@@ -80,7 +80,7 @@ final class ClientsListTest extends TestCase
             ->get('/clients')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('Clients/Index')
+                ->component('ResourceIndex')
                 ->has('records', 5)
                 ->where('records.0.plan_name', 'Alpha Plan')
             );
@@ -176,7 +176,7 @@ final class ClientsListTest extends TestCase
                 // The version is the manifest hash computed by the middleware —
                 // Inertia::getVersion() is empty outside a request lifecycle.
                 'X-Inertia-Version' => (string) (new HandleInertiaRequests())->version(request()),
-                'X-Inertia-Partial-Component' => 'Clients/Index',
+                'X-Inertia-Partial-Component' => 'ResourceIndex',
                 'X-Inertia-Partial-Data' => 'total',
             ])
             ->assertOk()
@@ -356,7 +356,7 @@ final class ClientsListTest extends TestCase
         $response = $this->actingAs($this->userA)->get('/clients', [
             'X-Inertia' => 'true',
             'X-Inertia-Version' => (string) (new HandleInertiaRequests())->version(request()),
-            'X-Inertia-Partial-Component' => 'Clients/Index',
+            'X-Inertia-Partial-Component' => 'ResourceIndex',
             'X-Inertia-Partial-Data' => 'tabCounts',
         ])->assertOk();
 
@@ -387,7 +387,7 @@ final class ClientsListTest extends TestCase
         $counts = $this->actingAs($this->userA)->get('/clients?tab=active', [
             'X-Inertia' => 'true',
             'X-Inertia-Version' => $version,
-            'X-Inertia-Partial-Component' => 'Clients/Index',
+            'X-Inertia-Partial-Component' => 'ResourceIndex',
             'X-Inertia-Partial-Data' => 'tabCounts',
         ])->assertOk()->json('props.tabCounts');
 
@@ -416,16 +416,16 @@ final class ClientsListTest extends TestCase
     /** @return list<string> */
     private function captureQueriesForIndex(): array
     {
-        $queries = [];
-
+        // The query LOG, not DB::listen. Registering a listener per call
+        // accumulates them, so the second call records every query twice and the
+        // resulting count is meaningless — which is exactly how this helper was
+        // producing nonsense figures like "4 at 5 rows, 3 at 500".
         DB::flushQueryLog();
-        DB::listen(function ($query) use (&$queries): void {
-            $queries[] = $query->sql;
-        });
+        DB::enableQueryLog();
 
         $this->actingAs($this->userA)->get('/clients')->assertOk();
 
-        return $queries;
+        return array_column(DB::getQueryLog(), 'query');
     }
 
     private function countQueriesForIndex(): int

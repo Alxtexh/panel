@@ -23,7 +23,9 @@ export { default as TableToolbar } from './components/DataTable/TableToolbar.vue
 export { default as PkDropdown } from './components/primitives/PkDropdown.vue'
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
+export { useSchemaColumns, BADGE_VARIANTS } from './composables/useSchemaColumns'
 
 export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
+export type { SchemaColumn } from './composables/useSchemaColumns'
 
 export const version = '0.0.1'

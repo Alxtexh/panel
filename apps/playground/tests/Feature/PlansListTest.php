@@ -65,7 +65,7 @@ final class PlansListTest extends TestCase
         $this->actingAs($this->userA)
             ->get('/plans')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('Plans/Index')->has('records', 5));
+            ->assertInertia(fn ($page) => $page->component('ResourceIndex')->has('records', 5));
     }
 
     public function test_it_never_returns_another_tenants_plans(): void
@@ -226,16 +226,16 @@ final class PlansListTest extends TestCase
     /** @return list<string> */
     private function captureQueriesForIndex(): array
     {
-        $queries = [];
-
+        // The query LOG, not DB::listen. Registering a listener per call
+        // accumulates them, so the second call records every query twice and the
+        // resulting count is meaningless — which is exactly how this helper was
+        // producing nonsense figures like "4 at 5 rows, 3 at 500".
         DB::flushQueryLog();
-        DB::listen(function ($query) use (&$queries): void {
-            $queries[] = $query->sql;
-        });
+        DB::enableQueryLog();
 
         $this->actingAs($this->userA)->get('/plans')->assertOk();
 
-        return $queries;
+        return array_column(DB::getQueryLog(), 'query');
     }
 
     private function countQueriesForIndex(): int

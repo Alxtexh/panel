@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Panel\Resources\ClientResource;
+use App\Panel\Resources\PlanResource;
+use App\Panel\Resources\RouterResource;
+use PanelKit\Panel\PanelManager;
+
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +28,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Explicit registration for now. Filesystem discovery (spec S6
+        // ->discoverResources) lands with the panel object in Phase 7; the
+        // registry is the same either way.
+        app(PanelManager::class)->registerResources([
+            ClientResource::class,
+            RouterResource::class,
+            PlanResource::class,
+        ]);
+
         $this->configureDefaults();
     }
 

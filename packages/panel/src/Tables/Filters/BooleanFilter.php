@@ -51,6 +51,17 @@ final class BooleanFilter extends Filter
         return $value ? '1' : '0';
     }
 
+    protected function schemaType(): string
+    {
+        return 'boolean';
+    }
+
+    /** Labels are structure, not tenant data, so they belong in the schema. */
+    public function toSchema(): array
+    {
+        return [...parent::toSchema(), 'trueLabel' => $this->trueLabel, 'falseLabel' => $this->falseLabel];
+    }
+
     public function toArray(): array
     {
         return [
