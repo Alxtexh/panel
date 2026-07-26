@@ -6,6 +6,10 @@ namespace PanelKit\Panel\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Support\SchemaCache;
 use PanelKit\Panel\Tables\ListResult;
 use PanelKit\Panel\Tables\Table;
@@ -39,6 +43,71 @@ abstract class Resource
 
     /** Declarative definition. MUST NOT query. */
     abstract public static function table(Table $table): Table;
+
+    /** Optional write form. A resource without one is read-only. */
+    public static function form(Form $form): Form
+    {
+        return $form;
+    }
+
+    public static function formDefinition(): Form
+    {
+        return static::form(Form::make());
+    }
+
+    public static function isWritable(): bool
+    {
+        return static::formDefinition()->fields() !== [];
+    }
+
+    /**
+     * Authorization. DENIES BY DEFAULT.
+     *
+     * A resource with no policy returns false rather than true. That inversion
+     * is the whole point: the usual default means forgetting to write a policy
+     * silently grants everyone everything, and the failure is invisible because
+     * the page renders correctly for the person who forgot.
+     *
+     * The refusal is LOGGED, because a silently-denying panel is its own kind of
+     * mystery — antipatterns opens on failures that returned 200 and looked
+     * right, and "the button does nothing" is the same class of bug.
+     *
+     * Schema permission booleans only hide UI. Every write re-checks here, so a
+     * client that lies gets a 403 rather than a mutation.
+     */
+    public static function can(string $ability, Model|string|null $record = null): bool
+    {
+        $model = static::model();
+
+        if (Gate::getPolicyFor($model) === null) {
+            Log::warning('Panel resource denied an ability because no policy is registered.', [
+                'component' => 'Resource',
+                'operation' => 'can',
+                'resource' => static::key(),
+                'model' => $model,
+                'ability' => $ability,
+            ]);
+
+            return false;
+        }
+
+        return Gate::allows($ability, $record ?? $model);
+    }
+
+    /**
+     * Permission booleans for the UI. Never a gate (spec S9 item 3).
+     *
+     * @return array<string, bool>
+     */
+    public static function permissions(): array
+    {
+        return [
+            'viewAny' => static::can('viewAny'),
+            'create' => static::isWritable() && static::can('create'),
+            'update' => static::isWritable() && static::can('update'),
+            'delete' => static::can('delete'),
+        ];
+    }
 
     /** URL segment and schema key, e.g. `clients`. */
     public static function key(): string
@@ -106,8 +175,14 @@ abstract class Resource
                 'labelPlural' => static::pluralLabel(),
                 'icon' => static::icon(),
                 'group' => static::group(),
-                'routes' => ['index' => '/' . static::key()],
+                'routes' => [
+                    'index' => '/' . static::key(),
+                    'store' => '/' . static::key(),
+                    'update' => '/' . static::key() . '/{id}',
+                    'destroy' => '/' . static::key() . '/{id}',
+                ],
                 'table' => $table->toSchema(),
+                'form' => static::formDefinition()->toSchema(),
             ];
         });
     }
