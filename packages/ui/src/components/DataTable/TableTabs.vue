@@ -2,13 +2,19 @@
 /**
  * Status tabs with counts.
  *
+ * Rendered as a SEGMENTED CONTROL rather than underlined text. The underline
+ * version read as a row of links with grey numbers after them — the counts
+ * looked like stray text rather than part of the tab, and nothing said "these
+ * are selectable". A filled pill for the active tab and a bordered count badge
+ * on every tab makes both facts obvious at a glance.
+ *
  * Counts arrive from ONE grouped aggregate query on the server (addendum C1:
  * "N tabs must never produce N queries") and are deferred, so they land after
  * the rows rather than in front of them.
  *
- * While the counts are in flight each tab shows a placeholder rather than a
- * zero. A zero that later becomes 47 reads as data changing under the operator;
- * a placeholder reads as "still counting", which is the truth.
+ * While counts are in flight each tab shows a placeholder, not a zero. A zero
+ * that later becomes 47 reads as data changing under the operator; a
+ * placeholder reads as "still counting", which is the truth.
  */
 withDefaults(
     defineProps<{
@@ -22,55 +28,74 @@ withDefaults(
 
 const emit = defineEmits<{ (e: 'select', tab: string | null): void }>()
 
-const format = (n: number) => new Intl.NumberFormat().format(n)
+/** Compact so a six-figure count does not stretch the tab. */
+function format(n: number): string {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + 'M'
+    if (n >= 10_000) return Math.round(n / 1000) + 'k'
+
+    return new Intl.NumberFormat().format(n)
+}
 </script>
 
 <template>
-    <div class="border-border pk-tabs flex shrink-0 items-center gap-1 overflow-x-auto overflow-y-hidden border-b">
+    <div class="pk-tabs bg-muted/40 flex w-fit max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-lg p-1">
         <button
             type="button"
-            class="relative shrink-0 px-3 py-2 text-sm capitalize transition-colors"
+            class="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm capitalize transition-colors"
             :class="
                 active === null
-                    ? 'text-foreground border-primary border-b-2 font-medium'
-                    : 'text-muted-foreground hover:text-foreground border-b-2 border-transparent'
+                    ? 'bg-background text-foreground shadow-sm font-medium'
+                    : 'text-muted-foreground hover:text-foreground'
             "
+            :aria-current="active === null ? 'page' : undefined"
             @click="emit('select', null)"
         >
             All
-            <span v-if="counts" class="text-muted-foreground ml-1 text-xs tabular-nums">
+            <span
+                v-if="counts"
+                class="rounded px-1.5 py-0.5 text-[11px] leading-none tabular-nums"
+                :class="active === null ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/15'"
+                :title="new Intl.NumberFormat().format(counts.all ?? 0)"
+            >
                 {{ format(counts.all ?? 0) }}
             </span>
-            <span v-else class="bg-muted ml-1 inline-block h-3 w-6 animate-pulse rounded align-middle" />
+            <span v-else class="bg-muted-foreground/15 h-4 w-7 animate-pulse rounded" />
         </button>
 
         <button
             v-for="tab in tabs"
             :key="tab"
             type="button"
-            class="relative shrink-0 px-3 py-2 text-sm capitalize transition-colors"
+            class="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm capitalize transition-colors"
             :class="
                 active === tab
-                    ? 'text-foreground border-primary border-b-2 font-medium'
-                    : 'text-muted-foreground hover:text-foreground border-b-2 border-transparent'
+                    ? 'bg-background text-foreground shadow-sm font-medium'
+                    : 'text-muted-foreground hover:text-foreground'
             "
+            :aria-current="active === tab ? 'page' : undefined"
             @click="emit('select', tab)"
         >
             {{ tab }}
-            <span v-if="counts" class="text-muted-foreground ml-1 text-xs tabular-nums">
+            <span
+                v-if="counts"
+                class="rounded px-1.5 py-0.5 text-[11px] leading-none tabular-nums"
+                :class="active === tab ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/15'"
+                :title="new Intl.NumberFormat().format(counts[tab] ?? 0)"
+            >
                 {{ format(counts[tab] ?? 0) }}
             </span>
-            <span v-else class="bg-muted ml-1 inline-block h-3 w-6 animate-pulse rounded align-middle" />
+            <span v-else class="bg-muted-foreground/15 h-4 w-7 animate-pulse rounded" />
         </button>
     </div>
 </template>
 
 <style scoped>
-/* The tab strip scrolls sideways when there are many tabs; it must never
-   scroll vertically. Without this the 2px active-tab border overflows by a
-   pixel and the browser paints a stub vertical scrollbar beside the tabs. */
+/* The strip scrolls sideways when a resource declares many tabs, but must never
+   scroll vertically, and the bar itself would be visual noise on a control this
+   small. */
 .pk-tabs {
     scrollbar-width: none;
+    overflow-y: hidden;
 }
 
 .pk-tabs::-webkit-scrollbar {

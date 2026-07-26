@@ -120,9 +120,18 @@ function clearAll() {
 
 <template>
     <div class="flex flex-wrap items-center gap-2">
-        <div class="relative min-w-0 flex-1 sm:max-w-xs">
+        <!--
+            Geometry deliberately identical to the global search trigger in the
+            topbar: same height, radius, border, icon size and inset, same
+            sm:w-72. Two search boxes on one screen that are almost-but-not-quite
+            alike read as an inconsistency rather than a hierarchy.
+
+            They stay distinct by SCOPE, not by styling — this one is filtering
+            the table in front of you; the topbar one searches everything.
+        -->
+        <div class="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
             <svg
-                class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+                class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -138,7 +147,7 @@ function clearAll() {
                 :placeholder="searchPlaceholder"
                 :title="searchHint"
                 :aria-label="searchHint ?? searchPlaceholder"
-                class="border-input bg-background focus-visible:ring-ring h-9 w-full rounded-md border pr-8 pl-8 text-sm focus-visible:ring-2 focus-visible:outline-none"
+                class="border-input bg-background focus-visible:ring-ring h-9 w-full rounded-md border pr-8 pl-9 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
             />
             <button
                 v-if="local"

@@ -5,6 +5,23 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+ * @panelkit/ui is consumed through a symlink into node_modules, which Tailwind
+ * excludes from scanning by default. Without this line every utility used ONLY
+ * inside the UI package is purged.
+ *
+ * That failure is silent and, worse, PARTIAL: `w-72` survived because the topbar
+ * also uses it, while `grow-0`, `accent-primary` and `max-w-full` did not — so
+ * the table sized itself wrongly and the selection checkboxes lost their colour
+ * with no error anywhere. antipatterns.md §6.1 is this exact incident, where one
+ * class in a responsive pair survived and its counterpart was purged, hiding an
+ * element at every width instead of only small ones.
+ *
+ * The real source path is used, not the node_modules symlink, because Tailwind
+ * resolves and de-duplicates by real path.
+ */
+@source '../../../../packages/ui/src/**/*.{vue,ts}';
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
