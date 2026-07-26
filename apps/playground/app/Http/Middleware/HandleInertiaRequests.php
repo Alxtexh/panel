@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\TenantContext;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -59,6 +60,23 @@ class HandleInertiaRequests extends Middleware
              | a few authorization checks and no queries at all — the old system
              | recomputed a nav tree AND ten cached badge counts here.
              */
+            /*
+             | Per-tenant branding, applied as runtime CSS custom properties.
+             |
+             | Spec S8: never compile a per-tenant CSS bundle. These are tenant
+             | DATA, so they cannot live in the cached schema — they ship as a
+             | shared prop and the client sets them on :root.
+             |
+             | oklch values are passed through verbatim and used directly via
+             | var(). antipatterns S6.2: someone wrapped a token in rgb() on the
+             | assumption it held a space-separated triple, the result was
+             | invalid, and the element rendered transparent — invisible in light
+             | mode, apparently fine in dark.
+             */
+            'panelTheme' => fn (): array => (array) (app(TenantContext::class)->tenant()?->theme_colors ?? []),
+
+            'panelBrand' => fn (): ?string => app(TenantContext::class)->tenant()?->name,
+
             'panelNav' => fn (): array => collect(app(PanelManager::class)->resources())
                 ->map(fn (string $class): array => [
                     'key' => $class::key(),

@@ -109,6 +109,15 @@ return [
         'mode' => env('PANEL_TENANCY_MODE', 'column'),
         'column' => 'tenant_id',
         'resolver' => null,
+
+        /*
+        | Per-tenant feature flags, as name => bool. A Closure, or null to read
+        | them from the acting user's tenant relation.
+        |
+        | An ABSENT flag means disabled. A flag that defaults to on is not a
+        | flag, it is a comment.
+        */
+        'features' => null,
     ],
 
 ];

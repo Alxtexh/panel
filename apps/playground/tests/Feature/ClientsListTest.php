@@ -416,10 +416,16 @@ final class ClientsListTest extends TestCase
     /** @return list<string> */
     private function captureQueriesForIndex(): array
     {
+        // Warm the per-request lookups that are NOT row-proportional — the
+        // tenant record behind branding and feature flags. actingAs reuses one
+        // user instance across requests, so its lazy relation loads on the first
+        // measurement and not the second, making the two counts differ for a
+        // reason that has nothing to do with an N+1.
+        $this->actingAs($this->userA)->get('/dashboard');
+
         // The query LOG, not DB::listen. Registering a listener per call
         // accumulates them, so the second call records every query twice and the
-        // resulting count is meaningless — which is exactly how this helper was
-        // producing nonsense figures like "4 at 5 rows, 3 at 500".
+        // resulting count is meaningless.
         DB::flushQueryLog();
         DB::enableQueryLog();
 

@@ -47,4 +47,16 @@ class User extends Authenticatable implements PasskeyUser
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+    /**
+     * The tenant this admin belongs to.
+     *
+     * Feature flags and branding are read from here, so it is deliberately a
+     * relation rather than an ambient `tenant()` helper — the panel must work
+     * identically whether or not stancl/tenancy is installed.
+     */
+    public function tenant(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Tenant::class);
+    }
 }

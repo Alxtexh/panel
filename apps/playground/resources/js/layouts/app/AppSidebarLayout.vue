@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useTenantTheme } from '@panelkit/ui';
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
@@ -13,6 +16,10 @@ type Props = {
 withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
+
+// Per-tenant branding, applied at runtime rather than compiled per tenant.
+const page = usePage();
+useTenantTheme(computed(() => page.props.panelTheme as Record<string, string> | undefined));
 </script>
 
 <template>
