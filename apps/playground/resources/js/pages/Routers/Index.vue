@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useListTable, type ListPageProps } from '@/composables/useListTable'
-import { DataTable, TableToolbar, useColumnVisibility, type TableColumn } from '@panelkit/ui'
+import { DataTable, TablePagination, TableToolbar, useColumnVisibility, type TableColumn } from '@panelkit/ui'
 import { Deferred, Head } from '@inertiajs/vue3'
 
 const props = defineProps<ListPageProps & { filterSchema: any[]; total?: number }>()
@@ -73,11 +73,11 @@ const num = (v: number) => new Intl.NumberFormat().format(v)
             </template>
         </DataTable>
 
-        <div class="flex items-center justify-between gap-3">
-            <p class="text-muted-foreground text-xs">Showing {{ num(t.rows.value.length) }}</p>
-            <Button v-if="nextCursor" variant="outline" size="sm" :disabled="t.loadingMore.value" @click="t.loadMore">
-                Load more
-            </Button>
-        </div>
+        <TablePagination
+            :page="t.page.value" :per-page="perPage" :per-page-options="perPageOptions"
+            :rows-on-page="t.rows.value.length" :has-next="t.hasNext.value" :has-previous="t.hasPrevious.value"
+            :total="total" :loading="t.loading.value"
+            @next="t.nextPage" @previous="t.previousPage" @update:per-page="t.setPerPage"
+        />
     </div>
 </template>

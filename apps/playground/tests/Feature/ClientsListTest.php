@@ -267,6 +267,33 @@ final class ClientsListTest extends TestCase
         $this->assertSame(count($seen), count(array_unique($seen)), 'Keyset pagination repeated a row.');
     }
 
+    /**
+     * §10 keeps page size on an allowlist rather than clamping it. Without that,
+     * `?perPage=100000` is a supported way to pull an entire tenant table in one
+     * request — a performance problem and an exfiltration path at the same time.
+     */
+    public function test_an_out_of_range_per_page_falls_back_to_the_default(): void
+    {
+        $this->makeClients($this->tenantA, 120, 'Alpha');
+
+        $props = $this->actingAs($this->userA)->get('/clients?perPage=100000')->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertSame(50, $props['perPage']);
+        $this->assertCount(50, $props['records']);
+    }
+
+    public function test_an_allowlisted_per_page_is_honoured(): void
+    {
+        $this->makeClients($this->tenantA, 120, 'Alpha');
+
+        $props = $this->actingAs($this->userA)->get('/clients?perPage=25')->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertSame(25, $props['perPage']);
+        $this->assertCount(25, $props['records']);
+    }
+
     public function test_guests_cannot_read_the_list(): void
     {
         $this->get('/clients')->assertRedirect('/login');

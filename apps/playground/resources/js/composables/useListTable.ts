@@ -17,7 +17,7 @@ import { computed, ref, watch } from 'vue'
  *   - `replace: true` so filtering does not bury the back button in history
  *   - a 300 ms delay before any loading indicator, because a flash of spinner
  *     reads as slower than a brief pause
- *   - keyset "load more" APPENDS rather than replacing
+ *   - keyset paging via a client-side cursor stack, so "previous" is free
  */
 export interface ListPageProps {
     records: Record<string, any>[]
@@ -26,22 +26,41 @@ export interface ListPageProps {
     sort: string
     direction: 'asc' | 'desc'
     nextCursor: string | null
+    perPage: number
+    perPageOptions: number[]
 }
 
 export function useListTable(url: string, props: ListPageProps) {
     const rows = ref<Record<string, any>[]>([...props.records])
     const loading = ref(false)
-    const loadingMore = ref(false)
     const showSpinner = ref(false)
 
     let spinnerTimer: ReturnType<typeof setTimeout> | undefined
 
-    // "Load more" appends, so when the server sends a fresh first page (filter,
-    // sort or search change) the accumulated list must be replaced outright.
+    /**
+     * Cursors for the pages already visited, oldest first.
+     *
+     * Keyset pagination only knows how to go FORWARD — a cursor says "everything
+     * after this row", not "everything before it". Rather than run a second
+     * reversed query to walk backwards, the pages we have already been through
+     * are remembered here, so "previous" is a stack pop and costs the server
+     * nothing beyond re-fetching that page.
+     *
+     * `stack[i]` is the cursor that produced page i+2 (page 1 needs no cursor).
+     */
+    const cursorStack = ref<string[]>([])
+    const page = computed(() => cursorStack.value.length + 1)
+
+    // Any change to filters, sort, search or page size invalidates the trail:
+    // those cursors point into a result set that no longer exists.
+    function resetPagination() {
+        cursorStack.value = []
+    }
+
     watch(
         () => props.records,
         (records) => {
-            if (!loadingMore.value) rows.value = [...records]
+            rows.value = [...records]
         },
     )
 
@@ -57,6 +76,7 @@ export function useListTable(url: string, props: ListPageProps) {
             search: props.search,
             sort: props.sort,
             direction: props.direction,
+            perPage: props.perPage,
             ...props.filters,
             ...overrides,
         }
@@ -79,12 +99,30 @@ export function useListTable(url: string, props: ListPageProps) {
         return out
     }
 
+    /**
+     * Any state change other than paging. Always returns to page 1, because the
+     * cursor trail describes a result set the new filters no longer produce.
+     */
     function apply(overrides: Record<string, unknown> = {}) {
+        resetPagination()
+        request(query(overrides))
+    }
+
+    function request(params: Record<string, string>) {
         loading.value = true
         spinnerTimer = setTimeout(() => (showSpinner.value = true), 300)
 
-        router.get(url, query(overrides), {
-            only: ['records', 'filters', 'search', 'sort', 'direction', 'nextCursor', 'total'],
+        router.get(url, params, {
+            only: [
+                'records',
+                'filters',
+                'search',
+                'sort',
+                'direction',
+                'nextCursor',
+                'perPage',
+                'total',
+            ],
             preserveState: true,
             preserveScroll: true,
             replace: true,
@@ -96,25 +134,28 @@ export function useListTable(url: string, props: ListPageProps) {
         })
     }
 
-    function loadMore() {
-        if (!props.nextCursor || loadingMore.value) return
+    function nextPage() {
+        if (!props.nextCursor || loading.value) return
 
-        loadingMore.value = true
+        const cursor = props.nextCursor
+        cursorStack.value = [...cursorStack.value, cursor]
+        request({ ...query(), cursor })
+    }
 
-        router.get(
-            url,
-            { ...query(), cursor: props.nextCursor },
-            {
-                only: ['records', 'nextCursor'],
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-                onSuccess: () => {
-                    rows.value = [...rows.value, ...props.records]
-                },
-                onFinish: () => (loadingMore.value = false),
-            },
-        )
+    function previousPage() {
+        if (cursorStack.value.length === 0 || loading.value) return
+
+        // Drop the cursor that got us here; the one beneath it produced the
+        // previous page. An empty stack means page 1, which takes no cursor.
+        const stack = cursorStack.value.slice(0, -1)
+        cursorStack.value = stack
+
+        const cursor = stack.length ? stack[stack.length - 1] : null
+        request(cursor ? { ...query(), cursor } : query())
+    }
+
+    function setPerPage(value: number) {
+        apply({ perPage: value })
     }
 
     function sortBy(key: string) {
@@ -145,11 +186,15 @@ export function useListTable(url: string, props: ListPageProps) {
     return {
         rows,
         loading,
-        loadingMore,
         showSpinner,
         isFiltered,
+        page,
+        hasNext: computed(() => props.nextCursor !== null),
+        hasPrevious: computed(() => cursorStack.value.length > 0),
         apply,
-        loadMore,
+        nextPage,
+        previousPage,
+        setPerPage,
         sortBy,
         setFilter,
         setSearch,
