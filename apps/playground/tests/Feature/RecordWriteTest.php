@@ -229,7 +229,10 @@ final class RecordWriteTest extends TestCase
     {
         $resource = new class extends \PanelKit\Panel\Resources\Resource
         {
-            protected static string $model = Tenant::class; // no policy registered
+            // User has no policy registered. Tenant deliberately is NOT used
+            // here: the generator creates a policy alongside a resource, so any
+            // model that has been generated for would silently start passing.
+            protected static string $model = User::class;
 
             public static function table(\PanelKit\Panel\Tables\Table $table): \PanelKit\Panel\Tables\Table
             {

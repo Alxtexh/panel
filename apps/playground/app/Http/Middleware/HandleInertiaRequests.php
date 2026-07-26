@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
+use PanelKit\Panel\PanelManager;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -37,6 +39,39 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+
+            /*
+             | Navigation is built ONCE and shipped with the initial payload.
+             |
+             | antipatterns S3.0: the system being replaced rebuilt its sidebar,
+             | nav tree and badge counts server-side on EVERY page load, with a
+             | permission check per item — identical work, thrown away and redone
+             | each navigation. Here the shell mounts once per session and never
+             | re-renders, so this is paid once.
+             |
+             | It comes from the resource registry rather than a literal list, so
+             | a generated resource appears in the sidebar untouched.
+             |
+             | A plain closure, NOT Inertia::optional — the sidebar has to be in
+             | the initial payload or the shell renders empty. Table interactions
+             | use partial reloads whose `only:` list excludes it, so filtering
+             | and paging never recompute it. A full navigation does, which costs
+             | a few authorization checks and no queries at all — the old system
+             | recomputed a nav tree AND ten cached badge counts here.
+             */
+            'panelNav' => fn (): array => collect(app(PanelManager::class)->resources())
+                ->map(fn (string $class): array => [
+                    'key' => $class::key(),
+                    'title' => $class::pluralLabel(),
+                    'href' => '/' . $class::key(),
+                    'icon' => $class::icon(),
+                    'group' => $class::group(),
+                    'sort' => $class::navigationSort(),
+                ])
+                ->filter(fn (array $item): bool => app(PanelManager::class)->resource($item['key'])::can('viewAny'))
+                ->sortBy([['sort', 'asc'], ['title', 'asc']])
+                ->values()
+                ->all(),
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),

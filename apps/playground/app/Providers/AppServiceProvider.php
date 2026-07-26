@@ -2,9 +2,6 @@
 
 namespace App\Providers;
 
-use App\Panel\Resources\ClientResource;
-use App\Panel\Resources\PlanResource;
-use App\Panel\Resources\RouterResource;
 use App\Models\Client;
 use App\Models\Plan;
 use App\Models\Router;
@@ -43,12 +40,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Client::class, ClientPolicy::class);
         Gate::policy(Router::class, RouterPolicy::class);
         Gate::policy(Plan::class, PlanPolicy::class);
-
-        app(PanelManager::class)->registerResources([
-            ClientResource::class,
-            RouterResource::class,
-            PlanResource::class,
-        ]);
 
         $this->configureDefaults();
     }

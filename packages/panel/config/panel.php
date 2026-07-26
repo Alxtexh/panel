@@ -65,6 +65,20 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Resource discovery
+    |---------------------------------------------------------------------------
+    |
+    | directory => namespace. Scanned lazily on first access, so a generated
+    | resource is routable with no registration line — which is what makes
+    | `make:panel-resource --generate` produce a working screen untouched.
+    |
+    */
+    'discover' => [
+        app_path('Panel/Resources') => 'App\\Panel\\Resources',
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
     | Tenancy
     |---------------------------------------------------------------------------
     |
