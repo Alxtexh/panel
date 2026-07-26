@@ -20,6 +20,8 @@ export { default as SelectionBar } from './components/DataTable/SelectionBar.vue
 export { default as TablePagination } from './components/DataTable/TablePagination.vue'
 export { default as TableTabs } from './components/DataTable/TableTabs.vue'
 export { default as TableToolbar } from './components/DataTable/TableToolbar.vue'
+export { default as PkModal } from './components/Overlay/PkModal.vue'
+export { default as RecordForm } from './components/Form/RecordForm.vue'
 export { default as PkDropdown } from './components/primitives/PkDropdown.vue'
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
@@ -27,5 +29,6 @@ export { useSchemaColumns, BADGE_VARIANTS } from './composables/useSchemaColumns
 
 export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
 export type { SchemaColumn } from './composables/useSchemaColumns'
+export type { FormField } from './components/Form/RecordForm.vue'
 
 export const version = '0.0.1'

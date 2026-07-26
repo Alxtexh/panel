@@ -6,6 +6,11 @@ namespace App\Panel\Resources;
 
 use App\Models\Client;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use App\Models\Plan;
+use PanelKit\Panel\Forms\Fields\DateField;
+use PanelKit\Panel\Forms\Fields\SelectField;
+use PanelKit\Panel\Forms\Fields\TextField;
+use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
@@ -29,6 +34,42 @@ final class ClientResource extends Resource
     protected static ?string $group = 'Subscribers';
 
     protected static ?int $sort = 10;
+
+    /**
+     * The write form.
+     *
+     * `tenant_id` is deliberately absent and cannot be added: it is set from
+     * the request context, and a form field for it would be a way to move a
+     * record into another tenant. sanitize() drops anything not listed here, so
+     * mass assignment is closed by construction rather than by remembering a
+     * $fillable list.
+     */
+    public static function form(Form $form): Form
+    {
+        return $form->columns(2)->schema([
+            TextField::make('name')->required()->placeholder('Full name'),
+            TextField::make('phone')->required()->as('tel')->placeholder('+2547...'),
+            TextField::make('access_code')->required()->max(32)
+                ->help('Unique within your organisation.'),
+            SelectField::make('status')->required()->options([
+                'active' => 'Active',
+                'expired' => 'Expired',
+                'suspended' => 'Suspended',
+            ]),
+            SelectField::make('plan_type')->label('Plan type')->required()->options([
+                'pppoe' => 'PPPoE',
+                'hotspot' => 'Hotspot',
+                'static' => 'Static',
+            ]),
+            // A CLOSURE. Resolved when the form data is assembled, never while
+            // building the cached schema, and tenant-scoped by the model's
+            // global scope (antipatterns S3.3).
+            SelectField::make('plan_id')->label('Plan')->options(
+                fn (): array => Plan::query()->orderBy('name')->pluck('name', 'id')->all()
+            ),
+            DateField::make('expiry_date')->label('Expires')->span(2),
+        ]);
+    }
 
     public static function table(Table $table): Table
     {

@@ -58,6 +58,15 @@ final class ResourceController extends Controller
             // definition time (antipatterns §3.3).
             'filterOptions' => $definition->resolveFilterOptions(),
 
+            // Form option lists are tenant data too, and resolving them HERE is
+            // what lets a modal open with no network request at all
+            // (antipatterns S3.0.3 — a Filament action modal fetches its form on
+            // open, so a confirmation dialog has latency in front of it).
+            'formOptions' => $class::formDefinition()->resolveOptions(),
+
+            // UI hints only. Every write re-authorizes server-side (S9 item 3).
+            'can' => $class::permissions(),
+
             // Deferred: neither the total nor the tab counts may sit in front of
             // the rows (§10, addendum C1).
             'total' => Inertia::defer($result->total),
