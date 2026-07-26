@@ -61,6 +61,17 @@ final class ListQuery
 
     private int $perPage = 50;
 
+    /**
+     * Allowlist for the per-page selector.
+     *
+     * An allowlist rather than a clamp: `?perPage=100000` would otherwise
+     * become a legitimate way to pull an entire tenant table in one request,
+     * which is both a performance and an exfiltration concern.
+     *
+     * @var list<int>
+     */
+    private array $perPageOptions = [25, 50, 100, 250];
+
     private string $keyColumn = 'id';
 
     private function __construct(string $model)
@@ -137,6 +148,14 @@ final class ListQuery
         return $this;
     }
 
+    /** @param list<int> $options */
+    public function perPageOptions(array $options): self
+    {
+        $this->perPageOptions = $options;
+
+        return $this;
+    }
+
     /** Qualified primary key, used as the keyset tiebreaker. */
     public function keyColumn(string $column): self
     {
@@ -174,13 +193,18 @@ final class ListQuery
         }
 
         $state = $this->readState($request);
-        $rows = $this->fetch($state);
+
+        // Request-supplied per-page, but only if it is on the allowlist.
+        $requested = (int) $request->query('perPage', (string) $this->perPage);
+        $perPage = in_array($requested, $this->perPageOptions, true) ? $requested : $this->perPage;
+
+        $rows = $this->fetch($state, $perPage);
 
         // The cursor is derived from the actual last row rather than trusted
         // from the client, and only when the page was full — a short page means
         // there is nothing after it.
         $last = $rows === [] ? null : $rows[array_key_last($rows)];
-        $nextCursor = $last === null || count($rows) < $this->perPage
+        $nextCursor = $last === null || count($rows) < $perPage
             ? null
             : Cursor::encode($last[$state['sort']] ?? null, (int) $last['id']);
 
@@ -189,7 +213,8 @@ final class ListQuery
             state: $state,
             filterSchema: array_map(static fn (Filter $f): array => $f->toArray(), $this->filters),
             nextCursor: $nextCursor,
-            perPage: $this->perPage,
+            perPage: $perPage,
+            perPageOptions: $this->perPageOptions,
             // A closure, not a number. The caller wraps it in Inertia::defer()
             // so the rows paint before any COUNT runs (§10).
             total: fn (): int => $this->base($state)->count(),
@@ -225,7 +250,7 @@ final class ListQuery
      * @param  array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>}  $state
      * @return list<array<string, mixed>>
      */
-    private function fetch(array $state): array
+    private function fetch(array $state, int $perPage): array
     {
         $column = $this->sortable[$state['sort']];
         $direction = $state['direction'];
@@ -242,7 +267,7 @@ final class ListQuery
 
         $rows = array_map(
             static fn (object $row): array => (array) $row,
-            $query->limit($this->perPage)->get()->all(),
+            $query->limit($perPage)->get()->all(),
         );
 
         return $this->transform === null ? $rows : array_map($this->transform, $rows);

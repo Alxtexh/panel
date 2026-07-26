@@ -20,6 +20,7 @@ final readonly class ListResult
      * @param  list<array<string, mixed>>  $records
      * @param  array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>}  $state
      * @param  list<array<string, mixed>>  $filterSchema
+     * @param  list<int>  $perPageOptions
      * @param  Closure(): int  $total
      */
     public function __construct(
@@ -28,6 +29,7 @@ final readonly class ListResult
         public array $filterSchema,
         public ?string $nextCursor,
         public int $perPage,
+        public array $perPageOptions,
         public Closure $total,
     ) {}
 
@@ -52,6 +54,7 @@ final readonly class ListResult
             'filterSchema' => $this->filterSchema,
             'nextCursor' => $this->nextCursor,
             'perPage' => $this->perPage,
+            'perPageOptions' => $this->perPageOptions,
         ];
     }
 }
