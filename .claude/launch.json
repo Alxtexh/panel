@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "playground",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["artisan", "dev"],
+      "cwd": "apps/playground",
+      "port": 8000
+    }
+  ]
+}

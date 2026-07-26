@@ -26,3 +26,7 @@
 
 # Local scratch — seed dumps, profiling output, bundle-size reports
 /.scratch
+
+# Seeded demo database — 692 MB of generated data, regenerate with panel:seed-demo
+*.sqlite
+*.sqlite-journal

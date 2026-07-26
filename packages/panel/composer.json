@@ -1,0 +1,42 @@
+{
+    "name": "panelkit/panel",
+    "description": "Schema-driven admin panel framework for Laravel. Filament's developer experience, SPA transport.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "illuminate/support": "^12.0|^13.0",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/routing": "^12.0|^13.0",
+        "inertiajs/inertia-laravel": "^2.0|^3.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^3.0|^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PanelKit\\Panel\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PanelKit\\Panel\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "PanelKit\\Panel\\PanelServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
