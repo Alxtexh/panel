@@ -45,6 +45,7 @@ final class PanelServiceProvider extends ServiceProvider
 
             $this->commands([
                 Commands\CacheClearCommand::class,
+                Commands\InstallCommand::class,
                 Commands\MakeResourceCommand::class,
                 Commands\SeedDemoCommand::class,
             ]);
