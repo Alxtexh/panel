@@ -357,3 +357,146 @@ towards server rendering and should be questioned.
 - [ ] No bare empty catch block exists in the package
 - [ ] `panel:audit` runs, warms up, reports the median of three runs, and fails on budget breach
 - [ ] Nothing from the C2 table has been built
+
+---
+
+## Part D: Additional built-in capabilities
+
+> **Scope discipline still applies.** The base spec's "What NOT to build" list exists because
+> scope creep is what turns a 33-day framework into a two-year one. Part D is tiered deliberately.
+> Build D1. Leave seams for D2 without building it. Do not start D3 until v1 ships.
+
+### D1. Build in v1, because the schema already carries the information
+
+These are cheap specifically because the resource schema already declares what they need. Each one
+would be expensive to add to a system that had not defined a schema contract, and is close to free
+here.
+
+#### Global search and command palette
+
+**This supersedes the "global search" entry in the base spec's do-not-build list.** That exclusion
+assumed global search meant building a search index. It does not. Every resource schema already
+declares which columns are `searchable`, so a cross-resource search endpoint is a loop over
+registered resources applying the same query builder the tables already use.
+
+- `Cmd/Ctrl + K` opens a palette.
+- Searches across every resource the user has permission to view, respecting tenant scope.
+- Results grouped by resource, keyboard navigable, Enter opens the record.
+- Also lists navigation destinations and global actions, so it doubles as a command runner.
+- Debounced, cancels in-flight requests, capped result count per resource.
+
+For an operator who already knows the customer's phone number, this removes navigation entirely.
+It is the highest user-value-per-line-of-code item in the entire kit.
+
+#### Saved views
+
+Filter, sort, and column state already live in the URL. A saved view is that query string, named
+and persisted.
+
+- Save the current view, name it, optionally share it with the tenant's other admins.
+- Pin saved views into the resource's tab strip.
+- A default view per user per resource.
+
+Operators currently rebuild the same filter combination many times a day and no profiler shows
+that cost. This removes it.
+
+#### Responsive card mode driven by column priority
+
+Mobile layout breakage is a recurring, expensive failure in server-rendered admin panels. Solve it
+once, in the kit, rather than per screen.
+
+```php
+TextColumn::make('name')->priority(1),      // always visible, card title
+TextColumn::make('status')->priority(2),    // card subtitle / badge
+TextColumn::make('plan.name')->priority(3), // card body
+TextColumn::make('created_at')->priority(9),// desktop table only
+```
+
+Below a breakpoint the table renders as cards using top-priority fields; above it, the full table.
+No screen ever hand-writes a mobile layout.
+
+#### Record history tab
+
+`spatie/laravel-activitylog` is already a dependency and the data already exists. Expose it.
+
+- A History tab on any resource that opts in, showing who changed what and when, with before and
+  after values.
+- Filterable by user and date.
+- Permission-gated, since change history can expose values a viewer should not see.
+
+For a billing system this settles disputes. "Who extended this client's expiry" should be a
+two-second answer.
+
+#### Money and phone column and field types
+
+A billing panel formats currency on almost every screen, and a multi-country operator cannot
+hardcode one.
+
+- **Money**: reads the tenant's configured currency, uses correct minor units and locale-aware
+  grouping, never hardcodes a symbol or assumes two decimal places. Derive the currency list from
+  ICU rather than a hand-maintained array.
+- **Phone**: normalizes to E.164 on save, validates server-side rather than only in the browser,
+  renders in a readable national format, and stores without a leading plus if downstream messaging
+  gateways require that. Replaces a third-party country-code field plugin.
+
+#### Bulk actions auto-queue above a threshold
+
+Select-all-matching-filter can select tens of thousands of rows. Running that in the request times
+out or, worse, half-completes.
+
+- Below a configurable threshold, run inline and return the result.
+- Above it, queue automatically, report progress over the existing broadcast channel, and notify
+  on completion with a summary of successes and failures.
+- The user is told which path was taken. Never silently switch behaviour without saying so.
+
+#### Real-user timing collection
+
+Performance budgets in the base spec are enforced in tests against seeded data, which proves the
+code is fast on a developer machine. That is not the same as being fast for an operator in another
+country on a mobile network.
+
+- A small collector records actual navigation, filter, and action latency from real sessions.
+- Reports p50, p95, and p99 per route, per tenant.
+- Surfaces in a panel health view and can alert on regression.
+
+You cannot hold a budget you only measure in CI.
+
+#### First-class empty, error, and permission states
+
+Every list, widget, and detail view must have designed states for: no data yet, no results for the
+current filter, insufficient permission, failed to load with retry, and offline. Five states, all
+designed, none of them a bare spinner or a blank area. Most admin panels ship one of the five and
+users interpret the other four as breakage.
+
+### D2. Leave the seam, build later
+
+Retrofitting these is expensive; leaving room for them is nearly free. Do not build them in v1.
+
+| Capability | Seam to leave now |
+|---|---|
+| Localization | Never hardcode a date, number, or currency format. All formatting goes through a formatter that accepts a locale. UI text stays English in v1, but adding translations later becomes a file rather than a refactor |
+| Soft delete and restore | The query builder is aware a resource may soft-delete, and the schema can carry a `trashed` filter, even though no recycle-bin UI ships in v1 |
+| Import | Export already needs queued-job-with-progress-and-error-report plumbing. Build that plumbing generically so the import mapping UI in v2 plugs into it rather than duplicating it |
+| Multi-panel switching | The panel manager already supports several panels. Reserve a slot in the shell for a panel switcher without building it |
+| Custom field types by third parties | `make:panel-field` already generates a PHP class plus a Vue component. Keep field resolution driven by a registry rather than a hardcoded map, so a plugin system in v2 is a registry entry |
+
+### D3. Explicitly v2, do not start
+
+Notification inbox, keyboard shortcuts beyond the command palette, PWA installability for field
+staff, panel health dashboard with queue depth and failed jobs, relation managers, wizards,
+rich text and markdown editors, and any plugin marketplace.
+
+Each is defensible. All of them together are how v1 never ships.
+
+### D4. Acceptance for Part D
+
+- [ ] Command palette searches every permitted resource, respects tenant scope, and is keyboard-only navigable
+- [ ] A saved view restores filters, sort, and column visibility exactly
+- [ ] Every table renders as cards below the mobile breakpoint with no per-screen code
+- [ ] Record history shows before and after values and is permission-gated
+- [ ] Money renders in the tenant's currency with correct minor units, verified for at least three currencies
+- [ ] Phone normalizes to E.164 and is validated server-side
+- [ ] A bulk action over the threshold queues, reports progress, and tells the user it queued
+- [ ] Real-user timings report p95 per route
+- [ ] All five list states (empty, no results, no permission, error, offline) are implemented and designed
+- [ ] Nothing from D3 has been started

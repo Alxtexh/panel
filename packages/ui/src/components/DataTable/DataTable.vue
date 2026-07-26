@@ -74,7 +74,7 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
     <!-- min-h-0 / min-w-0: without them a flex child refuses to shrink below its
          content size, so a wide table pushes the layout wider instead of
          scrolling inside its own container. -->
-    <div class="relative min-h-0 w-full min-w-0 flex-1 overflow-auto rounded-lg border">
+    <div class="pk-scroll relative min-h-0 w-full min-w-0 flex-1 overflow-auto rounded-lg border">
         <table class="w-full border-collapse text-sm">
             <thead class="bg-background sticky top-0 z-10">
                 <tr class="bg-muted/50">
@@ -101,7 +101,7 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
                          phone. -->
                     <th
                         v-if="$slots.actions"
-                        class="bg-muted/50 sticky right-0 w-12 border-b border-l px-2 py-2.5 shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.25)]"
+                        class="pk-actions bg-muted/50 sticky right-0 w-12 border-b border-l px-2 py-2.5 shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.25)]"
                     >
                         <span class="sr-only">Actions</span>
                     </th>
@@ -144,7 +144,7 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
 
                     <td
                         v-if="$slots.actions"
-                        class="bg-background group-hover:bg-muted/40 sticky right-0 border-l px-2 py-2 text-right shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.25)]"
+                        class="pk-actions bg-background group-hover:bg-muted/40 sticky right-0 border-l px-2 py-2 text-right shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.25)]"
                     >
                         <slot name="actions" :row="row" />
                     </td>
@@ -164,3 +164,66 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
         </div>
     </div>
 </template>
+
+<style scoped>
+/**
+ * Near-invisible scrollbars.
+ *
+ * A fixed shell means the table scrolls internally, which on the default
+ * browser styling produces two heavy grey bars framing the data — visual weight
+ * that competes with the content and reads as chrome rather than affordance.
+ *
+ * These are thin, transparent-tracked, and only tint on hover over the table.
+ * Deliberately NOT `scrollbar-width: none`: hiding a scrollbar outright removes
+ * the only cue that there is more content sideways, and leaves keyboard and
+ * trackpad users guessing.
+ */
+.pk-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 150ms ease;
+}
+
+.pk-scroll:hover,
+.pk-scroll:focus-within {
+    scrollbar-color: color-mix(in oklch, currentColor 25%, transparent) transparent;
+}
+
+/* WebKit needs the same expressed the long way round. */
+.pk-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.pk-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pk-scroll::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 9999px;
+    transition: background 150ms ease;
+}
+
+.pk-scroll:hover::-webkit-scrollbar-thumb,
+.pk-scroll:focus-within::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, currentColor 22%, transparent);
+}
+
+.pk-scroll::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/**
+ * The frozen actions column must sit above every other cell.
+ *
+ * Without an explicit stacking order a later sticky cell can paint over the
+ * actions column while the table is scrolled horizontally, which makes the row
+ * menu unclickable even though it is plainly visible — a failure that looks like
+ * a dead button rather than a layering bug.
+ */
+:deep(td.pk-actions),
+:deep(th.pk-actions) {
+    z-index: 2;
+}
+</style>

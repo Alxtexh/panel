@@ -35,8 +35,8 @@ return [
     |
     */
     'pagination' => [
-        'default_per_page' => 50,
-        'per_page_options' => [25, 50, 100, 250],
+        'default_per_page' => 10,
+        'per_page_options' => [10, 25, 50, 100],
         'keyset_threshold' => 10_000,
         'count_strategy' => env('PANEL_COUNT_STRATEGY', 'deferred'), // deferred|approximate|none
     ],

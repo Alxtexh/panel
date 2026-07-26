@@ -59,7 +59,7 @@ final class ListQuery
 
     private string $defaultDirection = 'desc';
 
-    private int $perPage = 50;
+    private int $perPage = 10;
 
     /**
      * Allowlist for the per-page selector.
@@ -70,7 +70,7 @@ final class ListQuery
      *
      * @var list<int>
      */
-    private array $perPageOptions = [25, 50, 100, 250];
+    private array $perPageOptions = [10, 25, 50, 100];
 
     private string $keyColumn = 'id';
 

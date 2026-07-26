@@ -261,7 +261,7 @@ final class ClientsListTest extends TestCase
             }
 
             $cursor = $props['nextCursor'];
-        } while ($cursor !== null && ++$guard < 10);
+        } while ($cursor !== null && ++$guard < 25);
 
         $this->assertCount(120, $seen, 'Keyset pagination did not return every row exactly once.');
         $this->assertSame(count($seen), count(array_unique($seen)), 'Keyset pagination repeated a row.');
@@ -279,8 +279,8 @@ final class ClientsListTest extends TestCase
         $props = $this->actingAs($this->userA)->get('/clients?perPage=100000')->assertOk()
             ->viewData('page')['props'];
 
-        $this->assertSame(50, $props['perPage']);
-        $this->assertCount(50, $props['records']);
+        $this->assertSame(10, $props['perPage']);
+        $this->assertCount(10, $props['records']);
     }
 
     public function test_an_allowlisted_per_page_is_honoured(): void

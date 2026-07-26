@@ -2,6 +2,10 @@
 /**
  * Keyset pagination controls.
  *
+ * ONE count line, not three. An earlier version showed a row range, a total, a
+ * page number and a page total all at once, which is four numbers describing the
+ * same fact and reads as clutter rather than information.
+ *
  * WHAT THIS DELIBERATELY DOES NOT DO: jump to an arbitrary page.
  *
  * That is not an oversight. Page numbers as links require OFFSET, and
@@ -11,14 +15,11 @@
  * (`WHERE (sort_col, id) < (?, ?)`) uses the index, so page 2,000 costs exactly
  * what page 1 costs.
  *
- * Everything else people actually want from pagination IS here: where am I, how
- * many are there, next, previous, and how many per page.
- *
  * "Previous" costs no extra server work — the consuming page keeps a stack of
  * the cursors it has already used and walks back down it.
  *
- * The total arrives late (it is a deferred prop), so `of N` and the last-page
- * boundary render only once it lands. The controls are fully usable before then.
+ * The total arrives late (it is a deferred prop), so the "of N results" half
+ * renders only once the count lands. The controls are fully usable before then.
  */
 import { computed } from 'vue'
 
@@ -34,7 +35,7 @@ const props = withDefaults(
         total?: number
         loading?: boolean
     }>(),
-    { perPageOptions: () => [25, 50, 100, 250], loading: false },
+    { perPageOptions: () => [10, 25, 50, 100], loading: false },
 )
 
 const emit = defineEmits<{
@@ -45,58 +46,43 @@ const emit = defineEmits<{
 
 const format = (n: number) => new Intl.NumberFormat().format(n)
 
-/** 1-based index of the first row on this page. */
 const from = computed(() => (props.rowsOnPage === 0 ? 0 : (props.page - 1) * props.perPage + 1))
 const to = computed(() => (props.page - 1) * props.perPage + props.rowsOnPage)
-
-const lastPage = computed(() =>
-    props.total === undefined ? undefined : Math.max(1, Math.ceil(props.total / props.perPage)),
-)
 </script>
 
 <template>
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="text-muted-foreground flex items-center gap-3 text-xs">
-            <span class="tabular-nums">
-                {{ format(from) }}–{{ format(to) }}
-                <template v-if="total !== undefined">of {{ format(total) }}</template>
-            </span>
-
-            <label class="flex items-center gap-1.5">
-                <span class="sr-only sm:not-sr-only">Per page</span>
-                <select
-                    :value="perPage"
-                    class="border-input bg-background h-7 rounded-md border px-1.5 text-xs"
-                    aria-label="Rows per page"
-                    @change="emit('update:perPage', Number(($event.target as HTMLSelectElement).value))"
-                >
-                    <option v-for="opt in perPageOptions" :key="opt" :value="opt">{{ opt }}</option>
-                </select>
-            </label>
-        </div>
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-muted-foreground text-xs tabular-nums">
+            Showing {{ format(from) }} to {{ format(to) }}
+            <template v-if="total !== undefined">of {{ format(total) }} results</template>
+        </p>
 
         <div class="flex items-center gap-2">
-            <span class="text-muted-foreground text-xs tabular-nums">
-                Page {{ format(page) }}
-                <template v-if="lastPage !== undefined">of {{ format(lastPage) }}</template>
-            </span>
+            <select
+                :value="perPage"
+                class="border-input bg-background text-muted-foreground h-7 rounded-md border px-1.5 text-xs"
+                aria-label="Rows per page"
+                @change="emit('update:perPage', Number(($event.target as HTMLSelectElement).value))"
+            >
+                <option v-for="opt in perPageOptions" :key="opt" :value="opt">{{ opt }} / page</option>
+            </select>
 
             <button
                 type="button"
-                class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-8 items-center rounded-md border px-2.5 text-sm transition-colors disabled:pointer-events-none disabled:opacity-50"
+                class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-7 items-center rounded-md border px-2 text-xs transition-colors disabled:pointer-events-none disabled:opacity-40"
                 :disabled="!hasPrevious || loading"
                 @click="emit('previous')"
             >
-                ‹ <span class="ml-1 hidden sm:inline">Previous</span>
+                ‹<span class="ml-1 hidden sm:inline">Prev</span>
             </button>
 
             <button
                 type="button"
-                class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-8 items-center rounded-md border px-2.5 text-sm transition-colors disabled:pointer-events-none disabled:opacity-50"
+                class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-7 items-center rounded-md border px-2 text-xs transition-colors disabled:pointer-events-none disabled:opacity-40"
                 :disabled="!hasNext || loading"
                 @click="emit('next')"
             >
-                <span class="mr-1 hidden sm:inline">Next</span> ›
+                <span class="mr-1 hidden sm:inline">Next</span>›
             </button>
         </div>
     </div>

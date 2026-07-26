@@ -3,6 +3,33 @@
 Working plan derived from [panelbuilder.md](panelbuilder.md), adapted to this machine.
 The spec is the contract; this file is the route through it.
 
+**Also binding, added 2026-07-26:**
+
+- [panel_antipatterns.md](panel_antipatterns.md) — real production incidents from the
+  system being replaced, written as rules. It states plainly that it **overrides
+  convenience**, and its meta-rule governs everything: *almost every failure
+  returned HTTP 200 and looked correct*, so silent fallbacks (`?? ''`,
+  `?? 'tenant'`, `return false` on a missing precondition, empty catch) are the
+  enemy. Make failures loud, and test that they are loud.
+- [panelkit addendum 01.md](panelkit%20addendum%2001.md) — additive only, explicitly
+  "do not re-plan the work in progress". Part A (stancl) from Phase 7, Part B
+  (auth/security) after Phase 7, Part C (internal components) from Phase 3.
+
+### What the two new documents change
+
+| Change | Effect |
+|---|---|
+| **Global search is now IN scope** | Addendum D1 supersedes the base spec's do-not-build entry: the exclusion assumed a search index, but every schema already declares `searchable` columns, so it is a loop over resources. The ⌘K palette already built is now sanctioned, not an override. |
+| **Schema must contain NO tenant data** | Addendum Part A. Filter options ship as props beside the records, not baked into the schema. The cache key then needs no tenant id, collapsing entries from (tenants × resources) to (permission sets × resources) — and a schema holding no tenant data cannot leak tenant data however badly the key is built. **This revises the §9 key format** and affects Phase 4. |
+| **Never write `->where('tenant_id')` in the package** | Addendum Part A. In dedicated-database mode that column does not exist and every query throws. Already satisfied — `TenantContext::shouldScopeByColumn()` decides, and the constraint lives in the app's global scope. |
+| **Tenant scope must THROW, not return unfiltered** | Antipatterns 1.2. Our `TenantScope` currently denies (returns no rows), which is safe but quiet. In a panel context "no tenant" is always a bug. To revisit in Phase 7. |
+| **A tenant id fallback string is forbidden** | Antipatterns 1.5. `tenant('id') ?? 'tenant'` collapsed every tenant onto one cache key in production. Absent tenant must throw. |
+| **No class strings in PHP, ever** | Antipatterns 6.1. A CSS purge silently dropped PHP-authored utility classes, and *partial* survival hid it. Schema carries semantic values (`"color": "danger"`); Vue maps them to classes. Affects Phase 4's column/badge design. |
+| **No eager queries in schema definitions** | Antipatterns 3.3. An eager `->options(Router::where(...))` in an action definition took `/admin/clients` down for every tenant. Every option list is a closure, verified by a zero-query definition test. Already the shape of `SelectFilter::options(Closure)`. |
+| **Seven error states must be defined** | Antipatterns 2.2. 401, 403, 419, 422, 429, 500 and offline all need a designed presentation before shipping. A background 403 currently freezes the page. |
+| **`panel:audit` ships with the kit** | Addendum C. Warms up, reports the median of three runs, fails on budget breach. Antipatterns 3.5: never accept a single cold measurement. |
+| **Do NOT port the C2 list** | Nav badge cache, nav tree cache, page snapshot caches, render cache-warming, deferred table loading, payload call limits, framework flush listeners. Building any of them signals the architecture has drifted back toward server rendering. |
+
 **Decisions locked (2026-07-26):**
 
 | Decision | Choice |

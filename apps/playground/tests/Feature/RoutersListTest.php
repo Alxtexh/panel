@@ -191,7 +191,7 @@ final class RoutersListTest extends TestCase
             }
 
             $cursor = $props['nextCursor'];
-        } while ($cursor !== null && ++$guard < 10);
+        } while ($cursor !== null && ++$guard < 25);
 
         $this->assertCount(120, $seen);
         $this->assertSame(count($seen), count(array_unique($seen)));

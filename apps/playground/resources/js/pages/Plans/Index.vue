@@ -9,8 +9,8 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useListTable, type ListPageProps } from '@/composables/useListTable'
-import { DataTable, TablePagination, TableToolbar, useColumnVisibility, type TableColumn } from '@panelkit/ui'
-import { Deferred, Head } from '@inertiajs/vue3'
+import { DataTable, PkDropdown, TablePagination, TableToolbar, useColumnVisibility, type TableColumn } from '@panelkit/ui'
+import { Head } from '@inertiajs/vue3'
 
 const props = defineProps<ListPageProps & { filterSchema: any[]; total?: number }>()
 defineOptions({ layout: { breadcrumbs: [{ title: 'Plans', href: '/plans' }] } })
@@ -30,7 +30,6 @@ const columns: TableColumn[] = [
 
 const date = (v: string | null) =>
     v ? new Date(v).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' }) : '—'
-const num = (v: number) => new Intl.NumberFormat().format(v)
 </script>
 
 <template>
@@ -40,12 +39,6 @@ const num = (v: number) => new Intl.NumberFormat().format(v)
         <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <div>
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Plans</h1>
-                <p class="text-muted-foreground text-sm">
-                    <Deferred data="total">
-                        <template #fallback><span class="bg-muted inline-block h-3 w-16 animate-pulse rounded" /></template>
-                        <span>{{ num(total ?? 0) }} matching</span>
-                    </Deferred>
-                </p>
             </div>
 
             <TableToolbar
@@ -72,8 +65,45 @@ const num = (v: number) => new Intl.NumberFormat().format(v)
             </template>
             <template #cell:created_at="{ row }">{{ date(row.created_at) }}</template>
             <template #clear-filters><Button variant="link" size="sm" @click="t.clearAll">Clear filters</Button></template>
+            <!--
+                The menu OPENS with no network request. Antipatterns 3.0.3: a
+                Filament action modal fetches its form from the server on open,
+                so a confirmation dialog has latency in front of it. Here the
+                definitions arrive with the page, so opening is local state.
+
+                Items are disabled and labelled until Phase 5 brings the form and
+                action layer. A menu that opens and explains itself beats a dead
+                button that looks broken.
+            -->
             <template #actions="{ row }">
-                <Button variant="ghost" size="icon" class="size-7" disabled :aria-label="`Actions for ${row.name}`">⋯</Button>
+                <PkDropdown width="w-44">
+                    <template #trigger>
+                        <button
+                            type="button"
+                            class="hover:bg-accent hover:text-accent-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors"
+                            :aria-label="`Actions for ${row.name}`"
+                        >
+                            ⋯
+                        </button>
+                    </template>
+                    <template #panel>
+                        <p class="text-muted-foreground truncate px-2 py-1.5 text-xs font-medium">{{ row.name }}</p>
+                        <div class="border-t pt-1">
+                        <button
+                            disabled
+                            class="text-muted-foreground flex w-full items-center rounded px-2 py-1.5 text-left text-sm disabled:opacity-50"
+                        >
+                            Edit — Phase 5
+                        </button>
+                        <button
+                            disabled
+                            class="text-muted-foreground flex w-full items-center rounded px-2 py-1.5 text-left text-sm disabled:opacity-50"
+                        >
+                            Archive — Phase 5
+                        </button>
+                        </div>
+                    </template>
+                </PkDropdown>
             </template>
         </DataTable>
 
