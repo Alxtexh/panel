@@ -118,7 +118,8 @@ final class RoutersListTest extends TestCase
             ->viewData('page')['props'];
 
         $this->assertNull($props['filters']['model'], 'A model not present in the acting tenant must be rejected.');
-        $this->assertNotContains('Cisco ASR9000', $props['models']);
+        $modelFilter = collect($props['filterSchema'])->firstWhere('key', 'model');
+        $this->assertNotContains('Cisco ASR9000', $modelFilter['options']);
     }
 
     public function test_query_count_is_constant_regardless_of_row_count(): void
@@ -153,7 +154,7 @@ final class RoutersListTest extends TestCase
         $this->actingAs($this->userA)
             ->get('/routers?sort=' . urlencode('id; drop table routers--'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->where('filters.sort', 'created_at'));
+            ->assertInertia(fn ($page) => $page->where('sort', 'created_at'));
 
         $this->assertDatabaseCount('routers', 3);
     }

@@ -2,8 +2,7 @@
  * @panelkit/ui — public surface.
  *
  * Two rules govern everything in this package (spec §4). They are cheap to hold
- * and expensive to recover once broken, so they are enforced by review and by
- * the lint rule in .eslintrc that forbids importing @inertiajs/* from here:
+ * and expensive to recover once broken:
  *
  *   1. NOTHING here imports Inertia. Pages receive data as props. A thin adapter
  *      in the consuming app wires Inertia to those props. This is what keeps the
@@ -12,12 +11,16 @@
  *   2. Components never fetch. They take props and emit events. Only page-level
  *      components in the consuming app trigger data loads.
  *
- * Contents arrive by phase — DataTable in Phase 3, the generic resource pages in
- * Phase 4, forms in Phase 5, widgets and live updates in Phase 8. Exporting
- * ahead of that would be inventing an API before the duplication has shown us
- * what it should be.
+ * Both are why DataTable emits `sort` rather than calling a router, and why
+ * TableToolbar emits `filter` rather than building a query string.
  */
 
-export const version = '0.0.1'
+export { default as DataTable } from './components/DataTable/DataTable.vue'
+export { default as TableToolbar } from './components/DataTable/TableToolbar.vue'
+export { default as PkDropdown } from './components/primitives/PkDropdown.vue'
 
-export type { SchemaEnvelope } from './types/schema'
+export { useColumnVisibility } from './composables/useColumnVisibility'
+
+export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
+
+export const version = '0.0.1'

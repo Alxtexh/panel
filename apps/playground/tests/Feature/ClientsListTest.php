@@ -194,7 +194,7 @@ final class ClientsListTest extends TestCase
         $this->actingAs($this->userA)
             ->get('/clients?sort=' . urlencode('id; drop table clients--'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->where('filters.sort', 'created_at'));
+            ->assertInertia(fn ($page) => $page->where('sort', 'created_at'));
 
         $this->assertDatabaseCount('clients', 3);
     }
