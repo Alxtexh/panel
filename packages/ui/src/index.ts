@@ -25,6 +25,7 @@ export { default as RecordForm } from './components/Form/RecordForm.vue'
 export { default as PkDropdown } from './components/primitives/PkDropdown.vue'
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
+export { useLiveUpdates } from './composables/useLiveUpdates'
 export { useTenantTheme } from './composables/useTenantTheme'
 export { useSchemaColumns, BADGE_VARIANTS } from './composables/useSchemaColumns'
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SearchController;
 use PanelKit\Panel\Http\Controllers\RecordController;
 use PanelKit\Panel\Http\Controllers\ResourceController;
@@ -17,7 +18,7 @@ $panelResources = array_keys(app(PanelManager::class)->resources());
 Route::inertia('/', 'Welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () use ($panelResources) {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // One route for every resource. Adding a screen is a PHP class, not a
     // route, a controller and a Vue file.
