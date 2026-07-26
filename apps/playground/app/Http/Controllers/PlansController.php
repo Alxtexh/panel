@@ -55,6 +55,8 @@ final class PlansController extends Controller
         return Inertia::render('Plans/Index', [
             ...$result->toProps(),
             'total' => Inertia::defer($result->total),
+            // Deferred: tab counts must never sit in front of the rows.
+            ...($result->tabCounts ? ['tabCounts' => Inertia::defer($result->tabCounts)] : []),
         ]);
     }
 }

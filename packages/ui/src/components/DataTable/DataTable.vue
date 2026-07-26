@@ -1,21 +1,20 @@
 <script setup lang="ts">
 /**
- * The generic list table, extracted in Phase 3 from three hardcoded screens.
+ * The generic list table.
  *
  * TWO RULES this component exists to honour (spec §4):
  *
  *   1. It does not import Inertia. It has no idea how data arrives.
  *   2. It never fetches. Props in, events out. The consuming page decides what
- *      a sort click means.
+ *      a sort click or a selection means.
  *
  * Everything §8 requires of the table lives here once, so no screen can forget:
  * sticky header, frozen actions column, rows keyed by record id, dim-don't-
- * unmount on reload, and three distinct empty states.
+ * unmount on reload, distinct empty states, and row selection.
  *
  * Per-cell rendering is a SLOT (`cell:<key>`), not a format enum. Three screens
  * needed badges, formatted dates, currency and units, and an enum would have
- * grown a case per screen forever. A slot is the escape hatch that keeps this
- * generic while letting any consuming app render anything.
+ * grown a case per screen forever.
  */
 import { computed, ref } from 'vue'
 import type { SortDirection, TableColumn } from './types'
@@ -29,6 +28,9 @@ const props = withDefaults(
         direction?: SortDirection
         loading?: boolean
         hidden?: Set<string>
+        selectable?: boolean
+        /** Ids selected on the current page. */
+        selected?: Set<string | number>
         /** Distinguishes "nothing here" from "nothing matches your filters". */
         filtered?: boolean
         emptyTitle?: string
@@ -39,16 +41,35 @@ const props = withDefaults(
         direction: 'desc',
         loading: false,
         filtered: false,
+        selectable: false,
         emptyTitle: 'Nothing here yet',
     },
 )
 
-const emit = defineEmits<{ (e: 'sort', key: string): void }>()
+const emit = defineEmits<{
+    (e: 'sort', key: string): void
+    (e: 'toggle-row', id: string | number): void
+    (e: 'toggle-page', select: boolean): void
+}>()
 
 const copied = ref<string | null>(null)
 
-const visibleColumns = computed(() =>
-    props.columns.filter((c) => !props.hidden?.has(c.key)),
+const visibleColumns = computed(() => props.columns.filter((c) => !props.hidden?.has(c.key)))
+
+const pageIds = computed(() => props.rows.map((r) => r[props.rowKey] as string | number))
+
+const allOnPageSelected = computed(
+    () => pageIds.value.length > 0 && pageIds.value.every((id) => props.selected?.has(id)),
+)
+
+/**
+ * Header checkbox shows a third state when only some rows are selected.
+ *
+ * Without it, a partially-selected page renders an unchecked box, and clicking
+ * it looks like "select all" while actually clearing an existing selection.
+ */
+const someOnPageSelected = computed(
+    () => !allOnPageSelected.value && pageIds.value.some((id) => props.selected?.has(id)),
 )
 
 function sortKeyOf(column: TableColumn): string {
@@ -71,13 +92,35 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
 </script>
 
 <template>
-    <!-- min-h-0 / min-w-0: without them a flex child refuses to shrink below its
-         content size, so a wide table pushes the layout wider instead of
-         scrolling inside its own container. -->
-    <div class="pk-scroll relative min-h-0 w-full min-w-0 flex-1 overflow-auto rounded-lg border">
+    <!--
+        `min-h-0 shrink`, not `flex-1` and not `max-h-full`.
+
+        flex-1 stretched this box to fill the shell, so a 10-row page left a
+        large empty area between the last row and the pagination — dead space
+        that reads as a broken layout.
+
+        max-h-full then clipped the last row instead, because 100% of the parent
+        ignores the title, tabs, toolbar and pagination sharing that column, so
+        the cap was too generous by exactly their height.
+
+        grow-0 + shrink + basis-auto hugs the content when it fits and shrinks
+        only when it genuinely cannot. min-h-0 is what allows the shrink at all.
+    -->
+    <div class="pk-scroll relative min-h-0 w-full min-w-0 shrink grow-0 overflow-auto rounded-lg border">
         <table class="w-full border-collapse text-sm">
             <thead class="bg-background sticky top-0 z-10">
                 <tr class="bg-muted/50">
+                    <th v-if="selectable" class="w-10 border-b px-3 py-2.5">
+                        <input
+                            type="checkbox"
+                            class="accent-primary size-3.5 cursor-pointer align-middle"
+                            :checked="allOnPageSelected"
+                            :indeterminate="someOnPageSelected"
+                            aria-label="Select all rows on this page"
+                            @change="emit('toggle-page', !allOnPageSelected)"
+                        />
+                    </th>
+
                     <th
                         v-for="col in visibleColumns"
                         :key="col.key"
@@ -115,15 +158,24 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
                     v-for="row in rows"
                     :key="row[rowKey]"
                     class="hover:bg-muted/40 group border-b transition-colors"
+                    :class="selected?.has(row[rowKey]) ? 'bg-primary/5' : ''"
                 >
+                    <td v-if="selectable" class="px-3 py-2">
+                        <input
+                            type="checkbox"
+                            class="accent-primary size-3.5 cursor-pointer align-middle"
+                            :checked="selected?.has(row[rowKey])"
+                            :aria-label="`Select row ${row[rowKey]}`"
+                            @change="emit('toggle-row', row[rowKey])"
+                        />
+                    </td>
+
                     <td
                         v-for="col in visibleColumns"
                         :key="col.key"
                         class="px-3 py-2 whitespace-nowrap"
                         :class="col.cellClass"
                     >
-                        <!-- Per-column override. Falls through to the default
-                             rendering when the page does not provide one. -->
                         <slot :name="`cell:${col.key}`" :row="row" :value="row[col.key]" :column="col">
                             <span v-if="col.copyable" class="inline-flex items-center gap-1.5">
                                 {{ row[col.key] }}
@@ -169,14 +221,13 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
 /**
  * Near-invisible scrollbars.
  *
- * A fixed shell means the table scrolls internally, which on the default
- * browser styling produces two heavy grey bars framing the data — visual weight
- * that competes with the content and reads as chrome rather than affordance.
+ * A fixed shell means the table scrolls internally, which on default browser
+ * styling produces heavy grey bars framing the data — visual weight that
+ * competes with the content and reads as chrome rather than affordance.
  *
- * These are thin, transparent-tracked, and only tint on hover over the table.
- * Deliberately NOT `scrollbar-width: none`: hiding a scrollbar outright removes
- * the only cue that there is more content sideways, and leaves keyboard and
- * trackpad users guessing.
+ * Thin, transparent-tracked, tinting only on hover. Deliberately NOT
+ * `scrollbar-width: none`: hiding a scrollbar outright removes the only cue
+ * that there is more content sideways.
  */
 .pk-scroll {
     scrollbar-width: thin;
@@ -189,7 +240,6 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
     scrollbar-color: color-mix(in oklch, currentColor 25%, transparent) transparent;
 }
 
-/* WebKit needs the same expressed the long way round. */
 .pk-scroll::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -218,12 +268,12 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
  * The frozen actions column must sit above every other cell.
  *
  * Without an explicit stacking order a later sticky cell can paint over the
- * actions column while the table is scrolled horizontally, which makes the row
- * menu unclickable even though it is plainly visible — a failure that looks like
- * a dead button rather than a layering bug.
+ * actions column while the table is scrolled horizontally, making the row menu
+ * unclickable even though it is plainly visible — a failure that looks like a
+ * dead button rather than a layering bug.
  */
-:deep(td.pk-actions),
-:deep(th.pk-actions) {
+td.pk-actions,
+th.pk-actions {
     z-index: 2;
 }
 </style>

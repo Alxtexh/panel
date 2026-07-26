@@ -82,7 +82,21 @@ final class ClientsPerformanceTest extends TestCase
 
     public function test_a_prefix_search_responds_within_budget(): void
     {
-        $this->assertWithinBudget('/clients?search=Am', 'prefix search');
+        $this->assertWithinBudget('/clients?search=Am', 'prefix search (indexed)');
+    }
+
+    /**
+     * The expensive half of the search fix.
+     *
+     * Matching the start of a LATER word needs a leading wildcard, which no
+     * btree index can serve, so this is a scan of the tenant's rows. It is
+     * measured separately from the indexed prefix case precisely so the cost is
+     * visible rather than averaged away — and so a regression past the budget
+     * fails loudly instead of quietly making every search slow.
+     */
+    public function test_a_word_prefix_search_responds_within_budget(): void
+    {
+        $this->assertWithinBudget('/clients?search=Achieng', 'word-prefix search (scan)');
     }
 
     public function test_a_combined_filter_and_sort_responds_within_budget(): void

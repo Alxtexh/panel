@@ -294,6 +294,120 @@ final class ClientsListTest extends TestCase
         $this->assertCount(25, $props['records']);
     }
 
+    /**
+     * Regression: prefix-only search silently returned ZERO for a surname.
+     *
+     * Names are stored "Amina Achieng", so `LIKE 'Achieng%'` matched nothing
+     * while the endpoint returned 200 and an empty table. An operator reads that
+     * as "no such customer" — the exact silent-success failure antipatterns.md
+     * opens with.
+     */
+    public function test_search_matches_the_start_of_any_word_not_just_the_value(): void
+    {
+        DB::table('clients')->insert([
+            'tenant_id' => $this->tenantA->id,
+            'name' => 'Amina Achieng',
+            'phone' => '+254700000001',
+            'access_code' => 'AA0001',
+            'status' => 'active',
+            'plan_type' => 'pppoe',
+            'expiry_date' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $byFirstName = $this->actingAs($this->userA)->get('/clients?search=Amina')->assertOk()
+            ->viewData('page')['props']['records'];
+        $this->assertCount(1, $byFirstName);
+
+        $bySurname = $this->actingAs($this->userA)->get('/clients?search=Achieng')->assertOk()
+            ->viewData('page')['props']['records'];
+        $this->assertCount(1, $bySurname, 'Searching a surname must find the record.');
+    }
+
+    public function test_search_still_does_not_match_mid_word(): void
+    {
+        $this->makeClients($this->tenantA, 1, 'Alpha');
+
+        // "lph" is inside "Alpha" but starts no word. Matching it would require
+        // a leading wildcard, which is unbounded — that is a trigram/FTS
+        // decision, not something to fake with LIKE.
+        $records = $this->actingAs($this->userA)->get('/clients?search=lph')->assertOk()
+            ->viewData('page')['props']['records'];
+
+        $this->assertSame([], $records);
+    }
+
+    /**
+     * Addendum C3: "N tabs produce exactly one aggregate query."
+     *
+     * The naive shape is one COUNT per tab, so a four-tab table pays four
+     * queries before rendering a row. This asserts the grouped query is one.
+     */
+    public function test_tab_counts_come_from_exactly_one_grouped_query(): void
+    {
+        $this->makeClients($this->tenantA, 30, 'Alpha');
+
+        $queries = [];
+        DB::listen(function ($q) use (&$queries): void {
+            $queries[] = $q->sql;
+        });
+
+        $response = $this->actingAs($this->userA)->get('/clients', [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => (string) (new HandleInertiaRequests())->version(request()),
+            'X-Inertia-Partial-Component' => 'Clients/Index',
+            'X-Inertia-Partial-Data' => 'tabCounts',
+        ])->assertOk();
+
+        $counts = $response->json('props.tabCounts');
+
+        $this->assertIsArray($counts);
+        $this->assertSame(30, $counts['all']);
+        $this->assertSame(30, $counts['active'] + $counts['expired'] + $counts['suspended']);
+
+        $aggregates = array_filter($queries, fn (string $sql): bool => str_contains(strtolower($sql), 'count('));
+
+        $this->assertCount(
+            1,
+            $aggregates,
+            'Tab counts must be ONE grouped query, got: ' . implode(' | ', $aggregates)
+        );
+        $this->assertStringContainsStringIgnoringCase('group by', $aggregates[array_key_first($aggregates)]);
+    }
+
+    public function test_tab_counts_ignore_the_active_tab_but_respect_filters(): void
+    {
+        $this->makeClients($this->tenantA, 30, 'Alpha');
+
+        $version = (string) (new HandleInertiaRequests())->version(request());
+
+        // With a tab active, counts must still describe every tab. Applying the
+        // tab to its own count query would zero every other tab.
+        $counts = $this->actingAs($this->userA)->get('/clients?tab=active', [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => $version,
+            'X-Inertia-Partial-Component' => 'Clients/Index',
+            'X-Inertia-Partial-Data' => 'tabCounts',
+        ])->assertOk()->json('props.tabCounts');
+
+        $this->assertSame(30, $counts['all'], 'A selected tab must not shrink the other tabs.');
+        $this->assertGreaterThan(0, $counts['expired']);
+    }
+
+    public function test_an_unknown_tab_falls_back_to_all(): void
+    {
+        $this->makeClients($this->tenantA, 9, 'Alpha');
+
+        $props = $this->actingAs($this->userA)
+            ->get('/clients?tab=' . urlencode("'; drop table clients--"))
+            ->assertOk()->viewData('page')['props'];
+
+        $this->assertNull($props['tab']);
+        $this->assertCount(9, $props['records']);
+        $this->assertDatabaseCount('clients', 9);
+    }
+
     public function test_guests_cannot_read_the_list(): void
     {
         $this->get('/clients')->assertRedirect('/login');

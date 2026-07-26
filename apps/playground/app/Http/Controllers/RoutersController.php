@@ -44,12 +44,15 @@ final class RoutersController extends Controller
                         ->select('model')->whereNotNull('model')
                         ->distinct()->orderBy('model')->pluck('model')->all()),
             ])
+            ->tabs('routers.status', ['online', 'degraded', 'offline'])
             ->defaultSort('created_at', 'desc')
             ->run($request);
 
         return Inertia::render('Routers/Index', [
             ...$result->toProps(),
             'total' => Inertia::defer($result->total),
+            // Deferred: tab counts must never sit in front of the rows.
+            ...($result->tabCounts ? ['tabCounts' => Inertia::defer($result->tabCounts)] : []),
         ]);
     }
 }

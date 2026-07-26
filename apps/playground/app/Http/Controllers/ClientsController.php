@@ -49,6 +49,8 @@ final class ClientsController extends Controller
                 SelectFilter::make('planType')->label('Plan type')->column('clients.plan_type')
                     ->options(['pppoe', 'hotspot', 'static']),
             ])
+            // ONE grouped query for every tab count, never one per tab (addendum C1).
+            ->tabs('clients.status', ['active', 'expired', 'suspended'])
             ->defaultSort('created_at', 'desc')
             ->run($request);
 
@@ -56,6 +58,8 @@ final class ClientsController extends Controller
             ...$result->toProps(),
             // Deferred, so the rows paint before any COUNT runs (§10).
             'total' => Inertia::defer($result->total),
+            // Deferred: tab counts must never sit in front of the rows.
+            ...($result->tabCounts ? ['tabCounts' => Inertia::defer($result->tabCounts)] : []),
         ]);
     }
 }

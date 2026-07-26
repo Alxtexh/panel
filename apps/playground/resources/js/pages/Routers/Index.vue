@@ -3,10 +3,21 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useListTable, type ListPageProps } from '@/composables/useListTable'
-import { DataTable, PkDropdown, TablePagination, TableToolbar, useColumnVisibility, type TableColumn } from '@panelkit/ui'
+import {
+    DataTable,
+    PkDropdown,
+    SelectionBar,
+    TablePagination,
+    TableTabs,
+    TableToolbar,
+    useColumnVisibility,
+    type TableColumn,
+} from '@panelkit/ui'
 import { Head } from '@inertiajs/vue3'
 
-const props = defineProps<ListPageProps & { filterSchema: any[]; total?: number }>()
+const props = defineProps<
+    ListPageProps & { filterSchema: any[]; total?: number; tabCounts?: Record<string, number> }
+>()
 defineOptions({ layout: { breadcrumbs: [{ title: 'Routers', href: '/routers' }] } })
 
 const t = useListTable('/routers', props)
@@ -33,10 +44,13 @@ const date = (v: string | null) =>
     <Head title="Routers" />
 
     <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-3 sm:p-4">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-            <div>
-                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Routers</h1>
-            </div>
+        <!-- Title on its own line; it previously shared a row with the
+             search box and both dropdowns. -->
+        <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Routers</h1>
+
+        <TableTabs :tabs="tabs" :active="tab" :counts="tabCounts" @select="t.setTab" />
+
+        <div>
 
             <TableToolbar
                 :search="search" search-placeholder="Name or IP…"
@@ -48,12 +62,29 @@ const date = (v: string | null) =>
             />
         </div>
 
+        <SelectionBar
+            v-if="t.selected.value.size"
+            :page-count="t.selected.value.size"
+            :all-matching="t.allMatching.value"
+            :total="total"
+            @select-all-matching="t.selectAllMatching"
+            @clear="t.clearSelection"
+        >
+            <template #actions>
+                <Button size="sm" variant="outline" disabled>Export — Phase 5</Button>
+            </template>
+        </SelectionBar>
+
         <DataTable
             :columns="columns" :rows="t.rows.value" :hidden="hidden"
             :sort="sort" :direction="direction" :loading="t.loading.value"
-            :filtered="t.isFiltered.value" empty-title="No routers yet"
+            :filtered="t.isFiltered.value"
+            selectable
+            :selected="t.selected.value" empty-title="No routers yet"
             empty-hint="Seed demo data with: make seed"
             @sort="t.sortBy"
+            @toggle-row="t.toggleRow"
+            @toggle-page="t.togglePage"
         >
             <template #cell:status="{ row }">
                 <Badge :variant="statusVariant[row.status] ?? 'outline'" class="capitalize">{{ row.status }}</Badge>

@@ -55,6 +55,8 @@ final class ListQuery
 
     private ?Closure $transform = null;
 
+    private ?Tabs $tabs = null;
+
     private string $defaultSort = 'created_at';
 
     private string $defaultDirection = 'desc';
@@ -156,6 +158,18 @@ final class ListQuery
         return $this;
     }
 
+    /**
+     * Status tabs with counts from ONE grouped query (addendum C1).
+     *
+     * @param list<string> $values
+     */
+    public function tabs(string $column, array $values): self
+    {
+        $this->tabs = Tabs::make($column, $values);
+
+        return $this;
+    }
+
     /** Qualified primary key, used as the keyset tiebreaker. */
     public function keyColumn(string $column): self
     {
@@ -215,6 +229,13 @@ final class ListQuery
             nextCursor: $nextCursor,
             perPage: $perPage,
             perPageOptions: $this->perPageOptions,
+            tabs: $this->tabs?->values ?? [],
+            // Counts come from the query WITHOUT the tab constraint — with it,
+            // every tab except the active one would read zero, which looks like
+            // real data rather than a bug. Deferred so they never block rows.
+            tabCounts: $this->tabs === null
+                ? null
+                : fn (): array => $this->tabs->counts($this->base($state, applyTab: false)),
             // A closure, not a number. The caller wraps it in Inertia::defer()
             // so the rows paint before any COUNT runs (§10).
             total: fn (): int => $this->base($state)->count(),
@@ -238,6 +259,7 @@ final class ListQuery
         }
 
         return [
+            'tab' => $this->tabs?->normalise($request->query('tab')),
             'search' => trim((string) $request->query('search', '')),
             'sort' => array_key_exists($sort, $this->sortable) ? $sort : $this->defaultSort,
             'direction' => $direction === 'asc' ? 'asc' : 'desc',
@@ -276,7 +298,7 @@ final class ListQuery
     /**
      * @param array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>} $state
      */
-    private function base(array $state): Builder
+    private function base(array $state, bool $applyTab = true): Builder
     {
         /** @var \Illuminate\Database\Eloquent\Builder $eloquent */
         $eloquent = $this->model::query();
@@ -290,6 +312,10 @@ final class ListQuery
         // builder directly would bypass them.
         $query = $eloquent->toBase();
 
+        if ($applyTab && $this->tabs !== null && ($state['tab'] ?? null) !== null) {
+            $this->tabs->apply($query, $state['tab']);
+        }
+
         foreach ($this->filters as $filter) {
             $value = $state['filters'][$filter->key] ?? null;
 
@@ -301,18 +327,37 @@ final class ListQuery
         }
 
         if ($state['search'] !== '' && $this->searchable !== []) {
-            // Prefix match, not `%term%`. A leading wildcard cannot use an index
-            // and turns every keystroke into a full table scan. Substring search
-            // needs a trigram index or FTS, which is an engine-specific decision
-            // rather than something to fake here.
-            $term = str_replace(['%', '_'], ['\%', '\_'], $state['search']) . '%';
+            /*
+             * WORD-prefix, not string-prefix.
+             *
+             * This was string-prefix only (`term%`) because that is the shape a
+             * btree index can serve. It was also silently wrong: names are
+             * stored as "Amina Achieng", so searching the surname "Achieng"
+             * matched ZERO rows while returning HTTP 200 and an empty table.
+             * An operator reads that as "no such customer", which is the exact
+             * failure mode antipatterns.md opens with.
+             *
+             * So each column is matched two ways: at the start of the value,
+             * which stays index-served, OR at the start of any later word,
+             * which does not. The second half costs a scan of the tenant's rows
+             * and is the deliberate price of a search that actually finds
+             * people. Substring-anywhere is still refused — it is unbounded and
+             * belongs to a trigram index or FTS once the engine is chosen.
+             */
+            $escaped = str_replace(['%', '_'], ['\%', '\_'], $state['search']);
+            $startsWith = $escaped . '%';
+            $wordStart = '% ' . $escaped . '%';
             $columns = $this->searchable;
 
-            $query->where(function (Builder $q) use ($columns, $term): void {
+            $query->where(function (Builder $q) use ($columns, $startsWith, $wordStart): void {
                 foreach ($columns as $i => $searchColumn) {
-                    $i === 0
-                        ? $q->where($searchColumn, 'like', $term)
-                        : $q->orWhere($searchColumn, 'like', $term);
+                    if ($i === 0) {
+                        $q->where($searchColumn, 'like', $startsWith);
+                    } else {
+                        $q->orWhere($searchColumn, 'like', $startsWith);
+                    }
+
+                    $q->orWhere($searchColumn, 'like', $wordStart);
                 }
             });
         }

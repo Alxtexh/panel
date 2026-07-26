@@ -16,7 +16,9 @@
  */
 
 export { default as DataTable } from './components/DataTable/DataTable.vue'
+export { default as SelectionBar } from './components/DataTable/SelectionBar.vue'
 export { default as TablePagination } from './components/DataTable/TablePagination.vue'
+export { default as TableTabs } from './components/DataTable/TableTabs.vue'
 export { default as TableToolbar } from './components/DataTable/TableToolbar.vue'
 export { default as PkDropdown } from './components/primitives/PkDropdown.vue'
 

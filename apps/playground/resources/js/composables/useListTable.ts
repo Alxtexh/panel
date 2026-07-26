@@ -28,6 +28,8 @@ export interface ListPageProps {
     nextCursor: string | null
     perPage: number
     perPageOptions: number[]
+    tab: string | null
+    tabs: string[]
 }
 
 export function useListTable(url: string, props: ListPageProps) {
@@ -50,6 +52,45 @@ export function useListTable(url: string, props: ListPageProps) {
      */
     const cursorStack = ref<string[]>([])
     const page = computed(() => cursorStack.value.length + 1)
+
+    /**
+     * Selected record ids.
+     *
+     * `allMatching` is a separate flag rather than "every id loaded", because
+     * the operator's intent is usually the whole filtered set (§8:
+     * select-all-matching-filter, not select-all-on-page). Enumerating 11,111
+     * ids into the browser to express that would be absurd; the flag says
+     * "everything the current filters match" and the server re-derives it.
+     */
+    const selected = ref<Set<string | number>>(new Set())
+    const allMatching = ref(false)
+
+    function clearSelection() {
+        selected.value = new Set()
+        allMatching.value = false
+    }
+
+    function toggleRow(id: string | number) {
+        const next = new Set(selected.value)
+        next.has(id) ? next.delete(id) : next.add(id)
+        selected.value = next
+        // Removing a row means the selection is no longer "everything".
+        allMatching.value = false
+    }
+
+    function togglePage(select: boolean) {
+        const next = new Set(selected.value)
+        for (const row of props.records) {
+            select ? next.add(row.id) : next.delete(row.id)
+        }
+        selected.value = next
+        allMatching.value = false
+    }
+
+    function selectAllMatching() {
+        togglePage(true)
+        allMatching.value = true
+    }
 
     // Any change to filters, sort, search or page size invalidates the trail:
     // those cursors point into a result set that no longer exists.
@@ -77,6 +118,7 @@ export function useListTable(url: string, props: ListPageProps) {
             sort: props.sort,
             direction: props.direction,
             perPage: props.perPage,
+            tab: props.tab,
             ...props.filters,
             ...overrides,
         }
@@ -105,6 +147,10 @@ export function useListTable(url: string, props: ListPageProps) {
      */
     function apply(overrides: Record<string, unknown> = {}) {
         resetPagination()
+        // A selection describes a result set. Change the result set and the
+        // selection is meaningless — worse, a bulk action on a stale selection
+        // would hit rows the operator can no longer see.
+        clearSelection()
         request(query(overrides))
     }
 
@@ -121,7 +167,9 @@ export function useListTable(url: string, props: ListPageProps) {
                 'direction',
                 'nextCursor',
                 'perPage',
+                'tab',
                 'total',
+                'tabCounts',
             ],
             preserveState: true,
             preserveScroll: true,
@@ -152,6 +200,10 @@ export function useListTable(url: string, props: ListPageProps) {
 
         const cursor = stack.length ? stack[stack.length - 1] : null
         request(cursor ? { ...query(), cursor } : query())
+    }
+
+    function setTab(tab: string | null) {
+        apply({ tab })
     }
 
     function setPerPage(value: number) {
@@ -189,6 +241,13 @@ export function useListTable(url: string, props: ListPageProps) {
         showSpinner,
         isFiltered,
         page,
+        selected,
+        allMatching,
+        toggleRow,
+        togglePage,
+        selectAllMatching,
+        clearSelection,
+        setTab,
         hasNext: computed(() => props.nextCursor !== null),
         hasPrevious: computed(() => cursorStack.value.length > 0),
         apply,
