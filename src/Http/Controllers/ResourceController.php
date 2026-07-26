@@ -1,0 +1,67 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PanelKit\Panel\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Inertia\Inertia;
+use Inertia\Response;
+use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Resources\Resource;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
+/**
+ * Serves every resource list. One controller, not one per screen.
+ *
+ * The transport split is visible here and is the whole architecture:
+ *
+ *   `schema` is sent on the FIRST load only. Every subsequent interaction is a
+ *   partial reload whose `only:` list omits it, so filtering, sorting and paging
+ *   move rows and nothing else. That is the difference from a server-rendered
+ *   panel, where the whole component tree re-renders per interaction
+ *   (antipatterns §3.1: 500–950 ms per page, of which 1–16 ms was the database).
+ *
+ *   `filterOptions` travels WITH the data, not inside the schema, because a
+ *   tenant's routers are tenant data (addendum Part A).
+ */
+final class ResourceController extends Controller
+{
+    public function index(Request $request, string $resource): Response
+    {
+        $class = app(PanelManager::class)->resource($resource);
+
+        if ($class === null) {
+            throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
+        }
+
+        /** @var class-string<Resource> $class */
+        // Built ONCE and reused for both the query and the option lists.
+        $definition = $class::definition();
+        $result = $class::data($request, $definition);
+
+        $schema = $class::schema();
+
+        return Inertia::render('ResourceIndex', [
+            // Cached, tenant-independent, sent once per session.
+            'schema' => $schema,
+
+            // A generic page cannot declare its breadcrumb statically the way a
+            // bespoke page did, so it comes from the schema instead.
+            'breadcrumbs' => [['title' => $schema['labelPlural'], 'href' => $schema['routes']['index']]],
+
+            ...$result->toProps(),
+
+            // Tenant data, so it rides with the records rather than the schema.
+            // This is also the ONLY place filter option closures run — never at
+            // definition time (antipatterns §3.3).
+            'filterOptions' => $definition->resolveFilterOptions(),
+
+            // Deferred: neither the total nor the tab counts may sit in front of
+            // the rows (§10, addendum C1).
+            'total' => Inertia::defer($result->total),
+            ...($result->tabCounts ? ['tabCounts' => Inertia::defer($result->tabCounts)] : []),
+        ]);
+    }
+}

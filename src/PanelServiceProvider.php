@@ -30,6 +30,10 @@ final class PanelServiceProvider extends ServiceProvider
         // Also scoped: it resolves the current tenant, which is per-request
         // state by definition. A singleton here is the classic Octane leak.
         $this->app->scoped(Support\TenantContext::class, fn () => new Support\TenantContext());
+
+        // Stateless, so a singleton is safe here — it holds no request or tenant
+        // data, which is the only thing S9 forbids in a long-lived binding.
+        $this->app->singleton(Support\SchemaCache::class);
     }
 
     public function boot(): void
@@ -40,6 +44,7 @@ final class PanelServiceProvider extends ServiceProvider
             ], 'panel-config');
 
             $this->commands([
+                Commands\CacheClearCommand::class,
                 Commands\SeedDemoCommand::class,
             ]);
         }

@@ -21,6 +21,23 @@ final class SelectFilter extends Filter
     /** @var list<string>|Closure(): list<string> */
     private array|Closure $options = [];
 
+    /**
+     * Resolved options, memoized for the lifetime of this instance.
+     *
+     * The closure was being invoked THREE times per request: once by
+     * normalise() validating the submitted value, once by toArray() building
+     * the filter schema, and once by resolveFilterOptions() assembling the data
+     * payload. For a data-derived filter that is three identical DISTINCT
+     * queries where one will do.
+     *
+     * Instance state, not static — filters are rebuilt per request from the
+     * resource definition, so this cannot outlive a request or leak a tenant's
+     * options into another's (S9).
+     *
+     * @var list<string>|null
+     */
+    private ?array $resolved = null;
+
     /** @param list<string>|Closure(): list<string> $options */
     public function options(array|Closure $options): static
     {
@@ -32,7 +49,7 @@ final class SelectFilter extends Filter
     /** @return list<string> */
     public function resolvedOptions(): array
     {
-        return $this->options instanceof Closure ? ($this->options)() : $this->options;
+        return $this->resolved ??= ($this->options instanceof Closure ? ($this->options)() : $this->options);
     }
 
     public function normalise(mixed $raw): ?string
@@ -47,6 +64,11 @@ final class SelectFilter extends Filter
     public function apply(Builder $query, mixed $value): void
     {
         $query->where($this->resolvedColumn(), $value);
+    }
+
+    protected function schemaType(): string
+    {
+        return 'select';
     }
 
     public function toArray(): array

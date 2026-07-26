@@ -73,6 +73,29 @@ abstract class Filter
      */
     abstract public function toArray(): array;
 
+    /**
+     * STRUCTURE ONLY, for the cached schema. Must never resolve options.
+     *
+     * Options are tenant data (addendum Part A) and are frequently backed by a
+     * closure that queries. Resolving them here would mean building a schema
+     * executes a query — which is antipatterns S3.3 exactly, where an eager
+     * option lookup in a definition took a page down for every tenant. It also
+     * made the query count differ between a cold and a warm schema cache, which
+     * is how this was found.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSchema(): array
+    {
+        return [
+            'key' => $this->key,
+            'label' => $this->resolvedLabel(),
+            'type' => $this->schemaType(),
+        ];
+    }
+
+    abstract protected function schemaType(): string;
+
     /** How the value appears in a query string. */
     public function toQueryValue(mixed $value): string
     {

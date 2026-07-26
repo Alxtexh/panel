@@ -29,6 +29,39 @@ final class PanelManager
     private array $memo = [];
 
     /**
+     * Registered resource classes, keyed by URL segment.
+     *
+     * Safe as instance state on a scoped binding. Spec S9 permits the
+     * DISCOVERED class list to be cached process-wide because it is immutable
+     * and tenant-independent; anything derived from it that depends on tenant or
+     * user is not, which is why resolved SCHEMAS live in the cache keyed by
+     * permissions rather than here.
+     *
+     * @var array<string, class-string>
+     */
+    private array $resources = [];
+
+    /** @param list<class-string> $classes */
+    public function registerResources(array $classes): void
+    {
+        foreach ($classes as $class) {
+            $this->resources[$class::key()] = $class;
+        }
+    }
+
+    /** @return class-string|null */
+    public function resource(string $key): ?string
+    {
+        return $this->resources[$key] ?? null;
+    }
+
+    /** @return array<string, class-string> */
+    public function resources(): array
+    {
+        return $this->resources;
+    }
+
+    /**
      * Cleared by the Octane flush listener in PanelServiceProvider.
      *
      * Static because the listener has no instance to reach, and empty because

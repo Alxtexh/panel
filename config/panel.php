@@ -18,7 +18,20 @@ return [
     |
     */
     'schema_cache' => [
-        'enabled' => env('PANEL_SCHEMA_CACHE', true),
+        /*
+        | OFF in local by default.
+        |
+        | The key carries an app version, not a hash of the definition, so
+        | editing a resource class does NOT invalidate its cached schema. In
+        | production that is correct — a deploy changes the version. In
+        | development it means every schema edit appears to do nothing until
+        | someone remembers to clear the cache, which is antipatterns S4.2
+        | ("poisoned keys outlive the fix") reproduced daily.
+        |
+        | It caught us within minutes of the cache going in: a column suffix was
+        | added and the table kept rendering the old schema.
+        */
+        'enabled' => env('PANEL_SCHEMA_CACHE', env('APP_ENV') !== 'local'),
         'store' => env('PANEL_SCHEMA_CACHE_STORE'), // null = default store
         'ttl' => 3600,
     ],
