@@ -10,6 +10,8 @@ The spec is the contract; this file is the route through it.
 | Naming | `PanelKit` / Composer `panelkit/panel` / npm `@panelkit/ui` / namespace `PanelKit\Panel` |
 | PHP | 8.4 via ondrej PPA |
 | Landing-page builder | Deferred past Phase 9. Schema envelope versioned now; no builder work before then. |
+| Stack pins | Spec versions are minimums, not targets: Laravel 13, Inertia 3, Tailwind 4.1. |
+| Security | Co-equal target with speed. Filament-style resource-level authorization. See target 7. |
 | Database engine | **Undecided.** Phase 0 runs on SQLite. Decision required before Phase 1 — see below. |
 | Perf tuning (opcache, DB config) | Deferred to Phase 8, when there is something to measure. |
 
@@ -114,6 +116,42 @@ built in Phases 5–6:
 - Column/field `type` strings resolve through that same map, so an unknown type
   from a consuming app renders its own component rather than failing.
 - The `->query()` hook on a table takes an arbitrary Eloquent builder.
+
+### 7. Security (added 2026-07-26, co-equal with speed)
+
+Borrow Filament's authorization model where it is good, and it is good in one
+specific way: **authorization is a property of the resource, not of the route.**
+Every read and every mutation passes through a policy check derived from the same
+declaration, so there is no route left unguarded by omission.
+
+What that means concretely here, layered on top of spec §9:
+
+- **Policy-gated by default, not by opt-in.** A resource with no policy denies
+  rather than allows. Filament's `can*()` methods delegate to Laravel policies;
+  the same, except the default answer flips to deny.
+- **The schema's permission booleans are UI hints and nothing else.** Spec §9
+  item 3 is explicit: every controller action independently calls `authorize()`.
+  A client that lies gets a 403, not data.
+- **Field-level authorization.** A user who may view a record is not thereby
+  entitled to every column on it. Column and field visibility resolve per user at
+  schema-build time, and the query `select()`s only what survived — so an
+  unauthorized column is absent from the payload, not merely hidden in the DOM.
+- **Mass-assignment is closed by construction.** Writes accept only keys the form
+  schema declares. No `$request->all()` reaching a model, ever.
+- **Tenant scoping is a global scope on the model, never a `where` in a
+  controller.** Spec §9 item 1 forbids raw `DB::table()` inside the package for
+  exactly this reason. A forgotten `where` is a cross-tenant leak; a global scope
+  cannot be forgotten.
+- **Broadcast payloads are narrowed, never whole models** (spec §8 rule 10), on
+  private tenant-scoped channels (rule 9).
+- **Signed, expiring URLs** for any file or export download, scoped to the tenant.
+- **The cross-tenant suite is the gate.** Spec §9 item 8 and the two-tenants-in-
+  one-process test in §9 are part of the definition of done, not optional.
+
+Where speed and security conflict, security wins and we find the speed elsewhere.
+The one place they genuinely trade is the schema cache: caching per tenant *and*
+per permission fingerprint costs cache entries, and the temptation is to widen the
+key. The key stays narrow.
 
 ### 6. Landing pages
 
