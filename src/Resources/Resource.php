@@ -55,6 +55,41 @@ abstract class Resource
         return static::form(Form::make());
     }
 
+    /**
+     * Per-tenant feature flag, if the resource declares one.
+     *
+     * Spec S9 item 5: a disabled feature hides the resource from navigation AND
+     * returns 404 from its routes. Hiding the link alone is not a control — the
+     * URL is still typeable, and an operator who bookmarks it keeps working.
+     */
+    protected static ?string $feature = null;
+
+    public static function feature(): ?string
+    {
+        return static::$feature;
+    }
+
+    /**
+     * Whether this resource is enabled for the acting tenant.
+     *
+     * Reads the flag through TenantContext rather than an ambient tenant()
+     * call, so it works identically in shared and dedicated database modes.
+     */
+    public static function isEnabled(): bool
+    {
+        $feature = static::feature();
+
+        if ($feature === null) {
+            return true;
+        }
+
+        $flags = app(\PanelKit\Panel\Support\TenantContext::class)->features();
+
+        // Absent means DISABLED. A missing flag is not permission — the whole
+        // point of a flag is that it must be turned on deliberately.
+        return (bool) ($flags[$feature] ?? false);
+    }
+
     public static function isWritable(): bool
     {
         return static::formDefinition()->fields() !== [];

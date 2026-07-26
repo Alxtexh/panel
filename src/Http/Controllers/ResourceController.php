@@ -36,6 +36,14 @@ final class ResourceController extends Controller
             throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
         }
 
+        // A disabled feature 404s, it does not merely hide its link. Spec S9
+        // item 5 — a hidden link is not a control, the URL is still typeable.
+        if (! $class::isEnabled()) {
+            throw new NotFoundHttpException("Resource [{$resource}] is not enabled for this tenant.");
+        }
+
+        abort_unless($class::can('viewAny'), 403);
+
         /** @var class-string<Resource> $class */
         // Built ONCE and reused for both the query and the option lists.
         $definition = $class::definition();

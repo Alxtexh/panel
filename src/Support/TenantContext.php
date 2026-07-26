@@ -40,6 +40,18 @@ use RuntimeException;
  */
 final class TenantContext
 {
+    /**
+     * The resolved tenant record for THIS request.
+     *
+     * Addendum Part A: "resolve tenancy once per request". Branding, feature
+     * flags and the nav each need the tenant, and three separate lazy loads is
+     * three queries for one fact. Instance state on a scoped binding, so it
+     * cannot survive into another request (S9).
+     *
+     * `false` distinguishes "not looked up yet" from "looked up, found nothing".
+     */
+    private mixed $tenantRecord = false;
+
     public const MODE_COLUMN = 'column';
 
     public const MODE_DATABASE = 'database';
@@ -111,6 +123,41 @@ final class TenantContext
             self::MODE_COLUMN => $this->currentKey() !== null,
             self::MODE_DATABASE => $this->stanclInitialised(),
         };
+    }
+
+    /**
+     * Per-tenant feature flags.
+     *
+     * Resolved from the tenant record when one is reachable. Returns an empty
+     * set rather than throwing, because "no flags" and "no tenant" both mean
+     * the same thing here — nothing is enabled — and a feature check is not the
+     * right place to blow up a request.
+     *
+     * @return array<string, bool>
+     */
+    public function features(): array
+    {
+        $resolver = config('panel.tenancy.features');
+
+        if ($resolver instanceof Closure) {
+            return (array) $resolver();
+        }
+
+        return (array) ($this->tenant()?->features ?? []);
+    }
+
+    /** The tenant record, loaded at most once per request. */
+    public function tenant(): mixed
+    {
+        if ($this->tenantRecord !== false) {
+            return $this->tenantRecord;
+        }
+
+        $user = Auth::user();
+
+        return $this->tenantRecord = ($user !== null && method_exists($user, 'tenant'))
+            ? $user->tenant
+            : null;
     }
 
     private function fromAuth(): int|string|null
