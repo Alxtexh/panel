@@ -26,6 +26,10 @@ final class PanelServiceProvider extends ServiceProvider
 
         // Scoped, not singleton. See note above — this is load-bearing.
         $this->app->scoped(PanelManager::class, fn () => new PanelManager());
+
+        // Also scoped: it resolves the current tenant, which is per-request
+        // state by definition. A singleton here is the classic Octane leak.
+        $this->app->scoped(Support\TenantContext::class, fn () => new Support\TenantContext());
     }
 
     public function boot(): void
