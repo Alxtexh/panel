@@ -21,6 +21,8 @@ final readonly class ListResult
      * @param  array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>}  $state
      * @param  list<array<string, mixed>>  $filterSchema
      * @param  list<int>  $perPageOptions
+     * @param  list<string>  $tabs
+     * @param  (Closure(): array<string, int>)|null  $tabCounts
      * @param  Closure(): int  $total
      */
     public function __construct(
@@ -30,6 +32,8 @@ final readonly class ListResult
         public ?string $nextCursor,
         public int $perPage,
         public array $perPageOptions,
+        public array $tabs,
+        public ?Closure $tabCounts,
         public Closure $total,
     ) {}
 
@@ -55,6 +59,8 @@ final readonly class ListResult
             'nextCursor' => $this->nextCursor,
             'perPage' => $this->perPage,
             'perPageOptions' => $this->perPageOptions,
+            'tab' => $this->state['tab'] ?? null,
+            'tabs' => $this->tabs,
         ];
     }
 }
