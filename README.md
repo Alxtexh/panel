@@ -1,0 +1,171 @@
+# PanelKit
+
+A schema-driven admin panel framework for Laravel. FilamentPHP's developer
+experience, without the per-interaction server render.
+
+Add a tenant-scoped admin screen by writing **one PHP class**. No Vue.
+
+```php
+final class ClientResource extends Resource
+{
+    protected static string $model = Client::class;
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('name')->sortable()->searchable()->locked(),
+                BadgeColumn::make('status')->colors(['active' => 'success', 'expired' => 'danger']),
+                DateColumn::make('expiry_date')->label('Expires')->sortable(),
+            ])
+            ->filters([SelectFilter::make('status')->options(['active', 'expired'])])
+            ->tabs('clients.status', ['active', 'expired', 'suspended']);
+    }
+}
+```
+
+That produces a list with search, filters, tabs with counts, sortable columns,
+column visibility, row selection, keyset pagination, create/edit/delete and row
+actions.
+
+---
+
+## Why not just use Filament
+
+Filament re-renders components on the server for every interaction through
+Livewire. That round trip is the latency floor.
+
+PanelKit sends a **schema once** and **data only** afterwards, so an interaction
+costs a JSON request and a client-side render.
+
+The measurement that motivated this: on the system being replaced, slow admin
+pages ran 5–16 queries totalling **1–16 ms**, while the response took
+**500–950 ms**. The remaining time was the framework building a component tree
+and rendering it. Page speed was *data-independent* — it did not worsen with
+more rows, because it was never about the data.
+
+---
+
+## Install
+
+```bash
+composer require panelkit/panel
+php artisan panel:install
+npm install && npm run build
+php artisan make:panel-resource Customer --generate
+```
+
+Then visit `/customers`. Discovery registers the resource; there is no route to
+add and no registration line to write.
+
+---
+
+## The architecture, in one table
+
+| Concern | Lives in | Travels | Frequency |
+|---|---|---|---|
+| **Schema** — which columns, filters, tabs, fields exist | PHP resource class | Once per session, cached | Rare |
+| **Data** — the rows, filter options, counts | Eloquent query | Every filter, sort, page change | Often |
+| **Rendering** | One generic Vue page | Never — it is in the bundle | Never |
+
+The schema contains **no tenant data**. Filter and select options are tenant
+data and ship beside the records, which is why the schema cache key needs no
+tenant id: entries collapse from (tenants × resources) to
+(permission sets × resources), and an entry holding no tenant data cannot leak
+tenant data however badly its key is built.
+
+---
+
+## What it does that most admin panels do not
+
+**Never blocks a list on `COUNT(*)`.** The total is a deferred prop that arrives
+after the rows. This is the single largest source of slow admin tables.
+
+**Keyset pagination.** `OFFSET 100000` makes the database walk 100,000 rows it
+then discards, so page 2,000 gets steadily slower. A keyset seek uses the index,
+so page 2,000 costs what page 1 costs. The trade is no jump-to-arbitrary-page.
+
+**One query for N tabs.** Tab counts come from a single grouped aggregate, never
+one `COUNT` per tab.
+
+**Modals open with zero network requests.** Field definitions arrive with the
+schema and option lists with the data, so opening a form or a confirmation is
+local state.
+
+**Denies by default.** A resource whose model has no policy denies every ability
+and logs why. The usual default means forgetting a policy silently grants
+everyone everything, and the page renders correctly for whoever forgot.
+
+**Mass assignment closed by construction.** Only keys the form declares can be
+written. A `$fillable` list can be forgotten when a column is added; a form that
+does not mention a field cannot submit it.
+
+**No CSS classes in PHP.** The schema carries semantic values — `type: 'badge'`,
+`color: 'success'`, `muted: true` — and Vue owns presentation. A class string
+authored in PHP is invisible to the CSS scanner and gets purged silently, and
+*partially*, so one class of a pair survives and the element renders wrong at
+some widths with no error anywhere.
+
+---
+
+## Repository layout
+
+```
+packages/panel/    Composer package: panelkit/panel
+packages/ui/       npm package: @panelkit/ui   (imports no Inertia, never fetches)
+apps/playground/   A real Laravel app consuming both
+```
+
+Two rules the UI package holds and a test enforces:
+
+1. **Nothing in `packages/ui` imports Inertia.** Components take props and emit
+   events; a thin adapter in the consuming app wires Inertia to them. Swapping
+   the transport means rewriting one file.
+2. **Components never fetch.** Only page-level components trigger data loads.
+
+---
+
+## Commands
+
+| Command | Does |
+|---|---|
+| `panel:install` | Publishes config, creates `app/Panel/`, checks tenancy is resolvable |
+| `make:panel-resource {Model} --generate` | Introspects the table and writes a working resource plus a policy stub |
+| `panel:seed-demo --scale=large` | 500k clients across 5 tenants, 2M sessions |
+| `panel:cache-clear` | Invalidates every cached schema by bumping a generation counter |
+
+---
+
+## Running the playground
+
+```bash
+scripts/bootstrap-env.sh   # PHP 8.4, Composer, Node 22 — read it first
+make install
+make seed
+make dev
+```
+
+Then `http://localhost:8000`. `make help` lists everything.
+
+---
+
+## Status
+
+Phases 0–9 of [panelbuilder.md](panelbuilder.md) are built, with
+[panel_antipatterns.md](panel_antipatterns.md) and
+[panelkit addendum 01.md](panelkit%20addendum%2001.md) applied. See
+[PLAN.md](PLAN.md) for the route through them and what each new document
+changed.
+
+**Known gaps**, stated rather than implied:
+
+- Live updates: `useLiveUpdates` implements the §8 rules but is not wired to a
+  running Reverb server, so it is unexercised end to end.
+- Precognition: rules live in exactly one place, but live per-keystroke
+  validation is not wired — `laravel-precognition-vue-inertia` peers on Inertia
+  ^1 || ^2 and this app is on Inertia 3.
+- Bulk actions: selection and the action bar exist; the mutations and the
+  auto-queue threshold do not.
+- The database engine is still SQLite, so every performance number demonstrates
+  that the query *shape* is sound rather than transferring to Postgres.
+- Every page logs a Vue hydration mismatch, pre-existing from the starter kit.
