@@ -42,6 +42,8 @@ const listEl = ref<HTMLElement | null>(null)
 const pages: Item[] = [
     { id: 'page-dashboard', title: 'Dashboard', subtitle: 'Overview', href: '/dashboard', kind: 'page' },
     { id: 'page-clients', title: 'Clients', subtitle: 'Subscribers', href: '/clients', kind: 'page' },
+    { id: 'page-routers', title: 'Routers', subtitle: 'Network', href: '/routers', kind: 'page' },
+    { id: 'page-plans', title: 'Plans', subtitle: 'Network', href: '/plans', kind: 'page' },
     { id: 'page-profile', title: 'Profile settings', subtitle: 'Settings', href: '/settings/profile', kind: 'page' },
     { id: 'page-password', title: 'Password', subtitle: 'Settings', href: '/settings/password', kind: 'page' },
     { id: 'page-appearance', title: 'Appearance', subtitle: 'Settings', href: '/settings/appearance', kind: 'page' },

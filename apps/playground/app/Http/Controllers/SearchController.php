@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Plan;
+use App\Models\Router;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -42,6 +44,8 @@ final class SearchController extends Controller
         return response()->json([
             'groups' => array_values(array_filter([
                 $this->clients($term),
+                $this->routers($term),
+                $this->plans($term),
             ])),
         ]);
     }
@@ -81,6 +85,66 @@ final class SearchController extends Controller
                 'title' => $row->name,
                 'subtitle' => $row->access_code . ' · ' . $row->status,
                 'href' => '/clients?search=' . urlencode($row->access_code),
+            ])->all(),
+        ];
+    }
+
+    /**
+     * @return array{label: string, items: list<array<string, mixed>>}|null
+     */
+    private function routers(string $term): ?array
+    {
+        $prefix = str_replace(['%', '_'], ['\%', '\_'], $term) . '%';
+
+        $rows = Router::query()
+            ->toBase()
+            ->select(['id', 'name', 'ip_address', 'status'])
+            ->where(function ($q) use ($prefix): void {
+                $q->where('name', 'like', $prefix)->orWhere('ip_address', 'like', $prefix);
+            })
+            ->limit(self::LIMIT)
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return null;
+        }
+
+        return [
+            'label' => 'Routers',
+            'items' => $rows->map(fn (object $row): array => [
+                'id' => 'router-' . $row->id,
+                'title' => $row->name,
+                'subtitle' => $row->ip_address . ' · ' . $row->status,
+                'href' => '/routers?search=' . urlencode($row->name),
+            ])->all(),
+        ];
+    }
+
+    /**
+     * @return array{label: string, items: list<array<string, mixed>>}|null
+     */
+    private function plans(string $term): ?array
+    {
+        $prefix = str_replace(['%', '_'], ['\%', '\_'], $term) . '%';
+
+        $rows = Plan::query()
+            ->toBase()
+            ->select(['id', 'name', 'speed_mbps', 'is_active'])
+            ->where('name', 'like', $prefix)
+            ->limit(self::LIMIT)
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return null;
+        }
+
+        return [
+            'label' => 'Plans',
+            'items' => $rows->map(fn (object $row): array => [
+                'id' => 'plan-' . $row->id,
+                'title' => $row->name,
+                'subtitle' => $row->speed_mbps . ' Mbps · ' . ($row->is_active ? 'active' : 'inactive'),
+                'href' => '/plans?search=' . urlencode($row->name),
             ])->all(),
         ];
     }
