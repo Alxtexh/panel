@@ -7,70 +7,82 @@ namespace App\Models\Scopes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use Illuminate\Support\Facades\Auth;
-use RuntimeException;
+use PanelKit\Panel\Support\TenantContext;
 
 /**
- * Constrains every query on a tenant-owned model to the acting user's tenant.
+ * Constrains every query on a tenant-owned model to the acting tenant.
  *
  * This is a global scope rather than a `where` in the controller for one reason:
  * a forgotten `where` is a cross-tenant data leak, and a global scope cannot be
  * forgotten. Every new query, relation load, and count inherits it.
  *
- * It applies to the model's own table via `qualifyColumn`, so it stays correct
- * once the list query joins `plans` — an unqualified `tenant_id` would be
- * ambiguous the moment a second table with that column enters the query.
+ * It applies via `qualifyColumn`, so it stays correct once the list query joins
+ * `plans` — an unqualified `tenant_id` is ambiguous the moment a second table
+ * with that column enters the query.
+ *
+ * WHICH constraint to apply is delegated to TenantContext, because the answer
+ * differs by isolation strategy:
+ *
+ *   shared / single database    add `where tenant_id = ?`
+ *   dedicated / multi database  add NOTHING — stancl/tenancy already switched
+ *                               the connection, and the column does not exist
  *
  * Fails closed, with NO context exemption. There is deliberately no
  * `runningInConsole()` escape hatch: `php artisan test` runs in console, so such
  * an exemption disables the scope across the entire test suite and no test can
- * ever catch a leak again. That is not a hypothetical — the first version of
- * this class had it, and the cross-tenant test passed a full result set.
+ * ever catch a leak again. That is not hypothetical — the first version of this
+ * class had it, and the cross-tenant test passed a full result set.
  *
- * Code that legitimately crosses tenants (seeders, back-office jobs) opts out
- * loudly and per query with `withoutGlobalScope(TenantScope::class)`, which is
- * greppable. An implicit ambient exemption is not.
+ * Code that legitimately crosses tenants opts out loudly and per query with
+ * `withoutGlobalScope(TenantScope::class)`, which is greppable. An implicit
+ * ambient exemption is not.
  */
 final class TenantScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
     {
-        $tenantId = self::currentTenantId();
+        $context = app(TenantContext::class);
 
-        if ($tenantId === null) {
-            // whereRaw('1 = 0') would be cheaper, but this is unambiguous in a
-            // query log and does not depend on the driver's boolean handling.
-            $builder->whereNull($model->qualifyColumn($model->getKeyName()));
+        // Dedicated-database tenancy: the connection is the boundary. Adding a
+        // column constraint here would reference a column that does not exist.
+        if (! $context->shouldScopeByColumn()) {
+            if (! $context->isIsolated()) {
+                $this->deny($builder, $model);
+            }
 
             return;
         }
 
-        $builder->where($model->qualifyColumn('tenant_id'), $tenantId);
+        $key = $context->currentKey();
+
+        if ($key === null) {
+            $this->deny($builder, $model);
+
+            return;
+        }
+
+        $builder->where($model->qualifyColumn($context->column()), $key);
     }
 
     /**
-     * Resolved per call, never memoized in a static.
+     * An unresolvable tenant yields no rows rather than every row.
      *
-     * Spec §9: a static holding tenant data survives the request under Octane
-     * and serves tenant A's id to tenant B on the same worker. Auth's own
-     * resolution is already request-scoped and cheap.
+     * whereRaw('1 = 0') would be marginally cheaper, but this reads unambiguously
+     * in a query log and does not depend on driver boolean handling.
      */
-    public static function currentTenantId(): ?int
+    private function deny(Builder $builder, Model $model): void
     {
-        $user = Auth::user();
+        $builder->whereNull($model->qualifyColumn($model->getKeyName()));
+    }
 
-        if ($user === null) {
-            return null;
-        }
-
-        if (! array_key_exists('tenant_id', $user->getAttributes())) {
-            throw new RuntimeException(
-                'The authenticated user has no tenant_id attribute; tenant scoping cannot be resolved safely.'
-            );
-        }
-
-        $tenantId = $user->getAttribute('tenant_id');
-
-        return $tenantId === null ? null : (int) $tenantId;
+    /**
+     * Convenience for application code that needs the current tenant key.
+     *
+     * Kept as a thin pass-through so callers do not reach into TenantContext
+     * directly and accidentally bypass the deny-on-null contract.
+     */
+    public static function currentTenantId(): int|string|null
+    {
+        return app(TenantContext::class)->currentKey();
     }
 }

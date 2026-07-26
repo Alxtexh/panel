@@ -6,19 +6,13 @@
  *
  * LAYOUT NOTE: this page must NOT wrap itself in <AppLayout>. app.ts applies
  * AppLayout as a persistent layout to every page by default, so wrapping here
- * nests it inside itself — two sidebars, two collapse triggers, two insets, and
- * a table that scrolls underneath the sidebar. Breadcrumbs go through
- * defineOptions({ layout }) instead, which is what Dashboard.vue does.
+ * nests it inside itself — two sidebars, two collapse triggers, and a table that
+ * scrolls underneath the sidebar. Breadcrumbs go through defineOptions.
  *
- * The interaction rules below are the §10 transport mandates and §8 table
- * requirements, and they are what Phase 3 extracts:
- *
- *   - every filter/sort/search reflected in the URL, so views are shareable
- *   - partial reloads carry data only, never the whole page
- *   - the table never unmounts during a reload; rows dim and swap in place
- *   - no spinner under 300 ms — a flash of loading reads as slower than a pause
- *   - empty, no-results-for-filter, and loading are three distinct states
- *   - column visibility toggled per user and persisted to localStorage
+ * Filter/column UX follows Filament's shape (one funnel dropdown holding every
+ * filter, a separate column-visibility dropdown) but not its cost model:
+ * Filament round-trips to the server to re-render the dropdown itself. Here the
+ * dropdown is local state, and only an applied filter costs a request.
  */
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -36,8 +30,10 @@ import { Deferred, Head, router } from '@inertiajs/vue3'
 import {
     ArrowDown,
     ArrowUp,
+    Check,
     ChevronsUpDown,
     Copy,
+    ListFilter,
     Loader2,
     MoreHorizontal,
     Search,
@@ -82,12 +78,9 @@ const props = defineProps<{
 defineOptions({ layout: { breadcrumbs: [{ title: 'Clients', href: '/clients' }] } })
 
 /**
- * Accumulated rows across "load more". Keyset pagination appends rather than
- * replacing, so this holds every page fetched so far.
- *
- * Keyed by record id in the template, never by array index — §8 rule 2. Index
- * keys make Vue reuse the wrong DOM node when rows shift, which produces the
- * classic "wrong row highlighted after an update" bug.
+ * Accumulated rows across "load more". Keyed by record id in the template,
+ * never by array index — §8 rule 2. Index keys make Vue reuse the wrong DOM
+ * node when rows shift, producing the classic "wrong row highlighted" bug.
  */
 const rows = ref<ClientRow[]>([...props.records])
 const loading = ref(false)
@@ -98,27 +91,30 @@ const showSpinner = ref(false)
 let spinnerTimer: ReturnType<typeof setTimeout> | undefined
 
 const search = ref(props.filters.search)
-const copiedId = ref<number | null>(null)
+const copied = ref<string | null>(null)
 
 const columns = [
-    { key: 'name', label: 'Name', sortable: true, alwaysVisible: true },
-    { key: 'access_code', label: 'Access code', sortable: false, alwaysVisible: false },
-    { key: 'phone', label: 'Phone', sortable: false, alwaysVisible: false },
-    { key: 'status', label: 'Status', sortable: true, alwaysVisible: false },
-    { key: 'plan_name', label: 'Plan', sortable: false, alwaysVisible: false },
-    { key: 'plan_type', label: 'Type', sortable: false, alwaysVisible: false },
-    { key: 'expiry_date', label: 'Expires', sortable: true, alwaysVisible: false },
-    { key: 'created_at', label: 'Created', sortable: true, alwaysVisible: false },
+    { key: 'name', label: 'Name', sortable: true, locked: true },
+    { key: 'access_code', label: 'Access code', sortable: false, locked: false },
+    { key: 'phone', label: 'Phone', sortable: false, locked: false },
+    { key: 'status', label: 'Status', sortable: true, locked: false },
+    { key: 'plan_name', label: 'Plan', sortable: false, locked: false },
+    { key: 'plan_type', label: 'Type', sortable: false, locked: false },
+    { key: 'expiry_date', label: 'Expires', sortable: true, locked: false },
+    { key: 'created_at', label: 'Created', sortable: true, locked: false },
 ] as const
 
 type ColumnKey = (typeof columns)[number]['key']
 
+/** Cells that carry an identifier worth copying straight out of the table. */
+const COPYABLE: ReadonlySet<string> = new Set(['access_code', 'phone'])
+
 /**
  * §8: "Column visibility toggling, persisted per user in localStorage."
  *
- * Purely a display concern in Phase 1 — the server still selects every column.
- * Phase 4 pushes this into the schema so hidden columns are dropped from the
- * SELECT too, which is where it also becomes a field-authorization boundary.
+ * Display-only in Phase 1 — the server still selects every column. Phase 4
+ * pushes this into the schema so hidden columns leave the SELECT too, which is
+ * also where it becomes a field-authorization boundary.
  */
 const STORAGE_KEY = 'panelkit.clients.columns'
 const hidden = ref<Set<ColumnKey>>(new Set())
@@ -152,15 +148,22 @@ function toggleColumn(key: ColumnKey) {
     hidden.value = next
 }
 
+function resetColumns() {
+    hidden.value = new Set()
+}
+
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
     active: 'default',
     expired: 'destructive',
     suspended: 'secondary',
 }
 
-const hasFilters = computed(
-    () => props.filters.search !== '' || props.filters.status !== null || props.filters.planType !== null,
+/** Drives the badge on the funnel button, as Filament does. */
+const activeFilterCount = computed(
+    () => (props.filters.status ? 1 : 0) + (props.filters.planType ? 1 : 0),
 )
+
+const hasFilters = computed(() => props.filters.search !== '' || activeFilterCount.value > 0)
 
 /** Every piece of table state lives in the URL — back button and sharing work. */
 function query(overrides: Partial<Filters> = {}): Record<string, string> {
@@ -229,16 +232,29 @@ function toggleSort(column: string) {
     apply({ sort: column, direction })
 }
 
-function clearFilters() {
+/** Selecting the already-active value clears it, so the menu toggles. */
+function setStatus(value: string | null) {
+    apply({ status: props.filters.status === value ? null : value })
+}
+
+function setPlanType(value: string | null) {
+    apply({ planType: props.filters.planType === value ? null : value })
+}
+
+function resetFilters() {
+    apply({ status: null, planType: null })
+}
+
+function clearAll() {
     search.value = ''
     apply({ search: '', status: null, planType: null })
 }
 
-async function copy(row: ClientRow, value: string) {
+async function copy(key: string, value: string) {
     try {
         await navigator.clipboard.writeText(value)
-        copiedId.value = row.id
-        setTimeout(() => (copiedId.value = null), 1200)
+        copied.value = key
+        setTimeout(() => (copied.value = null), 1200)
     } catch {
         // Clipboard needs a secure context; failing silently beats throwing.
     }
@@ -275,11 +291,11 @@ function formatNumber(value: number): string {
     <!-- min-h-0 / min-w-0 matter: without them a flex child refuses to shrink
          below its content size, so the table pushes the layout wider instead of
          scrolling inside its own container, and slides under the sidebar. -->
-    <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-4">
+    <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-3 sm:p-4">
         <!-- Header -->
-        <div class="flex flex-wrap items-end justify-between gap-3">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <div>
-                <h1 class="text-xl font-semibold tracking-tight">Clients</h1>
+                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Clients</h1>
                 <p class="text-muted-foreground text-sm">
                     <!-- Deferred prop: rows paint first, the count arrives after.
                          §10 forbids blocking a list response on COUNT(*). -->
@@ -296,54 +312,104 @@ function formatNumber(value: number): string {
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <div class="relative">
+                <!-- Search grows to fill the row on phones, sits fixed on desktop -->
+                <div class="relative min-w-0 flex-1 sm:flex-none">
                     <Search
                         class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
                     />
                     <Input
                         v-model="search"
                         placeholder="Name, phone or code…"
-                        class="w-56 pl-8"
+                        class="w-full pl-8 sm:w-56"
                         aria-label="Search clients"
                     />
                 </div>
 
-                <select
-                    :value="filters.status ?? ''"
-                    aria-label="Filter by status"
-                    class="border-input bg-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm capitalize focus-visible:ring-2 focus-visible:outline-none"
-                    @change="apply({ status: ($event.target as HTMLSelectElement).value || null })"
-                >
-                    <option value="">All statuses</option>
-                    <option v-for="s in statuses" :key="s" :value="s" class="capitalize">{{ s }}</option>
-                </select>
+                <!-- Filters: one dropdown holding every filter, Filament-style,
+                     with an active-count badge on the trigger. -->
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                        <Button variant="outline" size="sm" class="relative shrink-0">
+                            <ListFilter class="size-4" />
+                            <span class="hidden sm:inline">Filters</span>
+                            <Badge
+                                v-if="activeFilterCount"
+                                class="ml-0.5 size-5 justify-center rounded-full p-0 text-[10px] tabular-nums"
+                            >
+                                {{ activeFilterCount }}
+                            </Badge>
+                        </Button>
+                    </DropdownMenuTrigger>
 
-                <select
-                    :value="filters.planType ?? ''"
-                    aria-label="Filter by plan type"
-                    class="border-input bg-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm uppercase focus-visible:ring-2 focus-visible:outline-none"
-                    @change="apply({ planType: ($event.target as HTMLSelectElement).value || null })"
-                >
-                    <option value="">All types</option>
-                    <option v-for="t in planTypes" :key="t" :value="t">{{ t }}</option>
-                </select>
+                    <DropdownMenuContent align="end" class="w-56">
+                        <div class="flex items-center justify-between px-2 py-1.5">
+                            <span class="text-sm font-medium">Filters</span>
+                            <button
+                                v-if="activeFilterCount"
+                                class="text-muted-foreground hover:text-foreground text-xs"
+                                @click="resetFilters"
+                            >
+                                Reset
+                            </button>
+                        </div>
+                        <DropdownMenuSeparator />
+
+                        <DropdownMenuLabel class="text-muted-foreground text-[11px] tracking-wide uppercase">
+                            Status
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem
+                            v-for="s in statuses"
+                            :key="s"
+                            class="capitalize"
+                            @select="(e: Event) => e.preventDefault()"
+                            @click="setStatus(s)"
+                        >
+                            <Check :class="['size-4', filters.status === s ? 'opacity-100' : 'opacity-0']" />
+                            {{ s }}
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel class="text-muted-foreground text-[11px] tracking-wide uppercase">
+                            Plan type
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem
+                            v-for="t in planTypes"
+                            :key="t"
+                            class="uppercase"
+                            @select="(e: Event) => e.preventDefault()"
+                            @click="setPlanType(t)"
+                        >
+                            <Check :class="['size-4', filters.planType === t ? 'opacity-100' : 'opacity-0']" />
+                            {{ t }}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 <!-- Column visibility -->
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" class="shrink-0">
                             <SlidersHorizontal class="size-4" />
-                            Columns
+                            <span class="hidden sm:inline">Columns</span>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" class="w-48">
-                        <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
+                        <div class="flex items-center justify-between px-2 py-1.5">
+                            <span class="text-sm font-medium">Columns</span>
+                            <button
+                                v-if="hidden.size"
+                                class="text-muted-foreground hover:text-foreground text-xs"
+                                @click="resetColumns"
+                            >
+                                Reset
+                            </button>
+                        </div>
                         <DropdownMenuSeparator />
                         <DropdownMenuCheckboxItem
                             v-for="col in columns"
                             :key="col.key"
                             :model-value="!hidden.has(col.key)"
-                            :disabled="col.alwaysVisible"
+                            :disabled="col.locked"
                             @select="(e: Event) => e.preventDefault()"
                             @update:model-value="toggleColumn(col.key)"
                         >
@@ -352,13 +418,26 @@ function formatNumber(value: number): string {
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button v-if="hasFilters" variant="ghost" size="sm" @click="clearFilters">
+                <Button v-if="hasFilters" variant="ghost" size="sm" class="shrink-0" @click="clearAll">
                     <X class="size-4" />
-                    Clear
+                    <span class="hidden sm:inline">Clear</span>
                 </Button>
 
-                <Loader2 v-if="showSpinner" class="text-muted-foreground size-4 animate-spin" />
+                <Loader2 v-if="showSpinner" class="text-muted-foreground size-4 shrink-0 animate-spin" />
             </div>
+        </div>
+
+        <!-- Active filter chips, so what is applied is visible without opening
+             the dropdown. Filament hides this state behind the trigger badge. -->
+        <div v-if="activeFilterCount" class="flex flex-wrap items-center gap-2">
+            <Badge v-if="filters.status" variant="secondary" class="gap-1 capitalize">
+                Status: {{ filters.status }}
+                <button aria-label="Remove status filter" @click="setStatus(null)"><X class="size-3" /></button>
+            </Badge>
+            <Badge v-if="filters.planType" variant="secondary" class="gap-1 uppercase">
+                Type: {{ filters.planType }}
+                <button aria-label="Remove plan type filter" @click="setPlanType(null)"><X class="size-3" /></button>
+            </Badge>
         </div>
 
         <!-- Table. Never unmounted during a reload — it dims and swaps rows in
@@ -391,9 +470,15 @@ function formatNumber(value: number): string {
                             <span v-else>{{ col.label }}</span>
                         </th>
 
-                        <!-- Actions column pinned right, so it stays reachable
-                             while the rest of the table scrolls horizontally. -->
-                        <th class="bg-muted/50 sticky right-0 w-12 border-b border-l px-2 py-2.5">
+                        <!-- Actions pinned right, so they stay reachable while
+                             the rest of the table scrolls horizontally. The
+                             shadow is not decoration: without a depth cue a
+                             frozen column overlaying scrolled content reads as
+                             a rendering bug rather than a pinned column, which
+                             is most obvious at phone widths. -->
+                        <th
+                            class="bg-muted/50 sticky right-0 w-12 border-b border-l px-2 py-2.5 shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.25)]"
+                        >
                             <span class="sr-only">Actions</span>
                         </th>
                     </tr>
@@ -420,10 +505,30 @@ function formatNumber(value: number): string {
                             >
                                 {{ row.status }}
                             </Badge>
+
+                            <!-- Copy lives on the cell that holds the value, not
+                                 buried in a menu. Revealed on row hover so it
+                                 does not add permanent visual noise; always
+                                 present for keyboard and touch via focus. -->
+                            <span v-else-if="COPYABLE.has(col.key)" class="inline-flex items-center gap-1.5">
+                                {{ cell(row, col.key) }}
+                                <button
+                                    type="button"
+                                    class="text-muted-foreground hover:text-foreground rounded p-0.5 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"
+                                    :aria-label="`Copy ${col.label.toLowerCase()} for ${row.name}`"
+                                    @click="copy(`${row.id}-${col.key}`, String(row[col.key]))"
+                                >
+                                    <Check v-if="copied === `${row.id}-${col.key}`" class="size-3.5" />
+                                    <Copy v-else class="size-3.5" />
+                                </button>
+                            </span>
+
                             <span v-else>{{ cell(row, col.key) }}</span>
                         </td>
 
-                        <td class="bg-background group-hover:bg-muted/40 sticky right-0 border-l px-2 py-2 text-right">
+                        <td
+                            class="bg-background group-hover:bg-muted/40 sticky right-0 border-l px-2 py-2 text-right shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.25)]"
+                        >
                             <DropdownMenu>
                                 <DropdownMenuTrigger as-child>
                                     <Button variant="ghost" size="icon" class="size-7">
@@ -431,22 +536,14 @@ function formatNumber(value: number): string {
                                         <span class="sr-only">Actions for {{ row.name }}</span>
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" class="w-52">
+                                <DropdownMenuContent align="end" class="w-48">
                                     <DropdownMenuLabel class="truncate">{{ row.name }}</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem @click="copy(row, row.access_code)">
-                                        <Copy class="size-4" />
-                                        {{ copiedId === row.id ? 'Copied' : 'Copy access code' }}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem @click="copy(row, row.phone)">
-                                        <Copy class="size-4" />
-                                        Copy phone
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <!-- View, Edit, Suspend and Delete need the form
-                                         and action layer, which is Phase 5. A button
-                                         that silently does nothing is worse than one
-                                         that says why it is not ready yet. -->
+                                    <!-- View, Edit, Suspend and Delete need the
+                                         form and action layer, which is Phase 5.
+                                         A button that silently does nothing is
+                                         worse than one that says why. -->
+                                    <DropdownMenuItem disabled>View — Phase 5</DropdownMenuItem>
                                     <DropdownMenuItem disabled>Edit — Phase 5</DropdownMenuItem>
                                     <DropdownMenuItem disabled>Suspend — Phase 5</DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -459,7 +556,7 @@ function formatNumber(value: number): string {
             <!-- Three distinct states, not one generic "nothing here" (§8). -->
             <div v-if="rows.length === 0 && hasFilters" class="text-muted-foreground p-10 text-center">
                 <p class="font-medium">No clients match these filters</p>
-                <Button variant="link" size="sm" @click="clearFilters">Clear filters</Button>
+                <Button variant="link" size="sm" @click="clearAll">Clear filters</Button>
             </div>
             <div v-else-if="rows.length === 0" class="text-muted-foreground p-10 text-center">
                 <p class="font-medium">No clients yet</p>

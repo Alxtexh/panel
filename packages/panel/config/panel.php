@@ -50,4 +50,38 @@ return [
         'virtualize_above' => 200,
     ],
 
+    /*
+    |---------------------------------------------------------------------------
+    | Tenancy
+    |---------------------------------------------------------------------------
+    |
+    | mode
+    |   'column'   Shared / single database. Every tenant's rows live in one
+    |              database separated by a tenant_id column, and the panel adds
+    |              that constraint to every query. This is stancl/tenancy's
+    |              single-database tenancy.
+    |
+    |   'database' Dedicated / multi database. stancl/tenancy switches the
+    |              connection during bootstrapping and the rows carry no tenant
+    |              column, so the panel must NOT add one — isolation is already
+    |              done by the time the panel sees the request.
+    |
+    |   'none'     Single-tenant application.
+    |
+    | resolver
+    |   null       Auto-detect: use stancl/tenancy if it is installed and
+    |              initialised, otherwise the authenticated user's tenant column.
+    |   'stancl'   Force stancl/tenancy.
+    |   'auth'     Force the authenticated user's tenant column.
+    |   Closure    Resolve it yourself; return int|string|null.
+    |
+    | A null tenant key is always a DENY signal, never "all tenants".
+    |
+    */
+    'tenancy' => [
+        'mode' => env('PANEL_TENANCY_MODE', 'column'),
+        'column' => 'tenant_id',
+        'resolver' => null,
+    ],
+
 ];

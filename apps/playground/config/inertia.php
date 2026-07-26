@@ -15,9 +15,21 @@ return [
     |
     */
 
+    /*
+    | Off by default here, and env-driven rather than hardcoded.
+    |
+    | The starter kit ships this as `true`, but nothing serves it: there is no
+    | SSR bundle in bootstrap/ssr and no process on 13714. The client then
+    | hydrates markup that was never server-rendered, which logs "Hydration
+    | completed but contains mismatches" on every page load and silently costs a
+    | full client re-render of the mismatched subtree.
+    |
+    | To turn it on: `npm run build:ssr`, start `php artisan inertia:start-ssr`,
+    | then set INERTIA_SSR_ENABLED=true.
+    */
     'ssr' => [
-        'enabled' => true,
-        'url' => 'http://127.0.0.1:13714',
+        'enabled' => env('INERTIA_SSR_ENABLED', false),
+        'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714'),
         // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
 
     ],
