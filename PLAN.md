@@ -10,6 +10,35 @@ The spec is the contract; this file is the route through it.
 | Naming | `PanelKit` / Composer `panelkit/panel` / npm `@panelkit/ui` / namespace `PanelKit\Panel` |
 | PHP | 8.4 via ondrej PPA |
 | Landing-page builder | Deferred past Phase 9. Schema envelope versioned now; no builder work before then. |
+| Database engine | **Undecided.** Phase 0 runs on SQLite. Decision required before Phase 1 — see below. |
+| Perf tuning (opcache, DB config) | Deferred to Phase 8, when there is something to measure. |
+
+### Open decision: database engine (needed before Phase 1)
+
+Phase 0 is scaffolding — an authenticated shell and a seeder — and none of it
+cares what the database is, so it runs on SQLite and commits us to nothing.
+
+Phase 1 is where that stops being free. Its entire acceptance criterion is
+"each interaction lands under 300 ms against 500k rows", and the §10 mandates
+that get us there are not engine-neutral:
+
+- **Approximate counts from `pg_class.reltuples`** — one of the three sanctioned
+  ways to avoid blocking a list response on `COUNT(*)` — is Postgres-only. MySQL's
+  nearest equivalent is `information_schema.TABLES.TABLE_ROWS`, far less reliable
+  on InnoDB. SQLite has nothing.
+- **Query planner behaviour differs.** A keyset query tuned against SQLite's
+  planner tells you very little about how Postgres will index-scan the same shape.
+  A 300 ms number measured on the wrong engine is not a number, it is a guess.
+
+So: SQLite through Phase 0 costs nothing and is reversible. Carrying it into
+Phase 1 means the performance work — the only thing differentiating this project —
+gets validated against an engine we may not ship on. The spec picks PostgreSQL
+(§1 non-goals, §2 local stack). Recommendation is to hold to that, but the
+decision is open until Phase 1 starts, and `bootstrap-db.sh` gets written then.
+
+What is portable either way: Eloquent, the resource/table/form API, the schema
+contract, the whole Vue layer, and keyset pagination as a technique. The
+engine-specific surface is narrow and confined to `QueryBuilder`.
 
 ---
 
@@ -102,9 +131,9 @@ toolchain at all.
 
 | Phase | Goal | Accept when |
 |---|---|---|
-| **E. Environment** | PHP 8.4, Composer 2, PostgreSQL 16, Node 22, tuned. | `scripts/bootstrap-env.sh` completes; `psql` reachable on 127.0.0.1. |
-| **0. Scaffold** | Monorepo, playground Laravel app, Inertia + Vue 3 + TS, Tailwind 4, shadcn-vue, both packages path-linked, demo seeder. | `npm run dev` serves a blank authenticated shell; seeder finishes under 5 min. |
-| **1. One hardcoded screen** | Clients list. No abstraction, no schema JSON, no resource class. Real server-side pagination over 500k rows. | Filter, sort, search, paginate all work on the full dataset, each under 300 ms server-side. |
+| **E. Environment** | PHP 8.4, Composer 2, Node 22. Nothing else. | `scripts/bootstrap-env.sh` completes; `php -v`, `composer -V`, `node -v` all report. |
+| **0. Scaffold** | Monorepo, playground Laravel app, Inertia + Vue 3 + TS, Tailwind 4, shadcn-vue, both packages path-linked, demo seeder. Runs on SQLite. | `npm run dev` serves a blank authenticated shell; seeder finishes under 5 min. |
+| **1. One hardcoded screen** | Clients list. No abstraction, no schema JSON, no resource class. Real server-side pagination over 500k rows. **Requires the database decision.** | Filter, sort, search, paginate all work on the full dataset, each under 300 ms server-side. |
 | **2. Two more hardcoded screens** | Routers and Plans, copy-pasted. The duplication is the research. | Three screens work and the repetition is obvious in the diff. |
 | **3. Extract DataTable + QueryBuilder** | Shared Vue table into `packages/ui`, filter/sort/search/paginate into a PHP `QueryBuilder`. | All three screens still pass their tests, each under 60 lines. |
 | **4. Schema layer** | `Resource`, `Table`, `Column`, `Filter`, `Action`, the JSON contract, the schema cache, three generic Vue pages. | Three screens are three PHP classes with zero bespoke Vue, rendering identically to Phase 3. |
