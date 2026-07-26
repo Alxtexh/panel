@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -v)",
+      "Bash(npm -v)",
+      "Bash(composer -V)",
+      "Bash(psql --version)",
+      "Bash(pg_isready)",
+      "Bash(docker --version)"
+    ]
+  }
+}

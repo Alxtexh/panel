@@ -1,0 +1,28 @@
+/node_modules
+/vendor
+.DS_Store
+.idea
+.vscode
+*.log
+
+# Never commit environment files. The spec forbids a production .env ever
+# entering this repository; the ignore rule is the first line of that defence.
+.env
+.env.*
+!.env.example
+
+/apps/*/vendor
+/apps/*/node_modules
+/apps/*/public/build
+/apps/*/public/hot
+/apps/*/storage/*.key
+/apps/*/storage/framework
+/apps/*/storage/logs
+/apps/*/bootstrap/cache/*.php
+
+/packages/*/node_modules
+/packages/*/vendor
+/packages/*/dist
+
+# Local scratch — seed dumps, profiling output, bundle-size reports
+/.scratch
