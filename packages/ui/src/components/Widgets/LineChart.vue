@@ -25,17 +25,7 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
-interface Point {
-    label: string
-    value: number
-}
-
-export interface ChartSeries {
-    name: string
-    points: Point[]
-    /** A CSS colour. Defaults to the theme palette by index. */
-    color?: string
-}
+import type { ChartPoint as Point, ChartSeries } from './types'
 
 const props = withDefaults(
     defineProps<{
@@ -52,6 +42,17 @@ const props = withDefaults(
     }>(),
     { height: 220, type: 'area', showAxis: true, showLegend: false },
 )
+
+/**
+ * TWO SCALES WHEN A SERIES ASKS FOR ONE.
+ *
+ * Sessions in the thousands plotted beside a percentage on a shared scale
+ * flattens the percentage onto the baseline — it is drawn, it is just
+ * indistinguishable from zero. A second axis is the only honest way to show
+ * quantities with different units on one chart, and the axis labels are what
+ * stop the reader comparing two lines that are not comparable.
+ */
+const hasRightAxis = computed(() => resolved.value.some((s) => s.axis === 'right'))
 
 const host = ref<HTMLElement | null>(null)
 const width = ref(560)
@@ -88,7 +89,7 @@ const count = computed(() => labels.value.length)
 
 const pad = computed(() => ({
     top: 12,
-    right: 12,
+    right: props.showAxis && hasRightAxis.value ? 44 : 12,
     bottom: 22,
     // The axis gutter disappears entirely when the axis is hidden, rather than
     // sitting there as dead space.
@@ -112,8 +113,8 @@ function compact(v: number): string {
  * it reads as clipped, and produces gridlines at 8,333 / 16,667 that nobody can
  * compare at a glance.
  */
-const ceiling = computed(() => {
-    const max = Math.max(...resolved.value.flatMap((s) => s.points.map((p) => p.value)), 0)
+function ceilingOf(values: number[]): number {
+    const max = Math.max(...values, 0)
 
     if (max <= 0) return 1
 
@@ -121,7 +122,15 @@ const ceiling = computed(() => {
     const step = [1, 2, 2.5, 5, 10].find((s) => max <= s * magnitude) ?? 10
 
     return step * magnitude
-})
+}
+
+const ceiling = computed(() =>
+    ceilingOf(resolved.value.filter((s) => s.axis !== 'right').flatMap((s) => s.points.map((p) => p.value))),
+)
+
+const rightCeiling = computed(() =>
+    ceilingOf(resolved.value.filter((s) => s.axis === 'right').flatMap((s) => s.points.map((p) => p.value))),
+)
 
 const plot = computed(() => ({
     w: Math.max(1, width.value - pad.value.left - pad.value.right),
@@ -132,17 +141,35 @@ function xFor(i: number): number {
     return pad.value.left + (count.value <= 1 ? 0 : (i / (count.value - 1)) * plot.value.w)
 }
 
-function yFor(value: number): number {
-    return pad.value.top + plot.value.h - (value / ceiling.value) * plot.value.h
+function yFor(value: number, axis: 'left' | 'right' = 'left'): number {
+    const top = axis === 'right' ? rightCeiling.value : ceiling.value
+
+    return pad.value.top + plot.value.h - (value / top) * plot.value.h
 }
 
 const geometry = computed(() =>
     resolved.value.map((s) => {
-        const pts = s.points.map((p, i) => ({ ...p, x: xFor(i), y: yFor(p.value) }))
+        const pts = s.points.map((p, i) => ({ ...p, x: xFor(i), y: yFor(p.value, s.axis ?? 'left') }))
+        // Stepped is a genuinely different reading, not a style: it says the
+        // value HELD until the next reading rather than travelled towards it,
+        // which is what a status or a tier actually does.
+        const line = s.stepped ? steppedPath(pts) : monotonePath(pts)
 
-        return { ...s, pts, line: monotonePath(pts), area: areaFrom(monotonePath(pts), pts) }
+        return { ...s, pts, line, area: areaFrom(line, pts) }
     }),
 )
+
+function steppedPath(pts: { x: number; y: number }[]): string {
+    if (pts.length === 0) return ''
+
+    let d = `M${pts[0].x.toFixed(2)},${pts[0].y.toFixed(2)}`
+
+    for (let i = 1; i < pts.length; i++) {
+        d += ` L${pts[i].x.toFixed(2)},${pts[i - 1].y.toFixed(2)} L${pts[i].x.toFixed(2)},${pts[i].y.toFixed(2)}`
+    }
+
+    return d
+}
 
 /**
  * Monotone cubic Hermite interpolation (the `monotoneX` shape).
@@ -210,6 +237,13 @@ const gridlines = computed(() =>
     [0, 0.25, 0.5, 0.75, 1].map((fraction) => ({
         y: pad.value.top + plot.value.h * fraction,
         value: ceiling.value * (1 - fraction),
+    })),
+)
+
+const rightGridlines = computed(() =>
+    [0, 0.25, 0.5, 0.75, 1].map((fraction) => ({
+        y: pad.value.top + plot.value.h * fraction,
+        value: rightCeiling.value * (1 - fraction),
     })),
 )
 
@@ -316,6 +350,26 @@ const tooltipStyle = computed(() => {
                     >
                         {{ compact(line.value) }}
                     </text>
+
+                    <!-- The second scale, labelled on the opposite edge so it
+                         is obvious which line it belongs to.
+
+                         v-if on a WRAPPER, not on the same element as v-for:
+                         Vue 3 evaluates v-if first, so the two together read as
+                         if the condition could see the loop variable when it
+                         cannot. -->
+                    <template v-if="hasRightAxis">
+                        <text
+                            v-for="line in rightGridlines"
+                            :key="`rt-${line.y}`"
+                            :x="width - pad.right + 8"
+                            :y="line.y + 3"
+                            text-anchor="start"
+                            class="fill-muted-foreground text-[10px] tabular-nums"
+                        >
+                            {{ compact(line.value) }}
+                        </text>
+                    </template>
                 </g>
 
                 <!-- Dotted verticals at the labelled positions, as the
@@ -335,7 +389,11 @@ const tooltipStyle = computed(() => {
                 />
 
                 <g v-for="(s, i) in geometry" :key="`s-${i}`">
-                    <path v-if="type === 'area'" :d="s.area" :fill="`url(#pk-fill-${uid}-${i})`" />
+                    <path
+                        v-if="s.filled ?? type === 'area'"
+                        :d="s.area"
+                        :fill="`url(#pk-fill-${uid}-${i})`"
+                    />
                     <path
                         :d="s.line"
                         fill="none"
@@ -343,6 +401,7 @@ const tooltipStyle = computed(() => {
                         stroke-width="2"
                         stroke-linejoin="round"
                         stroke-linecap="round"
+                        :stroke-dasharray="s.dashed ? '6 4' : undefined"
                     />
                     <!-- A lone point draws no line, so it gets a dot or the
                          chart looks empty. -->

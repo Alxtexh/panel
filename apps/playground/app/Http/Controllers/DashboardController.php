@@ -131,6 +131,70 @@ final class DashboardController extends Controller
                 ->type('doughnut')
                 ->data(fn (): array => $this->groupedCount('plan_type')),
 
+            /*
+             | THE FULL CHART GALLERY.
+             |
+             | Every renderer the panel ships is represented, on real data, so a
+             | panel author can see what each one looks like against their own
+             | numbers before choosing. A gallery drawn from placeholder data
+             | teaches nothing — the reason to pick a polar area over a pie is
+             | how the actual distribution reads.
+             */
+            ChartWidget::make('sessions_bars', 'Sessions by day')
+                ->type('bar')
+                ->description('Vertical bars')
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->sessionSeries()->resolve(Period::Days7, $now)),
+
+            ChartWidget::make('routers_load', 'Busiest routers')
+                ->type('horizontalBar')
+                ->description('Horizontal bars — long labels stay readable')
+                ->data(fn (): array => $this->clientsPerRouter()),
+
+            ChartWidget::make('plan_status', 'Plan type by status')
+                ->type('stackedBar')
+                ->description('Stacked bars — parts of each total')
+                ->span(2)
+                ->data(fn (): array => $this->crossTab('plan_type', 'status')),
+
+            ChartWidget::make('plan_status_grouped', 'Plan type by status, side by side')
+                ->type('bar')
+                ->description('Grouped bars — the same data, compared rather than summed')
+                ->span(2)
+                ->data(fn (): array => $this->crossTab('plan_type', 'status')),
+
+            ChartWidget::make('sessions_vs_signups', 'Sessions against sign-ups')
+                ->type('combo')
+                ->description('Bars and a line together')
+                ->span(2)
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->comboSeries($now)),
+
+            ChartWidget::make('load_vs_growth', 'Load against growth')
+                ->type('multiAxis')
+                ->description('Two scales — sessions in thousands beside sign-ups in tens')
+                ->span(2)
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->multiAxisSeries($now)),
+
+            ChartWidget::make('today_hourly', 'Connections today')
+                ->type('steppedLine')
+                ->description('Stepped — a reading holds until the next one')
+                ->span(2)
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->sessionSeries()->resolve(Period::Today, $now)),
+
+            ChartWidget::make('status_pie', 'Status share')
+                ->type('pie')
+                ->description('Pie — parts of a whole')
+                ->data(fn (): array => $this->groupedCount('status')),
+
+            ChartWidget::make('routers_polar', 'Router distribution')
+                ->type('polarArea')
+                ->description('Polar area — magnitudes that need not sum')
+                ->data(fn (): array => $this->clientsPerRouter()),
+
+            ChartWidget::make('plan_radar', 'Plan mix by status')
+                ->type('radar')
+                ->description('Radar — the same axes compared across groups')
+                ->data(fn (): array => $this->crossTab('plan_type', 'status')),
+
             // A proportional bar rather than a plot: three buckets of one
             // quantity read better side by side than as three points.
             ChartWidget::make('renewals', 'Renewals due')
@@ -161,6 +225,153 @@ final class DashboardController extends Controller
     private function signupSeries(): TimeSeries
     {
         return TimeSeries::of(Client::query())->timestamp('created_at')->count();
+    }
+
+    /**
+     * A two-dimensional breakdown as several named series — ONE grouped query.
+     *
+     * The pivot happens in PHP over a handful of rows rather than as N queries
+     * or a hand-written CASE per series: `GROUP BY a, b` returns every
+     * combination that exists, and combinations that do NOT exist are filled
+     * with zero here. Without that fill a series would be shorter than the
+     * others and every renderer would silently mis-align its bars, because a
+     * bar's category comes from its index.
+     *
+     * @return array{series: list<array{name: string, points: list<array{label: string, value: int}>}>}
+     */
+    private function crossTab(string $rowColumn, string $seriesColumn): array
+    {
+        $rows = Client::query()->toBase()
+            ->selectRaw("{$rowColumn} as row_key, {$seriesColumn} as series_key, COUNT(*) as value")
+            ->groupBy($rowColumn, $seriesColumn)
+            ->get();
+
+        $categories = [];
+        $names = [];
+        $matrix = [];
+
+        foreach ($rows as $r) {
+            $category = (string) $r->row_key;
+            $name = (string) $r->series_key;
+
+            $categories[$category] = true;
+            $names[$name] = true;
+            $matrix[$name][$category] = (int) $r->value;
+        }
+
+        $categories = array_keys($categories);
+        sort($categories);
+
+        $series = [];
+
+        foreach (array_keys($names) as $name) {
+            $series[] = [
+                'name' => ucfirst($name),
+                'points' => array_map(
+                    static fn (string $c): array => ['label' => $c, 'value' => $matrix[$name][$c] ?? 0],
+                    $categories,
+                ),
+            ];
+        }
+
+        return ['series' => $series];
+    }
+
+    /**
+     * Clients per router, named.
+     *
+     * One grouped query plus one lookup of router names, not one query per
+     * router — addendum C1 again.
+     *
+     * @return list<array{label: string, value: int}>
+     */
+    private function clientsPerRouter(): array
+    {
+        $counts = Client::query()->toBase()
+            ->selectRaw('router_id, COUNT(*) as value')
+            ->groupBy('router_id')
+            ->orderByDesc('value')
+            ->limit(8)
+            ->get();
+
+        $names = Router::query()->toBase()
+            ->whereIn('id', $counts->pluck('router_id')->filter()->all())
+            ->pluck('name', 'id');
+
+        return $counts
+            ->map(fn (object $r): array => [
+                'label' => (string) ($names[$r->router_id] ?? "Router #{$r->router_id}"),
+                'value' => (int) $r->value,
+            ])
+            ->all();
+    }
+
+    /**
+     * Sessions as bars, with their own rolling average as the line.
+     *
+     * BOTH HALVES ARE IN THE SAME UNIT, which is what a combo chart is for: the
+     * line is a reading OF the bars, not a second quantity beside them. The
+     * first attempt put sign-ups (tens) against sessions (hundreds) on a shared
+     * scale, and the line rendered flat along the baseline — technically
+     * correct and completely unreadable. Two units on one plot is the
+     * multi-axis chart's job instead.
+     *
+     * @return array{bars: list<array<string, mixed>>, lines: list<array<string, mixed>>}
+     */
+    private function comboSeries(?DateTimeImmutable $now): array
+    {
+        $points = $this->sessionSeries()->resolve(Period::Days30, $now)['points'];
+
+        return [
+            'bars' => [['name' => 'Sessions', 'points' => $points]],
+            'lines' => [['name' => '7-day average', 'points' => $this->rollingAverage($points, 7)]],
+        ];
+    }
+
+    /**
+     * A trailing mean over `$window` points.
+     *
+     * Trailing, not centred: a centred average would need points from the
+     * future for the most recent days, which do not exist — so the line would
+     * stop short of the last bar and look truncated.
+     *
+     * @param  list<array{label: string, value: int|float}>  $points
+     * @return list<array{label: string, value: float}>
+     */
+    private function rollingAverage(array $points, int $window): array
+    {
+        $out = [];
+
+        foreach ($points as $i => $point) {
+            $slice = array_slice($points, max(0, $i - $window + 1), min($i + 1, $window));
+            $values = array_column($slice, 'value');
+
+            $out[] = [
+                'label' => $point['label'],
+                'value' => round(array_sum($values) / max(1, count($values)), 1),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Two series that genuinely need two scales.
+     *
+     * Sessions run in the hundreds and sign-ups in the tens; on a shared axis
+     * the sign-up line is pressed flat against the baseline and reads as zero.
+     */
+    private function multiAxisSeries(?DateTimeImmutable $now): array
+    {
+        return ['series' => [
+            ['name' => 'Sessions', 'points' => $this->sessionSeries()->resolve(Period::Days30, $now)['points']],
+            [
+                'name' => 'Sign-ups',
+                'axis' => 'right',
+                'dashed' => true,
+                'points' => $this->signupSeries()->resolve(Period::Days30, $now)['points'],
+            ],
+        ]];
     }
 
     /**

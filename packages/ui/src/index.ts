@@ -24,6 +24,9 @@ export { default as AppearanceDrawer } from './components/Layout/AppearanceDrawe
 export { default as BarChart } from './components/Widgets/BarChart.vue'
 export { default as LineChart } from './components/Widgets/LineChart.vue'
 export { default as PieChart } from './components/Widgets/PieChart.vue'
+export { default as RadarChart } from './components/Widgets/RadarChart.vue'
+export { default as PolarAreaChart } from './components/Widgets/PolarAreaChart.vue'
+export { default as ComboChart } from './components/Widgets/ComboChart.vue'
 export { default as Sparkline } from './components/Widgets/Sparkline.vue'
 export { default as TrendBadge } from './components/Widgets/TrendBadge.vue'
 export { default as ChartCard } from './components/Widgets/ChartCard.vue'
@@ -50,7 +53,7 @@ export { useSchemaColumns, BADGE_VARIANTS } from './composables/useSchemaColumns
 
 export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
 export type { BulkActionSchema } from './components/DataTable/BulkActions.vue'
-export type { ChartSeries } from './components/Widgets/LineChart.vue'
+export type { ChartSeries, ChartPoint } from './components/Widgets/types'
 export type { Appearance, Theme, Density, SidebarSide, CardStyle } from './composables/useAppearance'
 export type { SchemaColumn } from './composables/useSchemaColumns'
 export type { FormField } from './components/Form/types'

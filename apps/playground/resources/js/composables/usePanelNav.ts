@@ -1,6 +1,6 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Package, Router as RouterIcon, Users } from '@lucide/vue';
+import { HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Package, Router as RouterIcon, Sparkles, Users } from '@lucide/vue';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
@@ -66,17 +66,22 @@ export function usePanelNav() {
         };
     });
 
-    /** In-panel content pages. Static, because they are not resources. */
+    /**
+     * In-panel content pages. Static, because they are not resources.
+     *
+     * These now occupy the sidebar footer, which previously held links out to
+     * the starter kit's GitHub repository and the Laravel docs. Those were
+     * scaffolding: they leave the panel entirely, and an operator has no use
+     * for either. The footer is prime real estate — permanently visible, never
+     * scrolled away — so it should hold the panel's own help, not somebody
+     * else's.
+     */
     const supportItems = computed<NavItem[]>(() => [
         { title: 'Help', href: '/help', icon: HelpCircle },
         { title: 'FAQ', href: '/faq', icon: MessageCircleQuestion },
+        { title: "What's new", href: '/whats-new', icon: Sparkles },
         { title: 'About', href: '/about', icon: Info },
     ]);
 
-    const footerItems = computed<NavItem[]>(() => [
-        { title: 'Repository', href: 'https://github.com/laravel/vue-starter-kit', icon: FolderGit2 },
-        { title: 'Documentation', href: 'https://laravel.com/docs/starter-kits#vue', icon: BookOpen },
-    ]);
-
-    return { nav, supportItems, footerItems };
+    return { nav, supportItems };
 }

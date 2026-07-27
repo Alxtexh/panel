@@ -33,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
     Route::inertia('help', 'support/Help')->name('support.help');
     Route::inertia('faq', 'support/Faq')->name('support.faq');
     Route::inertia('about', 'support/About')->name('support.about');
+    Route::inertia('whats-new', 'support/WhatsNew')->name('support.whatsNew');
 
     /*
      | One set of routes for every resource. Adding a screen is a PHP class.

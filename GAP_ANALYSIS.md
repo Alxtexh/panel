@@ -18,7 +18,7 @@ not foundations, and breadth is what makes a panel usable on day one.
 | Form field types | **6** | **33** |
 | Table column types | **7** | **14** |
 | Table filter types | **4** | **5** + visual query builder |
-| Chart widget types | **5** (bar, line, area, pie, doughnut) | **8** |
+| Chart widget types | **12** — the full reference set | **8** |
 | Action classes | **3** records + **bulk** + **export** | **27** |
 | Layout components | **5** (Section, Tabs, Tab, Grid, + field leaves) | **23** |
 | View-page entry types | **0** (flat list) | **9** |
@@ -112,8 +112,15 @@ A number, its trend and its sparkline are required to measure the SAME thing:
 the first cut hung a signups trend off a cumulative total, which read as
 "we lost 4.3% of our subscribers".
 
-**Missing:** PolarArea, Radar, Scatter, Bubble, `TableWidget`, and live push —
-`useLiveUpdates` still is not wired to a running Reverb.
+**DONE — the full reference chart set.** Every demo on primevue.dev/chart is
+implemented and shown on the dashboard against real data: line, area, stepped
+line, multi-axis, vertical bar, horizontal bar, stacked bar, grouped bar, combo,
+pie, doughnut, polar area and radar, plus a segmented proportion bar.
+
+All drawn directly in SVG — no charting dependency anywhere in the bundle.
+
+**Missing:** Scatter, Bubble, `TableWidget`, and live push — `useLiveUpdates`
+still is not wired to a running Reverb.
 
 ---
 

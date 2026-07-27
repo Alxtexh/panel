@@ -12,7 +12,18 @@
  * Without `only:` this page would re-resolve every deferred prop on every
  * period click, which is the polling-shaped waste §8 exists to avoid.
  */
-import { ChartCard, LineChart, PieChart, SegmentedBar, StatCard, TrendBadge } from '@panelkit/ui'
+import {
+    BarChart,
+    ChartCard,
+    ComboChart,
+    LineChart,
+    PieChart,
+    PolarAreaChart,
+    RadarChart,
+    SegmentedBar,
+    StatCard,
+    TrendBadge,
+} from '@panelkit/ui'
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
 
 interface Widget {
@@ -26,13 +37,36 @@ interface Chart {
     key: string
     label: string
     description: string | null
-    type: 'line' | 'area' | 'bar' | 'pie' | 'doughnut' | 'segments'
+    type:
+        | 'line'
+        | 'area'
+        | 'steppedLine'
+        | 'multiAxis'
+        | 'bar'
+        | 'horizontalBar'
+        | 'stackedBar'
+        | 'combo'
+        | 'pie'
+        | 'doughnut'
+        | 'polarArea'
+        | 'radar'
+        | 'segments'
     span: number
     periods: { value: string; label: string }[] | null
 }
 
+interface Dataset {
+    name: string
+    points: { label: string; value: number }[]
+    axis?: 'left' | 'right'
+    dashed?: boolean
+}
+
 interface Series {
     points: { label: string; value: number }[]
+    series: Dataset[] | null
+    bars: Dataset[] | null
+    lines: Dataset[] | null
     total: number | null
     trend: { direction: 'up' | 'down' | 'flat' | 'new'; percentage: number | null } | null
     error: boolean
@@ -71,6 +105,9 @@ function series(key: string): Series {
     return (
         ((page.props as Record<string, any>)[`chart_${key}`] as Series | undefined) ?? {
             points: [],
+            series: null,
+            bars: null,
+            lines: null,
             total: null,
             trend: null,
             error: false,
@@ -98,6 +135,30 @@ function setPeriod(key: string, value: string) {
             replace: true,
         },
     )
+}
+
+/**
+ * Line-style flags are applied HERE, from the chart type.
+ *
+ * `steppedLine` is a type in PHP and a per-series flag in the renderer, because
+ * the renderer supports mixing a stepped series with a smooth one on the same
+ * plot. Translating at the boundary keeps the PHP declaration a single semantic
+ * word instead of a bag of style booleans (§6.1).
+ */
+function multiSeries(chart: Chart): Dataset[] | undefined {
+    const resolved = series(chart.key)
+    const stepped = chart.type === 'steppedLine'
+
+    // A single-dataset stepped chart arrives as `points`, so it has to be
+    // promoted to a series before the flag has anywhere to live. Without this
+    // the type was accepted, the data rendered, and the stepping silently did
+    // not happen — the worst kind of no-op.
+    const datasets =
+        resolved.series ?? (stepped && resolved.points.length ? [{ name: '', points: resolved.points }] : null)
+
+    if (!datasets) return undefined
+
+    return stepped ? datasets.map((d) => ({ ...d, stepped: true, filled: false })) : datasets
 }
 
 const comparison: Record<string, string> = {
@@ -172,6 +233,13 @@ const comparison: Record<string, string> = {
                                 />
                             </template>
 
+                            <!--
+                                One branch per renderer. Written out rather than
+                                resolved through a component map so the props
+                                each chart needs stay visible: a map would hide
+                                that a combo takes bars and lines while a radar
+                                takes series and a pie takes points.
+                            -->
                             <SegmentedBar
                                 v-if="chart.type === 'segments'"
                                 :segments="series(chart.key).points"
@@ -180,12 +248,35 @@ const comparison: Record<string, string> = {
                             <PieChart
                                 v-else-if="chart.type === 'pie' || chart.type === 'doughnut'"
                                 :data="series(chart.key).points"
-                                :type="chart.type as 'pie' | 'doughnut'"
+                                :type="chart.type === 'pie' ? 'pie' : 'doughnut'"
+                            />
+                            <PolarAreaChart
+                                v-else-if="chart.type === 'polarArea'"
+                                :data="series(chart.key).points"
+                            />
+                            <RadarChart
+                                v-else-if="chart.type === 'radar'"
+                                :series="series(chart.key).series ?? []"
+                            />
+                            <ComboChart
+                                v-else-if="chart.type === 'combo'"
+                                :bars="series(chart.key).bars ?? []"
+                                :lines="series(chart.key).lines ?? []"
+                            />
+                            <BarChart
+                                v-else-if="chart.type === 'bar' || chart.type === 'horizontalBar' || chart.type === 'stackedBar'"
+                                :data="series(chart.key).series ? undefined : series(chart.key).points"
+                                :series="series(chart.key).series ?? undefined"
+                                :orientation="chart.type === 'horizontalBar' ? 'horizontal' : 'vertical'"
+                                :stacked="chart.type === 'stackedBar'"
+                                show-legend
                             />
                             <LineChart
                                 v-else
-                                :data="series(chart.key).points"
+                                :data="multiSeries(chart) ? undefined : series(chart.key).points"
+                                :series="multiSeries(chart)"
                                 :type="chart.type === 'area' ? 'area' : 'line'"
+                                show-legend
                             />
                         </ChartCard>
                     </template>

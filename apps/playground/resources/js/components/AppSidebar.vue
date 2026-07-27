@@ -2,7 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import { PkDropdown, useAppearance } from '@panelkit/ui';
-import { BookOpen, FolderGit2, HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Package, Router as RouterIcon, Users } from '@lucide/vue';
+import { HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Package, Router as RouterIcon, Sparkles, Users } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -135,20 +135,8 @@ onMounted(() => {
 const supportNavItems: NavItem[] = [
     { title: 'Help', href: '/help', icon: HelpCircle },
     { title: 'FAQ', href: '/faq', icon: MessageCircleQuestion },
+    { title: "What's new", href: '/whats-new', icon: Sparkles },
     { title: 'About', href: '/about', icon: Info },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
 ];
 </script>
 
@@ -235,11 +223,18 @@ const footerNavItems: NavItem[] = [
         </SidebarContent>
 
         <SidebarFooter>
-            <!-- Support pages live in the footer, not the main nav: they are
-                 read once and then rarely, so they should not compete for
-                 attention with the resources. -->
+            <!--
+                Support pages live in the footer, not the main nav: they are
+                read once and then rarely, so they should not compete for
+                attention with the resources.
+
+                The starter kit's Repository and Documentation links used to sit
+                here. They pointed OUT of the panel — at the scaffold's GitHub
+                page and the Laravel docs — which is of no use to an operator,
+                while occupying the one part of the sidebar that never scrolls
+                away.
+            -->
             <NavFooter :items="supportNavItems" />
-            <NavFooter :items="footerNavItems" />
             <NavUser />
         </SidebarFooter>
     </Sidebar>
