@@ -12,7 +12,7 @@
  */
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useSchemaColumns, type SchemaColumn } from '@panelkit/ui'
+import { InfoNode, useSchemaColumns, type SchemaColumn } from '@panelkit/ui'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, toRef } from 'vue'
 import { toast } from 'vue-sonner'
@@ -24,12 +24,21 @@ const props = defineProps<{
         labelPlural: string
         routes: { index: string }
         table: { columns: SchemaColumn[] }
+        /** Optional layout tree. Falls back to a flat list when empty. */
+        infolist: any[]
     }
     record: Record<string, any>
     can: { update: boolean; delete: boolean }
     breadcrumbs: { title: string; href: string }[]
 }>()
 
+
+/**
+ * Layout when the resource declares one; a flat list of its table columns
+ * otherwise — which is what every resource had before layout existed, so
+ * nothing that has not opted in changes.
+ */
+const hasLayout = computed(() => (props.schema.infolist?.length ?? 0) > 0)
 
 const schemaColumns = toRef(() => props.schema.table.columns)
 const { byKey, badgeVariant } = useSchemaColumns(schemaColumns)
@@ -91,9 +100,14 @@ function destroy() {
             </div>
         </div>
 
-        <!-- A definition list, not a table: this is one record's attributes, and
-             a table row read vertically is harder to scan than labelled pairs. -->
-        <dl class="bg-card divide-y rounded-lg border">
+        <!-- Layout tree: tabs and sections, same components the form uses. -->
+        <template v-if="hasLayout">
+            <InfoNode v-for="(node, i) in schema.infolist" :key="i" :node="node" :record="record" />
+        </template>
+
+        <!-- Fallback: a definition list. One record's attributes read better as
+             labelled pairs than as a table row turned on its side. -->
+        <dl v-else class="bg-card divide-y rounded-lg border">
             <div
                 v-for="column in schema.table.columns"
                 :key="column.key"

@@ -7,6 +7,7 @@ namespace PanelKit\Panel\Forms;
 use Illuminate\Database\Eloquent\Model;
 use PanelKit\Panel\Forms\Fields\Field;
 use PanelKit\Panel\Schema\Component;
+use PanelKit\Panel\Schema\Renderable;
 
 /**
  * Declarative form definition.
@@ -28,7 +29,7 @@ final class Form
     /**
      * The schema TREE — layout components and fields, mixed and nested.
      *
-     * @var list<Component|Field>
+     * @var list<Component|Renderable>
      */
     private array $nodes = [];
 
@@ -39,7 +40,7 @@ final class Form
         return new self();
     }
 
-    /** @param list<Component|Field> $nodes */
+    /** @param list<Component|Renderable> $nodes */
     public function schema(array $nodes): self
     {
         $this->nodes = $nodes;
@@ -80,7 +81,7 @@ final class Form
             'columns' => $this->columns,
             // The TREE, so the client can render layout. Fields are leaves.
             'nodes' => array_map(
-                static fn (Component|Field $n): array => $n->toSchema(),
+                static fn (Component|Renderable $n): array => $n->toSchema(),
                 $this->nodes,
             ),
             // Flat list too: some consumers only need to know which fields

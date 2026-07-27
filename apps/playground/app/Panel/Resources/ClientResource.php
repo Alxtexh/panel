@@ -90,6 +90,39 @@ final class ClientResource extends Resource
         ]);
     }
 
+    /**
+     * The VIEW page layout. Leaves are the same Column objects the table uses,
+     * so a value cannot render one way in the list and another here.
+     */
+    public static function infolist(): array
+    {
+        return [
+            Tabs::make()->tabs([
+                Tab::make('Overview')->schema([
+                    Section::make('Identity')->columns(2)->schema([
+                        TextColumn::make('name'),
+                        TextColumn::make('phone'),
+                        TextColumn::make('access_code')->label('Access code')->mono(),
+                        BadgeColumn::make('status')->colors([
+                            'active' => 'success',
+                            'expired' => 'danger',
+                            'suspended' => 'warning',
+                        ]),
+                    ]),
+                ]),
+
+                Tab::make('Service')->schema([
+                    Section::make('Plan')->columns(2)->schema([
+                        TextColumn::make('plan_name')->label('Plan'),
+                        TextColumn::make('plan_type')->label('Type')->transform('upper'),
+                        DateColumn::make('expiry_date')->label('Expires'),
+                        DateColumn::make('created_at')->label('Created')->withTime(),
+                    ]),
+                ]),
+            ]),
+        ];
+    }
+
     public static function table(Table $table): Table
     {
         return $table

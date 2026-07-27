@@ -56,6 +56,23 @@ abstract class Resource
     }
 
     /**
+     * Optional layout for the VIEW page.
+     *
+     * Leaves are Columns, not a separate Entry hierarchy - a column already
+     * carries key, label, type and colour intent, so a parallel set of classes
+     * would be duplication under a different name.
+     *
+     * A resource that declares none gets a flat list of its table columns,
+     * which is what every resource had before layout existed.
+     *
+     * @return list<\PanelKit\Panel\Schema\Component>
+     */
+    public static function infolist(): array
+    {
+        return [];
+    }
+
+    /**
      * Per-tenant feature flag, if the resource declares one.
      *
      * Spec S9 item 5: a disabled feature hides the resource from navigation AND
@@ -218,6 +235,10 @@ abstract class Resource
                 ],
                 'table' => $table->toSchema(),
                 'form' => static::formDefinition()->toSchema(),
+                'infolist' => array_map(
+                    static fn (\PanelKit\Panel\Schema\Component $c): array => $c->toSchema(),
+                    static::infolist(),
+                ),
             ];
         });
     }

@@ -26,7 +26,7 @@ namespace PanelKit\Panel\Tables\Columns;
  *    cached once per permission set rather than once per tenant, and what stops
  *    a definition-time query taking a page down for everyone.
  */
-abstract class Column
+abstract class Column implements \PanelKit\Panel\Schema\Renderable
 {
     protected ?string $label = null;
 
@@ -186,6 +186,21 @@ abstract class Column
     }
 
     /**
+     * Satisfies Renderable, so a Column can be a leaf in a schema tree and the
+     * view page can reuse Section/Tabs/Grid rather than growing a parallel Entry
+     * hierarchy.
+     *
+     * An alias rather than a rename: `toArray()` is what the table schema has
+     * always called, and renaming it would churn every call site to no benefit.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSchema(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
      * Serialisable description. Must contain no tenant data and no CSS classes.
      *
      * @return array<string, mixed>
@@ -193,6 +208,11 @@ abstract class Column
     public function toArray(): array
     {
         return array_filter([
+            // Discriminator, so a view-page layout tree can mix layout nodes and
+            // columns. A column already carries everything an "infolist entry"
+            // would - key, label, type, colour intent - so a parallel Entry
+            // hierarchy would be duplication with a different name.
+            'component' => 'entry',
             'key' => $this->key,
             'label' => $this->resolvedLabel(),
             'type' => $this->type(),
