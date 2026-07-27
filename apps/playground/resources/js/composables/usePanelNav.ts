@@ -1,6 +1,6 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Package, Router as RouterIcon, Sparkles, Users } from '@lucide/vue';
+import { HelpCircle, Info, LayoutGrid, Mail, MessageCircleQuestion, MessagesSquare, Package, Router as RouterIcon, Sparkles, Users } from '@lucide/vue';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
@@ -60,9 +60,25 @@ export function usePanelNav() {
             grouped.set(item.group, [...(grouped.get(item.group) ?? []), entry]);
         }
 
+        /*
+         * App screens are a GROUP, not top-level items.
+         *
+         * They are not resources — no table, no policy, no model behind a
+         * registry entry — so they cannot come from the resource discovery that
+         * builds the rest. Grouping them keeps the top level for the things the
+         * panel actually administers.
+         */
+        const apps: NavItem[] = [
+            { title: 'Mail', href: '/apps/mail', icon: Mail },
+            { title: 'Chat', href: '/apps/chat', icon: MessagesSquare },
+        ];
+
         return {
             primary: [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }, ...ungrouped] as NavItem[],
-            groups: [...grouped.entries()].map(([name, items]): NavGroup => ({ name, items })),
+            groups: [
+                ...[...grouped.entries()].map(([name, items]): NavGroup => ({ name, items })),
+                { name: 'Apps', items: apps },
+            ],
         };
     });
 

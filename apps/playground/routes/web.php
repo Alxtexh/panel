@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AppearanceController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MailController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SearchController;
 use PanelKit\Panel\Http\Controllers\BulkController;
@@ -36,6 +38,17 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
     Route::inertia('faq', 'support/Faq')->name('support.faq');
     Route::inertia('about', 'support/About')->name('support.about');
     Route::inertia('whats-new', 'support/WhatsNew')->name('support.whatsNew');
+
+    /*
+     | App screens. Under /apps/ so they never collide with the resource routes,
+     | which match a bare {resource} segment.
+     */
+    Route::get('apps/mail', [MailController::class, 'index'])->name('apps.mail');
+    Route::patch('apps/mail/{id}', [MailController::class, 'update'])->whereNumber('id')->name('apps.mail.update');
+
+    Route::get('apps/chat', [ChatController::class, 'index'])->name('apps.chat');
+    Route::post('apps/chat/{id}', [ChatController::class, 'send'])->whereNumber('id')->name('apps.chat.send');
+    Route::post('apps/chat/{id}/read', [ChatController::class, 'markRead'])->whereNumber('id')->name('apps.chat.read');
 
     /*
      | One set of routes for every resource. Adding a screen is a PHP class.

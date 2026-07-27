@@ -2,7 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import { PkDropdown, useAppearance } from '@panelkit/ui';
-import { HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Package, Router as RouterIcon, Sparkles, Users } from '@lucide/vue';
+import { HelpCircle, Info, LayoutGrid, Mail, MessageCircleQuestion, MessagesSquare, Package, Router as RouterIcon, Sparkles, Users } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -105,7 +105,16 @@ const navGroups = computed(() => {
         grouped.set(item.group, [...(grouped.get(item.group) ?? []), entry]);
     }
 
-    return { ungrouped: [dashboardItem, ...ungrouped], grouped: [...grouped.entries()] };
+    // App screens are not resources, so they never come from the registry.
+    const apps: NavItem[] = [
+        { title: 'Mail', href: '/apps/mail', icon: Mail },
+        { title: 'Chat', href: '/apps/chat', icon: MessagesSquare },
+    ];
+
+    return {
+        ungrouped: [dashboardItem, ...ungrouped],
+        grouped: [...grouped.entries(), ['Apps', apps] as [string, NavItem[]]],
+    };
 });
 
 /** Which groups are closed. Open by default — a panel that hides its own navigation on first visit is hostile. */

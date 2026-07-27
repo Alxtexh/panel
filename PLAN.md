@@ -212,6 +212,56 @@ Do not abstract before Phase 4. Do not skip ahead.
 
 ---
 
+## Remaining roadmap
+
+Phases 0–8 are complete. What follows is the outstanding work, in the order it
+is worth doing. Measured against Filament 5.7 — see `GAP_ANALYSIS.md` for how
+the comparison was taken.
+
+### Now — design and app screens
+
+These are being built before Tier 2 because they are what the panel LOOKS like,
+and settling that first avoids reworking every feature screen afterwards.
+
+| Item | Notes |
+|---|---|
+| Mail / Inbox screen | Folder rail, message list, reading pane, star and archive. |
+| Chat screen | Conversation list, thread view, composer. |
+| Documentation page | Laravel-docs-style, in-panel. Not started. |
+
+### Tier 2 — needed before production for this domain
+
+| Item | Why it matters here |
+|---|---|
+| **Relation managers** | A client's sessions, devices and payments as tabs on the client page. The single largest remaining gap for real ISP work. |
+| **FileUpload** | Logos, contracts, ID scans. Nothing can be attached today. |
+| **Soft deletes + trashed filter** | There is no restore path at all; a mis-click is permanent. |
+| **`SummarizeRecords`** | A footer row of sums and averages. A filtered invoice list with no total is half an answer. |
+| **Live updates against a real Reverb** | The composable and the poll driver are proven; the broadcast driver has never been tested against a running connection. |
+
+### Tier 3 — differentiators and polish
+
+| Item | Notes |
+|---|---|
+| `Repeater`, `KeyValue`, `RichEditor` | Nested editing, arbitrary metadata, formatted notes. |
+| Visual query builder | Nested AND/OR conditions composed in the UI. |
+| Wizard | Multi-step creation. |
+| Table grouping and row reordering | Group rows with subtotals; drag to set display order. |
+| Import | The counterpart to the export that already exists. |
+| `ReplicateAction`, `ActionGroup` | Duplicate a record; nested action menus. |
+| **Auth and system screens** | A full set, designed rather than defaulted: OTP / verification, lock screen, access denied, and the error pages (404, 403, 419, 500, 503). Reference: the Diamond `auth/*` screens. These are the pages people see on their worst day, and a stock stack trace or an unstyled 403 is where a panel stops looking finished. |
+| **Invoice template** | A printable invoice document — line items, totals, tax, payment terms — as a real page rather than a PDF-only export. Reference: Diamond `pages/invoice`. Directly relevant to an ISP panel. |
+| **Device-frame preview page** | A workbench that renders arbitrary markup inside a pure-CSS phone frame, so a mobile layout can be designed and watched at the same time. Reference: the CSS iPhone collections on freefrontend. Standalone: it renders a preview, it does not couple to the panel's own screens. |
+
+### Open decisions
+
+| Decision | Status |
+|---|---|
+| **Database engine** | **Still SQLite.** Every performance figure so far demonstrates query SHAPE — keyset pagination, one grouped query per chart, no blocking counts — and none of it transfers to Postgres until the switch is made and the numbers retaken. This is the largest outstanding risk in the project. |
+| Landing pages | Deferred past Phase 9 by choice. |
+
+---
+
 ## Guardrails carried from spec §2
 
 1. Never SSH to, deploy to, or reference any remote server.

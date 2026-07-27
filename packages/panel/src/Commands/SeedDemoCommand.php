@@ -36,6 +36,15 @@ final class SeedDemoCommand extends Command
         'small'  => ['tenants' => 2, 'clients' => 5_000,   'sessions' => 20_000,    'plans' => 20,  'routers' => 10],
         'medium' => ['tenants' => 5, 'clients' => 50_000,  'sessions' => 200_000,   'plans' => 200, 'routers' => 50],
         'large'  => ['tenants' => 5, 'clients' => 500_000, 'sessions' => 2_000_000, 'plans' => 200, 'routers' => 50],
+        /*
+         | Deliberately past the point where anything sloppy shows.
+         |
+         | At 5M sessions a missing index is seconds rather than milliseconds,
+         | an OFFSET page is a visible stall, and a COUNT(*) in front of rows is
+         | unmissable. Numbers taken at `medium` prove a query SHAPE; numbers
+         | taken here prove the shape survives contact with real volume.
+         */
+        'xlarge' => ['tenants' => 5, 'clients' => 1_000_000, 'sessions' => 5_000_000, 'plans' => 400, 'routers' => 100],
     ];
 
     public function handle(): int
@@ -66,6 +75,7 @@ final class SeedDemoCommand extends Command
         $routerIds = $this->seedRouters($tenantIds, $cfg['routers']);
         $this->seedClients($tenantIds, $planIds, $routerIds, $cfg['clients']);
         $this->seedSessions($tenantIds, $cfg['sessions']);
+        $this->seedInbox($tenantIds);
 
         $elapsed = round(microtime(true) - $started, 1);
         $this->newLine();
@@ -112,7 +122,7 @@ final class SeedDemoCommand extends Command
         $this->components->warn('Truncating demo tables (local database only)');
 
         // Child-first, so foreign keys stay satisfied without disabling checks.
-        foreach (['client_sessions', 'clients', 'routers', 'plans', 'tenants'] as $table) {
+        foreach (['chat_messages', 'chat_conversations', 'mail_messages', 'client_sessions', 'clients', 'routers', 'plans', 'tenants'] as $table) {
             if (Schema::hasTable($table)) {
                 DB::table($table)->delete();
             }
@@ -517,6 +527,139 @@ final class SeedDemoCommand extends Command
         $minute = ($i * 7919 + $salt) % 3600;
 
         return $lo * 86400 + (23 - min(23, $hour)) * 3600 + $minute;
+    }
+
+
+    /**
+     * Mail and chat for every panel USER, not every tenant.
+     *
+     * These screens are per person: an inbox belongs to whoever is signed in,
+     * so seeding per tenant would leave the demo user with an empty mailbox
+     * whenever they were not the first user of their tenant — which is exactly
+     * how a seeded feature ends up looking broken.
+     *
+     * Small on purpose. Mail and chat are not the volume story; clients and
+     * sessions are. A million rows here would slow every reseed for no
+     * additional confidence.
+     */
+    private function seedInbox(array $tenantIds): void
+    {
+        $users = DB::table('users')->whereIn('tenant_id', $tenantIds)->get(['id', 'tenant_id']);
+
+        if ($users->isEmpty()) {
+            $this->components->warn('  no panel users, skipping mail and chat');
+
+            return;
+        }
+
+        $senders = [
+            ['Amina Achieng', 'amina.achieng@example.co.ke'],
+            ['Felix Mwangi', 'felix.mwangi@example.co.ke'],
+            ['Patience Ekwaro', 'p.ekwaro@example.co.ke'],
+            ['Kevin Peters', 'kevin.peters@example.co.ke'],
+            ['Network Operations', 'noc@example.co.ke'],
+            ['Billing', 'billing@example.co.ke'],
+        ];
+
+        $subjects = [
+            ['Connection dropping in the evenings', 'Since Tuesday the line drops around 8pm and comes back after a few minutes.'],
+            ['Upgrade to 20Mbps?', 'We would like to move up a plan before the end of the month.'],
+            ['Invoice query', 'The last invoice shows two months. Could you check?'],
+            ['Router replacement', 'The unit at the Kiambaa site is showing a red light.'],
+            ['Scheduled maintenance', 'Fibre splicing on the north route, Sunday 02:00 to 05:00.'],
+            ['New installation request', 'A neighbour has asked about coverage on our street.'],
+            ['Payment confirmation', 'Transfer sent this morning, reference 88213.'],
+            ['Speed test results', 'Attached are the results from this week, as requested.'],
+        ];
+
+        $folders = ['inbox', 'inbox', 'inbox', 'inbox', 'archived', 'sent', 'spam'];
+
+        $mail = [];
+        $now = time();
+        $n = 0;
+
+        foreach ($users as $user) {
+            for ($i = 0; $i < 40; $i++) {
+                [$name, $email] = $senders[$n % count($senders)];
+                [$subject, $body] = $subjects[$n % count($subjects)];
+                $offset = ($n * 7717) % (86400 * 21);
+                $n++;
+
+                $mail[] = [
+                    'user_id' => $user->id,
+                    'tenant_id' => $user->tenant_id,
+                    'folder' => $folders[$i % count($folders)],
+                    'from_name' => $name,
+                    'from_email' => $email,
+                    'subject' => $subject,
+                    'preview' => mb_substr($body, 0, 90),
+                    'body' => $body . "\n\n" . 'Thanks,' . "\n" . $name,
+                    'is_read' => $i % 3 !== 0,
+                    'is_starred' => $i % 7 === 0,
+                    'has_attachment' => $i % 5 === 0,
+                    'received_at' => date('Y-m-d H:i:s', $now - $offset),
+                    'created_at' => date('Y-m-d H:i:s', $now - $offset),
+                    'updated_at' => date('Y-m-d H:i:s', $now - $offset),
+                ];
+            }
+        }
+
+        foreach (array_chunk($mail, self::CHUNK) as $chunk) {
+            DB::table('mail_messages')->insert($chunk);
+        }
+
+        $contacts = ['Amina Achieng', 'Felix Mwangi', 'Patience Ekwaro', 'Kevin Peters', 'Rose Simiyu', 'Moses Otieno'];
+        $statuses = ['online', 'away', 'offline'];
+        $lines = [
+            'Is the line back up on your side?',
+            'Thanks, that fixed it.',
+            'Can someone come out on Thursday?',
+            'Invoice received, payment going out today.',
+            'The router is blinking red again.',
+            'All good now, appreciate the quick help.',
+        ];
+
+        $c = 0;
+
+        foreach ($users as $user) {
+            foreach ($contacts as $contact) {
+                $last = $now - (($c * 5407) % (86400 * 3));
+
+                $conversationId = DB::table('chat_conversations')->insertGetId([
+                    'user_id' => $user->id,
+                    'tenant_id' => $user->tenant_id,
+                    'contact_name' => $contact,
+                    'contact_email' => str($contact)->lower()->replace(' ', '.')->value() . '@example.co.ke',
+                    'status' => $statuses[$c % 3],
+                    'last_message' => $lines[$c % count($lines)],
+                    'last_message_at' => date('Y-m-d H:i:s', $last),
+                    'unread_count' => $c % 4 === 0 ? ($c % 3) + 1 : 0,
+                    'created_at' => date('Y-m-d H:i:s', $last),
+                    'updated_at' => date('Y-m-d H:i:s', $last),
+                ]);
+
+                $thread = [];
+
+                for ($m = 0; $m < 12; $m++) {
+                    $at = $last - ((12 - $m) * 900);
+
+                    $thread[] = [
+                        'conversation_id' => $conversationId,
+                        'tenant_id' => $user->tenant_id,
+                        'direction' => $m % 2 === 0 ? 'incoming' : 'outgoing',
+                        'body' => $lines[($c + $m) % count($lines)],
+                        'sent_at' => date('Y-m-d H:i:s', $at),
+                        'created_at' => date('Y-m-d H:i:s', $at),
+                        'updated_at' => date('Y-m-d H:i:s', $at),
+                    ];
+                }
+
+                DB::table('chat_messages')->insert($thread);
+                $c++;
+            }
+        }
+
+        $this->components->info('  mail and chat seeded for ' . $users->count() . ' users');
     }
 
 }
