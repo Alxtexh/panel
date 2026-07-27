@@ -32,7 +32,13 @@ use Throwable;
  */
 final class ChartWidget
 {
-    private const TYPES = ['line', 'area', 'bar', 'pie', 'doughnut'];
+    /*
+     * `segments` is a single proportional bar rather than a plot — a limit or a
+     * breakdown. It lives here rather than in its own widget class because the
+     * declaration, the deferral and the failure isolation are identical; only
+     * the renderer differs.
+     */
+    private const TYPES = ['line', 'area', 'bar', 'pie', 'doughnut', 'segments'];
 
     private string $type = 'line';
 

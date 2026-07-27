@@ -227,16 +227,36 @@ final class SeedDemoCommand extends Command
         $buffer = [];
         $seq = 0;
 
+        // 540 days of history, strongly weighted towards recent sign-ups, so
+        // the list has depth to page through and the chart has a growth curve.
+        $signupWeights = $this->dayWeights(540, $nowTs, 0.6, 0.85);
+        $expiryWeights = $this->dayWeights(360, $nowTs, 1.0, 0.0);
+
         for ($i = 0; $i < $total; $i++) {
             $tenantId = $tenantIds[$i % $tenantCount];
             $tenantPlans = $planIds[$tenantId] ?? [null];
             $tenantRouters = $routerIds[$tenantId] ?? [null];
 
-            // Deterministic pseudo-variation. Avoids 500k rand() calls and keeps
-            // the dataset reproducible between runs, which matters when a perf
-            // number regresses and you need to compare like for like.
-            $createdOffset = ($i * 37) % (86400 * 730);
-            $expiryOffset  = (($i * 53) % (86400 * 365)) - (86400 * 60);
+            /*
+             | Deterministic, but SHAPED — see dayWeights(). Reproducible
+             | between runs so a perf number stays comparable, while still
+             | producing a series with weekday rhythm and a growth trend rather
+             | than a horizontal line.
+             |
+             | THE PREVIOUS FORM WAS SILENTLY WRONG. `($i * 37) % (86400 * 730)`
+             | reads as "spread over two years", and is — but only once
+             | `$i * 37` exceeds 63,072,000, which needs 1.7 MILLION rows. At
+             | 50k the modulo never wraps, so every client was created within 21
+             | days: "clients over time" covered three weeks whatever the scale,
+             | and a date filter beyond a month matched everything or nothing.
+             | A weight table cannot fail that way — the window is stated in
+             | days and the distribution is normalised to it.
+             */
+            $createdOffset = $this->offsetFor($i, $signupWeights, 11);
+
+            // Same trap: an expiry spread must not depend on the row count
+            // either. Half already lapsed, half still ahead.
+            $expiryOffset = $this->offsetFor($i, $expiryWeights, 71) - (86400 * 180);
 
             $buffer[] = [
                 'tenant_id' => $tenantId,
@@ -294,6 +314,8 @@ final class SeedDemoCommand extends Command
         $tenantCount = count($tenantIds);
         $buffer = [];
 
+        $sessionWeights = $this->dayWeights(90, $nowTs, 0.45, 0.45);
+
         for ($i = 0; $i < $total; $i++) {
             $tenantId = $tenantIds[$i % $tenantCount];
             $range = $ranges[$tenantId] ?? null;
@@ -306,7 +328,7 @@ final class SeedDemoCommand extends Command
             $clientId = (int) $range->min_id + (($i * 7) % $span);
             $tenantRouters = $routers[$tenantId] ?? [null];
 
-            $startedOffset = ($i * 17) % (86400 * 30);
+            $startedOffset = $this->offsetFor($i, $sessionWeights, 29);
             // One session in six is still live, which gives the Phase 8 live
             // view something to patch without needing a generator process.
             $isLive = ($i % 6) === 0;
@@ -340,4 +362,84 @@ final class SeedDemoCommand extends Command
         $bar->finish();
         $this->newLine();
     }
+
+    /**
+     * A cumulative weight table over `$days` days, ending today.
+     *
+     * WHY THE SEEDER SHAPES ITS OWN TIME DISTRIBUTION.
+     *
+     * The previous `($i * 17) % (86400 * 30)` spread rows PERFECTLY EVENLY over
+     * the window. That is fine for measuring query cost — every bucket holds the
+     * same number of rows — and useless for everything else: a time series drawn
+     * from it is a horizontal line, so a chart bug that mangles the shape is
+     * invisible, and so is a chart feature that renders it well.
+     *
+     * The curve here is weekly seasonality (quiet weekends), a gentle growth
+     * trend, and two out-of-phase sine terms so the wobble does not read as a
+     * repeating pattern. Deterministic, so a performance number is still
+     * comparable between runs.
+     *
+     * @return list<float> Cumulative weights, normalised to end at 1.0.
+     */
+    private function dayWeights(int $days, int $nowTs, float $weekendDip, float $growth): array
+    {
+        $todayDow = (int) date('w', $nowTs);
+        $weights = [];
+        $sum = 0.0;
+
+        for ($d = 0; $d < $days; $d++) {
+            // $d counts BACKWARDS from today, so day 0 is today.
+            $dow = ($todayDow - $d % 7 + 7) % 7;
+            $seasonal = ($dow === 0 || $dow === 6) ? $weekendDip : 1.0;
+
+            // Older days are lighter, so the series trends upward on screen.
+            $trend = 1.0 - $growth * ($d / max(1, $days - 1));
+            $wobble = 1 + 0.20 * sin($d / 3.1) + 0.11 * sin($d / 1.6 + 1.2);
+
+            $w = max(0.05, $seasonal * $trend * $wobble);
+            $sum += $w;
+            $weights[$d] = $sum;
+        }
+
+        return array_map(static fn (float $w): float => $w / $sum, $weights);
+    }
+
+    /**
+     * Pick a second-offset into the past for row `$i`, following `$cumulative`.
+     *
+     * A binary search over ~90 buckets is seven comparisons — cheap enough to
+     * run two million times, which a reject-sampling loop would not be.
+     */
+    private function offsetFor(int $i, array $cumulative, int $salt): int
+    {
+        // Knuth multiplicative hash: a well-spread deterministic uniform.
+        $u = (($i * 2654435761 + $salt) % 1000003) / 1000003;
+
+        $lo = 0;
+        $hi = count($cumulative) - 1;
+
+        while ($lo < $hi) {
+            $mid = intdiv($lo + $hi, 2);
+            if ($cumulative[$mid] < $u) {
+                $lo = $mid + 1;
+            } else {
+                $hi = $mid;
+            }
+        }
+
+        /*
+         * Hour of day, weighted towards the evening peak an ISP actually sees.
+         * Without this the "Today" view — which buckets by hour — is flat even
+         * though the daily view is not.
+         */
+        $hourPick = (($i * 40503 + $salt) % 100) / 100;
+        $hour = $hourPick < 0.55
+            ? 18 + (int) ($hourPick / 0.55 * 5)   // 18:00-22:00 carries most of it
+            : (int) ($hourPick * 24);
+
+        $minute = ($i * 7919 + $salt) % 3600;
+
+        return $lo * 86400 + (23 - min(23, $hour)) * 3600 + $minute;
+    }
+
 }
