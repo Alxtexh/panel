@@ -11,6 +11,9 @@ use PanelKit\Panel\Forms\Fields\DateField;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
+use PanelKit\Panel\Schema\Section;
+use PanelKit\Panel\Schema\Tab;
+use PanelKit\Panel\Schema\Tabs;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
@@ -46,28 +49,44 @@ final class ClientResource extends Resource
      */
     public static function form(Form $form): Form
     {
-        return $form->columns(2)->schema([
-            TextField::make('name')->required()->placeholder('Full name'),
-            TextField::make('phone')->required()->as('tel')->placeholder('+2547...'),
-            TextField::make('access_code')->required()->max(32)
-                ->help('Unique within your organisation.'),
-            SelectField::make('status')->required()->options([
-                'active' => 'Active',
-                'expired' => 'Expired',
-                'suspended' => 'Suspended',
+        return $form->schema([
+            Tabs::make()->tabs([
+                Tab::make('Identity')->schema([
+                    Section::make('Contact')->columns(2)->schema([
+                        TextField::make('name')->required()->placeholder('Full name'),
+                        TextField::make('phone')->required()->as('tel')->placeholder('+2547...'),
+                    ]),
+                    Section::make('Access')->description('How this subscriber authenticates.')
+                        ->columns(2)->schema([
+                            TextField::make('access_code')->required()->max(32)
+                                ->help('Unique within your organisation.'),
+                            SelectField::make('status')->required()->options([
+                                'active' => 'Active',
+                                'expired' => 'Expired',
+                                'suspended' => 'Suspended',
+                            ]),
+                        ]),
+                ]),
+
+                Tab::make('Service')->schema([
+                    Section::make('Plan')->columns(2)->schema([
+                        SelectField::make('plan_type')->label('Plan type')->required()->options([
+                            'pppoe' => 'PPPoE',
+                            'hotspot' => 'Hotspot',
+                            'static' => 'Static',
+                        ]),
+                        // A CLOSURE. Resolved when the form data is assembled,
+                        // never while building the cached schema, and
+                        // tenant-scoped by the model's global scope.
+                        SelectField::make('plan_id')->label('Plan')->options(
+                            fn (): array => Plan::query()->orderBy('name')->pluck('name', 'id')->all()
+                        ),
+                    ]),
+                    Section::make('Billing')->collapsible(collapsed: true)->schema([
+                        DateField::make('expiry_date')->label('Expires'),
+                    ]),
+                ]),
             ]),
-            SelectField::make('plan_type')->label('Plan type')->required()->options([
-                'pppoe' => 'PPPoE',
-                'hotspot' => 'Hotspot',
-                'static' => 'Static',
-            ]),
-            // A CLOSURE. Resolved when the form data is assembled, never while
-            // building the cached schema, and tenant-scoped by the model's
-            // global scope (antipatterns S3.3).
-            SelectField::make('plan_id')->label('Plan')->options(
-                fn (): array => Plan::query()->orderBy('name')->pluck('name', 'id')->all()
-            ),
-            DateField::make('expiry_date')->label('Expires')->span(2),
         ]);
     }
 

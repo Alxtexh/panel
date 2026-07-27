@@ -24,7 +24,7 @@ const props = defineProps<{
         label: string
         labelPlural: string
         routes: { index: string }
-        form: { columns: number; fields: FormField[] }
+        form: { columns: number; nodes: any[]; fields: FormField[] }
     }
     record: { id: number | string; label: string } | null
     values: Record<string, any>
@@ -105,6 +105,7 @@ onBeforeUnmount(() => {
         <div class="bg-card rounded-lg border p-4 sm:p-6">
             <RecordForm
                 :model-value="formValues"
+                :nodes="schema.form.nodes"
                 :fields="schema.form.fields"
                 :columns="schema.form.columns"
                 :errors="form.errors as any"

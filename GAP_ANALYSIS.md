@@ -20,7 +20,7 @@ not foundations, and breadth is what makes a panel usable on day one.
 | Table filter types | **2** | **5** + visual query builder |
 | Chart widget types | **1** (bar) | **8** |
 | Action classes | **3** (create/edit/delete) | **27** |
-| Layout components | **0** | **23** |
+| Layout components | **5** (Section, Tabs, Tab, Grid, + field leaves) | **23** |
 | View-page entry types | **0** (flat list) | **9** |
 | Panel config options | **7** | **34** |
 | Table behaviours | 8 | 17 |
@@ -104,7 +104,20 @@ A dashboard of six static counters is not a dashboard an operator watches.
 
 ---
 
-## 5. Layout components — 0 of 23
+## 5. Layout components — 5 of 23 (was 0)
+
+**DONE:** `Section` (collapsible, described, column grid), `Tabs`, `Tab`, `Grid`,
+composing to any depth. Forms render from a tree; validation walks it, so a
+field behind an inactive tab is validated exactly like a visible one and its tab
+shows an error marker.
+
+**Still missing:** `Wizard`, `Fieldset`, `Flex`, `Callout`, `EmptyState`,
+`Text`, `Icon`, `Image`, `UnorderedList`, `FusedGroup`, and the 9 infolist entry
+types — so the VIEW page is still a flat definition list rather than tabbed.
+
+---
+
+### Original assessment
 
 This is the largest structural gap. Filament forms and view pages are built from
 `Tabs`, `Wizard`, `Section` (collapsible), `Fieldset`, `Grid`, `Flex`, `Group`,

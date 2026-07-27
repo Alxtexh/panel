@@ -138,6 +138,9 @@ abstract class Field
     public function toSchema(): array
     {
         return array_filter([
+            // Discriminator, so the client can walk a mixed tree of layout
+            // nodes and fields without guessing what each node is.
+            'component' => 'field',
             'key' => $this->key,
             'label' => $this->resolvedLabel(),
             'type' => $this->type(),
