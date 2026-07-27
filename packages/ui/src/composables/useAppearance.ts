@@ -15,7 +15,15 @@ import { computed, onMounted, ref } from 'vue'
  */
 export type Theme = 'light' | 'dark' | 'system'
 export type Density = 'comfortable' | 'compact'
-export type SidebarSide = 'left' | 'right'
+/**
+ * Where the navigation lives.
+ *
+ * `horizontal` is a different LAYOUT, not a different side — the nav becomes a
+ * top bar with dropdown groups and there is no vertical rail at all. It shares
+ * this setting because to the person choosing it, all three are the same
+ * question: "where do I want the menu".
+ */
+export type SidebarSide = 'left' | 'right' | 'horizontal'
 export type CardStyle = 'transparent' | 'filled'
 
 export interface Appearance {

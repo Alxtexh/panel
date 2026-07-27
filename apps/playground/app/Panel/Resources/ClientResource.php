@@ -20,7 +20,6 @@ use PanelKit\Panel\Schema\Tabs;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
-use PanelKit\Panel\Tables\Columns\SelectColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Filters\DateRangeFilter;
 use PanelKit\Panel\Tables\Filters\MultiSelectFilter;
@@ -147,22 +146,23 @@ final class ClientResource extends Resource
                 TextColumn::make('access_code')->from('clients.access_code')->searchable()->copyable()->mono(),
                 TextColumn::make('phone')->from('clients.phone')->searchable()->copyable()->muted(),
                 /*
-                 | EDITABLE IN PLACE. Changing twenty clients from active to
-                 | suspended used to be twenty page visits; it is now twenty
-                 | clicks in the list.
+                 | A BADGE, not an editable select.
                  |
-                 | The option list is also the validation rule — a request
-                 | naming a status that is not here is rejected, which matters
-                 | because the column is a plain string with no CHECK
-                 | constraint behind it.
+                 | SelectColumn exists and works, but putting it on `status` put
+                 | a form control in every row of the busiest column in the
+                 | panel: a list is a READING surface first, and a wall of
+                 | dropdowns is harder to scan than a wall of coloured badges —
+                 | the value stops being something you take in at a glance and
+                 | becomes something you have to read out of a widget.
+                 |
+                 | Changing many statuses at once is what the bulk actions are
+                 | for, and changing one is what the row menu is for.
                  */
-                SelectColumn::make('status')->from('clients.status')->sortable()
-                    ->options(['active', 'expired', 'suspended'])
-                    ->colors([
-                        'active' => 'success',
-                        'expired' => 'danger',
-                        'suspended' => 'warning',
-                    ]),
+                BadgeColumn::make('status')->from('clients.status')->sortable()->colors([
+                    'active' => 'success',
+                    'expired' => 'danger',
+                    'suspended' => 'warning',
+                ]),
                 TextColumn::make('plan_name')->from('plans.name as plan_name')->label('Plan'),
                 TextColumn::make('plan_type')->from('clients.plan_type')->label('Type')->transform('upper')->muted(),
                 DateColumn::make('expiry_date')->from('clients.expiry_date')->label('Expires')->sortable(),

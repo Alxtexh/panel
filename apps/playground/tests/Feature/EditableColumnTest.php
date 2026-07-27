@@ -35,6 +35,8 @@ final class EditableColumnTest extends TestCase
 
     private Client $client;
 
+    private Plan $plan;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -47,6 +49,23 @@ final class EditableColumnTest extends TestCase
         ]);
 
         $this->client = $this->makeClient($this->tenantA);
+
+        /*
+         * The editable-column fixture is a PLAN, not a client.
+         *
+         * Clients originally carried an editable `status` select; it was
+         * reverted to a badge because a form control in every row of the
+         * busiest column made the list harder to scan than it made it to edit.
+         * The endpoint and its guards are unchanged — only which resource
+         * exercises them.
+         */
+        $this->plan = Plan::withoutGlobalScopes()->create([
+            'tenant_id' => $this->tenantA->id,
+            'name' => 'Editable Plan',
+            'speed_mbps' => 20,
+            'price_cents' => 2000,
+            'is_active' => true,
+        ]);
     }
 
     /* ------------------------------------------------------------ the write */
@@ -54,11 +73,11 @@ final class EditableColumnTest extends TestCase
     public function test_an_editable_cell_can_be_written(): void
     {
         $this->actingAs($this->userA)
-            ->patchJson("/clients/{$this->client->id}/cell", ['column' => 'status', 'value' => 'suspended'])
+            ->patchJson("/plans/{$this->plan->id}/cell", ['column' => 'is_active', 'value' => false])
             ->assertOk()
-            ->assertJson(['column' => 'status', 'value' => 'suspended']);
+            ->assertJson(['column' => 'is_active', 'value' => false]);
 
-        $this->assertSame('suspended', $this->client->fresh()->status);
+        $this->assertFalse((bool) $this->plan->fresh()->is_active);
     }
 
     /* ----------------------------------------------------------- the refusals */
@@ -80,6 +99,20 @@ final class EditableColumnTest extends TestCase
         $this->assertSame($original, $this->client->fresh()->access_code);
     }
 
+    /**
+     * `status` is on the table and is NOT editable, so the endpoint refuses it
+     * exactly as it refuses a column that is not there at all. Being visible in
+     * the list confers nothing.
+     */
+    public function test_a_display_only_column_cannot_be_written(): void
+    {
+        $this->actingAs($this->userA)
+            ->patchJson("/clients/{$this->client->id}/cell", ['column' => 'status', 'value' => 'suspended'])
+            ->assertNotFound();
+
+        $this->assertSame('active', $this->client->fresh()->status);
+    }
+
     /** A column that is not on the table at all is equally refused. */
     public function test_an_unknown_column_is_refused(): void
     {
@@ -95,29 +128,35 @@ final class EditableColumnTest extends TestCase
      * with no CHECK constraint, so this is the only thing preventing a row that
      * no filter or tab will ever match again.
      */
-    public function test_a_value_outside_the_declared_options_is_rejected(): void
+    public function test_a_value_the_column_cannot_cast_is_rejected(): void
     {
         $this->actingAs($this->userA)
-            ->patchJson("/clients/{$this->client->id}/cell", ['column' => 'status', 'value' => 'god_mode'])
+            ->patchJson("/plans/{$this->plan->id}/cell", ['column' => 'is_active', 'value' => 'god_mode'])
             ->assertStatus(422);
 
-        $this->assertSame('active', $this->client->fresh()->status);
+        $this->assertTrue((bool) $this->plan->fresh()->is_active);
     }
 
     public function test_another_tenants_record_cannot_be_edited(): void
     {
-        $foreign = $this->makeClient($this->tenantB);
+        $foreign = Plan::withoutGlobalScopes()->create([
+            'tenant_id' => $this->tenantB->id,
+            'name' => 'Foreign Plan',
+            'speed_mbps' => 5,
+            'price_cents' => 500,
+            'is_active' => true,
+        ]);
 
         $this->actingAs($this->userA)
-            ->patchJson("/clients/{$foreign->id}/cell", ['column' => 'status', 'value' => 'suspended'])
+            ->patchJson("/plans/{$foreign->id}/cell", ['column' => 'is_active', 'value' => false])
             ->assertNotFound();
 
-        $this->assertSame('active', $foreign->fresh()->status);
+        $this->assertTrue((bool) $foreign->fresh()->is_active);
     }
 
     public function test_guests_cannot_edit_a_cell(): void
     {
-        $this->patchJson("/clients/{$this->client->id}/cell", ['column' => 'status', 'value' => 'suspended'])
+        $this->patchJson("/plans/{$this->plan->id}/cell", ['column' => 'is_active', 'value' => false])
             ->assertUnauthorized();
     }
 
@@ -125,14 +164,14 @@ final class EditableColumnTest extends TestCase
     public function test_a_stale_cell_edit_is_rejected(): void
     {
         $this->actingAs($this->userA)
-            ->patchJson("/clients/{$this->client->id}/cell", [
-                'column' => 'status',
-                'value' => 'suspended',
+            ->patchJson("/plans/{$this->plan->id}/cell", [
+                'column' => 'is_active',
+                'value' => false,
                 '_updated_at' => '2020-01-01T00:00:00+00:00',
             ])
             ->assertStatus(422);
 
-        $this->assertSame('active', $this->client->fresh()->status);
+        $this->assertTrue((bool) $this->plan->fresh()->is_active);
     }
 
     /* ------------------------------------------------------------- casting */
@@ -173,15 +212,21 @@ final class EditableColumnTest extends TestCase
 
     public function test_an_editable_column_declares_itself_in_the_schema(): void
     {
-        $schema = \App\Panel\Resources\ClientResource::schema()['table']['columns'];
-        $status = collect($schema)->firstWhere('key', 'status');
+        $active = collect(\App\Panel\Resources\PlanResource::schema()['table']['columns'])
+            ->firstWhere('key', 'is_active');
 
-        $this->assertSame('select', $status['type']);
-        $this->assertTrue($status['editable']);
-        $this->assertSame(
-            ['active' => 'Active', 'expired' => 'Expired', 'suspended' => 'Suspended'],
-            $status['options'],
-        );
+        $this->assertSame('toggle', $active['type']);
+        $this->assertTrue($active['editable']);
+    }
+
+    /** And a display-only column says nothing about being writable. */
+    public function test_a_badge_column_is_not_marked_editable(): void
+    {
+        $status = collect(\App\Panel\Resources\ClientResource::schema()['table']['columns'])
+            ->firstWhere('key', 'status');
+
+        $this->assertSame('badge', $status['type']);
+        $this->assertArrayNotHasKey('editable', $status);
     }
 
     /**

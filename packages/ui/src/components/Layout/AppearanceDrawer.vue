@@ -11,7 +11,7 @@
  * Everything applies IMMEDIATELY. No Apply button: there is no request to batch,
  * and seeing the change is the feedback.
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import {
     useAppearance,
     FONT_SIZE_MAX,
@@ -25,6 +25,9 @@ import {
 const { appearance, set, reset, PRIMARY_COLORS, SURFACE_TINTS } = useAppearance()
 
 const open = ref(false)
+
+/** The drawer takes the edge opposite the sidebar. */
+const onLeft = computed(() => appearance.value.sidebarSide === 'right')
 
 const themes: { value: Theme; label: string }[] = [
     { value: 'light', label: 'Light' },
@@ -45,6 +48,7 @@ const cardStyles: { value: CardStyle; label: string }[] = [
 const sides: { value: SidebarSide; label: string }[] = [
     { value: 'left', label: 'Left' },
     { value: 'right', label: 'Right' },
+    { value: 'horizontal', label: 'Top' },
 ]
 
 /**
@@ -84,15 +88,29 @@ function surfaceSwatch(hue: number, chroma: number): string {
             <div v-if="open" class="fixed inset-0 z-50 bg-black/30" @click="open = false" />
         </Transition>
 
+        <!--
+            THE DRAWER OPENS ON THE SIDE THE SIDEBAR IS NOT.
+
+            A panel that always slides in from the right lands ON TOP of a
+            right-hand sidebar, covering the navigation while you adjust where
+            the navigation should be. It also means the drawer flies in from the
+            opposite end of the screen to the gear you just clicked, since the
+            topbar mirrors too.
+
+            Both the resting edge and the direction of travel have to flip
+            together — an off-screen start of `-translate-x-full` with a
+            `right-0` anchor animates in from the wrong side.
+        -->
         <Transition
-            enter-active-class="transition duration-200 ease-out"
-            enter-from-class="translate-x-full"
-            leave-active-class="transition duration-150 ease-in"
-            leave-to-class="translate-x-full"
+            :enter-active-class="'transition duration-200 ease-out'"
+            :enter-from-class="onLeft ? '-translate-x-full' : 'translate-x-full'"
+            :leave-active-class="'transition duration-150 ease-in'"
+            :leave-to-class="onLeft ? '-translate-x-full' : 'translate-x-full'"
         >
             <aside
                 v-if="open"
-                class="bg-background fixed top-0 right-0 z-50 flex h-full w-80 flex-col border-l shadow-2xl"
+                class="bg-background fixed top-0 z-50 flex h-full w-80 flex-col shadow-2xl"
+                :class="onLeft ? 'left-0 border-r' : 'right-0 border-l'"
                 role="dialog"
                 aria-label="Appearance settings"
             >

@@ -22,6 +22,19 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /*
+     | In-panel content pages. Static, so Route::inertia is enough — they carry
+     | no props and adding a controller for each would be three files that only
+     | name a component.
+     |
+     | Declared BEFORE the resource routes: `{resource}` is constrained by
+     | whereIn, so these could not be captured by it today, but the ordering
+     | keeps that true if a resource is ever named `help`.
+     */
+    Route::inertia('help', 'support/Help')->name('support.help');
+    Route::inertia('faq', 'support/Faq')->name('support.faq');
+    Route::inertia('about', 'support/About')->name('support.about');
+
+    /*
      | One set of routes for every resource. Adding a screen is a PHP class.
      |
      | ORDER MATTERS: /create must be declared before /{id}, or 'create' is

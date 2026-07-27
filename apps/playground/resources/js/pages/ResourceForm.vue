@@ -13,7 +13,7 @@
  * whether `record` is null.
  */
 import { Button } from '@/components/ui/button'
-import { RecordForm, type FormField } from '@panelkit/ui'
+import { RecordForm, UnsavedBar } from '@panelkit/ui'
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { toast } from 'vue-sonner'
@@ -71,6 +71,20 @@ async function searchOptions(field: string, term: string): Promise<{ value: any;
 
 function cancel() {
     router.visit(props.schema.routes.index)
+}
+
+/**
+ * Discard edits without leaving the page.
+ *
+ * `form.reset()` restores the values the form was CONSTRUCTED with, which are
+ * the record's saved values on an edit page and the empty defaults on a create
+ * page — so one call is correct for both. Errors are cleared too: an error
+ * about a field that has just been reverted is describing a value that no
+ * longer exists.
+ */
+function discard() {
+    form.reset()
+    form.clearErrors()
 }
 
 /**
@@ -137,6 +151,18 @@ onBeforeUnmount(() => {
                 @change="(key: string, value: any) => ((form as any)[key] = value)"
             />
         </div>
+
+        <!--
+            The bar reports dirtiness; it does not define it. Shown only while
+            there is something to lose, so a page merely looked at stays quiet.
+        -->
+        <UnsavedBar
+            :show="form.isDirty && !form.processing"
+            :processing="form.processing"
+            :save-label="isEdit ? 'Save changes' : `Create ${schema.label}`"
+            @save="submit"
+            @reset="discard"
+        />
 
         <div class="flex items-center justify-end gap-2">
             <Button variant="ghost" :disabled="form.processing" @click="cancel">Cancel</Button>

@@ -130,6 +130,14 @@ final class DashboardController extends Controller
             ChartWidget::make('plan_type', 'Clients by plan type')
                 ->type('doughnut')
                 ->data(fn (): array => $this->groupedCount('plan_type')),
+
+            // A proportional bar rather than a plot: three buckets of one
+            // quantity read better side by side than as three points.
+            ChartWidget::make('renewals', 'Renewals due')
+                ->type('segments')
+                ->description('Subscriptions reaching their expiry date')
+                ->span(2)
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->renewalBuckets($now)),
         ];
     }
 
@@ -153,6 +161,38 @@ final class DashboardController extends Controller
     private function signupSeries(): TimeSeries
     {
         return TimeSeries::of(Client::query())->timestamp('created_at')->count();
+    }
+
+    /**
+     * Upcoming renewals in three windows, as ONE query.
+     *
+     * Conditional aggregation rather than three counts: the alternative reads
+     * more clearly and costs three scans of the same index for one card. The
+     * bounds are parameters, never interpolated dates.
+     *
+     * @return list<array{label: string, value: int}>
+     */
+    private function renewalBuckets(?DateTimeImmutable $now): array
+    {
+        $now ??= new DateTimeImmutable();
+
+        $at = static fn (string $modify): string => $now->modify($modify)->format('Y-m-d H:i:s');
+        $today = $now->format('Y-m-d H:i:s');
+
+        $row = Client::query()->toBase()
+            ->selectRaw(
+                'SUM(CASE WHEN expiry_date >= ? AND expiry_date < ? THEN 1 ELSE 0 END) AS week,'
+                . ' SUM(CASE WHEN expiry_date >= ? AND expiry_date < ? THEN 1 ELSE 0 END) AS month,'
+                . ' SUM(CASE WHEN expiry_date >= ? AND expiry_date < ? THEN 1 ELSE 0 END) AS quarter',
+                [$today, $at('+7 days'), $at('+7 days'), $at('+30 days'), $at('+30 days'), $at('+90 days')],
+            )
+            ->first();
+
+        return [
+            ['label' => 'Next 7 days', 'value' => (int) ($row->week ?? 0)],
+            ['label' => '8–30 days', 'value' => (int) ($row->month ?? 0)],
+            ['label' => '31–90 days', 'value' => (int) ($row->quarter ?? 0)],
+        ];
     }
 
     /**

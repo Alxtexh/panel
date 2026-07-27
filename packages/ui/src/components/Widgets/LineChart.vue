@@ -1,20 +1,27 @@
 <script setup lang="ts">
 /**
- * A line or area chart over a time series.
+ * A smooth multi-series line or area chart with a shared crosshair tooltip.
  *
  * NO CHARTING LIBRARY, for the reason BarChart gives: deferring a 200 KB
- * dependency is strictly worse than not having one. This is ~150 lines of SVG.
+ * dependency is strictly worse than not having one.
+ *
+ * THE CURVE IS A MONOTONE CUBIC HERMITE SPLINE, not a plain Bézier smoothing.
+ * The distinction matters for correctness rather than looks: an ordinary
+ * smoothing spline OVERSHOOTS between points, so a series that dips to 0 gets
+ * drawn dipping BELOW zero, and one that plateaus grows bumps that are not in
+ * the data. A monotone spline is constrained to stay within the values it
+ * connects, so the curve never invents a reading the series does not contain.
  *
  * COORDINATES ARE MEASURED, NOT SCALED. The obvious shortcut is a fixed
  * `viewBox` plus `preserveAspectRatio="none"`, which stretches the drawing to
- * the card. That also stretches the STROKES and the TEXT — the line comes out
- * thicker horizontally than vertically and the axis labels are visibly
- * condensed. A ResizeObserver gives real pixel widths, so a stroke is a stroke
- * and 11px text is 11px at every card size.
+ * the card — and stretches the STROKES and TEXT with it, so the line is thicker
+ * horizontally than vertically and the labels come out condensed. A
+ * ResizeObserver gives real pixel widths.
  *
- * X LABELS ARE THINNED. Thirty daily labels in a 400px card overlap into a grey
- * smear; the chart looks broken rather than dense. Every Nth label is drawn,
- * with the last always kept — the most recent point is the one being read.
+ * THE TOOLTIP IS SHARED ACROSS SERIES. Hovering shows every dataset at that
+ * moment, because the question a multi-series chart is asked is almost always
+ * comparative — per-series hit testing answers "what was this line" when the
+ * user meant "what was happening here".
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
@@ -23,14 +30,27 @@ interface Point {
     value: number
 }
 
+export interface ChartSeries {
+    name: string
+    points: Point[]
+    /** A CSS colour. Defaults to the theme palette by index. */
+    color?: string
+}
+
 const props = withDefaults(
     defineProps<{
-        data: Point[]
+        /** Single series, the common case. */
+        data?: Point[]
+        /** Several series. Takes precedence over `data`. */
+        series?: ChartSeries[]
         height?: number
         type?: 'line' | 'area'
         format?: (value: number) => string
+        /** Hide the y axis for a cleaner card, as the reference dashboards do. */
+        showAxis?: boolean
+        showLegend?: boolean
     }>(),
-    { height: 220, type: 'area' },
+    { height: 220, type: 'area', showAxis: true, showLegend: false },
 )
 
 const host = ref<HTMLElement | null>(null)
@@ -51,7 +71,29 @@ onMounted(() => {
 
 onBeforeUnmount(() => observer?.disconnect())
 
-const PAD = { top: 12, right: 12, bottom: 22, left: 44 }
+/** Theme tokens, so a tenant brand or the user's primary colour applies. */
+const PALETTE = ['var(--primary)', 'var(--chart-2)', 'var(--chart-4)', 'var(--chart-3)', 'var(--chart-5)']
+
+/** A stable id per instance; two charts on one page must not share a gradient. */
+const uid = Math.random().toString(36).slice(2, 9)
+
+const resolved = computed<ChartSeries[]>(() => {
+    const list = props.series?.length ? props.series : props.data?.length ? [{ name: '', points: props.data }] : []
+
+    return list.map((s, i) => ({ ...s, color: s.color ?? PALETTE[i % PALETTE.length] }))
+})
+
+const labels = computed(() => resolved.value[0]?.points.map((p) => p.label) ?? [])
+const count = computed(() => labels.value.length)
+
+const pad = computed(() => ({
+    top: 12,
+    right: 12,
+    bottom: 22,
+    // The axis gutter disappears entirely when the axis is hidden, rather than
+    // sitting there as dead space.
+    left: props.showAxis ? 44 : 8,
+}))
 
 const format = (v: number) => (props.format ? props.format(v) : compact(v))
 
@@ -71,7 +113,7 @@ function compact(v: number): string {
  * compare at a glance.
  */
 const ceiling = computed(() => {
-    const max = Math.max(...props.data.map((d) => d.value), 0)
+    const max = Math.max(...resolved.value.flatMap((s) => s.points.map((p) => p.value)), 0)
 
     if (max <= 0) return 1
 
@@ -82,184 +124,289 @@ const ceiling = computed(() => {
 })
 
 const plot = computed(() => ({
-    w: Math.max(1, width.value - PAD.left - PAD.right),
-    h: Math.max(1, props.height - PAD.top - PAD.bottom),
+    w: Math.max(1, width.value - pad.value.left - pad.value.right),
+    h: Math.max(1, props.height - pad.value.top - pad.value.bottom),
 }))
 
-const coords = computed(() =>
-    props.data.map((point, i) => ({
-        ...point,
-        // A single point has no span to divide, so it sits at the left edge
-        // rather than dividing by zero.
-        x: PAD.left + (props.data.length <= 1 ? 0 : (i / (props.data.length - 1)) * plot.value.w),
-        y: PAD.top + plot.value.h - (point.value / ceiling.value) * plot.value.h,
-    })),
+function xFor(i: number): number {
+    return pad.value.left + (count.value <= 1 ? 0 : (i / (count.value - 1)) * plot.value.w)
+}
+
+function yFor(value: number): number {
+    return pad.value.top + plot.value.h - (value / ceiling.value) * plot.value.h
+}
+
+const geometry = computed(() =>
+    resolved.value.map((s) => {
+        const pts = s.points.map((p, i) => ({ ...p, x: xFor(i), y: yFor(p.value) }))
+
+        return { ...s, pts, line: monotonePath(pts), area: areaFrom(monotonePath(pts), pts) }
+    }),
 )
 
-const linePath = computed(() =>
-    coords.value.map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(2)},${c.y.toFixed(2)}`).join(' '),
-)
+/**
+ * Monotone cubic Hermite interpolation (the `monotoneX` shape).
+ *
+ * Tangents are damped wherever the data changes direction, which is what keeps
+ * the curve inside the values it joins. Without that damping the classic
+ * Catmull-Rom smoothing draws a visible undershoot below zero every time a
+ * series touches its floor — on a count of sessions that reads as a negative
+ * number of sessions.
+ */
+function monotonePath(pts: { x: number; y: number }[]): string {
+    const n = pts.length
 
-const areaPath = computed(() => {
-    if (coords.value.length === 0) return ''
+    if (n === 0) return ''
+    if (n === 1) return `M${pts[0].x},${pts[0].y}`
 
-    const base = PAD.top + plot.value.h
-    const first = coords.value[0]
-    const last = coords.value[coords.value.length - 1]
+    const dx: number[] = []
+    const slope: number[] = []
 
-    return `${linePath.value} L${last.x.toFixed(2)},${base} L${first.x.toFixed(2)},${base} Z`
-})
+    for (let i = 0; i < n - 1; i++) {
+        dx[i] = pts[i + 1].x - pts[i].x
+        slope[i] = dx[i] === 0 ? 0 : (pts[i + 1].y - pts[i].y) / dx[i]
+    }
+
+    const tangent: number[] = [slope[0]]
+
+    for (let i = 1; i < n - 1; i++) {
+        if (slope[i - 1] * slope[i] <= 0) {
+            // A local extremum: a zero tangent is what pins the curve to the
+            // data point instead of letting it sail past.
+            tangent[i] = 0
+        } else {
+            const w1 = 2 * dx[i] + dx[i - 1]
+            const w2 = dx[i] + 2 * dx[i - 1]
+            tangent[i] = (w1 + w2) / (w1 / slope[i - 1] + w2 / slope[i])
+        }
+    }
+
+    tangent[n - 1] = slope[n - 2]
+
+    let d = `M${pts[0].x.toFixed(2)},${pts[0].y.toFixed(2)}`
+
+    for (let i = 0; i < n - 1; i++) {
+        const third = dx[i] / 3
+
+        d +=
+            ` C${(pts[i].x + third).toFixed(2)},${(pts[i].y + tangent[i] * third).toFixed(2)}` +
+            ` ${(pts[i + 1].x - third).toFixed(2)},${(pts[i + 1].y - tangent[i + 1] * third).toFixed(2)}` +
+            ` ${pts[i + 1].x.toFixed(2)},${pts[i + 1].y.toFixed(2)}`
+    }
+
+    return d
+}
+
+function areaFrom(line: string, pts: { x: number; y: number }[]): string {
+    if (pts.length === 0) return ''
+
+    const base = pad.value.top + plot.value.h
+
+    return `${line} L${pts[pts.length - 1].x.toFixed(2)},${base} L${pts[0].x.toFixed(2)},${base} Z`
+}
 
 /** Four gridlines, drawn from the ceiling down. */
 const gridlines = computed(() =>
     [0, 0.25, 0.5, 0.75, 1].map((fraction) => ({
-        y: PAD.top + plot.value.h * fraction,
+        y: pad.value.top + plot.value.h * fraction,
         value: ceiling.value * (1 - fraction),
     })),
 )
 
 /** Keep roughly eight x labels whatever the period length. */
-const labelStep = computed(() => Math.max(1, Math.ceil(props.data.length / 8)))
+const labelStep = computed(() => Math.max(1, Math.ceil(count.value / 8)))
 
 function showLabel(index: number): boolean {
-    return index === props.data.length - 1 || index % labelStep.value === 0
+    return index === count.value - 1 || index % labelStep.value === 0
 }
 
-/** Nearest point to the cursor, so the tooltip never feels like it lags. */
+/** Nearest index to the cursor, so the tooltip never feels like it lags. */
 function track(event: MouseEvent) {
     const rect = (event.currentTarget as SVGElement).getBoundingClientRect()
-    const x = event.clientX - rect.left - PAD.left
-    const step = props.data.length <= 1 ? 1 : plot.value.w / (props.data.length - 1)
+    const x = event.clientX - rect.left - pad.value.left
+    const step = count.value <= 1 ? 1 : plot.value.w / (count.value - 1)
 
-    hover.value = Math.min(props.data.length - 1, Math.max(0, Math.round(x / step)))
+    hover.value = Math.min(count.value - 1, Math.max(0, Math.round(x / step)))
 }
 
-const active = computed(() => (hover.value === null ? null : coords.value[hover.value]))
+const active = computed(() => {
+    if (hover.value === null || count.value === 0) return null
+
+    const i = hover.value
+
+    return {
+        i,
+        x: xFor(i),
+        label: labels.value[i],
+        rows: geometry.value.map((s) => ({
+            name: s.name,
+            color: s.color!,
+            value: s.points[i]?.value ?? 0,
+            y: s.pts[i]?.y ?? 0,
+        })),
+    }
+})
 
 /** Flip the tooltip before it runs off the right edge of the card. */
 const tooltipStyle = computed(() => {
     if (!active.value) return {}
 
-    const flip = active.value.x > width.value - 90
+    const flip = active.value.x > width.value * 0.6
 
     return {
         left: `${active.value.x}px`,
-        top: `${Math.max(0, active.value.y - 44)}px`,
-        transform: flip ? 'translateX(-100%) translateX(-8px)' : 'translateX(8px)',
+        top: '8px',
+        transform: flip ? 'translateX(-100%) translateX(-12px)' : 'translateX(12px)',
     }
 })
 </script>
 
 <template>
-    <div ref="host" class="relative w-full" :style="{ height: `${height}px` }">
+    <div ref="host" class="relative w-full">
         <div
-            v-if="data.length === 0"
-            class="text-muted-foreground flex h-full items-center justify-center text-sm"
+            v-if="count === 0"
+            class="text-muted-foreground flex items-center justify-center text-sm"
+            :style="{ height: `${height}px` }"
         >
             No data
         </div>
 
-        <svg
-            v-else
-            :width="width"
-            :height="height"
-            class="overflow-visible"
-            @mousemove="track"
-            @mouseleave="hover = null"
-        >
-            <defs>
-                <linearGradient :id="`pk-area-${type}`" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.28" />
-                    <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.02" />
-                </linearGradient>
-            </defs>
-
-            <!-- Gridlines and Y labels. -->
-            <g>
-                <line
-                    v-for="line in gridlines"
-                    :key="line.y"
-                    :x1="PAD.left"
-                    :x2="width - PAD.right"
-                    :y1="line.y"
-                    :y2="line.y"
-                    stroke="var(--border)"
-                    stroke-width="1"
-                />
-                <text
-                    v-for="line in gridlines"
-                    :key="`t-${line.y}`"
-                    :x="PAD.left - 8"
-                    :y="line.y + 3"
-                    text-anchor="end"
-                    class="fill-muted-foreground text-[10px] tabular-nums"
-                >
-                    {{ compact(line.value) }}
-                </text>
-            </g>
-
-            <path v-if="type === 'area'" :d="areaPath" :fill="`url(#pk-area-${type})`" />
-
-            <path
-                :d="linePath"
-                fill="none"
-                stroke="var(--primary)"
-                stroke-width="2"
-                stroke-linejoin="round"
-                stroke-linecap="round"
-            />
-
-            <!-- A lone point draws no line, so it gets a dot or the chart looks empty. -->
-            <circle
-                v-if="coords.length === 1"
-                :cx="coords[0].x"
-                :cy="coords[0].y"
-                r="3"
-                fill="var(--primary)"
-            />
-
-            <!-- Hover marker. -->
-            <g v-if="active">
-                <line
-                    :x1="active.x"
-                    :x2="active.x"
-                    :y1="PAD.top"
-                    :y2="PAD.top + plot.h"
-                    stroke="var(--border)"
-                    stroke-width="1"
-                    stroke-dasharray="3 3"
-                />
-                <circle
-                    :cx="active.x"
-                    :cy="active.y"
-                    r="4"
-                    fill="var(--primary)"
-                    stroke="var(--card)"
-                    stroke-width="2"
-                />
-            </g>
-
-            <!-- X labels. -->
-            <text
-                v-for="(c, i) in coords"
-                v-show="showLabel(i)"
-                :key="`x-${i}`"
-                :x="c.x"
-                :y="height - 6"
-                text-anchor="middle"
-                class="fill-muted-foreground text-[10px]"
+        <template v-else>
+            <svg
+                :width="width"
+                :height="height"
+                class="overflow-visible"
+                @mousemove="track"
+                @mouseleave="hover = null"
             >
-                {{ c.label }}
-            </text>
-        </svg>
+                <defs>
+                    <linearGradient
+                        v-for="(s, i) in geometry"
+                        :id="`pk-fill-${uid}-${i}`"
+                        :key="i"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                    >
+                        <stop offset="0%" :stop-color="s.color" stop-opacity="0.25" />
+                        <stop offset="100%" :stop-color="s.color" stop-opacity="0.01" />
+                    </linearGradient>
+                </defs>
 
-        <div
-            v-if="active"
-            class="bg-popover pointer-events-none absolute z-10 rounded-md border px-2 py-1 shadow-md"
-            :style="tooltipStyle"
-        >
-            <p class="text-muted-foreground text-[10px] whitespace-nowrap">{{ active.label }}</p>
-            <p class="text-xs font-semibold tabular-nums">{{ format(active.value) }}</p>
-        </div>
+                <!-- Horizontal gridlines and Y labels. -->
+                <g v-if="showAxis">
+                    <line
+                        v-for="line in gridlines"
+                        :key="line.y"
+                        :x1="pad.left"
+                        :x2="width - pad.right"
+                        :y1="line.y"
+                        :y2="line.y"
+                        stroke="var(--border)"
+                        stroke-width="1"
+                    />
+                    <text
+                        v-for="line in gridlines"
+                        :key="`t-${line.y}`"
+                        :x="pad.left - 8"
+                        :y="line.y + 3"
+                        text-anchor="end"
+                        class="fill-muted-foreground text-[10px] tabular-nums"
+                    >
+                        {{ compact(line.value) }}
+                    </text>
+                </g>
+
+                <!-- Dotted verticals at the labelled positions, as the
+                     reference dashboards use instead of a heavy grid. -->
+                <line
+                    v-for="(l, i) in labels"
+                    v-show="showLabel(i)"
+                    :key="`v-${i}`"
+                    :x1="xFor(i)"
+                    :x2="xFor(i)"
+                    :y1="pad.top"
+                    :y2="pad.top + plot.h"
+                    stroke="var(--border)"
+                    stroke-width="1"
+                    stroke-dasharray="2 4"
+                    opacity="0.7"
+                />
+
+                <g v-for="(s, i) in geometry" :key="`s-${i}`">
+                    <path v-if="type === 'area'" :d="s.area" :fill="`url(#pk-fill-${uid}-${i})`" />
+                    <path
+                        :d="s.line"
+                        fill="none"
+                        :stroke="s.color"
+                        stroke-width="2"
+                        stroke-linejoin="round"
+                        stroke-linecap="round"
+                    />
+                    <!-- A lone point draws no line, so it gets a dot or the
+                         chart looks empty. -->
+                    <circle v-if="s.pts.length === 1" :cx="s.pts[0].x" :cy="s.pts[0].y" r="3" :fill="s.color" />
+                </g>
+
+                <!-- Crosshair: one vertical, one dot per series. -->
+                <g v-if="active">
+                    <line
+                        :x1="active.x"
+                        :x2="active.x"
+                        :y1="pad.top"
+                        :y2="pad.top + plot.h"
+                        stroke="var(--muted-foreground)"
+                        stroke-width="1"
+                        stroke-dasharray="4 3"
+                    />
+                    <circle
+                        v-for="(row, i) in active.rows"
+                        :key="`d-${i}`"
+                        :cx="active.x"
+                        :cy="row.y"
+                        r="4"
+                        :fill="row.color"
+                        stroke="var(--card)"
+                        stroke-width="2"
+                    />
+                </g>
+
+                <!-- X labels. -->
+                <text
+                    v-for="(l, i) in labels"
+                    v-show="showLabel(i)"
+                    :key="`x-${i}`"
+                    :x="xFor(i)"
+                    :y="height - 6"
+                    text-anchor="middle"
+                    class="fill-muted-foreground text-[10px]"
+                >
+                    {{ l }}
+                </text>
+            </svg>
+
+            <div
+                v-if="active"
+                class="bg-popover pointer-events-none absolute z-10 min-w-36 rounded-lg border p-2 shadow-lg"
+                :style="tooltipStyle"
+            >
+                <p class="text-muted-foreground mb-1.5 text-[11px] whitespace-nowrap">{{ active.label }}</p>
+                <div v-for="(row, i) in active.rows" :key="i" class="flex items-center gap-2 py-0.5">
+                    <span class="size-2 shrink-0 rounded-full" :style="{ background: row.color }" />
+                    <span class="text-muted-foreground min-w-0 flex-1 truncate text-[11px]">
+                        {{ row.name || 'Value' }}
+                    </span>
+                    <span class="text-xs font-semibold tabular-nums">{{ format(row.value) }}</span>
+                </div>
+            </div>
+
+            <div v-if="showLegend && resolved.length > 1" class="mt-2 flex flex-wrap items-center gap-4">
+                <span v-for="(s, i) in geometry" :key="i" class="flex items-center gap-1.5 text-xs">
+                    <span class="size-2 rounded-full" :style="{ background: s.color }" />
+                    <span class="text-muted-foreground">{{ s.name }}</span>
+                </span>
+            </div>
+        </template>
     </div>
 </template>

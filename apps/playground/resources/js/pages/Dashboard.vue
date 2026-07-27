@@ -12,7 +12,7 @@
  * Without `only:` this page would re-resolve every deferred prop on every
  * period click, which is the polling-shaped waste §8 exists to avoid.
  */
-import { ChartCard, LineChart, PieChart, StatCard, TrendBadge } from '@panelkit/ui'
+import { ChartCard, LineChart, PieChart, SegmentedBar, StatCard, TrendBadge } from '@panelkit/ui'
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
 
 interface Widget {
@@ -26,7 +26,7 @@ interface Chart {
     key: string
     label: string
     description: string | null
-    type: 'line' | 'area' | 'bar' | 'pie' | 'doughnut'
+    type: 'line' | 'area' | 'bar' | 'pie' | 'doughnut' | 'segments'
     span: number
     periods: { value: string; label: string }[] | null
 }
@@ -148,6 +148,7 @@ const comparison: Record<string, string> = {
                             :description="chart.description"
                             :periods="chart.periods"
                             :period="periods[chart.key]"
+                            :body-height="chart.type === 'segments' ? 64 : 220"
                             loading
                         />
                     </template>
@@ -159,6 +160,7 @@ const comparison: Record<string, string> = {
                             :periods="chart.periods"
                             :period="periods[chart.key]"
                             :error="series(chart.key).error"
+                            :body-height="chart.type === 'segments' ? 64 : 220"
                             @update:period="(value: string) => setPeriod(chart.key, value)"
                         >
                             <template v-if="series(chart.key).trend" #trend>
@@ -170,10 +172,15 @@ const comparison: Record<string, string> = {
                                 />
                             </template>
 
+                            <SegmentedBar
+                                v-if="chart.type === 'segments'"
+                                :segments="series(chart.key).points"
+                                :height="10"
+                            />
                             <PieChart
-                                v-if="chart.type === 'pie' || chart.type === 'doughnut'"
+                                v-else-if="chart.type === 'pie' || chart.type === 'doughnut'"
                                 :data="series(chart.key).points"
-                                :type="chart.type"
+                                :type="chart.type as 'pie' | 'doughnut'"
                             />
                             <LineChart
                                 v-else

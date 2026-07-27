@@ -315,7 +315,7 @@ final class ChartWidgetTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->has('widgets')
-                ->has('charts', 4)
+                ->has('charts', 5)
                 ->has('periods')
                 // Deferred props are absent from the first response by design:
                 // the shell must paint before any aggregate runs (§10).

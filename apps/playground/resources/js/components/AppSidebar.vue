@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
-import { useAppearance } from '@panelkit/ui';
-import { BookOpen, FolderGit2, LayoutGrid, Package, Router as RouterIcon, Users } from '@lucide/vue';
+import { PkDropdown, useAppearance } from '@panelkit/ui';
+import { BookOpen, FolderGit2, HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Package, Router as RouterIcon, Users } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
+import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import {
     Sidebar,
     SidebarContent,
@@ -16,6 +17,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarGroup,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
@@ -38,6 +40,34 @@ const page = usePage();
  * left the panel sitting on top of the content.
  */
 const { appearance } = useAppearance();
+
+/**
+ * COLLAPSED GROUPS BECOME FLYOUTS.
+ *
+ * An icon rail has no width to expand a group into, so the previous behaviour
+ * was that collapsing the sidebar simply HID every grouped resource — the rail
+ * showed Dashboard and nothing else, and the only way back to Clients was to
+ * expand again. A flyout beside the rail is the standard answer and the one the
+ * reference panels use.
+ *
+ * It opens on hover as well as click, because a rail is a scanning surface:
+ * requiring a click to discover what an icon contains defeats the point of
+ * collapsing.
+ */
+const { state } = useSidebar();
+
+const isCollapsed = computed(() => state.value === 'collapsed');
+
+/** The flyout opens away from the rail, whichever edge it is on. */
+const flyoutSide = computed<'left' | 'right'>(() =>
+    appearance.value.sidebarSide === 'right' ? 'left' : 'right',
+);
+
+const { isCurrentUrl } = useCurrentUrl();
+
+function groupIsActive(items: NavItem[]): boolean {
+    return items.some((i) => isCurrentUrl(typeof i.href === 'string' ? i.href : String(i.href)));
+}
 
 const iconFor: Record<string, typeof LayoutGrid> = {
     users: Users,
@@ -102,6 +132,12 @@ onMounted(() => {
     }
 });
 
+const supportNavItems: NavItem[] = [
+    { title: 'Help', href: '/help', icon: HelpCircle },
+    { title: 'FAQ', href: '/faq', icon: MessageCircleQuestion },
+    { title: 'About', href: '/about', icon: Info },
+];
+
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
@@ -117,7 +153,7 @@ const footerNavItems: NavItem[] = [
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset" :side="appearance.sidebarSide">
+    <Sidebar collapsible="icon" variant="inset" :side="appearance.sidebarSide === 'right' ? 'right' : 'left'">
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
@@ -133,8 +169,48 @@ const footerNavItems: NavItem[] = [
         <SidebarContent>
             <NavMain :items="navGroups.ungrouped" label="Platform" />
 
-            <!-- Collapsible groups, so twenty resources stay navigable. -->
-            <SidebarGroup v-for="[name, items] in navGroups.grouped" :key="name" class="px-2 py-0">
+            <!--
+                Two renderings of one group list.
+
+                EXPANDED: a collapsible section, so twenty resources stay
+                navigable. COLLAPSED: a flyout, because the rail is too narrow
+                to expand into — without this branch every grouped resource
+                disappears the moment the sidebar is collapsed.
+            -->
+            <template v-if="isCollapsed">
+                <SidebarGroup v-for="[name, items] in navGroups.grouped" :key="name" class="px-2 py-0">
+                    <PkDropdown :placement="flyoutSide" width="w-52" :offset="8" hoverable>
+                        <template #trigger>
+                            <button
+                                type="button"
+                                class="hover:bg-sidebar-accent flex size-8 items-center justify-center rounded-md transition-colors"
+                                :class="groupIsActive(items) ? 'bg-sidebar-accent' : ''"
+                                :aria-label="name"
+                                :title="name"
+                            >
+                                <component :is="items[0]?.icon" class="size-4" />
+                            </button>
+                        </template>
+
+                        <template #panel="{ close }">
+                            <p class="text-muted-foreground px-2 py-1.5 text-xs font-semibold">{{ name }}</p>
+                            <Link
+                                v-for="item in items"
+                                :key="item.title"
+                                :href="item.href"
+                                class="hover:bg-accent flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+                                :class="isCurrentUrl(item.href) ? 'text-foreground font-medium' : ''"
+                                @click="close()"
+                            >
+                                <component :is="item.icon" class="size-4 shrink-0" />
+                                {{ item.title }}
+                            </Link>
+                        </template>
+                    </PkDropdown>
+                </SidebarGroup>
+            </template>
+
+            <SidebarGroup v-for="[name, items] in navGroups.grouped" v-else :key="name" class="px-2 py-0">
                 <button
                     type="button"
                     class="text-muted-foreground hover:text-foreground flex w-full items-center justify-between px-2 py-1.5 text-xs font-medium"
@@ -159,6 +235,10 @@ const footerNavItems: NavItem[] = [
         </SidebarContent>
 
         <SidebarFooter>
+            <!-- Support pages live in the footer, not the main nav: they are
+                 read once and then rarely, so they should not compete for
+                 attention with the resources. -->
+            <NavFooter :items="supportNavItems" />
             <NavFooter :items="footerNavItems" />
             <NavUser />
         </SidebarFooter>
