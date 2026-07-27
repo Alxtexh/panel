@@ -25,8 +25,9 @@ use Illuminate\Support\Facades\Schema;
 final class SeedDemoCommand extends Command
 {
     protected $signature = 'panel:seed-demo
-                            {--scale=medium : large|medium|small}
-                            {--fresh : Truncate demo tables first}';
+                            {--scale=medium : xlarge|large|medium|small}
+                            {--fresh : Truncate demo tables first}
+                            {--only= : Seed one section only (inbox)}';
 
     protected $description = 'Seed realistic multi-tenant demo data at scale';
 
@@ -63,6 +64,33 @@ final class SeedDemoCommand extends Command
 
         $cfg = self::SCALES[$scale];
         $started = microtime(true);
+
+        /*
+         * `--only` exists because reseeding is not always the answer.
+         *
+         * Adding the mailbox after a 5M-row dataset had already been generated
+         * meant either twenty minutes of rewriting rows that had not changed,
+         * or a one-off script. A named section is neither: the seeding logic
+         * stays in one place and can be re-run for the part that is missing.
+         */
+        if ($this->option('only') === 'inbox') {
+            $tenantIds = DB::table('tenants')->pluck('id')->all();
+
+            if ($tenantIds === []) {
+                $this->components->error('No tenants exist. Run a full seed first.');
+
+                return self::FAILURE;
+            }
+
+            DB::table('chat_messages')->delete();
+            DB::table('chat_conversations')->delete();
+            DB::table('mail_messages')->delete();
+
+            $this->seedInbox($tenantIds);
+            $this->components->info('Done in ' . round(microtime(true) - $started, 1) . 's.');
+
+            return self::SUCCESS;
+        }
 
         if ($this->option('fresh')) {
             $this->truncateDemoTables();
