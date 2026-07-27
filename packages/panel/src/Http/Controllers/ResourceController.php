@@ -29,6 +29,46 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 final class ResourceController extends Controller
 {
     /**
+     * Rows that changed, for the poll driver.
+     *
+     * Lean JSON, never an Inertia render. The whole point is that staying fresh
+     * costs an indexed lookup rather than a page render — antipatterns S3.1
+     * measured the system being replaced at 500-950ms per page of which 1-16ms
+     * was the database, and repeating that on a timer is what makes polling a
+     * bad word.
+     *
+     * Returns 204 when nothing changed, which is the common case, so the
+     * client does no work and the response is empty.
+     */
+    public function updates(Request $request, string $resource): \Illuminate\Http\JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        abort_unless($class::can('viewAny'), 403);
+
+        $ids = array_filter(explode(',', (string) $request->query('ids', '')));
+        $since = (string) $request->query('since', '');
+
+        if ($ids === [] || $since === '') {
+            return response()->json(['records' => [], 'at' => now()->toIso8601String()]);
+        }
+
+        // Bounded: a caller cannot ask about more ids than a page can hold.
+        $max = (int) config('panel.pagination.per_page_options.3', 100);
+        $ids = array_slice($ids, 0, $max);
+
+        $changed = $class::definition()->toListQuery($class::model())->changedSince($ids, $since);
+
+        return response()->json([
+            'records' => $changed,
+            // The server's clock, not the client's — a client whose clock is
+            // slow would otherwise re-request the same window forever, and one
+            // whose clock is fast would skip changes entirely.
+            'at' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
      * Create form. A REAL PAGE, not a modal.
      *
      * Filament routes create, view and edit as their own pages, and the reasons
@@ -72,6 +112,10 @@ final class ResourceController extends Controller
             'schema' => $class::schema(),
             'record' => [...$row, 'id' => $record->getKey()],
             'can' => $class::permissions(),
+
+            // The transport, so the client knows how to stay fresh without any
+            // page or component knowing which driver is configured.
+            'live' => \PanelKit\Panel\Live\LiveConfig::fromConfig()->toArray(),
             'breadcrumbs' => $this->trail($class, (string) ($record->name ?? "#{$record->getKey()}")),
         ]);
     }
@@ -173,6 +217,10 @@ final class ResourceController extends Controller
 
             // UI hints only. Every write re-authorizes server-side (S9 item 3).
             'can' => $class::permissions(),
+
+            // The transport, so the client knows how to stay fresh without any
+            // page or component knowing which driver is configured.
+            'live' => \PanelKit\Panel\Live\LiveConfig::fromConfig()->toArray(),
 
             // Deferred: neither the total nor the tab counts may sit in front of
             // the rows (§10, addendum C1).

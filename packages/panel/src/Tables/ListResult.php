@@ -35,6 +35,7 @@ final readonly class ListResult
         public array $tabs,
         public ?Closure $tabCounts,
         public Closure $total,
+        public string $countStrategy = 'deferred',
     ) {}
 
     /**
@@ -61,6 +62,8 @@ final readonly class ListResult
             'perPageOptions' => $this->perPageOptions,
             'tab' => $this->state['tab'] ?? null,
             'tabs' => $this->tabs,
+            // The client renders page counts only when a total is coming.
+            'countStrategy' => $this->countStrategy,
         ];
     }
 }

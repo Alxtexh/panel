@@ -1,82 +1,82 @@
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
 
 /**
- * Live row updates from a broadcast.
+ * Keeps rows fresh, WITHOUT caring how the change arrives.
  *
- * THE COST MODEL, which is the entire point (spec §8). A Livewire-style poll
- * re-renders the component on the SERVER once per connected viewer per tick, so
- * cost scales with how many people are watching. A broadcast is emitted once and
- * every client receives it, so server cost is constant regardless of viewers.
+ * An earlier version hardcoded Laravel Echo, which meant live updates needed a
+ * Reverb process running before anything moved on screen — a dependency
+ * masquerading as a feature. The ten §8 rules are about APPLYING a change, not
+ * receiving one, so the transport is now a driver and the rules are shared:
  *
- * This composable implements the ten rules §8 lists, each of which is a real
- * failure mode rather than a nicety:
+ *   none       off
+ *   poll       default; zero infrastructure, works on plain PHP-FPM
+ *   broadcast  Reverb / Pusher / Ably; true push, constant server cost
  *
- *  1. PATCH, NEVER REPLACE. Mutating the row object keeps the DOM node; swapping
- *     the array remounts every row, which flickers, drops scroll position and
- *     clears selection.
- *  2. Rows are keyed by record id, never array index — handled by DataTable.
- *  3. DO NOT RE-SORT OR RE-FILTER on a patch. A row that jumps out from under a
- *     cursor mid-read is worse than a slightly stale sort. A patched row that no
- *     longer matches the filter is MARKED, not removed.
- *  4. BATCH inside a window and apply once. With hundreds of concurrent sessions
- *     per-event patching thrashes the renderer.
- *  5. Animate the change, not the layout — a background flash on the changed
- *     cell, never width/height/position.
- *  6. PAUSE WHEN HIDDEN, resume with a refetch. A background tab accumulating
- *     thousands of buffered events and applying them at once is a freeze.
- *  7. HEAL ON RECONNECT. Sockets drop; refetch rather than assume local state
- *     is still correct.
- *  8. SHOW CONNECTION STATE, so nobody trusts a frozen table that lost its
- *     socket.
- *  9. Channels are private and tenant-scoped — enforced server-side in
- *     routes/channels.php, since a public channel is a cross-tenant leak no
- *     amount of query scoping catches.
- * 10. Payloads carry the record id plus changed fields only, never whole models.
+ * Swapping drivers is a config change. Nothing in a page or component knows
+ * which is active, so `poll` in development and `broadcast` in production is a
+ * deployment decision rather than a rewrite.
  *
- * No Inertia import: the caller supplies `onReconnect` (spec §4 rule 1).
+ * THE RULES, applied identically whichever driver is in use:
+ *
+ *  1. PATCH, NEVER REPLACE — mutate the row object. Replacing the array
+ *     remounts every row, which flickers, drops scroll and clears selection.
+ *  2. Key by record id, never array index (DataTable's job).
+ *  3. DO NOT RE-SORT OR RE-FILTER on a patch. A row jumping out from under a
+ *     cursor mid-read is worse than a slightly stale sort.
+ *  4. BATCH inside a window and apply once.
+ *  5. Animate the CHANGE, not the layout — a background flash, never geometry.
+ *  6. PAUSE WHEN HIDDEN, resume with a refetch.
+ *  7. HEAL ON RECONNECT rather than trusting local state.
+ *  8. SHOW CONNECTION STATE, so nobody trusts a frozen table.
+ *  9. Channels private and tenant-scoped (enforced server-side).
+ * 10. Lean payloads: id plus changed fields, never whole models.
+ *
+ * Imports no Inertia — the caller supplies `fetchChanges` and `onResync`.
  */
-export interface LiveUpdateOptions {
-    /** A function, so the channel name can include a tenant resolved later. */
-    channel: () => string
-    /** Event name to a patch extractor. Must return the record id and changes. */
-    events: Record<string, (payload: any) => { id: string | number; changes: Record<string, unknown> }>
-    rows: Ref<Record<string, any>[]>
-    rowKey?: string
-    /** Coalesce bursts into one patch. */
-    batchMs?: number
-    pauseWhenHidden?: boolean
-    /** Called after a reconnect or resume — refetch the current page. */
-    onReconnect?: () => void
+export interface LiveConfig {
+    driver: 'none' | 'poll' | 'broadcast'
+    intervalMs: number
+    batchMs: number
+    channel: string | null
+    events: string[]
+    pauseWhenHidden: boolean
 }
 
-type Echo = {
-    private: (channel: string) => { listen: (event: string, cb: (p: any) => void) => void; stopListening?: (e: string) => void }
+export interface LiveUpdateOptions {
+    config: LiveConfig
+    rows: Ref<Record<string, any>[]>
+    rowKey?: string
+    /**
+     * Poll driver only. Given the visible ids and a timestamp, return the rows
+     * that changed. The caller owns the request, so this package stays free of
+     * any HTTP client.
+     */
+    fetchChanges?: (ids: (string | number)[], since: string) => Promise<{ records: Record<string, any>[]; at: string }>
+    /** Called after a resume or reconnect — refetch the current page. */
+    onResync?: () => void
+}
+
+type EchoLike = {
+    private: (channel: string) => { listen: (event: string, cb: (p: any) => void) => void }
     leave: (channel: string) => void
     connector?: { pusher?: { connection?: { bind: (e: string, cb: () => void) => void } } }
 }
 
 export function useLiveUpdates(options: LiveUpdateOptions) {
-    const {
-        channel,
-        events,
-        rows,
-        rowKey = 'id',
-        batchMs = 250,
-        pauseWhenHidden = true,
-        onReconnect,
-    } = options
+    const { config, rows, rowKey = 'id', fetchChanges, onResync } = options
 
-    const connected = ref(false)
-    /** Ids patched recently, so the UI can flash the changed cells (rule 5). */
+    /** 'live' | 'connecting' | 'paused' | 'off' — surfaced so a frozen table is never silently trusted (rule 8). */
+    const status = ref<'live' | 'connecting' | 'paused' | 'off'>(config.driver === 'none' ? 'off' : 'connecting')
     const recentlyChanged = ref<Set<string | number>>(new Set())
-    /** Ids that no longer match the active filter (rule 3). */
-    const stale = ref<Set<string | number>>(new Set())
 
     let pending = new Map<string | number, Record<string, unknown>>()
     let flushTimer: ReturnType<typeof setTimeout> | undefined
+    let pollTimer: ReturnType<typeof setInterval> | undefined
+    let inFlight: AbortController | undefined
+    let since = new Date().toISOString()
     let subscribed: string | null = null
 
-    /** Rule 4: coalesce, then apply once. */
+    /** Rule 4: coalesce a burst, apply once. */
     function queue(id: string | number, changes: Record<string, unknown>) {
         pending.set(id, { ...(pending.get(id) ?? {}), ...changes })
 
@@ -85,7 +85,7 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
         flushTimer = setTimeout(() => {
             flushTimer = undefined
             flush()
-        }, batchMs)
+        }, config.batchMs)
     }
 
     function flush() {
@@ -93,7 +93,6 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
 
         const batch = pending
         pending = new Map()
-
         const touched = new Set<string | number>()
 
         for (const [id, changes] of batch) {
@@ -101,8 +100,8 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
 
             if (!row) continue
 
-            // Rule 1: mutate the existing object. Assigning a new array here, or
-            // replacing the row, remounts the DOM node and loses selection.
+            // Rule 1. Mutating keeps the DOM node; replacing loses selection.
+            // Rule 3: no re-sort, no re-filter — position is left alone.
             Object.assign(row, changes)
             touched.add(id)
         }
@@ -111,8 +110,8 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
 
         recentlyChanged.value = new Set([...recentlyChanged.value, ...touched])
 
-        // The flash is transient; clearing it is what makes the NEXT change
-        // visible rather than blending into a permanently highlighted row.
+        // Rule 5. Clearing the flag is what makes the NEXT change visible
+        // rather than leaving a permanently highlighted row.
         setTimeout(() => {
             const next = new Set(recentlyChanged.value)
             touched.forEach((id) => next.delete(id))
@@ -120,86 +119,139 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
         }, 1500)
     }
 
-    function echo(): Echo | null {
-        return (window as unknown as { Echo?: Echo }).Echo ?? null
+    /* ---------------------------------------------------------------- poll */
+
+    async function pollOnce() {
+        if (!fetchChanges || rows.value.length === 0) return
+
+        // A slow response must never overwrite a newer one.
+        inFlight?.abort()
+        inFlight = new AbortController()
+
+        try {
+            const ids = rows.value.map((r) => r[rowKey] as string | number)
+            const { records, at } = await fetchChanges(ids, since)
+
+            // The SERVER's clock. A client whose clock runs slow would re-ask
+            // for the same window forever; one running fast would skip changes.
+            since = at
+            status.value = 'live'
+
+            for (const record of records) {
+                queue(record[rowKey], record)
+            }
+        } catch {
+            // A failed poll is not fatal — the table is simply as fresh as its
+            // last success. Surfaced through status rather than thrown.
+            status.value = 'connecting'
+        }
     }
 
-    function subscribe() {
+    function startPolling() {
+        stopPolling()
+        status.value = 'live'
+        pollTimer = setInterval(pollOnce, config.intervalMs)
+    }
+
+    function stopPolling() {
+        clearInterval(pollTimer)
+        pollTimer = undefined
+        inFlight?.abort()
+    }
+
+    /* ----------------------------------------------------------- broadcast */
+
+    function echo(): EchoLike | null {
+        return (window as unknown as { Echo?: EchoLike }).Echo ?? null
+    }
+
+    function startBroadcast() {
         const instance = echo()
 
-        if (!instance) return
+        if (!instance || !config.channel) {
+            // Configured for broadcast but Echo is absent. Say so rather than
+            // sitting silently on a table that will never update.
+            status.value = 'connecting'
+            console.warn('[panelkit] broadcast driver configured but window.Echo is unavailable.')
 
-        const name = channel()
-        subscribed = name
+            return
+        }
 
-        // PRIVATE, always. A public or tenant-agnostic channel is a
-        // cross-tenant leak that server-side query scoping cannot catch.
-        const subscription = instance.private(name)
+        subscribed = config.channel
 
-        for (const [event, extract] of Object.entries(events)) {
-            subscription.listen(event, (payload: unknown) => {
-                const { id, changes } = extract(payload)
-                queue(id, changes)
+        // Rule 9: private, always. A public channel is a cross-tenant leak that
+        // server-side query scoping cannot catch.
+        const subscription = instance.private(config.channel)
+
+        for (const event of config.events) {
+            subscription.listen(event, (payload: Record<string, any>) => {
+                // Rule 10: the payload carries an id and changed fields only.
+                if (payload?.[rowKey] !== undefined) queue(payload[rowKey], payload)
             })
         }
 
-        connected.value = true
+        status.value = 'live'
 
-        // Rule 7: heal on reconnect rather than trusting local state.
         instance.connector?.pusher?.connection?.bind('connected', () => {
-            connected.value = true
-            onReconnect?.()
+            status.value = 'live'
+            onResync?.() // Rule 7.
         })
 
         instance.connector?.pusher?.connection?.bind('disconnected', () => {
-            connected.value = false
+            status.value = 'connecting'
         })
     }
 
-    function unsubscribe() {
+    function stopBroadcast() {
         if (subscribed) {
             echo()?.leave(subscribed)
             subscribed = null
         }
+    }
 
-        connected.value = false
+    /* -------------------------------------------------------------- shared */
+
+    function start() {
+        if (config.driver === 'poll') startPolling()
+        if (config.driver === 'broadcast') startBroadcast()
+    }
+
+    function stop() {
+        stopPolling()
+        stopBroadcast()
+        clearTimeout(flushTimer)
+        flushTimer = undefined
+        pending = new Map()
     }
 
     /** Rule 6: a hidden tab buffers nothing; resuming refetches. */
     function onVisibilityChange() {
-        if (!pauseWhenHidden) return
+        if (!config.pauseWhenHidden) return
 
         if (document.hidden) {
-            unsubscribe()
-            pending = new Map()
-            clearTimeout(flushTimer)
-            flushTimer = undefined
+            stop()
+            status.value = 'paused'
         } else {
-            subscribe()
-            onReconnect?.()
+            since = new Date().toISOString()
+            start()
+            onResync?.()
         }
     }
 
     onMounted(() => {
-        subscribe()
+        if (config.driver === 'none') return
 
-        if (pauseWhenHidden) {
+        start()
+
+        if (config.pauseWhenHidden) {
             document.addEventListener('visibilitychange', onVisibilityChange)
         }
     })
 
     onBeforeUnmount(() => {
         document.removeEventListener('visibilitychange', onVisibilityChange)
-        clearTimeout(flushTimer)
-        unsubscribe()
+        stop()
     })
 
-    return {
-        connected,
-        recentlyChanged,
-        stale,
-        /** Exposed for tests and for applying a patch from a non-socket source. */
-        applyPatch: queue,
-        flush,
-    }
+    return { status, recentlyChanged, applyPatch: queue, flush, pollOnce }
 }

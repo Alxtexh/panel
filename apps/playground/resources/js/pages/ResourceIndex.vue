@@ -37,6 +37,7 @@ import {
     TableToolbar,
     PkModal,
     useColumnVisibility,
+    useLiveUpdates,
     useSchemaColumns,
     type SchemaColumn,
 } from '@panelkit/ui'
@@ -71,6 +72,15 @@ const props = defineProps<
         formOptions: Record<string, { value: any; label: string }[]>
         /** UI hints only. Every write re-authorizes server-side. */
         can: { viewAny: boolean; create: boolean; update: boolean; delete: boolean }
+        /** Transport for staying fresh. The page does not know which driver. */
+        live: {
+            driver: 'none' | 'poll' | 'broadcast'
+            intervalMs: number
+            batchMs: number
+            channel: string | null
+            events: string[]
+            pauseWhenHidden: boolean
+        }
         total?: number
         tabCounts?: Record<string, number>
     }
@@ -157,6 +167,34 @@ function destroy() {
         onError: () => toast.error(`Could not delete this ${props.schema.label.toLowerCase()}`),
     })
 }
+/* ---------------------------------------------------------------------------
+ * Staying fresh
+ *
+ * The page does not know or care which transport is configured. `poll` needs no
+ * infrastructure and works on plain PHP-FPM; `broadcast` needs Reverb and gives
+ * constant server cost regardless of viewer count. Switching is a config change.
+ *
+ * The fetch lives HERE rather than in the composable because @panelkit/ui may
+ * not import Inertia or ship an HTTP client (spec §4).
+ * ------------------------------------------------------------------------- */
+
+const { status: liveStatus, recentlyChanged } = useLiveUpdates({
+    config: props.live,
+    rows: t.rows,
+    fetchChanges: async (ids, since) => {
+        const query = new URLSearchParams({ ids: ids.join(','), since })
+        const res = await fetch(`${props.schema.routes.index}/updates?${query}`, {
+            headers: { Accept: 'application/json' },
+        })
+
+        if (!res.ok) throw new Error(String(res.status))
+
+        return res.json()
+    },
+    // Rule 7: after a pause or a reconnect, refetch rather than trusting local
+    // state. Data only — the schema does not travel again.
+    onResync: () => router.reload({ only: ['records', 'total', 'tabCounts'] }),
+})
 function badgeLabel(key: string, value: unknown): string {
     if (typeof value === 'boolean') {
         const column = byKey.value[key]
@@ -173,7 +211,28 @@ function badgeLabel(key: string, value: unknown): string {
 
     <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-3 p-3 sm:p-4">
         <div class="flex items-center justify-between gap-3">
-            <h1 class="text-lg font-semibold tracking-tight sm:text-xl">{{ schema.labelPlural }}</h1>
+            <div class="flex items-center gap-2">
+                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">{{ schema.labelPlural }}</h1>
+
+                <!-- Rule 8: show connection state, so a table that silently
+                     lost its transport is never mistaken for a quiet one. -->
+                <span
+                    v-if="live.driver !== 'none'"
+                    class="inline-flex items-center gap-1 text-[11px]"
+                    :class="liveStatus === 'live' ? 'text-muted-foreground' : 'text-amber-600 dark:text-amber-500'"
+                    :title="`Live updates: ${liveStatus} (${live.driver})`"
+                >
+                    <span
+                        class="size-1.5 rounded-full"
+                        :class="{
+                            'bg-emerald-500': liveStatus === 'live',
+                            'bg-amber-500': liveStatus === 'connecting',
+                            'bg-muted-foreground': liveStatus === 'paused' || liveStatus === 'off',
+                        }"
+                    />
+                    {{ liveStatus }}
+                </span>
+            </div>
             <Button v-if="canWrite && can.create" as-child size="sm">
                 <Link :href="`${schema.routes.index}/create`">New {{ schema.label }}</Link>
             </Button>

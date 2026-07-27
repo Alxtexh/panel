@@ -79,6 +79,36 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Live updates
+    |---------------------------------------------------------------------------
+    |
+    | driver
+    |   'poll'       Default. Zero infrastructure, works on plain PHP-FPM. NOT
+    |                the polling the spec warns about: that warning is about
+    |                re-rendering a component server-side per viewer per tick.
+    |                This asks one bounded indexed question — "which of these
+    |                visible ids changed since T" — and usually answers with an
+    |                empty array.
+    |   'broadcast'  Reverb, Pusher or Ably. True push, constant server cost
+    |                regardless of viewer count. Needs a running process, which
+    |                is why it is opt-in rather than assumed.
+    |   'none'       Off.
+    |
+    | Moving from poll to broadcast is a config change. No resource, page or
+    | component knows which driver is active.
+    |
+    */
+    'live' => [
+        'driver' => env('PANEL_LIVE_DRIVER', 'poll'),
+        'interval_ms' => (int) env('PANEL_LIVE_INTERVAL', 10_000),
+        'batch_ms' => 250,
+        'channel' => null,
+        'events' => [],
+        'pause_when_hidden' => true,
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
     | Tenancy
     |---------------------------------------------------------------------------
     |

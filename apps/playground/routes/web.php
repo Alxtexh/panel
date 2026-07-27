@@ -30,6 +30,11 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
     Route::get('{resource}', [ResourceController::class, 'index'])
         ->whereIn('resource', $panelResources)->name('panel.resource');
 
+    // Lean JSON diff for the poll driver. Declared before /{id} so 'updates'
+    // is not captured as a record id.
+    Route::get('{resource}/updates', [ResourceController::class, 'updates'])
+        ->whereIn('resource', $panelResources)->name('panel.updates');
+
     Route::get('{resource}/create', [ResourceController::class, 'create'])
         ->whereIn('resource', $panelResources)->name('panel.create');
 
