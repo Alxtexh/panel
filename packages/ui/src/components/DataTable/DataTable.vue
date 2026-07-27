@@ -158,7 +158,11 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
                     v-for="row in rows"
                     :key="row[rowKey]"
                     class="hover:bg-muted/40 group border-b transition-colors"
-                    :class="selected?.has(row[rowKey]) ? 'bg-primary/5' : ''"
+                                        :class="
+                        selected?.has(row[rowKey])
+                            ? 'bg-primary/5 shadow-[inset_3px_0_0_0_var(--color-primary)]'
+                            : ''
+                    "
                 >
                     <td v-if="selectable" class="px-3 py-2">
                         <input

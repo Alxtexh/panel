@@ -19,7 +19,7 @@ use Illuminate\Database\Query\Builder;
  * bookmarked URL then still does something sensible instead of silently showing
  * an unfiltered list.
  */
-final class MultiSelectFilter extends Filter
+final class MultiSelectFilter extends Filter implements HasOptions
 {
     /** @var list<string>|Closure(): list<string> */
     private array|Closure $options = [];

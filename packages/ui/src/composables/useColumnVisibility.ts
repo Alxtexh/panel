@@ -41,9 +41,14 @@ export function useColumnVisibility(storageKey: string) {
         hidden.value = next
     }
 
+    /** Replace the whole set at once, for a panel that stages its choices. */
+    function setHidden(keys: Set<string>) {
+        hidden.value = new Set(keys)
+    }
+
     function reset() {
         hidden.value = new Set()
     }
 
-    return { hidden, toggle, reset }
+    return { hidden, toggle, setHidden, reset }
 }

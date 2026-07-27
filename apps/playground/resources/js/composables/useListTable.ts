@@ -219,6 +219,17 @@ export function useListTable(url: string, props: ListPageProps) {
         apply({ [key]: value })
     }
 
+    /**
+     * Apply a whole filter set in ONE request.
+     *
+     * Choosing four filters one click at a time cost four round trips and four
+     * repaints, with the list rearranging under the cursor between each. Staged
+     * in the panel and applied together, it costs one.
+     */
+    function applyFilters(next: Record<string, unknown>) {
+        apply(next)
+    }
+
     function setSearch(value: string) {
         apply({ search: value })
     }
@@ -256,6 +267,7 @@ export function useListTable(url: string, props: ListPageProps) {
         setPerPage,
         sortBy,
         setFilter,
+        applyFilters,
         setSearch,
         resetFilters,
         clearAll,

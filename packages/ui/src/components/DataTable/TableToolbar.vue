@@ -1,26 +1,24 @@
 <script setup lang="ts">
 /**
- * Search box, one filter dropdown holding every filter, and a column-visibility
- * dropdown.
+ * Search, a filter panel, and a column panel.
  *
- * Shape borrowed from Filament, cost model deliberately not: Filament
- * round-trips to the server to re-render its filter dropdown. Here the dropdown
- * is local state and only an APPLIED filter costs a request (antipatterns
- * 3.0.3 — opening a control must make no network request).
+ * FILTERS ARE STAGED, NOT INSTANT. Picking a value edits a local draft; nothing
+ * reaches the server until Apply. Two reasons, and the second matters more:
  *
- * Filters render from the server's `filterSchema`, so adding a filter is a PHP
- * change with no Vue change.
+ *   1. Choosing four filters used to cost four round trips and four table
+ *      repaints, with the list rearranging under the cursor between each one.
+ *      Staged, it costs one.
+ *   2. Multi-value filters are not expressible one click at a time. "Expired OR
+ *      suspended, created this month" is a single question, and applying it in
+ *      pieces briefly shows answers to questions nobody asked.
  *
- * Each filter is a COLLAPSIBLE SECTION, not a flat list. With three or four
- * filters a flat list becomes a long single column that overflows the viewport
- * and buries the last filter. One section open at a time keeps the panel a fixed
- *, scannable size however many filters a resource declares.
+ * Search stays instant and debounced, because typing IS the interaction — there
+ * is nothing to batch.
  *
- * Icons are inline SVG rather than a glyph or an icon package: a text glyph
- * renders in the user's font and reads as a character, and an icon dependency
- * would break this package's rule of having no UI dependencies at all.
+ * Opening either panel makes no network request: the filter schema arrived with
+ * the page and option lists with the data (antipatterns §3.0.3).
  *
- * Emits only. It never fetches (spec §4 rule 2).
+ * Emits only. Never fetches (spec §4 rule 2).
  */
 import { computed, ref, watch } from 'vue'
 import PkDropdown from '../primitives/PkDropdown.vue'
@@ -30,7 +28,6 @@ const props = withDefaults(
     defineProps<{
         search: string
         searchPlaceholder?: string
-        /** Names the fields search actually covers, so it is not a guess. */
         searchHint?: string
         filterSchema: FilterSchema[]
         filters: Record<string, unknown>
@@ -43,17 +40,15 @@ const props = withDefaults(
 
 const emit = defineEmits<{
     (e: 'update:search', value: string): void
-    (e: 'filter', key: string, value: unknown): void
-    (e: 'toggle-column', key: string): void
-    (e: 'reset-filters'): void
-    (e: 'reset-columns'): void
+    /** The whole filter set at once, so Apply is one request. */
+    (e: 'apply-filters', filters: Record<string, unknown>): void
+    (e: 'apply-columns', hidden: string[]): void
     (e: 'clear'): void
 }>()
 
-const local = ref(props.search)
+/* ------------------------------------------------------------------ search */
 
-/** Which filter section is expanded. Only one, to keep the panel compact. */
-const openSection = ref<string | null>(null)
+const local = ref(props.search)
 
 watch(
     () => props.search,
@@ -70,65 +65,85 @@ watch(local, (value) => {
     }, 250)
 })
 
-/** `!== null` and not a truthiness check — `false` is an applied value. */
+/* ------------------------------------------------------------------ filters */
+
+/** Local draft. The applied set only changes on Apply. */
+const draft = ref<Record<string, unknown>>({ ...props.filters })
+
+// Re-sync when the server echoes a different set back — a back-button
+// navigation, or another control clearing everything.
+watch(
+    () => props.filters,
+    (applied) => {
+        draft.value = { ...applied }
+    },
+    { deep: true },
+)
+
+/** `!== null` and not truthiness — `false` is an applied value for a toggle. */
 const activeCount = computed(
     () => props.filterSchema.filter((f) => props.filters[f.key] !== null && props.filters[f.key] !== undefined).length,
 )
 
+const draftDiffers = computed(() => JSON.stringify(draft.value) !== JSON.stringify(props.filters))
+
 const hasAnything = computed(() => props.search !== '' || activeCount.value > 0)
 
-function isSelected(filter: FilterSchema, value: unknown): boolean {
-    if (isMulti(filter)) return selectedValues(filter).includes(value)
-
-    // A date range stores its RESOLVED window but is chosen by preset name, so
-    // the tick compares the preset rather than a pair of timestamps.
-    if (filter.type === 'daterange') {
-        return (props.filters[filter.key] as { preset?: string } | null)?.preset === value
-    }
-
-    return props.filters[filter.key] === value
+function isMulti(filter: FilterSchema): boolean {
+    return filter.type === 'multiselect'
 }
 
-/** Selecting the already-applied value clears it, so options toggle. */
-function choose(filter: FilterSchema, value: unknown) {
-    if (isMulti(filter)) {
-        const current = selectedValues(filter)
-        const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value]
+function draftValues(filter: FilterSchema): unknown[] {
+    const value = draft.value[filter.key]
 
-        // An empty list means "no filter", never "match nothing".
-        emit('filter', filter.key, next.length ? next : null)
-
-        return
-    }
-
-    emit('filter', filter.key, isSelected(filter, value) ? null : value)
+    return Array.isArray(value) ? value : value === null || value === undefined ? [] : [value]
 }
 
-function toggleSection(key: string) {
-    openSection.value = openSection.value === key ? null : key
+function isChosen(filter: FilterSchema, value: unknown): boolean {
+    if (isMulti(filter)) return draftValues(filter).includes(value)
+
+    return draft.value[filter.key] === value
 }
 
-/** The applied value of a filter, rendered for its chip. */
-function labelFor(filter: FilterSchema): string {
-    const value = props.filters[filter.key]
+function toggleChip(filter: FilterSchema, value: unknown) {
+    const current = draftValues(filter)
+    const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value]
 
-    if (filter.type === 'boolean') {
-        return value ? (filter.trueLabel ?? 'Yes') : (filter.falseLabel ?? 'No')
-    }
+    // Empty means "no filter", never "match nothing".
+    draft.value = { ...draft.value, [filter.key]: next.length ? next : null }
+}
 
-    if (Array.isArray(value)) {
-        // Three names read fine in a chip; more would overflow it, so past that
-        // it becomes a count.
-        return value.length <= 3 ? value.join(', ') : value.length + ' selected'
-    }
+function setValue(filter: FilterSchema, value: unknown) {
+    draft.value = { ...draft.value, [filter.key]: value === '' ? null : value }
+}
 
-    if (filter.type === 'daterange') {
-        const preset = (value as { preset?: string })?.preset
+/** Date ranges carry a preset name, or an explicit from..to pair. */
+function rangePart(filter: FilterSchema, part: 'from' | 'to'): string {
+    const value = draft.value[filter.key] as { raw?: string } | string | null
 
-        return filter.presets?.[preset ?? ''] ?? 'Custom range'
-    }
+    if (typeof value !== 'string' || !value.includes('..')) return ''
 
-    return String(value)
+    const [from, to] = value.split('..')
+
+    return part === 'from' ? (from ?? '') : (to ?? '')
+}
+
+function setRangePart(filter: FilterSchema, part: 'from' | 'to', value: string) {
+    const from = part === 'from' ? value : rangePart(filter, 'from')
+    const to = part === 'to' ? value : rangePart(filter, 'to')
+
+    // Both halves are needed before the range means anything; until then the
+    // filter stays unset rather than half-applied.
+    draft.value = { ...draft.value, [filter.key]: from && to ? `${from}..${to}` : null }
+}
+
+function applyFilters(close: () => void) {
+    emit('apply-filters', { ...draft.value })
+    close()
+}
+
+function resetFilters() {
+    draft.value = Object.fromEntries(props.filterSchema.map((f) => [f.key, null]))
 }
 
 function optionsFor(filter: FilterSchema): { value: unknown; label: string }[] {
@@ -139,8 +154,6 @@ function optionsFor(filter: FilterSchema): { value: unknown; label: string }[] {
         ]
     }
 
-    // Date ranges offer named presets rather than an option list. Presets are
-    // structure, not tenant data, so they ship with the cached schema.
     if (filter.type === 'daterange') {
         return Object.entries(filter.presets ?? {}).map(([value, label]) => ({ value, label }))
     }
@@ -148,18 +161,31 @@ function optionsFor(filter: FilterSchema): { value: unknown; label: string }[] {
     return (filter.options ?? []).map((o) => ({ value: o, label: o }))
 }
 
-/** A multiselect holds a list; every other filter holds one value. */
-function isMulti(filter: FilterSchema): boolean {
-    return filter.type === 'multiselect'
+/* ------------------------------------------------------------------ columns */
+
+const columnDraft = ref<Set<string>>(new Set(props.hidden))
+
+watch(
+    () => props.hidden,
+    (hidden) => {
+        columnDraft.value = new Set(hidden)
+    },
+    { deep: true },
+)
+
+function toggleColumnDraft(key: string) {
+    const next = new Set(columnDraft.value)
+    next.has(key) ? next.delete(key) : next.add(key)
+    columnDraft.value = next
 }
 
-function selectedValues(filter: FilterSchema): unknown[] {
-    const applied = props.filters[filter.key]
-
-    return Array.isArray(applied) ? applied : applied === null || applied === undefined ? [] : [applied]
+function applyColumns(close: () => void) {
+    emit('apply-columns', [...columnDraft.value])
+    close()
 }
 
-function clearAll() {
+/** Clearing resets the local search box too, or it keeps a stale term. */
+function clearEverything() {
     local.value = ''
     emit('clear')
 }
@@ -167,15 +193,8 @@ function clearAll() {
 
 <template>
     <div class="flex flex-wrap items-center gap-2">
-        <!--
-            Geometry deliberately identical to the global search trigger in the
-            topbar: same height, radius, border, icon size and inset, same
-            sm:w-72. Two search boxes on one screen that are almost-but-not-quite
-            alike read as an inconsistency rather than a hierarchy.
-
-            They stay distinct by SCOPE, not by styling — this one is filtering
-            the table in front of you; the topbar one searches everything.
-        -->
+        <!-- Geometry deliberately identical to the topbar search: two search
+             boxes that are almost-but-not-quite alike read as inconsistency. -->
         <div class="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
             <svg
                 class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
@@ -209,12 +228,13 @@ function clearAll() {
             </button>
         </div>
 
-        <!-- Filters — icon only, count badge when anything is applied. -->
-        <PkDropdown v-if="filterSchema.length" width="w-60">
+        <!-- Filters -->
+        <PkDropdown v-if="filterSchema.length" width="w-80">
             <template #trigger>
                 <button
                     type="button"
                     class="border-input bg-background hover:bg-accent hover:text-accent-foreground relative inline-flex size-9 shrink-0 items-center justify-center rounded-md border transition-colors"
+                    :class="activeCount ? 'border-primary text-primary' : ''"
                     :aria-label="activeCount ? `Filters (${activeCount} active)` : 'Filters'"
                     title="Filters"
                 >
@@ -230,70 +250,137 @@ function clearAll() {
                 </button>
             </template>
 
-            <template #panel>
-                <div class="flex items-center justify-between px-2 py-1.5">
-                    <span class="text-sm font-medium">Filters</span>
-                    <button
-                        v-if="activeCount"
-                        class="text-muted-foreground hover:text-foreground text-xs"
-                        @click="emit('reset-filters')"
-                    >
-                        Reset
-                    </button>
+            <template #panel="{ close }">
+                <div class="flex items-center justify-between px-1 pt-1 pb-2">
+                    <span class="text-sm font-semibold">Filters</span>
+                    <button class="text-destructive text-xs hover:underline" @click="resetFilters">Reset</button>
                 </div>
 
-                <div class="max-h-80 overflow-y-auto border-t pt-1">
-                    <div v-for="filter in filterSchema" :key="filter.key">
-                        <button
-                            class="hover:bg-accent hover:text-accent-foreground flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm"
-                            @click="toggleSection(filter.key)"
-                        >
-                            <span class="flex items-center gap-1.5">
-                                {{ filter.label }}
-                                <span
-                                    v-if="filters[filter.key] !== null && filters[filter.key] !== undefined"
-                                    class="bg-primary size-1.5 rounded-full"
-                                />
-                            </span>
-                            <svg
-                                viewBox="0 0 24 24"
-                                class="size-3.5 transition-transform"
-                                :class="openSection === filter.key ? 'rotate-90' : ''"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                            >
-                                <path d="m9 6 6 6-6 6" />
-                            </svg>
-                        </button>
+                <p class="text-muted-foreground px-1 pb-3 text-xs">
+                    Select one or more — all chosen filters must match.
+                </p>
 
-                        <div v-if="openSection === filter.key" class="mb-1 ml-2 border-l pl-1">
+                <div class="flex max-h-96 flex-col gap-4 overflow-y-auto px-1 pb-3">
+                    <div v-for="filter in filterSchema" :key="filter.key" class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium">{{ filter.label }}</label>
+
+                        <!-- Multi-value: chips, because a stack of checkboxes
+                             hides how many are chosen and a multi-select box
+                             hides the options. -->
+                        <div v-if="isMulti(filter)" class="flex flex-wrap gap-1.5">
                             <button
                                 v-for="opt in optionsFor(filter)"
                                 :key="String(opt.value)"
-                                class="hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm capitalize"
-                                @click="choose(filter, opt.value)"
+                                type="button"
+                                class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs capitalize transition-colors"
+                                :class="
+                                    isChosen(filter, opt.value)
+                                        ? 'border-primary bg-primary/10 text-primary font-medium'
+                                        : 'border-input hover:bg-accent'
+                                "
+                                @click="toggleChip(filter, opt.value)"
                             >
                                 <svg
+                                    v-if="isChosen(filter, opt.value)"
                                     viewBox="0 0 24 24"
-                                    class="size-3.5 shrink-0"
-                                    :class="isSelected(filter, opt.value) ? 'opacity-100' : 'opacity-0'"
+                                    class="size-3"
                                     fill="none"
                                     stroke="currentColor"
-                                    stroke-width="3"
+                                    stroke-width="3.5"
                                 >
                                     <path d="m5 13 4 4L19 7" />
                                 </svg>
-                                <span class="truncate">{{ opt.label }}</span>
+                                {{ opt.label }}
                             </button>
                         </div>
+
+                        <!-- Date range: presets plus an explicit pair. -->
+                        <template v-else-if="filter.type === 'daterange'">
+                            <select
+                                :value="typeof draft[filter.key] === 'string' && !String(draft[filter.key]).includes('..') ? draft[filter.key] : ''"
+                                class="border-input bg-background h-9 rounded-md border px-3 text-sm"
+                                @change="setValue(filter, ($event.target as HTMLSelectElement).value)"
+                            >
+                                <option value="">Any time</option>
+                                <option v-for="opt in optionsFor(filter)" :key="String(opt.value)" :value="opt.value">
+                                    {{ opt.label }}
+                                </option>
+                            </select>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <input
+                                    type="date"
+                                    :value="rangePart(filter, 'from')"
+                                    aria-label="From"
+                                    class="border-input bg-background h-9 rounded-md border px-2 text-xs"
+                                    @change="setRangePart(filter, 'from', ($event.target as HTMLInputElement).value)"
+                                />
+                                <input
+                                    type="date"
+                                    :value="rangePart(filter, 'to')"
+                                    aria-label="To"
+                                    class="border-input bg-background h-9 rounded-md border px-2 text-xs"
+                                    @change="setRangePart(filter, 'to', ($event.target as HTMLInputElement).value)"
+                                />
+                            </div>
+                        </template>
+
+                        <!-- Boolean: a real toggle, since three states as a
+                             dropdown reads worse than a switch plus "Any". -->
+                        <div v-else-if="filter.type === 'boolean'" class="flex items-center gap-2">
+                            <button
+                                type="button"
+                                role="switch"
+                                :aria-checked="draft[filter.key] === true"
+                                class="relative h-5 w-9 shrink-0 rounded-full transition-colors"
+                                :class="draft[filter.key] === true ? 'bg-primary' : 'bg-muted-foreground/30'"
+                                @click="setValue(filter, draft[filter.key] === true ? null : true)"
+                            >
+                                <span
+                                    class="bg-background absolute top-0.5 size-4 rounded-full transition-all"
+                                    :class="draft[filter.key] === true ? 'left-4.5' : 'left-0.5'"
+                                />
+                            </button>
+                            <span class="text-xs">{{ filter.trueLabel ?? 'Yes' }}</span>
+
+                            <button
+                                type="button"
+                                class="text-muted-foreground ml-auto text-xs hover:underline"
+                                :class="draft[filter.key] === false ? 'text-primary font-medium' : ''"
+                                @click="setValue(filter, draft[filter.key] === false ? null : false)"
+                            >
+                                {{ filter.falseLabel ?? 'No' }} only
+                            </button>
+                        </div>
+
+                        <!-- Single choice. -->
+                        <select
+                            v-else
+                            :value="(draft[filter.key] as string) ?? ''"
+                            class="border-input bg-background h-9 rounded-md border px-3 text-sm capitalize"
+                            @change="setValue(filter, ($event.target as HTMLSelectElement).value)"
+                        >
+                            <option value="">All</option>
+                            <option v-for="opt in optionsFor(filter)" :key="String(opt.value)" :value="opt.value">
+                                {{ opt.label }}
+                            </option>
+                        </select>
                     </div>
                 </div>
+
+                <button
+                    type="button"
+                    class="bg-primary text-primary-foreground hover:bg-primary/90 mt-1 h-9 w-full rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+                    :disabled="!draftDiffers"
+                    @click="applyFilters(close)"
+                >
+                    Apply filters
+                </button>
             </template>
         </PkDropdown>
 
-        <!-- Columns — icon only. -->
-        <PkDropdown width="w-48">
+        <!-- Columns -->
+        <PkDropdown width="w-60">
             <template #trigger>
                 <button
                     type="button"
@@ -308,39 +395,42 @@ function clearAll() {
                 </button>
             </template>
 
-            <template #panel>
-                <div class="flex items-center justify-between px-2 py-1.5">
-                    <span class="text-sm font-medium">Columns</span>
-                    <button
-                        v-if="hidden.size"
-                        class="text-muted-foreground hover:text-foreground text-xs"
-                        @click="emit('reset-columns')"
-                    >
+            <template #panel="{ close }">
+                <div class="flex items-center justify-between px-1 pt-1 pb-2">
+                    <span class="text-sm font-semibold">Columns</span>
+                    <button class="text-destructive text-xs hover:underline" @click="columnDraft = new Set()">
                         Reset
                     </button>
                 </div>
 
-                <div class="max-h-80 overflow-y-auto border-t pt-1">
-                    <button
+                <div class="flex max-h-80 flex-col gap-0.5 overflow-y-auto px-1 pb-3">
+                    <label
                         v-for="col in columns"
                         :key="col.key"
-                        :disabled="col.locked"
-                        class="hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm disabled:opacity-50"
-                        @click="!col.locked && emit('toggle-column', col.key)"
+                        class="hover:bg-accent flex items-center gap-2.5 rounded px-2 py-1.5 text-sm"
+                        :class="col.locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'"
                     >
-                        <svg
-                            viewBox="0 0 24 24"
-                            class="size-3.5 shrink-0"
-                            :class="hidden.has(col.key) ? 'opacity-0' : 'opacity-100'"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="3"
-                        >
-                            <path d="m5 13 4 4L19 7" />
-                        </svg>
+                        <!-- A real checkbox, not a tick glyph: it carries its own
+                             disabled and indeterminate semantics, and screen
+                             readers already know what it is. -->
+                        <input
+                            type="checkbox"
+                            class="accent-primary size-4"
+                            :checked="!columnDraft.has(col.key)"
+                            :disabled="col.locked"
+                            @change="toggleColumnDraft(col.key)"
+                        />
                         {{ col.label }}
-                    </button>
+                    </label>
                 </div>
+
+                <button
+                    type="button"
+                    class="bg-primary text-primary-foreground hover:bg-primary/90 h-9 w-full rounded-md text-sm font-medium transition-colors"
+                    @click="applyColumns(close)"
+                >
+                    Apply columns
+                </button>
             </template>
         </PkDropdown>
 
@@ -348,29 +438,11 @@ function clearAll() {
             v-if="hasAnything"
             type="button"
             class="text-muted-foreground hover:text-foreground shrink-0 text-xs underline-offset-2 hover:underline"
-            @click="clearAll"
+            @click="clearEverything"
         >
             Clear
         </button>
 
         <span v-if="loading" class="text-muted-foreground shrink-0 text-xs">Loading…</span>
-    </div>
-
-    <!-- Applied filters as removable chips, so what is active is visible without
-         opening the dropdown. Filament hides this behind the trigger badge. -->
-    <div v-if="activeCount" class="flex flex-wrap items-center gap-1.5">
-        <template v-for="filter in filterSchema" :key="filter.key">
-            <span
-                v-if="filters[filter.key] !== null && filters[filter.key] !== undefined"
-                class="bg-secondary text-secondary-foreground inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs capitalize"
-            >
-                {{ filter.label }}: {{ labelFor(filter) }}
-                <button :aria-label="`Remove ${filter.label} filter`" @click="emit('filter', filter.key, null)">
-                    <svg viewBox="0 0 24 24" class="size-3" fill="none" stroke="currentColor" stroke-width="3">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
-                </button>
-            </span>
-        </template>
     </div>
 </template>

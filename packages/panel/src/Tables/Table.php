@@ -7,7 +7,7 @@ namespace PanelKit\Panel\Tables;
 use Closure;
 use PanelKit\Panel\Tables\Columns\Column;
 use PanelKit\Panel\Tables\Filters\Filter;
-use PanelKit\Panel\Tables\Filters\SelectFilter;
+use PanelKit\Panel\Tables\Filters\HasOptions;
 
 /**
  * Declarative table definition. Produces the schema, and configures ListQuery.
@@ -188,7 +188,10 @@ final class Table
         $options = [];
 
         foreach ($this->filters as $filter) {
-            if ($filter instanceof SelectFilter) {
+            // The INTERFACE, not a concrete class. Checking instanceof
+            // SelectFilter silently excluded MultiSelectFilter, so its chips
+            // rendered empty with no error anywhere.
+            if ($filter instanceof HasOptions) {
                 $options[$filter->key] = $filter->resolvedOptions();
             }
         }

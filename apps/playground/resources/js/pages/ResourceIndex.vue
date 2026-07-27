@@ -95,7 +95,12 @@ defineOptions({
 const t = useListTable(props.schema.routes.index, props)
 
 // Keyed by resource, so hiding a column on Clients does not hide it on Routers.
-const { hidden, toggle, reset } = useColumnVisibility(`panelkit.${props.schema.key}.columns`)
+const { hidden, setHidden } = useColumnVisibility(`panelkit.${props.schema.key}.columns`)
+
+/** The column panel stages its choices and applies them together. */
+function applyColumns(keys: string[]) {
+    setHidden(new Set(keys))
+}
 
 const schemaColumns = toRef(() => props.schema.table.columns)
 const { columns, byKey, badgeVariant } = useSchemaColumns(schemaColumns)
@@ -256,16 +261,14 @@ function badgeLabel(key: string, value: unknown): string {
             :hidden="hidden"
             :loading="t.showSpinner.value"
             @update:search="t.setSearch"
-            @filter="t.setFilter"
-            @toggle-column="toggle"
-            @reset-columns="reset"
-            @reset-filters="t.resetFilters"
+            @apply-filters="t.applyFilters"
+            @apply-columns="applyColumns"
             @clear="t.clearAll"
         />
 
         <SelectionBar
             v-if="t.selected.value.size"
-            :page-count="t.selected.value.size"
+            :count="t.selected.value.size"
             :all-matching="t.allMatching.value"
             :total="total"
             @select-all-matching="t.selectAllMatching"
