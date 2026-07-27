@@ -34,6 +34,8 @@ final readonly class ListResult
         public array $perPageOptions,
         public array $tabs,
         public ?Closure $tabCounts,
+        /** Footer aggregates over the filtered set, or null if none declared. */
+        public ?Closure $summary,
         public Closure $total,
         public string $countStrategy = 'deferred',
     ) {}

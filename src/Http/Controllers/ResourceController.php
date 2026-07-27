@@ -298,6 +298,10 @@ final class ResourceController extends Controller
             // Deferred: neither the total nor the tab counts may sit in front of
             // the rows (§10, addendum C1).
             'total' => Inertia::defer($result->total),
+
+            // Deferred for the same reason the total is: aggregating a tenant's
+            // 200,000 rows must not sit in front of the ten on screen.
+            ...($result->summary ? ['summary' => Inertia::defer($result->summary, 'summary')] : []),
             ...($result->tabCounts ? ['tabCounts' => Inertia::defer($result->tabCounts)] : []),
         ]);
     }

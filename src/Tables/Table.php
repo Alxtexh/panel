@@ -259,6 +259,7 @@ final class Table
             ->select($this->resolveSelect())
             ->sortable($this->resolveSortable())
             ->searchable($this->resolveSearchable())
+            ->summaries($this->resolveSummaries())
             ->filters($this->filters)
             ->defaultSort($this->defaultSort, $this->defaultDirection)
             ->perPage($this->perPage)
@@ -315,6 +316,37 @@ final class Table
         }
 
         return $map;
+    }
+
+    /**
+     * Declared footer aggregates, keyed by column key.
+     *
+     * The database column is resolved here — with any SELECT alias stripped,
+     * for the same reason searchable columns strip it: `plans.name as
+     * plan_name` is correct in a select and invalid inside `SUM(...)`.
+     *
+     * @return array<string, array{summarizer: Summarizer, column: string}>
+     */
+    private function resolveSummaries(): array
+    {
+        $out = [];
+
+        foreach ($this->columns as $column) {
+            $summarizer = $column->summarizer();
+
+            if ($summarizer === null) {
+                continue;
+            }
+
+            $declared = $column->resolvedDatabaseColumn() ?? $column->key;
+
+            $out[$column->key] = [
+                'summarizer' => $summarizer,
+                'column' => trim(preg_split('/\s+as\s+/i', $declared)[0]),
+            ];
+        }
+
+        return $out;
     }
 
     /**
