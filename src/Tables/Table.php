@@ -38,6 +38,9 @@ final class Table
     /** @var list<Filter> */
     private array $filters = [];
 
+    /** @var list<\PanelKit\Panel\Actions\BulkAction> */
+    private array $bulkActions = [];
+
     private ?Tabs $tabs = null;
 
     private ?Closure $query = null;
@@ -77,6 +80,38 @@ final class Table
         $this->filters = $filters;
 
         return $this;
+    }
+
+    /**
+     * Actions applied to a selection.
+     *
+     * Declared here rather than accepted from the request: the client may name
+     * one of these by key, never describe one.
+     *
+     * @param  list<\PanelKit\Panel\Actions\BulkAction>  $actions
+     */
+    public function bulkActions(array $actions): self
+    {
+        $this->bulkActions = $actions;
+
+        return $this;
+    }
+
+    /** @return list<\PanelKit\Panel\Actions\BulkAction> */
+    public function getBulkActions(): array
+    {
+        return $this->bulkActions;
+    }
+
+    public function bulkAction(string $key): ?\PanelKit\Panel\Actions\BulkAction
+    {
+        foreach ($this->bulkActions as $action) {
+            if ($action->key === $key) {
+                return $action;
+            }
+        }
+
+        return null;
     }
 
     /** @param list<string> $values */
@@ -168,6 +203,12 @@ final class Table
             // instead (addendum Part A).
             'filters' => array_map(static fn (Filter $f): array => $f->toSchema(), $this->filters),
             'tabs' => $this->tabs?->values ?? [],
+            // Structure, not behaviour: labels and confirmation copy. What an
+            // action DOES never leaves the server.
+            'bulkActions' => array_map(
+                static fn (\PanelKit\Panel\Actions\BulkAction $a): array => $a->toArray(),
+                $this->bulkActions,
+            ),
             'defaultSort' => $this->defaultSort,
             'defaultDirection' => $this->defaultDirection,
             'perPage' => $this->perPage,

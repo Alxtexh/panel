@@ -351,6 +351,126 @@ final class ListQuery
         return $this->transform === null ? $row : ($this->transform)($row);
     }
 
+    /**
+     * The set a bulk action or an export should operate on.
+     *
+     * REBUILT FROM THE REQUEST, NEVER TRUSTED FROM THE CLIENT. The browser
+     * sends the same filter parameters it used to draw the table, and this
+     * re-derives the query from them — it does not accept a row count, a list
+     * of "everything", or a where clause. The only thing the client can widen
+     * is which of its OWN visible rows are included.
+     *
+     * `$ids` is an intersection, not a source of truth: it narrows the already
+     * scoped set. An id belonging to another tenant survives the whereIn and is
+     * then removed by the global scope, so a forged selection matches nothing
+     * rather than reaching across the boundary.
+     *
+     * Passing null means "everything matching the current filters", which is
+     * the select-all-matching case §8 requires.
+     *
+     * @param  list<int|string>|null  $ids
+     */
+    public function matching(Request $request, ?array $ids = null): Builder
+    {
+        $query = $this->base($this->readState($request));
+
+        if ($ids !== null) {
+            $query->whereIn($this->qualifiedKey(), $ids);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Walk the whole filtered set in chunks, for an export.
+     *
+     * Reuses the list's own select, joins and row transform, so the export
+     * carries the same VALUES the table was built from — a joined plan name
+     * where the screen shows a plan name, rather than the raw `plan_id`.
+     * Rebuilding the query separately is how an export ends up full of foreign
+     * keys that nobody notices until a customer opens the file.
+     *
+     * Per-column PRESENTATION is deliberately not applied: casing, date
+     * formatting and badge styling are decided in the Vue layer, so a status
+     * exports as `suspended` rather than `Suspended` and a date as an ISO-ish
+     * timestamp rather than "27 May 2026". A CSV is read by spreadsheets and
+     * scripts, and a machine-readable date beats a prettier one.
+     *
+     * KEYSET, not OFFSET, for the same reason the runner is: at 100k rows
+     * `OFFSET 90000` re-walks ninety thousand rows to skip them, so the last
+     * chunk costs the most and the export gets slower the longer it runs.
+     * There is no shrinking-set hazard here — an export does not write — but
+     * the cost argument alone settles it.
+     *
+     * @param  list<int|string>|null  $ids
+     * @param  Closure(list<array<string, mixed>>): void  $callback
+     * @return int Rows emitted.
+     */
+    public function eachMatching(Request $request, ?array $ids, int $chunkSize, Closure $callback): int
+    {
+        $state = $this->readState($request);
+        $key = $this->qualifiedKey();
+
+        $emitted = 0;
+        $after = null;
+
+        while (true) {
+            $query = $this->base($state)->select($this->select);
+
+            if ($ids !== null) {
+                $query->whereIn($key, $ids);
+            }
+
+            if ($after !== null) {
+                $query->where($key, '>', $after);
+            }
+
+            $rows = $query->orderBy($key)->limit($chunkSize)->get()->all();
+
+            if ($rows === []) {
+                break;
+            }
+
+            $mapped = array_map(static fn (object $row): array => (array) $row, $rows);
+
+            if ($this->transform !== null) {
+                $mapped = array_map($this->transform, $mapped);
+            }
+
+            $callback($mapped);
+
+            $emitted += count($mapped);
+            $after = ((array) end($rows))[$this->keyColumn] ?? null;
+
+            if (count($rows) < $chunkSize || $after === null) {
+                break;
+            }
+        }
+
+        return $emitted;
+    }
+
+    /** The key column, table-qualified when the list joins. */
+    public function qualifiedKey(): string
+    {
+        if (str_contains($this->keyColumn, '.')) {
+            return $this->keyColumn;
+        }
+
+        return (new $this->model)->getTable() . '.' . $this->keyColumn;
+    }
+
+    public function keyColumnName(): string
+    {
+        return $this->keyColumn;
+    }
+
+    /** @return list<string> The columns the list selects, for an export header. */
+    public function selectedColumns(): array
+    {
+        return $this->select;
+    }
+
     public function run(Request $request): ListResult
     {
         if ($this->sortable === []) {

@@ -33,6 +33,10 @@ final class StatWidget
 {
     private ?Closure $value = null;
 
+    private ?Closure $trend = null;
+
+    private ?Closure $sparkline = null;
+
     private ?string $description = null;
 
     private ?int $ttl = null;
@@ -60,6 +64,34 @@ final class StatWidget
     public function description(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * A comparison against the preceding window: "▲ 4% vs previous 30 days".
+     *
+     * Resolved in the SAME deferred pass as the value, not as a second prop.
+     * Splitting them would let a card paint its number and then visibly grow a
+     * second line under it, which is the layout shift §10 puts at zero.
+     *
+     * @param  Closure(): Trend  $trend
+     */
+    public function trend(Closure $trend): self
+    {
+        $this->trend = $trend;
+
+        return $this;
+    }
+
+    /**
+     * The miniature series drawn behind the number.
+     *
+     * @param  Closure(): (array{points: list<array{label: string, value: int|float}>}|list<array{label: string, value: int|float}>)  $sparkline
+     */
+    public function sparkline(Closure $sparkline): self
+    {
+        $this->sparkline = $sparkline;
 
         return $this;
     }
@@ -101,9 +133,69 @@ final class StatWidget
     /**
      * Resolve the value. Never throws — a broken widget reports itself.
      *
-     * @return array{value: int|string|null, error: bool}
+     * The trend and sparkline resolve in their OWN try blocks, so a broken
+     * decoration cannot take down the number it decorates. Wrapping all three
+     * together would mean a failed sparkline query blanks a working counter,
+     * which inverts the importance of the two.
+     *
+     * @return array{
+     *     value: int|string|null,
+     *     trend: array<string, mixed>|null,
+     *     sparkline: list<array{label: string, value: int|float}>|null,
+     *     error: bool
+     * }
      */
     public function resolve(string $tenantKey): array
+    {
+        $value = $this->resolveValue($tenantKey);
+
+        return [
+            ...$value,
+            'trend' => $value['error'] ? null : $this->resolveSafely($this->trend, 'trend', $tenantKey)?->toArray(),
+            'sparkline' => $value['error'] ? null : $this->resolveSparkline($tenantKey),
+        ];
+    }
+
+    /**
+     * @return list<array{label: string, value: int|float}>|null
+     */
+    private function resolveSparkline(string $tenantKey): ?array
+    {
+        $resolved = $this->resolveSafely($this->sparkline, 'sparkline', $tenantKey);
+
+        if ($resolved === null) {
+            return null;
+        }
+
+        return array_values($resolved['points'] ?? $resolved);
+    }
+
+    /**
+     * Run one optional closure, reporting a failure without raising it.
+     */
+    private function resolveSafely(?Closure $closure, string $part, string $tenantKey): mixed
+    {
+        if ($closure === null) {
+            return null;
+        }
+
+        try {
+            return $closure();
+        } catch (Throwable $e) {
+            Log::error('Panel widget decoration failed to resolve.', [
+                'component' => 'StatWidget',
+                'operation' => $part,
+                'widget' => $this->key,
+                'tenant' => $tenantKey,
+                'exception' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /** @return array{value: int|string|null, error: bool} */
+    private function resolveValue(string $tenantKey): array
     {
         if ($this->value === null) {
             return ['value' => null, 'error' => true];

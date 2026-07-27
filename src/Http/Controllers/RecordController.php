@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Tables\Columns\EditableColumn;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -79,6 +82,77 @@ final class RecordController extends Controller
         $record->save();
 
         return back()->with('success', $class::label() . ' updated.');
+    }
+
+    /**
+     * Write ONE cell, from an editable column in the list.
+     *
+     * A cell edit is a full write with a smaller control, so it goes through
+     * every gate a form submission does — scoped lookup, per-record policy
+     * check, staleness check — and adds one more that forms do not need:
+     *
+     *   THE COLUMN MUST BE A DECLARED EditableColumn ON THIS TABLE. The request
+     *   names a column, and only a column the resource declared as editable is
+     *   accepted. Without that check this endpoint writes any attribute on any
+     *   record the operator can see, which is a mass-assignment hole wearing an
+     *   inline-edit costume.
+     *
+     * The VALUE is then validated by the column itself: a select accepts only
+     * its own options, a toggle only a real boolean. Most enum columns have no
+     * database constraint behind them, so this is the only thing standing
+     * between a crafted request and a row with an unroutable status.
+     *
+     * JSON, not a redirect: the row updates in place and the page must not
+     * navigate.
+     */
+    public function updateCell(Request $request, string $resource, string $id): JsonResponse
+    {
+        $class = $this->resolve($resource);
+
+        $record = $this->findScoped($class, $id);
+
+        abort_unless($class::can('update', $record), 403);
+
+        $validated = $request->validate([
+            'column' => ['required', 'string', 'max:64'],
+            'value' => ['present'],
+        ]);
+
+        $column = null;
+
+        foreach ($class::definition()->getColumns() as $candidate) {
+            if ($candidate->key === $validated['column'] && $candidate instanceof EditableColumn) {
+                $column = $candidate;
+                break;
+            }
+        }
+
+        if ($column === null) {
+            throw new NotFoundHttpException("[{$validated['column']}] is not an editable column on [{$resource}].");
+        }
+
+        try {
+            $value = $column->castValue($validated['value']);
+        } catch (InvalidArgumentException $e) {
+            throw ValidationException::withMessages(['value' => $e->getMessage()]);
+        }
+
+        $this->assertNotStale($request, $record);
+
+        // forceFill is safe HERE and only here: the attribute name came from the
+        // resource's own column declaration, not from the request. The request
+        // chose which declared column, never which attribute.
+        $record->forceFill([$column->writableColumn() => $value]);
+        $record->save();
+
+        return response()->json([
+            'id' => $record->getKey(),
+            'column' => $column->key,
+            'value' => $value,
+            // Echoed so the row's staleness guard stays armed for the next edit
+            // without a full reload.
+            'updated_at' => $record->updated_at?->toIso8601String(),
+        ]);
     }
 
     public function destroy(Request $request, string $resource, string $id): RedirectResponse
