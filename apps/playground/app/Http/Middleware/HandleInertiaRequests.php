@@ -39,6 +39,17 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return [
+            /*
+             * The unread badge, shared with every page.
+             *
+             * Shipping the count with the payload is what lets the bell render
+             * correctly on load WITHOUT a request — the alternative is every
+             * page firing an XHR just to decide whether to draw a dot.
+             *
+             * One indexed count, and only for an authenticated user.
+             */
+            'notificationCount' => fn (): int => $request->user()?->unreadNotifications()->count() ?? 0,
+
             ...parent::share($request),
 
             /*

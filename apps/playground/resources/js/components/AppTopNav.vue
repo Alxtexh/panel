@@ -19,6 +19,7 @@ import { AppearanceDrawer, PkDropdown } from '@panelkit/ui';
 import AppLogo from '@/components/AppLogo.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import TopNavUser from '@/components/TopNavUser.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { usePanelNav } from '@/composables/usePanelNav';
@@ -116,6 +117,7 @@ function groupIsActive(items: { href: string }[]): boolean {
 
             <div class="flex shrink-0 items-center gap-2">
                 <CommandPalette />
+                <NotificationBell />
                 <AppearanceDrawer />
                 <TopNavUser />
             </div>

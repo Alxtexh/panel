@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import { AppearanceDrawer, useAppearance } from '@panelkit/ui';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
@@ -74,6 +75,7 @@ const trail = computed<BreadcrumbItem[]>(() =>
 
         <div class="flex items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
             <CommandPalette />
+            <NotificationBell />
             <!-- Appearance belongs where you can see what it changes. -->
             <AppearanceDrawer />
         </div>

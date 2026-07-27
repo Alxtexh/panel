@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SearchController;
 use PanelKit\Panel\Http\Controllers\BulkController;
 use PanelKit\Panel\Http\Controllers\RecordController;
@@ -104,6 +105,18 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
 
     // Lean JSON, not an Inertia render — the palette fires per keystroke.
     Route::get('search', SearchController::class)->name('search');
+
+    /*
+     | The bell. Lean JSON too: it may be polled, and re-rendering a page to
+     | answer "anything new?" is exactly the cost the live-update rules avoid.
+     */
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])
+        ->name('notifications.readAll');
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])
+        ->name('notifications.read');
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])
+        ->name('notifications.destroy');
 });
 
 require __DIR__.'/settings.php';

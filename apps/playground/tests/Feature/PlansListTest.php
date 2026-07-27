@@ -173,7 +173,24 @@ final class PlansListTest extends TestCase
     {
         $this->makePlans($this->tenantA, 10, 'Alpha');
 
-        foreach ($this->captureQueriesForIndex() as $sql) {
+        /*
+         * The notifications table is EXEMPT, and named explicitly rather than
+         * matched loosely.
+         *
+         * This guard is about the LIST query: a COUNT over a resource table is
+         * unbounded, grows with the tenant, and is exactly what §10 forbids in
+         * front of rows. The unread-badge count is a different shape — one
+         * user's inbox, reached through the morph index, bounded by what that
+         * person has been sent. Excluding it by name keeps the guard sharp;
+         * broadening the pattern to "ignore counts we expect" would let a real
+         * one back in.
+         */
+        $queries = array_filter(
+            $this->captureQueriesForIndex(),
+            static fn (string $sql): bool => ! str_contains($sql, 'notifications'),
+        );
+
+        foreach ($queries as $sql) {
             $this->assertStringNotContainsStringIgnoringCase('count(', $sql, "Count query in list response: {$sql}");
         }
     }

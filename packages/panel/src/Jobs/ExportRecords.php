@@ -131,6 +131,12 @@ final class ExportRecords implements ShouldQueue
             $handle = null;
 
             JobStatus::finish($this->token, ['done' => $written, 'total' => $written, 'file' => $path]);
+
+            $this->notifyActor(
+                'Your export is ready',
+                number_format($written) . ' rows exported from ' . $this->resource . '.',
+                "/{$this->resource}/jobs/{$this->token}/download",
+            );
         } catch (Throwable $e) {
             if (is_resource($handle)) {
                 fclose($handle);
@@ -143,6 +149,8 @@ final class ExportRecords implements ShouldQueue
             }
 
             JobStatus::fail($this->token, $e->getMessage());
+
+            $this->notifyActor('Your export failed', $e->getMessage(), null, 'danger');
 
             throw $e;
         }

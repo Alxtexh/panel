@@ -48,6 +48,22 @@ final class DashboardWidgetTest extends TestCase
 
         $queries = array_column(DB::getQueryLog(), 'query');
 
+        /*
+         * The notifications table is EXEMPT, and deliberately named rather than
+         * matched loosely.
+         *
+         * This guard is about the LIST query: a COUNT over a resource table is
+         * unbounded, grows with the tenant, and is what §10 forbids in front of
+         * rows. The unread-badge count is a different shape — one user's inbox,
+         * hit through the morph index, bounded by what that person has been
+         * sent. Excluding it by name keeps the guard sharp; broadening the
+         * pattern to "ignore counts we expect" would let a real one back in.
+         */
+        $queries = array_filter(
+            $queries,
+            static fn (string $sql): bool => ! str_contains($sql, 'notifications'),
+        );
+
         foreach ($queries as $sql) {
             $this->assertStringNotContainsStringIgnoringCase(
                 'count(',
