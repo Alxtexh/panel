@@ -16,6 +16,7 @@
  */
 
 export { default as DataTable } from './components/DataTable/DataTable.vue'
+export { default as BarChart } from './components/Widgets/BarChart.vue'
 export { default as SelectionBar } from './components/DataTable/SelectionBar.vue'
 export { default as TablePagination } from './components/DataTable/TablePagination.vue'
 export { default as TableTabs } from './components/DataTable/TableTabs.vue'

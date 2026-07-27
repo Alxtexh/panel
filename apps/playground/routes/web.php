@@ -20,11 +20,24 @@ Route::inertia('/', 'Welcome')->name('home');
 Route::middleware(['auth', 'verified'])->group(function () use ($panelResources) {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // One route for every resource. Adding a screen is a PHP class, not a
-    // route, a controller and a Vue file.
+    /*
+     | One set of routes for every resource. Adding a screen is a PHP class.
+     |
+     | ORDER MATTERS: /create must be declared before /{id}, or 'create' is
+     | captured as a record id and the create page 404s looking for a record
+     | called "create".
+     */
     Route::get('{resource}', [ResourceController::class, 'index'])
-        ->whereIn('resource', $panelResources)
-        ->name('panel.resource');
+        ->whereIn('resource', $panelResources)->name('panel.resource');
+
+    Route::get('{resource}/create', [ResourceController::class, 'create'])
+        ->whereIn('resource', $panelResources)->name('panel.create');
+
+    Route::get('{resource}/{id}', [ResourceController::class, 'show'])
+        ->whereIn('resource', $panelResources)->whereNumber('id')->name('panel.show');
+
+    Route::get('{resource}/{id}/edit', [ResourceController::class, 'edit'])
+        ->whereIn('resource', $panelResources)->whereNumber('id')->name('panel.edit');
 
     // Writes. The precognitive middleware is registered so the endpoint can
     // answer validation-only requests, but no client uses it yet: the official

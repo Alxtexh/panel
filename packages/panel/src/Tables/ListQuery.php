@@ -194,6 +194,41 @@ final class ListQuery
         return $this;
     }
 
+    /**
+     * A SINGLE record, through the same select and joins the list uses.
+     *
+     * The detail page renders the table's columns, so it must fetch them the
+     * same way. Reading the raw model instead silently drops every joined
+     * column — the Plan field rendered an em dash, which an operator reads as
+     * "this client has no plan" rather than "this value was not loaded".
+     *
+     * @return array<string, mixed>|null
+     */
+    public function find(int|string $id): ?array
+    {
+        /** @var \Illuminate\Database\Eloquent\Builder $eloquent */
+        $eloquent = $this->model::query();
+
+        if ($this->join !== null) {
+            ($this->join)($eloquent);
+        }
+
+        // toBase() applies the tenant global scope before dropping to the query
+        // builder, so another tenant's record is simply not found.
+        $row = $eloquent->toBase()
+            ->select($this->select)
+            ->where($this->keyColumn, $id)
+            ->first();
+
+        if ($row === null) {
+            return null;
+        }
+
+        $row = (array) $row;
+
+        return $this->transform === null ? $row : ($this->transform)($row);
+    }
+
     public function run(Request $request): ListResult
     {
         if ($this->sortable === []) {

@@ -36,13 +36,11 @@ import {
     TableTabs,
     TableToolbar,
     PkModal,
-    RecordForm,
     useColumnVisibility,
     useSchemaColumns,
-    type FormField,
     type SchemaColumn,
 } from '@panelkit/ui'
-import { Head, router, useForm } from '@inertiajs/vue3'
+import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, ref, toRef } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -60,7 +58,8 @@ interface ResourceSchema {
         filters: { key: string; label: string; type: 'select' | 'boolean'; trueLabel?: string; falseLabel?: string }[]
         tabs: string[]
     }
-    form: { columns: number; fields: FormField[] }
+    /** Only the count matters here; the form pages own the field shapes. */
+    form: { columns: number; fields: unknown[] }
 }
 
 const props = defineProps<
@@ -126,72 +125,23 @@ const badgeKeys = computed(() => schemaColumns.value.filter((c) => c.type === 'b
 /* ---------------------------------------------------------------------------
  * Writes
  *
- * The modal opens as LOCAL STATE. Field definitions came with the schema and
- * option lists came with the data, so there is no request on open — antipatterns
- * §3.0.3 names that round trip as a real cost, since it puts network latency in
- * front of a confirmation dialog.
+ * Create, view and edit are dedicated PAGES now, not modals — Filament's
+ * convention, and for practical reasons: a page is linkable, survives a refresh,
+ * gets its own history entry, and has room for a form a dialog cannot hold.
+ *
+ * Delete stays a confirmation dialog, because that is what a modal is actually
+ * good at: a single irreversible decision with no form to fill in. It still
+ * opens with no network request.
  * ------------------------------------------------------------------------- */
 
-const formOpen = ref(false)
-const editing = ref<Record<string, any> | null>(null)
 const confirmingDelete = ref<Record<string, any> | null>(null)
 
-const blank = () => Object.fromEntries(props.schema.form.fields.map((f) => [f.key, null]))
-
-const form = useForm<Record<string, any>>({ ...blank(), _updated_at: null })
 
 const canWrite = computed(() => props.schema.form.fields.length > 0)
 
-/**
- * A plain snapshot of the form values for RecordForm.
- *
- * Inertia's useForm exposes fields as properties on the form object itself, so
- * it cannot be bound with v-model directly — the update has to be written back
- * onto the form so `processing`, `errors` and `reset()` keep working.
- */
-const formValues = computed<Record<string, any>>(() => ({ ...form.data() }))
 
-function openCreate() {
-    editing.value = null
-    form.defaults({ ...blank(), _updated_at: null })
-    form.reset()
-    form.clearErrors()
-    formOpen.value = true
-}
 
-function openEdit(row: Record<string, any>) {
-    editing.value = row
 
-    const values: Record<string, any> = {}
-    for (const field of props.schema.form.fields) {
-        values[field.key] = row[field.key] ?? null
-    }
-
-    // Carried so the server can reject a write against a record someone else
-    // changed meanwhile, rather than silently overwriting them (addendum C).
-    values._updated_at = row.updated_at ?? null
-
-    form.defaults(values)
-    form.reset()
-    form.clearErrors()
-    formOpen.value = true
-}
-
-function submit() {
-    const onSuccess = () => {
-        formOpen.value = false
-        toast.success(editing.value ? `${props.schema.label} updated` : `${props.schema.label} created`)
-        // The list must re-read: the new row may not match the active filters,
-        // and pretending otherwise shows a row that a refresh would remove.
-        router.reload({ only: ['records', 'total', 'tabCounts'] })
-    }
-
-    if (editing.value) {
-        form.put(`${props.schema.routes.index}/${editing.value.id}`, { preserveScroll: true, onSuccess })
-    } else {
-        form.post(props.schema.routes.index, { preserveScroll: true, onSuccess })
-    }
-}
 
 function destroy() {
     const row = confirmingDelete.value
@@ -224,7 +174,9 @@ function badgeLabel(key: string, value: unknown): string {
     <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-3 p-3 sm:p-4">
         <div class="flex items-center justify-between gap-3">
             <h1 class="text-lg font-semibold tracking-tight sm:text-xl">{{ schema.labelPlural }}</h1>
-            <Button v-if="canWrite && can.create" size="sm" @click="openCreate">New {{ schema.label }}</Button>
+            <Button v-if="canWrite && can.create" as-child size="sm">
+                <Link :href="`${schema.routes.index}/create`">New {{ schema.label }}</Link>
+            </Button>
         </div>
 
         <TableTabs
@@ -301,6 +253,13 @@ function badgeLabel(key: string, value: unknown): string {
                 >
                     {{ badgeLabel(col.key, row[col.key]) }}
                 </Badge>
+                <Link
+                    v-else-if="col.key === 'name'"
+                    :href="`${schema.routes.index}/${row.id}`"
+                    class="hover:text-primary hover:underline"
+                >
+                    {{ render(col.key, row[col.key]) }}
+                </Link>
                 <span v-else>{{ render(col.key, row[col.key]) }}</span>
             </template>
 
@@ -324,13 +283,19 @@ function badgeLabel(key: string, value: unknown): string {
                             {{ row.name ?? `#${row.id}` }}
                         </p>
                         <div class="border-t pt-1">
-                            <button
-                                v-if="canWrite && can.update"
+                            <Link
+                                :href="`${schema.routes.index}/${row.id}`"
                                 class="hover:bg-accent hover:text-accent-foreground flex w-full items-center rounded px-2 py-1.5 text-left text-sm"
-                                @click="openEdit(row)"
+                            >
+                                View
+                            </Link>
+                            <Link
+                                v-if="canWrite && can.update"
+                                :href="`${schema.routes.index}/${row.id}/edit`"
+                                class="hover:bg-accent hover:text-accent-foreground flex w-full items-center rounded px-2 py-1.5 text-left text-sm"
                             >
                                 Edit
-                            </button>
+                            </Link>
                             <button
                                 v-if="can.delete"
                                 class="text-destructive hover:bg-destructive/10 flex w-full items-center rounded px-2 py-1.5 text-left text-sm"
@@ -364,31 +329,6 @@ function badgeLabel(key: string, value: unknown): string {
             @update:per-page="t.setPerPage"
         />
 
-        <PkModal
-            :open="formOpen"
-            :title="editing ? `Edit ${schema.label}` : `New ${schema.label}`"
-            :busy="form.processing"
-            @close="formOpen = false"
-        >
-            <RecordForm
-                :model-value="formValues"
-                :fields="schema.form.fields"
-                :columns="schema.form.columns"
-                :errors="form.errors as any"
-                :options="formOptions"
-                :processing="form.processing"
-                @change="(key: string, value: any) => ((form as any)[key] = value)"
-            />
-
-            <template #footer>
-                <Button variant="ghost" size="sm" :disabled="form.processing" @click="formOpen = false">
-                    Cancel
-                </Button>
-                <Button size="sm" :disabled="form.processing" @click="submit">
-                    {{ form.processing ? 'Saving…' : 'Save' }}
-                </Button>
-            </template>
-        </PkModal>
 
         <PkModal
             :open="!!confirmingDelete"

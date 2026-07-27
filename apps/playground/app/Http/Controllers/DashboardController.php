@@ -47,7 +47,44 @@ final class DashboardController extends Controller
             );
         }
 
+        /*
+         | Charts, also deferred and also from ONE grouped query each.
+         |
+         | addendum C1 applies here as much as to tabs: N bars must never mean N
+         | queries. Both of these are a single GROUP BY.
+         */
+        $props['chart_status'] = Inertia::defer(fn (): array => $this->clientsByStatus(), 'chart_status');
+        $props['chart_plan_type'] = Inertia::defer(fn (): array => $this->clientsByPlanType(), 'chart_plan_type');
+
         return Inertia::render('Dashboard', $props);
+    }
+
+    /**
+     * One grouped query, every bar.
+     *
+     * @return list<array{label: string, value: int}>
+     */
+    private function clientsByStatus(): array
+    {
+        return Client::query()->toBase()
+            ->selectRaw('status as label, COUNT(*) as value')
+            ->groupBy('status')
+            ->orderByDesc('value')
+            ->get()
+            ->map(fn (object $r): array => ['label' => (string) $r->label, 'value' => (int) $r->value])
+            ->all();
+    }
+
+    /** @return list<array{label: string, value: int}> */
+    private function clientsByPlanType(): array
+    {
+        return Client::query()->toBase()
+            ->selectRaw('plan_type as label, COUNT(*) as value')
+            ->groupBy('plan_type')
+            ->orderByDesc('value')
+            ->get()
+            ->map(fn (object $r): array => ['label' => (string) $r->label, 'value' => (int) $r->value])
+            ->all();
     }
 
     /** @return list<StatWidget> */

@@ -9,6 +9,7 @@
  * The skeleton matches the final card exactly, so nothing shifts when a value
  * lands. Cumulative layout shift target is 0 (§10).
  */
+import { BarChart } from '@panelkit/ui'
 import { Deferred, Head, usePage } from '@inertiajs/vue3'
 
 interface Widget {
@@ -18,7 +19,11 @@ interface Widget {
     span: number
 }
 
-defineProps<{ widgets: Widget[] }>()
+defineProps<{
+    widgets: Widget[]
+    chart_status?: { label: string; value: number }[]
+    chart_plan_type?: { label: string; value: number }[]
+}>()
 
 defineOptions({ layout: { breadcrumbs: [{ title: 'Dashboard', href: '/dashboard' }] } })
 
@@ -75,6 +80,30 @@ const format = (v: unknown) => (typeof v === 'number' ? new Intl.NumberFormat().
                 </Deferred>
 
                 <p v-if="widget.description" class="text-muted-foreground text-xs">{{ widget.description }}</p>
+            </div>
+        </div>
+
+        <!-- Charts. Also deferred, and each from ONE grouped query — addendum C1
+             applies to bars as much as to tabs. -->
+        <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div class="bg-card flex flex-col gap-3 rounded-lg border p-4">
+                <p class="text-muted-foreground text-xs font-medium">Clients by status</p>
+                <Deferred data="chart_status">
+                    <template #fallback>
+                        <div class="bg-muted h-[160px] animate-pulse rounded" />
+                    </template>
+                    <BarChart :data="(page.props.chart_status as any) ?? []" />
+                </Deferred>
+            </div>
+
+            <div class="bg-card flex flex-col gap-3 rounded-lg border p-4">
+                <p class="text-muted-foreground text-xs font-medium">Clients by plan type</p>
+                <Deferred data="chart_plan_type">
+                    <template #fallback>
+                        <div class="bg-muted h-[160px] animate-pulse rounded" />
+                    </template>
+                    <BarChart :data="(page.props.chart_plan_type as any) ?? []" />
+                </Deferred>
             </div>
         </div>
     </div>
