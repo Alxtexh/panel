@@ -78,11 +78,29 @@ const activeCount = computed(
 const hasAnything = computed(() => props.search !== '' || activeCount.value > 0)
 
 function isSelected(filter: FilterSchema, value: unknown): boolean {
+    if (isMulti(filter)) return selectedValues(filter).includes(value)
+
+    // A date range stores its RESOLVED window but is chosen by preset name, so
+    // the tick compares the preset rather than a pair of timestamps.
+    if (filter.type === 'daterange') {
+        return (props.filters[filter.key] as { preset?: string } | null)?.preset === value
+    }
+
     return props.filters[filter.key] === value
 }
 
 /** Selecting the already-applied value clears it, so options toggle. */
 function choose(filter: FilterSchema, value: unknown) {
+    if (isMulti(filter)) {
+        const current = selectedValues(filter)
+        const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value]
+
+        // An empty list means "no filter", never "match nothing".
+        emit('filter', filter.key, next.length ? next : null)
+
+        return
+    }
+
     emit('filter', filter.key, isSelected(filter, value) ? null : value)
 }
 
@@ -98,6 +116,18 @@ function labelFor(filter: FilterSchema): string {
         return value ? (filter.trueLabel ?? 'Yes') : (filter.falseLabel ?? 'No')
     }
 
+    if (Array.isArray(value)) {
+        // Three names read fine in a chip; more would overflow it, so past that
+        // it becomes a count.
+        return value.length <= 3 ? value.join(', ') : value.length + ' selected'
+    }
+
+    if (filter.type === 'daterange') {
+        const preset = (value as { preset?: string })?.preset
+
+        return filter.presets?.[preset ?? ''] ?? 'Custom range'
+    }
+
     return String(value)
 }
 
@@ -109,7 +139,24 @@ function optionsFor(filter: FilterSchema): { value: unknown; label: string }[] {
         ]
     }
 
+    // Date ranges offer named presets rather than an option list. Presets are
+    // structure, not tenant data, so they ship with the cached schema.
+    if (filter.type === 'daterange') {
+        return Object.entries(filter.presets ?? {}).map(([value, label]) => ({ value, label }))
+    }
+
     return (filter.options ?? []).map((o) => ({ value: o, label: o }))
+}
+
+/** A multiselect holds a list; every other filter holds one value. */
+function isMulti(filter: FilterSchema): boolean {
+    return filter.type === 'multiselect'
+}
+
+function selectedValues(filter: FilterSchema): unknown[] {
+    const applied = props.filters[filter.key]
+
+    return Array.isArray(applied) ? applied : applied === null || applied === undefined ? [] : [applied]
 }
 
 function clearAll() {

@@ -18,6 +18,8 @@ use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
+use PanelKit\Panel\Tables\Filters\DateRangeFilter;
+use PanelKit\Panel\Tables\Filters\MultiSelectFilter;
 use PanelKit\Panel\Tables\Filters\SelectFilter;
 use PanelKit\Panel\Tables\Table;
 
@@ -141,10 +143,14 @@ final class ClientResource extends Resource
                 DateColumn::make('created_at')->from('clients.created_at')->sortable()->muted(),
             ])
             ->filters([
-                SelectFilter::make('status')->column('clients.status')
+                // Multiple at once: "everything that is not healthy" was not
+                // expressible with a single-select filter.
+                MultiSelectFilter::make('status')->column('clients.status')
                     ->options(['active', 'expired', 'suspended']),
                 SelectFilter::make('planType')->label('Plan type')->column('clients.plan_type')
                     ->options(['pppoe', 'hotspot', 'static']),
+                // The question a billing panel is actually asked.
+                DateRangeFilter::make('expiring')->label('Expiry')->column('clients.expiry_date'),
             ])
             // ONE grouped query for every tab count (addendum C1).
             ->tabs('clients.status', ['active', 'expired', 'suspended'])

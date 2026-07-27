@@ -25,10 +25,12 @@ export interface TableColumn {
 export interface FilterSchema {
     key: string
     label: string
-    type: 'select' | 'boolean'
+    type: 'select' | 'boolean' | 'multiselect' | 'daterange'
     options?: string[]
     trueLabel?: string
     falseLabel?: string
+    /** Date ranges only. Structure, so it ships with the cached schema. */
+    presets?: Record<string, string>
 }
 
 export type SortDirection = 'asc' | 'desc'
