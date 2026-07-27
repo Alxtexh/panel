@@ -17,6 +17,7 @@
 
 export { default as DataTable } from './components/DataTable/DataTable.vue'
 export { default as BulkActions } from './components/DataTable/BulkActions.vue'
+export { default as RelationPanel } from './components/DataTable/RelationPanel.vue'
 export { default as IconCell } from './components/DataTable/IconCell.vue'
 export { default as ImageCell } from './components/DataTable/ImageCell.vue'
 export { default as EditableCell } from './components/DataTable/EditableCell.vue'

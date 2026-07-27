@@ -176,6 +176,18 @@ final class Table
         return $this;
     }
 
+    /**
+     * The declared join/scope closure, if any.
+     *
+     * Exposed so a relation manager can LAYER its foreign-key constraint on top
+     * of the table's own join rather than replacing it — otherwise declaring a
+     * relation would silently drop the joined columns the table renders.
+     */
+    public function getQueryModifier(): ?Closure
+    {
+        return $this->query;
+    }
+
     /** @return list<Column> */
     public function getColumns(): array
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Panel\Resources;
 
 use App\Models\Client;
+use App\Models\ClientSession;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use App\Models\Plan;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,6 +19,7 @@ use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Schema\Section;
 use PanelKit\Panel\Schema\Tab;
 use PanelKit\Panel\Schema\Tabs;
+use PanelKit\Panel\Resources\RelationManager;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
@@ -153,6 +155,44 @@ final class ClientResource extends Resource
                     ]),
                 ]),
             ]),
+        ];
+    }
+
+    /**
+     * A client's sessions, on the client's own page.
+     *
+     * FETCHED ON DEMAND, NOT EAGER-LOADED. At 5M sessions a busy client has
+     * thousands, and `$client->load('sessions')` would read every one to render
+     * the ten a person looks at. This runs the same keyset-paginated ListQuery
+     * the main tables use, bounded to a page.
+     *
+     * @return list<RelationManager>
+     */
+    public static function relations(): array
+    {
+        return [
+            RelationManager::make('sessions', 'Sessions')
+                ->related(ClientSession::class, 'client_sessions.client_id')
+                ->icon('activity')
+                ->table(fn (Table $table): Table => $table
+                    ->columns([
+                        DateColumn::make('started_at')->label('Started')->withTime()->sortable(),
+                        DateColumn::make('ended_at')->label('Ended')->withTime(),
+                        BadgeColumn::make('status')->colors([
+                            'online' => 'success',
+                            'offline' => 'neutral',
+                        ]),
+                        TextColumn::make('ip_address')->label('IP')->mono(),
+                        TextColumn::make('bytes_in')->label('In')->muted(),
+                        TextColumn::make('bytes_out')->label('Out')->muted(),
+                    ])
+                    ->filters([
+                        SelectFilter::make('status')->column('client_sessions.status')
+                            ->options(['online', 'offline']),
+                    ])
+                    ->keyColumn('client_sessions.id')
+                    ->alsoSelect(['client_sessions.id'])
+                    ->defaultSort('started_at', 'desc')),
         ];
     }
 

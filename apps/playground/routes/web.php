@@ -95,6 +95,14 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
     Route::get('{resource}/{id}', [ResourceController::class, 'show'])
         ->whereIn('resource', $panelResources)->whereNumber('id')->name('panel.show');
 
+    // Rows for a related list. Declared before /{id}/edit for the same
+    // ordering reason the create route documents.
+    Route::get('{resource}/{id}/relations/{relation}', [ResourceController::class, 'relation'])
+        ->whereIn('resource', $panelResources)
+        ->whereNumber('id')
+        ->where('relation', '[a-z0-9_-]+')
+        ->name('panel.relation');
+
     Route::get('{resource}/{id}/edit', [ResourceController::class, 'edit'])
         ->whereIn('resource', $panelResources)->whereNumber('id')->name('panel.edit');
 

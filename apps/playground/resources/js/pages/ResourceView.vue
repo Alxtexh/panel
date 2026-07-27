@@ -12,9 +12,9 @@
  */
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { InfoNode, useSchemaColumns, type SchemaColumn } from '@panelkit/ui'
+import { InfoNode, RelationPanel, useSchemaColumns, type SchemaColumn } from '@panelkit/ui'
 import { Head, Link, router } from '@inertiajs/vue3'
-import { computed, toRef } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
@@ -26,6 +26,13 @@ const props = defineProps<{
         table: { columns: SchemaColumn[] }
         /** Optional layout tree. Falls back to a flat list when empty. */
         infolist: any[]
+        /** Related lists. Structure only — rows arrive on demand. */
+        relations?: {
+            key: string
+            label: string
+            icon: string | null
+            table: { columns: SchemaColumn[] }
+        }[]
     }
     record: Record<string, any>
     can: { update: boolean; delete: boolean }
@@ -44,6 +51,80 @@ const schemaColumns = toRef(() => props.schema.table.columns)
 const { byKey, badgeVariant } = useSchemaColumns(schemaColumns)
 
 const title = computed(() => String(props.record.name ?? `#${props.record.id}`))
+
+/* ---------------------------------------------------------------------------
+ * Related lists
+ *
+ * FETCHED WHEN A TAB IS OPENED, never with the record. A page with four
+ * relations must not run four list queries to show one, and eager-loading a
+ * relation reads every related row to render the ten a person looks at — which
+ * is fine for the client the developer tested with and ruinous for the one with
+ * forty thousand sessions.
+ *
+ * Each tab keeps its own rows and cursor, so switching back to a tab does not
+ * refetch what is already there.
+ * ------------------------------------------------------------------------- */
+
+interface RelationState {
+    rows: Record<string, any>[]
+    cursor: string | null
+    loading: boolean
+    loaded: boolean
+}
+
+const relations = computed(() => props.schema.relations ?? [])
+const activeRelation = ref<string | null>(relations.value[0]?.key ?? null)
+
+const state = ref<Record<string, RelationState>>({})
+
+function relationState(key: string): RelationState {
+    if (!state.value[key]) {
+        state.value = { ...state.value, [key]: { rows: [], cursor: null, loading: false, loaded: false } }
+    }
+
+    return state.value[key]
+}
+
+async function loadRelation(key: string, cursor: string | null = null) {
+    const current = relationState(key)
+
+    // Already have the first page and nothing more was asked for.
+    if (current.loaded && cursor === null) return
+
+    current.loading = true
+
+    try {
+        const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''
+
+        const response = await fetch(
+            `${props.schema.routes.index}/${props.record.id}/relations/${key}${query}`,
+            { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' },
+        )
+
+        if (!response.ok) throw new Error(String(response.status))
+
+        const data = await response.json()
+
+        // Appended, not replaced: "load more" continues the list rather than
+        // jumping to a page, which is what a keyset cursor expresses.
+        current.rows = cursor ? [...current.rows, ...data.records] : data.records
+        current.cursor = data.nextCursor ?? null
+        current.loaded = true
+    } catch {
+        current.loaded = true
+    } finally {
+        current.loading = false
+    }
+}
+
+function openRelation(key: string) {
+    activeRelation.value = key
+    loadRelation(key)
+}
+
+// The first tab loads once the page is up, because it is the one being looked
+// at; the rest wait to be asked for.
+if (activeRelation.value) loadRelation(activeRelation.value)
 
 const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
     date: { year: 'numeric', month: 'long', day: 'numeric' },
@@ -126,6 +207,39 @@ function destroy() {
                 </dd>
             </div>
         </dl>
+
+        <!-- Related lists. -->
+        <section v-if="relations.length" class="flex flex-col gap-3">
+            <div class="bg-muted/40 flex w-fit gap-1 rounded-md p-1">
+                <button
+                    v-for="relation in relations"
+                    :key="relation.key"
+                    type="button"
+                    class="rounded px-3 py-1.5 text-sm transition-colors"
+                    :class="
+                        activeRelation === relation.key
+                            ? 'bg-background text-foreground font-medium shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                    "
+                    @click="openRelation(relation.key)"
+                >
+                    {{ relation.label }}
+                </button>
+            </div>
+
+            <template v-for="relation in relations" :key="relation.key">
+                <RelationPanel
+                    v-if="activeRelation === relation.key"
+                    :columns="relation.table.columns"
+                    :rows="relationState(relation.key).rows"
+                    :loading="relationState(relation.key).loading"
+                    :loaded="relationState(relation.key).loaded"
+                    :next-cursor="relationState(relation.key).cursor"
+                    :empty-text="`No ${relation.label.toLowerCase()} for this ${schema.label.toLowerCase()}.`"
+                    @load="(cursor) => loadRelation(relation.key, cursor)"
+                />
+            </template>
+        </section>
 
         <div>
             <Button as-child variant="ghost" size="sm">

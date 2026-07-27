@@ -154,6 +154,45 @@ final class ResourceController extends Controller
         ]);
     }
 
+    /**
+     * Rows for one related list.
+     *
+     * LEAN JSON, and fetched on demand. The alternative — eager-loading the
+     * relation with the parent — reads every related row to render the twenty
+     * a person looks at, which is fine for the client the developer tested with
+     * and ruinous for the one with 40,000 sessions.
+     *
+     * Authorized against the PARENT record, because that is what the operator
+     * is looking at: permission to view a client is what grants sight of that
+     * client's sessions, and a separate policy per relation would be a second
+     * place to forget.
+     */
+    public function relation(Request $request, string $resource, string $id, string $relation): \Illuminate\Http\JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        $record = $class::model()::query()->findOrFail($id);
+
+        $manager = $class::relation($relation);
+
+        if ($manager === null) {
+            throw new NotFoundHttpException("No relation [{$relation}] on [{$resource}].");
+        }
+
+        abort_unless($class::can($manager->getAbility(), $record), 403);
+
+        $result = $manager->rows($request, $record->getKey());
+
+        return response()->json([
+            'records' => $result->records,
+            // Keyset, like every other list: page 40 of a client's sessions
+            // costs what page 1 costs. No total — a related list does not need
+            // a blocking count in front of its rows any more than a table does.
+            'nextCursor' => $result->nextCursor,
+            'perPage' => $result->perPage,
+        ]);
+    }
+
     /** Edit form. A real page, for the same reasons as create. */
     public function edit(Request $request, string $resource, string $id): Response
     {
