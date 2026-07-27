@@ -28,6 +28,105 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 final class ResourceController extends Controller
 {
+    /**
+     * Create form. A REAL PAGE, not a modal.
+     *
+     * Filament routes create, view and edit as their own pages, and the reasons
+     * are practical rather than stylistic: a page is linkable, survives a
+     * refresh, gets its own browser-history entry, and has room for a form that
+     * a dialog cannot hold. The modal remains for quick inline actions, which is
+     * what a modal is actually good at.
+     */
+    public function create(Request $request, string $resource): Response
+    {
+        $class = $this->guard($resource);
+
+        abort_unless($class::can('create'), 403);
+        abort_if($class::formDefinition()->fields() === [], 404, "Resource [{$resource}] has no form.");
+
+        return Inertia::render('ResourceForm', [
+            'schema' => $class::schema(),
+            'record' => null,
+            'values' => $class::formDefinition()->valuesFor(null),
+            'formOptions' => $class::formDefinition()->resolveOptions(),
+            'breadcrumbs' => $this->trail($class, 'New'),
+        ]);
+    }
+
+    /** Read-only detail page. */
+    public function show(Request $request, string $resource, string $id): Response
+    {
+        $class = $this->guard($resource);
+
+        $record = $class::model()::query()->findOrFail($id);
+
+        abort_unless($class::can('view', $record), 403);
+
+        // Fetched through the TABLE's select and joins, so joined columns like
+        // plan_name are present. The raw model carries only its own attributes,
+        // and a missing joined value renders as an em dash that reads like real
+        // data rather than an omission.
+        $row = $class::definition()->toListQuery($class::model())->find($id) ?? $record->toArray();
+
+        return Inertia::render('ResourceView', [
+            'schema' => $class::schema(),
+            'record' => [...$row, 'id' => $record->getKey()],
+            'can' => $class::permissions(),
+            'breadcrumbs' => $this->trail($class, (string) ($record->name ?? "#{$record->getKey()}")),
+        ]);
+    }
+
+    /** Edit form. A real page, for the same reasons as create. */
+    public function edit(Request $request, string $resource, string $id): Response
+    {
+        $class = $this->guard($resource);
+
+        $record = $class::model()::query()->findOrFail($id);
+
+        abort_unless($class::can('update', $record), 403);
+
+        $form = $class::formDefinition();
+        abort_if($form->fields() === [], 404, "Resource [{$resource}] has no form.");
+
+        return Inertia::render('ResourceForm', [
+            'schema' => $class::schema(),
+            'record' => ['id' => $record->getKey(), 'label' => (string) ($record->name ?? "#{$record->getKey()}")],
+            'values' => [
+                ...$form->valuesFor($record),
+                // Carried so a stale save is rejected rather than silently
+                // overwriting another admin (addendum C).
+                '_updated_at' => $record->updated_at?->toIso8601String(),
+            ],
+            'formOptions' => $form->resolveOptions(),
+            'breadcrumbs' => $this->trail($class, 'Edit'),
+        ]);
+    }
+
+    /** @return list<array{title: string, href: string}> */
+    private function trail(string $class, string $leaf): array
+    {
+        return [
+            ['title' => $class::pluralLabel(), 'href' => '/' . $class::key()],
+            ['title' => $leaf, 'href' => '#'],
+        ];
+    }
+
+    /** @return class-string<Resource> */
+    private function guard(string $resource): string
+    {
+        $class = app(PanelManager::class)->resource($resource);
+
+        if ($class === null) {
+            throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
+        }
+
+        if (! $class::isEnabled()) {
+            throw new NotFoundHttpException("Resource [{$resource}] is not enabled for this tenant.");
+        }
+
+        return $class;
+    }
+
     public function index(Request $request, string $resource): Response
     {
         $class = app(PanelManager::class)->resource($resource);
