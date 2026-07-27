@@ -7,14 +7,15 @@
  * column of truncated fragments. So narrow screens show the list, and opening a
  * message replaces it — which is what every mail client on a phone does.
  *
- * THE LIST AND THE MESSAGE ARE SEPARATE DEFERRED PROPS. Opening a message
- * re-fetches the message only, so clicking down a list of twenty does not refetch
- * the list twenty times.
+ * NOTHING HERE IS DEFERRED. Deferral is for aggregates that would block first
+ * paint; a 25-row indexed list and a single row by primary key are not that, and
+ * deferring them actively broke this screen — navigation preserves state, so the
+ * component never remounts and the deferred follow-up never fires.
  *
  * SELECTION LIVES IN THE URL, so a message is linkable and survives a refresh —
  * the same reasoning as the table filters.
  */
-import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import {
     Archive,
@@ -183,15 +184,6 @@ async function act(row: Row, action: string, folder?: string) {
                     />
                 </div>
             </div>
-
-            <Deferred data="messages">
-                <template #fallback>
-                    <div class="flex flex-col gap-3 p-3">
-                        <div v-for="i in 8" :key="i" class="bg-muted h-12 animate-pulse rounded" />
-                    </div>
-                </template>
-
-                <template #default>
                     <div v-if="messages.length === 0" class="text-muted-foreground p-8 text-center text-sm">
                         Nothing in {{ folder }}.
                     </div>
@@ -234,21 +226,10 @@ async function act(row: Row, action: string, folder?: string) {
                             </button>
                         </li>
                     </ul>
-                </template>
-            </Deferred>
         </section>
 
         <!-- Reading pane. -->
         <section class="flex min-w-0 flex-1 flex-col" :class="selectedId ? 'flex' : 'hidden md:flex'">
-            <Deferred data="message">
-                <template #fallback>
-                    <div class="flex flex-col gap-3 p-6">
-                        <div class="bg-muted h-6 w-2/3 animate-pulse rounded" />
-                        <div class="bg-muted h-40 animate-pulse rounded" />
-                    </div>
-                </template>
-
-                <template #default>
                     <div
                         v-if="!message"
                         class="text-muted-foreground flex flex-1 items-center justify-center p-8 text-sm"
@@ -297,8 +278,6 @@ async function act(row: Row, action: string, folder?: string) {
                             <p class="text-sm leading-relaxed whitespace-pre-line">{{ message.body }}</p>
                         </div>
                     </template>
-                </template>
-            </Deferred>
         </section>
     </div>
 </template>

@@ -172,6 +172,21 @@ final class ClientsPerformanceTest extends TestCase
 
         $this->actingAs($this->user)->get('/clients')->assertOk();
 
+        /*
+         * The notifications table is EXEMPT, named explicitly.
+         *
+         * This guard is about the LIST query: a COUNT over `clients` is
+         * unbounded and grows with the tenant, which is what §10 forbids in
+         * front of rows. The unread-badge count is a different shape — one
+         * user's inbox, through the morph index, bounded by what that person
+         * has been sent. Naming it keeps the guard sharp; a loose "ignore
+         * expected counts" pattern would let a real one back in.
+         */
+        $queries = array_filter(
+            $queries,
+            static fn (string $sql): bool => ! str_contains($sql, 'notifications'),
+        );
+
         foreach ($queries as $sql) {
             $this->assertStringNotContainsStringIgnoringCase('count(', $sql, "Count query in list response: {$sql}");
         }

@@ -229,6 +229,57 @@ and settling that first avoids reworking every feature screen afterwards.
 | Chat screen | Conversation list, thread view, composer. |
 | Documentation page | Laravel-docs-style, in-panel. Not started. |
 
+### Measured at 1M clients / 5M sessions (SQLite)
+
+Taken after seeding `--scale=xlarge`. These are read timings against the real
+dataset, not estimates.
+
+| Operation | Time | Notes |
+|---|---|---|
+| Clients: first page | 1.6 ms | Keyset, covering index. |
+| Clients: status filter | 0.4 ms | |
+| Clients: sort by expiry | 0.4 ms | |
+| Clients: filter + sort by name | 4.4 ms | Was 335 ms — see below. |
+| Clients: prefix search | 0.7 ms | |
+| Clients: word-prefix search | 1.6 ms | |
+| Tab counts (grouped) | 22 ms | One query for all three. |
+| Total / live counts | ~10–15 ms | |
+| Sign-ups series, 30 days | 15 ms | |
+| **Sessions series, 30 days** | **359 ms** | 412,034 rows read to produce 30 points. |
+| **Sessions series, 90 days** | **980 ms** | |
+
+**One real regression, found and fixed.** Filtering by status and plan type
+while sorting by NAME took 335 ms against a 300 ms budget. The plan showed the
+status index serving the filter and then a TEMP B-TREE FOR ORDER BY — roughly
+45,000 matching rows sorted in memory to return ten. A `(tenant_id, name, id)`
+index took it to 0.3 ms. That index is keyed on the SORT rather than on a
+filter, so it serves any filter combination ordered by name — the counterpart of
+the existing `created_at` index, not the start of one-index-per-query.
+
+**The list layer holds.** Sub-2 ms at a million rows, unchanged in shape from
+the numbers taken at 50k — which is what keyset pagination and per-shape indexes
+were for.
+
+**The time-series charts do not, and it is not an index problem.** `EXPLAIN
+QUERY PLAN` confirms a COVERING INDEX with a temp B-tree for the grouping: the
+query is already optimal. The cost is inherent — producing 30 points requires
+reading the 412,034 rows that fall in the window, and that number grows with
+usage forever. No index fixes this, because every row genuinely has to be
+counted.
+
+The answer is **pre-aggregation**: a rollup table holding one row per
+(tenant, day, metric), maintained on write or by a scheduled job, turning a
+30-point chart into 30 row reads. Added to Tier 2 below.
+
+Mitigating for now: the charts are deferred, so they never block first paint —
+the dashboard shell and its counters appear immediately and the charts fill in.
+That makes it a slow widget rather than a slow page, which is why this was not
+visible before the dataset got heavy.
+
+**Seeding took 21 minutes** for 5M sessions. That is SQLite's single-writer
+insert path against three composite indexes, not a panel cost, and it is a
+further argument for settling the engine question.
+
 ### Tier 2 — needed before production for this domain
 
 | Item | Why it matters here |
@@ -238,6 +289,7 @@ and settling that first avoids reworking every feature screen afterwards.
 | **Soft deletes + trashed filter** | There is no restore path at all; a mis-click is permanent. |
 | **`SummarizeRecords`** | A footer row of sums and averages. A filtered invoice list with no total is half an answer. |
 | **Live updates against a real Reverb** | The composable and the poll driver are proven; the broadcast driver has never been tested against a running connection. |
+| **Time-series rollups** | Measured above: a 30-day sessions chart reads 412k rows and takes 359 ms; 90 days takes ~1 s. The query is already using a covering index — the fix is a daily rollup table, not a better index. Needed before the dashboard is usable on a mature dataset. |
 
 ### Tier 3 — differentiators and polish
 

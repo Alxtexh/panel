@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\MailMessage;
@@ -53,7 +52,7 @@ final class AppScreensTest extends TestCase
         $this->mail($this->alice, 3);
         $this->mail($this->bob, 5);
 
-        $rows = $this->deferred('/apps/mail', 'apps/Mail', 'messages')['rows'];
+        $rows = $this->prop('/apps/mail', 'messages')['rows'];
 
         $this->assertCount(3, $rows, "A colleague's inbox must not appear.");
     }
@@ -83,7 +82,7 @@ final class AppScreensTest extends TestCase
     {
         $id = $this->mail($this->alice, 1, ['is_read' => false])[0];
 
-        $this->deferred("/apps/mail?id={$id}", 'apps/Mail', 'message');
+        $this->prop("/apps/mail?id={$id}", 'message');
 
         $this->assertTrue(MailMessage::withoutGlobalScopes()->find($id)->is_read);
     }
@@ -132,7 +131,7 @@ final class AppScreensTest extends TestCase
         $this->mail($this->alice, 1, ['is_starred' => true, 'folder' => 'archived']);
         $this->mail($this->alice, 1, ['is_starred' => true, 'folder' => 'trash']);
 
-        $rows = $this->deferred('/apps/mail?folder=starred', 'apps/Mail', 'messages')['rows'];
+        $rows = $this->prop('/apps/mail?folder=starred', 'messages')['rows'];
 
         $this->assertCount(2, $rows, 'Starred spans folders, but deleted mail is deleted.');
     }
@@ -155,7 +154,7 @@ final class AppScreensTest extends TestCase
         $this->conversation($this->alice, 'Amina');
         $this->conversation($this->bob, 'Felix');
 
-        $list = $this->deferred('/apps/chat', 'apps/Chat', 'conversations');
+        $list = $this->prop('/apps/chat', 'conversations');
 
         $this->assertCount(1, $list);
         $this->assertSame('Amina', $list[0]['name']);
@@ -180,7 +179,7 @@ final class AppScreensTest extends TestCase
             ]);
         }
 
-        $thread = $this->deferred("/apps/chat?id={$conversation->id}", 'apps/Chat', 'thread');
+        $thread = $this->prop("/apps/chat?id={$conversation->id}", 'thread');
 
         $this->assertCount(60, $thread['messages'], 'The thread must be capped.');
         // Newest 60, displayed oldest first.
@@ -239,27 +238,21 @@ final class AppScreensTest extends TestCase
     /* --------------------------------------------------------------- setup */
 
     /**
-     * Read a deferred prop, which is where the queries actually run.
+     * Read a prop off the rendered page.
      *
-     * `$component` is the INERTIA component name — `apps/Mail`, not `Mail`.
-     * A mismatch is not an error: Inertia decides the partial does not apply to
-     * this component and returns the full page, so the prop is simply absent
-     * and every assertion below it passes vacuously.
+     * These were deferred props and are not any more: navigation on both
+     * screens preserves state, so the component never remounts and the deferred
+     * follow-up never fired — the reading pane simply never filled. Deferral is
+     * for aggregates that would block first paint, and neither of these is one.
      *
      * @return array<mixed>
      */
-    private function deferred(string $url, string $component, string $prop): array
+    private function prop(string $url, string $prop): array
     {
         return $this->actingAs($this->alice)
-            ->withHeaders([
-                'X-Inertia' => 'true',
-                'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()),
-                'X-Inertia-Partial-Component' => $component,
-                'X-Inertia-Partial-Data' => $prop,
-            ])
-            ->getJson($url)
+            ->get($url)
             ->assertOk()
-            ->json("props.{$prop}");
+            ->viewData('page')['props'][$prop];
     }
 
     /**

@@ -38,8 +38,13 @@ final class ChatController extends Controller
         return Inertia::render('apps/Chat', [
             'search' => trim((string) $request->query('q', '')),
             'selectedId' => $conversationId,
-            'conversations' => Inertia::defer(fn (): array => $this->conversations($request), 'list'),
-            'thread' => Inertia::defer(fn (): ?array => $this->thread($request, $conversationId), 'thread'),
+            /*
+             * Inline, for the reason the mailbox documents: navigation here
+             * preserves state, so a deferred prop is never re-requested and the
+             * thread would never change. Both queries are bounded and indexed.
+             */
+            'conversations' => $this->conversations($request),
+            'thread' => $this->thread($request, $conversationId),
         ]);
     }
 

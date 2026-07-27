@@ -6,16 +6,17 @@
  * thread beside a list needs real width; below that, opening a conversation
  * replaces the list.
  *
- * THE LIST AND THE THREAD ARE SEPARATE DEFERRED PROPS, so selecting a contact
- * re-fetches the thread only. Selecting is the most repeated action here, and
- * making it reload the sidebar too would double its cost for nothing.
+ * NOTHING HERE IS DEFERRED, for the reason the mailbox documents: navigation
+ * preserves state, so the component never remounts and a deferred follow-up
+ * never fires — the thread would stay on whatever loaded first. Both queries are
+ * bounded and indexed.
  *
  * A SENT MESSAGE IS APPENDED LOCALLY and confirmed by the response. Waiting for
  * a round trip before the message appears is the single thing that makes a chat
  * feel broken, and the failure mode — a message that never arrives — is visible
  * because the input keeps its text until the request succeeds.
  */
-import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, nextTick, ref, watch } from 'vue'
 import { Search, Send } from '@lucide/vue'
 
@@ -175,15 +176,6 @@ function initials(name: string): string {
                     />
                 </div>
             </div>
-
-            <Deferred data="conversations">
-                <template #fallback>
-                    <div class="flex flex-col gap-3 p-3">
-                        <div v-for="i in 8" :key="i" class="bg-muted h-12 animate-pulse rounded" />
-                    </div>
-                </template>
-
-                <template #default>
                     <p v-if="conversations.length === 0" class="text-muted-foreground p-8 text-center text-sm">
                         No conversations.
                     </p>
@@ -224,21 +216,10 @@ function initials(name: string): string {
                             </button>
                         </li>
                     </ul>
-                </template>
-            </Deferred>
         </aside>
 
         <!-- Thread. -->
         <section class="flex min-w-0 flex-1 flex-col" :class="selectedId ? 'flex' : 'hidden md:flex'">
-            <Deferred data="thread">
-                <template #fallback>
-                    <div class="flex flex-col gap-3 p-6">
-                        <div class="bg-muted h-6 w-40 animate-pulse rounded" />
-                        <div class="bg-muted h-64 animate-pulse rounded" />
-                    </div>
-                </template>
-
-                <template #default>
                     <div
                         v-if="!thread"
                         class="text-muted-foreground flex flex-1 items-center justify-center p-8 text-sm"
@@ -301,8 +282,6 @@ function initials(name: string): string {
                             </button>
                         </form>
                     </template>
-                </template>
-            </Deferred>
         </section>
     </div>
 </template>

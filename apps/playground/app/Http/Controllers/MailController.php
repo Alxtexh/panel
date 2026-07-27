@@ -54,9 +54,23 @@ final class MailController extends Controller
             'folder' => $folder,
             'search' => $search,
             'folders' => $this->folderCounts($request),
-            'messages' => Inertia::defer(fn (): array => $this->messages($request, $folder, $search)),
+            /*
+             * RESOLVED INLINE, not deferred.
+             *
+             * Deferring is for expensive aggregates that must not block first
+             * paint (§10). A 25-row list through (user, folder, received_at)
+             * and a single row by primary key are neither — deferring them
+             * bought a round trip and cost correctness: navigation here uses
+             * `preserveState`, so the page component is not remounted and the
+             * deferred follow-up never fires. The reading pane stayed on
+             * "select a message" no matter what was clicked.
+             *
+             * On this screen the list IS the shell; there is nothing to paint
+             * before it.
+             */
+            'messages' => $this->messages($request, $folder, $search),
             'selectedId' => $request->query('id') !== null ? (int) $request->query('id') : null,
-            'message' => Inertia::defer(fn (): ?array => $this->message($request)),
+            'message' => $this->message($request),
         ]);
     }
 
