@@ -53,6 +53,8 @@ abstract class Column implements \PanelKit\Panel\Schema\Renderable
      */
     protected bool $muted = false;
 
+    protected ?\PanelKit\Panel\Tables\Summarizer $summarizer = null;
+
     protected ?string $prefix = null;
 
     protected ?string $suffix = null;
@@ -85,6 +87,25 @@ abstract class Column implements \PanelKit\Panel\Schema\Renderable
         $this->searchable = $searchable;
 
         return $this;
+    }
+
+    /**
+     * A footer aggregate for this column.
+     *
+     * Over the FILTERED set, not the page — see Summarizer. Declared on the
+     * column because that is where the reader looks for it: a total belongs
+     * under the numbers it totals.
+     */
+    public function summarize(\PanelKit\Panel\Tables\Summarizer $summarizer): static
+    {
+        $this->summarizer = $summarizer;
+
+        return $this;
+    }
+
+    public function summarizer(): ?\PanelKit\Panel\Tables\Summarizer
+    {
+        return $this->summarizer;
     }
 
     /** Renders an inline copy affordance on the cell that holds the value. */
@@ -224,6 +245,9 @@ abstract class Column implements \PanelKit\Panel\Schema\Renderable
             'muted' => $this->muted,
             'prefix' => $this->prefix,
             'suffix' => $this->suffix,
+            // Structure only: which aggregate and how to render it. The VALUE
+            // arrives later, deferred, like the total count.
+            'summary' => $this->summarizer?->toSchema(),
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
     }
 }

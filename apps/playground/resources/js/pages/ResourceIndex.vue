@@ -46,7 +46,7 @@ import {
     useSchemaColumns,
     type SchemaColumn,
 } from '@panelkit/ui'
-import { Head, Link, router } from '@inertiajs/vue3'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, ref, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -147,6 +147,25 @@ function render(key: string, value: unknown): string {
 }
 
 /** Columns the schema marks as badges get badge rendering, generically. */
+/**
+ * Footer aggregate definitions, pulled off the schema columns.
+ *
+ * Structure only — which aggregate and how to render it. The VALUES arrive as
+ * their own deferred prop, so a total over 200,000 rows never sits in front of
+ * the ten on screen.
+ */
+const page = usePage()
+
+const columnSummaries = computed(() => {
+    const out: Record<string, any> = {}
+
+    for (const column of schemaColumns.value) {
+        if ((column as any).summary) out[column.key] = (column as any).summary
+    }
+
+    return Object.keys(out).length ? out : null
+})
+
 const badgeKeys = computed(() => schemaColumns.value.filter((c) => c.type === 'badge').map((c) => c.key))
 
 /* ---------------------------------------------------------------------------
@@ -466,6 +485,8 @@ function badgeLabel(key: string, value: unknown): string {
             :filtered="t.isFiltered.value"
             selectable
             :selected="t.selected.value"
+            :summaries="columnSummaries"
+            :summary-values="(page.props.summary as any) ?? null"
             :empty-title="`No ${schema.labelPlural.toLowerCase()} yet`"
             empty-hint="Seed demo data with: make seed"
             @sort="t.sortBy"

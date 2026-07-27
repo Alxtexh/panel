@@ -35,6 +35,13 @@ const props = withDefaults(
         filtered?: boolean
         emptyTitle?: string
         emptyHint?: string
+        /**
+         * Footer aggregate DEFINITIONS, keyed by column key — how to render.
+         * Structure travels with the schema; the values arrive separately.
+         */
+        summaries?: Record<string, { kind: string; label: string | null; prefix: string | null; suffix: string | null; divideBy: number | null; decimals: number }> | null
+        /** The computed values, once the deferred prop lands. */
+        summaryValues?: Record<string, number | null> | null
     }>(),
     {
         rowKey: 'id',
@@ -42,6 +49,8 @@ const props = withDefaults(
         loading: false,
         filtered: false,
         selectable: false,
+        summaries: null,
+        summaryValues: null,
         emptyTitle: 'Nothing here yet',
     },
 )
@@ -88,6 +97,41 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
     } catch {
         // Clipboard needs a secure context; failing silently beats throwing.
     }
+}
+
+/**
+ * The footer only renders once the VALUES arrive.
+ *
+ * Showing the labels with blank or zero cells while the aggregate is still
+ * running reads as "the total is zero", which is a wrong answer rather than a
+ * pending one.
+ */
+const hasSummary = computed(
+    () => !!props.summaries && !!props.summaryValues && Object.keys(props.summaries).length > 0,
+)
+
+function summaryFor(key: string) {
+    return props.summaries?.[key] ?? null
+}
+
+function summaryValue(key: string): string {
+    const definition = props.summaries?.[key]
+    const raw = props.summaryValues?.[key]
+
+    if (!definition) return ''
+
+    // Null is "no matching rows", which is not zero — an average over nothing
+    // is undefined, and printing 0 would assert something false.
+    if (raw === null || raw === undefined) return '—'
+
+    const value = definition.divideBy ? raw / definition.divideBy : raw
+
+    const formatted = new Intl.NumberFormat(undefined, {
+        minimumFractionDigits: definition.decimals,
+        maximumFractionDigits: definition.decimals,
+    }).format(value)
+
+    return `${definition.prefix ?? ''}${formatted}${definition.suffix ?? ''}`
 }
 </script>
 
@@ -206,6 +250,38 @@ async function copy(rowId: string, column: TableColumn, value: unknown) {
                     </td>
                 </tr>
             </tbody>
+
+            <!--
+                The footer totals the FILTERED SET, not the page.
+
+                Rendered as a real <tfoot> so it aligns with the columns and
+                stays with the table when it scrolls horizontally. It is absent
+                until the deferred values arrive, rather than showing zeroes —
+                a total that reads 0 and then changes is worse than one that
+                appears a moment late.
+            -->
+            <tfoot v-if="hasSummary" class="bg-muted/40 border-t-2">
+                <tr>
+                    <td v-if="selectable" />
+                    <template v-for="col in columns" :key="`s-${col.key}`">
+                        <td
+                            v-if="!hidden.has(col.key)"
+                            class="px-3 py-2 align-top text-sm whitespace-nowrap"
+                            :class="col.cellClass"
+                        >
+                            <template v-if="summaryFor(col.key)">
+                                <span class="text-muted-foreground block text-[10px] font-medium">
+                                    {{ summaryFor(col.key)!.label }}
+                                </span>
+                                <span class="font-semibold tabular-nums">
+                                    {{ summaryValue(col.key) }}
+                                </span>
+                            </template>
+                        </td>
+                    </template>
+                    <td v-if="$slots.actions" />
+                </tr>
+            </tfoot>
         </table>
 
         <!-- "No results for your filter" and "no data at all" are different

@@ -11,6 +11,7 @@ use PanelKit\Panel\Tables\Columns\DateColumn;
 use PanelKit\Panel\Tables\Columns\ToggleColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Filters\BooleanFilter;
+use PanelKit\Panel\Tables\Summarizer;
 use PanelKit\Panel\Tables\Table;
 
 final class PlanResource extends Resource
@@ -28,10 +29,21 @@ final class PlanResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->from('plans.name')->sortable()->searchable()->locked(),
-                TextColumn::make('speed_mbps')->from('plans.speed_mbps')->label('Speed')->sortable()->suffix('Mbps'),
+                TextColumn::make('speed_mbps')->from('plans.speed_mbps')->label('Speed')->sortable()->suffix('Mbps')
+                    ->summarize(Summarizer::average(label: 'Average', suffix: ' Mbps', decimals: 1)),
                 // Displays the computed `price`, orders by `price_cents` —
                 // sorting the formatted string puts 12,000.00 before 900.00.
-                TextColumn::make('price')->sortable()->sortAs('price_cents')->prefix('KES'),
+                // Totals over the FILTERED set, not the page. A filtered list
+                // of plans with no total is half an answer.
+                TextColumn::make('price')->sortable()->sortAs('price_cents')->prefix('KES')
+                    ->summarize(Summarizer::sum(
+                        column: 'plans.price_cents',
+                        label: 'Total',
+                        prefix: 'KES ',
+                        // Stored in cents; shown in currency.
+                        divideBy: 100,
+                        decimals: 2,
+                    )),
                 // A switch, so retiring a plan is one click from the list.
                 ToggleColumn::make('is_active')->label('Active')
                     ->labels('Available to new clients', 'Retired'),

@@ -53,6 +53,9 @@ final class ListQuery
     /** @var list<Filter> */
     private array $filters = [];
 
+    /** @var array<string, array{summarizer: \PanelKit\Panel\Tables\Summarizer, column: string}> */
+    private array $summaries = [];
+
     private ?Closure $join = null;
 
     private ?Closure $transform = null;
@@ -148,6 +151,18 @@ final class ListQuery
     public function searchable(array $columns): self
     {
         $this->searchable = $columns;
+
+        return $this;
+    }
+
+    /**
+     * Footer aggregates, keyed by column key.
+     *
+     * @param  array<string, array{summarizer: \PanelKit\Panel\Tables\Summarizer, column: string}>  $summaries
+     */
+    public function summaries(array $summaries): self
+    {
+        $this->summaries = $summaries;
 
         return $this;
     }
@@ -358,6 +373,65 @@ final class ListQuery
         }
 
         return false;
+    }
+
+    /**
+     * Every declared aggregate, in ONE query over the filtered set.
+     *
+     * The naive version runs a query per summarised column, which is the same
+     * N+1 shape as counting tabs one at a time — invisible at two columns and a
+     * full extra scan each at five. One SELECT with several aggregate
+     * expressions costs exactly one pass.
+     *
+     * Aliases are derived from the column KEY and sanitised, because they are
+     * interpolated into the SELECT alongside the aggregate.
+     *
+     * @param  array<string, mixed>  $state
+     * @return array<string, int|float|null>
+     */
+    private function summarise(array $state): array
+    {
+        // The join is only needed if an aggregate reads a joined column — the
+        // same question the counts ask, and usually the same answer.
+        $needsJoin = $this->joinRequired($state);
+
+        foreach ($this->summaries as $summary) {
+            $column = $summary['summarizer']->readsColumn() ?? $summary['column'];
+
+            if (str_contains($column, '.') && ! str_starts_with($column, (new $this->model)->getTable() . '.')) {
+                $needsJoin = true;
+
+                break;
+            }
+        }
+
+        $query = $this->base($state, forCount: ! $needsJoin);
+
+        $expressions = [];
+        $aliases = [];
+
+        foreach ($this->summaries as $key => $summary) {
+            // Derived from the declared key, never from input, and stripped to
+            // an identifier because it lands in the SELECT unquoted.
+            $alias = 'pk_sum_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $key);
+
+            $expressions[] = $summary['summarizer']->expression($alias, $summary['column']);
+            $aliases[$key] = $alias;
+        }
+
+        $row = $query->selectRaw(implode(', ', $expressions))->first();
+
+        $out = [];
+
+        foreach ($aliases as $key => $alias) {
+            $value = $row?->{$alias};
+
+            // Null means "no matching rows", which is a real answer and not
+            // zero: an average over nothing is not 0, it is undefined.
+            $out[$key] = $value === null ? null : (float) $value;
+        }
+
+        return $out;
     }
 
     private function hasTrashedFilter(): bool
@@ -576,6 +650,9 @@ final class ListQuery
             // Counts come from the query WITHOUT the tab constraint — with it,
             // every tab except the active one would read zero, which looks like
             // real data rather than a bug. Deferred so they never block rows.
+            // ALL summaries in ONE query. Five summarised columns must not be
+            // five scans of the same filtered set.
+            summary: $this->summaries === [] ? null : fn (): array => $this->summarise($state),
             tabCounts: $this->tabs === null
                 ? null
                 : fn (): array => $this->tabs->counts($this->base($state, applyTab: false, forCount: true)),
