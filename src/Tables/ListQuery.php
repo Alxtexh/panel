@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Tables;
 
 use Closure;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Query\Builder;
+use PanelKit\Panel\Tables\Filters\TrashedFilter;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 use PanelKit\Panel\Tables\Filters\Filter;
@@ -303,6 +305,17 @@ final class ListQuery
         } catch (\Throwable) {
             return \Illuminate\Support\Carbon::now()->addCentury()->format('Y-m-d H:i:s');
         }
+    }
+
+    private function hasTrashedFilter(): bool
+    {
+        foreach ($this->filters as $filter) {
+            if ($filter instanceof TrashedFilter) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function qualifiedUpdatedAt(): string
@@ -656,6 +669,23 @@ final class ListQuery
         /** @var \Illuminate\Database\Eloquent\Builder $eloquent */
         $eloquent = $this->model::query();
 
+        /*
+         * A TRASHED FILTER TAKES OVER THE SOFT-DELETE PREDICATE.
+         *
+         * Eloquent's soft-delete scope is resolved by `toBase()` below, long
+         * before a filter runs, so a filter cannot lift it afterwards. When the
+         * table declares a TrashedFilter the scope is removed here and the
+         * filter applies `deleted_at IS NULL` itself — one place decides, in a
+         * form the index can serve.
+         *
+         * ONLY when the filter is declared. Removing the scope unconditionally
+         * would make every table without one start listing deleted records,
+         * which is the kind of change that looks like a data bug.
+         */
+        if ($this->hasTrashedFilter()) {
+            $eloquent->withoutGlobalScope(SoftDeletingScope::class);
+        }
+
         if ($this->join !== null) {
             ($this->join)($eloquent);
         }
@@ -671,6 +701,27 @@ final class ListQuery
 
         foreach ($this->filters as $filter) {
             $value = $state['filters'][$filter->key] ?? null;
+
+            /*
+             * A TRASHED FILTER ALWAYS APPLIES, even with no value.
+             *
+             * For every other filter, null means "not applied". For this one
+             * null means "live records only" — the DEFAULT view — and skipping
+             * it was a genuine bug in two ways at once. The soft-delete global
+             * scope has been lifted above so this filter can own the decision,
+             * so with nothing applied the list showed DELETED ROWS; and with no
+             * `deleted_at` predicate the rebuilt indexes, which lead with it,
+             * could not serve the sort, so a 1.6 ms list became 416 ms and a
+             * temp B-tree over 200,000 rows.
+             *
+             * Correctness and performance failed together, which is what made
+             * it obvious. Either alone would have been easy to miss.
+             */
+            if ($filter instanceof TrashedFilter) {
+                $filter->apply($query, $value);
+
+                continue;
+            }
 
             // `!== null`, never a truthiness check — `false` is an applied
             // value for a BooleanFilter and must not be skipped.
