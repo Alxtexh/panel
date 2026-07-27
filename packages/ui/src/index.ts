@@ -50,7 +50,14 @@ export { default as PkMultiSelect } from './components/primitives/PkMultiSelect.
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
 export { useLiveUpdates } from './composables/useLiveUpdates'
-export { useAppearance } from './composables/useAppearance'
+export {
+    useAppearance,
+    initializeAppearance,
+    applyAppearance,
+    appearanceVars,
+    readAppearance,
+    isDark,
+} from './composables/useAppearance'
 export { useTenantTheme } from './composables/useTenantTheme'
 export { useSchemaColumns, BADGE_VARIANTS } from './composables/useSchemaColumns'
 

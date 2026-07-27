@@ -133,8 +133,17 @@ function groupIsActive(items: { href: string }[]): boolean {
         <!-- Breadcrumbs get their own strip: there is no room for them beside a
              full menu, and dropping them entirely loses the sense of place the
              sidebar layouts keep in the topbar. -->
+        <!--
+            The strip appears ONLY when there is a real hierarchy to show.
+
+            On the dashboard the trail was a single "Dashboard" crumb, sitting
+            directly beneath a nav item reading "Dashboard" and directly above a
+            page heading reading "Dashboard" — the same word three times in
+            eighty pixels. A one-item trail tells you nothing the highlighted
+            nav item has not already said; "Clients › New" does.
+        -->
         <div
-            v-if="breadcrumbs.length"
+            v-if="breadcrumbs.length > 1"
             class="border-sidebar-border/70 hidden border-t px-3 py-2 sm:block sm:px-4"
         >
             <Breadcrumbs :breadcrumbs="breadcrumbs" />

@@ -111,50 +111,151 @@ const DEFAULTS: Appearance = {
 const state = ref<Appearance>({ ...DEFAULTS })
 let initialised = false
 
-export function useAppearance() {
-    function apply(next: Appearance) {
-        if (typeof document === 'undefined') return
+/** Where the COMPUTED custom properties are cached for the pre-paint script. */
+const VARS_KEY = 'panelkit.appearance.vars'
 
-        const root = document.documentElement
+export function isDark(next: Appearance): boolean {
+    return (
+        next.theme === 'dark' ||
+        (next.theme === 'system' &&
+            typeof window !== 'undefined' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+    )
+}
 
-        const dark =
-            next.theme === 'dark' ||
-            (next.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+/**
+ * The CSS custom properties a preference resolves to.
+ *
+ * SEPARATED FROM APPLYING THEM so the same mapping can be cached for the inline
+ * script that runs before Vue boots. The alternative — reimplementing the
+ * palette in Blade — would be two copies of the colour tables that drift the
+ * first time one is edited.
+ */
+export function appearanceVars(next: Appearance): Record<string, string> {
+    const accent = PRIMARY_COLORS[next.primary] ?? PRIMARY_COLORS.slate
+    const tint = SURFACE_TINTS[next.surface] ?? SURFACE_TINTS.neutral
+    const c = tint.chroma
+    const h = tint.hue
+    const dark = isDark(next)
 
-        root.classList.toggle('dark', dark)
+    const surfaces = dark
+        ? {
+              '--background': `oklch(0.15 ${c} ${h})`,
+              '--card': `oklch(${next.cardStyle === 'filled' ? 0.19 : 0.15} ${c} ${h})`,
+              '--popover': `oklch(0.18 ${c} ${h})`,
+              '--muted': `oklch(0.24 ${c} ${h})`,
+              '--accent': `oklch(0.24 ${c} ${h})`,
+              '--border': `oklch(0.27 ${c} ${h})`,
+              '--input': `oklch(0.27 ${c} ${h})`,
+          }
+        : {
+              '--background': 'oklch(1 0 0)',
+              '--card': `oklch(${next.cardStyle === 'filled' ? 0.985 : 1} ${c} ${h})`,
+              '--popover': 'oklch(1 0 0)',
+              '--muted': `oklch(0.965 ${c} ${h})`,
+              '--accent': `oklch(0.965 ${c} ${h})`,
+              '--border': `oklch(0.925 ${c} ${h})`,
+              '--input': `oklch(0.90 ${c} ${h})`,
+          }
 
-        const accent = PRIMARY_COLORS[next.primary] ?? PRIMARY_COLORS.slate
-        root.style.setProperty('--primary', accent.value)
-        root.style.setProperty('--primary-foreground', accent.foreground)
-        root.style.setProperty('--ring', accent.value)
+    return {
+        '--primary': accent.value,
+        '--primary-foreground': accent.foreground,
+        '--ring': accent.value,
+        ...surfaces,
+        '--pk-font-size': `${next.fontSize}px`,
+        '--pk-row-padding': next.density === 'compact' ? '0.25rem' : '0.5rem',
+    }
+}
 
-        // Surfaces are rebuilt from the tint so background, card and border stay
-        // in the same hue family. Lightness flips with the scheme; hue does not.
-        const tint = SURFACE_TINTS[next.surface] ?? SURFACE_TINTS.neutral
-        const c = tint.chroma
-        const h = tint.hue
+/**
+ * Read the stored preference, migrating anything an older version wrote.
+ *
+ * Exported and callable OUTSIDE a component, because the appearance has to be
+ * applied on pages that mount no panel component at all — the sign-in screen
+ * being the one people notice.
+ */
+export function readAppearance(): Appearance {
+    if (typeof window === 'undefined') return { ...DEFAULTS }
 
-        if (dark) {
-            root.style.setProperty('--background', `oklch(0.15 ${c} ${h})`)
-            root.style.setProperty('--card', `oklch(${next.cardStyle === 'filled' ? 0.19 : 0.15} ${c} ${h})`)
-            root.style.setProperty('--popover', `oklch(0.18 ${c} ${h})`)
-            root.style.setProperty('--muted', `oklch(0.24 ${c} ${h})`)
-            root.style.setProperty('--accent', `oklch(0.24 ${c} ${h})`)
-            root.style.setProperty('--border', `oklch(0.27 ${c} ${h})`)
-            root.style.setProperty('--input', `oklch(0.27 ${c} ${h})`)
-        } else {
-            root.style.setProperty('--background', `oklch(1 0 0)`)
-            root.style.setProperty('--card', `oklch(${next.cardStyle === 'filled' ? 0.985 : 1} ${c} ${h})`)
-            root.style.setProperty('--popover', `oklch(1 0 0)`)
-            root.style.setProperty('--muted', `oklch(0.965 ${c} ${h})`)
-            root.style.setProperty('--accent', `oklch(0.965 ${c} ${h})`)
-            root.style.setProperty('--border', `oklch(0.925 ${c} ${h})`)
-            root.style.setProperty('--input', `oklch(0.90 ${c} ${h})`)
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY)
+
+        if (!saved) return { ...DEFAULTS }
+
+        const parsed = { ...DEFAULTS, ...JSON.parse(saved) } as Appearance
+
+        /*
+         * MIGRATION. An earlier version stored fontSize as a NAME
+         * ('small' | 'normal' | 'large'); it is a pixel number now. A stored
+         * string sailed straight through and rendered "smallpx" as the label
+         * and an invalid CSS value.
+         */
+        const legacy: Record<string, number> = { small: 14, normal: 16, large: 18 }
+
+        if (typeof parsed.fontSize === 'string') {
+            parsed.fontSize = legacy[parsed.fontSize] ?? DEFAULTS.fontSize
         }
 
-        root.style.setProperty('--pk-font-size', `${next.fontSize}px`)
-        root.style.setProperty('--pk-row-padding', next.density === 'compact' ? '0.25rem' : '0.5rem')
-        root.dataset.sidebar = next.sidebarSide
+        if (
+            typeof parsed.fontSize !== 'number' ||
+            Number.isNaN(parsed.fontSize) ||
+            parsed.fontSize < FONT_SIZE_MIN ||
+            parsed.fontSize > FONT_SIZE_MAX
+        ) {
+            parsed.fontSize = DEFAULTS.fontSize
+        }
+
+        return parsed
+    } catch {
+        // Corrupt storage falls back to defaults rather than breaking the page.
+        return { ...DEFAULTS }
+    }
+}
+
+/**
+ * Apply the stored appearance at APP BOOT, before any component mounts.
+ *
+ * This is the fix for two related bugs. The preference used to be applied in
+ * `onMounted` of a component that only exists in the authenticated shell, so
+ * (a) the sign-in and registration screens rendered with no theme at all, and
+ * (b) signing out and back in appeared to lose the settings — nothing had been
+ * lost, but nothing re-applied them until a panel page mounted.
+ *
+ * It also fights nothing: this is now the ONLY writer of the theme class.
+ */
+export function initializeAppearance(): void {
+    state.value = readAppearance()
+    applyAppearance(state.value)
+}
+
+/** Apply a preference to the document, and cache it for the next first paint. */
+export function applyAppearance(next: Appearance): void {
+    if (typeof document === 'undefined') return
+
+    const root = document.documentElement
+    const vars = appearanceVars(next)
+
+    root.classList.toggle('dark', isDark(next))
+
+    for (const [property, value] of Object.entries(vars)) {
+        root.style.setProperty(property, value)
+    }
+
+    root.dataset.sidebar = next.sidebarSide
+
+    try {
+        // Cached so the pre-paint script can replay it without knowing the
+        // palette — which is what removes the flash of default theme.
+        localStorage.setItem(VARS_KEY, JSON.stringify({ dark: isDark(next), vars }))
+    } catch {
+        // Private mode. Only the flash-prevention is lost.
+    }
+}
+
+export function useAppearance() {
+    function apply(next: Appearance) {
+        applyAppearance(next)
     }
 
     function set(patch: Partial<Appearance>) {
@@ -174,55 +275,22 @@ export function useAppearance() {
         set({ ...DEFAULTS })
     }
 
+    /*
+     * Applied at APP BOOT by initializeAppearance(), not here.
+     *
+     * The load used to live in onMounted, so it only ran once a component
+     * calling this composable mounted — and no such component exists on the
+     * sign-in screen. A first mount still re-reads storage, in case another tab
+     * changed it while this one was open.
+     */
     onMounted(() => {
         if (initialised) return
         initialised = true
 
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY)
-
-            if (saved) {
-                const parsed = { ...DEFAULTS, ...JSON.parse(saved) } as Appearance
-
-                /*
-                 * MIGRATION. An earlier version stored fontSize as a NAME
-                 * ('small' | 'normal' | 'large'); it is a pixel number now.
-                 * A stored string sailed straight through and rendered
-                 * "smallpx" as the label and an invalid CSS value, so the panel
-                 * silently fell back to the browser default size.
-                 *
-                 * Anything not a number in range is discarded rather than
-                 * coerced — a stale preference is not worth a broken layout.
-                 */
-                const legacy: Record<string, number> = { small: 14, normal: 16, large: 18 }
-
-                if (typeof parsed.fontSize === 'string') {
-                    parsed.fontSize = legacy[parsed.fontSize] ?? DEFAULTS.fontSize
-                }
-
-                if (
-                    typeof parsed.fontSize !== 'number' ||
-                    Number.isNaN(parsed.fontSize) ||
-                    parsed.fontSize < FONT_SIZE_MIN ||
-                    parsed.fontSize > FONT_SIZE_MAX
-                ) {
-                    parsed.fontSize = DEFAULTS.fontSize
-                }
-
-                state.value = parsed
-            }
-        } catch {
-            // Corrupt storage falls back to defaults rather than breaking the
-            // page — an unreadable preference is not an error worth showing.
-        }
-
-        apply(state.value)
-
-        // Follow the OS only while the user has actually chosen "system".
-        window
-            .matchMedia('(prefers-color-scheme: dark)')
-            .addEventListener('change', () => state.value.theme === 'system' && apply(state.value))
+        state.value = readAppearance()
+        applyAppearance(state.value)
     })
+
 
     return {
         appearance: computed(() => state.value),

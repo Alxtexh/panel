@@ -1,5 +1,5 @@
 import { createInertiaApp } from '@inertiajs/vue3';
-import { initializeTheme } from '@/composables/useAppearance';
+import { initializeAppearance } from '@panelkit/ui';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
@@ -26,8 +26,15 @@ createInertiaApp({
     },
 });
 
-// This will set light / dark mode on page load...
-initializeTheme();
+/*
+ * Appearance is applied HERE, at boot, for EVERY page.
+ *
+ * Not in a component: the sign-in and registration screens mount none of the
+ * panel's chrome, so a preference applied on component mount left them
+ * unthemed — and made signing out and back in look like the settings had been
+ * lost. This runs before the first page renders, authenticated or not.
+ */
+initializeAppearance();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();
