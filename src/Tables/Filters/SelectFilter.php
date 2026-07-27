@@ -16,7 +16,7 @@ use Illuminate\Database\Query\Builder;
  * options are resolved from a TENANT-SCOPED query. That makes a crafted value
  * unable to confirm whether another tenant owns equipment you do not.
  */
-final class SelectFilter extends Filter
+final class SelectFilter extends Filter implements HasOptions
 {
     /** @var list<string>|Closure(): list<string> */
     private array|Closure $options = [];
