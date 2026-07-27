@@ -52,6 +52,23 @@ function submit() {
     }
 }
 
+/**
+ * Fetches options for a searchable select.
+ *
+ * Lives here because @panelkit/ui may not import an HTTP client — the same rule
+ * that keeps the live-update composable transport-agnostic.
+ */
+async function searchOptions(field: string, term: string): Promise<{ value: any; label: string }[]> {
+    const query = new URLSearchParams({ field, q: term })
+    const res = await fetch(`${props.schema.routes.index}/field-options?${query}`, {
+        headers: { Accept: 'application/json' },
+    })
+
+    if (!res.ok) throw new Error(String(res.status))
+
+    return (await res.json()).options
+}
+
 function cancel() {
     router.visit(props.schema.routes.index)
 }
@@ -116,6 +133,7 @@ onBeforeUnmount(() => {
                 :errors="form.errors as any"
                 :options="formOptions"
                 :processing="form.processing"
+                :search-options="searchOptions"
                 @change="(key: string, value: any) => ((form as any)[key] = value)"
             />
         </div>

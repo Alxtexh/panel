@@ -17,4 +17,6 @@ export interface FormField {
     rows?: number
     min?: number
     max?: number
+    /** Fetches options on demand instead of rendering them inline. */
+    searchable?: boolean
 }

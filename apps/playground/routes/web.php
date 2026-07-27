@@ -35,6 +35,9 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
     Route::get('{resource}/updates', [ResourceController::class, 'updates'])
         ->whereIn('resource', $panelResources)->name('panel.updates');
 
+    Route::get('{resource}/field-options', [ResourceController::class, 'fieldOptions'])
+        ->whereIn('resource', $panelResources)->name('panel.fieldOptions');
+
     Route::get('{resource}/create', [ResourceController::class, 'create'])
         ->whereIn('resource', $panelResources)->name('panel.create');
 

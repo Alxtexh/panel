@@ -31,6 +31,8 @@ const props = withDefaults(
         errors?: Record<string, string>
         options?: Record<string, { value: any; label: string }[]>
         processing?: boolean
+        /** Supplied by the page; this package ships no HTTP client. */
+        searchOptions?: (field: string, term: string) => Promise<{ value: any; label: string }[]>
     }>(),
     { nodes: () => [], fields: () => [], columns: 1, errors: () => ({}), options: () => ({}), processing: false },
 )
@@ -74,6 +76,7 @@ const conflict = computed(() => props.errors._conflict)
                 :errors="errors"
                 :options="options"
                 :processing="processing"
+                :search-options="searchOptions"
                 @change="(key, value) => emit('change', key, value)"
             />
         </template>
@@ -88,6 +91,7 @@ const conflict = computed(() => props.errors._conflict)
                 :error="errors[field.key]"
                 :options="options[field.key]"
                 :processing="processing"
+                :search-options="field.searchable && searchOptions ? (term: string) => searchOptions!(field.key, term) : undefined"
                 :class="field.span && field.span >= 2 ? 'sm:col-span-2' : ''"
                 @change="(value) => emit('change', field.key, value)"
             />

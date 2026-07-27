@@ -39,6 +39,8 @@ const props = withDefaults(
         errors?: Record<string, string>
         options?: Record<string, { value: any; label: string }[]>
         processing?: boolean
+        /** Supplied by the page; @panelkit/ui ships no HTTP client. */
+        searchOptions?: (field: string, term: string) => Promise<{ value: any; label: string }[]>
         /** 0 is the outermost layout node — the only one that draws a frame. */
         depth?: number
     }>(),
@@ -88,6 +90,7 @@ function tabHasError(tab: SchemaNode): boolean {
         :error="errors[node.key]"
         :options="options[node.key]"
         :processing="processing"
+        :search-options="node.searchable && searchOptions ? (term: string) => searchOptions!(node.key, term) : undefined"
         @change="(value: unknown) => emit('change', node.key, value)"
     />
 
@@ -125,6 +128,7 @@ function tabHasError(tab: SchemaNode): boolean {
                 :errors="errors"
                 :options="options"
                 :processing="processing"
+                :search-options="searchOptions"
                 :depth="depth + 1"
                 :class="child.span && child.span >= 2 ? 'sm:col-span-2' : ''"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
@@ -142,16 +146,17 @@ function tabHasError(tab: SchemaNode): boolean {
             :errors="errors"
             :options="options"
             :processing="processing"
+            :search-options="searchOptions"
             :depth="depth + 1"
             @change="(key: string, value: unknown) => emit('change', key, value)"
         />
     </div>
 
     <!-- Tabs. -->
-    <div v-else-if="node.component === 'tabs'" :class="isRoot ? 'bg-card overflow-hidden rounded-lg border' : ''">
+    <div v-else-if="node.component === 'tabs'"         :class="isRoot ? 'bg-card rounded-lg border' : ''">
         <div
             class="bg-muted/30 flex gap-1 overflow-x-auto p-1"
-            :class="isRoot ? 'border-b' : 'rounded-md'"
+            :class="isRoot ? 'rounded-t-lg border-b' : 'rounded-md'"
         >
             <button
                 v-for="(tab, i) in node.children ?? []"
@@ -193,6 +198,7 @@ function tabHasError(tab: SchemaNode): boolean {
                 :errors="errors"
                 :options="options"
                 :processing="processing"
+                :search-options="searchOptions"
                 :depth="depth + 1"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
             />

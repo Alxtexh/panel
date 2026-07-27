@@ -10,6 +10,7 @@ use App\Models\Plan;
 use PanelKit\Panel\Forms\Fields\DateField;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
+use PanelKit\Panel\Forms\Rules\ExistsInScope;
 use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Schema\Section;
 use PanelKit\Panel\Schema\Tab;
@@ -80,9 +81,19 @@ final class ClientResource extends Resource
                         // A CLOSURE. Resolved when the form data is assembled,
                         // never while building the cached schema, and
                         // tenant-scoped by the model's global scope.
-                        SelectField::make('plan_id')->label('Plan')->options(
-                            fn (): array => Plan::query()->orderBy('name')->pluck('name', 'id')->all()
-                        ),
+                        // SEARCHABLE. Plans is small today, but a picker that
+                        // renders every option inline stops working the moment
+                        // it points at anything that grows - and `exists` is a
+                        // stronger check than an in: list built from whatever
+                        // the last search happened to return.
+                        SelectField::make('plan_id')->label('Plan')
+                            ->searchable(fn (string $term): array => Plan::query()
+                                ->when($term !== '', fn ($q) => $q->where('name', 'like', $term . '%'))
+                                ->orderBy('name')->limit(25)->pluck('name', 'id')->all())
+                            // NOT exists:plans,id — that queries the raw table
+                            // and confirms another tenant's row. This asks the
+                            // model, so the tenant global scope applies.
+                            ->rule(ExistsInScope::of(Plan::class)),
                     ]),
                     Section::make('Billing')->collapsible(collapsed: true)->schema([
                         DateField::make('expiry_date')->label('Expires'),

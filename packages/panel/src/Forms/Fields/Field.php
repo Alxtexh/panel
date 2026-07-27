@@ -39,7 +39,7 @@ abstract class Field implements \PanelKit\Panel\Schema\Renderable
 
     protected bool $disabled = false;
 
-    /** @var list<string> */
+    /** @var list<object|string> */
     protected array $rules = [];
 
     /** Columns spanned in the form grid. Layout intent, not a CSS class. */
@@ -89,8 +89,17 @@ abstract class Field implements \PanelKit\Panel\Schema\Renderable
         return $this;
     }
 
-    /** Additional Laravel rules, merged with the ones the type implies. */
-    public function rule(string ...$rules): static
+    /**
+     * Additional rules, merged with the ones the type implies.
+     *
+     * Accepts rule OBJECTS as well as strings, because some checks a string
+     * cannot express — ExistsInScope, for instance, has to ask the model rather
+     * than the table so global scopes apply.
+     *
+     * Widened rather than given a second method: `rules()` is already the
+     * getter, and a setter of the same name is a fatal redeclare.
+     */
+    public function rule(object|string ...$rules): static
     {
         $this->rules = [...$this->rules, ...$rules];
 

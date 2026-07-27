@@ -29,6 +29,40 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 final class ResourceController extends Controller
 {
     /**
+     * Options for a searchable select.
+     *
+     * Lean JSON, capped, and tenant-scoped by whatever model the field's query
+     * touches. This is what lets a relation with 100k rows be pickable at all -
+     * the alternative was shipping every row to the browser as an option
+     * element, which is a correctness problem rather than a slow one.
+     */
+    public function fieldOptions(Request $request, string $resource): \Illuminate\Http\JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        abort_unless($class::can('create') || $class::can('update'), 403);
+
+        $key = (string) $request->query('field', '');
+        $term = trim((string) $request->query('q', ''));
+
+        foreach ($class::formDefinition()->fields() as $field) {
+            if ($field->key !== $key) {
+                continue;
+            }
+
+            // Only a field that OPTED IN may be queried this way. Otherwise the
+            // endpoint becomes a way to enumerate any option list on demand.
+            if (! $field instanceof \PanelKit\Panel\Forms\Fields\SelectField || ! $field->isSearchable()) {
+                break;
+            }
+
+            return response()->json(['options' => array_slice($field->search($term), 0, 25)]);
+        }
+
+        return response()->json(['options' => []]);
+    }
+
+    /**
      * Rows that changed, for the poll driver.
      *
      * Lean JSON, never an Inertia render. The whole point is that staying fresh
