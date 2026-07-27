@@ -102,7 +102,12 @@ onBeforeUnmount(() => {
             <p v-if="record" class="text-muted-foreground text-sm">{{ record.label }}</p>
         </div>
 
-        <div class="bg-card rounded-lg border p-4 sm:p-6">
+        <!--
+            No card here when the schema declares layout: Section and Tabs draw
+            their own frame, and wrapping them puts a border around a border.
+            The flat fallback has no frame of its own, so it still gets one.
+        -->
+        <div :class="schema.form.nodes?.length ? '' : 'bg-card rounded-lg border p-4 sm:p-6'">
             <RecordForm
                 :model-value="formValues"
                 :nodes="schema.form.nodes"

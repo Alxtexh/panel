@@ -2,13 +2,19 @@
 /**
  * Renders one node of a form schema tree, recursing into its children.
  *
- * The tree is a mix of layout components and fields, discriminated by
- * `component`. Recursion is what lets a Section hold a Grid hold a Field, at any
- * depth, without the renderer knowing the shapes in advance.
+ * The tree mixes layout components and fields, discriminated by `component`.
+ * Recursion is what lets a Section hold a Grid hold a Field at any depth without
+ * the renderer knowing the shapes in advance.
+ *
+ * ONLY THE OUTERMOST LAYOUT NODE DRAWS A FRAME. A Section inside Tabs inside a
+ * page card renders three nested bordered boxes — each individually reasonable,
+ * collectively a set of Russian dolls that eats horizontal space and makes the
+ * actual inputs look like a footnote. `depth` is how a node knows whether it is
+ * the container or the contained.
  *
  * Layout carries only SEMANTIC values — `columns: 2`, `collapsible: true` — and
- * this file decides what those look like. PHP never emits a class (antipatterns
- * §6.1).
+ * this file decides what those look like. PHP never emits a class
+ * (antipatterns §6.1).
  */
 import { computed, ref } from 'vue'
 import FormFieldControl from './FormFieldControl.vue'
@@ -33,15 +39,18 @@ const props = withDefaults(
         errors?: Record<string, string>
         options?: Record<string, { value: any; label: string }[]>
         processing?: boolean
+        /** 0 is the outermost layout node — the only one that draws a frame. */
+        depth?: number
     }>(),
-    { errors: () => ({}), options: () => ({}), processing: false },
+    { errors: () => ({}), options: () => ({}), processing: false, depth: 0 },
 )
 
 const emit = defineEmits<{ (e: 'change', key: string, value: unknown): void }>()
 
 const open = ref(!props.node.collapsed)
-
 const activeTab = ref(0)
+
+const isRoot = computed(() => props.depth === 0)
 
 const gridClass = computed(() => {
     const columns = props.node.columns ?? 1
@@ -53,8 +62,8 @@ const gridClass = computed(() => {
  * Whether a tab contains a field with an error.
  *
  * Without this, submitting an invalid form can highlight nothing at all: the
- * offending field sits behind an inactive tab, the user sees a rejected save and
- * no reason for it. The dot is the only cue that the problem is elsewhere.
+ * offending field sits behind an inactive tab, so the user sees a rejected save
+ * and no reason for it.
  */
 function tabHasError(tab: SchemaNode): boolean {
     const keys: string[] = []
@@ -82,11 +91,11 @@ function tabHasError(tab: SchemaNode): boolean {
         @change="(value: unknown) => emit('change', node.key, value)"
     />
 
-    <!-- Section: a titled, optionally collapsible group. -->
-    <section v-else-if="node.component === 'section'" class="bg-card rounded-lg border">
+    <!-- Section. Framed at the root, a plain labelled group when nested. -->
+    <section v-else-if="node.component === 'section'" :class="isRoot ? 'bg-card rounded-lg border' : ''">
         <header
-            class="flex items-start justify-between gap-3 px-4 py-3"
-            :class="node.collapsible ? 'cursor-pointer select-none' : ''"
+            class="flex items-start justify-between gap-3"
+            :class="[isRoot ? 'px-4 py-3' : 'pb-2', node.collapsible ? 'cursor-pointer select-none' : '']"
             @click="node.collapsible && (open = !open)"
         >
             <div>
@@ -107,7 +116,7 @@ function tabHasError(tab: SchemaNode): boolean {
             </svg>
         </header>
 
-        <div v-if="open" class="grid grid-cols-1 gap-4 border-t px-4 py-4" :class="gridClass">
+        <div v-if="open" class="grid grid-cols-1 gap-4" :class="[gridClass, isRoot ? 'border-t px-4 py-4' : '']">
             <SchemaNode
                 v-for="(child, i) in node.children ?? []"
                 :key="i"
@@ -116,13 +125,14 @@ function tabHasError(tab: SchemaNode): boolean {
                 :errors="errors"
                 :options="options"
                 :processing="processing"
+                :depth="depth + 1"
                 :class="child.span && child.span >= 2 ? 'sm:col-span-2' : ''"
-                @change="(key, value) => emit('change', key, value)"
+                @change="(key: string, value: unknown) => emit('change', key, value)"
             />
         </div>
     </section>
 
-    <!-- Grid: layout with no heading. -->
+    <!-- Grid: layout with no heading, so it never draws a frame. -->
     <div v-else-if="node.component === 'grid'" class="grid grid-cols-1 gap-4" :class="gridClass">
         <SchemaNode
             v-for="(child, i) in node.children ?? []"
@@ -132,13 +142,17 @@ function tabHasError(tab: SchemaNode): boolean {
             :errors="errors"
             :options="options"
             :processing="processing"
-            @change="(key, value) => emit('change', key, value)"
+            :depth="depth + 1"
+            @change="(key: string, value: unknown) => emit('change', key, value)"
         />
     </div>
 
     <!-- Tabs. -->
-    <div v-else-if="node.component === 'tabs'" class="bg-card overflow-hidden rounded-lg border">
-        <div class="bg-muted/30 flex gap-1 overflow-x-auto border-b p-1">
+    <div v-else-if="node.component === 'tabs'" :class="isRoot ? 'bg-card overflow-hidden rounded-lg border' : ''">
+        <div
+            class="bg-muted/30 flex gap-1 overflow-x-auto p-1"
+            :class="isRoot ? 'border-b' : 'rounded-md'"
+        >
             <button
                 v-for="(tab, i) in node.children ?? []"
                 :key="i"
@@ -161,14 +175,15 @@ function tabHasError(tab: SchemaNode): boolean {
             Every tab stays MOUNTED, hidden with v-show rather than v-if.
 
             v-if would destroy the inputs in inactive tabs, so switching tabs
-            would discard anything typed in them — and a field with a validation
-            error would unmount before the user could see it.
+            would discard anything typed in them, and a field with a validation
+            error would unmount before the user could read it.
         -->
         <div
             v-for="(tab, i) in node.children ?? []"
             v-show="activeTab === i"
             :key="i"
-            class="flex flex-col gap-4 p-4"
+            class="flex flex-col gap-5"
+            :class="isRoot ? 'p-4' : 'pt-4'"
         >
             <SchemaNode
                 v-for="(child, j) in tab.children ?? []"
@@ -178,7 +193,8 @@ function tabHasError(tab: SchemaNode): boolean {
                 :errors="errors"
                 :options="options"
                 :processing="processing"
-                @change="(key, value) => emit('change', key, value)"
+                :depth="depth + 1"
+                @change="(key: string, value: unknown) => emit('change', key, value)"
             />
         </div>
     </div>
