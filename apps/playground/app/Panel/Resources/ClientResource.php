@@ -27,6 +27,7 @@ use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Filters\DateRangeFilter;
 use PanelKit\Panel\Tables\Filters\MultiSelectFilter;
 use PanelKit\Panel\Tables\Filters\SelectFilter;
+use PanelKit\Panel\Tables\Filters\TrashedFilter;
 use PanelKit\Panel\Tables\Table;
 
 /**
@@ -235,6 +236,9 @@ final class ClientResource extends Resource
                     ->options(['pppoe', 'hotspot', 'static']),
                 // The question a billing panel is actually asked.
                 DateRangeFilter::make('expiring')->label('Expiry')->column('clients.expiry_date'),
+                // Live by default; deleted records are reachable but never the
+                // default view.
+                TrashedFilter::make('trashed')->label('Deleted')->deletedColumn('clients.deleted_at'),
             ])
             /*
              | Bulk actions.
@@ -259,6 +263,13 @@ final class ClientResource extends Resource
                     ->authorize('update')
                     ->requiresConfirmation('Suspend the selected clients? They will lose access immediately.')
                     ->mutate(['status' => 'suspended']),
+
+                BulkAction::make('restore', 'Restore')
+                    ->icon('undo')
+                    ->authorize('restore')
+                    // A soft delete is a column, so restoring many is one
+                    // UPDATE per chunk like any other bulk mutation.
+                    ->mutate(['deleted_at' => null]),
 
                 BulkAction::make('delete', 'Delete')
                     ->icon('trash')

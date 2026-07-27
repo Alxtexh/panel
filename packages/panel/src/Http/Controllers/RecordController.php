@@ -169,6 +169,69 @@ final class RecordController extends Controller
     }
 
     /**
+     * Bring a soft-deleted record back.
+     *
+     * Deliberately its own route rather than a flag on update: restoring is not
+     * an edit, it carries a different permission, and it is the one action whose
+     * whole purpose is to be reachable after a mistake. Burying it in a form
+     * would mean opening the record to undo deleting it.
+     */
+    public function restore(Request $request, string $resource, string $id): RedirectResponse
+    {
+        $class = $this->resolve($resource);
+
+        $record = $this->findTrashed($class, $id);
+
+        // `restore` and not `update`: a policy may well let someone edit records
+        // without letting them resurrect one.
+        abort_unless($class::can('restore', $record), 403);
+
+        $record->restore();
+
+        return back()->with('success', $class::label() . ' restored.');
+    }
+
+    /**
+     * Delete permanently.
+     *
+     * Separate from destroy() because they are different acts: destroy() is
+     * reversible and this is not. Sharing a route would mean one confirmation
+     * dialog standing in front of two very different outcomes.
+     */
+    public function forceDestroy(Request $request, string $resource, string $id): RedirectResponse
+    {
+        $class = $this->resolve($resource);
+
+        $record = $this->findTrashed($class, $id);
+
+        abort_unless($class::can('forceDelete', $record), 403);
+
+        $record->forceDelete();
+
+        return back()->with('success', $class::label() . ' permanently deleted.');
+    }
+
+    /**
+     * Find a record INCLUDING trashed ones, still tenant-scoped.
+     *
+     * `withTrashed()` lifts only the soft-delete scope; every other global
+     * scope — tenancy above all — still applies, so another organisation's
+     * deleted record is as unreachable as its live ones.
+     */
+    private function findTrashed(string $class, string $id): Model
+    {
+        $model = $class::model();
+
+        abort_unless(
+            in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($model), true),
+            404,
+            "Resource [{$class::key()}] does not support soft deletes.",
+        );
+
+        return $model::query()->withTrashed()->findOrFail($id);
+    }
+
+    /**
      * Rejects a write against a record that changed since the form was opened.
      *
      * Thrown as a validation error rather than a bare 409 so the SPA surfaces it

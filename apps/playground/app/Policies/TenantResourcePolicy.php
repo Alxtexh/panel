@@ -60,6 +60,27 @@ abstract class TenantResourcePolicy
         return $record === null ? $this->hasTenant($user) : $this->owns($user, $record);
     }
 
+    /**
+     * Restoring is not editing.
+     *
+     * Given its own ability rather than folded into `update` because they are
+     * genuinely different permissions: plenty of roles should be able to correct
+     * a record without being able to resurrect one somebody else deleted.
+     */
+    public function restore(User $user, ?Model $record = null): bool
+    {
+        return $record === null ? $this->hasTenant($user) : $this->owns($user, $record);
+    }
+
+    /**
+     * Permanent deletion is the one act with no undo, so it is separate from
+     * `delete` — which is reversible — and can be withheld on its own.
+     */
+    public function forceDelete(User $user, ?Model $record = null): bool
+    {
+        return $record === null ? $this->hasTenant($user) : $this->owns($user, $record);
+    }
+
     private function hasTenant(User $user): bool
     {
         return app(TenantContext::class)->currentKey() !== null;

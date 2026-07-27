@@ -169,13 +169,129 @@ final class RecordWriteTest extends TestCase
         $this->assertDatabaseHas('clients', ['id' => $client->id, 'name' => 'Fresh edit']);
     }
 
+    /**
+     * Deleting a client SOFT-deletes it: the row survives with `deleted_at` set
+     * and disappears from every list. That is the point — a mis-click used to
+     * be permanent.
+     */
     public function test_it_deletes_a_record(): void
     {
         $client = $this->makeClient($this->tenantA);
 
         $this->actingAs($this->userA)->delete("/clients/{$client->id}")->assertRedirect();
 
+        $this->assertSoftDeleted('clients', ['id' => $client->id]);
+
+        // Gone from the default scope, which is what the operator sees.
+        $this->assertNull(Client::query()->find($client->id));
+    }
+
+    public function test_a_deleted_record_can_be_restored(): void
+    {
+        $client = $this->makeClient($this->tenantA);
+
+        $this->actingAs($this->userA)->delete("/clients/{$client->id}")->assertRedirect();
+        $this->actingAs($this->userA)->post("/clients/{$client->id}/restore")->assertRedirect();
+
+        $this->assertNotNull(Client::query()->find($client->id));
+    }
+
+    /** The one act with no undo, so it is its own route and its own ability. */
+    public function test_a_record_can_be_permanently_deleted(): void
+    {
+        $client = $this->makeClient($this->tenantA);
+
+        $this->actingAs($this->userA)->delete("/clients/{$client->id}")->assertRedirect();
+        $this->actingAs($this->userA)->delete("/clients/{$client->id}/force")->assertRedirect();
+
         $this->assertDatabaseMissing('clients', ['id' => $client->id]);
+    }
+
+    /**
+     * THE REGRESSION GUARD. With no trashed filter applied, deleted records must
+     * not appear.
+     *
+     * When the soft-delete global scope was lifted so the filter could own the
+     * predicate, the filter was skipped on a null value — because for every
+     * other filter null means "not applied". The list then had no `deleted_at`
+     * predicate at all, so it showed deleted rows AND lost the index that leads
+     * with that column: 1.6 ms became 416 ms. Correctness and performance broke
+     * together.
+     */
+    public function test_a_deleted_record_disappears_from_the_default_list(): void
+    {
+        $keep = $this->makeClient($this->tenantA);
+        $gone = $this->makeClient($this->tenantA);
+
+        $gone->delete();
+
+        $records = $this->actingAs($this->userA)->get('/clients')->assertOk()
+            ->viewData('page')['props']['records'];
+
+        $ids = array_column($records, 'id');
+
+        $this->assertContains($keep->id, $ids);
+        $this->assertNotContains($gone->id, $ids, 'A deleted record must not appear by default.');
+    }
+
+    /** And is reachable when explicitly asked for. */
+    public function test_the_trashed_view_shows_only_deleted_records(): void
+    {
+        $live = $this->makeClient($this->tenantA);
+        $gone = $this->makeClient($this->tenantA);
+
+        $gone->delete();
+
+        $records = $this->actingAs($this->userA)->get('/clients?trashed=trashed')->assertOk()
+            ->viewData('page')['props']['records'];
+
+        $ids = array_column($records, 'id');
+
+        $this->assertContains($gone->id, $ids);
+        $this->assertNotContains($live->id, $ids);
+    }
+
+    public function test_the_all_view_shows_both(): void
+    {
+        $live = $this->makeClient($this->tenantA);
+        $gone = $this->makeClient($this->tenantA);
+
+        $gone->delete();
+
+        $ids = array_column(
+            $this->actingAs($this->userA)->get('/clients?trashed=all')->assertOk()
+                ->viewData('page')['props']['records'],
+            'id',
+        );
+
+        $this->assertContains($live->id, $ids);
+        $this->assertContains($gone->id, $ids);
+    }
+
+    /** A hand-edited value falls back to the default rather than erroring. */
+    public function test_an_unknown_trashed_value_shows_live_records(): void
+    {
+        $gone = $this->makeClient($this->tenantA);
+        $gone->delete();
+
+        $ids = array_column(
+            $this->actingAs($this->userA)->get('/clients?trashed=nonsense')->assertOk()
+                ->viewData('page')['props']['records'],
+            'id',
+        );
+
+        $this->assertNotContains($gone->id, $ids);
+    }
+
+    /** Restoring is still tenant-scoped: `withTrashed` lifts only that scope. */
+    public function test_another_tenants_record_cannot_be_restored(): void
+    {
+        $foreign = $this->makeClient($this->tenantB);
+        $foreign->delete();
+
+        $this->actingAs($this->userA)->post("/clients/{$foreign->id}/restore")->assertNotFound();
+
+        $this->assertSoftDeleted('clients', ['id' => $foreign->id]);
     }
 
     /**

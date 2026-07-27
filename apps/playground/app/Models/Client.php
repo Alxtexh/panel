@@ -7,11 +7,14 @@ namespace App\Models;
 use App\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[ScopedBy(TenantScope::class)]
 final class Client extends Model
 {
+    use SoftDeletes;
+
     /**
      * Explicit, not `$guarded = []`. Spec target 7: mass assignment is closed by
      * construction. `tenant_id` is deliberately absent — it is set from the

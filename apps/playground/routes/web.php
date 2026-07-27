@@ -122,6 +122,16 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
     Route::patch('{resource}/{id}/cell', [RecordController::class, 'updateCell'])
         ->whereIn('resource', $panelResources)->whereNumber('id')->name('panel.cell');
 
+    /*
+     | Restore and permanent delete. Separate routes because they are different
+     | acts with different permissions — and one of them cannot be undone.
+     */
+    Route::post('{resource}/{id}/restore', [RecordController::class, 'restore'])
+        ->whereIn('resource', $panelResources)->whereNumber('id')->name('panel.restore');
+
+    Route::delete('{resource}/{id}/force', [RecordController::class, 'forceDestroy'])
+        ->whereIn('resource', $panelResources)->whereNumber('id')->name('panel.forceDestroy');
+
     Route::delete('{resource}/{id}', [RecordController::class, 'destroy'])
         ->whereIn('resource', $panelResources)->name('panel.destroy');
 
