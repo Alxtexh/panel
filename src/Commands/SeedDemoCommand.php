@@ -260,12 +260,35 @@ final class SeedDemoCommand extends Command
 
             $buffer[] = [
                 'tenant_id' => $tenantId,
-                'plan_id' => $tenantPlans[$i % count($tenantPlans)],
-                'router_id' => $tenantRouters[$i % count($tenantRouters)],
+                /*
+                 | THE SAME DECORRELATION TRAP as status/plan_type above.
+                 |
+                 | `$i` advances by `$tenantCount` between two rows of the SAME
+                 | tenant, so `$i % count($tenantRouters)` only ever visits the
+                 | residues those strides land on — with 5 tenants and 10
+                 | routers, exactly two routers received every client and the
+                 | other eight showed zero. Dividing by the tenant count first
+                 | walks the list one entry at a time.
+                 */
+                'plan_id' => $tenantPlans[intdiv($i, $tenantCount) % count($tenantPlans)],
+                'router_id' => $tenantRouters[intdiv($i, $tenantCount) % count($tenantRouters)],
                 'name' => $first[$i % 20] . ' ' . $last[intdiv($i, 20) % 20],
                 'phone' => '+2547' . str_pad((string) (10_000_000 + ($i % 89_999_999)), 8, '0', STR_PAD_LEFT),
                 'access_code' => strtoupper(base_convert((string) (100_000 + $seq++), 10, 36)),
-                'status' => $statuses[$i % 9],
+                /*
+                 | STATUS AND PLAN TYPE MUST BE INDEPENDENT.
+                 |
+                 | `$statuses[$i % 9]` beside `$planTypes[$i % 3]` looks like two
+                 | unrelated cycles and is not: 9 is a multiple of 3, so `$i % 9`
+                 | determines `$i % 3`. Every suspended client landed on the same
+                 | plan type, which made every cross-tab degenerate — the stacked
+                 | and radar charts showed statuses that only ever appeared under
+                 | one plan, which reads as a charting bug rather than as seeded
+                 | data.
+                 |
+                 | Dividing before the modulo decorrelates them.
+                 */
+                'status' => $statuses[intdiv($i, 3) % 9],
                 'plan_type' => $planTypes[$i % 3],
                 'expiry_date' => date('Y-m-d H:i:s', $nowTs + $expiryOffset),
                 'created_at' => date('Y-m-d H:i:s', $nowTs - $createdOffset),

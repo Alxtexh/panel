@@ -38,7 +38,12 @@ final class ChartWidget
      * declaration, the deferral and the failure isolation are identical; only
      * the renderer differs.
      */
-    private const TYPES = ['line', 'area', 'bar', 'pie', 'doughnut', 'segments'];
+    private const TYPES = [
+        'line', 'area', 'steppedLine', 'multiAxis',
+        'bar', 'horizontalBar', 'stackedBar', 'combo',
+        'pie', 'doughnut', 'polarArea', 'radar',
+        'segments',
+    ];
 
     private string $type = 'line';
 
@@ -138,6 +143,7 @@ final class ChartWidget
      *
      * @return array{
      *     points: list<array{label: string, value: int|float}>,
+     *     series: list<array{name: string, points: list<array{label: string, value: int|float}>}>|null,
      *     total: int|float|null,
      *     trend: array<string, mixed>|null,
      *     error: bool
@@ -145,7 +151,7 @@ final class ChartWidget
      */
     public function resolve(Period $period, string $tenantKey, ?DateTimeImmutable $now = null): array
     {
-        $empty = ['points' => [], 'total' => null, 'trend' => null, 'error' => true];
+        $empty = ['points' => [], 'series' => null, 'bars' => null, 'lines' => null, 'total' => null, 'trend' => null, 'error' => true];
 
         if ($this->data === null) {
             return $empty;
@@ -154,14 +160,31 @@ final class ChartWidget
         try {
             $resolved = ($this->data)($period, $now);
 
-            // A TimeSeries hands back a full envelope; a categorical closure
-            // hands back a bare list. Both are accepted so a pie chart does not
-            // have to pretend to be a series.
-            $points = $resolved['points'] ?? $resolved;
-            $total = $resolved['total'] ?? array_sum(array_column($points, 'value'));
+            /*
+             | THREE PAYLOAD SHAPES, all accepted.
+             |
+             |   ['points' => [...]]           a TimeSeries envelope
+             |   [ {label,value}, … ]          a categorical list
+             |   ['series' => [...]]           several named datasets
+             |   ['bars' => …, 'lines' => …]   a combo
+             |
+             | A multi-series chart genuinely has no single `points` list, and
+             | forcing one would mean flattening datasets the renderer has to
+             | pull apart again — losing which value belonged to which series.
+             */
+            $series = $resolved['series'] ?? null;
+            $bars = $resolved['bars'] ?? null;
+            $lines = $resolved['lines'] ?? null;
+            $isMulti = $series !== null || $bars !== null;
+
+            $points = $isMulti ? [] : ($resolved['points'] ?? $resolved);
+            $total = $resolved['total'] ?? ($isMulti ? null : array_sum(array_column($points, 'value')));
 
             return [
                 'points' => array_values($points),
+                'series' => $series,
+                'bars' => $bars,
+                'lines' => $lines,
                 'total' => $total,
                 'trend' => $this->trend !== null ? ($this->trend)($period, $now)->toArray() : null,
                 'error' => false,
