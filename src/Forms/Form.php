@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Forms;
 
 use Illuminate\Database\Eloquent\Model;
 use PanelKit\Panel\Forms\Fields\Field;
+use PanelKit\Panel\Schema\Component;
 
 /**
  * Declarative form definition.
@@ -24,8 +25,12 @@ use PanelKit\Panel\Forms\Fields\Field;
  */
 final class Form
 {
-    /** @var list<Field> */
-    private array $fields = [];
+    /**
+     * The schema TREE — layout components and fields, mixed and nested.
+     *
+     * @var list<Component|Field>
+     */
+    private array $nodes = [];
 
     private int $columns = 1;
 
@@ -34,10 +39,10 @@ final class Form
         return new self();
     }
 
-    /** @param list<Field> $fields */
-    public function schema(array $fields): self
+    /** @param list<Component|Field> $nodes */
+    public function schema(array $nodes): self
     {
-        $this->fields = $fields;
+        $this->nodes = $nodes;
 
         return $this;
     }
@@ -49,10 +54,19 @@ final class Form
         return $this;
     }
 
-    /** @return list<Field> */
+    /**
+     * Every field, at any nesting depth.
+     *
+     * Validation, sanitisation and hydration all use this rather than the top
+     * level, so a field inside a collapsed section or an unopened tab behaves
+     * exactly like a visible one. Anything else would let a required field be
+     * skipped by never opening its tab — a correctness hole, not a layout quirk.
+     *
+     * @return list<Field>
+     */
     public function fields(): array
     {
-        return $this->fields;
+        return Component::collectFields($this->nodes);
     }
 
     /**
@@ -64,7 +78,14 @@ final class Form
     {
         return [
             'columns' => $this->columns,
-            'fields' => array_map(static fn (Field $f): array => $f->toSchema(), $this->fields),
+            // The TREE, so the client can render layout. Fields are leaves.
+            'nodes' => array_map(
+                static fn (Component|Field $n): array => $n->toSchema(),
+                $this->nodes,
+            ),
+            // Flat list too: some consumers only need to know which fields
+            // exist, and re-walking the tree client-side to find out is waste.
+            'fields' => array_map(static fn (Field $f): array => $f->toSchema(), $this->fields()),
         ];
     }
 
@@ -77,7 +98,7 @@ final class Form
     {
         $options = [];
 
-        foreach ($this->fields as $field) {
+        foreach ($this->fields() as $field) {
             $resolved = $field->resolveOptions();
 
             if ($resolved !== null) {
@@ -93,7 +114,7 @@ final class Form
     {
         $rules = [];
 
-        foreach ($this->fields as $field) {
+        foreach ($this->fields() as $field) {
             $rules[$field->key] = $field->rules();
         }
 
@@ -108,7 +129,7 @@ final class Form
      */
     public function sanitize(array $input): array
     {
-        $keys = array_map(static fn (Field $f): string => $f->key, $this->fields);
+        $keys = array_map(static fn (Field $f): string => $f->key, $this->fields());
 
         return array_intersect_key($input, array_flip($keys));
     }
@@ -122,7 +143,7 @@ final class Form
     {
         $values = [];
 
-        foreach ($this->fields as $field) {
+        foreach ($this->fields() as $field) {
             $value = $record?->getAttribute($field->key);
 
             // Dates serialise to ISO so the client can parse them without
