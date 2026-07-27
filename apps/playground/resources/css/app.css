@@ -187,3 +187,25 @@
         @apply bg-background text-foreground;
     }
 }
+
+/*
+ * Per-user appearance, applied at runtime by useAppearance().
+ *
+ * Defaults live here so the panel renders correctly before any preference is
+ * read — without them the first paint has no font size at all and the page
+ * visibly reflows once localStorage is parsed.
+ */
+:root {
+    --pk-font-size: 16px;
+    --pk-row-padding: 0.5rem;
+}
+
+html {
+    font-size: var(--pk-font-size);
+}
+
+/* Density. Table cells opt in via .pk-row so other paddings are unaffected. */
+.pk-row td {
+    padding-top: var(--pk-row-padding);
+    padding-bottom: var(--pk-row-padding);
+}

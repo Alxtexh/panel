@@ -11,6 +11,14 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import type { NavItem } from '@/types';
 
 defineProps<{
+    /**
+     * Heading above the items.
+     *
+     * Optional because the sidebar renders its own group headings now — a
+     * hardcoded 'Platform' inside each one repeated the label under every
+     * group.
+     */
+    label?: string;
     items: NavItem[];
 }>();
 
@@ -19,7 +27,7 @@ const { isCurrentUrl } = useCurrentUrl();
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+        <SidebarGroupLabel v-if="label">{{ label }}</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton

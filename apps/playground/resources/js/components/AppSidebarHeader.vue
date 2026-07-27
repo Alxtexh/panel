@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
+import { AppearanceMenu } from '@panelkit/ui';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
 import { usePage } from '@inertiajs/vue3';
@@ -47,6 +48,8 @@ const trail = computed<BreadcrumbItem[]>(() =>
 
         <div class="ml-auto flex items-center gap-2">
             <CommandPalette />
+            <!-- Appearance belongs where you can see what it changes. -->
+            <AppearanceMenu />
         </div>
     </header>
 </template>

@@ -16,6 +16,7 @@
  */
 
 export { default as DataTable } from './components/DataTable/DataTable.vue'
+export { default as AppearanceMenu } from './components/Layout/AppearanceMenu.vue'
 export { default as BarChart } from './components/Widgets/BarChart.vue'
 export { default as SelectionBar } from './components/DataTable/SelectionBar.vue'
 export { default as TablePagination } from './components/DataTable/TablePagination.vue'
@@ -30,10 +31,12 @@ export { default as PkDropdown } from './components/primitives/PkDropdown.vue'
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
 export { useLiveUpdates } from './composables/useLiveUpdates'
+export { useAppearance } from './composables/useAppearance'
 export { useTenantTheme } from './composables/useTenantTheme'
 export { useSchemaColumns, BADGE_VARIANTS } from './composables/useSchemaColumns'
 
 export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
+export type { Appearance, Theme, Density, FontSize, SidebarSide } from './composables/useAppearance'
 export type { SchemaColumn } from './composables/useSchemaColumns'
 export type { FormField } from './components/Form/types'
 
