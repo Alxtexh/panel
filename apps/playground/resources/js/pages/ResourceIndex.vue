@@ -28,8 +28,13 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useListTable, type ListPageProps } from '@/composables/useListTable'
+import { useBulkJob } from '@/composables/useBulkJob'
 import {
+    BulkActions,
     DataTable,
+    EditableCell,
+    IconCell,
+    ImageCell,
     PkDropdown,
     SelectionBar,
     TablePagination,
@@ -42,7 +47,7 @@ import {
     type SchemaColumn,
 } from '@panelkit/ui'
 import { Head, Link, router } from '@inertiajs/vue3'
-import { computed, ref, toRef } from 'vue'
+import { computed, ref, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 interface ResourceSchema {
@@ -58,6 +63,13 @@ interface ResourceSchema {
         columns: SchemaColumn[]
         filters: { key: string; label: string; type: 'select' | 'boolean'; trueLabel?: string; falseLabel?: string }[]
         tabs: string[]
+        bulkActions: {
+            key: string
+            label: string
+            icon: string | null
+            destructive: boolean
+            confirmation: string | null
+        }[]
     }
     /** Only the count matters here; the form pages own the field shapes. */
     form: { columns: number; fields: unknown[] }
@@ -157,6 +169,164 @@ const canWrite = computed(() => props.schema.form.fields.length > 0)
 
 
 
+
+/* ---------------------------------------------------------------------------
+ * Inline cell edits
+ *
+ * OPTIMISTIC, WITH A REAL ROLLBACK. The switch flips immediately because
+ * waiting 40 ms to see your own click is what makes a panel feel slow — but a
+ * rejected write must visibly undo, or the operator walks away believing a
+ * change landed that never did.
+ *
+ * The new value is held in an OVERRIDE MAP rather than written into the row.
+ * `t.rows` derives from page props, so mutating a row in place fights the next
+ * partial reload: the reload would restore the server value and the edit would
+ * appear to flicker back. An override keyed by row and column is discarded when
+ * fresh rows arrive, which is exactly the desired lifetime.
+ * ------------------------------------------------------------------------- */
+
+const cellOverrides = ref<Record<string, unknown>>({})
+const savingCell = ref<string | null>(null)
+
+// A new page of rows makes every override stale by definition.
+watch(
+    () => t.rows.value,
+    () => (cellOverrides.value = {}),
+)
+
+function cellKey(row: Record<string, any>, column: string): string {
+    return `${row.id}:${column}`
+}
+
+/** `in`, not `??` — an override of `false` or `0` is a real value. */
+function cellValue(row: Record<string, any>, column: string): unknown {
+    const key = cellKey(row, column)
+
+    return key in cellOverrides.value ? cellOverrides.value[key] : row[column]
+}
+
+async function editCell(row: Record<string, any>, column: string, value: unknown) {
+    const key = cellKey(row, column)
+    const previous = cellValue(row, column)
+
+    cellOverrides.value = { ...cellOverrides.value, [key]: value }
+    savingCell.value = key
+
+    try {
+        const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+
+        const response = await fetch(`${props.schema.routes.index}/${row.id}/cell`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': match ? decodeURIComponent(match[1]) : '',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ column, value }),
+        })
+
+        if (!response.ok) {
+            const body = await response.json().catch(() => ({}))
+
+            throw new Error(body.message ?? 'That change was rejected.')
+        }
+
+        const saved = await response.json()
+        cellOverrides.value = { ...cellOverrides.value, [key]: saved.value }
+
+        // Tab counts and the total can both move when a status changes.
+        router.reload({ only: ['tabCounts', 'total'] })
+    } catch (e) {
+        const { [key]: _discarded, ...rest } = cellOverrides.value
+        cellOverrides.value = { ...rest, [key]: previous }
+
+        toast.error(e instanceof Error ? e.message : 'That change was rejected.')
+    } finally {
+        savingCell.value = null
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Bulk actions and export
+ *
+ * The selection can mean two very different things and they post differently:
+ * a set of ticked ids, or "everything matching the current filters". The second
+ * never sends ids — the whole point is that the set may be far larger than this
+ * page has ever seen, so the server re-derives it from the same filter
+ * parameters that drew the table.
+ * ------------------------------------------------------------------------- */
+
+const job = useBulkJob(props.schema.key)
+
+/**
+ * Hide actions the operator cannot perform.
+ *
+ * A UI HINT ONLY — every bulk request re-authorizes server-side against the
+ * ability the action declares (§9 item 3). Hiding a button the policy would
+ * refuse just avoids offering a guaranteed 403.
+ */
+const allowedBulkActions = computed(() =>
+    props.schema.table.bulkActions.filter((action) =>
+        action.destructive ? props.can.delete !== false : props.can.update !== false,
+    ),
+)
+
+function bulkTarget() {
+    return t.allMatching.value
+        ? { all: true }
+        : { ids: Array.from(t.selected.value) as (string | number)[] }
+}
+
+async function runBulk(action: string) {
+    await job.run(action, bulkTarget())
+
+    if (job.error.value) {
+        toast.error(job.error.value)
+        return
+    }
+
+    // A queued run reports when it lands, not now.
+    if (job.progress.value?.status === 'done') {
+        toast.success(`${job.progress.value.done.toLocaleString()} records updated`)
+        t.clearSelection()
+    }
+}
+
+async function exportSelection() {
+    await job.exportView(bulkTarget())
+
+    if (job.error.value) toast.error(job.error.value)
+}
+
+/**
+ * A finished export announces itself rather than downloading silently.
+ *
+ * An automatic `window.location = url` on a background job fires whenever the
+ * poll happens to resolve, which can be minutes after the click and while the
+ * operator is reading something else — a file appearing unbidden reads as a
+ * bug. The toast is persistent because the alternative is a download link that
+ * times out while they are looking away.
+ */
+watch(
+    () => job.downloadUrl.value,
+    (url) => {
+        if (!url) return
+
+        toast.success('Your export is ready', {
+            duration: Number.POSITIVE_INFINITY,
+            action: { label: 'Download', onClick: () => window.location.assign(url) },
+        })
+    },
+)
+
+watch(
+    () => job.error.value,
+    (message) => {
+        if (message) toast.error(message)
+    },
+)
 
 function destroy() {
     const row = confirmingDelete.value
@@ -275,9 +445,14 @@ function badgeLabel(key: string, value: unknown): string {
             @clear="t.clearSelection"
         >
             <template #actions>
-                <!-- Bulk mutations need the action layer and the auto-queue
-                     threshold from addendum D1, both Phase 5. -->
-                <Button size="sm" variant="outline" disabled>Bulk actions — Phase 5</Button>
+                <BulkActions
+                    :actions="allowedBulkActions"
+                    :count="t.selected.value.size"
+                    :all-matching="t.allMatching.value"
+                    :busy="job.busy.value"
+                    @run="runBulk"
+                    @export="exportSelection"
+                />
             </template>
         </SelectionBar>
 
@@ -308,8 +483,35 @@ function badgeLabel(key: string, value: unknown): string {
                 schema's semantic map, and formatting from the column type.
             -->
             <template v-for="col in columns" :key="col.key" #[`cell:${col.key}`]="{ row }">
+                <EditableCell
+                    v-if="byKey[col.key]?.editable"
+                    :type="byKey[col.key].type === 'toggle' ? 'toggle' : 'select'"
+                    :value="cellValue(row, col.key)"
+                    :options="byKey[col.key].options ?? {}"
+                    :on-label="byKey[col.key].onLabel"
+                    :off-label="byKey[col.key].offLabel"
+                    :busy="savingCell === `${row.id}:${col.key}`"
+                    :disabled="!can.update"
+                    @change="(value: unknown) => editCell(row, col.key, value)"
+                />
+                <IconCell
+                    v-else-if="byKey[col.key]?.type === 'icon'"
+                    :value="row[col.key]"
+                    :icons="byKey[col.key].icons ?? {}"
+                    :colors="byKey[col.key].colors ?? {}"
+                    :labels="byKey[col.key].labels ?? {}"
+                    :default-icon="byKey[col.key].defaultIcon ?? 'dot'"
+                />
+                <ImageCell
+                    v-else-if="byKey[col.key]?.type === 'image'"
+                    :src="row[col.key]"
+                    :fallback-text="row[byKey[col.key].fallbackFrom ?? 'name']"
+                    :rounded="byKey[col.key].rounded !== false"
+                    :size="byKey[col.key].size ?? 'md'"
+                    :fallback="byKey[col.key].fallback ?? 'initials'"
+                />
                 <Badge
-                    v-if="badgeKeys.includes(col.key)"
+                    v-else-if="badgeKeys.includes(col.key)"
                     :variant="badgeVariant(col.key, row[col.key]) as any"
                     class="capitalize"
                 >

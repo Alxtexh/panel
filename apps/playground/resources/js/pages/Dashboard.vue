@@ -2,15 +2,18 @@
 /**
  * Dashboard.
  *
- * Every stat is its own DEFERRED prop, so the shell paints immediately and the
- * numbers fill in independently — one slow counter does not hold up the others.
- * Spec §10: no widget may block first paint.
+ * Every stat and chart is its own DEFERRED prop, so the shell paints
+ * immediately and the numbers fill in independently — one slow counter does not
+ * hold up the others. Spec §10: no widget may block first paint.
  *
- * The skeleton matches the final card exactly, so nothing shifts when a value
- * lands. Cumulative layout shift target is 0 (§10).
+ * CHANGING A PERIOD RELOADS ONE PROP. `only: ['chart_sessions', 'periods']` is
+ * the whole point of the per-chart query parameter: the click re-runs one
+ * grouped query, not the six counters and two breakdowns that did not change.
+ * Without `only:` this page would re-resolve every deferred prop on every
+ * period click, which is the polling-shaped waste §8 exists to avoid.
  */
-import { BarChart } from '@panelkit/ui'
-import { Deferred, Head, usePage } from '@inertiajs/vue3'
+import { ChartCard, LineChart, PieChart, StatCard, TrendBadge } from '@panelkit/ui'
+import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
 
 interface Widget {
     key: string
@@ -19,10 +22,26 @@ interface Widget {
     span: number
 }
 
+interface Chart {
+    key: string
+    label: string
+    description: string | null
+    type: 'line' | 'area' | 'bar' | 'pie' | 'doughnut'
+    span: number
+    periods: { value: string; label: string }[] | null
+}
+
+interface Series {
+    points: { label: string; value: number }[]
+    total: number | null
+    trend: { direction: 'up' | 'down' | 'flat' | 'new'; percentage: number | null } | null
+    error: boolean
+}
+
 defineProps<{
     widgets: Widget[]
-    chart_status?: { label: string; value: number }[]
-    chart_plan_type?: { label: string; value: number }[]
+    charts: Chart[]
+    periods: Record<string, string>
 }>()
 
 defineOptions({ layout: { breadcrumbs: [{ title: 'Dashboard', href: '/dashboard' }] } })
@@ -37,11 +56,57 @@ const page = usePage()
  * rendered an em dash for every stat — the numbers were arriving correctly and
  * being thrown away.
  */
-function stat(key: string): { value: unknown; error: boolean } | undefined {
-    return (page.props as Record<string, any>)[`stat_${key}`]
+function stat(key: string) {
+    return (page.props as Record<string, any>)[`stat_${key}`] as
+        | {
+              value: unknown
+              error: boolean
+              trend: { direction: 'up' | 'down' | 'flat' | 'new'; percentage: number | null } | null
+              sparkline: { label: string; value: number }[] | null
+          }
+        | undefined
 }
 
-const format = (v: unknown) => (typeof v === 'number' ? new Intl.NumberFormat().format(v) : String(v ?? '—'))
+function series(key: string): Series {
+    return (
+        ((page.props as Record<string, any>)[`chart_${key}`] as Series | undefined) ?? {
+            points: [],
+            total: null,
+            trend: null,
+            error: false,
+        }
+    )
+}
+
+/**
+ * Swap one chart's window.
+ *
+ * The existing query string is carried forward, so changing the sessions period
+ * does not silently reset the signups one — each selector owns exactly its own
+ * parameter.
+ */
+function setPeriod(key: string, value: string) {
+    const query = Object.fromEntries(new URLSearchParams(window.location.search))
+
+    router.get(
+        window.location.pathname,
+        { ...query, [`period_${key}`]: value },
+        {
+            only: [`chart_${key}`, 'periods'],
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    )
+}
+
+const comparison: Record<string, string> = {
+    today: 'vs yesterday',
+    '7d': 'vs previous 7 days',
+    '30d': 'vs previous 30 days',
+    '90d': 'vs previous 90 days',
+    '12m': 'vs previous 12 months',
+}
 </script>
 
 <template>
@@ -51,58 +116,72 @@ const format = (v: unknown) => (typeof v === 'number' ? new Intl.NumberFormat().
         <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Dashboard</h1>
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div
-                v-for="widget in widgets"
-                :key="widget.key"
-                class="bg-card flex flex-col gap-1 rounded-lg border p-4"
-            >
-                <p class="text-muted-foreground text-xs font-medium">{{ widget.label }}</p>
+            <Deferred v-for="widget in widgets" :key="widget.key" :data="`stat_${widget.key}`">
+                <template #fallback>
+                    <StatCard :label="widget.label" :description="widget.description" loading />
+                </template>
 
-                <Deferred :data="`stat_${widget.key}`">
+                <template #default>
+                    <StatCard
+                        :label="widget.label"
+                        :description="widget.description"
+                        :value="stat(widget.key)?.value"
+                        :trend="stat(widget.key)?.trend"
+                        :sparkline="stat(widget.key)?.sparkline"
+                        :error="stat(widget.key)?.error"
+                        comparison="vs previous 30 days"
+                    />
+                </template>
+            </Deferred>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div
+                v-for="chart in charts"
+                :key="chart.key"
+                :class="chart.span >= 2 ? 'lg:col-span-2' : ''"
+            >
+                <Deferred :data="`chart_${chart.key}`">
                     <template #fallback>
-                        <!-- Same height as the resolved value, so the card does
-                             not resize when the number arrives. -->
-                        <span class="bg-muted h-8 w-24 animate-pulse rounded" />
+                        <ChartCard
+                            :label="chart.label"
+                            :description="chart.description"
+                            :periods="chart.periods"
+                            :period="periods[chart.key]"
+                            loading
+                        />
                     </template>
 
                     <template #default>
-                        <span
-                            v-if="stat(widget.key)?.error"
-                            class="text-destructive flex h-8 items-center text-sm"
-                            role="alert"
+                        <ChartCard
+                            :label="chart.label"
+                            :description="chart.description"
+                            :periods="chart.periods"
+                            :period="periods[chart.key]"
+                            :error="series(chart.key).error"
+                            @update:period="(value: string) => setPeriod(chart.key, value)"
                         >
-                            Could not load
-                        </span>
-                        <span v-else class="flex h-8 items-center text-2xl font-semibold tabular-nums">
-                            {{ format(stat(widget.key)?.value) }}
-                        </span>
-                    </template>
-                </Deferred>
+                            <template v-if="series(chart.key).trend" #trend>
+                                <TrendBadge
+                                    class="mt-1"
+                                    :direction="series(chart.key).trend!.direction"
+                                    :percentage="series(chart.key).trend!.percentage"
+                                    :comparison="comparison[periods[chart.key]]"
+                                />
+                            </template>
 
-                <p v-if="widget.description" class="text-muted-foreground text-xs">{{ widget.description }}</p>
-            </div>
-        </div>
-
-        <!-- Charts. Also deferred, and each from ONE grouped query — addendum C1
-             applies to bars as much as to tabs. -->
-        <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-            <div class="bg-card flex flex-col gap-3 rounded-lg border p-4">
-                <p class="text-muted-foreground text-xs font-medium">Clients by status</p>
-                <Deferred data="chart_status">
-                    <template #fallback>
-                        <div class="bg-muted h-[160px] animate-pulse rounded" />
+                            <PieChart
+                                v-if="chart.type === 'pie' || chart.type === 'doughnut'"
+                                :data="series(chart.key).points"
+                                :type="chart.type"
+                            />
+                            <LineChart
+                                v-else
+                                :data="series(chart.key).points"
+                                :type="chart.type === 'area' ? 'area' : 'line'"
+                            />
+                        </ChartCard>
                     </template>
-                    <BarChart :data="(page.props.chart_status as any) ?? []" />
-                </Deferred>
-            </div>
-
-            <div class="bg-card flex flex-col gap-3 rounded-lg border p-4">
-                <p class="text-muted-foreground text-xs font-medium">Clients by plan type</p>
-                <Deferred data="chart_plan_type">
-                    <template #fallback>
-                        <div class="bg-muted h-[160px] animate-pulse rounded" />
-                    </template>
-                    <BarChart :data="(page.props.chart_plan_type as any) ?? []" />
                 </Deferred>
             </div>
         </div>

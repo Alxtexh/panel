@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SearchController;
+use PanelKit\Panel\Http\Controllers\BulkController;
 use PanelKit\Panel\Http\Controllers\RecordController;
 use PanelKit\Panel\Http\Controllers\ResourceController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,27 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
     Route::get('{resource}/create', [ResourceController::class, 'create'])
         ->whereIn('resource', $panelResources)->name('panel.create');
 
+    /*
+     | Bulk actions and exports. All declared before /{id} so 'bulk' and
+     | 'export' are not captured as record ids — the same ordering trap the
+     | create route documents.
+     */
+    Route::post('{resource}/bulk', [BulkController::class, 'run'])
+        ->whereIn('resource', $panelResources)->name('panel.bulk');
+
+    Route::post('{resource}/export', [BulkController::class, 'export'])
+        ->whereIn('resource', $panelResources)->name('panel.export');
+
+    Route::get('{resource}/jobs/{token}', [BulkController::class, 'status'])
+        ->whereIn('resource', $panelResources)
+        ->where('token', '[0-9a-fA-F-]{36}')
+        ->name('panel.job');
+
+    Route::get('{resource}/jobs/{token}/download', [BulkController::class, 'download'])
+        ->whereIn('resource', $panelResources)
+        ->where('token', '[0-9a-fA-F-]{36}')
+        ->name('panel.job.download');
+
     Route::get('{resource}/{id}', [ResourceController::class, 'show'])
         ->whereIn('resource', $panelResources)->whereNumber('id')->name('panel.show');
 
@@ -57,6 +79,11 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
         Route::put('{resource}/{id}', [RecordController::class, 'update'])
             ->whereIn('resource', $panelResources)->name('panel.update');
     });
+
+    // One cell, from an editable column. Outside the precognitive group: an
+    // inline edit has no form to validate ahead of, it just writes.
+    Route::patch('{resource}/{id}/cell', [RecordController::class, 'updateCell'])
+        ->whereIn('resource', $panelResources)->whereNumber('id')->name('panel.cell');
 
     Route::delete('{resource}/{id}', [RecordController::class, 'destroy'])
         ->whereIn('resource', $panelResources)->name('panel.destroy');

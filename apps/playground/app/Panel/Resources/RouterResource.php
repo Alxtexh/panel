@@ -8,6 +8,7 @@ use App\Models\Router;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
+use PanelKit\Panel\Tables\Columns\IconColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Filters\SelectFilter;
 use PanelKit\Panel\Tables\Table;
@@ -30,11 +31,12 @@ final class RouterResource extends Resource
                 TextColumn::make('ip_address')->from('routers.ip_address')->label('IP address')
                     ->searchable()->copyable()->mono(),
                 TextColumn::make('model')->from('routers.model')->muted(),
-                BadgeColumn::make('status')->from('routers.status')->sortable()->colors([
-                    'online' => 'success',
-                    'offline' => 'danger',
-                    'degraded' => 'warning',
-                ]),
+                // An icon, not a badge: reachability is scanned down the
+                // column rather than read row by row.
+                IconColumn::make('status')->from('routers.status')->sortable()
+                    ->icons(['online' => 'wifi', 'offline' => 'wifi-off', 'degraded' => 'alert'])
+                    ->colors(['online' => 'success', 'offline' => 'danger', 'degraded' => 'warning'])
+                    ->labels(['online' => 'Online', 'offline' => 'Offline', 'degraded' => 'Degraded']),
                 DateColumn::make('last_seen_at')->from('routers.last_seen_at')->label('Last seen')->sortable(),
                 DateColumn::make('created_at')->from('routers.created_at')->sortable()->muted(),
             ])

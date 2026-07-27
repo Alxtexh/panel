@@ -8,6 +8,7 @@ use App\Models\Plan;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
+use PanelKit\Panel\Tables\Columns\ToggleColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Filters\BooleanFilter;
 use PanelKit\Panel\Tables\Table;
@@ -31,10 +32,9 @@ final class PlanResource extends Resource
                 // Displays the computed `price`, orders by `price_cents` —
                 // sorting the formatted string puts 12,000.00 before 900.00.
                 TextColumn::make('price')->sortable()->sortAs('price_cents')->prefix('KES'),
-                BadgeColumn::make('is_active')->label('Active')->colors([
-                    '1' => 'success',
-                    '' => 'neutral',
-                ]),
+                // A switch, so retiring a plan is one click from the list.
+                ToggleColumn::make('is_active')->label('Active')
+                    ->labels('Available to new clients', 'Retired'),
                 DateColumn::make('created_at')->from('plans.created_at')->sortable()->muted(),
             ])
             ->filters([

@@ -120,4 +120,20 @@ return [
         'features' => null,
     ],
 
+
+    /*
+    |---------------------------------------------------------------------------
+    | Exports
+    |---------------------------------------------------------------------------
+    |
+    | Where a queued export writes its CSV. Local by default: an export contains
+    | whatever the operator could already see, but writing it to a public disk
+    | would put that behind a guessable URL instead of behind the download
+    | endpoint's ownership check.
+    |
+    */
+    'exports' => [
+        'disk' => env('PANEL_EXPORT_DISK', 'local'),
+    ],
+
 ];

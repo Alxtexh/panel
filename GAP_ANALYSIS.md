@@ -16,10 +16,10 @@ not foundations, and breadth is what makes a panel usable on day one.
 | Area | PanelKit | Filament 5.7 |
 |---|---|---|
 | Form field types | **6** | **33** |
-| Table column types | **3** | **14** |
-| Table filter types | **2** | **5** + visual query builder |
-| Chart widget types | **1** (bar) | **8** |
-| Action classes | **3** (create/edit/delete) | **27** |
+| Table column types | **7** | **14** |
+| Table filter types | **4** | **5** + visual query builder |
+| Chart widget types | **5** (bar, line, area, pie, doughnut) | **8** |
+| Action classes | **3** records + **bulk** + **export** | **27** |
 | Layout components | **5** (Section, Tabs, Tab, Grid, + field leaves) | **23** |
 | View-page entry types | **0** (flat list) | **9** |
 | Panel config options | **7** | **34** |
@@ -55,16 +55,23 @@ builds a form with a large relation.
 
 ---
 
-## 2. Table columns — 3 of 14
+## 2. Table columns — 7 of 14
 
-**Have:** Text, Badge, Date.
+**Have:** Text, Badge, Date, **Icon**, **Image**, **Toggle**, **Select**.
 
-**Missing:** `IconColumn` (booleans as ✓/✗ rather than a badge), `ImageColumn`
-(avatars, logos), `ColorColumn`, `TagsColumn`, `ColumnGroup` (grouped headers),
-and the **editable-in-place** family — `SelectColumn`, `ToggleColumn`,
-`TextInputColumn`, `CheckboxColumn`. Those four are a real workflow difference:
-flipping twenty clients from active to suspended currently means twenty page
-visits.
+**DONE:** `IconColumn` (semantic icon + colour maps, always with an aria-label),
+`ImageColumn` (fixed-size, scheme-checked URL, initials fallback), and the
+editable-in-place pair `ToggleColumn` / `SelectColumn`. Flipping twenty clients
+from active to suspended is now twenty clicks in the list rather than twenty
+page visits.
+
+The write goes through `PATCH {resource}/{id}/cell`, which accepts only a column
+the resource DECLARED editable and validates the value against that
+declaration — a select's option list is its validation rule, which matters
+because these are plain string columns with no CHECK constraint behind them.
+
+**Still missing:** `ColorColumn`, `TagsColumn`, `ColumnGroup` (grouped headers),
+`TextInputColumn`, `CheckboxColumn`.
 
 ---
 
@@ -84,23 +91,29 @@ expiring this week" cannot be asked.
 
 ## 4. Widgets and charts — 1 of 8 chart types
 
-**Have:** StatWidget, BarChart.
+**Have:** StatWidget, BarChart, **LineChart/area**, **PieChart/doughnut**,
+**Sparkline**, **TrendBadge**.
 
-**Missing:** Line, Pie, Doughnut, PolarArea, Radar, Scatter, Bubble, plus
-`TableWidget` (a table as a dashboard widget).
+**DONE — change over time, which was the real gap:**
 
-**And the bigger gap you named — nothing shows change over time.** Every widget
-is a point-in-time number. There is no:
+- **Line/area chart over a period**, one `GROUP BY` per chart whatever the point
+  count, bounded by the window so an index is usable
+- **Period selector** — today / 7d / 30d / 90d / 12m, PER CHART, reloading
+  exactly one prop via `only:`
+- **Trend indicator** — "▲ 4% vs previous 30 days", with the zero cases handled
+  (growth from nothing is "new", not `INF%`)
+- **Sparkline in a stat card**
+- **Gap filling** — a day with no rows is an explicit zero, so an outage renders
+  as a hole rather than a gentle slope
+- **Driver-aware bucketing** — SQLite/MySQL/Postgres/SQL Server each declare
+  their own truncation expression; an unknown driver throws rather than guessing
 
-- **Line/area chart over a period** — sessions per hour, revenue per day
-- **Period selector** — today / 7 days / 30 days / custom
-- **Trend indicator** — "66,667 active, ▲ 4% vs last week"
-- **Sparkline in a stat card** — Filament's `StatsOverviewWidget` supports this
-- **Polling** — `PollRecords` on tables and `$pollingInterval` on widgets
-- **Live push** — `useLiveUpdates` exists but is not wired to Reverb, so nothing
-  actually moves on screen
+A number, its trend and its sparkline are required to measure the SAME thing:
+the first cut hung a signups trend off a cumulative total, which read as
+"we lost 4.3% of our subscribers".
 
-A dashboard of six static counters is not a dashboard an operator watches.
+**Missing:** PolarArea, Radar, Scatter, Bubble, `TableWidget`, and live push —
+`useLiveUpdates` still is not wired to a running Reverb.
 
 ---
 
@@ -137,14 +150,24 @@ Ours is a flat list of fields in an N-column grid. Consequences:
 
 **Have:** create, edit, delete (as pages), plus a delete confirmation.
 
-**Missing:** `BulkAction` **mutations** (selection exists; nothing acts on it),
-`BulkActionGroup`, `ActionGroup` (nested menus), `ReplicateAction` (duplicate a
-client), `ExportAction` / `ExportBulkAction`, `ImportAction`,
-`RestoreAction` / `ForceDeleteAction` (no soft deletes), and the relation family
-`AttachAction` / `AssociateAction` / `DetachAction` / `DissociateAction`.
+**DONE:** `BulkAction` mutations and `ExportAction`.
 
-**Export is the one operators will ask for first**, and addendum C already
-specifies it: export the *current filtered view*, queued, with progress.
+- The client sends an action KEY; the mutation is declared server-side, so this
+  can never become an arbitrary-write endpoint.
+- Bounded selections run inline; **select-all-matching is queued**, because it
+  can be the whole table. The decision is made on whether the set is bounded,
+  not on a `COUNT(*)` we refuse to run anywhere else.
+- Chunking is **keyset, not offset** — a mutation usually invalidates the
+  predicate that selected its own rows, and offset paging silently skips half of
+  a shrinking set.
+- Export writes the **current filtered view**, queued, chunked to a stream, with
+  a BOM for Excel and formula-injection neutralised. Progress is owner-checked,
+  so a leaked token is inert.
+
+**Missing:** `BulkActionGroup`, `ActionGroup` (nested menus), `ReplicateAction`,
+`ImportAction`, `RestoreAction` / `ForceDeleteAction` (no soft deletes), and the
+relation family `AttachAction` / `AssociateAction` / `DetachAction` /
+`DissociateAction`.
 
 ---
 
@@ -218,18 +241,16 @@ Worth building *because* they are differentiators, not gaps:
 
 Grouped by ratio of operator value to effort.
 
-**Tier 1 — the panel feels incomplete without these**
+**Tier 1 — COMPLETE**
 
-1. Layout components: `Section`, `Tabs`, `Grid` — unlocks view-page tabs and
-   readable long forms. Biggest single unlock.
-2. `IconColumn`, `ImageColumn`, and the editable columns (`ToggleColumn`,
-   `SelectColumn`).
-3. Date-range and multi-select filters.
-4. Bulk action mutations + export of the filtered view (queued, per addendum C).
-5. Chart types: Line and Pie, plus a period selector and trend indicators.
-6. Appearance in the navbar: theme switcher, sidebar position, font size — as
-   per-user preferences.
-7. Collapsible sidebar navigation groups.
+1. ~~Layout components: `Section`, `Tabs`, `Grid`.~~ Done.
+2. ~~`IconColumn`, `ImageColumn`, `ToggleColumn`, `SelectColumn`.~~ Done.
+3. ~~Date-range and multi-select filters.~~ Done.
+4. ~~Bulk action mutations + export of the filtered view.~~ Done.
+5. ~~Line and Pie charts, period selector, trend indicators.~~ Done.
+6. ~~Appearance in the navbar.~~ Done — theme, primary colour, surface tint,
+   card style, density, sidebar side, and font size in px.
+7. ~~Collapsible sidebar navigation groups.~~ Done.
 
 **Tier 2 — needed before production for this domain**
 

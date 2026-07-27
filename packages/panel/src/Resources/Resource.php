@@ -107,9 +107,35 @@ abstract class Resource
         return (bool) ($flags[$feature] ?? false);
     }
 
+    /** Whether a create or edit PAGE can be rendered at all. */
     public static function isWritable(): bool
     {
         return static::formDefinition()->fields() !== [];
+    }
+
+    /**
+     * Whether any write path exists — a form OR an editable column.
+     *
+     * These are two different questions and conflating them was a bug: Plans
+     * declares no form, so `isWritable()` is false, so `permissions()['update']`
+     * came back false, so every inline switch on the Plans list rendered
+     * DISABLED. The policy allowed the write and the endpoint would have
+     * accepted it; only the UI hint said otherwise, which is the worst place for
+     * the disagreement to live because it looks like a permissions problem.
+     *
+     * `create` still requires a form — a row cannot be brought into existence by
+     * toggling a cell — which is why this is a second method rather than a
+     * widening of the first.
+     */
+    public static function hasWritableColumns(): bool
+    {
+        foreach (static::definition()->getColumns() as $column) {
+            if ($column instanceof \PanelKit\Panel\Tables\Columns\EditableColumn) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -156,7 +182,8 @@ abstract class Resource
         return [
             'viewAny' => static::can('viewAny'),
             'create' => static::isWritable() && static::can('create'),
-            'update' => static::isWritable() && static::can('update'),
+            // A form OR an editable column: both are ways to update a record.
+            'update' => (static::isWritable() || static::hasWritableColumns()) && static::can('update'),
             'delete' => static::can('delete'),
         ];
     }

@@ -7,6 +7,8 @@ namespace App\Panel\Resources;
 use App\Models\Client;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use App\Models\Plan;
+use Illuminate\Database\Eloquent\Collection;
+use PanelKit\Panel\Actions\BulkAction;
 use PanelKit\Panel\Forms\Fields\DateField;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
@@ -18,6 +20,7 @@ use PanelKit\Panel\Schema\Tabs;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
+use PanelKit\Panel\Tables\Columns\SelectColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Filters\DateRangeFilter;
 use PanelKit\Panel\Tables\Filters\MultiSelectFilter;
@@ -143,11 +146,23 @@ final class ClientResource extends Resource
                 TextColumn::make('name')->from('clients.name')->sortable()->searchable()->locked(),
                 TextColumn::make('access_code')->from('clients.access_code')->searchable()->copyable()->mono(),
                 TextColumn::make('phone')->from('clients.phone')->searchable()->copyable()->muted(),
-                BadgeColumn::make('status')->from('clients.status')->sortable()->colors([
-                    'active' => 'success',
-                    'expired' => 'danger',
-                    'suspended' => 'warning',
-                ]),
+                /*
+                 | EDITABLE IN PLACE. Changing twenty clients from active to
+                 | suspended used to be twenty page visits; it is now twenty
+                 | clicks in the list.
+                 |
+                 | The option list is also the validation rule — a request
+                 | naming a status that is not here is rejected, which matters
+                 | because the column is a plain string with no CHECK
+                 | constraint behind it.
+                 */
+                SelectColumn::make('status')->from('clients.status')->sortable()
+                    ->options(['active', 'expired', 'suspended'])
+                    ->colors([
+                        'active' => 'success',
+                        'expired' => 'danger',
+                        'suspended' => 'warning',
+                    ]),
                 TextColumn::make('plan_name')->from('plans.name as plan_name')->label('Plan'),
                 TextColumn::make('plan_type')->from('clients.plan_type')->label('Type')->transform('upper')->muted(),
                 DateColumn::make('expiry_date')->from('clients.expiry_date')->label('Expires')->sortable(),
@@ -162,6 +177,39 @@ final class ClientResource extends Resource
                     ->options(['pppoe', 'hotspot', 'static']),
                 // The question a billing panel is actually asked.
                 DateRangeFilter::make('expiring')->label('Expiry')->column('clients.expiry_date'),
+            ])
+            /*
+             | Bulk actions.
+             |
+             | The MUTATION IS DECLARED HERE, server-side. The browser posts
+             | `{action: 'suspend'}` and nothing else — it cannot describe an
+             | attribute set, so this endpoint can never become a way to write
+             | an arbitrary column on rows the operator merely happens to be
+             | able to see.
+             |
+             | Each one is a single UPDATE per chunk, so suspending 60,000
+             | expired clients is sixty queries rather than sixty thousand.
+             */
+            ->bulkActions([
+                BulkAction::make('activate', 'Activate')
+                    ->icon('check')
+                    ->authorize('update')
+                    ->mutate(['status' => 'active']),
+
+                BulkAction::make('suspend', 'Suspend')
+                    ->icon('pause')
+                    ->authorize('update')
+                    ->requiresConfirmation('Suspend the selected clients? They will lose access immediately.')
+                    ->mutate(['status' => 'suspended']),
+
+                BulkAction::make('delete', 'Delete')
+                    ->icon('trash')
+                    ->destructive()
+                    ->authorize('delete')
+                    // A handler rather than a mutation: deleting through the
+                    // models fires the events any listener depends on, which a
+                    // bare DELETE would skip silently.
+                    ->handle(fn (Collection $records) => $records->each->delete()),
             ])
             // ONE grouped query for every tab count (addendum C1).
             ->tabs('clients.status', ['active', 'expired', 'suspended'])

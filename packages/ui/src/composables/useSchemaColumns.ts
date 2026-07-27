@@ -18,7 +18,7 @@ import type { TableColumn } from '../components/DataTable/types'
 export interface SchemaColumn {
     key: string
     label: string
-    type: 'text' | 'badge' | 'date' | 'datetime'
+    type: 'text' | 'badge' | 'date' | 'datetime' | 'icon' | 'image' | 'toggle' | 'select'
     sortable?: boolean
     sortKey?: string
     copyable?: boolean
@@ -31,6 +31,24 @@ export interface SchemaColumn {
     suffix?: string
     colors?: Record<string, string>
     defaultColor?: string
+
+    /* icon */
+    icons?: Record<string, string>
+    labels?: Record<string, string>
+    defaultIcon?: string
+
+    /* image */
+    rounded?: boolean
+    size?: 'sm' | 'md' | 'lg'
+    fallback?: 'initials' | 'icon' | 'none'
+    fallbackFrom?: string
+
+    /* toggle and select — writable in place */
+    editable?: boolean
+    confirmation?: string | null
+    options?: Record<string, string>
+    onLabel?: string | null
+    offLabel?: string | null
 }
 
 /** Semantic intent to badge variant. The only place the mapping exists. */
@@ -43,6 +61,18 @@ export const BADGE_VARIANTS: Record<string, string> = {
 
 function cellClassFor(column: SchemaColumn): string {
     const classes: string[] = []
+
+    /*
+     * A control is not text. Applying `uppercase` or `font-mono` to a cell
+     * holding a <select> restyles the control itself — the options render in
+     * caps and the width jumps — so the text treatments stop at text.
+     */
+    if (column.type === 'toggle' || column.type === 'select' || column.type === 'image') {
+        if (column.align === 'right') classes.push('text-right')
+        if (column.align === 'center') classes.push('text-center')
+
+        return classes.join(' ')
+    }
 
     if (column.key === 'name') classes.push('font-medium')
     if (column.mono) classes.push('font-mono text-xs')

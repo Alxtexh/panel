@@ -56,9 +56,9 @@ final class DashboardWidgetTest extends TestCase
             );
         }
 
-        // The widget LIST is present so the shell can render six skeletons of
-        // the right shape; the values are not.
-        $this->assertCount(6, $props['widgets']);
+        // The widget LIST is present so the shell can render a skeleton of the
+        // right shape for each; the values are not.
+        $this->assertCount(8, $props['widgets']);
         $this->assertArrayNotHasKey('stat_clients_total', $props);
     }
 
@@ -97,8 +97,16 @@ final class DashboardWidgetTest extends TestCase
 
         $working = StatWidget::make('working', 'Working')->value(fn (): int => 42);
 
-        $this->assertSame(['value' => null, 'error' => true], $broken->resolve('tenant-1'));
-        $this->assertSame(['value' => 42, 'error' => false], $working->resolve('tenant-1'));
+        // The envelope always carries trend and sparkline slots, declared or
+        // not, so a card renders the same shape either way.
+        $this->assertSame(
+            ['value' => null, 'error' => true, 'trend' => null, 'sparkline' => null],
+            $broken->resolve('tenant-1'),
+        );
+        $this->assertSame(
+            ['value' => 42, 'error' => false, 'trend' => null, 'sparkline' => null],
+            $working->resolve('tenant-1'),
+        );
     }
 
     /** The whole page must still render with a broken widget on it. */
@@ -138,6 +146,9 @@ final class DashboardWidgetTest extends TestCase
             ->cache(300)
             ->invalidatedBy(['App\Events\ClientSaved']);
 
-        $this->assertSame(['value' => 7, 'error' => false], $widget->resolve('tenant-1'));
+        $this->assertSame(
+            ['value' => 7, 'error' => false, 'trend' => null, 'sparkline' => null],
+            $widget->resolve('tenant-1'),
+        );
     }
 }
