@@ -317,15 +317,32 @@ final class Table
         return $map;
     }
 
-    /** @return list<string> */
+    /**
+     * Searchable columns, with any SELECT alias stripped.
+     *
+     * A joined column is declared for the select as `plans.name as plan_name`,
+     * which is correct there and invalid anywhere else. Passing it through
+     * verbatim put the alias into the WHERE clause and produced
+     * `... where "plans"."name" as "plan_name" like ?` — a syntax error, and
+     * one that only appears once someone marks a joined column searchable.
+     *
+     * Found by a test fixture doing exactly that.
+     *
+     * @return list<string>
+     */
     private function resolveSearchable(): array
     {
         $columns = [];
 
         foreach ($this->columns as $column) {
-            if ($column->isSearchable()) {
-                $columns[] = $column->resolvedDatabaseColumn() ?? $column->key;
+            if (! $column->isSearchable()) {
+                continue;
             }
+
+            $declared = $column->resolvedDatabaseColumn() ?? $column->key;
+
+            // Case-insensitive, because `AS` is as valid as `as`.
+            $columns[] = trim(preg_split('/\s+as\s+/i', $declared)[0]);
         }
 
         return $columns;

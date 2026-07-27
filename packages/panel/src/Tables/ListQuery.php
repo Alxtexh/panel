@@ -269,6 +269,8 @@ final class ListQuery
         /** @var \Illuminate\Database\Eloquent\Builder $eloquent */
         $eloquent = $this->model::query();
 
+        // The diff SELECTS the same columns the list does, joined ones included,
+        // so this join is always needed — unlike the count paths in base().
         if ($this->join !== null) {
             ($this->join)($eloquent);
         }
@@ -305,6 +307,57 @@ final class ListQuery
         } catch (\Throwable) {
             return \Illuminate\Support\Carbon::now()->addCentury()->format('Y-m-d H:i:s');
         }
+    }
+
+    /**
+     * Whether anything applied to this query references a JOINED column.
+     *
+     * Columns are declared table-qualified throughout, so "belongs to the base
+     * table" is decidable from the name. Anything unqualified is assumed to be
+     * the base table, which is how an unqualified column already behaves in the
+     * generated SQL.
+     *
+     * Conservative by construction: if this cannot prove the join is
+     * unnecessary it keeps it, so the worst case is the cost it has today.
+     *
+     * @param  array<string, mixed>  $state
+     */
+    private function joinRequired(array $state): bool
+    {
+        $table = (new $this->model)->getTable();
+
+        $isJoined = static fn (string $column): bool => str_contains($column, '.')
+            && ! str_starts_with($column, $table . '.');
+
+        // A search touches every searchable column, so any joined one counts.
+        if (($state['search'] ?? '') !== '') {
+            foreach ($this->searchable as $column) {
+                if ($isJoined($column)) {
+                    return true;
+                }
+            }
+        }
+
+        foreach ($this->filters as $filter) {
+            $value = $state['filters'][$filter->key] ?? null;
+
+            // Only APPLIED filters matter — a declared filter nobody used adds
+            // no predicate. The trashed filter always applies, and always
+            // targets the base table's own deleted_at.
+            if ($value === null && ! $filter instanceof TrashedFilter) {
+                continue;
+            }
+
+            if ($isJoined($filter->resolvedColumn())) {
+                return true;
+            }
+        }
+
+        if ($this->tabs !== null && $isJoined($this->tabs->column)) {
+            return true;
+        }
+
+        return false;
     }
 
     private function hasTrashedFilter(): bool
@@ -525,10 +578,10 @@ final class ListQuery
             // real data rather than a bug. Deferred so they never block rows.
             tabCounts: $this->tabs === null
                 ? null
-                : fn (): array => $this->tabs->counts($this->base($state, applyTab: false)),
+                : fn (): array => $this->tabs->counts($this->base($state, applyTab: false, forCount: true)),
             // A closure, not a number. The caller wraps it in Inertia::defer()
             // so the rows paint before any COUNT runs (§10).
-            total: fn (): int => $this->base($state)->count(),
+            total: fn (): int => $this->base($state, forCount: true)->count(),
         );
     }
 
@@ -553,9 +606,9 @@ final class ListQuery
              */
             'approximate' => fn (): ?int => $this->isUnfiltered($state)
                 ? $this->approximateTotal()
-                : $this->base($state)->count(),
+                : $this->base($state, forCount: true)->count(),
 
-            default => fn (): int => $this->base($state)->count(),
+            default => fn (): int => $this->base($state, forCount: true)->count(),
         };
     }
 
@@ -587,7 +640,7 @@ final class ListQuery
         $connection = $this->model::query()->getConnection();
 
         if ($connection->getDriverName() !== 'pgsql') {
-            return $this->base(['search' => '', 'filters' => [], 'sort' => $this->defaultSort, 'direction' => 'desc', 'cursor' => null])->count();
+            return $this->base(['search' => '', 'filters' => [], 'sort' => $this->defaultSort, 'direction' => 'desc', 'cursor' => null], forCount: true)->count();
         }
 
         $table = (new $this->model())->getTable();
@@ -664,7 +717,7 @@ final class ListQuery
     /**
      * @param array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>} $state
      */
-    private function base(array $state, bool $applyTab = true): Builder
+    private function base(array $state, bool $applyTab = true, bool $forCount = false): Builder
     {
         /** @var \Illuminate\Database\Eloquent\Builder $eloquent */
         $eloquent = $this->model::query();
@@ -686,7 +739,19 @@ final class ListQuery
             $eloquent->withoutGlobalScope(SoftDeletingScope::class);
         }
 
-        if ($this->join !== null) {
+        /*
+         * THE JOIN IS SKIPPED FOR COUNTS THAT DO NOT NEED IT.
+         *
+         * A count selects no joined columns, so the join exists only to let a
+         * FILTER or the SEARCH reference one. When nothing applied does, it is
+         * pure cost — and at scale not a small one: counting a tenant's 200,000
+         * clients took 503 ms through a LEFT JOIN to plans and 25 ms without
+         * it, because every counted row did a primary-key lookup whose result
+         * was then discarded.
+         *
+         * Twenty times, for a join nothing read.
+         */
+        if ($this->join !== null && ! ($forCount && ! $this->joinRequired($state))) {
             ($this->join)($eloquent);
         }
 

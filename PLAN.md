@@ -242,11 +242,20 @@ dataset, not estimates.
 | Clients: filter + sort by name | 4.4 ms | Was 335 ms — see below. |
 | Clients: prefix search | 0.7 ms | |
 | Clients: word-prefix search | 1.6 ms | |
-| Tab counts (grouped) | 22 ms | One query for all three. |
+| Tab counts (deferred) | 24 ms | Was 507 ms — see below. |
+| Total count (deferred) | 12 ms | Was 493 ms. |
 | Total / live counts | ~10–15 ms | |
 | Sign-ups series, 30 days | 15 ms | |
 | **Sessions series, 30 days** | **359 ms** | 412,034 rows read to produce 30 points. |
 | **Sessions series, 90 days** | **980 ms** | |
+
+**A join nothing read, costing 20x.** The deferred counts carried the table's
+LEFT JOIN to plans — 503 ms to count a tenant's 200,000 clients, against 25 ms
+without it, because every counted row did a primary-key lookup whose result was
+discarded. A count selects no joined columns; the join is only there so a filter
+or the search can reference one. It is now dropped when nothing applied does,
+and kept when something does — asserted both ways, because dropping it wrongly
+would not be slow, it would be wrong.
 
 **One real regression, found and fixed.** Filtering by status and plan type
 while sorting by NAME took 335 ms against a 300 ms budget. The plan showed the
