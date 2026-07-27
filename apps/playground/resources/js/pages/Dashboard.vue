@@ -16,6 +16,7 @@ import {
     BarChart,
     ChartCard,
     ComboChart,
+    HeatmapChart,
     LineChart,
     PieChart,
     PolarAreaChart,
@@ -25,6 +26,8 @@ import {
     TrendBadge,
 } from '@panelkit/ui'
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
+import DashboardFilterPanel from '@/components/DashboardFilters.vue'
 
 interface Widget {
     key: string
@@ -50,9 +53,13 @@ interface Chart {
         | 'doughnut'
         | 'polarArea'
         | 'radar'
+        | 'rankedBar'
+        | 'heatmap'
         | 'segments'
     span: number
     periods: { value: string; label: string }[] | null
+    thresholds: { max: number; color: string }[] | null
+    maxValue: number | null
 }
 
 interface Dataset {
@@ -72,10 +79,20 @@ interface Series {
     error: boolean
 }
 
-defineProps<{
+interface AppliedFilters {
+    from: string | null
+    to: string | null
+    routers: number[]
+    active: boolean
+    label: string | null
+}
+
+const props = defineProps<{
     widgets: Widget[]
     charts: Chart[]
     periods: Record<string, string>
+    filters: AppliedFilters
+    filterOptions: { routers: { value: number; label: string }[] }
 }>()
 
 defineOptions({ layout: { breadcrumbs: [{ title: 'Dashboard', href: '/dashboard' }] } })
@@ -161,6 +178,66 @@ function multiSeries(chart: Chart): Dataset[] | undefined {
     return stepped ? datasets.map((d) => ({ ...d, stepped: true, filled: false })) : datasets
 }
 
+/** Cards size to their content: a ranked list is tall, a proportion bar short. */
+function bodyHeight(chart: Chart): number {
+    if (chart.type === 'segments') return 64
+    if (chart.type === 'rankedBar') return 380
+    if (chart.type === 'heatmap') return 200
+
+    return 220
+}
+
+/* ---------------------------------------------------------------------------
+ * Dashboard-wide filters
+ *
+ * Applied filters live in the URL, so a filtered dashboard can be bookmarked or
+ * sent to someone. Applying REPLACES the history entry rather than pushing one:
+ * otherwise adjusting a range three times leaves three states to walk back
+ * through before Back leaves the page.
+ * ------------------------------------------------------------------------- */
+
+const filtersOpen = ref(false)
+
+function applyFilters(next: { from: string | null; to: string | null; routers: number[] }) {
+    const query: Record<string, string> = {}
+
+    if (next.from) query.from = next.from
+    if (next.to) query.to = next.to
+    if (next.routers.length) query.routers = next.routers.join(',')
+
+    filtersOpen.value = false
+
+    router.get(window.location.pathname, query, { preserveState: true, preserveScroll: true, replace: true })
+}
+
+function resetFilters() {
+    filtersOpen.value = false
+    router.get(window.location.pathname, {}, { preserveState: true, preserveScroll: true, replace: true })
+}
+
+const filterSummary = computed(() => {
+    const parts: string[] = []
+
+    if (props.filters.label) parts.push(props.filters.label)
+    if (props.filters.routers.length) {
+        parts.push(`${props.filters.routers.length} router${props.filters.routers.length === 1 ? '' : 's'}`)
+    }
+
+    return parts.join(' · ')
+})
+
+/**
+ * A per-chart period selector is HIDDEN while a global range is applied.
+ *
+ * Leaving both visible produces a dashboard where one card says "7 days" and
+ * another says "March", and no two numbers on the page can be compared. The
+ * server ignores the period in that case; hiding the control is what stops the
+ * interface implying otherwise.
+ */
+function periodsFor(chart: Chart) {
+    return props.filters.from ? null : chart.periods
+}
+
 const comparison: Record<string, string> = {
     today: 'vs yesterday',
     '7d': 'vs previous 7 days',
@@ -174,7 +251,50 @@ const comparison: Record<string, string> = {
     <Head title="Dashboard" />
 
     <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-3 sm:p-4">
-        <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Dashboard</h1>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="min-w-0">
+                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Dashboard</h1>
+                <p v-if="filterSummary" class="text-muted-foreground truncate text-xs">{{ filterSummary }}</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button
+                    v-if="filters.active"
+                    type="button"
+                    class="text-muted-foreground hover:text-foreground text-xs hover:underline"
+                    @click="resetFilters"
+                >
+                    Clear
+                </button>
+                <button
+                    type="button"
+                    class="bg-background hover:bg-accent relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
+                    @click="filtersOpen = true"
+                >
+                    <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 5h18M6 12h12M10 19h4" />
+                    </svg>
+                    Filters
+                    <span
+                        v-if="filters.active"
+                        class="bg-primary text-primary-foreground ml-0.5 rounded-full px-1.5 text-[10px] font-semibold"
+                    >
+                        on
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        <DashboardFilterPanel
+            :open="filtersOpen"
+            :from="filters.from"
+            :to="filters.to"
+            :routers="filters.routers"
+            :router-options="filterOptions.routers"
+            @close="filtersOpen = false"
+            @apply="applyFilters"
+            @reset="resetFilters"
+        />
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <Deferred v-for="widget in widgets" :key="widget.key" :data="`stat_${widget.key}`">
@@ -207,9 +327,9 @@ const comparison: Record<string, string> = {
                         <ChartCard
                             :label="chart.label"
                             :description="chart.description"
-                            :periods="chart.periods"
+                            :periods="periodsFor(chart)"
                             :period="periods[chart.key]"
-                            :body-height="chart.type === 'segments' ? 64 : 220"
+                            :body-height="bodyHeight(chart)"
                             loading
                         />
                     </template>
@@ -218,10 +338,10 @@ const comparison: Record<string, string> = {
                         <ChartCard
                             :label="chart.label"
                             :description="chart.description"
-                            :periods="chart.periods"
+                            :periods="periodsFor(chart)"
                             :period="periods[chart.key]"
                             :error="series(chart.key).error"
-                            :body-height="chart.type === 'segments' ? 64 : 220"
+                            :body-height="bodyHeight(chart)"
                             @update:period="(value: string) => setPeriod(chart.key, value)"
                         >
                             <template v-if="series(chart.key).trend" #trend>
@@ -263,13 +383,30 @@ const comparison: Record<string, string> = {
                                 :bars="series(chart.key).bars ?? []"
                                 :lines="series(chart.key).lines ?? []"
                             />
+                            <HeatmapChart
+                                v-else-if="chart.type === 'heatmap'"
+                                :series="series(chart.key).series ?? []"
+                                :height="160"
+                            />
                             <BarChart
-                                v-else-if="chart.type === 'bar' || chart.type === 'horizontalBar' || chart.type === 'stackedBar'"
+                                v-else-if="
+                                    chart.type === 'bar' ||
+                                    chart.type === 'horizontalBar' ||
+                                    chart.type === 'stackedBar' ||
+                                    chart.type === 'rankedBar'
+                                "
                                 :data="series(chart.key).series ? undefined : series(chart.key).points"
                                 :series="series(chart.key).series ?? undefined"
-                                :orientation="chart.type === 'horizontalBar' ? 'horizontal' : 'vertical'"
+                                :orientation="
+                                    chart.type === 'horizontalBar' || chart.type === 'rankedBar'
+                                        ? 'horizontal'
+                                        : 'vertical'
+                                "
                                 :stacked="chart.type === 'stackedBar'"
-                                show-legend
+                                :thresholds="chart.thresholds"
+                                :max-value="chart.maxValue"
+                                :height="chart.type === 'rankedBar' ? 380 : 220"
+                                :show-legend="chart.type !== 'rankedBar'"
                             />
                             <LineChart
                                 v-else

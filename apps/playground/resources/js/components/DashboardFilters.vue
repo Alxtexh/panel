@@ -1,0 +1,245 @@
+<script setup lang="ts">
+/**
+ * The dashboard filter panel.
+ *
+ * IT DOES NOT FETCH and it does not own the applied state — it emits `apply`
+ * with a filter object and the page turns that into a visit. The applied
+ * filters live in the URL, which is what makes a filtered dashboard
+ * shareable, bookmarkable and survivable across a reload.
+ *
+ * THE DRAFT IS LOCAL UNTIL APPLIED. Editing three fields must not cost three
+ * round trips, and a half-set range ("from" chosen, "to" not yet) is not a
+ * question worth asking the server. This is the same staged pattern the table
+ * filters use.
+ *
+ * PRESETS WRITE INTO THE DATE FIELDS rather than being a separate mode. A
+ * preset that stores "last 7 days" as a token would silently mean something
+ * different tomorrow, and a shared link would show the recipient a different
+ * window than the sender saw.
+ */
+import { PkSlideover } from '@panelkit/ui'
+import { computed, ref, watch } from 'vue'
+
+interface Option {
+    value: number
+    label: string
+}
+
+const props = defineProps<{
+    open: boolean
+    /** Currently applied, from the URL. */
+    from: string | null
+    to: string | null
+    routers: number[]
+    routerOptions: Option[]
+}>()
+
+const emit = defineEmits<{
+    (e: 'close'): void
+    (e: 'apply', filters: { from: string | null; to: string | null; routers: number[] }): void
+    (e: 'reset'): void
+}>()
+
+const draft = ref({ from: '', to: '', routers: [] as number[] })
+const routerSearch = ref('')
+
+// Re-seed whenever the panel opens, so a cancelled edit does not linger.
+watch(
+    () => props.open,
+    (isOpen) => {
+        if (!isOpen) return
+
+        draft.value = {
+            from: props.from ?? '',
+            to: props.to ?? '',
+            routers: [...props.routers],
+        }
+        routerSearch.value = ''
+    },
+    { immediate: true },
+)
+
+function iso(date: Date): string {
+    // Local date parts, not toISOString(): that converts to UTC first, so
+    // anywhere east of Greenwich "today" becomes yesterday after midnight UTC.
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function preset(days: number) {
+    const end = new Date()
+    const start = new Date()
+    start.setDate(start.getDate() - (days - 1))
+
+    draft.value.from = iso(start)
+    draft.value.to = iso(end)
+}
+
+function thisMonth() {
+    const now = new Date()
+
+    draft.value.from = iso(new Date(now.getFullYear(), now.getMonth(), 1))
+    draft.value.to = iso(now)
+}
+
+const presets = [
+    { label: 'Last 7 days', apply: () => preset(7) },
+    { label: 'Last 30 days', apply: () => preset(30) },
+    { label: 'Last 90 days', apply: () => preset(90) },
+    { label: 'This month', apply: thisMonth },
+]
+
+const visibleRouters = computed(() => {
+    const q = routerSearch.value.trim().toLowerCase()
+
+    return q ? props.routerOptions.filter((r) => r.label.toLowerCase().includes(q)) : props.routerOptions
+})
+
+function toggleRouter(id: number) {
+    draft.value.routers = draft.value.routers.includes(id)
+        ? draft.value.routers.filter((r) => r !== id)
+        : [...draft.value.routers, id]
+}
+
+/** A range with only an end is meaningless — "until then, from when?" */
+const invalid = computed(() => draft.value.to !== '' && draft.value.from === '')
+
+const changeCount = computed(
+    () => (draft.value.from ? 1 : 0) + (draft.value.routers.length > 0 ? 1 : 0),
+)
+
+function apply() {
+    if (invalid.value) return
+
+    emit('apply', {
+        from: draft.value.from || null,
+        to: draft.value.to || null,
+        routers: draft.value.routers,
+    })
+}
+</script>
+
+<template>
+    <PkSlideover
+        :open="open"
+        title="Filter dashboard"
+        description="Applies to every widget on this page"
+        width="w-[22rem]"
+        @close="emit('close')"
+    >
+        <div class="flex flex-col gap-6 p-4">
+            <section class="flex flex-col gap-2">
+                <h3 class="text-sm font-semibold">Date range</h3>
+
+                <div class="flex flex-wrap gap-1.5">
+                    <button
+                        v-for="p in presets"
+                        :key="p.label"
+                        type="button"
+                        class="bg-background hover:bg-accent rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
+                        @click="p.apply()"
+                    >
+                        {{ p.label }}
+                    </button>
+                </div>
+
+                <div class="mt-1 grid grid-cols-2 gap-2">
+                    <label class="flex flex-col gap-1">
+                        <span class="text-muted-foreground text-xs">From</span>
+                        <input
+                            v-model="draft.from"
+                            type="date"
+                            class="bg-background focus:ring-ring rounded-md border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
+                        />
+                    </label>
+                    <label class="flex flex-col gap-1">
+                        <span class="text-muted-foreground text-xs">To</span>
+                        <input
+                            v-model="draft.to"
+                            type="date"
+                            class="bg-background focus:ring-ring rounded-md border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
+                        />
+                    </label>
+                </div>
+
+                <p v-if="invalid" class="text-destructive text-xs">Choose a start date as well.</p>
+                <p v-else-if="draft.from && !draft.to" class="text-muted-foreground text-xs">
+                    Leaving “To” empty means everything since that date.
+                </p>
+                <p v-else-if="draft.from" class="text-muted-foreground text-xs">
+                    While a range is set, the per-chart period buttons are hidden — every widget
+                    covers the same window.
+                </p>
+            </section>
+
+            <section v-if="routerOptions.length" class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-semibold">Routers</h3>
+                    <button
+                        v-if="draft.routers.length"
+                        type="button"
+                        class="text-muted-foreground text-xs hover:underline"
+                        @click="draft.routers = []"
+                    >
+                        Clear {{ draft.routers.length }}
+                    </button>
+                </div>
+
+                <input
+                    v-if="routerOptions.length > 8"
+                    v-model="routerSearch"
+                    type="search"
+                    class="bg-background focus:ring-ring rounded-md border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
+                    placeholder="Find a router…"
+                />
+
+                <!-- Capped height: a hundred routers must not push Apply off the
+                     panel, which the fixed footer already guards against, but a
+                     scrolling sub-list keeps the date section reachable too. -->
+                <div class="flex max-h-56 flex-col overflow-y-auto rounded-md border">
+                    <label
+                        v-for="option in visibleRouters"
+                        :key="option.value"
+                        class="hover:bg-accent flex cursor-pointer items-center gap-2 px-2.5 py-1.5 text-sm"
+                    >
+                        <input
+                            type="checkbox"
+                            class="accent-primary size-3.5"
+                            :checked="draft.routers.includes(option.value)"
+                            @change="toggleRouter(option.value)"
+                        />
+                        <span class="min-w-0 truncate">{{ option.label }}</span>
+                    </label>
+
+                    <p v-if="visibleRouters.length === 0" class="text-muted-foreground px-2.5 py-3 text-xs">
+                        No router matches “{{ routerSearch }}”.
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <template #footer>
+            <button
+                type="button"
+                class="text-muted-foreground mr-auto text-xs hover:underline"
+                @click="emit('reset')"
+            >
+                Reset all
+            </button>
+            <button
+                type="button"
+                class="bg-background hover:bg-accent rounded-md border px-3 py-1.5 text-sm"
+                @click="emit('close')"
+            >
+                Cancel
+            </button>
+            <button
+                type="button"
+                class="bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+                :disabled="invalid"
+                @click="apply"
+            >
+                Apply<span v-if="changeCount"> ({{ changeCount }})</span>
+            </button>
+        </template>
+    </PkSlideover>
+</template>

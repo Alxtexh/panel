@@ -1,0 +1,164 @@
+<script setup lang="ts">
+/**
+ * A panel that slides in from an edge — filters, notifications, details.
+ *
+ * WHY A SLIDEOVER RATHER THAN A DIALOG for these: a modal dialog is a question
+ * that must be answered before anything else can happen. A filter panel and a
+ * notification list are neither — they are secondary surfaces you consult
+ * beside the page, and forcing them into a centred modal makes the page they
+ * describe disappear behind them.
+ *
+ * IT OWNS NO STATE. `open` comes in, `close` goes out. A component that decides
+ * for itself when it is open cannot be driven from a keyboard shortcut, a route
+ * or a parent's logic without fighting it.
+ *
+ * SCROLL IS LOCKED WHILE OPEN. Without it a touch scroll inside the panel
+ * chains to the page behind once the panel hits its end, and the content you
+ * were reading moves out from under the panel.
+ *
+ * THE BODY SCROLLS, NOT THE PANEL. Header and footer stay put, so the primary
+ * action in a long filter form is never scrolled out of reach.
+ */
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+
+const props = withDefaults(
+    defineProps<{
+        open: boolean
+        title: string
+        description?: string | null
+        side?: 'left' | 'right'
+        /** A Tailwind width class; forms want more room than a list. */
+        width?: string
+    }>(),
+    { description: null, side: 'right', width: 'w-96' },
+)
+
+const emit = defineEmits<{ (e: 'close'): void }>()
+
+const panel = ref<HTMLElement | null>(null)
+
+let restoreFocusTo: HTMLElement | null = null
+let previousOverflow = ''
+
+function onKeydown(e: KeyboardEvent) {
+    if (!props.open) return
+
+    if (e.key === 'Escape') {
+        e.stopPropagation()
+        emit('close')
+
+        return
+    }
+
+    if (e.key !== 'Tab' || !panel.value) return
+
+    /*
+     * A minimal focus trap. Without it, tabbing out of the panel lands on
+     * controls UNDER the backdrop — reachable by keyboard, unreachable by
+     * mouse, which is the worst possible combination.
+     */
+    const focusable = panel.value.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )
+
+    if (focusable.length === 0) return
+
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+
+    if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+    }
+}
+
+watch(
+    () => props.open,
+    async (isOpen) => {
+        if (isOpen) {
+            restoreFocusTo = document.activeElement as HTMLElement | null
+            previousOverflow = document.body.style.overflow
+            document.body.style.overflow = 'hidden'
+            document.addEventListener('keydown', onKeydown)
+
+            await nextTick()
+            panel.value?.querySelector<HTMLElement>('input, button, [tabindex]')?.focus()
+
+            return
+        }
+
+        document.body.style.overflow = previousOverflow
+        document.removeEventListener('keydown', onKeydown)
+        // Focus goes back where it came from, or the trigger appears to vanish.
+        restoreFocusTo?.focus?.()
+    },
+)
+
+onBeforeUnmount(() => {
+    document.removeEventListener('keydown', onKeydown)
+    document.body.style.overflow = previousOverflow
+})
+</script>
+
+<template>
+    <Teleport to="body">
+        <Transition
+            enter-active-class="transition duration-150 ease-out"
+            enter-from-class="opacity-0"
+            leave-active-class="transition duration-100 ease-in"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="open" class="fixed inset-0 z-50 bg-black/30" @click="emit('close')" />
+        </Transition>
+
+        <Transition
+            enter-active-class="transition duration-200 ease-out"
+            :enter-from-class="side === 'left' ? '-translate-x-full' : 'translate-x-full'"
+            leave-active-class="transition duration-150 ease-in"
+            :leave-to-class="side === 'left' ? '-translate-x-full' : 'translate-x-full'"
+        >
+            <aside
+                v-if="open"
+                ref="panel"
+                class="bg-background fixed top-0 z-50 flex h-full max-w-full flex-col shadow-2xl"
+                :class="[width, side === 'left' ? 'left-0 border-r' : 'right-0 border-l']"
+                role="dialog"
+                aria-modal="true"
+                :aria-label="title"
+            >
+                <header class="flex items-start justify-between gap-3 border-b px-4 py-3">
+                    <div class="min-w-0">
+                        <h2 class="text-base font-semibold">{{ title }}</h2>
+                        <p v-if="description" class="text-muted-foreground mt-0.5 text-xs">{{ description }}</p>
+                    </div>
+
+                    <div class="flex shrink-0 items-center gap-2">
+                        <slot name="header-actions" />
+                        <button
+                            type="button"
+                            class="text-muted-foreground hover:text-foreground"
+                            aria-label="Close"
+                            @click="emit('close')"
+                        >
+                            <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M18 6 6 18M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Only this scrolls. -->
+                <div class="min-h-0 flex-1 overflow-y-auto">
+                    <slot />
+                </div>
+
+                <footer v-if="$slots.footer" class="flex items-center justify-end gap-2 border-t px-4 py-3">
+                    <slot name="footer" />
+                </footer>
+            </aside>
+        </Transition>
+    </Teleport>
+</template>

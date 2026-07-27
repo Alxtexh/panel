@@ -41,9 +41,55 @@ const props = withDefaults(
         format?: (value: number) => string
         showAxis?: boolean
         showLegend?: boolean
+        /**
+         * Colour each bar by its own VALUE rather than by its series.
+         *
+         * This is what turns a plain bar chart into a ranked "worst performers"
+         * chart: the eye is drawn to the red end without having to read a single
+         * number. Ordered ascending by `max`; the first threshold a value falls
+         * under wins, and anything above them all takes `aboveColor`.
+         */
+        thresholds?: { max: number; color: string }[] | null
+        aboveColor?: string
+        /** Pin the value axis, e.g. to 100 for a percentage. */
+        maxValue?: number | null
     }>(),
-    { height: 220, orientation: 'vertical', stacked: false, showAxis: true, showLegend: false },
+    {
+        height: 220,
+        orientation: 'vertical',
+        stacked: false,
+        showAxis: true,
+        showLegend: false,
+        thresholds: null,
+        aboveColor: 'var(--chart-2)',
+        maxValue: null,
+    },
 )
+
+/**
+ * Semantic tones, resolved here rather than passed as CSS from the server.
+ *
+ * A threshold declaration says `danger`, and this file decides what danger looks
+ * like — the same rule that keeps every other colour out of PHP (§6.1).
+ */
+const TONES: Record<string, string> = {
+    danger: 'var(--destructive)',
+    warning: 'var(--chart-4)',
+    success: 'var(--chart-2)',
+    neutral: 'var(--muted-foreground)',
+}
+
+function toneColour(name: string): string {
+    return TONES[name] ?? name
+}
+
+function colourFor(value: number, fallback: string): string {
+    if (!props.thresholds?.length) return fallback
+
+    const hit = props.thresholds.find((t) => value < t.max)
+
+    return toneColour(hit ? hit.color : props.aboveColor)
+}
 
 const host = ref<HTMLElement | null>(null)
 const width = ref(560)
@@ -76,13 +122,46 @@ const count = computed(() => labels.value.length)
 
 const horizontal = computed(() => props.orientation === 'horizontal')
 
+/**
+ * Roughly how wide the longest category label renders, at 10px.
+ *
+ * An estimate rather than a measurement: measuring means rendering the text,
+ * reading its box, and re-rendering, which is two extra layout passes on every
+ * resize. 5.6px per character is close enough for a gutter, and the truncation
+ * below covers the cases where it is not.
+ */
+const CHAR_WIDTH = 5.6
+
+const longestLabel = computed(() => Math.max(0, ...labels.value.map((l) => l.length)))
+
+/**
+ * The left gutter.
+ *
+ * A FIXED 120px cap meant a ranked chart's labels — which carry the value and
+ * the sample size, so "RTR-01-001 — 42.6% (1000)" — simply ran off the left of
+ * the card and over whatever was beside it. The gutter now follows the content,
+ * capped at 40% of the card so the bars never become a sliver.
+ */
+const gutter = computed(() => {
+    if (!horizontal.value) return props.showAxis ? 44 : 8
+
+    const wanted = longestLabel.value * CHAR_WIDTH + 16
+
+    return Math.round(Math.min(Math.max(60, wanted), width.value * 0.4))
+})
+
+/** How many characters actually fit, so anything longer is cut with an ellipsis. */
+const labelChars = computed(() => Math.max(4, Math.floor((gutter.value - 16) / CHAR_WIDTH)))
+
+function truncate(label: string): string {
+    return label.length <= labelChars.value ? label : `${label.slice(0, labelChars.value - 1)}…`
+}
+
 const pad = computed(() => ({
     top: 12,
     right: 12,
     bottom: 26,
-    // Horizontal bars put their category names on the left, so the gutter has
-    // to hold a word rather than a number.
-    left: props.showAxis ? (horizontal.value ? Math.min(120, width.value * 0.28) : 44) : 8,
+    left: gutter.value,
 }))
 
 const plot = computed(() => ({
@@ -106,6 +185,11 @@ const ceiling = computed(() => {
             ? resolved.value.reduce((sum, s) => sum + Math.max(0, s.points[i]?.value ?? 0), 0)
             : Math.max(...resolved.value.map((s) => s.points[i]?.value ?? 0)),
     )
+
+    // A pinned maximum keeps a percentage chart anchored to 100 rather than to
+    // whatever the best performer happened to score — otherwise the worst bar
+    // fills most of the width and "37%" reads as "nearly full".
+    if (props.maxValue) return props.maxValue
 
     const max = Math.max(...totals, 0)
 
@@ -166,7 +250,7 @@ const bars = computed(() => {
                           y: slotStart + lane,
                           w: length,
                           h: Math.max(0, barWidth.value - 2),
-                          color: s.color!,
+                          color: colourFor(p.value, s.color!),
                           label: p.label,
                           name: s.name,
                           value: p.value,
@@ -177,7 +261,7 @@ const bars = computed(() => {
                           y: pad.value.top + plot.value.h - length - offsets[i],
                           w: Math.max(0, barWidth.value - 2),
                           h: length,
-                          color: s.color!,
+                          color: colourFor(p.value, s.color!),
                           label: p.label,
                           name: s.name,
                           value: p.value,
@@ -236,7 +320,13 @@ const active = computed(() => {
         </div>
 
         <template v-else>
-            <svg :width="width" :height="height" class="overflow-visible" @mouseleave="hover = null">
+            <!--
+                NOT overflow-visible. The tooltip is an HTML sibling rather than
+                an SVG child, so nothing here needs to escape the box — and
+                letting it escape is precisely how the long ranked labels ended
+                up drawn on top of the card next door.
+            -->
+            <svg :width="width" :height="height" @mouseleave="hover = null">
                 <!-- Gridlines run along the VALUE axis, which swaps with the
                      orientation: horizontal bars are measured left to right. -->
                 <g v-if="showAxis">
@@ -327,9 +417,10 @@ const active = computed(() => {
                         :x="pad.left - 8"
                         :y="categoryCentre(i) + 3"
                         text-anchor="end"
-                        class="fill-muted-foreground text-[10px] capitalize"
+                        class="fill-muted-foreground text-[10px]"
                     >
-                        {{ l }}
+                        {{ truncate(l) }}
+                        <title>{{ l }}</title>
                     </text>
                 </template>
                 <template v-else>

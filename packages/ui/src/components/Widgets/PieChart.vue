@@ -12,8 +12,19 @@
  * primary applies without recompiling. Beyond the palette length, slices reuse
  * colours at reduced opacity rather than repeating them outright — a repeated
  * colour makes two legend rows indistinguishable.
+ *
+ * THE TOOLTIP IS RENDERED, NOT AN SVG <title>. A native title tooltip is the
+ * browser's, which means it appears after a delay the page cannot control, in
+ * the operating system's styling, and never on touch. For the one chart type
+ * whose values are otherwise unreadable — a slice states a proportion, not a
+ * number — that is the difference between a chart you can query and a chart you
+ * can only look at.
+ *
+ * HOVER IS SHARED WITH THE LEGEND. Pointing at a legend row highlights its
+ * slice and vice versa, because on a chart with six similar colours the legend
+ * is often the easier thing to aim at.
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 interface Slice {
     label: string
@@ -41,6 +52,8 @@ const PALETTE = [
 ]
 
 const total = computed(() => props.data.reduce((sum, d) => sum + d.value, 0))
+
+const hover = ref<number | null>(null)
 
 const size = computed(() => props.height)
 const radius = computed(() => size.value / 2 - 4)
@@ -142,7 +155,7 @@ const percent = (share: number) => `${(share * 100).toFixed(share < 0.01 ? 2 : 0
         No data
     </div>
 
-    <div v-else class="flex flex-wrap items-center gap-4 sm:flex-nowrap">
+    <div v-else class="relative flex flex-wrap items-center gap-4 sm:flex-nowrap">
         <svg
             :width="size"
             :height="size"
@@ -156,15 +169,17 @@ const percent = (share: number) => `${(share * 100).toFixed(share < 0.01 ? 2 : 0
                 :key="i"
                 :d="slice.path"
                 :fill="slice.colour"
-                :fill-opacity="slice.opacity"
+                :fill-opacity="hover === null || hover === i ? slice.opacity : slice.opacity * 0.35"
                 fill-rule="evenodd"
                 stroke="var(--card)"
                 stroke-width="2"
-                class="transition-opacity hover:opacity-80"
-            >
-                <title>{{ slice.label }}: {{ format(slice.value) }} ({{ percent(slice.share) }})</title>
-            </path>
+                class="cursor-default transition-[fill-opacity]"
+                @mouseenter="hover = i"
+                @mouseleave="hover = null"
+            />
 
+            <!-- A doughnut's centre shows the HOVERED slice while pointing and
+                 the total otherwise, which is the reading the hole is for. -->
             <template v-if="type === 'doughnut'">
                 <text
                     :x="size / 2"
@@ -172,21 +187,28 @@ const percent = (share: number) => `${(share * 100).toFixed(share < 0.01 ? 2 : 0
                     text-anchor="middle"
                     class="fill-foreground text-base font-semibold tabular-nums"
                 >
-                    {{ format(total) }}
+                    {{ format(hover === null ? total : slices[hover].value) }}
                 </text>
                 <text
                     :x="size / 2"
                     :y="size / 2 + 14"
                     text-anchor="middle"
-                    class="fill-muted-foreground text-[10px]"
+                    class="fill-muted-foreground text-[10px] capitalize"
                 >
-                    Total
+                    {{ hover === null ? 'Total' : slices[hover].label }}
                 </text>
             </template>
         </svg>
 
-        <ul class="flex min-w-0 flex-1 flex-col gap-1.5">
-            <li v-for="(slice, i) in slices" :key="i" class="flex items-center gap-2 text-xs">
+        <ul class="flex min-w-0 flex-1 flex-col gap-0.5">
+            <li
+                v-for="(slice, i) in slices"
+                :key="i"
+                class="flex cursor-default items-center gap-2 rounded px-1.5 py-1 text-xs transition-colors"
+                :class="hover === i ? 'bg-muted' : ''"
+                @mouseenter="hover = i"
+                @mouseleave="hover = null"
+            >
                 <span
                     class="size-2.5 shrink-0 rounded-sm"
                     :style="{ background: slice.colour, opacity: slice.opacity }"
@@ -196,5 +218,19 @@ const percent = (share: number) => `${(share * 100).toFixed(share < 0.01 ? 2 : 0
                 <span class="text-muted-foreground w-9 text-right tabular-nums">{{ percent(slice.share) }}</span>
             </li>
         </ul>
+
+        <!-- A pie has no hole to write into, so it gets a floating readout. -->
+        <div
+            v-if="hover !== null && type === 'pie'"
+            class="bg-popover pointer-events-none absolute top-2 left-2 rounded-lg border px-2.5 py-1.5 shadow-lg"
+        >
+            <p class="text-muted-foreground text-[11px] capitalize">{{ slices[hover].label }}</p>
+            <p class="text-sm font-semibold tabular-nums">
+                {{ format(slices[hover].value) }}
+                <span class="text-muted-foreground text-xs font-normal">
+                    ({{ percent(slices[hover].share) }})
+                </span>
+            </p>
+        </div>
     </div>
 </template>

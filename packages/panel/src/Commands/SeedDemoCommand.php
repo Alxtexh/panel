@@ -288,7 +288,20 @@ final class SeedDemoCommand extends Command
                  |
                  | Dividing before the modulo decorrelates them.
                  */
-                'status' => $statuses[intdiv($i, 3) % 9],
+                /*
+                 | STATUS IS BIASED BY ROUTER, so some service areas genuinely
+                 | perform worse than others.
+                 |
+                 | A flat `$statuses[...]` cycle gives EVERY router the same
+                 | 66.7% active share, which is realistic of nothing and makes a
+                 | ranked "worst performers" chart a row of identical bars — the
+                 | one chart whose entire purpose is showing the spread.
+                 |
+                 | Each router gets a stable health score and the draw is
+                 | compared against it, so active share varies from roughly 40%
+                 | to 95% across the estate while staying deterministic.
+                 */
+                'status' => $this->statusFor($i, intdiv($i, $tenantCount) % count($tenantRouters)),
                 'plan_type' => $planTypes[$i % 3],
                 'expiry_date' => date('Y-m-d H:i:s', $nowTs + $expiryOffset),
                 'created_at' => date('Y-m-d H:i:s', $nowTs - $createdOffset),
@@ -384,6 +397,47 @@ final class SeedDemoCommand extends Command
 
         $bar->finish();
         $this->newLine();
+    }
+
+    /**
+     * A subscriber's status, biased by which router serves them.
+     *
+     * `$statuses` is still the source of the mix; this only decides how far
+     * along that list a given subscriber lands, so the overall proportions stay
+     * recognisable while individual routers diverge.
+     */
+    private function statusFor(int $i, int $routerIndex): string
+    {
+        // Stable per router, spread across the range, never 0 or 100.
+        $health = 42 + (($routerIndex * 37) % 53);
+
+        /*
+         * A proper avalanche hash, not a single multiply.
+         *
+         * `($i * prime) % 100` looks random and is not: `$i` advances by a FIXED
+         * stride between two subscribers on the same router, so the products
+         * land on an arithmetic progression and only a handful of distinct rolls
+         * ever appear. The first attempt produced routers at exactly 50.1%,
+         * 66.7% and 83.3% — and one at a flat 100% — which reads as fabricated
+         * because it is.
+         *
+         * Masking to 32 bits keeps every step in integer range; without it the
+         * second multiply exceeds PHP's integer width, silently becomes a float
+         * and loses the low bits that carry the randomness.
+         */
+        $h = ($i * 2654435761) & 0xFFFFFFFF;
+        $h = ($h ^ ($h >> 13)) & 0xFFFFFFFF;
+        $h = ($h * 1274126177) & 0xFFFFFFFF;
+        $h = ($h ^ ($h >> 16)) & 0xFFFFFFFF;
+
+        $roll = ($h + $routerIndex * 7919) % 100;
+
+        if ($roll < $health) {
+            return 'active';
+        }
+
+        // The remainder splits roughly two to one, as it did before.
+        return $roll % 3 === 0 ? 'suspended' : 'expired';
     }
 
     /**

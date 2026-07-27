@@ -13,10 +13,12 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Support\TenantContext;
 use PanelKit\Panel\Widgets\ChartWidget;
+use PanelKit\Panel\Widgets\DashboardFilters;
 use PanelKit\Panel\Widgets\Period;
 use PanelKit\Panel\Widgets\StatWidget;
 use PanelKit\Panel\Widgets\TimeSeries;
 use PanelKit\Panel\Widgets\Trend;
+use PanelKit\Panel\Widgets\Window;
 
 /**
  * The dashboard.
@@ -51,13 +53,31 @@ final class DashboardController extends Controller
          */
         $now = new DateTimeImmutable();
 
-        $stats = $this->stats($now);
-        $charts = $this->charts();
+        /*
+         * ONE filter object for the whole request, built before any widget.
+         *
+         * Every widget closure closes over it, so a chart cannot accidentally
+         * ignore the filter — there is no second place where the range or the
+         * router set could be read and forgotten.
+         */
+        $filters = DashboardFilters::fromRequest($request, $now);
+
+        $stats = $this->stats($now, $filters);
+        $charts = $this->charts($filters);
 
         $props = [
             'widgets' => array_map(static fn (StatWidget $w): array => $w->toArray(), $stats),
             'charts' => array_map(static fn (ChartWidget $c): array => $c->toArray(), $charts),
             'periods' => $this->selectedPeriods($request, $charts),
+            'filters' => $filters->toArray(),
+            // Options for the filter panel. Small and tenant-scoped, so they
+            // ride with the page rather than needing a second request.
+            'filterOptions' => [
+                'routers' => Router::query()->orderBy('name')->limit(200)
+                    ->get(['id', 'name'])
+                    ->map(fn (Router $r): array => ['value' => $r->id, 'label' => $r->name])
+                    ->all(),
+            ],
         ];
 
         foreach ($stats as $widget) {
@@ -102,7 +122,7 @@ final class DashboardController extends Controller
     }
 
     /** @return list<ChartWidget> */
-    private function charts(): array
+    private function charts(DashboardFilters $filters): array
     {
         return [
             ChartWidget::make('sessions', 'Sessions over time')
@@ -110,26 +130,34 @@ final class DashboardController extends Controller
                 ->description('When subscribers connect')
                 ->withPeriods()
                 ->span(2)
-                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->sessionSeries()->resolve($p, $now))
-                ->trend(fn (Period $p, ?DateTimeImmutable $now): Trend => $this->trendFor($this->sessionSeries(), $p, $now)),
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->sessionSeries($filters)
+                    ->resolveWindow($filters->windowFor($p, $now ?? new DateTimeImmutable())))
+                ->trend(fn (Period $p, ?DateTimeImmutable $now): Trend => $this->trendFor(
+                    $this->sessionSeries($filters),
+                    $filters->windowFor($p, $now ?? new DateTimeImmutable()),
+                )),
 
             ChartWidget::make('signups', 'New subscribers')
                 ->type('line')
                 ->description('Sign-ups per bucket')
                 ->withPeriods()
                 ->span(2)
-                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->signupSeries()->resolve($p, $now))
-                ->trend(fn (Period $p, ?DateTimeImmutable $now): Trend => $this->trendFor($this->signupSeries(), $p, $now)),
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->signupSeries($filters)
+                    ->resolveWindow($filters->windowFor($p, $now ?? new DateTimeImmutable())))
+                ->trend(fn (Period $p, ?DateTimeImmutable $now): Trend => $this->trendFor(
+                    $this->signupSeries($filters),
+                    $filters->windowFor($p, $now ?? new DateTimeImmutable()),
+                )),
 
             // Categorical, so no period selector — a current-state breakdown
             // has only one sensible reading.
             ChartWidget::make('status', 'Clients by status')
                 ->type('doughnut')
-                ->data(fn (): array => $this->groupedCount('status')),
+                ->data(fn (): array => $this->groupedCount('status', $filters)),
 
             ChartWidget::make('plan_type', 'Clients by plan type')
                 ->type('doughnut')
-                ->data(fn (): array => $this->groupedCount('plan_type')),
+                ->data(fn (): array => $this->groupedCount('plan_type', $filters)),
 
             /*
              | THE FULL CHART GALLERY.
@@ -143,57 +171,78 @@ final class DashboardController extends Controller
             ChartWidget::make('sessions_bars', 'Sessions by day')
                 ->type('bar')
                 ->description('Vertical bars')
-                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->sessionSeries()->resolve(Period::Days7, $now)),
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->sessionSeries($filters)->resolve(Period::Days7, $now)),
 
             ChartWidget::make('routers_load', 'Busiest routers')
                 ->type('horizontalBar')
                 ->description('Horizontal bars — long labels stay readable')
-                ->data(fn (): array => $this->clientsPerRouter()),
+                ->data(fn (): array => $this->clientsPerRouter($filters)),
 
             ChartWidget::make('plan_status', 'Plan type by status')
                 ->type('stackedBar')
                 ->description('Stacked bars — parts of each total')
                 ->span(2)
-                ->data(fn (): array => $this->crossTab('plan_type', 'status')),
+                ->data(fn (): array => $this->crossTab('plan_type', 'status', $filters)),
 
             ChartWidget::make('plan_status_grouped', 'Plan type by status, side by side')
                 ->type('bar')
                 ->description('Grouped bars — the same data, compared rather than summed')
                 ->span(2)
-                ->data(fn (): array => $this->crossTab('plan_type', 'status')),
+                ->data(fn (): array => $this->crossTab('plan_type', 'status', $filters)),
 
             ChartWidget::make('sessions_vs_signups', 'Sessions against sign-ups')
                 ->type('combo')
                 ->description('Bars and a line together')
                 ->span(2)
-                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->comboSeries($now)),
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->comboSeries($now, $filters)),
 
             ChartWidget::make('load_vs_growth', 'Load against growth')
                 ->type('multiAxis')
                 ->description('Two scales — sessions in thousands beside sign-ups in tens')
                 ->span(2)
-                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->multiAxisSeries($now)),
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->multiAxisSeries($now, $filters)),
 
             ChartWidget::make('today_hourly', 'Connections today')
                 ->type('steppedLine')
                 ->description('Stepped — a reading holds until the next one')
                 ->span(2)
-                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->sessionSeries()->resolve(Period::Today, $now)),
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->sessionSeries($filters)->resolve(Period::Today, $now)),
 
             ChartWidget::make('status_pie', 'Status share')
                 ->type('pie')
                 ->description('Pie — parts of a whole')
-                ->data(fn (): array => $this->groupedCount('status')),
+                ->data(fn (): array => $this->groupedCount('status', $filters)),
 
             ChartWidget::make('routers_polar', 'Router distribution')
                 ->type('polarArea')
                 ->description('Polar area — magnitudes that need not sum')
-                ->data(fn (): array => $this->clientsPerRouter()),
+                ->data(fn (): array => $this->clientsPerRouter($filters)),
+
+            /*
+             | RANKED, WORST FIRST. The point of this shape is that the reader
+             | never has to read a number: the red end IS the answer. Pinned to
+             | 100 so a percentage is measured against the full scale rather
+             | than against whichever router happened to score highest.
+             */
+            ChartWidget::make('router_health', 'Service area performance (lowest 15)')
+                ->type('rankedBar')
+                ->description('Share of subscribers currently active, per router')
+                ->span(2)
+                ->thresholds([40 => 'danger', 70 => 'warning'], max: 100)
+                ->data(fn (): array => $this->routerHealth($filters)),
+
+            // A hundred routers against three statuses: too many for bars, and
+            // an ordering a line chart would imply does not exist.
+            ChartWidget::make('status_heatmap', 'Subscribers by service area')
+                ->type('heatmap')
+                ->description('Subscriber status across every router')
+                ->span(2)
+                ->data(fn (): array => $this->statusByRouter($filters)),
 
             ChartWidget::make('plan_radar', 'Plan mix by status')
                 ->type('radar')
                 ->description('Radar — the same axes compared across groups')
-                ->data(fn (): array => $this->crossTab('plan_type', 'status')),
+                ->data(fn (): array => $this->crossTab('plan_type', 'status', $filters)),
 
             // A proportional bar rather than a plot: three buckets of one
             // quantity read better side by side than as three points.
@@ -201,30 +250,52 @@ final class DashboardController extends Controller
                 ->type('segments')
                 ->description('Subscriptions reaching their expiry date')
                 ->span(2)
-                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->renewalBuckets($now)),
+                ->data(fn (Period $p, ?DateTimeImmutable $now): array => $this->renewalBuckets($now, $filters)),
         ];
     }
 
     /** Current window against the equally-long window before it. */
-    private function trendFor(TimeSeries $series, Period $period, ?DateTimeImmutable $now): Trend
+    private function trendFor(TimeSeries $series, Window $window): Trend
     {
-        $now ??= new DateTimeImmutable();
-        [$previousStart, $previousEnd] = $period->previous($now);
-
-        return Trend::between(
-            $series->totalBetween($period->start($now), $period->end($now)),
-            $series->totalBetween($previousStart, $previousEnd),
-        );
+        return Trend::between($series->totalIn($window), $series->totalIn($window->previous()));
     }
 
-    private function sessionSeries(): TimeSeries
+    /**
+     * The session series, narrowed by the dashboard filter.
+     *
+     * The router constraint is applied to the QUERY, not to the result: filtering
+     * afterwards would still scan and aggregate every router's rows and then
+     * throw most of them away.
+     */
+    private function sessionSeries(?DashboardFilters $filters = null): TimeSeries
     {
-        return TimeSeries::of(ClientSession::query())->timestamp('started_at')->count();
+        return TimeSeries::of($this->scoped(ClientSession::query(), $filters))
+            ->timestamp('started_at')
+            ->count();
     }
 
-    private function signupSeries(): TimeSeries
+    private function signupSeries(?DashboardFilters $filters = null): TimeSeries
     {
-        return TimeSeries::of(Client::query())->timestamp('created_at')->count();
+        return TimeSeries::of($this->scoped(Client::query(), $filters))
+            ->timestamp('created_at')
+            ->count();
+    }
+
+    /**
+     * Apply the filter's router set to any query that has a `router_id`.
+     *
+     * @template TBuilder of \Illuminate\Database\Eloquent\Builder
+     *
+     * @param  TBuilder  $query
+     * @return TBuilder
+     */
+    private function scoped(\Illuminate\Database\Eloquent\Builder $query, ?DashboardFilters $filters): \Illuminate\Database\Eloquent\Builder
+    {
+        if ($filters !== null && $filters->routers !== []) {
+            $query->whereIn('router_id', $filters->routers);
+        }
+
+        return $query;
     }
 
     /**
@@ -239,9 +310,9 @@ final class DashboardController extends Controller
      *
      * @return array{series: list<array{name: string, points: list<array{label: string, value: int}>}>}
      */
-    private function crossTab(string $rowColumn, string $seriesColumn): array
+    private function crossTab(string $rowColumn, string $seriesColumn, ?DashboardFilters $filters = null): array
     {
-        $rows = Client::query()->toBase()
+        $rows = $this->scoped(Client::query(), $filters)->toBase()
             ->selectRaw("{$rowColumn} as row_key, {$seriesColumn} as series_key, COUNT(*) as value")
             ->groupBy($rowColumn, $seriesColumn)
             ->get();
@@ -278,6 +349,98 @@ final class DashboardController extends Controller
     }
 
     /**
+     * Active share per router, worst first — ONE query.
+     *
+     * Conditional aggregation rather than two grouped queries and a join in
+     * PHP: the numerator and the denominator come from the same scan, so they
+     * cannot disagree if a row changes between them.
+     *
+     * Routers with too few subscribers are EXCLUDED. One subscriber who happens
+     * to be suspended is a 0% router, and it would occupy the worst slot on the
+     * chart every time while telling nobody anything.
+     *
+     * @return list<array{label: string, value: float}>
+     */
+    private function routerHealth(?DashboardFilters $filters = null): array
+    {
+        $rows = $this->scoped(Client::query(), $filters)->toBase()
+            ->selectRaw(
+                'router_id, COUNT(*) as total,'
+                . " SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active"
+            )
+            ->groupBy('router_id')
+            ->havingRaw('COUNT(*) >= 5')
+            ->get();
+
+        $names = Router::query()->toBase()
+            ->whereIn('id', $rows->pluck('router_id')->filter()->all())
+            ->pluck('name', 'id');
+
+        return $rows
+            ->map(fn (object $r): array => [
+                'label' => sprintf(
+                    '%s — %s%% (%d)',
+                    $names[$r->router_id] ?? "#{$r->router_id}",
+                    round(($r->active / max(1, $r->total)) * 100, 1),
+                    (int) $r->total,
+                ),
+                'value' => round(($r->active / max(1, $r->total)) * 100, 1),
+            ])
+            ->sortBy('value')
+            ->take(15)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Status across every router, as heatmap rows — ONE grouped query.
+     *
+     * Rows are statuses and columns are routers, not the other way round: a
+     * heatmap is read along its rows, and three long rows are scannable where
+     * a hundred short ones are not.
+     *
+     * @return array{series: list<array{name: string, points: list<array{label: string, value: int}>}>}
+     */
+    private function statusByRouter(?DashboardFilters $filters = null): array
+    {
+        $rows = $this->scoped(Client::query(), $filters)->toBase()
+            ->selectRaw('router_id, status, COUNT(*) as value')
+            ->groupBy('router_id', 'status')
+            ->get();
+
+        $names = Router::query()->toBase()
+            ->whereIn('id', $rows->pluck('router_id')->filter()->unique()->all())
+            ->orderBy('name')
+            ->pluck('name', 'id');
+
+        $matrix = [];
+
+        foreach ($rows as $r) {
+            $matrix[(string) $r->status][(int) $r->router_id] = (int) $r->value;
+        }
+
+        $statuses = array_keys($matrix);
+        sort($statuses);
+
+        return ['series' => array_map(
+            static fn (string $status): array => [
+                'name' => ucfirst($status),
+                // Every router appears in every row, zero-filled. A row missing
+                // a column would shift every cell after it, so a status would
+                // be attributed to the wrong router with nothing failing.
+                'points' => $names
+                    ->map(fn (string $name, int $id): array => [
+                        'label' => $name,
+                        'value' => $matrix[$status][$id] ?? 0,
+                    ])
+                    ->values()
+                    ->all(),
+            ],
+            $statuses,
+        )];
+    }
+
+    /**
      * Clients per router, named.
      *
      * One grouped query plus one lookup of router names, not one query per
@@ -285,9 +448,9 @@ final class DashboardController extends Controller
      *
      * @return list<array{label: string, value: int}>
      */
-    private function clientsPerRouter(): array
+    private function clientsPerRouter(?DashboardFilters $filters = null): array
     {
-        $counts = Client::query()->toBase()
+        $counts = $this->scoped(Client::query(), $filters)->toBase()
             ->selectRaw('router_id, COUNT(*) as value')
             ->groupBy('router_id')
             ->orderByDesc('value')
@@ -318,9 +481,9 @@ final class DashboardController extends Controller
      *
      * @return array{bars: list<array<string, mixed>>, lines: list<array<string, mixed>>}
      */
-    private function comboSeries(?DateTimeImmutable $now): array
+    private function comboSeries(?DateTimeImmutable $now, ?DashboardFilters $filters = null): array
     {
-        $points = $this->sessionSeries()->resolve(Period::Days30, $now)['points'];
+        $points = $this->sessionSeries($filters)->resolve(Period::Days30, $now)['points'];
 
         return [
             'bars' => [['name' => 'Sessions', 'points' => $points]],
@@ -361,15 +524,15 @@ final class DashboardController extends Controller
      * Sessions run in the hundreds and sign-ups in the tens; on a shared axis
      * the sign-up line is pressed flat against the baseline and reads as zero.
      */
-    private function multiAxisSeries(?DateTimeImmutable $now): array
+    private function multiAxisSeries(?DateTimeImmutable $now, ?DashboardFilters $filters = null): array
     {
         return ['series' => [
-            ['name' => 'Sessions', 'points' => $this->sessionSeries()->resolve(Period::Days30, $now)['points']],
+            ['name' => 'Sessions', 'points' => $this->sessionSeries($filters)->resolve(Period::Days30, $now)['points']],
             [
                 'name' => 'Sign-ups',
                 'axis' => 'right',
                 'dashed' => true,
-                'points' => $this->signupSeries()->resolve(Period::Days30, $now)['points'],
+                'points' => $this->signupSeries($filters)->resolve(Period::Days30, $now)['points'],
             ],
         ]];
     }
@@ -383,14 +546,14 @@ final class DashboardController extends Controller
      *
      * @return list<array{label: string, value: int}>
      */
-    private function renewalBuckets(?DateTimeImmutable $now): array
+    private function renewalBuckets(?DateTimeImmutable $now, ?DashboardFilters $filters = null): array
     {
         $now ??= new DateTimeImmutable();
 
         $at = static fn (string $modify): string => $now->modify($modify)->format('Y-m-d H:i:s');
         $today = $now->format('Y-m-d H:i:s');
 
-        $row = Client::query()->toBase()
+        $row = $this->scoped(Client::query(), $filters)->toBase()
             ->selectRaw(
                 'SUM(CASE WHEN expiry_date >= ? AND expiry_date < ? THEN 1 ELSE 0 END) AS week,'
                 . ' SUM(CASE WHEN expiry_date >= ? AND expiry_date < ? THEN 1 ELSE 0 END) AS month,'
@@ -414,9 +577,9 @@ final class DashboardController extends Controller
      *
      * @return list<array{label: string, value: int}>
      */
-    private function groupedCount(string $column): array
+    private function groupedCount(string $column, ?DashboardFilters $filters = null): array
     {
-        return Client::query()->toBase()
+        return $this->scoped(Client::query(), $filters)->toBase()
             ->selectRaw("{$column} as label, COUNT(*) as value")
             ->groupBy($column)
             ->orderByDesc('value')
@@ -439,42 +602,50 @@ final class DashboardController extends Controller
      * period-over-period measures get their own cards where the arrow refers to
      * the number printed above it.
      */
-    private function stats(DateTimeImmutable $now): array
+    private function stats(DateTimeImmutable $now, DashboardFilters $filters): array
     {
         $period = Period::Days30;
 
+        // The filter's range wins over the stat cards' fixed 30-day window, so
+        // a filtered dashboard's counters describe the same period as its
+        // charts rather than quietly reporting a different one.
+        $window = $filters->windowFor($period, $now);
+
         return [
             StatWidget::make('clients_total', 'Total clients')
-                ->value(fn (): int => Client::query()->count())
+                ->value(fn (): int => $this->scoped(Client::query(), $filters)->count())
                 ->description('All subscribers'),
 
             // The growth card. Value, trend and sparkline are all "sign-ups in
             // the window", so the arrow means what it appears to mean.
-            StatWidget::make('clients_new', 'New in 30 days')
-                ->value(fn (): int => (int) $this->signupSeries()->totalBetween($period->start($now), $period->end($now)))
-                ->trend(fn (): Trend => $this->trendFor($this->signupSeries(), $period, $now))
-                ->sparkline(fn (): array => $this->signupSeries()->resolve($period, $now)),
+            StatWidget::make('clients_new', 'New subscribers')
+                ->value(fn (): int => (int) $this->signupSeries($filters)->totalIn($window))
+                ->trend(fn (): Trend => $this->trendFor($this->signupSeries($filters), $window))
+                ->sparkline(fn (): array => $this->signupSeries($filters)->resolveWindow($window)),
 
             StatWidget::make('clients_active', 'Active')
-                ->value(fn (): int => Client::query()->where('status', 'active')->count()),
+                ->value(fn (): int => $this->scoped(Client::query(), $filters)->where('status', 'active')->count()),
 
             StatWidget::make('clients_expired', 'Expired')
-                ->value(fn (): int => Client::query()->where('status', 'expired')->count()),
+                ->value(fn (): int => $this->scoped(Client::query(), $filters)->where('status', 'expired')->count()),
 
             // A gauge, not a series: there is no stored history of how many
             // sessions were live an hour ago, so there is nothing honest to
             // compare against.
             StatWidget::make('sessions_live', 'Live sessions')
-                ->value(fn (): int => ClientSession::query()->whereNull('ended_at')->count())
+                ->value(fn (): int => $this->scoped(ClientSession::query(), $filters)->whereNull('ended_at')->count())
                 ->description('Currently online'),
 
-            StatWidget::make('sessions_30d', 'Sessions in 30 days')
-                ->value(fn (): int => (int) $this->sessionSeries()->totalBetween($period->start($now), $period->end($now)))
-                ->trend(fn (): Trend => $this->trendFor($this->sessionSeries(), $period, $now))
-                ->sparkline(fn (): array => $this->sessionSeries()->resolve($period, $now)),
+            StatWidget::make('sessions_window', 'Sessions in range')
+                ->value(fn (): int => (int) $this->sessionSeries($filters)->totalIn($window))
+                ->trend(fn (): Trend => $this->trendFor($this->sessionSeries($filters), $window))
+                ->sparkline(fn (): array => $this->sessionSeries($filters)->resolveWindow($window)),
 
             StatWidget::make('routers_online', 'Routers online')
-                ->value(fn (): int => Router::query()->where('status', 'online')->count()),
+                ->value(fn (): int => Router::query()
+                    ->when($filters->routers !== [], fn ($q) => $q->whereIn('id', $filters->routers))
+                    ->where('status', 'online')
+                    ->count()),
 
             // Deliberately broken, to prove failure isolation: one widget that
             // throws must not take the dashboard down. antipatterns §3.3 — the

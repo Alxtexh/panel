@@ -42,7 +42,7 @@ final class ChartWidget
         'line', 'area', 'steppedLine', 'multiAxis',
         'bar', 'horizontalBar', 'stackedBar', 'combo',
         'pie', 'doughnut', 'polarArea', 'radar',
-        'segments',
+        'rankedBar', 'heatmap', 'segments',
     ];
 
     private string $type = 'line';
@@ -58,6 +58,11 @@ final class ChartWidget
     private int $span = 1;
 
     private ?Closure $format = null;
+
+    /** @var list<array{max: int|float, color: string}> */
+    private array $thresholds = [];
+
+    private int|float|null $maxValue = null;
 
     private function __construct(public readonly string $key, private readonly string $label) {}
 
@@ -125,6 +130,30 @@ final class ChartWidget
         return $this;
     }
 
+    /**
+     * Colour bars by their own value — a ranked "worst first" chart.
+     *
+     * Colours are SEMANTIC names (`danger`, `warning`), never CSS. The client
+     * owns what danger looks like, so a tenant theme applies without touching
+     * this declaration (§6.1).
+     *
+     * @param  array<int|float, string>  $thresholds  upper bound => tone
+     */
+    public function thresholds(array $thresholds, ?int $max = null): self
+    {
+        ksort($thresholds);
+
+        $this->thresholds = array_map(
+            static fn (int|float $bound, string $tone): array => ['max' => $bound, 'color' => $tone],
+            array_keys($thresholds),
+            array_values($thresholds),
+        );
+
+        $this->maxValue = $max;
+
+        return $this;
+    }
+
     /** @return array<string, mixed> The structure. Never runs a query. */
     public function toArray(): array
     {
@@ -135,6 +164,8 @@ final class ChartWidget
             'description' => $this->description,
             'span' => $this->span,
             'periods' => $this->periodSelector ? Period::options() : null,
+            'thresholds' => $this->thresholds === [] ? null : $this->thresholds,
+            'maxValue' => $this->maxValue,
         ];
     }
 
