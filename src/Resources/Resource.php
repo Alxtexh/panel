@@ -188,6 +188,30 @@ abstract class Resource
         ];
     }
 
+    /**
+     * Related lists shown as tabs on the record page.
+     *
+     * Declared, never inferred: a relation appears because a resource named it,
+     * so the endpoint can only ever open a list the author intended.
+     *
+     * @return list<\PanelKit\Panel\Resources\RelationManager>
+     */
+    public static function relations(): array
+    {
+        return [];
+    }
+
+    public static function relation(string $key): ?\PanelKit\Panel\Resources\RelationManager
+    {
+        foreach (static::relations() as $relation) {
+            if ($relation->key === $key) {
+                return $relation;
+            }
+        }
+
+        return null;
+    }
+
     /** URL segment and schema key, e.g. `clients`. */
     public static function key(): string
     {
@@ -265,6 +289,12 @@ abstract class Resource
                 'infolist' => array_map(
                     static fn (\PanelKit\Panel\Schema\Component $c): array => $c->toSchema(),
                     static::infolist(),
+                ),
+                // Structure only — column definitions for each related list.
+                // The rows are fetched on demand, never with the parent.
+                'relations' => array_map(
+                    static fn (RelationManager $r): array => $r->toSchema(),
+                    static::relations(),
                 ),
             ];
         });
