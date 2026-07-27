@@ -209,3 +209,15 @@ html {
     padding-top: var(--pk-row-padding);
     padding-bottom: var(--pk-row-padding);
 }
+
+/*
+ * Sidebar on the right needs BOTH halves.
+ *
+ * The component`s side prop moves the FIXED panel to right-0, but its spacer
+ * still sits first in flex order, so the space was reserved on the left. The
+ * content ended up squeezed into the middle with a dead gutter on one side and
+ * the panel overlapping it on the other.
+ */
+:root[data-sidebar=right] [data-slot=sidebar-wrapper] {
+    flex-direction: row-reverse;
+}
