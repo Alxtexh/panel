@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { AppearanceDrawer } from '@panelkit/ui';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { home } from '@/routes';
 
@@ -11,8 +12,22 @@ defineProps<{
 
 <template>
     <div
-        class="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10"
+        class="bg-background relative flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10"
     >
+        <!--
+            THE SAME APPEARANCE CONTROL AS THE PANEL, on the sign-in screen.
+
+            The theme applied here already, but there was no way to CHANGE it
+            without signing in first — which is precisely backwards for someone
+            on a dark-adapted screen looking at a login form. Changes made here
+            are stored in this browser only; there is no account yet to save
+            them against, and they are adopted by the account the first time the
+            panel saves anything after signing in.
+        -->
+        <div class="absolute top-4 right-4">
+            <AppearanceDrawer />
+        </div>
+
         <div class="w-full max-w-sm">
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col items-center gap-4">

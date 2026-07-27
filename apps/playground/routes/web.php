@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SearchController;
@@ -110,6 +111,10 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
      | The bell. Lean JSON too: it may be polled, and re-rendering a page to
      | answer "anything new?" is exactly the cost the live-update rules avoid.
      */
+    // Display preferences, stored on the account so they follow the user to
+    // another browser rather than living only in this one's localStorage.
+    Route::put('settings/appearance', [AppearanceController::class, 'update'])->name('appearance.update');
+
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications');
     Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])
         ->name('notifications.readAll');

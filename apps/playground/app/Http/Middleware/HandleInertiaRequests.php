@@ -50,6 +50,16 @@ class HandleInertiaRequests extends Middleware
              */
             'notificationCount' => fn (): int => $request->user()?->unreadNotifications()->count() ?? 0,
 
+            /*
+             * The account's saved appearance, or null for a guest.
+             *
+             * Shipped with every page so a second browser adopts the same theme
+             * on its FIRST load rather than after the user notices and fixes it
+             * by hand. The client treats this as authoritative and keeps
+             * localStorage as a pre-paint cache.
+             */
+            'appearance' => fn (): ?array => $request->user()?->appearance,
+
             ...parent::share($request),
 
             /*

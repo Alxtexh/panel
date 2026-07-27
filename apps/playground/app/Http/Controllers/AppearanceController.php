@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+
+/**
+ * Saves the acting user's display preferences.
+ *
+ * EVERY VALUE IS CHECKED AGAINST A LIST. These end up as CSS custom properties
+ * on `<html>`, so an unvalidated value is a string the browser will happily
+ * accept into a style declaration. `primary` in particular becomes part of a
+ * colour value — the allow-list is what keeps this a preference endpoint rather
+ * than a way to inject style into every page the user loads.
+ *
+ * FONT SIZE IS CLAMPED, not merely typed. An integer is still an integer at
+ * 4,000, and the panel would render one word per screen with no way back except
+ * clearing storage.
+ *
+ * PARTIAL UPDATES ARE MERGED. The drawer changes one setting at a time, and a
+ * replace-everything write would blank the other six each click.
+ */
+final class AppearanceController extends Controller
+{
+    /**
+     * The permitted values, mirroring the client's tables.
+     *
+     * Duplicated deliberately: the client decides what a preference LOOKS like,
+     * the server decides what may be STORED. A shared list would mean trusting
+     * the browser's copy, which is the thing being validated.
+     */
+    private const THEMES = ['light', 'dark', 'system'];
+
+    private const DENSITIES = ['comfortable', 'compact'];
+
+    private const SIDES = ['left', 'right', 'horizontal'];
+
+    private const CARD_STYLES = ['transparent', 'filled'];
+
+    private const PRIMARIES = [
+        'slate', 'gray', 'zinc', 'red', 'rose', 'orange', 'amber', 'yellow',
+        'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo',
+        'violet', 'purple', 'fuchsia', 'pink',
+    ];
+
+    private const SURFACES = ['neutral', 'slate', 'gray', 'zinc', 'stone', 'warm', 'cool', 'sand'];
+
+    private const FONT_MIN = 12;
+
+    private const FONT_MAX = 20;
+
+    public function update(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'theme' => ['sometimes', 'string', 'in:' . implode(',', self::THEMES)],
+            'density' => ['sometimes', 'string', 'in:' . implode(',', self::DENSITIES)],
+            'sidebarSide' => ['sometimes', 'string', 'in:' . implode(',', self::SIDES)],
+            'cardStyle' => ['sometimes', 'string', 'in:' . implode(',', self::CARD_STYLES)],
+            'primary' => ['sometimes', 'string', 'in:' . implode(',', self::PRIMARIES)],
+            'surface' => ['sometimes', 'string', 'in:' . implode(',', self::SURFACES)],
+            'fontSize' => ['sometimes', 'integer', 'between:' . self::FONT_MIN . ',' . self::FONT_MAX],
+        ]);
+
+        $user = $request->user();
+
+        // Merged, not replaced: the drawer sends one key at a time.
+        $user->appearance = [...($user->appearance ?? []), ...$validated];
+        $user->save();
+
+        return response()->json(['appearance' => $user->appearance]);
+    }
+}

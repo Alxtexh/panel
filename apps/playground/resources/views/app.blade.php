@@ -23,20 +23,73 @@
             mode, or corrupt JSON all fall through to the server-rendered
             default rather than throwing in the head and blocking the page.
         --}}
+        {{--
+            The ACCOUNT's saved appearance, if there is one.
+
+            Rendered by the server so a browser that has never seen this user
+            still applies their theme on the very first paint — localStorage
+            alone cannot do that, because it belongs to whichever browser
+            happened to set it.
+        --}}
+        <script>
+            window.__panelAppearance = @json(auth()->user()?->appearance);
+        </script>
+
         <script>
             (function () {
                 try {
+                    var server = window.__panelAppearance;
                     var raw = localStorage.getItem('panelkit.appearance.vars');
 
                     if (raw) {
                         var cached = JSON.parse(raw);
                         var root = document.documentElement;
 
+                        /*
+                         * The cached variables were computed from THIS browser's
+                         * preference. When the account says something different
+                         * — a theme set in another browser — the cache is stale,
+                         * so only the parts that can be derived without the
+                         * colour palette are applied here and the script hands
+                         * over to the bundle for the rest.
+                         *
+                         * Dark mode and text size are what cause a visible jump;
+                         * an accent settling a moment later is not worth
+                         * duplicating the palette into Blade to avoid.
+                         */
+                        var stale = server && server.theme && cached.theme && server.theme !== cached.theme;
+
+                        if (stale) {
+                            root.classList.toggle('dark', server.theme === 'dark' ||
+                                (server.theme === 'system' &&
+                                    window.matchMedia('(prefers-color-scheme: dark)').matches));
+
+                            if (server.fontSize) {
+                                root.style.setProperty('--pk-font-size', server.fontSize + 'px');
+                            }
+
+                            return;
+                        }
+
                         if (cached.dark) root.classList.add('dark');
                         else root.classList.remove('dark');
 
                         for (var name in cached.vars) {
                             root.style.setProperty(name, cached.vars[name]);
+                        }
+
+                        return;
+                    }
+
+                    // No cache, but the account has a preference: apply what can
+                    // be applied without the palette.
+                    if (server && server.theme) {
+                        document.documentElement.classList.toggle('dark', server.theme === 'dark' ||
+                            (server.theme === 'system' &&
+                                window.matchMedia('(prefers-color-scheme: dark)').matches));
+
+                        if (server.fontSize) {
+                            document.documentElement.style.setProperty('--pk-font-size', server.fontSize + 'px');
                         }
 
                         return;

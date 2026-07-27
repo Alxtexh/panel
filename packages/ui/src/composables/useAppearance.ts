@@ -224,9 +224,46 @@ export function readAppearance(): Appearance {
  *
  * It also fights nothing: this is now the ONLY writer of the theme class.
  */
-export function initializeAppearance(): void {
-    state.value = readAppearance()
-    applyAppearance(state.value)
+export function initializeAppearance(fromServer?: Partial<Appearance> | null): void {
+    /*
+     * THE SERVER VALUE WINS when there is one.
+     *
+     * localStorage is per browser profile, so signing into the same account
+     * from a second browser showed a different theme — nothing was broken, the
+     * preference simply had no way to travel with the account. The stored
+     * account value is therefore authoritative, and the local copy is a cache
+     * that gets corrected on the first page load.
+     *
+     * A GUEST still gets their local preference: the sign-in screen has no user
+     * to read from, and the person choosing a dark login page is the same
+     * person who set it last time.
+     */
+    const local = readAppearance()
+    const merged = fromServer ? ({ ...local, ...fromServer } as Appearance) : local
+
+    state.value = merged
+    applyAppearance(merged)
+
+    // Write the reconciled value back so the pre-paint script agrees next time.
+    if (fromServer) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+        } catch {
+            // Private mode. The theme still applies this session.
+        }
+    }
+}
+
+/**
+ * Persist a change to the account.
+ *
+ * Supplied by the app, because @panelkit/ui ships no HTTP client (§4). Set to
+ * null for an unauthenticated page, where there is nobody to save against.
+ */
+let persist: ((patch: Partial<Appearance>) => void) | null = null
+
+export function setAppearancePersister(fn: ((patch: Partial<Appearance>) => void) | null): void {
+    persist = fn
 }
 
 /** Apply a preference to the document, and cache it for the next first paint. */
@@ -247,7 +284,11 @@ export function applyAppearance(next: Appearance): void {
     try {
         // Cached so the pre-paint script can replay it without knowing the
         // palette — which is what removes the flash of default theme.
-        localStorage.setItem(VARS_KEY, JSON.stringify({ dark: isDark(next), vars }))
+        // `theme` is cached alongside the computed values so the pre-paint
+        // script can tell whether this browser's cache still agrees with the
+        // account — without it, a theme changed elsewhere would be replayed
+        // from a stale cache on every first paint.
+        localStorage.setItem(VARS_KEY, JSON.stringify({ dark: isDark(next), theme: next.theme, vars }))
     } catch {
         // Private mode. Only the flash-prevention is lost.
     }
@@ -269,6 +310,11 @@ export function useAppearance() {
         }
 
         apply(state.value)
+
+        // Local first, account second: the change is visible immediately and
+        // the request is fire-and-forget. A failed save costs this browser
+        // nothing and only means another browser will not see the change yet.
+        persist?.(patch)
     }
 
     function reset() {

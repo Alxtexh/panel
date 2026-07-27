@@ -57,6 +57,7 @@ export {
     appearanceVars,
     readAppearance,
     isDark,
+    setAppearancePersister,
 } from './composables/useAppearance'
 export { useTenantTheme } from './composables/useTenantTheme'
 export { useSchemaColumns, BADGE_VARIANTS } from './composables/useSchemaColumns'
