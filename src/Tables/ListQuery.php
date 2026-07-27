@@ -76,6 +76,29 @@ final class ListQuery
 
     private string $keyColumn = 'id';
 
+    /**
+     * keyset | offset.
+     *
+     * KEYSET is the default because OFFSET 100000 makes the database walk
+     * 100,000 rows it then discards, so page 2,000 gets steadily slower.
+     *
+     * But it is a DEFAULT, not a mandate. Offset is genuinely better for a small
+     * table where an operator wants to jump to page 7, and refusing to offer it
+     * would be the framework imposing a decision it cannot make — a 200-row
+     * lookup table pays nothing for OFFSET and gains real navigation.
+     */
+    private string $paginationStrategy = 'keyset';
+
+    /**
+     * deferred | exact | approximate | none.
+     *
+     *   deferred     count runs AFTER the rows are sent (default)
+     *   exact        count blocks the response. Correct for a small table.
+     *   approximate  engine statistics. Instant, and wrong by a little.
+     *   none         no total at all. Cheapest, and no page count.
+     */
+    private string $countStrategy = 'deferred';
+
     private function __construct(string $model)
     {
         $this->model = $model;
@@ -170,6 +193,30 @@ final class ListQuery
         return $this;
     }
 
+    /** keyset (default) or offset. See the property docblock for the trade. */
+    public function paginationStrategy(string $strategy): self
+    {
+        if (! in_array($strategy, ['keyset', 'offset'], true)) {
+            throw new InvalidArgumentException("Unknown pagination strategy [{$strategy}].");
+        }
+
+        $this->paginationStrategy = $strategy;
+
+        return $this;
+    }
+
+    /** deferred (default), exact, approximate, or none. */
+    public function countStrategy(string $strategy): self
+    {
+        if (! in_array($strategy, ['deferred', 'exact', 'approximate', 'none'], true)) {
+            throw new InvalidArgumentException("Unknown count strategy [{$strategy}].");
+        }
+
+        $this->countStrategy = $strategy;
+
+        return $this;
+    }
+
     /** Qualified primary key, used as the keyset tiebreaker. */
     public function keyColumn(string $column): self
     {
@@ -192,6 +239,81 @@ final class ListQuery
         $this->transform = $transform;
 
         return $this;
+    }
+
+    /**
+     * Rows among $ids that changed since $since.
+     *
+     * This is what makes the poll driver cheap enough to be the default. It is
+     * NOT the polling S8 warns against — that warning is about re-rendering a
+     * component server-side once per viewer per tick, so cost scales with
+     * audience. This asks one bounded, indexed question:
+     *
+     *     WHERE id IN (visible ids) AND updated_at > ?
+     *
+     * The id set is capped by the page size, so the query is O(page), never
+     * O(table), and it returns only rows that actually changed — usually none,
+     * in which case the response is an empty array.
+     *
+     * @param  list<int|string>  $ids  Ids currently on screen.
+     * @return list<array<string, mixed>>
+     */
+    public function changedSince(array $ids, string $since): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        /** @var \Illuminate\Database\Eloquent\Builder $eloquent */
+        $eloquent = $this->model::query();
+
+        if ($this->join !== null) {
+            ($this->join)($eloquent);
+        }
+
+        // toBase() applies the tenant scope, so a crafted id list can only ever
+        // return rows this tenant already owns.
+        $rows = $eloquent->toBase()
+            ->select($this->select)
+            ->whereIn($this->keyColumn, $ids)
+            // Parsed, not passed through. The client sends ISO-8601 with an
+            // offset (2026-07-27T09:15:00+00:00) while the column holds
+            // 'Y-m-d H:i:s', and comparing those as strings silently matches
+            // nothing — an endpoint that returns 200 and an empty array forever.
+            ->where($this->qualifiedUpdatedAt(), '>', $this->normaliseTimestamp($since))
+            ->limit(count($ids))
+            ->get()
+            ->map(static fn (object $r): array => (array) $r)
+            ->all();
+
+        return $this->transform === null ? $rows : array_map($this->transform, $rows);
+    }
+
+    /**
+     * Client timestamp to a comparable database value, in UTC.
+     *
+     * Returns a far-future value on garbage input rather than throwing or
+     * defaulting to the epoch: the epoch would return every row on every poll,
+     * which is the expensive wrong answer.
+     */
+    private function normaliseTimestamp(string $since): string
+    {
+        try {
+            return \Illuminate\Support\Carbon::parse($since)->utc()->format('Y-m-d H:i:s');
+        } catch (\Throwable) {
+            return \Illuminate\Support\Carbon::now()->addCentury()->format('Y-m-d H:i:s');
+        }
+    }
+
+    private function qualifiedUpdatedAt(): string
+    {
+        // Qualified, because the list may join another table that also has an
+        // updated_at and an unqualified column is ambiguous the moment it does.
+        $table = str_contains($this->keyColumn, '.')
+            ? substr($this->keyColumn, 0, strpos($this->keyColumn, '.'))
+            : (new $this->model())->getTable();
+
+        return "{$table}.updated_at";
     }
 
     /**
@@ -278,6 +400,74 @@ final class ListQuery
     }
 
     /**
+     * How the total is produced, per the declared strategy.
+     *
+     * @param array<string, mixed> $state
+     * @return Closure(): ?int
+     */
+    private function totalResolver(array $state): Closure
+    {
+        return match ($this->countStrategy) {
+            'none' => static fn (): ?int => null,
+
+            /*
+             * Engine statistics: instant, and approximate. Postgres keeps
+             * reltuples on pg_class and it is close enough for "about 500k"
+             * while costing nothing. It is only valid UNFILTERED - a filtered
+             * approximate count would be a number that looks precise and is
+             * simply wrong, so this falls back to an exact count the moment any
+             * filter or search is applied.
+             */
+            'approximate' => fn (): ?int => $this->isUnfiltered($state)
+                ? $this->approximateTotal()
+                : $this->base($state)->count(),
+
+            default => fn (): int => $this->base($state)->count(),
+        };
+    }
+
+    /** @param array<string, mixed> $state */
+    private function isUnfiltered(array $state): bool
+    {
+        if (($state['search'] ?? '') !== '' || ($state['tab'] ?? null) !== null) {
+            return false;
+        }
+
+        foreach ((array) ($state['filters'] ?? []) as $value) {
+            if ($value !== null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Row estimate from engine statistics.
+     *
+     * Postgres only. Every other engine falls back to an exact count rather
+     * than guessing - MySQL's information_schema.TABLE_ROWS is unreliable
+     * enough on InnoDB to be misleading, and SQLite has nothing.
+     */
+    private function approximateTotal(): ?int
+    {
+        $connection = $this->model::query()->getConnection();
+
+        if ($connection->getDriverName() !== 'pgsql') {
+            return $this->base(['search' => '', 'filters' => [], 'sort' => $this->defaultSort, 'direction' => 'desc', 'cursor' => null])->count();
+        }
+
+        $table = (new $this->model())->getTable();
+
+        $row = $connection->selectOne(
+            'select reltuples::bigint as estimate from pg_class where relname = ?',
+            [$table],
+        );
+
+        return $row === null ? null : max(0, (int) $row->estimate);
+    }
+
+    /**
      * @return array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>}
      */
     private function readState(Request $request): array
@@ -299,6 +489,7 @@ final class ListQuery
             'sort' => array_key_exists($sort, $this->sortable) ? $sort : $this->defaultSort,
             'direction' => $direction === 'asc' ? 'asc' : 'desc',
             'cursor' => $request->query('cursor') ? (string) $request->query('cursor') : null,
+            'page' => max(1, (int) $request->query('page', 1)),
             'filters' => $filters,
         ];
     }
@@ -320,7 +511,14 @@ final class ListQuery
             // across page boundaries.
             ->orderBy($this->keyColumn, $direction);
 
-        $this->applyCursor($query, $state, $column, $direction);
+        if ($this->paginationStrategy === 'offset') {
+            // Explicitly opt-in. Fine on a small table, and the reason page
+            // 2,000 is slow on a large one.
+            $page = max(1, (int) ($state['page'] ?? 1));
+            $query->forPage($page, $perPage);
+        } else {
+            $this->applyCursor($query, $state, $column, $direction);
+        }
 
         $rows = array_map(
             static fn (object $row): array => (array) $row,
