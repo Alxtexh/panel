@@ -27,7 +27,7 @@ use Closure;
  * backed by a query is a closure, resolved when the form's data is assembled,
  * never while building the cached schema (antipatterns §3.3, addendum Part A).
  */
-abstract class Field
+abstract class Field implements \PanelKit\Panel\Schema\Renderable
 {
     protected ?string $label = null;
 

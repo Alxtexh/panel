@@ -26,12 +26,12 @@ use PanelKit\Panel\Forms\Fields\Field;
  */
 abstract class Component
 {
-    /** @var list<Component|Field> */
+    /** @var list<Component|Renderable> */
     protected array $children = [];
 
     abstract public function component(): string;
 
-    /** @param list<Component|Field> $children */
+    /** @param list<Component|Renderable> $children */
     public function schema(array $children): static
     {
         $this->children = $children;
@@ -39,7 +39,7 @@ abstract class Component
         return $this;
     }
 
-    /** @return list<Component|Field> */
+    /** @return list<Component|Renderable> */
     public function children(): array
     {
         return $this->children;
@@ -51,7 +51,7 @@ abstract class Component
         return [
             'component' => $this->component(),
             'children' => array_map(
-                static fn (Component|Field $child): array => $child->toSchema(),
+                static fn (Component|Renderable $child): array => $child->toSchema(),
                 $this->children,
             ),
         ];
@@ -66,7 +66,7 @@ abstract class Component
      * the failure that would make layout a security problem rather than a
      * presentation one.
      *
-     * @param  list<Component|Field>  $nodes
+     * @param  list<Component|Renderable>  $nodes
      * @return list<Field>
      */
     public static function collectFields(array $nodes): array
