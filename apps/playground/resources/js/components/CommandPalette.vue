@@ -186,7 +186,7 @@ defineExpose({ show })
          search field would eat the whole topbar. -->
     <button
         type="button"
-        class="border-input bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground flex h-9 items-center gap-2 rounded-md border px-2.5 text-sm transition-colors sm:w-72 sm:px-3"
+        class="border-input bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground flex h-9 shrink items-center gap-2 rounded-md border px-2.5 text-sm transition-colors sm:w-56 sm:px-3 lg:w-72"
         @click="show"
     >
         <Search class="size-4 shrink-0" />

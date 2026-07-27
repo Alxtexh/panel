@@ -147,7 +147,8 @@ const supportNavItems: NavItem[] = [
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
                         <Link :href="dashboard()">
-                            <AppLogo />
+                            <!-- The rail has room, and the name says which tenant. -->
+                            <AppLogo show-name />
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

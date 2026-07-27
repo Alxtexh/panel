@@ -11,6 +11,7 @@
 import type { FormField } from './types'
 
 import { onBeforeUnmount, ref, watch } from 'vue'
+import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -101,7 +102,19 @@ onBeforeUnmount(() => clearTimeout(debounce))
             inline, which is what makes a relation with 100k rows pickable at all
             — the alternative ships 100,000 option elements to every browser.
         -->
-        <div v-if="field.type === 'select' && searchOptions" class="relative">
+        <!-- Several values: the same token field the filters use, so "choose
+             several of these" looks identical wherever it appears. -->
+        <PkMultiSelect
+            v-if="field.type === 'multiselect'"
+            :model-value="(Array.isArray(value) ? value : []) as (string | number)[]"
+            :options="(options ?? []) as any"
+            :disabled="field.disabled || processing"
+            :max="(field as any).max ?? null"
+            :placeholder="field.placeholder ?? 'Select…'"
+            @update:model-value="(next) => emit('change', next)"
+        />
+
+        <div v-else-if="field.type === 'select' && searchOptions" class="relative">
             <button
                 type="button"
                 class="border-input bg-background focus-visible:ring-ring flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"

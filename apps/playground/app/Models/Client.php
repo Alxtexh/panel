@@ -19,6 +19,7 @@ final class Client extends Model
      * row into somebody else's tenant.
      */
     protected $fillable = [
+        'reminder_days',
         'plan_id',
         'router_id',
         'name',
@@ -31,7 +32,10 @@ final class Client extends Model
 
     protected function casts(): array
     {
-        return ['expiry_date' => 'datetime'];
+        return [
+            'reminder_days' => 'array',
+            'expiry_date' => 'datetime',
+        ];
     }
 
     public function plan(): BelongsTo

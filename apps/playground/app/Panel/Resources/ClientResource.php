@@ -10,6 +10,7 @@ use App\Models\Plan;
 use Illuminate\Database\Eloquent\Collection;
 use PanelKit\Panel\Actions\BulkAction;
 use PanelKit\Panel\Forms\Fields\DateField;
+use PanelKit\Panel\Forms\Fields\MultiSelectField;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Rules\ExistsInScope;
@@ -99,6 +100,23 @@ final class ClientResource extends Resource
                     ]),
                     Section::make('Billing')->collapsible(collapsed: true)->schema([
                         DateField::make('expiry_date')->label('Expires'),
+                        // Several values from a short fixed list — the option
+                        // list is also the validation rule, and it is enforced
+                        // on each MEMBER rather than on the array.
+                        MultiSelectField::make('reminder_days')->label('Reminder times')
+                            ->placeholder('No reminders')
+                            ->help('When to warn this subscriber before their subscription lapses.')
+                            ->options([
+                                0 => 'At expiry',
+                                1 => '1 day before',
+                                2 => '2 days before',
+                                3 => '3 days before',
+                                4 => '4 days before',
+                                5 => '5 days before',
+                                7 => '7 days before',
+                                14 => '14 days before',
+                                30 => '30 days before',
+                            ]),
                     ]),
                 ]),
             ]),

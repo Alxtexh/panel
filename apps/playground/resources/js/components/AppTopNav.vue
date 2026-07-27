@@ -38,12 +38,12 @@ function groupIsActive(items: { href: string }[]): boolean {
 
 <template>
     <header class="border-sidebar-border/70 bg-background sticky top-0 z-30 border-b">
-        <div class="flex h-14 items-center gap-2 px-3 sm:px-4">
-            <Link :href="nav.primary[0].href" class="mr-2 shrink-0">
+        <div class="flex h-14 items-center gap-3 px-3 sm:px-4">
+            <Link :href="nav.primary[0].href" class="shrink-0">
                 <AppLogo />
             </Link>
 
-            <nav class="pk-scroll flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+            <nav class="pk-scroll flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
                 <Link
                     v-for="item in nav.primary"
                     :key="item.title"
@@ -115,7 +115,14 @@ function groupIsActive(items: { href: string }[]): boolean {
                 </PkDropdown>
             </nav>
 
-            <div class="flex shrink-0 items-center gap-2">
+            <!--
+                The right-hand group is allowed to SHRINK, and the nav is not.
+                Reversing that is what produced the crush in the first place: a
+                fixed-width search box pushed the menu into a scrolling strip
+                while sitting at its full size, so the thing that lost room was
+                the thing people actually use.
+            -->
+            <div class="flex min-w-0 shrink items-center gap-1.5">
                 <CommandPalette />
                 <NotificationBell />
                 <AppearanceDrawer />

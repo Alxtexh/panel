@@ -17,7 +17,7 @@
  * different tomorrow, and a shared link would show the recipient a different
  * window than the sender saw.
  */
-import { PkSlideover } from '@panelkit/ui'
+import { PkMultiSelect, PkSlideover } from '@panelkit/ui'
 import { computed, ref, watch } from 'vue'
 
 interface Option {
@@ -41,7 +41,6 @@ const emit = defineEmits<{
 }>()
 
 const draft = ref({ from: '', to: '', routers: [] as number[] })
-const routerSearch = ref('')
 
 // Re-seed whenever the panel opens, so a cancelled edit does not linger.
 watch(
@@ -54,7 +53,6 @@ watch(
             to: props.to ?? '',
             routers: [...props.routers],
         }
-        routerSearch.value = ''
     },
     { immediate: true },
 )
@@ -87,18 +85,6 @@ const presets = [
     { label: 'Last 90 days', apply: () => preset(90) },
     { label: 'This month', apply: thisMonth },
 ]
-
-const visibleRouters = computed(() => {
-    const q = routerSearch.value.trim().toLowerCase()
-
-    return q ? props.routerOptions.filter((r) => r.label.toLowerCase().includes(q)) : props.routerOptions
-})
-
-function toggleRouter(id: number) {
-    draft.value.routers = draft.value.routers.includes(id)
-        ? draft.value.routers.filter((r) => r !== id)
-        : [...draft.value.routers, id]
-}
 
 /** A range with only an end is meaningless — "until then, from when?" */
 const invalid = computed(() => draft.value.to !== '' && draft.value.from === '')
@@ -184,36 +170,14 @@ function apply() {
                     </button>
                 </div>
 
-                <input
-                    v-if="routerOptions.length > 8"
-                    v-model="routerSearch"
-                    type="search"
-                    class="bg-background focus:ring-ring rounded-md border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
-                    placeholder="Find a router…"
+                <!-- The same token field the table filters use, so "choose
+                     several of these" looks identical everywhere in the panel. -->
+                <PkMultiSelect
+                    v-model="draft.routers"
+                    :options="routerOptions"
+                    placeholder="All routers"
+                    search-placeholder="Start typing to search..."
                 />
-
-                <!-- Capped height: a hundred routers must not push Apply off the
-                     panel, which the fixed footer already guards against, but a
-                     scrolling sub-list keeps the date section reachable too. -->
-                <div class="flex max-h-56 flex-col overflow-y-auto rounded-md border">
-                    <label
-                        v-for="option in visibleRouters"
-                        :key="option.value"
-                        class="hover:bg-accent flex cursor-pointer items-center gap-2 px-2.5 py-1.5 text-sm"
-                    >
-                        <input
-                            type="checkbox"
-                            class="accent-primary size-3.5"
-                            :checked="draft.routers.includes(option.value)"
-                            @change="toggleRouter(option.value)"
-                        />
-                        <span class="min-w-0 truncate">{{ option.label }}</span>
-                    </label>
-
-                    <p v-if="visibleRouters.length === 0" class="text-muted-foreground px-2.5 py-3 text-xs">
-                        No router matches “{{ routerSearch }}”.
-                    </p>
-                </div>
             </section>
         </div>
 

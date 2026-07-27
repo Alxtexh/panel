@@ -21,6 +21,7 @@
  * Emits only. Never fetches (spec §4 rule 2).
  */
 import { computed, ref, watch } from 'vue'
+import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import PkDropdown from '../primitives/PkDropdown.vue'
 import type { FilterSchema } from './types'
 
@@ -264,35 +265,23 @@ function clearEverything() {
                     <div v-for="filter in filterSchema" :key="filter.key" class="flex flex-col gap-1.5">
                         <label class="text-xs font-medium">{{ filter.label }}</label>
 
-                        <!-- Multi-value: chips, because a stack of checkboxes
-                             hides how many are chosen and a multi-select box
-                             hides the options. -->
-                        <div v-if="isMulti(filter)" class="flex flex-wrap gap-1.5">
-                            <button
-                                v-for="opt in optionsFor(filter)"
-                                :key="String(opt.value)"
-                                type="button"
-                                class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs capitalize transition-colors"
-                                :class="
-                                    isChosen(filter, opt.value)
-                                        ? 'border-primary bg-primary/10 text-primary font-medium'
-                                        : 'border-input hover:bg-accent'
-                                "
-                                @click="toggleChip(filter, opt.value)"
-                            >
-                                <svg
-                                    v-if="isChosen(filter, opt.value)"
-                                    viewBox="0 0 24 24"
-                                    class="size-3"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="3.5"
-                                >
-                                    <path d="m5 13 4 4L19 7" />
-                                </svg>
-                                {{ opt.label }}
-                            </button>
-                        </div>
+                        <!--
+                            A TOKEN FIELD, not a row of toggle chips.
+                            
+                            The chip row showed every option all the time, which
+                            is fine at three and unusable at forty: the chosen
+                            ones are scattered through the list and the only way
+                            to see what you picked is to read all of them. A
+                            token field answers "what have I chosen" directly,
+                            and moves the rest behind a searchable list.
+                        -->
+                        <PkMultiSelect
+                            v-if="isMulti(filter)"
+                            :model-value="draftValues(filter)"
+                            :options="optionsFor(filter)"
+                            :placeholder="`Any ${filter.label.toLowerCase()}`"
+                            @update:model-value="(value) => (draft[filter.key] = value.length ? value : null)"
+                        />
 
                         <!-- Date range: presets plus an explicit pair. -->
                         <template v-else-if="filter.type === 'daterange'">

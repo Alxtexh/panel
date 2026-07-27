@@ -140,6 +140,21 @@ abstract class Field implements \PanelKit\Panel\Schema\Renderable
     }
 
     /**
+     * Rules for keys OTHER than this field's own.
+     *
+     * A multi-value field needs `key.*` as well as `key`, and Form::rules()
+     * keys everything by field — so without this hook a field could only ever
+     * validate its own key. The consequence is not cosmetic: an `array` rule
+     * alone accepts `['active', 'anything']`, because the array is an array.
+     *
+     * @return array<string, list<mixed>>
+     */
+    public function additionalRules(): array
+    {
+        return [];
+    }
+
+    /**
      * Structure only. Never resolves an option closure.
      *
      * @return array<string, mixed>

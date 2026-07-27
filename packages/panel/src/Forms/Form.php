@@ -117,6 +117,12 @@ final class Form
 
         foreach ($this->fields() as $field) {
             $rules[$field->key] = $field->rules();
+
+            // Fields that validate more than their own key — a multi-select
+            // has to constrain each MEMBER, not merely assert an array.
+            foreach ($field->additionalRules() as $key => $extra) {
+                $rules[$key] = $extra;
+            }
         }
 
         return $rules;

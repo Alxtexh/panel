@@ -7,7 +7,7 @@ export interface FormField {
     component?: 'field'
     key: string
     label: string
-    type: 'text' | 'textarea' | 'number' | 'select' | 'toggle' | 'date' | 'datetime'
+    type: 'text' | 'textarea' | 'number' | 'select' | 'toggle' | 'date' | 'multiselect' | 'datetime'
     required?: boolean
     help?: string
     placeholder?: string
