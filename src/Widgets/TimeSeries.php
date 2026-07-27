@@ -102,11 +102,28 @@ final class TimeSeries
      */
     public function resolve(Period $period, ?DateTimeImmutable $now = null): array
     {
-        $now ??= new DateTimeImmutable();
+        return $this->resolveWindow(Window::fromPeriod($period, $now ?? new DateTimeImmutable()), $period->value);
+    }
 
-        $bucket = $period->bucket();
-        $start = $period->start($now);
-        $end = $period->end($now);
+    /**
+     * Run the series over an explicit window.
+     *
+     * The real implementation; `resolve()` is the named-period shorthand. A
+     * dashboard filter produces a window a Period cannot express, and having
+     * one path for both is what stops "last 7 days" and "3–9 March" diverging.
+     *
+     * @return array{
+     *     points: list<array{label: string, value: int|float}>,
+     *     total: int|float,
+     *     period: string,
+     *     bucket: string
+     * }
+     */
+    public function resolveWindow(Window $window, string $periodLabel = 'custom'): array
+    {
+        $bucket = $window->bucket;
+        $start = $window->start;
+        $end = $window->end;
 
         $rows = $this->rawSeries($bucket, $start, $end);
 
@@ -133,7 +150,7 @@ final class TimeSeries
             'total' => $this->aggregate === 'avg' && $points !== []
                 ? round($total / count($points), 2)
                 : $total,
-            'period' => $period->value,
+            'period' => $periodLabel,
             'bucket' => $bucket->value,
         ];
     }
@@ -145,6 +162,11 @@ final class TimeSeries
      * total and nothing else — running a full bucketed series to sum it back up
      * would be a second grouped scan for a single number.
      */
+    public function totalIn(Window $window): int|float
+    {
+        return $this->totalBetween($window->start, $window->end);
+    }
+
     public function totalBetween(DateTimeImmutable $start, DateTimeImmutable $end): int|float
     {
         $query = $this->base()->whereBetween($this->timestamp, [
