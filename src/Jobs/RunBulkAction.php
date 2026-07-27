@@ -83,12 +83,20 @@ final class RunBulkAction implements ShouldQueue
             );
 
             JobStatus::finish($this->token, ['done' => $affected]);
+
+            $this->notifyActor(
+                'Bulk action finished',
+                number_format($affected) . ' records updated by "' . $this->actionKey . '".',
+                "/{$this->resource}",
+            );
         } catch (Throwable $e) {
             // Recorded for the operator watching the progress bar, then
             // rethrown so it reaches failed_jobs and the logs like any other
             // job failure. Swallowing it would leave the UI saying "failed"
             // with nothing anywhere explaining why.
             JobStatus::fail($this->token, $e->getMessage());
+
+            $this->notifyActor('Bulk action failed', $e->getMessage(), "/{$this->resource}", 'danger');
 
             throw $e;
         }

@@ -31,6 +31,9 @@ use RuntimeException;
  */
 trait ActsAsPanelUser
 {
+    /** The user this job is running as, once actAs() has established it. */
+    protected mixed $actor = null;
+
     /**
      * @return class-string<Resource>
      */
@@ -44,6 +47,7 @@ trait ActsAsPanelUser
         }
 
         Auth::setUser($user);
+        $this->actor = $user;
 
         $class = app(PanelManager::class)->resource($resourceKey);
 
@@ -65,5 +69,29 @@ trait ActsAsPanelUser
         }
 
         return $class;
+    }
+
+    /**
+     * Tell the operator their background work finished.
+     *
+     * Guarded, because a notification failure must not fail the JOB — the export
+     * is already written and the mutation already committed, so throwing here
+     * would retry work that is done and, worse, report a success as a failure.
+     */
+    protected function notifyActor(string $title, string $body, ?string $href = null, string $severity = 'info'): void
+    {
+        if ($this->actor === null || ! method_exists($this->actor, 'notify')) {
+            return;
+        }
+
+        try {
+            $this->actor->notify(new \App\Notifications\JobFinished($title, $body, $href, $severity));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Could not notify the panel user about a finished job.', [
+                'component' => 'ActsAsPanelUser',
+                'operation' => 'notifyActor',
+                'exception' => $e->getMessage(),
+            ]);
+        }
     }
 }
