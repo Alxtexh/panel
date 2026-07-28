@@ -360,6 +360,14 @@ return [
     */
     'exports' => [
         'disk' => env('PANEL_EXPORT_DISK', 'local'),
+
+        /*
+        | How long a finished export stays downloadable. It must outlive the
+        | notification announcing it - that notification is stored until
+        | somebody reads it, and a link that expires within the hour turns
+        | "your export is ready" into a 404 page the next morning.
+        */
+        'retention_days' => (int) env('PANEL_EXPORT_RETENTION_DAYS', 7),
     ],
 
 

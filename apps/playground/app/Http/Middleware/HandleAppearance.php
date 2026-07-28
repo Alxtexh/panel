@@ -16,7 +16,13 @@ class HandleAppearance
      */
     public function handle(Request $request, Closure $next): Response
     {
-        View::share('appearance', $request->cookie('appearance') ?? 'system');
+        /*
+         * LIGHT WHEN NOTHING HAS BEEN CHOSEN. The fallback was `system`, which
+         * the pre-paint script resolved against `prefers-color-scheme` - so a
+         * first visit on a dark-mode laptop opened a dark panel nobody had
+         * asked for, and no setting anywhere said why.
+         */
+        View::share('appearance', $request->cookie('appearance') ?? 'light');
 
         return $next($request);
     }

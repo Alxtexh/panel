@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import AssistantDrawer from '@/components/AssistantDrawer.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import { AppearanceDrawer, useAppearance } from '@panelkit/ui';
@@ -75,6 +76,10 @@ const trail = computed<BreadcrumbItem[]>(() =>
 
         <div class="flex items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
             <CommandPalette />
+            <!-- Beside search, because a question about a record is the same
+                 kind of interruption as looking one up - and it opens over the
+                 screen you are on rather than navigating away from it. -->
+            <AssistantDrawer />
             <NotificationBell />
             <!-- Appearance belongs where you can see what it changes. -->
             <AppearanceDrawer />

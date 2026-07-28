@@ -1,4 +1,5 @@
-export type Appearance = 'light' | 'dark' | 'system';
+/** Light or dark. `system` was removed - see @panelkit/ui's Theme. */
+export type Appearance = 'light' | 'dark';
 export type ResolvedAppearance = 'light' | 'dark';
 
 export type AppVariant = 'header' | 'sidebar';

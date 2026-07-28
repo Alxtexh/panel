@@ -168,4 +168,50 @@ final class AppearanceTest extends TestCase
             ->assertOk()
             ->assertSee('window.__panelAppearance = null', false);
     }
+
+    /* ----------------------------------------------------- light by default */
+
+    /**
+     * NOBODY IS SHOWN A THEME THEY DID NOT CHOOSE.
+     *
+     * The default used to be `system`, which the pre-paint script resolved
+     * against `prefers-color-scheme` - so a first visit on a dark-mode laptop
+     * opened a dark panel, the same account looked different on two machines,
+     * and no setting anywhere explained it. Light is the default now and the
+     * only thing that changes it is somebody choosing dark.
+     */
+    public function test_the_panel_starts_light_when_nothing_has_been_chosen(): void
+    {
+        $response = $this->get('/login')->assertOk();
+
+        // `matchMedia` was how the pre-paint script asked the operating system.
+        // Its absence is the mechanism, not just the outcome.
+        $this->assertStringNotContainsString('matchMedia', $response->getContent());
+        $response->assertSee("var appearance = 'light'", false);
+    }
+
+    /**
+     * `system` IS NO LONGER STORABLE.
+     *
+     * A client that still sends it - a stale bundle, an old bookmarked request
+     * - is refused rather than allowed to write a value nothing renders, which
+     * would show as a settings control with no option selected.
+     */
+    public function test_following_the_operating_system_is_no_longer_an_option(): void
+    {
+        $this->actingAs($this->user)
+            ->putJson('/settings/appearance', ['theme' => 'system'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('theme');
+    }
+
+    /** Dark is still a choice - mandatory light is a DEFAULT, not a lock. */
+    public function test_dark_can_still_be_chosen(): void
+    {
+        $this->actingAs($this->user)
+            ->putJson('/settings/appearance', ['theme' => 'dark'])
+            ->assertOk();
+
+        $this->assertSame('dark', $this->user->fresh()->appearance['theme']);
+    }
 }

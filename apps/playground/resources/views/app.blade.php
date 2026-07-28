@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"  @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"  @class(['dark' => ($appearance ?? 'light') == 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -60,9 +60,7 @@
                         var stale = server && server.theme && cached.theme && server.theme !== cached.theme;
 
                         if (stale) {
-                            root.classList.toggle('dark', server.theme === 'dark' ||
-                                (server.theme === 'system' &&
-                                    window.matchMedia('(prefers-color-scheme: dark)').matches));
+                            root.classList.toggle('dark', server.theme === 'dark');
 
                             if (server.fontSize) {
                                 root.style.setProperty('--pk-font-size', server.fontSize + 'px');
@@ -84,9 +82,7 @@
                     // No cache, but the account has a preference: apply what can
                     // be applied without the palette.
                     if (server && server.theme) {
-                        document.documentElement.classList.toggle('dark', server.theme === 'dark' ||
-                            (server.theme === 'system' &&
-                                window.matchMedia('(prefers-color-scheme: dark)').matches));
+                        document.documentElement.classList.toggle('dark', server.theme === 'dark');
 
                         if (server.fontSize) {
                             document.documentElement.style.setProperty('--pk-font-size', server.fontSize + 'px');
@@ -98,11 +94,18 @@
                     // Fall through to the server default below.
                 }
 
-                var appearance = '{{ $appearance ?? "system" }}';
+                /*
+                 * THE LAST RESORT IS LIGHT, and it consults nothing.
+                 *
+                 * This used to read `prefers-color-scheme` when the stored
+                 * theme was `system` - which was the default - so a first visit
+                 * on a dark-mode laptop rendered a dark panel nobody had asked
+                 * for, and the pre-paint script was where that decision was
+                 * actually made. Dark now happens only when somebody chose it.
+                 */
+                var appearance = '{{ $appearance ?? "light" }}';
 
-                if (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    document.documentElement.classList.add('dark');
-                }
+                document.documentElement.classList.toggle('dark', appearance === 'dark');
             })();
         </script>
 

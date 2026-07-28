@@ -40,17 +40,33 @@ final class AssistantStreamTest extends TestCase
         ]);
     }
 
-    public function test_the_screen_opens(): void
+    /**
+     * THERE IS NO ASSISTANT PAGE, and that is the assertion.
+     *
+     * It is a drawer in the topbar now - opened over whatever screen somebody is
+     * on, so the filters and the half-typed form behind it survive the question.
+     * A page left behind after the drawer landed would be a second, diverging
+     * copy of the same conversation, reachable by anyone with the old link.
+     */
+    public function test_there_is_no_dedicated_assistant_page(): void
     {
-        $response = $this->actingAs($this->user)->get('/apps/assistant');
+        $this->actingAs($this->user)->get('/apps/assistant')->assertNotFound();
+    }
 
-        $response->assertOk();
-        $this->assertSame('apps/Assistant', $response->viewData('page')['component']);
+    /** The drawer is in the shell, so it arrives with every authenticated page. */
+    public function test_the_assistant_is_reachable_from_an_ordinary_screen(): void
+    {
+        $this->actingAs($this->user)->get('/dashboard')->assertOk();
+
+        $this->assertStringContainsString(
+            'AssistantDrawer',
+            file_get_contents(resource_path('js/components/AppSidebarHeader.vue')),
+            'The topbar no longer mounts the assistant, so nothing can open it.',
+        );
     }
 
     public function test_it_is_behind_authentication(): void
     {
-        $this->get('/apps/assistant')->assertRedirect();
         $this->post('/apps/assistant/stream', ['message' => 'hello'])->assertRedirect();
     }
 

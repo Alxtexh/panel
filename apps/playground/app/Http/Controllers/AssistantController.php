@@ -6,8 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Ai\PanelAssistant;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Laravel\Ai\Streaming\Events\Error;
 use Laravel\Ai\Streaming\Events\TextDelta;
 use Laravel\Ai\Streaming\Events\ToolCall;
@@ -40,11 +38,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final class AssistantController extends Controller
 {
-    public function index(): Response
-    {
-        return Inertia::render('apps/Assistant');
-    }
-
     /**
      * Stream one reply.
      *

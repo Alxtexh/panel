@@ -18,6 +18,7 @@ import { Link } from '@inertiajs/vue3';
 import { AppearanceDrawer, PkDropdown } from '@panelkit/ui';
 import AppLogo from '@/components/AppLogo.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import AssistantDrawer from '@/components/AssistantDrawer.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import TopNavUser from '@/components/TopNavUser.vue';
@@ -131,6 +132,7 @@ function groupIsActive(items: NavItem[]): boolean {
             -->
             <div class="flex min-w-0 shrink items-center gap-1.5">
                 <CommandPalette />
+                <AssistantDrawer />
                 <NotificationBell />
                 <AppearanceDrawer />
                 <TopNavUser />

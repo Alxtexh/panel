@@ -22,10 +22,15 @@ const open = ref(false)
 /** The drawer takes the edge opposite the sidebar. */
 const onLeft = computed(() => appearance.value.sidebarSide === 'right')
 
+/*
+ * NO "SYSTEM" ENTRY. It used to be here and was the default, so the panel's
+ * appearance was decided by whatever the laptop happened to be set to - the
+ * same account looked different on two machines and nobody had chosen either.
+ * Light is now the default and dark is a deliberate choice.
+ */
 const themes: { value: Theme; label: string }[] = [
     { value: 'light', label: 'Light' },
     { value: 'dark', label: 'Dark' },
-    { value: 'system', label: 'System' },
 ]
 
 const densities: { value: Density; label: string }[] = [

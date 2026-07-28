@@ -22,6 +22,15 @@ export interface JobProgress {
     total: number | null
     error: string | null
     downloadable: boolean
+    /**
+     * Where to fetch the file, as the SERVER built it.
+     *
+     * This used to be assembled here as `/${resourceKey}/jobs/${token}/download`,
+     * which is right for the portal mounted at the root and wrong for every
+     * other one - a reseller's export linked to a path their portal does not
+     * serve. The prefix is a server-side fact; only the server should say it.
+     */
+    download: string | null
 }
 
 export interface BulkTarget {
@@ -113,7 +122,7 @@ export function useBulkJob(resourceKey: string) {
                     busy.value = false
 
                     if (state.downloadable) {
-                        downloadUrl.value = `/${resourceKey}/jobs/${token}/download`
+                        downloadUrl.value = state.download ?? `/${resourceKey}/jobs/${token}/download`
                     } else {
                         // A mutation changed rows; the table must catch up.
                         // Partial reload, so the schema does not travel again.
@@ -158,6 +167,7 @@ export function useBulkJob(resourceKey: string) {
                     total: result.affected,
                     error: null,
                     downloadable: false,
+                    download: null,
                 }
                 router.reload({ only: ['records', 'total', 'tabCounts'] })
                 return

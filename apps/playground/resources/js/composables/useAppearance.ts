@@ -33,14 +33,12 @@ export function useAppearance(): UseAppearanceReturn {
         set: (value: Appearance) => set({ theme: value }),
     }) as unknown as Ref<Appearance>;
 
-    const resolvedAppearance = computed<ResolvedAppearance>(() => {
-        if (panel.value.theme !== 'system') return panel.value.theme;
-
-        return typeof window !== 'undefined' &&
-            window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'dark'
-            : 'light';
-    });
+    /*
+     * THE PREFERENCE IS THE ANSWER, now that `system` is gone. This used to
+     * fall back to `prefers-color-scheme`, which is how a panel defaulting to
+     * light still rendered dark on a dark-mode machine.
+     */
+    const resolvedAppearance = computed<ResolvedAppearance>(() => panel.value.theme);
 
     return {
         appearance,

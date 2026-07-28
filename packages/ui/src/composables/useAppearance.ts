@@ -13,7 +13,20 @@ import { computed, onMounted, ref } from 'vue'
  * not data: a round trip to change font size would be absurd, and it has to
  * apply before first paint or the page visibly reflows.
  */
-export type Theme = 'light' | 'dark' | 'system'
+/**
+ * Light or dark, and nothing else.
+ *
+ * `system` USED TO BE HERE AND WAS THE DEFAULT, which meant the panel's own
+ * appearance was decided by whatever the operating system happened to be set
+ * to - the same account looked different on two machines, a screenshot in a
+ * ticket did not match what the next person saw, and a dark panel nobody chose
+ * was the first impression for anyone whose laptop was in dark mode.
+ *
+ * The panel now starts LIGHT for everybody and follows nothing. Dark remains a
+ * deliberate choice a person makes, which is a different thing from a default
+ * inherited from elsewhere.
+ */
+export type Theme = 'light' | 'dark'
 /**
  * How much air a row gets.
  *
@@ -166,7 +179,10 @@ export const FONT_SIZE_MAX = 20
 const STORAGE_KEY = 'panelkit.appearance'
 
 const DEFAULTS: Appearance = {
-    theme: 'system',
+    // LIGHT, NOT THE OPERATING SYSTEM'S. See the Theme type - this is the whole
+    // of the "mandatory light default": there is no branch that can produce
+    // anything else before somebody chooses it.
+    theme: 'light',
     density: 'comfortable',
     fontSize: 16,
     sidebarSide: 'left',
@@ -188,12 +204,13 @@ let initialised = false
 const VARS_KEY = 'panelkit.appearance.vars'
 
 export function isDark(next: Appearance): boolean {
-    return (
-        next.theme === 'dark' ||
-        (next.theme === 'system' &&
-            typeof window !== 'undefined' &&
-            window.matchMedia('(prefers-color-scheme: dark)').matches)
-    )
+    /*
+     * ONE COMPARISON, with no `matchMedia` anywhere in it. While `system`
+     * existed this function could return dark for a preference that said
+     * nothing about dark, so a light-defaulting panel still rendered dark on a
+     * dark-mode laptop - which is exactly the behaviour being removed.
+     */
+    return next.theme === 'dark'
 }
 
 /**
@@ -283,6 +300,17 @@ export function readAppearance(): Appearance {
          * string sailed straight through and rendered "smallpx" as the label
          * and an invalid CSS value.
          */
+        /*
+         * MIGRATION. `system` is no longer a theme, and a browser that stored
+         * it before this change would otherwise fail every comparison and
+         * render as light while REPORTING a value the drawer cannot show as
+         * selected - a control with nothing highlighted and no way to explain
+         * it. Rewritten to the new default on first read.
+         */
+        if ((parsed.theme as string) === 'system') {
+            parsed.theme = DEFAULTS.theme
+        }
+
         const legacy: Record<string, number> = { small: 14, normal: 16, large: 18 }
 
         if (typeof parsed.fontSize === 'string') {

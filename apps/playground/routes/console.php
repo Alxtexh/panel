@@ -152,3 +152,25 @@ Schedule::command('panel:reports-due')
     ->everyMinute()
     ->withoutOverlapping()
     ->onOneServer();
+
+/*
+|--------------------------------------------------------------------------
+| Sweeping up what nothing else collects
+|--------------------------------------------------------------------------
+|
+| TWO COMMANDS THAT EXISTED AND WERE NEVER RUN. Both delete files that no
+| screen lists and no record points at - an abandoned upload, an export past
+| its retention window - so nothing in the panel ever reports that they are
+| accumulating. The disk fills quietly and the first symptom is a write
+| failing somewhere unrelated.
+|
+| DAILY, AND OUT OF HOURS. Neither is urgent to the minute, and both walk a
+| disk; running them while people are working buys nothing and competes with
+| the requests that matter.
+|
+| An export's expiry is enforced by the download endpoint itself, so a
+| scheduler that stopped means old files linger rather than expired ones
+| staying downloadable.
+*/
+Schedule::command('panel:prune-exports')->dailyAt('03:20')->onOneServer();
+Schedule::command('panel:prune-uploads')->dailyAt('03:30')->onOneServer();

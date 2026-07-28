@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use PanelKit\Panel\Actions\ExportedFile;
 use PanelKit\Panel\Actions\JobStatus;
 use PanelKit\Panel\Tables\Columns\Column;
 use Throwable;
@@ -51,12 +52,22 @@ final class ExportRecords implements ShouldQueue
      * @param  array<string, mixed>  $query
      * @param  list<int|string>|null  $ids
      */
+    /**
+     * @param  string|null  $downloadPath  Where the notification should link.
+     *
+     * PASSED IN RATHER THAN BUILT HERE, because a queued job has no request and
+     * therefore no idea which portal the export was started from. Building
+     * "/{resource}/jobs/{token}/download" in this class sent every reseller and
+     * platform export to a path that portal does not serve - a notification that
+     * 404s, stored permanently, for a file that exists.
+     */
     public function __construct(
         private readonly string $resource,
         private readonly array $query,
         private readonly ?array $ids,
         private readonly int|string $userId,
         private readonly string $token,
+        private readonly ?string $downloadPath = null,
     ) {}
 
     public function handle(): void
@@ -133,10 +144,25 @@ final class ExportRecords implements ShouldQueue
 
             JobStatus::finish($this->token, ['done' => $written, 'total' => $written, 'file' => $path]);
 
+            /*
+             * RECORDED WHERE IT OUTLIVES THE CACHE. `JobStatus` is a one-hour
+             * cache entry and this file is not - so an export downloaded an hour
+             * later used to 404 while the CSV sat on disk, including from the
+             * notification below, which is stored until somebody reads it.
+             */
+            ExportedFile::record(
+                token: $this->token,
+                ownerId: $this->userId,
+                resource: $this->resource,
+                disk: config('panel.exports.disk', 'local'),
+                path: $path,
+                rows: $written,
+            );
+
             $this->notifyActor(
                 'Your export is ready',
                 number_format($written).' rows exported from '.$this->resource.'.',
-                "/{$this->resource}/jobs/{$this->token}/download",
+                $this->downloadPath ?? "/{$this->resource}/jobs/{$this->token}/download",
             );
         } catch (Throwable $e) {
             if (is_resource($handle)) {

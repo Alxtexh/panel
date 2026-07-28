@@ -33,7 +33,13 @@ final class AppearanceController extends Controller
      * the server decides what may be STORED. A shared list would mean trusting
      * the browser's copy, which is the thing being validated.
      */
-    private const THEMES = ['light', 'dark', 'system'];
+    /*
+     * TWO, NOT THREE. `system` is gone: it made the appearance a property of
+     * the machine rather than of the account, and it was the default - so most
+     * people were shown a theme nobody had chosen. A client that still sends it
+     * is refused here rather than storing a value nothing can render.
+     */
+    private const THEMES = ['light', 'dark'];
 
     private const DENSITIES = ['comfortable', 'compact'];
 

@@ -60,14 +60,6 @@ final class Pages
             ['title' => 'Mail', 'href' => '/apps/mail', 'icon' => 'mail', 'group' => 'Apps'],
             ['title' => 'Chat', 'href' => '/apps/chat', 'icon' => 'chat', 'group' => 'Apps'],
             /*
-             * THE ASSISTANT HAD NO WAY IN AT ALL. `PanelAssistant` was written,
-             * tenant-scoped, metered and tested, and nothing in the panel could
-             * reach it - the same disappearing-page problem as the backup
-             * screens, one layer down.
-             */
-            ['title' => 'Assistant', 'href' => '/apps/assistant', 'icon' => 'activity', 'group' => 'Apps'],
-
-            /*
              * Development surfaces, kept apart from the operator's screens. A
              * device workbench and an API reference are for whoever is BUILDING
              * the panel; listing them beside Clients would put two things an

@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Actions\BulkAction;
@@ -378,6 +379,178 @@ final class BulkActionTest extends TestCase
             // refusal rather than a missing file.
             $this->actingAs($other)->get("/clients/jobs/{$token}/download")->assertNotFound();
             $this->actingAs($this->userA)->get("/clients/jobs/{$token}/download")->assertOk();
+        });
+    }
+
+    /* ------------------------------------------------- the link has to last */
+
+    /**
+     * THE BUG A USER HIT: an export downloaded an hour later was a 404 page.
+     *
+     * Ownership and the file name lived only in `JobStatus`, which is a cache
+     * entry with a one-hour TTL. The CSV lived on disk until something pruned
+     * it, and the "your export is ready" NOTIFICATION lives in the database
+     * until somebody reads it - so opening that notification the next morning
+     * reliably failed, for a file that was still there.
+     *
+     * Dropping the cache is exactly what an hour, a `cache:clear`, a Redis
+     * restart or a deploy does. The download must survive all four.
+     */
+    public function test_an_export_is_still_downloadable_after_its_job_status_expires(): void
+    {
+        Storage::fake('local');
+
+        $this->seedClients($this->tenantA, 2, 'active');
+
+        $token = JobStatus::token();
+
+        $this->asTenant($this->tenantA, function () use ($token): void {
+            JobStatus::start($token, $this->userA->id, 'export');
+            (new ExportRecords('clients', [], null, $this->userA->id, $token))->handle();
+
+            // An hour passes, a worker restarts, somebody clears the cache -
+            // all the same thing from here.
+            Cache::flush();
+
+            $this->assertNull(JobStatus::get($token, $this->userA->id), 'The premise: the cache is empty.');
+
+            $this->actingAs($this->userA)
+                ->get("/clients/jobs/{$token}/download")
+                ->assertOk()
+                ->assertDownload();
+        });
+    }
+
+    /** And ownership still holds once the cache is not the thing enforcing it. */
+    public function test_ownership_survives_the_cache_too(): void
+    {
+        Storage::fake('local');
+
+        $other = User::factory()->create(['tenant_id' => $this->tenantA->id, 'email_verified_at' => now()]);
+
+        $this->seedClients($this->tenantA, 2, 'active');
+
+        $token = JobStatus::token();
+
+        $this->asTenant($this->tenantA, function () use ($token, $other): void {
+            JobStatus::start($token, $this->userA->id, 'export');
+            (new ExportRecords('clients', [], null, $this->userA->id, $token))->handle();
+
+            Cache::flush();
+
+            $this->actingAs($other)->get("/clients/jobs/{$token}/download")->assertNotFound();
+            $this->actingAs($this->userA)->get("/clients/jobs/{$token}/download")->assertOk();
+        });
+    }
+
+    /**
+     * PAST ITS RETENTION WINDOW IT IS GONE, even if the file is not.
+     *
+     * The panel promises to keep an export for a number of days, and the
+     * endpoint enforces that itself rather than trusting the pruner to have run
+     * - a scheduler that stopped should mean old files linger, not that expired
+     * ones stay downloadable.
+     */
+    public function test_an_expired_export_is_refused(): void
+    {
+        Storage::fake('local');
+
+        $this->seedClients($this->tenantA, 1, 'active');
+
+        $token = JobStatus::token();
+
+        $this->asTenant($this->tenantA, function () use ($token): void {
+            JobStatus::start($token, $this->userA->id, 'export');
+            (new ExportRecords('clients', [], null, $this->userA->id, $token))->handle();
+
+            DB::table('panel_exports')->where('token', $token)->update(['expires_at' => now()->subDay()]);
+
+            $this->actingAs($this->userA)->get("/clients/jobs/{$token}/download")->assertNotFound();
+        });
+    }
+
+    /**
+     * PRUNING TAKES THE FILE AND THE ROW TOGETHER.
+     *
+     * Either one alone is a bug: an orphaned CSV nothing can reach and nothing
+     * will collect, or a row promising a download that 404s.
+     */
+    public function test_pruning_removes_the_record_and_the_file(): void
+    {
+        Storage::fake('local');
+
+        $this->seedClients($this->tenantA, 1, 'active');
+
+        $token = JobStatus::token();
+
+        $this->asTenant($this->tenantA, function () use ($token): void {
+            JobStatus::start($token, $this->userA->id, 'export');
+            (new ExportRecords('clients', [], null, $this->userA->id, $token))->handle();
+
+            $path = "panel-exports/{$token}.csv";
+
+            $this->assertTrue(Storage::disk('local')->exists($path));
+
+            DB::table('panel_exports')->where('token', $token)->update(['expires_at' => now()->subDay()]);
+
+            $this->artisan('panel:prune-exports')->assertSuccessful();
+
+            $this->assertFalse(Storage::disk('local')->exists($path), 'The file outlived its record.');
+            $this->assertSame(0, DB::table('panel_exports')->where('token', $token)->count());
+        });
+    }
+
+    /** A live export is not swept up with the expired ones. */
+    public function test_pruning_leaves_a_current_export_alone(): void
+    {
+        Storage::fake('local');
+
+        $this->seedClients($this->tenantA, 1, 'active');
+
+        $token = JobStatus::token();
+
+        $this->asTenant($this->tenantA, function () use ($token): void {
+            JobStatus::start($token, $this->userA->id, 'export');
+            (new ExportRecords('clients', [], null, $this->userA->id, $token))->handle();
+
+            $this->artisan('panel:prune-exports')->assertSuccessful();
+
+            $this->actingAs($this->userA)->get("/clients/jobs/{$token}/download")->assertOk();
+        });
+    }
+
+    /**
+     * THE LINK CARRIES THE PORTAL IT WAS STARTED FROM.
+     *
+     * A queued job has no request and cannot know whether the export began at
+     * `/clients` or `/reseller/clients`, so the path used to be assembled from
+     * the resource key alone - correct in exactly one portal, and written into
+     * a permanently stored notification in every other.
+     */
+    public function test_the_status_response_carries_a_download_url_with_the_panel_prefix(): void
+    {
+        Storage::fake('local');
+
+        $this->seedClients($this->tenantA, 1, 'active');
+
+        $token = JobStatus::token();
+
+        // The reseller portal serves its own plans resource, not clients - which
+        // is exactly why the prefix cannot be inferred from a resource key.
+        $this->asTenant($this->tenantA, function () use ($token): void {
+            JobStatus::start($token, $this->userA->id, 'export');
+            (new ExportRecords('reseller-plans', [], null, $this->userA->id, $token))->handle();
+
+            $this->actingAs($this->userA)
+                ->getJson("/reseller/reseller-plans/jobs/{$token}")
+                ->assertOk()
+                ->assertJsonPath('download', "/reseller/reseller-plans/jobs/{$token}/download");
+
+            // And from the root portal the same token is offered without one.
+            $this->actingAs($this->userA)
+                ->getJson("/clients/jobs/{$token}")
+                ->assertOk()
+                ->assertJsonPath('download', "/clients/jobs/{$token}/download");
         });
     }
 

@@ -303,14 +303,18 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
     Route::get('apps/chat', [ChatController::class, 'index'])->name('apps.chat');
 
     /*
-     | The assistant, and the stream that answers it.
+     | The stream that answers the assistant.
+     |
+     | THERE IS NO PAGE ANY MORE. The assistant is a drawer in the topbar, open
+     | over whatever screen somebody is already on - see `AssistantDrawer.vue`.
+     | A dedicated page answered an aside by navigating away from the work that
+     | prompted it, and the filters and half-typed form went with it.
      |
      | THROTTLED PER USER because a model call costs money per token and the
      | endpoint is a text box - without a limit, one person holding a key down
      | is an invoice. Twenty a minute is far above anybody asking questions in
      | good faith and far below anything expensive.
      */
-    Route::get('apps/assistant', [AssistantController::class, 'index'])->name('apps.assistant');
     Route::post('apps/assistant/stream', [AssistantController::class, 'stream'])
         ->middleware('throttle:20,1')
         ->name('apps.assistant.stream');

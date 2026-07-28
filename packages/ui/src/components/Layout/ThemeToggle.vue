@@ -12,13 +12,13 @@
  *
  * Light-versus-dark is the exception, and the reason is physical rather than
  * organisational. Somebody on a dark-adapted screen at night should not have to
- * be blinded by a sign-in form before they are allowed to change it. It is also
- * the one preference the operating system already has an opinion about, so
- * honouring it costs nothing and needs no account.
+ * be blinded by a sign-in form before they are allowed to change it.
  *
- * TWO STATES, NOT THREE. `system` is the default and stays reachable through
- * the panel's own settings; a three-way cycle on a login screen makes the
- * button's next state unguessable for the one case it exists to serve.
+ * TWO STATES, AND THE PANEL STARTS ON THE FIRST. It used to default to
+ * `system`, which meant the appearance was decided by the laptop rather than by
+ * anybody - the same account looked different on two machines. Light is now the
+ * default everywhere and dark is a choice; this button is where that choice is
+ * made before there is an account to save it against.
  */
 import { computed } from 'vue'
 import { useAppearance } from '../../composables/useAppearance'
@@ -26,21 +26,13 @@ import { useAppearance } from '../../composables/useAppearance'
 const { appearance, set } = useAppearance()
 
 /*
- * Resolved rather than read straight off the preference: with `system` chosen,
- * the stored theme says nothing about what is currently on screen, and a button
- * offering "switch to dark" while the page is already dark is worse than no
- * button.
+ * THE PREFERENCE IS NOW THE ANSWER. While `system` existed the stored theme
+ * said nothing about what was actually on screen, so this had to consult
+ * `matchMedia` to avoid offering "switch to dark" on a page that was already
+ * dark. There are two themes and both are chosen, so there is nothing to
+ * resolve.
  */
-const isDarkNow = computed(() => {
-    if (appearance.value.theme === 'system') {
-        return (
-            typeof window !== 'undefined' &&
-            window.matchMedia?.('(prefers-color-scheme: dark)').matches
-        )
-    }
-
-    return appearance.value.theme === 'dark'
-})
+const isDarkNow = computed(() => appearance.value.theme === 'dark')
 
 function toggle() {
     set({ theme: isDarkNow.value ? 'light' : 'dark' })
