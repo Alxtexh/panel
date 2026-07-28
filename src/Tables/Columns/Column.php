@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Tables\Columns;
 
+use PanelKit\Panel\Schema\Renderable;
+use PanelKit\Panel\Tables\Summarizer;
+
 /**
  * A column in the resource schema.
  *
  * TWO RULES this base class exists to enforce.
  *
  * 1. NO CLASS STRINGS. A column never emits a CSS class. It emits semantic
- *    values — `type: 'badge'`, `color: 'danger'`, `align: 'right'` — and the Vue
+ *    values - `type: 'badge'`, `color: 'danger'`, `align: 'right'` - and the Vue
  *    layer decides what those look like.
  *
  *    This is a hard architectural boundary, not a preference (antipatterns
@@ -26,7 +29,7 @@ namespace PanelKit\Panel\Tables\Columns;
  *    cached once per permission set rather than once per tenant, and what stops
  *    a definition-time query taking a page down for everyone.
  */
-abstract class Column implements \PanelKit\Panel\Schema\Renderable
+abstract class Column implements Renderable
 {
     protected ?string $label = null;
 
@@ -48,12 +51,12 @@ abstract class Column implements \PanelKit\Panel\Schema\Renderable
      * De-emphasised rendering.
      *
      * Lives on the base rather than TextColumn because it is a presentation
-     * INTENT that applies to any column type — a muted date is as ordinary as a
+     * INTENT that applies to any column type - a muted date is as ordinary as a
      * muted string. Still a semantic name, never a CSS class (antipatterns S6.1).
      */
     protected bool $muted = false;
 
-    protected ?\PanelKit\Panel\Tables\Summarizer $summarizer = null;
+    protected ?Summarizer $summarizer = null;
 
     protected ?string $prefix = null;
 
@@ -92,18 +95,18 @@ abstract class Column implements \PanelKit\Panel\Schema\Renderable
     /**
      * A footer aggregate for this column.
      *
-     * Over the FILTERED set, not the page — see Summarizer. Declared on the
+     * Over the FILTERED set, not the page - see Summarizer. Declared on the
      * column because that is where the reader looks for it: a total belongs
      * under the numbers it totals.
      */
-    public function summarize(\PanelKit\Panel\Tables\Summarizer $summarizer): static
+    public function summarize(Summarizer $summarizer): static
     {
         $this->summarizer = $summarizer;
 
         return $this;
     }
 
-    public function summarizer(): ?\PanelKit\Panel\Tables\Summarizer
+    public function summarizer(): ?Summarizer
     {
         return $this->summarizer;
     }
@@ -143,6 +146,35 @@ abstract class Column implements \PanelKit\Panel\Schema\Renderable
         $this->databaseColumn = $column;
 
         return $this;
+    }
+
+    /**
+     * How this column appears in the SELECT list - aliased to its own key.
+     *
+     * THE ALIAS IS ADDED HERE RATHER THAN WRITTEN BY HAND, because writing it by
+     * hand fails silently. `->from('clients.name')` on a column keyed
+     * `client_name` selects a result column called `name`, the row arrives with
+     * a key nothing looks for, and the cell renders an em dash. Nothing errors:
+     * the query is valid, the join is correct, and the only symptom is a column
+     * of dashes that reads like missing data.
+     *
+     * An explicit `as` in the expression is respected - several resources
+     * already write `->from('plans.name as plan_name')`, and second-guessing
+     * them would break the thing this is meant to fix.
+     */
+    public function selectExpression(): string
+    {
+        $column = $this->databaseColumn ?? $this->key;
+
+        // Already aliased, or unqualified and therefore already named after
+        // itself. Neither needs help.
+        if (stripos($column, ' as ') !== false || ! str_contains($column, '.')) {
+            return $column;
+        }
+
+        $bare = substr($column, strrpos($column, '.') + 1);
+
+        return $bare === $this->key ? $column : "{$column} as {$this->key}";
     }
 
     /**
@@ -196,9 +228,26 @@ abstract class Column implements \PanelKit\Panel\Schema\Renderable
         return $this->sortKey ?? $this->key;
     }
 
+    /**
+     * The column an ORDER BY may name - never the alias.
+     *
+     * Any `as` is stripped: `ORDER BY plans.name as plan_name` is not valid SQL,
+     * and a joined column that is both displayed and sortable would otherwise
+     * produce exactly that. The SELECT wants the alias; the ORDER BY wants the
+     * column. They are different questions and this is the one that must not
+     * carry a rename.
+     */
     public function resolvedDatabaseColumn(): ?string
     {
-        return $this->databaseColumn;
+        if ($this->databaseColumn === null) {
+            return null;
+        }
+
+        $position = stripos($this->databaseColumn, ' as ');
+
+        return $position === false
+            ? $this->databaseColumn
+            : trim(substr($this->databaseColumn, 0, $position));
     }
 
     public function resolvedLabel(): string

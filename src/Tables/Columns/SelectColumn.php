@@ -11,12 +11,12 @@ use InvalidArgumentException;
  *
  * THE OPTION LIST IS THE VALIDATION RULE. `castValue()` rejects anything not in
  * it, so the same declaration that draws the dropdown is what a forged request
- * is checked against — there is no second list to forget to update. Most enum
+ * is checked against - there is no second list to forget to update. Most enum
  * columns are plain strings in the database with no CHECK constraint behind
  * them, so without this a crafted request writes `status = 'anything'` and the
  * row becomes unfilterable and unroutable for the rest of its life.
  *
- * OPTIONS ARE A LITERAL ARRAY, NOT A CLOSURE — deliberately narrower than
+ * OPTIONS ARE A LITERAL ARRAY, NOT A CLOSURE - deliberately narrower than
  * SelectField. A closure here would be tenant data, which cannot live in the
  * cached schema (addendum Part A), and it would run per render. An editable
  * cell is for a short fixed enum; picking from a relation is a job for the edit

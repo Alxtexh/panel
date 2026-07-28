@@ -22,8 +22,8 @@ use RuntimeException;
  * back to saved settings. Every unsaved edit was discarded. The page returned
  * 200 and looked correct; only logging the resolved id exposed it.
  *
- * CONTEXT matters too (addendum Part A). A central panel — platform or super
- * admin — must never have tenant scoping applied, and a tenant panel must refuse
+ * CONTEXT matters too (addendum Part A). A central panel - platform or super
+ * admin - must never have tenant scoping applied, and a tenant panel must refuse
  * to boot without a resolved tenant. Conflating them is how a super admin ends
  * up seeing one tenant's data, or an operator sees everyone's.
  */
@@ -38,6 +38,8 @@ final class Panel
     private string $guard = 'web';
 
     private string $context = self::CONTEXT_TENANT;
+
+    private ?string $routeName = null;
 
     /** @var list<string> */
     private array $middleware = ['web'];
@@ -97,7 +99,7 @@ final class Panel
         return $this;
     }
 
-    /** Resolved lazily — branding is tenant data and must not be cached. */
+    /** Resolved lazily - branding is tenant data and must not be cached. */
     public function brandName(Closure $brandName): self
     {
         $this->brandName = $brandName;
@@ -111,6 +113,28 @@ final class Panel
         $this->colors = $colors;
 
         return $this;
+    }
+
+    /**
+     * The prefix every route in this panel is named with.
+     *
+     * IT DEFAULTS TO THE PANEL ID AND IS OVERRIDABLE, because two panels both
+     * naming a route `resource` would have the second silently overwrite the
+     * first - and every generated URL in the first portal would then point into
+     * the second. The override exists for a panel that was mounted before there
+     * were panels: renaming its routes would break every link that already
+     * names them.
+     */
+    public function routeName(string $prefix): self
+    {
+        $this->routeName = rtrim($prefix, '.').'.';
+
+        return $this;
+    }
+
+    public function getRouteName(): string
+    {
+        return $this->routeName ?? $this->id.'.';
     }
 
     public function getPath(): string
@@ -144,7 +168,7 @@ final class Panel
      *
      * Never `auth()->user()` or `$request->user()`. Both read the default guard,
      * which returns null under a non-default one and fails open in confusing
-     * ways — see the class docblock.
+     * ways - see the class docblock.
      */
     public function user(): ?Authenticatable
     {

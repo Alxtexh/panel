@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * php artisan panel:install
  *
  * Spec §13: `composer require`, `panel:install`, `npm install && npm run build`,
- * then a resource — and a working panel in under ten minutes on a fresh app. If
+ * then a resource - and a working panel in under ten minutes on a fresh app. If
  * it takes longer, the packaging is not finished.
  *
  * Deliberately IDEMPOTENT and non-destructive. An installer that overwrites a
@@ -36,7 +37,7 @@ final class InstallCommand extends Command
         $this->line('  1. Add a `tenant_id` column to your admin users table, or configure');
         $this->line('     panel.tenancy.resolver for stancl/tenancy.');
         $this->line('  2. php artisan make:panel-resource YourModel --generate');
-        $this->line('  3. Review the generated policy — the panel DENIES any ability whose');
+        $this->line('  3. Review the generated policy - the panel DENIES any ability whose');
         $this->line('     model has no policy, so an unreviewed stub is a real grant.');
         $this->line('  4. Visit /your-models. Discovery registers it; there is no route to add.');
 
@@ -72,7 +73,7 @@ final class InstallCommand extends Command
     }
 
     /**
-     * A panel with no way to resolve a tenant fails CLOSED — every list is
+     * A panel with no way to resolve a tenant fails CLOSED - every list is
      * empty and every write is refused. That is correct, and completely
      * baffling if nobody says so at install time.
      */
@@ -93,7 +94,7 @@ final class InstallCommand extends Command
         $column = config('panel.tenancy.column', 'tenant_id');
 
         try {
-            $hasColumn = \Illuminate\Support\Facades\Schema::hasColumn((new $userModel())->getTable(), $column);
+            $hasColumn = Schema::hasColumn((new $userModel)->getTable(), $column);
         } catch (\Throwable) {
             return;
         }
@@ -101,8 +102,8 @@ final class InstallCommand extends Command
         if (! $hasColumn) {
             $this->components->warn(
                 "Your users table has no [{$column}] column. In shared-database mode the panel "
-                . 'cannot resolve a tenant, so it will deny every query and every write. Add the '
-                . 'column, or set panel.tenancy.mode to "none" for a single-tenant app.'
+                .'cannot resolve a tenant, so it will deny every query and every write. Add the '
+                .'column, or set panel.tenancy.mode to "none" for a single-tenant app.'
             );
         }
     }

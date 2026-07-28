@@ -9,8 +9,8 @@ namespace PanelKit\Panel\Tables\Columns;
  *
  * THE CELL VALUE IS A URL FROM THE DATABASE, which makes this the one column
  * type whose content is attacker-influenced whenever users can set their own
- * avatar. The client checks the scheme before it renders — `javascript:` and
- * `data:` are refused and fall back to initials — because "the browser ignores
+ * avatar. The client checks the scheme before it renders - `javascript:` and
+ * `data:` are refused and fall back to initials - because "the browser ignores
  * a javascript: URL in an img src" is true today and is not a thing to depend
  * on across every element this value might later be pasted into.
  *
@@ -49,7 +49,7 @@ final class ImageColumn extends Column
         return $this->rounded(false);
     }
 
-    /** sm | md | lg — fixed sizes, never a pixel value from data. */
+    /** sm | md | lg - fixed sizes, never a pixel value from data. */
     public function size(string $size): self
     {
         $this->size = in_array($size, ['sm', 'md', 'lg'], true) ? $size : 'md';

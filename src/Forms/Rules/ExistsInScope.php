@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Forms\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * The value must reference a record THIS TENANT can see.
@@ -16,16 +17,16 @@ use Illuminate\Contracts\Validation\ValidationRule;
  * immediately reopened a cross-tenant write the suite had been guarding, and
  * the test caught it on the first run.
  *
- * This asks the MODEL instead, so every global scope — tenancy above all —
+ * This asks the MODEL instead, so every global scope - tenancy above all -
  * applies. A record the acting tenant cannot read is a record they cannot
  * reference.
  */
 final class ExistsInScope implements ValidationRule
 {
-    /** @param class-string<\Illuminate\Database\Eloquent\Model> $model */
+    /** @param class-string<Model> $model */
     public function __construct(private readonly string $model) {}
 
-    /** @param class-string<\Illuminate\Database\Eloquent\Model> $model */
+    /** @param class-string<Model> $model */
     public static function of(string $model): self
     {
         return new self($model);
@@ -41,7 +42,7 @@ final class ExistsInScope implements ValidationRule
             // Deliberately vague. "The selected plan is invalid" is all the
             // caller needs; confirming the row exists but belongs to someone
             // else would itself leak.
-            $fail("The selected :attribute is invalid.");
+            $fail('The selected :attribute is invalid.');
         }
     }
 }

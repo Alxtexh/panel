@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Jobs;
 
+use App\Notifications\JobFinished;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
 use RuntimeException;
@@ -17,8 +19,8 @@ use RuntimeException;
  *
  * A queue worker has no session. `Auth::user()` is null, so TenantContext
  * resolves no tenant, so the tenant global scope has nothing to scope by. The
- * scope FAILS CLOSED — a job that forgets this exports zero rows rather than
- * every tenant's rows — but "fails closed" is only true of the current scope
+ * scope FAILS CLOSED - a job that forgets this exports zero rows rather than
+ * every tenant's rows - but "fails closed" is only true of the current scope
  * implementation, and a background job silently producing empty files is its
  * own bug.
  *
@@ -35,7 +37,7 @@ trait ActsAsPanelUser
     protected mixed $actor = null;
 
     /**
-     * @return class-string<Resource>
+     * @return class-string<resource>
      */
     protected function actAs(int|string $userId, string $resourceKey): string
     {
@@ -58,7 +60,7 @@ trait ActsAsPanelUser
         /*
          * RE-AUTHORIZED HERE, not only at dispatch.
          *
-         * A queued job runs later — sometimes much later. Permission can be
+         * A queued job runs later - sometimes much later. Permission can be
          * revoked, a feature flag can be turned off, or a tenant can be
          * suspended between the click and the worker picking it up. Trusting
          * the check made at dispatch means a revoked operator's queued action
@@ -74,7 +76,7 @@ trait ActsAsPanelUser
     /**
      * Tell the operator their background work finished.
      *
-     * Guarded, because a notification failure must not fail the JOB — the export
+     * Guarded, because a notification failure must not fail the JOB - the export
      * is already written and the mutation already committed, so throwing here
      * would retry work that is done and, worse, report a success as a failure.
      */
@@ -85,9 +87,9 @@ trait ActsAsPanelUser
         }
 
         try {
-            $this->actor->notify(new \App\Notifications\JobFinished($title, $body, $href, $severity));
+            $this->actor->notify(new JobFinished($title, $body, $href, $severity));
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Could not notify the panel user about a finished job.', [
+            Log::warning('Could not notify the panel user about a finished job.', [
                 'component' => 'ActsAsPanelUser',
                 'operation' => 'notifyActor',
                 'exception' => $e->getMessage(),

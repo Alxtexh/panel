@@ -10,7 +10,7 @@ use InvalidArgumentException;
  * A column an operator can write to without leaving the list.
  *
  * THE WORKFLOW ARGUMENT: flipping twenty clients from active to suspended
- * currently costs twenty page visits — list, open, edit, save, back, repeat.
+ * currently costs twenty page visits - list, open, edit, save, back, repeat.
  * That is the single largest difference between a panel that gets used and one
  * that gets worked around.
  *
@@ -25,7 +25,7 @@ use InvalidArgumentException;
  *      "set any attribute" endpoint.
  *
  *   2. THE VALUE IS VALIDATED AGAINST THE DECLARATION, not merely cast.
- *      `castValue()` is abstract for exactly this reason — a select accepts
+ *      `castValue()` is abstract for exactly this reason - a select accepts
  *      only its own declared options, so a hand-crafted request cannot write
  *      `status = 'god'` into an enum column that has no database constraint.
  *

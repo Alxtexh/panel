@@ -10,8 +10,8 @@ use Illuminate\Validation\Rule;
 /**
  * A single-choice field.
  *
- * Options may be a literal list (structure — safe to cache) or a Closure
- * (tenant data — resolved only when the form's data payload is assembled).
+ * Options may be a literal list (structure - safe to cache) or a Closure
+ * (tenant data - resolved only when the form's data payload is assembled).
  * Either way the SUBMITTED value is validated against the resolved list by an
  * `in:` rule, so the allowlist is enforced server-side rather than trusted from
  * the client.
@@ -34,7 +34,7 @@ final class SelectField extends Field
      * Not arbitrary: 200 options is a long but usable dropdown, and it is far
      * enough below the point where the DOM cost shows up that nobody hits it by
      * accident. Pointed at a 100k-row relation the old code emitted 100,000
-     * option elements — a correctness problem, not a slow one.
+     * option elements - a correctness problem, not a slow one.
      */
     private const INLINE_LIMIT = 200;
 
@@ -55,11 +55,11 @@ final class SelectField extends Field
     /**
      * Fetch options on demand instead of rendering them all.
      *
-     * Required for any relation that can grow — a client picker cannot ship
+     * Required for any relation that can grow - a client picker cannot ship
      * every client to the browser. The callback receives the search term and
      * returns value => label, already tenant-scoped by the model it queries.
      *
-     * @param (Closure(string): array<string|int, string>)|null $query
+     * @param  (Closure(string): array<string|int, string>)|null  $query
      */
     public function searchable(?Closure $query = null): static
     {
@@ -114,7 +114,7 @@ final class SelectField extends Field
      *
      * Emitting nothing when the list resolves EMPTY was a real hole. `plan_id`
      * is populated from a tenant-scoped query, so an empty result is exactly
-     * what a caller without a resolvable tenant sees — and the field then
+     * what a caller without a resolvable tenant sees - and the field then
      * accepted any integer, including another tenant's plan id. Rule::in([])
      * rejects every non-null value instead, which is the correct reading of
      * "there is nothing you may choose".
@@ -157,7 +157,7 @@ final class SelectField extends Field
         if (count($map) > self::INLINE_LIMIT) {
             throw new \RuntimeException(sprintf(
                 'Select field [%s] resolved %d options. Rendering them inline would ship %d option '
-                . 'elements to every browser. Call ->searchable() and supply a query.',
+                .'elements to every browser. Call ->searchable() and supply a query.',
                 $this->key,
                 count($map),
                 count($map),

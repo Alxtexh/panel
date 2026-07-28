@@ -12,6 +12,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Actions\JobStatus;
+use PanelKit\Panel\Tables\Columns\Column;
 use Throwable;
 
 /**
@@ -23,7 +24,7 @@ use Throwable;
  * 100,000 is both useless and a data-minimisation problem.
  *
  * WRITTEN IN CHUNKS, NEVER ASSEMBLED IN MEMORY. Building the CSV as a string
- * and writing it once needs the whole result set resident — 100k rows is
+ * and writing it once needs the whole result set resident - 100k rows is
  * hundreds of megabytes and the worker dies with an allocation error, which
  * looks like an infrastructure problem rather than an export that was written
  * wrong. Rows stream to an open handle a chunk at a time, so memory is flat
@@ -92,7 +93,7 @@ final class ExportRecords implements ShouldQueue
              * A BOM, so Excel reads UTF-8.
              *
              * Without it Excel assumes the local codepage and mangles every
-             * non-ASCII name — which in this domain means most of them. The
+             * non-ASCII name - which in this domain means most of them. The
              * file is not corrupt and no error appears anywhere; the customer
              * simply sees "Amina Achieng" spelled wrongly.
              */
@@ -102,7 +103,7 @@ final class ExportRecords implements ShouldQueue
             // form is also what the client renders, so the CSV header and the
             // on-screen header cannot drift apart.
             $described = array_map(
-                static fn (\PanelKit\Panel\Tables\Columns\Column $c): array => $c->toArray(),
+                static fn (Column $c): array => $c->toArray(),
                 $columns,
             );
 
@@ -134,7 +135,7 @@ final class ExportRecords implements ShouldQueue
 
             $this->notifyActor(
                 'Your export is ready',
-                number_format($written) . ' rows exported from ' . $this->resource . '.',
+                number_format($written).' rows exported from '.$this->resource.'.',
                 "/{$this->resource}/jobs/{$this->token}/download",
             );
         } catch (Throwable $e) {
@@ -162,7 +163,7 @@ final class ExportRecords implements ShouldQueue
      * A leading `=`, `+`, `-` or `@` is prefixed with a quote, because
      * spreadsheet software treats such a cell as a FORMULA. A stored value like
      * `=HYPERLINK(...)` becomes executable content in the recipient's
-     * spreadsheet — CSV injection, and the panel would be the delivery
+     * spreadsheet - CSV injection, and the panel would be the delivery
      * mechanism for data an operator typed in themselves.
      */
     private static function stringify(mixed $value): string
@@ -181,7 +182,7 @@ final class ExportRecords implements ShouldQueue
 
         $value = (string) $value;
 
-        return preg_match('/^[=+\-@\t\r]/', $value) === 1 ? "'" . $value : $value;
+        return preg_match('/^[=+\-@\t\r]/', $value) === 1 ? "'".$value : $value;
     }
 
     public function failed(Throwable $e): void

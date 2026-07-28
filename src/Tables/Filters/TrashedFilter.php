@@ -10,7 +10,7 @@ use Illuminate\Database\Query\Builder;
  * Show live records, deleted records, or both.
  *
  * THE DEFAULT IS "LIVE ONLY", and it is the model's global scope that provides
- * it — not this filter. That matters: a resource without this filter still
+ * it - not this filter. That matters: a resource without this filter still
  * hides deleted rows, because the scope is on the model. The filter only lets
  * someone ASK for the deleted ones.
  *
@@ -18,7 +18,7 @@ use Illuminate\Database\Query\Builder;
  * THE SCOPE. Eloquent's `withTrashed()` removes the global scope entirely,
  * which cannot work here: the list runs through `toBase()` on a query builder,
  * long after scopes have been resolved. So the base query is built WITHOUT the
- * soft-delete scope and this filter applies the predicate itself — one place
+ * soft-delete scope and this filter applies the predicate itself - one place
  * that decides, in a form the index can serve.
  *
  * The column is the model's own `deleted_at` name, taken from the model rather
@@ -58,7 +58,7 @@ final class TrashedFilter extends Filter implements HasOptions
         match ($this->normalise($value)) {
             'trashed' => $query->whereNotNull($column),
             'all' => null,
-            // Null — the default — is live only. Written explicitly rather than
+            // Null - the default - is live only. Written explicitly rather than
             // relying on a scope that is not present on this builder.
             default => $query->whereNull($column),
         };
@@ -72,7 +72,7 @@ final class TrashedFilter extends Filter implements HasOptions
     /**
      * @return array<string, mixed>
      *
-     * The options are STATIC — three fixed views — so unlike a select they are
+     * The options are STATIC - three fixed views - so unlike a select they are
      * safe in the cached schema: they carry no tenant data and resolving them
      * runs no query.
      */
@@ -90,7 +90,7 @@ final class TrashedFilter extends Filter implements HasOptions
      * No `toSchema()` override, deliberately.
      *
      * The three views are static and carry no tenant data, so putting them in
-     * the cached schema would be harmless HERE — and it would still weaken the
+     * the cached schema would be harmless HERE - and it would still weaken the
      * rule. The guard is "a schema holds no filter options", full stop; a rule
      * with an exception is a rule someone has to remember. The client already
      * knows what a `trashed` filter offers from its type.

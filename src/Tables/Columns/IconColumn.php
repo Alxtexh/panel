@@ -12,7 +12,7 @@ namespace PanelKit\Panel\Tables\Columns;
  * glance, and a table is a scanning surface before it is a reading one.
  *
  * ICON NAMES ARE SEMANTIC, exactly like colours (antipatterns §6.1). This emits
- * `check` and `success`, never an SVG path or a CSS class — the client owns the
+ * `check` and `success`, never an SVG path or a CSS class - the client owns the
  * icon set, so swapping icon libraries never touches PHP, and nothing here can
  * be purged by a CSS scanner that does not read PHP.
  *

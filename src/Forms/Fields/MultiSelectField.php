@@ -15,21 +15,66 @@ use Closure;
  * column is usually JSON with no constraint of its own to catch it.
  *
  * THE VALIDATION IS TWO RULES, not one. `array` guards the field itself and
- * `key.*` guards each MEMBER — a rule set that only validates the array accepts
+ * `key.*` guards each MEMBER - a rule set that only validates the array accepts
  * `['active', 'anything']` because the array is, indeed, an array. That is the
  * mistake this field exists to make impossible to repeat.
  *
  * Options may be a closure, resolved when the data payload is assembled and
- * never while building the cached schema — a tenant's routers are tenant data
+ * never while building the cached schema - a tenant's routers are tenant data
  * (addendum Part A) and a definition-time query takes the page down for
  * everyone (antipatterns §3.3).
  */
 final class MultiSelectField extends Field
 {
+    private string $optionAttribute = 'name';
+
     /** @var array<string|int, string>|Closure|null */
     private array|Closure|null $options = null;
 
     private ?int $max = null;
+
+    /**
+     * Turn whatever the record holds into option values.
+     *
+     * A MANY-TO-MANY FIELD READS A RELATION, and a relation returns MODELS. The
+     * base implementation passes the value through untouched, so the form
+     * received a Collection of `Role` objects and the browser rendered each one
+     * as `[object Object]` - a control that cannot show what is selected and
+     * therefore cannot be trusted to save it either.
+     *
+     * MAPPED TO THE SAME KEY THE OPTIONS USE, which is what makes the token
+     * match an entry in the list. `optionAttribute` names it, defaulting to
+     * `name`: options are usually `name => label` for a relation, and a field
+     * whose options are keyed by id can say so.
+     *
+     * Scalars and plain arrays pass through unchanged, so a multiselect over a
+     * JSON column behaves exactly as before.
+     */
+    public function presentValue(mixed $value): mixed
+    {
+        if ($value instanceof \Illuminate\Support\Collection) {
+            return $value
+                ->map(fn (mixed $item): mixed => $item instanceof \Illuminate\Database\Eloquent\Model
+                    ? $item->getAttribute($this->optionAttribute)
+                    : $item)
+                ->values()
+                ->all();
+        }
+
+        return $value;
+    }
+
+    /**
+     * Which attribute of a related model the options are keyed by.
+     *
+     * `name` covers the ordinary case. An id-keyed option list declares it.
+     */
+    public function optionAttribute(string $attribute): self
+    {
+        $this->optionAttribute = $attribute;
+
+        return $this;
+    }
 
     public function type(): string
     {
@@ -93,7 +138,7 @@ final class MultiSelectField extends Field
     /**
      * EVERY MEMBER, not just the array.
      *
-     * `['active', 'god_mode']` satisfies an `array` rule perfectly well — the
+     * `['active', 'god_mode']` satisfies an `array` rule perfectly well - the
      * array is an array. Only a rule on `key.*` looks inside it.
      *
      * @return array<string, list<mixed>>
@@ -102,7 +147,7 @@ final class MultiSelectField extends Field
     {
         $keys = array_map(static fn (int|string $k): string => (string) $k, array_keys($this->optionMap()));
 
-        return ["{$this->key}.*" => $keys === [] ? ['string'] : ['in:' . implode(',', $keys)]];
+        return ["{$this->key}.*" => $keys === [] ? ['string'] : ['in:'.implode(',', $keys)]];
     }
 
     /** @return array<string, mixed> Structure only; never resolves options. */

@@ -17,13 +17,14 @@ use Illuminate\Support\Str;
  * means the generated class is routable and rendering with NO hand editing.
  *
  * The generated file is a starting point, not a contract. It is meant to be
- * edited — which is why it is written as ordinary readable PHP rather than
+ * edited - which is why it is written as ordinary readable PHP rather than
  * something clever.
  */
 final class MakeResourceCommand extends Command
 {
     protected $signature = 'make:panel-resource
                             {model : The Eloquent model class name, e.g. Invoice}
+                            {--panel= : Which panel it belongs to. Defaults to the first registered one}
                             {--generate : Introspect the table and pre-fill columns and fields}
                             {--force : Overwrite an existing resource}';
 
@@ -43,7 +44,7 @@ final class MakeResourceCommand extends Command
      * Shown on the table but never on the form.
      *
      * Timestamps are what operators sort by, so excluding them from the table
-     * entirely was wrong — and it also produced a class that threw on load,
+     * entirely was wrong - and it also produced a class that threw on load,
      * because the generated `defaultSort('created_at')` referenced a column no
      * generated column declared, so it was not in the sortable allowlist.
      *
@@ -62,7 +63,18 @@ final class MakeResourceCommand extends Command
             return self::FAILURE;
         }
 
-        $path = app_path("Panel/Resources/{$model}Resource.php");
+        /*
+         * WHICH PANEL, AND THEREFORE WHICH DIRECTORY AND NAMESPACE.
+         *
+         * A resource is only routable from the panel it declares, so putting one
+         * in the wrong place produces a class that discovery finds, the registry
+         * holds, and no URL reaches - an empty menu entry that never appears and
+         * nothing to explain why. Asking makes the decision explicit at the one
+         * moment somebody knows the answer.
+         */
+        [$panelId, $directory, $namespace] = $this->panelTarget();
+
+        $path = $directory."/{$model}Resource.php";
 
         if (file_exists($path) && ! $this->option('force')) {
             $this->components->error("Resource already exists: {$path}. Use --force to overwrite.");
@@ -70,7 +82,7 @@ final class MakeResourceCommand extends Command
             return self::FAILURE;
         }
 
-        $table = (new $modelClass())->getTable();
+        $table = (new $modelClass)->getTable();
 
         [$columns, $fields, $imports] = $this->option('generate')
             ? $this->introspect($table)
@@ -80,17 +92,77 @@ final class MakeResourceCommand extends Command
             mkdir(dirname($path), 0755, true);
         }
 
-        file_put_contents($path, $this->render($model, $modelClass, $columns, $fields, $imports));
+        file_put_contents($path, $this->render($model, $modelClass, $columns, $fields, $imports, $panelId, $namespace));
 
         $this->components->info("Created {$path}");
 
         $this->writePolicy($model, $modelClass);
 
         if ($this->option('generate')) {
-            $this->components->info("Introspected [{$table}]. Visit /" . Str::of($model)->plural()->kebab() . ' — no registration needed.');
+            /*
+             * THE PANEL'S OWN PATH, not a bare `/plans`. A resource generated
+             * into a second portal is reachable at that portal's prefix, and a
+             * message naming the root sends somebody to a 404 and then to the
+             * routing code looking for a bug that is not there.
+             */
+            $prefix = trim((string) app(\PanelKit\Panel\PanelManager::class)->panel($panelId)?->getPath(), '/');
+            $url = '/'.($prefix === '' ? '' : $prefix.'/').Str::of($model)->plural()->kebab();
+
+            $this->components->info("Introspected [{$table}]. Visit {$url} - no registration needed.");
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Which panel this resource is for, and where its class goes.
+     *
+     * THE FIRST REGISTERED PANEL IS THE DEFAULT, not a literal `'admin'`. An
+     * application that renamed its only panel would otherwise get resources
+     * declaring a panel that does not exist - discovered, registered, and
+     * reachable from nowhere, with no error anywhere.
+     *
+     * @return array{0: string, 1: string, 2: string} panel id, directory, namespace
+     */
+    private function panelTarget(): array
+    {
+        $panels = app(\PanelKit\Panel\PanelManager::class)->panels();
+        $requested = $this->option('panel');
+
+        /*
+         * THE CONFIGURED DEFAULT PANEL, not whichever happens to be first in the
+         * array. Provider order is decided by a file that a generator edits, so
+         * "first" silently changed every time a portal was created - and with it
+         * where the next resource was written.
+         */
+        $default = (string) config('panel.default', 'admin');
+
+        $id = $requested !== null ? (string) $requested : $default;
+
+        /*
+         * A PANEL THAT IS NOT REGISTERED IS A TYPO, and generating into it would
+         * produce a class nothing ever routes. Naming the ones that do exist
+         * turns a silent dead end into a one-line correction.
+         */
+        if ($requested !== null && ! array_key_exists($id, $panels)) {
+            $known = $panels === [] ? 'none are registered' : implode(', ', array_keys($panels));
+
+            throw new \RuntimeException("No panel [{$id}]. Registered: {$known}.");
+        }
+
+        /*
+         * THE FIRST PANEL KEEPS THE ORIGINAL LOCATION. Its resources are already
+         * at `app/Panel/Resources`, and moving them to satisfy a naming scheme
+         * would be a rename with no benefit and a broken discovery config for
+         * anybody who had customised it.
+         */
+        if ($id === $default) {
+            return [$id, app_path('Panel/Resources'), 'App\\Panel\\Resources'];
+        }
+
+        $studly = Str::studly($id);
+
+        return [$id, app_path("Panel/{$studly}/Resources"), "App\\Panel\\{$studly}\\Resources"];
     }
 
     /**
@@ -98,7 +170,7 @@ final class MakeResourceCommand extends Command
      * policy.
      *
      * Without this the generator would produce a resource that renders an empty
-     * table with no actions and no explanation — technically secure, and a
+     * table with no actions and no explanation - technically secure, and a
      * broken promise, since --generate is supposed to need no hand editing.
      *
      * The stub is deliberately permissive-within-tenant and clearly marked, so
@@ -132,7 +204,7 @@ final class MakeResourceCommand extends Command
          * REVIEW THIS. It currently permits any authenticated user, which is
          * almost certainly not what you want. The panel denies every ability whose
          * model has no policy, so this file is what makes the resource visible at
-         * all — that is deliberate, and so is the fact that you have to edit it.
+         * all - that is deliberate, and so is the fact that you have to edit it.
          */
         final class {$model}Policy
         {
@@ -167,7 +239,7 @@ final class MakeResourceCommand extends Command
         file_put_contents($path, $stub);
 
         $this->components->info("Created {$path}");
-        $this->components->warn("Review {$model}Policy — it permits any authenticated user.");
+        $this->components->warn("Review {$model}Policy - it permits any authenticated user.");
     }
 
     /**
@@ -201,11 +273,11 @@ final class MakeResourceCommand extends Command
             if (str_ends_with($name, '_at') || in_array($type, ['date', 'datetime', 'timestamp'], true)) {
                 $withTime = ! str_starts_with($type, 'date') || str_contains($type, 'time');
                 $columns[] = "DateColumn::make('{$name}')->from('{$qualified}')->sortable()"
-                    . ($withTime ? '->withTime()' : '') . ($readOnly ? '->muted()' : '');
+                    .($withTime ? '->withTime()' : '').($readOnly ? '->muted()' : '');
                 $imports['DateColumn'] = 'Columns\DateColumn';
 
                 if (! $readOnly) {
-                    $fields[] = "DateField::make('{$name}'){$required}" . ($withTime ? '->withTime()' : '');
+                    $fields[] = "DateField::make('{$name}'){$required}".($withTime ? '->withTime()' : '');
                     $imports['DateField'] = 'Fields\DateField';
                 }
 
@@ -214,11 +286,11 @@ final class MakeResourceCommand extends Command
 
             if (str_ends_with($name, '_id')) {
                 // A relationship select needs the related model's labels, which
-                // is a decision only the developer can make — so it is a TODO
+                // is a decision only the developer can make - so it is a TODO
                 // rather than a guess that silently queries the wrong table.
                 $columns[] = "TextColumn::make('{$name}')->from('{$qualified}')->muted()";
                 $fields[] = "// TODO: point this at the related model\n            "
-                    . "SelectField::make('{$name}'){$required}->options([])";
+                    ."SelectField::make('{$name}'){$required}->options([])";
                 $imports['TextColumn'] = 'Columns\TextColumn';
                 $imports['SelectField'] = 'Fields\SelectField';
 
@@ -227,7 +299,7 @@ final class MakeResourceCommand extends Command
 
             if (in_array($type, ['bool', 'boolean', 'tinyint'], true)) {
                 $columns[] = "BadgeColumn::make('{$name}')->from('{$qualified}')"
-                    . "->colors(['1' => 'success', '' => 'neutral'])";
+                    ."->colors(['1' => 'success', '' => 'neutral'])";
                 $fields[] = "ToggleField::make('{$name}')";
                 $imports['BadgeColumn'] = 'Columns\BadgeColumn';
                 $imports['ToggleField'] = 'Fields\ToggleField';
@@ -280,15 +352,23 @@ final class MakeResourceCommand extends Command
      * @param  list<string>  $fields
      * @param  list<string>  $imports
      */
-    private function render(string $model, string $modelClass, array $columns, array $fields, array $imports): string
+    private function render(
+        string $model,
+        string $modelClass,
+        array $columns,
+        array $fields,
+        array $imports,
+        string $panelId,
+        string $namespace,
+    ): string
     {
         $use = collect($imports)
             ->map(static fn (string $i): string => 'use PanelKit\\Panel\\'
-                . (str_starts_with($i, 'Columns') ? 'Tables\\' : 'Forms\\') . $i . ';')
+                .(str_starts_with($i, 'Columns') ? 'Tables\\' : 'Forms\\').$i.';')
             ->sort()
             ->implode("\n");
 
-        $table = (new $modelClass())->getTable();
+        $table = (new $modelClass)->getTable();
         $columnCode = collect($columns)->map(static fn (string $c): string => "                {$c},")->implode("\n");
         $fieldCode = collect($fields)->map(static fn (string $f): string => "            {$f},")->implode("\n");
 
@@ -297,7 +377,7 @@ final class MakeResourceCommand extends Command
 
         declare(strict_types=1);
 
-        namespace App\\Panel\\Resources;
+        namespace {$namespace};
 
         use {$modelClass};
         {$use}
@@ -308,7 +388,7 @@ final class MakeResourceCommand extends Command
         /**
          * Generated by `make:panel-resource {$model}`.
          *
-         * Edit freely — this is a starting point, not a contract. Discovery picks
+         * Edit freely - this is a starting point, not a contract. Discovery picks
          * it up automatically, so there is nothing to register.
          *
          * `tenant_id` is deliberately absent from the form. It is set from request
@@ -317,6 +397,14 @@ final class MakeResourceCommand extends Command
         final class {$model}Resource extends Resource
         {
             protected static string \$model = {$model}::class;
+
+            /*
+             * WHICH PANEL THIS BELONGS TO, and therefore where it is reachable.
+             * Only this panel's routes resolve it: a resource is not visible -
+             * or addressable - from another portal, which is the isolation the
+             * panel split exists for rather than a naming convention.
+             */
+            protected static string \$panel = '{$panelId}';
 
             public static function form(Form \$form): Form
             {

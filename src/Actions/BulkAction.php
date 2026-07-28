@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Actions;
 
 use Closure;
+use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
 
 /**
@@ -12,8 +13,8 @@ use InvalidArgumentException;
  *
  * THE CLIENT SENDS AN ACTION KEY, NEVER AN ATTRIBUTE SET. `mutate()` is
  * declared here, in server-side code, and the request may only name which
- * declared action to run. The alternative — accepting `{status: 'active'}` from
- * the browser and applying it — is a mass-assignment endpoint wearing a bulk
+ * declared action to run. The alternative - accepting `{status: 'active'}` from
+ * the browser and applying it - is a mass-assignment endpoint wearing a bulk
  * action's clothes, and it would let any authenticated operator write any
  * column on any row they can see.
  *
@@ -27,7 +28,7 @@ use InvalidArgumentException;
  *               the honest price of doing per-record work.
  *
  * Authorization is an ABILITY NAME resolved against the resource policy, and it
- * defaults to `update` rather than to nothing — an action that forgets to
+ * defaults to `update` rather than to nothing - an action that forgets to
  * declare one is checked, not waved through.
  */
 final class BulkAction
@@ -37,6 +38,9 @@ final class BulkAction
     private bool $destructive = false;
 
     private ?string $confirmation = null;
+
+    /** Same palette as RecordAction, because it is the same menu vocabulary. */
+    private ?string $color = null;
 
     private string $ability = 'update';
 
@@ -65,6 +69,28 @@ final class BulkAction
     public function destructive(bool $destructive = true): self
     {
         $this->destructive = $destructive;
+
+        return $this;
+    }
+
+    /**
+     * The tone this action carries in the bulk menu.
+     *
+     * Deliberately the SAME vocabulary and the same six names as
+     * `RecordAction::color()`. Suspend means the same thing whether it is done
+     * to one subscriber or to nine hundred, and it should not be amber in one
+     * menu and grey in the other.
+     */
+    public function color(string $color): self
+    {
+        if (! in_array($color, RecordAction::COLORS, true)) {
+            throw new InvalidArgumentException(
+                "[{$this->key}] has unknown colour [{$color}]. One of: "
+                .implode(', ', RecordAction::COLORS).'.'
+            );
+        }
+
+        $this->color = $color;
 
         return $this;
     }
@@ -103,7 +129,7 @@ final class BulkAction
     /**
      * Per-record work, for anything an UPDATE cannot express.
      *
-     * @param  Closure(\Illuminate\Database\Eloquent\Collection): void  $handle
+     * @param  Closure(Collection): void  $handle
      */
     public function handle(Closure $handle): self
     {
@@ -157,7 +183,7 @@ final class BulkAction
     }
 
     /**
-     * The client half. Semantic only — no classes, no colours (§6.1).
+     * The client half. Semantic only - no classes, no colours (§6.1).
      *
      * @return array<string, mixed>
      */
@@ -168,6 +194,7 @@ final class BulkAction
             'label' => $this->label,
             'icon' => $this->icon,
             'destructive' => $this->destructive,
+            'color' => $this->color,
             // A destructive action always confirms, even if the definition
             // forgot to say so.
             'confirmation' => $this->confirmation

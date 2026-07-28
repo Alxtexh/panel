@@ -11,7 +11,7 @@ namespace PanelKit\Panel\Tables\Columns;
  * `datetime`) and the client formats using the viewer's locale.
  *
  * Addendum C also requires display in the TENANT's timezone with UTC storage.
- * The timezone is tenant data, so it cannot live in the schema — it ships as a
+ * The timezone is tenant data, so it cannot live in the schema - it ships as a
  * shared prop and the client applies it. That keeps this column identical for
  * every tenant and the schema cacheable without a tenant key.
  */

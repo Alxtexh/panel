@@ -11,14 +11,14 @@ use Illuminate\Support\Str;
  * Progress for a queued bulk action or export.
  *
  * EVERY READ IS OWNER-CHECKED. A status token is an unguessable string, but
- * "unguessable" is not an authorization model — it is a delay. The record
+ * "unguessable" is not an authorization model - it is a delay. The record
  * carries the id of the user who started the work and `get()` returns null for
  * anyone else, so a leaked token in a shared log or a copied URL still cannot
  * be used to watch someone else's job or reach the export it produced.
  *
  * Cache rather than a table, because progress is genuinely ephemeral: it is
  * read for the seconds a job runs and never again. The TTL is the cleanup, and
- * losing a status record costs a re-run rather than data — the mutation itself
+ * losing a status record costs a re-run rather than data - the mutation itself
  * lives in the database, not here.
  */
 final class JobStatus

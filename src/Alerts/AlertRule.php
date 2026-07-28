@@ -12,7 +12,7 @@ use Throwable;
  * A declared condition that MAY produce an alert.
  *
  * The closure returns an Alert when the condition holds and null when it does
- * not — "no alert" is the normal, healthy answer, and modelling it as null
+ * not - "no alert" is the normal, healthy answer, and modelling it as null
  * rather than as a zero-severity alert saves every caller from filtering out
  * non-alerts.
  *

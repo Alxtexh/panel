@@ -20,7 +20,7 @@ use RuntimeException;
  * consumer, which is exactly the mandate this framework refuses to make.
  *
  * So the dialect is looked up, never assumed, and an UNKNOWN driver throws
- * instead of guessing. A wrong guess here does not error — it returns a chart
+ * instead of guessing. A wrong guess here does not error - it returns a chart
  * with plausible, silently incorrect buckets, which is the worst failure shape
  * available.
  */
@@ -47,7 +47,7 @@ enum Bucket: string
          * identifier first. These strings come from developer-authored widget
          * definitions rather than from a request, but "not currently reachable
          * from user input" is a property of today's callers, not of this
-         * method — and it is one refactor away from being false.
+         * method - and it is one refactor away from being false.
          */
         if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column) !== 1) {
             throw new InvalidArgumentException(
@@ -62,9 +62,9 @@ enum Bucket: string
             'sqlsrv' => sprintf("FORMAT(%s, '%s')", $column, $this->sqlsrvFormat()),
             default => throw new RuntimeException(
                 "No time series bucketing strategy for database driver [{$driver}]. "
-                . 'Truncating a timestamp has no portable spelling, so this must be '
-                . 'declared explicitly rather than guessed — a guess here produces a '
-                . 'chart that is wrong without being broken.'
+                .'Truncating a timestamp has no portable spelling, so this must be '
+                .'declared explicitly rather than guessed - a guess here produces a '
+                .'chart that is wrong without being broken.'
             ),
         };
     }

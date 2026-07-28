@@ -49,7 +49,7 @@ final class BulkController extends Controller
         $validated = $request->validate([
             'action' => ['required', 'string', 'max:64'],
             'all' => ['sometimes', 'boolean'],
-            'ids' => ['sometimes', 'array', 'max:' . self::MAX_EXPLICIT_IDS],
+            'ids' => ['sometimes', 'array', 'max:'.self::MAX_EXPLICIT_IDS],
             'ids.*' => ['required'],
         ]);
 
@@ -78,7 +78,7 @@ final class BulkController extends Controller
             RunBulkAction::dispatch(
                 $resource,
                 $action->key,
-                // The FILTERS travel, not the ids — see the job.
+                // The FILTERS travel, not the ids - see the job.
                 $this->filterParameters($request),
                 $this->actorId(),
                 $token,
@@ -108,7 +108,7 @@ final class BulkController extends Controller
 
         $validated = $request->validate([
             'all' => ['sometimes', 'boolean'],
-            'ids' => ['sometimes', 'array', 'max:' . self::MAX_EXPLICIT_IDS],
+            'ids' => ['sometimes', 'array', 'max:'.self::MAX_EXPLICIT_IDS],
             'ids.*' => ['required'],
         ]);
 
@@ -173,13 +173,13 @@ final class BulkController extends Controller
             throw new NotFoundHttpException('That export has expired.');
         }
 
-        return $disk->download($state['file'], $class::key() . '-' . now()->format('Y-m-d') . '.csv');
+        return $disk->download($state['file'], $class::key().'-'.now()->format('Y-m-d').'.csv');
     }
 
     /**
      * The parameters that describe the current view.
      *
-     * Only the query string — a body cannot smuggle a filter the table never
+     * Only the query string - a body cannot smuggle a filter the table never
      * offered, and pagination is dropped because a bulk action applies to the
      * whole filtered set rather than to the visible page.
      *
@@ -214,7 +214,7 @@ final class BulkController extends Controller
         return $id;
     }
 
-    /** @return class-string<Resource> */
+    /** @return class-string<resource> */
     private function guard(string $resource): string
     {
         $class = app(PanelManager::class)->resource($resource);

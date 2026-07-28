@@ -12,7 +12,7 @@ use Illuminate\Database\Query\Builder;
  * The three states are the entire point. Phase 2 surfaced this on Plans: an
  * abstraction generalised from string-equality filters alone models every filter
  * as a nullable string, and then `false` and "no filter" both look falsy and
- * collapse into each other — so "show only inactive plans" silently becomes
+ * collapse into each other - so "show only inactive plans" silently becomes
  * "show everything".
  *
  * normalise() therefore distinguishes null from false explicitly, and every

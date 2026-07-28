@@ -22,7 +22,7 @@ use Throwable;
  *    card; the other five still paint. `resolve()` does not propagate.
  *
  * 3. THE CLOSURE RECEIVES THE PERIOD. Charts are not point-in-time, so the
- *    window has to reach the query — a widget that resolves its own period
+ *    window has to reach the query - a widget that resolves its own period
  *    internally cannot be re-asked for a different one, which is what the
  *    period selector does on every click.
  *
@@ -33,7 +33,7 @@ use Throwable;
 final class ChartWidget
 {
     /*
-     * `segments` is a single proportional bar rather than a plot — a limit or a
+     * `segments` is a single proportional bar rather than a plot - a limit or a
      * breakdown. It lives here rather than in its own widget class because the
      * declaration, the deferral and the failure isolation are identical; only
      * the renderer differs.
@@ -57,6 +57,8 @@ final class ChartWidget
 
     private int $span = 1;
 
+    private ?string $ability = null;
+
     private ?Closure $format = null;
 
     /** @var list<array{max: int|float, color: string}> */
@@ -75,7 +77,7 @@ final class ChartWidget
     {
         if (! in_array($type, self::TYPES, true)) {
             throw new InvalidArgumentException(
-                "[{$type}] is not a chart type. Available: " . implode(', ', self::TYPES) . '.'
+                "[{$type}] is not a chart type. Available: ".implode(', ', self::TYPES).'.'
             );
         }
 
@@ -131,7 +133,7 @@ final class ChartWidget
     }
 
     /**
-     * Colour bars by their own value — a ranked "worst first" chart.
+     * Colour bars by their own value - a ranked "worst first" chart.
      *
      * Colours are SEMANTIC names (`danger`, `warning`), never CSS. The client
      * owns what danger looks like, so a tenant theme applies without touching
@@ -155,6 +157,47 @@ final class ChartWidget
     }
 
     /** @return array<string, mixed> The structure. Never runs a query. */
+    /**
+     * An ability required to SEE this widget at all, or null for everyone.
+     *
+     * PER WIDGET, BECAUSE A DASHBOARD IS NOT ONE SECRET. The question that
+     * prompted this was exact: somebody needs the dashboard but must not see the
+     * commercial figures. With visibility all-or-nothing the only answers were
+     * "show them the revenue" or "take the dashboard away", and both are wrong
+     * for a support rota that needs the connection counts.
+     *
+     * FILTERING HAPPENS BEFORE THE DEFERRED PROP IS REGISTERED, which is the
+     * part that matters. Hiding a card in the browser leaves the number sitting
+     * in the page payload for anybody who opens the network tab - and the query
+     * still runs, so it is not even cheaper. A widget somebody may not see is
+     * never computed.
+     */
+    public function ability(?string $ability): self
+    {
+        $this->ability = $ability;
+
+        return $this;
+    }
+
+    /**
+     * Whether `$user` may see this widget.
+     *
+     * NO ABILITY MEANS VISIBLE, and the default direction is deliberate. A
+     * dashboard whose widgets default to hidden is a dashboard that silently
+     * empties itself as widgets are added, and the symptom - a blank screen with
+     * no error - reads as a broken page rather than a permissions decision.
+     */
+    public function visibleTo(mixed $user): bool
+    {
+        if ($this->ability === null) {
+            return true;
+        }
+
+        return is_object($user)
+            && method_exists($user, 'hasPermission')
+            && $user->hasPermission($this->ability);
+    }
+
     public function toArray(): array
     {
         return [
@@ -201,7 +244,7 @@ final class ChartWidget
              |
              | A multi-series chart genuinely has no single `points` list, and
              | forcing one would mean flattening datasets the renderer has to
-             | pull apart again — losing which value belonged to which series.
+             | pull apart again - losing which value belonged to which series.
              */
             $series = $resolved['series'] ?? null;
             $bars = $resolved['bars'] ?? null;

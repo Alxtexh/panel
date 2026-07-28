@@ -44,7 +44,7 @@ final readonly class ListResult
      * Props every list screen shares, minus the deferred total.
      *
      * The caller adds `'total' => Inertia::defer($result->total)` itself rather
-     * than this class reaching for Inertia — packages/panel stays usable outside
+     * than this class reaching for Inertia - packages/panel stays usable outside
      * an Inertia request, and the deferral stays visible at the call site where
      * someone might otherwise remove it without noticing what it was for.
      *

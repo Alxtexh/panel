@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\Support\DemoData;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Schema;
  * the §10 budgets mean anything.
  *
  * Spec §2 also mandates bulk insert() in chunks rather than model factories in a
- * loop — factories hydrate and save one model per row, which turns a 90-second
+ * loop - factories hydrate and save one model per row, which turns a 90-second
  * job into an overnight one. Nothing here touches an Eloquent model.
  *
  * LOCAL ONLY. Refuses to run outside a local environment, and refuses to run
@@ -34,9 +35,9 @@ final class SeedDemoCommand extends Command
     private const CHUNK = 5_000;
 
     private const SCALES = [
-        'small'  => ['tenants' => 2, 'clients' => 5_000,   'sessions' => 20_000,    'plans' => 20,  'routers' => 10],
+        'small' => ['tenants' => 2, 'clients' => 5_000,   'sessions' => 20_000,    'plans' => 20,  'routers' => 10],
         'medium' => ['tenants' => 5, 'clients' => 50_000,  'sessions' => 200_000,   'plans' => 200, 'routers' => 50],
-        'large'  => ['tenants' => 5, 'clients' => 500_000, 'sessions' => 2_000_000, 'plans' => 200, 'routers' => 50],
+        'large' => ['tenants' => 5, 'clients' => 500_000, 'sessions' => 2_000_000, 'plans' => 200, 'routers' => 50],
         /*
          | Deliberately past the point where anything sloppy shows.
          |
@@ -87,7 +88,7 @@ final class SeedDemoCommand extends Command
             DB::table('mail_messages')->delete();
 
             $this->seedInbox($tenantIds);
-            $this->components->info('Done in ' . round(microtime(true) - $started, 1) . 's.');
+            $this->components->info('Done in '.round(microtime(true) - $started, 1).'s.');
 
             return self::SUCCESS;
         }
@@ -99,7 +100,7 @@ final class SeedDemoCommand extends Command
         $this->components->info("Seeding demo data at scale [{$scale}]");
 
         $tenantIds = $this->seedTenants($cfg['tenants']);
-        $planIds   = $this->seedPlans($tenantIds, $cfg['plans']);
+        $planIds = $this->seedPlans($tenantIds, $cfg['plans']);
         $routerIds = $this->seedRouters($tenantIds, $cfg['routers']);
         $this->seedClients($tenantIds, $planIds, $routerIds, $cfg['clients']);
         $this->seedSessions($tenantIds, $cfg['sessions']);
@@ -195,7 +196,7 @@ final class SeedDemoCommand extends Command
                 $speed = [5, 10, 20, 40, 100][$i % 5];
                 $rows[] = [
                     'tenant_id' => $tenantId,
-                    'name' => "{$speed}Mbps " . ['Home', 'Business', 'Lite'][$i % 3],
+                    'name' => "{$speed}Mbps ".['Home', 'Business', 'Lite'][$i % 3],
                     'speed_mbps' => $speed,
                     'price_cents' => $speed * 100_000,
                     'is_active' => true,
@@ -209,7 +210,7 @@ final class SeedDemoCommand extends Command
             DB::table('plans')->insert($chunk);
         }
 
-        $this->components->task('  ' . count($rows) . ' plans', fn () => true);
+        $this->components->task('  '.count($rows).' plans', fn () => true);
 
         return DB::table('plans')->orderBy('id')->get(['id', 'tenant_id'])
             ->groupBy('tenant_id')->map->pluck('id')->map->all()->all();
@@ -241,7 +242,7 @@ final class SeedDemoCommand extends Command
             DB::table('routers')->insert($chunk);
         }
 
-        $this->components->task('  ' . count($rows) . ' routers', fn () => true);
+        $this->components->task('  '.count($rows).' routers', fn () => true);
 
         return DB::table('routers')->orderBy('id')->get(['id', 'tenant_id'])
             ->groupBy('tenant_id')->map->pluck('id')->map->all()->all();
@@ -249,102 +250,39 @@ final class SeedDemoCommand extends Command
 
     private function seedClients(array $tenantIds, array $planIds, array $routerIds, int $total): void
     {
-        $first = ['Amina', 'Brian', 'Cynthia', 'David', 'Esther', 'Felix', 'Grace', 'Hassan', 'Irene', 'James',
-                  'Kevin', 'Lydia', 'Moses', 'Nancy', 'Oscar', 'Patience', 'Quincy', 'Rose', 'Samuel', 'Teresa'];
-        $last  = ['Achieng', 'Baraka', 'Chebet', 'Dube', 'Ekwaro', 'Fumo', 'Gitau', 'Hamisi', 'Imani', 'Juma',
-                  'Kamau', 'Lutta', 'Mwangi', 'Njoroge', 'Otieno', 'Peters', 'Quaye', 'Ruto', 'Simiyu', 'Tembo'];
-        $statuses = ['active', 'active', 'active', 'active', 'active', 'active', 'expired', 'expired', 'suspended'];
-        $planTypes = ['pppoe', 'hotspot', 'static'];
-
         $bar = $this->output->createProgressBar($total);
         $bar->setFormat('  clients  %current%/%max% [%bar%] %percent:3s%%  %elapsed:6s%');
         $bar->start();
 
+        $data = new DemoData;
         $nowTs = time();
         $tenantCount = count($tenantIds);
-        $buffer = [];
-        $seq = 0;
 
         // 540 days of history, strongly weighted towards recent sign-ups, so
         // the list has depth to page through and the chart has a growth curve.
-        $signupWeights = $this->dayWeights(540, $nowTs, 0.6, 0.85);
-        $expiryWeights = $this->dayWeights(360, $nowTs, 1.0, 0.0);
+        $signupWeights = $data->dayWeights(540, $nowTs, 0.6, 0.85);
+        $expiryWeights = $data->dayWeights(360, $nowTs, 1.0, 0.0);
+
+        $buffer = [];
 
         for ($i = 0; $i < $total; $i++) {
             $tenantId = $tenantIds[$i % $tenantCount];
-            $tenantPlans = $planIds[$tenantId] ?? [null];
-            $tenantRouters = $routerIds[$tenantId] ?? [null];
 
-            /*
-             | Deterministic, but SHAPED — see dayWeights(). Reproducible
-             | between runs so a perf number stays comparable, while still
-             | producing a series with weekday rhythm and a growth trend rather
-             | than a horizontal line.
-             |
-             | THE PREVIOUS FORM WAS SILENTLY WRONG. `($i * 37) % (86400 * 730)`
-             | reads as "spread over two years", and is — but only once
-             | `$i * 37` exceeds 63,072,000, which needs 1.7 MILLION rows. At
-             | 50k the modulo never wraps, so every client was created within 21
-             | days: "clients over time" covered three weeks whatever the scale,
-             | and a date filter beyond a month matched everything or nothing.
-             | A weight table cannot fail that way — the window is stated in
-             | days and the distribution is normalised to it.
-             */
-            $createdOffset = $this->offsetFor($i, $signupWeights, 11);
-
-            // Same trap: an expiry spread must not depend on the row count
-            // either. Half already lapsed, half still ahead.
-            $expiryOffset = $this->offsetFor($i, $expiryWeights, 71) - (86400 * 180);
-
-            $buffer[] = [
-                'tenant_id' => $tenantId,
-                /*
-                 | THE SAME DECORRELATION TRAP as status/plan_type above.
-                 |
-                 | `$i` advances by `$tenantCount` between two rows of the SAME
-                 | tenant, so `$i % count($tenantRouters)` only ever visits the
-                 | residues those strides land on — with 5 tenants and 10
-                 | routers, exactly two routers received every client and the
-                 | other eight showed zero. Dividing by the tenant count first
-                 | walks the list one entry at a time.
-                 */
-                'plan_id' => $tenantPlans[intdiv($i, $tenantCount) % count($tenantPlans)],
-                'router_id' => $tenantRouters[intdiv($i, $tenantCount) % count($tenantRouters)],
-                'name' => $first[$i % 20] . ' ' . $last[intdiv($i, 20) % 20],
-                'phone' => '+2547' . str_pad((string) (10_000_000 + ($i % 89_999_999)), 8, '0', STR_PAD_LEFT),
-                'access_code' => strtoupper(base_convert((string) (100_000 + $seq++), 10, 36)),
-                /*
-                 | STATUS AND PLAN TYPE MUST BE INDEPENDENT.
-                 |
-                 | `$statuses[$i % 9]` beside `$planTypes[$i % 3]` looks like two
-                 | unrelated cycles and is not: 9 is a multiple of 3, so `$i % 9`
-                 | determines `$i % 3`. Every suspended client landed on the same
-                 | plan type, which made every cross-tab degenerate — the stacked
-                 | and radar charts showed statuses that only ever appeared under
-                 | one plan, which reads as a charting bug rather than as seeded
-                 | data.
-                 |
-                 | Dividing before the modulo decorrelates them.
-                 */
-                /*
-                 | STATUS IS BIASED BY ROUTER, so some service areas genuinely
-                 | perform worse than others.
-                 |
-                 | A flat `$statuses[...]` cycle gives EVERY router the same
-                 | 66.7% active share, which is realistic of nothing and makes a
-                 | ranked "worst performers" chart a row of identical bars — the
-                 | one chart whose entire purpose is showing the spread.
-                 |
-                 | Each router gets a stable health score and the draw is
-                 | compared against it, so active share varies from roughly 40%
-                 | to 95% across the estate while staying deterministic.
-                 */
-                'status' => $this->statusFor($i, intdiv($i, $tenantCount) % count($tenantRouters)),
-                'plan_type' => $planTypes[$i % 3],
-                'expiry_date' => date('Y-m-d H:i:s', $nowTs + $expiryOffset),
-                'created_at' => date('Y-m-d H:i:s', $nowTs - $createdOffset),
-                'updated_at' => date('Y-m-d H:i:s', $nowTs - $createdOffset),
-            ];
+            // `$total` is spread evenly across tenants here, so a tenant's own
+            // row number is the loop counter divided by the tenant count. The
+            // reference seeder gives each tenant a DIFFERENT size and counts per
+            // tenant directly - which is why DemoData takes `$n` rather than
+            // working this out itself.
+            $buffer[] = $data->clientRow(
+                $tenantId,
+                intdiv($i, $tenantCount),
+                $i,
+                $planIds[$tenantId] ?? [null],
+                $routerIds[$tenantId] ?? [null],
+                $nowTs,
+                $signupWeights,
+                $expiryWeights,
+            );
 
             if (count($buffer) >= self::CHUNK) {
                 DB::table('clients')->insert($buffer);
@@ -388,7 +326,8 @@ final class SeedDemoCommand extends Command
         $tenantCount = count($tenantIds);
         $buffer = [];
 
-        $sessionWeights = $this->dayWeights(90, $nowTs, 0.45, 0.45);
+        $data = new DemoData;
+        $sessionWeights = $data->dayWeights(90, $nowTs, 0.45, 0.45);
 
         for ($i = 0; $i < $total; $i++) {
             $tenantId = $tenantIds[$i % $tenantCount];
@@ -402,7 +341,7 @@ final class SeedDemoCommand extends Command
             $clientId = (int) $range->min_id + (($i * 7) % $span);
             $tenantRouters = $routers[$tenantId] ?? [null];
 
-            $startedOffset = $this->offsetFor($i, $sessionWeights, 29);
+            $startedOffset = $data->offsetFor($i, $sessionWeights, 29);
             // One session in six is still live, which gives the Phase 8 live
             // view something to patch without needing a generator process.
             $isLive = ($i % 6) === 0;
@@ -438,132 +377,11 @@ final class SeedDemoCommand extends Command
     }
 
     /**
-     * A subscriber's status, biased by which router serves them.
-     *
-     * `$statuses` is still the source of the mix; this only decides how far
-     * along that list a given subscriber lands, so the overall proportions stay
-     * recognisable while individual routers diverge.
-     */
-    private function statusFor(int $i, int $routerIndex): string
-    {
-        // Stable per router, spread across the range, never 0 or 100.
-        $health = 42 + (($routerIndex * 37) % 53);
-
-        /*
-         * A proper avalanche hash, not a single multiply.
-         *
-         * `($i * prime) % 100` looks random and is not: `$i` advances by a FIXED
-         * stride between two subscribers on the same router, so the products
-         * land on an arithmetic progression and only a handful of distinct rolls
-         * ever appear. The first attempt produced routers at exactly 50.1%,
-         * 66.7% and 83.3% — and one at a flat 100% — which reads as fabricated
-         * because it is.
-         *
-         * Masking to 32 bits keeps every step in integer range; without it the
-         * second multiply exceeds PHP's integer width, silently becomes a float
-         * and loses the low bits that carry the randomness.
-         */
-        $h = ($i * 2654435761) & 0xFFFFFFFF;
-        $h = ($h ^ ($h >> 13)) & 0xFFFFFFFF;
-        $h = ($h * 1274126177) & 0xFFFFFFFF;
-        $h = ($h ^ ($h >> 16)) & 0xFFFFFFFF;
-
-        $roll = ($h + $routerIndex * 7919) % 100;
-
-        if ($roll < $health) {
-            return 'active';
-        }
-
-        // The remainder splits roughly two to one, as it did before.
-        return $roll % 3 === 0 ? 'suspended' : 'expired';
-    }
-
-    /**
-     * A cumulative weight table over `$days` days, ending today.
-     *
-     * WHY THE SEEDER SHAPES ITS OWN TIME DISTRIBUTION.
-     *
-     * The previous `($i * 17) % (86400 * 30)` spread rows PERFECTLY EVENLY over
-     * the window. That is fine for measuring query cost — every bucket holds the
-     * same number of rows — and useless for everything else: a time series drawn
-     * from it is a horizontal line, so a chart bug that mangles the shape is
-     * invisible, and so is a chart feature that renders it well.
-     *
-     * The curve here is weekly seasonality (quiet weekends), a gentle growth
-     * trend, and two out-of-phase sine terms so the wobble does not read as a
-     * repeating pattern. Deterministic, so a performance number is still
-     * comparable between runs.
-     *
-     * @return list<float> Cumulative weights, normalised to end at 1.0.
-     */
-    private function dayWeights(int $days, int $nowTs, float $weekendDip, float $growth): array
-    {
-        $todayDow = (int) date('w', $nowTs);
-        $weights = [];
-        $sum = 0.0;
-
-        for ($d = 0; $d < $days; $d++) {
-            // $d counts BACKWARDS from today, so day 0 is today.
-            $dow = ($todayDow - $d % 7 + 7) % 7;
-            $seasonal = ($dow === 0 || $dow === 6) ? $weekendDip : 1.0;
-
-            // Older days are lighter, so the series trends upward on screen.
-            $trend = 1.0 - $growth * ($d / max(1, $days - 1));
-            $wobble = 1 + 0.20 * sin($d / 3.1) + 0.11 * sin($d / 1.6 + 1.2);
-
-            $w = max(0.05, $seasonal * $trend * $wobble);
-            $sum += $w;
-            $weights[$d] = $sum;
-        }
-
-        return array_map(static fn (float $w): float => $w / $sum, $weights);
-    }
-
-    /**
-     * Pick a second-offset into the past for row `$i`, following `$cumulative`.
-     *
-     * A binary search over ~90 buckets is seven comparisons — cheap enough to
-     * run two million times, which a reject-sampling loop would not be.
-     */
-    private function offsetFor(int $i, array $cumulative, int $salt): int
-    {
-        // Knuth multiplicative hash: a well-spread deterministic uniform.
-        $u = (($i * 2654435761 + $salt) % 1000003) / 1000003;
-
-        $lo = 0;
-        $hi = count($cumulative) - 1;
-
-        while ($lo < $hi) {
-            $mid = intdiv($lo + $hi, 2);
-            if ($cumulative[$mid] < $u) {
-                $lo = $mid + 1;
-            } else {
-                $hi = $mid;
-            }
-        }
-
-        /*
-         * Hour of day, weighted towards the evening peak an ISP actually sees.
-         * Without this the "Today" view — which buckets by hour — is flat even
-         * though the daily view is not.
-         */
-        $hourPick = (($i * 40503 + $salt) % 100) / 100;
-        $hour = $hourPick < 0.55
-            ? 18 + (int) ($hourPick / 0.55 * 5)   // 18:00-22:00 carries most of it
-            : (int) ($hourPick * 24);
-
-        $minute = ($i * 7919 + $salt) % 3600;
-
-        return $lo * 86400 + (23 - min(23, $hour)) * 3600 + $minute;
-    }
-
-
-    /**
      * Mail and chat for every panel USER, not every tenant.
      *
      * These screens are per person: an inbox belongs to whoever is signed in,
      * so seeding per tenant would leave the demo user with an empty mailbox
-     * whenever they were not the first user of their tenant — which is exactly
+     * whenever they were not the first user of their tenant - which is exactly
      * how a seeded feature ends up looking broken.
      *
      * Small on purpose. Mail and chat are not the volume story; clients and
@@ -572,7 +390,7 @@ final class SeedDemoCommand extends Command
      */
     private function seedInbox(array $tenantIds): void
     {
-        $users = DB::table('users')->whereIn('tenant_id', $tenantIds)->get(['id', 'tenant_id']);
+        $users = DB::table('users')->whereIn('tenant_id', $tenantIds)->get(['id', 'tenant_id', 'name', 'email']);
 
         if ($users->isEmpty()) {
             $this->components->warn('  no panel users, skipping mail and chat');
@@ -589,15 +407,33 @@ final class SeedDemoCommand extends Command
             ['Billing', 'billing@example.co.ke'],
         ];
 
+        /*
+         * Subject, body, and the LABEL it carries.
+         *
+         * The category is a property of the message rather than of the sender:
+         * the same person raises a billing query one week and a fault the next,
+         * and deriving the label from the sender would make every one of their
+         * messages the same colour - which reads as a rule the user cannot see.
+         */
         $subjects = [
-            ['Connection dropping in the evenings', 'Since Tuesday the line drops around 8pm and comes back after a few minutes.'],
-            ['Upgrade to 20Mbps?', 'We would like to move up a plan before the end of the month.'],
-            ['Invoice query', 'The last invoice shows two months. Could you check?'],
-            ['Router replacement', 'The unit at the Kiambaa site is showing a red light.'],
-            ['Scheduled maintenance', 'Fibre splicing on the north route, Sunday 02:00 to 05:00.'],
-            ['New installation request', 'A neighbour has asked about coverage on our street.'],
-            ['Payment confirmation', 'Transfer sent this morning, reference 88213.'],
-            ['Speed test results', 'Attached are the results from this week, as requested.'],
+            ['Connection dropping in the evenings', 'Since Tuesday the line drops around 8pm and comes back after a few minutes.', 'Support'],
+            ['Upgrade to 20Mbps?', 'We would like to move up a plan before the end of the month.', 'Sales'],
+            ['Invoice query', 'The last invoice shows two months. Could you check?', 'Finance'],
+            ['Router replacement', 'The unit at the Kiambaa site is showing a red light.', 'Support'],
+            ['Scheduled maintenance', 'Fibre splicing on the north route, Sunday 02:00 to 05:00.', 'System'],
+            ['New installation request', 'A neighbour has asked about coverage on our street.', 'Sales'],
+            ['Payment confirmation', 'Transfer sent this morning, reference 88213.', 'Finance'],
+            ['Speed test results', 'Attached are the results from this week, as requested.', 'Update'],
+            ['Unusual sign-in on your account', 'We noticed a sign-in from a new device. Review it if this was not you.', 'Security'],
+            ['Team appreciation lunch', 'Mark your calendars for Friday. Everyone on the ops rota is invited.', 'HR'],
+        ];
+
+        /* The reply that turns a message into a thread. */
+        $replies = [
+            'Thanks for flagging this - I have logged it and someone will be on site tomorrow.',
+            'Noted. I have queued the change so it takes effect at the start of the next cycle.',
+            'Checked, and you are right. A credit note is going out this afternoon.',
+            'Confirmed on our side. Let me know if anything else looks off.',
         ];
 
         $folders = ['inbox', 'inbox', 'inbox', 'inbox', 'archived', 'sent', 'spam'];
@@ -606,28 +442,78 @@ final class SeedDemoCommand extends Command
         $now = time();
         $n = 0;
 
+        /*
+         * THREAD IDS ARE ASSIGNED BEFORE INSERT, which means they cannot be the
+         * root's real primary key here - a bulk insert does not hand ids back.
+         * A counter offset well past any seeded id keeps them unique without a
+         * second pass to rewrite them, and the read path only ever groups by the
+         * column, never joins it to `id`.
+         */
+        $thread = 1_000_000;
+
         foreach ($users as $user) {
             for ($i = 0; $i < 40; $i++) {
                 [$name, $email] = $senders[$n % count($senders)];
-                [$subject, $body] = $subjects[$n % count($subjects)];
+                [$subject, $body, $category] = $subjects[$n % count($subjects)];
                 $offset = ($n * 7717) % (86400 * 21);
                 $n++;
+                $thread++;
+
+                $at = $now - $offset;
+                $folder = $folders[$i % count($folders)];
 
                 $mail[] = [
                     'user_id' => $user->id,
                     'tenant_id' => $user->tenant_id,
-                    'folder' => $folders[$i % count($folders)],
+                    'folder' => $folder,
+                    'thread_id' => $thread,
                     'from_name' => $name,
                     'from_email' => $email,
+                    'to_name' => $user->name,
+                    'to_email' => $user->email,
                     'subject' => $subject,
+                    'category' => $category,
                     'preview' => mb_substr($body, 0, 90),
-                    'body' => $body . "\n\n" . 'Thanks,' . "\n" . $name,
+                    'body' => $body."\n\n".'Thanks,'."\n".$name,
                     'is_read' => $i % 3 !== 0,
                     'is_starred' => $i % 7 === 0,
+                    'is_important' => $i % 6 === 0,
                     'has_attachment' => $i % 5 === 0,
-                    'received_at' => date('Y-m-d H:i:s', $now - $offset),
-                    'created_at' => date('Y-m-d H:i:s', $now - $offset),
-                    'updated_at' => date('Y-m-d H:i:s', $now - $offset),
+                    'received_at' => date('Y-m-d H:i:s', $at),
+                    'created_at' => date('Y-m-d H:i:s', $at),
+                    'updated_at' => date('Y-m-d H:i:s', $at),
+                ];
+
+                // Every third thread has an answer, so the detail view has
+                // something to be a THREAD of rather than one message with a
+                // count of one under it.
+                if ($i % 3 !== 0) {
+                    continue;
+                }
+
+                $repliedAt = $at + 1260;
+
+                $mail[] = [
+                    'user_id' => $user->id,
+                    'tenant_id' => $user->tenant_id,
+                    'folder' => $folder,
+                    'thread_id' => $thread,
+                    // The reply runs the other way: the signed-in user answered.
+                    'from_name' => $user->name,
+                    'from_email' => $user->email,
+                    'to_name' => $name,
+                    'to_email' => $email,
+                    'subject' => $subject,
+                    'category' => $category,
+                    'preview' => mb_substr($replies[$n % count($replies)], 0, 90),
+                    'body' => $replies[$n % count($replies)],
+                    'is_read' => true,
+                    'is_starred' => false,
+                    'is_important' => false,
+                    'has_attachment' => false,
+                    'received_at' => date('Y-m-d H:i:s', $repliedAt),
+                    'created_at' => date('Y-m-d H:i:s', $repliedAt),
+                    'updated_at' => date('Y-m-d H:i:s', $repliedAt),
                 ];
             }
         }
@@ -657,7 +543,7 @@ final class SeedDemoCommand extends Command
                     'user_id' => $user->id,
                     'tenant_id' => $user->tenant_id,
                     'contact_name' => $contact,
-                    'contact_email' => str($contact)->lower()->replace(' ', '.')->value() . '@example.co.ke',
+                    'contact_email' => str($contact)->lower()->replace(' ', '.')->value().'@example.co.ke',
                     'status' => $statuses[$c % 3],
                     'last_message' => $lines[$c % count($lines)],
                     'last_message_at' => date('Y-m-d H:i:s', $last),
@@ -687,7 +573,6 @@ final class SeedDemoCommand extends Command
             }
         }
 
-        $this->components->info('  mail and chat seeded for ' . $users->count() . ' users');
+        $this->components->info('  mail and chat seeded for '.$users->count().' users');
     }
-
 }

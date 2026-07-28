@@ -15,7 +15,7 @@ use PanelKit\Panel\Support\SchemaCache;
  * wrong value with a multi-day TTL survives the code change that caused it. The
  * rule is to ship this command from day one rather than write it under pressure.
  *
- * It bumps a generation counter rather than scanning or enumerating keys —
+ * It bumps a generation counter rather than scanning or enumerating keys -
  * scanning is slow and, on a sharded or clustered store, misses entries.
  */
 final class CacheClearCommand extends Command

@@ -7,7 +7,7 @@ namespace PanelKit\Panel\Tables;
 use InvalidArgumentException;
 
 /**
- * A footer aggregate for one column — a sum, an average, a count.
+ * A footer aggregate for one column - a sum, an average, a count.
  *
  * OVER THE FILTERED SET, NOT THE PAGE. This is the entire point and the thing
  * that is easy to get wrong: summing the ten rows on screen produces a number
@@ -20,7 +20,7 @@ use InvalidArgumentException;
  * paint, the footer fills in.
  *
  * THE COLUMN IS AN IDENTIFIER, VALIDATED HERE. It is interpolated into a SELECT
- * — `SUM(price_cents)` — which no binding can parameterise, exactly like the
+ * - `SUM(price_cents)` - which no binding can parameterise, exactly like the
  * ORDER BY allowlist. A summariser is declared in a resource class rather than
  * chosen by a request, but "not currently reachable from input" is a property
  * of today's callers, not of this class.
@@ -43,7 +43,7 @@ final class Summarizer
         public readonly ?string $label,
         public readonly ?string $prefix,
         public readonly ?string $suffix,
-        /** Divide before display — cents to currency, bytes to megabytes. */
+        /** Divide before display - cents to currency, bytes to megabytes. */
         public readonly ?float $divideBy,
         public readonly int $decimals,
     ) {}
@@ -101,7 +101,7 @@ final class Summarizer
         return self::make(self::MAX, $column, $label, null, null, null, 0);
     }
 
-    /** Rows matching the filters — the same number the total shows. */
+    /** Rows matching the filters - the same number the total shows. */
     public static function count(?string $label = 'Records'): self
     {
         return self::make(self::COUNT, null, $label, null, null, null, 0);
@@ -137,7 +137,7 @@ final class Summarizer
         return $this->kind === self::COUNT ? null : $this->column;
     }
 
-    /** Presentation hints only — the client decides what they look like (§6.1). */
+    /** Presentation hints only - the client decides what they look like (§6.1). */
     public function toSchema(): array
     {
         return [

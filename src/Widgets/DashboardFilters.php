@@ -13,7 +13,7 @@ use Throwable;
  *
  * WHAT IT DOES TO PER-CHART PERIODS. When a range is set it OVERRIDES every
  * chart's own period selector, and the selectors are hidden while it is active.
- * The alternative — letting both apply — produces a dashboard where one card
+ * The alternative - letting both apply - produces a dashboard where one card
  * says "last 7 days" and another says "March", and nobody can tell whether two
  * numbers beside each other cover the same time. A global filter has to be
  * global or it is a trap.
@@ -23,7 +23,7 @@ use Throwable;
  * coerced to real types here so nothing downstream has to remember to.
  *
  * AN UNPARSEABLE DATE IS DROPPED, NOT AN ERROR. A hand-edited or stale URL
- * should show an unfiltered dashboard, not a 500 — the filter is a convenience,
+ * should show an unfiltered dashboard, not a 500 - the filter is a convenience,
  * and failing it closed would make a bad bookmark look like an outage.
  */
 final class DashboardFilters
