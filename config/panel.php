@@ -264,6 +264,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Exports
+    |--------------------------------------------------------------------------
+    |
+    | How long a finished export stays downloadable.
+    |
+    | IT HAS TO OUTLIVE THE NOTIFICATION SOMEBODY WILL OPEN TOMORROW. The link
+    | previously lived in a one-hour cache entry while the file sat on disk
+    | indefinitely, so the ordinary case - opening "your export is ready" the
+    | next morning - was a 404 for a file that existed. Days, not hours.
+    |
+    | It should also not be forever: an export is a copy of records taken
+    | outside the panel's own screens and its own permission checks, and every
+    | one that lingers is a copy nobody is looking after.
+    */
+    'exports' => [
+        'disk' => env('PANEL_EXPORT_DISK', 'local'),
+        'retention_days' => (int) env('PANEL_EXPORT_RETENTION_DAYS', 7),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Retrieval, so the assistant can cite instead of inventing
     |--------------------------------------------------------------------------
     |

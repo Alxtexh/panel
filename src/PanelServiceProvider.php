@@ -117,6 +117,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\SuspendTenantCommand::class,
             Commands\BenchmarkCommand::class,
             Commands\RefreshRollupsCommand::class,
+            Commands\PruneExportsCommand::class,
             Commands\PruneUploadsCommand::class,
         ]);
 

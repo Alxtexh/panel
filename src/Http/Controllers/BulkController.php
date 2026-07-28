@@ -10,6 +10,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Actions\BulkRunner;
+use PanelKit\Panel\Actions\ExportedFile;
 use PanelKit\Panel\Actions\JobStatus;
 use PanelKit\Panel\Jobs\ExportRecords;
 use PanelKit\Panel\Jobs\RunBulkAction;
@@ -123,6 +124,14 @@ final class BulkController extends Controller
             ($validated['all'] ?? false) ? null : ($ids === [] ? null : $ids),
             $this->actorId(),
             $token,
+            /*
+             * THE LINK IS BUILT HERE, WHERE THE PORTAL IS KNOWN. A queued job has
+             * no request, so it cannot tell whether this export was started from
+             * `/clients` or `/reseller/clients` - and the notification it writes
+             * is stored permanently. Guessing produced a stored link into a
+             * portal that does not serve it.
+             */
+            $this->downloadPath($resource, $token),
         );
 
         return response()->json(['status' => JobStatus::PENDING, 'token' => $token]);
@@ -145,6 +154,13 @@ final class BulkController extends Controller
             'total' => $state['total'],
             'error' => $state['error'],
             'downloadable' => $state['file'] !== null,
+            /*
+             * THE URL COMES FROM THE SERVER, which is the only side that knows
+             * the portal's path prefix. The client used to build
+             * `/{resource}/jobs/{token}/download` itself, which is correct for
+             * exactly one portal and wrong for every other one.
+             */
+            'download' => $state['file'] === null ? null : $this->downloadPath($resource, $token),
         ]);
     }
 
@@ -161,19 +177,29 @@ final class BulkController extends Controller
 
         abort_unless($class::can('viewAny'), 403);
 
-        $state = JobStatus::get($token, $this->actorId());
+        /*
+         * READ FROM THE TABLE, NOT FROM THE CACHE.
+         *
+         * This used to resolve the file through `JobStatus`, whose entries last
+         * an hour. The CSV lasts until it is pruned, and the "your export is
+         * ready" notification lasts until somebody reads it - so the ordinary
+         * case of opening that notification the next morning was a 404 page for
+         * a file sitting on disk. Ownership now lives exactly as long as the
+         * bytes do; see `ExportedFile`.
+         */
+        $export = ExportedFile::find($token, $this->actorId());
 
-        if ($state === null || $state['status'] !== JobStatus::DONE || $state['file'] === null) {
+        if ($export === null) {
             throw new NotFoundHttpException('No such export.');
         }
 
-        $disk = Storage::disk(config('panel.exports.disk', 'local'));
+        $disk = Storage::disk($export['disk']);
 
-        if (! $disk->exists($state['file'])) {
+        if (! $disk->exists($export['path'])) {
             throw new NotFoundHttpException('That export has expired.');
         }
 
-        return $disk->download($state['file'], $class::key().'-'.now()->format('Y-m-d').'.csv');
+        return $disk->download($export['path'], $class::key().'-'.now()->format('Y-m-d').'.csv');
     }
 
     /**
@@ -215,6 +241,22 @@ final class BulkController extends Controller
     }
 
     /** @return class-string<resource> */
+    /**
+     * Where this export will be downloadable from, including the portal prefix.
+     *
+     * BUILT FROM THE CURRENT PANEL rather than from the resource key alone. The
+     * same resource is served at `/clients` in one portal and
+     * `/reseller/clients` in another, so a path assembled without the prefix is
+     * correct in exactly one of them - and it was being written into a
+     * permanently stored notification.
+     */
+    private function downloadPath(string $resource, string $token): string
+    {
+        $prefix = app(PanelManager::class)->currentPanel()?->getPath() ?? '';
+
+        return '/'.trim($prefix.'/'.$resource.'/jobs/'.$token.'/download', '/');
+    }
+
     private function guard(string $resource): string
     {
         $class = app(PanelManager::class)->resource($resource);
