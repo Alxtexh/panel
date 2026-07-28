@@ -1,11 +1,11 @@
 <script setup lang="ts">
 /**
- * Bars and a line on the same plot — the reference's "Combo" demo.
+ * Bars and a line on the same plot - the reference's "Combo" demo.
  *
  * THE TWO HALVES SHARE ONE SCALE BY DEFAULT, and that is the point: a combo
  * chart says "this line is the trend through these bars". If the line is in a
  * different unit it needs `lineAxis: 'right'`, or it will either flatten onto
- * the baseline or tower over every bar — both of which are the chart lying
+ * the baseline or tower over every bar - both of which are the chart lying
  * about a relationship it is drawn specifically to show.
  *
  * DRAW ORDER IS BARS FIRST, LINE SECOND. The line is the thing being read
@@ -42,7 +42,9 @@ onMounted(() => {
         width.value = Math.max(160, entries[0].contentRect.width)
     })
 
-    if (host.value) observer.observe(host.value)
+    if (host.value) {
+        observer.observe(host.value)
+    }
 })
 
 onBeforeUnmount(() => observer?.disconnect())
@@ -51,18 +53,34 @@ const BAR_PALETTE = ['var(--chart-2)', 'var(--chart-4)', 'var(--chart-3)']
 const LINE_PALETTE = ['var(--primary)', 'var(--chart-5)']
 
 const barSeries = computed(() =>
-    props.bars.map((s, i) => ({ ...s, color: s.color ?? BAR_PALETTE[i % BAR_PALETTE.length] })),
+    props.bars.map((s, i) => ({
+        ...s,
+        color: s.color ?? BAR_PALETTE[i % BAR_PALETTE.length],
+    })),
 )
 const lineSeries = computed(() =>
-    props.lines.map((s, i) => ({ ...s, color: s.color ?? LINE_PALETTE[i % LINE_PALETTE.length] })),
+    props.lines.map((s, i) => ({
+        ...s,
+        color: s.color ?? LINE_PALETTE[i % LINE_PALETTE.length],
+    })),
 )
 
-const labels = computed(() => barSeries.value[0]?.points.map((p) => p.label) ?? lineSeries.value[0]?.points.map((p) => p.label) ?? [])
+const labels = computed(
+    () =>
+        barSeries.value[0]?.points.map((p) => p.label) ??
+        lineSeries.value[0]?.points.map((p) => p.label) ??
+        [],
+)
 const count = computed(() => labels.value.length)
 
 const splitScale = computed(() => props.lineAxis === 'right')
 
-const pad = computed(() => ({ top: 12, right: splitScale.value ? 44 : 12, bottom: 26, left: 44 }))
+const pad = computed(() => ({
+    top: 12,
+    right: splitScale.value ? 44 : 12,
+    bottom: 26,
+    left: 44,
+}))
 
 const plot = computed(() => ({
     w: Math.max(1, width.value - pad.value.left - pad.value.right),
@@ -72,7 +90,9 @@ const plot = computed(() => ({
 function niceCeiling(values: number[]): number {
     const max = Math.max(...values, 0)
 
-    if (max <= 0) return 1
+    if (max <= 0) {
+        return 1
+    }
 
     const magnitude = 10 ** Math.floor(Math.log10(max))
     const step = [1, 2, 2.5, 5, 10].find((s) => max <= s * magnitude) ?? 10
@@ -88,7 +108,9 @@ const barCeiling = computed(() =>
 )
 
 const lineCeiling = computed(() =>
-    splitScale.value ? niceCeiling(lineSeries.value.flatMap((s) => s.points.map((p) => p.value))) : barCeiling.value,
+    splitScale.value
+        ? niceCeiling(lineSeries.value.flatMap((s) => s.points.map((p) => p.value)))
+        : barCeiling.value,
 )
 
 const band = computed(() => plot.value.w / Math.max(1, count.value))
@@ -123,14 +145,19 @@ const lines = computed(() =>
     lineSeries.value.map((s) => {
         const pts = s.points.map((p, i) => ({
             x: centreOf(i),
-            y: pad.value.top + plot.value.h - (Math.max(0, p.value) / lineCeiling.value) * plot.value.h,
+            y:
+                pad.value.top +
+                plot.value.h -
+                (Math.max(0, p.value) / lineCeiling.value) * plot.value.h,
             value: p.value,
         }))
 
         return {
             ...s,
             pts,
-            d: pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' '),
+            d: pts
+                .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+                .join(' '),
         }
     }),
 )
@@ -152,22 +179,37 @@ function showLabel(i: number): boolean {
 const format = (v: number) => (props.format ? props.format(v) : compact(v))
 
 function compact(v: number): string {
-    if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`
-    if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`
+    if (Math.abs(v) >= 1_000_000) {
+        return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`
+    }
+
+    if (Math.abs(v) >= 1_000) {
+        return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`
+    }
 
     return new Intl.NumberFormat().format(Math.round(v * 100) / 100)
 }
 
 const active = computed(() => {
-    if (hover.value === null) return null
+    if (hover.value === null) {
+        return null
+    }
 
     const i = hover.value
 
     return {
         label: labels.value[i],
         rows: [
-            ...barSeries.value.map((s) => ({ name: s.name, color: s.color!, value: s.points[i]?.value ?? 0 })),
-            ...lineSeries.value.map((s) => ({ name: s.name, color: s.color!, value: s.points[i]?.value ?? 0 })),
+            ...barSeries.value.map((s) => ({
+                name: s.name,
+                color: s.color!,
+                value: s.points[i]?.value ?? 0,
+            })),
+            ...lineSeries.value.map((s) => ({
+                name: s.name,
+                color: s.color!,
+                value: s.points[i]?.value ?? 0,
+            })),
         ],
     }
 })
@@ -184,7 +226,12 @@ const active = computed(() => {
         </div>
 
         <template v-else>
-            <svg :width="width" :height="height" class="overflow-visible" @mouseleave="hover = null">
+            <svg
+                :width="width"
+                :height="height"
+                class="overflow-visible"
+                @mouseleave="hover = null"
+            >
                 <line
                     v-for="g in gridlines"
                     :key="`g-${g.y}`"
@@ -283,16 +330,28 @@ const active = computed(() => {
                 v-if="active"
                 class="bg-popover pointer-events-none absolute top-2 right-2 z-10 min-w-36 rounded-lg border p-2 shadow-lg"
             >
-                <p class="text-muted-foreground mb-1 text-[11px] capitalize">{{ active.label }}</p>
-                <div v-for="(row, i) in active.rows" :key="i" class="flex items-center gap-2 py-0.5">
+                <p class="text-muted-foreground mb-1 text-[11px] capitalize">
+                    {{ active.label }}
+                </p>
+                <div
+                    v-for="(row, i) in active.rows"
+                    :key="i"
+                    class="flex items-center gap-2 py-0.5"
+                >
                     <span class="size-2 shrink-0 rounded-full" :style="{ background: row.color }" />
-                    <span class="text-muted-foreground min-w-0 flex-1 truncate text-[11px]">{{ row.name }}</span>
+                    <span class="text-muted-foreground min-w-0 flex-1 truncate text-[11px]">{{
+                        row.name
+                    }}</span>
                     <span class="text-xs font-semibold tabular-nums">{{ format(row.value) }}</span>
                 </div>
             </div>
 
             <div v-if="showLegend" class="mt-2 flex flex-wrap items-center gap-4">
-                <span v-for="(s, i) in [...barSeries, ...lineSeries]" :key="i" class="flex items-center gap-1.5 text-xs">
+                <span
+                    v-for="(s, i) in [...barSeries, ...lineSeries]"
+                    :key="i"
+                    class="flex items-center gap-1.5 text-xs"
+                >
                     <span class="size-2 rounded-full" :style="{ background: s.color }" />
                     <span class="text-muted-foreground">{{ s.name }}</span>
                 </span>

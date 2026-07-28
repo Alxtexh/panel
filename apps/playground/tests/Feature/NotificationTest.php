@@ -17,7 +17,7 @@ use Tests\TestCase;
 /**
  * The bell: alerts and notifications, which are NOT the same thing.
  *
- * Most of what is asserted here is the boundary between them — an alert that
+ * Most of what is asserted here is the boundary between them - an alert that
  * could be marked read, or a notification that recomputed itself, would each be
  * a bug in the model rather than in the code.
  */
@@ -44,7 +44,7 @@ final class NotificationTest extends TestCase
 
     /**
      * AN ALERT IS DERIVED. It exists while the condition holds and disappears
-     * when it clears — no row, no dismissal, no per-user copy.
+     * when it clears - no row, no dismissal, no per-user copy.
      */
     public function test_an_alert_appears_and_clears_with_its_condition(): void
     {
@@ -62,7 +62,7 @@ final class NotificationTest extends TestCase
         $this->assertNotContains('routers_offline', array_column($this->alerts(), 'key'));
     }
 
-    /** An alert never counts towards the unread badge — only notifications do. */
+    /** An alert never counts towards the unread badge - only notifications do. */
     public function test_alerts_do_not_affect_the_unread_badge(): void
     {
         $this->makeRouter('offline');
@@ -151,7 +151,7 @@ final class NotificationTest extends TestCase
 
     /**
      * THE ONE THAT MATTERS. Notifications are addressed to a person, so another
-     * user's id must not be readable or writable — the stream is scoped to the
+     * user's id must not be readable or writable - the stream is scoped to the
      * actor, not merely filtered in the response.
      */
     public function test_another_users_notification_cannot_be_touched(): void
@@ -188,7 +188,7 @@ final class NotificationTest extends TestCase
     {
         return Router::withoutGlobalScopes()->create([
             'tenant_id' => $this->tenant->id,
-            'name' => 'RTR-' . uniqid(),
+            'name' => 'RTR-'.uniqid(),
             'ip_address' => '10.0.0.1',
             'model' => 'RB750',
             'status' => $status,

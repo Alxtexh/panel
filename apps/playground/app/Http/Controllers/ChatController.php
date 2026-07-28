@@ -6,10 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
+use PanelKit\Panel\Live\LiveConfig;
 use Inertia\Response;
 
 /**
@@ -18,7 +20,7 @@ use Inertia\Response;
  * A THREAD IS BOUNDED. Loading a whole conversation is fine at forty messages
  * and ruinous at forty thousand, and the difference is invisible until someone
  * has been using the panel for a year. The last N are fetched newest-first
- * through the index and reversed in PHP — reversing forty rows costs nothing,
+ * through the index and reversed in PHP - reversing forty rows costs nothing,
  * where `orderBy('sent_at')` with no bound reads the entire thread to find its
  * end.
  *
@@ -45,6 +47,27 @@ final class ChatController extends Controller
              */
             'conversations' => $this->conversations($request),
             'thread' => $this->thread($request, $conversationId),
+
+            /*
+             * The transport, so the page can stay fresh without knowing which
+             * driver is configured.
+             *
+             * TRANSPORT-READY, NOT TRANSPORT-COUPLED. Nothing on this screen
+             * assumes a socket exists: it renders, it subscribes if a driver is
+             * present, and it falls back to polling if one is not. That is what
+             * makes Reverb a config change rather than a rewrite - and what
+             * keeps the page at zero overhead when live updates are off, which
+             * is the default.
+             *
+             * The channel is per CONVERSATION, not per tenant. A tenant-wide
+             * chat channel would deliver every conversation in the organisation
+             * to everybody watching any of them.
+             */
+            'live' => [
+                ...LiveConfig::fromConfig()->toArray(),
+                'channel' => $conversationId === null ? null : "chat.{$conversationId}",
+                'events' => ['MessageSent'],
+            ],
         ]);
     }
 
@@ -67,7 +90,7 @@ final class ChatController extends Controller
         ]);
 
         // Denormalised onto the conversation so the list can be ordered and
-        // previewed without a correlated subquery per row — the N+1 that a
+        // previewed without a correlated subquery per row - the N+1 that a
         // "most recent message" column exists to avoid.
         $conversation->last_message = $validated['body'];
         $conversation->last_message_at = $message->sent_at;
@@ -101,8 +124,8 @@ final class ChatController extends Controller
 
         return $this->scoped($request)
             ->when($search !== '', fn ($q) => $q
-                ->where('contact_name', 'like', $search . '%')
-                ->orWhere('contact_name', 'like', '% ' . $search . '%'))
+                ->where('contact_name', 'like', $search.'%')
+                ->orWhere('contact_name', 'like', '% '.$search.'%'))
             ->orderByDesc('last_message_at')
             ->orderByDesc('id')
             ->limit(50)
@@ -162,7 +185,7 @@ final class ChatController extends Controller
         ];
     }
 
-    private function scoped(Request $request): \Illuminate\Database\Eloquent\Builder
+    private function scoped(Request $request): Builder
     {
         // Tenant scope is global; the user filter is what keeps one operator's
         // conversations out of another's list inside the same organisation.

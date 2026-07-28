@@ -36,7 +36,7 @@ const props = withDefaults(
     defineProps<{
         node: InfoNode
         record: Record<string, any>
-        /** 0 is the outermost layout node — the only one that draws a frame. */
+        /** 0 is the outermost layout node - the only one that draws a frame. */
         depth?: number
     }>(),
     { depth: 0 },
@@ -62,7 +62,13 @@ const BADGE_VARIANTS: Record<string, string> = {
 
 const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
     date: { year: 'numeric', month: 'long', day: 'numeric' },
-    datetime: { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' },
+    datetime: {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    },
 }
 
 const value = computed(() => (props.node.key ? props.record[props.node.key] : null))
@@ -70,15 +76,23 @@ const value = computed(() => (props.node.key ? props.record[props.node.key] : nu
 const display = computed(() => {
     const v = value.value
 
-    if (v === null || v === undefined || v === '') return '—'
+    if (v === null || v === undefined || v === '') {
+        return '-'
+    }
 
     if (props.node.type === 'date' || props.node.type === 'datetime') {
         return new Date(String(v)).toLocaleDateString(undefined, dateFormats[props.node.type])
     }
 
     let text = String(v)
-    if (props.node.transform === 'upper') text = text.toUpperCase()
-    if (props.node.transform === 'lower') text = text.toLowerCase()
+
+    if (props.node.transform === 'upper') {
+        text = text.toUpperCase()
+    }
+
+    if (props.node.transform === 'lower') {
+        text = text.toLowerCase()
+    }
 
     return [props.node.prefix, text, props.node.suffix].filter(Boolean).join(' ')
 })
@@ -103,26 +117,44 @@ const badgeClass = computed(() => {
             >
                 {{ value }}
             </span>
-            <span v-else :class="[node.mono ? 'font-mono text-xs' : '', node.muted ? 'text-muted-foreground' : '']">
+            <span
+                v-else
+                :class="[
+                    node.mono ? 'font-mono text-xs' : '',
+                    node.muted ? 'text-muted-foreground' : '',
+                ]"
+            >
                 {{ display }}
             </span>
         </dd>
     </div>
 
     <!-- Section. -->
-    <section v-else-if="node.component === 'section'" :class="isRoot ? 'bg-card rounded-lg border' : ''">
+    <section
+        v-else-if="node.component === 'section'"
+        :class="isRoot ? 'bg-card rounded-lg border' : ''"
+    >
         <header
             class="flex items-start justify-between gap-3"
-            :class="[isRoot ? 'px-4 py-3' : 'pb-2', node.collapsible ? 'cursor-pointer select-none' : '']"
+            :class="[
+                isRoot ? 'px-4 py-3' : 'pb-2',
+                node.collapsible ? 'cursor-pointer select-none' : '',
+            ]"
             @click="node.collapsible && (open = !open)"
         >
             <div>
                 <h3 class="text-sm font-semibold">{{ node.label }}</h3>
-                <p v-if="node.description" class="text-muted-foreground mt-0.5 text-xs">{{ node.description }}</p>
+                <p v-if="node.description" class="text-muted-foreground mt-0.5 text-xs">
+                    {{ node.description }}
+                </p>
             </div>
         </header>
 
-        <dl v-if="open" class="grid grid-cols-1 gap-4" :class="[gridClass, isRoot ? 'border-t px-4 py-4' : '']">
+        <dl
+            v-if="open"
+            class="grid grid-cols-1 gap-4"
+            :class="[gridClass, isRoot ? 'border-t px-4 py-4' : '']"
+        >
             <InfoNode
                 v-for="(child, i) in node.children ?? []"
                 :key="i"
@@ -135,12 +167,24 @@ const badgeClass = computed(() => {
 
     <!-- Grid. -->
     <dl v-else-if="node.component === 'grid'" class="grid grid-cols-1 gap-4" :class="gridClass">
-        <InfoNode v-for="(child, i) in node.children ?? []" :key="i" :node="child" :record="record" :depth="depth + 1" />
+        <InfoNode
+            v-for="(child, i) in node.children ?? []"
+            :key="i"
+            :node="child"
+            :record="record"
+            :depth="depth + 1"
+        />
     </dl>
 
     <!-- Tabs. -->
-    <div v-else-if="node.component === 'tabs'" :class="isRoot ? 'bg-card overflow-hidden rounded-lg border' : ''">
-        <div class="bg-muted/30 flex gap-1 overflow-x-auto p-1" :class="isRoot ? 'border-b' : 'rounded-md'">
+    <div
+        v-else-if="node.component === 'tabs'"
+        :class="isRoot ? 'bg-card overflow-hidden rounded-lg border' : ''"
+    >
+        <div
+            class="bg-muted/30 flex gap-1 overflow-x-auto p-1"
+            :class="isRoot ? 'border-b' : 'rounded-md'"
+        >
             <button
                 v-for="(tab, i) in node.children ?? []"
                 :key="i"

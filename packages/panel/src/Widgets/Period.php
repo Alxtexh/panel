@@ -13,7 +13,7 @@ use DateTimeImmutable;
  * forget: its own range, the bucket granularity that suits that range, and the
  * PRECEDING range of equal length. Without the third, a trend indicator has
  * nothing to compare against, and "▲ 4%" gets computed against an arbitrary
- * baseline — a number that looks authoritative and means nothing.
+ * baseline - a number that looks authoritative and means nothing.
  *
  * The bucket is chosen here rather than by the caller because the pairing is
  * what keeps a chart readable: a year bucketed by hour is 8,760 points through
@@ -41,8 +41,8 @@ enum Period: string
      * Resolve an untrusted string to a period.
      *
      * Falls back rather than throwing: a stale bookmark or a hand-edited query
-     * string is not an error worth a 500, and the alternative — interpolating
-     * whatever arrived into a date expression — is how a query string becomes
+     * string is not an error worth a 500, and the alternative - interpolating
+     * whatever arrived into a date expression - is how a query string becomes
      * an injection surface.
      */
     public static function fromRequest(?string $value): self
@@ -94,7 +94,7 @@ enum Period: string
     /**
      * The equally-long window immediately before this one.
      *
-     * Equal LENGTH, not equal calendar unit — comparing a 30-day window against
+     * Equal LENGTH, not equal calendar unit - comparing a 30-day window against
      * "last month" compares 30 days against 28, 30 or 31 and manufactures a
      * trend out of the calendar.
      *

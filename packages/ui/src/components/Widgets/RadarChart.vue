@@ -6,14 +6,14 @@
  * axes are COMPARABLE, because they share a centre and a scale. Plotting bytes
  * against a count on one radar draws a shape that means nothing. So the scale
  * here is shared deliberately, and the caller is expected to pass values in the
- * same unit — router health scores, plan mix percentages, and so on.
+ * same unit - router health scores, plan mix percentages, and so on.
  *
  * THE GRID IS POLYGONAL, NOT CIRCULAR. Concentric circles look tidier and lie
  * slightly: a value read against a circle appears further from the centre than
  * the same value read against the polygon the data is actually plotted on.
  *
- * FEWER THAN THREE AXES CANNOT MAKE A POLYGON — two axes collapse to a line and
- * one to a point — so it degrades to a message rather than drawing something
+ * FEWER THAN THREE AXES CANNOT MAKE A POLYGON - two axes collapse to a line and
+ * one to a point - so it degrades to a message rather than drawing something
  * meaningless.
  */
 import { computed } from 'vue'
@@ -29,10 +29,19 @@ const props = withDefaults(
     { height: 240, showLegend: true },
 )
 
-const PALETTE = ['var(--primary)', 'var(--chart-2)', 'var(--chart-4)', 'var(--chart-3)', 'var(--chart-5)']
+const PALETTE = [
+    'var(--primary)',
+    'var(--chart-2)',
+    'var(--chart-4)',
+    'var(--chart-3)',
+    'var(--chart-5)',
+]
 
 const resolved = computed(() =>
-    props.series.map((s, i) => ({ ...s, color: s.color ?? PALETTE[i % PALETTE.length] })),
+    props.series.map((s, i) => ({
+        ...s,
+        color: s.color ?? PALETTE[i % PALETTE.length],
+    })),
 )
 
 const axes = computed(() => resolved.value[0]?.points.map((p) => p.label) ?? [])
@@ -46,7 +55,9 @@ const radius = computed(() => size.value / 2 - 34)
 const ceiling = computed(() => {
     const max = Math.max(...resolved.value.flatMap((s) => s.points.map((p) => p.value)), 0)
 
-    if (max <= 0) return 1
+    if (max <= 0) {
+        return 1
+    }
 
     const magnitude = 10 ** Math.floor(Math.log10(max))
     const step = [1, 2, 2.5, 5, 10].find((s) => max <= s * magnitude) ?? 10
@@ -84,7 +95,7 @@ const rings = computed(() => [0.25, 0.5, 0.75, 1].map((f) => ({ f, points: polyg
  *
  * `outline` and `dots` are NEW keys rather than an overwrite of `points`.
  * Spreading the series and replacing `points` with a coordinate string destroyed
- * the values the tooltip needs, and the tooltip then read them off a string —
+ * the values the tooltip needs, and the tooltip then read them off a string -
  * which yields `undefined` and renders "0" for every vertex without erroring.
  */
 const shapes = computed(() =>
@@ -159,7 +170,13 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
             />
 
             <g v-for="(s, i) in shapes" :key="`s-${i}`">
-                <polygon :points="s.outline" :fill="s.color" fill-opacity="0.16" :stroke="s.color" stroke-width="2" />
+                <polygon
+                    :points="s.outline"
+                    :fill="s.color"
+                    fill-opacity="0.16"
+                    :stroke="s.color"
+                    stroke-width="2"
+                />
                 <circle
                     v-for="(d, j) in s.dots"
                     :key="j"
@@ -170,7 +187,9 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
                     stroke="var(--card)"
                     stroke-width="1.5"
                 >
-                    <title>{{ s.name }} — {{ axes[j] }}: {{ format(s.values[j]?.value ?? 0) }}</title>
+                    <title>
+                        {{ s.name }} - {{ axes[j] }}: {{ format(s.values[j]?.value ?? 0) }}
+                    </title>
                 </circle>
             </g>
 

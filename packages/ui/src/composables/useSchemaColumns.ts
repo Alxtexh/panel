@@ -1,4 +1,5 @@
-import { computed, type Ref } from 'vue'
+import { computed } from 'vue'
+import type { Ref } from 'vue'
 import type { TableColumn } from '../components/DataTable/types'
 
 /**
@@ -10,7 +11,7 @@ import type { TableColumn } from '../components/DataTable/types'
  *
  * The direction of that dependency is the point (antipatterns §6.1): PHP
  * describes intent, the client owns presentation. A CSS class authored in PHP
- * is invisible to the CSS scanner and gets purged silently — and *partially*,
+ * is invisible to the CSS scanner and gets purged silently - and *partially*,
  * so one class of a pair survives and the element renders wrong at some widths
  * with no error anywhere. That exact bug has already happened twice in this
  * project's history.
@@ -43,7 +44,7 @@ export interface SchemaColumn {
     fallback?: 'initials' | 'icon' | 'none'
     fallbackFrom?: string
 
-    /* toggle and select — writable in place */
+    /* toggle and select - writable in place */
     editable?: boolean
     confirmation?: string | null
     options?: Record<string, string>
@@ -64,23 +65,48 @@ function cellClassFor(column: SchemaColumn): string {
 
     /*
      * A control is not text. Applying `uppercase` or `font-mono` to a cell
-     * holding a <select> restyles the control itself — the options render in
-     * caps and the width jumps — so the text treatments stop at text.
+     * holding a <select> restyles the control itself - the options render in
+     * caps and the width jumps - so the text treatments stop at text.
      */
     if (column.type === 'toggle' || column.type === 'select' || column.type === 'image') {
-        if (column.align === 'right') classes.push('text-right')
-        if (column.align === 'center') classes.push('text-center')
+        if (column.align === 'right') {
+            classes.push('text-right')
+        }
+
+        if (column.align === 'center') {
+            classes.push('text-center')
+        }
 
         return classes.join(' ')
     }
 
-    if (column.key === 'name') classes.push('font-medium')
-    if (column.mono) classes.push('font-mono text-xs')
-    if (column.muted) classes.push('text-muted-foreground')
-    if (column.transform === 'upper') classes.push('uppercase')
-    if (column.transform === 'lower') classes.push('lowercase')
-    if (column.align === 'right') classes.push('text-right')
-    if (column.align === 'center') classes.push('text-center')
+    if (column.key === 'name') {
+        classes.push('font-medium')
+    }
+
+    if (column.mono) {
+        classes.push('font-mono text-xs')
+    }
+
+    if (column.muted) {
+        classes.push('text-muted-foreground')
+    }
+
+    if (column.transform === 'upper') {
+        classes.push('uppercase')
+    }
+
+    if (column.transform === 'lower') {
+        classes.push('lowercase')
+    }
+
+    if (column.align === 'right') {
+        classes.push('text-right')
+    }
+
+    if (column.align === 'center') {
+        classes.push('text-center')
+    }
 
     return classes.join(' ')
 }
@@ -102,7 +128,10 @@ export function useSchemaColumns(schemaColumns: Ref<SchemaColumn[]>) {
 
     function badgeVariant(key: string, value: unknown): string {
         const column = byKey.value[key]
-        if (!column) return 'outline'
+
+        if (!column) {
+            return 'outline'
+        }
 
         // Booleans arrive as true/false but colour maps are keyed by string.
         const lookup = typeof value === 'boolean' ? (value ? '1' : '') : String(value)

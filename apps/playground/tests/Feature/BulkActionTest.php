@@ -9,11 +9,13 @@ use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Actions\BulkAction;
+use PanelKit\Panel\Actions\BulkRunner;
 use PanelKit\Panel\Actions\JobStatus;
 use PanelKit\Panel\Jobs\ExportRecords;
 use PanelKit\Panel\Jobs\RunBulkAction;
@@ -192,7 +194,7 @@ final class BulkActionTest extends TestCase
 
         // Dispatched synchronously, exactly as the worker would run it.
         (new RunBulkAction('clients', 'suspend', ['status' => 'active'], $this->userA->id, $token))
-            ->handle(app(\PanelKit\Panel\Actions\BulkRunner::class));
+            ->handle(app(BulkRunner::class));
 
         $this->assertSame(3, Client::withoutGlobalScopes()->whereIn('id', $active)->where('status', 'suspended')->count());
         $this->assertSame(2, Client::withoutGlobalScopes()->whereIn('id', $expired)->where('status', 'expired')->count(), 'The filter excluded these.');
@@ -222,9 +224,9 @@ final class BulkActionTest extends TestCase
             ->mutate(['status' => 'suspended'])
             ->chunkSize(5);
 
-        $list = \App\Panel\Resources\ClientResource::definition()->toListQuery(Client::class);
+        $list = ClientResource::definition()->toListQuery(Client::class);
 
-        $affected = app(\PanelKit\Panel\Actions\BulkRunner::class)->run(
+        $affected = app(BulkRunner::class)->run(
             $action,
             // The predicate the mutation destroys.
             $list->matching(request()->merge(['status' => 'active'])),
@@ -240,7 +242,7 @@ final class BulkActionTest extends TestCase
         );
     }
 
-    /** N records, a bounded number of queries — never one per record. */
+    /** N records, a bounded number of queries - never one per record. */
     public function test_a_bulk_mutation_does_not_run_one_query_per_record(): void
     {
         $ids = $this->seedClients($this->tenantA, 40, 'active');
@@ -313,34 +315,110 @@ final class BulkActionTest extends TestCase
     /** A leaked token is inert: status is owner-checked, not merely unguessable. */
     public function test_another_user_cannot_read_a_job_status(): void
     {
-        $other = User::factory()->create(['tenant_id' => $this->tenantB->id, 'email_verified_at' => now()]);
+        // A colleague, for the same reason as the download test below.
+        $other = User::factory()->create(['tenant_id' => $this->tenantA->id, 'email_verified_at' => now()]);
 
         $token = JobStatus::token();
-        JobStatus::start($token, $this->userA->id, 'export');
 
-        $this->assertNotNull(JobStatus::get($token, $this->userA->id));
-        $this->assertNull(JobStatus::get($token, $other->id));
+        /*
+         * WRITTEN INSIDE TENANCY, because that is where it will be read.
+         *
+         * `JobStatus` lives in the CACHE, and `CacheTenancyBootstrapper` prefixes
+         * every cache key with the tenant. Writing the token outside tenancy and
+         * reading it inside produces a miss, and the endpoint 404s - which looks
+         * exactly like the ownership check passing.
+         *
+         * That is not hypothetical: this assertion passed for that reason once
+         * `InitializeTenancyForUser` landed, and would have gone on "proving" a
+         * guard that was never consulted. Setting up in the same context the
+         * request runs in is what makes the refusal below mean ownership.
+         */
+        $this->asTenant($this->tenantA, function () use ($token, $other): void {
+            JobStatus::start($token, $this->userA->id, 'export');
 
-        $this->actingAs($other)->getJson("/clients/jobs/{$token}")->assertNotFound();
+            $this->assertNotNull(JobStatus::get($token, $this->userA->id));
+            $this->assertNull(JobStatus::get($token, $other->id), 'Owner id is checked, not just the token.');
+
+            // The token IS present in this context, so a 404 here can only mean
+            // the ownership check refused it.
+            $this->actingAs($other)->getJson("/clients/jobs/{$token}")->assertNotFound();
+        });
     }
 
     public function test_an_export_cannot_be_downloaded_by_another_user(): void
     {
         Storage::fake('local');
 
-        $other = User::factory()->create(['tenant_id' => $this->tenantB->id, 'email_verified_at' => now()]);
+        /*
+         * A COLLEAGUE, not another tenant - the test is named "another user".
+         *
+         * It used to be a tenant B user, which refuses for the wrong reason now
+         * that permissions exist: their role is invisible under tenant A's scope,
+         * so they are stopped at the permission gate with a 403 and the
+         * ownership check never runs. That still refuses, but it proves tenancy
+         * rather than ownership, and tenancy is already covered elsewhere.
+         *
+         * The realistic threat is somebody in the SAME organisation who has the
+         * token - a URL pasted into chat. They pass every other gate, so a
+         * refusal here can only mean the owner id was checked.
+         */
+        $other = User::factory()->create(['tenant_id' => $this->tenantA->id, 'email_verified_at' => now()]);
 
         $this->seedClients($this->tenantA, 2, 'active');
 
         $token = JobStatus::token();
-        JobStatus::start($token, $this->userA->id, 'export');
-        (new ExportRecords('clients', [], null, $this->userA->id, $token))->handle();
 
-        $this->actingAs($other)->get("/clients/jobs/{$token}/download")->assertNotFound();
-        $this->actingAs($this->userA)->get("/clients/jobs/{$token}/download")->assertOk();
+        // Inside tenancy: the job runs there in production (QueueTenancyBootstrapper)
+        // and the download request reads there. See the note above.
+        $this->asTenant($this->tenantA, function () use ($token, $other): void {
+            JobStatus::start($token, $this->userA->id, 'export');
+            (new ExportRecords('clients', [], null, $this->userA->id, $token))->handle();
+
+            // The owner CAN download, which is what makes the refusal above a
+            // refusal rather than a missing file.
+            $this->actingAs($other)->get("/clients/jobs/{$token}/download")->assertNotFound();
+            $this->actingAs($this->userA)->get("/clients/jobs/{$token}/download")->assertOk();
+        });
     }
 
     /* ---------------------------------------------------------------- setup */
+
+    /**
+     * Run `$body` with `$tenant` initialised, exactly as a request would.
+     *
+     * Needed wherever the test touches the CACHE, because cache keys are
+     * tenant-prefixed and a test that sets up outside tenancy is not setting up
+     * the state the request will read.
+     */
+    private function asTenant(Tenant $tenant, callable $body): mixed
+    {
+        /*
+         * EVERYTHING THAT TOUCHES THE CACHE GOES IN ONE BLOCK, including the
+         * HTTP calls - this cannot be split into setup-then-request.
+         *
+         * `CacheTenancyBootstrapper` builds a NEW TenantCacheManager on every
+         * initialise, and the suite runs the `array` store, so each rebuild
+         * starts empty: anything written in one tenancy block is gone in the
+         * next. Every read then misses, every endpoint 404s, and it reads as a
+         * broken ownership guard rather than a driver artifact.
+         *
+         * The store cannot simply be swapped for a persistent one, either:
+         * stancl tags its cache entries, and of Laravel's stores only `array`
+         * and `redis` support tagging. So `array` it is, and the context has to
+         * be held open across the request.
+         *
+         * That works because `InitializeTenancyForUser` SKIPS when tenancy is
+         * already initialised - the request joins the context the test opened
+         * rather than starting a new one.
+         */
+        tenancy()->initialize($tenant);
+
+        try {
+            return $body();
+        } finally {
+            tenancy()->end();
+        }
+    }
 
     /** @return list<int> */
     private function seedClients(Tenant $tenant, int $count, string $status): array
@@ -370,7 +448,7 @@ final class BulkActionTest extends TestCase
                 'plan_id' => $plan->id,
                 'router_id' => $router->id,
                 'name' => "Client {$unique}",
-                'phone' => '+254' . substr((string) crc32($unique), 0, 9),
+                'phone' => '+254'.substr((string) crc32($unique), 0, 9),
                 'access_code' => strtoupper(substr(md5($unique), 0, 10)),
                 'status' => $status,
                 'plan_type' => 'pppoe',

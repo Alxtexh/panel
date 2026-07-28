@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import PkSkeleton from '../primitives/PkSkeleton.vue'
 /**
  * One number on the dashboard, with an optional trend and sparkline.
  *
- * EVERY STATE IS THE SAME HEIGHT — skeleton, error, and resolved. Six cards
+ * EVERY STATE IS THE SAME HEIGHT - skeleton, error, and resolved. Six cards
  * resolving independently is the whole point of deferring them; if each one
  * changes height on arrival the page reflows six times and the operator's
  * cursor lands on the wrong card. Cumulative layout shift target is 0 (§10),
@@ -10,7 +11,7 @@
  *
  * THE SPARKLINE IS A FULL-BLEED FOOTER, not a background behind the text.
  * Positioning it absolutely under the content looked tidy in isolation and put
- * the curve straight through the trend line — "▲ 13.4% vs previous 30 days"
+ * the curve straight through the trend line - "▲ 13.4% vs previous 30 days"
  * read across a moving graph, which is unreadable at any opacity. Below the
  * content and flush to the card edges, it reads as the card's own texture,
  * which is what makes a row of these scannable.
@@ -36,47 +37,63 @@ withDefaults(
         /** True when a DECREASE is the good outcome. */
         inverted?: boolean
     }>(),
-    { description: null, trend: null, sparkline: null, loading: false, error: false, inverted: false },
+    {
+        description: null,
+        trend: null,
+        sparkline: null,
+        loading: false,
+        error: false,
+        inverted: false,
+    },
 )
 
 const format = (v: unknown) =>
-    typeof v === 'number' ? new Intl.NumberFormat().format(v) : String(v ?? '—')
+    typeof v === 'number' ? new Intl.NumberFormat().format(v) : String(v ?? '-')
 </script>
 
 <template>
     <div class="bg-card flex flex-col overflow-hidden rounded-lg border">
         <div class="flex flex-1 flex-col gap-1 p-4">
-        <p class="text-muted-foreground relative text-xs font-medium">{{ label }}</p>
+            <p class="text-muted-foreground relative text-xs font-medium">
+                {{ label }}
+            </p>
 
-        <!-- The skeleton matches the resolved line exactly. -->
-        <span v-if="loading" class="bg-muted my-1 h-6 w-24 animate-pulse rounded" />
+            <!-- The `number` shape matches the resolved line exactly, which
+                 is what keeps the card from jumping when the value lands. -->
+            <PkSkeleton v-if="loading" variant="number" class="my-1" />
 
-        <span
-            v-else-if="error"
-            class="text-destructive relative flex h-8 items-center text-sm"
-            role="alert"
-        >
-            Could not load
-        </span>
+            <span
+                v-else-if="error"
+                class="text-destructive relative flex h-8 items-center text-sm"
+                role="alert"
+            >
+                Could not load
+            </span>
 
-        <span v-else class="relative flex h-8 items-center text-2xl font-semibold tabular-nums">
-            {{ format(value) }}
-        </span>
+            <span v-else class="relative flex h-8 items-center text-2xl font-semibold tabular-nums">
+                {{ format(value) }}
+            </span>
 
-        <TrendBadge
-            v-if="trend && !loading && !error"
-            class="relative"
-            :direction="trend.direction"
-            :percentage="trend.percentage"
-            :comparison="comparison"
-            :inverted="inverted"
-        />
+            <TrendBadge
+                v-if="trend && !loading && !error"
+                class="relative"
+                :direction="trend.direction"
+                :percentage="trend.percentage"
+                :comparison="comparison"
+                :inverted="inverted"
+            />
 
-        <p v-else-if="description" class="text-muted-foreground relative text-xs">{{ description }}</p>
+            <p v-else-if="description" class="text-muted-foreground relative text-xs">
+                {{ description }}
+            </p>
         </div>
 
         <!-- Full bleed: no padding, flush to the bottom edge. -->
-        <div v-if="sparkline && sparkline.length > 1 && !loading && !error" class="-mb-px" aria-hidden="true">
+        <div
+            v-if="sparkline && sparkline.length > 1 && !loading && !error"
+            class="-mb-px"
+            aria-hidden="true"
+        >
             <Sparkline :data="sparkline" :height="44" filled />
         </div>
     </div>

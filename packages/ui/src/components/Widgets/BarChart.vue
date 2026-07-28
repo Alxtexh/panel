@@ -3,7 +3,7 @@
  * Bars: vertical or horizontal, grouped or stacked, one series or many.
  *
  * ONE COMPONENT FOR FOUR OF THE REFERENCE DEMOS, because they are four
- * arrangements of the same arithmetic — a value becomes a length, and the only
+ * arrangements of the same arithmetic - a value becomes a length, and the only
  * questions are which axis the length runs along and whether bars sit beside or
  * on top of one another. Splitting them would mean four copies of the scale,
  * the gridlines and the tooltip, and four places to fix the next axis bug.
@@ -13,12 +13,12 @@
  *
  * COORDINATES ARE MEASURED, NOT SCALED, for the reason LineChart gives: a
  * stretched viewBox distorts strokes and text. Horizontal mode needs the real
- * width for a second reason — its category-label gutter is a proportion of the
+ * width for a second reason - its category-label gutter is a proportion of the
  * card, which a fixed viewBox cannot know.
  *
  * THE STACKED SCALE IS THE STACK TOTAL, not the largest single value. Scaling a
  * stack to its tallest segment pushes the top of the bar past the plot, so the
- * bar renders taller than the axis it is measured against — a chart that is
+ * bar renders taller than the axis it is measured against - a chart that is
  * wrong without looking broken.
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
@@ -70,7 +70,7 @@ const props = withDefaults(
  * Semantic tones, resolved here rather than passed as CSS from the server.
  *
  * A threshold declaration says `danger`, and this file decides what danger looks
- * like — the same rule that keeps every other colour out of PHP (§6.1).
+ * like - the same rule that keeps every other colour out of PHP (§6.1).
  */
 const TONES: Record<string, string> = {
     danger: 'var(--destructive)',
@@ -84,7 +84,9 @@ function toneColour(name: string): string {
 }
 
 function colourFor(value: number, fallback: string): string {
-    if (!props.thresholds?.length) return fallback
+    if (!props.thresholds?.length) {
+        return fallback
+    }
 
     const hit = props.thresholds.find((t) => value < t.max)
 
@@ -104,17 +106,32 @@ onMounted(() => {
         width.value = Math.max(160, entries[0].contentRect.width)
     })
 
-    if (host.value) observer.observe(host.value)
+    if (host.value) {
+        observer.observe(host.value)
+    }
 })
 
 onBeforeUnmount(() => observer?.disconnect())
 
-const PALETTE = ['var(--primary)', 'var(--chart-2)', 'var(--chart-4)', 'var(--chart-3)', 'var(--chart-5)']
+const PALETTE = [
+    'var(--primary)',
+    'var(--chart-2)',
+    'var(--chart-4)',
+    'var(--chart-3)',
+    'var(--chart-5)',
+]
 
 const resolved = computed<ChartSeries[]>(() => {
-    const list = props.series?.length ? props.series : props.data?.length ? [{ name: '', points: props.data }] : []
+    const list = props.series?.length
+        ? props.series
+        : props.data?.length
+          ? [{ name: '', points: props.data }]
+          : []
 
-    return list.map((s, i) => ({ ...s, color: s.color ?? PALETTE[i % PALETTE.length] }))
+    return list.map((s, i) => ({
+        ...s,
+        color: s.color ?? PALETTE[i % PALETTE.length],
+    }))
 })
 
 const labels = computed(() => resolved.value[0]?.points.map((p) => p.label) ?? [])
@@ -137,13 +154,15 @@ const longestLabel = computed(() => Math.max(0, ...labels.value.map((l) => l.len
 /**
  * The left gutter.
  *
- * A FIXED 120px cap meant a ranked chart's labels — which carry the value and
- * the sample size, so "RTR-01-001 — 42.6% (1000)" — simply ran off the left of
+ * A FIXED 120px cap meant a ranked chart's labels - which carry the value and
+ * the sample size, so "RTR-01-001 - 42.6% (1000)" - simply ran off the left of
  * the card and over whatever was beside it. The gutter now follows the content,
  * capped at 40% of the card so the bars never become a sliver.
  */
 const gutter = computed(() => {
-    if (!horizontal.value) return props.showAxis ? 44 : 8
+    if (!horizontal.value) {
+        return props.showAxis ? 44 : 8
+    }
 
     const wanted = longestLabel.value * CHAR_WIDTH + 16
 
@@ -172,8 +191,13 @@ const plot = computed(() => ({
 const format = (v: number) => (props.format ? props.format(v) : compact(v))
 
 function compact(v: number): string {
-    if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`
-    if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`
+    if (Math.abs(v) >= 1_000_000) {
+        return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`
+    }
+
+    if (Math.abs(v) >= 1_000) {
+        return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`
+    }
 
     return new Intl.NumberFormat().format(Math.round(v * 100) / 100)
 }
@@ -187,13 +211,17 @@ const ceiling = computed(() => {
     )
 
     // A pinned maximum keeps a percentage chart anchored to 100 rather than to
-    // whatever the best performer happened to score — otherwise the worst bar
+    // whatever the best performer happened to score - otherwise the worst bar
     // fills most of the width and "37%" reads as "nearly full".
-    if (props.maxValue) return props.maxValue
+    if (props.maxValue) {
+        return props.maxValue
+    }
 
     const max = Math.max(...totals, 0)
 
-    if (max <= 0) return 1
+    if (max <= 0) {
+        return 1
+    }
 
     const magnitude = 10 ** Math.floor(Math.log10(max))
     const step = [1, 2, 2.5, 5, 10].find((s) => max <= s * magnitude) ?? 10
@@ -202,10 +230,14 @@ const ceiling = computed(() => {
 })
 
 /** Category slot, then the bar (or group of bars) inside it. */
-const band = computed(() => (horizontal.value ? plot.value.h : plot.value.w) / Math.max(1, count.value))
+const band = computed(
+    () => (horizontal.value ? plot.value.h : plot.value.w) / Math.max(1, count.value),
+)
 const barGroup = computed(() => band.value * 0.68)
 const barWidth = computed(() =>
-    props.stacked || resolved.value.length <= 1 ? barGroup.value : barGroup.value / resolved.value.length,
+    props.stacked || resolved.value.length <= 1
+        ? barGroup.value
+        : barGroup.value / resolved.value.length,
 )
 
 /**
@@ -234,7 +266,8 @@ const bars = computed(() => {
     resolved.value.forEach((s, si) => {
         s.points.forEach((p, i) => {
             const value = Math.max(0, p.value)
-            const length = (value / ceiling.value) * (horizontal.value ? plot.value.w : plot.value.h)
+            const length =
+                (value / ceiling.value) * (horizontal.value ? plot.value.w : plot.value.h)
 
             const slotStart =
                 (horizontal.value ? pad.value.top : pad.value.left) +
@@ -269,7 +302,9 @@ const bars = computed(() => {
                       },
             )
 
-            if (props.stacked) offsets[i] += length
+            if (props.stacked) {
+                offsets[i] += length
+            }
         })
     })
 
@@ -296,7 +331,9 @@ function categoryCentre(i: number): number {
 }
 
 const active = computed(() => {
-    if (hover.value === null) return null
+    if (hover.value === null) {
+        return null
+    }
 
     return {
         label: labels.value[hover.value],
@@ -322,7 +359,7 @@ const active = computed(() => {
         <template v-else>
             <!--
                 NOT overflow-visible. The tooltip is an HTML sibling rather than
-                an SVG child, so nothing here needs to escape the box — and
+                an SVG child, so nothing here needs to escape the box - and
                 letting it escape is precisely how the long ranked labels ended
                 up drawn on top of the card next door.
             -->
@@ -405,7 +442,10 @@ const active = computed(() => {
                     class="transition-[fill-opacity]"
                     pointer-events="none"
                 >
-                    <title>{{ b.name ? `${b.name} — ` : '' }}{{ b.label }}: {{ format(b.value) }}</title>
+                    <title>
+                        {{ b.name ? `${b.name} - ` : '' }}{{ b.label }}:
+                        {{ format(b.value) }}
+                    </title>
                 </rect>
 
                 <!-- Category labels. -->
@@ -442,8 +482,14 @@ const active = computed(() => {
                 v-if="active"
                 class="bg-popover pointer-events-none absolute top-2 right-2 z-10 min-w-32 rounded-lg border p-2 shadow-lg"
             >
-                <p class="text-muted-foreground mb-1 text-[11px] capitalize">{{ active.label }}</p>
-                <div v-for="(row, i) in active.rows" :key="i" class="flex items-center gap-2 py-0.5">
+                <p class="text-muted-foreground mb-1 text-[11px] capitalize">
+                    {{ active.label }}
+                </p>
+                <div
+                    v-for="(row, i) in active.rows"
+                    :key="i"
+                    class="flex items-center gap-2 py-0.5"
+                >
                     <span class="size-2 shrink-0 rounded-full" :style="{ background: row.color }" />
                     <span class="text-muted-foreground min-w-0 flex-1 truncate text-[11px]">
                         {{ row.name || 'Value' }}
@@ -452,7 +498,10 @@ const active = computed(() => {
                 </div>
             </div>
 
-            <div v-if="showLegend && resolved.length > 1" class="mt-2 flex flex-wrap items-center gap-4">
+            <div
+                v-if="showLegend && resolved.length > 1"
+                class="mt-2 flex flex-wrap items-center gap-4"
+            >
                 <span v-for="(s, i) in resolved" :key="i" class="flex items-center gap-1.5 text-xs">
                     <span class="size-2 rounded-full" :style="{ background: s.color }" />
                     <span class="text-muted-foreground">{{ s.name }}</span>

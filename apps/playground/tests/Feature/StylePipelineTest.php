@@ -11,7 +11,7 @@ use Tests\TestCase;
  *
  * antipatterns.md §6.1 is this exact incident: the CSS build did not scan a
  * source directory, its utilities were purged, and the failure was invisible
- * because it was PARTIAL — one class in a responsive pair survived (used
+ * because it was PARTIAL - one class in a responsive pair survived (used
  * elsewhere) while its counterpart did not, so an element was hidden at every
  * width instead of only small ones. No error, no warning, a full build and
  * deploy cycle to find.
@@ -31,7 +31,7 @@ final class StylePipelineTest extends TestCase
     /**
      * Utilities used exclusively inside packages/ui.
      *
-     * Each must stay genuinely exclusive to be a canary — if one starts being
+     * Each must stay genuinely exclusive to be a canary - if one starts being
      * used in the app too, it will survive a purge and stop detecting anything.
      * Verify with: grep -rn "<class>" resources/js
      *
@@ -52,7 +52,7 @@ final class StylePipelineTest extends TestCase
                 $class,
                 $css,
                 "The utility [{$class}] is used only in packages/ui and is missing from the built CSS. "
-                . 'Tailwind has stopped scanning the package — check the @source line in resources/css/app.css.'
+                .'Tailwind has stopped scanning the package - check the @source line in resources/css/app.css.'
             );
         }
     }

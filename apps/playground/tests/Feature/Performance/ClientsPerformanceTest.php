@@ -13,16 +13,16 @@ use Tests\TestCase;
  * responds in under 300 ms."
  *
  * This is the one test that cannot run on the in-memory fixture the rest of the
- * suite uses — a budget measured against 20 rows measures nothing. It connects to
+ * suite uses - a budget measured against 20 rows measures nothing. It connects to
  * the real development database and SKIPS if the demo data has not been seeded,
  * so a fresh clone does not fail on it.
  *
- * READ ONLY. Nothing here writes, and RefreshDatabase is deliberately not used —
+ * READ ONLY. Nothing here writes, and RefreshDatabase is deliberately not used -
  * it would drop the 500k rows this test exists to measure against.
  *
  * CAVEAT while the engine is undecided: these numbers are measured on SQLite.
- * They demonstrate that the query SHAPE is sound — keyset seek, no COUNT, one
- * join, constant query count — but they do not transfer to Postgres, whose
+ * They demonstrate that the query SHAPE is sound - keyset seek, no COUNT, one
+ * join, constant query count - but they do not transfer to Postgres, whose
  * planner will behave differently. Re-baseline when the engine is chosen.
  */
 final class ClientsPerformanceTest extends TestCase
@@ -91,7 +91,7 @@ final class ClientsPerformanceTest extends TestCase
      * Matching the start of a LATER word needs a leading wildcard, which no
      * btree index can serve, so this is a scan of the tenant's rows. It is
      * measured separately from the indexed prefix case precisely so the cost is
-     * visible rather than averaged away — and so a regression past the budget
+     * visible rather than averaged away - and so a regression past the budget
      * fails loudly instead of quietly making every search slow.
      */
     public function test_a_word_prefix_search_responds_within_budget(): void
@@ -110,7 +110,7 @@ final class ClientsPerformanceTest extends TestCase
     /**
      * The point of keyset pagination: page 2,000 costs what page 1 costs.
      *
-     * With OFFSET this test is what fails first — the database walks every
+     * With OFFSET this test is what fails first - the database walks every
      * skipped row. Walking 20 pages here is a proxy for deep pagination without
      * needing to fabricate a deep cursor by hand.
      */
@@ -121,7 +121,7 @@ final class ClientsPerformanceTest extends TestCase
         $cursor = null;
 
         for ($page = 0; $page < 20; $page++) {
-            $url = '/clients' . ($cursor ? '?cursor=' . urlencode($cursor) : '');
+            $url = '/clients'.($cursor ? '?cursor='.urlencode($cursor) : '');
 
             $started = microtime(true);
             $response = $this->actingAs($this->user)->get($url)->assertOk();
@@ -164,6 +164,22 @@ final class ClientsPerformanceTest extends TestCase
      */
     public function test_the_list_response_runs_no_count_at_scale(): void
     {
+        /*
+         * A WARM-UP REQUEST FIRST, DISCARDED - the same methodology
+         * `panel:benchmark` uses and for the same reason.
+         *
+         * The first request in a process populates caches that later requests do
+         * not pay for: the panel's schema cache, and Spatie's permission map.
+         * Measured here, that first request issues 15 queries and the second
+         * issues 5 - so counting the first would report a threefold regression
+         * that no user experiences.
+         *
+         * This is not the threshold being relaxed to accommodate Spatie. The
+         * steady-state count is unchanged; what changed is that there is now a
+         * warm-up cost, and measuring it was the mistake.
+         */
+        $this->actingAs($this->user)->get('/clients')->assertOk();
+
         $queries = [];
 
         DB::listen(function ($query) use (&$queries): void {
@@ -177,7 +193,7 @@ final class ClientsPerformanceTest extends TestCase
          *
          * This guard is about the LIST query: a COUNT over `clients` is
          * unbounded and grows with the tenant, which is what §10 forbids in
-         * front of rows. The unread-badge count is a different shape — one
+         * front of rows. The unread-badge count is a different shape - one
          * user's inbox, through the morph index, bounded by what that person
          * has been sent. Naming it keeps the guard sharp; a loose "ignore
          * expected counts" pattern would let a real one back in.
@@ -194,7 +210,7 @@ final class ClientsPerformanceTest extends TestCase
         $this->assertLessThanOrEqual(
             5,
             count($queries),
-            'The list response issued more queries than expected: ' . implode(' | ', $queries)
+            'The list response issued more queries than expected: '.implode(' | ', $queries)
         );
     }
 
@@ -202,7 +218,7 @@ final class ClientsPerformanceTest extends TestCase
     {
         // One warm-up request, then measure. The first request in a process pays
         // framework boot and query-plan preparation, which is not what the budget
-        // is about — §10 measures the steady-state interaction cost.
+        // is about - §10 measures the steady-state interaction cost.
         $this->actingAs($this->user)->get($url)->assertOk();
 
         $samples = [];

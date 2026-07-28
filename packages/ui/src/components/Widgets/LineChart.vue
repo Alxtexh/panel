@@ -14,13 +14,13 @@
  *
  * COORDINATES ARE MEASURED, NOT SCALED. The obvious shortcut is a fixed
  * `viewBox` plus `preserveAspectRatio="none"`, which stretches the drawing to
- * the card — and stretches the STROKES and TEXT with it, so the line is thicker
+ * the card - and stretches the STROKES and TEXT with it, so the line is thicker
  * horizontally than vertically and the labels come out condensed. A
  * ResizeObserver gives real pixel widths.
  *
  * THE TOOLTIP IS SHARED ACROSS SERIES. Hovering shows every dataset at that
  * moment, because the question a multi-series chart is asked is almost always
- * comparative — per-series hit testing answers "what was this line" when the
+ * comparative - per-series hit testing answers "what was this line" when the
  * user meant "what was happening here".
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
@@ -47,7 +47,7 @@ const props = withDefaults(
  * TWO SCALES WHEN A SERIES ASKS FOR ONE.
  *
  * Sessions in the thousands plotted beside a percentage on a shared scale
- * flattens the percentage onto the baseline — it is drawn, it is just
+ * flattens the percentage onto the baseline - it is drawn, it is just
  * indistinguishable from zero. A second axis is the only honest way to show
  * quantities with different units on one chart, and the axis labels are what
  * stop the reader comparing two lines that are not comparable.
@@ -67,21 +67,36 @@ onMounted(() => {
         width.value = Math.max(160, entries[0].contentRect.width)
     })
 
-    if (host.value) observer.observe(host.value)
+    if (host.value) {
+        observer.observe(host.value)
+    }
 })
 
 onBeforeUnmount(() => observer?.disconnect())
 
 /** Theme tokens, so a tenant brand or the user's primary colour applies. */
-const PALETTE = ['var(--primary)', 'var(--chart-2)', 'var(--chart-4)', 'var(--chart-3)', 'var(--chart-5)']
+const PALETTE = [
+    'var(--primary)',
+    'var(--chart-2)',
+    'var(--chart-4)',
+    'var(--chart-3)',
+    'var(--chart-5)',
+]
 
 /** A stable id per instance; two charts on one page must not share a gradient. */
 const uid = Math.random().toString(36).slice(2, 9)
 
 const resolved = computed<ChartSeries[]>(() => {
-    const list = props.series?.length ? props.series : props.data?.length ? [{ name: '', points: props.data }] : []
+    const list = props.series?.length
+        ? props.series
+        : props.data?.length
+          ? [{ name: '', points: props.data }]
+          : []
 
-    return list.map((s, i) => ({ ...s, color: s.color ?? PALETTE[i % PALETTE.length] }))
+    return list.map((s, i) => ({
+        ...s,
+        color: s.color ?? PALETTE[i % PALETTE.length],
+    }))
 })
 
 const labels = computed(() => resolved.value[0]?.points.map((p) => p.label) ?? [])
@@ -100,8 +115,13 @@ const format = (v: number) => (props.format ? props.format(v) : compact(v))
 
 /** 1200 → "1.2k". Full precision belongs in the tooltip, not the axis. */
 function compact(v: number): string {
-    if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`
-    if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`
+    if (Math.abs(v) >= 1_000_000) {
+        return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`
+    }
+
+    if (Math.abs(v) >= 1_000) {
+        return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`
+    }
 
     return new Intl.NumberFormat().format(Math.round(v * 100) / 100)
 }
@@ -116,7 +136,9 @@ function compact(v: number): string {
 function ceilingOf(values: number[]): number {
     const max = Math.max(...values, 0)
 
-    if (max <= 0) return 1
+    if (max <= 0) {
+        return 1
+    }
 
     const magnitude = 10 ** Math.floor(Math.log10(max))
     const step = [1, 2, 2.5, 5, 10].find((s) => max <= s * magnitude) ?? 10
@@ -125,11 +147,19 @@ function ceilingOf(values: number[]): number {
 }
 
 const ceiling = computed(() =>
-    ceilingOf(resolved.value.filter((s) => s.axis !== 'right').flatMap((s) => s.points.map((p) => p.value))),
+    ceilingOf(
+        resolved.value
+            .filter((s) => s.axis !== 'right')
+            .flatMap((s) => s.points.map((p) => p.value)),
+    ),
 )
 
 const rightCeiling = computed(() =>
-    ceilingOf(resolved.value.filter((s) => s.axis === 'right').flatMap((s) => s.points.map((p) => p.value))),
+    ceilingOf(
+        resolved.value
+            .filter((s) => s.axis === 'right')
+            .flatMap((s) => s.points.map((p) => p.value)),
+    ),
 )
 
 const plot = computed(() => ({
@@ -149,7 +179,11 @@ function yFor(value: number, axis: 'left' | 'right' = 'left'): number {
 
 const geometry = computed(() =>
     resolved.value.map((s) => {
-        const pts = s.points.map((p, i) => ({ ...p, x: xFor(i), y: yFor(p.value, s.axis ?? 'left') }))
+        const pts = s.points.map((p, i) => ({
+            ...p,
+            x: xFor(i),
+            y: yFor(p.value, s.axis ?? 'left'),
+        }))
         // Stepped is a genuinely different reading, not a style: it says the
         // value HELD until the next reading rather than travelled towards it,
         // which is what a status or a tier actually does.
@@ -160,7 +194,9 @@ const geometry = computed(() =>
 )
 
 function steppedPath(pts: { x: number; y: number }[]): string {
-    if (pts.length === 0) return ''
+    if (pts.length === 0) {
+        return ''
+    }
 
     let d = `M${pts[0].x.toFixed(2)},${pts[0].y.toFixed(2)}`
 
@@ -177,14 +213,19 @@ function steppedPath(pts: { x: number; y: number }[]): string {
  * Tangents are damped wherever the data changes direction, which is what keeps
  * the curve inside the values it joins. Without that damping the classic
  * Catmull-Rom smoothing draws a visible undershoot below zero every time a
- * series touches its floor — on a count of sessions that reads as a negative
+ * series touches its floor - on a count of sessions that reads as a negative
  * number of sessions.
  */
 function monotonePath(pts: { x: number; y: number }[]): string {
     const n = pts.length
 
-    if (n === 0) return ''
-    if (n === 1) return `M${pts[0].x},${pts[0].y}`
+    if (n === 0) {
+        return ''
+    }
+
+    if (n === 1) {
+        return `M${pts[0].x},${pts[0].y}`
+    }
 
     const dx: number[] = []
     const slope: number[] = []
@@ -225,7 +266,9 @@ function monotonePath(pts: { x: number; y: number }[]): string {
 }
 
 function areaFrom(line: string, pts: { x: number; y: number }[]): string {
-    if (pts.length === 0) return ''
+    if (pts.length === 0) {
+        return ''
+    }
 
     const base = pad.value.top + plot.value.h
 
@@ -264,7 +307,9 @@ function track(event: MouseEvent) {
 }
 
 const active = computed(() => {
-    if (hover.value === null || count.value === 0) return null
+    if (hover.value === null || count.value === 0) {
+        return null
+    }
 
     const i = hover.value
 
@@ -283,7 +328,9 @@ const active = computed(() => {
 
 /** Flip the tooltip before it runs off the right edge of the card. */
 const tooltipStyle = computed(() => {
-    if (!active.value) return {}
+    if (!active.value) {
+        return {}
+    }
 
     const flip = active.value.x > width.value * 0.6
 
@@ -405,7 +452,13 @@ const tooltipStyle = computed(() => {
                     />
                     <!-- A lone point draws no line, so it gets a dot or the
                          chart looks empty. -->
-                    <circle v-if="s.pts.length === 1" :cx="s.pts[0].x" :cy="s.pts[0].y" r="3" :fill="s.color" />
+                    <circle
+                        v-if="s.pts.length === 1"
+                        :cx="s.pts[0].x"
+                        :cy="s.pts[0].y"
+                        r="3"
+                        :fill="s.color"
+                    />
                 </g>
 
                 <!-- Crosshair: one vertical, one dot per series. -->
@@ -450,8 +503,14 @@ const tooltipStyle = computed(() => {
                 class="bg-popover pointer-events-none absolute z-10 min-w-36 rounded-lg border p-2 shadow-lg"
                 :style="tooltipStyle"
             >
-                <p class="text-muted-foreground mb-1.5 text-[11px] whitespace-nowrap">{{ active.label }}</p>
-                <div v-for="(row, i) in active.rows" :key="i" class="flex items-center gap-2 py-0.5">
+                <p class="text-muted-foreground mb-1.5 text-[11px] whitespace-nowrap">
+                    {{ active.label }}
+                </p>
+                <div
+                    v-for="(row, i) in active.rows"
+                    :key="i"
+                    class="flex items-center gap-2 py-0.5"
+                >
                     <span class="size-2 shrink-0 rounded-full" :style="{ background: row.color }" />
                     <span class="text-muted-foreground min-w-0 flex-1 truncate text-[11px]">
                         {{ row.name || 'Value' }}
@@ -460,7 +519,10 @@ const tooltipStyle = computed(() => {
                 </div>
             </div>
 
-            <div v-if="showLegend && resolved.length > 1" class="mt-2 flex flex-wrap items-center gap-4">
+            <div
+                v-if="showLegend && resolved.length > 1"
+                class="mt-2 flex flex-wrap items-center gap-4"
+            >
                 <span v-for="(s, i) in geometry" :key="i" class="flex items-center gap-1.5 text-xs">
                     <span class="size-2 rounded-full" :style="{ background: s.color }" />
                     <span class="text-muted-foreground">{{ s.name }}</span>

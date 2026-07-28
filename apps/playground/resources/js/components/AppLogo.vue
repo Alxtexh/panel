@@ -9,27 +9,80 @@
  * already carry. On the horizontal layout it was the difference between a menu
  * that fitted and one that scrolled.
  *
- * `showName` exists for the places where the icon alone is not enough — an
- * expanded sidebar has the room, and the name doubles as a reminder of which
- * tenant you are in.
+ * THE TENANT'S MARK WINS OVER THE PRODUCT'S. Someone signed into their own
+ * panel should see their own organisation, not the software's badge - that is
+ * the whole point of white-labelling, and it is also the honest answer to
+ * "which tenant am I in" when somebody administers several.
+ *
+ * NO LOGO MEANS THE NAME, NOT A STAND-IN. The fallback used to be the framework
+ * badge, which is the one thing on screen that is actively wrong: it tells the
+ * customer whose panel this is, and the answer is neither them nor the product
+ * they bought. A shipped default mark also makes "has this organisation set a
+ * logo yet?" unanswerable at a glance, because something is always there.
+ *
+ * So an organisation with no mark gets its NAME - which is real information,
+ * always available, and reads correctly in the one place it has to.
  */
-import { usePage } from '@inertiajs/vue3';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 
-withDefaults(defineProps<{ showName?: boolean }>(), { showName: false });
+withDefaults(defineProps<{ showName?: boolean }>(), { showName: false })
 
-const name = usePage().props.name;
+const page = usePage()
+
+/** The tenant's name, falling back to the product's only outside a tenant. */
+const name = computed(() => String((page.props.panelBrand as string | null) ?? page.props.name))
+
+const logo = computed(() => (page.props.panelLogo as string | null) ?? null)
+
+/**
+ * Initials, for the collapsed rail where a name does not fit.
+ *
+ * Two letters at most: three is unreadable at 32px, and the point of the rail
+ * is to be scanned rather than read.
+ */
+const initials = computed(() =>
+    name.value
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]!.toUpperCase())
+        .join(''),
+)
 </script>
 
 <template>
     <div class="flex items-center gap-2">
+        <!--
+            `object-contain` on a fixed square, never `cover`. A logo is a
+            drawing with intended proportions; cropping it to fill a box is how
+            a wordmark loses its last letter.
+        -->
+        <img
+            v-if="logo"
+            :src="logo"
+            :alt="name"
+            :title="name"
+            class="size-8 shrink-0 rounded-md object-contain"
+        />
+
+        <!--
+            No logo and no room for the name: initials of the ORGANISATION, not
+            a product badge. Rendered only when the name itself is suppressed,
+            so the expanded sidebar shows the name alone rather than the name
+            next to a square repeating its first letters.
+        -->
         <div
-            class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-md"
-            :title="String(name)"
+            v-else-if="!showName"
+            class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-md text-xs font-semibold"
+            :title="name"
         >
-            <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
+            {{ initials }}
         </div>
 
-        <span v-if="showName" class="truncate text-sm leading-tight font-semibold">{{ name }}</span>
+        <!-- A logo replaces the name; the two never sit side by side. -->
+        <span v-if="showName && !logo" class="truncate text-sm leading-tight font-semibold">{{
+            name
+        }}</span>
     </div>
 </template>

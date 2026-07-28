@@ -12,7 +12,7 @@
  * technology. An unlabelled tick in a table is a puzzle, not information.
  *
  * A value with no mapping falls back to a neutral dot rather than rendering
- * nothing — an empty cell reads as missing data, which is a different claim
+ * nothing - an empty cell reads as missing data, which is a different claim
  * from "this value is not one we colour".
  */
 import { computed } from 'vue'
@@ -25,16 +25,22 @@ const props = withDefaults(
         labels?: Record<string, string>
         defaultIcon?: string
     }>(),
-    { icons: () => ({}), colors: () => ({}), labels: () => ({}), defaultIcon: 'dot' },
+    {
+        icons: () => ({}),
+        colors: () => ({}),
+        labels: () => ({}),
+        defaultIcon: 'dot',
+    },
 )
 
-/** SVG path data only — the wrapper supplies size, stroke and colour. */
+/** SVG path data only - the wrapper supplies size, stroke and colour. */
 const PATHS: Record<string, string> = {
     check: 'M20 6 9 17l-5-5',
     x: 'M18 6 6 18M6 6l12 12',
     dot: 'M12 12h.01',
     wifi: 'M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0M12 20h.01M2 8.8a15 15 0 0 1 20 0',
-    'wifi-off': 'M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5-2.6M2 8.8a15 15 0 0 1 4.2-2.5M22 8.8a15 15 0 0 0-6-3.4M12 20h.01',
+    'wifi-off':
+        'M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5-2.6M2 8.8a15 15 0 0 1 4.2-2.5M22 8.8a15 15 0 0 0-6-3.4M12 20h.01',
     alert: 'M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z',
     clock: 'M12 6v6l4 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z',
     star: 'm12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L7 14.2l-5-4.9 6.9-1L12 2Z',
@@ -53,8 +59,13 @@ const TONES: Record<string, string> = {
  * falsy counterparts likewise. Both collapse to the two keys PHP maps against.
  */
 const lookup = computed(() => {
-    if (typeof props.value === 'boolean') return props.value ? '1' : ''
-    if (props.value === null || props.value === undefined) return ''
+    if (typeof props.value === 'boolean') {
+        return props.value ? '1' : ''
+    }
+
+    if (props.value === null || props.value === undefined) {
+        return ''
+    }
 
     return String(props.value)
 })
@@ -62,7 +73,7 @@ const lookup = computed(() => {
 const icon = computed(() => props.icons[lookup.value] ?? props.defaultIcon)
 const path = computed(() => PATHS[icon.value] ?? PATHS.dot)
 const tone = computed(() => TONES[props.colors[lookup.value] ?? 'neutral'] ?? TONES.neutral)
-const label = computed(() => props.labels[lookup.value] ?? String(props.value ?? '—'))
+const label = computed(() => props.labels[lookup.value] ?? String(props.value ?? '-'))
 </script>
 
 <template>

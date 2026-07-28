@@ -30,3 +30,7 @@
 # Seeded demo database — 692 MB of generated data, regenerate with panel:seed-demo
 *.sqlite
 *.sqlite-journal
+
+# The push credential. It lives in the working tree and must never leave it -
+# a token committed here is a token GitHub revokes and a stranger uses first.
+/githubkey.md

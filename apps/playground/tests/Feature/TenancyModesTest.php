@@ -50,7 +50,7 @@ final class TenancyModesTest extends TestCase
             DB::table('clients')->insert([
                 'tenant_id' => $tenant->id,
                 'plan_id' => $plan->id,
-                'name' => $tenant->name . ' Client',
+                'name' => $tenant->name.' Client',
                 'phone' => '+254700000000',
                 'access_code' => strtoupper(substr($tenant->slug, -6)),
                 'status' => 'active',
@@ -86,7 +86,7 @@ final class TenancyModesTest extends TestCase
 
     /**
      * The important half. In dedicated-database mode stancl has already switched
-     * the connection, and `clients` has no tenant_id column at all — so the panel
+     * the connection, and `clients` has no tenant_id column at all - so the panel
      * must add no constraint.
      */
     public function test_database_mode_adds_no_column_constraint(): void
@@ -109,7 +109,7 @@ final class TenancyModesTest extends TestCase
         $this->assertStringNotContainsString(
             'tenant_id',
             $sql,
-            'Dedicated-database mode must not add a tenant column constraint — the column does not exist there.'
+            'Dedicated-database mode must not add a tenant column constraint - the column does not exist there.'
         );
     }
 
@@ -154,7 +154,7 @@ final class TenancyModesTest extends TestCase
             'panel.tenancy.resolver' => fn () => $this->tenantB->id,
         ]);
 
-        // Acting as tenant A's user, but the resolver says tenant B — the
+        // Acting as tenant A's user, but the resolver says tenant B - the
         // resolver wins, which is what lets an app define its own strategy.
         $this->actingAs($this->userA);
 

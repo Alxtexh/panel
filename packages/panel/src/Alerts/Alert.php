@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Alerts;
 
 /**
- * A DERIVED condition that currently holds — "6 routers are offline".
+ * A DERIVED condition that currently holds - "6 routers are offline".
  *
  * AN ALERT IS NOT A NOTIFICATION, and conflating them is the usual mistake.
  *
  *   An ALERT describes the state of the system RIGHT NOW. It is recomputed on
  *   every read, it is identical for everyone who can see the same data, and it
  *   disappears when the underlying condition clears. You do not dismiss an
- *   alert — you fix it, or it stops being true on its own. Storing one would
+ *   alert - you fix it, or it stops being true on its own. Storing one would
  *   mean keeping a row that claims six routers are offline long after they came
  *   back.
  *
@@ -23,7 +23,7 @@ namespace PanelKit\Panel\Alerts;
  *
  * The practical consequence: alerts have no id, no read state and no per-user
  * storage, and this class has no `markAsRead`. If a future requirement wants an
- * alert acknowledged, that is a notification ABOUT an alert — not a mutable
+ * alert acknowledged, that is a notification ABOUT an alert - not a mutable
  * alert.
  */
 final class Alert

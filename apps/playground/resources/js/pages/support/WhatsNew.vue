@@ -4,19 +4,20 @@
  *
  * WHY A PANEL SHOULD HAVE ONE AT ALL: operators live in this interface daily,
  * and a control that moved or a feature that appeared is otherwise discovered
- * by accident — or reported as a bug. A release note inside the product is the
+ * by accident - or reported as a bug. A release note inside the product is the
  * cheapest way to stop "where did the export button go?" reaching support.
  *
  * ENTRIES ARE GROUPED BY KIND, not written as prose. "Added / Changed / Fixed"
  * lets someone scan for the one line that affects them; a paragraph per release
  * has to be read in full to find out it says nothing relevant.
  *
- * Newest first, and the top entry is expanded — the release someone has not
+ * Newest first, and the top entry is expanded - the release someone has not
  * seen yet is almost always the most recent one.
  */
 import { Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
-import { Sparkles } from '@lucide/vue'
+import { Bug, Lightbulb, Sparkles } from '@lucide/vue'
+import FeedbackDialog from '@/components/FeedbackDialog.vue'
 
 defineOptions({ layout: { breadcrumbs: [{ title: "What's new", href: '/whats-new' }] } })
 
@@ -31,11 +32,27 @@ interface Release {
 
 const releases: Release[] = [
     {
+        version: '0.7',
+        date: '28 July 2026',
+        highlight: 'Portals from a command, a public API, scheduled reports, and an assistant that cites its sources.',
+        added: [
+            'make:panel builds a whole portal - provider, routes, guard and navigation - so a superadmin, an admin and a reseller portal are three commands rather than three copies of the routing.',
+            'A public REST API with its own tokens, abilities and rate limit, kept separate from the endpoints the panel itself uses.',
+            'Reports on a schedule: a saved filter, run as its owner, emailed as a CSV - including when it matches nothing, because silence looks the same as a scheduler that stopped.',
+            'Retrieval over the help centre, so the assistant answers from the actual page and links to it. Where nothing matches it says it does not have the answer instead of writing a plausible one.',
+            'panel:doctor now reports a knowledge base that can no longer be searched - the failure where every passage is still there and every search returns nothing.',
+        ],
+        changed: [
+            'Help articles are defined on the server. The page still searches them in the browser; there is now one copy rather than one for the screen and another for the assistant.',
+            'Retrieval works without pgvector. PostgreSQL with the extension searches in the database against an index, and every other engine scores the candidates in PHP - same schema, same answers.',
+        ],
+    },
+    {
         version: '0.6',
         date: '27 July 2026',
         highlight: 'A full chart gallery, three navigation layouts, and in-panel help.',
         added: [
-            'Twelve chart types on the dashboard — line, area, stepped, multi-axis, vertical, horizontal, stacked and grouped bars, combo, pie, doughnut, polar area and radar.',
+            'Twelve chart types on the dashboard - line, area, stepped, multi-axis, vertical, horizontal, stacked and grouped bars, combo, pie, doughnut, polar area and radar.',
             'Navigation can now sit on the left, on the right, or across the top.',
             'A collapsed sidebar opens its groups as flyout menus beside the rail.',
             'Help, FAQ, About and this page.',
@@ -87,6 +104,21 @@ const releases: Release[] = [
 
 const open = ref<string | null>(releases[0]?.version ?? null)
 
+/*
+ * The dialog is opened WITH a kind, from two buttons rather than one.
+ *
+ * A single "Send feedback" button makes choosing the type the first thing you
+ * do inside the dialog, which is a decision you had already made before
+ * clicking. Two buttons carry it in, and the dialog opens on the right form.
+ */
+const feedbackOpen = ref(false)
+const feedbackKind = ref<'feature' | 'bug'>('feature')
+
+function openFeedback(kind: 'feature' | 'bug'): void {
+    feedbackKind.value = kind
+    feedbackOpen.value = true
+}
+
 const KINDS = [
     { key: 'added', label: 'Added', tone: 'text-emerald-600 dark:text-emerald-400' },
     { key: 'changed', label: 'Changed', tone: 'text-amber-600 dark:text-amber-400' },
@@ -107,6 +139,43 @@ const KINDS = [
                 <p class="text-muted-foreground text-sm">Recent changes to the panel.</p>
             </div>
         </header>
+
+        <!--
+            HERE BECAUSE THIS IS WHERE THE THOUGHT HAPPENS. Somebody reading a
+            changelog is already thinking about what the panel does and does not
+            do, which is the moment they are most likely to have a request worth
+            writing down. A feedback link buried in a settings page is one nobody
+            is looking at when they have something to say.
+        -->
+        <div class="bg-muted/40 flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm font-medium">Something missing, or something broken?</p>
+                <p class="text-muted-foreground text-sm">
+                    Reports arrive with the page and browser details already attached.
+                </p>
+            </div>
+
+            <div class="flex shrink-0 gap-2">
+                <button
+                    type="button"
+                    class="hover:bg-accent inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors"
+                    @click="openFeedback('feature')"
+                >
+                    <Lightbulb class="size-4" />
+                    Request a feature
+                </button>
+                <button
+                    type="button"
+                    class="hover:bg-accent inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors"
+                    @click="openFeedback('bug')"
+                >
+                    <Bug class="size-4" />
+                    Report a bug
+                </button>
+            </div>
+        </div>
+
+        <FeedbackDialog v-model:open="feedbackOpen" :kind="feedbackKind" />
 
         <ol class="flex flex-col gap-3">
             <li v-for="release in releases" :key="release.version" class="bg-card overflow-hidden rounded-lg border">
@@ -145,7 +214,7 @@ const KINDS = [
                         </h3>
                         <ul class="text-muted-foreground mt-1.5 flex flex-col gap-1.5 text-sm">
                             <li v-for="(line, i) in release[kind.key] ?? []" :key="i" class="flex gap-2">
-                                <span class="text-muted-foreground/50 select-none">—</span>
+                                <span class="text-muted-foreground/50 select-none">-</span>
                                 <span>{{ line }}</span>
                             </li>
                         </ul>

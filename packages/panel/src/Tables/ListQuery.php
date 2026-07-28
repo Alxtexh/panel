@@ -7,10 +7,13 @@ namespace PanelKit\Panel\Tables;
 use Closure;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Query\Builder;
-use PanelKit\Panel\Tables\Filters\TrashedFilter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
+use PanelKit\Panel\Actions\ActionGroup;
+use PanelKit\Panel\Actions\RecordAction;
 use PanelKit\Panel\Tables\Filters\Filter;
+use PanelKit\Panel\Tables\Filters\TrashedFilter;
 
 /**
  * The shared list query, extracted in Phase 3 from three hardcoded controllers.
@@ -53,12 +56,40 @@ final class ListQuery
     /** @var list<Filter> */
     private array $filters = [];
 
-    /** @var array<string, array{summarizer: \PanelKit\Panel\Tables\Summarizer, column: string}> */
+    /** @var array<string, array{summarizer: Summarizer, column: string}> */
     private array $summaries = [];
 
     private ?Closure $join = null;
 
+    /**
+     * Predicates that define WHAT THIS TABLE LISTS, never a join.
+     *
+     * Applied to every query the table makes - rows, counts, exports, bulk
+     * selections. See `base()` for why it cannot share a hook with the join.
+     */
+    private ?Closure $constrain = null;
+
     private ?Closure $transform = null;
+
+    /**
+     * The declared record actions, for per-row availability.
+     *
+     * @var list<RecordAction|ActionGroup>
+     */
+    private array $recordActions = [];
+
+    /**
+     * This table's slice of the query string, when it shares a page.
+     *
+     * Null for a resource index - the only table on its page, so it owns the
+     * flat query string and its URLs stay exactly as they were.
+     */
+    private ?string $namespace = null;
+
+    /** The grouping key as the client knows it, and the column behind it. */
+    private ?string $groupKey = null;
+
+    private ?string $groupColumn = null;
 
     private ?Tabs $tabs = null;
 
@@ -89,7 +120,7 @@ final class ListQuery
      *
      * But it is a DEFAULT, not a mandate. Offset is genuinely better for a small
      * table where an operator wants to jump to page 7, and refusing to offer it
-     * would be the framework imposing a decision it cannot make — a 200-row
+     * would be the framework imposing a decision it cannot make - a 200-row
      * lookup table pays nothing for OFFSET and gains real navigation.
      */
     private string $paginationStrategy = 'keyset';
@@ -123,10 +154,24 @@ final class ListQuery
         return $this;
     }
 
-    /** Declared joins, so the query count stays constant rather than N+1. */
+    /**
+     * Declared joins, so the query count stays constant rather than N+1.
+     *
+     * JOINS ONLY. A predicate here is silently dropped from counts - see the
+     * comment in `base()`. Use `constrain()` for anything that narrows the set
+     * of rows the table describes.
+     */
     public function join(Closure $join): self
     {
         $this->join = $join;
+
+        return $this;
+    }
+
+    /** A predicate applied to every query, counts included. */
+    public function constrain(Closure $constrain): self
+    {
+        $this->constrain = $constrain;
 
         return $this;
     }
@@ -138,7 +183,7 @@ final class ListQuery
      * into an ORDER BY, which no query binding can parameterise. Anything not in
      * this map falls back to the default sort.
      *
-     * @param array<string, string> $map display key => qualified column
+     * @param  array<string, string>  $map  display key => qualified column
      */
     public function sortable(array $map): self
     {
@@ -158,7 +203,7 @@ final class ListQuery
     /**
      * Footer aggregates, keyed by column key.
      *
-     * @param  array<string, array{summarizer: \PanelKit\Panel\Tables\Summarizer, column: string}>  $summaries
+     * @param  array<string, array{summarizer: Summarizer, column: string}>  $summaries
      */
     public function summaries(array $summaries): self
     {
@@ -201,7 +246,7 @@ final class ListQuery
     /**
      * Status tabs with counts from ONE grouped query (addendum C1).
      *
-     * @param list<string> $values
+     * @param  list<string>  $values
      */
     public function tabs(string $column, array $values): self
     {
@@ -246,11 +291,126 @@ final class ListQuery
      * Row post-processing for computed columns.
      *
      * Runs on the already-fetched page only, so it costs nothing per row in the
-     * database and cannot reintroduce an N+1 — provided the closure does not
+     * database and cannot reintroduce an N+1 - provided the closure does not
      * query, which is the one rule callers must keep.
      *
-     * @param Closure(array<string, mixed>): array<string, mixed> $transform
+     * @param  Closure(array<string, mixed>): array<string, mixed>  $transform
      */
+    /**
+     * @param  list<RecordAction|ActionGroup>  $actions
+     */
+    public function groupRowsBy(string $key, string $column): self
+    {
+        $this->groupKey = $key;
+        $this->groupColumn = $column;
+
+        return $this;
+    }
+
+    /**
+     * @param  list<\PanelKit\Panel\Actions\RecordAction|\PanelKit\Panel\Actions\ActionGroup>  $actions
+     */
+    /**
+     * Read this table's state from `?{namespace}[sort]=…` instead of `?sort=…`.
+     *
+     * Set by `Workspace`, never by a resource index. The name must be a plain
+     * identifier: it becomes a query-string key and, on the client, a prop name.
+     */
+    public function within(string $namespace): self
+    {
+        if (preg_match('/^[a-z][a-z0-9_]*$/', $namespace) !== 1) {
+            throw new \InvalidArgumentException("[{$namespace}] is not a valid table namespace.");
+        }
+
+        $this->namespace = $namespace;
+
+        return $this;
+    }
+
+    public function namespaceName(): ?string
+    {
+        return $this->namespace;
+    }
+
+    public function recordActions(array $actions): self
+    {
+        $this->recordActions = $actions;
+
+        return $this;
+    }
+
+    /**
+     * Which declared actions apply to this row, and where the links point.
+     *
+     * SENT AS KEYS, NOT AS MENUS. The labels, icons and confirmation copy are
+     * identical for every row, so they travel once in the schema; repeating
+     * them per row would be 25 copies of the same menu in every page payload.
+     *
+     * Evaluated against the ROW ARRAY - no model is hydrated, which is the
+     * whole reason the list is fast on a million rows.
+     *
+     * Returns null when the resource declares no actions at all, so the client
+     * can tell "no filtering needed" apart from "nothing is available".
+     *
+     * @param  array<string, mixed>  $row
+     * @return array{keys: list<string>, urls: array<string, string>}|null
+     */
+    private function actionsFor(array $row): ?array
+    {
+        if ($this->recordActions === []) {
+            return null;
+        }
+
+        $keys = [];
+        $urls = [];
+
+        foreach ($this->recordActions as $entry) {
+            $actions = $entry instanceof ActionGroup
+                ? $entry->getActions()
+                : [$entry];
+
+            foreach ($actions as $action) {
+                if (! $action->appliesTo($row)) {
+                    continue;
+                }
+
+                $keys[] = $action->key;
+
+                if ($action->isLink()) {
+                    $urls[$action->key] = (string) $action->urlFor($row);
+                }
+            }
+        }
+
+        return ['keys' => $keys, 'urls' => $urls];
+    }
+
+    /**
+     * Transform, then annotate. In that order, deliberately - a transform may
+     * rename or derive the very columns a `visible()` predicate reads.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function decorate(array $rows): array
+    {
+        if ($this->transform !== null) {
+            $rows = array_map($this->transform, $rows);
+        }
+
+        if ($this->recordActions === []) {
+            return $rows;
+        }
+
+        return array_map(function (array $row): array {
+            $resolved = $this->actionsFor($row);
+
+            return $resolved === null
+                ? $row
+                : [...$row, '_actions' => $resolved['keys'], '_actionUrls' => $resolved['urls']];
+        }, $rows);
+    }
+
     public function transform(Closure $transform): self
     {
         $this->transform = $transform;
@@ -262,14 +422,14 @@ final class ListQuery
      * Rows among $ids that changed since $since.
      *
      * This is what makes the poll driver cheap enough to be the default. It is
-     * NOT the polling S8 warns against — that warning is about re-rendering a
+     * NOT the polling S8 warns against - that warning is about re-rendering a
      * component server-side once per viewer per tick, so cost scales with
      * audience. This asks one bounded, indexed question:
      *
      *     WHERE id IN (visible ids) AND updated_at > ?
      *
      * The id set is capped by the page size, so the query is O(page), never
-     * O(table), and it returns only rows that actually changed — usually none,
+     * O(table), and it returns only rows that actually changed - usually none,
      * in which case the response is an empty array.
      *
      * @param  list<int|string>  $ids  Ids currently on screen.
@@ -285,7 +445,7 @@ final class ListQuery
         $eloquent = $this->model::query();
 
         // The diff SELECTS the same columns the list does, joined ones included,
-        // so this join is always needed — unlike the count paths in base().
+        // so this join is always needed - unlike the count paths in base().
         if ($this->join !== null) {
             ($this->join)($eloquent);
         }
@@ -298,7 +458,7 @@ final class ListQuery
             // Parsed, not passed through. The client sends ISO-8601 with an
             // offset (2026-07-27T09:15:00+00:00) while the column holds
             // 'Y-m-d H:i:s', and comparing those as strings silently matches
-            // nothing — an endpoint that returns 200 and an empty array forever.
+            // nothing - an endpoint that returns 200 and an empty array forever.
             ->where($this->qualifiedUpdatedAt(), '>', $this->normaliseTimestamp($since))
             ->limit(count($ids))
             ->get()
@@ -318,9 +478,9 @@ final class ListQuery
     private function normaliseTimestamp(string $since): string
     {
         try {
-            return \Illuminate\Support\Carbon::parse($since)->utc()->format('Y-m-d H:i:s');
+            return Carbon::parse($since)->utc()->format('Y-m-d H:i:s');
         } catch (\Throwable) {
-            return \Illuminate\Support\Carbon::now()->addCentury()->format('Y-m-d H:i:s');
+            return Carbon::now()->addCentury()->format('Y-m-d H:i:s');
         }
     }
 
@@ -342,7 +502,7 @@ final class ListQuery
         $table = (new $this->model)->getTable();
 
         $isJoined = static fn (string $column): bool => str_contains($column, '.')
-            && ! str_starts_with($column, $table . '.');
+            && ! str_starts_with($column, $table.'.');
 
         // A search touches every searchable column, so any joined one counts.
         if (($state['search'] ?? '') !== '') {
@@ -356,7 +516,7 @@ final class ListQuery
         foreach ($this->filters as $filter) {
             $value = $state['filters'][$filter->key] ?? null;
 
-            // Only APPLIED filters matter — a declared filter nobody used adds
+            // Only APPLIED filters matter - a declared filter nobody used adds
             // no predicate. The trashed filter always applies, and always
             // targets the base table's own deleted_at.
             if ($value === null && ! $filter instanceof TrashedFilter) {
@@ -379,7 +539,7 @@ final class ListQuery
      * Every declared aggregate, in ONE query over the filtered set.
      *
      * The naive version runs a query per summarised column, which is the same
-     * N+1 shape as counting tabs one at a time — invisible at two columns and a
+     * N+1 shape as counting tabs one at a time - invisible at two columns and a
      * full extra scan each at five. One SELECT with several aggregate
      * expressions costs exactly one pass.
      *
@@ -391,14 +551,14 @@ final class ListQuery
      */
     private function summarise(array $state): array
     {
-        // The join is only needed if an aggregate reads a joined column — the
+        // The join is only needed if an aggregate reads a joined column - the
         // same question the counts ask, and usually the same answer.
         $needsJoin = $this->joinRequired($state);
 
         foreach ($this->summaries as $summary) {
             $column = $summary['summarizer']->readsColumn() ?? $summary['column'];
 
-            if (str_contains($column, '.') && ! str_starts_with($column, (new $this->model)->getTable() . '.')) {
+            if (str_contains($column, '.') && ! str_starts_with($column, (new $this->model)->getTable().'.')) {
                 $needsJoin = true;
 
                 break;
@@ -413,7 +573,7 @@ final class ListQuery
         foreach ($this->summaries as $key => $summary) {
             // Derived from the declared key, never from input, and stripped to
             // an identifier because it lands in the SELECT unquoted.
-            $alias = 'pk_sum_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $key);
+            $alias = 'pk_sum_'.preg_replace('/[^a-zA-Z0-9_]/', '_', $key);
 
             $expressions[] = $summary['summarizer']->expression($alias, $summary['column']);
             $aliases[$key] = $alias;
@@ -451,7 +611,7 @@ final class ListQuery
         // updated_at and an unqualified column is ambiguous the moment it does.
         $table = str_contains($this->keyColumn, '.')
             ? substr($this->keyColumn, 0, strpos($this->keyColumn, '.'))
-            : (new $this->model())->getTable();
+            : (new $this->model)->getTable();
 
         return "{$table}.updated_at";
     }
@@ -461,7 +621,7 @@ final class ListQuery
      *
      * The detail page renders the table's columns, so it must fetch them the
      * same way. Reading the raw model instead silently drops every joined
-     * column — the Plan field rendered an em dash, which an operator reads as
+     * column - the Plan field rendered an em dash, which an operator reads as
      * "this client has no plan" rather than "this value was not loaded".
      *
      * @return array<string, mixed>|null
@@ -496,7 +656,7 @@ final class ListQuery
      *
      * REBUILT FROM THE REQUEST, NEVER TRUSTED FROM THE CLIENT. The browser
      * sends the same filter parameters it used to draw the table, and this
-     * re-derives the query from them — it does not accept a row count, a list
+     * re-derives the query from them - it does not accept a row count, a list
      * of "everything", or a where clause. The only thing the client can widen
      * is which of its OWN visible rows are included.
      *
@@ -525,7 +685,7 @@ final class ListQuery
      * Walk the whole filtered set in chunks, for an export.
      *
      * Reuses the list's own select, joins and row transform, so the export
-     * carries the same VALUES the table was built from — a joined plan name
+     * carries the same VALUES the table was built from - a joined plan name
      * where the screen shows a plan name, rather than the raw `plan_id`.
      * Rebuilding the query separately is how an export ends up full of foreign
      * keys that nobody notices until a customer opens the file.
@@ -539,7 +699,7 @@ final class ListQuery
      * KEYSET, not OFFSET, for the same reason the runner is: at 100k rows
      * `OFFSET 90000` re-walks ninety thousand rows to skip them, so the last
      * chunk costs the most and the export gets slower the longer it runs.
-     * There is no shrinking-set hazard here — an export does not write — but
+     * There is no shrinking-set hazard here - an export does not write - but
      * the cost argument alone settles it.
      *
      * @param  list<int|string>|null  $ids
@@ -597,7 +757,7 @@ final class ListQuery
             return $this->keyColumn;
         }
 
-        return (new $this->model)->getTable() . '.' . $this->keyColumn;
+        return (new $this->model)->getTable().'.'.$this->keyColumn;
     }
 
     public function keyColumnName(): string
@@ -626,18 +786,50 @@ final class ListQuery
         $state = $this->readState($request);
 
         // Request-supplied per-page, but only if it is on the allowlist.
-        $requested = (int) $request->query('perPage', (string) $this->perPage);
+        $requested = (int) $this->param($request, 'perPage', (string) $this->perPage);
         $perPage = in_array($requested, $this->perPageOptions, true) ? $requested : $this->perPage;
 
+        /*
+         * ONE ROW MORE THAN THE PAGE, and the extra row is never shown.
+         *
+         * "The page was full, so there is probably more" is not a fact, it is a
+         * guess - and it is wrong exactly when the row count is a multiple of
+         * the page size. With 20 routers and a page of 10, page 2 came back
+         * full, so a cursor was issued, so Next stayed enabled, so page 3
+         * rendered "No routers yet" under a paginator reading "3 of 2".
+         *
+         * Asking for `perPage + 1` replaces the guess with an answer: if the
+         * extra row exists there IS a next page, and if it does not there is
+         * not. The cost is reading one row that gets discarded, which is the
+         * cheapest possible way to know.
+         */
         $rows = $this->fetch($state, $perPage);
 
-        // The cursor is derived from the actual last row rather than trusted
-        // from the client, and only when the page was full — a short page means
-        // there is nothing after it.
+        $hasMore = count($rows) > $perPage;
+
+        // The probe row is dropped before anything sees it.
+        $rows = $hasMore ? array_slice($rows, 0, $perPage) : $rows;
+
+        // Derived from the actual last row of the PAGE rather than trusted from
+        // the client.
         $last = $rows === [] ? null : $rows[array_key_last($rows)];
-        $nextCursor = $last === null || count($rows) < $perPage
+
+        /*
+         * The cursor carries EVERY ordering value, in the order they are sorted
+         * by - read from the row's own keys rather than from the qualified
+         * columns, because that is the shape the client got.
+         */
+        $nextCursor = $last === null || ! $hasMore
             ? null
-            : Cursor::encode($last[$state['sort']] ?? null, (int) $last['id']);
+            : Cursor::encode(
+                array_map(
+                    static fn (string $key): mixed => $last[$key] ?? null,
+                    $this->groupKey === null || $this->groupKey === $state['sort']
+                        ? [$state['sort']]
+                        : [$this->groupKey, $state['sort']],
+                ),
+                (int) $last['id'],
+            );
 
         return new ListResult(
             records: $rows,
@@ -647,7 +839,7 @@ final class ListQuery
             perPage: $perPage,
             perPageOptions: $this->perPageOptions,
             tabs: $this->tabs?->values ?? [],
-            // Counts come from the query WITHOUT the tab constraint — with it,
+            // Counts come from the query WITHOUT the tab constraint - with it,
             // every tab except the active one would read zero, which looks like
             // real data rather than a bug. Deferred so they never block rows.
             // ALL summaries in ONE query. Five summarised columns must not be
@@ -665,7 +857,7 @@ final class ListQuery
     /**
      * How the total is produced, per the declared strategy.
      *
-     * @param array<string, mixed> $state
+     * @param  array<string, mixed>  $state
      * @return Closure(): ?int
      */
     private function totalResolver(array $state): Closure
@@ -720,7 +912,7 @@ final class ListQuery
             return $this->base(['search' => '', 'filters' => [], 'sort' => $this->defaultSort, 'direction' => 'desc', 'cursor' => null], forCount: true)->count();
         }
 
-        $table = (new $this->model())->getTable();
+        $table = (new $this->model)->getTable();
 
         $row = $connection->selectOne(
             'select reltuples::bigint as estimate from pg_class where relname = ?',
@@ -735,26 +927,58 @@ final class ListQuery
      */
     private function readState(Request $request): array
     {
-        $sort = (string) $request->query('sort', $this->defaultSort);
-        $direction = strtolower((string) $request->query('direction', $this->defaultDirection));
+        $sort = (string) $this->param($request, 'sort', $this->defaultSort);
+        $direction = strtolower((string) $this->param($request, 'direction', $this->defaultDirection));
 
         $filters = [];
 
         foreach ($this->filters as $filter) {
             // Deliberately preserved even when null, so the frontend can tell
             // "filter exists but is unset" from "filter does not exist".
-            $filters[$filter->key] = $filter->normalise($request->query($filter->key));
+            $filters[$filter->key] = $filter->normalise($this->param($request, $filter->key));
         }
 
         return [
-            'tab' => $this->tabs?->normalise($request->query('tab')),
-            'search' => trim((string) $request->query('search', '')),
+            'tab' => $this->tabs?->normalise($this->param($request, 'tab')),
+            'search' => trim((string) $this->param($request, 'search', '')),
             'sort' => array_key_exists($sort, $this->sortable) ? $sort : $this->defaultSort,
             'direction' => $direction === 'asc' ? 'asc' : 'desc',
-            'cursor' => $request->query('cursor') ? (string) $request->query('cursor') : null,
-            'page' => max(1, (int) $request->query('page', 1)),
+            'cursor' => $this->param($request, 'cursor') ? (string) $this->param($request, 'cursor') : null,
+            'page' => max(1, (int) $this->param($request, 'page', 1)),
             'filters' => $filters,
         ];
+    }
+
+    /**
+     * One query parameter, read from this table's own namespace.
+     *
+     * WHY A NAMESPACE EXISTS AT ALL: a workspace page hosts several independent
+     * tables, and every one of them wants to be called `page`, `sort` and
+     * `search`. Sharing the flat query string means paging the redemption
+     * history also pages the active rewards beside it, and neither table can
+     * express its own state in a shareable URL.
+     *
+     * BRACKET NOTATION rather than a `history_page` prefix: `?history[page]=2`
+     * parses into a nested array natively, so there is no delimiter to collide
+     * with a column name that happens to contain an underscore - and every
+     * column name in this application contains an underscore.
+     *
+     * An unnamespaced table reads the flat query string exactly as before, which
+     * is what keeps every existing resource URL working and shareable.
+     */
+    private function param(Request $request, string $name, mixed $default = null): mixed
+    {
+        if ($this->namespace === null) {
+            return $request->query($name, $default);
+        }
+
+        $scoped = $request->query($this->namespace);
+
+        if (! is_array($scoped)) {
+            return $default;
+        }
+
+        return $scoped[$name] ?? $default;
     }
 
     /**
@@ -763,16 +987,46 @@ final class ListQuery
      */
     private function fetch(array $state, int $perPage): array
     {
+        /*
+         * The probe is applied to the LIMIT only, never to the offset.
+         *
+         * `forPage($page, $size)` derives its offset from the size it is given,
+         * so inflating the size here would move the window: page 2 of a 10-row
+         * table would start at row 11 instead of row 10 and quietly skip one.
+         * The offset uses the real page size; only the fetch limit is one
+         * larger.
+         */
+        $limit = $perPage + 1;
+
         $column = $this->sortable[$state['sort']];
         $direction = $state['direction'];
 
-        $query = $this->base($state)
-            ->select($this->select)
-            ->orderBy($column, $direction)
-            // The tiebreaker is also the trailing column on every sort index.
-            // Without it the seek below is ambiguous and rows repeat or vanish
-            // across page boundaries.
-            ->orderBy($this->keyColumn, $direction);
+        $ordering = $this->orderingColumns($column);
+
+        $query = $this->base($state)->select($this->select);
+
+        /*
+         * Group first, then the chosen sort. That single extra ORDER BY term is
+         * the whole of grouping - rows arrive clustered, and the client inserts
+         * a heading wherever the value changes.
+         */
+        foreach ($ordering as $orderColumn) {
+            $query->orderBy($orderColumn, $direction);
+        }
+
+        /*
+         * The tiebreaker is also the trailing column on every sort index.
+         * Without it the seek below is ambiguous and rows repeat or vanish
+         * across page boundaries.
+         *
+         * QUALIFIED, via the helper that exists for exactly this. It used to
+         * order by the raw `keyColumn`, which is `id` unless a resource says
+         * otherwise - so the first table to declare a join produced
+         * "ambiguous column name: id" and nothing in the message pointed at the
+         * tiebreaker. Resources should still set `keyColumn`, but forgetting it
+         * is now a working query rather than a broken page.
+         */
+        $query->orderBy($this->qualifiedKey(), $direction);
 
         if ($this->paginationStrategy === 'offset') {
             // Explicitly opt-in. Fine on a small table, and the reason page
@@ -780,19 +1034,19 @@ final class ListQuery
             $page = max(1, (int) ($state['page'] ?? 1));
             $query->forPage($page, $perPage);
         } else {
-            $this->applyCursor($query, $state, $column, $direction);
+            $this->applyCursor($query, $state, $ordering, $direction);
         }
 
         $rows = array_map(
             static fn (object $row): array => (array) $row,
-            $query->limit($perPage)->get()->all(),
+            $query->limit($limit)->get()->all(),
         );
 
-        return $this->transform === null ? $rows : array_map($this->transform, $rows);
+        return $this->decorate($rows);
     }
 
     /**
-     * @param array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>} $state
+     * @param  array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>}  $state
      */
     private function base(array $state, bool $applyTab = true, bool $forCount = false): Builder
     {
@@ -805,7 +1059,7 @@ final class ListQuery
          * Eloquent's soft-delete scope is resolved by `toBase()` below, long
          * before a filter runs, so a filter cannot lift it afterwards. When the
          * table declares a TrashedFilter the scope is removed here and the
-         * filter applies `deleted_at IS NULL` itself — one place decides, in a
+         * filter applies `deleted_at IS NULL` itself - one place decides, in a
          * form the index can serve.
          *
          * ONLY when the filter is declared. Removing the scope unconditionally
@@ -821,7 +1075,7 @@ final class ListQuery
          *
          * A count selects no joined columns, so the join exists only to let a
          * FILTER or the SEARCH reference one. When nothing applied does, it is
-         * pure cost — and at scale not a small one: counting a tenant's 200,000
+         * pure cost - and at scale not a small one: counting a tenant's 200,000
          * clients took 503 ms through a LEFT JOIN to plans and 25 ms without
          * it, because every counted row did a primary-key lookup whose result
          * was then discarded.
@@ -830,6 +1084,25 @@ final class ListQuery
          */
         if ($this->join !== null && ! ($forCount && ! $this->joinRequired($state))) {
             ($this->join)($eloquent);
+        }
+
+        /*
+         * A CONSTRAINT ALWAYS APPLIES, INCLUDING TO COUNTS. This is the half the
+         * optimisation above must never touch.
+         *
+         * The distinction is not pedantry - it was a real bug. A workspace table
+         * put `whereNull('ended_at')` inside the join closure, which reads
+         * naturally and is what the old single hook invited. Nothing needed the
+         * join for a count, so the whole closure was skipped, and the "live
+         * sessions" total came back as every session ever recorded. No error,
+         * no warning, just a number that was wrong.
+         *
+         * Dropping a JOIN from a count is safe because a count selects no joined
+         * columns. Dropping a WHERE changes the answer. Two hooks, because they
+         * are two different things and only one of them is optional.
+         */
+        if ($this->constrain !== null) {
+            ($this->constrain)($eloquent);
         }
 
         // toBase() applies global scopes (including tenant scoping) before
@@ -848,7 +1121,7 @@ final class ListQuery
              * A TRASHED FILTER ALWAYS APPLIES, even with no value.
              *
              * For every other filter, null means "not applied". For this one
-             * null means "live records only" — the DEFAULT view — and skipping
+             * null means "live records only" - the DEFAULT view - and skipping
              * it was a genuine bug in two ways at once. The soft-delete global
              * scope has been lifted above so this filter can own the decision,
              * so with nothing applied the list showed DELETED ROWS; and with no
@@ -865,7 +1138,7 @@ final class ListQuery
                 continue;
             }
 
-            // `!== null`, never a truthiness check — `false` is an applied
+            // `!== null`, never a truthiness check - `false` is an applied
             // value for a BooleanFilter and must not be skipped.
             if ($value !== null) {
                 $filter->apply($query, $value);
@@ -887,12 +1160,12 @@ final class ListQuery
              * which stays index-served, OR at the start of any later word,
              * which does not. The second half costs a scan of the tenant's rows
              * and is the deliberate price of a search that actually finds
-             * people. Substring-anywhere is still refused — it is unbounded and
+             * people. Substring-anywhere is still refused - it is unbounded and
              * belongs to a trigram index or FTS once the engine is chosen.
              */
             $escaped = str_replace(['%', '_'], ['\%', '\_'], $state['search']);
-            $startsWith = $escaped . '%';
-            $wordStart = '% ' . $escaped . '%';
+            $startsWith = $escaped.'%';
+            $wordStart = '% '.$escaped.'%';
             $columns = $this->searchable;
 
             $query->where(function (Builder $q) use ($columns, $startsWith, $wordStart): void {
@@ -916,9 +1189,47 @@ final class ListQuery
      * it stays portable across Postgres, MySQL and SQLite. Postgres row-value
      * syntax is tidier and can replace this once the engine is fixed.
      *
-     * @param array{cursor: string|null, ...} $state
+     * @param  array{cursor: string|null, ...}  $state
      */
-    private function applyCursor(Builder $query, array $state, string $column, string $direction): void
+    /**
+     * The ORDER BY, minus the key: group first, then the chosen sort.
+     *
+     * ONE DEFINITION, used by the query, the cursor that is issued, and the
+     * cursor that is read back. Three places deriving the same list separately
+     * is how a seek ends up disagreeing with the sort it is seeking into, and
+     * that bug looks like rows repeating or vanishing across page boundaries
+     * rather than like an ordering mistake.
+     *
+     * The group column is dropped when it IS the sort column - ordering by a
+     * column twice is harmless but makes the cursor carry a value the seek then
+     * compares against itself.
+     *
+     * @return list<string>
+     */
+    private function orderingColumns(string $sortColumn): array
+    {
+        if ($this->groupColumn === null || $this->groupColumn === $sortColumn) {
+            return [$sortColumn];
+        }
+
+        return [$this->groupColumn, $sortColumn];
+    }
+
+    /**
+     * The lexicographic keyset seek.
+     *
+     * For an order of `(a, b, id)` the predicate is
+     *
+     *     a > ?  OR (a = ? AND b > ?)  OR (a = ? AND b = ? AND id > ?)
+     *
+     * which is exactly "everything after this row in that ordering". Written as
+     * a loop rather than by hand because the number of terms is now variable:
+     * one column ungrouped, two grouped, and hardcoding either would silently
+     * paginate wrongly in the other case.
+     *
+     * @param  list<string>  $columns
+     */
+    private function applyCursor(Builder $query, array $state, array $columns, string $direction): void
     {
         $cursor = Cursor::decode($state['cursor']);
 
@@ -929,12 +1240,55 @@ final class ListQuery
         $operator = $direction === 'asc' ? '>' : '<';
         $key = $this->keyColumn;
 
-        $query->where(function (Builder $q) use ($column, $operator, $cursor, $key): void {
-            $q->where($column, $operator, $cursor->value)
-                ->orWhere(function (Builder $q) use ($column, $operator, $cursor, $key): void {
-                    $q->where($column, '=', $cursor->value)
-                        ->where($key, $operator, $cursor->id);
+        /*
+         * A cursor from a DIFFERENT ordering cannot be honoured.
+         *
+         * Grouping can be turned on with a cursor already in the URL, and that
+         * cursor carries one value where the seek now needs two. Resuming from
+         * it would compare the old sort value against the group column and land
+         * somewhere arbitrary, so the page restarts instead - which is what
+         * every other state change already does.
+         */
+        if (count($cursor->values) !== count($columns)) {
+            return;
+        }
+
+        /*
+         * A NULL ordering value cannot be seeked against.
+         *
+         * `WHERE col < NULL` is not a comparison, it is an error - and even
+         * spelled as `IS NULL` the ordering of nulls differs by engine, so
+         * there is no seek that means "after this row" when the row's sort
+         * value is null. Restarting the page is the only honest answer, and it
+         * is the same thing every other unusable cursor does.
+         */
+        foreach ($cursor->values as $value) {
+            if ($value === null) {
+                return;
+            }
+        }
+
+        $query->where(function (Builder $outer) use ($columns, $operator, $cursor, $key): void {
+            foreach ($columns as $depth => $column) {
+                $outer->orWhere(function (Builder $q) use ($columns, $depth, $operator, $cursor): void {
+                    // Every column before this one must be EQUAL...
+                    for ($i = 0; $i < $depth; $i++) {
+                        $q->where($columns[$i], '=', $cursor->values[$i]);
+                    }
+
+                    // ...and this one strictly past the cursor.
+                    $q->where($columns[$depth], $operator, $cursor->values[$depth]);
                 });
+            }
+
+            // The final tier: every ordering column equal, broken by the key.
+            $outer->orWhere(function (Builder $q) use ($columns, $operator, $cursor, $key): void {
+                foreach ($columns as $i => $column) {
+                    $q->where($column, '=', $cursor->values[$i]);
+                }
+
+                $q->where($key, $operator, $cursor->id);
+            });
         });
     }
 }

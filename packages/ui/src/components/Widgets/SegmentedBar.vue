@@ -4,8 +4,8 @@
  *
  * Two shapes, one component, because they are the same drawing:
  *
- *   TWO segments  — a limit: spent against remaining.
- *   N segments    — a breakdown: food, clothing, other.
+ *   TWO segments  - a limit: spent against remaining.
+ *   N segments    - a breakdown: food, clothing, other.
  *
  * A TINY SEGMENT STILL GETS A VISIBLE SLIVER. A category worth 0.2% rounds to
  * zero width and disappears from the bar while still appearing in the legend
@@ -13,7 +13,7 @@
  * 2px, so "present but small" is distinguishable from "absent".
  *
  * THE PERCENTAGES ARE NOT RE-NORMALISED. If the segments do not sum to the
- * total, the remainder is drawn as empty track rather than being scaled away —
+ * total, the remainder is drawn as empty track rather than being scaled away -
  * a bar that always fills completely cannot show an under-spend, which is
  * exactly what a spending limit is for.
  */
@@ -38,7 +38,13 @@ const props = withDefaults(
     { total: null, showLegend: true, height: 8 },
 )
 
-const PALETTE = ['var(--primary)', 'var(--chart-2)', 'var(--chart-4)', 'var(--chart-3)', 'var(--chart-5)']
+const PALETTE = [
+    'var(--primary)',
+    'var(--chart-2)',
+    'var(--chart-4)',
+    'var(--chart-3)',
+    'var(--chart-5)',
+]
 
 const sum = computed(() => props.segments.reduce((t, s) => t + Math.max(0, s.value), 0))
 const denominator = computed(() => Math.max(props.total ?? sum.value, sum.value, 1))

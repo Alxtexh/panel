@@ -3,15 +3,15 @@
  * An avatar or logo in a cell.
  *
  * THE URL COMES FROM THE DATABASE, so the scheme is checked before it is bound.
- * Only http, https and protocol-relative URLs render; anything else — most
- * pointedly `javascript:` — falls through to initials. A `javascript:` URL in
+ * Only http, https and protocol-relative URLs render; anything else - most
+ * pointedly `javascript:` - falls through to initials. A `javascript:` URL in
  * an `img src` does not execute in any current browser, so this is defence in
  * depth rather than a live hole, and it is worth having because the value flows
  * onward: the same string would execute the moment someone renders it in an
  * `<a href>`.
  *
  * A BROKEN IMAGE ALSO FALLS BACK. `@error` catches the far more common failure
- * — a URL that was valid when it was stored and 404s now — so a dead link
+ * - a URL that was valid when it was stored and 404s now - so a dead link
  * shows initials instead of the browser's torn-page glyph.
  *
  * The box is a FIXED SIZE regardless of the image, so rows do not resize as
@@ -35,14 +35,19 @@ const failed = ref(false)
 
 // A new URL deserves a fresh attempt; otherwise one broken image poisons the
 // cell for every row that later reuses this component instance.
-watch(() => props.src, () => (failed.value = false))
+watch(
+    () => props.src,
+    () => (failed.value = false),
+)
 
 const SIZES = { sm: 'size-6', md: 'size-8', lg: 'size-10' }
 
 const url = computed(() => {
     const raw = typeof props.src === 'string' ? props.src.trim() : ''
 
-    if (raw === '') return null
+    if (raw === '') {
+        return null
+    }
 
     return /^(https?:)?\/\//i.test(raw) ? raw : null
 })
@@ -50,7 +55,9 @@ const url = computed(() => {
 const initials = computed(() => {
     const text = typeof props.fallbackText === 'string' ? props.fallbackText.trim() : ''
 
-    if (text === '') return '?'
+    if (text === '') {
+        return '?'
+    }
 
     return text
         .split(/\s+/)

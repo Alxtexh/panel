@@ -21,7 +21,7 @@ use Throwable;
  * QUEUED BECAUSE THE SET IS UNBOUNDED. An explicit selection is bounded by what
  * a person can tick on screen and runs inline; select-all-matching can be every
  * row in the table, and a request that updates 400,000 rows will hit the PHP
- * time limit somewhere in the middle — leaving a partial write with no record
+ * time limit somewhere in the middle - leaving a partial write with no record
  * of where it stopped.
  *
  * The FILTERS travel, not the ids. Serialising 400,000 identifiers into the
@@ -30,7 +30,7 @@ use Throwable;
  *
  * That does mean the set is evaluated when the job RUNS, not when it was
  * queued, so rows created in between are included. For "suspend every expired
- * client" that is the desired reading — and the alternative, freezing a
+ * client" that is the desired reading - and the alternative, freezing a
  * snapshot of hundreds of thousands of ids, is worse in both size and staleness.
  */
 final class RunBulkAction implements ShouldQueue
@@ -86,7 +86,7 @@ final class RunBulkAction implements ShouldQueue
 
             $this->notifyActor(
                 'Bulk action finished',
-                number_format($affected) . ' records updated by "' . $this->actionKey . '".',
+                number_format($affected).' records updated by "'.$this->actionKey.'".',
                 "/{$this->resource}",
             );
         } catch (Throwable $e) {

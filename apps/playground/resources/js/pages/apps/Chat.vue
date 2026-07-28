@@ -2,22 +2,23 @@
 /**
  * Chat: conversation list beside a thread.
  *
- * TWO PANES ON DESKTOP, ONE ON MOBILE — the same reasoning the mailbox uses. A
+ * TWO PANES ON DESKTOP, ONE ON MOBILE - the same reasoning the mailbox uses. A
  * thread beside a list needs real width; below that, opening a conversation
  * replaces the list.
  *
  * NOTHING HERE IS DEFERRED, for the reason the mailbox documents: navigation
  * preserves state, so the component never remounts and a deferred follow-up
- * never fires — the thread would stay on whatever loaded first. Both queries are
+ * never fires - the thread would stay on whatever loaded first. Both queries are
  * bounded and indexed.
  *
  * A SENT MESSAGE IS APPENDED LOCALLY and confirmed by the response. Waiting for
  * a round trip before the message appears is the single thing that makes a chat
- * feel broken, and the failure mode — a message that never arrives — is visible
+ * feel broken, and the failure mode - a message that never arrives - is visible
  * because the input keeps its text until the request succeeds.
  */
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, nextTick, ref, watch } from 'vue'
+import { useLiveUpdates } from '@panelkit/ui'
 import { Search, Send } from '@lucide/vue'
 
 interface Conversation {
@@ -39,6 +40,21 @@ interface Message {
 const props = defineProps<{
     search: string
     selectedId: number | null
+    /**
+     * The transport, chosen server-side.
+     *
+     * The page never names Reverb or polling. It hands this to the composable
+     * and gets patched rows; which driver produced them is not its business,
+     * which is what makes switching one a config change.
+     */
+    live: {
+        driver: 'none' | 'poll' | 'broadcast'
+        intervalMs: number
+        batchMs: number
+        channel: string | null
+        events: string[]
+        pauseWhenHidden: boolean
+    }
 }>()
 
 defineOptions({ layout: { breadcrumbs: [{ title: 'Chat', href: '/apps/chat' }] } })
@@ -57,6 +73,26 @@ const scroller = ref<HTMLElement | null>(null)
 const appended = ref<Message[]>([])
 
 const visibleMessages = computed(() => [...(thread.value?.messages ?? []), ...appended.value])
+
+/**
+ * Live updates for the OPEN thread.
+ *
+ * `onInsert` rather than a patch, because in a chat the arrival IS the event -
+ * a message that is not already on the page is exactly the one somebody is
+ * waiting for. Every other surface in the panel wants the opposite (a row
+ * created on page 40 must not appear on page 1), which is why the composable
+ * drops unknown ids unless a caller asks for them.
+ *
+ * `onResync` refetches after a reconnect rather than trusting what was on
+ * screen: a gap in delivery is invisible from the client, so the only safe
+ * assumption after a disconnect is that something was missed.
+ */
+const { status: liveStatus } = useLiveUpdates({
+    config: props.live,
+    rows: computed(() => visibleMessages.value as unknown as Record<string, any>[]),
+    onInsert: () => router.reload({ only: ['thread', 'conversations'] }),
+    onResync: () => router.reload({ only: ['thread', 'conversations'] }),
+})
 
 // A new thread starts at the bottom, where the newest message is.
 watch(
@@ -234,7 +270,37 @@ function initials(name: string): string {
                             </span>
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-semibold">{{ thread.name }}</p>
-                                <p class="text-muted-foreground text-xs capitalize">{{ thread.status }}</p>
+                                <p class="text-muted-foreground flex items-center gap-1.5 text-xs">
+                                    <span class="capitalize">{{ thread.status }}</span>
+
+                                    <!--
+                                        THE CONNECTION STATE IS SHOWN, because a
+                                        thread that has silently stopped
+                                        receiving looks exactly like a thread
+                                        where nobody has replied. Hidden only
+                                        when live updates are off entirely -
+                                        there is nothing to be reassured about.
+                                    -->
+                                    <template v-if="liveStatus !== 'off'">
+                                        <span aria-hidden="true">·</span>
+                                        <span
+                                            class="inline-flex items-center gap-1"
+                                            :title="`Live updates: ${liveStatus}`"
+                                        >
+                                            <span
+                                                class="size-1.5 rounded-full"
+                                                :class="
+                                                    liveStatus === 'live'
+                                                        ? 'bg-emerald-500'
+                                                        : liveStatus === 'paused'
+                                                          ? 'bg-amber-500'
+                                                          : 'bg-muted-foreground/40'
+                                                "
+                                            />
+                                            {{ liveStatus }}
+                                        </span>
+                                    </template>
+                                </p>
                             </div>
                         </header>
 

@@ -34,7 +34,7 @@ const POLL_MS = 1000
 const MAX_POLLS = 300
 
 /**
- * Laravel accepts the XSRF cookie echoed back as a header — the same thing
+ * Laravel accepts the XSRF cookie echoed back as a header - the same thing
  * axios does automatically. Read here because these calls are plain fetch, not
  * Inertia visits, so nothing sets it for us.
  */
@@ -81,7 +81,7 @@ export function useBulkJob(resourceKey: string) {
 
     /**
      * The current filter parameters, carried so the server re-derives the exact
-     * set the operator is looking at. The IDs are not sent for select-all — the
+     * set the operator is looking at. The IDs are not sent for select-all - the
      * whole point is that the set may be larger than the browser knows.
      */
     function currentQuery(): string {

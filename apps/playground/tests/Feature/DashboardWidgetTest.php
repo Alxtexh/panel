@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Widgets\StatWidget;
@@ -54,7 +54,7 @@ final class DashboardWidgetTest extends TestCase
          *
          * This guard is about the LIST query: a COUNT over a resource table is
          * unbounded, grows with the tenant, and is what §10 forbids in front of
-         * rows. The unread-badge count is a different shape — one user's inbox,
+         * rows. The unread-badge count is a different shape - one user's inbox,
          * hit through the morph index, bounded by what that person has been
          * sent. Excluding it by name keeps the guard sharp; broadening the
          * pattern to "ignore counts we expect" would let a real one back in.
@@ -72,9 +72,16 @@ final class DashboardWidgetTest extends TestCase
             );
         }
 
-        // The widget LIST is present so the shell can render a skeleton of the
-        // right shape for each; the values are not.
-        $this->assertCount(8, $props['widgets']);
+        /*
+         * The widget LIST is present so the shell can render a skeleton of the
+         * right shape for each; the values are not.
+         *
+         * SEVEN, NOT EIGHT: the deliberately-broken demonstration card is off by
+         * default now - see `panel.demo.broken_widget`. Counted rather than
+         * named because the number is the thing this assertion is about, and a
+         * widget quietly disappearing would otherwise go unnoticed.
+         */
+        $this->assertCount(7, $props['widgets']);
         $this->assertArrayNotHasKey('stat_clients_total', $props);
     }
 
@@ -89,7 +96,7 @@ final class DashboardWidgetTest extends TestCase
 
         $response = $this->actingAs($this->user)->get('/dashboard', [
             'X-Inertia' => 'true',
-            'X-Inertia-Version' => (string) (new HandleInertiaRequests())->version(request()),
+            'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(request()),
             'X-Inertia-Partial-Component' => 'Dashboard',
             'X-Inertia-Partial-Data' => 'stat_clients_total',
         ])->assertOk();
@@ -125,14 +132,24 @@ final class DashboardWidgetTest extends TestCase
         );
     }
 
-    /** The whole page must still render with a broken widget on it. */
+    /**
+     * The whole page must still render with a broken widget on it.
+     *
+     * THE DEMONSTRATION CARD IS OFF BY DEFAULT NOW, so this test turns it on.
+     * It used to ship enabled: a permanently red card on the reference
+     * dashboard, which teaches every reader to ignore a red card. The behaviour
+     * still has to be proved - that is what this is - it just no longer has to
+     * be proved on everybody's screen.
+     */
     public function test_the_dashboard_renders_despite_a_broken_widget(): void
     {
+        config()->set('panel.demo.broken_widget', true);
+
         $this->actingAs($this->user)->get('/dashboard')->assertOk();
 
         $response = $this->actingAs($this->user)->get('/dashboard', [
             'X-Inertia' => 'true',
-            'X-Inertia-Version' => (string) (new HandleInertiaRequests())->version(request()),
+            'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(request()),
             'X-Inertia-Partial-Component' => 'Dashboard',
             'X-Inertia-Partial-Data' => 'stat_deliberately_broken',
         ])->assertOk();

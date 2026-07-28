@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import PkSkeleton from '../primitives/PkSkeleton.vue'
 /**
  * The frame around a chart: title, period selector, trend, and the chart slot.
  *
  * IT DOES NOT FETCH. Selecting a period emits `update:period` and nothing else
- * — the page decides that this means an Inertia partial reload of one prop.
+ * - the page decides that this means an Inertia partial reload of one prop.
  * That is package rule 2 (§4), and it is what lets the same card work outside
  * Inertia later.
  *
@@ -26,7 +27,13 @@ const props = withDefaults(
         error?: boolean
         bodyHeight?: number
     }>(),
-    { description: null, periods: null, loading: false, error: false, bodyHeight: 220 },
+    {
+        description: null,
+        periods: null,
+        loading: false,
+        error: false,
+        bodyHeight: 220,
+    },
 )
 
 defineEmits<{ (e: 'update:period', value: string): void }>()
@@ -37,7 +44,9 @@ defineEmits<{ (e: 'update:period', value: string): void }>()
         <div class="flex flex-wrap items-start justify-between gap-2">
             <div class="min-w-0">
                 <p class="text-sm font-medium">{{ label }}</p>
-                <p v-if="description" class="text-muted-foreground mt-0.5 text-xs">{{ description }}</p>
+                <p v-if="description" class="text-muted-foreground mt-0.5 text-xs">
+                    {{ description }}
+                </p>
 
                 <!-- Trend sits under the title, where it reads as a property of
                      the metric rather than of the selected period. -->
@@ -69,7 +78,7 @@ defineEmits<{ (e: 'update:period', value: string): void }>()
         </div>
 
         <div :style="{ minHeight: `${bodyHeight}px` }" class="flex flex-col justify-center">
-            <div v-if="loading" class="bg-muted animate-pulse rounded" :style="{ height: `${bodyHeight}px` }" />
+            <PkSkeleton v-if="loading" variant="block" :height="bodyHeight" />
 
             <p
                 v-else-if="error"

@@ -21,7 +21,7 @@ use PanelKit\Panel\Forms\Fields\Field;
  *   {"component": "field",   "type": "text", ...}
  *
  * Layout carries NO tenant data and NO CSS classes, exactly like columns and
- * fields — it says `columns: 2` and `collapsible: true`, and Vue decides what
+ * fields - it says `columns: 2` and `collapsible: true`, and Vue decides what
  * that looks like (antipatterns §6.1).
  */
 abstract class Component
@@ -62,7 +62,7 @@ abstract class Component
      *
      * Validation, sanitisation and value hydration all need the flat field list
      * regardless of how deeply layout nests them. Walking the tree in one place
-     * is what stops a field inside a tab being silently unvalidated — which is
+     * is what stops a field inside a tab being silently unvalidated - which is
      * the failure that would make layout a security problem rather than a
      * presentation one.
      *

@@ -14,7 +14,7 @@ use Tests\TestCase;
  *
  * The bug this guards: the preference lived only in localStorage, so signing
  * into the same account from a second browser showed a different theme. Nothing
- * was broken — the setting simply had no way to travel with the user.
+ * was broken - the setting simply had no way to travel with the user.
  */
 final class AppearanceTest extends TestCase
 {
@@ -34,7 +34,7 @@ final class AppearanceTest extends TestCase
     }
 
     /**
-     * Set the preference the way the CONTROLLER does — direct assignment.
+     * Set the preference the way the CONTROLLER does - direct assignment.
      *
      * `appearance` is deliberately absent from the model's Fillable attribute:
      * mass assignment stays closed by construction, and the endpoint assigns
@@ -63,7 +63,7 @@ final class AppearanceTest extends TestCase
 
     /**
      * THE CROSS-BROWSER CASE. A second browser has an empty localStorage, so
-     * the account value is the only thing that can tell it what to render — it
+     * the account value is the only thing that can tell it what to render - it
      * has to arrive with the page rather than being asked for afterwards.
      */
     public function test_the_saved_appearance_ships_with_every_page(): void
@@ -146,7 +146,7 @@ final class AppearanceTest extends TestCase
             ->assertOk();
     }
 
-    /** Unknown keys are simply not stored — validation returns only what it knows. */
+    /** Unknown keys are simply not stored - validation returns only what it knows. */
     public function test_an_unknown_key_is_not_stored(): void
     {
         $this->actingAs($this->user)

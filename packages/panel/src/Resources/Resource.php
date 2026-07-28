@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Resources;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use PanelKit\Panel\Forms\Form;
+use PanelKit\Panel\Schema\Component;
+use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\SchemaCache;
+use PanelKit\Panel\Support\TenantContext;
+use PanelKit\Panel\Tables\Columns\EditableColumn;
 use PanelKit\Panel\Tables\ListResult;
 use PanelKit\Panel\Tables\Table;
 
@@ -41,6 +45,22 @@ abstract class Resource
 
     protected static ?int $sort = null;
 
+    /**
+     * Which panel this resource belongs to.
+     *
+     * DEFAULTS TO THE TENANT ADMIN, because that is what almost every resource
+     * is and because the default has to be the SAFE one. A resource that forgets
+     * to declare a panel lands in a tenant-scoped panel, where the worst outcome
+     * is that it appears in the wrong navigation. Defaulting to a central panel
+     * would mean a forgotten declaration silently disables tenant scoping.
+     */
+    protected static string $panel = 'admin';
+
+    public static function panel(): string
+    {
+        return static::$panel;
+    }
+
     /** Declarative definition. MUST NOT query. */
     abstract public static function table(Table $table): Table;
 
@@ -65,7 +85,7 @@ abstract class Resource
      * A resource that declares none gets a flat list of its table columns,
      * which is what every resource had before layout existed.
      *
-     * @return list<\PanelKit\Panel\Schema\Component>
+     * @return list<Component>
      */
     public static function infolist(): array
     {
@@ -76,7 +96,7 @@ abstract class Resource
      * Per-tenant feature flag, if the resource declares one.
      *
      * Spec S9 item 5: a disabled feature hides the resource from navigation AND
-     * returns 404 from its routes. Hiding the link alone is not a control — the
+     * returns 404 from its routes. Hiding the link alone is not a control - the
      * URL is still typeable, and an operator who bookmarks it keeps working.
      */
     protected static ?string $feature = null;
@@ -100,9 +120,9 @@ abstract class Resource
             return true;
         }
 
-        $flags = app(\PanelKit\Panel\Support\TenantContext::class)->features();
+        $flags = app(TenantContext::class)->features();
 
-        // Absent means DISABLED. A missing flag is not permission — the whole
+        // Absent means DISABLED. A missing flag is not permission - the whole
         // point of a flag is that it must be turned on deliberately.
         return (bool) ($flags[$feature] ?? false);
     }
@@ -114,7 +134,7 @@ abstract class Resource
     }
 
     /**
-     * Whether any write path exists — a form OR an editable column.
+     * Whether any write path exists - a form OR an editable column.
      *
      * These are two different questions and conflating them was a bug: Plans
      * declares no form, so `isWritable()` is false, so `permissions()['update']`
@@ -123,14 +143,14 @@ abstract class Resource
      * accepted it; only the UI hint said otherwise, which is the worst place for
      * the disagreement to live because it looks like a permissions problem.
      *
-     * `create` still requires a form — a row cannot be brought into existence by
-     * toggling a cell — which is why this is a second method rather than a
+     * `create` still requires a form - a row cannot be brought into existence by
+     * toggling a cell - which is why this is a second method rather than a
      * widening of the first.
      */
     public static function hasWritableColumns(): bool
     {
         foreach (static::definition()->getColumns() as $column) {
-            if ($column instanceof \PanelKit\Panel\Tables\Columns\EditableColumn) {
+            if ($column instanceof EditableColumn) {
                 return true;
             }
         }
@@ -147,7 +167,7 @@ abstract class Resource
      * the page renders correctly for the person who forgot.
      *
      * The refusal is LOGGED, because a silently-denying panel is its own kind of
-     * mystery — antipatterns opens on failures that returned 200 and looked
+     * mystery - antipatterns opens on failures that returned 200 and looked
      * right, and "the button does nothing" is the same class of bug.
      *
      * Schema permission booleans only hide UI. Every write re-checks here, so a
@@ -182,8 +202,20 @@ abstract class Resource
         return [
             'viewAny' => static::can('viewAny'),
             'create' => static::isWritable() && static::can('create'),
-            // A form OR an editable column: both are ways to update a record.
-            'update' => (static::isWritable() || static::hasWritableColumns()) && static::can('update'),
+            /*
+             * A form, an editable column, OR a drag handle - all three are ways
+             * to update a record.
+             *
+             * Reordering was missed at first, and the symptom was oblique: the
+             * Reorder button simply never appeared on a table that declared
+             * itself reorderable, because this flag gates the affordance and it
+             * only knew about forms and cells. A resource whose only write is a
+             * drag is still a resource you can write to.
+             */
+            'update' => (static::isWritable()
+                || static::hasWritableColumns()
+                || static::definition()->getReorderColumn() !== null)
+                && static::can('update'),
             'delete' => static::can('delete'),
         ];
     }
@@ -194,14 +226,14 @@ abstract class Resource
      * Declared, never inferred: a relation appears because a resource named it,
      * so the endpoint can only ever open a list the author intended.
      *
-     * @return list<\PanelKit\Panel\Resources\RelationManager>
+     * @return list<RelationManager>
      */
     public static function relations(): array
     {
         return [];
     }
 
-    public static function relation(string $key): ?\PanelKit\Panel\Resources\RelationManager
+    public static function relation(string $key): ?RelationManager
     {
         foreach (static::relations() as $relation) {
             if ($relation->key === $key) {
@@ -238,9 +270,49 @@ abstract class Resource
         return static::$group;
     }
 
+    /**
+     * Whether this resource appears in the navigation.
+     *
+     * ROUTABLE BUT UNLISTED. Some resources exist to be reached rather than
+     * browsed - a fixture that exercises an endpoint, a screen linked to only
+     * from another record, an admin-only table that should not advertise
+     * itself. Hiding is a NAVIGATION decision and nothing else: the routes
+     * still exist and every policy still applies, because a resource absent
+     * from a menu is not a resource nobody can reach.
+     */
+    public static function showsInNavigation(): bool
+    {
+        return true;
+    }
+
     public static function navigationSort(): int
     {
         return static::$sort ?? 0;
+    }
+
+    /**
+     * Whether this resource belongs in the API reference.
+     *
+     * NOT EVERY RESOURCE IS AN INTEGRATION SURFACE. An internal read-only trail
+     * - the activity log is the case that prompted this - has real endpoints
+     * that nobody will ever call from outside, and listing it only lengthens a
+     * document somebody is reading to find the endpoint they actually need.
+     * Volume is not thoroughness in a reference.
+     *
+     * SEPARATE FROM `showsInNavigation()`, deliberately, because they answer
+     * different questions. A resource can be worth a menu entry and useless to
+     * an integrator, or the reverse: an endpoint reached only by a machine
+     * belongs in the document and in no menu at all. One flag serving both would
+     * force those two to agree.
+     *
+     * OPT-OUT, NOT OPT-IN. A resource that says nothing appears and gets edited
+     * down; the alternative is a reference silently missing what nobody
+     * remembered to declare, which is indistinguishable from an endpoint that
+     * does not exist.
+     */
+    public static function documented(): bool
+    {
+        return true;
     }
 
     /** @return class-string */
@@ -257,17 +329,33 @@ abstract class Resource
     /**
      * The cached, tenant-independent half of the contract.
      *
-     * The envelope carries `v` and `kind` from the start — spec §5 requires the
+     * The envelope carries `v` and `kind` from the start - spec §5 requires the
      * contract be versioned, and it is what lets a second schema shape be added
      * later without breaking a consumer that only understands `resource`.
      *
      * @return array<string, mixed>
      */
-    public static function schema(string $panelId = 'admin'): array
+    public static function schema(?string $panelId = null): array
     {
+        /*
+         * THE RESOURCE'S OWN PANEL, not a literal default.
+         *
+         * The key was previously built with `'admin'` whenever a caller did not
+         * say otherwise, which was harmless while one panel existed and becomes
+         * a leak with three: a super-admin resource and a tenant-admin resource
+         * with the same key would share a cache entry, so whichever panel warmed
+         * it first would decide what the other one saw. Column sets differ
+         * between panels precisely because their audiences differ.
+         */
+        $panelId ??= static::panel();
+
         $cache = app(SchemaCache::class);
 
-        return $cache->remember($panelId, static::key(), static::permissionsFingerprint(), static function (): array {
+        return $cache->remember(
+            $panelId,
+            static::key(),
+            static::permissionsFingerprint(),
+            static function (): array {
             $table = static::definition();
 
             return [
@@ -279,25 +367,97 @@ abstract class Resource
                 'icon' => static::icon(),
                 'group' => static::group(),
                 'routes' => [
-                    'index' => '/' . static::key(),
-                    'store' => '/' . static::key(),
-                    'update' => '/' . static::key() . '/{id}',
-                    'destroy' => '/' . static::key() . '/{id}',
+                    'index' => '/'.static::key(),
+                    'store' => '/'.static::key(),
+                    'update' => '/'.static::key().'/{id}',
+                    'destroy' => '/'.static::key().'/{id}',
                 ],
                 'table' => $table->toSchema(),
                 'form' => static::formDefinition()->toSchema(),
                 'infolist' => array_map(
-                    static fn (\PanelKit\Panel\Schema\Component $c): array => $c->toSchema(),
+                    static fn (Component $c): array => $c->toSchema(),
                     static::infolist(),
                 ),
-                // Structure only — column definitions for each related list.
+                // Structure only - column definitions for each related list.
                 // The rows are fetched on demand, never with the parent.
                 'relations' => array_map(
                     static fn (RelationManager $r): array => $r->toSchema(),
                     static::relations(),
                 ),
             ];
-        });
+            },
+            static::customFieldsFingerprint(),
+        );
+    }
+
+    /**
+     * Fields this TENANT has added to the resource, beyond the declared ones.
+     *
+     * A SEAM, NOT A FEATURE. It returns nothing today and exists so that adding
+     * tenant-defined fields later is ADDITIVE rather than structural.
+     *
+     * WHY IT HAS TO BE DECIDED BEFORE MORE RESOURCES ARE WRITTEN: two of the
+     * panel's load-bearing assumptions are that a schema is identical for every
+     * tenant, and that every column names a real database column. Custom fields
+     * break both, and retrofitting them afterwards means changing the schema
+     * cache, the column engine, the form layer, validation and import/export at
+     * the same time. With the seam in place, each of those can be taught about
+     * custom fields on its own.
+     *
+     * WHAT IT MUST EVENTUALLY RETURN is a list of field definitions in the same
+     * shape a declared field produces, resolved from wherever an installation
+     * stores them - a `custom_fields` table, a config file, anything. What it
+     * must NOT do is read the request: this runs inside a CACHED closure, so
+     * anything request-varying would be baked into an entry other requests then
+     * receive.
+     *
+     * @return list<array<string, mixed>>
+     */
+    /**
+     * The actions this resource supports at all.
+     *
+     * EVERY ACTION BY DEFAULT, narrowed by resources that genuinely cannot do
+     * some of them. An audit trail is the clearest case: entries are written by
+     * the recorder and never edited, so `create_activity` and `delete_activity`
+     * are abilities that can be granted and mean nothing. A permission matrix
+     * that offers them is teaching people it lies.
+     *
+     * NARROWING IS NOT AUTHORISATION. The policy still decides who may do the
+     * actions that remain; this only decides which ones are on the menu.
+     *
+     * @return list<string>
+     */
+    public static function actions(): array
+    {
+        return Abilities::ACTIONS;
+    }
+
+    protected static function customFields(): array
+    {
+        return [];
+    }
+
+    /**
+     * A fingerprint of this tenant's custom fields, or an empty string.
+     *
+     * EMPTY IS THE IMPORTANT CASE. It is what keeps the schema cache key
+     * unchanged - and therefore shared across every tenant - for an
+     * installation that uses no custom fields, which is every installation
+     * today. See `SchemaCache::key`.
+     *
+     * The hash covers the DEFINITIONS, so changing one invalidates only the
+     * schemas that contain it, and does so without anybody remembering to clear
+     * a cache.
+     */
+    protected static function customFieldsFingerprint(): string
+    {
+        $fields = static::customFields();
+
+        if ($fields === []) {
+            return '';
+        }
+
+        return substr(hash('xxh128', json_encode($fields) ?: ''), 0, 12);
     }
 
     /**
@@ -306,7 +466,7 @@ abstract class Resource
      * Accepts an already-built definition so a caller that needs both the data
      * AND the filter options does not build the table twice. Building it twice
      * means two sets of filter instances, and a data-derived option closure then
-     * runs once per set — a duplicate DISTINCT query per request that no test
+     * runs once per set - a duplicate DISTINCT query per request that no test
      * would notice because the row count is identical either way.
      */
     public static function data(Request $request, ?Table $definition = null): ListResult
@@ -317,8 +477,8 @@ abstract class Resource
     /**
      * Hash of the acting user's effective permission set.
      *
-     * Schemas vary by role — a user without `delete_client` must not receive a
-     * delete action — so the fingerprint keys the cache. It is deliberately NOT
+     * Schemas vary by role - a user without `delete_client` must not receive a
+     * delete action - so the fingerprint keys the cache. It is deliberately NOT
      * a tenant id: the schema contains no tenant data (addendum Part A).
      *
      * Reused as the per-request permission lookup (addendum C), so permissions
@@ -333,7 +493,7 @@ abstract class Resource
         }
 
         // Spatie's API when present; a stable fallback when it is not. Never an
-        // empty string — SchemaCache throws on that rather than collapsing every
+        // empty string - SchemaCache throws on that rather than collapsing every
         // role onto one key (antipatterns §1.5).
         if (method_exists($user, 'getAllPermissions')) {
             $names = $user->getAllPermissions()->pluck('name')->sort()->implode(',');

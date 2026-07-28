@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\DB;
 use App\Models\Router;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Auth;
 use PanelKit\Panel\Alerts\Alert;
 use PanelKit\Panel\Alerts\AlertRule;
 
@@ -18,14 +19,14 @@ use PanelKit\Panel\Alerts\AlertRule;
  * The bell: two streams that are deliberately not one list.
  *
  *   ALERTS are recomputed here on every request from the current data. They
- *   have no stored row, no read state and no per-user copy — they are simply
+ *   have no stored row, no read state and no per-user copy - they are simply
  *   what is true right now, and they vanish when the condition clears.
  *
  *   NOTIFICATIONS are rows addressed to the acting user. They persist, they
  *   carry read state, and they are deleted only when the user says so.
  *
  * MERGING THEM WOULD BREAK BOTH. An alert cannot be "marked read" without
- * lying — the routers are still offline — and a notification cannot be
+ * lying - the routers are still offline - and a notification cannot be
  * recomputed, because the event it records is over. The unread COUNT on the
  * badge is notifications only, for the same reason: a badge that never clears
  * while a condition persists trains people to ignore the badge.
@@ -60,7 +61,7 @@ final class NotificationController extends Controller
         return response()->json([
             'alerts' => AlertRule::resolveAll($this->rules()),
             'notifications' => $notifications,
-            // The badge counts UNREAD NOTIFICATIONS only — see the class note.
+            // The badge counts UNREAD NOTIFICATIONS only - see the class note.
             'unread' => $user->unreadNotifications()->count(),
         ]);
     }
@@ -91,17 +92,61 @@ final class NotificationController extends Controller
     }
 
     /**
+     * How many matches a rule will count before it stops caring.
+     *
+     * A BELL IS NOT A REPORT. "84,846 subscribers are past their expiry date"
+     * and "500+ subscribers are past their expiry date" prompt exactly the same
+     * action, and only one of them costs a fifth of a second every time somebody
+     * opens the dropdown.
+     */
+    private const CAP = 500;
+
+    /**
      * The conditions this panel watches.
      *
-     * Every rule is ONE bounded query. The bell can be opened often, so a rule
-     * that scans a large table is a rule that makes the whole panel feel slow —
-     * these all hit an index and count.
+     * THE COMMENT HERE USED TO CLAIM THESE WERE BOUNDED. They were not, and the
+     * gap between the claim and the code is the whole story: every rule reads
+     * `->count()`, which walks every matching row. On the reference estate the
+     * expiry rule matched 84,846 of them and the bell took 303 ms - sixty times
+     * the next slowest page in the panel - while issuing only eight queries, so
+     * nothing about the query count looked wrong and the resource benchmark
+     * never touched this path at all.
+     *
+     * Adding the right index took it to 185 ms and no further, because the cost
+     * was never the lookup: SQLite counts by walking, so an exact count of
+     * 84,846 rows costs 84,846 steps however good the index is. The fix is to
+     * stop asking for an exact count.
+     *
+     * `countUpTo()` is what makes the original comment true. It is the same
+     * lesson the list pages already learned when the total became deferred - a
+     * number nobody acts on precisely should not be paid for precisely.
      *
      * @return list<AlertRule>
      */
+    /**
+     * Count matches, giving up at `CAP`.
+     *
+     * `limit()` inside a subquery rather than on the count itself, because
+     * `count()` collapses the whole result to one row and a LIMIT applies to
+     * THAT - so `->limit(500)->count()` returns the true total and reads every
+     * row, which is the bug it looks like it is fixing.
+     */
+    private function countUpTo(Builder $query): int
+    {
+        return DB::query()
+            ->fromSub($query->select(DB::raw('1'))->limit(self::CAP), 'capped')
+            ->count();
+    }
+
+    /** "500+" once the cap is hit, so the label never claims more precision than was paid for. */
+    private function describeCount(int $count): string
+    {
+        return $count >= self::CAP ? self::CAP.'+' : (string) $count;
+    }
+
     private function rules(): array
     {
-        $now = new DateTimeImmutable();
+        $now = new DateTimeImmutable;
 
         return [
             AlertRule::make('routers_offline', function (): ?Alert {
@@ -139,12 +184,12 @@ final class NotificationController extends Controller
             }),
 
             AlertRule::make('expiring_soon', function () use ($now): ?Alert {
-                $count = Client::query()
+                $count = $this->countUpTo(Client::query()
                     ->whereBetween('expiry_date', [
                         $now->format('Y-m-d H:i:s'),
                         $now->modify('+7 days')->format('Y-m-d H:i:s'),
                     ])
-                    ->count();
+                    ->toBase());
 
                 if ($count === 0) {
                     return null;
@@ -153,7 +198,7 @@ final class NotificationController extends Controller
                 return Alert::make(
                     'expiring_soon',
                     Alert::WARNING,
-                    "{$count} subscriptions expire within 7 days",
+                    $this->describeCount($count).' subscriptions expire within 7 days',
                     'Renew or contact these subscribers before they lapse.',
                     '/clients',
                     $count,
@@ -161,10 +206,10 @@ final class NotificationController extends Controller
             }),
 
             AlertRule::make('lapsed', function () use ($now): ?Alert {
-                $count = Client::query()
+                $count = $this->countUpTo(Client::query()
                     ->where('status', 'active')
                     ->where('expiry_date', '<', $now->format('Y-m-d H:i:s'))
-                    ->count();
+                    ->toBase());
 
                 if ($count === 0) {
                     return null;
@@ -176,7 +221,7 @@ final class NotificationController extends Controller
                 return Alert::make(
                     'lapsed',
                     Alert::DANGER,
-                    "{$count} active subscribers are past their expiry date",
+                    $this->describeCount($count).' active subscribers are past their expiry date',
                     'These are still connected but their subscription has lapsed.',
                     '/clients?status=active',
                     $count,

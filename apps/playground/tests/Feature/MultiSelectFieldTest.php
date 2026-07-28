@@ -118,8 +118,8 @@ final class MultiSelectFieldTest extends TestCase
             'reminder_days' => [1, 'god_mode'],
         ])
             ->assertStatus(422)
-            // The error names the offending MEMBER by index — `.1`, the bad one
-            // — rather than the field as a whole, which is what tells the user
+            // The error names the offending MEMBER by index - `.1`, the bad one
+            // - rather than the field as a whole, which is what tells the user
             // which chip to remove.
             ->assertJsonValidationErrors('reminder_days.1');
     }
@@ -189,7 +189,7 @@ final class MultiSelectFieldTest extends TestCase
             'plan_id' => $plan->id,
             'router_id' => $router->id,
             'name' => "Client {$unique}",
-            'phone' => '+254' . substr((string) crc32($unique), 0, 9),
+            'phone' => '+254'.substr((string) crc32($unique), 0, 9),
             'access_code' => strtoupper(substr(md5($unique), 0, 10)),
             'status' => 'active',
             'plan_type' => 'pppoe',

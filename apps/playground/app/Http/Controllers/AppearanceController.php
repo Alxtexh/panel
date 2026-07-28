@@ -14,7 +14,7 @@ use Illuminate\Routing\Controller;
  * EVERY VALUE IS CHECKED AGAINST A LIST. These end up as CSS custom properties
  * on `<html>`, so an unvalidated value is a string the browser will happily
  * accept into a style declaration. `primary` in particular becomes part of a
- * colour value — the allow-list is what keeps this a preference endpoint rather
+ * colour value - the allow-list is what keeps this a preference endpoint rather
  * than a way to inject style into every page the user loads.
  *
  * FONT SIZE IS CLAMPED, not merely typed. An integer is still an integer at
@@ -56,13 +56,13 @@ final class AppearanceController extends Controller
     public function update(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'theme' => ['sometimes', 'string', 'in:' . implode(',', self::THEMES)],
-            'density' => ['sometimes', 'string', 'in:' . implode(',', self::DENSITIES)],
-            'sidebarSide' => ['sometimes', 'string', 'in:' . implode(',', self::SIDES)],
-            'cardStyle' => ['sometimes', 'string', 'in:' . implode(',', self::CARD_STYLES)],
-            'primary' => ['sometimes', 'string', 'in:' . implode(',', self::PRIMARIES)],
-            'surface' => ['sometimes', 'string', 'in:' . implode(',', self::SURFACES)],
-            'fontSize' => ['sometimes', 'integer', 'between:' . self::FONT_MIN . ',' . self::FONT_MAX],
+            'theme' => ['sometimes', 'string', 'in:'.implode(',', self::THEMES)],
+            'density' => ['sometimes', 'string', 'in:'.implode(',', self::DENSITIES)],
+            'sidebarSide' => ['sometimes', 'string', 'in:'.implode(',', self::SIDES)],
+            'cardStyle' => ['sometimes', 'string', 'in:'.implode(',', self::CARD_STYLES)],
+            'primary' => ['sometimes', 'string', 'in:'.implode(',', self::PRIMARIES)],
+            'surface' => ['sometimes', 'string', 'in:'.implode(',', self::SURFACES)],
+            'fontSize' => ['sometimes', 'integer', 'between:'.self::FONT_MIN.','.self::FONT_MAX],
         ]);
 
         $user = $request->user();

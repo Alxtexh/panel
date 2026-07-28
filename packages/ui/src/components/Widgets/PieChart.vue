@@ -3,21 +3,21 @@
  * A pie or doughnut chart with a legend.
  *
  * TWO ARC CASES, and the second one is the trap: an arc whose start and end
- * points are identical draws NOTHING. A single-category result — every client
- * on one plan, which is the normal state of a new tenant — is exactly 100%, so
+ * points are identical draws NOTHING. A single-category result - every client
+ * on one plan, which is the normal state of a new tenant - is exactly 100%, so
  * the naive path renders an empty card on the most ordinary data there is. A
  * full circle is drawn as a circle, not as an arc.
  *
  * SLICE COLOURS COME FROM THEME TOKENS, so a tenant brand or a user's chosen
  * primary applies without recompiling. Beyond the palette length, slices reuse
- * colours at reduced opacity rather than repeating them outright — a repeated
+ * colours at reduced opacity rather than repeating them outright - a repeated
  * colour makes two legend rows indistinguishable.
  *
  * THE TOOLTIP IS RENDERED, NOT AN SVG <title>. A native title tooltip is the
  * browser's, which means it appears after a delay the page cannot control, in
  * the operating system's styling, and never on touch. For the one chart type
- * whose values are otherwise unreadable — a slice states a proportion, not a
- * number — that is the difference between a chart you can query and a chart you
+ * whose values are otherwise unreadable - a slice states a proportion, not a
+ * number - that is the difference between a chart you can query and a chart you
  * can only look at.
  *
  * HOVER IS SHARED WITH THE LEGEND. Pointing at a legend row highlights its
@@ -69,7 +69,9 @@ function opacity(index: number): number {
 }
 
 const slices = computed(() => {
-    if (total.value <= 0) return []
+    if (total.value <= 0) {
+        return []
+    }
 
     const c = size.value / 2
     let angle = -Math.PI / 2 // Start at twelve o'clock, as every pie chart does.
@@ -91,10 +93,7 @@ const slices = computed(() => {
              * The 100% case. An arc from a point back to itself is degenerate
              * and SVG draws nothing, so it is expressed as two half circles.
              */
-            path:
-                share >= 0.9999
-                    ? fullRing(c)
-                    : wedge(c, start, end, radius.value, inner.value),
+            path: share >= 0.9999 ? fullRing(c) : wedge(c, start, end, radius.value, inner.value),
         }
     })
 })
@@ -130,7 +129,9 @@ function fullRing(c: number): string {
         'Z',
     ]
 
-    if (h <= 0) return ring.join(' ')
+    if (h <= 0) {
+        return ring.join(' ')
+    }
 
     return [
         ...ring,
@@ -215,7 +216,9 @@ const percent = (share: number) => `${(share * 100).toFixed(share < 0.01 ? 2 : 0
                 />
                 <span class="min-w-0 flex-1 truncate capitalize">{{ slice.label }}</span>
                 <span class="tabular-nums font-medium">{{ format(slice.value) }}</span>
-                <span class="text-muted-foreground w-9 text-right tabular-nums">{{ percent(slice.share) }}</span>
+                <span class="text-muted-foreground w-9 text-right tabular-nums">{{
+                    percent(slice.share)
+                }}</span>
             </li>
         </ul>
 
@@ -224,7 +227,9 @@ const percent = (share: number) => `${(share * 100).toFixed(share < 0.01 ? 2 : 0
             v-if="hover !== null && type === 'pie'"
             class="bg-popover pointer-events-none absolute top-2 left-2 rounded-lg border px-2.5 py-1.5 shadow-lg"
         >
-            <p class="text-muted-foreground text-[11px] capitalize">{{ slices[hover].label }}</p>
+            <p class="text-muted-foreground text-[11px] capitalize">
+                {{ slices[hover].label }}
+            </p>
             <p class="text-sm font-semibold tabular-nums">
                 {{ format(slices[hover].value) }}
                 <span class="text-muted-foreground text-xs font-normal">

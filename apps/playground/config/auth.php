@@ -63,7 +63,20 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            /*
+             * `panel-tenant`, not `eloquent`.
+             *
+             * `users.email` is unique PER TENANT now, so an email alone no
+             * longer identifies anybody - the plain Eloquent provider would
+             * match whichever row the database returned first, which on a
+             * per-tenant login page means the person typing into one
+             * organisation's form can be matched against another's account with
+             * the same address.
+             *
+             * The driver adds a tenant constraint and leaves password
+             * verification, rehashing and remember-me tokens to Laravel.
+             */
+            'driver' => 'panel-tenant',
             'model' => env('AUTH_MODEL', User::class),
         ],
 

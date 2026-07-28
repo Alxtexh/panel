@@ -7,7 +7,7 @@
  * metric say which direction is healthy, and the colour follows the metric
  * rather than the arithmetic.
  *
- * A NULL PERCENTAGE IS A REAL STATE, not missing data — there is no percentage
+ * A NULL PERCENTAGE IS A REAL STATE, not missing data - there is no percentage
  * increase from zero. It renders as "New" with an arrow and no figure, because
  * the alternatives are a division by zero or a fabricated 100%.
  */
@@ -26,8 +26,13 @@ const props = withDefaults(
 )
 
 const good = computed(() => {
-    if (props.direction === 'flat') return null
-    if (props.direction === 'new') return !props.inverted
+    if (props.direction === 'flat') {
+        return null
+    }
+
+    if (props.direction === 'new') {
+        return !props.inverted
+    }
 
     return props.inverted ? props.direction === 'down' : props.direction === 'up'
 })
@@ -45,8 +50,13 @@ const arrow = computed(() =>
 )
 
 const figure = computed(() => {
-    if (props.direction === 'new') return 'New'
-    if (props.percentage === null) return '—'
+    if (props.direction === 'new') {
+        return 'New'
+    }
+
+    if (props.percentage === null) {
+        return '-'
+    }
 
     return `${Math.abs(props.percentage)}%`
 })

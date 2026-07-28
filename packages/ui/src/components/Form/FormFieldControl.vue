@@ -1,17 +1,48 @@
 <script setup lang="ts">
+/*
+ * A COMMENT MUST NEVER SIT BETWEEN `v-else-if` AND `v-else` in the template
+ * below. Vue requires them to be ADJACENT siblings, and a comment node between
+ * them breaks the chain - the whole component then fails to compile, with an
+ * error naming the file and not the comment. This note lives here for that
+ * reason, and it is why the following one does too.
+ *
+ * `autocomplete="new-password"` on a password field is not a nicety. Without it
+ * the browser offers the SIGNED-IN ADMINISTRATOR's own saved credentials on a
+ * form that edits a colleague's account - so accepting the autofill silently
+ * sets somebody else's password to yours.
+ */
 /**
  * One field control.
  *
  * Extracted so the flat renderer and the recursive tree renderer share exactly
- * one implementation — two copies would drift, and the copy that drifts is
+ * one implementation - two copies would drift, and the copy that drifts is
  * always the one you are not looking at.
  *
  * Emits its value only. The parent owns state; this never mutates anything.
  */
+
+import { defineAsyncComponent, onBeforeUnmount, ref, watch } from 'vue'
+import PkMultiSelect from '../primitives/PkMultiSelect.vue'
+import PkFileUpload from './PkFileUpload.vue'
+import type { UploadedFileValue } from './PkFileUpload.vue'
+import PkKeyValue from './PkKeyValue.vue'
+import PkRichEditor from './PkRichEditor.vue'
 import type { FormField } from './types'
 
-import { onBeforeUnmount, ref, watch } from 'vue'
-import PkMultiSelect from '../primitives/PkMultiSelect.vue'
+/**
+ * Async ONLY to break a module cycle, not to defer loading.
+ *
+ * A repeater renders its children through this component, and this component
+ * renders a repeater - so a static import is circular and one of the two
+ * resolves to `undefined` at module-evaluation time, depending on which file
+ * the bundler reaches first. That failure is silent and looks like a broken
+ * field. `defineAsyncComponent` defers the resolution to render time, by which
+ * point both modules exist.
+ *
+ * The cycle is bounded: the server refuses a repeater nested inside a repeater,
+ * so the recursion is at most one level deep.
+ */
+const PkRepeater = defineAsyncComponent(() => import('./PkRepeater.vue'))
 
 const props = withDefaults(
     defineProps<{
@@ -22,11 +53,32 @@ const props = withDefaults(
         processing?: boolean
         /**
          * Supplied only for a SEARCHABLE select. The component never fetches
-         * itself — @panelkit/ui ships no HTTP client (spec §4 rule 2).
+         * itself - @panelkit/ui ships no HTTP client (spec §4 rule 2).
          */
         searchOptions?: (term: string) => Promise<{ value: any; label: string }[]>
+        /**
+         * Performs an upload for a file field. Supplied by the page for the
+         * same reason `searchOptions` is: this package ships no HTTP client.
+         */
+        upload?: (file: File, onProgress: (percent: number) => void) => Promise<UploadedFileValue>
+        discard?: (handle: string) => Promise<void>
+        /**
+         * The whole form's errors, keyed by dotted path.
+         *
+         * A repeater needs these rather than the single `error` above, because
+         * Laravel reports a child failure at `contacts.2.phone` and only the
+         * repeater knows which row that is. Every other control uses `error`.
+         */
+        errors?: Record<string, string>
+        /** Option lists for a repeater's child selects, keyed by child key. */
+        childOptions?: Record<string, { value: any; label: string }[]>
     }>(),
-    { options: () => [], processing: false },
+    {
+        options: () => [],
+        processing: false,
+        errors: () => ({}),
+        childOptions: () => ({}),
+    },
 )
 
 const emit = defineEmits<{ (e: 'change', value: unknown): void }>()
@@ -43,7 +95,9 @@ const chosenLabel = ref<string | null>(null)
 let debounce: ReturnType<typeof setTimeout> | undefined
 
 watch(term, (value) => {
-    if (!props.searchOptions) return
+    if (!props.searchOptions) {
+        return
+    }
 
     clearTimeout(debounce)
     searching.value = true
@@ -61,12 +115,15 @@ watch(term, (value) => {
 })
 
 async function openSearch() {
-    if (props.processing || props.field.disabled) return
+    if (props.processing || props.field.disabled) {
+        return
+    }
 
     open.value = true
 
     if (results.value.length === 0 && props.searchOptions) {
         searching.value = true
+
         try {
             results.value = await props.searchOptions('')
         } finally {
@@ -100,12 +157,60 @@ onBeforeUnmount(() => clearTimeout(debounce))
         <!--
             Searchable select. Options are fetched on demand rather than rendered
             inline, which is what makes a relation with 100k rows pickable at all
-            — the alternative ships 100,000 option elements to every browser.
+            - the alternative ships 100,000 option elements to every browser.
         -->
         <!-- Several values: the same token field the filters use, so "choose
              several of these" looks identical wherever it appears. -->
+        <!-- A file is uploaded ahead of the form and held as a handle, so a
+             validation error elsewhere never empties the input. -->
+        <PkFileUpload
+            v-if="field.type === 'file' && upload"
+            :model-value="(value as UploadedFileValue | null) ?? null"
+            :accept="field.accept ?? []"
+            :max-kilobytes="field.maxKilobytes ?? 10240"
+            :image="field.image ?? false"
+            :disabled="field.disabled || processing"
+            :upload="upload"
+            :discard="discard"
+            @update:model-value="(next) => emit('change', next)"
+        />
+
+        <PkRepeater
+            v-else-if="field.type === 'repeater'"
+            :model-value="(value as Record<string, unknown>[] | null) ?? null"
+            :children="field.children ?? []"
+            :field-key="field.key"
+            :item-label="field.itemLabel ?? 'Item'"
+            :min-items="field.minItems ?? null"
+            :max-items="field.maxItems ?? null"
+            :disabled="field.disabled || processing"
+            :errors="errors"
+            :child-options="childOptions"
+            @update:model-value="(next) => emit('change', next)"
+        />
+
+        <PkRichEditor
+            v-else-if="field.type === 'richtext'"
+            :model-value="(value as string | null) ?? null"
+            :toolbar="field.toolbar ?? ['bold', 'italic', 'heading', 'list', 'link']"
+            :max-length="field.maxLength ?? null"
+            :placeholder="field.placeholder ?? 'Write a note…'"
+            :disabled="field.disabled || processing"
+            @update:model-value="(next) => emit('change', next)"
+        />
+
+        <PkKeyValue
+            v-else-if="field.type === 'keyvalue'"
+            :model-value="(value as Record<string, string> | null) ?? null"
+            :key-label="field.keyLabel ?? 'Key'"
+            :value-label="field.valueLabel ?? 'Value'"
+            :max-pairs="field.maxPairs ?? null"
+            :disabled="field.disabled || processing"
+            @update:model-value="(next) => emit('change', next)"
+        />
+
         <PkMultiSelect
-            v-if="field.type === 'multiselect'"
+            v-else-if="field.type === 'multiselect'"
             :model-value="(Array.isArray(value) ? value : []) as (string | number)[]"
             :options="(options ?? []) as any"
             :disabled="field.disabled || processing"
@@ -149,8 +254,13 @@ onBeforeUnmount(() => clearTimeout(debounce))
                 />
 
                 <div class="max-h-56 overflow-y-auto p-1">
-                    <p v-if="searching" class="text-muted-foreground px-2 py-2 text-xs">Searching…</p>
-                    <p v-else-if="results.length === 0" class="text-muted-foreground px-2 py-2 text-xs">
+                    <p v-if="searching" class="text-muted-foreground px-2 py-2 text-xs">
+                        Searching…
+                    </p>
+                    <p
+                        v-else-if="results.length === 0"
+                        class="text-muted-foreground px-2 py-2 text-xs"
+                    >
                         No matches
                     </p>
                     <button
@@ -178,8 +288,10 @@ onBeforeUnmount(() => clearTimeout(debounce))
             class="border-input bg-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
             @change="emit('change', ($event.target as HTMLSelectElement).value || null)"
         >
-            <option value="">—</option>
-            <option v-for="opt in options" :key="String(opt.value)" :value="opt.value">{{ opt.label }}</option>
+            <option value="">-</option>
+            <option v-for="opt in options" :key="String(opt.value)" :value="opt.value">
+                {{ opt.label }}
+            </option>
         </select>
 
         <label v-else-if="field.type === 'toggle'" class="flex items-center gap-2 text-sm">
@@ -216,10 +328,13 @@ onBeforeUnmount(() => clearTimeout(debounce))
                       ? 'date'
                       : field.type === 'datetime'
                         ? 'datetime-local'
-                        : (field.inputType ?? 'text')
+                        : field.type === 'password'
+                          ? 'password'
+                          : (field.inputType ?? 'text')
             "
             :value="value ?? ''"
             :placeholder="field.placeholder"
+            :autocomplete="field.type === 'password' ? 'new-password' : undefined"
             :min="field.min"
             :max="field.max"
             :disabled="field.disabled || processing"
@@ -228,7 +343,9 @@ onBeforeUnmount(() => clearTimeout(debounce))
             @input="emit('change', ($event.target as HTMLInputElement).value)"
         />
 
-        <p v-if="error" class="text-destructive text-xs" role="alert">{{ error }}</p>
+        <p v-if="error" class="text-destructive text-xs" role="alert">
+            {{ error }}
+        </p>
         <p v-else-if="field.help && field.type !== 'toggle'" class="text-muted-foreground text-xs">
             {{ field.help }}
         </p>

@@ -11,7 +11,7 @@
  * inside the UI package is purged.
  *
  * That failure is silent and, worse, PARTIAL: `w-72` survived because the topbar
- * also uses it, while `grow-0`, `accent-primary` and `max-w-full` did not — so
+ * also uses it, while `grow-0`, `accent-primary` and `max-w-full` did not - so
  * the table sized itself wrongly and the selection checkboxes lost their colour
  * with no error anywhere. antipatterns.md §6.1 is this exact incident, where one
  * class in a responsive pair survived and its counterpart was purged, hiding an
@@ -192,7 +192,7 @@
  * Per-user appearance, applied at runtime by useAppearance().
  *
  * Defaults live here so the panel renders correctly before any preference is
- * read — without them the first paint has no font size at all and the page
+ * read - without them the first paint has no font size at all and the page
  * visibly reflows once localStorage is parsed.
  */
 :root {
@@ -220,4 +220,101 @@ html {
  */
 :root[data-sidebar=right] [data-slot=sidebar-wrapper] {
     flex-direction: row-reverse;
+}
+
+/*
+ * Thin, self-effacing scrollbars.
+ *
+ * The default on Linux and Windows is a wide, high-contrast bar with arrow
+ * buttons at each end - chrome designed for a document, and far too loud inside
+ * a 16rem navigation rail where it reads as a UI element rather than an
+ * affordance. In the sidebar it was competing with the links beside it.
+ *
+ * BOTH SYNTAXES, because neither is enough alone: `scrollbar-width` is the
+ * standard and is all Firefox honours, while WebKit and Blink only respond to
+ * the pseudo-elements. Shipping one gives a thin bar in half the browsers.
+ *
+ * The thumb is drawn from `--border`, so it follows the theme and the tenant's
+ * surface tint rather than being a hardcoded grey that turns invisible on a
+ * dark background - the failure mode of the obvious fix.
+ */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+    /* Inset via a transparent border, so the thumb reads as floating in the
+       track rather than filling it edge to edge. */
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
+    background-clip: content-box;
+}
+
+/* A corner between two scrollbars is a grey square nobody wants. */
+*::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/*
+ * REDUCED MOTION IS A MEDICAL SETTING, not a preference.
+ *
+ * For somebody with a vestibular disorder, a sliding drawer or a sheet that
+ * flies in from the edge can cause genuine nausea and dizziness - and this panel
+ * animates the sidebar, every dialog, every sheet and every toast. The operating
+ * system already knows; `prefers-reduced-motion` is it telling us.
+ *
+ * NEAR-ZERO RATHER THAN ZERO. `0s` makes some browsers skip transitionend
+ * events entirely, and code that waits for one then hangs - a drawer that never
+ * finishes closing. 0.01ms is imperceptible and still fires.
+ *
+ * Deliberately `!important` and deliberately last. Anything a component sets
+ * inline or through a utility has to lose to this; a single animated element
+ * that escaped is the one that causes the symptom.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/*
+ * Visible only when focused - the skip link.
+ *
+ * Every page of this panel begins with a sidebar of twenty-odd links. Without a
+ * skip link, reaching the actual content by keyboard means tabbing through all
+ * of them, on every single navigation. It is the cheapest accessibility win
+ * there is and it is invisible to everybody who does not need it.
+ */
+.pk-skip-link {
+    position: absolute;
+    left: 0.5rem;
+    top: 0.5rem;
+    z-index: 100;
+    translate: 0 -200%;
+    transition: translate 150ms;
+}
+
+.pk-skip-link:focus-visible {
+    translate: 0 0;
 }

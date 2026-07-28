@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schema;
  * WHY THIS COLUMN EXISTS. The preference lived solely in localStorage, which is
  * scoped to one browser profile on one machine. Signing into the same account
  * from a second browser produced a different theme, because the second browser
- * had never been told — nothing was broken, the setting simply had no way to
+ * had never been told - nothing was broken, the setting simply had no way to
  * travel with the account.
  *
  * JSON rather than seven columns: it is a small bag of display settings read
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Schema;
  * another key every time a setting is added. Seven columns would mean a
  * migration per preference for no benefit.
  *
- * NOT INDEXED, deliberately — nothing ever searches by theme.
+ * NOT INDEXED, deliberately - nothing ever searches by theme.
  */
 return new class extends Migration
 {

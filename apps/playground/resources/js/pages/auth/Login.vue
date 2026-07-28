@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
+import TurnstileField from '@/components/TurnstileField.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -89,6 +90,13 @@ defineProps<{
                     <span>Remember me</span>
                 </Label>
             </div>
+
+            <!-- Renders nothing when Turnstile is off; the server refuses
+
+                 without a token either way. -->
+
+            <TurnstileField name="cf-turnstile-response" />
+
 
             <Button
                 type="submit"

@@ -18,7 +18,7 @@ use Illuminate\Http\Request;
  * Livewire cost model the whole project exists to avoid (spec §8). This returns
  * the smallest possible payload and nothing else.
  *
- * Static pages are NOT searched here — the client already has the nav list and
+ * Static pages are NOT searched here - the client already has the nav list and
  * filters it locally in the same frame, so page results appear with zero network
  * latency. Only records need the server.
  *
@@ -57,11 +57,11 @@ final class SearchController extends Controller
     {
         // Prefix match, not `%term%`. A leading wildcard cannot use an index and
         // turns every keystroke into a full scan of 500k rows.
-        $prefix = str_replace(['%', '_'], ['\%', '\_'], $term) . '%';
+        $prefix = str_replace(['%', '_'], ['\%', '\_'], $term).'%';
 
         // Tenant scoping comes from the global scope on the model, which
         // toBase() applies before dropping to the query builder. A palette that
-        // searched across tenants would be the worst possible leak — it is the
+        // searched across tenants would be the worst possible leak - it is the
         // one surface a user points at arbitrary strings.
         $rows = Client::query()
             ->toBase()
@@ -81,10 +81,10 @@ final class SearchController extends Controller
         return [
             'label' => 'Clients',
             'items' => $rows->map(fn (object $row): array => [
-                'id' => 'client-' . $row->id,
+                'id' => 'client-'.$row->id,
                 'title' => $row->name,
-                'subtitle' => $row->access_code . ' · ' . $row->status,
-                'href' => '/clients?search=' . urlencode($row->access_code),
+                'subtitle' => $row->access_code.' · '.$row->status,
+                'href' => '/clients?search='.urlencode($row->access_code),
             ])->all(),
         ];
     }
@@ -94,7 +94,7 @@ final class SearchController extends Controller
      */
     private function routers(string $term): ?array
     {
-        $prefix = str_replace(['%', '_'], ['\%', '\_'], $term) . '%';
+        $prefix = str_replace(['%', '_'], ['\%', '\_'], $term).'%';
 
         $rows = Router::query()
             ->toBase()
@@ -112,10 +112,10 @@ final class SearchController extends Controller
         return [
             'label' => 'Routers',
             'items' => $rows->map(fn (object $row): array => [
-                'id' => 'router-' . $row->id,
+                'id' => 'router-'.$row->id,
                 'title' => $row->name,
-                'subtitle' => $row->ip_address . ' · ' . $row->status,
-                'href' => '/routers?search=' . urlencode($row->name),
+                'subtitle' => $row->ip_address.' · '.$row->status,
+                'href' => '/routers?search='.urlencode($row->name),
             ])->all(),
         ];
     }
@@ -125,7 +125,7 @@ final class SearchController extends Controller
      */
     private function plans(string $term): ?array
     {
-        $prefix = str_replace(['%', '_'], ['\%', '\_'], $term) . '%';
+        $prefix = str_replace(['%', '_'], ['\%', '\_'], $term).'%';
 
         $rows = Plan::query()
             ->toBase()
@@ -141,10 +141,10 @@ final class SearchController extends Controller
         return [
             'label' => 'Plans',
             'items' => $rows->map(fn (object $row): array => [
-                'id' => 'plan-' . $row->id,
+                'id' => 'plan-'.$row->id,
                 'title' => $row->name,
-                'subtitle' => $row->speed_mbps . ' Mbps · ' . ($row->is_active ? 'active' : 'inactive'),
-                'href' => '/plans?search=' . urlencode($row->name),
+                'subtitle' => $row->speed_mbps.' Mbps · '.($row->is_active ? 'active' : 'inactive'),
+                'href' => '/plans?search='.urlencode($row->name),
             ])->all(),
         ];
     }

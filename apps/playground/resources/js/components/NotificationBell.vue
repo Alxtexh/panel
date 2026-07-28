@@ -5,14 +5,14 @@
  * TWO TABS, NOT ONE LIST, because they answer different questions and support
  * different actions:
  *
- *   ALERTS  — what is wrong RIGHT NOW. Recomputed server-side on every open,
+ *   ALERTS  - what is wrong RIGHT NOW. Recomputed server-side on every open,
  *             no read state, nothing to dismiss. You clear an alert by fixing
  *             the condition.
- *   INBOX   — what HAPPENED, addressed to you. Persistent, has read state, and
+ *   INBOX   - what HAPPENED, addressed to you. Persistent, has read state, and
  *             you delete it when you are done with it.
  *
  * THE BADGE COUNTS UNREAD NOTIFICATIONS ONLY. Counting alerts too would leave
- * a badge lit for as long as a condition persists — which trains people to
+ * a badge lit for as long as a condition persists - which trains people to
  * ignore the badge, and then they miss the notification that mattered.
  *
  * IT FETCHES ONLY WHEN OPENED. A bell that polls in the background costs a

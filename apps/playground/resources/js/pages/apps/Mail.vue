@@ -1,32 +1,36 @@
 <script setup lang="ts">
 /**
- * The mailbox: folder rail, message list, reading pane.
+ * The mailbox: a folder rail and a table of threads.
  *
- * THREE PANES ON DESKTOP, ONE AT A TIME ON MOBILE. A reading pane beside a list
- * needs roughly 900px before both are usable; below that the list becomes a
- * column of truncated fragments. So narrow screens show the list, and opening a
- * message replaces it — which is what every mail client on a phone does.
+ * NO READING PANE, and that is the correction. The first cut put a pane beside
+ * the list, which left the list about 380px wide - enough for a sender and a
+ * truncated subject and nothing else. Sender, time, subject, preview and label
+ * are what make a mailbox scannable, and none of them fit. So the list gets the
+ * full width and a thread opens as its own page, which is also what makes a
+ * thread linkable.
  *
- * NOTHING HERE IS DEFERRED. Deferral is for aggregates that would block first
- * paint; a 25-row indexed list and a single row by primary key are not that, and
- * deferring them actively broke this screen — navigation preserves state, so the
- * component never remounts and the deferred follow-up never fires.
+ * IT LISTS THREADS, NOT MESSAGES. A message and its reply share a subject; two
+ * rows for one conversation is the artefact of a flat list, not a mailbox.
  *
- * SELECTION LIVES IN THE URL, so a message is linkable and survives a refresh —
- * the same reasoning as the table filters.
+ * SELECTION AND FOLDER LIVE IN THE URL, so a view survives a refresh and the
+ * back button does what it looks like it does.
  */
-import { Head, router, usePage } from '@inertiajs/vue3'
+import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import {
     Archive,
+    FileText,
     Inbox,
     Mail as MailIcon,
     Paperclip,
+    RefreshCw,
     Search,
     Send,
     Star,
+    Tag,
     Trash2,
     TriangleAlert,
+    Users,
 } from '@lucide/vue'
 
 interface Folder {
@@ -36,46 +40,95 @@ interface Folder {
     total: number
 }
 
+interface Category {
+    key: string
+    label: string
+    total: number
+}
+
 interface Row {
     id: number
     from: string
     email: string
     subject: string
     preview: string
+    category: string | null
     read: boolean
     starred: boolean
+    important: boolean
     attachment: boolean
+    count: number
     at: string | null
 }
 
 const props = defineProps<{
     folder: string
+    category: string | null
     search: string
     folders: Folder[]
-    selectedId: number | null
+    categories: Category[]
+    messages: { rows: Row[]; total: number }
 }>()
 
-defineOptions({ layout: { breadcrumbs: [{ title: 'Mail', href: '/apps/mail' }] } })
+defineOptions({
+    layout: { breadcrumbs: [{ title: 'Mail', href: '/apps/mail' }] },
+})
 
-const page = usePage()
-
-const messages = computed(
-    () => ((page.props.messages as { rows: Row[] } | undefined)?.rows ?? []) as Row[],
-)
-const message = computed(() => page.props.message as Record<string, any> | null)
+const rows = computed(() => props.messages.rows)
 
 const query = ref(props.search)
+const selected = ref<Set<number>>(new Set())
 
 const ICONS: Record<string, typeof Inbox> = {
     inbox: Inbox,
     starred: Star,
+    important: Tag,
     sent: Send,
     archived: Archive,
     spam: TriangleAlert,
     trash: Trash2,
 }
 
-/** Navigation is a visit, so back/forward work and a message is linkable. */
+const CATEGORY_ICONS: Record<string, typeof Users> = {
+    Security: TriangleAlert,
+    Support: Users,
+    Finance: FileText,
+    Sales: Tag,
+    Update: RefreshCw,
+    System: RefreshCw,
+    HR: Users,
+}
+
+/**
+ * A label needs to be distinguishable at a glance, not merely present. The map
+ * is explicit rather than hashed from the string, because a hash gives Finance
+ * and Security the same colour often enough to matter and there is no way to
+ * fix it when it does.
+ */
+const CATEGORY_TONE: Record<string, string> = {
+    Security: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+    Support: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+    Finance: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    Sales: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+    Update: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    System: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
+    HR: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
+}
+
+const allSelected = computed(
+    () => rows.value.length > 0 && selected.value.size === rows.value.length,
+)
+
+function initials(name: string): string {
+    return name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]!.toUpperCase())
+        .join('')
+}
+
+/** Navigation is a visit, so back/forward work and a view is linkable. */
 function go(params: Record<string, string | number | undefined>) {
     const current = Object.fromEntries(new URLSearchParams(window.location.search))
 
@@ -85,21 +138,60 @@ function go(params: Record<string, string | number | undefined>) {
         if (value !== undefined && value !== '' && value !== null) next[key] = String(value)
     }
 
-    router.get('/apps/mail', next, { preserveState: true, preserveScroll: true, replace: true })
+    selected.value = new Set()
+
+    router.get('/apps/mail', next, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    })
 }
 
 function openFolder(key: string) {
-    // Clear the open message: an id from the inbox is not in the trash view.
-    go({ folder: key, id: undefined })
+    // A category narrows a folder, so switching folder clears it rather than
+    // silently carrying a filter into a view that may have nothing under it.
+    go({ folder: key, category: undefined })
 }
 
-function openMessage(row: Row) {
-    row.read = true
-    go({ id: row.id })
+function openCategory(key: string) {
+    go({ category: props.category === key ? undefined : key })
 }
 
 function submitSearch() {
-    go({ q: query.value || undefined, id: undefined })
+    go({ q: query.value || undefined })
+}
+
+/**
+ * THE WHOLE ROW OPENS THE THREAD.
+ *
+ * The subject and the sender were the only links, so most of a wide row was
+ * dead space - the pointer says "clickable" over two words out of a hundred
+ * pixels, and everything else silently does nothing.
+ *
+ * The anchors STAY rather than being replaced by this handler: a real link is
+ * what makes middle-click, ⌘-click and "open in new tab" work, and none of that
+ * survives being turned into a click listener. So the row is a convenience on
+ * top of the links, and it steps aside when the click was already on one.
+ */
+function openRow(event: MouseEvent, row: Row) {
+    const target = event.target as HTMLElement | null
+
+    // A click that landed on a link, the checkbox, or the star has already been
+    // handled by the thing it landed on.
+    if (target?.closest('a, button, input')) return
+
+    router.visit(`/apps/mail/${row.id}`)
+}
+
+function toggleAll() {
+    selected.value = allSelected.value ? new Set() : new Set(rows.value.map((r) => r.id))
+}
+
+function toggle(id: number) {
+    const next = new Set(selected.value)
+
+    next.has(id) ? next.delete(id) : next.add(id)
+    selected.value = next
 }
 
 function csrf(): string {
@@ -114,11 +206,15 @@ function csrf(): string {
  * A star toggling half a second after the click reads as a broken button; the
  * request is what makes it true, the local flip is what makes it feel true.
  */
-async function act(row: Row, action: string, folder?: string) {
-    if (action === 'star') row.starred = true
-    if (action === 'unstar') row.starred = false
+async function act(id: number, action: string, folder?: string) {
+    const row = rows.value.find((r) => r.id === id)
 
-    await fetch(`/apps/mail/${row.id}`, {
+    if (row) {
+        if (action === 'star') row.starred = true
+        if (action === 'unstar') row.starred = false
+    }
+
+    await fetch(`/apps/mail/${id}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -131,153 +227,272 @@ async function act(row: Row, action: string, folder?: string) {
     })
 
     // A move changes which folder the row belongs to, so the list and the
-    // counts both have to catch up; a star does not.
-    if (action === 'move') go({ id: undefined })
-    else router.reload({ only: ['folders'] })
+    // counts both have to catch up; a star only changes a count.
+    if (action === 'move') go({})
+    else router.reload({ only: ['folders', 'categories'] })
+}
+
+async function moveSelected(folder: string) {
+    await Promise.all([...selected.value].map((id) => act(id, 'move', folder)))
 }
 </script>
 
 <template>
     <Head title="Mail" />
 
-    <div class="flex h-full min-h-0 w-full">
-        <!-- Folder rail. Hidden on mobile, where the list is the whole screen. -->
-        <aside class="hidden w-48 shrink-0 flex-col gap-1 border-r p-3 md:flex">
-            <button
-                type="button"
-                class="bg-primary text-primary-foreground mb-2 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium"
+    <div class="flex h-full min-h-0 w-full overflow-hidden rounded-xl border bg-card">
+        <!-- The rail. Hidden on mobile, where the list is the whole screen. -->
+        <aside class="hidden w-56 shrink-0 flex-col gap-1 overflow-y-auto border-r p-4 md:flex">
+            <h2 class="mb-3 px-2 text-base font-semibold">Mails</h2>
+
+            <p
+                class="px-2 pb-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
             >
-                <MailIcon class="size-4" />
-                Compose
-            </button>
+                Menu
+            </p>
 
             <button
                 v-for="f in folders"
                 :key="f.key"
                 type="button"
-                class="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors"
-                :class="folder === f.key ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/50'"
+                class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors"
+                :class="
+                    folder === f.key
+                        ? 'bg-primary font-medium text-primary-foreground'
+                        : 'text-muted-foreground hover:bg-accent/60'
+                "
                 @click="openFolder(f.key)"
             >
                 <component :is="ICONS[f.key] ?? Inbox" class="size-4 shrink-0" />
                 <span class="min-w-0 flex-1 truncate text-left">{{ f.label }}</span>
-                <span v-if="f.unread > 0" class="bg-primary text-primary-foreground rounded-full px-1.5 text-[10px] font-semibold">
+                <span
+                    v-if="f.unread > 0"
+                    class="rounded-full px-1.5 text-[10px] font-semibold"
+                    :class="folder === f.key ? 'bg-primary-foreground/20' : 'bg-accent'"
+                >
                     {{ f.unread }}
                 </span>
             </button>
+
+            <template v-if="categories.length">
+                <hr class="my-3" />
+
+                <p
+                    class="px-2 pb-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
+                >
+                    Categories
+                </p>
+
+                <button
+                    v-for="c in categories"
+                    :key="c.key"
+                    type="button"
+                    class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors"
+                    :class="
+                        category === c.key
+                            ? 'bg-accent font-medium text-foreground'
+                            : 'text-muted-foreground hover:bg-accent/60'
+                    "
+                    @click="openCategory(c.key)"
+                >
+                    <component :is="CATEGORY_ICONS[c.key] ?? Tag" class="size-4 shrink-0" />
+                    <span class="min-w-0 flex-1 truncate text-left">{{ c.label }}</span>
+                    <span class="text-[10px] font-semibold text-muted-foreground">{{
+                        c.total
+                    }}</span>
+                </button>
+            </template>
         </aside>
 
-        <!-- Message list. Replaced by the reading pane on mobile. -->
-        <section
-            class="flex min-w-0 flex-col border-r md:w-96 md:shrink-0"
-            :class="selectedId ? 'hidden md:flex' : 'flex flex-1'"
-        >
-            <div class="flex items-center gap-2 border-b p-3">
-                <div class="relative flex-1">
-                    <Search class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+        <!-- The list. -->
+        <section class="flex min-w-0 flex-1 flex-col">
+            <div class="flex items-center gap-3 p-4">
+                <div class="relative min-w-0 flex-1">
+                    <Search
+                        class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                    />
                     <input
                         v-model="query"
                         type="search"
-                        class="bg-background focus:ring-ring w-full rounded-md border py-1.5 pr-2 pl-8 text-sm focus:ring-2 focus:outline-none"
-                        placeholder="Search mail…"
+                        class="w-full rounded-lg border bg-background py-2 pr-3 pl-9 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
+                        placeholder="Search mail"
                         @keydown.enter="submitSearch"
                     />
                 </div>
+
+                <button
+                    type="button"
+                    class="flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground"
+                >
+                    <MailIcon class="size-4" />
+                    <span class="hidden sm:inline">Compose New</span>
+                </button>
             </div>
-                    <div v-if="messages.length === 0" class="text-muted-foreground p-8 text-center text-sm">
-                        Nothing in {{ folder }}.
-                    </div>
 
-                    <ul v-else class="min-h-0 flex-1 divide-y overflow-y-auto">
-                        <li v-for="row in messages" :key="row.id">
-                            <button
-                                type="button"
-                                class="hover:bg-accent/40 flex w-full items-start gap-2 p-3 text-left transition-colors"
-                                :class="selectedId === row.id ? 'bg-accent/60' : ''"
-                                @click="openMessage(row)"
-                            >
-                                <span
-                                    class="mt-1 shrink-0"
-                                    role="button"
-                                    :aria-label="row.starred ? 'Unstar' : 'Star'"
-                                    @click.stop="act(row, row.starred ? 'unstar' : 'star')"
-                                >
-                                    <Star
-                                        class="size-4"
-                                        :class="row.starred ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'"
-                                    />
-                                </span>
+            <!--
+                Bulk actions replace the header row rather than sitting beside
+                it: a toolbar that is present but inert most of the time is what
+                trains people to stop reading it.
+            -->
+            <div
+                v-if="selected.size"
+                class="flex items-center gap-2 border-y bg-accent/40 px-4 py-2 text-sm"
+            >
+                <span class="text-muted-foreground">{{ selected.size }} selected</span>
+                <span class="flex-1"></span>
+                <button
+                    type="button"
+                    class="rounded-md px-2 py-1 hover:bg-accent"
+                    @click="moveSelected('archived')"
+                >
+                    Archive
+                </button>
+                <button
+                    type="button"
+                    class="rounded-md px-2 py-1 hover:bg-accent"
+                    @click="moveSelected('spam')"
+                >
+                    Spam
+                </button>
+                <button
+                    type="button"
+                    class="rounded-md px-2 py-1 hover:bg-accent hover:text-destructive"
+                    @click="moveSelected('trash')"
+                >
+                    Delete
+                </button>
+            </div>
 
-                                <span class="min-w-0 flex-1">
-                                    <span class="flex items-center justify-between gap-2">
-                                        <span class="truncate text-sm" :class="row.read ? '' : 'font-semibold'">
-                                            {{ row.from }}
+            <div v-if="rows.length === 0" class="p-12 text-center text-sm text-muted-foreground">
+                Nothing in {{ category ?? folder }}.
+            </div>
+
+            <div v-else class="min-h-0 flex-1 overflow-y-auto">
+                <table class="w-full table-fixed border-collapse text-sm">
+                    <thead class="sticky top-0 z-10 text-muted-foreground">
+                        <tr class="border-y bg-card">
+                            <th class="w-10 py-2.5 pl-4">
+                                <input
+                                    type="checkbox"
+                                    class="size-4 align-middle"
+                                    aria-label="Select all"
+                                    :checked="allSelected"
+                                    @change="toggleAll"
+                                />
+                            </th>
+                            <th class="w-44 py-2.5 pl-3 text-left font-medium">From</th>
+                            <th class="w-20 py-2.5 text-left font-medium">Time</th>
+                            <th class="py-2.5 pl-3 text-left font-medium">Message</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y">
+                        <tr
+                            v-for="row in rows"
+                            :key="row.id"
+                            class="group cursor-pointer transition-colors hover:bg-accent/40"
+                            :class="selected.has(row.id) ? 'bg-accent/50' : ''"
+                            @click="openRow($event, row)"
+                        >
+                            <td class="py-3 pl-4 align-top">
+                                <input
+                                    type="checkbox"
+                                    class="size-4 align-middle"
+                                    :aria-label="`Select ${row.subject}`"
+                                    :checked="selected.has(row.id)"
+                                    @change="toggle(row.id)"
+                                />
+                            </td>
+
+                            <td class="py-3 pl-3 align-top">
+                                <div class="flex items-start gap-2.5">
+                                    <span class="relative shrink-0">
+                                        <span
+                                            class="flex size-8 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-muted-foreground"
+                                        >
+                                            {{ initials(row.from) }}
                                         </span>
-                                        <span class="text-muted-foreground shrink-0 text-[11px]">{{ row.at }}</span>
+                                        <!-- The unread dot rides the avatar, so
+                                             it never competes with the subject. -->
+                                        <span
+                                            v-if="!row.read"
+                                            class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-primary ring-2 ring-card"
+                                        ></span>
                                     </span>
-                                    <span class="block truncate text-sm" :class="row.read ? 'text-muted-foreground' : 'font-medium'">
-                                        {{ row.subject }}
+
+                                    <span class="min-w-0">
+                                        <Link
+                                            :href="`/apps/mail/${row.id}`"
+                                            class="block truncate hover:underline"
+                                            :class="row.read ? '' : 'font-semibold'"
+                                        >
+                                            {{ row.from }}
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            class="mt-0.5 flex items-center gap-1"
+                                            :aria-label="row.starred ? 'Unstar' : 'Star'"
+                                            @click="act(row.id, row.starred ? 'unstar' : 'star')"
+                                        >
+                                            <Star
+                                                class="size-3.5"
+                                                :class="
+                                                    row.starred
+                                                        ? 'fill-amber-400 text-amber-400'
+                                                        : 'text-muted-foreground/50'
+                                                "
+                                            />
+                                            <span
+                                                v-if="row.count > 1"
+                                                class="text-[11px] text-muted-foreground"
+                                            >
+                                                {{ row.count }}
+                                            </span>
+                                        </button>
                                     </span>
-                                    <span class="text-muted-foreground flex items-center gap-1 truncate text-xs">
-                                        <Paperclip v-if="row.attachment" class="size-3 shrink-0" />
-                                        {{ row.preview }}
+                                </div>
+                            </td>
+
+                            <td
+                                class="py-3 align-top text-xs whitespace-nowrap text-muted-foreground"
+                            >
+                                {{ row.at }}
+                            </td>
+
+                            <td class="py-3 pr-4 pl-3 align-top">
+                                <div class="flex items-start gap-3">
+                                    <Link
+                                        :href="`/apps/mail/${row.id}`"
+                                        class="min-w-0 flex-1 truncate"
+                                    >
+                                        <span :class="row.read ? '' : 'font-semibold'">{{
+                                            row.subject
+                                        }}</span>
+                                        <span class="text-muted-foreground">
+                                            <Paperclip
+                                                v-if="row.attachment"
+                                                class="mx-1 inline size-3"
+                                            />
+                                            {{ row.preview }}
+                                        </span>
+                                    </Link>
+
+                                    <span
+                                        v-if="row.category"
+                                        class="shrink-0 rounded-md px-2 py-0.5 text-[11px] font-medium"
+                                        :class="
+                                            CATEGORY_TONE[row.category] ??
+                                            'bg-accent text-muted-foreground'
+                                        "
+                                    >
+                                        {{ row.category }}
                                     </span>
-                                </span>
-                            </button>
-                        </li>
-                    </ul>
-        </section>
-
-        <!-- Reading pane. -->
-        <section class="flex min-w-0 flex-1 flex-col" :class="selectedId ? 'flex' : 'hidden md:flex'">
-                    <div
-                        v-if="!message"
-                        class="text-muted-foreground flex flex-1 items-center justify-center p-8 text-sm"
-                    >
-                        Select a message to read it.
-                    </div>
-
-                    <template v-else>
-                        <header class="flex items-start justify-between gap-3 border-b p-4">
-                            <div class="min-w-0">
-                                <h1 class="truncate text-base font-semibold">{{ message.subject }}</h1>
-                                <p class="text-muted-foreground text-xs">
-                                    {{ message.from }} &lt;{{ message.email }}&gt; · {{ message.at }}
-                                </p>
-                            </div>
-
-                            <div class="flex shrink-0 items-center gap-1">
-                                <button
-                                    type="button"
-                                    class="hover:bg-accent rounded-md p-1.5"
-                                    aria-label="Archive"
-                                    @click="act({ id: message.id } as Row, 'move', 'archived')"
-                                >
-                                    <Archive class="size-4" />
-                                </button>
-                                <button
-                                    type="button"
-                                    class="hover:bg-accent rounded-md p-1.5"
-                                    aria-label="Move to spam"
-                                    @click="act({ id: message.id } as Row, 'move', 'spam')"
-                                >
-                                    <TriangleAlert class="size-4" />
-                                </button>
-                                <button
-                                    type="button"
-                                    class="hover:bg-accent hover:text-destructive rounded-md p-1.5"
-                                    aria-label="Move to trash"
-                                    @click="act({ id: message.id } as Row, 'move', 'trash')"
-                                >
-                                    <Trash2 class="size-4" />
-                                </button>
-                            </div>
-                        </header>
-
-                        <div class="min-h-0 flex-1 overflow-y-auto p-4">
-                            <p class="text-sm leading-relaxed whitespace-pre-line">{{ message.body }}</p>
-                        </div>
-                    </template>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
     </div>
 </template>

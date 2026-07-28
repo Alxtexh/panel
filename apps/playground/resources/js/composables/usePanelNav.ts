@@ -1,6 +1,28 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { HelpCircle, Info, LayoutGrid, Mail, MessageCircleQuestion, MessagesSquare, Package, Router as RouterIcon, Sparkles, Users } from '@lucide/vue';
+import {
+    Activity,
+    BookOpen,
+    FileQuestion,
+    Gauge,
+    HelpCircle,
+    Info,
+    KeyRound,
+    LayoutGrid,
+    Lock,
+    Mail,
+    MessageCircleQuestion,
+    MessagesSquare,
+    Package,
+    Router as RouterIcon,
+    ServerCrash,
+    ShieldAlert,
+    Smartphone,
+    Sparkles,
+    TimerOff,
+    Users,
+    Wrench,
+} from '@lucide/vue';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
@@ -12,19 +34,50 @@ import type { NavItem } from '@/types';
  * group-building into each is how a resource ends up visible in two layouts and
  * missing from the third, with nothing failing.
  *
- * Items come from the resource registry in the initial payload and are already
- * permission-filtered server-side, so a resource the user cannot view never
- * reaches the client at all — the client never decides who sees what.
+ * NOTHING IS DECLARED HERE ANY MORE. Both halves of the menu arrive as shared
+ * props: `panelNav` from the resource registry, `panelPages` from
+ * `App\Panel\Pages`. Everything that is not a resource used to be a hardcoded
+ * array in this file, and that is exactly how finished screens - backups, logs,
+ * the connections workspace - ended up reachable from nowhere, silently, with
+ * their own tests still green. Moving the declaration to the server put it
+ * somewhere `NavigationCoverageTest` can see it, which is the entire point.
+ *
+ * Resources are permission-filtered server-side, so one the user may not open
+ * never reaches the client at all - the client never decides who sees what.
+ * Declared pages carry no ability, because the guarded screens are reached from
+ * the account menu instead and are deliberately not repeated here.
  */
 
 const ICONS: Record<string, typeof LayoutGrid> = {
+    // Resource icons.
     users: Users,
     router: RouterIcon,
     package: Package,
+    activity: Activity,
+    // Page icons.
+    'book-open': BookOpen,
+    chat: MessagesSquare,
+    faq: MessageCircleQuestion,
+    'file-question': FileQuestion,
+    gauge: Gauge,
     help: HelpCircle,
     info: Info,
-    faq: MessageCircleQuestion,
+    key: KeyRound,
+    lock: Lock,
+    mail: Mail,
+    'server-crash': ServerCrash,
+    'shield-alert': ShieldAlert,
+    smartphone: Smartphone,
+    'timer-off': TimerOff,
+    wrench: Wrench,
 };
+
+interface NavPayload {
+    title: string;
+    href: string;
+    icon: string;
+    group: string | null;
+}
 
 export interface NavGroup {
     name: string;
@@ -35,15 +88,23 @@ export function usePanelNav() {
     const page = usePage();
 
     const nav = computed(() => {
-        const items =
-            (page.props.panelNav as
-                | { title: string; href: string; icon: string; group: string | null }[]
-                | undefined) ?? [];
+        const resources = (page.props.panelNav as NavPayload[] | undefined) ?? [];
+        const pages = (page.props.panelPages as NavPayload[] | undefined) ?? [];
 
         const ungrouped: NavItem[] = [];
+
+        /*
+         * A Map, so insertion order is the order groups appear.
+         *
+         * Resources go in first and therefore set the running order; a page
+         * declaring an existing group name JOINS it rather than opening a
+         * second heading with the same words. That is what puts Connections
+         * under the Network heading the Routers resource already created,
+         * instead of splitting one subject across two places in the column.
+         */
         const grouped = new Map<string, NavItem[]>();
 
-        for (const item of items) {
+        const add = (item: NavPayload) => {
             const entry: NavItem = {
                 title: item.title,
                 href: item.href,
@@ -54,43 +115,34 @@ export function usePanelNav() {
             // catch-all "Other": a group of one is noise.
             if (!item.group) {
                 ungrouped.push(entry);
-                continue;
+                return;
             }
 
             grouped.set(item.group, [...(grouped.get(item.group) ?? []), entry]);
-        }
+        };
 
-        /*
-         * App screens are a GROUP, not top-level items.
-         *
-         * They are not resources — no table, no policy, no model behind a
-         * registry entry — so they cannot come from the resource discovery that
-         * builds the rest. Grouping them keeps the top level for the things the
-         * panel actually administers.
-         */
-        const apps: NavItem[] = [
-            { title: 'Mail', href: '/apps/mail', icon: Mail },
-            { title: 'Chat', href: '/apps/chat', icon: MessagesSquare },
-        ];
+        resources.forEach(add);
+        pages.forEach(add);
 
         return {
             primary: [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }, ...ungrouped] as NavItem[],
-            groups: [
-                ...[...grouped.entries()].map(([name, items]): NavGroup => ({ name, items })),
-                { name: 'Apps', items: apps },
-            ],
+            groups: [...grouped.entries()].map(([name, items]): NavGroup => ({ name, items })),
         };
     });
 
     /**
      * In-panel content pages. Static, because they are not resources.
      *
-     * These now occupy the sidebar footer, which previously held links out to
-     * the starter kit's GitHub repository and the Laravel docs. Those were
-     * scaffolding: they leave the panel entirely, and an operator has no use
-     * for either. The footer is prime real estate — permanently visible, never
-     * scrolled away — so it should hold the panel's own help, not somebody
+     * These occupy the sidebar footer, which previously held links out to the
+     * starter kit's GitHub repository and the Laravel docs. Those were
+     * scaffolding: they leave the panel entirely, and an operator has no use for
+     * either. The footer is prime real estate - permanently visible, never
+     * scrolled away - so it should hold the panel's own help, not somebody
      * else's.
+     *
+     * They stay client-side because the footer is a FIXED set of four, not a
+     * list anything appends to; `Pages::intentionallyUnlinked()` records that
+     * they are reached from here, so the coverage test still accounts for them.
      */
     const supportItems = computed<NavItem[]>(() => [
         { title: 'Help', href: '/help', icon: HelpCircle },

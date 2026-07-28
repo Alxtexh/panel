@@ -57,8 +57,8 @@ final class ClientsListTest extends TestCase
                 'tenant_id' => $tenant->id,
                 'plan_id' => $plan->id,
                 'name' => sprintf('%s %04d', $prefix, $i),
-                'phone' => '+2547' . str_pad((string) $i, 8, '0', STR_PAD_LEFT),
-                'access_code' => strtoupper($prefix[0]) . str_pad((string) $i, 6, '0', STR_PAD_LEFT),
+                'phone' => '+2547'.str_pad((string) $i, 8, '0', STR_PAD_LEFT),
+                'access_code' => strtoupper($prefix[0]).str_pad((string) $i, 6, '0', STR_PAD_LEFT),
                 'status' => ['active', 'expired', 'suspended'][$i % 3],
                 'plan_type' => ['pppoe', 'hotspot', 'static'][$i % 3],
                 'expiry_date' => now()->addDays($i % 90),
@@ -124,7 +124,7 @@ final class ClientsListTest extends TestCase
      * §10: "One query per list request, plus one per eager-loaded relation.
      * Queries per list request: constant. Never proportional to row count."
      *
-     * Comparing the count at two row counts is what catches an N+1 — an absolute
+     * Comparing the count at two row counts is what catches an N+1 - an absolute
      * number would drift as the app grows and stop meaning anything.
      */
     public function test_query_count_is_constant_regardless_of_row_count(): void
@@ -139,7 +139,7 @@ final class ClientsListTest extends TestCase
         $this->assertSame(
             $atTen,
             $atThousand,
-            "Query count changed with row count ({$atTen} at 10 rows, {$atThousand} at 1000) — an N+1 exists."
+            "Query count changed with row count ({$atTen} at 10 rows, {$atThousand} at 1000) - an N+1 exists."
         );
     }
 
@@ -161,7 +161,7 @@ final class ClientsListTest extends TestCase
          *
          * This guard is about the LIST query: a COUNT over a resource table is
          * unbounded, grows with the tenant, and is what §10 forbids in front of
-         * rows. The unread-badge count is a different shape — one user's inbox,
+         * rows. The unread-badge count is a different shape - one user's inbox,
          * hit through the morph index, bounded by what that person has been
          * sent. Excluding it by name keeps the guard sharp; broadening the
          * pattern to "ignore counts we expect" would let a real one back in.
@@ -189,9 +189,9 @@ final class ClientsListTest extends TestCase
                 'X-Inertia' => 'true',
                 // Must match the running asset version, or Inertia answers 409
                 // and asks the client to hard-reload rather than serving props.
-                // The version is the manifest hash computed by the middleware —
+                // The version is the manifest hash computed by the middleware -
                 // Inertia::getVersion() is empty outside a request lifecycle.
-                'X-Inertia-Version' => (string) (new HandleInertiaRequests())->version(request()),
+                'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(request()),
                 'X-Inertia-Partial-Component' => 'ResourceIndex',
                 'X-Inertia-Partial-Data' => 'total',
             ])
@@ -208,7 +208,7 @@ final class ClientsListTest extends TestCase
         $this->makeClients($this->tenantA, 3, 'Alpha');
 
         $this->actingAs($this->userA)
-            ->get('/clients?sort=' . urlencode('id; drop table clients--'))
+            ->get('/clients?sort='.urlencode('id; drop table clients--'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('sort', 'created_at'));
 
@@ -268,7 +268,7 @@ final class ClientsListTest extends TestCase
         $guard = 0;
 
         do {
-            $url = '/clients' . ($cursor ? '?cursor=' . urlencode($cursor) : '');
+            $url = '/clients'.($cursor ? '?cursor='.urlencode($cursor) : '');
             $props = $this->actingAs($this->userA)->get($url)->assertOk()
                 ->viewData('page')['props'];
 
@@ -286,7 +286,7 @@ final class ClientsListTest extends TestCase
     /**
      * §10 keeps page size on an allowlist rather than clamping it. Without that,
      * `?perPage=100000` is a supported way to pull an entire tenant table in one
-     * request — a performance problem and an exfiltration path at the same time.
+     * request - a performance problem and an exfiltration path at the same time.
      */
     public function test_an_out_of_range_per_page_falls_back_to_the_default(): void
     {
@@ -315,7 +315,7 @@ final class ClientsListTest extends TestCase
      *
      * Names are stored "Amina Achieng", so `LIKE 'Achieng%'` matched nothing
      * while the endpoint returned 200 and an empty table. An operator reads that
-     * as "no such customer" — the exact silent-success failure antipatterns.md
+     * as "no such customer" - the exact silent-success failure antipatterns.md
      * opens with.
      */
     public function test_search_matches_the_start_of_any_word_not_just_the_value(): void
@@ -346,7 +346,7 @@ final class ClientsListTest extends TestCase
         $this->makeClients($this->tenantA, 1, 'Alpha');
 
         // "lph" is inside "Alpha" but starts no word. Matching it would require
-        // a leading wildcard, which is unbounded — that is a trigram/FTS
+        // a leading wildcard, which is unbounded - that is a trigram/FTS
         // decision, not something to fake with LIKE.
         $records = $this->actingAs($this->userA)->get('/clients?search=lph')->assertOk()
             ->viewData('page')['props']['records'];
@@ -371,7 +371,7 @@ final class ClientsListTest extends TestCase
 
         $response = $this->actingAs($this->userA)->get('/clients', [
             'X-Inertia' => 'true',
-            'X-Inertia-Version' => (string) (new HandleInertiaRequests())->version(request()),
+            'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(request()),
             'X-Inertia-Partial-Component' => 'ResourceIndex',
             'X-Inertia-Partial-Data' => 'tabCounts',
         ])->assertOk();
@@ -387,7 +387,7 @@ final class ClientsListTest extends TestCase
         $this->assertCount(
             1,
             $aggregates,
-            'Tab counts must be ONE grouped query, got: ' . implode(' | ', $aggregates)
+            'Tab counts must be ONE grouped query, got: '.implode(' | ', $aggregates)
         );
         $this->assertStringContainsStringIgnoringCase('group by', $aggregates[array_key_first($aggregates)]);
     }
@@ -396,7 +396,7 @@ final class ClientsListTest extends TestCase
     {
         $this->makeClients($this->tenantA, 30, 'Alpha');
 
-        $version = (string) (new HandleInertiaRequests())->version(request());
+        $version = (string) (new HandleInertiaRequests)->version(request());
 
         // With a tab active, counts must still describe every tab. Applying the
         // tab to its own count query would zero every other tab.
@@ -416,7 +416,7 @@ final class ClientsListTest extends TestCase
         $this->makeClients($this->tenantA, 9, 'Alpha');
 
         $props = $this->actingAs($this->userA)
-            ->get('/clients?tab=' . urlencode("'; drop table clients--"))
+            ->get('/clients?tab='.urlencode("'; drop table clients--"))
             ->assertOk()->viewData('page')['props'];
 
         $this->assertNull($props['tab']);
@@ -432,12 +432,24 @@ final class ClientsListTest extends TestCase
     /** @return list<string> */
     private function captureQueriesForIndex(): array
     {
-        // Warm the per-request lookups that are NOT row-proportional — the
-        // tenant record behind branding and feature flags. actingAs reuses one
-        // user instance across requests, so its lazy relation loads on the first
-        // measurement and not the second, making the two counts differ for a
-        // reason that has nothing to do with an N+1.
-        $this->actingAs($this->userA)->get('/dashboard');
+        /*
+         * A DISCARDED WARM-UP OF THE PAGE BEING MEASURED, for the same reason
+         * `panel:benchmark` does one: the first call pays costs that are paid
+         * ONCE, and this test compares two calls.
+         *
+         * actingAs reuses a single user instance across requests, so anything
+         * lazy-loaded onto it - the tenant behind branding, and now the three
+         * Spatie relations behind a permission check - is queried during the
+         * first measurement and already in memory for the second. The counts
+         * then differ by a fixed 3 for a reason that has nothing to do with row
+         * count. Warming with /dashboard was not enough: it does not run the
+         * same permission checks, so it left exactly those three unwarmed.
+         *
+         * THIS DOES NOT BLUNT THE GUARD. A real N+1 is proportional to rows and
+         * is re-run on every request, warm or cold, so it still shows up as a
+         * difference between 10 rows and 1000.
+         */
+        $this->actingAs($this->userA)->get('/clients');
 
         // The query LOG, not DB::listen. Registering a listener per call
         // accumulates them, so the second call records every query twice and the

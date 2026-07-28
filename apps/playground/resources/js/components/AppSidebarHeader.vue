@@ -23,7 +23,7 @@ const page = usePage();
  * The topbar MIRRORS the sidebar.
  *
  * Leaving the collapse trigger and breadcrumbs on the left while the sidebar
- * sits on the right splits the navigation across both edges — the trigger ends
+ * sits on the right splits the navigation across both edges - the trigger ends
  * up as far as possible from the thing it collapses. Flipping the row keeps
  * them adjacent whichever side is chosen.
  */
@@ -35,8 +35,8 @@ const mirrored = computed(() => appearance.value.sidebarSide === 'right');
  * Static layout options first, page props second.
  *
  * A bespoke page declares its trail through defineOptions, which is evaluated
- * once at definition time. The generic resource page cannot — it does not know
- * which resource it is until the props arrive — so it ships the trail as a prop
+ * once at definition time. The generic resource page cannot - it does not know
+ * which resource it is until the props arrive - so it ships the trail as a prop
  * instead and this falls through to it.
  */
 const trail = computed<BreadcrumbItem[]>(() =>
@@ -53,7 +53,7 @@ const trail = computed<BreadcrumbItem[]>(() =>
         `ml-auto` only reads as "push to the far end" while the main axis runs
         left-to-right. Under flex-row-reverse the axis is inverted, so an auto
         LEFT margin absorbs the free space on the item's left and drags it
-        toward its sibling — both groups ended up jammed into the right corner
+        toward its sibling - both groups ended up jammed into the right corner
         with the whole left half empty.
 
         justify-between has no handedness: it pins the first child to one edge

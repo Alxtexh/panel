@@ -2,7 +2,7 @@
 /**
  * The dashboard filter panel.
  *
- * IT DOES NOT FETCH and it does not own the applied state — it emits `apply`
+ * IT DOES NOT FETCH and it does not own the applied state - it emits `apply`
  * with a filter object and the page turns that into a visit. The applied
  * filters live in the URL, which is what makes a filtered dashboard
  * shareable, bookmarkable and survivable across a reload.
@@ -86,7 +86,7 @@ const presets = [
     { label: 'This month', apply: thisMonth },
 ]
 
-/** A range with only an end is meaningless — "until then, from when?" */
+/** A range with only an end is meaningless - "until then, from when?" */
 const invalid = computed(() => draft.value.to !== '' && draft.value.from === '')
 
 const changeCount = computed(
@@ -152,7 +152,7 @@ function apply() {
                     Leaving “To” empty means everything since that date.
                 </p>
                 <p v-else-if="draft.from" class="text-muted-foreground text-xs">
-                    While a range is set, the per-chart period buttons are hidden — every widget
+                    While a range is set, the per-chart period buttons are hidden - every widget
                     covers the same window.
                 </p>
             </section>

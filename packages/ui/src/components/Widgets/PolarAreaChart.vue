@@ -5,7 +5,7 @@
  * HOW IT DIFFERS FROM A PIE, and why that matters when choosing one: a pie
  * varies the ANGLE and keeps the radius fixed, so its slices always sum to a
  * whole. A polar area keeps the angle fixed and varies the RADIUS, so the
- * categories need not be parts of anything — it compares magnitudes that happen
+ * categories need not be parts of anything - it compares magnitudes that happen
  * to share a unit, which is the wrong job for a pie.
  *
  * THE RADIUS IS SCALED BY THE SQUARE ROOT of the value. Area grows with the
@@ -45,7 +45,9 @@ const max = computed(() => Math.max(...props.data.map((d) => Math.max(0, d.value
 const segments = computed(() => {
     const n = props.data.length
 
-    if (n === 0 || max.value <= 0) return []
+    if (n === 0 || max.value <= 0) {
+        return []
+    }
 
     const step = (Math.PI * 2) / n
 
@@ -69,10 +71,12 @@ const segments = computed(() => {
  * One wedge from the centre.
  *
  * A single-category chart is a full circle, and an arc whose start and end
- * coincide draws NOTHING — the same degenerate case the pie chart handles.
+ * coincide draws NOTHING - the same degenerate case the pie chart handles.
  */
 function sector(c: number, start: number, end: number, r: number): string {
-    if (r <= 0) return ''
+    if (r <= 0) {
+        return ''
+    }
 
     if (end - start >= Math.PI * 2 - 1e-6) {
         return `M${c - r},${c} A${r},${r} 0 1 1 ${c + r},${c} A${r},${r} 0 1 1 ${c - r},${c} Z`

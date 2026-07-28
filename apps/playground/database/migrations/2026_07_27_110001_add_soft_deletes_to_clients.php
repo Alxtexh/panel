@@ -12,15 +12,15 @@ use Illuminate\Support\Facades\Schema;
  * WHY THE INDEXES ARE REBUILT AND NOT JUST ADDED TO.
  *
  * A soft delete turns every list query into `... AND deleted_at IS NULL`. If
- * that column is not in the index, the planner filters AFTER the index seek —
+ * that column is not in the index, the planner filters AFTER the index seek -
  * so a tenant with 200,000 clients reads all of them through the index and
  * discards the deleted ones. The list stays correct and silently loses the
  * property the index existed to provide.
  *
  * SQLite cannot add a column to an existing index, so the sort indexes are
  * dropped and recreated with `deleted_at` leading the sort columns. On Postgres
- * a partial index (`WHERE deleted_at IS NULL`) would be better still — smaller
- * and not carrying the null in every entry — which is one more thing the engine
+ * a partial index (`WHERE deleted_at IS NULL`) would be better still - smaller
+ * and not carrying the null in every entry - which is one more thing the engine
  * decision changes.
  */
 return new class extends Migration

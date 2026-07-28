@@ -2,7 +2,7 @@
 /**
  * A related list on a record's page.
  *
- * IT DOES NOT FETCH (§4 rule 2) — it takes rows and emits `load` with a cursor.
+ * IT DOES NOT FETCH (§4 rule 2) - it takes rows and emits `load` with a cursor.
  * The page owns the request, which is what keeps this usable outside Inertia.
  *
  * ROWS ARRIVE ONLY WHEN THE TAB IS OPENED. A record page with four relations
@@ -10,7 +10,7 @@
  * relation exists, and their invoices can wait until someone asks.
  *
  * KEYSET, NOT A PAGE COUNT. There is no total and no last page, deliberately:
- * counting a client's 40,000 sessions to print "1–10 of 40,000" is the blocking
+ * counting a client's 40,000 sessions to print "1-10 of 40,000" is the blocking
  * count §10 forbids everywhere else, and it does not become acceptable because
  * the list is nested.
  */
@@ -28,7 +28,12 @@ const props = withDefaults(
         loaded?: boolean
         emptyText?: string
     }>(),
-    { loading: false, nextCursor: null, loaded: false, emptyText: 'Nothing here yet.' },
+    {
+        loading: false,
+        nextCursor: null,
+        loaded: false,
+        emptyText: 'Nothing here yet.',
+    },
 )
 
 const emit = defineEmits<{ (e: 'load', cursor: string | null): void }>()
@@ -36,7 +41,9 @@ const emit = defineEmits<{ (e: 'load', cursor: string | null): void }>()
 const visible = computed(() => props.columns.filter((c) => c.type !== 'image'))
 
 function format(column: SchemaColumn, value: unknown): string {
-    if (value === null || value === undefined || value === '') return '—'
+    if (value === null || value === undefined || value === '') {
+        return '-'
+    }
 
     if (column.type === 'date' || column.type === 'datetime') {
         return new Date(String(value)).toLocaleString(undefined, {
@@ -69,13 +76,19 @@ function format(column: SchemaColumn, value: unknown): string {
 
                 <tbody class="divide-y">
                     <tr v-if="loading && rows.length === 0">
-                        <td :colspan="visible.length" class="text-muted-foreground px-3 py-6 text-center text-sm">
+                        <td
+                            :colspan="visible.length"
+                            class="text-muted-foreground px-3 py-6 text-center text-sm"
+                        >
                             Loading…
                         </td>
                     </tr>
 
                     <tr v-else-if="loaded && rows.length === 0">
-                        <td :colspan="visible.length" class="text-muted-foreground px-3 py-6 text-center text-sm">
+                        <td
+                            :colspan="visible.length"
+                            class="text-muted-foreground px-3 py-6 text-center text-sm"
+                        >
                             {{ emptyText }}
                         </td>
                     </tr>
@@ -85,9 +98,17 @@ function format(column: SchemaColumn, value: unknown): string {
                             v-for="column in visible"
                             :key="column.key"
                             class="px-3 py-2 whitespace-nowrap"
-                            :class="[column.mono ? 'font-mono text-xs' : '', column.muted ? 'text-muted-foreground' : '']"
+                            :class="[
+                                column.mono ? 'font-mono text-xs' : '',
+                                column.muted ? 'text-muted-foreground' : '',
+                            ]"
                         >
-                            <slot :name="`cell:${column.key}`" :row="row" :value="row[column.key]" :column="column">
+                            <slot
+                                :name="`cell:${column.key}`"
+                                :row="row"
+                                :value="row[column.key]"
+                                :column="column"
+                            >
                                 {{ format(column, row[column.key]) }}
                             </slot>
                         </td>

@@ -23,6 +23,22 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
+        <!--
+            THE SAME BROADCASTER THE APPLICATION USES, set here rather than in a
+            test, because `Broadcast::channel()` registers callbacks on whichever
+            driver exists at BOOT. Switching the driver inside setUp() builds a
+            fresh broadcaster with no channels on it, so every subscription is
+            refused and the refusal tests pass for entirely the wrong reason.
+
+            It matches `.env` deliberately. `log` and `null` do not consult the
+            callbacks at all — they authorise everything, including guests — so a
+            suite testing one driver while the application runs another would be
+            proving a guard that never runs in production.
+        -->
+        <env name="BROADCAST_CONNECTION" value="reverb" force="true"/>
+        <env name="REVERB_APP_ID" value="test-app"/>
+        <env name="REVERB_APP_KEY" value="test-key"/>
+        <env name="REVERB_APP_SECRET" value="test-secret"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>

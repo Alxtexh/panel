@@ -4,7 +4,7 @@
  *
  * SEPARATE FROM NavUser BECAUSE NavUser CALLS useSidebar(). That composable
  * reads the SidebarProvider context to decide which side to open on, and the
- * horizontal layout has no provider at all — rendering NavUser there throws on
+ * horizontal layout has no provider at all - rendering NavUser there throws on
  * mount, taking the whole page with it rather than degrading.
  *
  * The MENU CONTENTS are shared (UserMenuContent), so profile and sign-out stay

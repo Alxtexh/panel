@@ -3,7 +3,7 @@
  * A heatmap (matrix chart): rows × columns, colour carries the value.
  *
  * WHAT IT IS FOR. When a breakdown has two dimensions and one of them has
- * dozens of members — a hundred service areas against three statuses — every
+ * dozens of members - a hundred service areas against three statuses - every
  * other chart type fails. A grouped bar chart draws three hundred bars, a
  * stacked bar makes the small categories invisible, and a line chart implies an
  * ordering the categories do not have. A heatmap gives every cell the same
@@ -12,7 +12,7 @@
  * COLOUR IS BUCKETED, NOT CONTINUOUS, and that is deliberate. A continuous
  * gradient looks more precise and is much harder to read: nobody can tell 40%
  * lightness from 45%, so a reader can only rank cells, never estimate them.
- * Named bands turn the legend into an actual key — a cell IS "11-30", it is not
+ * Named bands turn the legend into an actual key - a cell IS "11-30", it is not
  * "roughly two thirds of the way along a ramp".
  *
  * ZERO GETS ITS OWN NEUTRAL BAND rather than the palest shade of the scale.
@@ -39,7 +39,7 @@ const props = withDefaults(
         buckets?: HeatmapBucket[]
         height?: number
         format?: (value: number) => string
-        /** Draw the column labels underneath. Off by default — usually too many. */
+        /** Draw the column labels underneath. Off by default - usually too many. */
         showColumnLabels?: boolean
     }>(),
     {
@@ -66,7 +66,9 @@ onMounted(() => {
         width.value = Math.max(160, entries[0].contentRect.width)
     })
 
-    if (host.value) observer.observe(host.value)
+    if (host.value) {
+        observer.observe(host.value)
+    }
 })
 
 onBeforeUnmount(() => observer?.disconnect())
@@ -89,7 +91,9 @@ const rowHeight = computed(() => Math.max(1, (props.height - 8) / Math.max(1, ro
  * tenant's accent instead of only the darkest step matching it.
  */
 function bucketColour(index: number): string {
-    if (index === 0) return 'var(--muted)'
+    if (index === 0) {
+        return 'var(--muted)'
+    }
 
     const steps = Math.max(1, props.buckets.length - 1)
 
@@ -100,7 +104,9 @@ function bucketOf(value: number): number {
     for (let i = 0; i < props.buckets.length; i++) {
         const max = props.buckets[i].max
 
-        if (max === undefined || value < max) return i
+        if (max === undefined || value < max) {
+            return i
+        }
     }
 
     return props.buckets.length - 1
@@ -132,7 +138,9 @@ const cells = computed(() =>
 const tooDense = computed(() => cellWidth.value < 2)
 
 const active = computed(() => {
-    if (!hover.value) return null
+    if (!hover.value) {
+        return null
+    }
 
     return cells.value.find((c) => c.row === hover.value!.row && c.col === hover.value!.col) ?? null
 })
@@ -154,14 +162,21 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
             <!-- The legend is a KEY here, not decoration: without it a shade
                  means nothing at all. -->
             <div class="mb-3 flex flex-wrap items-center justify-center gap-3">
-                <span v-for="(b, i) in buckets" :key="i" class="flex items-center gap-1.5 text-[11px]">
-                    <span class="size-3 rounded-sm border" :style="{ background: bucketColour(i) }" />
+                <span
+                    v-for="(b, i) in buckets"
+                    :key="i"
+                    class="flex items-center gap-1.5 text-[11px]"
+                >
+                    <span
+                        class="size-3 rounded-sm border"
+                        :style="{ background: bucketColour(i) }"
+                    />
                     <span class="text-muted-foreground">{{ b.label }}</span>
                 </span>
             </div>
 
             <p v-if="tooDense" class="text-muted-foreground mb-2 text-center text-xs">
-                {{ colCount }} columns — too many to label individually
+                {{ colCount }} columns - too many to label individually
             </p>
 
             <svg
@@ -189,7 +204,11 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
                     :width="cell.w"
                     :height="cell.h"
                     :fill="cell.colour"
-                    :fill-opacity="hover === null || (hover.row === cell.row && hover.col === cell.col) ? 1 : 0.55"
+                    :fill-opacity="
+                        hover === null || (hover.row === cell.row && hover.col === cell.col)
+                            ? 1
+                            : 0.55
+                    "
                     rx="1"
                     class="transition-[fill-opacity]"
                     @mouseenter="hover = { row: cell.row, col: cell.col }"
@@ -214,10 +233,14 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
                 class="bg-popover pointer-events-none absolute top-0 right-0 z-10 rounded-lg border px-2.5 py-1.5 shadow-lg"
             >
                 <p class="text-[11px] font-medium capitalize">{{ active.label }}</p>
-                <p class="text-muted-foreground text-[11px] capitalize">{{ active.rowName }}</p>
+                <p class="text-muted-foreground text-[11px] capitalize">
+                    {{ active.rowName }}
+                </p>
                 <p class="text-sm font-semibold tabular-nums">
                     {{ format(active.value) }}
-                    <span class="text-muted-foreground text-xs font-normal">({{ active.bucketLabel }})</span>
+                    <span class="text-muted-foreground text-xs font-normal"
+                        >({{ active.bucketLabel }})</span
+                    >
                 </p>
             </div>
         </template>

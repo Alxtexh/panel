@@ -1,5 +1,5 @@
 /**
- * @panelkit/ui — public surface.
+ * @panelkit/ui - public surface.
  *
  * Two rules govern everything in this package (spec §4). They are cheap to hold
  * and expensive to recover once broken:
@@ -21,7 +21,15 @@ export { default as RelationPanel } from './components/DataTable/RelationPanel.v
 export { default as IconCell } from './components/DataTable/IconCell.vue'
 export { default as ImageCell } from './components/DataTable/ImageCell.vue'
 export { default as EditableCell } from './components/DataTable/EditableCell.vue'
+export { default as RecordActions } from './components/DataTable/RecordActions.vue'
 export { default as AppearanceDrawer } from './components/Layout/AppearanceDrawer.vue'
+export { default as PkBottomNav } from './components/Layout/PkBottomNav.vue'
+export { default as PkBoundary } from './components/Layout/PkBoundary.vue'
+export { default as PkDeviceFrame } from './components/Layout/PkDeviceFrame.vue'
+export { default as PkRepeater } from './components/Form/PkRepeater.vue'
+export { default as PkKeyValue } from './components/Form/PkKeyValue.vue'
+export { default as PkRichEditor } from './components/Form/PkRichEditor.vue'
+export { default as ThemeToggle } from './components/Layout/ThemeToggle.vue'
 export { default as BarChart } from './components/Widgets/BarChart.vue'
 export { default as LineChart } from './components/Widgets/LineChart.vue'
 export { default as PieChart } from './components/Widgets/PieChart.vue'
@@ -35,17 +43,26 @@ export { default as ChartCard } from './components/Widgets/ChartCard.vue'
 export { default as StatCard } from './components/Widgets/StatCard.vue'
 export { default as MiniStatCard } from './components/Widgets/MiniStatCard.vue'
 export { default as SegmentedBar } from './components/Widgets/SegmentedBar.vue'
+export { default as StatStrip } from './components/Widgets/StatStrip.vue'
 export { default as SelectionBar } from './components/DataTable/SelectionBar.vue'
 export { default as TablePagination } from './components/DataTable/TablePagination.vue'
 export { default as TableTabs } from './components/DataTable/TableTabs.vue'
 export { default as TableToolbar } from './components/DataTable/TableToolbar.vue'
 export { default as PkModal } from './components/Overlay/PkModal.vue'
+/*
+ * ONE SKELETON, WITH NAMED SHAPES. There were six different ones in this package
+ * - different greys, different heights, written independently at each place
+ * something loads - and on a screen where several resolve at once they read as a
+ * rendering fault rather than as loading. See the component.
+ */
+export { default as PkSkeleton } from './components/primitives/PkSkeleton.vue'
 export { default as PkSlideover } from './components/Overlay/PkSlideover.vue'
 export { default as RecordForm } from './components/Form/RecordForm.vue'
 export { default as UnsavedBar } from './components/Form/UnsavedBar.vue'
 export { default as InfoNode } from './components/Form/InfoNode.vue'
 export { default as SchemaNode } from './components/Form/SchemaNode.vue'
 export { default as FormFieldControl } from './components/Form/FormFieldControl.vue'
+export { default as PkFileUpload } from './components/Form/PkFileUpload.vue'
 export { default as PkDropdown } from './components/primitives/PkDropdown.vue'
 export { default as PkMultiSelect } from './components/primitives/PkMultiSelect.vue'
 
@@ -66,8 +83,19 @@ export { useSchemaColumns, BADGE_VARIANTS } from './composables/useSchemaColumns
 export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
 export type { BulkActionSchema } from './components/DataTable/BulkActions.vue'
 export type { ChartSeries, ChartPoint } from './components/Widgets/types'
+export type { StatSegment } from './components/Widgets/StatStrip.vue'
 export type { MultiSelectOption } from './components/primitives/PkMultiSelect.vue'
-export type { Appearance, Theme, Density, SidebarSide, CardStyle } from './composables/useAppearance'
+export type { BottomNavItem } from './components/Layout/PkBottomNav.vue'
+export type { RecordActionGroup, RecordActionItem } from './components/DataTable/RecordActions.vue'
+export { ICON_PATHS, iconPath } from './components/primitives/icons'
+export type { UploadedFileValue } from './components/Form/PkFileUpload.vue'
+export type {
+    Appearance,
+    Theme,
+    Density,
+    SidebarSide,
+    CardStyle,
+} from './composables/useAppearance'
 export type { SchemaColumn } from './composables/useSchemaColumns'
 export type { FormField } from './components/Form/types'
 

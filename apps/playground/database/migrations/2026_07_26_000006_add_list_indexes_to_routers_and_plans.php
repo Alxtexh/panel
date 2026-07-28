@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
  * happily scan them, so these indexes buy nothing today. They exist anyway
  * because §10 requires each resource to document and create the indexes its
  * filter and sort combinations need, and because the trailing `id` is what makes
- * the keyset seek work at all — a resource that grows past 10k rows later should
+ * the keyset seek work at all - a resource that grows past 10k rows later should
  * not need this discovered the hard way.
  *
  * Query shapes:

@@ -3,7 +3,7 @@
  * The horizontal layout: navigation across the top, no vertical rail.
  *
  * NO SidebarProvider. The provider exists to share collapse state between the
- * rail, its spacer and the trigger, none of which exist here — mounting it
+ * rail, its spacer and the trigger, none of which exist here - mounting it
  * anyway would leave a hidden fixed-position panel and a spacer reserving space
  * for a sidebar that is not rendered.
  */
@@ -16,6 +16,8 @@ withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), { breadcrumbs: (
 
 <template>
     <div class="bg-sidebar flex min-h-screen w-full flex-col">
+        <ImpersonationBanner />
+
         <AppTopNav :breadcrumbs="breadcrumbs" />
 
         <!-- The same rounded content surface the inset sidebar variant uses, so

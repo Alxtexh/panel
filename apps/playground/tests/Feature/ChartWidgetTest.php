@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Client;
 use App\Models\ClientSession;
 use App\Models\Plan;
@@ -13,7 +14,6 @@ use App\Models\User;
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use App\Http\Middleware\HandleInertiaRequests;
 use InvalidArgumentException;
 use PanelKit\Panel\Widgets\Bucket;
 use PanelKit\Panel\Widgets\ChartWidget;
@@ -62,7 +62,7 @@ final class ChartWidgetTest extends TestCase
          * nothing rather than falling back to every row. So an unauthenticated
          * series legitimately returns zeroes, and a test asserting real counts
          * has to establish a tenant first. That is the scope working, not a
-         * fixture problem — the equivalent bug in the opposite direction would
+         * fixture problem - the equivalent bug in the opposite direction would
          * be a chart silently aggregating across all tenants.
          */
         $this->actingAs($this->userA);
@@ -75,7 +75,7 @@ final class ChartWidgetTest extends TestCase
      *
      * The database returns no row at all for an empty bucket. Plotting that raw
      * draws a straight line from Monday to Wednesday and labels the midpoint
-     * Tuesday — a total outage renders as a gentle slope, which is the most
+     * Tuesday - a total outage renders as a gentle slope, which is the most
      * expensive kind of wrong a dashboard can be.
      */
     public function test_a_bucket_with_no_rows_is_a_zero_not_a_hole(): void
@@ -107,7 +107,7 @@ final class ChartWidgetTest extends TestCase
         $this->assertSame(2, $series['total'], 'June rows are outside a 7-day window.');
     }
 
-    /** N points, ONE query — addendum C1. */
+    /** N points, ONE query - addendum C1. */
     public function test_a_thirty_point_series_runs_one_query(): void
     {
         $this->seedClientsOn(['2026-07-27' => 4]);
@@ -168,7 +168,7 @@ final class ChartWidgetTest extends TestCase
     /**
      * An unknown driver must THROW rather than fall back to a default dialect.
      *
-     * A guessed expression does not error — it returns a chart with silently
+     * A guessed expression does not error - it returns a chart with silently
      * wrong buckets, which is worse than a page that fails loudly.
      */
     public function test_an_unknown_driver_throws_rather_than_guessing(): void
@@ -183,7 +183,7 @@ final class ChartWidgetTest extends TestCase
 
     /**
      * The comparison window must be the same LENGTH, not the same calendar
-     * unit — 30 days against a 28-day February manufactures a trend out of the
+     * unit - 30 days against a 28-day February manufactures a trend out of the
      * calendar.
      */
     public function test_the_previous_window_is_equal_in_length(): void
@@ -216,7 +216,7 @@ final class ChartWidgetTest extends TestCase
     }
 
     /**
-     * "Today" stops at the current hour — it does NOT pad out the rest of the
+     * "Today" stops at the current hour - it does NOT pad out the rest of the
      * day with zeroes.
      *
      * Gap filling exists to make a missing bucket visible, and a bucket that
@@ -283,7 +283,7 @@ final class ChartWidgetTest extends TestCase
         $this->assertSame([], $resolved['points']);
     }
 
-    /** Structure must never run a query — it ships with the page shell. */
+    /** Structure must never run a query - it ships with the page shell. */
     public function test_describing_a_chart_runs_no_query(): void
     {
         $chart = ChartWidget::make('sessions', 'Sessions')
@@ -328,7 +328,7 @@ final class ChartWidgetTest extends TestCase
      * Changing one period must reload ONE chart.
      *
      * Without `only:`, a period click re-resolves every deferred prop on the
-     * page — seven counters and four charts for one selector — which is the
+     * page - seven counters and four charts for one selector - which is the
      * polling-shaped waste the live-update rules exist to avoid.
      */
     public function test_a_period_change_resolves_only_that_chart(): void
@@ -341,7 +341,7 @@ final class ChartWidgetTest extends TestCase
                 /*
                  * The REAL asset version, computed the same way the middleware
                  * computes it. A made-up one gets a 409 telling the client to
-                 * do a full reload — and a 409 has no props at all, so the
+                 * do a full reload - and a 409 has no props at all, so the
                  * "only this chart resolved" assertions below would have passed
                  * vacuously against an empty response.
                  *
@@ -394,7 +394,7 @@ final class ChartWidgetTest extends TestCase
                 $n++;
 
                 // forceCreate, because Client keeps `tenant_id` OUT of
-                // $fillable on purpose (spec target 7 — mass assignment is
+                // $fillable on purpose (spec target 7 - mass assignment is
                 // closed). A plain create() silently drops it and the row
                 // fails the NOT NULL constraint.
                 Client::withoutGlobalScopes()->forceCreate([
@@ -402,7 +402,7 @@ final class ChartWidgetTest extends TestCase
                     'plan_id' => $plan->id,
                     'router_id' => $router->id,
                     'name' => "Client {$tenant->id} {$n}",
-                    'phone' => '+2547' . str_pad((string) $n, 8, '0', STR_PAD_LEFT),
+                    'phone' => '+2547'.str_pad((string) $n, 8, '0', STR_PAD_LEFT),
                     'access_code' => strtoupper(substr(md5("{$tenant->id}-{$n}"), 0, 8)),
                     'status' => 'active',
                     'plan_type' => 'pppoe',

@@ -3,7 +3,7 @@
  * appearance system.
  *
  * WHY IT STILL EXISTS. Two files owned "the theme" and wrote to different
- * localStorage keys — this one to `appearance` (light/dark only) and
+ * localStorage keys - this one to `appearance` (light/dark only) and
  * @panelkit/ui to `panelkit.appearance` (scheme, accent, surface, density, text
  * size, navigation side). Both ran, so the last writer won and the panel's
  * settings appeared to reset themselves. The visible symptom was that a theme

@@ -3,6 +3,15 @@
 return [
 
     /*
+    | Telegram, for operational alerts only - a failing backup, an unhealthy
+    | one. Unset means the channel does nothing; see TelegramChannel.
+    */
+    'telegram' => [
+        'token' => env('TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Third Party Services
     |--------------------------------------------------------------------------

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Client;
-use App\Models\ClientSession;
 use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -95,7 +95,7 @@ final class RelationManagerTest extends TestCase
     }
 
     /**
-     * No blocking count. Paging a client's sessions must not first count them —
+     * No blocking count. Paging a client's sessions must not first count them -
      * that is the same COUNT(*) §10 forbids in front of a table, and it does not
      * become acceptable because the list is nested.
      */
@@ -127,7 +127,7 @@ final class RelationManagerTest extends TestCase
         $guard = 0;
 
         do {
-            $url = "/clients/{$this->client->id}/relations/sessions" . ($cursor ? "?cursor={$cursor}" : '');
+            $url = "/clients/{$this->client->id}/relations/sessions".($cursor ? "?cursor={$cursor}" : '');
             $body = $this->getJson($url)->assertOk()->json();
 
             foreach ($body['records'] as $row) {
@@ -208,11 +208,11 @@ final class RelationManagerTest extends TestCase
                 ->where('schema.relations.0.key', 'sessions'));
     }
 
-    /** Building the schema must not query — it happens on a cache miss. */
+    /** Building the schema must not query - it happens on a cache miss. */
     public function test_describing_relations_runs_no_query(): void
     {
         DB::enableQueryLog();
-        $schema = \App\Panel\Resources\ClientResource::relations()[0]->toSchema();
+        $schema = ClientResource::relations()[0]->toSchema();
         $queries = DB::getQueryLog();
         DB::disableQueryLog();
 
@@ -227,14 +227,14 @@ final class RelationManagerTest extends TestCase
     {
         $plan = Plan::withoutGlobalScopes()->create([
             'tenant_id' => $tenant->id,
-            'name' => 'Plan ' . uniqid(),
+            'name' => 'Plan '.uniqid(),
             'speed_mbps' => 10,
             'price_cents' => 1000,
         ]);
 
         $router = Router::withoutGlobalScopes()->create([
             'tenant_id' => $tenant->id,
-            'name' => 'Router ' . uniqid(),
+            'name' => 'Router '.uniqid(),
             'ip_address' => '10.0.0.1',
             'model' => 'RB750',
             'status' => 'online',
@@ -247,7 +247,7 @@ final class RelationManagerTest extends TestCase
             'plan_id' => $plan->id,
             'router_id' => $router->id,
             'name' => "Client {$unique}",
-            'phone' => '+254' . substr((string) crc32($unique), 0, 9),
+            'phone' => '+254'.substr((string) crc32($unique), 0, 9),
             'access_code' => strtoupper(substr(md5($unique), 0, 10)),
             'status' => 'active',
             'plan_type' => 'pppoe',
@@ -267,7 +267,7 @@ final class RelationManagerTest extends TestCase
                 'client_id' => $client->id,
                 'router_id' => $client->router_id,
                 'status' => $i % 3 === 0 ? 'online' : 'offline',
-                'ip_address' => '100.0.0.' . ($i % 250 + 1),
+                'ip_address' => '100.0.0.'.($i % 250 + 1),
                 'bytes_in' => $i * 1000,
                 'bytes_out' => $i * 500,
                 'started_at' => $at,

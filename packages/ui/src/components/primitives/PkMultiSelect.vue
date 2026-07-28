@@ -11,7 +11,7 @@
  *
  * CHOSEN OPTIONS LEAVE THE LIST. They are already visible as chips, so
  * repeating them below is duplication that pushes the remaining choices out of
- * view — which is the actual complaint about a long checkbox list.
+ * view - which is the actual complaint about a long checkbox list.
  *
  * THE PANEL IS TELEPORTED AND POSITIONED FIXED, for the reason PkDropdown
  * documents: an absolutely-positioned panel is clipped by any scrolling
@@ -19,7 +19,7 @@
  * both of which scroll.
  *
  * KEYBOARD IS FIRST CLASS. Typing filters, Enter takes the highlighted option,
- * ArrowUp/Down move, and Backspace on an empty query removes the last chip —
+ * ArrowUp/Down move, and Backspace on an empty query removes the last chip -
  * the behaviour every token field has, and its absence is immediately felt.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -50,7 +50,9 @@ const props = withDefaults(
     },
 )
 
-const emit = defineEmits<{ (e: 'update:modelValue', value: (string | number)[]): void }>()
+const emit = defineEmits<{
+    (e: 'update:modelValue', value: (string | number)[]): void
+}>()
 
 const root = ref<HTMLElement | null>(null)
 const panel = ref<HTMLElement | null>(null)
@@ -63,7 +65,13 @@ const position = ref({ top: 0, left: 0, width: 0 })
 
 const selected = computed(() =>
     props.modelValue
-        .map((v) => props.options.find((o) => o.value === v) ?? { value: v, label: String(v) })
+        .map(
+            (v) =>
+                props.options.find((o) => o.value === v) ?? {
+                    value: v,
+                    label: String(v),
+                },
+        )
         .filter(Boolean),
 )
 
@@ -85,7 +93,9 @@ function place() {
     const anchor = root.value
     const menu = panel.value
 
-    if (!anchor || !menu) return
+    if (!anchor || !menu) {
+        return
+    }
 
     const box = anchor.getBoundingClientRect()
     const size = menu.getBoundingClientRect()
@@ -109,7 +119,9 @@ function place() {
 }
 
 async function show() {
-    if (props.disabled || open.value) return
+    if (props.disabled || open.value) {
+        return
+    }
 
     open.value = true
     query.value = ''
@@ -130,7 +142,9 @@ function toggle() {
 }
 
 function pick(option: MultiSelectOption) {
-    if (atLimit.value) return
+    if (atLimit.value) {
+        return
+    }
 
     emit('update:modelValue', [...props.modelValue, option.value])
 
@@ -160,7 +174,9 @@ function clearAll() {
 }
 
 function onKeydown(e: KeyboardEvent) {
-    if (props.disabled) return
+    if (props.disabled) {
+        return
+    }
 
     if (e.key === 'Escape' && open.value) {
         e.stopPropagation()
@@ -184,7 +200,9 @@ function onKeydown(e: KeyboardEvent) {
         return
     }
 
-    if (!open.value) return
+    if (!open.value) {
+        return
+    }
 
     if (e.key === 'ArrowDown') {
         e.preventDefault()
@@ -197,30 +215,40 @@ function onKeydown(e: KeyboardEvent) {
 
         const option = available.value[highlighted.value]
 
-        if (option) pick(option)
+        if (option) {
+            pick(option)
+        }
     }
 }
 
 function onDocumentPointerDown(e: PointerEvent) {
-    if (!open.value) return
+    if (!open.value) {
+        return
+    }
 
     const target = e.target as Node
 
     // The panel is teleported, so it is not a descendant of the trigger; both
     // have to be checked or picking an option would close before it registered.
-    if (root.value?.contains(target) || panel.value?.contains(target)) return
+    if (root.value?.contains(target) || panel.value?.contains(target)) {
+        return
+    }
 
     hide()
 }
 
 function reposition() {
-    if (open.value) place()
+    if (open.value) {
+        place()
+    }
 }
 
 // A filtered list can shrink under the cursor; keep the highlight in range or
 // Enter selects nothing and looks broken.
 watch(available, (list) => {
-    if (highlighted.value > list.length - 1) highlighted.value = Math.max(0, list.length - 1)
+    if (highlighted.value > list.length - 1) {
+        highlighted.value = Math.max(0, list.length - 1)
+    }
 })
 
 onMounted(() => {
@@ -262,7 +290,13 @@ onBeforeUnmount(() => {
                     :aria-label="`Remove ${option.label}`"
                     @click.stop="remove(option.value)"
                 >
-                    <svg viewBox="0 0 24 24" class="size-3" fill="none" stroke="currentColor" stroke-width="3">
+                    <svg
+                        viewBox="0 0 24 24"
+                        class="size-3"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="3"
+                    >
                         <path d="M18 6 6 18M6 6l12 12" />
                     </svg>
                 </button>
@@ -306,6 +340,7 @@ onBeforeUnmount(() => {
                 <div
                     v-if="open"
                     ref="panel"
+                    data-pk-overlay
                     class="bg-popover fixed z-[100] overflow-hidden rounded-md border shadow-lg"
                     :style="{
                         top: `${position.top}px`,
@@ -340,7 +375,10 @@ onBeforeUnmount(() => {
                             {{ option.label }}
                         </button>
 
-                        <p v-if="available.length === 0" class="text-muted-foreground px-2 py-3 text-sm">
+                        <p
+                            v-if="available.length === 0"
+                            class="text-muted-foreground px-2 py-3 text-sm"
+                        >
                             <template v-if="atLimit">You have selected the maximum.</template>
                             <template v-else-if="query">Nothing matches “{{ query }}”.</template>
                             <template v-else>Everything is selected.</template>

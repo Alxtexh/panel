@@ -38,6 +38,20 @@ return [
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+
+            /*
+             * WHERE `sqlite3` LIVES, for the process that takes backups.
+             *
+             * `spatie/laravel-backup` shells out to the driver's own dump tool,
+             * and it inherits the PATH of whatever process runs it. A queue
+             * worker started from a service manager has a minimal PATH - not the
+             * one an interactive shell has - so "backup:run" worked when typed
+             * by hand and FAILED from the queue, which is the only place it
+             * actually runs. Naming the path here removes the difference.
+             */
+            'dump' => [
+                'dump_binary_path' => env('DB_DUMP_BINARY_PATH', ''),
+            ],
             'busy_timeout' => null,
             'journal_mode' => null,
             'synchronous' => null,

@@ -6,11 +6,12 @@
  * dedicated page rather than a modal for the same reasons as the form: it is
  * linkable, survives a refresh, and is what an operator pastes into a ticket.
  *
- * Fields render through the same semantic mapping the table uses — badge
- * colours from the schema's intent map, dates by column type — so a value never
+ * Fields render through the same semantic mapping the table uses - badge
+ * colours from the schema's intent map, dates by column type - so a value never
  * looks one way in the list and another here.
  */
 import { Badge } from '@/components/ui/badge'
+import AuditTimeline from '@/components/AuditTimeline.vue'
 import { Button } from '@/components/ui/button'
 import { InfoNode, RelationPanel, useSchemaColumns, type SchemaColumn } from '@panelkit/ui'
 import { Head, Link, router } from '@inertiajs/vue3'
@@ -26,7 +27,7 @@ const props = defineProps<{
         table: { columns: SchemaColumn[] }
         /** Optional layout tree. Falls back to a flat list when empty. */
         infolist: any[]
-        /** Related lists. Structure only — rows arrive on demand. */
+        /** Related lists. Structure only - rows arrive on demand. */
         relations?: {
             key: string
             label: string
@@ -42,7 +43,7 @@ const props = defineProps<{
 
 /**
  * Layout when the resource declares one; a flat list of its table columns
- * otherwise — which is what every resource had before layout existed, so
+ * otherwise - which is what every resource had before layout existed, so
  * nothing that has not opted in changes.
  */
 const hasLayout = computed(() => (props.schema.infolist?.length ?? 0) > 0)
@@ -57,7 +58,7 @@ const title = computed(() => String(props.record.name ?? `#${props.record.id}`))
  *
  * FETCHED WHEN A TAB IS OPENED, never with the record. A page with four
  * relations must not run four list queries to show one, and eager-loading a
- * relation reads every related row to render the ten a person looks at — which
+ * relation reads every related row to render the ten a person looks at - which
  * is fine for the client the developer tested with and ruinous for the one with
  * forty thousand sessions.
  *
@@ -135,7 +136,7 @@ function render(key: string): string {
     const column = byKey.value[key]
     const value = props.record[key]
 
-    if (value === null || value === undefined || value === '') return '—'
+    if (value === null || value === undefined || value === '') return '-'
 
     if (column?.type === 'date' || column?.type === 'datetime') {
         return new Date(String(value)).toLocaleDateString(undefined, dateFormats[column.type])
@@ -240,6 +241,13 @@ function destroy() {
                 />
             </template>
         </section>
+
+        <!--
+            History last, and collapsed. It is the least-read part of a detail
+            page and the most likely to be long, so it sits below the record
+            rather than competing with it.
+        -->
+        <AuditTimeline :resource="schema.key" :record-id="record.id" />
 
         <div>
             <Button as-child variant="ghost" size="sm">

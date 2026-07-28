@@ -6,7 +6,7 @@ import { computed, ref, watch } from 'vue'
  *
  * This is the ONLY place that knows list screens are driven by Inertia. It lives
  * in the app, not in @panelkit/ui, because spec §4 rule 1 says nothing in the UI
- * package may import Inertia — the components emit events, and this turns those
+ * package may import Inertia - the components emit events, and this turns those
  * events into requests. Swapping Inertia for anything else means rewriting this
  * file and nothing else.
  *
@@ -42,7 +42,7 @@ export function useListTable(url: string, props: ListPageProps) {
     /**
      * Cursors for the pages already visited, oldest first.
      *
-     * Keyset pagination only knows how to go FORWARD — a cursor says "everything
+     * Keyset pagination only knows how to go FORWARD - a cursor says "everything
      * after this row", not "everything before it". Rather than run a second
      * reversed query to walk backwards, the pages we have already been through
      * are remembered here, so "previous" is a stack pop and costs the server
@@ -108,7 +108,7 @@ export function useListTable(url: string, props: ListPageProps) {
     /**
      * Builds the query string from current state plus an override.
      *
-     * `null` removes a parameter; `false` must NOT — it is an applied value for
+     * `null` removes a parameter; `false` must NOT - it is an applied value for
      * a tri-state boolean filter, and dropping it would silently turn "only
      * inactive" into "no filter".
      */
@@ -148,7 +148,7 @@ export function useListTable(url: string, props: ListPageProps) {
     function apply(overrides: Record<string, unknown> = {}) {
         resetPagination()
         // A selection describes a result set. Change the result set and the
-        // selection is meaningless — worse, a bulk action on a stale selection
+        // selection is meaningless - worse, a bulk action on a stale selection
         // would hit rows the operator can no longer see.
         clearSelection()
         request(query(overrides))
@@ -202,6 +202,21 @@ export function useListTable(url: string, props: ListPageProps) {
         request(cursor ? { ...query(), cursor } : query())
     }
 
+    /**
+     * Back to page 1, without seeking anywhere.
+     *
+     * The cheapest operation in keyset pagination and the reason a "first"
+     * control exists while a "last" one does not: page 1 is simply the query
+     * with no cursor, so this drops the trail and re-asks. Nothing is walked
+     * and nothing is discarded.
+     */
+    function firstPage() {
+        if (cursorStack.value.length === 0 || loading.value) return
+
+        cursorStack.value = []
+        request(query())
+    }
+
     function setTab(tab: string | null) {
         apply({ tab })
     }
@@ -239,11 +254,16 @@ export function useListTable(url: string, props: ListPageProps) {
     }
 
     function clearAll() {
-        apply({ search: '', ...Object.fromEntries(Object.keys(props.filters).map((k) => [k, null])) })
+        apply({
+            search: '',
+            ...Object.fromEntries(Object.keys(props.filters).map((k) => [k, null])),
+        })
     }
 
     const isFiltered = computed(
-        () => props.search !== '' || Object.values(props.filters).some((v) => v !== null && v !== undefined),
+        () =>
+            props.search !== '' ||
+            Object.values(props.filters).some((v) => v !== null && v !== undefined),
     )
 
     return {
@@ -264,6 +284,7 @@ export function useListTable(url: string, props: ListPageProps) {
         apply,
         nextPage,
         previousPage,
+        firstPage,
         setPerPage,
         sortBy,
         setFilter,

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /**
- * A panel that slides in from an edge — filters, notifications, details.
+ * A panel that slides in from an edge - filters, notifications, details.
  *
  * WHY A SLIDEOVER RATHER THAN A DIALOG for these: a modal dialog is a question
  * that must be answered before anything else can happen. A filter panel and a
- * notification list are neither — they are secondary surfaces you consult
+ * notification list are neither - they are secondary surfaces you consult
  * beside the page, and forcing them into a centred modal makes the page they
  * describe disappear behind them.
  *
@@ -41,7 +41,9 @@ let restoreFocusTo: HTMLElement | null = null
 let previousOverflow = ''
 
 function onKeydown(e: KeyboardEvent) {
-    if (!props.open) return
+    if (!props.open) {
+        return
+    }
 
     if (e.key === 'Escape') {
         e.stopPropagation()
@@ -50,18 +52,22 @@ function onKeydown(e: KeyboardEvent) {
         return
     }
 
-    if (e.key !== 'Tab' || !panel.value) return
+    if (e.key !== 'Tab' || !panel.value) {
+        return
+    }
 
     /*
      * A minimal focus trap. Without it, tabbing out of the panel lands on
-     * controls UNDER the backdrop — reachable by keyboard, unreachable by
+     * controls UNDER the backdrop - reachable by keyboard, unreachable by
      * mouse, which is the worst possible combination.
      */
     const focusable = panel.value.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     )
 
-    if (focusable.length === 0) return
+    if (focusable.length === 0) {
+        return
+    }
 
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
@@ -132,7 +138,9 @@ onBeforeUnmount(() => {
                 <header class="flex items-start justify-between gap-3 border-b px-4 py-3">
                     <div class="min-w-0">
                         <h2 class="text-base font-semibold">{{ title }}</h2>
-                        <p v-if="description" class="text-muted-foreground mt-0.5 text-xs">{{ description }}</p>
+                        <p v-if="description" class="text-muted-foreground mt-0.5 text-xs">
+                            {{ description }}
+                        </p>
                     </div>
 
                     <div class="flex shrink-0 items-center gap-2">
@@ -143,7 +151,13 @@ onBeforeUnmount(() => {
                             aria-label="Close"
                             @click="emit('close')"
                         >
-                            <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <svg
+                                viewBox="0 0 24 24"
+                                class="size-4"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                            >
                                 <path d="M18 6 6 18M6 6l12 12" />
                             </svg>
                         </button>
@@ -155,7 +169,10 @@ onBeforeUnmount(() => {
                     <slot />
                 </div>
 
-                <footer v-if="$slots.footer" class="flex items-center justify-end gap-2 border-t px-4 py-3">
+                <footer
+                    v-if="$slots.footer"
+                    class="flex items-center justify-end gap-2 border-t px-4 py-3"
+                >
                     <slot name="footer" />
                 </footer>
             </aside>

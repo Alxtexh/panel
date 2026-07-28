@@ -4,7 +4,7 @@
  *
  * A slide-in panel rather than a dropdown, because there are now seven controls
  * including two colour palettes. A dropdown that tall stops being a menu and
- * becomes a cramped page — and a drawer lets you keep adjusting while watching
+ * becomes a cramped page - and a drawer lets you keep adjusting while watching
  * the panel behind it change, which is the entire point of putting appearance
  * in the chrome rather than in settings.
  *
@@ -12,15 +12,8 @@
  * and seeing the change is the feedback.
  */
 import { computed, ref } from 'vue'
-import {
-    useAppearance,
-    FONT_SIZE_MAX,
-    FONT_SIZE_MIN,
-    type CardStyle,
-    type Density,
-    type SidebarSide,
-    type Theme,
-} from '../../composables/useAppearance'
+import { useAppearance, FONT_SIZE_MAX, FONT_SIZE_MIN } from '../../composables/useAppearance'
+import type { CardStyle, Density, SidebarSide, Theme } from '../../composables/useAppearance'
 
 const { appearance, set, reset, PRIMARY_COLORS, SURFACE_TINTS } = useAppearance()
 
@@ -36,8 +29,9 @@ const themes: { value: Theme; label: string }[] = [
 ]
 
 const densities: { value: Density; label: string }[] = [
-    { value: 'comfortable', label: 'Comfortable' },
     { value: 'compact', label: 'Compact' },
+    { value: 'comfortable', label: 'Comfortable' },
+    { value: 'spacious', label: 'Spacious' },
 ]
 
 const cardStyles: { value: CardStyle; label: string }[] = [
@@ -54,7 +48,7 @@ const sides: { value: SidebarSide; label: string }[] = [
 /**
  * Surface swatches preview the CARD colour, not the accent.
  *
- * Showing the tint at full chroma would misrepresent it — these are nearly-grey
+ * Showing the tint at full chroma would misrepresent it - these are nearly-grey
  * by design, and a vivid swatch promises a colour the panel will never show.
  */
 function surfaceSwatch(hue: number, chroma: number): string {
@@ -70,11 +64,29 @@ function surfaceSwatch(hue: number, chroma: number): string {
         title="Appearance"
         @click="open = true"
     >
-        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3" />
+        <!--
+            A PALETTE, NOT A COG.
+
+            This opens theme, colour and layout - an appearance drawer. A gear is
+            the universal glyph for "application settings", and sitting next to
+            the real settings control it read as a second one; people looked here
+            for their account and profile. The icon should say what is behind it.
+        -->
+        <svg
+            viewBox="0 0 24 24"
+            class="size-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
             <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                d="M12 22a10 10 0 1 1 0-20c5 0 9 3.6 9 8 0 2.2-1.8 4-4 4h-2.2a1.8 1.8 0 0 0-1.3 3 1.8 1.8 0 0 1-1.5 3z"
             />
+            <circle cx="7.5" cy="11.5" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="10.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="8.5" r="1.2" fill="currentColor" stroke="none" />
         </svg>
     </button>
 
@@ -98,7 +110,7 @@ function surfaceSwatch(hue: number, chroma: number): string {
             topbar mirrors too.
 
             Both the resting edge and the direction of travel have to flip
-            together — an off-screen start of `-translate-x-full` with a
+            together - an off-screen start of `-translate-x-full` with a
             `right-0` anchor animates in from the wrong side.
         -->
         <Transition
@@ -117,9 +129,24 @@ function surfaceSwatch(hue: number, chroma: number): string {
                 <header class="flex items-center justify-between border-b px-4 py-3">
                     <h2 class="text-base font-semibold">Settings</h2>
                     <div class="flex items-center gap-2">
-                        <button class="text-muted-foreground text-xs hover:underline" @click="reset">Reset</button>
-                        <button class="text-muted-foreground hover:text-foreground" aria-label="Close" @click="open = false">
-                            <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <button
+                            class="text-muted-foreground text-xs hover:underline"
+                            @click="reset"
+                        >
+                            Reset
+                        </button>
+                        <button
+                            class="text-muted-foreground hover:text-foreground"
+                            aria-label="Close"
+                            @click="open = false"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                class="size-4"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                            >
                                 <path d="M18 6 6 18M6 6l12 12" />
                             </svg>
                         </button>
@@ -220,7 +247,9 @@ function surfaceSwatch(hue: number, chroma: number): string {
                     <section class="flex flex-col gap-2">
                         <div class="flex items-center justify-between">
                             <h3 class="text-sm font-semibold">Font size</h3>
-                            <span class="text-muted-foreground text-xs tabular-nums">{{ appearance.fontSize }}px</span>
+                            <span class="text-muted-foreground text-xs tabular-nums"
+                                >{{ appearance.fontSize }}px</span
+                            >
                         </div>
 
                         <div class="flex items-center gap-2">
@@ -241,7 +270,11 @@ function surfaceSwatch(hue: number, chroma: number): string {
                                 :max="FONT_SIZE_MAX"
                                 :value="appearance.fontSize"
                                 aria-label="Font size in pixels"
-                                @input="set({ fontSize: Number(($event.target as HTMLInputElement).value) })"
+                                @input="
+                                    set({
+                                        fontSize: Number(($event.target as HTMLInputElement).value),
+                                    })
+                                "
                             />
 
                             <button

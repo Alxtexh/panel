@@ -98,7 +98,7 @@ final class DashboardFilterTest extends TestCase
 
     /**
      * The bucket follows the span, because a person picking dates has no reason
-     * to think about granularity — and picking wrong gives 17,000 points or one.
+     * to think about granularity - and picking wrong gives 17,000 points or one.
      */
     public function test_the_bucket_is_chosen_from_the_span(): void
     {
@@ -184,7 +184,7 @@ final class DashboardFilterTest extends TestCase
 
     public function test_the_dashboard_echoes_the_applied_filters(): void
     {
-        $this->get('/dashboard?from=2026-07-01&to=2026-07-10&routers=' . $this->routerA->id)
+        $this->get('/dashboard?from=2026-07-01&to=2026-07-10&routers='.$this->routerA->id)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('filters.from', '2026-07-01')
@@ -197,7 +197,7 @@ final class DashboardFilterTest extends TestCase
      * The router filter must narrow the WIDGETS, not merely appear in the URL.
      *
      * Asserted through the deferred prop, because that is where the query
-     * actually runs — a filter echoed back but never applied would pass a
+     * actually runs - a filter echoed back but never applied would pass a
      * check on the props alone.
      */
     public function test_the_router_filter_narrows_a_widget(): void
@@ -206,7 +206,7 @@ final class DashboardFilterTest extends TestCase
         $this->seedClients($this->routerB, 4);
 
         $all = $this->deferredStat('/dashboard', 'clients_total');
-        $onlyA = $this->deferredStat('/dashboard?routers=' . $this->routerA->id, 'clients_total');
+        $onlyA = $this->deferredStat('/dashboard?routers='.$this->routerA->id, 'clients_total');
 
         $this->assertSame(10, $all['value']);
         $this->assertSame(6, $onlyA['value']);
@@ -259,7 +259,7 @@ final class DashboardFilterTest extends TestCase
                 'plan_id' => $plan->id,
                 'router_id' => $router->id,
                 'name' => "Client {$unique}",
-                'phone' => '+254' . substr((string) crc32($unique), 0, 9),
+                'phone' => '+254'.substr((string) crc32($unique), 0, 9),
                 'access_code' => strtoupper(substr(md5($unique), 0, 10)),
                 'status' => 'active',
                 'plan_type' => 'pppoe',

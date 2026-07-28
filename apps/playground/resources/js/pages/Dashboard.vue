@@ -3,7 +3,7 @@
  * Dashboard.
  *
  * Every stat and chart is its own DEFERRED prop, so the shell paints
- * immediately and the numbers fill in independently — one slow counter does not
+ * immediately and the numbers fill in independently - one slow counter does not
  * hold up the others. Spec §10: no widget may block first paint.
  *
  * CHANGING A PERIOD RELOADS ONE PROP. `only: ['chart_sessions', 'periods']` is
@@ -21,10 +21,13 @@ import {
     PieChart,
     PolarAreaChart,
     RadarChart,
+    PkBoundary,
     SegmentedBar,
     StatCard,
+    StatStrip,
     TrendBadge,
 } from '@panelkit/ui'
+import type { StatSegment } from '@panelkit/ui'
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import DashboardFilterPanel from '@/components/DashboardFilters.vue'
@@ -75,7 +78,10 @@ interface Series {
     bars: Dataset[] | null
     lines: Dataset[] | null
     total: number | null
-    trend: { direction: 'up' | 'down' | 'flat' | 'new'; percentage: number | null } | null
+    trend: {
+        direction: 'up' | 'down' | 'flat' | 'new'
+        percentage: number | null
+    } | null
     error: boolean
 }
 
@@ -95,7 +101,9 @@ const props = defineProps<{
     filterOptions: { routers: { value: number; label: string }[] }
 }>()
 
-defineOptions({ layout: { breadcrumbs: [{ title: 'Dashboard', href: '/dashboard' }] } })
+defineOptions({
+    layout: { breadcrumbs: [{ title: 'Dashboard', href: '/dashboard' }] },
+})
 
 const page = usePage()
 
@@ -104,15 +112,43 @@ const page = usePage()
  *
  * <Deferred> gates when its default slot renders; it does not hand the value in
  * as a slot prop. Reading `slotProps[key]` looked plausible and silently
- * rendered an em dash for every stat — the numbers were arriving correctly and
+ * rendered an em dash for every stat - the numbers were arriving correctly and
  * being thrown away.
  */
+/**
+ * The window strip, and the shape it holds while it loads.
+ *
+ * The placeholder carries the real labels rather than blank cells, because the
+ * labels are known before the numbers are - showing them immediately means the
+ * strip does not change size or wording when the data lands, only its values.
+ */
+const STRIP_PLACEHOLDER: StatSegment[] = [
+    { key: 'today', label: 'Today', value: '', caption: 'so far' },
+    { key: 'week', label: 'Last 7 days', value: '', caption: 'rolling window' },
+    { key: 'month', label: 'This month', value: '', caption: 'since the 1st' },
+    {
+        key: 'quarter',
+        label: 'Last 90 days',
+        value: '',
+        caption: 'rolling window',
+    },
+]
+
+const strip = computed(
+    () =>
+        ((page.props as Record<string, any>).strip as StatSegment[] | undefined) ??
+        STRIP_PLACEHOLDER,
+)
+
 function stat(key: string) {
     return (page.props as Record<string, any>)[`stat_${key}`] as
         | {
               value: unknown
               error: boolean
-              trend: { direction: 'up' | 'down' | 'flat' | 'new'; percentage: number | null } | null
+              trend: {
+                  direction: 'up' | 'down' | 'flat' | 'new'
+                  percentage: number | null
+              } | null
               sparkline: { label: string; value: number }[] | null
           }
         | undefined
@@ -136,7 +172,7 @@ function series(key: string): Series {
  * Swap one chart's window.
  *
  * The existing query string is carried forward, so changing the sessions period
- * does not silently reset the signups one — each selector owns exactly its own
+ * does not silently reset the signups one - each selector owns exactly its own
  * parameter.
  */
 function setPeriod(key: string, value: string) {
@@ -169,9 +205,10 @@ function multiSeries(chart: Chart): Dataset[] | undefined {
     // A single-dataset stepped chart arrives as `points`, so it has to be
     // promoted to a series before the flag has anywhere to live. Without this
     // the type was accepted, the data rendered, and the stepping silently did
-    // not happen — the worst kind of no-op.
+    // not happen - the worst kind of no-op.
     const datasets =
-        resolved.series ?? (stepped && resolved.points.length ? [{ name: '', points: resolved.points }] : null)
+        resolved.series ??
+        (stepped && resolved.points.length ? [{ name: '', points: resolved.points }] : null)
 
     if (!datasets) return undefined
 
@@ -207,12 +244,20 @@ function applyFilters(next: { from: string | null; to: string | null; routers: n
 
     filtersOpen.value = false
 
-    router.get(window.location.pathname, query, { preserveState: true, preserveScroll: true, replace: true })
+    router.get(window.location.pathname, query, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    })
 }
 
 function resetFilters() {
     filtersOpen.value = false
-    router.get(window.location.pathname, {}, { preserveState: true, preserveScroll: true, replace: true })
+    router.get(
+        window.location.pathname,
+        {},
+        { preserveState: true, preserveScroll: true, replace: true },
+    )
 }
 
 const filterSummary = computed(() => {
@@ -220,7 +265,9 @@ const filterSummary = computed(() => {
 
     if (props.filters.label) parts.push(props.filters.label)
     if (props.filters.routers.length) {
-        parts.push(`${props.filters.routers.length} router${props.filters.routers.length === 1 ? '' : 's'}`)
+        parts.push(
+            `${props.filters.routers.length} router${props.filters.routers.length === 1 ? '' : 's'}`,
+        )
     }
 
     return parts.join(' · ')
@@ -254,30 +301,38 @@ const comparison: Record<string, string> = {
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="min-w-0">
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Dashboard</h1>
-                <p v-if="filterSummary" class="text-muted-foreground truncate text-xs">{{ filterSummary }}</p>
+                <p v-if="filterSummary" class="truncate text-xs text-muted-foreground">
+                    {{ filterSummary }}
+                </p>
             </div>
 
             <div class="flex items-center gap-2">
                 <button
                     v-if="filters.active"
                     type="button"
-                    class="text-muted-foreground hover:text-foreground text-xs hover:underline"
+                    class="text-xs text-muted-foreground hover:text-foreground hover:underline"
                     @click="resetFilters"
                 >
                     Clear
                 </button>
                 <button
                     type="button"
-                    class="bg-background hover:bg-accent relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
+                    class="relative inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent"
                     @click="filtersOpen = true"
                 >
-                    <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg
+                        viewBox="0 0 24 24"
+                        class="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
                         <path d="M3 5h18M6 12h12M10 19h4" />
                     </svg>
                     Filters
                     <span
                         v-if="filters.active"
-                        class="bg-primary text-primary-foreground ml-0.5 rounded-full px-1.5 text-[10px] font-semibold"
+                        class="ml-0.5 rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground"
                     >
                         on
                     </span>
@@ -296,8 +351,33 @@ const comparison: Record<string, string> = {
             @reset="resetFilters"
         />
 
+        <!--
+            One strip, four windows on the same metric. Separate cards would say
+            "four things"; the shared container says "one thing, measured four
+            ways", which is what these are.
+        -->
+        <!--
+            EVERY WIDGET IS ITS OWN BOUNDARY, and that is the whole point of the
+            pattern on this page: a dashboard is twenty independent queries, and
+            one of them failing must cost one rectangle rather than the page.
+            Wrapping the grid once instead would trade a broken widget for a
+            broken dashboard, which is the trade this exists to refuse.
+        -->
+        <PkBoundary label="The summary strip">
+            <Deferred data="strip">
+                <template #fallback>
+                    <StatStrip :segments="STRIP_PLACEHOLDER" loading />
+                </template>
+
+                <template #default>
+                    <StatStrip :segments="strip" />
+                </template>
+            </Deferred>
+        </PkBoundary>
+
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Deferred v-for="widget in widgets" :key="widget.key" :data="`stat_${widget.key}`">
+            <PkBoundary v-for="widget in widgets" :key="widget.key" :label="widget.label" fill>
+            <Deferred :data="`stat_${widget.key}`">
                 <template #fallback>
                     <StatCard :label="widget.label" :description="widget.description" loading />
                 </template>
@@ -314,13 +394,18 @@ const comparison: Record<string, string> = {
                     />
                 </template>
             </Deferred>
+            </PkBoundary>
         </div>
 
         <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-            <div
+            <!-- `fill` because these are GRID CELLS: without it a row of cards
+                 is only as tall as its shortest, which reads as misalignment. -->
+            <PkBoundary
                 v-for="chart in charts"
                 :key="chart.key"
+                :label="chart.label"
                 :class="chart.span >= 2 ? 'lg:col-span-2' : ''"
+                fill
             >
                 <Deferred :data="`chart_${chart.key}`">
                     <template #fallback>
@@ -395,7 +480,9 @@ const comparison: Record<string, string> = {
                                     chart.type === 'stackedBar' ||
                                     chart.type === 'rankedBar'
                                 "
-                                :data="series(chart.key).series ? undefined : series(chart.key).points"
+                                :data="
+                                    series(chart.key).series ? undefined : series(chart.key).points
+                                "
                                 :series="series(chart.key).series ?? undefined"
                                 :orientation="
                                     chart.type === 'horizontalBar' || chart.type === 'rankedBar'
@@ -418,7 +505,7 @@ const comparison: Record<string, string> = {
                         </ChartCard>
                     </template>
                 </Deferred>
-            </div>
+            </PkBoundary>
         </div>
     </div>
 </template>

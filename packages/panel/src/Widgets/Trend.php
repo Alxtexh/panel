@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Widgets;
 
 /**
- * "66,667 active, ▲ 4% vs last week" — the comparison behind the arrow.
+ * "66,667 active, ▲ 4% vs last week" - the comparison behind the arrow.
  *
  * The whole value of this class is in the ZERO CASES, which is where a naive
  * `($current - $previous) / $previous` produces the three worst outputs a

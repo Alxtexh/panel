@@ -14,7 +14,7 @@ use Tests\TestCase;
  *
  * "No hand editing" is the part worth testing, and it has three parts that are
  * easy to get individually right and collectively wrong: the class must be
- * VALID, DISCOVERED without a registration line, and AUTHORIZED — the panel
+ * VALID, DISCOVERED without a registration line, and AUTHORIZED - the panel
  * denies any ability whose model has no policy, so a generator that skipped the
  * policy would emit a resource rendering an empty table with no explanation.
  */
@@ -26,6 +26,13 @@ final class GeneratorTest extends TestCase
 
     private string $policyPath;
 
+    /**
+     * Anything that was already at those paths, held for restoration.
+     *
+     * @var array<string, string>
+     */
+    private array $preserved = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -33,14 +40,50 @@ final class GeneratorTest extends TestCase
         $this->resourcePath = app_path('Panel/Resources/UserResource.php');
         $this->policyPath = app_path('Policies/UserPolicy.php');
 
+        /*
+         * THIS TEST WRITES INTO THE APPLICATION'S OWN SOURCE TREE, because that
+         * is where the generator writes and there is no honest way to test it
+         * elsewhere. Which means its fixture paths are REAL paths that real code
+         * can legitimately occupy.
+         *
+         * It did. `UserResource` was written as an actual resource, and this
+         * test deleted it - twice - because `cleanUp()` removed the path in both
+         * setUp and tearDown without ever asking whether something was there.
+         * Nothing failed: the suite passed, the file was gone, and the panel
+         * simply stopped having a users screen.
+         *
+         * So the contents are preserved and put back. A test may own a path for
+         * the length of a test; it may not own it permanently.
+         */
+        $this->preserve($this->resourcePath);
+        $this->preserve($this->policyPath);
+
         $this->cleanUp();
     }
 
     protected function tearDown(): void
     {
         $this->cleanUp();
+        $this->restore();
 
         parent::tearDown();
+    }
+
+    private function preserve(string $path): void
+    {
+        if (File::exists($path)) {
+            $this->preserved[$path] = File::get($path);
+        }
+    }
+
+    private function restore(): void
+    {
+        foreach ($this->preserved as $path => $contents) {
+            File::ensureDirectoryExists(dirname($path));
+            File::put($path, $contents);
+        }
+
+        $this->preserved = [];
     }
 
     private function cleanUp(): void
@@ -59,7 +102,7 @@ final class GeneratorTest extends TestCase
         $code = File::get($this->resourcePath);
 
         $this->assertStringContainsString('final class UserResource extends Resource', $code);
-        $this->assertStringContainsString("protected static string \$model = User::class;", $code);
+        $this->assertStringContainsString('protected static string $model = User::class;', $code);
 
         // Introspected from the real users table.
         $this->assertStringContainsString("TextColumn::make('name')", $code);
@@ -71,9 +114,9 @@ final class GeneratorTest extends TestCase
     {
         $this->artisan('make:panel-resource', ['model' => 'User', '--generate' => true])->assertSuccessful();
 
-        exec('php -l ' . escapeshellarg($this->resourcePath) . ' 2>&1', $output, $status);
+        exec('php -l '.escapeshellarg($this->resourcePath).' 2>&1', $output, $status);
 
-        $this->assertSame(0, $status, 'Generated resource has a syntax error: ' . implode("\n", $output));
+        $this->assertSame(0, $status, 'Generated resource has a syntax error: '.implode("\n", $output));
     }
 
     /**

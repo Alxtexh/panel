@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Modal dialog. Opens as pure local state — no network request (antipatterns §3.0.3).
+ * Modal dialog. Opens as pure local state - no network request (antipatterns §3.0.3).
  *
  * Focus is trapped and restored, Escape closes, and the backdrop closes on a
  * click that both started AND ended outside the panel. That last detail matters:
@@ -10,7 +10,12 @@
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 const props = withDefaults(
-    defineProps<{ open: boolean; title: string; description?: string; busy?: boolean }>(),
+    defineProps<{
+        open: boolean
+        title: string
+        description?: string
+        busy?: boolean
+    }>(),
     { busy: false },
 )
 
@@ -34,25 +39,33 @@ function onBackdropUp(e: PointerEvent) {
     if (pressStartedOnBackdrop.value && e.target === e.currentTarget && !props.busy) {
         emit('close')
     }
+
     pressStartedOnBackdrop.value = false
 }
 
 function onKeydown(e: KeyboardEvent) {
-    if (!props.open) return
+    if (!props.open) {
+        return
+    }
 
     if (e.key === 'Escape' && !props.busy) {
         e.stopPropagation()
         emit('close')
+
         return
     }
 
-    if (e.key !== 'Tab' || !panel.value) return
+    if (e.key !== 'Tab' || !panel.value) {
+        return
+    }
 
     const focusable = panel.value.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     )
 
-    if (focusable.length === 0) return
+    if (focusable.length === 0) {
+        return
+    }
 
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
@@ -73,7 +86,9 @@ watch(
         if (open) {
             restoreFocusTo = document.activeElement as HTMLElement | null
             document.addEventListener('keydown', onKeydown)
-            nextTick(() => panel.value?.querySelector<HTMLElement>('input, select, textarea, button')?.focus())
+            nextTick(() =>
+                panel.value?.querySelector<HTMLElement>('input, select, textarea, button')?.focus(),
+            )
         } else {
             document.removeEventListener('keydown', onKeydown)
             // Returning focus to the trigger is what makes a modal usable by
@@ -110,14 +125,18 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                 >
                     <div class="border-b px-5 py-4">
                         <h2 class="text-base font-semibold">{{ title }}</h2>
-                        <p v-if="description" class="text-muted-foreground mt-0.5 text-sm">{{ description }}</p>
+                        <p v-if="description" class="text-muted-foreground mt-0.5 text-sm">
+                            {{ description }}
+                        </p>
                     </div>
 
                     <div class="px-5 py-4">
                         <slot />
                     </div>
 
-                    <div class="bg-muted/30 flex items-center justify-end gap-2 rounded-b-xl border-t px-5 py-3">
+                    <div
+                        class="bg-muted/30 flex items-center justify-end gap-2 rounded-b-xl border-t px-5 py-3"
+                    >
                         <slot name="footer" />
                     </div>
                 </div>

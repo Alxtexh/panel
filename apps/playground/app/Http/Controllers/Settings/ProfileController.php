@@ -22,6 +22,17 @@ class ProfileController extends Controller
         return Inertia::render('settings/Profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            /*
+             * Whether a second factor is on - the STATUS only, never the secret.
+             *
+             * Two-factor setup itself stays on the Security page behind a
+             * password confirmation, and that gate is the point: an attacker
+             * sitting at an unlocked laptop must not be able to re-enrol the
+             * second factor without knowing the password. But a profile that
+             * says nothing about it is a profile where nobody discovers it
+             * exists, so the state is surfaced here and the ACTION is a link.
+             */
+            'twoFactorEnabled' => $request->user()?->two_factor_confirmed_at !== null,
         ]);
     }
 

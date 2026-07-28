@@ -7,15 +7,15 @@ namespace PanelKit\Panel\Live;
 use RuntimeException;
 
 /**
- * How a resource stays fresh — the TRANSPORT only.
+ * How a resource stays fresh - the TRANSPORT only.
  *
  * WHY THIS EXISTS. An earlier version hardcoded Laravel Echo, which meant live
  * updates required a Reverb process before anything moved on screen, and an app
  * that did not want one got nothing. That is a dependency masquerading as a
  * feature.
  *
- * The patching rules in §8 — patch never replace, key by id, batch, do not
- * re-sort, pause when hidden, heal on reconnect — are entirely independent of
+ * The patching rules in §8 - patch never replace, key by id, batch, do not
+ * re-sort, pause when hidden, heal on reconnect - are entirely independent of
  * how a change ARRIVES. So the transport is a driver and the rules are shared.
  *
  *   DRIVER_NONE       Off. A list is as fresh as its last request.
@@ -23,8 +23,8 @@ use RuntimeException;
  *   DRIVER_POLL       The default, because it works everywhere with no infra.
  *                     NOT the polling §8 warns about: that warning is about
  *                     re-rendering a component server-side per viewer per tick.
- *                     This asks one lean indexed question — "which of these
- *                     visible ids changed since T" — and returns only changed
+ *                     This asks one lean indexed question - "which of these
+ *                     visible ids changed since T" - and returns only changed
  *                     fields. Cost is a keyed index scan, not a render.
  *
  *   DRIVER_BROADCAST  Reverb, Pusher, Ably. True push, constant server cost
@@ -64,21 +64,21 @@ final class LiveConfig
         if ($driver === self::DRIVER_BROADCAST && $channel === null) {
             /*
              * A broadcast driver with no channel would silently listen to
-             * nothing — the classic failure this project is built against: no
+             * nothing - the classic failure this project is built against: no
              * error, a table that simply never updates, and an operator who
              * trusts it.
              */
             throw new RuntimeException(
                 'The broadcast driver requires a channel. It must be private and tenant-scoped: '
-                . 'a public or tenant-agnostic channel is a cross-tenant leak that server-side '
-                . 'query scoping cannot catch.'
+                .'a public or tenant-agnostic channel is a cross-tenant leak that server-side '
+                .'query scoping cannot catch.'
             );
         }
 
         if ($driver === self::DRIVER_POLL && $intervalMs < 1000) {
             throw new RuntimeException(
                 "A poll interval of {$intervalMs}ms is a denial of service against your own database. "
-                . 'Use the broadcast driver if you need sub-second freshness.'
+                .'Use the broadcast driver if you need sub-second freshness.'
             );
         }
     }
@@ -103,7 +103,7 @@ final class LiveConfig
      * Read from config, so an application chooses once for every resource.
      *
      * A resource can still override, but the common case is one decision in one
-     * place — and moving from poll to Reverb should not touch any resource.
+     * place - and moving from poll to Reverb should not touch any resource.
      */
     public static function fromConfig(): self
     {

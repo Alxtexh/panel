@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * PHASE 2 — the third copy.
+ * PHASE 2 - the third copy.
  *
  * Beyond the shared cross-tenant and N+1 guards, this file pins the two things
  * Plans has that the other screens do not: a THREE-state boolean filter, and a
@@ -47,7 +47,7 @@ final class PlansListTest extends TestCase
                 'name' => sprintf('%s %03d', $prefix, $i),
                 'speed_mbps' => [5, 10, 20, 40, 100][$i % 5],
                 // Deliberately spans the 4-digit boundary so a string sort and a
-                // numeric sort disagree — that is what the price sort test needs.
+                // numeric sort disagree - that is what the price sort test needs.
                 'price_cents' => [90000, 100000, 5000, 1200000, 30000][$i % 5],
                 'is_active' => $i % 3 !== 0,
                 'created_at' => now()->subMinutes($i),
@@ -165,7 +165,7 @@ final class PlansListTest extends TestCase
         $this->assertSame(
             $atFive,
             $atFiveHundred,
-            "Query count changed with row count ({$atFive} at 5, {$atFiveHundred} at 500) — an N+1 exists."
+            "Query count changed with row count ({$atFive} at 5, {$atFiveHundred} at 500) - an N+1 exists."
         );
     }
 
@@ -179,7 +179,7 @@ final class PlansListTest extends TestCase
          *
          * This guard is about the LIST query: a COUNT over a resource table is
          * unbounded, grows with the tenant, and is exactly what §10 forbids in
-         * front of rows. The unread-badge count is a different shape — one
+         * front of rows. The unread-badge count is a different shape - one
          * user's inbox, reached through the morph index, bounded by what that
          * person has been sent. Excluding it by name keeps the guard sharp;
          * broadening the pattern to "ignore counts we expect" would let a real
@@ -195,14 +195,22 @@ final class PlansListTest extends TestCase
         }
     }
 
+    /**
+     * The fallback is the table's DEFAULT sort, which is now `position`.
+     *
+     * Plans became reorderable, and declaring a reorder column makes it the
+     * default ordering - dragging while sorted by anything else moves a row
+     * somewhere the operator cannot see the effect of. So the fallback moved
+     * with it.
+     */
     public function test_an_unknown_sort_column_falls_back_instead_of_reaching_sql(): void
     {
         $this->makePlans($this->tenantA, 3, 'Alpha');
 
         $this->actingAs($this->userA)
-            ->get('/plans?sort=' . urlencode('id; drop table plans--'))
+            ->get('/plans?sort='.urlencode('id; drop table plans--'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->where('sort', 'created_at'));
+            ->assertInertia(fn ($page) => $page->where('sort', 'position'));
 
         $this->assertDatabaseCount('plans', 3);
     }
@@ -216,7 +224,7 @@ final class PlansListTest extends TestCase
         $guard = 0;
 
         do {
-            $props = $this->props('/plans' . ($cursor ? '?cursor=' . urlencode($cursor) : ''));
+            $props = $this->props('/plans'.($cursor ? '?cursor='.urlencode($cursor) : ''));
 
             foreach ($props['records'] as $record) {
                 $seen[] = $record['id'];
@@ -243,12 +251,24 @@ final class PlansListTest extends TestCase
     /** @return list<string> */
     private function captureQueriesForIndex(): array
     {
-        // Warm the per-request lookups that are NOT row-proportional — the
-        // tenant record behind branding and feature flags. actingAs reuses one
-        // user instance across requests, so its lazy relation loads on the first
-        // measurement and not the second, making the two counts differ for a
-        // reason that has nothing to do with an N+1.
-        $this->actingAs($this->userA)->get('/dashboard');
+        /*
+         * A DISCARDED WARM-UP OF THE PAGE BEING MEASURED, for the same reason
+         * `panel:benchmark` does one: the first call pays costs that are paid
+         * ONCE, and this test compares two calls.
+         *
+         * actingAs reuses a single user instance across requests, so anything
+         * lazy-loaded onto it - the tenant behind branding, and now the three
+         * Spatie relations behind a permission check - is queried during the
+         * first measurement and already in memory for the second. The counts
+         * then differ by a fixed 3 for a reason that has nothing to do with row
+         * count. Warming with /dashboard was not enough: it does not run the
+         * same permission checks, so it left exactly those three unwarmed.
+         *
+         * THIS DOES NOT BLUNT THE GUARD. A real N+1 is proportional to rows and
+         * is re-run on every request, warm or cold, so it still shows up as a
+         * difference between the small and large row counts.
+         */
+        $this->actingAs($this->userA)->get('/plans');
 
         // The query LOG, not DB::listen. Registering a listener per call
         // accumulates them, so the second call records every query twice and the

@@ -10,7 +10,7 @@ use Illuminate\Database\Query\Builder;
  * Status tabs with counts, from ONE grouped aggregate query.
  *
  * Addendum C1: the system being replaced had nine separate helper classes, one
- * per resource, each computing tab counts — and the naive shape is one COUNT per
+ * per resource, each computing tab counts - and the naive shape is one COUNT per
  * tab, so a five-tab table costs five queries before it renders a row. The rule
  * is explicit: **N tabs must never produce N queries.**
  *
@@ -22,7 +22,7 @@ use Illuminate\Database\Query\Builder;
  * "all" tab, which is the sum rather than a second query.
  *
  * The counts respect the active search and filters, so a tab reads "how many of
- * what I am currently looking at", not "how many exist" — the latter is
+ * what I am currently looking at", not "how many exist" - the latter is
  * misleading the moment any filter is on.
  *
  * Counts are returned as a closure so the caller can defer them. They must never
@@ -48,7 +48,7 @@ final class Tabs
     /**
      * The active tab, or null for "all".
      *
-     * Validated against the declared values — the tab arrives from the URL and
+     * Validated against the declared values - the tab arrives from the URL and
      * is interpolated into a WHERE, so an allowlist is the boundary.
      */
     public function normalise(mixed $raw): ?string
@@ -69,7 +69,7 @@ final class Tabs
      * One grouped query, every tab's count.
      *
      * $base must NOT already have the tab constraint applied, or every tab
-     * except the active one reads zero — a bug that looks like real data.
+     * except the active one reads zero - a bug that looks like real data.
      *
      * @return array<string, int> value => count, plus `all`
      */

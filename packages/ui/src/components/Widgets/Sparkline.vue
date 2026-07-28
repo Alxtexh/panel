@@ -5,7 +5,7 @@
  * Unlike LineChart this DOES stretch its viewBox, which is the right trade at
  * this size: a sparkline has no axes or text to distort, only a path. The one
  * casualty of stretching is the stroke, and `vector-effect="non-scaling-stroke"`
- * exempts it — so the line stays an even 1.5px at any card width without
+ * exempts it - so the line stays an even 1.5px at any card width without
  * measuring anything.
  *
  * THE BASELINE IS THE SERIES MINIMUM, NOT ZERO. A count that hovers between
@@ -39,7 +39,9 @@ const uid = Math.random().toString(36).slice(2, 9)
 const coords = computed(() => {
     const values = props.data.map((d) => d.value)
 
-    if (values.length < 2) return []
+    if (values.length < 2) {
+        return []
+    }
 
     const min = Math.min(...values)
     const max = Math.max(...values)
@@ -52,11 +54,13 @@ const coords = computed(() => {
     }))
 })
 
-/** Monotone cubic Hermite — constrained to stay within the plotted values. */
+/** Monotone cubic Hermite - constrained to stay within the plotted values. */
 function monotone(pts: { x: number; y: number }[]): string {
     const n = pts.length
 
-    if (n < 2) return ''
+    if (n < 2) {
+        return ''
+    }
 
     const dx: number[] = []
     const slope: number[] = []
@@ -97,7 +101,9 @@ function monotone(pts: { x: number; y: number }[]): string {
 const path = computed(() => {
     const pts = coords.value
 
-    if (pts.length < 2) return ''
+    if (pts.length < 2) {
+        return ''
+    }
 
     return props.smooth
         ? monotone(pts)
@@ -107,7 +113,9 @@ const path = computed(() => {
 const area = computed(() => {
     const pts = coords.value
 
-    if (!props.filled || pts.length < 2) return ''
+    if (!props.filled || pts.length < 2) {
+        return ''
+    }
 
     return `${path.value} L${pts[pts.length - 1].x.toFixed(2)},${H} L${pts[0].x.toFixed(2)},${H} Z`
 })

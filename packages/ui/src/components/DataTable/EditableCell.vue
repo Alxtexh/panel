@@ -6,7 +6,7 @@
  * makes the request, and hands back `busy` and, on failure, the original value.
  *
  * THE CELL SHOWS THE VALUE IT WAS GIVEN, and never remembers its own. The
- * tempting shortcut is a local ref seeded from the prop, updated on change —
+ * tempting shortcut is a local ref seeded from the prop, updated on change -
  * which desynchronises the moment a write fails, because the control keeps
  * showing the value the server rejected. Rendering straight from the prop means
  * a rollback in the page is a rollback on screen, with nothing to keep in sync.
@@ -16,7 +16,7 @@
  * lands somewhere they did not aim at.
  *
  * The select's `min-w` matters more than it looks. The table lays out
- * automatically, so a column sizes to its widest content — and a short header
+ * automatically, so a column sizes to its widest content - and a short header
  * like "Status" wrapping a `w-full` select collapses the column until every row
  * reads "Susp▾". A floor width makes the column reserve room for the longest
  * option instead of clipping all of them.
@@ -34,7 +34,13 @@ const props = withDefaults(
         onLabel?: string | null
         offLabel?: string | null
     }>(),
-    { options: () => ({}), busy: false, disabled: false, onLabel: null, offLabel: null },
+    {
+        options: () => ({}),
+        busy: false,
+        disabled: false,
+        onLabel: null,
+        offLabel: null,
+    },
 )
 
 const emit = defineEmits<{ (e: 'change', value: unknown): void }>()
@@ -48,7 +54,9 @@ const stateLabel = computed(() =>
 )
 
 function toggle() {
-    if (locked.value) return
+    if (locked.value) {
+        return
+    }
 
     emit('change', !on.value)
 }
@@ -57,7 +65,9 @@ function pick(event: Event) {
     const next = (event.target as HTMLSelectElement).value
 
     // A no-op selection would still cost a round trip and a row flash.
-    if (next === String(props.value ?? '')) return
+    if (next === String(props.value ?? '')) {
+        return
+    }
 
     emit('change', next)
 }
@@ -90,6 +100,8 @@ function pick(event: Event) {
         @click.stop
         @change="pick"
     >
-        <option v-for="(label, key) in options" :key="key" :value="key">{{ label }}</option>
+        <option v-for="(label, key) in options" :key="key" :value="key">
+            {{ label }}
+        </option>
     </select>
 </template>

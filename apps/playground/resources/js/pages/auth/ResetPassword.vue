@@ -2,6 +2,7 @@
 import { Form, Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import TurnstileField from '@/components/TurnstileField.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,6 +76,13 @@ const inputEmail = ref(props.email);
                 />
                 <InputError :message="errors.password_confirmation" />
             </div>
+
+            <!-- Renders nothing when Turnstile is off; the server refuses
+
+                 without a token either way. -->
+
+            <TurnstileField name="cf-turnstile-response" />
+
 
             <Button
                 type="submit"

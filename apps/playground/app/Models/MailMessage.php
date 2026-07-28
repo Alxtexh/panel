@@ -27,8 +27,30 @@ final class MailMessage extends Model
         return [
             'is_read' => 'boolean',
             'is_starred' => 'boolean',
+            'is_important' => 'boolean',
             'has_attachment' => 'boolean',
             'received_at' => 'datetime',
         ];
+    }
+
+    /**
+     * A MESSAGE WITH NO THREAD IS ITS OWN THREAD.
+     *
+     * The list collapses by `thread_id`, so a null there is not a message
+     * outside every thread - it is a message in the null thread, along with
+     * every other one. Three unrelated messages became a single row, and the
+     * more mail arrived the fewer rows the inbox showed.
+     *
+     * Backfilled on create rather than defaulted in the schema, because the
+     * value is the row's own id and no column default can express that.
+     */
+    protected static function booted(): void
+    {
+        self::created(static function (self $message): void {
+            if ($message->thread_id === null) {
+                $message->thread_id = $message->id;
+                $message->saveQuietly();
+            }
+        });
     }
 }

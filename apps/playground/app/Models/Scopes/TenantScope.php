@@ -17,20 +17,20 @@ use PanelKit\Panel\Support\TenantContext;
  * forgotten. Every new query, relation load, and count inherits it.
  *
  * It applies via `qualifyColumn`, so it stays correct once the list query joins
- * `plans` — an unqualified `tenant_id` is ambiguous the moment a second table
+ * `plans` - an unqualified `tenant_id` is ambiguous the moment a second table
  * with that column enters the query.
  *
  * WHICH constraint to apply is delegated to TenantContext, because the answer
  * differs by isolation strategy:
  *
  *   shared / single database    add `where tenant_id = ?`
- *   dedicated / multi database  add NOTHING — stancl/tenancy already switched
+ *   dedicated / multi database  add NOTHING - stancl/tenancy already switched
  *                               the connection, and the column does not exist
  *
  * Fails closed, with NO context exemption. There is deliberately no
  * `runningInConsole()` escape hatch: `php artisan test` runs in console, so such
  * an exemption disables the scope across the entire test suite and no test can
- * ever catch a leak again. That is not hypothetical — the first version of this
+ * ever catch a leak again. That is not hypothetical - the first version of this
  * class had it, and the cross-tenant test passed a full result set.
  *
  * Code that legitimately crosses tenants opts out loudly and per query with
@@ -42,6 +42,23 @@ final class TenantScope implements Scope
     public function apply(Builder $builder, Model $model): void
     {
         $context = app(TenantContext::class);
+
+        /*
+         * A CENTRAL PANEL IS DELIBERATELY UNSCOPED.
+         *
+         * A super admin exists to see across tenants; constraining its queries
+         * to one would make the panel useless. This is the only exemption the
+         * scope grants, and it is checked FIRST so it reads as the exception it
+         * is rather than as one branch among several.
+         *
+         * It cannot be reached by accident: `isCentralPanel()` answers false for
+         * an unregistered panel, an absent panel, and an unknown id, so the only
+         * way here is a `Panel` explicitly declared `central` in application code
+         * and made current by the route. Nothing in the REQUEST can select it.
+         */
+        if ($context->isCentralPanel()) {
+            return;
+        }
 
         // Dedicated-database tenancy: the connection is the boundary. Adding a
         // column constraint here would reference a column that does not exist.

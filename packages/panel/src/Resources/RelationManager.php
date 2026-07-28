@@ -8,10 +8,11 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
+use PanelKit\Panel\Tables\ListResult;
 use PanelKit\Panel\Tables\Table;
 
 /**
- * A related list shown on a record's page — a client's sessions, a router's
+ * A related list shown on a record's page - a client's sessions, a router's
  * clients, an account's invoices.
  *
  * THE WHOLE POINT IS THAT IT IS A TABLE, NOT AN EAGER LOAD. The obvious
@@ -22,8 +23,8 @@ use PanelKit\Panel\Tables\Table;
  * scale, because the relation is small for every record the developer tested
  * with.
  *
- * So a relation manager reuses the SAME ListQuery the main table uses — keyset
- * pagination, explicit select, per-shape indexes, no blocking count — and is
+ * So a relation manager reuses the SAME ListQuery the main table uses - keyset
+ * pagination, explicit select, per-shape indexes, no blocking count - and is
  * fetched on demand rather than with the parent record.
  *
  * THE FOREIGN KEY IS DECLARED, NEVER INFERRED FROM THE REQUEST. `ownerKey` is
@@ -95,7 +96,7 @@ final class RelationManager
         return $this;
     }
 
-    /** Narrow the relation further — "unpaid invoices", "live sessions". */
+    /** Narrow the relation further - "unpaid invoices", "live sessions". */
     public function query(Closure $modify): self
     {
         $this->modifyQuery = $modify;
@@ -140,10 +141,10 @@ final class RelationManager
      * Rows for one parent record.
      *
      * The parent key is bound as a PARAMETER against a column named in the
-     * declaration — the request never chooses the column, only which declared
+     * declaration - the request never chooses the column, only which declared
      * relation to open.
      */
-    public function rows(Request $request, int|string $parentKey): \PanelKit\Panel\Tables\ListResult
+    public function rows(Request $request, int|string $parentKey): ListResult
     {
         $definition = $this->definition();
         $foreignKey = $this->foreignKey;

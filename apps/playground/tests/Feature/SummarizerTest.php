@@ -7,7 +7,6 @@ namespace Tests\Feature;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -69,7 +68,7 @@ final class SummarizerTest extends TestCase
         $this->plans($this->tenantA, 10, 1000, 'Gold');
         $this->plans($this->tenantA, 5, 2000, 'Bronze');
 
-        // 10 x 1000 and 5 x 2000 — the same subtotal by different routes, which
+        // 10 x 1000 and 5 x 2000 - the same subtotal by different routes, which
         // is what makes the "follows the filter" assertion meaningful.
         $this->assertSame(10_000.0, $this->summarise(['search' => 'Gold'])['price']);
         $this->assertSame(10_000.0, $this->summarise(['search' => 'Bronze'])['price']);
@@ -98,7 +97,7 @@ final class SummarizerTest extends TestCase
 
     /* ------------------------------------------------------------ the walls */
 
-    /** Tenant-scoped like everything else — the aggregate runs through it. */
+    /** Tenant-scoped like everything else - the aggregate runs through it. */
     public function test_a_summary_never_includes_another_tenants_rows(): void
     {
         $this->plans($this->tenantA, 3, 1000);
@@ -129,7 +128,7 @@ final class SummarizerTest extends TestCase
      * N summarised columns must be ONE query.
      *
      * The naive version runs a query per column, which is the same N+1 shape as
-     * counting tabs one at a time — invisible at two columns and a full extra
+     * counting tabs one at a time - invisible at two columns and a full extra
      * scan each at five.
      */
     public function test_every_aggregate_comes_from_one_query(): void
@@ -148,7 +147,7 @@ final class SummarizerTest extends TestCase
     }
 
     /**
-     * And it never blocks the rows — §10 forbids an aggregate in front of a
+     * And it never blocks the rows - §10 forbids an aggregate in front of a
      * page as firmly as it forbids a count.
      */
     public function test_the_list_response_does_not_compute_the_summary(): void
@@ -222,7 +221,7 @@ final class SummarizerTest extends TestCase
         for ($i = 0; $i < $count; $i++) {
             Plan::withoutGlobalScopes()->create([
                 'tenant_id' => $tenant->id,
-                'name' => "{$prefix} " . uniqid(),
+                'name' => "{$prefix} ".uniqid(),
                 'speed_mbps' => 10 + $i,
                 'price_cents' => $cents,
             ]);

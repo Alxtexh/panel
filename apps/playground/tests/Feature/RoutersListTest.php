@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * PHASE 2 — a copy of ClientsListTest, on purpose.
+ * PHASE 2 - a copy of ClientsListTest, on purpose.
  *
  * §9 item 8 requires the cross-tenant assertions for EVERY resource, not just
  * the first one. Copying them is the point: a shared helper written now would be
@@ -113,7 +113,7 @@ final class RoutersListTest extends TestCase
         ]);
 
         $props = $this->actingAs($this->userA)
-            ->get('/routers?model=' . urlencode('Cisco ASR9000'))
+            ->get('/routers?model='.urlencode('Cisco ASR9000'))
             ->assertOk()
             ->viewData('page')['props'];
 
@@ -134,7 +134,7 @@ final class RoutersListTest extends TestCase
         $this->assertSame(
             $atFive,
             $atFiveHundred,
-            "Query count changed with row count ({$atFive} at 5, {$atFiveHundred} at 500) — an N+1 exists."
+            "Query count changed with row count ({$atFive} at 5, {$atFiveHundred} at 500) - an N+1 exists."
         );
     }
 
@@ -148,7 +148,7 @@ final class RoutersListTest extends TestCase
          *
          * This guard is about the LIST query: a COUNT over a resource table is
          * unbounded, grows with the tenant, and is exactly what §10 forbids in
-         * front of rows. The unread-badge count is a different shape — one
+         * front of rows. The unread-badge count is a different shape - one
          * user's inbox, reached through the morph index, bounded by what that
          * person has been sent. Excluding it by name keeps the guard sharp;
          * broadening the pattern to "ignore counts we expect" would let a real
@@ -169,7 +169,7 @@ final class RoutersListTest extends TestCase
         $this->makeRouters($this->tenantA, 3, 'RTR-A');
 
         $this->actingAs($this->userA)
-            ->get('/routers?sort=' . urlencode('id; drop table routers--'))
+            ->get('/routers?sort='.urlencode('id; drop table routers--'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('sort', 'created_at'));
 
@@ -200,7 +200,7 @@ final class RoutersListTest extends TestCase
 
         do {
             $props = $this->actingAs($this->userA)
-                ->get('/routers' . ($cursor ? '?cursor=' . urlencode($cursor) : ''))
+                ->get('/routers'.($cursor ? '?cursor='.urlencode($cursor) : ''))
                 ->assertOk()->viewData('page')['props'];
 
             foreach ($props['records'] as $record) {
@@ -222,12 +222,24 @@ final class RoutersListTest extends TestCase
     /** @return list<string> */
     private function captureQueriesForIndex(): array
     {
-        // Warm the per-request lookups that are NOT row-proportional — the
-        // tenant record behind branding and feature flags. actingAs reuses one
-        // user instance across requests, so its lazy relation loads on the first
-        // measurement and not the second, making the two counts differ for a
-        // reason that has nothing to do with an N+1.
-        $this->actingAs($this->userA)->get('/dashboard');
+        /*
+         * A DISCARDED WARM-UP OF THE PAGE BEING MEASURED, for the same reason
+         * `panel:benchmark` does one: the first call pays costs that are paid
+         * ONCE, and this test compares two calls.
+         *
+         * actingAs reuses a single user instance across requests, so anything
+         * lazy-loaded onto it - the tenant behind branding, and now the three
+         * Spatie relations behind a permission check - is queried during the
+         * first measurement and already in memory for the second. The counts
+         * then differ by a fixed 3 for a reason that has nothing to do with row
+         * count. Warming with /dashboard was not enough: it does not run the
+         * same permission checks, so it left exactly those three unwarmed.
+         *
+         * THIS DOES NOT BLUNT THE GUARD. A real N+1 is proportional to rows and
+         * is re-run on every request, warm or cold, so it still shows up as a
+         * difference between the small and large row counts.
+         */
+        $this->actingAs($this->userA)->get('/routers');
 
         // The query LOG, not DB::listen. Registering a listener per call
         // accumulates them, so the second call records every query twice and the

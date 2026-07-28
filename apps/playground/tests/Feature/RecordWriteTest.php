@@ -7,17 +7,20 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Plan;
 use App\Models\Tenant;
+use App\Models\Feedback;
 use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**
  * Phase 5 write path.
  *
  * Most of these guard a failure that would otherwise return a 2xx and look
- * correct — a row written into the wrong tenant, a silent overwrite of another
+ * correct - a row written into the wrong tenant, a silent overwrite of another
  * admin's edit, a field the form never declared reaching the database.
  */
 final class RecordWriteTest extends TestCase
@@ -60,7 +63,7 @@ final class RecordWriteTest extends TestCase
             'tenant_id' => $tenant->id,
             'name' => $name,
             'phone' => '+254700000999',
-            'access_code' => strtoupper(substr($tenant->slug, -4)) . rand(1000, 9999),
+            'access_code' => strtoupper(substr($tenant->slug, -4)).rand(1000, 9999),
             'status' => 'active',
             'plan_type' => 'pppoe',
             'expiry_date' => now(),
@@ -96,7 +99,7 @@ final class RecordWriteTest extends TestCase
 
     /**
      * A select's allowlist is built from a TENANT-SCOPED query, so another
-     * tenant's plan is not an option — and must be rejected rather than written.
+     * tenant's plan is not an option - and must be rejected rather than written.
      */
     public function test_another_tenants_plan_cannot_be_assigned(): void
     {
@@ -171,7 +174,7 @@ final class RecordWriteTest extends TestCase
 
     /**
      * Deleting a client SOFT-deletes it: the row survives with `deleted_at` set
-     * and disappears from every list. That is the point — a mis-click used to
+     * and disappears from every list. That is the point - a mis-click used to
      * be permanent.
      */
     public function test_it_deletes_a_record(): void
@@ -212,7 +215,7 @@ final class RecordWriteTest extends TestCase
      * not appear.
      *
      * When the soft-delete global scope was lifted so the filter could own the
-     * predicate, the filter was skipped on a null value — because for every
+     * predicate, the filter was skipped on a null value - because for every
      * other filter null means "not applied". The list then had no `deleted_at`
      * predicate at all, so it showed deleted rows AND lost the index that leads
      * with that column: 1.6 ms became 416 ms. Correctness and performance broke
@@ -295,7 +298,7 @@ final class RecordWriteTest extends TestCase
     }
 
     /**
-     * A 404, not a 403 — confirming that another tenant's record EXISTS is
+     * A 404, not a 403 - confirming that another tenant's record EXISTS is
      * itself a leak, however small.
      */
     public function test_another_tenants_record_cannot_be_updated_or_deleted(): void
@@ -345,12 +348,27 @@ final class RecordWriteTest extends TestCase
     {
         $resource = new class extends \PanelKit\Panel\Resources\Resource
         {
-            // User has no policy registered. Tenant deliberately is NOT used
-            // here: the generator creates a policy alongside a resource, so any
-            // model that has been generated for would silently start passing.
-            protected static string $model = User::class;
+            /*
+             * A MODEL WITH NO POLICY, and finding one that stays that way is
+             * the whole difficulty of this test.
+             *
+             * It used to be `User`, chosen because the generator writes a policy
+             * beside every resource it creates - so any generated-for model
+             * would silently start passing. Then `UserResource` was written for
+             * real, `UserPolicy` came with it, and this test began asserting
+             * that a model WITH a policy denies. It failed, which is the good
+             * outcome; the bad one was available too, since a policy that
+             * happened to deny would have kept it green while proving nothing.
+             *
+             * `Feedback` is the choice now because it is deliberately NOT a
+             * panel resource - it is written by a dialog and read by nothing -
+             * so no generator will produce a policy for it. If that ever
+             * changes, this test fails rather than quietly passing, which is the
+             * property worth having.
+             */
+            protected static string $model = Feedback::class;
 
-            public static function table(\PanelKit\Panel\Tables\Table $table): \PanelKit\Panel\Tables\Table
+            public static function table(Table $table): Table
             {
                 return $table;
             }

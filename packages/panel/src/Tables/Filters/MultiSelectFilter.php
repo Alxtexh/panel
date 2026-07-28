@@ -11,7 +11,7 @@ use Illuminate\Database\Query\Builder;
  * Multiple values at once: status IN (expired, suspended).
  *
  * The single-select filter cannot express the most common real question an
- * operator has — "show me everything that is not healthy" — so they filtered
+ * operator has - "show me everything that is not healthy" - so they filtered
  * twice and compared by eye.
  *
  * Every submitted value is checked against the allowlist INDIVIDUALLY and the
@@ -46,7 +46,7 @@ final class MultiSelectFilter extends Filter implements HasOptions
     public function normalise(mixed $raw): ?array
     {
         // Arrives as a comma-joined string so the URL stays readable and
-        // shareable — ?status=expired,suspended rather than status[]=… twice.
+        // shareable - ?status=expired,suspended rather than status[]=… twice.
         $values = is_array($raw) ? $raw : (is_string($raw) && $raw !== '' ? explode(',', $raw) : []);
 
         $allowed = array_values(array_intersect($values, $this->resolvedOptions()));

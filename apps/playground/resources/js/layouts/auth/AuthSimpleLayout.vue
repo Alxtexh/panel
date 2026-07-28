@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { AppearanceDrawer } from '@panelkit/ui';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
-import { home } from '@/routes';
+import { Link } from '@inertiajs/vue3'
+import { ThemeToggle } from '@panelkit/ui'
+
+import { home } from '@/routes'
+import { computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 
 defineProps<{
-    title?: string;
-    description?: string;
-}>();
+    title?: string
+    description?: string
+}>()
+
+const appName = computed(() => String(usePage().props.name ?? 'Panel'))
 </script>
 
 <template>
@@ -15,33 +19,46 @@ defineProps<{
         class="bg-background relative flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10"
     >
         <!--
-            THE SAME APPEARANCE CONTROL AS THE PANEL, on the sign-in screen.
+            LIGHT OR DARK ONLY, before sign-in.
 
-            The theme applied here already, but there was no way to CHANGE it
-            without signing in first — which is precisely backwards for someone
-            on a dark-adapted screen looking at a login form. Changes made here
-            are stored in this browser only; there is no account yet to save
-            them against, and they are adopted by the account the first time the
-            panel saves anything after signing in.
+            The full appearance drawer used to be here, and it promised a
+            personalisation with nowhere to live: accent, density, sidebar side
+            and font size are saved against an ACCOUNT, so choosing them on a
+            login screen writes them to this browser alone and they vanish the
+            moment the same person signs in elsewhere. That reads as the panel
+            forgetting what it was told.
+
+            Light-versus-dark stays because the reason for it is physical rather
+            than organisational - nobody on a dark-adapted screen at night
+            should have to be blinded by a sign-in form first - and because the
+            operating system already has an opinion the browser can read without
+            an account.
         -->
         <div class="absolute top-4 right-4">
-            <AppearanceDrawer />
+            <ThemeToggle />
         </div>
 
         <div class="w-full max-w-sm">
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col items-center gap-4">
-                    <Link
-                        :href="home()"
-                        class="flex flex-col items-center gap-2 font-medium"
-                    >
-                        <div
-                            class="mb-1 flex h-9 w-9 items-center justify-center rounded-md"
-                        >
-                            <AppLogoIcon
-                                class="size-9 fill-current text-[var(--foreground)] dark:text-white"
-                            />
-                        </div>
+                    <Link :href="home()" class="flex flex-col items-center gap-2 font-medium">
+                        <!--
+                            THE PRODUCT'S NAME, NOT A FRAMEWORK BADGE.
+
+                            There is no tenant before sign-in - the hostname
+                            might identify one, but a shared sign-in screen does
+                            not - so there is no organisation logo to show and
+                            nothing tenant-specific to say. What belongs here is
+                            whoever operates the panel, which is `APP_NAME`.
+
+                            The framework's mark was actively wrong: it told
+                            every customer whose software this is, which is the
+                            one fact a white-labelled panel exists to not
+                            volunteer.
+                        -->
+                        <span class="mb-1 text-lg font-semibold tracking-tight">
+                            {{ appName }}
+                        </span>
                         <span class="sr-only">{{ title }}</span>
                     </Link>
                     <div class="space-y-2 text-center">

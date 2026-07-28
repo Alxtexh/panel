@@ -16,7 +16,7 @@ use Tests\TestCase;
 /**
  * The mail and chat screens.
  *
- * Both are scoped TWICE — by tenant and by user — and the tests below check
+ * Both are scoped TWICE - by tenant and by user - and the tests below check
  * each separately, because they cover different failures: the tenant scope
  * stops another organisation's data being reachable at all, and the user filter
  * stops a colleague's inbox being readable within one organisation.
@@ -57,34 +57,173 @@ final class AppScreensTest extends TestCase
         $this->assertCount(3, $rows, "A colleague's inbox must not appear.");
     }
 
-    /** The folder rail's badges are ONE grouped query, not one per folder. */
-    public function test_folder_counts_are_a_single_query(): void
+    /**
+     * The rail's badges cost the SAME whether there is one folder in use or
+     * seven - addendum C1.
+     *
+     * Asserting a fixed number would only pin today's implementation; asserting
+     * that the number does not MOVE when the data spreads across every folder
+     * and label is the property that actually matters. A per-folder count would
+     * fail this by construction.
+     */
+    public function test_the_rail_costs_the_same_however_many_folders_are_in_use(): void
     {
-        $this->mail($this->alice, 6);
+        $this->mail($this->alice, 2, ['folder' => 'inbox', 'category' => 'Support']);
 
-        $this->actingAs($this->alice);
+        $narrow = $this->railQueries();
 
-        DB::enableQueryLog();
-        $this->get('/apps/mail')->assertOk();
-        $queries = array_column(DB::getQueryLog(), 'query');
-        DB::disableQueryLog();
+        foreach (['sent', 'archived', 'spam', 'trash'] as $folder) {
+            $this->mail($this->alice, 2, ['folder' => $folder, 'category' => 'Finance']);
+        }
 
-        $grouped = array_filter($queries, static fn (string $q): bool => str_contains($q, 'group by') && str_contains($q, 'mail_messages'));
+        $this->mail($this->alice, 1, ['is_starred' => true, 'category' => 'Security']);
+        $this->mail($this->alice, 1, ['is_important' => true, 'category' => 'HR']);
 
-        $this->assertLessThanOrEqual(
-            1,
-            count($grouped),
-            'Six folders must not mean six counts — addendum C1.',
+        $this->assertSame(
+            $narrow,
+            $this->railQueries(),
+            'The rail must not cost one query per folder or per label.',
         );
     }
 
-    public function test_opening_a_message_marks_it_read(): void
+    public function test_opening_a_thread_marks_it_read(): void
     {
         $id = $this->mail($this->alice, 1, ['is_read' => false])[0];
 
-        $this->prop("/apps/mail?id={$id}", 'message');
+        $this->actingAs($this->alice)->get("/apps/mail/{$id}")->assertOk();
 
         $this->assertTrue(MailMessage::withoutGlobalScopes()->find($id)->is_read);
+    }
+
+    /* -------------------------------------------------------------- threads */
+
+    /**
+     * A CONVERSATION IS ONE ROW.
+     *
+     * A message and its reply share a subject; listing both is the artefact of
+     * a flat list rather than a mailbox, and it is how an inbox of ten
+     * conversations reads as twenty.
+     */
+    public function test_the_list_shows_one_row_per_thread(): void
+    {
+        $root = $this->mail($this->alice, 1, ['subject' => 'Invoice query'])[0];
+        $this->mail($this->alice, 2, ['subject' => 'Invoice query', 'thread_id' => $root]);
+        $this->mail($this->alice, 1, ['subject' => 'Something else']);
+
+        $rows = $this->prop('/apps/mail', 'messages')['rows'];
+
+        $this->assertCount(2, $rows);
+
+        $thread = collect($rows)->firstWhere('subject', 'Invoice query');
+
+        $this->assertSame(3, $thread['count'], 'The row must carry how many messages it stands for.');
+    }
+
+    /**
+     * A message created without a thread is its OWN thread, never the null one.
+     *
+     * Collapsing groups by `thread_id`, so a null there does not mean "outside
+     * every thread" - it means "in the null thread, with everything else". The
+     * inbox showed fewer rows the more mail arrived.
+     */
+    public function test_a_message_with_no_thread_does_not_join_every_other_one(): void
+    {
+        $this->mail($this->alice, 3);
+
+        $rows = $this->prop('/apps/mail', 'messages')['rows'];
+
+        $this->assertCount(3, $rows);
+    }
+
+    /** The whole conversation, oldest first. */
+    public function test_a_thread_page_shows_every_message_in_order(): void
+    {
+        $root = $this->mail($this->alice, 1, ['subject' => 'Router replacement', 'received_at' => now()->subHour()])[0];
+        $this->mail($this->alice, 1, ['subject' => 'Router replacement', 'thread_id' => $root, 'received_at' => now()]);
+
+        $this->actingAs($this->alice);
+
+        $response = $this->get("/apps/mail/{$root}");
+        $messages = $response->viewData('page')['props']['messages'];
+
+        $this->assertCount(2, $messages);
+        $this->assertSame($root, $messages[0]['id'], 'A conversation reads downwards.');
+    }
+
+    /** A colleague's thread is not reachable by guessing its id. */
+    public function test_a_colleagues_thread_cannot_be_opened(): void
+    {
+        $id = $this->mail($this->bob, 1)[0];
+
+        $this->actingAs($this->alice)->get("/apps/mail/{$id}")->assertNotFound();
+    }
+
+    /**
+     * THE FROM COLUMN NAMES THE CORRESPONDENT, NOT THE SENDER.
+     *
+     * A thread's newest message is often the reader's own reply, so showing its
+     * sender fills the inbox with the reader's own name - which identifies
+     * nothing, because every row could say it.
+     */
+    public function test_the_list_names_the_other_party_when_the_last_word_was_ours(): void
+    {
+        $root = $this->mail($this->alice, 1, [
+            'from_name' => 'Amina Achieng',
+            'from_email' => 'amina@example.test',
+            'to_name' => $this->alice->name,
+            'to_email' => $this->alice->email,
+            'received_at' => now()->subHour(),
+        ])[0];
+
+        // Alice answered, so hers is the newest message in the thread.
+        $this->mail($this->alice, 1, [
+            'thread_id' => $root,
+            'from_name' => $this->alice->name,
+            'from_email' => $this->alice->email,
+            'to_name' => 'Amina Achieng',
+            'to_email' => 'amina@example.test',
+            'received_at' => now(),
+        ]);
+
+        $rows = $this->prop('/apps/mail', 'messages')['rows'];
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('Amina Achieng', $rows[0]['from']);
+    }
+
+    /* ----------------------------------------------------------- categories */
+
+    /** A label narrows a folder; it is not a folder of its own. */
+    public function test_a_category_filters_within_the_folder(): void
+    {
+        $this->mail($this->alice, 2, ['category' => 'Security']);
+        $this->mail($this->alice, 3, ['category' => 'Finance']);
+
+        $rows = $this->prop('/apps/mail?category=Security', 'messages')['rows'];
+
+        $this->assertCount(2, $rows);
+    }
+
+    /** An unknown label is ignored rather than showing an empty mailbox. */
+    public function test_an_unknown_category_is_ignored(): void
+    {
+        $this->mail($this->alice, 2, ['category' => 'Security']);
+
+        $rows = $this->prop('/apps/mail?category=Nonsense', 'messages')['rows'];
+
+        $this->assertCount(2, $rows);
+    }
+
+    /** Important, like starred, is a flag across folders. */
+    public function test_the_important_view_crosses_folders_but_excludes_trash(): void
+    {
+        $this->mail($this->alice, 1, ['is_important' => true, 'folder' => 'inbox']);
+        $this->mail($this->alice, 1, ['is_important' => true, 'folder' => 'sent']);
+        $this->mail($this->alice, 1, ['is_important' => true, 'folder' => 'trash']);
+
+        $rows = $this->prop('/apps/mail?folder=important', 'messages')['rows'];
+
+        $this->assertCount(2, $rows);
     }
 
     public function test_a_message_can_be_starred_and_moved(): void
@@ -242,11 +381,28 @@ final class AppScreensTest extends TestCase
      *
      * These were deferred props and are not any more: navigation on both
      * screens preserves state, so the component never remounts and the deferred
-     * follow-up never fired — the reading pane simply never filled. Deferral is
+     * follow-up never fired - the reading pane simply never filled. Deferral is
      * for aggregates that would block first paint, and neither of these is one.
      *
      * @return array<mixed>
      */
+    /** How many grouped counts one mailbox render costs. */
+    private function railQueries(): int
+    {
+        $this->actingAs($this->alice);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->get('/apps/mail')->assertOk();
+        $queries = array_column(DB::getQueryLog(), 'query');
+        DB::disableQueryLog();
+
+        return count(array_filter(
+            $queries,
+            static fn (string $q): bool => str_contains($q, 'group by') && str_contains($q, 'mail_messages'),
+        ));
+    }
+
     private function prop(string $url, string $prop): array
     {
         return $this->actingAs($this->alice)
@@ -268,9 +424,9 @@ final class AppScreensTest extends TestCase
                 'user_id' => $user->id,
                 'tenant_id' => $user->tenant_id,
                 'folder' => 'inbox',
-                'from_name' => 'Sender ' . $i,
+                'from_name' => 'Sender '.$i,
                 'from_email' => "s{$i}@example.test",
-                'subject' => 'Subject ' . $i,
+                'subject' => 'Subject '.$i,
                 'preview' => 'Preview',
                 'body' => 'Body',
                 'is_read' => true,
@@ -290,7 +446,7 @@ final class AppScreensTest extends TestCase
             'user_id' => $user->id,
             'tenant_id' => $user->tenant_id,
             'contact_name' => $name,
-            'contact_email' => strtolower($name) . '@example.test',
+            'contact_email' => strtolower($name).'@example.test',
             'status' => 'online',
             'last_message' => 'Hello',
             'last_message_at' => now(),

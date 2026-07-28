@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/profile';
+import { edit as editSecurity } from '@/routes/security';
 import { send } from '@/routes/verification';
 
 defineOptions({
@@ -22,6 +23,8 @@ defineOptions({
         ],
     },
 });
+
+defineProps<{ twoFactorEnabled?: boolean }>();
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -99,6 +102,43 @@ const user = computed(() => page.props.auth.user);
                 >
             </div>
         </Form>
+    </div>
+
+    <!--
+        Status here, the ACTION on Security. Enrolling a second factor sits
+        behind a password confirmation on purpose - someone at an unlocked
+        laptop must not be able to re-enrol it - but a profile that never
+        mentions it is a profile where nobody finds out it exists.
+    -->
+    <div class="mt-6 flex flex-col space-y-6">
+        <Heading
+            variant="small"
+            title="Two-factor authentication"
+            :description="
+                twoFactorEnabled
+                    ? 'Your account asks for a second factor when you sign in.'
+                    : 'Add a second step at sign-in, so a stolen password is not enough.'
+            "
+        />
+
+        <div class="flex items-center gap-3">
+            <span
+                class="rounded-md px-2 py-0.5 text-xs font-medium"
+                :class="
+                    twoFactorEnabled
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                "
+            >
+                {{ twoFactorEnabled ? 'Enabled' : 'Not enabled' }}
+            </span>
+
+            <Button as-child variant="outline" size="sm">
+                <Link :href="editSecurity()">
+                    {{ twoFactorEnabled ? 'Manage' : 'Enable' }} two-factor authentication
+                </Link>
+            </Button>
+        </div>
     </div>
 
     <DeleteUser />

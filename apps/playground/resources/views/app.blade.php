@@ -27,7 +27,7 @@
             The ACCOUNT's saved appearance, if there is one.
 
             Rendered by the server so a browser that has never seen this user
-            still applies their theme on the very first paint — localStorage
+            still applies their theme on the very first paint - localStorage
             alone cannot do that, because it belongs to whichever browser
             happened to set it.
         --}}
@@ -48,7 +48,7 @@
                         /*
                          * The cached variables were computed from THIS browser's
                          * preference. When the account says something different
-                         * — a theme set in another browser — the cache is stale,
+                         * - a theme set in another browser - the cache is stale,
                          * so only the parts that can be derived without the
                          * colour palette are applied here and the script hands
                          * over to the bundle for the rest.

@@ -11,7 +11,9 @@ use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Panel;
+use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\SchemaCache;
+use PanelKit\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**
@@ -62,8 +64,8 @@ final class TenantIsolationTest extends TestCase
                 DB::table('clients')->insert([
                     'tenant_id' => $tenant->id,
                     'name' => "{$prefix} {$i}",
-                    'phone' => '+2547000000' . $i,
-                    'access_code' => strtoupper($prefix) . $i,
+                    'phone' => '+2547000000'.$i,
+                    'access_code' => strtoupper($prefix).$i,
                     'status' => 'active',
                     'plan_type' => 'pppoe',
                     'expiry_date' => now(),
@@ -79,7 +81,7 @@ final class TenantIsolationTest extends TestCase
      *
      * Two different tenants hit the SAME endpoint inside ONE process, and the
      * second response must contain nothing belonging to the first. This is what
-     * catches state that survives a request — a memoized tenant id, a schema
+     * catches state that survives a request - a memoized tenant id, a schema
      * cached without a distinguishing key, a static holding a resolved user.
      */
     public function test_two_tenants_in_one_process_never_see_each_others_data(): void
@@ -107,7 +109,7 @@ final class TenantIsolationTest extends TestCase
         $this->assertSame(
             [],
             array_intersect($firstNames, $secondNames),
-            'The second tenant received rows belonging to the first — state survived the request.'
+            'The second tenant received rows belonging to the first - state survived the request.'
         );
     }
 
@@ -185,7 +187,7 @@ final class TenantIsolationTest extends TestCase
         $this->assertCount(7, $segments, "Unexpected key shape: {$key}");
         $this->assertSame(['panel', 'schema', 'admin', 'clients', 'fingerprint'], array_slice($segments, 0, 5));
 
-        // Two tenants must produce the identical key — that is the point.
+        // Two tenants must produce the identical key - that is the point.
         $this->actingAs($this->userA);
         $forA = app(SchemaCache::class)->key('admin', 'clients', 'fingerprint');
 
@@ -197,7 +199,7 @@ final class TenantIsolationTest extends TestCase
 
     /**
      * Spec §9 item 5: a disabled feature hides the resource from navigation AND
-     * returns 404 from its routes. Hiding the link alone is not a control — the
+     * returns 404 from its routes. Hiding the link alone is not a control - the
      * URL stays typeable and a bookmark keeps working.
      */
     public function test_a_disabled_feature_returns_404_not_just_a_hidden_link(): void
@@ -213,7 +215,7 @@ final class TenantIsolationTest extends TestCase
 
             protected static ?string $feature = 'routers';
 
-            public static function table(\PanelKit\Panel\Tables\Table $table): \PanelKit\Panel\Tables\Table
+            public static function table(Table $table): Table
             {
                 return $table;
             }
@@ -235,7 +237,7 @@ final class TenantIsolationTest extends TestCase
 
             protected static ?string $feature = 'anything';
 
-            public static function table(\PanelKit\Panel\Tables\Table $table): \PanelKit\Panel\Tables\Table
+            public static function table(Table $table): Table
             {
                 return $table;
             }
@@ -247,7 +249,7 @@ final class TenantIsolationTest extends TestCase
     /**
      * Spec §9 item 6 / antipatterns §2.1: a panel resolves its user through its
      * OWN guard. `$request->user()` returns null under a non-default guard and
-     * fails open in confusing ways — in production it silently discarded every
+     * fails open in confusing ways - in production it silently discarded every
      * unsaved edit while returning 200.
      */
     public function test_a_panel_resolves_its_user_through_its_own_guard(): void

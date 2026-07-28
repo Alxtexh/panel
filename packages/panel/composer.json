@@ -14,6 +14,9 @@
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^3.0|^4.0"
     },
+    "suggest": {
+        "laravel/ai": "Needed only for ProviderEmbedder - model-backed retrieval. The default embedder is local and needs nothing."
+    },
     "autoload": {
         "psr-4": {
             "PanelKit\\Panel\\": "src/"
@@ -38,6 +41,5 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true
         }
-    },
-    "version": "0.1.0"
+    }
 }

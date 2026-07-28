@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Panel\Resources;
 
 use App\Models\Router;
+use PanelKit\Panel\Forms\Fields\SelectField;
+use PanelKit\Panel\Forms\Fields\TextField;
+use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Columns\BadgeColumn;
+use PanelKit\Panel\Schema\Step;
+use PanelKit\Panel\Schema\Wizard;
 use PanelKit\Panel\Tables\Columns\DateColumn;
 use PanelKit\Panel\Tables\Columns\IconColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
@@ -23,9 +27,74 @@ final class RouterResource extends Resource
 
     protected static ?int $sort = 20;
 
+    /**
+     * Onboarding a router, as an ordered wizard rather than one long form.
+     *
+     * A WIZARD BECAUSE THE STEPS DEPEND ON EACH OTHER. You cannot say how a
+     * router is reached before saying what it is, and asking for monitoring
+     * preferences before either is how somebody abandons the form. That
+     * dependency is the only thing that justifies a wizard over tabs - a form
+     * you dip into should be tabs.
+     *
+     * The reference application measures this exact screen at ~967 ms per step
+     * in the system being replaced, because each step was a full server render.
+     * Here every step is already in the payload and advancing is local.
+     */
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            Wizard::make()->steps([
+                Step::make('Identity')
+                    ->description('What this device is called')
+                    ->schema([
+                        TextField::make('name')->required()->placeholder('Nairobi West NAS-1'),
+                        SelectField::make('model')->required()->options([
+                            'RB750' => 'MikroTik RB750',
+                            'RB4011' => 'MikroTik RB4011',
+                            'CCR1009' => 'MikroTik CCR1009',
+                            'other' => 'Other',
+                        ]),
+                    ]),
+
+                Step::make('Connection')
+                    ->description('How the panel reaches it')
+                    ->schema([
+                        TextField::make('ip_address')->label('IP address')->required()
+                            ->placeholder('10.0.0.1'),
+
+                        /*
+                         * CONDITIONAL, and the condition is enforced on BOTH
+                         * sides from this one declaration.
+                         *
+                         * The client hides the control when the model is not
+                         * "other"; the server turns the same condition into
+                         * `required_if:model,other`, so a request claiming
+                         * `model=other` must supply this whatever the browser
+                         * chose to draw. Neither half can drift, because there
+                         * is only one declaration.
+                         */
+                        TextField::make('status')->label('Model name')->required()
+                            ->visibleWhen('model', 'other')
+                            ->help('Only needed when the model is not in the list.'),
+                    ]),
+            ]),
+        ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
+            /*
+             * Clustered by status: online routers together, then degraded, then
+             * offline - which is how anyone triaging a network reads this list.
+             *
+             * Grouping is an ORDERING, not an aggregation: rows arrive already
+             * clustered and the client inserts a heading wherever the value
+             * changes. The cost is one extra ORDER BY term, and the price is
+             * that the group column must lead an index - see the note in
+             * ClientResource for what happens on a large table when it does not.
+             */
+            ->groupBy('status', 'Status')
             ->columns([
                 TextColumn::make('name')->from('routers.name')->sortable()->searchable()->locked(),
                 TextColumn::make('ip_address')->from('routers.ip_address')->label('IP address')
@@ -44,7 +113,7 @@ final class RouterResource extends Resource
                 SelectFilter::make('status')->column('routers.status')
                     ->options(['online', 'degraded', 'offline']),
                 // Data-derived options, resolved lazily from a TENANT-SCOPED
-                // query — never at schema-build time, and never cached into the
+                // query - never at schema-build time, and never cached into the
                 // schema, because they are tenant data (addendum Part A).
                 SelectFilter::make('model')->column('routers.model')
                     ->options(fn (): array => Router::query()->toBase()

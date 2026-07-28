@@ -12,6 +12,19 @@ export type User = {
 
 export type Auth = {
     user: User;
+
+    /**
+     * Panel-level abilities, for hiding navigation that would only 403.
+     *
+     * PRESENTATION ONLY. Every one of these is re-checked at the endpoint, so a
+     * client that ignores them gets a refusal rather than a mutation. They exist
+     * so a link that always fails is never offered, not to decide anything.
+     */
+    can?: {
+        manageRoles?: boolean;
+        /** Backups and logs - the installation's own health, not a tenant's. */
+        viewOperations?: boolean;
+    };
 };
 
 /* @chisel-passkeys */

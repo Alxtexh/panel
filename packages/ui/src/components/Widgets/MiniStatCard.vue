@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import PkSkeleton from '../primitives/PkSkeleton.vue'
 /**
  * A compact metric card: value, delta badge, and a filled sparkline beneath.
  *
- * Modelled on the account cards in the reference dashboard — the shape where a
+ * Modelled on the account cards in the reference dashboard - the shape where a
  * row of four sits side by side and the sparkline runs edge to edge along the
  * bottom of the card.
  *
@@ -12,7 +13,7 @@
  * card's own texture, which is what makes a row of these scannable.
  *
  * THE DELTA IS NOT ASSUMED TO BE GOOD WHEN POSITIVE. `inverted` flips the
- * colouring for metrics where down is the win — churn, failures, latency —
+ * colouring for metrics where down is the win - churn, failures, latency -
  * because a rising failure count rendered green is worse than no colour at all.
  */
 import { computed } from 'vue'
@@ -32,11 +33,20 @@ const props = withDefaults(
         color?: string
         loading?: boolean
     }>(),
-    { caption: null, delta: null, inverted: false, series: null, color: 'var(--primary)', loading: false },
+    {
+        caption: null,
+        delta: null,
+        inverted: false,
+        series: null,
+        color: 'var(--primary)',
+        loading: false,
+    },
 )
 
 const good = computed(() => {
-    if (props.delta === null || props.delta === 0) return null
+    if (props.delta === null || props.delta === 0) {
+        return null
+    }
 
     return props.inverted ? props.delta < 0 : props.delta > 0
 })
@@ -62,12 +72,14 @@ const display = computed(() =>
                 <slot name="menu" />
             </div>
 
-            <p v-if="caption" class="text-muted-foreground font-mono text-xs">{{ caption }}</p>
+            <p v-if="caption" class="text-muted-foreground font-mono text-xs">
+                {{ caption }}
+            </p>
 
             <div class="mt-1 flex flex-wrap items-center gap-2">
                 <!-- The skeleton is the same height as the value, so a row of
                      cards does not jump as each one resolves. -->
-                <span v-if="loading" class="bg-muted h-7 w-24 animate-pulse rounded" />
+                <PkSkeleton v-if="loading" variant="number" />
                 <span v-else class="text-xl font-semibold tabular-nums">{{ display }}</span>
 
                 <span

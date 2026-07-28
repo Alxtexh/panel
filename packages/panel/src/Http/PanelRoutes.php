@@ -1,0 +1,287 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PanelKit\Panel\Http;
+
+use Illuminate\Support\Facades\Route;
+use PanelKit\Panel\Http\Controllers\BulkController;
+use PanelKit\Panel\Http\Controllers\RecordController;
+use PanelKit\Panel\Http\Controllers\ResourceController;
+use PanelKit\Panel\Http\Controllers\UploadController;
+use PanelKit\Panel\Panel;
+use PanelKit\Panel\PanelManager;
+
+/**
+ * Every route a panel needs, mounted at that panel's path.
+ *
+ * IT EXISTS BECAUSE A SECOND PORTAL MEANT COPYING A HUNDRED AND SEVENTY LINES.
+ * The resource routes lived inline in the application's `web.php`, mounted at
+ * the root, against one flat registry. Adding a super-admin portal would have
+ * meant duplicating all of it with a different prefix and a different guard, and
+ * the copy would drift: a route added to one and not the other is a screen that
+ * works in one portal and 404s in the other, with nothing to notice.
+ *
+ * SO A PANEL IS A REGISTRATION, NOT A ROUTE FILE. `PanelServiceProvider` calls
+ * this once per registered panel; the path, the middleware and the resource set
+ * all come from the `Panel` object. Running `make:panel` therefore produces a
+ * working portal without anybody editing routes.
+ *
+ * THE RESOURCE SEGMENT IS CONSTRAINED TO *THIS PANEL'S* RESOURCES, and that is
+ * the security property rather than a tidiness one. A shared `{resource}`
+ * pattern would let `/app/tenants` resolve the super admin's Tenants resource
+ * from inside a tenant-scoped request - a central-context query reached through
+ * a tenant URL, which is the exact leak the multi-panel split exists to prevent.
+ *
+ * ROUTE NAMES ARE PREFIXED WITH THE PANEL ID. Two panels both naming a route
+ * `panel.resource` would have the second silently overwrite the first, and every
+ * generated URL in the first portal would point into the second.
+ *
+ * ORDERING IS LOAD-BEARING THROUGHOUT: every fixed segment - `create`, `bulk`,
+ * `views`, `uploads` - must be declared before `{id}`, or it is captured as a
+ * record id and the page 404s looking for a record called "create".
+ */
+final class PanelRoutes
+{
+    /**
+     * Mount every panel that has been registered.
+     *
+     * CALLED FROM THE PROVIDER'S `boot`, so a panel added by a command is
+     * routable on the next request with no route file edited. Resources are
+     * discovered lazily, so this does not force discovery at boot - see
+     * `PanelManager::resources`.
+     */
+    public static function registerAll(): void
+    {
+        foreach (app(PanelManager::class)->panels() as $panel) {
+            self::register($panel);
+        }
+    }
+
+    /**
+     * Routes an APPLICATION wants inside every panel.
+     *
+     * THE EXTENSION POINT EXISTS BECAUSE SOME ROUTES CANNOT LIVE IN THE PACKAGE.
+     * Import, saved views and the audit trail hang off a resource and are
+     * answered by controllers in the application, so the package cannot declare
+     * them - and while they were declared in `web.php` they existed for the
+     * first portal only. A generated portal got the resource screens and
+     * silently lost Import, with nothing to say why the button was missing.
+     *
+     * Registered once per application, called inside every panel's group with
+     * that panel's resource keys.
+     *
+     * HELD IN THE CONTAINER, NOT IN A STATIC, and the difference is not
+     * stylistic. A static list is appended to every time the route file loads
+     * and never cleared - so across a test suite that boots the application a
+     * thousand times it grew to a thousand copies of the same closure, each
+     * registering the same routes for each of three panels. Nothing failed. The
+     * suite simply went from forty-eight seconds to four minutes, which reads as
+     * "the tests got slower" rather than as a leak.
+     *
+     * A container binding is rebuilt with the application, so a fresh boot gets
+     * a fresh list. That is the same reason `PanelManager` is scoped.
+     */
+    private const EXTENSIONS = 'panelkit.route-extensions';
+
+    /** @param callable(list<string>, Panel): void $routes */
+    public static function extend(callable $routes): void
+    {
+        $extensions = app()->bound(self::EXTENSIONS) ? app(self::EXTENSIONS) : [];
+
+        $extensions[] = $routes;
+
+        app()->instance(self::EXTENSIONS, $extensions);
+    }
+
+    /** @return list<callable(list<string>, Panel): void> */
+    private static function extensions(): array
+    {
+        return app()->bound(self::EXTENSIONS) ? (array) app(self::EXTENSIONS) : [];
+    }
+
+    public static function register(Panel $panel): void
+    {
+        $keys = array_keys(app(PanelManager::class)->resourcesFor($panel->id));
+
+        /*
+         * A PANEL WITH NO RESOURCES REGISTERS NOTHING BUT ITS HOME. `whereIn`
+         * with an empty list matches nothing in some drivers and everything in
+         * others; rather than depend on which, a portal with no resources yet
+         * has no resource routes - and `make:panel-resource` gives it some.
+         */
+
+        /*
+         * `UsePanel` FIRST, AHEAD OF EVERYTHING INCLUDING `auth`.
+         *
+         * IT WAS WRITTEN AND NEVER ATTACHED, which meant the panel serving a
+         * request was always the default - so a central portal's routes ran
+         * WITH tenant scoping and showed an operator's own organisation instead
+         * of every organisation. Nothing failed; the list was simply wrong, and
+         * on a platform screen "wrong" looks like "there is only one tenant".
+         *
+         * The id is a literal fixed at boot, so nothing a client sends can
+         * influence which panel - and therefore which scoping - is in force.
+         * Even the guard used to authenticate is a property of the panel, which
+         * is why this runs before `auth` rather than after it.
+         */
+        Route::middleware([
+            Middleware\UsePanel::class.':'.$panel->id,
+            ...$panel->getMiddleware(),
+        ])
+            ->prefix($panel->getPath())
+            ->name($panel->getRouteName())
+            ->group(function () use ($keys, $panel): void {
+                /*
+                 * THE HOME SCREEN, AND IT IS NOT DECORATION. A portal mounted at
+                 * `/platform` whose only routes are `/platform/tenants` answers
+                 * its own root with a 404 - so the first thing anybody does with
+                 * a portal they just generated is hit an error page. It lists
+                 * what the portal contains, which for a portal with nothing in
+                 * it yet is the most useful thing it can say.
+                 */
+                /*
+                 * NOT FOR A PANEL MOUNTED AT THE ROOT. That portal IS the
+                 * application, and `/` already belongs to it - a marketing page,
+                 * a redirect, whatever the app decided. Claiming it here would
+                 * put a resource directory over somebody's landing page, and the
+                 * two would race on declaration order.
+                 */
+                if (trim($panel->getPath(), '/') !== '') {
+                    Route::get('/', [Controllers\PanelHomeController::class, 'index'])->name('home');
+                }
+
+                if ($keys !== []) {
+                    self::within($keys);
+                }
+
+                foreach (self::extensions() as $extension) {
+                    $extension($keys, $panel);
+                }
+            });
+    }
+
+    /**
+     * The routes themselves, without the group.
+     *
+     * PUBLIC SO AN APPLICATION CAN MOUNT THEM INSIDE ITS OWN GROUP. The
+     * playground's first panel sits at the root, inside a middleware group it
+     * shares with its own screens - so it needs the definitions without the
+     * prefix, while a generated portal needs the whole thing. One definition
+     * either way, which is the entire reason this class exists: the alternative
+     * was the second portal copying a hundred and seventy lines that then drift.
+     *
+     * @param  list<string>  $keys  Resource keys this mount may resolve.
+     */
+    public static function within(array $keys): void
+    {
+        /*
+         * READS BEFORE WRITES, and fixed segments before `{id}` throughout.
+         * The grouping below follows the order the routes must be declared in,
+         * not the order they are conceptually related in - the constraint is the
+         * router's, and rearranging for readability is how `create` becomes a
+         * record id again.
+         */
+        Route::get('{resource}', [ResourceController::class, 'index'])
+            ->whereIn('resource', $keys)->name('resource');
+
+        // Lean JSON diff for the poll driver, not an Inertia render: it may be
+        // asked every few seconds and usually answers with an empty array.
+        Route::get('{resource}/updates', [ResourceController::class, 'updates'])
+            ->whereIn('resource', $keys)->name('updates');
+
+        Route::get('{resource}/field-options', [ResourceController::class, 'fieldOptions'])
+            ->whereIn('resource', $keys)->name('fieldOptions');
+
+        Route::get('{resource}/create', [ResourceController::class, 'create'])
+            ->whereIn('resource', $keys)->name('create');
+
+        Route::post('{resource}/bulk', [BulkController::class, 'run'])
+            ->whereIn('resource', $keys)->name('bulk');
+
+        Route::post('{resource}/export', [BulkController::class, 'export'])
+            ->whereIn('resource', $keys)->name('export');
+
+        Route::get('{resource}/jobs/{token}', [BulkController::class, 'status'])
+            ->whereIn('resource', $keys)
+            ->where('token', '[0-9a-fA-F-]{36}')
+            ->name('job');
+
+        Route::get('{resource}/jobs/{token}/download', [BulkController::class, 'download'])
+            ->whereIn('resource', $keys)
+            ->where('token', '[0-9a-fA-F-]{36}')
+            ->name('job.download');
+
+        /*
+         * The upload endpoint takes the resource but no record: a file is chosen
+         * before the record it belongs to exists. The DOWNLOAD takes both,
+         * because that is what makes authorization possible - there is a record
+         * to run a policy against.
+         */
+        Route::post('{resource}/uploads', [UploadController::class, 'store'])
+            ->whereIn('resource', $keys)->name('upload');
+
+        Route::delete('{resource}/uploads', [UploadController::class, 'destroy'])
+            ->whereIn('resource', $keys)->name('upload.discard');
+
+        Route::post('{resource}/reorder', [RecordController::class, 'reorder'])
+            ->whereIn('resource', $keys)->name('reorder');
+
+        Route::get('{resource}/{id}/file/{field}', [UploadController::class, 'show'])
+            ->whereIn('resource', $keys)
+            ->whereNumber('id')
+            ->where('field', '[a-z0-9_]+')
+            ->name('file');
+
+        Route::get('{resource}/{id}', [ResourceController::class, 'show'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('show');
+
+        Route::get('{resource}/{id}/relations/{relation}', [ResourceController::class, 'relation'])
+            ->whereIn('resource', $keys)
+            ->whereNumber('id')
+            ->where('relation', '[a-z0-9_-]+')
+            ->name('relation');
+
+        Route::get('{resource}/{id}/edit', [ResourceController::class, 'edit'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('edit');
+
+        /*
+         * Writes. `precognitive` is registered so the endpoints can answer
+         * validation-only requests; the rules live in one place either way.
+         */
+        Route::middleware('precognitive')->group(function () use ($keys): void {
+            Route::post('{resource}', [RecordController::class, 'store'])
+                ->whereIn('resource', $keys)->name('store');
+
+            Route::put('{resource}/{id}', [RecordController::class, 'update'])
+                ->whereIn('resource', $keys)->name('update');
+        });
+
+        /*
+         * One declared action against one record. The request names a KEY; only
+         * a key the resource's table declared resolves, so the endpoint can
+         * never be talked into calling something the resource did not offer.
+         */
+        Route::post('{resource}/{id}/action', [RecordController::class, 'runAction'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('action');
+
+        // One cell, from an editable column. Outside the precognitive group: an
+        // inline edit has no form to validate ahead of, it just writes.
+        Route::patch('{resource}/{id}/cell', [RecordController::class, 'updateCell'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('cell');
+
+        /*
+         * Restore and permanent delete are separate routes because they are
+         * different acts with different permissions - and one of them cannot be
+         * undone.
+         */
+        Route::post('{resource}/{id}/restore', [RecordController::class, 'restore'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('restore');
+
+        Route::delete('{resource}/{id}/force', [RecordController::class, 'forceDestroy'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('forceDestroy');
+
+        Route::delete('{resource}/{id}', [RecordController::class, 'destroy'])
+            ->whereIn('resource', $keys)->name('destroy');
+    }
+}

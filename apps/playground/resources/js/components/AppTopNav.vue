@@ -1,13 +1,13 @@
 <script setup lang="ts">
 /**
- * The horizontal navigation bar — the third layout option.
+ * The horizontal navigation bar - the third layout option.
  *
  * SAME NAV MODEL AS THE SIDEBAR, different rendering. Groups that are
  * collapsible sections in the rail become dropdown menus here, which is the
  * only honest translation: a top bar has no vertical room to expand into.
  *
  * THE DROPDOWNS TELEPORT (PkDropdown). A nav dropdown in a bar that sits above
- * a scrolling region has exactly the clipping problem the table row menu had —
+ * a scrolling region has exactly the clipping problem the table row menu had -
  * `overflow` on any ancestor cuts it off, and no z-index rescues it.
  *
  * THE BAR SCROLLS HORIZONTALLY rather than wrapping. A wrapping nav changes the
@@ -23,16 +23,23 @@ import NotificationBell from '@/components/NotificationBell.vue';
 import TopNavUser from '@/components/TopNavUser.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { usePanelNav } from '@/composables/usePanelNav';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, NavItem } from '@/types';
 
 withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), { breadcrumbs: () => [] });
 
 const { nav, supportItems } = usePanelNav();
 const { isCurrentUrl } = useCurrentUrl();
 
-/** A group is active when any of its children is the current page. */
-function groupIsActive(items: { href: string }[]): boolean {
-    return items.some((i) => isCurrentUrl(i.href));
+/**
+ * A group is active when any of its children is the current page.
+ *
+ * Typed against `NavItem` rather than `{ href: string }`, because Inertia's
+ * `href` is a string OR a `{ url, method }` pair - narrowing it here claimed
+ * something about the nav that was not true, and `isCurrentUrl` already accepts
+ * both forms.
+ */
+function groupIsActive(items: NavItem[]): boolean {
+    return items.some((i) => (i.href ? isCurrentUrl(i.href) : false));
 }
 </script>
 
@@ -138,7 +145,7 @@ function groupIsActive(items: { href: string }[]): boolean {
 
             On the dashboard the trail was a single "Dashboard" crumb, sitting
             directly beneath a nav item reading "Dashboard" and directly above a
-            page heading reading "Dashboard" — the same word three times in
+            page heading reading "Dashboard" - the same word three times in
             eighty pixels. A one-item trail tells you nothing the highlighted
             nav item has not already said; "Clients › New" does.
         -->

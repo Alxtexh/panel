@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Forms;
 
 use Illuminate\Database\Eloquent\Model;
 use PanelKit\Panel\Forms\Fields\Field;
+use PanelKit\Panel\Forms\Fields\RepeaterField;
 use PanelKit\Panel\Schema\Component;
 use PanelKit\Panel\Schema\Renderable;
 
@@ -20,14 +21,14 @@ use PanelKit\Panel\Schema\Renderable;
  *
  * 2. MASS ASSIGNMENT IS CLOSED BY CONSTRUCTION. `sanitize()` returns only keys
  *    this form declares, so a request cannot write a column the form does not
- *    mention — including `tenant_id`. `$request->all()` never reaches a model.
+ *    mention - including `tenant_id`. `$request->all()` never reaches a model.
  *    A `$fillable` list can be forgotten when a column is added; a form that
  *    does not mention a field simply cannot submit it.
  */
 final class Form
 {
     /**
-     * The schema TREE — layout components and fields, mixed and nested.
+     * The schema TREE - layout components and fields, mixed and nested.
      *
      * @var list<Component|Renderable>
      */
@@ -37,7 +38,7 @@ final class Form
 
     public static function make(): self
     {
-        return new self();
+        return new self;
     }
 
     /** @param list<Component|Renderable> $nodes */
@@ -61,7 +62,7 @@ final class Form
      * Validation, sanitisation and hydration all use this rather than the top
      * level, so a field inside a collapsed section or an unopened tab behaves
      * exactly like a visible one. Anything else would let a required field be
-     * skipped by never opening its tab — a correctness hole, not a layout quirk.
+     * skipped by never opening its tab - a correctness hole, not a layout quirk.
      *
      * @return list<Field>
      */
@@ -105,6 +106,25 @@ final class Form
             if ($resolved !== null) {
                 $options[$field->key] = $resolved;
             }
+
+            /*
+             * A repeater's CHILD selects need their lists too.
+             *
+             * Keyed by the child's own key rather than a nested path, because
+             * every row of a repeater shares one shape - a per-row list would
+             * be the same array repeated once per row, which is exactly the
+             * duplication the schema/data split exists to avoid.
+             *
+             * They resolve here, in the DATA payload, for the same reason every
+             * other option list does: a select inside a repeater may be backed
+             * by a tenant's own rows, and tenant data never enters the cached
+             * schema (addendum Part A).
+             */
+            if ($field instanceof RepeaterField) {
+                foreach ($field->childOptions() as $childKey => $childOptions) {
+                    $options[$childKey] = $childOptions;
+                }
+            }
         }
 
         return $options;
@@ -118,7 +138,7 @@ final class Form
         foreach ($this->fields() as $field) {
             $rules[$field->key] = $field->rules();
 
-            // Fields that validate more than their own key — a multi-select
+            // Fields that validate more than their own key - a multi-select
             // has to constrain each MEMBER, not merely assert an array.
             foreach ($field->additionalRules() as $key => $extra) {
                 $rules[$key] = $extra;
@@ -136,9 +156,28 @@ final class Form
      */
     public function sanitize(array $input): array
     {
-        $keys = array_map(static fn (Field $f): string => $f->key, $this->fields());
+        $out = [];
 
-        return array_intersect_key($input, array_flip($keys));
+        foreach ($this->fields() as $field) {
+            if (! array_key_exists($field->key, $input)) {
+                continue;
+            }
+
+            // Declared keys only - nothing else reaches the model - and each
+            // one passed through its own field, so a value that is not what the
+            // column stores (an upload handle, say) becomes what it should be
+            // here rather than in every caller.
+            // A field may decline to be written at all - see omitsFromStorage().
+            // Omission is not the same as writing null: one keeps the stored
+            // value, the other destroys it.
+            if ($field->omitsFromStorage($input[$field->key])) {
+                continue;
+            }
+
+            $out[$field->key] = $field->transformForStorage($input[$field->key]);
+        }
+
+        return $out;
     }
 
     /**
@@ -158,7 +197,7 @@ final class Form
             // unparseable and is a localisation trap (addendum D2).
             $values[$field->key] = $value instanceof \DateTimeInterface
                 ? $value->format(str_contains($field->type(), 'time') ? 'Y-m-d\TH:i' : 'Y-m-d')
-                : $value;
+                : $field->presentValue($value);
         }
 
         return $values;

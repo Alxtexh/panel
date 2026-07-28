@@ -24,12 +24,12 @@ use Tests\TestCase;
  * FOUND BY MEASUREMENT at 1M rows: counting a tenant's 200,000 clients took
  * 503 ms through a LEFT JOIN to plans and 25 ms without it, because every
  * counted row did a primary-key lookup whose result was then discarded. A count
- * selects no joined columns — the join is only there so a FILTER or the SEARCH
+ * selects no joined columns - the join is only there so a FILTER or the SEARCH
  * can reference one.
  *
  * The optimisation is only safe when nothing applied touches a joined column,
  * so both halves are asserted: that it is dropped when unused, and kept when
- * needed. The second is the one that matters — dropping it wrongly would not
+ * needed. The second is the one that matters - dropping it wrongly would not
  * be slow, it would be WRONG.
  */
 final class CountJoinTest extends TestCase
@@ -186,7 +186,7 @@ final class CountJoinTest extends TestCase
                 'plan_id' => $this->plan->id,
                 'router_id' => $this->router->id,
                 'name' => "Client {$i}",
-                'phone' => '+254' . substr((string) crc32($unique), 0, 9),
+                'phone' => '+254'.substr((string) crc32($unique), 0, 9),
                 'access_code' => strtoupper(substr(md5($unique), 0, 10)),
                 'status' => 'active',
                 'plan_type' => 'pppoe',

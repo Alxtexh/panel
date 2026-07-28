@@ -20,7 +20,7 @@ use Throwable;
  *    page down for every tenant, because definitions evaluate at render time.
  *
  * 2. A WIDGET FAILURE DEGRADES THAT WIDGET ONLY. One broken query must not take
- *    the dashboard down — the operator directive after that incident was
+ *    the dashboard down - the operator directive after that incident was
  *    literally "even if the user has no router just show the pages". A failed
  *    widget returns an error state and the other five still render.
  *
@@ -45,6 +45,8 @@ final class StatWidget
     private array $invalidatedBy = [];
 
     private int $span = 1;
+
+    private ?string $ability = null;
 
     private function __construct(public readonly string $key, private string $label) {}
 
@@ -120,6 +122,47 @@ final class StatWidget
     }
 
     /** @return array<string, mixed> */
+    /**
+     * An ability required to SEE this widget at all, or null for everyone.
+     *
+     * PER WIDGET, BECAUSE A DASHBOARD IS NOT ONE SECRET. The question that
+     * prompted this was exact: somebody needs the dashboard but must not see the
+     * commercial figures. With visibility all-or-nothing the only answers were
+     * "show them the revenue" or "take the dashboard away", and both are wrong
+     * for a support rota that needs the connection counts.
+     *
+     * FILTERING HAPPENS BEFORE THE DEFERRED PROP IS REGISTERED, which is the
+     * part that matters. Hiding a card in the browser leaves the number sitting
+     * in the page payload for anybody who opens the network tab - and the query
+     * still runs, so it is not even cheaper. A widget somebody may not see is
+     * never computed.
+     */
+    public function ability(?string $ability): self
+    {
+        $this->ability = $ability;
+
+        return $this;
+    }
+
+    /**
+     * Whether `$user` may see this widget.
+     *
+     * NO ABILITY MEANS VISIBLE, and the default direction is deliberate. A
+     * dashboard whose widgets default to hidden is a dashboard that silently
+     * empties itself as widgets are added, and the symptom - a blank screen with
+     * no error - reads as a broken page rather than a permissions decision.
+     */
+    public function visibleTo(mixed $user): bool
+    {
+        if ($this->ability === null) {
+            return true;
+        }
+
+        return is_object($user)
+            && method_exists($user, 'hasPermission')
+            && $user->hasPermission($this->ability);
+    }
+
     public function toArray(): array
     {
         return [
@@ -131,7 +174,7 @@ final class StatWidget
     }
 
     /**
-     * Resolve the value. Never throws — a broken widget reports itself.
+     * Resolve the value. Never throws - a broken widget reports itself.
      *
      * The trend and sparkline resolve in their OWN try blocks, so a broken
      * decoration cannot take down the number it decorates. Wrapping all three
@@ -204,7 +247,7 @@ final class StatWidget
         if ($this->ttl !== null && $this->invalidatedBy === []) {
             throw new RuntimeException(
                 "Widget [{$this->key}] is cached but declares no invalidation events. "
-                . 'A cache with no invalidation path is a bug, not an optimisation.'
+                .'A cache with no invalidation path is a bug, not an optimisation.'
             );
         }
 
@@ -216,7 +259,7 @@ final class StatWidget
             }
 
             // The tenant is part of the key AND the builder cannot read ambient
-            // state — antipatterns §1.4, where a deferred rebuild lost tenancy
+            // state - antipatterns §1.4, where a deferred rebuild lost tenancy
             // and wrote one tenant's answer into every tenant's cache entry.
             $key = "panel:widget:{$this->key}:{$tenantKey}";
 

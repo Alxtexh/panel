@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Schema;
  * and the only thing it would buy is a query nobody needs.
  *
  * NOT INDEXED, deliberately. The reminder scheduler will read it per client
- * while walking clients that are expiring — which is already an indexed scan on
- * `expiry_date` — so an index here would be written on every save and read by
+ * while walking clients that are expiring - which is already an indexed scan on
+ * `expiry_date` - so an index here would be written on every save and read by
  * nothing.
  */
 return new class extends Migration

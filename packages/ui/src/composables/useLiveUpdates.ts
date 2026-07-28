@@ -1,10 +1,11 @@
-import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import type { Ref } from 'vue'
 
 /**
  * Keeps rows fresh, WITHOUT caring how the change arrives.
  *
  * An earlier version hardcoded Laravel Echo, which meant live updates needed a
- * Reverb process running before anything moved on screen — a dependency
+ * Reverb process running before anything moved on screen - a dependency
  * masquerading as a feature. The ten §8 rules are about APPLYING a change, not
  * receiving one, so the transport is now a driver and the rules are shared:
  *
@@ -18,20 +19,20 @@ import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
  *
  * THE RULES, applied identically whichever driver is in use:
  *
- *  1. PATCH, NEVER REPLACE — mutate the row object. Replacing the array
+ *  1. PATCH, NEVER REPLACE - mutate the row object. Replacing the array
  *     remounts every row, which flickers, drops scroll and clears selection.
  *  2. Key by record id, never array index (DataTable's job).
  *  3. DO NOT RE-SORT OR RE-FILTER on a patch. A row jumping out from under a
  *     cursor mid-read is worse than a slightly stale sort.
  *  4. BATCH inside a window and apply once.
- *  5. Animate the CHANGE, not the layout — a background flash, never geometry.
+ *  5. Animate the CHANGE, not the layout - a background flash, never geometry.
  *  6. PAUSE WHEN HIDDEN, resume with a refetch.
  *  7. HEAL ON RECONNECT rather than trusting local state.
  *  8. SHOW CONNECTION STATE, so nobody trusts a frozen table.
  *  9. Channels private and tenant-scoped (enforced server-side).
  * 10. Lean payloads: id plus changed fields, never whole models.
  *
- * Imports no Inertia — the caller supplies `fetchChanges` and `onResync`.
+ * Imports no Inertia - the caller supplies `fetchChanges` and `onResync`.
  */
 export interface LiveConfig {
     driver: 'none' | 'poll' | 'broadcast'
@@ -51,22 +52,45 @@ export interface LiveUpdateOptions {
      * that changed. The caller owns the request, so this package stays free of
      * any HTTP client.
      */
-    fetchChanges?: (ids: (string | number)[], since: string) => Promise<{ records: Record<string, any>[]; at: string }>
-    /** Called after a resume or reconnect — refetch the current page. */
+    fetchChanges?: (
+        ids: (string | number)[],
+        since: string,
+    ) => Promise<{ records: Record<string, any>[]; at: string }>
+    /** Called after a resume or reconnect - refetch the current page. */
     onResync?: () => void
+    /**
+     * A change arrived for a record that is NOT on the page.
+     *
+     * WITHOUT THIS, A NEW RECORD IS SILENTLY DROPPED. `flush()` patches rows it
+     * can find and skips the rest, which is correct for a paged table - a row
+     * created on page 40 must not appear on page 1 and push everything down.
+     *
+     * It is exactly wrong for the two cases where arrival IS the event: a chat
+     * thread, where a new message is the whole point, and a live "currently
+     * online" list, where a session appearing is what somebody is watching for.
+     * Those pass a handler; everything else keeps the old behaviour, which is
+     * the safe default rather than an oversight.
+     */
+    onInsert?: (id: string | number, changes: Record<string, unknown>) => void
 }
 
 type EchoLike = {
-    private: (channel: string) => { listen: (event: string, cb: (p: any) => void) => void }
+    private: (channel: string) => {
+        listen: (event: string, cb: (p: any) => void) => void
+    }
     leave: (channel: string) => void
-    connector?: { pusher?: { connection?: { bind: (e: string, cb: () => void) => void } } }
+    connector?: {
+        pusher?: { connection?: { bind: (e: string, cb: () => void) => void } }
+    }
 }
 
 export function useLiveUpdates(options: LiveUpdateOptions) {
-    const { config, rows, rowKey = 'id', fetchChanges, onResync } = options
+    const { config, rows, rowKey = 'id', fetchChanges, onResync, onInsert } = options
 
-    /** 'live' | 'connecting' | 'paused' | 'off' — surfaced so a frozen table is never silently trusted (rule 8). */
-    const status = ref<'live' | 'connecting' | 'paused' | 'off'>(config.driver === 'none' ? 'off' : 'connecting')
+    /** 'live' | 'connecting' | 'paused' | 'off' - surfaced so a frozen table is never silently trusted (rule 8). */
+    const status = ref<'live' | 'connecting' | 'paused' | 'off'>(
+        config.driver === 'none' ? 'off' : 'connecting',
+    )
     const recentlyChanged = ref<Set<string | number>>(new Set())
 
     let pending = new Map<string | number, Record<string, unknown>>()
@@ -80,7 +104,9 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
     function queue(id: string | number, changes: Record<string, unknown>) {
         pending.set(id, { ...(pending.get(id) ?? {}), ...changes })
 
-        if (flushTimer) return
+        if (flushTimer) {
+            return
+        }
 
         flushTimer = setTimeout(() => {
             flushTimer = undefined
@@ -89,7 +115,9 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
     }
 
     function flush() {
-        if (pending.size === 0) return
+        if (pending.size === 0) {
+            return
+        }
 
         const batch = pending
         pending = new Map()
@@ -98,15 +126,23 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
         for (const [id, changes] of batch) {
             const row = rows.value.find((r) => r[rowKey] === id)
 
-            if (!row) continue
+            if (!row) {
+                // Not on the page. Only a caller that WANTS arrivals hears
+                // about it - see `onInsert`.
+                onInsert?.(id, changes)
+
+                continue
+            }
 
             // Rule 1. Mutating keeps the DOM node; replacing loses selection.
-            // Rule 3: no re-sort, no re-filter — position is left alone.
+            // Rule 3: no re-sort, no re-filter - position is left alone.
             Object.assign(row, changes)
             touched.add(id)
         }
 
-        if (touched.size === 0) return
+        if (touched.size === 0) {
+            return
+        }
 
         recentlyChanged.value = new Set([...recentlyChanged.value, ...touched])
 
@@ -122,7 +158,9 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
     /* ---------------------------------------------------------------- poll */
 
     async function pollOnce() {
-        if (!fetchChanges || rows.value.length === 0) return
+        if (!fetchChanges || rows.value.length === 0) {
+            return
+        }
 
         // A slow response must never overwrite a newer one.
         inFlight?.abort()
@@ -141,7 +179,7 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
                 queue(record[rowKey], record)
             }
         } catch {
-            // A failed poll is not fatal — the table is simply as fresh as its
+            // A failed poll is not fatal - the table is simply as fresh as its
             // last success. Surfaced through status rather than thrown.
             status.value = 'connecting'
         }
@@ -186,7 +224,9 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
         for (const event of config.events) {
             subscription.listen(event, (payload: Record<string, any>) => {
                 // Rule 10: the payload carries an id and changed fields only.
-                if (payload?.[rowKey] !== undefined) queue(payload[rowKey], payload)
+                if (payload?.[rowKey] !== undefined) {
+                    queue(payload[rowKey], payload)
+                }
             })
         }
 
@@ -212,8 +252,13 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
     /* -------------------------------------------------------------- shared */
 
     function start() {
-        if (config.driver === 'poll') startPolling()
-        if (config.driver === 'broadcast') startBroadcast()
+        if (config.driver === 'poll') {
+            startPolling()
+        }
+
+        if (config.driver === 'broadcast') {
+            startBroadcast()
+        }
     }
 
     function stop() {
@@ -226,7 +271,9 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
 
     /** Rule 6: a hidden tab buffers nothing; resuming refetches. */
     function onVisibilityChange() {
-        if (!config.pauseWhenHidden) return
+        if (!config.pauseWhenHidden) {
+            return
+        }
 
         if (document.hidden) {
             stop()
@@ -239,7 +286,9 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
     }
 
     onMounted(() => {
-        if (config.driver === 'none') return
+        if (config.driver === 'none') {
+            return
+        }
 
         start()
 

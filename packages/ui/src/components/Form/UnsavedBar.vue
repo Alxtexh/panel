@@ -3,14 +3,24 @@
  * The floating "Unsaved changes" bar.
  *
  * WHY THIS EXISTS ALONGSIDE THE BROWSER GUARDS. `beforeunload` and the
- * navigation confirm are both REACTIVE — they only speak up once the user is
+ * navigation confirm are both REACTIVE - they only speak up once the user is
  * already leaving, and by then the question ("save or lose it?") is being asked
  * at the worst possible moment. A persistent bar makes the state visible while
  * there is still nothing at stake, so the interruption is rarely reached at all.
  *
- * IT DOES NOT FETCH (§4 rule 2): it emits `save` and `reset`, and the page owns
- * both. It also does not decide when it is shown — dirtiness belongs to the
+ * IT DOES NOT FETCH (§4 rule 2): it emits `save` and `cancel`, and the page owns
+ * both. It also does not decide when it is shown - dirtiness belongs to the
  * form, not to a bar that draws it.
+ *
+ * THE SECONDARY ACTION IS CANCEL, NOT RESET, and the difference is what somebody
+ * actually wants. "Reset" clears the form and leaves you sitting on it - which
+ * on a CREATE page means staring at the empty fields you just emptied, and on an
+ * edit page is a thing people ask for perhaps once. What somebody who has
+ * decided against a form wants is to be somewhere else.
+ *
+ * It also stops the bar contradicting the form: the buttons at the foot of the
+ * page are already Cancel and Save, and a floating bar offering Reset and Save
+ * gave two different answers to "how do I get out of this".
  *
  * FIXED TO THE VIEWPORT, not to the end of the form. A long form scrolls the
  * save button off screen exactly when someone has made the most changes; the
@@ -25,17 +35,17 @@ withDefaults(
         processing?: boolean
         message?: string
         saveLabel?: string
-        resetLabel?: string
+        cancelLabel?: string
     }>(),
     {
         processing: false,
         message: 'Unsaved changes',
         saveLabel: 'Save',
-        resetLabel: 'Reset',
+        cancelLabel: 'Cancel',
     },
 )
 
-defineEmits<{ (e: 'save'): void; (e: 'reset'): void }>()
+defineEmits<{ (e: 'save'): void; (e: 'cancel'): void }>()
 </script>
 
 <template>
@@ -56,7 +66,13 @@ defineEmits<{ (e: 'save'): void; (e: 'reset'): void }>()
                     class="bg-popover pointer-events-auto flex w-full max-w-lg items-center gap-3 rounded-full border py-2 pr-2 pl-4 shadow-lg"
                 >
                     <span class="text-amber-500" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg
+                            viewBox="0 0 24 24"
+                            class="size-4"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
                             <circle cx="12" cy="12" r="9" />
                             <path d="M12 8v4M12 16h.01" />
                         </svg>
@@ -68,9 +84,9 @@ defineEmits<{ (e: 'save'): void; (e: 'reset'): void }>()
                         type="button"
                         class="bg-muted hover:bg-muted/70 rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
                         :disabled="processing"
-                        @click="$emit('reset')"
+                        @click="$emit('cancel')"
                     >
-                        {{ resetLabel }}
+                        {{ cancelLabel }}
                     </button>
 
                     <button

@@ -11,7 +11,7 @@ use Illuminate\Database\Query\Builder;
  * Single-choice equality filter backed by an allowlist.
  *
  * The allowlist is the security boundary, not a convenience. A submitted value
- * that is not in it is discarded rather than passed to the query — which matters
+ * that is not in it is discarded rather than passed to the query - which matters
  * most when the options are data-derived (Routers' hardware models), because the
  * options are resolved from a TENANT-SCOPED query. That makes a crafted value
  * unable to confirm whether another tenant owns equipment you do not.
@@ -30,7 +30,7 @@ final class SelectFilter extends Filter implements HasOptions
      * payload. For a data-derived filter that is three identical DISTINCT
      * queries where one will do.
      *
-     * Instance state, not static — filters are rebuilt per request from the
+     * Instance state, not static - filters are rebuilt per request from the
      * resource definition, so this cannot outlive a request or leak a tenant's
      * options into another's (S9).
      *

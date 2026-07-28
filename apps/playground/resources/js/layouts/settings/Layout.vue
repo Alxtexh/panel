@@ -8,6 +8,8 @@ import { toUrl } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -18,7 +20,32 @@ const sidebarNavItems: NavItem[] = [
         title: 'Security',
         href: editSecurity(),
     },
+    /*
+     * Last, and named for what it is. The two above are about the person
+     * signed in; this one changes what every colleague sees, so it reads
+     * wrongly anywhere in the middle of a list of personal settings.
+     */
+    {
+        title: 'Organisation',
+        href: '/settings/organisation',
+    },
 ];
+
+/**
+ * Roles are only listed for somebody who can actually open the screen.
+ *
+ * A LINK THAT ONLY EVER 403s IS WORSE THAN NO LINK - it advertises a page,
+ * invites the click, and answers with a refusal. The flag is presentation only;
+ * the controller checks `manage_roles` again, so hiding it is politeness rather
+ * than protection.
+ */
+const page = usePage();
+
+const navItems = computed<NavItem[]>(() =>
+    page.props.auth?.can?.manageRoles
+        ? [...sidebarNavItems, { title: 'Roles', href: '/settings/roles' }]
+        : sidebarNavItems,
+);
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
 </script>
@@ -27,7 +54,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
     <div class="px-4 py-6">
         <Heading
             title="Settings"
-            description="Manage your profile and account settings"
+            description="Manage your profile, security and organisation"
         />
 
         <div class="flex flex-col lg:flex-row lg:space-x-12">
@@ -37,7 +64,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
                     aria-label="Settings"
                 >
                     <Button
-                        v-for="item in sidebarNavItems"
+                        v-for="item in navItems"
                         :key="toUrl(item.href)"
                         variant="ghost"
                         :class="[

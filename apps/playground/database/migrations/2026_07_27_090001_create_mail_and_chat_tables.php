@@ -9,17 +9,17 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Mail and chat, as real tables rather than fixtures in a Vue file.
  *
- * A screen backed by a hardcoded array demonstrates a layout and nothing else —
+ * A screen backed by a hardcoded array demonstrates a layout and nothing else -
  * it cannot be filtered, searched, paginated or measured, which is most of what
  * these screens are actually for. The Help page was rebuilt for exactly this
  * reason; starting these the same way would repeat it.
  *
  * INDEXES ARE JUSTIFIED PER QUERY SHAPE, as everywhere else (spec §10):
  *
- *   mail   — the list is always "one folder, one user, newest first", so the
+ *   mail   - the list is always "one folder, one user, newest first", so the
  *            index is (user_id, folder, received_at). Anything narrower makes
  *            the sort a filesort.
- *   chat   — messages are always read as "one conversation, oldest first", and
+ *   chat   - messages are always read as "one conversation, oldest first", and
  *            conversations as "mine, most recent activity first".
  *
  * `id` trails every sort index because keyset pagination compares the tuple

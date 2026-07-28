@@ -17,7 +17,7 @@ use Tests\TestCase;
  * Live updates must not require Reverb.
  *
  * The transport is a driver; the patching rules are shared. These cover the
- * server half — the diff endpoint that makes the default `poll` driver cheap
+ * server half - the diff endpoint that makes the default `poll` driver cheap
  * enough to be the default at all.
  */
 final class LiveUpdatesTest extends TestCase
@@ -59,7 +59,7 @@ final class LiveUpdatesTest extends TestCase
         $id = $this->makeClient($this->tenantA, 'alpha');
 
         $body = $this->actingAs($this->userA)
-            ->getJson("/clients/updates?ids={$id}&since=" . urlencode(now()->toIso8601String()))
+            ->getJson("/clients/updates?ids={$id}&since=".urlencode(now()->toIso8601String()))
             ->assertOk()
             ->json();
 
@@ -75,7 +75,7 @@ final class LiveUpdatesTest extends TestCase
         DB::table('clients')->where('id', $id)->update(['status' => 'suspended', 'updated_at' => now()]);
 
         $records = $this->actingAs($this->userA)
-            ->getJson("/clients/updates?ids={$id}&since=" . urlencode($since))
+            ->getJson("/clients/updates?ids={$id}&since=".urlencode($since))
             ->assertOk()
             ->json('records');
 
@@ -85,7 +85,7 @@ final class LiveUpdatesTest extends TestCase
 
     /**
      * The id list comes from the client and is therefore untrusted. Tenant
-     * scoping must apply to it exactly as it does to the list itself — this is
+     * scoping must apply to it exactly as it does to the list itself - this is
      * the one endpoint where a caller names records directly.
      */
     public function test_it_never_returns_another_tenants_row_even_when_asked_by_id(): void
@@ -96,7 +96,7 @@ final class LiveUpdatesTest extends TestCase
         DB::table('clients')->whereIn('id', [$mine, $theirs])->update(['updated_at' => now()]);
 
         $records = $this->actingAs($this->userA)
-            ->getJson("/clients/updates?ids={$mine},{$theirs}&since=" . urlencode(now()->subHour()->toIso8601String()))
+            ->getJson("/clients/updates?ids={$mine},{$theirs}&since=".urlencode(now()->subHour()->toIso8601String()))
             ->assertOk()
             ->json('records');
 
@@ -122,7 +122,7 @@ final class LiveUpdatesTest extends TestCase
         $padded = implode(',', [...$ids, ...range(900000, 900500)]);
 
         $records = $this->actingAs($this->userA)
-            ->getJson('/clients/updates?ids=' . $padded . '&since=' . urlencode(now()->subHour()->toIso8601String()))
+            ->getJson('/clients/updates?ids='.$padded.'&since='.urlencode(now()->subHour()->toIso8601String()))
             ->assertOk()
             ->json('records');
 
@@ -141,7 +141,7 @@ final class LiveUpdatesTest extends TestCase
         DB::enableQueryLog();
 
         $this->actingAs($this->userA)
-            ->getJson("/clients/updates?ids={$id}&since=" . urlencode(now()->subHour()->toIso8601String()))
+            ->getJson("/clients/updates?ids={$id}&since=".urlencode(now()->subHour()->toIso8601String()))
             ->assertOk();
 
         $this->assertLessThanOrEqual(
@@ -165,7 +165,7 @@ final class LiveUpdatesTest extends TestCase
 
     /**
      * A broadcast driver with no channel would listen to nothing and never
-     * update — silently, which is the failure mode this project is built
+     * update - silently, which is the failure mode this project is built
      * against.
      */
     public function test_broadcast_without_a_channel_throws(): void

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Tenant;
+use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use App\Panel\Resources\PlanResource;
 use App\Panel\Resources\RouterResource;
-use App\Models\Tenant;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Support\SchemaCache;
@@ -18,7 +18,7 @@ use Tests\TestCase;
 /**
  * Guards the Phase 4 schema contract.
  *
- * Every assertion here corresponds to a rule that, when broken, fails silently —
+ * Every assertion here corresponds to a rule that, when broken, fails silently -
  * a schema still renders, a page still returns 200, and the damage shows up as a
  * slow panel, a purged style, or a cross-tenant leak much later.
  */
@@ -35,7 +35,7 @@ final class SchemaContractTest extends TestCase
      * definitions evaluate at page render rather than when the control opens.
      *
      * This caught a real bug: `Table::toSchema()` called `Filter::toArray()`,
-     * which resolved the option closure and only then discarded the options — so
+     * which resolved the option closure and only then discarded the options - so
      * building a schema ran a DISTINCT query, and the query count differed
      * between a cold and a warm schema cache.
      */
@@ -52,7 +52,7 @@ final class SchemaContractTest extends TestCase
             $this->assertSame(
                 [],
                 $queries,
-                $resource . ' executed a query while building its schema: ' . implode(' | ', $queries)
+                $resource.' executed a query while building its schema: '.implode(' | ', $queries)
             );
         }
     }
@@ -60,7 +60,7 @@ final class SchemaContractTest extends TestCase
     /**
      * Addendum Part A: the schema describes STRUCTURE. Tenant data ships beside
      * the records. A schema holding no tenant data cannot leak tenant data,
-     * however badly its cache key is built — which is why the key drops the
+     * however badly its cache key is built - which is why the key drops the
      * tenant id entirely.
      */
     public function test_the_schema_carries_no_filter_options(): void
@@ -70,7 +70,7 @@ final class SchemaContractTest extends TestCase
                 $this->assertArrayNotHasKey(
                     'options',
                     $filter,
-                    $resource . " leaked filter options into the cached schema via [{$filter['key']}]."
+                    $resource." leaked filter options into the cached schema via [{$filter['key']}]."
                 );
             }
         }
@@ -95,8 +95,8 @@ final class SchemaContractTest extends TestCase
                 $this->assertStringNotContainsString(
                     $suspect,
                     $json,
-                    $resource . " emitted what looks like a CSS class ([{$suspect}]) in its schema. "
-                    . 'PHP describes intent; Vue owns presentation.'
+                    $resource." emitted what looks like a CSS class ([{$suspect}]) in its schema. "
+                    .'PHP describes intent; Vue owns presentation.'
                 );
             }
         }
@@ -115,7 +115,7 @@ final class SchemaContractTest extends TestCase
 
     /**
      * The cache key must NOT contain a tenant id (addendum Part A) but MUST
-     * contain a permissions fingerprint — schemas vary by role, so a user
+     * contain a permissions fingerprint - schemas vary by role, so a user
      * without a delete permission must not be served another role's schema.
      */
     public function test_the_cache_key_is_keyed_by_permissions_and_not_by_tenant(): void
@@ -152,9 +152,9 @@ final class SchemaContractTest extends TestCase
         foreach ([[$a, 'Alpha'], [$b, 'Bravo']] as [$tenant, $prefix]) {
             DB::table('routers')->insert([
                 'tenant_id' => $tenant->id,
-                'name' => $prefix . '-1',
+                'name' => $prefix.'-1',
                 'ip_address' => '10.0.0.1',
-                'model' => $prefix . ' Model',
+                'model' => $prefix.' Model',
                 'status' => 'online',
                 'last_seen_at' => now(),
                 'created_at' => now(),

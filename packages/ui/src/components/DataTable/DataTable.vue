@@ -23,6 +23,39 @@ const props = withDefaults(
     defineProps<{
         columns: TableColumn[]
         rows: Record<string, any>[]
+        /**
+         * Cluster rows under headings, by this row key.
+         *
+         * The rows arrive already ORDERED by it - grouping is an ordering, not
+         * an aggregation - so all that happens here is inserting a heading
+         * wherever the value changes. Nothing is re-sorted or bucketed on the
+         * client, which is what keeps this free on a page of any size.
+         */
+        groupBy?: { key: string; label: string } | null
+        /**
+         * Whether the table is CURRENTLY in reorder mode.
+         *
+         * A MODE, NOT A PERMANENT AFFORDANCE. Handles on every row all the time
+         * are clutter on a table nobody reorders daily, and they turn an
+         * ordinary list into something that looks half-editable. Filament gets
+         * this right: reordering is entered deliberately, and while you are in
+         * it the table stops being a list you read and becomes a thing you
+         * arrange.
+         *
+         * The PAGE owns the flag, because entering the mode also suppresses
+         * selection and sorting - decisions that belong with the toolbar rather
+         * than with the rows.
+         */
+        reordering?: boolean
+        /**
+         * Whether a click on the row body opens the record.
+         *
+         * The PAGE decides what "opens" means and whether the operator may -
+         * this component only reports that a row was clicked somewhere that was
+         * not another control. Declared server-side per resource; see
+         * `Table::rowClick()`.
+         */
+        rowClickable?: boolean
         rowKey?: string
         sort?: string
         direction?: SortDirection
@@ -36,10 +69,20 @@ const props = withDefaults(
         emptyTitle?: string
         emptyHint?: string
         /**
-         * Footer aggregate DEFINITIONS, keyed by column key — how to render.
+         * Footer aggregate DEFINITIONS, keyed by column key - how to render.
          * Structure travels with the schema; the values arrive separately.
          */
-        summaries?: Record<string, { kind: string; label: string | null; prefix: string | null; suffix: string | null; divideBy: number | null; decimals: number }> | null
+        summaries?: Record<
+            string,
+            {
+                kind: string
+                label: string | null
+                prefix: string | null
+                suffix: string | null
+                divideBy: number | null
+                decimals: number
+            }
+        > | null
         /** The computed values, once the deferred prop lands. */
         summaryValues?: Record<string, number | null> | null
     }>(),
@@ -55,11 +98,164 @@ const props = withDefaults(
     },
 )
 
+/**
+ * Whether this row opens a new group.
+ *
+ * TRUE FOR THE FIRST ROW OF EVERY PAGE, deliberately. A group can span a page
+ * boundary - the page size is fixed and the groups are whatever size they are -
+ * so page 2 may open mid-group, and it needs a heading saying which one or the
+ * rows underneath have no label at all.
+ */
+function startsGroup(index: number): boolean {
+    if (!props.groupBy) {
+        return false
+    }
+
+    if (index === 0) {
+        return true
+    }
+
+    return props.rows[index]?.[props.groupBy.key] !== props.rows[index - 1]?.[props.groupBy.key]
+}
+
+/** The heading text: the row's own value, or a placeholder for null. */
+function groupValue(row: Record<string, any>): string {
+    const value = props.groupBy ? row[props.groupBy.key] : null
+
+    return value === null || value === undefined || value === '' ? 'None' : String(value)
+}
+
+/* ------------------------------------------------------------- reordering */
+
+/** The row index currently being dragged, or null. */
+const dragging = ref<number | null>(null)
+
+/** The index it would drop into, for the insertion line. */
+const dragOver = ref<number | null>(null)
+
+function onDragStart(index: number, event: DragEvent) {
+    dragging.value = index
+
+    // Required for Firefox to start a drag at all, and the payload is unused -
+    // the indices live in component state, not in the drag data.
+    event.dataTransfer?.setData('text/plain', String(index))
+
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move'
+    }
+}
+
+/**
+ * Where the dragged row would land, as an insertion line.
+ *
+ * Drawn on the edge the row would enter from - above when moving up, below when
+ * moving down - because a line on a fixed edge is ambiguous about which side of
+ * the hovered row you are dropping onto.
+ */
+/** Clears the drag state however the gesture ends, including a cancelled one. */
+function onDragEnd() {
+    dragging.value = null
+    dragOver.value = null
+}
+
+function dropEdge(index: number): string {
+    if (dragging.value === null || dragOver.value !== index) {
+        return ''
+    }
+
+    return dragging.value > index ? 'border-primary border-t-2' : 'border-primary border-b-2'
+}
+
+function onDragOver(index: number, event: DragEvent) {
+    if (dragging.value === null) {
+        return
+    }
+
+    event.preventDefault()
+    dragOver.value = index
+}
+
+function onDrop(index: number) {
+    const from = dragging.value
+
+    dragging.value = null
+    dragOver.value = null
+
+    if (from === null || from === index) {
+        return
+    }
+
+    /*
+     * The reordered ids are emitted; the PAGE owns the rows.
+     *
+     * Splicing them here would mean this component mutated a prop, and the
+     * optimistic update and the request would then live in different places -
+     * so a failed save could leave the table showing an order the server never
+     * accepted.
+     */
+    const ids = props.rows.map((row) => row[props.rowKey])
+    const [moved] = ids.splice(from, 1)
+
+    ids.splice(index, 0, moved)
+
+    emit('reorder', ids)
+}
+
 const emit = defineEmits<{
     (e: 'sort', key: string): void
     (e: 'toggle-row', id: string | number): void
     (e: 'toggle-page', select: boolean): void
+    /** The page's ids in their new order, after a drop. */
+    (e: 'reorder', ids: (string | number)[]): void
+    /**
+     * Right-click on a row, with the raw event so a menu can open at the cursor.
+     *
+     * The DEFAULT IS NOT PREVENTED HERE. A table that swallows the browser's own
+     * context menu whether or not it has anything to offer takes away Copy and
+     * Inspect and gives back nothing. The listener decides - it prevents the
+     * default only once it knows the row actually has actions.
+     */
+    (e: 'row-contextmenu', row: Record<string, unknown>, event: MouseEvent): void
+    /** A plain click on the row body, already filtered for stray targets. */
+    (e: 'row-click', row: Record<string, unknown>): void
 }>()
+
+/**
+ * A click counts as "the row" only if it hit none of the row's own controls.
+ *
+ * WITHOUT THIS THE ROW EATS EVERYTHING INSIDE IT - the select checkbox, the
+ * actions menu, an editable cell, a copy button, a link to a related record.
+ * Each of those is a control somebody aimed at deliberately, and navigating
+ * away instead is the single most irritating way for this feature to be wrong.
+ *
+ * A TEXT SELECTION IS NOT A CLICK EITHER. Dragging across a cell to read or
+ * copy a value ends in a mouseup on the row, which is indistinguishable from a
+ * click unless the selection is checked - and on a table of account numbers,
+ * selecting text is something people do constantly.
+ */
+function onRowClick(row: Record<string, unknown>, event: MouseEvent) {
+    if (!props.rowClickable || props.reordering) {
+        return
+    }
+
+    // Modified clicks belong to the browser: ctrl/cmd-click and middle-click
+    // mean "open in a new tab" everywhere else and must keep meaning it.
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+    }
+
+    const target = event.target as HTMLElement | null
+
+    if (target?.closest('a, button, input, select, textarea, label, [role="menuitem"]')) {
+        return
+    }
+
+    if ((window.getSelection()?.toString().length ?? 0) > 0) {
+        return
+    }
+
+    emit('row-click', row)
+}
 
 const copied = ref<string | null>(null)
 
@@ -118,11 +314,15 @@ function summaryValue(key: string): string {
     const definition = props.summaries?.[key]
     const raw = props.summaryValues?.[key]
 
-    if (!definition) return ''
+    if (!definition) {
+        return ''
+    }
 
-    // Null is "no matching rows", which is not zero — an average over nothing
+    // Null is "no matching rows", which is not zero - an average over nothing
     // is undefined, and printing 0 would assert something false.
-    if (raw === null || raw === undefined) return '—'
+    if (raw === null || raw === undefined) {
+        return '-'
+    }
 
     const value = definition.divideBy ? raw / definition.divideBy : raw
 
@@ -140,7 +340,7 @@ function summaryValue(key: string): string {
         `min-h-0 shrink`, not `flex-1` and not `max-h-full`.
 
         flex-1 stretched this box to fill the shell, so a 10-row page left a
-        large empty area between the last row and the pagination — dead space
+        large empty area between the last row and the pagination - dead space
         that reads as a broken layout.
 
         max-h-full then clipped the last row instead, because 100% of the parent
@@ -150,11 +350,17 @@ function summaryValue(key: string): string {
         grow-0 + shrink + basis-auto hugs the content when it fits and shrinks
         only when it genuinely cannot. min-h-0 is what allows the shrink at all.
     -->
-    <div class="pk-scroll relative min-h-0 w-full min-w-0 shrink grow-0 overflow-auto rounded-lg border">
+    <div
+        class="pk-scroll relative min-h-0 w-full min-w-0 shrink grow-0 overflow-auto rounded-lg border"
+    >
         <table class="w-full border-collapse text-sm">
             <thead class="bg-background sticky top-0 z-10">
                 <tr class="bg-muted/50">
-                    <th v-if="selectable" class="w-10 border-b px-3 py-2.5">
+                    <!-- Unlabelled: the handles below say what it is, and a
+                         heading over a column of grips is noise. -->
+                    <th v-if="reordering" class="w-8 border-b px-2 py-2.5" />
+
+                    <th v-if="selectable && !reordering" class="w-10 border-b px-3 py-2.5">
                         <input
                             type="checkbox"
                             class="accent-primary size-3.5 cursor-pointer align-middle"
@@ -176,7 +382,9 @@ function summaryValue(key: string): string {
                             @click="emit('sort', sortKeyOf(col))"
                         >
                             {{ col.label }}
-                            <span v-if="isSortedBy(col)" class="text-xs">{{ direction === 'desc' ? '↓' : '↑' }}</span>
+                            <span v-if="isSortedBy(col)" class="text-xs">{{
+                                direction === 'desc' ? '↓' : '↑'
+                            }}</span>
                             <span v-else class="text-xs opacity-40">↕</span>
                         </button>
                         <span v-else>{{ col.label }}</span>
@@ -195,60 +403,126 @@ function summaryValue(key: string): string {
                 </tr>
             </thead>
 
-            <!-- Dimmed, never unmounted — scroll position and selection survive
+            <!-- Dimmed, never unmounted - scroll position and selection survive
                  a reload (§10). -->
             <tbody :class="loading ? 'opacity-50 transition-opacity' : 'transition-opacity'">
-                <tr
-                    v-for="row in rows"
-                    :key="row[rowKey]"
-                    class="hover:bg-muted/40 group pk-row border-b transition-colors"
-                                        :class="
-                        selected?.has(row[rowKey])
-                            ? 'bg-primary/5 shadow-[inset_3px_0_0_0_var(--color-primary)]'
-                            : ''
-                    "
-                >
-                    <td v-if="selectable" class="px-3 py-2">
-                        <input
-                            type="checkbox"
-                            class="accent-primary size-3.5 cursor-pointer align-middle"
-                            :checked="selected?.has(row[rowKey])"
-                            :aria-label="`Select row ${row[rowKey]}`"
-                            @change="emit('toggle-row', row[rowKey])"
-                        />
-                    </td>
+                <template v-for="(row, index) in rows" :key="row[rowKey]">
+                    <!--
+                        A heading whenever the value changes from the previous
+                        row - including on the FIRST row of a page, which is how
+                        a group that spans a page boundary is shown continuing
+                        rather than starting over.
+                    -->
+                    <tr v-if="groupBy && startsGroup(index)" class="bg-muted/40">
+                        <td
+                            :colspan="
+                                columns.length + (selectable ? 1 : 0) + (reordering ? 1 : 0) + 1
+                            "
+                            class="text-muted-foreground px-3 py-1.5 text-[11px] font-semibold tracking-wider uppercase"
+                        >
+                            <span class="text-muted-foreground/70">{{ groupBy.label }}:</span>
+                            {{ groupValue(row) }}
+                        </td>
+                    </tr>
 
-                    <td
-                        v-for="col in visibleColumns"
-                        :key="col.key"
-                        class="px-3 py-2 whitespace-nowrap"
-                        :class="col.cellClass"
+                    <tr
+                        class="hover:bg-muted/40 group pk-row border-b transition-colors"
+                        :class="[
+                            selected?.has(row[rowKey])
+                                ? 'bg-primary/5 shadow-[inset_3px_0_0_0_var(--color-primary)]'
+                                : '',
+                            dragging === index ? 'opacity-40' : '',
+                            dropEdge(index),
+                            reordering ? 'cursor-grab active:cursor-grabbing' : '',
+                            rowClickable && !reordering ? 'cursor-pointer' : '',
+                        ]"
+                        :draggable="reordering"
+                        @dragstart="onDragStart(index, $event)"
+                        @dragover="onDragOver(index, $event)"
+                        @drop.prevent="onDrop(index)"
+                        @dragend="onDragEnd"
+                        @contextmenu="emit('row-contextmenu', row, $event)"
+                        @click="onRowClick(row, $event)"
                     >
-                        <slot :name="`cell:${col.key}`" :row="row" :value="row[col.key]" :column="col">
-                            <span v-if="col.copyable" class="inline-flex items-center gap-1.5">
-                                {{ row[col.key] }}
-                                <button
-                                    type="button"
-                                    class="text-muted-foreground hover:text-foreground rounded p-0.5 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"
-                                    :aria-label="`Copy ${col.label.toLowerCase()}`"
-                                    @click="copy(String(row[rowKey]), col, row[col.key])"
+                        <!--
+                        THE WHOLE ROW DRAGS, and only in reorder mode.
+                        
+                        An earlier version made just the grip draggable, which
+                        meant aiming at a 16px target to move a row - and it
+                        needed a `mousedown` to arm `draggable` first, which is
+                        fragile across browsers. Inside a mode where reordering
+                        is the only thing you can do, the row itself is the
+                        obvious handle and the grip is just the affordance
+                        saying so.
+                    -->
+                        <td v-if="reordering" class="w-8 px-2 py-2 align-middle">
+                            <span
+                                class="text-muted-foreground/50 flex cursor-grab active:cursor-grabbing"
+                                aria-hidden="true"
+                            >
+                                <svg
+                                    class="size-4"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                    aria-hidden="true"
                                 >
-                                    <span class="text-xs">{{
-                                        copied === `${row[rowKey]}-${col.key}` ? '✓' : '⧉'
-                                    }}</span>
-                                </button>
+                                    <circle cx="9" cy="6" r="1.5" />
+                                    <circle cx="15" cy="6" r="1.5" />
+                                    <circle cx="9" cy="12" r="1.5" />
+                                    <circle cx="15" cy="12" r="1.5" />
+                                    <circle cx="9" cy="18" r="1.5" />
+                                    <circle cx="15" cy="18" r="1.5" />
+                                </svg>
                             </span>
-                            <span v-else>{{ row[col.key] ?? '—' }}</span>
-                        </slot>
-                    </td>
+                        </td>
 
-                    <td
-                        v-if="$slots.actions"
-                        class="pk-actions bg-background group-hover:bg-muted/40 sticky right-0 border-l px-2 py-2 text-right shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.25)]"
-                    >
-                        <slot name="actions" :row="row" />
-                    </td>
-                </tr>
+                        <td v-if="selectable && !reordering" class="px-3 py-2">
+                            <input
+                                type="checkbox"
+                                class="accent-primary size-3.5 cursor-pointer align-middle"
+                                :checked="selected?.has(row[rowKey])"
+                                :aria-label="`Select row ${row[rowKey]}`"
+                                @change="emit('toggle-row', row[rowKey])"
+                            />
+                        </td>
+
+                        <td
+                            v-for="col in visibleColumns"
+                            :key="col.key"
+                            class="px-3 py-2 whitespace-nowrap"
+                            :class="col.cellClass"
+                        >
+                            <slot
+                                :name="`cell:${col.key}`"
+                                :row="row"
+                                :value="row[col.key]"
+                                :column="col"
+                            >
+                                <span v-if="col.copyable" class="inline-flex items-center gap-1.5">
+                                    {{ row[col.key] }}
+                                    <button
+                                        type="button"
+                                        class="text-muted-foreground hover:text-foreground rounded p-0.5 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"
+                                        :aria-label="`Copy ${col.label.toLowerCase()}`"
+                                        @click="copy(String(row[rowKey]), col, row[col.key])"
+                                    >
+                                        <span class="text-xs">{{
+                                            copied === `${row[rowKey]}-${col.key}` ? '✓' : '⧉'
+                                        }}</span>
+                                    </button>
+                                </span>
+                                <span v-else>{{ row[col.key] ?? '-' }}</span>
+                            </slot>
+                        </td>
+
+                        <td
+                            v-if="$slots.actions"
+                            class="pk-actions bg-background group-hover:bg-muted/40 sticky right-0 border-l px-2 py-2 text-right shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.25)]"
+                        >
+                            <slot name="actions" :row="row" />
+                        </td>
+                    </tr>
+                </template>
             </tbody>
 
             <!--
@@ -256,7 +530,7 @@ function summaryValue(key: string): string {
 
                 Rendered as a real <tfoot> so it aligns with the columns and
                 stays with the table when it scrolls horizontally. It is absent
-                until the deferred values arrive, rather than showing zeroes —
+                until the deferred values arrive, rather than showing zeroes -
                 a total that reads 0 and then changes is worse than one that
                 appears a moment late.
             -->
@@ -265,7 +539,7 @@ function summaryValue(key: string): string {
                     <td v-if="selectable" />
                     <template v-for="col in columns" :key="`s-${col.key}`">
                         <td
-                            v-if="!hidden.has(col.key)"
+                            v-if="!hidden?.has(col.key)"
                             class="px-3 py-2 align-top text-sm whitespace-nowrap"
                             :class="col.cellClass"
                         >
@@ -302,7 +576,7 @@ function summaryValue(key: string): string {
  * Near-invisible scrollbars.
  *
  * A fixed shell means the table scrolls internally, which on default browser
- * styling produces heavy grey bars framing the data — visual weight that
+ * styling produces heavy grey bars framing the data - visual weight that
  * competes with the content and reads as chrome rather than affordance.
  *
  * Thin, transparent-tracked, tinting only on hover. Deliberately NOT
@@ -349,7 +623,7 @@ function summaryValue(key: string): string {
  *
  * Without an explicit stacking order a later sticky cell can paint over the
  * actions column while the table is scrolled horizontally, making the row menu
- * unclickable even though it is plainly visible — a failure that looks like a
+ * unclickable even though it is plainly visible - a failure that looks like a
  * dead button rather than a layering bug.
  */
 td.pk-actions,

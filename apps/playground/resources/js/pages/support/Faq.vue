@@ -30,7 +30,7 @@ const groups = [
             },
             {
                 q: 'What does the expiry filter actually match?',
-                a: 'The subscription end date, not the last payment. A subscriber can be active with an expiry in the past if their status has not been updated yet — the "Renewals due" panel on the dashboard is the quickest way to see what is coming.',
+                a: 'The subscription end date, not the last payment. A subscriber can be active with an expiry in the past if their status has not been updated yet - the "Renewals due" panel on the dashboard is the quickest way to see what is coming.',
             },
         ],
     },
@@ -56,7 +56,7 @@ const groups = [
             },
             {
                 q: 'Do the numbers update on their own?',
-                a: 'Lists stay current without a full page reload. How that happens — polling or a push connection — is a configuration choice, and nothing in the interface changes when it is switched.',
+                a: 'Lists stay current without a full page reload. How that happens - polling or a push connection - is a configuration choice, and nothing in the interface changes when it is switched.',
             },
         ],
     },
@@ -67,7 +67,7 @@ const groups = [
  *
  * The first cut assigned indices lazily from inside the template expression,
  * which meant a multi-statement expression in `@click` and an id that did not
- * exist until the first click — so `aria-expanded` was wrong until then. That
+ * exist until the first click - so `aria-expanded` was wrong until then. That
  * pattern has already caused two bugs in this project; the flattening belongs
  * in script.
  */

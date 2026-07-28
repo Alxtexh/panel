@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
  * `sessions_tenant_client_started_idx` is (tenant_id, client_id, started_at, id)
  * and looks like it covers a `started_at` range for one tenant. It does not:
  * `client_id` sits between the equality column and the range column, so with no
- * predicate on `client_id` the planner cannot seek to a `started_at` position —
+ * predicate on `client_id` the planner cannot seek to a `started_at` position -
  * it has to walk every client's slice. The chart query is
  *
  *     WHERE tenant_id = ? AND started_at BETWEEN ? AND ?  GROUP BY <bucket>
@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * spec §10 forbids one-index-per-column, so this is ONE composite justified
  * against one query shape, not a column sprinkled with indexes. `clients` needs
- * nothing new — `clients_tenant_created_id_idx` is already (tenant_id,
+ * nothing new - `clients_tenant_created_id_idx` is already (tenant_id,
  * created_at, id) and serves the signups series exactly.
  */
 return new class extends Migration

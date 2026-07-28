@@ -6,7 +6,8 @@
       "runtimeExecutable": "php",
       "runtimeArgs": ["artisan", "dev"],
       "cwd": "apps/playground",
-      "port": 8000
+      "port": 8000,
+      "autoPort": false
     }
   ]
 }

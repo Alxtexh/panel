@@ -3,7 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 /**
  * Column visibility, persisted per user in localStorage (spec §8).
  *
- * No Inertia, no fetch — it is browser state, so it belongs in the UI package.
+ * No Inertia, no fetch - it is browser state, so it belongs in the UI package.
  *
  * Reading happens in onMounted rather than at setup time so this stays safe
  * under server-side rendering, where `localStorage` does not exist. Every access
@@ -17,7 +17,10 @@ export function useColumnVisibility(storageKey: string) {
     onMounted(() => {
         try {
             const saved = localStorage.getItem(storageKey)
-            if (saved) hidden.value = new Set(JSON.parse(saved) as string[])
+
+            if (saved) {
+                hidden.value = new Set(JSON.parse(saved) as string[])
+            }
         } catch {
             // Corrupt or unavailable storage must never break the table.
         }

@@ -1,16 +1,17 @@
-import { watchEffect, type Ref } from 'vue'
+import { watchEffect } from 'vue'
+import type { Ref } from 'vue'
 
 /**
  * Applies per-tenant branding as CSS custom properties on :root.
  *
  * Spec §8: branding overrides tokens at RUNTIME. Never compile a per-tenant CSS
- * bundle — that turns a colour change into a deploy, and multiplies build output
+ * bundle - that turns a colour change into a deploy, and multiplies build output
  * by the tenant count.
  *
  * Values are written through UNCHANGED. antipatterns §6.2 is the failure to
  * avoid: a token was wrapped in `rgb()` on the assumption it held a
  * space-separated triple, it actually held a complete colour, the result was
- * invalid CSS, and the element rendered transparent — invisible in light mode
+ * invalid CSS, and the element rendered transparent - invisible in light mode
  * and apparently fine in dark, so it shipped.
  *
  * Only keys matching a strict pattern are applied. The values arrive from a
@@ -22,7 +23,9 @@ const SAFE_VALUE = /^[a-zA-Z0-9\s.,()%#/-]+$/
 
 export function useTenantTheme(colors: Ref<Record<string, string> | undefined>) {
     watchEffect(() => {
-        if (typeof document === 'undefined') return
+        if (typeof document === 'undefined') {
+            return
+        }
 
         const root = document.documentElement
 

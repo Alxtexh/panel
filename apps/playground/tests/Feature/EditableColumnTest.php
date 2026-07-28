@@ -9,6 +9,8 @@ use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Panel\Resources\ClientResource;
+use App\Panel\Resources\EditablePlanResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
 use PanelKit\Panel\Tables\Columns\IconColumn;
@@ -56,7 +58,7 @@ final class EditableColumnTest extends TestCase
          * Clients originally carried an editable `status` select; it was
          * reverted to a badge because a form control in every row of the
          * busiest column made the list harder to scan than it made it to edit.
-         * The endpoint and its guards are unchanged — only which resource
+         * The endpoint and its guards are unchanged - only which resource
          * exercises them.
          */
         $this->plan = Plan::withoutGlobalScopes()->create([
@@ -73,7 +75,7 @@ final class EditableColumnTest extends TestCase
     public function test_an_editable_cell_can_be_written(): void
     {
         $this->actingAs($this->userA)
-            ->patchJson("/plans/{$this->plan->id}/cell", ['column' => 'is_active', 'value' => false])
+            ->patchJson("/editable-plans/{$this->plan->id}/cell", ['column' => 'is_active', 'value' => false])
             ->assertOk()
             ->assertJson(['column' => 'is_active', 'value' => false]);
 
@@ -131,7 +133,7 @@ final class EditableColumnTest extends TestCase
     public function test_a_value_the_column_cannot_cast_is_rejected(): void
     {
         $this->actingAs($this->userA)
-            ->patchJson("/plans/{$this->plan->id}/cell", ['column' => 'is_active', 'value' => 'god_mode'])
+            ->patchJson("/editable-plans/{$this->plan->id}/cell", ['column' => 'is_active', 'value' => 'god_mode'])
             ->assertStatus(422);
 
         $this->assertTrue((bool) $this->plan->fresh()->is_active);
@@ -148,7 +150,7 @@ final class EditableColumnTest extends TestCase
         ]);
 
         $this->actingAs($this->userA)
-            ->patchJson("/plans/{$foreign->id}/cell", ['column' => 'is_active', 'value' => false])
+            ->patchJson("/editable-plans/{$foreign->id}/cell", ['column' => 'is_active', 'value' => false])
             ->assertNotFound();
 
         $this->assertTrue((bool) $foreign->fresh()->is_active);
@@ -156,7 +158,7 @@ final class EditableColumnTest extends TestCase
 
     public function test_guests_cannot_edit_a_cell(): void
     {
-        $this->patchJson("/plans/{$this->plan->id}/cell", ['column' => 'is_active', 'value' => false])
+        $this->patchJson("/editable-plans/{$this->plan->id}/cell", ['column' => 'is_active', 'value' => false])
             ->assertUnauthorized();
     }
 
@@ -164,7 +166,7 @@ final class EditableColumnTest extends TestCase
     public function test_a_stale_cell_edit_is_rejected(): void
     {
         $this->actingAs($this->userA)
-            ->patchJson("/plans/{$this->plan->id}/cell", [
+            ->patchJson("/editable-plans/{$this->plan->id}/cell", [
                 'column' => 'is_active',
                 'value' => false,
                 '_updated_at' => '2020-01-01T00:00:00+00:00',
@@ -212,7 +214,7 @@ final class EditableColumnTest extends TestCase
 
     public function test_an_editable_column_declares_itself_in_the_schema(): void
     {
-        $active = collect(\App\Panel\Resources\PlanResource::schema()['table']['columns'])
+        $active = collect(EditablePlanResource::schema()['table']['columns'])
             ->firstWhere('key', 'is_active');
 
         $this->assertSame('toggle', $active['type']);
@@ -222,7 +224,7 @@ final class EditableColumnTest extends TestCase
     /** And a display-only column says nothing about being writable. */
     public function test_a_badge_column_is_not_marked_editable(): void
     {
-        $status = collect(\App\Panel\Resources\ClientResource::schema()['table']['columns'])
+        $status = collect(ClientResource::schema()['table']['columns'])
             ->firstWhere('key', 'status');
 
         $this->assertSame('badge', $status['type']);
@@ -230,7 +232,7 @@ final class EditableColumnTest extends TestCase
     }
 
     /**
-     * REGRESSION GUARD. Plans declares no form, so `isWritable()` is false — and
+     * REGRESSION GUARD. Plans declares no form, so `isWritable()` is false - and
      * gating `update` on that alone rendered every inline switch DISABLED while
      * the policy and the endpoint both allowed the write. A UI hint that
      * contradicts the server reads as a permissions bug and is very hard to
@@ -240,9 +242,9 @@ final class EditableColumnTest extends TestCase
     {
         $this->actingAs($this->userA);
 
-        $permissions = \App\Panel\Resources\PlanResource::permissions();
+        $permissions = EditablePlanResource::permissions();
 
-        $this->assertFalse(\App\Panel\Resources\PlanResource::isWritable(), 'Plans has no form.');
+        $this->assertFalse(EditablePlanResource::isWritable(), 'Plans has no form.');
         $this->assertTrue($permissions['update'], 'But it does have an editable column.');
         $this->assertFalse($permissions['create'], 'A row cannot be created by toggling a cell.');
     }
@@ -258,7 +260,7 @@ final class EditableColumnTest extends TestCase
         ]);
 
         $this->actingAs($this->userA)
-            ->patchJson("/plans/{$plan->id}/cell", ['column' => 'is_active', 'value' => false])
+            ->patchJson("/editable-plans/{$plan->id}/cell", ['column' => 'is_active', 'value' => false])
             ->assertOk();
 
         $this->assertFalse((bool) $plan->fresh()->is_active);
@@ -330,7 +332,7 @@ final class EditableColumnTest extends TestCase
             'plan_id' => $plan->id,
             'router_id' => $router->id,
             'name' => "Client {$unique}",
-            'phone' => '+254' . substr((string) crc32($unique), 0, 9),
+            'phone' => '+254'.substr((string) crc32($unique), 0, 9),
             'access_code' => strtoupper(substr(md5($unique), 0, 10)),
             'status' => 'active',
             'plan_type' => 'pppoe',

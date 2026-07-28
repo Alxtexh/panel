@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,9 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Support\TenantContext;
 use PanelKit\Panel\Tables\Columns\EditableColumn;
+use PanelKit\Panel\Tables\Reorderer;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -52,7 +55,7 @@ final class RecordController extends Controller
         $validated = $request->validate($form->rules());
 
         $model = $class::model();
-        $record = new $model();
+        $record = new $model;
 
         // Only declared keys. Nothing else can reach the model.
         $record->forceFill($form->sanitize($validated));
@@ -62,7 +65,7 @@ final class RecordController extends Controller
 
         $record->save();
 
-        return back()->with('success', $class::label() . ' created.');
+        return back()->with('success', $class::label().' created.');
     }
 
     public function update(Request $request, string $resource, string $id): RedirectResponse
@@ -81,15 +84,107 @@ final class RecordController extends Controller
         $record->forceFill($form->sanitize($validated));
         $record->save();
 
-        return back()->with('success', $class::label() . ' updated.');
+        return back()->with('success', $class::label().' updated.');
+    }
+
+    /**
+     * Run ONE declared record action against ONE record.
+     *
+     * Every gate a form submission passes, and one more that forms do not need:
+     *
+     *   THE ACTION MUST BE DECLARED ON THIS RESOURCE'S TABLE. The request names
+     *   a key, and only a key the table declared resolves - so the endpoint can
+     *   never be talked into calling a method the resource did not offer.
+     *
+     *   THE ABILITY IS THE ACTION'S OWN, checked against THIS record. Replicate
+     *   asks for `create`, not `update`: it produces a new row, and somebody who
+     *   may edit clients but not add them must not add one through a menu item.
+     *
+     *   `visible()` IS RE-EVALUATED. It exists to hide "Restore" on a row that
+     *   was never deleted, and hiding is not enforcement - a client that skips
+     *   the UI and posts the key still has to satisfy it.
+     */
+    public function runAction(Request $request, string $resource, string $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'action' => ['required', 'string', 'max:64'],
+        ]);
+
+        $class = $this->resolve($resource);
+        $record = $this->findScoped($class, $id);
+
+        $action = $class::definition()->recordAction($validated['action']);
+
+        if ($action === null) {
+            throw new NotFoundHttpException(
+                "No record action [{$validated['action']}] on [{$resource}]."
+            );
+        }
+
+        abort_unless($class::can($action->ability(), $record), 403);
+
+        abort_unless(
+            $action->appliesTo($record->getAttributes()),
+            422,
+            'That action does not apply to this record.',
+        );
+
+        $action->run($record);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Apply a new display order to the rows of one page.
+     *
+     * THE SCOPED QUERY IS THE AUTHORITY on which rows exist. Ids the caller
+     * cannot already see are dropped before anything is written, so a request
+     * naming another organisation's row reorders nothing rather than reordering
+     * something it should not know about.
+     *
+     * IT IS AN UPDATE, so it needs `update` - checked once for the resource
+     * rather than per row, because a reorder is one act on a set. A per-row
+     * policy check here would be N calls to answer a question about a list.
+     *
+     * BOUNDED BY THE PAGE. The request carries the ids of one page in their new
+     * order; anything longer is refused. Reordering is a gesture on what is
+     * visible, and accepting an arbitrary list would make this an endpoint for
+     * rewriting the whole table's order in one request.
+     */
+    public function reorder(Request $request, string $resource): JsonResponse
+    {
+        $class = $this->resolve($resource);
+
+        abort_unless($class::can('update'), 403);
+
+        $table = $class::definition();
+        $column = $table->getReorderColumn();
+
+        if ($column === null) {
+            throw new NotFoundHttpException("[{$resource}] is not reorderable.");
+        }
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:' . $table->largestPage()],
+            'ids.*' => ['required', 'integer'],
+        ]);
+
+        $model = $class::model();
+
+        $written = (new Reorderer($column))->apply(
+            $model::query(),
+            $validated['ids'],
+        );
+
+        return response()->json(['ok' => true, 'moved' => $written]);
     }
 
     /**
      * Write ONE cell, from an editable column in the list.
      *
      * A cell edit is a full write with a smaller control, so it goes through
-     * every gate a form submission does — scoped lookup, per-record policy
-     * check, staleness check — and adds one more that forms do not need:
+     * every gate a form submission does - scoped lookup, per-record policy
+     * check, staleness check - and adds one more that forms do not need:
      *
      *   THE COLUMN MUST BE A DECLARED EditableColumn ON THIS TABLE. The request
      *   names a column, and only a column the resource declared as editable is
@@ -165,7 +260,7 @@ final class RecordController extends Controller
 
         $record->delete();
 
-        return back()->with('success', $class::label() . ' deleted.');
+        return back()->with('success', $class::label().' deleted.');
     }
 
     /**
@@ -188,7 +283,7 @@ final class RecordController extends Controller
 
         $record->restore();
 
-        return back()->with('success', $class::label() . ' restored.');
+        return back()->with('success', $class::label().' restored.');
     }
 
     /**
@@ -208,14 +303,14 @@ final class RecordController extends Controller
 
         $record->forceDelete();
 
-        return back()->with('success', $class::label() . ' permanently deleted.');
+        return back()->with('success', $class::label().' permanently deleted.');
     }
 
     /**
      * Find a record INCLUDING trashed ones, still tenant-scoped.
      *
      * `withTrashed()` lifts only the soft-delete scope; every other global
-     * scope — tenancy above all — still applies, so another organisation's
+     * scope - tenancy above all - still applies, so another organisation's
      * deleted record is as unreachable as its live ones.
      */
     private function findTrashed(string $class, string $id): Model
@@ -223,7 +318,7 @@ final class RecordController extends Controller
         $model = $class::model();
 
         abort_unless(
-            in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($model), true),
+            in_array(SoftDeletes::class, class_uses_recursive($model), true),
             404,
             "Resource [{$class::key()}] does not support soft deletes.",
         );
@@ -253,13 +348,13 @@ final class RecordController extends Controller
 
         throw ValidationException::withMessages([
             '_conflict' => 'This record was changed by someone else while you were editing. '
-                . 'Reload to see the current values, or save again to overwrite them.',
+                .'Reload to see the current values, or save again to overwrite them.',
         ]);
     }
 
     private function applyTenant(Model $record): void
     {
-        $context = app(\PanelKit\Panel\Support\TenantContext::class);
+        $context = app(TenantContext::class);
 
         if (! $context->shouldScopeByColumn()) {
             // Dedicated-database tenancy: the connection is the boundary and the
@@ -276,7 +371,7 @@ final class RecordController extends Controller
         $record->setAttribute($context->column(), $key);
     }
 
-    /** @return class-string<Resource> */
+    /** @return class-string<resource> */
     private function resolve(string $resource): string
     {
         $class = app(PanelManager::class)->resource($resource);
@@ -290,9 +385,9 @@ final class RecordController extends Controller
 
     /**
      * The tenant global scope makes this a 404 for another tenant's record,
-     * which is the correct answer — confirming existence would itself leak.
+     * which is the correct answer - confirming existence would itself leak.
      *
-     * @param  class-string<Resource>  $class
+     * @param  class-string<resource>  $class
      */
     private function findScoped(string $class, string $id): Model
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Actions;
 
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
@@ -13,7 +14,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
  * THE CHUNKING IS KEYSET, AND THAT IS A CORRECTNESS REQUIREMENT RATHER THAN A
  * PERFORMANCE ONE.
  *
- * A bulk action usually invalidates the predicate that selected its own rows —
+ * A bulk action usually invalidates the predicate that selected its own rows -
  * "suspend every active client" stops matching `status = active` the moment the
  * first chunk commits. Paging that with OFFSET means the result set shrinks
  * underneath the cursor and every other chunk is skipped: page 2 of a shrinking
@@ -33,7 +34,7 @@ final class BulkRunner
 {
     /**
      * @param  QueryBuilder  $target  The filtered, tenant-scoped set.
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $model
+     * @param  class-string<Model>  $model
      * @param  Closure(int): void|null  $onProgress  Called with the running total.
      * @return int How many records were actually written.
      */
@@ -88,7 +89,7 @@ final class BulkRunner
          * Through the MODEL, not the raw builder handed in.
          *
          * The incoming query may carry joins from the table definition, and an
-         * UPDATE against a joined query is dialect-specific — it works on MySQL
+         * UPDATE against a joined query is dialect-specific - it works on MySQL
          * and fails on Postgres. Re-entering through the model also re-applies
          * the tenant global scope, so the write is scoped independently of how
          * the read was built. Two locks on the same door, deliberately.
@@ -109,7 +110,7 @@ final class BulkRunner
 
         // Touched explicitly: `update()` on a query builder does not maintain
         // timestamps, and a row whose updated_at did not move is invisible to
-        // the live-update diff endpoint — the change would never reach an open
+        // the live-update diff endpoint - the change would never reach an open
         // table until a full reload.
         $attributes['updated_at'] = now();
 

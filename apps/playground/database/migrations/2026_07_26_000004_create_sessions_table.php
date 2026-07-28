@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
  * 2,000,000 rows. This is the table that makes or breaks the performance story,
  * and the one the live-update tier (Phase 8) patches row-by-row from broadcasts.
  *
- * Named `client_sessions`, not `sessions` — Laravel's own session driver owns
+ * Named `client_sessions`, not `sessions` - Laravel's own session driver owns
  * that table name, and colliding with it breaks the database session driver in
  * any consuming app that uses it.
  *
@@ -38,16 +38,16 @@ return new class extends Migration
             $table->timestamp('ended_at')->nullable();
             $table->timestamps();
 
-            // A — the live view. Partial index would be better on Postgres
+            // A - the live view. Partial index would be better on Postgres
             // (WHERE ended_at IS NULL); SQLite supports partial indexes too, but
             // the engine is still undecided, so this stays portable for now and
             // gets revisited when bootstrap-db.sh is written.
             $table->index(['tenant_id', 'ended_at', 'started_at', 'id'], 'sessions_tenant_live_idx');
 
-            // B — per-client history, the drill-down from the clients list
+            // B - per-client history, the drill-down from the clients list
             $table->index(['tenant_id', 'client_id', 'started_at', 'id'], 'sessions_tenant_client_started_idx');
 
-            // C — per-router activity
+            // C - per-router activity
             $table->index(['tenant_id', 'router_id', 'started_at', 'id'], 'sessions_tenant_router_started_idx');
         });
     }

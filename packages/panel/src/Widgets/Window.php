@@ -12,7 +12,7 @@ use InvalidArgumentException;
  *
  * WHY THIS EXISTS ALONGSIDE Period. A Period is a NAMED window relative to now
  * ("last 30 days") and knows its own bucket. A dashboard filter produces an
- * ARBITRARY window — two dates a person picked — which has no name and no
+ * ARBITRARY window - two dates a person picked - which has no name and no
  * obvious granularity. Expressing that as a Period would mean inventing a
  * `Custom` case that lies about being relative to now, and every method that
  * computes a range from `$now` would need a special branch for it.
@@ -46,8 +46,8 @@ final class Window
      *
      * THE END DATE IS INCLUSIVE, and getting that wrong is invisible. `to` is a
      * date a person selected, not a moment: choosing 27 July means "up to and
-     * including the 27th". Treating it as an exclusive instant — start of the
-     * 27th — silently drops the last day of every range, so a filter ending
+     * including the 27th". Treating it as an exclusive instant - start of the
+     * 27th - silently drops the last day of every range, so a filter ending
      * "today" showed everything except today and the chart simply appeared to
      * stop a day early.
      *
@@ -82,7 +82,7 @@ final class Window
     /**
      * The equally-long window immediately before this one, for a trend.
      *
-     * Equal LENGTH, not equal calendar unit — the same reasoning Period uses.
+     * Equal LENGTH, not equal calendar unit - the same reasoning Period uses.
      */
     public function previous(): self
     {
@@ -97,6 +97,6 @@ final class Window
 
     public function label(): string
     {
-        return $this->start->format('j M Y') . ' – ' . $this->end->modify('-1 second')->format('j M Y');
+        return $this->start->format('j M Y').' - '.$this->end->modify('-1 second')->format('j M Y');
     }
 }

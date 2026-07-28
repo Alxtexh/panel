@@ -17,7 +17,7 @@ use Throwable;
  * BOUNDARIES ARE COMPUTED IN THE TENANT'S TIMEZONE and converted to UTC for the
  * query (addendum C). "Today" in Nairobi is not "today" in UTC, and a range
  * computed in the wrong zone silently returns the wrong rows for three hours
- * either side of midnight — the sort of error nobody notices until a report
+ * either side of midnight - the sort of error nobody notices until a report
  * disagrees with a customer.
  *
  * The end of the range is EXCLUSIVE (`< next day`) rather than `<= end of day`.
@@ -146,7 +146,7 @@ final class DateRangeFilter extends Filter
     public function toSchema(): array
     {
         // Presets are STRUCTURE, not tenant data, so they belong in the cached
-        // schema — unlike a select's options, which are rows.
+        // schema - unlike a select's options, which are rows.
         return [...parent::toSchema(), 'presets' => self::PRESETS];
     }
 }

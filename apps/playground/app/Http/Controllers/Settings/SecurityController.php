@@ -19,6 +19,15 @@ class SecurityController extends Controller
     public function edit(TwoFactorAuthenticationRequest $request): Response
     {
         $props = [
+            /*
+             * The devices signed in to this account.
+             *
+             * On the SECURITY page rather than anywhere else, because "where
+             * am I logged in" is the same question as "who has my password" -
+             * somebody who reaches for it is already worried, and it belongs
+             * beside the password and two-factor controls they will use next.
+             */
+            'devices' => DeviceController::forUser($request),
             'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
             'canManagePasskeys' => Features::canManagePasskeys(),
             'passkeys' => Features::canManagePasskeys()
@@ -55,9 +64,27 @@ class SecurityController extends Controller
      */
     public function update(PasswordUpdateRequest $request): RedirectResponse
     {
-        $request->user()->update([
-            'password' => $request->password,
-        ]);
+        $user = $request->user();
+        $policy = \PanelKit\Panel\Auth\PasswordPolicy::fromConfig();
+
+        /*
+         * THE SAME REFUSAL AS THE RENEWAL SCREEN, because this is the other way
+         * to change a password and a rule enforced at one entrance is not
+         * enforced. Somebody caught by the age policy who happens to be on the
+         * settings page would otherwise satisfy it by re-entering what they
+         * already had.
+         */
+        if ($policy->isReused($user, $request->password)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'password' => 'That is one of your recent passwords. Choose a different one.',
+            ]);
+        }
+
+        // Before the save, so the history holds the password being replaced -
+        // see `PasswordPolicy::recordChange`.
+        $policy->recordChange($user);
+
+        $user->forceFill(['password' => $request->password])->save();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Password updated.')]);
 

@@ -1,9 +1,32 @@
 <?php
 
+use App\Http\Controllers\Auth\PasswordRenewalController;
+use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
+
+/*
+| PASSWORD RENEWAL.
+|
+| OUTSIDE THE `verified` GROUP AND EXEMPT FROM THE RENEWAL MIDDLEWARE ITSELF -
+| see `RequirePasswordRenewal::ALWAYS_ALLOWED`. This is the screen somebody with
+| an expired password is sent to, so anything that could stop them reaching it
+| turns the policy into a loop with no error and no way out.
+|
+| NOT BEHIND `RequirePassword` either: the form already asks for the current
+| password, and asking for the same secret twice on consecutive screens teaches
+| people to type it without reading.
+*/
+Route::middleware(['auth'])->group(function () {
+    Route::get('password/change', [PasswordRenewalController::class, 'edit'])
+        ->name('password.change');
+
+    Route::put('password/change', [PasswordRenewalController::class, 'update'])
+        ->middleware('throttle:6,1')
+        ->name('password.change.update');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', '/settings/profile');
@@ -23,6 +46,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:6,1')
         ->name('user-password.update');
 
+    /*
+     | The organisation, not the person. No tenant id appears in any of these
+     | routes on purpose - the tenant comes from context, and a route that
+     | accepted one would be a route for renaming somebody else's company.
+     */
+    Route::get('settings/organisation', [OrganisationController::class, 'edit'])->name('organisation.edit');
+    Route::put('settings/organisation', [OrganisationController::class, 'update'])->name('organisation.update');
+    Route::post('settings/organisation/logo', [OrganisationController::class, 'uploadLogo'])->name('organisation.logo.upload');
+    Route::get('settings/organisation/logo', [OrganisationController::class, 'logo'])->name('organisation.logo');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

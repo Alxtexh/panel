@@ -12,7 +12,7 @@
  *      suspended, created this month" is a single question, and applying it in
  *      pieces briefly shows answers to questions nobody asked.
  *
- * Search stays instant and debounced, because typing IS the interaction — there
+ * Search stays instant and debounced, because typing IS the interaction - there
  * is nothing to batch.
  *
  * Opening either panel makes no network request: the filter schema arrived with
@@ -21,8 +21,8 @@
  * Emits only. Never fetches (spec §4 rule 2).
  */
 import { computed, ref, watch } from 'vue'
-import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import PkDropdown from '../primitives/PkDropdown.vue'
+import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import type { FilterSchema } from './types'
 
 const props = withDefaults(
@@ -54,7 +54,9 @@ const local = ref(props.search)
 watch(
     () => props.search,
     (value) => {
-        if (value !== local.value) local.value = value
+        if (value !== local.value) {
+            local.value = value
+        }
     },
 )
 
@@ -62,7 +64,9 @@ let timer: ReturnType<typeof setTimeout> | undefined
 watch(local, (value) => {
     clearTimeout(timer)
     timer = setTimeout(() => {
-        if (value !== props.search) emit('update:search', value)
+        if (value !== props.search) {
+            emit('update:search', value)
+        }
     }, 250)
 })
 
@@ -71,7 +75,7 @@ watch(local, (value) => {
 /** Local draft. The applied set only changes on Apply. */
 const draft = ref<Record<string, unknown>>({ ...props.filters })
 
-// Re-sync when the server echoes a different set back — a back-button
+// Re-sync when the server echoes a different set back - a back-button
 // navigation, or another control clearing everything.
 watch(
     () => props.filters,
@@ -81,9 +85,12 @@ watch(
     { deep: true },
 )
 
-/** `!== null` and not truthiness — `false` is an applied value for a toggle. */
+/** `!== null` and not truthiness - `false` is an applied value for a toggle. */
 const activeCount = computed(
-    () => props.filterSchema.filter((f) => props.filters[f.key] !== null && props.filters[f.key] !== undefined).length,
+    () =>
+        props.filterSchema.filter(
+            (f) => props.filters[f.key] !== null && props.filters[f.key] !== undefined,
+        ).length,
 )
 
 const draftDiffers = computed(() => JSON.stringify(draft.value) !== JSON.stringify(props.filters))
@@ -100,8 +107,33 @@ function draftValues(filter: FilterSchema): unknown[] {
     return Array.isArray(value) ? value : value === null || value === undefined ? [] : [value]
 }
 
+/**
+ * The same values, narrowed for the token field.
+ *
+ * `draftValues` is deliberately `unknown[]` because a filter's value may be a
+ * boolean or a date range. Only a MULTISELECT reaches the token control, and
+ * its options are scalars - so the narrowing happens once, here, rather than
+ * being asserted at the call site where nothing checks it.
+ */
+function multiDraftValues(filter: FilterSchema): (string | number)[] {
+    return draftValues(filter).filter(
+        (v): v is string | number => typeof v === 'string' || typeof v === 'number',
+    )
+}
+
+/** Options for the token field, likewise narrowed to what it can render. */
+function multiOptionsFor(filter: FilterSchema): { value: string | number; label: string }[] {
+    return optionsFor(filter).flatMap((option) =>
+        typeof option.value === 'string' || typeof option.value === 'number'
+            ? [{ value: option.value, label: option.label }]
+            : [],
+    )
+}
+
 function isChosen(filter: FilterSchema, value: unknown): boolean {
-    if (isMulti(filter)) return draftValues(filter).includes(value)
+    if (isMulti(filter)) {
+        return draftValues(filter).includes(value)
+    }
 
     return draft.value[filter.key] === value
 }
@@ -122,7 +154,9 @@ function setValue(filter: FilterSchema, value: unknown) {
 function rangePart(filter: FilterSchema, part: 'from' | 'to'): string {
     const value = draft.value[filter.key] as { raw?: string } | string | null
 
-    if (typeof value !== 'string' || !value.includes('..')) return ''
+    if (typeof value !== 'string' || !value.includes('..')) {
+        return ''
+    }
 
     const [from, to] = value.split('..')
 
@@ -135,7 +169,10 @@ function setRangePart(filter: FilterSchema, part: 'from' | 'to', value: string) 
 
     // Both halves are needed before the range means anything; until then the
     // filter stays unset rather than half-applied.
-    draft.value = { ...draft.value, [filter.key]: from && to ? `${from}..${to}` : null }
+    draft.value = {
+        ...draft.value,
+        [filter.key]: from && to ? `${from}..${to}` : null,
+    }
 }
 
 function applyFilters(close: () => void) {
@@ -156,7 +193,10 @@ function optionsFor(filter: FilterSchema): { value: unknown; label: string }[] {
     }
 
     if (filter.type === 'daterange') {
-        return Object.entries(filter.presets ?? {}).map(([value, label]) => ({ value, label }))
+        return Object.entries(filter.presets ?? {}).map(([value, label]) => ({
+            value,
+            label,
+        }))
     }
 
     return (filter.options ?? []).map((o) => ({ value: o, label: o }))
@@ -223,14 +263,29 @@ function clearEverything() {
                 aria-label="Clear search"
                 @click="local = ''"
             >
-                <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.5">
+                <svg
+                    viewBox="0 0 24 24"
+                    class="size-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                >
                     <path d="M18 6 6 18M6 6l12 12" />
                 </svg>
             </button>
         </div>
 
         <!-- Filters -->
-        <PkDropdown v-if="filterSchema.length" width="w-80">
+        <!--
+            THE FILTER PANEL IS A FORM, so a click inside it is never "done".
+            It has an explicit Apply button, and dismissing on any stray click
+            discarded a half-built filter draft - see PkDropdown's prop note.
+        -->
+        <PkDropdown
+            v-if="filterSchema.length"
+            width="w-80"
+            :dismiss-on-panel-click="false"
+        >
             <template #trigger>
                 <button
                     type="button"
@@ -239,7 +294,14 @@ function clearEverything() {
                     :aria-label="activeCount ? `Filters (${activeCount} active)` : 'Filters'"
                     title="Filters"
                 >
-                    <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <svg
+                        viewBox="0 0 24 24"
+                        class="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                    >
                         <path d="M3 5h18M6 12h12M10 19h4" />
                     </svg>
                     <span
@@ -254,15 +316,21 @@ function clearEverything() {
             <template #panel="{ close }">
                 <div class="flex items-center justify-between px-1 pt-1 pb-2">
                     <span class="text-sm font-semibold">Filters</span>
-                    <button class="text-destructive text-xs hover:underline" @click="resetFilters">Reset</button>
+                    <button class="text-destructive text-xs hover:underline" @click="resetFilters">
+                        Reset
+                    </button>
                 </div>
 
                 <p class="text-muted-foreground px-1 pb-3 text-xs">
-                    Select one or more — all chosen filters must match.
+                    Select one or more - all chosen filters must match.
                 </p>
 
                 <div class="flex max-h-96 flex-col gap-4 overflow-y-auto px-1 pb-3">
-                    <div v-for="filter in filterSchema" :key="filter.key" class="flex flex-col gap-1.5">
+                    <div
+                        v-for="filter in filterSchema"
+                        :key="filter.key"
+                        class="flex flex-col gap-1.5"
+                    >
                         <label class="text-xs font-medium">{{ filter.label }}</label>
 
                         <!--
@@ -277,21 +345,34 @@ function clearEverything() {
                         -->
                         <PkMultiSelect
                             v-if="isMulti(filter)"
-                            :model-value="draftValues(filter)"
-                            :options="optionsFor(filter)"
+                            :model-value="multiDraftValues(filter)"
+                            :options="multiOptionsFor(filter)"
                             :placeholder="`Any ${filter.label.toLowerCase()}`"
-                            @update:model-value="(value) => (draft[filter.key] = value.length ? value : null)"
+                            @update:model-value="
+                                (value) => (draft[filter.key] = value.length ? value : null)
+                            "
                         />
 
                         <!-- Date range: presets plus an explicit pair. -->
                         <template v-else-if="filter.type === 'daterange'">
                             <select
-                                :value="typeof draft[filter.key] === 'string' && !String(draft[filter.key]).includes('..') ? draft[filter.key] : ''"
+                                :value="
+                                    typeof draft[filter.key] === 'string' &&
+                                    !String(draft[filter.key]).includes('..')
+                                        ? draft[filter.key]
+                                        : ''
+                                "
                                 class="border-input bg-background h-9 rounded-md border px-3 text-sm"
-                                @change="setValue(filter, ($event.target as HTMLSelectElement).value)"
+                                @change="
+                                    setValue(filter, ($event.target as HTMLSelectElement).value)
+                                "
                             >
                                 <option value="">Any time</option>
-                                <option v-for="opt in optionsFor(filter)" :key="String(opt.value)" :value="opt.value">
+                                <option
+                                    v-for="opt in optionsFor(filter)"
+                                    :key="String(opt.value)"
+                                    :value="opt.value"
+                                >
                                     {{ opt.label }}
                                 </option>
                             </select>
@@ -302,14 +383,26 @@ function clearEverything() {
                                     :value="rangePart(filter, 'from')"
                                     aria-label="From"
                                     class="border-input bg-background h-9 rounded-md border px-2 text-xs"
-                                    @change="setRangePart(filter, 'from', ($event.target as HTMLInputElement).value)"
+                                    @change="
+                                        setRangePart(
+                                            filter,
+                                            'from',
+                                            ($event.target as HTMLInputElement).value,
+                                        )
+                                    "
                                 />
                                 <input
                                     type="date"
                                     :value="rangePart(filter, 'to')"
                                     aria-label="To"
                                     class="border-input bg-background h-9 rounded-md border px-2 text-xs"
-                                    @change="setRangePart(filter, 'to', ($event.target as HTMLInputElement).value)"
+                                    @change="
+                                        setRangePart(
+                                            filter,
+                                            'to',
+                                            ($event.target as HTMLInputElement).value,
+                                        )
+                                    "
                                 />
                             </div>
                         </template>
@@ -322,7 +415,11 @@ function clearEverything() {
                                 role="switch"
                                 :aria-checked="draft[filter.key] === true"
                                 class="relative h-5 w-9 shrink-0 rounded-full transition-colors"
-                                :class="draft[filter.key] === true ? 'bg-primary' : 'bg-muted-foreground/30'"
+                                :class="
+                                    draft[filter.key] === true
+                                        ? 'bg-primary'
+                                        : 'bg-muted-foreground/30'
+                                "
                                 @click="setValue(filter, draft[filter.key] === true ? null : true)"
                             >
                                 <span
@@ -335,8 +432,12 @@ function clearEverything() {
                             <button
                                 type="button"
                                 class="text-muted-foreground ml-auto text-xs hover:underline"
-                                :class="draft[filter.key] === false ? 'text-primary font-medium' : ''"
-                                @click="setValue(filter, draft[filter.key] === false ? null : false)"
+                                :class="
+                                    draft[filter.key] === false ? 'text-primary font-medium' : ''
+                                "
+                                @click="
+                                    setValue(filter, draft[filter.key] === false ? null : false)
+                                "
                             >
                                 {{ filter.falseLabel ?? 'No' }} only
                             </button>
@@ -350,7 +451,11 @@ function clearEverything() {
                             @change="setValue(filter, ($event.target as HTMLSelectElement).value)"
                         >
                             <option value="">All</option>
-                            <option v-for="opt in optionsFor(filter)" :key="String(opt.value)" :value="opt.value">
+                            <option
+                                v-for="opt in optionsFor(filter)"
+                                :key="String(opt.value)"
+                                :value="opt.value"
+                            >
                                 {{ opt.label }}
                             </option>
                         </select>
@@ -377,7 +482,13 @@ function clearEverything() {
                     aria-label="Columns"
                     title="Columns"
                 >
-                    <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg
+                        viewBox="0 0 24 24"
+                        class="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
                         <rect x="3" y="4" width="18" height="16" rx="2" />
                         <path d="M9 4v16M15 4v16" />
                     </svg>
@@ -387,7 +498,10 @@ function clearEverything() {
             <template #panel="{ close }">
                 <div class="flex items-center justify-between px-1 pt-1 pb-2">
                     <span class="text-sm font-semibold">Columns</span>
-                    <button class="text-destructive text-xs hover:underline" @click="columnDraft = new Set()">
+                    <button
+                        class="text-destructive text-xs hover:underline"
+                        @click="columnDraft = new Set()"
+                    >
                         Reset
                     </button>
                 </div>

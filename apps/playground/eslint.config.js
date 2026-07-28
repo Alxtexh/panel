@@ -72,6 +72,22 @@ export default defineConfigWithVueTs(
             ],
         },
     },
+    /*
+     | THE SHIPPED PACKAGE IS LINTED TOO.
+     |
+     | `packages/ui` sits outside this config's directory, so every file in it
+     | was reported as "ignored because outside of base path" — which reads like
+     | a warning and means "not checked at all". The component code that
+     | actually ships to consumers was the one part of the repository with no
+     | lint coverage, while the playground that consumes it had full coverage.
+     |
+     | `basePath` (ESLint 9.30+) lifts the root for this block only, so the same
+     | rules apply without moving the config or adding a root package.
+     */
+    {
+        basePath: '../../packages/ui',
+        files: ['src/**/*.{ts,vue}'],
+    },
     {
         ignores: [
             'vendor',

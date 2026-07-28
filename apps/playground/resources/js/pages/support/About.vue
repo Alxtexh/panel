@@ -2,7 +2,7 @@
 /**
  * About the panel.
  *
- * THE FIRST VERSION WAS FOUR SLOGANS AND A LIST OF FRAMEWORK NAMES — the kind
+ * THE FIRST VERSION WAS FOUR SLOGANS AND A LIST OF FRAMEWORK NAMES - the kind
  * of page that exists to fill a route. An About page earns its place by
  * answering questions someone actually has: what is this for, what does it do
  * well, what does it not do yet, and what version am I looking at. The last two
@@ -10,7 +10,7 @@
  * about everything else.
  */
 import { Head, Link } from '@inertiajs/vue3'
-import { Gauge, Layers, Lock, Zap } from '@lucide/vue'
+import { BookOpen, Gauge, Layers, Lock, Zap } from '@lucide/vue'
 
 defineOptions({ layout: { breadcrumbs: [{ title: 'About', href: '/about' }] } })
 
@@ -37,16 +37,29 @@ const principles = [
     },
 ]
 
+/*
+ * KEPT HONEST BY BEING EDITED. Four of these were listed as planned long after
+ * they shipped, which is the direction that matters least - but a stale list is
+ * a list nobody trusts in either direction, and the unchecked half is the only
+ * part of this page that answers "can I rely on it yet".
+ */
 const capabilities = [
     { label: 'Subscribers, routers and plans', done: true },
     { label: 'Filtering, sorting and search across large tables', done: true },
     { label: 'Bulk actions and background CSV export', done: true },
     { label: 'Dashboard widgets and twelve chart types', done: true },
     { label: 'Per-user appearance and three navigation layouts', done: true },
-    { label: 'File uploads on forms', done: false },
-    { label: 'Notifications with a topbar bell', done: false },
-    { label: 'Related records as tabs on a record page', done: false },
-    { label: 'Soft deletes and a trash view', done: false },
+    { label: 'File uploads on forms', done: true },
+    { label: 'Notifications with a topbar bell', done: true },
+    { label: 'Related records as tabs on a record page', done: true },
+    { label: 'Soft deletes and a trash view', done: true },
+    { label: 'Roles, a permission matrix and role templates', done: true },
+    { label: 'Several portals from one command, each with its own guard', done: true },
+    { label: 'Backups: schedule, off-site copies, download, restore', done: true },
+    { label: 'An assistant that can look subscribers up, with approvals', done: true },
+    { label: 'A public REST API distinct from the panel’s own endpoints', done: true },
+    { label: 'Scheduled report delivery by email', done: true },
+    { label: 'Retrieval over panel content, so the assistant cites rather than guesses', done: true },
 ]
 </script>
 
@@ -57,11 +70,34 @@ const capabilities = [
         <header class="flex flex-col gap-2">
             <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">About this panel</h1>
             <p class="text-muted-foreground text-sm">
-                An administration panel for internet service providers — subscribers, routers and
-                plans — built to stay responsive as the data grows rather than only while it is
+                An administration panel for internet service providers - subscribers, routers and
+                plans - built to stay responsive as the data grows rather than only while it is
                 small.
             </p>
         </header>
+
+        <!--
+            THE DOCUMENTATION, AT THE TOP RATHER THAN IN A FOOTER. Somebody
+            reading About is usually deciding whether to build with this; the
+            page that answers that is one link, and burying it under four
+            principle cards makes it the last thing they see.
+        -->
+        <Link
+            href="/about/building"
+            class="bg-card hover:bg-accent flex items-start gap-3 rounded-lg border p-4 transition-colors"
+        >
+            <span class="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
+                <BookOpen class="size-4" />
+            </span>
+            <span class="min-w-0">
+                <span class="block text-sm font-semibold">Building a panel</span>
+                <span class="text-muted-foreground mt-1 block text-sm">
+                    What you need before you start, the commands in order, and the decisions that
+                    are hard to change later - panels, resources, forms, actions, permissions,
+                    tenancy and operations.
+                </span>
+            </span>
+        </Link>
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <article v-for="p in principles" :key="p.title" class="bg-card flex gap-3 rounded-lg border p-4">
@@ -96,7 +132,7 @@ const capabilities = [
                     </span>
                     <span :class="c.done ? '' : 'text-muted-foreground'">
                         {{ c.label }}
-                        <span v-if="!c.done" class="text-muted-foreground/70 text-xs">— planned</span>
+                        <span v-if="!c.done" class="text-muted-foreground/70 text-xs">- planned</span>
                     </span>
                 </li>
             </ul>
