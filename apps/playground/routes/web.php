@@ -347,6 +347,20 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
         ->middleware('throttle:3,60')
         ->name('operations.backups.restore');
 
+    /*
+     | THE POLICY HAS ITS OWN URL NOW, because it outgrew the dialog it used to
+     | live in. Declared BEFORE the download and restore routes for no reason
+     | other than reading order: get, then put, on the same path.
+     */
+    /*
+     | NAMED `configure`, NOT `settings.edit`, and the reason is generated code.
+     | `operations.backups.settings` is already the PUT that saves the policy,
+     | so a nested `settings.edit` would be a property on a function - Wayfinder
+     | skips it silently and the page ends up with no route helper at all.
+     */
+    Route::get('operations/backups/settings', [OperationsController::class, 'backupSettings'])
+        ->name('operations.backups.configure');
+
     Route::put('operations/backups/settings', [OperationsController::class, 'saveBackupSettings'])
         ->name('operations.backups.settings');
 

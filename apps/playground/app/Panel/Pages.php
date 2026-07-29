@@ -192,6 +192,14 @@ final class Pages
             '/operations/backups' => 'Listed in the account menu: the installation, not the organisation.',
             '/operations/logs' => 'Listed in the account menu, beside Backups.',
             '/operations/monitoring' => 'Listed in the account menu, beside Backups and Logs.',
+            /*
+             * THE POLICY BEHIND THE LIST. It used to be a dialog over the
+             * backups screen and outgrew one - four unrelated subjects and
+             * nineteen controls, with the schedule off screen while somebody
+             * typed a bot token. It is reached from the Settings button there,
+             * which is the only place it makes sense to enter it from.
+             */
+            '/operations/backups/settings' => 'Opened from the Settings button on the backups screen.',
             '/activities' => 'Listed in the account menu. What the panel did to itself, not what it administers.',
             '/trash' => 'Listed in the account menu, at the end: what was deleted from this portal.',
             /*

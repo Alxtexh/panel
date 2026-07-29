@@ -125,6 +125,43 @@ final class OperationsController extends Controller
     }
 
     /**
+     * The backup policy, on a page of its own.
+     *
+     * IT WAS A DIALOG, AND IT HAD OUTGROWN ONE. Nineteen controls across four
+     * unrelated subjects - when it runs, how long copies live, where they go,
+     * who is told - inside a box that scrolls independently of the page behind
+     * it. A dialog is for one decision you can hold in your head while the thing
+     * underneath stays visible and relevant; none of that was true here. The
+     * page behind it was a list of snapshots nobody was reading, and the
+     * scheduling half was off screen while somebody typed a bot token.
+     *
+     * A PAGE ALSO GIVES THE SETTINGS A URL, which a dialog cannot. "Send me the
+     * retention screen" and a bookmark both work now, and the back button means
+     * what it says.
+     *
+     * THE SAME PROPS AS THE LIST, deliberately. Both screens describe one
+     * policy, and a second shape for the same data is a second thing to keep in
+     * step.
+     */
+    public function backupSettings(Request $request): Response
+    {
+        abort_unless($request->user()?->hasPermission('view_operations'), 403);
+
+        $settings = BackupSettings::load();
+
+        return Inertia::render('operations/BackupSettings', [
+            // Redacted: the bot token is stored, applied, and never sent back.
+            'settings' => $settings->redacted(),
+            'schedule' => $settings->describe(),
+            'settingsChangedBy' => app(PanelSettings::class)->provenance(BackupSettings::KEY),
+            'disks' => array_keys((array) config('filesystems.disks', [])),
+            'can' => [
+                'manage' => (bool) $request->user()?->hasPermission('manage_backups'),
+            ],
+        ]);
+    }
+
+    /**
      * Take a backup now.
      *
      * QUEUED AND LOCKED - see `RunBackupNow`. This endpoint only asks; it never
