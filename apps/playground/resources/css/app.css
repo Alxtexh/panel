@@ -22,6 +22,16 @@
  */
 @source '../../../../packages/ui/src/**/*.{vue,ts}';
 
+/*
+ * AND THE SCREENS, for exactly the same reason. The resource list, the form,
+ * the record page and the trash moved into `@panelkit/inertia`, which is another
+ * symlink into node_modules and therefore another tree Tailwind will not scan
+ * unless told. Missing this one purges the layout of every panel screen while
+ * leaving the table inside it styled, which reads as a broken page rather than
+ * as a missing configuration line.
+ */
+@source '../../../../packages/inertia/src/**/*.{vue,ts}';
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

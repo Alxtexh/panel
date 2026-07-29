@@ -152,4 +152,40 @@ final class PackagedScreensTest extends TestCase
             );
         }
     }
+
+    /**
+     * AND EVERY ONE OF THOSE FILES HAS A TEMPLATE.
+     *
+     * THIS IS NOT A STYLE RULE. The obvious way to write a one-line page file is
+     *
+     *     export { default } from '@panelkit/inertia/pages/ResourceIndex.vue'
+     *
+     * which type-checks, builds, and emits a chunk containing the entire real
+     * component - and renders NOTHING. An SFC with no `<template>` block
+     * compiles to a component with no render function, so Vue mounts it and
+     * draws an empty comment node.
+     *
+     * The only symptom is a blank page under a working header. `vue-tsc` is
+     * silent, the build is silent, and a PRODUCTION build is silent in the
+     * browser too - the warning that names the cause, "Component is missing
+     * template or render function", exists only in a development build. It was
+     * found by installing into a fresh application and looking at the screen.
+     *
+     * A text assertion is crude and it is the only place this is checkable
+     * without a browser. It costs nothing and it catches the exact mistake.
+     */
+    public function test_every_page_file_renders_something(): void
+    {
+        foreach ($this->renderedPageNames() as $name) {
+            $contents = (string) file_get_contents(resource_path("js/pages/{$name}.vue"));
+
+            $this->assertStringContainsString(
+                '<template>',
+                $contents,
+                "resources/js/pages/{$name}.vue has no template block, so it compiles to a component "
+                .'with no render function and draws an empty page. A re-export of another component '
+                .'is not enough - wrap it.',
+            );
+        }
+    }
 }

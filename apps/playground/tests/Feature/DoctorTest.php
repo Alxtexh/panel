@@ -33,11 +33,35 @@ final class DoctorTest extends TestCase
      */
     public function test_it_reports_a_broadcast_driver_that_cannot_authorise(): void
     {
-        config(['broadcasting.default' => 'log']);
+        config([
+            'panel.live.driver' => 'broadcast',
+            'broadcasting.default' => 'log',
+        ]);
 
         $this->artisan('panel:doctor')
-            ->expectsOutputToContain('channel authorisation is inert')
+            ->expectsOutputToContain('broadcast driver is [log]')
             ->assertFailed();
+    }
+
+    /**
+     * AND IS QUIET WHEN THE PANEL DOES NOT BROADCAST AT ALL.
+     *
+     * The check used to look at the broadcast driver alone, and Laravel ships
+     * `log` by default - so a fresh, correctly configured install reported a
+     * problem about channel authorisation for a panel whose live driver is
+     * `poll` and which registers no channel anybody can reach. This is the first
+     * command anybody runs after installing, and a first run that says "1
+     * problem found" about something that is not a problem teaches people to
+     * stop reading the output.
+     */
+    public function test_it_is_quiet_about_the_broadcaster_when_the_panel_polls(): void
+    {
+        config([
+            'panel.live.driver' => 'poll',
+            'broadcasting.default' => 'log',
+        ]);
+
+        $this->artisan('panel:doctor')->assertSuccessful();
     }
 
     public function test_it_is_quiet_about_a_real_broadcaster(): void
@@ -156,7 +180,10 @@ final class DoctorTest extends TestCase
 
     public function test_it_emits_machine_readable_findings(): void
     {
-        config(['broadcasting.default' => 'log']);
+        config([
+            'panel.live.driver' => 'broadcast',
+            'broadcasting.default' => 'log',
+        ]);
 
         $this->artisan('panel:doctor --json')->assertFailed();
     }

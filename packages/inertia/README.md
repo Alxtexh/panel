@@ -39,9 +39,19 @@ createInertiaApp({
 })
 ```
 
-**Tailwind, and the theme tokens.** The components style with tokens
-(`bg-primary`, `text-muted-foreground`) rather than values, so they take your
-theme. If you have no theme, import the one the UI package ships:
+**Tailwind, pointed at these packages.** Tailwind does not scan `node_modules`,
+so without these two lines every utility used *only* inside the packages is
+purged — and the failure is partial and silent, because classes your own code
+also uses survive. You get a panel with a styled table inside an unstyled page.
+
+```css
+@source '../../node_modules/@panelkit/ui/src/**/*.{vue,ts}';
+@source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';
+```
+
+**The theme tokens.** The components style with tokens (`bg-primary`,
+`text-muted-foreground`) rather than values, so they take your theme. If you have
+no theme, import the one the UI package ships:
 
 ```css
 @import '@panelkit/ui/theme/tokens.css';
