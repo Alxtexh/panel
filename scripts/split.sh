@@ -65,7 +65,9 @@ split_one() {
     # monorepo to speed up later splits, and that commit is noise in the history
     # of a repository whose whole point is being readable. Splits are seconds on
     # a repository this size.
-    git subtree split --prefix="${prefix}" -b "${branch}" >/dev/null
+    # 2>/dev/null drops the per-commit progress counter, which is several
+    # hundred lines of carriage-returned noise in a log or a CI transcript.
+    git subtree split --prefix="${prefix}" -b "${branch}" >/dev/null 2>/dev/null
     echo "    branch ${branch} ($(git rev-list --count "${branch}") commits)"
 
     if [[ "$PUSH" != true ]]; then
