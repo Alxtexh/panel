@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Support\PanelSettings;
 
 /**
  * Everything this person has deleted, across every resource, in one place.
@@ -184,16 +185,39 @@ final class TrashBin
         return \Illuminate\Support\Carbon::parse($deleted)->addDays(self::retentionDays());
     }
 
+    /** The shortest and longest a bin may keep something. */
+    public const MINIMUM_DAYS = 7;
+
+    public const MAXIMUM_DAYS = 30;
+
     /**
      * How long a deleted record is kept.
      *
-     * AT LEAST ONE DAY, whatever config says. A retention of zero would purge
-     * records in the same sweep that put them here, which is not a bin - it is
-     * a delayed hard delete with a screen in front of it.
+     * THE SETTING WINS OVER CONFIG, because this is an operational decision
+     * rather than a deployment one: whoever runs the panel knows how long their
+     * people take to notice a mistake, and that answer should not need a deploy.
+     * Config remains the default for an installation that never opens the
+     * screen.
+     *
+     * CLAMPED BETWEEN SEVEN AND THIRTY DAYS, and both ends are deliberate.
+     * Below a week, "I deleted it on Friday" is already unrecoverable on Monday
+     * - which is the exact case a bin exists for. Above a month it stops being a
+     * bin and becomes a second copy of the database that nobody is looking
+     * after, holding personal data long after anybody meant to keep it.
+     *
+     * THE CLAMP IS HERE, NOT ONLY IN THE FORM. A value that arrives from a
+     * hand-edited request, an older release or a config file still lands inside
+     * the range, because this is the one function both the screen and the pruner
+     * read.
      */
     public static function retentionDays(): int
     {
-        return max(1, (int) config('panel.trash.retention_days', 7));
+        $configured = app(PanelSettings::class)->get(
+            'trash.retention_days',
+            config('panel.trash.retention_days', self::MINIMUM_DAYS),
+        );
+
+        return max(self::MINIMUM_DAYS, min(self::MAXIMUM_DAYS, (int) $configured));
     }
 
     /** @param  class-string<Resource>  $class */

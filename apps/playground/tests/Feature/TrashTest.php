@@ -135,7 +135,7 @@ final class TrashTest extends TestCase
      */
     public function test_each_record_says_when_it_will_be_purged(): void
     {
-        config(['panel.trash.retention_days' => 5]);
+        config(['panel.trash.retention_days' => 10]);
 
         Carbon::setTestNow('2026-08-01 10:00:00');
 
@@ -145,7 +145,7 @@ final class TrashTest extends TestCase
         $record = $this->binFor($this->owner)[0]['records'][0];
 
         $this->assertSame(
-            '2026-08-06',
+            '2026-08-11',
             Carbon::parse($record['purgesAt'])->toDateString(),
         );
 
@@ -309,7 +309,7 @@ final class TrashTest extends TestCase
      * a bin - it is a hard delete with a screen in front of it. The floor is one
      * day, in the one place both the screen and the pruner read.
      */
-    public function test_a_zero_retention_still_keeps_records_for_a_day(): void
+    public function test_a_zero_retention_still_keeps_records_for_the_minimum(): void
     {
         config(['panel.trash.retention_days' => 0]);
 
@@ -333,6 +333,160 @@ final class TrashTest extends TestCase
         $this->artisan('panel:prune-trash')->assertSuccessful();
 
         $this->assertDatabaseMissing('clients', ['id' => $theirs->id]);
+    }
+
+    /* ----------------------------------------------------------- in bulk */
+
+    /**
+     * A SELECTION IS RESTORED IN ONE REQUEST.
+     *
+     * Emptying a bin one row at a time is forty requests and forty
+     * confirmations, so people either do not do it or write a script - and the
+     * second is worse, because a script has no policy check in it.
+     */
+    public function test_a_selection_can_be_restored_at_once(): void
+    {
+        $one = $this->client($this->acme, 'First');
+        $two = $this->client($this->acme, 'Second');
+        $left = $this->client($this->acme, 'Left Alone');
+
+        $one->delete();
+        $two->delete();
+        $left->delete();
+
+        $this->actingAs($this->owner)
+            ->post('/trash/restore', ['resource' => 'clients', 'ids' => [$one->id, $two->id]])
+            ->assertRedirect();
+
+        $this->assertNotSoftDeleted('clients', ['id' => $one->id]);
+        $this->assertNotSoftDeleted('clients', ['id' => $two->id]);
+        // An unselected record stays deleted: a bulk action applies to the
+        // selection, not to the tab.
+        $this->assertSoftDeleted('clients', ['id' => $left->id]);
+    }
+
+    public function test_a_selection_can_be_deleted_for_good_at_once(): void
+    {
+        $one = $this->client($this->acme, 'Doomed One');
+        $two = $this->client($this->acme, 'Doomed Two');
+
+        $one->delete();
+        $two->delete();
+
+        $this->actingAs($this->owner)
+            ->delete('/trash', ['resource' => 'clients', 'ids' => [$one->id, $two->id]])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('clients', ['id' => $one->id]);
+        $this->assertDatabaseMissing('clients', ['id' => $two->id]);
+    }
+
+    /**
+     * THE POLICY IS ASKED PER RECORD, not once for the resource.
+     *
+     * A bulk endpoint that checked the class-level question would let somebody
+     * with `viewAny` and nothing else empty the bin - the exact widening a
+     * convenience endpoint must not introduce.
+     */
+    public function test_a_bulk_restore_refuses_records_the_policy_refuses(): void
+    {
+        $client = $this->client($this->acme, 'Not Yours To Restore');
+        $client->delete();
+
+        $reader = $this->userFor($this->acme, [Abilities::name('viewAny', 'clients')]);
+
+        $this->actingAs($reader)
+            ->post('/trash/restore', ['resource' => 'clients', 'ids' => [$client->id]])
+            ->assertRedirect();
+
+        $this->assertSoftDeleted('clients', ['id' => $client->id]);
+    }
+
+    /** Another organisation's ids match nothing, as they do everywhere else. */
+    public function test_a_bulk_action_cannot_reach_another_organisations_records(): void
+    {
+        $theirs = $this->client($this->rival, 'Theirs');
+        $theirs->delete();
+
+        $this->actingAs($this->owner)
+            ->post('/trash/restore', ['resource' => 'clients', 'ids' => [$theirs->id]])
+            ->assertRedirect();
+
+        $this->assertSoftDeleted('clients', ['id' => $theirs->id]);
+    }
+
+    /** A resource that is not in this panel's bin is not addressable. */
+    public function test_an_unknown_resource_is_not_found(): void
+    {
+        $this->actingAs($this->owner)
+            ->post('/trash/restore', ['resource' => 'nonexistent', 'ids' => [1]])
+            ->assertNotFound();
+    }
+
+    /* -------------------------------------------------------- retention */
+
+    /**
+     * THE WINDOW IS A SETTING, not a deploy.
+     *
+     * Whoever runs the panel knows how long their people take to notice a
+     * mistake; that answer should not need a release.
+     */
+    public function test_an_administrator_can_change_the_retention_window(): void
+    {
+        $admin = $this->userFor($this->acme, ['manage_backups']);
+
+        $this->actingAs($admin)
+            ->patch('/trash/settings', ['days' => 21])
+            ->assertRedirect();
+
+        $props = $this->actingAs($this->owner)->get('/trash')->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertSame(21, $props['retentionDays']);
+    }
+
+    /**
+     * SEVEN TO THIRTY, AND BOTH ENDS ARE ENFORCED.
+     *
+     * Below a week, "I deleted it on Friday" is already unrecoverable on Monday
+     * - the exact case a bin exists for. Above a month it is a second copy of
+     * the database nobody is looking after.
+     */
+    public function test_the_window_is_refused_outside_its_bounds(): void
+    {
+        $admin = $this->userFor($this->acme, ['manage_backups']);
+
+        $this->actingAs($admin)->patch('/trash/settings', ['days' => 3])
+            ->assertSessionHasErrors('days');
+
+        $this->actingAs($admin)->patch('/trash/settings', ['days' => 90])
+            ->assertSessionHasErrors('days');
+    }
+
+    /**
+     * AND A VALUE THAT GOT PAST THE FORM IS STILL CLAMPED.
+     *
+     * Config, an older release or a hand-edited row can all hold something
+     * outside the range, and the pruner reads the same function the screen does
+     * - so the clamp belongs there rather than only in the validator.
+     */
+    public function test_a_stored_value_outside_the_range_is_clamped(): void
+    {
+        app(\PanelKit\Panel\Support\PanelSettings::class)->put('trash.retention_days', 365);
+
+        $this->assertSame(30, \PanelKit\Panel\Trash\TrashBin::retentionDays());
+
+        app(\PanelKit\Panel\Support\PanelSettings::class)->put('trash.retention_days', 1);
+
+        $this->assertSame(7, \PanelKit\Panel\Trash\TrashBin::retentionDays());
+    }
+
+    /** Somebody without the ability cannot shorten it. */
+    public function test_retention_is_behind_a_permission(): void
+    {
+        $this->actingAs($this->owner)
+            ->patch('/trash/settings', ['days' => 30])
+            ->assertForbidden();
     }
 
     /* ----------------------------------------------------------- navigation */

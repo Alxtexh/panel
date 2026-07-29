@@ -166,6 +166,24 @@ final class PanelRoutes
                  */
                 Route::get('trash', [Controllers\TrashController::class, 'index'])->name('trash');
 
+                /*
+                 * BULK RESTORE AND BULK DESTROY. Emptying a bin one row at a
+                 * time is forty requests and forty confirmations, so people
+                 * either do not do it or write a script - and the second is
+                 * worse. Both check the policy PER RECORD; the endpoint is a
+                 * convenience, not a shortcut past the gate.
+                 */
+                Route::post('trash/restore', [Controllers\TrashController::class, 'restore'])
+                    ->name('trash.restore');
+
+                Route::delete('trash', [Controllers\TrashController::class, 'destroy'])
+                    ->name('trash.destroy');
+
+                // How long the bin keeps things - an operational decision, so a
+                // setting rather than a deploy. Clamped server-side.
+                Route::patch('trash/settings', [Controllers\TrashController::class, 'updateSettings'])
+                    ->name('trash.settings');
+
                 foreach (self::extensions() as $extension) {
                     $extension($keys, $panel);
                 }
