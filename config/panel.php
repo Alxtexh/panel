@@ -120,6 +120,50 @@ return [
     | component knows which driver is active.
     |
     */
+    /*
+    |---------------------------------------------------------------------------
+    | Alerts
+    |---------------------------------------------------------------------------
+    |
+    | Telegram ships with the panel - `laravel-notification-channels/telegram`
+    | is a dependency, and the panel adds a channel on top of it that falls back
+    | to a notification's mail representation, so third-party notifications
+    | (spatie/laravel-backup's, for one) deliver instead of silently doing
+    | nothing.
+    |
+    | The token and chat id live in `services.telegram`, and the panel's own
+    | settings are applied over them at boot. Anything can then say
+    |
+    |     PanelKit\Panel\Alerts\Telegram::send('Disk at 94% on db-01.');
+    |
+    | EXCEPTIONS ARE OPT-IN AND OFF BY DEFAULT. A chat that receives every
+    | unhandled exception from an application nobody has tuned yet is a chat
+    | somebody mutes in the first week - and a muted alert channel is worse than
+    | none, because it looks like coverage. Turn it on once the obvious noise is
+    | fixed. See `ReportsToTelegram` for the deduplication that makes it
+    | survivable at all.
+    |
+    */
+    'alerts' => [
+        'telegram' => [
+            'exceptions' => (bool) env('PANEL_ALERT_EXCEPTIONS', false),
+
+            /*
+             | Failures that are the framework working correctly. A 404, a
+             | validation error and an expired session all arrive as exceptions,
+             | and alerting on them makes the channel mostly noise within a day.
+             */
+            'ignore' => [
+                \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface::class,
+                \Illuminate\Validation\ValidationException::class,
+                \Illuminate\Auth\AuthenticationException::class,
+                \Illuminate\Auth\Access\AuthorizationException::class,
+                \Illuminate\Database\Eloquent\ModelNotFoundException::class,
+                \Illuminate\Session\TokenMismatchException::class,
+            ],
+        ],
+    ],
+
     'live' => [
         'driver' => env('PANEL_LIVE_DRIVER', 'poll'),
         'interval_ms' => (int) env('PANEL_LIVE_INTERVAL', 10_000),
