@@ -87,6 +87,39 @@ final class PanelManager
      */
     private ?string $currentPanel = null;
 
+    /**
+     * Which panel a plugin's resource was registered for.
+     *
+     * STATIC FOR THE SAME REASON `$panels` IS: this is boot-time configuration,
+     * identical for every request, and a scoped binding rebuilt per request
+     * would forget it - so a plugin's resource would be discoverable on the
+     * first request and belong to no panel on the second.
+     *
+     * @var array<class-string, string>
+     */
+    private static array $resourcePanels = [];
+
+    /**
+     * Plugins registered globally, by id.
+     *
+     * KEYED BY ID so registering the same plugin twice - once from its own
+     * service provider and once explicitly in a panel, which is an easy mistake
+     * - is a no-op rather than a duplicate-key exception naming a RESOURCE.
+     *
+     * @var array<string, Plugins\PanelPlugin>
+     */
+    private static array $plugins = [];
+
+    /** Panels whose plugins have already run, so they run exactly once. */
+    private static array $pluginsApplied = [];
+
+    /**
+     * What plugins contributed, per panel.
+     *
+     * @var array<string, list<Plugins\PluginContext>>
+     */
+    private static array $pluginContexts = [];
+
     public function registerPanel(Panel $panel): void
     {
         self::$panels[$panel->id] = $panel;
@@ -96,6 +129,158 @@ final class PanelManager
     public function panels(): array
     {
         return self::$panels;
+    }
+
+    /* ------------------------------------------------------------- plugins */
+
+    /**
+     * Install a plugin into every panel that accepts it.
+     *
+     * CALLED FROM A PACKAGE'S OWN SERVICE PROVIDER, which is what makes
+     * `composer require` enough: Laravel discovers the provider, the provider
+     * registers the plugin, and the panel picks it up when it applies plugins at
+     * boot. Nothing in the application has to be edited, which is the entire
+     * difference between a plugin and a README.
+     *
+     * REGISTERING TWICE IS A NO-OP, keyed by the plugin's id. A package
+     * registered globally AND named explicitly in a panel provider is an easy
+     * mistake to make and an ugly one to diagnose - without this it surfaces as
+     * a duplicate-key exception naming a RESOURCE, several layers from the
+     * cause.
+     */
+    public function plugin(Plugins\PanelPlugin $plugin): void
+    {
+        self::$plugins[$plugin->id()] = $plugin;
+    }
+
+    /** @return array<string, Plugins\PanelPlugin> */
+    public function plugins(): array
+    {
+        return self::$plugins;
+    }
+
+    /**
+     * Run every applicable plugin against `$panel`, once.
+     *
+     * IDEMPOTENT BY PANEL, because this is called from route registration and
+     * from anything that needs the resulting pages - and running a plugin twice
+     * would register its resources twice, which throws.
+     *
+     * PLUGINS FROM CONFIG TOO. `panel.plugins` is how an installation adds one
+     * whose package does not register itself, and how it can be turned off
+     * without uninstalling anything.
+     */
+    public function applyPlugins(Panel $panel): void
+    {
+        if (isset(self::$pluginsApplied[$panel->id])) {
+            return;
+        }
+
+        // Marked BEFORE the loop: a plugin that resolves something which itself
+        // asks for the panel's pages would otherwise recurse forever.
+        self::$pluginsApplied[$panel->id] = true;
+
+        foreach ((array) config('panel.plugins', []) as $class) {
+            $instance = is_string($class) ? app($class) : $class;
+
+            if ($instance instanceof Plugins\PanelPlugin) {
+                $this->plugin($instance);
+            }
+        }
+
+        $contexts = [];
+
+        foreach ([...self::$plugins, ...$panel->getPlugins()] as $plugin) {
+            if (! $plugin->appliesTo($panel)) {
+                continue;
+            }
+
+            $context = new Plugins\PluginContext($panel, $this);
+
+            $plugin->register($context);
+
+            $contexts[] = $context;
+        }
+
+        self::$pluginContexts[$panel->id] = $contexts;
+    }
+
+    /**
+     * Navigation entries contributed by plugins, plus the panel's own.
+     *
+     * ONE LIST FOR THE APPLICATION TO MERGE. The alternative - the app asking
+     * for plugin pages, then for the trash entry, then for whatever comes next -
+     * means every new panel-provided screen needs a line in every application
+     * that ever installed this package, which is precisely the disappearing-page
+     * failure the declared-pages test exists to catch.
+     *
+     * @return list<array{title: string, href: string, icon: string, group: string|null}>
+     */
+    public function panelPages(?string $panelId = null): array
+    {
+        $panel = $panelId === null ? $this->currentPanel() : $this->panel($panelId);
+
+        if ($panel === null) {
+            return [];
+        }
+
+        $this->applyPlugins($panel);
+
+        $pages = [];
+
+        $trash = app(Trash\TrashBin::class)->navigationEntry($panel->id);
+
+        if ($trash !== null) {
+            $pages[] = $trash;
+        }
+
+        foreach (self::$pluginContexts[$panel->id] ?? [] as $context) {
+            foreach ($context->registeredPages() as $page) {
+                $pages[] = $page;
+            }
+        }
+
+        return $pages;
+    }
+
+    /**
+     * Route callbacks contributed by plugins, for `PanelRoutes` to mount.
+     *
+     * @return list<\Closure>
+     */
+    public function pluginRoutes(string $panelId): array
+    {
+        $panel = $this->panel($panelId);
+
+        if ($panel === null) {
+            return [];
+        }
+
+        $this->applyPlugins($panel);
+
+        $routes = [];
+
+        foreach (self::$pluginContexts[$panelId] ?? [] as $context) {
+            foreach ($context->registeredRoutes() as $callback) {
+                $routes[] = $callback;
+            }
+        }
+
+        return $routes;
+    }
+
+    /**
+     * Forget every plugin. TESTS ONLY.
+     *
+     * The registry is static - boot-time configuration, like the panel list - so
+     * a test that installs a plugin would otherwise leave it installed for every
+     * test after it, in a suite that passes in order and fails alone.
+     */
+    public static function forgetPlugins(): void
+    {
+        self::$plugins = [];
+        self::$pluginsApplied = [];
+        self::$pluginContexts = [];
     }
 
     public function panel(string $id): ?Panel
@@ -190,11 +375,29 @@ final class PanelManager
         $this->registerResources($classes);
     }
 
-    /** @param list<class-string> $classes */
-    public function registerResources(array $classes): void
+    /**
+     * @param  list<class-string>  $classes
+     * @param  string|null  $panelId  Overrides the class's own `panel()`.
+     */
+    public function registerResources(array $classes, ?string $panelId = null): void
     {
         foreach ($classes as $class) {
             $key = $class::key();
+
+            /*
+             * WHERE A PLUGIN'S RESOURCE LANDS IS DECIDED HERE, not by the class.
+             *
+             * A resource declares `protected static string $panel = 'admin'`,
+             * which is right for an application's own classes and impossible for
+             * a package's: a plugin cannot know what an installation called its
+             * portals, so a hardcoded `'admin'` lands nowhere on an installation
+             * whose operator portal is `'isp'`. Recording the panel the
+             * registration happened FOR lets the same class install into
+             * whichever panel accepted the plugin.
+             */
+            if ($panelId !== null) {
+                self::$resourcePanels[$class] = $panelId;
+            }
 
             /*
              * A KEY IS UNIQUE ACROSS THE WHOLE INSTALLATION, and a collision
@@ -262,7 +465,7 @@ final class PanelManager
     {
         return array_filter(
             $this->resources(),
-            static fn (string $class): bool => $class::panel() === $panelId,
+            static fn (string $class): bool => (self::$resourcePanels[$class] ?? $class::panel()) === $panelId,
         );
     }
 

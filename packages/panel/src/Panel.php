@@ -47,6 +47,19 @@ final class Panel
     /** @var list<string> */
     private array $authMiddleware = ['auth'];
 
+    /**
+     * Plugins named by THIS panel, on top of any registered globally.
+     *
+     * BOTH ROUTES EXIST BECAUSE THEY ANSWER DIFFERENT QUESTIONS. A package
+     * registering itself (`PanelManager::plugin`) means "install wherever you
+     * apply", which is what makes `composer require` sufficient. Naming one here
+     * means "this portal, specifically" - the reseller portal getting a billing
+     * screen the operator portal does not.
+     *
+     * @var list<Plugins\PanelPlugin>
+     */
+    private array $plugins = [];
+
     private ?Closure $brandName = null;
 
     private ?Closure $colors = null;
@@ -56,6 +69,24 @@ final class Panel
     public static function make(string $id): self
     {
         return new self($id);
+    }
+
+    /**
+     * Install plugins into this panel.
+     *
+     * @param  list<Plugins\PanelPlugin>  $plugins
+     */
+    public function plugins(array $plugins): self
+    {
+        $this->plugins = [...$this->plugins, ...$plugins];
+
+        return $this;
+    }
+
+    /** @return list<Plugins\PanelPlugin> */
+    public function getPlugins(): array
+    {
+        return $this->plugins;
     }
 
     public function path(string $path): self

@@ -200,10 +200,17 @@ class HandleInertiaRequests extends Middleware
              | portal soft-deletes - a bin that can never fill would advertise a
              | recovery the panel does not offer.
              */
-            'panelPages' => fn (): array => array_values(array_filter([
+            'panelPages' => fn (): array => [
                 ...\App\Panel\Pages::all(),
-                app(\PanelKit\Panel\Trash\TrashBin::class)->navigationEntry(),
-            ])),
+                /*
+                 | ONE CALL FOR EVERYTHING THE PANEL ITSELF PROVIDES - the trash
+                 | screen today, a plugin's screens the moment one is installed.
+                 | Asking for each separately would mean every new panel-provided
+                 | page needs a line in every application that installed this
+                 | package, which is the disappearing-page failure again.
+                 */
+                ...app(PanelManager::class)->panelPages(),
+            ],
 
             'name' => config('app.name'),
             /*

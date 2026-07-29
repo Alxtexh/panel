@@ -317,6 +317,19 @@ return [
     | chunk is - stays at the package defaults, which are local and free. See
     | `packages/panel/config/panel.php`.
     */
+    /*
+    | PLUGINS.
+    |
+    | A published plugin registers itself from its own service provider, so this
+    | list is usually empty and `composer require` is the whole installation.
+    | The announcements plugin lives in this application rather than in a
+    | package - the playground is one repository - so it is named here, which is
+    | the other supported way in.
+    */
+    'plugins' => [
+        App\Plugins\AnnouncementsPlugin::class,
+    ],
+
     'knowledge' => [
         'sources' => [
             App\Knowledge\HelpSource::class,

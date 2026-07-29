@@ -306,6 +306,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Plugins
+    |--------------------------------------------------------------------------
+    |
+    | Classes implementing `Plugins\PanelPlugin`, installed into every panel
+    | that accepts them.
+    |
+    | USUALLY EMPTY, AND THAT IS FINE. A published plugin registers itself from
+    | its own service provider - `PanelManager::plugin(new BillingPlugin)` - so
+    | `composer require` is enough and nothing here needs editing. This list is
+    | for the other two cases: a plugin whose package does not register itself,
+    | and one an installation wants to add without touching a panel provider.
+    |
+    | A PLUGIN CAN ONLY ADD. It never receives the `Panel` itself, so installing
+    | a package can never change the guard, the tenancy context or the
+    | middleware - which would make "install this" a way to turn off tenant
+    | scoping as a side effect.
+    */
+    'plugins' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | Retrieval, so the assistant can cite instead of inventing
     |--------------------------------------------------------------------------
     |
