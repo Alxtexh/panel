@@ -40,6 +40,7 @@ final class InstallCommand extends Command
 
         $this->publishConfig();
         $this->createTree();
+        $this->createDefaultPanel();
         $this->writePageFiles();
         $this->checkTenancy();
 
@@ -48,14 +49,80 @@ final class InstallCommand extends Command
         $this->line('  1. npm install @panelkit/ui @panelkit/inertia');
         $this->line('     The five page files above import from it. Without the package they are');
         $this->line('     imports of nothing, which fails in the browser rather than at build time.');
+        $this->line('     Then point Tailwind at them, or every utility used only inside the');
+        $this->line('     packages is purged - a styled table inside an unstyled page:');
+        $this->line("     @source '../../node_modules/@panelkit/ui/src/**/*.{vue,ts}';");
+        $this->line("     @source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';");
         $this->line('  2. Add a `tenant_id` column to your admin users table, or configure');
-        $this->line('     panel.tenancy.resolver for stancl/tenancy.');
+        $this->line('     panel.tenancy.resolver for stancl/tenancy. For a single-tenant app,');
+        $this->line('     set panel.tenancy.mode to "none" instead.');
         $this->line('  3. php artisan make:panel-resource YourModel --generate');
         $this->line('  4. Review the generated policy - the panel DENIES any ability whose');
         $this->line('     model has no policy, so an unreviewed stub is a real grant.');
         $this->line('  5. Visit /your-models. Discovery registers it; there is no route to add.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * A panel to put resources in.
+     *
+     * WITHOUT ONE, NOTHING IS ROUTED AND NOTHING SAYS SO. A resource belongs to
+     * a panel; a panel with no resources registers no routes; and an
+     * installation with no panel registers nothing at all. So a fresh install
+     * followed by `make:panel-resource Product --generate` produced a resource
+     * that `PanelManager` knew about, an ability set, a policy - and a 404 at
+     * `/products`, because there was no portal for it to be reachable from.
+     *
+     * Every diagnostic said it was fine. `panel:doctor` was clean, the resource
+     * was registered, and the install output ended with "Visit /your-models" -
+     * which is the failure this whole command exists to avoid: an installer that
+     * finishes successfully and leaves you with nothing that works.
+     *
+     * IT DELEGATES TO `make:panel` rather than writing a second provider
+     * template, so there is one generator and one shape of provider. The
+     * generated file is ordinary readable PHP and is meant to be edited - which
+     * is also why re-running this command leaves an existing one alone.
+     *
+     * `admin`, MOUNTED AT `/`. A first panel at `/admin` would make every
+     * generated resource live at `/admin/products`, which is a decision about
+     * URLs that an installer should not make for an application whose panel may
+     * be the entire application.
+     */
+    private function createDefaultPanel(): void
+    {
+        if (file_exists(app_path('Providers/Panels/AdminPanelProvider.php'))) {
+            $this->components->warn('app/Providers/Panels/AdminPanelProvider.php already exists, skipping.');
+
+            return;
+        }
+
+        $this->callSilently('make:panel', [
+            'id' => 'admin',
+            '--path' => '/',
+        ]);
+
+        /*
+         * `make:panel` discovers `app/Panel/Admin/Resources`; this command and
+         * `make:panel-resource` both use `app/Panel/Resources`. Rather than have
+         * the two generators disagree about where a resource lives - which
+         * discovers nothing, silently - the provider is pointed at the directory
+         * that already exists.
+         */
+        $provider = app_path('Providers/Panels/AdminPanelProvider.php');
+
+        if (file_exists($provider)) {
+            file_put_contents($provider, str_replace(
+                ["Panel/Admin/Resources", "App\\\\Panel\\\\Admin\\\\Resources"],
+                ["Panel/Resources", "App\\\\Panel\\\\Resources"],
+                (string) file_get_contents($provider),
+            ));
+
+            @rmdir(app_path('Panel/Admin/Resources'));
+            @rmdir(app_path('Panel/Admin'));
+        }
+
+        $this->components->info('Created the admin panel at / (app/Providers/Panels/AdminPanelProvider.php).');
     }
 
     /**
@@ -126,21 +193,55 @@ final class InstallCommand extends Command
         }
     }
 
+    /**
+     * A WRAPPER, NOT A RE-EXPORT, and the difference is not stylistic.
+     *
+     * `export { default } from '@panelkit/inertia/pages/X.vue'` is the obvious
+     * way to write this. It type-checks, it builds, the chunk it emits contains
+     * the whole real component - and the page renders NOTHING. An SFC with no
+     * `<template>` block compiles to a component with no render function, so
+     * Vue mounts it and draws an empty comment node. In a production build there
+     * is no warning at all; the only symptom is a blank page under a working
+     * header. It cost an afternoon here, and it would cost a consumer their
+     * first impression of the package.
+     *
+     * `$attrs` CARRIES THE PROPS. Inertia hands page props to this component,
+     * which declares none, so they arrive as attributes and are forwarded
+     * whole - which is also why `inheritAttrs` is off: without it Vue would
+     * apply them a second time to the child's root element, and an object prop
+     * rendered as a DOM attribute becomes `records="[object Object]"`.
+     */
     private function pageFile(string $screen): string
     {
         return <<<VUE
-        <script lang="ts">
+        <script setup lang="ts">
         /*
          * The panel's {$screen} screen, from @panelkit/inertia.
          *
          * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
          * directory, so a screen living in node_modules is one it cannot find.
          *
-         * IT IS ALSO WHERE YOU OVERRIDE IT. Replace the line below with your own
+         * IT IS ALSO WHERE YOU OVERRIDE IT. Point the import at your own
          * component and nothing else has to change.
+         *
+         * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
+         * all, silently, in a production build.
          */
-        export { default } from '@panelkit/inertia/pages/{$screen}.vue'
+        import {$screen} from '@panelkit/inertia/pages/{$screen}.vue'
+
+        defineOptions({ inheritAttrs: false })
         </script>
+
+        <template>
+            <!--
+                The cast is deliberate. `\$attrs` is `Record<string, unknown>`, so
+                the checker cannot see that it holds this screen's props and
+                reports every one of them as missing. There is nothing to verify
+                either way: these values arrive from the server as JSON and are
+                typed where they are USED, inside the packaged component.
+            -->
+            <{$screen} v-bind="(\$attrs as any)" />
+        </template>
 
         VUE;
     }

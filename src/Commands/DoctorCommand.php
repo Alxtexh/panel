@@ -81,14 +81,34 @@ final class DoctorCommand extends Command
 
     private function checkBroadcasting(): void
     {
+        /*
+         * ONLY WHEN THE PANEL ACTUALLY BROADCASTS.
+         *
+         * This used to fire on the broadcast driver alone, and Laravel ships
+         * `log` by default - so a fresh, correctly configured install reported
+         * an ERROR about channel authorisation for a panel whose live driver is
+         * `poll` and which registers no channel anybody can reach. An installer
+         * whose first diagnostic run says "1 problem found" about something that
+         * is not a problem teaches people to ignore the output, which costs more
+         * than the check is worth.
+         *
+         * Under `broadcast` the warning is real and severe, which is why it
+         * survives: the log and null broadcasters never consult the channel
+         * callbacks, so every channel authorises, including for a guest.
+         */
+        if (config('panel.live.driver') !== 'broadcast') {
+            return;
+        }
+
         $driver = config('broadcasting.default');
 
         if ($driver === 'log' || $driver === 'null') {
             $this->problem(
-                "Broadcast driver is [{$driver}], so channel authorisation is inert",
+                "Panel live updates are set to broadcast, but the broadcast driver is [{$driver}]",
                 'The log and null broadcasters never consult the channel callbacks - every channel '
                 .'authorises, including for a guest. A channel written today can be wrong in every '
-                .'way and still appear to work all the way to deploy.',
+                .'way and still appear to work all the way to deploy. Nothing is delivered either, '
+                .'so every list is silently static.',
             );
         }
     }
@@ -190,6 +210,26 @@ final class DoctorCommand extends Command
     private function checkIndexes(TenantContext $context): void
     {
         if ($context->shouldScopeByColumn()) {
+            return;
+        }
+
+        /*
+         * SINGLE-TENANT INSTALLS HAVE NO TENANT COLUMN TO LEAD WITH, and this
+         * check used to fire at them anyway - `shouldScopeByColumn()` is false
+         * for `database` mode AND for `none`, and only the first of those is a
+         * dedicated database.
+         *
+         * The result was a fresh, correctly configured single-tenant install
+         * reporting an ERROR about "a dedicated database" it does not have, and
+         * prescribing `panel:reindex-tenant`, which would do nothing. That is
+         * the exact failure this command exists to prevent, produced by this
+         * command - and it is the first thing anybody runs after installing.
+         *
+         * The package's own migrations carry the index, because they are written
+         * for the shared-database default. Leaving it in place costs a
+         * single-tenant install nothing; it is unused, not wrong.
+         */
+        if ($context->mode() === 'none') {
             return;
         }
 
