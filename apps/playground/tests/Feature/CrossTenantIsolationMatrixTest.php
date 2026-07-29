@@ -431,8 +431,31 @@ final class CrossTenantIsolationMatrixTest extends TestCase
             Router::class => $this->foreignRouter(),
             User::class => $this->foreignUser(),
             AuditEntry::class => $this->foreignAuditEntry(),
+            \PanelKit\Panel\Alerts\Announcement::class => $this->foreignAnnouncement(),
             default => null,
         };
+    }
+
+    /**
+     * A notice written in the OTHER organisation.
+     *
+     * IT EARNS ITS PLACE HERE because an announcement is the most visible
+     * surface in the panel - it renders at the top of the dashboard before
+     * anybody has clicked anything - so a missing scope would not be a subtle
+     * leak, it would be somebody else's internal notice on the front page.
+     *
+     * `forceCreate`, because the model stamps the tenant from context on create
+     * and this fixture deliberately belongs to the other one.
+     */
+    private function foreignAnnouncement(): Model
+    {
+        return \PanelKit\Panel\Alerts\Announcement::query()->forceCreate([
+            'tenant_id' => $this->theirs->id,
+            'title' => 'Their internal notice',
+            'body' => 'Not for this organisation.',
+            'severity' => 'info',
+            'display' => 'banner',
+        ]);
     }
 
     /**

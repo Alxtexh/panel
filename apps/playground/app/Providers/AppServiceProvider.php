@@ -66,6 +66,13 @@ class AppServiceProvider extends ServiceProvider
         // Read-only by construction - see AuditEntryPolicy.
         Gate::policy(\App\Models\AuditEntry::class, \App\Policies\AuditEntryPolicy::class);
 
+        /*
+         | THE ANNOUNCEMENT MODEL LIVES IN THE PACKAGE and its policy here,
+         | because who may address the whole organisation is an application's
+         | decision rather than a framework's.
+         */
+        Gate::policy(\PanelKit\Panel\Alerts\Announcement::class, \App\Policies\AnnouncementPolicy::class);
+
         $this->configureDefaults();
     }
 

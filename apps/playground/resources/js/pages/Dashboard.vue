@@ -30,6 +30,7 @@ import {
 import type { StatSegment } from '@panelkit/ui'
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
+import AnnouncementBanners from '@/components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '@/components/DashboardFilters.vue'
 
 interface Widget {
@@ -94,6 +95,16 @@ interface AppliedFilters {
 }
 
 const props = defineProps<{
+    /** Notices somebody wrote, addressed to everybody here. */
+    announcements: {
+        id: number
+        title: string
+        body: string | null
+        severity: 'info' | 'success' | 'warning' | 'danger'
+        display: 'banner' | 'toast'
+        actionLabel: string | null
+        actionUrl: string | null
+    }[]
     widgets: Widget[]
     charts: Chart[]
     periods: Record<string, string>
@@ -298,6 +309,13 @@ const comparison: Record<string, string> = {
     <Head title="Dashboard" />
 
     <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-3 sm:p-4">
+        <!--
+            ABOVE EVERYTHING, because a notice below the fold is a notice nobody
+            read - which is exactly what the dedicated Announcements page turned
+            out to be.
+        -->
+        <AnnouncementBanners :announcements="announcements" />
+
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="min-w-0">
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Dashboard</h1>

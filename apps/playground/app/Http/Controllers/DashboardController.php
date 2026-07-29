@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use PanelKit\Panel\Alerts\Announcement;
 use PanelKit\Panel\Support\TenantContext;
 use PanelKit\Panel\Widgets\Bucket;
 use PanelKit\Panel\Widgets\ChartWidget;
@@ -113,6 +114,23 @@ final class DashboardController extends Controller
         ));
 
         $props = [
+            /*
+             | ANNOUNCEMENTS AT THE TOP, where people already are.
+             |
+             | They used to have a page of their own, and a page called
+             | Announcements is a page nobody opens - so the notice everybody
+             | needed to read was the one nobody read. Here they are the first
+             | thing on the screen somebody opens anyway, and closing one moves
+             | it into their notifications rather than destroying it.
+             |
+             | NOT DEFERRED. It is one indexed read that usually returns
+             | nothing, and a banner that arrives after the page is a banner
+             | somebody has already scrolled past.
+             */
+            'announcements' => $user === null ? [] : Announcement::activeFor($user->getKey())
+                ->map(fn (Announcement $a): array => $a->toBanner())
+                ->all(),
+
             'widgets' => array_map(static fn (StatWidget $w): array => $w->toArray(), $stats),
             'charts' => array_map(static fn (ChartWidget $c): array => $c->toArray(), $charts),
             'periods' => $this->selectedPeriods($request, $charts),

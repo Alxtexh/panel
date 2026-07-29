@@ -184,6 +184,16 @@ final class PanelRoutes
                 Route::patch('trash/settings', [Controllers\TrashController::class, 'updateSettings'])
                     ->name('trash.settings');
 
+                /*
+                 * CLOSING AN ANNOUNCEMENT BANNER. Per person, and it writes the
+                 * notice into that person's notifications rather than deleting
+                 * it - somebody closes a banner because it is in the way, not
+                 * because they are finished with it.
+                 */
+                Route::post('announcements/{id}/dismiss', [Controllers\AnnouncementController::class, 'dismiss'])
+                    ->whereNumber('id')
+                    ->name('announcements.dismiss');
+
                 foreach (self::extensions() as $extension) {
                     $extension($keys, $panel);
                 }

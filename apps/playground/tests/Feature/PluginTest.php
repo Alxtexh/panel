@@ -54,16 +54,23 @@ final class PluginTest extends TestCase
     /* ------------------------------------------------------- the whole path */
 
     /**
-     * A ROUTE THE APPLICATION NEVER DECLARED, serving a page.
+     * A WHOLE SCREEN THE APPLICATION NEVER DECLARED.
      *
-     * `routes/web.php` has no announcements route and never will: the plugin
-     * registered it, and `PanelRoutes` mounted it inside the panel's group.
+     * `routes/web.php` has no announcements route and never will, and
+     * `panel.discover` does not scan for this class either: the plugin
+     * registered the resource, and the panel routed it exactly like its own.
      */
-    public function test_a_plugins_route_is_reachable(): void
+    public function test_a_plugins_resource_is_reachable(): void
     {
         $response = $this->actingAs($this->user)->get('/announcements')->assertOk();
 
-        $this->assertSame('Announcements', $response->viewData('page')['component']);
+        $this->assertSame('ResourceIndex', $response->viewData('page')['component']);
+    }
+
+    /** With its form, so it is a screen rather than a listing. */
+    public function test_a_plugins_resource_can_be_written_to(): void
+    {
+        $this->actingAs($this->user)->get('/announcements/create')->assertOk();
     }
 
     /**
@@ -75,22 +82,35 @@ final class PluginTest extends TestCase
      * unauthenticated route into a tenant's records is not something anybody
      * spots reviewing a package they did not write.
      */
-    public function test_a_plugins_route_is_behind_the_panels_authentication(): void
+    public function test_a_plugins_screen_is_behind_the_panels_authentication(): void
     {
         $this->get('/announcements')->assertRedirect();
     }
 
     /**
-     * IT LANDS IN EVERY PORTAL IT APPLIES TO, with that portal's prefix.
+     * A RESOURCE BELONGS TO ONE PORTAL, and the plugin says which.
      *
-     * A plugin cannot know what an installation called its portals or where they
-     * are mounted, so a package assembling `/announcements` itself would work in
-     * exactly one installation - the same bug the export download link had, one
-     * layer up.
+     * Its key is a URL segment and an ability name, both globally unique, so the
+     * same class cannot serve two portals - registering it twice would leave the
+     * first portal with a navigation entry whose URL its own route constraint
+     * refuses. A plugin wanting a screen in two portals ships two classes.
      */
-    public function test_a_plugin_installs_into_each_applicable_portal(): void
+    public function test_a_plugins_resource_is_not_mounted_in_other_portals(): void
     {
-        $this->actingAs($this->user)->get('/reseller/announcements')->assertOk();
+        $this->actingAs($this->user)->get('/reseller/announcements')->assertNotFound();
+    }
+
+    /** And registering one class for two panels is refused rather than silently overwritten. */
+    public function test_registering_a_resource_for_two_panels_throws(): void
+    {
+        $manager = app(PanelManager::class);
+
+        $manager->registerResources([PluginOwnedResource::class], 'reseller');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('belongs to one panel');
+
+        $manager->registerResources([PluginOwnedResource::class], 'admin');
     }
 
     /**
@@ -108,26 +128,22 @@ final class PluginTest extends TestCase
         );
     }
 
-    /** The link is in the navigation, prefixed for the portal it belongs to. */
-    public function test_a_plugin_adds_its_own_navigation_entry(): void
+    /**
+     * THE LINK IS IN THE NAVIGATION, without the application listing it.
+     *
+     * A resource places itself, which is the whole reason a plugin registering
+     * one is more useful than a plugin registering a page: it arrives with its
+     * routes, its policy checks, its tenant scope AND its menu entry.
+     */
+    public function test_a_plugins_resource_appears_in_the_navigation(): void
     {
-        $pages = $this->actingAs($this->user)->get('/dashboard')->assertOk()
-            ->viewData('page')['props']['panelPages'];
+        $nav = $this->actingAs($this->user)->get('/dashboard')->assertOk()
+            ->viewData('page')['props']['panelNav'];
 
-        $entry = collect($pages)->firstWhere('title', 'Announcements');
+        $entry = collect($nav)->firstWhere('key', 'announcements');
 
-        $this->assertNotNull($entry, 'The plugin page is not in the navigation.');
+        $this->assertNotNull($entry, 'The plugin resource is not in the navigation.');
         $this->assertSame('/announcements', $entry['href']);
-    }
-
-    public function test_the_navigation_entry_carries_the_portals_prefix(): void
-    {
-        $pages = app(PanelManager::class)->panelPages('reseller');
-
-        $entry = collect($pages)->firstWhere('title', 'Announcements');
-
-        $this->assertNotNull($entry);
-        $this->assertSame('/reseller/announcements', $entry['href']);
     }
 
     /* ------------------------------------------------------- what it cannot do */

@@ -188,14 +188,6 @@ final class Pages
              */
             '/platform/trash' => 'The platform portal links its own bin; this portal links its own.',
             '/reseller/trash' => 'The reseller portal links its own bin; this portal links its own.',
-            /*
-             * A PLUGIN'S SCREEN, IN ANOTHER PORTAL. `AnnouncementsPlugin`
-             * installs into every tenant portal and adds the link to each one's
-             * own navigation - so this is linked, from the reseller sidebar.
-             * This portal lists its own, at `/announcements`, which is why that
-             * path is NOT here.
-             */
-            '/reseller/announcements' => 'Installed by a plugin, and linked from the reseller portal\'s own navigation.',
         ];
     }
 }
