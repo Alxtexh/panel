@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Ai\PanelAssistant;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Streaming\Events\Error;
 use Laravel\Ai\Streaming\Events\TextDelta;
 use Laravel\Ai\Streaming\Events\ToolCall;
@@ -38,6 +40,123 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final class AssistantController extends Controller
 {
+    /**
+     * The conversations this person has had, newest first.
+     *
+     * WITHOUT THIS THE ASSISTANT HAD NO MEMORY A PERSON COULD REACH. Every
+     * conversation was already stored, tenant-scoped and linked to its
+     * participant - and the only way back to one was to not close the drawer.
+     * Somebody who asked a good question on Monday could not find the answer on
+     * Tuesday, which makes the whole feature feel disposable.
+     *
+     * SCOPED TO THE PARTICIPANT AS WELL AS THE TENANT. A chat history is a
+     * transcript of what one person asked about their own customers, in their
+     * own words, including the questions they thought better of - being in the
+     * same organisation is not a reason to read it.
+     *
+     * BOUNDED, because this is a sidebar list rather than an archive. Twenty is
+     * more than anybody scrolls; anything older is found by asking again.
+     */
+    public function conversations(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $conversations = Conversation::query()
+            ->where('participant_type', $user->getMorphClass())
+            ->where('participant_id', $user->getKey())
+            ->latest('updated_at')
+            ->limit(20)
+            ->get(['id', 'title', 'updated_at']);
+
+        return response()->json([
+            'conversations' => $conversations->map(fn (Conversation $c): array => [
+                'id' => (string) $c->id,
+                /*
+                 * A TITLE IS NOT GUARANTEED. The SDK fills one in when it can and
+                 * leaves it null otherwise, and "Untitled" in a list of six is
+                 * six rows nobody can tell apart - so the first thing asked is
+                 * the fallback, which is what somebody actually remembers.
+                 */
+                'title' => $c->title ?: $this->openingLine($c),
+                'at' => $c->updated_at?->diffForHumans(),
+            ])->all(),
+        ]);
+    }
+
+    /**
+     * One conversation, replayed.
+     *
+     * THE TOOL CALLS COME BACK TOO, in the same shape the stream sent them, so a
+     * reopened conversation shows which record was looked up rather than only
+     * the conclusion. An answer without its lookups is one nobody can check.
+     */
+    public function conversation(Request $request, string $id): JsonResponse
+    {
+        $user = $request->user();
+
+        $conversation = Conversation::query()
+            ->where('participant_type', $user->getMorphClass())
+            ->where('participant_id', $user->getKey())
+            ->whereKey($id)
+            ->firstOrFail();
+
+        $turns = [];
+
+        foreach ($conversation->messages()->oldest('created_at')->get() as $message) {
+            // System and tool rows are transport, not conversation: replaying
+            // them would show somebody the prompt rather than their own chat.
+            if (! in_array($message->role, ['user', 'assistant'], true)) {
+                continue;
+            }
+
+            $text = trim((string) $message->content);
+
+            $tools = array_values(array_filter(array_map(
+                static fn (mixed $call): ?string => is_array($call) ? ($call['name'] ?? null) : null,
+                (array) ($message->tool_calls ?? []),
+            )));
+
+            if ($text === '' && $tools === []) {
+                continue;
+            }
+
+            $turns[] = [
+                'role' => $message->role === 'user' ? 'you' : 'assistant',
+                'text' => $text,
+                'tools' => $tools,
+            ];
+        }
+
+        return response()->json([
+            'id' => (string) $conversation->id,
+            'title' => $conversation->title ?: $this->openingLine($conversation),
+            'turns' => $turns,
+        ]);
+    }
+
+    /**
+     * The first thing somebody asked, as a title.
+     *
+     * TRUNCATED RATHER THAN WRAPPED: this goes in a narrow list, and a title
+     * that takes three lines makes the list unreadable for the sake of a
+     * sentence nobody needs in full.
+     */
+    private function openingLine(Conversation $conversation): string
+    {
+        $first = $conversation->messages()
+            ->where('role', 'user')
+            ->oldest('created_at')
+            ->value('content');
+
+        $first = trim((string) $first);
+
+        if ($first === '') {
+            return 'New conversation';
+        }
+
+        return mb_strlen($first) > 48 ? mb_substr($first, 0, 48).'…' : $first;
+    }
+
     /**
      * Stream one reply.
      *

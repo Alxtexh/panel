@@ -7,6 +7,8 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -68,6 +70,144 @@ final class AssistantStreamTest extends TestCase
     public function test_it_is_behind_authentication(): void
     {
         $this->post('/apps/assistant/stream', ['message' => 'hello'])->assertRedirect();
+    }
+
+    /* ------------------------------------------------------------- history */
+
+    /**
+     * THE CONVERSATIONS ARE REACHABLE, which they were not.
+     *
+     * Every one was stored, tenant-scoped and linked to its participant, and the
+     * only route back was to not close the drawer - so a good answer from Monday
+     * was gone on Tuesday. That is not a missing feature anybody files; it just
+     * makes the assistant feel disposable.
+     */
+    public function test_a_person_can_list_their_own_conversations(): void
+    {
+        $id = (string) Str::uuid();
+
+        DB::table('agent_conversations')->insert([
+            'id' => $id,
+            'participant_type' => $this->user->getMorphClass(),
+            'participant_id' => $this->user->getKey(),
+            'tenant_id' => $this->user->tenant_id,
+            'title' => 'Overdue accounts',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($this->user)
+            ->getJson('/apps/assistant/conversations')
+            ->assertOk()
+            ->assertJsonPath('conversations.0.id', $id)
+            ->assertJsonPath('conversations.0.title', 'Overdue accounts');
+    }
+
+    /**
+     * AND NOBODY ELSE'S, even a colleague in the same organisation.
+     *
+     * A chat history is a transcript of what one person asked about their own
+     * customers, in their own words, including the questions they thought better
+     * of. Sharing an organisation is not a reason to read it.
+     */
+    public function test_a_colleagues_conversations_are_not_listed(): void
+    {
+        $colleague = User::factory()->create([
+            'tenant_id' => $this->user->tenant_id,
+            'email_verified_at' => now(),
+        ]);
+
+        $id = (string) Str::uuid();
+
+        DB::table('agent_conversations')->insert([
+            'id' => $id,
+            'participant_type' => $colleague->getMorphClass(),
+            'participant_id' => $colleague->getKey(),
+            'tenant_id' => $colleague->tenant_id,
+            'title' => 'Theirs',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($this->user)
+            ->getJson('/apps/assistant/conversations')
+            ->assertOk()
+            ->assertJsonCount(0, 'conversations');
+
+        // And not by asking for it directly, which is the half that matters.
+        $this->actingAs($this->user)
+            ->getJson("/apps/assistant/conversations/{$id}")
+            ->assertNotFound();
+    }
+
+    /** Replaying a conversation returns the turns, with their tool calls. */
+    public function test_a_conversation_replays_with_its_tool_calls(): void
+    {
+        $id = (string) Str::uuid();
+
+        DB::table('agent_conversations')->insert([
+            'id' => $id,
+            'participant_type' => $this->user->getMorphClass(),
+            'participant_id' => $this->user->getKey(),
+            'tenant_id' => $this->user->tenant_id,
+            // The column is NOT NULL, so an untitled conversation is an empty
+            // string rather than null - which is exactly the case the opening
+            // question stands in for.
+            'title' => '',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('agent_conversation_messages')->insert([
+            [
+                'id' => (string) Str::uuid(),
+                'conversation_id' => $id,
+                'participant_type' => $this->user->getMorphClass(),
+                'participant_id' => $this->user->getKey(),
+                'tenant_id' => $this->user->tenant_id,
+                'agent' => 'panel',
+                'role' => 'user',
+                'content' => 'Is Grace active?',
+                // Every JSON column on this table is NOT NULL, so an empty
+                // array is what "none" looks like.
+                'attachments' => '[]',
+                'tool_calls' => '[]',
+                'tool_results' => '[]',
+                'usage' => '[]',
+                'meta' => '[]',
+                'created_at' => now()->subMinute(),
+                'updated_at' => now()->subMinute(),
+            ],
+            [
+                'id' => (string) Str::uuid(),
+                'conversation_id' => $id,
+                'participant_type' => $this->user->getMorphClass(),
+                'participant_id' => $this->user->getKey(),
+                'tenant_id' => $this->user->tenant_id,
+                'agent' => 'panel',
+                'role' => 'assistant',
+                'content' => 'Yes, her line is active.',
+                'attachments' => '[]',
+                'tool_calls' => json_encode([['name' => 'find_subscriber']]),
+                'tool_results' => '[]',
+                'usage' => '[]',
+                'meta' => '[]',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson("/apps/assistant/conversations/{$id}")
+            ->assertOk();
+
+        $response->assertJsonPath('turns.0.role', 'you');
+        $response->assertJsonPath('turns.1.role', 'assistant');
+        $response->assertJsonPath('turns.1.tools.0', 'find_subscriber');
+
+        // No title: the opening question stands in, because "Untitled" in a list
+        // of six is six rows nobody can tell apart.
+        $response->assertJsonPath('title', 'Is Grace active?');
     }
 
     /**

@@ -5,33 +5,44 @@
  * IT WAS A PAGE AND THAT WAS THE WRONG SHAPE. Asking "is Grace's line active?"
  * is something you do WHILE looking at a list, a form, an invoice - and a
  * dedicated page answers it by throwing that context away. You navigate off the
- * screen you were working on, get an answer, and navigate back to find your
- * filters, your scroll position and your half-typed form gone. The question is
- * an aside; the page made it an errand.
+ * screen you were working on, get an answer, and come back to find your filters,
+ * your scroll position and your half-typed form gone.
  *
- * SO IT OVERLAYS RATHER THAN REPLACES. The panel underneath keeps its state,
- * because nothing about it unmounted - the drawer is a sibling of the layout,
- * not a route. Close it and you are exactly where you were.
+ * THE HISTORY IS THE OTHER HALF, and its absence made the whole thing feel
+ * disposable. Every conversation was already stored, tenant-scoped and linked to
+ * the person who had it - and the only route back to one was to not close the
+ * drawer. Somebody who got a good answer on Monday could not find it on Tuesday.
+ * The list is one panel over, and switching to a thread replays it with its tool
+ * calls intact, because an answer without its lookups is one nobody can check.
  *
- * THE TRANSCRIPT SURVIVES CLOSING, deliberately. Somebody asks a question,
- * closes the drawer to go and look at the record it named, and opens it again to
- * ask the follow-up - and a conversation that reset itself in between would make
- * the second question unanswerable ("that one" refers to nothing). The state
- * lives in the component, and the component stays mounted for the session.
+ * THE TRANSCRIPT SURVIVES CLOSING. Somebody asks a question, closes the drawer
+ * to look at the record it named, and opens it again to ask the follow-up - and
+ * a conversation that reset in between would make the second question
+ * unanswerable ("that one" refers to nothing).
  *
- * IT IS REACHABLE FROM EVERY SCREEN, which is the other half of the point: it is
- * in the topbar beside search, not in a menu somebody has to remember is there.
- *
- * The streaming below is unchanged from the page it replaces - `fetch` and a
- * reader rather than `EventSource`, because the browser's own SSE client can
- * only issue a GET and this posts a message body. Tool calls are shown as they
- * happen: seeing which record was fetched is what makes a wrong answer
+ * ON THE LOOK: messages are sided and tinted rather than stacked in one column,
+ * because the first thing you do returning to a thread is find where you last
+ * spoke. Tool calls are inline chips above the answer, in the order they
+ * happened - seeing WHICH record was fetched is what makes a wrong answer
  * catchable, and once the conclusion is on screen nobody re-checks the premise.
+ *
+ * The streaming is `fetch` and a reader rather than `EventSource`, because the
+ * browser's own SSE client can only issue a GET and this posts a message body.
  */
 import { Button } from '@/components/ui/button'
 import { PkSkeleton } from '@panelkit/ui'
-import { MessageSquarePlus, Send, Sparkles, Square, TriangleAlert, Wrench, X } from '@lucide/vue'
-import { nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import {
+    ArrowLeft,
+    History,
+    MessageSquarePlus,
+    Send,
+    Sparkles,
+    Square,
+    TriangleAlert,
+    Wrench,
+    X,
+} from '@lucide/vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 
 interface Turn {
     role: 'you' | 'assistant'
@@ -41,10 +52,19 @@ interface Turn {
     error?: string
 }
 
+interface PastConversation {
+    id: string
+    title: string
+    at: string | null
+}
+
 const open = ref(false)
+const showHistory = ref(false)
 const turns = ref<Turn[]>([])
 const draft = ref('')
 const streaming = ref(false)
+const past = ref<PastConversation[]>([])
+const loadingHistory = ref(false)
 
 /**
  * Carried, not remembered server-side.
@@ -67,9 +87,11 @@ const input = useTemplateRef<HTMLTextAreaElement>('input')
  */
 let controller: AbortController | null = null
 
+const empty = computed(() => turns.value.length === 0)
+
 async function scrollDown() {
     await nextTick()
-    transcript.value?.scrollTo({ top: transcript.value.scrollHeight })
+    transcript.value?.scrollTo({ top: transcript.value.scrollHeight, behavior: 'smooth' })
 }
 
 function stop() {
@@ -84,11 +106,62 @@ function reset() {
     turns.value = []
     conversation.value = null
     draft.value = ''
-    input.value?.focus()
+    showHistory.value = false
+    nextTick(() => input.value?.focus())
 }
 
 function close() {
     open.value = false
+}
+
+/* ------------------------------------------------------------------ history */
+
+async function loadHistory() {
+    showHistory.value = true
+    loadingHistory.value = true
+
+    try {
+        const response = await fetch('/apps/assistant/conversations', {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+
+        if (!response.ok) throw new Error('history')
+
+        past.value = (await response.json()).conversations ?? []
+    } catch {
+        // An unreachable history is not worth an error dialog over the top of a
+        // working chat; the list simply stays empty and says so.
+        past.value = []
+    } finally {
+        loadingHistory.value = false
+    }
+}
+
+async function openConversation(id: string) {
+    stop()
+    loadingHistory.value = true
+
+    try {
+        const response = await fetch(`/apps/assistant/conversations/${id}`, {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+
+        if (!response.ok) throw new Error('conversation')
+
+        const payload = await response.json()
+
+        turns.value = payload.turns ?? []
+        conversation.value = payload.id
+        showHistory.value = false
+
+        await scrollDown()
+    } catch {
+        showHistory.value = false
+    } finally {
+        loadingHistory.value = false
+    }
 }
 
 /*
@@ -104,15 +177,23 @@ watch(open, async (isOpen) => {
     await scrollDown()
 })
 
-/** Escape closes it, as it does every other overlay in the panel. */
+/** Escape closes the history first, then the drawer - innermost thing first. */
 function onKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && open.value) {
-        close()
+    if (event.key !== 'Escape' || !open.value) return
+
+    if (showHistory.value) {
+        showHistory.value = false
+
+        return
     }
+
+    close()
 }
 
 onMounted(() => window.addEventListener('keydown', onKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+
+/* ------------------------------------------------------------------ sending */
 
 async function send() {
     const message = draft.value.trim()
@@ -122,6 +203,7 @@ async function send() {
     }
 
     draft.value = ''
+    showHistory.value = false
     turns.value.push({ role: 'you', text: message, tools: [] })
 
     const reply: Turn = { role: 'assistant', text: '', tools: [] }
@@ -209,9 +291,9 @@ async function send() {
 const toolLabel = (name: string) => name.replace(/[-_]/g, ' ')
 
 const suggestions = [
-    "Is Grace Wanjiku's line active?",
-    'Who expires this week?',
-    'How do exports work?',
+    { text: "Is Grace Wanjiku's line active?", hint: 'Looks a subscriber up' },
+    { text: 'Who expires this week?', hint: 'Searches your own records' },
+    { text: 'How do exports work?', hint: 'Answers from the help centre' },
 ]
 
 function ask(question: string) {
@@ -246,11 +328,9 @@ function ask(question: string) {
             enter-from-class="opacity-0"
             leave-to-class="opacity-0"
         >
-            <!-- The scrim is dismissal, not decoration: clicking away is how
-                 people close a thing that appeared over their work. -->
             <div
                 v-if="open"
-                class="fixed inset-0 z-50 bg-black/20 backdrop-blur-[1px]"
+                class="fixed inset-0 z-50 bg-black/30 backdrop-blur-[2px]"
                 @click="close"
             />
         </Transition>
@@ -263,26 +343,49 @@ function ask(question: string) {
         >
             <aside
                 v-if="open"
-                class="bg-background fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l shadow-xl"
+                class="bg-background fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col shadow-2xl sm:inset-y-2 sm:right-2 sm:rounded-xl sm:border"
                 role="dialog"
                 aria-label="Assistant"
             >
-                <header class="flex items-start justify-between gap-3 border-b px-4 py-3">
-                    <div class="min-w-0">
-                        <h2 class="flex items-center gap-2 text-sm font-semibold">
-                            <Sparkles class="text-primary size-4" />
-                            Assistant
-                        </h2>
-                        <p class="text-muted-foreground mt-0.5 text-xs">
-                            Subscribers, and how the panel works. Suspending pauses for your
-                            approval.
-                        </p>
+                <!--
+                    THE HEADER CARRIES THE TINT, not the whole panel. A drawer
+                    that is entirely accented competes with the page it sits over;
+                    a band at the top says which surface you are on and leaves the
+                    conversation to read as text.
+                -->
+                <header
+                    class="from-primary/10 relative flex items-start justify-between gap-3 rounded-t-xl bg-gradient-to-br to-transparent px-4 py-3.5"
+                >
+                    <div class="flex min-w-0 items-start gap-2.5">
+                        <span
+                            class="bg-primary/15 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg"
+                        >
+                            <Sparkles class="size-4" />
+                        </span>
+
+                        <div class="min-w-0">
+                            <h2 class="text-sm font-semibold">Assistant</h2>
+                            <p class="text-muted-foreground mt-0.5 text-xs leading-snug">
+                                Subscribers, and how the panel works. Suspending pauses for your
+                                approval.
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="flex shrink-0 items-center gap-1">
+                    <div class="flex shrink-0 items-center gap-0.5">
                         <button
                             type="button"
-                            class="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1.5 transition-colors"
+                            class="text-muted-foreground hover:bg-background/70 hover:text-foreground rounded-md p-1.5 transition-colors"
+                            :class="showHistory ? 'bg-background/70 text-foreground' : ''"
+                            aria-label="Previous conversations"
+                            title="Previous conversations"
+                            @click="showHistory ? (showHistory = false) : loadHistory()"
+                        >
+                            <History class="size-4" />
+                        </button>
+                        <button
+                            type="button"
+                            class="text-muted-foreground hover:bg-background/70 hover:text-foreground rounded-md p-1.5 transition-colors"
                             aria-label="New conversation"
                             title="New conversation"
                             @click="reset"
@@ -291,7 +394,7 @@ function ask(question: string) {
                         </button>
                         <button
                             type="button"
-                            class="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1.5 transition-colors"
+                            class="text-muted-foreground hover:bg-background/70 hover:text-foreground rounded-md p-1.5 transition-colors"
                             aria-label="Close"
                             @click="close"
                         >
@@ -300,97 +403,176 @@ function ask(question: string) {
                     </div>
                 </header>
 
-                <div ref="transcript" class="flex-1 overflow-y-auto">
-                    <!--
-                        THE EMPTY STATE OFFERS QUESTIONS RATHER THAN A PROMPT.
-                        "Ask me anything" tells somebody nothing about what this
-                        one can do, and the first question people try is usually
-                        the one it cannot answer.
-                    -->
-                    <div v-if="!turns.length" class="flex flex-col gap-2 p-4">
-                        <p class="text-muted-foreground text-xs">Try:</p>
+                <!-- ------------------------------------------------ history -->
+
+                <div v-if="showHistory" class="flex min-h-0 flex-1 flex-col">
+                    <div class="flex items-center gap-2 border-y px-4 py-2">
                         <button
-                            v-for="s in suggestions"
-                            :key="s"
                             type="button"
-                            class="hover:bg-accent rounded-md border px-3 py-2 text-left text-sm transition-colors"
-                            @click="ask(s)"
+                            class="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs"
+                            @click="showHistory = false"
                         >
-                            {{ s }}
+                            <ArrowLeft class="size-3.5" />
+                            Back to the conversation
                         </button>
                     </div>
 
-                    <div
-                        v-for="(turn, i) in turns"
-                        :key="i"
-                        class="border-b px-4 py-3 last:border-b-0"
-                        :class="turn.role === 'you' ? 'bg-muted/30' : ''"
-                    >
-                        <p class="text-muted-foreground mb-1 text-xs font-medium">
-                            {{ turn.role === 'you' ? 'You' : 'Assistant' }}
-                        </p>
-
-                        <!--
-                            THE TOOL CALLS COME FIRST, above the answer, because
-                            that is the order they happened in and because seeing
-                            which record was fetched is what makes a wrong answer
-                            catchable.
-                        -->
-                        <p
-                            v-for="(tool, t) in turn.tools"
-                            :key="t"
-                            class="text-muted-foreground mb-1 flex items-center gap-1.5 text-xs"
-                        >
-                            <Wrench class="size-3" />
-                            {{ toolLabel(tool) }}
-                        </p>
-
-                        <p v-if="turn.text" class="text-sm whitespace-pre-wrap">{{ turn.text }}</p>
-
-                        <!-- Only while nothing has arrived yet: once text is
-                             streaming, the growing text is its own progress. -->
+                    <div class="flex-1 overflow-y-auto p-2">
                         <PkSkeleton
-                            v-else-if="streaming && i === turns.length - 1 && !turn.error"
+                            v-if="loadingHistory"
                             variant="text"
-                            :count="2"
-                            label="The assistant is answering"
-                            class="mt-1"
+                            :count="4"
+                            label="Loading your conversations"
+                            class="p-2"
                         />
 
                         <p
-                            v-if="turn.error"
-                            class="text-destructive mt-1 flex items-start gap-1.5 text-sm"
+                            v-else-if="past.length === 0"
+                            class="text-muted-foreground p-4 text-center text-sm"
                         >
-                            <TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
-                            {{ turn.error }}
+                            Nothing here yet. Conversations appear once you have had one.
                         </p>
+
+                        <button
+                            v-for="item in past"
+                            :key="item.id"
+                            type="button"
+                            class="hover:bg-accent flex w-full flex-col gap-0.5 rounded-lg px-3 py-2 text-left transition-colors"
+                            :class="conversation === item.id ? 'bg-accent' : ''"
+                            @click="openConversation(item.id)"
+                        >
+                            <span class="truncate text-sm">{{ item.title }}</span>
+                            <span v-if="item.at" class="text-muted-foreground text-xs">
+                                {{ item.at }}
+                            </span>
+                        </button>
                     </div>
                 </div>
 
-                <form class="flex items-end gap-2 border-t p-3" @submit.prevent="send">
-                    <textarea
-                        ref="input"
-                        v-model="draft"
-                        rows="2"
-                        placeholder="Ask about a subscriber…"
-                        class="border-input bg-background flex-1 resize-none rounded-md border px-3 py-2 text-sm"
-                        :disabled="streaming"
-                        @keydown.enter.exact.prevent="send"
-                    />
+                <!-- --------------------------------------------- transcript -->
 
-                    <!-- Stop replaces Send while streaming rather than sitting
-                         beside it: two buttons where only one can do anything is
-                         a choice nobody has to make. -->
-                    <Button v-if="streaming" type="button" variant="outline" size="sm" @click="stop">
-                        <Square class="size-4" />
-                        Stop
-                    </Button>
+                <template v-else>
+                    <div ref="transcript" class="flex-1 overflow-y-auto px-4 py-4">
+                        <!--
+                            THE EMPTY STATE OFFERS QUESTIONS RATHER THAN A PROMPT.
+                            "Ask me anything" says nothing about what this one can
+                            do, and the first question people try is usually the
+                            one it cannot answer. Each card says what it will do.
+                        -->
+                        <div v-if="empty" class="flex flex-col gap-4 py-6">
+                            <div class="flex flex-col items-center gap-1.5 text-center">
+                                <span
+                                    class="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-xl"
+                                >
+                                    <Sparkles class="size-5" />
+                                </span>
+                                <p class="text-sm font-medium">What would you like to know?</p>
+                                <p class="text-muted-foreground text-xs">
+                                    It can look records up and cite the help centre.
+                                </p>
+                            </div>
 
-                    <Button v-else type="submit" size="sm" :disabled="!draft.trim()">
-                        <Send class="size-4" />
-                        Send
-                    </Button>
-                </form>
+                            <div class="flex flex-col gap-1.5">
+                                <button
+                                    v-for="s in suggestions"
+                                    :key="s.text"
+                                    type="button"
+                                    class="hover:border-primary/40 hover:bg-accent/50 group flex flex-col gap-0.5 rounded-lg border px-3 py-2 text-left transition-colors"
+                                    @click="ask(s.text)"
+                                >
+                                    <span class="text-sm">{{ s.text }}</span>
+                                    <span class="text-muted-foreground text-xs">{{ s.hint }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-else class="flex flex-col gap-4">
+                            <div
+                                v-for="(turn, i) in turns"
+                                :key="i"
+                                class="flex flex-col gap-1"
+                                :class="turn.role === 'you' ? 'items-end' : 'items-start'"
+                            >
+                                <!--
+                                    TOOL CALLS COME FIRST, above the answer,
+                                    because that is the order they happened in
+                                    and because seeing which record was fetched is
+                                    what makes a wrong answer catchable.
+                                -->
+                                <div
+                                    v-if="turn.tools.length"
+                                    class="mb-0.5 flex flex-wrap gap-1"
+                                >
+                                    <span
+                                        v-for="(tool, t) in turn.tools"
+                                        :key="t"
+                                        class="bg-muted text-muted-foreground flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px]"
+                                    >
+                                        <Wrench class="size-3" />
+                                        {{ toolLabel(tool) }}
+                                    </span>
+                                </div>
+
+                                <div
+                                    class="max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap"
+                                    :class="
+                                        turn.role === 'you'
+                                            ? 'bg-primary text-primary-foreground rounded-br-sm'
+                                            : 'bg-muted rounded-bl-sm'
+                                    "
+                                >
+                                    <template v-if="turn.text">{{ turn.text }}</template>
+
+                                    <!-- Only while nothing has arrived: once text
+                                         is streaming it is its own progress. -->
+                                    <PkSkeleton
+                                        v-else-if="streaming && i === turns.length - 1 && !turn.error"
+                                        variant="text"
+                                        :count="2"
+                                        label="The assistant is answering"
+                                    />
+
+                                    <span v-else-if="turn.error" class="sr-only">Failed</span>
+                                </div>
+
+                                <p
+                                    v-if="turn.error"
+                                    class="text-destructive flex items-start gap-1.5 text-xs"
+                                >
+                                    <TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
+                                    {{ turn.error }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form class="flex items-end gap-2 border-t p-3" @submit.prevent="send">
+                        <div class="bg-muted/40 focus-within:border-primary/40 flex flex-1 items-end rounded-xl border px-3 py-2 transition-colors">
+                            <textarea
+                                ref="input"
+                                v-model="draft"
+                                rows="1"
+                                placeholder="Ask about a subscriber…"
+                                class="max-h-32 min-h-6 flex-1 resize-none bg-transparent text-sm outline-none"
+                                :disabled="streaming"
+                                @keydown.enter.exact.prevent="send"
+                            />
+                        </div>
+
+                        <!-- Stop replaces Send while streaming rather than
+                             sitting beside it: two buttons where only one can do
+                             anything is a choice nobody has to make. -->
+                        <Button v-if="streaming" type="button" variant="outline" size="icon" @click="stop">
+                            <Square class="size-4" />
+                            <span class="sr-only">Stop</span>
+                        </Button>
+
+                        <Button v-else type="submit" size="icon" :disabled="!draft.trim()">
+                            <Send class="size-4" />
+                            <span class="sr-only">Send</span>
+                        </Button>
+                    </form>
+                </template>
             </aside>
         </Transition>
     </Teleport>

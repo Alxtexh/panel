@@ -339,6 +339,19 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
      | is an invoice. Twenty a minute is far above anybody asking questions in
      | good faith and far below anything expensive.
      */
+    /*
+     | THE HISTORY. Conversations were stored, tenant-scoped and unreachable -
+     | the only way back to one was to not close the drawer, so a good answer
+     | from Monday was gone by Tuesday. Both endpoints are scoped to the
+     | PARTICIPANT as well as the tenant: being in the same organisation is not a
+     | reason to read what a colleague asked about their own customers.
+     */
+    Route::get('apps/assistant/conversations', [AssistantController::class, 'conversations'])
+        ->name('apps.assistant.conversations');
+
+    Route::get('apps/assistant/conversations/{id}', [AssistantController::class, 'conversation'])
+        ->name('apps.assistant.conversation');
+
     Route::post('apps/assistant/stream', [AssistantController::class, 'stream'])
         ->middleware('throttle:20,1')
         ->name('apps.assistant.stream');
