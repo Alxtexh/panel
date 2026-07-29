@@ -60,6 +60,25 @@ no theme, import the one the UI package ships:
 **Toasts.** Successful actions report through `vue-sonner`. Mount `<Toaster />`
 once in your layout, or nothing confirms a save.
 
+## If you install it by path
+
+Consuming this package from a local checkout rather than from npm — a `file:`
+dependency, a workspace link — means Node resolves its imports from the
+package's own directory, so it finds its own copy of `vue` and
+`@inertiajs/vue3` instead of yours. Two Vue instances break reactivity in ways
+that look like random components not updating; two Inertia instances mean the
+packaged pages call `usePage` against a provider your `createInertiaApp` never
+installed, which fails server-side rendering with an error naming an internal.
+
+```ts
+// vite.config.ts
+resolve: {
+    dedupe: ['vue', '@inertiajs/vue3'],
+},
+```
+
+Installing from npm hoists one copy of each and needs none of this.
+
 ## What it does not need
 
 No shadcn install, no `reka-ui`, no `class-variance-authority`. The two primitives

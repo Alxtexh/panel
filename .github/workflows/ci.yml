@@ -143,6 +143,12 @@ jobs:
       # resolves every import for real and runs the SFC compiler over every
       # component; the type checker does neither. An import of a file that does
       # not exist type-checks clean and fails here.
+      #
+      # `build:ssr` RATHER THAN `build`, because it builds both bundles. The
+      # server bundle resolves imports through Node rather than the browser
+      # field, which is where a duplicated dependency surfaces - the packaged
+      # screens once resolved their own copy of `@inertiajs/vue3` and rendered
+      # fine in the browser while server rendering died on an internal.
       - name: Build
         working-directory: apps/playground
-        run: npm run build
+        run: npm run build:ssr

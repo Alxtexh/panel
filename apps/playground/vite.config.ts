@@ -32,7 +32,20 @@ export default defineConfig({
         // rather than the app's. Two Vue instances break reactivity in ways
         // that look like random components silently not updating. Dedupe
         // forces a single instance.
-        dedupe: ['vue'],
+        //
+        // `@inertiajs/vue3` IS HERE FOR THE SAME REASON AND WAS MISSING IT.
+        // The panel screens moved into packages/inertia, which is symlinked and
+        // carries its own copy - so the packaged pages called `usePage` and
+        // `useForm` against a DIFFERENT Inertia instance from the one
+        // `createInertiaApp` installed. Server-side rendering died on it with
+        // "Cannot read properties of undefined (reading 'createProvider')",
+        // which names an internal and points at nothing.
+        //
+        // A consumer installing both packages from npm gets one copy hoisted
+        // and never sees this. It is a property of consuming them by path, which
+        // is what this repository does and what anybody developing against a
+        // local checkout will do.
+        dedupe: ['vue', '@inertiajs/vue3'],
     },
     plugins: [
         laravel({
