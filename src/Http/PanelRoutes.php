@@ -169,6 +169,21 @@ final class PanelRoutes
                 foreach (self::extensions() as $extension) {
                     $extension($keys, $panel);
                 }
+
+                /*
+                 * PLUGIN ROUTES, INSIDE THE PANEL'S GROUP.
+                 *
+                 * That placement is the whole value: a plugin route gets the
+                 * portal's prefix, middleware, guard and route-name prefix
+                 * already applied, so it is authenticated and tenant-scoped
+                 * exactly like a built-in one. A plugin registering routes from
+                 * its own service provider would get none of that - and an
+                 * unauthenticated route into a tenant's records is not something
+                 * anybody spots while reviewing a package they did not write.
+                 */
+                foreach (app(PanelManager::class)->pluginRoutes($panel->id) as $routes) {
+                    $routes($panel);
+                }
             });
     }
 
