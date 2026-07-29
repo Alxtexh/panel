@@ -38,6 +38,7 @@
         "@inertiajs/vue3": "^3.0.0",
         "@laravel/passkeys": "^0.2.0",
         "@lucide/vue": "^1.17.0",
+        "@panelkit/inertia": "file:../../packages/inertia",
         "@panelkit/ui": "file:../../packages/ui",
         "@scalar/api-reference": "^1.63.0",
         "@vueuse/core": "^12.8.2",

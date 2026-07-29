@@ -50,10 +50,17 @@ more rows, because it was never about the data.
 
 ```bash
 composer require panelkit/panel
+npm install @panelkit/ui @panelkit/inertia
 php artisan panel:install
-npm install && npm run build
+npm run build
 php artisan make:panel-resource Customer --generate
 ```
+
+Three packages, and all three are required. `panelkit/panel` answers the requests,
+`@panelkit/inertia` holds the screens it renders, and `@panelkit/ui` draws the table
+and the form. `panel:install` writes one page file per screen into
+`resources/js/pages`, because Inertia resolves page names by globbing that directory
+and cannot see into `node_modules`.
 
 Then visit `/customers`. Discovery registers the resource; there is no route to
 add and no registration line to write.

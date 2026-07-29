@@ -17,9 +17,9 @@
  * is given and has no idea which fields were sensitive, which is the correct
  * arrangement: a client that could un-redact would mean the value had travelled.
  */
-import { Button } from '@/components/ui/button'
+import { PkButton as Button } from '@panelkit/ui'
 import { History } from '@lucide/vue'
-import { useTranslations } from '@/composables/useTranslations'
+import { useTranslations } from '../composables/useTranslations'
 import { ref } from 'vue'
 
 const props = defineProps<{ resource: string; recordId: string | number }>()

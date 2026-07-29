@@ -71,6 +71,20 @@ export { default as PkFileUpload } from './components/Form/PkFileUpload.vue'
 export { default as PkDropdown } from './components/primitives/PkDropdown.vue'
 export { default as PkMultiSelect } from './components/primitives/PkMultiSelect.vue'
 
+/*
+ * A BUTTON AND A BADGE, WITH NOTHING BEHIND THEM.
+ *
+ * These are shadcn's variants and shadcn's classes, reimplemented without
+ * `reka-ui`, `class-variance-authority` or an application-local `cn()`. The
+ * packaged resource screens use them, and those screens have to render in an
+ * application that has never run shadcn's installer - where the alternative is a
+ * missing import at runtime, in the browser, in a file the consumer did not
+ * write. An application that DOES have shadcn sees its own button; one that does
+ * not sees a button.
+ */
+export { default as PkButton } from './components/primitives/PkButton.vue'
+export { default as PkBadge } from './components/primitives/PkBadge.vue'
+
 export { useColumnVisibility } from './composables/useColumnVisibility'
 export { useLiveUpdates } from './composables/useLiveUpdates'
 export {
