@@ -62,7 +62,7 @@ final class Guide
             ],
             [
                 'title' => 'Extending',
-                'pages' => ['custom-fields', 'plugins', 'testing'],
+                'pages' => ['custom-fields', 'plugins', 'testing', 'blueprint'],
             ],
             [
                 'title' => 'Running it',
@@ -82,7 +82,6 @@ final class Guide
         return array_key_exists($slug, self::pages());
     }
 
-    /** @return array{slug: string, title: string, summary: string, body: list<string>, blocks: list<array{kind: string, code: string}>, warning: string|null} */
     public static function page(string $slug): array
     {
         $page = self::pages()[$slug];
@@ -91,10 +90,75 @@ final class Guide
             'slug' => $slug,
             'title' => $page['title'],
             'summary' => $page['summary'],
-            'body' => $page['body'],
+            'body' => array_map([self::class, 'paragraph'], $page['body']),
             'blocks' => $page['blocks'] ?? [],
-            'warning' => $page['warning'] ?? null,
+            'warning' => isset($page['warning']) ? self::segments($page['warning']) : null,
         ];
+    }
+
+    /**
+     * One paragraph, split into a lead and the rest.
+     *
+     * THE PROSE WAS UNREADABLE AS A WALL. Every paragraph here opens with a
+     * capitalised claim - "THE RULES ARE WRITTEN ONCE" - and then explains it,
+     * which is a good way to write and a terrible way to render if the claim is
+     * just more sentence. Pulled out, it becomes the thing you scan for; the
+     * explanation is what you read once you have found the right paragraph.
+     *
+     * SPLIT HERE RATHER THAN WRITTEN AS TWO FIELDS, because the shape is already
+     * in the prose and asking every author to restate it is how the two drift.
+     *
+     * @return array{lead: list<array{type: string, value: string}>|null, text: list<array{type: string, value: string}>}
+     */
+    private static function paragraph(string $body): array
+    {
+        /*
+         * AT LEAST TWO CAPITALISED WORDS, ending at a full stop, a comma or a
+         * dash. One word is an acronym in an ordinary sentence - "The API is" -
+         * and hoisting that would put "THE API" on its own line for no reason.
+         */
+        if (preg_match('/^([A-Z][A-Z0-9\'`\-]*(?:\s+[A-Z][A-Z0-9\'`\-]*)+)([.,]|\s-)\s+(.*)$/su', $body, $m) === 1) {
+            return [
+                'lead' => self::segments(rtrim($m[1], ' -')),
+                'text' => self::segments(trim($m[3])),
+            ];
+        }
+
+        return ['lead' => null, 'text' => self::segments($body)];
+    }
+
+    /**
+     * Text split into prose and code spans.
+     *
+     * DONE ON THE SERVER, AS DATA, rather than by handing the client a string to
+     * interpret. Rendering markdown in the browser means either a parser in the
+     * bundle or `v-html`, and `v-html` over content that will one day be edited
+     * by somebody is how documentation becomes an injection point.
+     *
+     * @return list<array{type: string, value: string}>
+     */
+    private static function segments(string $text): array
+    {
+        /*
+         * NO `PREG_SPLIT_NO_EMPTY`, and that flag is the trap. The alternation
+         * below depends on POSITION - even is prose, odd is code - and dropping
+         * empty pieces renumbers everything after the first one, so a paragraph
+         * starting with a code span came back with its prose marked as code and
+         * its code as prose. Empty pieces are filtered AFTER the parity is read.
+         */
+        $parts = preg_split('/`([^`]+)`/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+        $out = [];
+
+        foreach ($parts ?: [$text] as $i => $part) {
+            if ($part === '') {
+                continue;
+            }
+
+            $out[] = ['type' => $i % 2 === 1 ? 'code' : 'text', 'value' => $part];
+        }
+
+        return $out;
     }
 
     /**
@@ -574,6 +638,29 @@ final class Guide
                 ],
             ],
 
+            'blueprint' => [
+                'title' => 'Building with an AI agent',
+                'summary' => 'A generated instruction file, and the documentation as plain text.',
+                'body' => [
+                    'An agent asked to "add an invoices screen" will otherwise invent a controller, a route and a Blade view. All three work, none of them is how this panel does anything, and every one quietly skips the tenant scope and the policy. The cost is not the wasted attempt - it is that the result LOOKS right: a resource with no policy is invisible, and a query without the scope returns another organisation\'s rows with a 200.',
+                    '`panel:blueprint` writes the conventions into `AGENTS.md`, which is what agents read on every session without anybody remembering to paste anything. It leads with the rules that fail silently rather than with a feature tour, because everything discoverable by reading a class - method names, options - an agent can already find.',
+                    'IT IS GENERATED, NOT MAINTAINED. The resource list, the panels and the commands come from the running application, so an instruction file naming a resource somebody deleted last week cannot happen. That matters more here than in ordinary documentation: a person notices a stale claim and an agent writes code against it. Re-run it after adding a resource or a portal.',
+                    'IT APPENDS BETWEEN MARKERS rather than overwriting. `AGENTS.md` usually holds a team\'s own notes - deploy steps, conventions nothing here knows about - and a command that replaced the file is a command nobody runs twice.',
+                    'THE DOCUMENTATION IS ALSO FETCHABLE AS TEXT. `/docs/llms.txt` is an index in the shape agents expect, so a tool can decide what to read rather than pulling everything to answer one question; `/docs/guide.md` is this whole guide as one document, and `/docs/blueprint.md` is the instruction file. All three are behind the panel\'s own authentication, because the blueprint names this installation\'s resources and portals.',
+                ],
+                'blocks' => [
+                    [
+                        'kind' => 'shell',
+                        'code' => "# Write it into the project\nphp artisan panel:blueprint\n\n# Somewhere else, or to read it first\nphp artisan panel:blueprint --file=CLAUDE.md\nphp artisan panel:blueprint --print",
+                    ],
+                    [
+                        'kind' => 'text',
+                        'code' => "# Point an agent at the documentation over HTTP\n\n/docs/llms.txt        an index of every page, with summaries\n/docs/guide.md        the whole guide as one markdown document\n/docs/blueprint.md    the conventions and the verification steps",
+                    ],
+                ],
+                'warning' => 'The blueprint tells an agent what to do; it does not enforce anything. The guards are the policy, the tenant scope and the tests - `panel:doctor` and the isolation assertions in `InteractsWithPanels` are what actually catch a mistake.',
+            ],
+
             /* --------------------------------------------------------- running it */
 
             'operations' => [
@@ -665,10 +752,97 @@ final class Guide
                 'blocks' => [
                     [
                         'kind' => 'shell',
-                        'code' => "php artisan panel:install                   # publish config, register the provider\nphp artisan make:panel {id}                 # a portal: provider, resources, routes\nphp artisan make:panel-resource {Model}     # a screen, optionally --generate\nphp artisan panel:permissions sync          # reconcile ability names with the registry\nphp artisan panel:doctor                    # what is silently wrong\nphp artisan panel:benchmark                 # query counts and timings on real data\nphp artisan panel:seed-demo                 # believable data to build against\nphp artisan panel:seed-reference            # the reference application's own data\nphp artisan panel:cache-clear               # drop cached resource schemas\nphp artisan panel:reindex-tenant            # indexes for a dedicated tenant database\nphp artisan panel:api-token {email} {name}  # issue a public API token\nphp artisan panel:reports-due               # dispatch any scheduled reports due now\nphp artisan panel:knowledge index           # index panel content for the assistant\nphp artisan panel:refresh-rollups           # maintain the time-series tables\nphp artisan panel:prune-trash               # empty the bin past its retention\nphp artisan panel:prune-exports             # expired exports, file and record\nphp artisan panel:prune-uploads             # uploads nobody ever saved\nphp artisan panel:tenant-suspension {slug}  # lock an organisation out, or lift it\nphp artisan panel:journey                   # walk a first-run journey end to end",
+                        'code' => "php artisan panel:install                   # publish config, register the provider\nphp artisan make:panel {id}                 # a portal: provider, resources, routes\nphp artisan make:panel-resource {Model}     # a screen, optionally --generate\nphp artisan panel:permissions sync          # reconcile ability names with the registry\nphp artisan panel:doctor                    # what is silently wrong\nphp artisan panel:blueprint                 # write the conventions into AGENTS.md, for an AI agent\nphp artisan panel:benchmark                 # query counts and timings on real data\nphp artisan panel:seed-demo                 # believable data to build against\nphp artisan panel:seed-reference            # the reference application's own data\nphp artisan panel:cache-clear               # drop cached resource schemas\nphp artisan panel:reindex-tenant            # indexes for a dedicated tenant database\nphp artisan panel:api-token {email} {name}  # issue a public API token\nphp artisan panel:reports-due               # dispatch any scheduled reports due now\nphp artisan panel:knowledge index           # index panel content for the assistant\nphp artisan panel:refresh-rollups           # maintain the time-series tables\nphp artisan panel:prune-trash               # empty the bin past its retention\nphp artisan panel:prune-exports             # expired exports, file and record\nphp artisan panel:prune-uploads             # uploads nobody ever saved\nphp artisan panel:tenant-suspension {slug}  # lock an organisation out, or lift it\nphp artisan panel:journey                   # walk a first-run journey end to end",
                     ],
                 ],
             ],
         ];
+    }
+
+    /**
+     * The whole guide as one markdown document.
+     *
+     * FOR THE READER THAT IS NOT A PERSON. An agent asked to add a screen cannot
+     * click through thirty pages; it fetches one file, or it guesses. Filament
+     * ships `llms.txt` for the same reason, and the reason is worth stating
+     * plainly: documentation that only exists as a rendered page is documentation
+     * half the people writing code against it cannot read.
+     *
+     * GENERATED FROM THE SAME SOURCE as the screen, so there is no second copy to
+     * drift. The prose is written with a capitalised lead per paragraph, which
+     * markdown renders as bold - the same shape the page shows as a heading.
+     */
+    public static function markdown(): string
+    {
+        $out = ["# Building a panel\n"];
+
+        $out[] = "What you need before you start, which command comes next, and the "
+            ."decisions that are hard to change later.\n";
+
+        foreach (self::groups() as $group) {
+            $out[] = '## '.$group['title']."\n";
+
+            foreach ($group['pages'] as $slug) {
+                $page = self::pages()[$slug];
+
+                $out[] = '### '.$page['title'];
+                $out[] = '_'.$page['summary']."_\n";
+
+                foreach ($page['body'] as $paragraph) {
+                    $out[] = $paragraph."\n";
+                }
+
+                foreach ($page['blocks'] ?? [] as $block) {
+                    $language = $block['kind'] === 'shell' ? 'bash' : $block['kind'];
+
+                    $out[] = '```'.$language."\n".$block['code']."\n```\n";
+                }
+
+                if (isset($page['warning'])) {
+                    $out[] = '> **Careful:** '.$page['warning']."\n";
+                }
+            }
+        }
+
+        return implode("\n", $out);
+    }
+
+    /**
+     * The index an agent fetches first.
+     *
+     * LINKS RATHER THAN CONTENT, in the `llms.txt` shape: a list of every page
+     * with a one-line summary, so a tool can decide what to read instead of
+     * pulling the whole guide to answer one question.
+     */
+    public static function llmsTxt(string $base): string
+    {
+        $out = [
+            '# '.config('app.name').' — panel documentation',
+            '',
+            '> An administration panel built with PanelKit. Screens are declared as PHP '
+            .'classes; the framework generates routes, permissions and navigation.',
+            '',
+            '## Start here',
+            '',
+            '- ['.'The blueprint]('.$base.'/docs/blueprint.md): the conventions to follow and the '
+            .'mistakes that return HTTP 200. Read this before writing code.',
+            '- [The whole guide]('.$base.'/docs/guide.md): every page below, as one document.',
+            '',
+        ];
+
+        foreach (self::groups() as $group) {
+            $out[] = '## '.$group['title'];
+            $out[] = '';
+
+            foreach ($group['pages'] as $slug) {
+                $page = self::pages()[$slug];
+
+                $out[] = '- ['.$page['title'].']('.$base.'/about/building/'.$slug.'): '.$page['summary'];
+            }
+
+            $out[] = '';
+        }
+
+        return implode("\n", $out);
     }
 }

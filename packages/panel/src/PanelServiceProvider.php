@@ -102,6 +102,7 @@ final class PanelServiceProvider extends ServiceProvider
          * `vendor:publish`.
          */
         $this->commands([
+            Commands\BlueprintCommand::class,
             Commands\CacheClearCommand::class,
             Commands\InstallCommand::class,
             Commands\DispatchScheduledReportsCommand::class,

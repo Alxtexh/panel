@@ -124,6 +124,29 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
      */
     Route::get('docs/openapi.json', [ApiReferenceController::class, 'spec'])->name('docs.spec');
 
+    /*
+     | THE DOCUMENTATION, FOR A READER THAT IS NOT A PERSON.
+     |
+     | An agent asked to add a screen cannot click through thirty pages; it
+     | fetches a file, or it guesses - and a guess here is a hand-written
+     | controller that skips the tenant scope and looks completely fine. These
+     | are the same content the screens render, as plain text.
+     |
+     | BEHIND AUTHENTICATION, like every other panel screen. The blueprint names
+     | this installation's resources and portals, which is internal detail
+     | whatever else it is.
+     */
+    Route::get('docs/llms.txt', fn () => response(
+        App\Support\Guide::llmsTxt(rtrim((string) config('app.url'), '/')),
+    )->header('Content-Type', 'text/plain; charset=utf-8'))->name('docs.llms');
+
+    Route::get('docs/guide.md', fn () => response(App\Support\Guide::markdown())
+        ->header('Content-Type', 'text/markdown; charset=utf-8'))->name('docs.guide');
+
+    Route::get('docs/blueprint.md', fn () => response(
+        PanelKit\Panel\Support\Blueprint::markdown(),
+    )->header('Content-Type', 'text/markdown; charset=utf-8'))->name('docs.blueprint');
+
     Route::get('screens/locked', fn () => Inertia::render('auth/LockScreen'))->name('screens.locked');
 
     /*
