@@ -8,8 +8,6 @@ import { toUrl } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
-import { usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -31,22 +29,16 @@ const sidebarNavItems: NavItem[] = [
     },
 ];
 
-/**
- * Roles are only listed for somebody who can actually open the screen.
+/*
+ * ROLES IS NOT LISTED HERE, and its absence is deliberate.
  *
- * A LINK THAT ONLY EVER 403s IS WORSE THAN NO LINK - it advertises a page,
- * invites the click, and answers with a refusal. The flag is presentation only;
- * the controller checks `manage_roles` again, so hiding it is politeness rather
- * than protection.
+ * These are SETTINGS: the person signed in, and the organisation they belong
+ * to. Who may do what is administration of other people, which is the subject
+ * of User management - and that screen already has a Roles tab, so listing it
+ * here was the same destination in two places with different names.
+ *
+ * The screen still exists and still routes; User management is the way in.
  */
-const page = usePage();
-
-const navItems = computed<NavItem[]>(() =>
-    page.props.auth?.can?.manageRoles
-        ? [...sidebarNavItems, { title: 'Roles', href: '/settings/roles' }]
-        : sidebarNavItems,
-);
-
 const { isCurrentOrParentUrl } = useCurrentUrl();
 </script>
 
@@ -64,7 +56,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
                     aria-label="Settings"
                 >
                     <Button
-                        v-for="item in navItems"
+                        v-for="item in sidebarNavItems"
                         :key="toUrl(item.href)"
                         variant="ghost"
                         :class="[
