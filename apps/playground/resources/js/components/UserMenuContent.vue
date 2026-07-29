@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { DatabaseBackup, Lock, LogOut, ScrollText, Server, Settings, UsersRound } from '@lucide/vue'
+import { Activity, DatabaseBackup, Lock, LogOut, ScrollText, Server, Settings, Trash2, UsersRound } from '@lucide/vue'
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -16,7 +16,7 @@ import { edit } from '@/routes/profile'
  * rename the route and this menu silently starts offering a 404.
  */
 import operations from '@/routes/operations'
-import { lock } from '@/routes/panel'
+import { lock, resource } from '@/routes/panel'
 
 import type { User } from '@/types'
 
@@ -46,6 +46,24 @@ const page = usePage()
  */
 const isApplicationPortal = computed(
     () => (page.props.panelHome as { isDefault: boolean } | undefined)?.isDefault ?? true,
+)
+
+/**
+ * This portal's bin, or null where it has none.
+ *
+ * IT IS THE ONE ITEM HERE THAT IS NOT GATED ON THE APPLICATION PORTAL, and the
+ * distinction is the whole rule this menu follows. Backups, logs and monitoring
+ * are the APPLICATION's screens, routed at the root, so offering them inside a
+ * generated portal is offering a way out of it. A bin belongs to the portal you
+ * are standing in - `/reseller/trash` holds what was deleted from the reseller
+ * portal and nothing else - so hiding it there would leave that portal's own
+ * screen reachable from nothing.
+ *
+ * The server decides whether it exists at all: a portal whose resources do not
+ * soft-delete has no bin, and this is null.
+ */
+const trash = computed(
+    () => page.props.panelTrash as { title: string; href: string } | null | undefined,
 )
 </script>
 
@@ -123,6 +141,35 @@ const isApplicationPortal = computed(
             <Link class="block w-full cursor-pointer" :href="operations.monitoring.url()" prefetch>
                 <Server class="mr-2 h-4 w-4" />
                 Monitoring
+            </Link>
+        </DropdownMenuItem>
+
+        <!--
+            WHAT THE PANEL DID TO ITSELF, which is the same kind of question as
+            the logs above it and a different kind from anything in the sidebar.
+            It sat in the Organisation group between two screens that manage
+            people, where it read as a third way to administer them.
+        -->
+        <DropdownMenuItem
+            v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
+            :as-child="true"
+        >
+            <Link class="block w-full cursor-pointer" :href="resource.url('activities')" prefetch>
+                <Activity class="mr-2 h-4 w-4" />
+                Activity
+            </Link>
+        </DropdownMenuItem>
+
+        <!--
+            THE BIN, LAST OF THE SCREENS AND NOT GATED ON THE PORTAL.
+            See the `trash` computed: this one belongs to whichever portal you
+            are in, so hiding it outside the application portal would orphan
+            that portal's own screen. Absent entirely where nothing soft-deletes.
+        -->
+        <DropdownMenuItem v-if="trash" :as-child="true">
+            <Link class="block w-full cursor-pointer" :href="trash.href" prefetch>
+                <Trash2 class="mr-2 h-4 w-4" />
+                {{ trash.title }}
             </Link>
         </DropdownMenuItem>
 

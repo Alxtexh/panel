@@ -56,6 +56,24 @@ final class AnnouncementResource extends Resource
         return 'Apps';
     }
 
+    /**
+     * NOT A PAGE IN THE SIDEBAR, and that was the whole complaint.
+     *
+     * An announcement is READ in two places that people already look at - the
+     * banner at the top of the dashboard and the bell - and it expires by
+     * itself. A permanent entry in the column somebody scans all day, for a
+     * feature whose entire output appears somewhere else, is a line of
+     * navigation that earns nothing.
+     *
+     * WRITING ONE STILL HAS A SCREEN, reached from the bell rather than from
+     * the sidebar: the form, the routes, the policy and the tenant scope are all
+     * unchanged, because hiding is a navigation decision and nothing else.
+     */
+    public static function showsInNavigation(): bool
+    {
+        return false;
+    }
+
     public static function table(Table $table): Table
     {
         return $table

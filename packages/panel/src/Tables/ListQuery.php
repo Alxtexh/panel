@@ -740,7 +740,14 @@ final class ListQuery
             $callback($mapped);
 
             $emitted += count($mapped);
-            $after = ((array) end($rows))[$this->keyColumn] ?? null;
+            /*
+             * BY THE ROW'S KEY NAME, not the key COLUMN. See `rowKeyName()`:
+             * a qualified `audit_entries.id` never appears as a row key, so this
+             * read null, the loop broke after the first chunk, and an export of
+             * a joined resource silently produced one page of rows and called it
+             * the whole file.
+             */
+            $after = ((array) end($rows))[$this->rowKeyName()] ?? null;
 
             if (count($rows) < $chunkSize || $after === null) {
                 break;
@@ -763,6 +770,30 @@ final class ListQuery
     public function keyColumnName(): string
     {
         return $this->keyColumn;
+    }
+
+    /**
+     * The key as it appears on a ROW, which is not the same as the key column.
+     *
+     * A resource that joins declares `keyColumn('audit_entries.id')`, because
+     * an unqualified `id` is ambiguous in SQL the moment a second table is in
+     * the query. The rows that come back are keyed by the SELECT alias, which
+     * has no table prefix - so reading `$row['audit_entries.id']` finds nothing
+     * and reading `$row['id']` finds it.
+     *
+     * THIS EXISTED AS AN ASSUMPTION IN TWO PLACES AND WAS WRONG IN BOTH. The
+     * cursor did `(int) $last['id']` outright, so the Activity screen - the one
+     * resource with a qualified key and a join - died with `Undefined array key
+     * "id"` the moment it had more than one page of rows. Under a page it never
+     * fired, because a last page encodes no cursor at all, which is why every
+     * test passed: the suite creates a handful of entries and the seeded
+     * database has thousands.
+     */
+    private function rowKeyName(): string
+    {
+        return str_contains($this->keyColumn, '.')
+            ? substr($this->keyColumn, strrpos($this->keyColumn, '.') + 1)
+            : $this->keyColumn;
     }
 
     /** @return list<string> The columns the list selects, for an export header. */
@@ -828,7 +859,7 @@ final class ListQuery
                         ? [$state['sort']]
                         : [$this->groupKey, $state['sort']],
                 ),
-                (int) $last['id'],
+                (int) ($last[$this->rowKeyName()] ?? 0),
             );
 
         return new ListResult(

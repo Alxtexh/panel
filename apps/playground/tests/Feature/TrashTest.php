@@ -492,18 +492,48 @@ final class TrashTest extends TestCase
     /* ----------------------------------------------------------- navigation */
 
     /**
-     * THE BIN IS IN THE MENU, and the entry comes from the package.
+     * THE BIN IS IN THE MENU, and the entry still comes from the package.
      *
      * A generated portal routes `/trash` the moment it exists, so the link has
      * to arrive with the panel rather than with an application's page list -
      * otherwise every new portal ships a working screen nothing points at, which
      * is exactly how backups and the assistant ended up unreachable.
+     *
+     * IT MOVED OUT OF THE SIDEBAR, WHICH IS WHY THIS READS A DIFFERENT PROP.
+     * It used to be one of `panelPages` and therefore in the resource column,
+     * under a heading called Platform of which it was the only member - so one
+     * entry produced a whole section, in a list meant to hold what the panel
+     * ADMINISTERS. It is in the account menu now, beside the backups and the
+     * logs, which are the other screens about the installation.
+     *
+     * What has not changed is where the entry comes from: the application still
+     * does not decide whether this portal has a bin, or where it lives.
      */
-    public function test_the_trash_is_linked_from_the_navigation(): void
+    public function test_the_trash_is_linked_from_the_account_menu(): void
     {
-        $pages = $this->actingAs($this->owner)->get('/dashboard')->assertOk()
-            ->viewData('page')['props']['panelPages'];
+        $props = $this->actingAs($this->owner)->get('/dashboard')->assertOk()
+            ->viewData('page')['props'];
 
-        $this->assertContains('/trash', array_column($pages, 'href'));
+        $this->assertSame('/trash', $props['panelTrash']['href']);
+
+        $this->assertNotContains(
+            '/trash',
+            array_column($props['panelPages'], 'href'),
+            'The bin is back in the sidebar, in a group of its own.',
+        );
+    }
+
+    /**
+     * AND THE MENU RENDERS IT FROM THAT PROP.
+     *
+     * The pair matters: a prop nothing reads is a link nobody has, and this one
+     * replaced an entry that used to be drawn by the sidebar automatically.
+     */
+    public function test_the_account_menu_uses_that_entry(): void
+    {
+        $menu = (string) file_get_contents(resource_path('js/components/UserMenuContent.vue'));
+
+        $this->assertStringContainsString('panelTrash', $menu);
+        $this->assertStringContainsString('trash.href', $menu);
     }
 }

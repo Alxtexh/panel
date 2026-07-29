@@ -129,21 +129,42 @@ final class PluginTest extends TestCase
     }
 
     /**
-     * THE LINK IS IN THE NAVIGATION, without the application listing it.
+     * A PLUGIN'S RESOURCE PLACES ITSELF, AND MAY DECLINE TO.
      *
-     * A resource places itself, which is the whole reason a plugin registering
-     * one is more useful than a plugin registering a page: it arrives with its
-     * routes, its policy checks, its tenant scope AND its menu entry.
+     * The original claim here was that the entry appears in the navigation
+     * without the application listing it, which is what makes a plugin
+     * registering a resource more useful than one registering a page: it arrives
+     * with its routes, its policy checks, its tenant scope AND its menu entry.
+     *
+     * THIS ONE DECLINES, and that is the more interesting half. An announcement
+     * is read from the dashboard banner and the bell and expires by itself, so a
+     * permanent sidebar entry for the form that writes one earns nothing - and a
+     * plugin author must be able to make that call, from the resource, without
+     * the host application knowing the screen exists.
+     *
+     * So the test asserts the mechanism rather than the outcome: registered for
+     * this panel, routable, and absent from the menu because it said so.
      */
-    public function test_a_plugins_resource_appears_in_the_navigation(): void
+    public function test_a_plugins_resource_registers_itself_and_may_stay_out_of_the_menu(): void
     {
+        $manager = app(\PanelKit\Panel\PanelManager::class);
+
+        $this->assertArrayHasKey(
+            'announcements',
+            $manager->resourcesFor((string) config('panel.default', 'admin')),
+            'The plugin resource is not registered for the panel.',
+        );
+
         $nav = $this->actingAs($this->user)->get('/dashboard')->assertOk()
             ->viewData('page')['props']['panelNav'];
 
-        $entry = collect($nav)->firstWhere('key', 'announcements');
+        $this->assertNull(
+            collect($nav)->firstWhere('key', 'announcements'),
+            'The resource asked to stay out of the navigation and is in it anyway.',
+        );
 
-        $this->assertNotNull($entry, 'The plugin resource is not in the navigation.');
-        $this->assertSame('/announcements', $entry['href']);
+        // Unlisted is not unreachable: the route still answers.
+        $this->actingAs($this->user)->get('/announcements')->assertOk();
     }
 
     /* ------------------------------------------------------- what it cannot do */

@@ -45,6 +45,27 @@ final class UserResource extends Resource
     protected static ?int $sort = 10;
 
     /**
+     * NOT IN THE SIDEBAR, because it was the same screen twice.
+     *
+     * The account menu has held User management since roles and permissions
+     * arrived, and this resource put a second "Users" entry in the resource
+     * column. Two entry points to one subject is worse than either alone: the
+     * two screens are not identical - the settings one has the roles and
+     * invitations tabs - so whichever a person happened to click became their
+     * idea of what the panel can do, and the half they never opened looked
+     * missing.
+     *
+     * THE RESOURCE STAYS. Its routes, its policy, its abilities and its API
+     * endpoints are all still here and still used - by the command palette, by
+     * record links from other screens, and by integrations. Hiding is a
+     * navigation decision and nothing else.
+     */
+    public static function showsInNavigation(): bool
+    {
+        return false;
+    }
+
+    /**
      * The driver's "join these rows into one string" function.
      *
      * THE THREE DATABASES SPELL IT DIFFERENTLY and none of them accepts the

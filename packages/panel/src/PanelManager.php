@@ -228,12 +228,20 @@ final class PanelManager
 
         $pages = [];
 
-        $trash = app(Trash\TrashBin::class)->navigationEntry($panel->id);
-
-        if ($trash !== null) {
-            $pages[] = $trash;
-        }
-
+        /*
+         * THE BIN IS NO LONGER IN THIS LIST, and the reason is what the list is
+         * FOR. `panelPages` becomes the sidebar - the column of things this
+         * panel administers. A bin of records deleted from those screens is
+         * about the installation rather than about the subject matter, and it
+         * was the only member of a group called Platform, so one entry created a
+         * whole heading of its own.
+         *
+         * It moved to the account menu, beside the backups and the logs, which
+         * are the other screens about the installation. The entry itself is
+         * still described by the package - see `TrashBin::navigationEntry` - so
+         * an application does not have to know a bin exists, or where it lives,
+         * or whether this portal has one at all.
+         */
         foreach (self::$pluginContexts[$panel->id] ?? [] as $context) {
             foreach ($context->registeredPages() as $page) {
                 $pages[] = $page;

@@ -23,7 +23,7 @@
 import { PkSlideover, useAppearance } from '@panelkit/ui'
 import { usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { Bell } from '@lucide/vue'
+import { Bell, Megaphone } from '@lucide/vue'
 
 interface Alert {
     key: string
@@ -52,6 +52,15 @@ const tab = ref<'alerts' | 'inbox'>('alerts')
 const loading = ref(false)
 const alerts = ref<Alert[]>([])
 const notifications = ref<Note[]>([])
+
+/**
+ * Whether this person may write an announcement.
+ *
+ * FROM THE SERVER, WITH THE LIST, rather than assumed. Most people who open
+ * this bell cannot create one, and a link that always 403s advertises a screen
+ * and then refuses it.
+ */
+const canAnnounce = ref(false)
 
 /**
  * Seeded from the page payload so the badge is right before anything is
@@ -99,6 +108,7 @@ async function load() {
         alerts.value = data.alerts
         notifications.value = data.notifications
         unread.value = data.unread
+        canAnnounce.value = data.canAnnounce === true
 
         // Open on whichever tab has something to say. Landing on an empty
         // Alerts tab while three unread notifications sit behind it is the
@@ -109,6 +119,7 @@ async function load() {
         // alerts, which would be worse: an alert list is a claim about NOW.
         alerts.value = []
         notifications.value = []
+        canAnnounce.value = false
     } finally {
         loading.value = false
     }
@@ -233,6 +244,24 @@ const side = computed<'left' | 'right'>(() => (appearance.value.sidebarSide === 
                         </component>
                     </li>
                 </ul>
+
+                <!--
+                    WHERE AN ANNOUNCEMENT IS WRITTEN, and the only place it is
+                    offered. It used to be a permanent sidebar entry for a
+                    feature whose entire output appears somewhere else - the
+                    banner and this list - so the link now sits beside the thing
+                    it produces.
+
+                    Shown only to somebody who can actually create one.
+                -->
+                <a
+                    v-if="canAnnounce"
+                    href="/announcements/create"
+                    class="text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center gap-2 border-t p-3 text-xs transition-colors"
+                >
+                    <Megaphone class="size-3.5" />
+                    Write an announcement
+                </a>
             </template>
 
             <!-- INBOX: recorded events, per user. -->

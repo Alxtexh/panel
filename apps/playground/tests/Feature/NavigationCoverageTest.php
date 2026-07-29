@@ -129,6 +129,29 @@ final class NavigationCoverageTest extends TestCase
             $paths[] = '/'.trim(rtrim((string) $uri, '/'), '/');
         }
 
+        /*
+         * RESOURCE SCREENS, WHICH THE LOOP ABOVE CANNOT SEE.
+         *
+         * Every resource list is served by one route - `/{resource}` - so the
+         * required-parameter rule above skips it, and the sweep has never
+         * examined a single resource screen. That was invisible while every
+         * resource appeared in the sidebar: they were all linked, so nothing
+         * looked missing.
+         *
+         * It stopped being invisible the moment a resource was hidden from
+         * navigation. A hidden resource is exactly the thing this test exists to
+         * find - a screen that renders and that nothing links to - and it was
+         * the one kind of screen the sweep could not reach.
+         *
+         * Asked of the registry rather than the router, because the registry is
+         * what decides the key and therefore the URL.
+         */
+        foreach (array_keys(app(\PanelKit\Panel\PanelManager::class)->resourcesFor(
+            (string) config('panel.default', 'admin'),
+        )) as $key) {
+            $paths[] = '/'.$key;
+        }
+
         return array_values(array_unique($paths));
     }
 
@@ -485,6 +508,31 @@ final class NavigationCoverageTest extends TestCase
             // same in every portal; everything else is the application's.
             if (str_contains($item, 'edit()') || str_contains($item, 'logout()')) {
                 $ungated++;
+
+                continue;
+            }
+
+            /*
+             * THE BIN IS THE EXCEPTION, AND IT SHARPENS THE RULE RATHER THAN
+             * WEAKENING IT.
+             *
+             * Everything else here is routed at the ROOT - user management, the
+             * backups, the logs, the activity trail - so offering any of them
+             * inside a generated portal offers a way OUT of it. A bin is routed
+             * under the portal's own prefix and holds what was deleted from THAT
+             * portal, so hiding it outside the application portal would orphan a
+             * screen the portal owns.
+             *
+             * It is gated on something stricter instead: the server sends
+             * `panelTrash` as null where a portal has no bin at all, so the item
+             * cannot render pointing at a route that does not exist.
+             */
+            if (str_contains($item, 'trash')) {
+                $this->assertStringContainsString(
+                    'v-if="trash"',
+                    $item,
+                    'The bin is offered unconditionally, including in portals that have none.',
+                );
 
                 continue;
             }

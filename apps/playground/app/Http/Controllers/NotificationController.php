@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use PanelKit\Panel\Alerts\Alert;
+use PanelKit\Panel\Alerts\Announcement;
 use PanelKit\Panel\Alerts\AlertRule;
 
 /**
@@ -59,11 +60,60 @@ final class NotificationController extends Controller
             ->all();
 
         return response()->json([
-            'alerts' => AlertRule::resolveAll($this->rules()),
+            'alerts' => [...$this->announcements($user), ...AlertRule::resolveAll($this->rules())],
             'notifications' => $notifications,
             // The badge counts UNREAD NOTIFICATIONS only - see the class note.
             'unread' => $user->unreadNotifications()->count(),
+            /*
+             * WHERE AN ANNOUNCEMENT IS WRITTEN, now that the sidebar does not
+             * offer it. Sent as a permission rather than assumed by the client,
+             * because most people who open this bell cannot create one and a
+             * button that always 403s advertises a screen and then refuses it.
+             */
+            'canAnnounce' => $user->can('create', Announcement::class),
         ]);
+    }
+
+    /**
+     * Announcements, as alerts.
+     *
+     * THEY BELONG IN THIS STREAM AND NOT THE OTHER ONE, and the reason is the
+     * semantics rather than the subject. An alert is what is TRUE RIGHT NOW: it
+     * is recomputed on every open, it has no read state, and it disappears when
+     * the condition clears. That is exactly an announcement - it appears when it
+     * starts, and when `ends_at` passes it is simply not returned any more.
+     * Nobody has to remember to take it down, and nothing has to run to expire
+     * it.
+     *
+     * Filed as a notification instead, it would need a read state it does not
+     * have, would sit in the inbox after it stopped being true, and would have
+     * to be written per user at the moment it was created - so a person who
+     * joined afterwards would never see it.
+     *
+     * ABOVE THE COMPUTED RULES, because an announcement is somebody deliberately
+     * telling this operator something, and the rules are the system noticing
+     * things. `activeFor` already sorts by severity and drops the ones this user
+     * dismissed.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function announcements(mixed $user): array
+    {
+        return Announcement::activeFor($user->getKey())
+            ->map(fn (Announcement $announcement): array => [
+                /*
+                 * PREFIXED, because an alert key is a client-side identity and
+                 * the computed rules pick their own. An announcement numbered 3
+                 * and a rule called `3` would collide silently.
+                 */
+                'key' => 'announcement:'.$announcement->getKey(),
+                'severity' => $announcement->severity === 'success' ? 'info' : $announcement->severity,
+                'title' => $announcement->title,
+                'body' => (string) $announcement->body,
+                'href' => $announcement->action_url,
+                'count' => 1,
+            ])
+            ->all();
     }
 
     public function markRead(Request $request, string $id): JsonResponse

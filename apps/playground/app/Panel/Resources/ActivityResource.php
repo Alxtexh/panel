@@ -45,6 +45,22 @@ final class ActivityResource extends Resource
     protected static ?int $sort = 90;
 
     /**
+     * IN THE ACCOUNT MENU, NOT THE SIDEBAR.
+     *
+     * The sidebar is the list of things this panel ADMINISTERS - subscribers,
+     * routers, plans. A trail of what the panel did to itself is not one of
+     * them; it is the same kind of thing as the logs and the backups, which
+     * have always been in the account menu, and it was sitting in Organisation
+     * between two screens that manage people.
+     *
+     * Routable, and linked from the menu - see `UserMenuContent.vue`.
+     */
+    public static function showsInNavigation(): bool
+    {
+        return false;
+    }
+
+    /**
      * ABSENT FROM THE API REFERENCE, on purpose.
      *
      * This is an internal record of what the panel did to itself: read-only,

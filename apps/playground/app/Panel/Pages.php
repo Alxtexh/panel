@@ -146,6 +146,16 @@ final class Pages
             '/operations/backups' => 'operations.backups',
             '/operations/logs' => 'operations.logs',
             '/operations/monitoring' => 'operations.monitoring',
+
+            /*
+             * MOVED OUT OF THE SIDEBAR, because neither is a thing this panel
+             * administers. The sidebar lists subscribers, routers and plans -
+             * the operator's subject matter. A trail of what the panel did to
+             * itself and a bin of what was deleted from it are both about the
+             * INSTALLATION, which is what the rest of this list already holds.
+             */
+            '/activities' => 'activities',
+            '/trash' => 'trash',
         ];
     }
 
@@ -182,6 +192,33 @@ final class Pages
             '/operations/backups' => 'Listed in the account menu: the installation, not the organisation.',
             '/operations/logs' => 'Listed in the account menu, beside Backups.',
             '/operations/monitoring' => 'Listed in the account menu, beside Backups and Logs.',
+            '/activities' => 'Listed in the account menu. What the panel did to itself, not what it administers.',
+            '/trash' => 'Listed in the account menu, at the end: what was deleted from this portal.',
+            /*
+             * THE USERS RESOURCE IS THE SAME SUBJECT AS USER MANAGEMENT, and
+             * having both in the sidebar meant two entry points to one thing -
+             * with different screens behind them, so whichever somebody clicked
+             * became their idea of what the panel can do. The resource is
+             * hidden from navigation and reached from the palette, from record
+             * links, and from the API.
+             */
+            '/users' => 'User management in the account menu is the linked way in.',
+            /*
+             * READ FROM THE BANNER AND THE BELL, WRITTEN FROM THE BELL.
+             *
+             * An announcement's whole output appears somewhere people already
+             * look - the top of the dashboard and the alerts list - and it
+             * expires by itself. A permanent sidebar entry for the form that
+             * writes one is navigation that earns nothing, so the link sits in
+             * the bell beside the thing it produces.
+             */
+            '/announcements' => 'Written from the bell, read from the dashboard banner and the alerts list.',
+            /*
+             * A FIXTURE, and it has never been in a menu. It exists so the
+             * editable-column path has a screen to exercise; listing it would
+             * put a second, worse Plans screen in front of operators.
+             */
+            '/editable-plans' => 'A fixture for editable columns, opened by its tests and by hand.',
             '/operations/platform' => 'The old path for monitoring; it redirects, and runbooks still point at it.',
             '/user/confirm-password' => 'An interstitial, shown when a screen demands a fresh password.',
             /*

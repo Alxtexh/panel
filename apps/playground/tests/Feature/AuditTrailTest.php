@@ -273,4 +273,46 @@ final class AuditTrailTest extends TestCase
             ->getJson("/clients/{$client->id}/audit")
             ->assertForbidden();
     }
+
+    /* ---------------------------------------------------- the activity screen */
+
+    /**
+     * THE SECOND PAGE OF A JOINED RESOURCE.
+     *
+     * This is the exact failure it exists to catch, and it survived every other
+     * test in the suite. The activity resource declares
+     * `keyColumn('audit_entries.id')` - qualified, because an unqualified `id`
+     * is ambiguous the moment the query joins - and the cursor encoder read
+     * `$row['id']`, which a qualified key never produces. So the screen died
+     * with `Undefined array key "id"`.
+     *
+     * IT ONLY FIRES ABOVE ONE PAGE. A last page encodes no cursor at all, so a
+     * test that creates three entries passes and a seeded database with
+     * thousands 500s on the first click. Every audit test above creates a
+     * handful; this one deliberately creates more than a page.
+     */
+    public function test_the_activity_screen_pages_past_the_first_page(): void
+    {
+        $client = $this->client();
+
+        // Comfortably more than the default page size, so a cursor is encoded.
+        for ($i = 0; $i < 30; $i++) {
+            $client->update(['name' => "Renamed {$i}"]);
+        }
+
+        $props = $this->actingAs($this->user)->get('/activities')->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertNotEmpty($props['records'], 'The activity screen returned no rows.');
+
+        $this->assertNotNull(
+            $props['nextCursor'],
+            'There is more than one page of entries and no cursor was encoded.',
+        );
+
+        // And the cursor is honoured rather than merely produced.
+        $this->actingAs($this->user)
+            ->get('/activities?cursor='.urlencode((string) $props['nextCursor']))
+            ->assertOk();
+    }
 }

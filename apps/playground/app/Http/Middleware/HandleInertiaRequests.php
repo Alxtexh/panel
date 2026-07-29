@@ -242,6 +242,22 @@ class HandleInertiaRequests extends Middleware
                     ?? config('panel.default', 'admin')) === config('panel.default', 'admin'),
             ],
 
+            /*
+             | THIS PORTAL'S BIN, or null where it has none.
+             |
+             | It used to be one of `panelPages` and therefore in the sidebar,
+             | under a heading called Platform of which it was the only member.
+             | It belongs with the backups and the logs - screens about the
+             | INSTALLATION rather than about the subscribers and routers the
+             | sidebar lists - so it moved into the account menu.
+             |
+             | STILL ASKED OF THE PACKAGE. Whether a portal has a bin depends on
+             | which of its resources soft-delete, and where it lives depends on
+             | the portal's path. Neither is a question this application should
+             | answer, per portal, to draw a menu.
+             */
+            'panelTrash' => fn (): ?array => app(\PanelKit\Panel\Trash\TrashBin::class)->navigationEntry(),
+
             'name' => config('app.name'),
             /*
              | The impersonation banner's data.

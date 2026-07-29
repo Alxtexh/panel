@@ -110,7 +110,7 @@ final class TrashBin
      * anything is a menu entry that teaches somebody the panel keeps deleted
      * records when it does not.
      *
-     * @return array{title: string, href: string, icon: string, group: string}|null
+     * @return array{title: string, href: string, icon: string, group: string|null}|null
      */
     public function navigationEntry(?string $panelId = null): ?array
     {
@@ -128,12 +128,21 @@ final class TrashBin
             'href' => $prefix.'/trash',
             'icon' => 'trash',
             /*
-             * BESIDE THE RESOURCES rather than under a heading of its own. It is
-             * about the records those screens administer, and "where did the
-             * thing I deleted go" is asked in a hurry - a bin two levels into a
-             * menu is one nobody finds when they need it.
+             * NO GROUP, because it is no longer in the sidebar to be grouped.
+             *
+             * It used to sit under a heading called Platform, of which it was
+             * the only member - so one entry produced a whole section, and a
+             * column meant to list what the panel ADMINISTERS ended with a
+             * heading about the panel itself. It is in the account menu now,
+             * beside the backups and the logs, which are the other screens
+             * about the installation rather than about the subject matter.
+             *
+             * The entry is still described HERE rather than by the application,
+             * because whether a portal has a bin at all depends on which of its
+             * resources soft-delete - a question the application should not have
+             * to ask, per portal, to render a menu.
              */
-            'group' => 'Platform',
+            'group' => null,
         ];
     }
 
