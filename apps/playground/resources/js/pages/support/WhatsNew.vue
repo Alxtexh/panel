@@ -32,6 +32,26 @@ interface Release {
 
 const releases: Release[] = [
     {
+        version: '0.8',
+        date: '28 July 2026',
+        highlight: 'A trash bin, an extension point for fields, plugins, and documentation with a page per subject.',
+        added: [
+            'A Trash screen covering every resource. Deleted records leave the lists entirely, are restorable from one place, and are removed for good after seven days - stated on each row and enforced by a scheduled sweep.',
+            'A registration point for form field types, so a field can be added - or a built-in replaced - without editing the framework. Five new fields go through it: radio, checkbox list, tags, colour and slider.',
+            'A plugin API. A package can install resources, routes and navigation entries into a panel; it can only add, never reconfigure the guard or the tenancy context.',
+            'Testing helpers for anybody building on the panel, covering the three failures that matter: a resource that was never discovered, one that shows another organisation\'s rows, and a policy that is never consulted.',
+            'The build guide is now a page per subject with its own URL, walked by a test that checks every documented command still exists.',
+        ],
+        changed: [
+            'The subscriber form asks for the plan type as an inline radio group rather than a dropdown - three short options where reading them is part of the decision.',
+            'Deleted records no longer appear in resource lists under any query string. Every count, filter and export on a list now means live records and nothing else.',
+        ],
+        fixed: [
+            'An export link stopped working an hour after the export finished, while the file sat on disk - including from the notification announcing it, which is stored until it is read.',
+            'Export links carried no portal prefix, so a reseller\'s export pointed into a portal that does not serve it.',
+        ],
+    },
+    {
         version: '0.7',
         date: '28 July 2026',
         highlight: 'Portals from a command, a public API, scheduled reports, and an assistant that cites its sources.',

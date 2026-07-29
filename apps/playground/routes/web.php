@@ -178,7 +178,31 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
      | the moment they have the question - and it stays honest, because every
      | claim on it is one screen away from being checked.
      */
-    Route::inertia('about/building', 'support/BuildGuide')->name('support.building');
+    /*
+     | THE BUILD GUIDE, ONE PAGE PER SUBJECT.
+     |
+     | It was a single page with thirteen sections, which is an orientation
+     | rather than a reference - a section inside a long page cannot be linked in
+     | a review, bookmarked, or sent with "read this first". Each subject now has
+     | its own URL, and the content lives in `App\Support\Guide` so a test can
+     | walk it: a group naming a page that does not exist fails rather than
+     | rendering a dead link.
+     */
+    Route::get('about/building/{page?}', function (?string $page = null) {
+        $page ??= App\Support\Guide::slugs()[0];
+
+        abort_unless(App\Support\Guide::has($page), 404);
+
+        return Inertia::render('support/BuildGuide', [
+            'groups' => App\Support\Guide::groups(),
+            'titles' => array_map(
+                static fn (array $p): string => $p['title'],
+                App\Support\Guide::pages(),
+            ),
+            'page' => App\Support\Guide::page($page),
+            ...App\Support\Guide::neighbours($page),
+        ]);
+    })->name('support.building');
     Route::inertia('whats-new', 'support/WhatsNew')->name('support.whatsNew');
 
     /*
