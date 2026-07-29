@@ -211,10 +211,30 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
      | walk it: a group naming a page that does not exist fails rather than
      | rendering a dead link.
      */
-    Route::get('about/building/{page?}', function (?string $page = null) {
+    /*
+     | SEARCHING THE GUIDE.
+     |
+     | Declared BEFORE the page route, because `{page?}` would otherwise capture
+     | `search` and answer "no such page" - the classic fixed-segment-after-
+     | wildcard mistake, and one that looks like the endpoint was never written.
+     |
+     | ON THE SERVER rather than shipping the whole guide to every reader: it is
+     | tens of kilobytes of prose, and a search nobody performs would be paid for
+     | by everybody who opens the documentation to read one paragraph.
+     */
+    Route::get('about/building/search', fn (Illuminate\Http\Request $request) => response()->json([
+        'results' => App\Support\Guide::search((string) $request->query('q', '')),
+    ]))->name('support.building.search');
+
+    Route::get('about/building/{page?}', function (Illuminate\Http\Request $request, ?string $page = null) {
         $page ??= App\Support\Guide::slugs()[0];
 
         abort_unless(App\Support\Guide::has($page), 404);
+
+        // The term travels with the link from a search result, so the page can
+        // mark it and scroll to it - the difference between finding a page and
+        // finding an answer.
+        $term = (string) $request->query('q', '');
 
         return Inertia::render('support/BuildGuide', [
             'groups' => App\Support\Guide::groups(),
@@ -222,7 +242,8 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
                 static fn (array $p): string => $p['title'],
                 App\Support\Guide::pages(),
             ),
-            'page' => App\Support\Guide::page($page),
+            'page' => App\Support\Guide::page($page, $term),
+            'query' => $term,
             ...App\Support\Guide::neighbours($page),
         ]);
     })->name('support.building');

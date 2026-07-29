@@ -221,4 +221,134 @@ final class GuideTest extends TestCase
             );
         }
     }
+
+    /* -------------------------------------------------------------- searching */
+
+    /**
+     * IT SEARCHES THE PROSE, NOT THE TITLES.
+     *
+     * A table of contents already answers "which page is called filters". The
+     * question somebody arrives with is "where does it say anything about
+     * `visibleWhen`" - a word in the body of one page and the title of none, so
+     * a title-only search would make the box a slower version of the list beside
+     * it.
+     */
+    public function test_it_finds_a_term_that_appears_only_in_the_prose(): void
+    {
+        $results = Guide::search('visibleWhen');
+
+        $this->assertNotEmpty($results, 'A term in the body of a page was not found.');
+        $this->assertSame('fields', $results[0]['slug']);
+    }
+
+    /** A title match outranks a passing mention. */
+    public function test_a_title_match_comes_first(): void
+    {
+        $results = Guide::search('filter');
+
+        $this->assertSame('filters', $results[0]['slug']);
+        $this->assertGreaterThan(1, count($results), 'Only the title matched; the prose was not searched.');
+    }
+
+    public function test_searching_is_case_insensitive(): void
+    {
+        $this->assertSame(
+            array_column(Guide::search('TENANCY'), 'slug'),
+            array_column(Guide::search('tenancy'), 'slug'),
+        );
+    }
+
+    /**
+     * ONE LETTER RETURNS NOTHING, deliberately. It matches most of the guide, so
+     * the honest result is a list of everything - which reads as a broken search
+     * rather than as "type more".
+     */
+    public function test_a_single_character_returns_nothing(): void
+    {
+        $this->assertSame([], Guide::search('t'));
+        $this->assertSame([], Guide::search(''));
+    }
+
+    /**
+     * THE SNIPPET CONTAINS THE TERM, marked.
+     *
+     * A snippet that starts at the paragraph often leaves the match off the end
+     * of the line - so the result shows a sentence without the word somebody
+     * typed, which reads as a wrong result.
+     */
+    public function test_a_result_carries_a_snippet_with_the_term_marked(): void
+    {
+        $result = Guide::search('pgvector')[0];
+
+        $marked = array_filter(
+            $result['snippet'],
+            static fn (array $segment): bool => $segment['type'] === 'match',
+        );
+
+        $this->assertNotEmpty($marked, 'The snippet does not mark the term.');
+    }
+
+    public function test_the_search_endpoint_answers(): void
+    {
+        $this->actingAs($this->user)
+            ->getJson('/about/building/search?q=tenancy')
+            ->assertOk()
+            ->assertJsonPath('results.0.slug', 'tenancy');
+    }
+
+    /**
+     * THE ENDPOINT IS DECLARED BEFORE `{page?}`, and this asserts it stayed
+     * there. A fixed segment after a wildcard is captured by the wildcard, so
+     * `search` would answer "no such page" - a failure that looks like the
+     * endpoint was never written.
+     */
+    public function test_search_is_not_captured_by_the_page_route(): void
+    {
+        $response = $this->actingAs($this->user)->get('/about/building/search?q=trash');
+
+        $response->assertOk();
+        $this->assertJson($response->getContent());
+    }
+
+    /**
+     * ARRIVING FROM A RESULT LANDS ON THE SENTENCE.
+     *
+     * Without the term travelling with the link, search finds a PAGE and leaves
+     * the reader to find the word they typed - on a page whose whole job is to
+     * contain a lot of words.
+     */
+    public function test_a_page_marks_the_term_it_was_opened_with(): void
+    {
+        $props = $this->actingAs($this->user)
+            ->get('/about/building/fields?q=slider')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $marked = 0;
+
+        foreach ($props['page']['body'] as $paragraph) {
+            foreach ([...($paragraph['lead'] ?? []), ...$paragraph['text']] as $segment) {
+                // Either kind of mark: a code span containing the term is
+                // marked whole rather than split.
+                if (str_contains($segment['type'], 'match')) {
+                    $marked++;
+                }
+            }
+        }
+
+        $this->assertGreaterThan(0, $marked, 'The searched term is not marked on the page it opens.');
+    }
+
+    /** And a page opened without one is unmarked, so nothing is highlighted at random. */
+    public function test_a_page_opened_without_a_term_marks_nothing(): void
+    {
+        $props = $this->actingAs($this->user)->get('/about/building/fields')->assertOk()
+            ->viewData('page')['props'];
+
+        foreach ($props['page']['body'] as $paragraph) {
+            foreach ($paragraph['text'] as $segment) {
+                $this->assertStringNotContainsString('match', $segment['type']);
+            }
+        }
+    }
 }

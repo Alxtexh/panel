@@ -28,14 +28,30 @@
  */
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
-import { ArrowLeft, ArrowRight, Check, Copy, TriangleAlert } from '@lucide/vue'
-import { nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { ArrowLeft, ArrowRight, Check, Copy, Search, TriangleAlert, X } from '@lucide/vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { router } from '@inertiajs/vue3'
 
 defineOptions({ layout: AppLayout })
 
 interface Segment {
-    type: 'text' | 'code'
+    /**
+     * `match` is the searched term and `code-match` a code span containing it -
+     * both marked by the server, so nothing here renders HTML.
+     *
+     * A code span is marked WHOLE rather than split: cutting `visibleWhen` into
+     * three chips for a search on "visible" is less readable than the thing
+     * being searched for.
+     */
+    type: 'text' | 'code' | 'match' | 'code-match'
     value: string
+}
+
+interface SearchResult {
+    slug: string
+    title: string
+    group: string
+    snippet: Segment[]
 }
 
 interface Paragraph {
@@ -67,6 +83,8 @@ const props = defineProps<{
     groups: { title: string; pages: string[] }[]
     titles: Record<string, string>
     page: GuidePage
+    /** The term this page was opened with, if it came from a result. */
+    query: string
     previous: Neighbour | null
     next: Neighbour | null
 }>()
@@ -88,6 +106,7 @@ watch(
         await nextTick()
         article.value?.scrollTo({ top: 0 })
         showActiveEntry()
+        showFirstMatch()
     },
 )
 
@@ -108,7 +127,178 @@ function showActiveEntry() {
         ?.scrollIntoView({ block: 'nearest' })
 }
 
-onMounted(showActiveEntry)
+onMounted(() => {
+    showActiveEntry()
+    showFirstMatch()
+    searchAgainIfArrivedFromAResult()
+})
+
+/**
+ * Arriving from a result lands on the sentence, not on the page.
+ *
+ * Without this, search finds a PAGE and leaves the reader to find the word they
+ * typed - on a page whose whole job is to contain a lot of words.
+ */
+async function showFirstMatch() {
+    if (!props.query) return
+
+    await nextTick()
+
+    /*
+     * BY ATTRIBUTE, NOT BY TAG. A marked code span renders as `<code>` rather
+     * than `<mark>` - splitting `visibleWhen` into three chips would be less
+     * readable than the thing being searched for - so looking for `mark` found
+     * nothing precisely when the search term was a class name, which is most of
+     * the time in this guide.
+     */
+    article.value?.querySelector('[data-match]')?.scrollIntoView({ block: 'center' })
+}
+
+/* ------------------------------------------------------------------- search */
+
+const term = ref(props.query ?? '')
+const results = ref<SearchResult[]>([])
+const searching = ref(false)
+
+/**
+ * The term the results on screen belong to.
+ *
+ * WITHOUT IT, ARRIVING FROM A RESULT SHOWED "0 RESULTS". The box is seeded with
+ * the term the page was opened with, so the panel had a term and an empty list
+ * - and it replaced the contents with "nothing in the guide mentions that",
+ * about a word that had just matched the page being read.
+ */
+const searchedFor = ref('')
+const highlighted = ref(0)
+const box = useTemplateRef<HTMLInputElement>('box')
+
+let debounce: ReturnType<typeof setTimeout> | undefined
+
+/**
+ * DEBOUNCED, AND NOT FIRED AT ALL BELOW TWO CHARACTERS.
+ *
+ * A request per keystroke over a guide is a request per keystroke; one letter
+ * matches most of the prose, so the answer would be "everything", which reads as
+ * a broken search rather than as "type more".
+ */
+watch(term, (value) => {
+    clearTimeout(debounce)
+
+    if (value.trim().length < 2) {
+        results.value = []
+        searchedFor.value = ''
+        searching.value = false
+
+        return
+    }
+
+    searching.value = true
+
+    debounce = setTimeout(() => runSearch(value), 180)
+})
+
+async function runSearch(value: string) {
+    searching.value = true
+
+    try {
+        const response = await fetch(
+            `/about/building/search?q=${encodeURIComponent(value.trim())}`,
+            {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            },
+        )
+
+        if (!response.ok) throw new Error('search')
+
+        results.value = (await response.json()).results ?? []
+        searchedFor.value = value.trim()
+        highlighted.value = 0
+    } catch {
+        // A failed search leaves the previous results rather than blanking the
+        // list, which would read as "no such thing exists".
+    } finally {
+        searching.value = false
+    }
+}
+
+/** The term travels with the link, so the page it opens marks and scrolls to it. */
+function open(result: SearchResult) {
+    router.visit(`${href(result.slug)}?q=${encodeURIComponent(term.value.trim())}`)
+}
+
+function onSearchKey(event: KeyboardEvent) {
+    if (results.value.length === 0) return
+
+    if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        highlighted.value = (highlighted.value + 1) % results.value.length
+    } else if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        highlighted.value = (highlighted.value - 1 + results.value.length) % results.value.length
+    } else if (event.key === 'Enter') {
+        event.preventDefault()
+        open(results.value[highlighted.value])
+    }
+}
+
+function clearSearch() {
+    term.value = ''
+    results.value = []
+    searchedFor.value = ''
+    box.value?.focus()
+}
+
+/**
+ * A page opened from a result re-runs its own search.
+ *
+ * The term is still in the box, so the reader expects the other matches to still
+ * be there - and finding the second-best page is exactly what somebody does when
+ * the first one did not answer the question.
+ */
+function searchAgainIfArrivedFromAResult() {
+    if (props.query && props.query.trim().length >= 2) {
+        // Assigning the same value would not trigger the watcher, so the search
+        // is kicked off directly.
+        term.value = props.query
+        results.value = []
+        searchedFor.value = ''
+        runSearch(props.query)
+    }
+}
+
+/**
+ * `/` FOCUSES THE BOX, the shortcut every documentation site has - but only when
+ * nothing else is being typed into, or pressing slash inside a filter field
+ * would jump the caret out of it.
+ */
+function onKeydown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement | null
+    const typing =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable
+
+    if (event.key === '/' && !typing) {
+        event.preventDefault()
+        box.value?.focus()
+
+        return
+    }
+
+    if (event.key === 'Escape' && document.activeElement === box.value) {
+        clearSearch()
+    }
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onKeydown)
+    clearTimeout(debounce)
+})
+
+/* ------------------------------------------------------------------- copying */
 
 const copied = ref<string | null>(null)
 
@@ -144,14 +334,89 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
             ref="contents"
             class="shrink-0 border-b px-4 py-4 lg:w-60 lg:overflow-y-auto lg:border-r lg:border-b-0 lg:py-6"
         >
-            <div class="mb-4">
+            <div class="mb-3">
                 <p class="text-sm font-semibold">Building a panel</p>
                 <p class="text-muted-foreground mt-0.5 text-xs">
                     The order to do things in, and the decisions that are hard to change later.
                 </p>
             </div>
 
-            <div class="flex flex-col gap-5">
+            <div class="relative mb-4">
+                <Search
+                    class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
+                />
+                <input
+                    ref="box"
+                    v-model="term"
+                    type="search"
+                    class="border-input bg-background focus:ring-ring h-8 w-full rounded-md border pr-7 pl-8 text-sm focus:ring-2 focus:outline-none"
+                    placeholder="Search the guide"
+                    aria-label="Search the guide"
+                    @keydown="onSearchKey"
+                />
+                <button
+                    v-if="term"
+                    type="button"
+                    class="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                    aria-label="Clear search"
+                    @click="clearSearch"
+                >
+                    <X class="size-3.5" />
+                </button>
+                <kbd
+                    v-else
+                    class="text-muted-foreground pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-[10px]"
+                    aria-hidden="true"
+                    >/</kbd
+                >
+            </div>
+
+            <!--
+                RESULTS REPLACE THE CONTENTS rather than appearing over them. A
+                dropdown inside a scrolling column is clipped by that column, and
+                the alternative - a floating panel - covers the list you are
+                trying to compare the results against.
+            -->
+            <div
+                v-if="term.trim().length >= 2 && (searching || searchedFor === term.trim())"
+                class="flex flex-col gap-1"
+            >
+                <p class="text-muted-foreground px-2 pb-1 text-[11px] font-semibold tracking-wide uppercase">
+                    {{ searching ? 'Searching…' : `${results.length} result(s)` }}
+                </p>
+
+                <p
+                    v-if="!searching && results.length === 0"
+                    class="text-muted-foreground px-2 py-3 text-sm"
+                >
+                    Nothing in the guide mentions that.
+                </p>
+
+                <button
+                    v-for="(result, i) in results"
+                    :key="result.slug"
+                    type="button"
+                    class="flex flex-col gap-0.5 rounded-md px-2 py-1.5 text-left transition-colors"
+                    :class="i === highlighted ? 'bg-muted' : 'hover:bg-muted/50'"
+                    @click="open(result)"
+                    @mouseenter="highlighted = i"
+                >
+                    <span class="text-sm font-medium">{{ result.title }}</span>
+                    <span class="text-muted-foreground text-[11px] uppercase">{{ result.group }}</span>
+                    <span class="text-muted-foreground text-xs leading-snug">
+                        <template v-for="(segment, s) in result.snippet" :key="s">
+                            <mark
+                                v-if="segment.type === 'match'"
+                                class="bg-primary/20 text-foreground rounded-sm px-0.5"
+                                >{{ segment.value }}</mark
+                            >
+                            <template v-else>{{ segment.value }}</template>
+                        </template>
+                    </span>
+                </button>
+            </div>
+
+            <div v-else class="flex flex-col gap-5">
                 <div v-for="group in groups" :key="group.title" class="flex flex-col gap-0.5">
                     <p class="text-muted-foreground px-2 pb-1 text-[11px] font-semibold tracking-wide uppercase">
                         {{ group.title }}
@@ -199,9 +464,17 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                     <h2 v-if="paragraph.lead" class="text-sm font-semibold">
                         <template v-for="(segment, s) in paragraph.lead" :key="s">
                             <code
-                                v-if="segment.type === 'code'"
-                                class="bg-muted rounded px-1 py-0.5 font-mono text-[13px] font-normal"
+                                v-if="segment.type === 'code' || segment.type === 'code-match'"
+                                :data-match="segment.type === 'code-match' ? '' : undefined"
+                                class="rounded px-1 py-0.5 font-mono text-[13px] font-normal"
+                                :class="segment.type === 'code-match' ? 'bg-primary/20' : 'bg-muted'"
                                 >{{ segment.value }}</code
+                            >
+                            <mark
+                                v-else-if="segment.type === 'match'"
+                                data-match
+                                class="bg-primary/20 text-foreground rounded-sm px-0.5"
+                                >{{ segment.value }}</mark
                             >
                             <template v-else>{{ segment.value }}</template>
                         </template>
@@ -210,9 +483,17 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                     <p class="text-muted-foreground text-[15px] leading-7">
                         <template v-for="(segment, s) in paragraph.text" :key="s">
                             <code
-                                v-if="segment.type === 'code'"
-                                class="bg-muted text-foreground rounded px-1 py-0.5 font-mono text-[13px]"
+                                v-if="segment.type === 'code' || segment.type === 'code-match'"
+                                :data-match="segment.type === 'code-match' ? '' : undefined"
+                                class="text-foreground rounded px-1 py-0.5 font-mono text-[13px]"
+                                :class="segment.type === 'code-match' ? 'bg-primary/20' : 'bg-muted'"
                                 >{{ segment.value }}</code
+                            >
+                            <mark
+                                v-else-if="segment.type === 'match'"
+                                data-match
+                                class="bg-primary/20 text-foreground rounded-sm px-0.5"
+                                >{{ segment.value }}</mark
                             >
                             <template v-else>{{ segment.value }}</template>
                         </template>
@@ -268,9 +549,15 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                     <p class="text-[15px] leading-7">
                         <template v-for="(segment, s) in page.warning" :key="s">
                             <code
-                                v-if="segment.type === 'code'"
+                                v-if="segment.type === 'code' || segment.type === 'code-match'"
                                 class="bg-muted rounded px-1 py-0.5 font-mono text-[13px]"
                                 >{{ segment.value }}</code
+                            >
+                            <mark
+                                v-else-if="segment.type === 'match'"
+                                data-match
+                                class="bg-primary/20 text-foreground rounded-sm px-0.5"
+                                >{{ segment.value }}</mark
                             >
                             <template v-else>{{ segment.value }}</template>
                         </template>

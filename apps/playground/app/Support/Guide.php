@@ -82,7 +82,7 @@ final class Guide
         return array_key_exists($slug, self::pages());
     }
 
-    public static function page(string $slug): array
+    public static function page(string $slug, string $term = ''): array
     {
         $page = self::pages()[$slug];
 
@@ -90,9 +90,19 @@ final class Guide
             'slug' => $slug,
             'title' => $page['title'],
             'summary' => $page['summary'],
-            'body' => array_map([self::class, 'paragraph'], $page['body']),
+            /*
+             * THE SEARCHED TERM IS MARKED IN THE PROSE, so arriving from a
+             * result lands on the sentence rather than on a page you then have
+             * to read looking for the word you already typed. That is the whole
+             * difference between search that finds a PAGE and search that finds
+             * an ANSWER.
+             */
+            'body' => array_map(
+                static fn (string $paragraph): array => self::paragraph($paragraph, $term),
+                $page['body'],
+            ),
             'blocks' => $page['blocks'] ?? [],
-            'warning' => isset($page['warning']) ? self::segments($page['warning']) : null,
+            'warning' => isset($page['warning']) ? self::segments($page['warning'], $term) : null,
         ];
     }
 
@@ -110,7 +120,7 @@ final class Guide
      *
      * @return array{lead: list<array{type: string, value: string}>|null, text: list<array{type: string, value: string}>}
      */
-    private static function paragraph(string $body): array
+    private static function paragraph(string $body, string $term = ''): array
     {
         /*
          * AT LEAST TWO CAPITALISED WORDS, ending at a full stop, a comma or a
@@ -119,12 +129,12 @@ final class Guide
          */
         if (preg_match('/^([A-Z][A-Z0-9\'`\-]*(?:\s+[A-Z][A-Z0-9\'`\-]*)+)([.,]|\s-)\s+(.*)$/su', $body, $m) === 1) {
             return [
-                'lead' => self::segments(rtrim($m[1], ' -')),
-                'text' => self::segments(trim($m[3])),
+                'lead' => self::segments(rtrim($m[1], ' -'), $term),
+                'text' => self::segments(trim($m[3]), $term),
             ];
         }
 
-        return ['lead' => null, 'text' => self::segments($body)];
+        return ['lead' => null, 'text' => self::segments($body, $term)];
     }
 
     /**
@@ -137,7 +147,7 @@ final class Guide
      *
      * @return list<array{type: string, value: string}>
      */
-    private static function segments(string $text): array
+    private static function segments(string $text, string $term = ''): array
     {
         /*
          * NO `PREG_SPLIT_NO_EMPTY`, and that flag is the trap. The alternation
@@ -155,7 +165,34 @@ final class Guide
                 continue;
             }
 
-            $out[] = ['type' => $i % 2 === 1 ? 'code' : 'text', 'value' => $part];
+            $type = $i % 2 === 1 ? 'code' : 'text';
+
+            if ($term === '' || mb_strlen($term) < 2) {
+                $out[] = ['type' => $type, 'value' => $part];
+
+                continue;
+            }
+
+            /*
+             * A CODE SPAN IS MARKED WHOLE, never split. Splitting `visibleWhen`
+             * into three chips for a search on "visible" is less readable than
+             * the thing being searched for - but leaving it unmarked was worse:
+             * the search matches inside code, so `SliderField` was a result that
+             * opened a page with nothing highlighted, which reads as the wrong
+             * page.
+             */
+            if ($type === 'code') {
+                $out[] = [
+                    'type' => self::contains($part, $term) ? 'code-match' : 'code',
+                    'value' => $part,
+                ];
+
+                continue;
+            }
+
+            foreach (self::highlight($part, $term) as $piece) {
+                $out[] = $piece;
+            }
         }
 
         return $out;
@@ -844,5 +881,183 @@ final class Guide
         }
 
         return implode("\n", $out);
+    }
+
+    /* ---------------------------------------------------------------- search */
+
+    /**
+     * Pages matching `$term`, best first.
+     *
+     * IT SEARCHES THE PROSE, NOT THE TITLES. A table of contents already
+     * answers "which page is called filters"; the question somebody actually
+     * arrives with is "where does it say anything about `visibleWhen`" - and
+     * that word appears in the body of one page and the title of none. Matching
+     * titles only would make the search box a slower version of the list beside
+     * it.
+     *
+     * ON THE SERVER, deliberately. The alternative is shipping every page with
+     * every page - the whole guide is tens of kilobytes of prose - so that a
+     * search nobody performs is paid for by everybody who opens the
+     * documentation to read one paragraph.
+     *
+     * RANKED, because a term in a title means something different from a term in
+     * the fourth paragraph. Title beats summary beats prose beats code, and
+     * within a rank the guide\'s own reading order breaks the tie - which is
+     * more useful than alphabetical, since earlier pages are more introductory.
+     *
+     * @return list<array{slug: string, title: string, group: string, snippet: list<array{type: string, value: string}>}>
+     */
+    public static function search(string $term): array
+    {
+        $term = trim($term);
+
+        /*
+         * TWO CHARACTERS MINIMUM. A single letter matches most of the guide, so
+         * the result is a list of everything - which reads as "the search is
+         * broken" rather than "type more".
+         */
+        if (mb_strlen($term) < 2) {
+            return [];
+        }
+
+        $groupOf = [];
+
+        foreach (self::groups() as $group) {
+            foreach ($group['pages'] as $slug) {
+                $groupOf[$slug] = $group['title'];
+            }
+        }
+
+        $results = [];
+        $order = 0;
+
+        foreach (self::slugs() as $slug) {
+            $page = self::pages()[$slug];
+            $order++;
+
+            $rank = null;
+            $snippet = null;
+
+            if (self::contains($page['title'], $term)) {
+                $rank = 0;
+                $snippet = $page['summary'];
+            } elseif (self::contains($page['summary'], $term)) {
+                $rank = 1;
+                $snippet = $page['summary'];
+            }
+
+            foreach ($page['body'] as $paragraph) {
+                if (! self::contains($paragraph, $term)) {
+                    continue;
+                }
+
+                // A prose match beats a code one but not a title; the first
+                // matching paragraph is the snippet, because it is the one the
+                // reader will land on.
+                if ($rank === null || $rank > 2) {
+                    $rank = 2;
+                    $snippet = $paragraph;
+                }
+
+                break;
+            }
+
+            if ($rank === null) {
+                foreach ($page['blocks'] ?? [] as $block) {
+                    if (self::contains($block['code'], $term)) {
+                        $rank = 3;
+                        $snippet = $page['summary'];
+
+                        break;
+                    }
+                }
+            }
+
+            if ($rank === null) {
+                continue;
+            }
+
+            $results[] = [
+                'slug' => $slug,
+                'title' => $page['title'],
+                'group' => $groupOf[$slug] ?? '',
+                'snippet' => self::highlight(self::around((string) $snippet, $term), $term),
+                'rank' => $rank,
+                'order' => $order,
+            ];
+        }
+
+        usort(
+            $results,
+            static fn (array $a, array $b): int => [$a['rank'], $a['order']] <=> [$b['rank'], $b['order']],
+        );
+
+        return array_map(
+            static fn (array $r): array => array_diff_key($r, ['rank' => null, 'order' => null]),
+            array_slice($results, 0, 12),
+        );
+    }
+
+    private static function contains(string $haystack, string $needle): bool
+    {
+        return mb_stripos($haystack, $needle) !== false;
+    }
+
+    /**
+     * A window of text around the first match.
+     *
+     * A SNIPPET THAT STARTS AT THE PARAGRAPH is a snippet whose match is often
+     * off the end of the line - so the result shows a sentence that does not
+     * contain the word somebody typed, which reads as a wrong result. This
+     * centres on the match instead.
+     */
+    private static function around(string $text, string $term, int $width = 140): string
+    {
+        $text = trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
+
+        $at = mb_stripos($text, $term);
+
+        if ($at === false || mb_strlen($text) <= $width) {
+            return $text;
+        }
+
+        $start = max(0, $at - (int) ($width / 3));
+
+        $window = mb_substr($text, $start, $width);
+
+        return ($start > 0 ? '…' : '').trim($window).'…';
+    }
+
+    /**
+     * Text split so the client can mark the match without `v-html`.
+     *
+     * THE SAME REASON THE CODE SPANS ARE SEGMENTS: highlighting by injecting
+     * `<mark>` into a string means rendering unescaped HTML from content
+     * somebody will one day edit.
+     *
+     * @return list<array{type: string, value: string}>
+     */
+    private static function highlight(string $text, string $term): array
+    {
+        $parts = preg_split(
+            '/('.preg_quote($term, '/').')/iu',
+            $text,
+            -1,
+            PREG_SPLIT_DELIM_CAPTURE,
+        );
+
+        $out = [];
+
+        foreach ($parts ?: [$text] as $i => $part) {
+            if ($part === '') {
+                continue;
+            }
+
+            // Odd pieces are the captured term - see the note in `segments`
+            // about why empty pieces are dropped after the parity is read.
+            $out[] = ['type' => $i % 2 === 1 ? 'match' : 'text', 'value' => $part];
+        }
+
+        return $out;
     }
 }
