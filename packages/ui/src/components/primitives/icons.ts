@@ -57,6 +57,43 @@ export const ICON_PATHS: Record<string, string> = {
     // reads as "more columns this way" next to a scrollable table.
     'more-vertical': 'M12 12h.01M12 19h.01M12 5h.01',
     'chevron-right': 'm9 18 6-6-6-6',
+
+    /* -------------------------------------------------------- destinations */
+    /*
+     * THE NAVIGATION SET, AND ITS ABSENCE WAS VISIBLE ON EVERY PHONE.
+     *
+     * Everything above is an ACTION - the vocabulary of a row menu and a
+     * confirmation dialog - because that is all this registry was ever asked
+     * for. Then the bottom bar started drawing the same navigation the sidebar
+     * draws, and the sidebar resolves its icons through Lucide components while
+     * this resolves them through these paths. Every name the server sends -
+     * `users`, `router`, `mail`, `home` - was missing, `iconPath()` fell back to
+     * the dot for all of them, and the bar rendered five identical specks above
+     * five labels.
+     *
+     * Nothing failed. The fallback is deliberate and correct, and it made an
+     * entirely unusable navigation look like a design choice.
+     *
+     * NAMES MATCH THE SERVER'S VOCABULARY, not Lucide's file names, because a
+     * resource says `->icon('router')` and neither half should have to know what
+     * the other calls it.
+     */
+    home: 'M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z M9 21v-8h6v8',
+    users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-3.9 M16 3.1a4 4 0 0 1 0 7.8',
+    package: 'M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z m3.3 7L12 12l8.7-5 M12 22V12 m7.5 4.3 9 5.1',
+    router: 'M2 14a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z M6.01 17H6 M10.01 17H10 M15 10v2 M17.8 7.2a4 4 0 0 0-5.6 0 M20.7 4.3a8 8 0 0 0-11.4 0',
+    mail: 'M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z m22 6-10 7L2 6',
+    chat: 'M7.9 20A9 9 0 1 0 4 16.1L2 22Z',
+    'book-open': 'M12 7v14 M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3Z',
+    smartphone: 'M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2Z M12 18h.01',
+    lock: 'M7 11V7a5 5 0 0 1 10 0v4 M5 11h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z',
+    gauge: 'm12 14 4-4 M3.3 19a10 10 0 1 1 17.4 0',
+    'file-question': 'M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z M15 2v5h5 M10 11a2 2 0 1 1 2 2v1 M12 17h.01',
+    'server-crash': 'M6 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2 M6 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2 M6 6h.01 M6 18h.01 M13 6l-3 5h4l-3 5',
+    'shield-alert': 'M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1 1 0 0 1 1.5 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1Z M12 8v4 M12 16h.01',
+    'timer-off': 'M10 2h4 M12 12v-2 M4.6 11a8 8 0 0 0 10.4 10.4 M7.4 7.4a8 8 0 0 1 11.2 11.2 M2 2l20 20',
+    wrench: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9Z',
+    menu: 'M4 6h16M4 12h16M4 18h16',
 }
 
 /** The path for a name, or the fallback dot when the name is unknown. */

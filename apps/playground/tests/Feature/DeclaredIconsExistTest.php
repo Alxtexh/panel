@@ -59,4 +59,72 @@ final class DeclaredIconsExistTest extends TestCase
 
         $this->assertSame([], $missing, 'These icons render as a fallback dot.');
     }
+
+    /**
+     * AND EVERY NAVIGATION ICON, which is where this test had a hole.
+     *
+     * The method above reads `->icon('name')` - the ACTION vocabulary, declared
+     * fluently inside a resource. A destination's icon is declared differently:
+     * `protected static string $icon = 'router'` on a resource, and
+     * `'icon' => 'mail'` in the page list. None of those were checked.
+     *
+     * IT COST A WHOLE NAVIGATION. The sidebar resolves icons through Lucide
+     * components and never noticed; the phone's bottom bar resolves them through
+     * this map, and not one navigation name was in it - so every item rendered
+     * the fallback dot and the bar was five identical specks above five labels.
+     * The failure is invisible on a desktop, which is where it was written.
+     */
+    public function test_every_navigation_icon_has_a_path(): void
+    {
+        $map = file_get_contents(base_path('../../packages/ui/src/components/primitives/icons.ts'));
+
+        $this->assertNotFalse($map, 'The icon map moved; this test points at the wrong file.');
+
+        $declared = [];
+
+        // A resource's own icon: the static property or the accessor.
+        foreach (glob(app_path('Panel/Resources/*.php')) as $file) {
+            $source = (string) file_get_contents($file);
+
+            preg_match_all("/\\\$icon\s*=\s*'([a-z0-9-]+)'/", $source, $property);
+            preg_match_all("/function icon\(\): string\s*\{\s*return '([a-z0-9-]+)'/", $source, $accessor);
+
+            foreach ([...$property[1], ...$accessor[1]] as $name) {
+                $declared[$name] = basename($file);
+            }
+        }
+
+        // Non-resource pages, and the bin the package contributes.
+        foreach ([app_path('Panel/Pages.php'), base_path('../../packages/panel/src/Trash/TrashBin.php')] as $file) {
+            preg_match_all("/'icon'\s*=>\s*'([a-z0-9-]+)'/", (string) file_get_contents($file), $matches);
+
+            foreach ($matches[1] as $name) {
+                $declared[$name] = basename($file);
+            }
+        }
+
+        /*
+         * THE HANDSET BAR PREPENDS ONE OF ITS OWN. It is the only icon named in
+         * a Vue file rather than in PHP, and it was among the missing ones.
+         */
+        $declared['home'] = 'AppLayout.vue';
+
+        $this->assertGreaterThan(8, count($declared), 'No navigation icons were found to check.');
+
+        $missing = [];
+
+        foreach ($declared as $name => $file) {
+            $quoted = preg_quote($name, '/');
+
+            if (preg_match("/(^|\s)'?{$quoted}'?\s*:/m", $map) !== 1) {
+                $missing[] = "{$name} (declared in {$file})";
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $missing,
+            'These render as a fallback dot in the handset navigation, which has no other icon source.',
+        );
+    }
 }

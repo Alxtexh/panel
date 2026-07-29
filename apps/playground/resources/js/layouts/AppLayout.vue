@@ -18,6 +18,7 @@ import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue'
 import AppHorizontalLayout from '@/layouts/app/AppHorizontalLayout.vue'
 import type { BreadcrumbItem } from '@/types'
 import SessionExpired from '@/components/SessionExpired.vue'
+import { useSidebarOpener } from '@/lib/mobileNav'
 
 const { breadcrumbs = [] } = defineProps<{
     breadcrumbs?: BreadcrumbItem[]
@@ -66,17 +67,30 @@ const bottomNavItems = computed<BottomNavItem[]>(() => {
 })
 
 /**
- * "More" opens the full navigation rather than pretending the list fits.
+ * "More" opens the SIDEBAR, not a menu of its own.
  *
  * IT USED TO NAVIGATE TO THE DASHBOARD, which is not "more" - it is somewhere
- * else. Five slots hold four destinations and a way out; sending somebody home
- * when they asked to see the rest is the interface answering a different
- * question, and on a handset there is no sidebar to fall back on.
+ * else. Sending somebody home when they asked to see the rest is the interface
+ * answering a different question.
+ *
+ * THEN IT OPENED A SHEET, which was closer and still wrong. That sheet was
+ * built from the same data as the sidebar and looked nothing like it: a flat
+ * list, no groups, no collapse state, none of the footer links. A phone got a
+ * second navigation nobody else had seen, so what a technician learned standing
+ * at a pole was not what they saw at a desk. There IS a sidebar on a handset -
+ * it opens as a drawer - and it is the same one.
+ *
+ * THE SHEET SURVIVES AS A FALLBACK for the horizontal layout, which genuinely
+ * has no sidebar. `request()` answers whether anything took it.
  */
 const showAllNav = ref(false)
 
+const opener = useSidebarOpener()
+
 function openFullNav() {
-    showAllNav.value = true
+    if (! opener.request()) {
+        showAllNav.value = true
+    }
 }
 
 const shell = computed(() =>

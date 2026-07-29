@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { PkBoundary, PkDropdown, useAppearance } from '@panelkit/ui'
 import { usePanelNav } from '@/composables/usePanelNav'
 import {
@@ -27,6 +27,7 @@ import NavFooter from '@/components/NavFooter.vue'
 import NavMain from '@/components/NavMain.vue'
 import NavUser from '@/components/NavUser.vue'
 import { useCurrentUrl } from '@/composables/useCurrentUrl'
+import { useSidebarOpener } from '@/lib/mobileNav'
 import {
     Sidebar,
     SidebarContent,
@@ -74,6 +75,24 @@ const { appearance } = useAppearance()
  * collapsing.
  */
 const { state, isMobile, setOpenMobile } = useSidebar()
+
+/**
+ * THE BOTTOM BAR'S "MORE" OPENS THIS, rather than a menu of its own.
+ *
+ * It used to open a sheet built from the same data as this sidebar and looking
+ * nothing like it - no groups, no collapse state, no footer links - so a phone
+ * got a second navigation nobody else has seen. Opening the real drawer means
+ * the thing somebody learns on a handset is the thing they see on a laptop.
+ *
+ * REGISTERED WHILE MOUNTED, because the horizontal layout has no sidebar and
+ * the bar has to know the difference between "opened" and "asked into nothing".
+ */
+const opener = useSidebarOpener()
+
+onMounted(() => opener.register())
+onUnmounted(() => opener.unregister())
+
+watch(opener.requests, () => setOpenMobile(true))
 
 const isCollapsed = computed(() => state.value === 'collapsed')
 
