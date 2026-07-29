@@ -441,4 +441,63 @@ final class NavigationCoverageTest extends TestCase
         $this->assertContains('/docs', $hrefs);
         $this->assertTrue($props['panelHome']['isDefault']);
     }
+
+    /**
+     * THE ACCOUNT MENU IN A GENERATED PORTAL IS THE ACCOUNT, AND NOTHING ELSE.
+     *
+     * User management, backups, logs, monitoring and the lock screen are all
+     * routed at the ROOT - they belong to the application, not to whichever
+     * portal you happen to be standing in. Offering them in a generated portal
+     * makes the account menu another way out of it, which is the same failure
+     * the sidebar had.
+     *
+     * ASSERTED AGAINST THE COMPONENT, because this is a client-side decision
+     * driven by a server-side fact. Nothing inside PHP can see the menu, and
+     * nothing inside the component can see the panel - the shared prop is the
+     * only place both are true, so the test checks that the component actually
+     * consults it.
+     */
+    public function test_the_account_menu_hides_the_applications_screens_in_other_portals(): void
+    {
+        $menu = (string) file_get_contents(resource_path('js/components/UserMenuContent.vue'));
+
+        $this->assertStringContainsString(
+            'isApplicationPortal',
+            $menu,
+            'The account menu no longer asks which portal it is in.',
+        );
+
+        // The TEMPLATE, not the file - the imports name every route the menu can
+        // reach, so searching the whole thing would match a line that renders
+        // nothing.
+        preg_match('/<template>(.*)<\/template>/s', $menu, $template);
+
+        $this->assertNotEmpty($template, 'The account menu has no template.');
+
+        preg_match_all('/<DropdownMenuItem(.*?)<\/DropdownMenuItem>/s', $template[1], $items);
+
+        $this->assertGreaterThan(4, count($items[0]), 'No menu items were found to check.');
+
+        $ungated = 0;
+
+        foreach ($items[0] as $item) {
+            // The account and the way out of it are the two things that mean the
+            // same in every portal; everything else is the application's.
+            if (str_contains($item, 'edit()') || str_contains($item, 'logout()')) {
+                $ungated++;
+
+                continue;
+            }
+
+            $this->assertStringContainsString(
+                'isApplicationPortal',
+                $item,
+                "An account-menu item is offered in every portal, including ones that cannot serve it:\n".$item,
+            );
+        }
+
+        // Both of them, still there: a portal whose account menu offers nothing
+        // is as wrong as one that offers everything.
+        $this->assertSame(2, $ungated, 'The profile or the way out of it has gone missing.');
+    }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import { DatabaseBackup, Lock, LogOut, ScrollText, Server, Settings, UsersRound } from '@lucide/vue'
 import {
     DropdownMenuGroup,
@@ -30,6 +31,22 @@ const handleLogout = () => {
 defineProps<Props>()
 
 const page = usePage()
+
+/**
+ * Whether this is the application's OWN portal.
+ *
+ * EVERYTHING BELOW THE PROFILE BELONGS TO THE APPLICATION, not to the panel:
+ * user management, backups, logs and monitoring are all routed at the root, so a
+ * generated portal offering them is a portal you leave by opening your own
+ * account menu. The account itself - and signing out of it - is the only part
+ * that means the same thing in every portal.
+ *
+ * A PORTAL THAT WANTS MORE ADDS IT. This is the floor, not the ceiling: a panel
+ * declares its own pages, and a plugin can install screens into it.
+ */
+const isApplicationPortal = computed(
+    () => (page.props.panelHome as { isDefault: boolean } | undefined)?.isDefault ?? true,
+)
 </script>
 
 <template>
@@ -52,7 +69,10 @@ const page = usePage()
             configuration - and only shown to somebody who can actually open it.
             A link that always 403s advertises a page and then refuses it.
         -->
-        <DropdownMenuItem v-if="page.props.auth?.can?.manageRoles" :as-child="true">
+        <DropdownMenuItem
+            v-if="isApplicationPortal && page.props.auth?.can?.manageRoles"
+            :as-child="true"
+        >
             <Link class="block w-full cursor-pointer" :href="userManagement.url({ tab: 'users' })" prefetch>
                 <UsersRound class="mr-2 h-4 w-4" />
                 User management
@@ -69,14 +89,20 @@ const page = usePage()
             Shown only to somebody holding `view_operations` - a link that always
             403s advertises a page and then refuses it.
         -->
-        <DropdownMenuItem v-if="page.props.auth?.can?.viewOperations" :as-child="true">
+        <DropdownMenuItem
+            v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
+            :as-child="true"
+        >
             <Link class="block w-full cursor-pointer" :href="operations.backups.url()" prefetch>
                 <DatabaseBackup class="mr-2 h-4 w-4" />
                 Backups
             </Link>
         </DropdownMenuItem>
 
-        <DropdownMenuItem v-if="page.props.auth?.can?.viewOperations" :as-child="true">
+        <DropdownMenuItem
+            v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
+            :as-child="true"
+        >
             <Link class="block w-full cursor-pointer" :href="operations.logs.url()" prefetch>
                 <ScrollText class="mr-2 h-4 w-4" />
                 Logs
@@ -90,7 +116,10 @@ const page = usePage()
             requiring a shell, and the configuration is still on the same page
             underneath.
         -->
-        <DropdownMenuItem v-if="page.props.auth?.can?.viewOperations" :as-child="true">
+        <DropdownMenuItem
+            v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
+            :as-child="true"
+        >
             <Link class="block w-full cursor-pointer" :href="operations.monitoring.url()" prefetch>
                 <Server class="mr-2 h-4 w-4" />
                 Monitoring
@@ -102,7 +131,7 @@ const page = usePage()
             that are one slip apart: locking keeps the session and the page you
             were on, signing out throws both away.
         -->
-        <DropdownMenuItem :as-child="true">
+        <DropdownMenuItem v-if="isApplicationPortal" :as-child="true">
             <Link class="block w-full cursor-pointer" :href="lock.url()" method="post" as="button">
                 <Lock class="mr-2 h-4 w-4" />
                 Lock screen
@@ -110,6 +139,12 @@ const page = usePage()
         </DropdownMenuItem>
     </DropdownMenuGroup>
     <DropdownMenuSeparator />
+
+    <!--
+        LOG OUT IS IN EVERY PORTAL. It is the one item that means the same thing
+        wherever you are, and a portal you cannot sign out of is one people close
+        the tab on - which leaves the session open on a shared machine.
+    -->
     <DropdownMenuItem :as-child="true">
         <Link
             class="block w-full cursor-pointer"

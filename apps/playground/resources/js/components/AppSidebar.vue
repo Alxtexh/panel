@@ -128,7 +128,14 @@ const panelHome = computed(
 )
 
 const dashboardItem = computed<NavItem>(() => ({
-    title: panelHome.value.isDefault ? 'Dashboard' : 'Home',
+    /*
+     * THE NAME DOES NOT CHANGE BETWEEN PORTALS. It was briefly "Home" in a
+     * generated one, which is a second word for the same thing - somebody
+     * working across two portals then has to notice that the first entry is
+     * called something else before they trust it is the same entry. The
+     * DESTINATION differs; the label is a constant.
+     */
+    title: 'Dashboard',
     href: panelHome.value.href,
     icon: LayoutGrid,
 }))
