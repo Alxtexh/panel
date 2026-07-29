@@ -34,6 +34,8 @@ export { default as PkCheckboxList } from './components/Form/PkCheckboxList.vue'
 export { default as PkTagsInput } from './components/Form/PkTagsInput.vue'
 export { default as PkColourPicker } from './components/Form/PkColourPicker.vue'
 export { default as PkSlider } from './components/Form/PkSlider.vue'
+export { default as PkVisualSelect } from './components/Form/PkVisualSelect.vue'
+export { default as PkSwatchPreview } from './components/Form/PkSwatchPreview.vue'
 export { default as ThemeToggle } from './components/Layout/ThemeToggle.vue'
 export { default as BarChart } from './components/Widgets/BarChart.vue'
 export { default as LineChart } from './components/Widgets/LineChart.vue'
@@ -138,6 +140,14 @@ export {
     registeredFieldTypes,
     resetFieldControls,
 } from './composables/useFieldControls'
+
+export {
+    registerOptionPreview,
+    optionPreview,
+    hasOptionPreview,
+    registeredOptionPreviews,
+    resetOptionPreviews,
+} from './composables/useOptionPreviews'
 
 import { registerBuiltInFieldControls } from './components/Form/builtInFields'
 

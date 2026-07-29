@@ -300,6 +300,36 @@ const telegramHalfDone = computed(
                                     />
                                     <span class="text-muted-foreground text-xs">days</span>
                                 </div>
+
+                                <!--
+                                    The four answers anybody actually gives. The box
+                                    still accepts 1..3650 because a contract
+                                    occasionally says 47, but offering that range as
+                                    a bare input asks somebody to invent a number
+                                    and then rejects the ones they invent badly.
+
+                                    `type="button"` matters - the default inside a
+                                    form is submit, so without it every chip saves.
+                                -->
+                                <div class="flex flex-wrap gap-1.5 pt-0.5">
+                                    <button
+                                        v-for="preset in [7, 14, 30, 90, 365]"
+                                        :key="preset"
+                                        type="button"
+                                        :disabled="!can.manage"
+                                        :aria-pressed="form.keepDays === preset"
+                                        class="focus-visible:ring-ring rounded-md border px-2 py-0.5 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                                        :class="
+                                            form.keepDays === preset
+                                                ? 'border-primary bg-primary/10 text-primary font-medium'
+                                                : 'border-input hover:bg-muted'
+                                        "
+                                        @click="form.keepDays = preset"
+                                    >
+                                        {{ preset }}
+                                    </button>
+                                </div>
+
                                 <span v-if="form.errors.keepDays" class="text-destructive text-xs">
                                     {{ form.errors.keepDays }}
                                 </span>

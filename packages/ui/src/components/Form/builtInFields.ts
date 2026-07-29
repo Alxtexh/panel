@@ -1,9 +1,12 @@
 import { registerFieldControl } from '../../composables/useFieldControls'
+import { registerOptionPreview } from '../../composables/useOptionPreviews'
 import PkCheckboxList from './PkCheckboxList.vue'
 import PkColourPicker from './PkColourPicker.vue'
 import PkRadioGroup from './PkRadioGroup.vue'
 import PkSlider from './PkSlider.vue'
+import PkSwatchPreview from './PkSwatchPreview.vue'
 import PkTagsInput from './PkTagsInput.vue'
+import PkVisualSelect from './PkVisualSelect.vue'
 
 /**
  * The field types this package ships THROUGH the registry rather than inside the
@@ -30,4 +33,14 @@ export function registerBuiltInFieldControls(): void {
     registerFieldControl('tags', PkTagsInput)
     registerFieldControl('colour', PkColourPicker)
     registerFieldControl('slider', PkSlider)
+    registerFieldControl('visual-select', PkVisualSelect)
+
+    /*
+     * The option renderers, which are a second registry one level down: this one
+     * says what draws a single option INSIDE a visual select. `swatch` is the
+     * one that ships, for the same reason the five controls above go through the
+     * registry rather than a switch - an extension point the package itself does
+     * not use is one nobody has exercised.
+     */
+    registerOptionPreview('swatch', PkSwatchPreview)
 }

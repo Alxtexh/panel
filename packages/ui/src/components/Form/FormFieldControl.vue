@@ -378,6 +378,47 @@ const registered = computed(() => fieldControl(props.field.type))
             @input="emit('change', ($event.target as HTMLInputElement).value)"
         />
 
+        <!--
+            THE PRESETS SIT BESIDE THE INPUT, not instead of it. Most answers to
+            "how many days" are one of four; occasionally the answer really is 47
+            because a contract says so, and a control that made that
+            unrepresentable would be worse than the bare box it replaced.
+
+            BUTTONS, NOT A RADIO GROUP, because these are shortcuts that WRITE
+            INTO the input rather than a separate choice - the field's value is
+            still whatever the input holds. A radio group here would be a second
+            control claiming the same value, and the two would disagree the
+            moment somebody typed.
+
+            `type="button"` is load-bearing: the default inside a form is
+            `submit`, so without it every chip saves the form.
+        -->
+        <div
+            v-if="field.type === 'number' && (field.presets as number[] | undefined)?.length"
+            class="flex flex-wrap gap-1.5"
+        >
+            <button
+                v-for="preset in field.presets as number[]"
+                :key="preset"
+                type="button"
+                :disabled="field.disabled || processing"
+                class="focus-visible:ring-ring rounded-md border px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                :class="
+                    // eslint-disable-next-line eqeqeq
+                    value != null && value == preset
+                        ? 'border-primary bg-primary/10 text-primary font-medium'
+                        : 'border-input hover:bg-muted'
+                "
+                :aria-pressed="
+                    // eslint-disable-next-line eqeqeq
+                    value != null && value == preset
+                "
+                @click="emit('change', String(preset))"
+            >
+                {{ preset }}
+            </button>
+        </div>
+
         <p v-if="error" class="text-destructive text-xs" role="alert">
             {{ error }}
         </p>

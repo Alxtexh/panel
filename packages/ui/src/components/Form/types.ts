@@ -31,6 +31,17 @@ export interface FormField {
     rows?: number
     min?: number
     max?: number
+
+    /**
+     * Number: the handful of answers people actually give, offered as chips
+     * beside the input rather than instead of it.
+     *
+     * The server refuses to declare a preset outside `min`..`max`, so a chip
+     * here is always a value the field would accept - a chip that failed
+     * validation when pressed would read as "you typed something wrong" about a
+     * value the panel itself supplied.
+     */
+    presets?: number[]
     /** Fetches options on demand instead of rendering them inline. */
     searchable?: boolean
     /** File fields: allowed extensions, the size ceiling, and preview intent. */
