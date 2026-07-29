@@ -37,6 +37,7 @@ import { Head, router, useForm } from '@inertiajs/vue3'
  * breaks the build instead.
  */
 import backups from '@/routes/operations/backups'
+import alerts from '@/routes/operations/alerts'
 import { PkModal } from '@panelkit/ui'
 import { Download, RotateCcw, Settings2, Trash2, TriangleAlert } from '@lucide/vue'
 import { computed, ref } from 'vue'
@@ -312,6 +313,31 @@ function testDestination(disk: string) {
         backups.destinations.test.url(),
         { disk },
         { preserveScroll: true, preserveState: true, onFinish: () => (testing.value = null) },
+    )
+}
+
+/**
+ * Send a test message to the alert chat.
+ *
+ * THE SAME REASONING AS `testDestination`, one step further out: this leaves the
+ * building. A destination probe writes a file somebody can delete; this posts to
+ * a chat other people are reading, which is why it is a deliberate press rather
+ * than something that happens on save.
+ */
+const testingTelegram = ref(false)
+
+function testTelegram() {
+    testingTelegram.value = true
+
+    router.post(
+        alerts.telegram.test.url(),
+        {
+            // Whatever is on screen, so a pasted token can be checked before it
+            // is committed. The server applies it for that request only.
+            token: form.alertTelegramToken,
+            chat_id: form.alertTelegramChatId,
+        },
+        { preserveScroll: true, preserveState: true, onFinish: () => (testingTelegram.value = false) },
     )
 }
 
@@ -948,6 +974,32 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
                 >
                     Telegram needs both a bot token and a chat id. With only one, nothing is sent.
                 </p>
+
+                <!--
+                    A REAL MESSAGE, NOT A CREDENTIAL CHECK.
+                    Validating the token proves the bot exists and proves nothing
+                    about whether the chat id is right or whether the bot was ever
+                    added to that group - and all of those fail identically at
+                    three in the morning: silence. This sends, through the same
+                    channel the next real alert will use.
+
+                    It tests WHAT IS IN THE FORM, so a token can be checked
+                    before it is committed. That is the order somebody actually
+                    works in: paste, test, save.
+                -->
+                <div class="flex items-center gap-2 pt-1">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="testingTelegram"
+                        @click="testTelegram"
+                    >
+                        {{ testingTelegram ? 'Sending…' : 'Send a test message' }}
+                    </Button>
+                    <span class="text-muted-foreground text-xs">
+                        Posts to the chat above, now.
+                    </span>
+                </div>
 
                 <label class="flex items-start gap-2 pt-1">
                     <input v-model="form.notifyOnSuccess" type="checkbox" class="mt-0.5 size-4" />

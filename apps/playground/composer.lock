@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b328406e3a171b1726f937f5202a0359",
+    "content-hash": "756423032cd639b91c40ccfb60be8b69",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1662,6 +1662,78 @@
                 "source": "https://github.com/inertiajs/inertia-laravel/tree/v3.1.1"
             },
             "time": "2026-07-02T12:45:54+00:00"
+        },
+        {
+            "name": "laravel-notification-channels/telegram",
+            "version": "7.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel-notification-channels/telegram.git",
+                "reference": "948b3a73a893950f271f5b0fc2df45883d176fc8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel-notification-channels/telegram/zipball/948b3a73a893950f271f5b0fc2df45883d176fc8",
+                "reference": "948b3a73a893950f271f5b0fc2df45883d176fc8",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "guzzlehttp/guzzle": "^7.8",
+                "illuminate/contracts": "^12.0 || ^13.0",
+                "illuminate/notifications": "^12.0 || ^13.0",
+                "illuminate/support": "^12.0 || ^13.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "mockery/mockery": "^1.4.4",
+                "orchestra/testbench": "^10.0 || ^11.0",
+                "pestphp/pest": "^4.0",
+                "pestphp/pest-plugin-laravel": "^4.0",
+                "phpstan/extension-installer": "^1.2",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "NotificationChannels\\Telegram\\TelegramServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "NotificationChannels\\Telegram\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Irfaq Syed",
+                    "email": "github@lukonet.net",
+                    "homepage": "https://lukonet.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Telegram Notifications Channel for Laravel",
+            "homepage": "https://github.com/laravel-notification-channels/telegram",
+            "keywords": [
+                "laravel",
+                "notification",
+                "telegram",
+                "telegram notification",
+                "telegram notifications channel"
+            ],
+            "support": {
+                "issues": "https://github.com/laravel-notification-channels/telegram/issues",
+                "source": "https://github.com/laravel-notification-channels/telegram/tree/7.0.0"
+            },
+            "time": "2026-03-19T18:58:46+00:00"
         },
         {
             "name": "laravel/ai",
@@ -3622,7 +3694,7 @@
             "dist": {
                 "type": "path",
                 "url": "../../packages/panel",
-                "reference": "9739e0d41147a5c7619f6ab6f9e42701283d482b"
+                "reference": "a3112218139c3cef6042ac1a2ca51b942d04c147"
             },
             "require": {
                 "illuminate/database": "^12.0|^13.0",
@@ -3634,6 +3706,9 @@
             "require-dev": {
                 "orchestra/testbench": "^10.0|^11.0",
                 "pestphp/pest": "^3.0|^4.0"
+            },
+            "suggest": {
+                "laravel/ai": "Needed only for ProviderEmbedder - model-backed retrieval. The default embedder is local and needs nothing."
             },
             "type": "library",
             "extra": {

@@ -1,6 +1,5 @@
 <?php
 
-use App\Notifications\Channels\TelegramChannel;
 
 use Spatie\Backup\Notifications\Notifiable;
 use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
@@ -234,9 +233,20 @@ return [
              * `HealthyBackupWasFound` is the same story: it fires every time the
              * monitor runs and finds nothing wrong.
              */
-            BackupHasFailedNotification::class => ['mail', TelegramChannel::class],
-            UnhealthyBackupWasFoundNotification::class => ['mail', TelegramChannel::class],
-            CleanupHasFailedNotification::class => ['mail', TelegramChannel::class],
+            /*
+             * `'telegram'` IS THE DRIVER NAME, not a class.
+             *
+             * It used to name an application class that POSTed to the Bot API
+             * by hand. The transport is now
+             * `laravel-notification-channels/telegram`, which ships with the
+             * panel - and the panel replaces its channel with one that falls
+             * back to the mail representation, because none of the three
+             * notifications below defines `toTelegram()`. Without that fallback
+             * this configuration reads as complete and delivers nothing.
+             */
+            BackupHasFailedNotification::class => ['mail', 'telegram'],
+            UnhealthyBackupWasFoundNotification::class => ['mail', 'telegram'],
+            CleanupHasFailedNotification::class => ['mail', 'telegram'],
             BackupWasSuccessfulNotification::class => [],
             HealthyBackupWasFoundNotification::class => [],
             CleanupWasSuccessfulNotification::class => [],

@@ -359,6 +359,16 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
         ->middleware('throttle:20,1')
         ->name('operations.backups.destinations.test');
 
+    /*
+     | THE SAME SHAPE, AND THROTTLED HARDER. This one leaves the building: each
+     | press posts to Telegram, and a bot that is hammered is rate-limited for
+     | every message it sends afterwards - including the alert about the incident
+     | somebody was testing for.
+     */
+    Route::post('operations/alerts/telegram/test', [OperationsController::class, 'testTelegram'])
+        ->middleware('throttle:6,1')
+        ->name('operations.alerts.telegram.test');
+
     Route::get('settings/roles', [RoleController::class, 'index'])->name('settings.roles');
     Route::post('settings/roles', [RoleController::class, 'store'])->name('settings.roles.store');
     Route::put('settings/roles/{role}', [RoleController::class, 'update'])->name('settings.roles.update');

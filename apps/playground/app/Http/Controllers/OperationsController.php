@@ -378,6 +378,45 @@ final class OperationsController extends Controller
     }
 
     /**
+     * Send a real message to the alert chat, and report what happened.
+     *
+     * A SEND, NOT A CREDENTIAL CHECK. Validating the token proves the bot
+     * exists and proves nothing about whether the chat id is right, whether the
+     * bot was ever added to that group, or whether somebody removed it last
+     * week - and all three fail the same way at three in the morning: silence.
+     * This walks the whole path the next real alert will take.
+     *
+     * IT USES WHAT IS IN THE FORM, not only what is saved, so a token can be
+     * tested before it is committed. That is the sequence somebody actually
+     * performs: paste, test, save.
+     */
+    public function testTelegram(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()?->hasPermission('manage_backups'), 403);
+
+        $validated = $request->validate([
+            'token' => ['nullable', 'string', 'max:200'],
+            'chat_id' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        /*
+         * APPLIED FOR THIS REQUEST ONLY. `config()` is per-process, and this
+         * process ends with the response - nothing is persisted, so a test with
+         * a mistyped token cannot leave the installation alerting through it.
+         */
+        if (($validated['token'] ?? null) !== null && trim((string) $validated['token']) !== '') {
+            config(['services.telegram.token' => trim((string) $validated['token'])]);
+        }
+
+        $result = \PanelKit\Panel\Alerts\Telegram::test($validated['chat_id'] ?? null);
+
+        return back()->with('toast', [
+            'type' => $result['ok'] ? 'success' : 'error',
+            'message' => $result['message'],
+        ]);
+    }
+
+    /**
      * What this installation is actually running.
      *
      * READ-ONLY, AND THAT IS THE DESIGN. Nothing here writes: a screen that

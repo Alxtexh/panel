@@ -3,8 +3,15 @@
 return [
 
     /*
-    | Telegram, for operational alerts only - a failing backup, an unhealthy
-    | one. Unset means the channel does nothing; see TelegramChannel.
+    | Telegram, read by `laravel-notification-channels/telegram` and by the
+    | panel's channel on top of it.
+    |
+    | THE ENVIRONMENT IS THE FLOOR, NOT THE ONLY SOURCE. An administrator can
+    | set both from the panel's alert settings, which are applied over these at
+    | boot - so a token can be rotated without a deploy, and an installation
+    | that has always used `.env` keeps working untouched. Unset in both places
+    | means nothing is sent, silently and deliberately: an alert channel that
+    | throws turns one incident into two.
     */
     'telegram' => [
         'token' => env('TELEGRAM_BOT_TOKEN'),

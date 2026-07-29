@@ -188,6 +188,25 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         /*
+         * UNHANDLED EXCEPTIONS GO TO TELEGRAM, if the operator turned that on.
+         *
+         * The panel already reports a failed backup and said nothing at all
+         * about the exception making every subscriber screen a 500 - so the
+         * failure most worth knowing about was the one that waited in a log
+         * file until a customer telephoned.
+         *
+         * `report()` RATHER THAN A CUSTOM HANDLER, so this runs alongside
+         * whatever else reports - the log, Sentry, Flare - rather than
+         * replacing any of it. It is off by default, ignores the exceptions
+         * that are the framework working correctly, and sends one message per
+         * signature per fifteen minutes; see `ReportsToTelegram` for why that
+         * last part is the whole design.
+         */
+        $exceptions->report(function (\Throwable $e): void {
+            \PanelKit\Panel\Alerts\ReportsToTelegram::report($e);
+        });
+
+        /*
          * Panel errors render as PANEL PAGES, not as framework stack pages.
          *
          * Without this, a 403 in the middle of an Inertia app drops the person

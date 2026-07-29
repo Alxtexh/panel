@@ -167,6 +167,7 @@ final class PanelServiceProvider extends ServiceProvider
          * fork would be silently dropped by the next `composer update`.
          */
         Ai\TenantScopedConversations::attach();
+        $this->registerTelegram();
         $this->registerOctaneFlush();
     }
 
@@ -224,6 +225,46 @@ final class PanelServiceProvider extends ServiceProvider
         $this->app['events']->listen(
             'Laravel\Octane\Events\RequestReceived',
             static fn () => PanelManager::flushMemoization(),
+        );
+    }
+
+    /**
+     * Telegram, wired once so everything that alerts can use it.
+     *
+     * TWO THINGS HAPPEN HERE, and neither is the transport - that is
+     * `laravel-notification-channels/telegram`, which ships as a dependency and
+     * registers itself.
+     *
+     * THE CREDENTIALS ARE BRIDGED. The channel resolves its client from
+     * `services.telegram.*`; the panel keeps a token and a chat id in its
+     * settings, where an administrator can change them without a deploy.
+     * Pushing one into the other at boot means every consumer - the backup
+     * notifications, the exception reporter, an application's own code - reads
+     * the same bot without knowing where it came from.
+     *
+     * THE CHANNEL IS REPLACED WITH THE PANEL'S SUBCLASS, and this is the part
+     * that matters on the night it matters. The package's channel returns null
+     * for any notification without a `toTelegram()` method, which is every
+     * notification a third-party package ships: `spatie/laravel-backup` defines
+     * `toMail`, `toSlack` and `toDiscord` and nothing else. Configuring
+     * Telegram for backup failures therefore produced a setup that looked
+     * complete and delivered silence. The subclass falls back to the mail
+     * representation; anything that speaks Telegram natively is untouched.
+     *
+     * REGISTERED AFTER THE PACKAGE'S OWN, deliberately: `Notification::resolved`
+     * callbacks run in order and the last `extend` for a driver name wins.
+     */
+    private function registerTelegram(): void
+    {
+        Alerts\Telegram::configure();
+
+        \Illuminate\Support\Facades\Notification::resolved(
+            static function (\Illuminate\Notifications\ChannelManager $manager): void {
+                $manager->extend(
+                    'telegram',
+                    static fn ($app) => $app->make(Notifications\Channels\TelegramChannel::class),
+                );
+            },
         );
     }
 }
