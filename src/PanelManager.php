@@ -396,6 +396,29 @@ final class PanelManager
              * whichever panel accepted the plugin.
              */
             if ($panelId !== null) {
+                /*
+                 * A RESOURCE BELONGS TO EXACTLY ONE PANEL, and a second claim
+                 * throws rather than overwriting.
+                 *
+                 * This is not theoretical: a plugin that applies to two tenant
+                 * portals registers its resource for both, the last write wins,
+                 * and the FIRST portal ends up with a navigation entry pointing
+                 * at a URL its own route constraint refuses - a 404 on a screen
+                 * the menu insists exists. Keys are globally unique because they
+                 * are URL segments and ability names, so one class genuinely
+                 * cannot serve two portals; the fix is a second class with its
+                 * own key, exactly as the reseller portal's plans resource does.
+                 */
+                $existing = self::$resourcePanels[$class] ?? null;
+
+                if ($existing !== null && $existing !== $panelId) {
+                    throw new \RuntimeException(
+                        "The resource {$class} was registered for the [{$existing}] panel and again for "
+                        ."[{$panelId}]. A resource belongs to one panel: its key is a URL segment and an "
+                        .'ability name. Register a subclass with its own `key()` for the second portal.'
+                    );
+                }
+
                 self::$resourcePanels[$class] = $panelId;
             }
 
@@ -463,6 +486,26 @@ final class PanelManager
      */
     public function resourcesFor(string $panelId): array
     {
+        /*
+         * PLUGINS RUN BEFORE THE LIST IS READ, and this is where it has to
+         * happen rather than at boot.
+         *
+         * The application computes its route keys from this method while its
+         * route file loads - earlier than any hook a plugin could use - so a
+         * plugin's resource was registered AFTER the `whereIn` constraint had
+         * already been built from a list that did not contain it. The screen
+         * existed, the navigation linked it, and the URL 404ed.
+         *
+         * Applying here means every caller - routes, navigation, the trash bin,
+         * the API - sees the same set, whichever runs first. It is idempotent
+         * per panel, so this costs one array lookup after the first call.
+         */
+        $panel = $this->panel($panelId);
+
+        if ($panel !== null) {
+            $this->applyPlugins($panel);
+        }
+
         return array_filter(
             $this->resources(),
             static fn (string $class): bool => (self::$resourcePanels[$class] ?? $class::panel()) === $panelId,
