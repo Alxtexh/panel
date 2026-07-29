@@ -84,14 +84,16 @@ const page = usePage()
         </DropdownMenuItem>
 
         <!--
-            What the installation is RUNNING, as opposed to what it has done.
-            Drivers, versions, tenancy mode and whether cron is ticking at all -
-            answers that previously needed a shell and a copy of the config.
+            HOW THE INSTALLATION IS DOING, which is a different question from
+            what it is configured as. Load, memory, disk, database latency, queue
+            depth, failed jobs and whether cron is ticking - all previously
+            requiring a shell, and the configuration is still on the same page
+            underneath.
         -->
         <DropdownMenuItem v-if="page.props.auth?.can?.viewOperations" :as-child="true">
-            <Link class="block w-full cursor-pointer" :href="operations.platform.url()" prefetch>
+            <Link class="block w-full cursor-pointer" :href="operations.monitoring.url()" prefetch>
                 <Server class="mr-2 h-4 w-4" />
-                Platform
+                Monitoring
             </Link>
         </DropdownMenuItem>
 

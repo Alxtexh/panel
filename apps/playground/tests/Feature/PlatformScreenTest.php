@@ -48,7 +48,7 @@ final class PlatformScreenTest extends TestCase
     private function report(): array
     {
         return $this->actingAs($this->operator(['view_operations']))
-            ->get('/operations/platform')
+            ->get('/operations/monitoring')
             ->viewData('page')['props'];
     }
 
@@ -56,7 +56,7 @@ final class PlatformScreenTest extends TestCase
     {
         $user = $this->operator(array_values(array_diff(Abilities::all(), ['view_operations'])));
 
-        $this->actingAs($user)->get('/operations/platform')->assertForbidden();
+        $this->actingAs($user)->get('/operations/monitoring')->assertForbidden();
     }
 
     /**
@@ -67,7 +67,7 @@ final class PlatformScreenTest extends TestCase
     public function test_it_does_not_need_manage_backups(): void
     {
         $this->actingAs($this->operator(['view_operations']))
-            ->get('/operations/platform')
+            ->get('/operations/monitoring')
             ->assertOk();
     }
 
@@ -167,5 +167,69 @@ final class PlatformScreenTest extends TestCase
         // A mode name is one word; two of them are one word apart and mean
         // entirely different isolation guarantees.
         $this->assertNotSame('', $tenancy['meaning']);
+    }
+
+    /* ------------------------------------------------------------- health */
+
+    /**
+     * THE NUMBERS THAT CHANGE, which is what this screen was missing.
+     *
+     * The page listed versions, drivers and the tenancy mode - a deploy-time
+     * question somebody asks once. Whether the disk is filling, the queue is
+     * backing up, anything has failed and the database is still quick was
+     * answered nowhere in the panel.
+     */
+    public function test_the_screen_reports_live_health(): void
+    {
+        $props = $this->actingAs($this->operator(['view_operations']))
+            ->get('/operations/monitoring')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $health = $props['health'];
+
+        $this->assertArrayHasKey('cpu', $health);
+        $this->assertArrayHasKey('memory', $health);
+        $this->assertArrayHasKey('disk', $health);
+        $this->assertArrayHasKey('queue', $health);
+
+        // The database is answering, and the latency is real rather than a
+        // placeholder - a check that only asks whether the connection opens
+        // cannot see a database that is up and taking 400ms.
+        $this->assertTrue($health['database']['available']);
+        $this->assertIsFloat($health['database']['latency_ms']);
+
+        // A cache round trip, not a ping: "the process is listening" is not the
+        // same as "a write followed by a read returns what was written".
+        $this->assertTrue($health['cache']['available']);
+    }
+
+    /** The metrics endpoint answers on its own, for the page to poll. */
+    public function test_metrics_are_available_as_json(): void
+    {
+        $this->actingAs($this->operator(['view_operations']))
+            ->getJson('/operations/monitoring/metrics')
+            ->assertOk()
+            ->assertJsonStructure(['cpu', 'memory', 'disk', 'database', 'queue', 'cache', 'scheduler', 'at']);
+    }
+
+    /** And they are behind the same permission as the screen. */
+    public function test_metrics_need_view_operations(): void
+    {
+        $stranger = $this->operator(array_values(array_diff(Abilities::all(), ['view_operations'])));
+
+        $this->actingAs($stranger)->getJson('/operations/monitoring/metrics')->assertForbidden();
+    }
+
+    /**
+     * THE OLD PATH STILL LANDS SOMEWHERE. It is in runbooks and bookmarks, and a
+     * monitoring page that has moved is one somebody looks for at exactly the
+     * wrong moment.
+     */
+    public function test_the_old_platform_path_redirects(): void
+    {
+        $this->actingAs($this->operator(['view_operations']))
+            ->get('/operations/platform')
+            ->assertRedirect('/operations/monitoring');
     }
 }

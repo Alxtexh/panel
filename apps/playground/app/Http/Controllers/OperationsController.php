@@ -19,6 +19,7 @@ use PanelKit\Panel\Support\BackupStatus;
 use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\LogReader;
 use PanelKit\Panel\Support\PanelSettings;
+use PanelKit\Panel\Support\HealthReport;
 use PanelKit\Panel\Support\PlatformReport;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -389,11 +390,41 @@ final class OperationsController extends Controller
      * environment changes nothing - and the person diagnosing a problem is
      * usually not the person allowed to restore over the database.
      */
-    public function platform(Request $request): Response
+    /**
+     * How the installation is DOING, not what it is configured as.
+     *
+     * THE PAGE WAS THE WRONG ANSWER TO THE RIGHT QUESTION. `PlatformReport`
+     * lists versions, drivers and the tenancy mode - a deploy-time question
+     * somebody asks once. The question an operator has at three in the afternoon
+     * is whether the disk is filling, the queue is backing up, anything has
+     * failed and the database is still quick, and none of that was anywhere.
+     *
+     * BOTH ARE HERE, in that order: the health first, because it changes and it
+     * is why somebody opened the page; the configuration below it, because it is
+     * still the fastest way to answer "what is this actually running".
+     */
+    public function monitoring(Request $request): Response
     {
         abort_unless($request->user()?->hasPermission('view_operations'), 403);
 
-        return Inertia::render('operations/Platform', (new PlatformReport)->all());
+        return Inertia::render('operations/Monitoring', [
+            ...(new PlatformReport)->all(),
+            'health' => (new HealthReport)->all(),
+        ]);
+    }
+
+    /**
+     * The same numbers, as JSON, for the page to poll.
+     *
+     * SEPARATE FROM THE RENDER so a refresh costs one small response rather than
+     * a whole Inertia page with its schema, navigation and shared props. The
+     * configuration half does not change between ticks, so it is not resent.
+     */
+    public function metrics(Request $request): \Illuminate\Http\JsonResponse
+    {
+        abort_unless($request->user()?->hasPermission('view_operations'), 403);
+
+        return response()->json((new HealthReport)->all());
     }
 
     public function logs(Request $request): Response

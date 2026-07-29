@@ -253,7 +253,26 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
      | What the installation is running: drivers, versions, tenancy mode, and
      | whether cron is ticking at all. Read-only - see the controller.
      */
-    Route::get('operations/platform', [OperationsController::class, 'platform'])
+    /*
+     | MONITORING, WHICH IS WHAT THIS SCREEN SHOULD ALWAYS HAVE BEEN.
+     |
+     | It listed versions, drivers and the tenancy mode - what the installation
+     | IS - and answered nothing an operator asks while something feels wrong.
+     | It now leads with load, memory, disk, database latency, queue depth,
+     | failed jobs and the scheduler heartbeat, and keeps the configuration
+     | underneath.
+     |
+     | THE OLD PATH REDIRECTS rather than 404ing. It is in runbooks and
+     | bookmarks, and a monitoring page that has moved is one somebody looks for
+     | at exactly the wrong moment.
+     */
+    Route::get('operations/monitoring', [OperationsController::class, 'monitoring'])
+        ->name('operations.monitoring');
+
+    Route::get('operations/monitoring/metrics', [OperationsController::class, 'metrics'])
+        ->name('operations.metrics');
+
+    Route::redirect('operations/platform', 'operations/monitoring')
         ->name('operations.platform');
 
     /*

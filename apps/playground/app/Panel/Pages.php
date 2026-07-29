@@ -118,7 +118,7 @@ final class Pages
             '/user-management' => 'userManagement',
             '/operations/backups' => 'operations.backups',
             '/operations/logs' => 'operations.logs',
-            '/operations/platform' => 'operations.platform',
+            '/operations/monitoring' => 'operations.monitoring',
         ];
     }
 
@@ -154,7 +154,8 @@ final class Pages
             '/user-management' => 'Listed in the account menu, next to Settings.',
             '/operations/backups' => 'Listed in the account menu: the installation, not the organisation.',
             '/operations/logs' => 'Listed in the account menu, beside Backups.',
-            '/operations/platform' => 'Listed in the account menu, beside Backups and Logs.',
+            '/operations/monitoring' => 'Listed in the account menu, beside Backups and Logs.',
+            '/operations/platform' => 'The old path for monitoring; it redirects, and runbooks still point at it.',
             '/user/confirm-password' => 'An interstitial, shown when a screen demands a fresh password.',
             /*
              * DELIBERATELY UNLINKED, and linking it would be a bug. It is where
