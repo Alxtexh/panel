@@ -47,6 +47,19 @@ defineProps<{
                 <InputError :message="errors.email" />
             </div>
 
+            <!--
+                THIS WAS IMPORTED AND NEVER RENDERED, and the symptom was not a
+                missing widget: `VerifyTurnstile` guards `password.email` on the
+                server, so with Turnstile enabled this form submitted without a
+                token and was refused every time. Password reset was broken for
+                everybody who had the feature on, and the only trace anywhere was
+                an unused import - which is how the linter found it.
+
+                Renders nothing when Turnstile is off; the server refuses without
+                a token either way.
+            -->
+            <TurnstileField name="cf-turnstile-response" />
+
             <div class="my-6 flex items-center justify-start">
                 <Button
                     class="w-full"

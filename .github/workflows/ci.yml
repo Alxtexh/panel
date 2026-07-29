@@ -1,0 +1,148 @@
+# Everything that was previously only run by hand.
+#
+# WHY THIS IS THE HIGHEST-VALUE FILE IN THE REPOSITORY. The suite, the type
+# check, the build and `panel:doctor` have all been green for months - because
+# somebody remembered to run them. The failures this project keeps finding are
+# the ones nothing checks: a package that shipped no Vue, a page file that
+# rendered an empty component, a diagnostic that reported problems that were not
+# problems. Each was invisible until a human looked. A check that only runs when
+# remembered is a check that is present on the day it is written and absent every
+# day after.
+#
+# THE TWO HALVES RUN AS TWO JOBS, deliberately, so a failure names itself. A
+# single job that installs PHP and Node and runs five commands reports "CI
+# failed"; two jobs report "the client half failed", which is the difference
+# between reading a log and knowing where to look.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch cancels the first. The interesting answer is
+# always about the newest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    name: PHP suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: sqlite3, pdo_sqlite, zip, intl, bcmath, gd
+          coverage: none
+
+      # The suite runs against SQLite in memory with the array cache store, so
+      # it needs no services. That is a property worth keeping: the moment it
+      # needs Redis to pass, it stops being runnable on a laptop offline.
+      - name: Install dependencies
+        working-directory: apps/playground
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare the environment
+        working-directory: apps/playground
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Tests
+        working-directory: apps/playground
+        run: vendor/bin/phpunit
+
+      # Configuration that is silently wrong. It is a command the package ships
+      # for its users, so a version of it that fails on its own reference
+      # application is worth catching here rather than in an installation.
+      - name: panel:doctor
+        working-directory: apps/playground
+        run: php artisan panel:doctor
+
+  client:
+    name: Client half
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # PHP IS HERE FOR ONE COMMAND, AND IT IS NOT OPTIONAL.
+      #
+      # `resources/js/{routes,actions,wayfinder}` are generated from the route
+      # table by Wayfinder and are not committed, so on a fresh checkout every
+      # file that imports `@/routes` fails to resolve. The type check reported
+      # forty "cannot find module" errors that say nothing about the real cause.
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: sqlite3, pdo_sqlite, zip, intl
+          coverage: none
+
+      - name: Install PHP dependencies
+        working-directory: apps/playground
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Generate the route helpers
+        working-directory: apps/playground
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          # `--with-form` MATCHES `formVariants: true` IN vite.config.ts. Without
+          # it the route helpers are generated but their `.form` variants are
+          # not, and the type check fails on five components that use them - a
+          # smaller and more confusing version of the same failure.
+          php artisan wayfinder:generate --with-form
+
+      # THE PACKAGES FIRST, AND NOT ONLY FOR SPEED. Both are linked into the
+      # application with `file:`, and both carry their own dependencies - the
+      # type checker resolves `vue` from the package's real path, so a package
+      # with no `node_modules` fails to type-check every file in it while the
+      # application itself looks fine.
+      - name: Install @panelkit/ui
+        working-directory: packages/ui
+        run: npm install --no-audit --no-fund
+
+      - name: Install @panelkit/inertia
+        working-directory: packages/inertia
+        run: npm install --no-audit --no-fund
+
+      - name: Install the application
+        working-directory: apps/playground
+        run: npm install --no-audit --no-fund
+
+      - name: Unit tests
+        working-directory: packages/ui
+        run: npm test
+
+      - name: Types
+        working-directory: apps/playground
+        run: npx vue-tsc --noEmit
+
+      # NO LINT STEP, AND THAT IS A DECISION RATHER THAN AN OVERSIGHT.
+      #
+      # `npm run lint:check` currently reports 230 violations, because the rule
+      # set was added and never enforced. A red build on the first run is a build
+      # people learn to ignore, and clearing 230 findings means either a
+      # 65-file automated reformat - which buries every real change under
+      # semicolons for a year of `git blame` - or a deliberate pass nobody has
+      # asked for yet. Neither belongs in the commit that adds CI.
+      #
+      # The checks below are the ones that catch failures rather than style. Add
+      # the lint step in the change that makes it pass.
+
+      # THE BUILD IS NOT REDUNDANT WITH THE TYPE CHECK. A production build
+      # resolves every import for real and runs the SFC compiler over every
+      # component; the type checker does neither. An import of a file that does
+      # not exist type-checks clean and fails here.
+      - name: Build
+        working-directory: apps/playground
+        run: npm run build

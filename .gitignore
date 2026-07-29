@@ -16,8 +16,24 @@
 /apps/*/public/build
 /apps/*/public/hot
 /apps/*/storage/*.key
-/apps/*/storage/framework
 /apps/*/storage/logs
+
+#
+# NOT `/apps/*/storage/framework`, WHICH IS HOW THIS WAS WRITTEN AND WHY A
+# FRESH CLONE COULD NOT RUN ITS OWN TESTS.
+#
+# That one line ignored the DIRECTORIES, not just their contents, so a clone had
+# no `storage/framework/views` at all - and the first thing anybody runs, the
+# suite, failed 279 tests with "Please provide a valid cache path". The message
+# names a configuration value, so it reads as a misconfiguration; nothing in it
+# points at a missing directory. Found by cloning this repository and running
+# the suite the way CI does, which nobody had done.
+#
+# Laravel's skeleton already ships a `.gitignore` inside each of these
+# directories that ignores their contents and keeps the directory. Those files
+# are now tracked, and this rule stays out of their way.
+#
+/apps/*/storage/framework/testing/*.php
 /apps/*/bootstrap/cache/*.php
 
 /packages/*/node_modules

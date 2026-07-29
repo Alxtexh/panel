@@ -88,6 +88,16 @@ export default defineConfigWithVueTs(
         basePath: '../../packages/ui',
         files: ['src/**/*.{ts,vue}'],
     },
+    /*
+     | AND THE SCREENS PACKAGE, for the same reason and with more at stake: the
+     | resource list, the form and the record page moved out of this application
+     | into `packages/inertia`, so without this block the code most consumers
+     | actually see would be the least checked code in the repository.
+     */
+    {
+        basePath: '../../packages/inertia',
+        files: ['src/**/*.{ts,vue}'],
+    },
     {
         ignores: [
             'vendor',

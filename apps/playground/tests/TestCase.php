@@ -9,6 +9,32 @@ use Laravel\Fortify\Features;
 abstract class TestCase extends BaseTestCase
 {
     /**
+     * THE SUITE DOES NOT NEED A COMPILED BUNDLE.
+     *
+     * Without this, 271 tests failed on a fresh clone with "Vite manifest not
+     * found at public/build/manifest.json" - because the Blade shell calls
+     * `@vite`, and every test that renders a page therefore required
+     * `npm run build` to have been run first. The failure is unhelpful in the
+     * specific way that costs time: it names a missing file rather than saying
+     * "build the front end", and it fires on tests that have nothing to do with
+     * assets.
+     *
+     * IT ALSO COUPLED THE TWO HALVES FOR NO BENEFIT. A backend test asserting a
+     * policy or a tenant scope has no opinion about a hashed asset filename, and
+     * making it wait for Rollup makes the suite slower and the CI graph
+     * needlessly sequential. Nothing here asserts on asset tags; the client half
+     * is verified by building it.
+     *
+     * Found by cloning this repository and running the suite the way CI does.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutVite();
+    }
+
+    /**
      * Sign in, starting a fresh session when the ORGANISATION changes.
      *
      * WHY THIS OVERRIDE EXISTS. `ScopeSessionToTenant` refuses a session stamped
