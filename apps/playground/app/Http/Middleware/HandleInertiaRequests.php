@@ -201,7 +201,15 @@ class HandleInertiaRequests extends Middleware
              | recovery the panel does not offer.
              */
             'panelPages' => fn (): array => [
-                ...\App\Panel\Pages::all(),
+                /*
+                 | SCOPED TO THE CURRENT PORTAL. Every page in that list is
+                 | routed at the ROOT, so a generated portal was showing Mail,
+                 | the API reference and the error previews - links out of the
+                 | portal with no way back. The resources were scoped from the
+                 | start; the pages were not, and nothing failed because every
+                 | one of those links resolves.
+                 */
+                ...\App\Panel\Pages::forPanel(),
                 /*
                  | ONE CALL FOR EVERYTHING THE PANEL ITSELF PROVIDES - the trash
                  | screen today, a plugin's screens the moment one is installed.
@@ -210,6 +218,28 @@ class HandleInertiaRequests extends Middleware
                  | package, which is the disappearing-page failure again.
                  */
                 ...app(PanelManager::class)->panelPages(),
+            ],
+
+            /*
+             | WHERE "HOME" IS, for the panel serving this request.
+             |
+             | The sidebar's first entry was a hardcoded `/dashboard`, which is
+             | the operator application's screen - so the first thing in a
+             | generated portal's navigation took you out of it.
+             */
+            'panelHome' => fn (): array => [
+                'href' => rtrim('/'.trim(
+                    (string) app(PanelManager::class)->currentPanel()?->getPath(),
+                    '/',
+                ), '/') ?: '/dashboard',
+                /*
+                 | Whether this is the application's own portal. The support
+                 | links - help, FAQ, what's new, about - are its screens, and a
+                 | generated portal linking them is a portal you leave by
+                 | clicking Help.
+                 */
+                'isDefault' => (app(PanelManager::class)->currentPanel()?->id
+                    ?? config('panel.default', 'admin')) === config('panel.default', 'admin'),
             ],
 
             'name' => config('app.name'),

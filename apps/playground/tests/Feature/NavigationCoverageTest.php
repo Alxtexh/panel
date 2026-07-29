@@ -384,4 +384,61 @@ final class NavigationCoverageTest extends TestCase
             );
         }
     }
+
+    /* -------------------------------------------------- one portal at a time */
+
+    /**
+     * A GENERATED PORTAL'S SIDEBAR IS ITS OWN.
+     *
+     * Every page in `Pages::all()` is routed at the ROOT, so the reseller portal
+     * was listing Mail, the API reference and the error previews - links OUT of
+     * the portal, into the operator application, with no way back but the
+     * browser button. Nothing failed, because every one of those links resolves.
+     *
+     * The resources were scoped per panel from the first day; the pages were
+     * not, and the difference was invisible until somebody opened a portal.
+     */
+    public function test_a_generated_portal_lists_none_of_the_applications_pages(): void
+    {
+        $props = $this->actingAs($this->admin)->get('/reseller/reseller-plans')->assertOk()
+            ->viewData('page')['props'];
+
+        $hrefs = array_column($props['panelPages'], 'href');
+
+        foreach ($hrefs as $href) {
+            $this->assertStringStartsWith(
+                '/reseller',
+                $href,
+                "The reseller portal links [{$href}], which leaves the portal.",
+            );
+        }
+    }
+
+    /**
+     * AND ITS HOME IS ITS OWN ROOT, not the application's dashboard.
+     *
+     * The first entry in the sidebar was a hardcoded `/dashboard`, so the first
+     * thing in a generated portal's navigation took you out of it.
+     */
+    public function test_a_generated_portal_goes_home_to_itself(): void
+    {
+        $props = $this->actingAs($this->admin)->get('/reseller/reseller-plans')->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertSame('/reseller', $props['panelHome']['href']);
+        $this->assertFalse($props['panelHome']['isDefault']);
+    }
+
+    /** The operator portal keeps everything it had. */
+    public function test_the_application_portal_still_lists_its_own_pages(): void
+    {
+        $props = $this->actingAs($this->admin)->get('/dashboard')->assertOk()
+            ->viewData('page')['props'];
+
+        $hrefs = array_column($props['panelPages'], 'href');
+
+        $this->assertContains('/apps/mail', $hrefs);
+        $this->assertContains('/docs', $hrefs);
+        $this->assertTrue($props['panelHome']['isDefault']);
+    }
 }

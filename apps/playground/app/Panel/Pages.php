@@ -33,6 +33,33 @@ namespace App\Panel;
 final class Pages
 {
     /**
+     * Pages, filtered to the panel that should show them.
+     *
+     * EVERY PAGE HERE IS ROUTED AT THE ROOT, which is what makes the filter
+     * necessary rather than tidy. A generated portal was showing Mail, the API
+     * reference and the error previews in its sidebar - all links OUT of the
+     * portal, into the operator application, with no way back except the browser
+     * button. The resources were scoped per panel from the start; the pages were
+     * not, and nothing failed because every one of those links resolves.
+     *
+     * DECLARED PER PAGE rather than assumed, because an application may
+     * genuinely want a screen in two portals - and a page with no declaration
+     * belongs to the default panel, which is where every one of these lives.
+     *
+     * @return list<array{title: string, href: string, icon: string, group: string}>
+     */
+    public static function forPanel(?string $panelId = null): array
+    {
+        $panelId ??= app(\PanelKit\Panel\PanelManager::class)->currentPanel()?->id
+            ?? (string) config('panel.default', 'admin');
+
+        return array_values(array_filter(
+            self::all(),
+            static fn (array $page): bool => ($page['panel'] ?? config('panel.default', 'admin')) === $panelId,
+        ));
+    }
+
+    /**
      * @return list<array{title: string, href: string, icon: string, group: string}>
      */
     public static function all(): array

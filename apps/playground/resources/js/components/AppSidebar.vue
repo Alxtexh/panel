@@ -114,7 +114,24 @@ function closeOnMobile() {
     }
 }
 
-const dashboardItem: NavItem = { title: 'Dashboard', href: dashboard(), icon: LayoutGrid }
+/**
+ * Home, for the portal actually being served.
+ *
+ * IT WAS A HARDCODED `/dashboard`, which is the operator application's screen -
+ * so the first entry in a generated portal's navigation took you out of the
+ * portal, and the only way back was the browser button. The server knows which
+ * panel is serving the request; the client should not be guessing.
+ */
+const panelHome = computed(
+    () => (page.props.panelHome as { href: string; isDefault: boolean } | undefined)
+        ?? { href: dashboard().url ?? '/dashboard', isDefault: true },
+)
+
+const dashboardItem = computed<NavItem>(() => ({
+    title: panelHome.value.isDefault ? 'Dashboard' : 'Home',
+    href: panelHome.value.href,
+    icon: LayoutGrid,
+}))
 
 /**
  * Navigation, grouped by the `group` each resource declares.
@@ -144,7 +161,10 @@ const dashboardItem: NavItem = { title: 'Dashboard', href: dashboard(), icon: La
  * pairs because it iterates them alongside a collapsed-state Map keyed by name.
  */
 const navGroups = computed(() => ({
-    ungrouped: [dashboardItem, ...nav.value.primary.filter((item) => item.title !== 'Dashboard')],
+    ungrouped: [
+        dashboardItem.value,
+        ...nav.value.primary.filter((item) => item.title !== 'Dashboard'),
+    ],
     grouped: nav.value.groups.map(
         (group): [string, NavItem[]] => [group.name, group.items],
     ),
@@ -233,12 +253,23 @@ watch(
     },
 )
 
-const supportNavItems: NavItem[] = [
-    { title: 'Help', href: '/help', icon: HelpCircle },
-    { title: 'FAQ', href: '/faq', icon: MessageCircleQuestion },
-    { title: "What's new", href: '/whats-new', icon: Sparkles },
-    { title: 'About', href: '/about', icon: Info },
-]
+/**
+ * The application's own support screens - and only in the application's portal.
+ *
+ * They are routed at the root, so a generated portal offering them is a portal
+ * you leave by clicking Help. A portal that needs its own support pages declares
+ * them like any other page.
+ */
+const supportNavItems = computed<NavItem[]>(() =>
+    panelHome.value.isDefault
+        ? [
+              { title: 'Help', href: '/help', icon: HelpCircle },
+              { title: 'FAQ', href: '/faq', icon: MessageCircleQuestion },
+              { title: "What's new", href: '/whats-new', icon: Sparkles },
+              { title: 'About', href: '/about', icon: Info },
+          ]
+        : [],
+)
 </script>
 
 <template>
