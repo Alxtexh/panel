@@ -237,53 +237,33 @@ final class RecordWriteTest extends TestCase
         $this->assertNotContains($gone->id, $ids, 'A deleted record must not appear by default.');
     }
 
-    /** And is reachable when explicitly asked for. */
-    public function test_the_trashed_view_shows_only_deleted_records(): void
+    /**
+     * A DELETED RECORD CANNOT BE COAXED BACK INTO THE LIST.
+     *
+     * The list used to offer `?trashed=trashed` and `?trashed=all`, which meant
+     * every count, filter and export on the screen had to be read twice - "43
+     * live, or 43 including the ones somebody removed?" - with the answer hidden
+     * in a filter panel most people never open. Deleted records live on the
+     * Trash screen now, and a hand-edited query string must not reopen the old
+     * behaviour.
+     */
+    public function test_no_query_string_brings_deleted_records_back_into_the_list(): void
     {
         $live = $this->makeClient($this->tenantA);
         $gone = $this->makeClient($this->tenantA);
 
         $gone->delete();
 
-        $records = $this->actingAs($this->userA)->get('/clients?trashed=trashed')->assertOk()
-            ->viewData('page')['props']['records'];
+        foreach (['?trashed=trashed', '?trashed=all', '?trashed=nonsense', ''] as $query) {
+            $ids = array_column(
+                $this->actingAs($this->userA)->get('/clients'.$query)->assertOk()
+                    ->viewData('page')['props']['records'],
+                'id',
+            );
 
-        $ids = array_column($records, 'id');
-
-        $this->assertContains($gone->id, $ids);
-        $this->assertNotContains($live->id, $ids);
-    }
-
-    public function test_the_all_view_shows_both(): void
-    {
-        $live = $this->makeClient($this->tenantA);
-        $gone = $this->makeClient($this->tenantA);
-
-        $gone->delete();
-
-        $ids = array_column(
-            $this->actingAs($this->userA)->get('/clients?trashed=all')->assertOk()
-                ->viewData('page')['props']['records'],
-            'id',
-        );
-
-        $this->assertContains($live->id, $ids);
-        $this->assertContains($gone->id, $ids);
-    }
-
-    /** A hand-edited value falls back to the default rather than erroring. */
-    public function test_an_unknown_trashed_value_shows_live_records(): void
-    {
-        $gone = $this->makeClient($this->tenantA);
-        $gone->delete();
-
-        $ids = array_column(
-            $this->actingAs($this->userA)->get('/clients?trashed=nonsense')->assertOk()
-                ->viewData('page')['props']['records'],
-            'id',
-        );
-
-        $this->assertNotContains($gone->id, $ids);
+            $this->assertContains($live->id, $ids, "Live records vanished for [{$query}].");
+            $this->assertNotContains($gone->id, $ids, "A deleted record reappeared for [{$query}].");
+        }
     }
 
     /** Restoring is still tenant-scoped: `withTrashed` lifts only that scope. */

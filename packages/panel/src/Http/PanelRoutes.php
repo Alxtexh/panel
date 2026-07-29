@@ -155,6 +155,17 @@ final class PanelRoutes
                     self::within($keys);
                 }
 
+                /*
+                 * THE BIN, per portal.
+                 *
+                 * DECLARED HERE RATHER THAN IN `within()` because it takes no
+                 * `{resource}` segment - it is the one screen that spans all of
+                 * them - and because a portal whose resources are all
+                 * hard-deleting still routes it, showing an empty bin rather
+                 * than a 404.
+                 */
+                Route::get('trash', [Controllers\TrashController::class, 'index'])->name('trash');
+
                 foreach (self::extensions() as $extension) {
                     $extension($keys, $panel);
                 }

@@ -192,7 +192,18 @@ class HandleInertiaRequests extends Middleware
              | a code path with no caller, and the first page that needs it can
              | bring one back along with the test that proves it works.
              */
-            'panelPages' => fn (): array => \App\Panel\Pages::all(),
+            /*
+             | THE TRASH ENTRY COMES FROM THE PACKAGE, not from `Pages`, because
+             | the bin is a panel feature rather than an application screen:
+             | `make:panel` routes it, so a generated portal must link it without
+             | anybody editing this application. Null when nothing in the current
+             | portal soft-deletes - a bin that can never fill would advertise a
+             | recovery the panel does not offer.
+             */
+            'panelPages' => fn (): array => array_values(array_filter([
+                ...\App\Panel\Pages::all(),
+                app(\PanelKit\Panel\Trash\TrashBin::class)->navigationEntry(),
+            ])),
 
             'name' => config('app.name'),
             /*

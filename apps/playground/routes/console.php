@@ -173,4 +173,12 @@ Schedule::command('panel:reports-due')
 | staying downloadable.
 */
 Schedule::command('panel:prune-exports')->dailyAt('03:20')->onOneServer();
+
+/*
+ | THE ONLY UNATTENDED HARD DELETE IN THE PANEL. Without it a soft delete is not
+ | a delete: the row stays in the table, the backups and every later export, and
+ | "deleted" quietly means "hidden". The Trash screen states the same retention
+ | this enforces, so the promise on screen and the sweep on disk cannot drift.
+ */
+Schedule::command('panel:prune-trash')->dailyAt('03:10')->onOneServer();
 Schedule::command('panel:prune-uploads')->dailyAt('03:30')->onOneServer();

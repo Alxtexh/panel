@@ -78,12 +78,19 @@ final class NavigationCoverageTest extends TestCase
      */
     private function linkedPaths(): array
     {
-        $nav = $this->actingAs($this->admin)->get('/dashboard')
-            ->viewData('page')['props']['panelNav'];
+        $props = $this->actingAs($this->admin)->get('/dashboard')->viewData('page')['props'];
 
+        /*
+         * READ FROM THE PROPS, NOT FROM `Pages::all()` DIRECTLY.
+         *
+         * The declared list is no longer the whole menu: the Trash entry comes
+         * from the package, per panel, so a generated portal links its own bin
+         * without this application editing anything. Reading what the client is
+         * actually sent covers both sources and cannot drift from either.
+         */
         return [
-            ...array_column($nav, 'href'),
-            ...array_column(Pages::all(), 'href'),
+            ...array_column($props['panelNav'], 'href'),
+            ...array_column($props['panelPages'], 'href'),
             ...array_keys(Pages::intentionallyUnlinked()),
         ];
     }

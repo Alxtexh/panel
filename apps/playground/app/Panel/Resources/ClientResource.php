@@ -34,7 +34,6 @@ use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Filters\DateRangeFilter;
 use PanelKit\Panel\Tables\Filters\MultiSelectFilter;
 use PanelKit\Panel\Tables\Filters\SelectFilter;
-use PanelKit\Panel\Tables\Filters\TrashedFilter;
 use PanelKit\Panel\Tables\Table;
 
 /**
@@ -329,9 +328,6 @@ final class ClientResource extends Resource
                     ->options(['pppoe', 'hotspot', 'static']),
                 // The question a billing panel is actually asked.
                 DateRangeFilter::make('expiring')->label('Expiry')->column('clients.expiry_date'),
-                // Live by default; deleted records are reachable but never the
-                // default view.
-                TrashedFilter::make('trashed')->label('Deleted')->deletedColumn('clients.deleted_at'),
             ])
             /*
              | Bulk actions.

@@ -179,6 +179,14 @@ final class Pages
              */
             '/platform' => 'A generated portal\'s home. Not part of this portal\'s navigation.',
             '/reseller' => 'A generated portal\'s home. Not part of this portal\'s navigation.',
+            /*
+             * EACH PORTAL LINKS ITS OWN BIN, from `TrashBin::navigationEntry` -
+             * so these are linked, just not from HERE. This portal's sidebar
+             * offers this portal's trash and nobody else's, for the same reason
+             * it does not offer another portal's subscribers.
+             */
+            '/platform/trash' => 'The platform portal links its own bin; this portal links its own.',
+            '/reseller/trash' => 'The reseller portal links its own bin; this portal links its own.',
         ];
     }
 }

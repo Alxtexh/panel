@@ -20,6 +20,7 @@ import {
     Smartphone,
     Sparkles,
     TimerOff,
+    Trash2,
     Users,
     Wrench,
 } from '@lucide/vue';
@@ -69,6 +70,7 @@ const ICONS: Record<string, typeof LayoutGrid> = {
     'shield-alert': ShieldAlert,
     smartphone: Smartphone,
     'timer-off': TimerOff,
+    trash: Trash2,
     wrench: Wrench,
 };
 

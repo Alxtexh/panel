@@ -285,6 +285,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | The trash
+    |--------------------------------------------------------------------------
+    |
+    | How long a soft-deleted record can be restored from the Trash screen
+    | before `panel:prune-trash` removes it for good.
+    |
+    | A BIN IS ONLY USEFUL IF IT HAS A DEADLINE PEOPLE CAN PLAN AROUND. Too
+    | short and "I deleted it on Friday" is already unrecoverable on Monday; no
+    | limit at all and the panel quietly accumulates every record anybody ever
+    | removed, which is a data-retention position nobody chose.
+    |
+    | THE PRUNE IS A HARD DELETE and runs unattended, so this number is the only
+    | thing standing between a mistake and its consequences. The Trash screen
+    | shows it, computed from here rather than written in a heading.
+    */
+    'trash' => [
+        'retention_days' => (int) env('PANEL_TRASH_RETENTION_DAYS', 7),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Retrieval, so the assistant can cite instead of inventing
     |--------------------------------------------------------------------------
     |
