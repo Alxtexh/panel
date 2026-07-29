@@ -9,8 +9,12 @@ component tree per click.
 
 ```bash
 composer require panelkit/panel
+npm install @panelkit/ui @panelkit/inertia
 php artisan panel:install
 ```
+
+This package answers the requests; `@panelkit/inertia` holds the five screens it
+renders. Installing one without the other gives you routes that resolve to nothing.
 
 ---
 
@@ -195,13 +199,24 @@ is a finding.
 
 ## What ships to the browser
 
-`@panelkit/ui` is the Vue layer, and it imports no HTTP client and no Inertia. Data
-fetching belongs to the application; the package renders what it is handed. That is what
-lets the same components work under Inertia, a fetch-based page, or a test harness.
+Two packages, split along one line: whether they know how the data arrived.
+
+`@panelkit/ui` is the rendering layer, and it imports no HTTP client and no Inertia.
+Data fetching belongs to the caller; the package renders what it is handed. That is
+what lets the same table and form work under Inertia, a fetch-based page, or a test
+harness with no router at all.
+
+`@panelkit/inertia` is the five screens this package renders, and they are Inertia
+to their bones — `useForm`, `Link`, partial reloads by prop name. They name no
+layout: the shell stays the application's.
 
 ```bash
-npm install @panelkit/ui
+npm install @panelkit/ui @panelkit/inertia
 ```
+
+`panel:install` then writes one page file per screen into `resources/js/pages`,
+because Inertia resolves page names by globbing that directory and cannot see into
+`node_modules`. Each file is one line, and each is where you override that screen.
 
 ---
 
