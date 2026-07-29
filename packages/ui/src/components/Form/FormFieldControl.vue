@@ -21,7 +21,8 @@
  * Emits its value only. The parent owns state; this never mutates anything.
  */
 
-import { defineAsyncComponent, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from 'vue'
+import { fieldControl } from '../../composables/useFieldControls'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import PkFileUpload from './PkFileUpload.vue'
 import type { UploadedFileValue } from './PkFileUpload.vue'
@@ -145,6 +146,22 @@ function clearChoice() {
 }
 
 onBeforeUnmount(() => clearTimeout(debounce))
+
+/* ------------------------------------------------------- registered controls */
+
+/**
+ * A control somebody registered for this field's type.
+ *
+ * CONSULTED BEFORE THE BUILT-INS, which is what makes the registry an extension
+ * point rather than a fallback: an application can register its own control for
+ * `select` and have it used everywhere, rather than being able to add types and
+ * never replace one.
+ *
+ * `computed` because a repeater reuses one instance of this component across
+ * rows of different shapes - resolving once on setup would draw the second row
+ * with the first row's control.
+ */
+const registered = computed(() => fieldControl(props.field.type))
 </script>
 
 <template>
@@ -153,6 +170,24 @@ onBeforeUnmount(() => clearTimeout(debounce))
             {{ field.label }}
             <span v-if="field.required" class="text-destructive" aria-hidden="true">*</span>
         </label>
+
+        <!--
+            A REGISTERED CONTROL WINS. Everything below is a built-in; this is
+            how a field type the package has never heard of - or a replacement
+            for one it has - gets drawn without editing this file. The contract
+            is plain `v-model`, so such a control is an ordinary Vue component
+            rather than something shaped for this switch.
+        -->
+        <component
+            :is="registered"
+            v-if="registered"
+            :field="field"
+            :model-value="value"
+            :options="options"
+            :errors="errors"
+            :disabled="field.disabled || processing"
+            @update:model-value="(next: unknown) => emit('change', next)"
+        />
 
         <!--
             Searchable select. Options are fetched on demand rather than rendered
@@ -164,7 +199,7 @@ onBeforeUnmount(() => clearTimeout(debounce))
         <!-- A file is uploaded ahead of the form and held as a handle, so a
              validation error elsewhere never empties the input. -->
         <PkFileUpload
-            v-if="field.type === 'file' && upload"
+            v-else-if="field.type === 'file' && upload"
             :model-value="(value as UploadedFileValue | null) ?? null"
             :accept="field.accept ?? []"
             :max-kilobytes="field.maxKilobytes ?? 10240"

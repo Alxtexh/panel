@@ -19,6 +19,7 @@ use PanelKit\Panel\Forms\Fields\KeyValueField;
 use PanelKit\Panel\Forms\Fields\MultiSelectField;
 use PanelKit\Panel\Forms\Fields\RepeaterField;
 use PanelKit\Panel\Forms\Fields\RichEditorField;
+use PanelKit\Panel\Forms\Fields\RadioField;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
@@ -116,7 +117,18 @@ final class ClientResource extends Resource
 
                 Tab::make('Service')->schema([
                     Section::make('Plan')->columns(2)->schema([
-                        SelectField::make('plan_type')->label('Plan type')->required()->options([
+                        /*
+                         * A RADIO GROUP, not a dropdown, and the difference is
+                         * whether reading the options is part of the decision.
+                         * There are three, they are short, and which one a
+                         * subscriber is on changes how the connection is set up
+                         * - hiding them behind a click makes somebody open the
+                         * control just to learn what the question is.
+                         *
+                         * It validates identically: `Rule::in` over the same
+                         * declared options, server-side.
+                         */
+                        RadioField::make('plan_type')->label('Plan type')->required()->inline()->options([
                             'pppoe' => 'PPPoE',
                             'hotspot' => 'Hotspot',
                             'static' => 'Static',

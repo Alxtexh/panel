@@ -29,6 +29,11 @@ export { default as PkDeviceFrame } from './components/Layout/PkDeviceFrame.vue'
 export { default as PkRepeater } from './components/Form/PkRepeater.vue'
 export { default as PkKeyValue } from './components/Form/PkKeyValue.vue'
 export { default as PkRichEditor } from './components/Form/PkRichEditor.vue'
+export { default as PkRadioGroup } from './components/Form/PkRadioGroup.vue'
+export { default as PkCheckboxList } from './components/Form/PkCheckboxList.vue'
+export { default as PkTagsInput } from './components/Form/PkTagsInput.vue'
+export { default as PkColourPicker } from './components/Form/PkColourPicker.vue'
+export { default as PkSlider } from './components/Form/PkSlider.vue'
 export { default as ThemeToggle } from './components/Layout/ThemeToggle.vue'
 export { default as BarChart } from './components/Widgets/BarChart.vue'
 export { default as LineChart } from './components/Widgets/LineChart.vue'
@@ -98,5 +103,32 @@ export type {
 } from './composables/useAppearance'
 export type { SchemaColumn } from './composables/useSchemaColumns'
 export type { FormField } from './components/Form/types'
+
+/*
+ * THE FIELD REGISTRY, and the five controls this package registers into it.
+ *
+ * Adding a field type used to mean editing a `v-else-if` chain inside
+ * `FormFieldControl.vue` - fine for us, impossible for anybody who installed the
+ * package. A "custom field" you can only add by patching the framework is not an
+ * extension point, and its absence is what stops a plugin ecosystem existing.
+ *
+ * `registerBuiltInFieldControls()` IS CALLED HERE, at import time, rather than
+ * left for the application to call. A control that has to be turned on is one
+ * somebody forgets to turn on, and the failure - a field that renders as nothing
+ * at all - looks like the server failed to send it.
+ */
+export {
+    registerFieldControl,
+    fieldControl,
+    hasFieldControl,
+    registeredFieldTypes,
+    resetFieldControls,
+} from './composables/useFieldControls'
+
+import { registerBuiltInFieldControls } from './components/Form/builtInFields'
+
+export { registerBuiltInFieldControls }
+
+registerBuiltInFieldControls()
 
 export const version = '0.0.1'
