@@ -4,7 +4,7 @@
 is the forward view — everything outstanding, why it matters, what it costs, and
 what it depends on.
 
-Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.4
+Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.5
 are done** — see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
 **S** = an afternoon · **M** = a day or two · **L** = several days · **XL** = a
 week or more.
@@ -277,7 +277,7 @@ crowded off the list by old history. Presentational half is
 installation-health detail, and a tenant user who cannot open that page must
 not receive it a second way, on a screen everybody opens.
 
-### 3.5 Conditional sections — **M**
+### 3.5 Conditional sections — **DONE**
 
 `visibleWhen` works per field; a whole `Section` cannot depend on a value, so a
 disabled group still occupies the page. Schema change plus the Vue half.
@@ -286,6 +286,26 @@ disabled group still occupies the page. Schema change plus the Vue half.
 server omits the section's fields from the payload entirely when it is off — so
 a hidden section is not merely invisible, it is absent, and cannot be submitted
 by a crafted request.
+
+Shipped as `Component::isVisible()`/`Component::visibleFields()`
+(`packages/panel/src/Schema/Component.php`), a base-class mechanism `Section`
+opts into with its own `visibleWhen()`. `Form::sanitize()` is the actual
+enforcement — it walks `visibleFields($this->nodes, $input)` rather than the
+unconditional flat list, so a field inside an unmet section's condition is
+dropped from the write payload however a request tries to include it, using
+the same submitted data already available at that call site (no signature
+change reached the many other `Form` callers — Importer, the document
+designer, the public API — all of which keep every field's rules and
+sanitisation exactly as before). The cached schema and `valuesFor()`
+deliberately stay unconditional: a hidden section's fields still have to
+exist in the structure the client walks and still need their real stored
+values, so that flipping the condition back on shows what was actually saved
+rather than a blank. `SchemaNode.vue`'s section branch gained the identical
+`conditionMet(node)` gate a conditional field already had, so a hidden
+section is absent from the DOM, not merely styled invisible. A field
+required inside a conditional section should still declare its own matching
+`visibleWhen` — the section's condition governs what gets written, not what
+gets required; that half of the existing per-field design is unchanged.
 
 ### 3.6 Variable chips under message fields — **S**
 

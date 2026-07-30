@@ -11,6 +11,7 @@ use App\Panel\Resources\RouterResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
+use PanelKit\Panel\Schema\Grid;
 use PanelKit\Panel\Schema\Section;
 use PanelKit\Panel\Schema\Step;
 use PanelKit\Panel\Schema\Wizard;
@@ -200,6 +201,129 @@ final class WizardAndConditionalFieldTest extends TestCase
         $this->postJson('/routers', ['name' => 'Edge', 'model' => 'RB750'])
             ->assertStatus(422)
             ->assertJsonValidationErrors('ip_address');
+    }
+
+    /* ----------------------------------------------------- conditional sections */
+
+    /** The condition travels to the client so the whole section can be hidden. */
+    public function test_a_conditional_sections_condition_travels_in_the_schema(): void
+    {
+        $schema = Section::make('Refund details')->visibleWhen('kind', 'refund')->toSchema();
+
+        $this->assertSame(['field' => 'kind', 'value' => 'refund'], $schema['visibleWhen']);
+    }
+
+    /** A section with no condition is unconditionally present, as before. */
+    public function test_a_plain_section_carries_no_visibility_condition(): void
+    {
+        $this->assertNull(Section::make('Always here')->toSchema()['visibleWhen']);
+    }
+
+    /**
+     * THE CENTRAL GUARANTEE, restated for a whole section rather than one
+     * field. A crafted request including a hidden section's key must not
+     * reach the write payload just because the key was present - "hidden"
+     * has never been a constraint on what a request may contain, so the
+     * server has to be the one refusing it rather than trusting the client
+     * not to send it.
+     */
+    public function test_a_hidden_sections_fields_are_omitted_from_the_write_payload(): void
+    {
+        $form = Form::make()->schema([
+            TextField::make('kind'),
+            Section::make('Refund details')->visibleWhen('kind', 'refund')->schema([
+                TextField::make('refund_reason'),
+            ]),
+        ]);
+
+        $out = $form->sanitize([
+            'kind' => 'purchase',
+            // Included anyway, as a crafted request would.
+            'refund_reason' => 'Changed my mind',
+        ]);
+
+        $this->assertArrayNotHasKey('refund_reason', $out);
+        $this->assertSame('purchase', $out['kind']);
+    }
+
+    /** And when the submitted data DOES satisfy the condition, the field writes normally. */
+    public function test_a_visible_sections_fields_are_written_normally(): void
+    {
+        $form = Form::make()->schema([
+            TextField::make('kind'),
+            Section::make('Refund details')->visibleWhen('kind', 'refund')->schema([
+                TextField::make('refund_reason'),
+            ]),
+        ]);
+
+        $out = $form->sanitize([
+            'kind' => 'refund',
+            'refund_reason' => 'Wrong size',
+        ]);
+
+        $this->assertSame('Wrong size', $out['refund_reason']);
+    }
+
+    /** A field nested arbitrarily deep inside a hidden section is still omitted. */
+    public function test_a_field_nested_inside_a_hidden_section_is_still_omitted(): void
+    {
+        $form = Form::make()->schema([
+            TextField::make('kind'),
+            Section::make('Refund details')->visibleWhen('kind', 'refund')->schema([
+                Grid::make()->schema([
+                    TextField::make('refund_reason'),
+                ]),
+            ]),
+        ]);
+
+        $out = $form->sanitize(['kind' => 'purchase', 'refund_reason' => 'Anything']);
+
+        $this->assertArrayNotHasKey('refund_reason', $out);
+    }
+
+    /**
+     * A BOOLEAN CONDITION ON A SECTION reads the request the way Laravel's
+     * own `required_if` does, for the same reason a field's does - `true`
+     * declared in PHP has to match `"1"` arriving on the wire.
+     */
+    public function test_a_boolean_sections_condition_matches_a_submitted_string(): void
+    {
+        $form = Form::make()->schema([
+            TextField::make('is_business'),
+            Section::make('Business details')->visibleWhen('is_business', true)->schema([
+                TextField::make('tax_number'),
+            ]),
+        ]);
+
+        $shown = $form->sanitize(['is_business' => '1', 'tax_number' => '12345']);
+        $hidden = $form->sanitize(['is_business' => '0', 'tax_number' => '12345']);
+
+        $this->assertSame('12345', $shown['tax_number']);
+        $this->assertArrayNotHasKey('tax_number', $hidden);
+    }
+
+    /**
+     * NEITHER THE CACHED SCHEMA NOR EXISTING VALUES ARE FILTERED. A hidden
+     * section's fields still have to exist in the structural schema (so the
+     * client knows the section exists at all) and in a record's current
+     * values (so flipping the condition back on shows what was actually
+     * stored, not a blank) - only the WRITE path is conditional.
+     */
+    public function test_the_flat_field_list_and_current_values_ignore_visibility(): void
+    {
+        $form = Form::make()->schema([
+            TextField::make('kind'),
+            Section::make('Refund details')->visibleWhen('kind', 'refund')->schema([
+                TextField::make('refund_reason'),
+            ]),
+        ]);
+
+        $this->assertSame(['kind', 'refund_reason'], array_map(
+            static fn ($f) => $f->key,
+            $form->fields(),
+        ));
+
+        $this->assertArrayHasKey('refund_reason', $form->valuesFor(null));
     }
 
     /* -------------------------------------------------------------- objects */

@@ -163,9 +163,18 @@ function uploadFor(key: string) {
         @change="(value: unknown) => emit('change', node.key, value)"
     />
 
-    <!-- Section. Framed at the root, a plain labelled group when nested. -->
+    <!--
+        Section. Framed at the root, a plain labelled group when nested.
+
+        A CONDITIONAL SECTION IS NOT RENDERED when its condition is unmet,
+        the same choice made for a conditional field above and for the same
+        reason - a disabled-but-present group still occupies the page and
+        still submits whatever is in it. `Form::sanitize()` is the actual
+        enforcement, from the same declaration; this is what makes a hidden
+        section look like what it is on the server.
+    -->
     <section
-        v-else-if="node.component === 'section'"
+        v-else-if="node.component === 'section' && conditionMet(node)"
         :class="isRoot ? 'bg-card rounded-lg border' : ''"
     >
         <header

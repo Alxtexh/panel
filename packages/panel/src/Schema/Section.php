@@ -50,6 +50,31 @@ final class Section extends Component
         return $this;
     }
 
+    /**
+     * Show this WHOLE SECTION only when another field holds a given value.
+     *
+     * `visibleWhen` on a `Field` is a hint the client draws and the server
+     * turns into `required_if` - the field can still be present in a request
+     * and still gets written if it is. This is stronger: `Form::sanitize()`
+     * omits every field in an unmet section from the write payload entirely,
+     * so a crafted request cannot resurrect a section by including its keys.
+     * A hidden section is not merely invisible; it does not exist as far as
+     * what a request may contain.
+     *
+     * A FIELD required INSIDE a conditional section should still declare its
+     * OWN `visibleWhen` matching the section's - that is what relaxes its
+     * `required` rule to `required_if` so submitting the form without the
+     * section open does not fail validation on a field nobody could see.
+     * This method does not do that for you; it only governs what gets
+     * written, not what gets required.
+     */
+    public function visibleWhen(string $field, mixed $value): self
+    {
+        $this->visibleWhen = [$field, $value];
+
+        return $this;
+    }
+
     public function component(): string
     {
         return 'section';
@@ -64,6 +89,16 @@ final class Section extends Component
             'columns' => $this->columns,
             'collapsible' => $this->collapsible,
             'collapsed' => $this->collapsed,
+            /*
+             * A HINT, NOT A RULE - see the note on `visibleWhen()`. The client
+             * uses this to decide whether to render the section at all;
+             * `Form::sanitize()` is the actual enforcement, from the same
+             * declaration.
+             */
+            'visibleWhen' => $this->visibleWhen === null ? null : [
+                'field' => $this->visibleWhen[0],
+                'value' => $this->visibleWhen[1],
+            ],
         ];
     }
 }
