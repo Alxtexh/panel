@@ -91,3 +91,62 @@ describe('FormFieldControl - number presets', () => {
         }
     })
 })
+
+const messageField: FormField = {
+    key: 'body',
+    label: 'Body',
+    type: 'textarea',
+    chips: { '@user': "The reader's name", '@organisation': 'The organisation name' },
+} as FormField
+
+describe('FormFieldControl - message chips', () => {
+    /** Mirrors the number-preset tests above: nothing renders without a declared token map. */
+    it('renders no chips for a textarea with no chips declared', () => {
+        const wrapper = mount(FormFieldControl, {
+            props: { field: { key: 'x', label: 'X', type: 'textarea' } as FormField, value: null },
+        })
+
+        expect(wrapper.findAll('button[type="button"]').length).toBe(0)
+    })
+
+    it('renders no chips for a non-textarea field, even with chips set', () => {
+        const wrapper = mount(FormFieldControl, {
+            props: {
+                field: { key: 'x', label: 'X', type: 'text', chips: { '@a': 'A' } } as FormField,
+                value: null,
+            },
+        })
+
+        expect(wrapper.findAll('button[type="button"]').length).toBe(0)
+    })
+
+    it('renders one chip per token', () => {
+        const wrapper = mount(FormFieldControl, { props: { field: messageField, value: '' } })
+
+        const chips = wrapper.findAll('button[type="button"]')
+        expect(chips.map((c) => c.text())).toEqual(['@user', '@organisation'])
+    })
+
+    /**
+     * ATTACHED TO THE REAL DOCUMENT, deliberately - `insertChip` finds this
+     * field's own textarea by `document.getElementById`, which only resolves
+     * against elements actually in the document. A detached mount (Vue Test
+     * Utils' default) would make the lookup fail silently and this test would
+     * pass for the wrong reason: nothing to insert into, nothing asserted.
+     */
+    it('inserts the token at the cursor and emits the new value', async () => {
+        const wrapper = mount(FormFieldControl, {
+            props: { field: messageField, value: 'Hi , welcome.' },
+            attachTo: document.body,
+        })
+
+        const textarea = wrapper.find('textarea').element as HTMLTextAreaElement
+        textarea.setSelectionRange(3, 3) // "Hi |, welcome." - cursor after "Hi "
+
+        await wrapper.find('button[type="button"]').trigger('click')
+
+        expect(wrapper.emitted('change')?.[0]).toEqual(['Hi @user, welcome.'])
+
+        wrapper.unmount()
+    })
+})

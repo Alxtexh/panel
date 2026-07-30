@@ -7,6 +7,7 @@ namespace PanelKit\Panel\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use PanelKit\Panel\Alerts;
 use PanelKit\Panel\Documents;
 use PanelKit\Panel\Knowledge;
 use PanelKit\Panel\PanelManager;
@@ -54,6 +55,7 @@ final class DoctorCommand extends Command
         $this->checkIndexes($context);
         $this->checkKnowledge();
         $this->checkDocumentTemplates();
+        $this->checkAnnouncementVariables();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -344,6 +346,53 @@ final class DoctorCommand extends Command
                     'An unknown variable is printed as written rather than blanked, so the '
                     .'document reads "@expiry" where a date belongs. Known variables for this '
                     .'kind: '.(implode(', ', $known) ?: 'none').'.',
+                );
+            }
+        }
+    }
+
+    /**
+     * The same guard as `checkDocumentTemplates()`, for the other caller
+     * `Field::chips()` was generalised for. `Announcement::variables()` is the
+     * one declaration all three of the chip strip, the substitution and this
+     * check read from - an announcement referencing a token that declaration
+     * does not name is exactly as silent in production as an unknown
+     * document variable, and for the same reason: `strtr()` and this regex
+     * scan both leave an unrecognised token printed as written.
+     */
+    private function checkAnnouncementVariables(): void
+    {
+        if (! Schema::hasTable('panel_announcements')) {
+            // The migration has not run. That is a fresh install, not a fault.
+            return;
+        }
+
+        $known = array_keys(Alerts\Announcement::variables());
+
+        $announcements = Alerts\Announcement::query()
+            ->withoutGlobalScope('tenant')
+            ->get(['id', 'tenant_id', 'body']);
+
+        foreach ($announcements as $announcement) {
+            if (! is_string($announcement->body)) {
+                continue;
+            }
+
+            preg_match_all('/@[a-z_][a-z0-9_]*/i', $announcement->body, $matches);
+
+            $unknown = array_values(array_unique(array_diff($matches[0], $known)));
+
+            if ($unknown !== []) {
+                $this->problem(
+                    sprintf(
+                        'An announcement (tenant %s) uses %s, which %s not exist',
+                        (string) $announcement->tenant_id,
+                        implode(', ', $unknown),
+                        count($unknown) === 1 ? 'does' : 'do',
+                    ),
+                    'An unknown variable is printed as written rather than substituted, so the '
+                    .'banner reads "@user" literally instead of a name. Known variables: '
+                    .(implode(', ', $known) ?: 'none').'.',
                 );
             }
         }

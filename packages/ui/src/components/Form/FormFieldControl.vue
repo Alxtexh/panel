@@ -162,6 +162,38 @@ onBeforeUnmount(() => clearTimeout(debounce))
  * with the first row's control.
  */
 const registered = computed(() => fieldControl(props.field.type))
+
+/* ------------------------------------------------------------------- chips */
+
+/**
+ * Insert a token at the cursor in THIS field's own textarea.
+ *
+ * FOUND BY ID, not `document.activeElement`. The document designer's own
+ * chip strip (the first version of this idea) reads whatever element
+ * currently has focus, which is fine when there is exactly one chip-bearing
+ * field on the page - a repeater or a form with two message fields would
+ * make a chip ambiguous about which field it is offering to fill. Reaching
+ * for `#f-${field.key}` targets THIS control specifically, whether or not it
+ * happens to be focused.
+ *
+ * `setRangeText`, not string concatenation - it inserts at the cursor (or
+ * replaces a selection) rather than always appending, and it is what the
+ * browser itself uses for typed input, so undo/redo keeps working.
+ */
+function insertChip(token: string) {
+    const el = document.getElementById(`f-${props.field.key}`)
+
+    if (!(el instanceof HTMLTextAreaElement) && !(el instanceof HTMLInputElement)) {
+        return
+    }
+
+    const start = el.selectionStart ?? el.value.length
+    const end = el.selectionEnd ?? start
+
+    el.setRangeText(token, start, end, 'end')
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+    el.focus()
+}
 </script>
 
 <template>
@@ -416,6 +448,29 @@ const registered = computed(() => fieldControl(props.field.type))
                 @click="emit('change', String(preset))"
             >
                 {{ preset }}
+            </button>
+        </div>
+
+        <!--
+            CHIPS SIT BESIDE THE FIELD for the same reason presets do above: a
+            chip WRITES INTO the textarea rather than being a second control
+            with its own value, so it belongs next to what it edits rather
+            than in place of it.
+        -->
+        <div
+            v-if="field.type === 'textarea' && field.chips && Object.keys(field.chips).length"
+            class="flex flex-wrap gap-1.5"
+        >
+            <button
+                v-for="(meaning, token) in field.chips"
+                :key="token"
+                type="button"
+                :title="meaning"
+                :disabled="field.disabled || processing"
+                class="border-input hover:bg-muted rounded-md border px-2 py-1 font-mono text-xs transition-colors disabled:opacity-50"
+                @click="insertChip(String(token))"
+            >
+                {{ token }}
             </button>
         </div>
 

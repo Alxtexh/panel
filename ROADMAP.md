@@ -4,7 +4,7 @@
 is the forward view — everything outstanding, why it matters, what it costs, and
 what it depends on.
 
-Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.5
+Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.6
 are done** — see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
 **S** = an afternoon · **M** = a day or two · **L** = several days · **XL** = a
 week or more.
@@ -307,13 +307,34 @@ required inside a conditional section should still declare its own matching
 `visibleWhen` — the section's condition governs what gets written, not what
 gets required; that half of the existing per-field design is unchanged.
 
-### 3.6 Variable chips under message fields — **S**
+### 3.6 Variable chips under message fields — **DONE**
 
 *Theirs:* a fixed chip list per template.
 
 **Ours:** the token list comes from the resource schema, so it cannot list a
 variable the record does not have — and `panel:doctor` flags a template using
 one that was removed. Callers: announcements, scheduled reports, 3.1's copy.
+
+Generalised rather than duplicated: `Field::chips(array $tokens)` and its
+`toSchema()` key are new on the base `Field` class, and `FormFieldControl.vue`
+gained the chip strip + insert-at-cursor behaviour the document designer's
+own page had hand-built — found by `document.getElementById` for this
+field's own textarea specifically, not `document.activeElement`, so two
+message fields on one page can never insert into each other's control.
+`Announcement` gets its own `variables()` (`@user`, `@organisation` — there
+is no per-record field the way an invoice has `@customer`, only who is
+reading and which organisation wrote it), a `substitute()` used both on the
+dashboard banner and in the notification a dismissal writes to the bell (the
+same text, substituted once, not re-declared), and `panel:doctor` grows a
+second check mirroring `checkDocumentTemplates()` for an announcement
+referencing an unknown token.
+
+**Scheduled reports is not wired up, and that is not an oversight.** No
+message/body field exists on `ScheduledReport` today — it has no free text a
+chip could insert into. Attaching chips to a field that does not exist would
+mean inventing that field and a mail template to go with it, which is scope
+belonging to a future report-composer item, not this one. `Field::chips()`
+is ready for it the moment that field is added.
 
 ### 3.7 Settings index with descriptions and search — **S**
 

@@ -129,7 +129,7 @@ final class DashboardController extends Controller
              | somebody has already scrolled past.
              */
             'announcements' => $user === null ? [] : Announcement::activeFor($user->getKey())
-                ->map(fn (Announcement $a): array => $a->toBanner())
+                ->map(fn (Announcement $a): array => $a->toBanner($user))
                 ->all(),
 
             'widgets' => array_map(static fn (StatWidget $w): array => $w->toArray(), $stats),

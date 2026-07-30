@@ -45,6 +45,13 @@ abstract class Field implements Renderable
 
     protected ?string $placeholder = null;
 
+    /**
+     * Insertable tokens for a message field, `@token => meaning`, or null.
+     *
+     * @var array<string, string>|null
+     */
+    protected ?array $chips = null;
+
     protected bool $disabled = false;
 
     /** @var list<object|string> */
@@ -209,6 +216,33 @@ abstract class Field implements Renderable
         return $this->visibleWhen;
     }
 
+    /**
+     * Tokens the client can insert into this field, drawn from wherever the
+     * caller's own schema says they come from.
+     *
+     * THE ORIGINAL VERSION OF THIS WAS THE DOCUMENT DESIGNER'S OWN, hand-built
+     * against `DocumentKind::variables()` because nothing more general
+     * existed. This is that same idea moved onto `Field` itself, so any
+     * message field anywhere - an announcement's body, a future report's -
+     * gets the identical chip strip and the identical "unknown token" guard
+     * `panel:doctor` already knows how to run against a declared map, rather
+     * than a second bespoke implementation per caller.
+     *
+     * NOT A DYNAMIC LIST. Unlike `options()`, which resolves late because a
+     * select's choices are often tenant data, a token map is documentation
+     * about what THIS FIELD substitutes - the same handful of names for every
+     * tenant - so it is safe to cache in the schema exactly like any other
+     * structural value.
+     *
+     * @param  array<string, string>  $chips  `@token => meaning`
+     */
+    public function chips(array $chips): static
+    {
+        $this->chips = $chips;
+
+        return $this;
+    }
+
     /** @return list<mixed> */
     protected function typeRules(): array
     {
@@ -260,6 +294,7 @@ abstract class Field implements Renderable
                 'field' => $this->visibleWhen[0],
                 'value' => $this->visibleWhen[1],
             ],
+            'chips' => $this->chips,
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
     }
 

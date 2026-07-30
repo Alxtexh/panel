@@ -104,7 +104,8 @@ final class AnnouncementResource extends Resource
                 // `TextareaField` has no `max()`; the limit is a rule, which is
                 // where every other length constraint in the panel lives too.
                 TextareaField::make('body')->rows(3)->span(2)->rule('max:500')
-                    ->help('One or two sentences. A banner nobody finishes reading is a banner nobody read.'),
+                    ->help('One or two sentences. A banner nobody finishes reading is a banner nobody read.')
+                    ->chips(Announcement::variables()),
             ]),
 
             Section::make('How it appears')->columns(2)->schema([

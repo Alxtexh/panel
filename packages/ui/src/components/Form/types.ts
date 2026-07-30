@@ -74,4 +74,14 @@ export interface FormField {
      */
     toolbar?: string[]
     maxLength?: number | null
+
+    /**
+     * Insertable tokens for a message field, `@token => meaning`.
+     *
+     * Comes from wherever the resource's own schema says the tokens are -
+     * `DocumentKind::variables()`, `Announcement::variables()` - never
+     * hand-written per screen, so it cannot list a token the record does not
+     * actually have.
+     */
+    chips?: Record<string, string>
 }

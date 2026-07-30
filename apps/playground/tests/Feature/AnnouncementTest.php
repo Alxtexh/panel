@@ -208,6 +208,85 @@ final class AnnouncementTest extends TestCase
             ->assertNotFound();
     }
 
+    /* ------------------------------------------------------------- variables */
+
+    /**
+     * Roadmap 3.6. `@user` and `@organisation` are the two things a banner
+     * actually knows, in the absence of a record the way a document has one.
+     */
+    public function test_the_organisation_and_reader_variables_are_substituted_on_the_dashboard(): void
+    {
+        $this->announce($this->acme, [
+            'title' => 'Welcome',
+            'body' => 'Hi @user, welcome to @organisation.',
+        ]);
+
+        $banner = $this->banners($this->user)[0];
+
+        $this->assertSame(
+            "Hi {$this->user->name}, welcome to Acme.",
+            $banner['body'],
+        );
+    }
+
+    /** THE SAME CHOICE DOCUMENT RENDERING MAKES: printed as written, not blanked. */
+    public function test_an_unknown_variable_survives_in_the_banner(): void
+    {
+        $this->announce($this->acme, ['body' => 'See you @whenever.']);
+
+        $this->assertSame('See you @whenever.', $this->banners($this->user)[0]['body']);
+    }
+
+    /**
+     * THE COPY IN THE BELL IS THE SAME TEXT, substituted for the SAME reader -
+     * not a second declaration that could drift from the banner's own.
+     */
+    public function test_the_substituted_body_travels_into_the_notification_on_dismissal(): void
+    {
+        $announcement = $this->announce($this->acme, ['body' => 'Hi @user, from @organisation.']);
+
+        $this->actingAs($this->user)
+            ->post("/announcements/{$announcement->id}/dismiss")
+            ->assertRedirect();
+
+        $notification = $this->user->fresh()->notifications()->first();
+
+        $this->assertSame(
+            "Hi {$this->user->name}, from Acme.",
+            $notification->data['body'],
+        );
+    }
+
+    /** The chip choices travel in the composer's own schema, sourced from the same declaration. */
+    public function test_the_chip_choices_travel_in_the_composer_schema(): void
+    {
+        $schema = $this->actingAs($this->user)->get('/announcements/create')
+            ->assertOk()->viewData('page')['props']['schema']['form'];
+
+        $body = collect($schema['nodes'][0]['children'])->firstWhere('key', 'body');
+
+        $this->assertSame(Announcement::variables(), $body['chips']);
+    }
+
+    /* ---------------------------------------------------------------- doctor */
+
+    /** THE SAME GUARD `checkDocumentTemplates()` RUNS, for the other declared-variable caller. */
+    public function test_doctor_finds_an_announcement_using_an_unknown_variable(): void
+    {
+        $this->announce($this->acme, ['body' => 'See you @whenever.']);
+
+        $this->artisan('panel:doctor')
+            ->expectsOutputToContain('@whenever')
+            ->assertExitCode(1);
+    }
+
+    public function test_doctor_is_quiet_when_announcement_variables_are_known(): void
+    {
+        $this->announce($this->acme, ['body' => 'Hi @user, from @organisation.']);
+
+        $this->artisan('panel:doctor')->assertExitCode(0);
+    }
+
     /* --------------------------------------------------------------- writing */
 
     /**
