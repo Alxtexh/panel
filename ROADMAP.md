@@ -4,8 +4,8 @@
 is the forward view — everything outstanding, why it matters, what it costs, and
 what it depends on.
 
-Written 2026-07-29, last updated 2026-07-30. **§1 and §3.1–3.3 are done** — see
-[CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
+Written 2026-07-29, last updated 2026-07-30. **§1, §2.2, §2.3 and §3.1–3.3 are
+done** — see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
 **S** = an afternoon · **M** = a day or two · **L** = several days · **XL** = a
 week or more.
 
@@ -85,7 +85,7 @@ script, or a splitter action on push (automation that needs a token in GitHub).
 | # | Item | Size | Notes |
 | --- | --- | --- | --- |
 | 2.1 | **Lint** | M | 230 violations, 216 auto-fixable. The auto-fix reformats 65 files and flips the codebase to semicolons — a year of `git blame` buried. **Decision: reformat once and enforce, or relax the rules to match the code as written.** Until then CI has no lint step, deliberately. |
-| 2.2 | **Component tests** | L | `@panelkit/ui` has one spec file; `@panelkit/inertia` has none. The table, the form and the five screens are verified only indirectly through Laravel feature tests, which cannot see a render. |
+| 2.2 | ~~**Component tests**~~ | **DONE** | `@panelkit/ui`, Vitest + `@vue/test-utils` + jsdom. 8 spec files, 53 tests. See below. |
 | 2.3 | ~~**Browser tests**~~ | **DONE** | Laravel Dusk, 14 tests, own CI job. See below. |
 | 2.4 | **Accessibility check in CI** | M | The audit was manual and is now stale. `axe` over the main screens would keep it true. |
 | 2.5 | **Un-gate the fixtures** | M | MySQL, pgvector, broadcast and the AI provider pass when their scripts run and skip otherwise. CI services would make them permanent. |
@@ -115,8 +115,22 @@ does not emit.
   command line where it outranks any env file, serves on its own port, and
   refuses to run if the path resolves to the development one.
 
-**2.2 (component tests) is now the open item in this section**, and cheaper than
-it was: several things it would have covered are covered from the outside.
+**2.2 is done.** `packages/ui/vitest.config.ts` adds jsdom and
+`@vitejs/plugin-vue` so a `.vue` file can be mounted at all — the two spec files
+that existed before this only tested composables and never needed either. 53
+tests across 8 files: `RecordForm`, `PkVisualSelect`, `PkDocument`, `PkCodeBox`,
+`FormFieldControl`'s number-preset chips, and a `useFieldControls` registry spec
+mirroring the existing `useOptionPreviews` one. `@panelkit/inertia` still has no
+component tests — its screens are still verified only indirectly, through
+Laravel feature tests and the Dusk suite.
+
+**Both regressions this session were pinned as tests, not just fixed.** The
+`RecordForm` emit-contract bug (bound as `@update:model-value` against a
+component that emits `change`) and the line-item column-collision bug both have
+a spec asserting the specific shape that broke, not just "the component
+renders" — `RecordForm.spec.ts` asserts `update:model-value` is never emitted,
+and `PkDocument.spec.ts` asserts the padding classes are on every data cell
+`tbody td` renders.
 
 ---
 
@@ -435,9 +449,11 @@ designer), with 3.3 (preset chips) alongside. 3.6's variable chips landed inside
 the designer, sourced from the kind rather than hand-written; making them
 available to announcements and scheduled reports is what remains of that item.
 
-**~~Then — trust.~~ 2.3 done.** Both bugs it was written for now fail the suite
-when reintroduced. Remaining in that section: 2.1 (the lint decision) and 2.2
-(component tests), and 2.2 is cheaper than it was.
+**~~Then — trust.~~ 2.2 and 2.3 done.** Both bugs the browser suite was written
+for now fail it when reintroduced, and the same two are pinned again at the
+component level, in milliseconds rather than minutes. Remaining in that
+section: 2.1 (the lint decision), 2.4 (accessibility check in CI) and 2.5
+(un-gate the fixtures).
 
 **Alongside, cheap and high-leverage.** 7.1 (contrast guard) and 7.5 (API
 parity, applied per feature) cost hours each and are exactly the kind of thing

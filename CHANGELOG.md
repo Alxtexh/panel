@@ -48,11 +48,12 @@ does not.
   when their scripts have been run.
 - **No lint step in CI.** 230 violations, 216 auto-fixable; the auto-fix
   reformats 65 files, so the decision is deferred rather than made badly.
-- **Component tests are thin.** `@panelkit/ui` has two spec files. The browser
-  suite covers the rendering failures from the outside, which is where the two
-  real ones were found, but the components are not unit-tested.
 - **Browser tests need a non-snap Chrome.** They skip with an instruction when
   none is found; a snap-packaged Chromium makes ChromeDriver hang rather than
   fail.
+- **`@panelkit/inertia` has no component tests.** `@panelkit/ui` now does — 8
+  spec files, 53 tests, both regressions found this release pinned as
+  assertions rather than just fixed — but the Inertia-bound screen package is
+  still verified only through Laravel feature tests and the browser suite.
 
 [UPGRADING.md]: UPGRADING.md
