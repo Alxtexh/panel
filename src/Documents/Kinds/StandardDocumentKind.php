@@ -71,11 +71,16 @@ abstract class StandardDocumentKind extends DocumentKind
                     ColourField::make('accent')
                         ->label('Accent colour')
                         ->help('Rules, headings and the total line.'),
+                    /*
+                     * SEGMENTED, because this is one decision with two answers.
+                     * As two tiles it took a quarter of the form and read as a
+                     * six-option picker missing four options.
+                     */
                     VisualSelectField::make('colour_mode')
                         ->label('Colour')
                         ->options(['colour' => 'Colour', 'mono' => 'Black & white'])
                         ->preview('document-colour-mode')
-                        ->columns(2)
+                        ->segmented()
                         ->help('Most offices print in black and white. Choosing it here shows you what that looks like.'),
                 ]),
 
