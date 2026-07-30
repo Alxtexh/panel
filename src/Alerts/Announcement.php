@@ -51,6 +51,10 @@ final class Announcement extends Model
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        // Roadmap 5.4: which transports this notice rides beyond the
+        // banner. Delivery happens once, on create - see AnnouncementDelivery.
+        'notify_bell' => 'boolean',
+        'notify_telegram' => 'boolean',
     ];
 
     protected static function booted(): void
