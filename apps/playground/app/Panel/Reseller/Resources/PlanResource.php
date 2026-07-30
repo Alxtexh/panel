@@ -29,6 +29,8 @@ final class PlanResource extends Resource
 {
     protected static string $model = Plan::class;
 
+    protected static ?string $purpose = 'The plans this reseller offers to their own subscribers.';
+
     /*
      * WHICH PANEL THIS BELONGS TO, and therefore where it is reachable.
      * Only this panel's routes resolve it: a resource is not visible -

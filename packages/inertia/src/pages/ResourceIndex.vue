@@ -60,6 +60,8 @@ interface ResourceSchema {
     key: string
     label: string
     labelPlural: string
+    /** One sentence, declared on the `Resource` - see roadmap 3.9. */
+    purpose: string | null
     icon: string
     group: string | null
     routes: { index: string }
@@ -226,6 +228,18 @@ const badgeKeys = computed(() =>
 const confirmingDelete = ref<Record<string, any> | null>(null)
 
 const canWrite = computed(() => props.schema.form.fields.length > 0)
+
+/**
+ * An empty state that NAMES THE BUTTON TO PRESS - roadmap 3.9. "Seed demo
+ * data with: make seed" was every resource's hint, dev-only advice with
+ * nothing to do with what an operator can actually click. This is derived
+ * rather than declared on the Resource: the button's own label already
+ * exists (`New {label}`, above), so a second, hand-written copy of the same
+ * words would only be one more place for the two to drift apart.
+ */
+const emptyHint = computed(() =>
+    canWrite.value && props.can.create ? `Click "New ${props.schema.label}" to add one.` : undefined,
+)
 
 /* ---------------------------------------------------------------------------
  * Inline cell edits
@@ -728,71 +742,84 @@ function badgeLabel(key: string, value: unknown): string {
     <Head :title="schema.labelPlural" />
 
     <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-3 p-3 sm:p-4">
-        <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
-                    {{ schema.labelPlural }}
-                </h1>
+        <div class="flex flex-col gap-1">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
+                        {{ schema.labelPlural }}
+                    </h1>
 
-                <!-- Rule 8: show connection state, so a table that silently
-                     lost its transport is never mistaken for a quiet one. -->
-                <span
-                    v-if="live.driver !== 'none'"
-                    class="inline-flex items-center gap-1 text-[11px]"
-                    :class="
-                        liveStatus === 'live'
-                            ? 'text-muted-foreground'
-                            : 'text-amber-600 dark:text-amber-500'
-                    "
-                    :title="`Live updates: ${liveStatus} (${live.driver})`"
-                >
+                    <!-- Rule 8: show connection state, so a table that silently
+                         lost its transport is never mistaken for a quiet one. -->
                     <span
-                        class="size-1.5 rounded-full"
-                        :class="{
-                            'bg-emerald-500': liveStatus === 'live',
-                            'bg-amber-500': liveStatus === 'connecting',
-                            'bg-muted-foreground': liveStatus === 'paused' || liveStatus === 'off',
-                        }"
-                    />
-                    {{ liveStatus }}
-                </span>
+                        v-if="live.driver !== 'none'"
+                        class="inline-flex items-center gap-1 text-[11px]"
+                        :class="
+                            liveStatus === 'live'
+                                ? 'text-muted-foreground'
+                                : 'text-amber-600 dark:text-amber-500'
+                        "
+                        :title="`Live updates: ${liveStatus} (${live.driver})`"
+                    >
+                        <span
+                            class="size-1.5 rounded-full"
+                            :class="{
+                                'bg-emerald-500': liveStatus === 'live',
+                                'bg-amber-500': liveStatus === 'connecting',
+                                'bg-muted-foreground':
+                                    liveStatus === 'paused' || liveStatus === 'off',
+                            }"
+                        />
+                        {{ liveStatus }}
+                    </span>
+                </div>
+                <!--
+                    Reordering is ENTERED, not always available. See `reordering`.
+                -->
+                <Button
+                    v-if="canReorder"
+                    size="sm"
+                    :variant="reordering ? 'default' : 'outline'"
+                    @click="reordering = !reordering"
+                >
+                    {{ reordering ? 'Done' : 'Reorder' }}
+                </Button>
+
+                <Button
+                    v-if="canWrite && can.create && !reordering"
+                    variant="outline"
+                    size="sm"
+                    @click="importing = true"
+                >
+                    Import
+                </Button>
+
+                <!--
+                    A `<Link>` WEARING BUTTON CLASSES, not a `<Button as-child>`
+                    wrapping one. `PkButton` never merges its classes onto a
+                    child - see its own note - so `as-child` here used to render
+                    as an inert attribute on a real `<button>` with this `<Link>`
+                    as an `<a>` INSIDE it: two interactive elements where a
+                    screen reader or keyboard user expects one.
+                -->
+                <Link
+                    v-if="canWrite && can.create && !reordering"
+                    :href="`${schema.routes.index}/create`"
+                    :class="buttonClasses({ size: 'sm' })"
+                >
+                    New {{ schema.label }}
+                </Link>
             </div>
-            <!--
-                Reordering is ENTERED, not always available. See `reordering`.
-            -->
-            <Button
-                v-if="canReorder"
-                size="sm"
-                :variant="reordering ? 'default' : 'outline'"
-                @click="reordering = !reordering"
-            >
-                {{ reordering ? 'Done' : 'Reorder' }}
-            </Button>
-
-            <Button
-                v-if="canWrite && can.create && !reordering"
-                variant="outline"
-                size="sm"
-                @click="importing = true"
-            >
-                Import
-            </Button>
 
             <!--
-                A `<Link>` WEARING BUTTON CLASSES, not a `<Button as-child>`
-                wrapping one. `PkButton` never merges its classes onto a
-                child - see its own note - so `as-child` here used to render
-                as an inert attribute on a real `<button>` with this `<Link>`
-                as an `<a>` INSIDE it: two interactive elements where a
-                screen reader or keyboard user expects one.
+                ONE SENTENCE, DECLARED ON THE RESOURCE - roadmap 3.9. Every
+                index otherwise looks identical at a glance (a title, a
+                table); this is the one line that says what THIS one is for,
+                rather than making the operator infer it from column headers.
             -->
-            <Link
-                v-if="canWrite && can.create && !reordering"
-                :href="`${schema.routes.index}/create`"
-                :class="buttonClasses({ size: 'sm' })"
-            >
-                New {{ schema.label }}
-            </Link>
+            <p v-if="schema.purpose" class="text-muted-foreground text-sm">
+                {{ schema.purpose }}
+            </p>
         </div>
 
         <!--
@@ -878,7 +905,7 @@ function badgeLabel(key: string, value: unknown): string {
                 :summaries="columnSummaries"
                 :summary-values="(page.props.summary as any) ?? null"
                 :empty-title="`No ${schema.labelPlural.toLowerCase()} yet`"
-                empty-hint="Seed demo data with: make seed"
+                :empty-hint="emptyHint"
                 @sort="t.sortBy"
                 @toggle-row="t.toggleRow"
                 @toggle-page="t.togglePage"

@@ -19,6 +19,8 @@ final class PlanResource extends Resource
 
     protected static string $icon = 'package';
 
+    protected static ?string $purpose = 'The catalogue of plans subscribers can be sold.';
+
     protected static ?string $group = 'Network';
 
     protected static ?int $sort = 30;

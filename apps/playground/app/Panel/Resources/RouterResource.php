@@ -23,6 +23,8 @@ final class RouterResource extends Resource
 
     protected static string $icon = 'router';
 
+    protected static ?string $purpose = 'The network hardware that serves connections, and its live state.';
+
     protected static ?string $group = 'Network';
 
     protected static ?int $sort = 20;

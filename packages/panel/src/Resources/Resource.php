@@ -41,6 +41,16 @@ abstract class Resource
 
     protected static string $icon = 'list';
 
+    /**
+     * One sentence: what this list is for. Shown under the title on the
+     * index page - see roadmap 3.9. No default, deliberately: a fallback
+     * like "Manage your {label}" is true of every resource and tells the
+     * operator nothing a generic list screen didn't already say. A resource
+     * that ships without one fails `ListPageConventionsTest`, the same way
+     * an unreachable screen fails the navigation coverage test.
+     */
+    protected static ?string $purpose = null;
+
     protected static ?string $group = null;
 
     protected static ?int $sort = null;
@@ -270,6 +280,11 @@ abstract class Resource
         return static::$group;
     }
 
+    public static function purpose(): ?string
+    {
+        return static::$purpose;
+    }
+
     /**
      * Whether this resource appears in the navigation.
      *
@@ -356,35 +371,36 @@ abstract class Resource
             static::key(),
             static::permissionsFingerprint(),
             static function (): array {
-            $table = static::definition();
+                $table = static::definition();
 
-            return [
-                'v' => 1,
-                'kind' => 'resource',
-                'key' => static::key(),
-                'label' => static::label(),
-                'labelPlural' => static::pluralLabel(),
-                'icon' => static::icon(),
-                'group' => static::group(),
-                'routes' => [
-                    'index' => '/'.static::key(),
-                    'store' => '/'.static::key(),
-                    'update' => '/'.static::key().'/{id}',
-                    'destroy' => '/'.static::key().'/{id}',
-                ],
-                'table' => $table->toSchema(),
-                'form' => static::formDefinition()->toSchema(),
-                'infolist' => array_map(
-                    static fn (Component $c): array => $c->toSchema(),
-                    static::infolist(),
-                ),
-                // Structure only - column definitions for each related list.
-                // The rows are fetched on demand, never with the parent.
-                'relations' => array_map(
-                    static fn (RelationManager $r): array => $r->toSchema(),
-                    static::relations(),
-                ),
-            ];
+                return [
+                    'v' => 1,
+                    'kind' => 'resource',
+                    'key' => static::key(),
+                    'label' => static::label(),
+                    'labelPlural' => static::pluralLabel(),
+                    'purpose' => static::purpose(),
+                    'icon' => static::icon(),
+                    'group' => static::group(),
+                    'routes' => [
+                        'index' => '/'.static::key(),
+                        'store' => '/'.static::key(),
+                        'update' => '/'.static::key().'/{id}',
+                        'destroy' => '/'.static::key().'/{id}',
+                    ],
+                    'table' => $table->toSchema(),
+                    'form' => static::formDefinition()->toSchema(),
+                    'infolist' => array_map(
+                        static fn (Component $c): array => $c->toSchema(),
+                        static::infolist(),
+                    ),
+                    // Structure only - column definitions for each related list.
+                    // The rows are fetched on demand, never with the parent.
+                    'relations' => array_map(
+                        static fn (RelationManager $r): array => $r->toSchema(),
+                        static::relations(),
+                    ),
+                ];
             },
             static::customFieldsFingerprint(),
         );

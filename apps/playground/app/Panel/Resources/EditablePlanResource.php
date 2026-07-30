@@ -35,6 +35,8 @@ final class EditablePlanResource extends Resource
 {
     protected static string $model = Plan::class;
 
+    protected static ?string $purpose = 'A fixture for inline cell editing - reachable, not shown in navigation.';
+
     public static function key(): string
     {
         return 'editable-plans';

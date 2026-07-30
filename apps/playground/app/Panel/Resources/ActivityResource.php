@@ -41,6 +41,8 @@ final class ActivityResource extends Resource
 
     protected static string $icon = 'activity';
 
+    protected static ?string $purpose = 'Everything that happened in this organisation, who did it and when.';
+
     protected static ?string $group = 'Organisation';
 
     protected static ?int $sort = 90;

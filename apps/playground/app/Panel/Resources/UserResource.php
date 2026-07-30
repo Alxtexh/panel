@@ -40,6 +40,8 @@ final class UserResource extends Resource
 
     protected static string $icon = 'users';
 
+    protected static ?string $purpose = 'Colleagues who can sign in, and which role each one holds.';
+
     protected static ?string $group = 'Organisation';
 
     protected static ?int $sort = 10;

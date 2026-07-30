@@ -27,6 +27,8 @@ final class TenantResource extends Resource
 {
     protected static string $model = Tenant::class;
 
+    protected static ?string $purpose = 'Every organisation on this installation, and their status.';
+
     /*
      * WHICH PANEL THIS BELONGS TO, and therefore where it is reachable.
      * Only this panel's routes resolve it: a resource is not visible -

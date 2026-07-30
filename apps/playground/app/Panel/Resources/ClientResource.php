@@ -50,6 +50,8 @@ final class ClientResource extends Resource
 
     protected static string $icon = 'users';
 
+    protected static ?string $purpose = 'Every subscriber on the network, and the plan and status each one has.';
+
     protected static ?string $group = 'Subscribers';
 
     protected static ?int $sort = 10;

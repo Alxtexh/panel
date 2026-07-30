@@ -36,6 +36,8 @@ final class AnnouncementResource extends Resource
 {
     protected static string $model = Announcement::class;
 
+    protected static ?string $purpose = 'Notices composed here, read by everyone from the dashboard banner.';
+
     public static function key(): string
     {
         return 'announcements';

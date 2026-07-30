@@ -4,7 +4,7 @@
 is the forward view — everything outstanding, why it matters, what it costs, and
 what it depends on.
 
-Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.8
+Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.9
 are done** — see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
 **S** = an afternoon · **M** = a day or two · **L** = several days · **XL** = a
 week or more.
@@ -415,15 +415,38 @@ disabled until every required field is mapped), and the Restore step
 indicator both as a pre-flight preview and, with a seeded failure state, with
 a cross on the phase that actually failed.
 
-### 3.9 List-page conventions — **M**
+### 3.9 List-page conventions — **DONE**
 
-One template for every index: purpose line, stats strip, filter tabs with counts,
-and an empty state that **names the button to press**.
+*Theirs and ours, before this:* filter tabs with counts already existed
+(`TableTabs` + `tabCounts`, one mechanism, always on when a resource declares
+tabs) and already read as the stats strip the roadmap asked for — a second,
+separate widget saying the same numbers a second way would be decoration, not
+a second convention, so none was built. What was missing was the other two:
+every index's title had nothing under it, and every empty state said the
+same dev-only sentence - *"Seed demo data with: make seed"* - regardless of
+whether the viewer could create anything at all.
 
-**Ours is enforced, not documented.** The empty state and the purpose line are
-declared on the `Resource`, so a generated resource gets them, and the coverage
-test fails a screen that ships without them — the same mechanism that already
-stops pages disappearing from the navigation.
+**The purpose line is enforced, not documented**, because it is the one
+thing here that genuinely cannot be derived: `Resource::$purpose` has no
+default, `schema()` sends it to the client, and `ListPageConventionsTest`
+walks every resource discovered across every panel and fails the suite if
+one ships without it - the same shape as `NavigationCoverageTest` failing an
+unreachable screen. All nine resources in this application now declare one.
+
+**The empty-state CTA is derived, not declared**, deliberately narrower than
+the roadmap's own wording. The button it should name (`New {label}`) is
+already computed on the same page for the same permission check
+(`canWrite && can.create`); a second, hand-written copy of that sentence per
+resource would only be one more place for the words to drift from the
+button they describe. `ResourceIndex.vue` composes the CTA from data that
+already exists rather than asking every resource to restate it.
+
+Verified: 1253/1253 PHP tests (2 new - every resource has a purpose, and it
+reaches the schema), 21/21 Dusk tests, ESLint/vue-tsc/Prettier/Pint clean,
+production SSR build succeeds. Confirmed live in the browser: the purpose
+line under Clients' and Announcements' titles, and - logged in as a freshly
+created, genuinely empty tenant - the empty state reading exactly `No
+clients yet` / `Click "New Client" to add one.`
 
 ### 3.10 Count before commit — **S**
 
