@@ -151,6 +151,13 @@ final class Form
     /**
      * Reduce request input to the fields this form declares.
      *
+     * `Component::visibleFields($this->nodes, $input)`, NOT `$this->fields()`.
+     * A field inside a `Section` whose own `visibleWhen` condition the
+     * SUBMITTED input does not satisfy is dropped before it ever reaches the
+     * loop below - the same source of truth the client used to decide
+     * whether to draw the section, evaluated here to decide whether a
+     * crafted request gets to write it anyway.
+     *
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
@@ -158,7 +165,7 @@ final class Form
     {
         $out = [];
 
-        foreach ($this->fields() as $field) {
+        foreach (Component::visibleFields($this->nodes, $input) as $field) {
             if (! array_key_exists($field->key, $input)) {
                 continue;
             }
