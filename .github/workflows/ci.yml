@@ -31,18 +31,54 @@ jobs:
     name: PHP suite
     runs-on: ubuntu-latest
 
+    # THE DEFAULT CONNECTION IS STILL SQLITE IN MEMORY, and that property is
+    # kept on purpose: a laptop offline with no services running gets the same
+    # 1,213-test suite it always has, and MysqlRestoreTest / PgvectorRetrievalTest
+    # skip exactly as they did before, with a message naming the fixture script.
+    #
+    # These two services exist ONLY so CI, specifically, does not have to be
+    # that laptop. They un-gate the 13 tests roadmap 2.5 named - 5 for a real
+    # MariaDB restore, 8 for the native pgvector search path - which is real
+    # coverage that has been sitting behind "run this script first" since the
+    # day it was written.
+    services:
+      mariadb:
+        image: mariadb:11
+        ports:
+          - 3399:3306
+        env:
+          # Matches `MysqlRestoreTest`'s hardcoded root/no-password/port 3399 -
+          # that test connects exactly like a real incident restore does, with
+          # no fixture-specific config path for CI to diverge onto.
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: '1'
+          MARIADB_DATABASE: panelkit_restore
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 --silent"
+          --health-interval=5s --health-timeout=5s --health-retries=10
+      postgres:
+        image: pgvector/pgvector:pg16
+        ports:
+          - 5499:5432
+        env:
+          # `PgvectorRetrievalTest` reads the port and database from
+          # `PANELKIT_PG_PORT` / `PANELKIT_PG_DATABASE`, defaulting to exactly
+          # these values - set explicitly here anyway so the mapping is not
+          # "the test happens to agree with the service", it is stated once.
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: panelkit_rag
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s --health-timeout=5s --health-retries=10
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: sqlite3, pdo_sqlite, zip, intl, bcmath, gd
+          extensions: sqlite3, pdo_sqlite, pdo_mysql, pdo_pgsql, zip, intl, bcmath, gd
           coverage: none
 
-      # The suite runs against SQLite in memory with the array cache store, so
-      # it needs no services. That is a property worth keeping: the moment it
-      # needs Redis to pass, it stops being runnable on a laptop offline.
       - name: Install dependencies
         working-directory: apps/playground
         run: composer install --prefer-dist --no-interaction --no-progress
@@ -53,8 +89,20 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
+      # THE IMAGE PROVIDES THE EXTENSION; IT DOES NOT ENABLE IT PER DATABASE.
+      # `pgvector/pgvector` ships the `vector` extension files, but a fresh
+      # database still needs `CREATE EXTENSION` run against it once -
+      # `PgvectorRetrievalTest` checks `pg_extension` for exactly this and
+      # skips if it is missing, the same check a real installation's own
+      # doctor-style guard would make.
+      - name: Enable pgvector
+        run: PGPASSWORD= psql -h 127.0.0.1 -p 5499 -U postgres -d panelkit_rag -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+
       - name: Tests
         working-directory: apps/playground
+        env:
+          PANELKIT_PG_PORT: 5499
+          PANELKIT_PG_DATABASE: panelkit_rag
         run: vendor/bin/phpunit
 
       # Same story as the JS lint step below: Pint had a config and no

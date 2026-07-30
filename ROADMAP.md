@@ -88,7 +88,7 @@ script, or a splitter action on push (automation that needs a token in GitHub).
 | 2.2 | ~~**Component tests**~~ | **DONE** | `@panelkit/ui`, Vitest + `@vue/test-utils` + jsdom. 8 spec files, 53 tests. See below. |
 | 2.3 | ~~**Browser tests**~~ | **DONE** | Laravel Dusk, 14 tests, own CI job. See below. |
 | 2.4 | ~~**Accessibility check in CI**~~ | **DONE** | axe-core over 7 main screens via Dusk, part of the existing browser job. Found and fixed 5 real violations. See below. |
-| 2.5 | **Un-gate the fixtures** | M | MySQL, pgvector, broadcast and the AI provider pass when their scripts run and skip otherwise. CI services would make them permanent. |
+| 2.5 | ~~**Un-gate the fixtures**~~ | **DONE** | MariaDB and pgvector now run as real CI services. Broadcast and the AI provider turned out not to be gated at all. See below. |
 
 **2.3 is done.** 14 Dusk tests over two classes, a `browser` job in CI that
 uploads failure screenshots, and `make browser` locally.
@@ -452,7 +452,33 @@ available to announcements and scheduled reports is what remains of that item.
 **~~Then — trust.~~ 2.2 and 2.3 done.** Both bugs the browser suite was written
 for now fail it when reintroduced, and the same two are pinned again at the
 component level, in milliseconds rather than minutes. Remaining in that
-section: 2.5 (un-gate the fixtures).
+section.
+
+**2.5 is done, and turned out smaller than described.** Only two of the four
+named fixtures were actually gated: `MysqlRestoreTest` (5 tests, hardcoded to
+127.0.0.1:3399/root/panelkit_restore) and `PgvectorRetrievalTest` (8 tests,
+port and database read from `PANELKIT_PG_PORT`/`PANELKIT_PG_DATABASE`, both
+skipping via `markTestSkipped` when the server or the extension is not
+found). `BroadcastChannelTest` and `AssistantStreamTest` have no skip logic
+at all — broadcasting resolves channel callbacks in-process against the fake
+Reverb credentials `phpunit.xml` already sets, and the assistant test
+deliberately asserts the no-API-key failure path — both already run for
+real in every CI run.
+
+The `php` job now declares `mariadb:11` and `pgvector/pgvector:pg16` as
+services, mapped to the exact host/port each test already hardcodes or
+reads from env, with `pdo_mysql`/`pdo_pgsql` added to the PHP extensions.
+pgvector needs one extra step — the image ships the extension files but a
+fresh database still needs `CREATE EXTENSION` run against it once, which is
+exactly the check `PgvectorRetrievalTest` itself makes before running.
+Verified locally against real servers via the existing `tests/bin/*-fixture.sh`
+scripts before trusting the CI config to match: all 13 previously-skipped
+tests pass.
+
+**A laptop with no services running is still the same suite it always was.**
+The default connection stays SQLite in memory; these two files skip exactly
+as before, naming the fixture script, when nothing is listening on 3399 or
+5499.
 
 **2.4 is done, and it found five real bugs on its first run** - the argument
 for the check made by the check. `AccessibilityTest.php` runs axe-core (via

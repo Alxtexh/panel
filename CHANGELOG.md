@@ -44,8 +44,6 @@ does not.
 - **Workspaces expose `show` only.** No create, switch or member management.
 - **Retrieval indexes the help centre only.** The build guide, the blueprint and
   resource records are not searchable by the assistant.
-- **13 tests skip without fixtures** — MariaDB (5) and pgvector (8). They pass
-  when their scripts have been run.
 - **Browser tests need a non-snap Chrome.** They skip with an instruction when
   none is found; a snap-packaged Chromium makes ChromeDriver hang rather than
   fail.
