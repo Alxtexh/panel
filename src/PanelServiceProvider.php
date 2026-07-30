@@ -36,6 +36,29 @@ final class PanelServiceProvider extends ServiceProvider
         $this->app->singleton(Support\SchemaCache::class);
 
         /*
+         * DOCUMENT KINDS ARE A BOOT-TIME REGISTRY, so a singleton is right: what
+         * is registered is decided by which service providers ran, never by who
+         * is signed in. The templates themselves are tenant data and live in a
+         * table; nothing tenant-scoped is held here.
+         *
+         * The three that ship are registered in `register()` rather than
+         * `boot()` so that an application's own provider - which boots later -
+         * can replace one by registering the same id, without having to worry
+         * about ordering.
+         */
+        $this->app->singleton(Documents\DocumentKinds::class, static function (): Documents\DocumentKinds {
+            $kinds = new Documents\DocumentKinds;
+
+            $kinds->register(new Documents\Kinds\InvoiceKind);
+            $kinds->register(new Documents\Kinds\ReceiptKind);
+            $kinds->register(new Documents\Kinds\VoucherKind);
+
+            return $kinds;
+        });
+
+        $this->app->singleton(Documents\DocumentRenderer::class);
+
+        /*
          * Scoped, because it memoizes rows it has read. Installation settings
          * are not tenant data, so a leak here would not cross customers - but a
          * singleton under Octane would hold the retention policy as it stood

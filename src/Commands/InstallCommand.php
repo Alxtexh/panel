@@ -32,7 +32,23 @@ final class InstallCommand extends Command
      * the PHP half without a line here is a route that resolves to nothing, so
      * the panel's own test walks the render calls and this list together.
      */
-    private const SCREENS = ['ResourceIndex', 'ResourceForm', 'ResourceView', 'Trash', 'PanelHome'];
+    private const SCREENS = [
+        'ResourceIndex',
+        'ResourceForm',
+        'ResourceView',
+        'Trash',
+        'PanelHome',
+
+        /*
+         * NESTED NAMES, because the server renders `documents/Templates` and a
+         * page name is a path. The writer creates the directory; the component
+         * identifier is the basename, since `documents/Templates` is not a
+         * legal JavaScript name.
+         */
+        'documents/Templates',
+        'documents/TemplateDesigner',
+        'documents/DocumentPrint',
+    ];
 
     public function handle(): int
     {
@@ -47,7 +63,7 @@ final class InstallCommand extends Command
         $this->newLine();
         $this->components->info('Done. Next:');
         $this->line('  1. npm install @panelkit/ui @panelkit/inertia');
-        $this->line('     The five page files above import from it. Without the package they are');
+        $this->line('     The page files above import from it. Without the package they are');
         $this->line('     imports of nothing, which fails in the browser rather than at build time.');
         $this->line('     Then point Tailwind at them, or every utility used only inside the');
         $this->line('     packages is purged - a styled table inside an unstyled page:');
@@ -177,6 +193,16 @@ final class InstallCommand extends Command
                 continue;
             }
 
+            // A nested screen name is a path, so its directory may not exist -
+            // and `file_put_contents` into a missing directory fails with a
+            // warning and no file, which would be a screen that installs
+            // silently as nothing.
+            $folder = dirname($path);
+
+            if (! is_dir($folder)) {
+                mkdir($folder, 0755, true);
+            }
+
             file_put_contents($path, $this->pageFile($screen));
 
             $written[] = $screen;
@@ -213,10 +239,14 @@ final class InstallCommand extends Command
      */
     private function pageFile(string $screen): string
     {
+        // `documents/Templates` is a page NAME; the component identifier has to
+        // be a legal JavaScript one.
+        $component = basename($screen);
+
         return <<<VUE
         <script setup lang="ts">
         /*
-         * The panel's {$screen} screen, from @panelkit/inertia.
+         * The panel's {$component} screen, from @panelkit/inertia.
          *
          * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
          * directory, so a screen living in node_modules is one it cannot find.
@@ -227,7 +257,7 @@ final class InstallCommand extends Command
          * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
          * all, silently, in a production build.
          */
-        import {$screen} from '@panelkit/inertia/pages/{$screen}.vue'
+        import {$component} from '@panelkit/inertia/pages/{$screen}.vue'
 
         defineOptions({ inheritAttrs: false })
         </script>
@@ -240,7 +270,7 @@ final class InstallCommand extends Command
                 either way: these values arrive from the server as JSON and are
                 typed where they are USED, inside the packaged component.
             -->
-            <{$screen} v-bind="(\$attrs as any)" />
+            <{$component} v-bind="(\$attrs as any)" />
         </template>
 
         VUE;
