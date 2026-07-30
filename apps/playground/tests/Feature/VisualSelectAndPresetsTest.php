@@ -84,6 +84,50 @@ final class VisualSelectAndPresetsTest extends TestCase
         $this->assertNull($schema['preview']);
     }
 
+    /**
+     * A LAYOUT IS A SHAPE, not a class list.
+     *
+     * Two options rendered as two large tiles read as a six-option picker missing
+     * four options, and take a quarter of a form for what is essentially a
+     * switch. `segmented()` says "this choice wants one pill"; what a pill looks
+     * like stays on the client.
+     */
+    public function test_a_two_option_choice_can_ask_for_a_segmented_layout(): void
+    {
+        $tiles = VisualSelectField::make('mode')->options(['a' => 'A', 'b' => 'B'])->toSchema();
+        $this->assertSame('tiles', $tiles['layout']);
+
+        $segmented = VisualSelectField::make('mode')
+            ->options(['a' => 'A', 'b' => 'B'])
+            ->segmented()
+            ->toSchema();
+
+        $this->assertSame('segmented', $segmented['layout']);
+
+        // Still no presentation crossing the boundary.
+        $this->assertStringNotContainsString('rounded', (string) json_encode($segmented));
+        $this->assertStringNotContainsString('bg-', (string) json_encode($segmented));
+    }
+
+    /**
+     * Segmenting does not stop it being a visual select.
+     *
+     * The renderer survives, which is the reason this is a layout rather than a
+     * separate toggle field: a colour choice still shows the colours, just small
+     * and inline.
+     */
+    public function test_a_segmented_field_keeps_its_renderer(): void
+    {
+        $schema = VisualSelectField::make('colour_mode')
+            ->options(['colour' => 'Colour', 'mono' => 'Black & white'])
+            ->preview('document-colour-mode')
+            ->segmented()
+            ->toSchema();
+
+        $this->assertSame('document-colour-mode', $schema['preview']);
+        $this->assertSame('segmented', $schema['layout']);
+    }
+
     public function test_columns_cannot_be_zero(): void
     {
         // A zero-column grid renders nothing at all, which looks like a field

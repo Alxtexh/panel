@@ -33,6 +33,8 @@ interface VisualSelectSchema {
     key: string
     preview?: string | null
     columns?: number
+    /** `tiles` (default) or `segmented` — a shape, never a class list. */
+    layout?: string
     [key: string]: unknown
 }
 
@@ -66,6 +68,16 @@ const renderer = computed(() => (props.field.preview ? optionPreview(props.field
  * because the usual cause is a typo or an entry point that never ran.
  */
 const missing = computed(() => Boolean(props.field.preview) && !renderer.value)
+
+/**
+ * ONE PILL WITH SEGMENTS, for a choice with two answers.
+ *
+ * Two large cards for colour-versus-monochrome read as six options of which four
+ * went missing, and take a quarter of the form for something that is essentially
+ * a switch. The segments keep their renderers - small and inline - so the
+ * appearance is still shown, which is the entire reason this control exists.
+ */
+const segmented = computed(() => props.field.layout === 'segmented')
 
 /**
  * A COUNT TURNED INTO A CLASS HERE, not in PHP. The schema said "three across";
@@ -103,7 +115,56 @@ function isChosen(option: Option): boolean {
 </script>
 
 <template>
-    <div role="radiogroup" class="grid gap-3" :class="gridClass">
+    <!-- ------------------------------------------------------------ segmented -->
+    <div
+        v-if="segmented"
+        role="radiogroup"
+        class="bg-muted/60 inline-flex w-fit max-w-full items-stretch gap-1 rounded-lg p-1"
+        :class="disabled ? 'opacity-50' : ''"
+    >
+        <label
+            v-for="option in options"
+            :key="String(option.value)"
+            class="relative flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+            :class="[
+                isChosen(option)
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                disabled ? '' : 'cursor-pointer',
+            ]"
+        >
+            <input
+                type="radio"
+                class="peer sr-only"
+                :name="`f-${field.key}`"
+                :value="option.value"
+                :checked="isChosen(option)"
+                :disabled="disabled"
+                @change="emit('update:modelValue', option.value)"
+            />
+
+            <span
+                class="ring-ring pointer-events-none absolute inset-0 rounded-md peer-focus-visible:ring-2"
+                aria-hidden="true"
+            />
+
+            <!-- The renderer, inline and small. `scale` rather than a second set
+                 of sizes in every renderer: one component draws the option and
+                 the layout decides how big it is. -->
+            <span v-if="renderer" class="flex shrink-0 scale-75 items-center" aria-hidden="true">
+                <component :is="renderer" :value="option.value" :label="option.label" :selected="isChosen(option)" />
+            </span>
+
+            <span class="whitespace-nowrap">{{ option.label }}</span>
+        </label>
+
+        <p v-if="options.length === 0" class="text-muted-foreground px-2 py-1 text-xs">
+            Nothing to choose from yet.
+        </p>
+    </div>
+
+    <!-- ---------------------------------------------------------------- tiles -->
+    <div v-else role="radiogroup" class="grid gap-3" :class="gridClass">
         <label
             v-for="option in options"
             :key="String(option.value)"

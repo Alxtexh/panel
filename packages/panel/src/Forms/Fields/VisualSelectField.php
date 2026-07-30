@@ -42,6 +42,8 @@ final class VisualSelectField extends Field
 
     private int $columns = 3;
 
+    private bool $segmented = false;
+
     /**
      * Name the client-side renderer that draws each option.
      *
@@ -62,6 +64,30 @@ final class VisualSelectField extends Field
     public function preview(string $renderer): static
     {
         $this->preview = $renderer;
+
+        return $this;
+    }
+
+    /**
+     * Draw the options as one segmented control instead of a grid of tiles.
+     *
+     * TILES ARE FOR SIX FRAMINGS; A SEGMENTED CONTROL IS FOR TWO. Colour versus
+     * black-and-white is one decision with two answers, and rendering it as two
+     * large cards makes it look like six options of which four are missing - it
+     * takes a quarter of the form for a choice that is essentially a switch.
+     *
+     * IT IS STILL A VISUAL SELECT, which is the reason this is a layout rather
+     * than a different field. The segments keep their renderers, just small and
+     * inline, so "black and white" is still shown as black and white. A plain
+     * toggle would have lost that, and the whole point of the control is that an
+     * appearance choice shows the appearance.
+     *
+     * USE IT FOR TWO OPTIONS, or at a stretch three. Past that the segments are
+     * too narrow to draw anything in and the grid is the right shape again.
+     */
+    public function segmented(bool $segmented = true): static
+    {
+        $this->segmented = $segmented;
 
         return $this;
     }
@@ -97,6 +123,12 @@ final class VisualSelectField extends Field
             ...parent::toSchema(),
             'preview' => $this->preview,
             'columns' => $this->columns,
+            /*
+             * A LAYOUT NAME, not a class list. The client decides what a
+             * segmented control looks like; PHP says only which shape this
+             * choice wants.
+             */
+            'layout' => $this->segmented ? 'segmented' : 'tiles',
         ];
     }
 }

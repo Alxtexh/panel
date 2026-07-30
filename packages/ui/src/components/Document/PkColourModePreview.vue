@@ -15,16 +15,22 @@ defineProps<{
 </script>
 
 <template>
-    <span class="flex items-center gap-1">
+    <!--
+        THREE SMALL SQUARES, sized for a segment rather than a tile. This renderer
+        is only ever used on a two-option choice, and a two-option choice belongs
+        in a segmented control - so the tile-sized version it started at was
+        sizing for a layout it will never appear in.
+    -->
+    <span class="flex items-center gap-0.5">
         <template v-if="String(value) === 'mono'">
-            <span class="size-6 rounded-sm border border-neutral-400 bg-black" />
-            <span class="size-6 rounded-sm border border-neutral-400 bg-neutral-500" />
-            <span class="size-6 rounded-sm border border-neutral-400 bg-white" />
+            <span class="size-3 rounded-[2px] border border-neutral-400 bg-black" />
+            <span class="size-3 rounded-[2px] border border-neutral-400 bg-neutral-500" />
+            <span class="size-3 rounded-[2px] border border-neutral-400 bg-white" />
         </template>
         <template v-else>
-            <span class="size-6 rounded-sm border border-neutral-400 bg-sky-600" />
-            <span class="size-6 rounded-sm border border-neutral-400 bg-amber-500" />
-            <span class="size-6 rounded-sm border border-neutral-400 bg-emerald-600" />
+            <span class="size-3 rounded-[2px] border border-neutral-400 bg-sky-600" />
+            <span class="size-3 rounded-[2px] border border-neutral-400 bg-amber-500" />
+            <span class="size-3 rounded-[2px] border border-neutral-400 bg-emerald-600" />
         </template>
     </span>
 </template>
