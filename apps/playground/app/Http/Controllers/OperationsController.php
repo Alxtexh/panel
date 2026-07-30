@@ -157,11 +157,35 @@ final class OperationsController extends Controller
             'settings' => $settings->redacted(),
             'schedule' => $settings->describe(),
             'settingsChangedBy' => app(PanelSettings::class)->provenance(BackupSettings::KEY),
+            'history' => $this->settingsHistory(),
             'disks' => array_keys((array) config('filesystems.disks', [])),
             'can' => [
                 'manage' => (bool) $request->user()?->hasPermission('manage_backups'),
             ],
         ]);
+    }
+
+    /**
+     * The policy's own timeline - roadmap 7.2.
+     *
+     * DESCRIBED, NOT DUMPED. Each entry is the same one-sentence summary the
+     * screen already shows for the current policy (`describe()`), read
+     * through the same redaction the current one gets, rather than a raw
+     * JSON diff nobody not already fluent in this schema could act on.
+     *
+     * @return list<array{id: int, description: string, by: string|null, at: string}>
+     */
+    private function settingsHistory(): array
+    {
+        return array_map(
+            static fn (array $entry): array => [
+                'id' => $entry['id'],
+                'description' => BackupSettings::fromArray((array) $entry['value'])->describe(),
+                'by' => $entry['by'],
+                'at' => $entry['at'],
+            ],
+            app(PanelSettings::class)->history(BackupSettings::KEY),
+        );
     }
 
     /**
@@ -386,6 +410,61 @@ final class OperationsController extends Controller
         return back()->with('toast', [
             'type' => 'success',
             'message' => 'Backup settings saved. '.$settings->describe().'.',
+        ]);
+    }
+
+    /**
+     * Put a past version of the policy back - roadmap 7.2.
+     *
+     * THE SAME PATH AS SAVING, not a shortcut around it. A restore is "load
+     * an old value, then do exactly what Save does": round-tripped through
+     * `BackupSettings::fromArray()` so a value that predates a validation
+     * rule cannot resurrect it, and through the destination probe so
+     * restoring a policy whose off-site disk credentials rotated out from
+     * under it fails loudly here rather than on the next scheduled run.
+     *
+     * A NEW HISTORY ROW, NOT A REWIND. `put()` appends; restoring writes the
+     * old value as a new entry with today's date, so the timeline still
+     * reads top-to-bottom as what actually happened, in order - a restore
+     * is itself a change, and un-does nothing that cannot itself be undone
+     * the same way.
+     */
+    public function restoreBackupSettingsHistory(Request $request, int $history): RedirectResponse
+    {
+        abort_unless($request->user()?->hasPermission('manage_backups'), 403);
+
+        $entry = app(PanelSettings::class)->historyEntry(BackupSettings::KEY, $history);
+
+        abort_if($entry === null, 404, 'That version of the settings no longer exists.');
+
+        $settings = BackupSettings::fromArray((array) $entry['value']);
+
+        $broken = array_values(array_filter(
+            (new BackupDestinationProbe)->checkAll($settings->destinations),
+            static fn (array $result): bool => ! $result['ok'],
+        ));
+
+        if ($broken !== []) {
+            return back()->with('toast', [
+                'type' => 'error',
+                'message' => 'Nothing was restored. '.implode(' ', array_map(
+                    static fn (array $r): string => "{$r['disk']}: {$r['message']}",
+                    $broken,
+                )),
+            ]);
+        }
+
+        app(PanelSettings::class)->put(
+            BackupSettings::KEY,
+            $settings->toArray(),
+            $request->user()?->name,
+        );
+
+        $this->audit($request, 'backup.settings-restored');
+
+        return back()->with('toast', [
+            'type' => 'success',
+            'message' => 'Restored: '.$settings->describe().'.',
         ]);
     }
 

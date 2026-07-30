@@ -428,6 +428,86 @@ final class BackupManagementTest extends TestCase
         $this->assertTrue($settings->notifyOnSuccess);
     }
 
+    /* --------------------------------------------------------------- history */
+
+    public function test_saving_twice_gives_the_page_a_two_entry_history(): void
+    {
+        $manager = $this->manager();
+
+        $this->actingAs($manager)->put('/operations/backups/settings', $this->settingsPayload(['time' => '01:30']));
+        $this->actingAs($manager)->put('/operations/backups/settings', $this->settingsPayload(['time' => '23:00']));
+
+        $history = $this->actingAs($manager)
+            ->get('/operations/backups/settings')
+            ->viewData('page')['props']['history'];
+
+        $this->assertCount(2, $history);
+        $this->assertStringContainsString('01:30', $history[1]['description']);
+        $this->assertStringContainsString('23:00', $history[0]['description']);
+    }
+
+    public function test_restoring_a_past_version_puts_it_back(): void
+    {
+        $manager = $this->manager();
+
+        $this->actingAs($manager)->put('/operations/backups/settings', $this->settingsPayload(['keepDays' => 7]));
+        $this->actingAs($manager)->put('/operations/backups/settings', $this->settingsPayload(['keepDays' => 30]));
+
+        $oldest = $this->actingAs($manager)
+            ->get('/operations/backups/settings')
+            ->viewData('page')['props']['history'][1];
+
+        $this->actingAs($manager)
+            ->post("/operations/backups/settings/history/{$oldest['id']}/restore")
+            ->assertRedirect();
+
+        $this->assertSame(7, BackupSettings::load(app(PanelSettings::class))->keepDays);
+    }
+
+    /** A restore is a change too - it must not silently rewrite what actually happened. */
+    public function test_restoring_appends_a_new_history_entry_rather_than_rewinding(): void
+    {
+        $manager = $this->manager();
+
+        $this->actingAs($manager)->put('/operations/backups/settings', $this->settingsPayload(['keepDays' => 7]));
+        $this->actingAs($manager)->put('/operations/backups/settings', $this->settingsPayload(['keepDays' => 30]));
+
+        $oldest = $this->actingAs($manager)
+            ->get('/operations/backups/settings')
+            ->viewData('page')['props']['history'][1];
+
+        $this->actingAs($manager)->post("/operations/backups/settings/history/{$oldest['id']}/restore");
+
+        $history = $this->actingAs($manager)
+            ->get('/operations/backups/settings')
+            ->viewData('page')['props']['history'];
+
+        $this->assertCount(3, $history);
+    }
+
+    public function test_restoring_an_unknown_history_entry_is_a_404(): void
+    {
+        $this->actingAs($this->manager())
+            ->post('/operations/backups/settings/history/999999/restore')
+            ->assertNotFound();
+    }
+
+    public function test_restoring_a_history_entry_needs_manage_backups(): void
+    {
+        $manager = $this->manager();
+        $this->actingAs($manager)->put('/operations/backups/settings', $this->settingsPayload());
+
+        $id = $this->actingAs($manager)
+            ->get('/operations/backups/settings')
+            ->viewData('page')['props']['history'][0]['id'];
+
+        $user = $this->operator(array_values(array_diff(Abilities::all(), ['manage_backups'])));
+
+        $this->actingAs($user)
+            ->post("/operations/backups/settings/history/{$id}/restore")
+            ->assertForbidden();
+    }
+
     /** The page shows what was saved, or an operator cannot tell that it was. */
     public function test_the_page_reports_the_saved_schedule(): void
     {

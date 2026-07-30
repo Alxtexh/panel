@@ -25,15 +25,18 @@ import {
     ArrowLeft,
     CalendarClock,
     HardDrive,
+    History,
     Megaphone,
     Timer,
 } from '@lucide/vue';
+import { PkModal } from '@panelkit/ui';
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import operations from '@/routes/operations';
 import alerts from '@/routes/operations/alerts';
 import backups from '@/routes/operations/backups';
+import { restore as restoreHistory } from '@/routes/operations/backups/settings/history';
 
 interface Settings {
     frequency: string;
@@ -51,10 +54,19 @@ interface Settings {
     telegramReady: boolean;
 }
 
+interface HistoryEntry {
+    id: number;
+    description: string;
+    by: string | null;
+    at: string;
+}
+
 const props = defineProps<{
     settings: Settings;
     schedule: string;
     settingsChangedBy: { by: string | null; at: string } | null;
+    /** Newest first; index 0 is the policy currently in force. */
+    history: HistoryEntry[];
     disks: string[];
     can: { manage: boolean };
 }>();
@@ -102,6 +114,36 @@ function testDestination(disk: string) {
             preserveScroll: true,
             preserveState: true,
             onFinish: () => (testing.value = null),
+        },
+    );
+}
+
+/**
+ * "Put it back" - roadmap 7.2. Confirmed, because restoring replaces the
+ * live policy exactly the way Save does; the confirmation is a courtesy
+ * against a mis-click, not a guard against anything irreversible - the
+ * result becomes a new history entry itself, so restoring the wrong one
+ * is one more restore away from fixed.
+ */
+const pendingRestore = ref<HistoryEntry | null>(null);
+const restoring = ref(false);
+
+function confirmRestore() {
+    if (!pendingRestore.value) {
+        return;
+    }
+
+    restoring.value = true;
+
+    router.post(
+        restoreHistory.url(pendingRestore.value.id),
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                restoring.value = false;
+                pendingRestore.value = null;
+            },
         },
     );
 }
@@ -776,6 +818,58 @@ const telegramHalfDone = computed(
                     </dl>
                 </section>
 
+                <!--
+                    THE TIMELINE, NOT JUST THE LATEST CHANGE - roadmap 7.2.
+                    "Last changed by X at Y" above answers who and when for
+                    the CURRENT policy; this answers the harder question -
+                    what did it say before, and can it go back. Described in
+                    the same sentence the rail already uses for the current
+                    policy, not a raw diff nobody not already fluent in this
+                    schema could act on.
+                -->
+                <section
+                    v-if="history.length > 1"
+                    class="rounded-lg border bg-card p-4"
+                >
+                    <h2 class="flex items-center gap-2 text-sm font-semibold">
+                        <History class="size-4 text-muted-foreground" />
+                        History
+                    </h2>
+
+                    <ul class="mt-3 flex flex-col gap-3 text-xs">
+                        <li
+                            v-for="(entry, i) in history"
+                            :key="entry.id"
+                            class="flex items-start justify-between gap-2"
+                        >
+                            <div>
+                                <p
+                                    class="font-medium"
+                                    :class="
+                                        i === 0 ? '' : 'text-muted-foreground'
+                                    "
+                                >
+                                    {{ entry.description }}
+                                </p>
+                                <p class="text-muted-foreground">
+                                    {{ i === 0 ? 'Current — ' : ''
+                                    }}{{ entry.by ?? 'somebody' }} ·
+                                    {{ entry.at }}
+                                </p>
+                            </div>
+
+                            <button
+                                v-if="i > 0 && can.manage"
+                                type="button"
+                                class="shrink-0 text-primary underline hover:no-underline"
+                                @click="pendingRestore = entry"
+                            >
+                                Restore
+                            </button>
+                        </li>
+                    </ul>
+                </section>
+
                 <div class="flex items-center gap-2">
                     <Button
                         size="sm"
@@ -801,5 +895,33 @@ const telegramHalfDone = computed(
                 </p>
             </aside>
         </div>
+
+        <PkModal
+            :open="pendingRestore !== null"
+            title="Restore this version?"
+            :description="pendingRestore?.description ?? ''"
+            :busy="restoring"
+            @close="pendingRestore = null"
+        >
+            <p class="text-sm text-muted-foreground">
+                The current policy is replaced. This becomes a new entry in the
+                history above, so restoring the wrong version is one more
+                restore away from fixed.
+            </p>
+
+            <template #footer>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    :disabled="restoring"
+                    @click="pendingRestore = null"
+                >
+                    Cancel
+                </Button>
+                <Button size="sm" :disabled="restoring" @click="confirmRestore">
+                    {{ restoring ? 'Restoring…' : 'Restore' }}
+                </Button>
+            </template>
+        </PkModal>
     </div>
 </template>

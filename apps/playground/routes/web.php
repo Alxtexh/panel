@@ -364,6 +364,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('operations/backups/settings', [OperationsController::class, 'saveBackupSettings'])
         ->name('operations.backups.settings');
 
+    Route::post('operations/backups/settings/history/{history}/restore', [OperationsController::class, 'restoreBackupSettingsHistory'])
+        ->whereNumber('history')
+        ->name('operations.backups.settings.history.restore');
+
     /*
      | Trying a destination makes an outbound request per call, and the button
      | sits beside a field somebody is editing - so it is throttled harder than

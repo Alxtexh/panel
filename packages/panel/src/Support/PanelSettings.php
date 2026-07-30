@@ -29,6 +29,15 @@ use Illuminate\Support\Facades\DB;
  */
 final class PanelSettings
 {
+    /**
+     * Past values kept per key - roadmap 7.2. Bounded, not because storage
+     * is scarce, but because nothing that reads this needs more: an
+     * operator asking "what did it say before" means recently, and a
+     * hundredth resave of an unrelated field should not be why the
+     * thousandth is the one that gets pruned first.
+     */
+    private const HISTORY_LIMIT = 20;
+
     /** @var array<string, mixed>|null */
     private ?array $memo = null;
 
@@ -71,19 +80,132 @@ final class PanelSettings
 
     public function put(string $key, mixed $value, ?string $by = null): void
     {
+        $encoded = json_encode($value, JSON_THROW_ON_ERROR);
+        $now = now();
+
         DB::table('panel_settings')->updateOrInsert(
             ['key' => $key],
             [
-                'value' => json_encode($value, JSON_THROW_ON_ERROR),
+                'value' => $encoded,
                 'updated_by' => $by,
-                'updated_at' => now(),
-                'created_at' => now(),
+                'updated_at' => $now,
+                'created_at' => $now,
             ],
         );
+
+        /*
+         * THE HISTORY ROW IS THE SAME WRITE, not a separate call callers
+         * have to remember to make - a settings screen that opts into
+         * history and a caller that forgets to record it is exactly the
+         * gap 7.2 exists to close. Every `put()` on any key gets a
+         * timeline for free.
+         */
+        DB::table('panel_setting_history')->insert([
+            'key' => $key,
+            'value' => $encoded,
+            'changed_by' => $by,
+            'created_at' => $now,
+        ]);
+
+        $this->pruneHistory($key);
 
         // The memo described the world before this write. Dropping it is what
         // makes a read immediately after a write return what was just written.
         $this->memo = null;
+    }
+
+    /**
+     * Every value this key has held, newest first - including the current
+     * one, so a caller need not treat "now" specially.
+     *
+     * @return list<array{id: int, value: mixed, by: string|null, at: string}>
+     */
+    public function history(string $key, int $limit = self::HISTORY_LIMIT): array
+    {
+        try {
+            $rows = DB::table('panel_setting_history')
+                ->where('key', $key)
+                ->orderByDesc('id')
+                ->limit($limit)
+                ->get(['id', 'value', 'changed_by', 'created_at']);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach ($rows as $row) {
+            $decoded = json_decode((string) $row->value, true);
+
+            // Same rule as `all()`: a row that will not decode is skipped,
+            // not fatal - a corrupt entry from long ago must not break
+            // reading the ones after it.
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                continue;
+            }
+
+            $out[] = [
+                'id' => (int) $row->id,
+                'value' => $decoded,
+                'by' => $row->changed_by === null ? null : (string) $row->changed_by,
+                'at' => (string) $row->created_at,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * One historical value, by the id `history()` handed out - what a
+     * restore action reads before writing it back through `put()`.
+     *
+     * @return array{value: mixed, by: string|null, at: string}|null
+     */
+    public function historyEntry(string $key, int $id): ?array
+    {
+        try {
+            $row = DB::table('panel_setting_history')
+                ->where('key', $key)
+                ->where('id', $id)
+                ->first(['value', 'changed_by', 'created_at']);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if ($row === null) {
+            return null;
+        }
+
+        $decoded = json_decode((string) $row->value, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return null;
+        }
+
+        return [
+            'value' => $decoded,
+            'by' => $row->changed_by === null ? null : (string) $row->changed_by,
+            'at' => (string) $row->created_at,
+        ];
+    }
+
+    /** Keeps only the newest `HISTORY_LIMIT` rows for a key. */
+    private function pruneHistory(string $key): void
+    {
+        $keepIds = DB::table('panel_setting_history')
+            ->where('key', $key)
+            ->orderByDesc('id')
+            ->limit(self::HISTORY_LIMIT)
+            ->pluck('id');
+
+        if ($keepIds->isEmpty()) {
+            return;
+        }
+
+        DB::table('panel_setting_history')
+            ->where('key', $key)
+            ->whereNotIn('id', $keepIds)
+            ->delete();
     }
 
     /** @param array<string, mixed> $values */

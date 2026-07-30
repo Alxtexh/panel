@@ -596,15 +596,45 @@ warning with its real ratio and visibly washes out in the live preview;
 "Use a readable shade" replaces it with a passing dark shade and the
 preview's heading and total line become legible immediately.
 
-### 7.2 Settings with a history you can restore — **M**
+### 7.2 Settings with a history you can restore — **DONE**
 
-We already record **who changed a setting and when** (`PanelSettings::provenance`
-is on screen in the backup policy). Nobody uses that to answer the question people
-actually ask: *what did it say last Tuesday, and put it back.*
+*Ours before this:* `PanelSettings::provenance()` answered one question -
+who changed this, and when - for exactly one screen, the backup policy. It
+was who-and-when for the CURRENT value only; every save before it had
+already been overwritten and was gone. "What did it say last Tuesday" had
+no answer anywhere in the codebase, for any setting.
 
-A settings screen that shows its own timeline and restores a previous value is a
-small step from what is stored, and it is the difference between an audit trail
-that is decoration and one that is a tool.
+**The history lives on the storage class, not the screen.** `PanelSettings::put()`
+now appends every value it ever writes to a new `panel_setting_history` table
+- one row per write, any key, automatically - rather than each settings
+screen opting in separately. `history()` reads it back newest-first, capped
+at twenty entries per key (bounded on write, the same "the done tail stops
+growing" instinct as 3.4's checklist - nothing here needed more than a
+recent window). The mechanism is generic; only the Backup settings screen
+actually renders it, because it is the one screen that already showed
+provenance and therefore the one place "what did it say before" is a
+question anybody has actually been asking.
+
+**Restoring is Save with an old value, not a rewind.** `restoreBackupSettingsHistory()`
+loads a past entry and runs it through the exact same path `saveBackupSettings()`
+already used - `BackupSettings::fromArray()`, the destination-reachability
+probe, then `PanelSettings::put()` - so a restore can never resurrect a value
+a validation rule added later would refuse, and a destination that stopped
+working fails the restore the same way it fails a save. The write is a NEW
+history row, not a rollback: the timeline still reads top-to-bottom as what
+actually happened, and restoring the wrong version is one more restore away
+from fixed rather than a state nothing can get back to.
+
+Verified: 7/7 new PHP unit tests for the history mechanism itself (append,
+ordering, per-key scoping, id lookup, pruning at the cap, provenance
+unaffected), 6 new Feature tests for the restore endpoint (round-trip,
+appends rather than rewinds, unknown id is 404, needs `manage_backups`),
+full suites otherwise unaffected - 1272/1272 PHP, 91/91 Vitest, 21/21 Dusk,
+ESLint/vue-tsc/Prettier/Pint clean, production SSR build succeeds. Confirmed
+live: saved the backup policy twice with different retention windows, watched
+the History section appear once a second entry existed, restored the older
+one, and confirmed both the page (after a fresh load, not just the redirect)
+and the database agree on which value is now current.
 
 ### 7.3 `panel:doctor` as a first-class product surface — **M**
 
