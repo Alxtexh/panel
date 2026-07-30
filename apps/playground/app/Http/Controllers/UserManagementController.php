@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Support\Abilities;
+use PanelKit\Panel\Support\RoleTemplates;
 
 /**
  * One screen for the two halves of the same question: who is here, and what may
@@ -103,7 +104,7 @@ final class UserManagementController extends Controller
             // Name AND label, from the server - the Roles tab renders the same
             // component as the standalone matrix, so the two must agree.
             'panelAbilities' => Abilities::panelLabelled(),
-            'templates' => \PanelKit\Panel\Support\RoleTemplates::all(),
+            'templates' => RoleTemplates::all(),
 
             // DEFERRED: the users tab is usually not the one being read first,
             // and its rows cost a query the roles tab does not need.

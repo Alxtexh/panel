@@ -3,17 +3,20 @@
  * page mounts. `@panelkit/ui` reads that global - it ships no Echo import of its
  * own, which is what lets the same components run without a socket at all.
  */
-import './echo'
+import './echo';
 
-import { createInertiaApp, router } from '@inertiajs/vue3'
-import { initializeAppearance, setAppearancePersister } from '@panelkit/ui'
-import AppLayout from '@/layouts/AppLayout.vue'
-import AuthLayout from '@/layouts/AuthLayout.vue'
-import SettingsLayout from '@/layouts/settings/Layout.vue'
-import { initializeFlashToast } from '@/lib/flashToast'
-import { installSessionExpiryPreview, watchForSessionExpiry } from '@/lib/sessionExpired'
+import { createInertiaApp, router } from '@inertiajs/vue3';
+import { initializeAppearance, setAppearancePersister } from '@panelkit/ui';
+import AppLayout from '@/layouts/AppLayout.vue';
+import AuthLayout from '@/layouts/AuthLayout.vue';
+import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { initializeFlashToast } from '@/lib/flashToast';
+import {
+    installSessionExpiryPreview,
+    watchForSessionExpiry,
+} from '@/lib/sessionExpired';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel'
+const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 /**
  * Save a preference change to the account.
@@ -27,7 +30,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel'
  * sign-in screen, and the local preference is the right answer there.
  */
 setAppearancePersister((patch) => {
-    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
 
     fetch('/settings/appearance', {
         method: 'PUT',
@@ -41,8 +44,8 @@ setAppearancePersister((patch) => {
         body: JSON.stringify(patch),
     }).catch(() => {
         // Offline, or a guest. The preference still applies in this browser.
-    })
-})
+    });
+});
 
 /**
  * DIRECTION IS SET ON <html>, ONCE, AND UPDATED ON EVERY NAVIGATION.
@@ -58,24 +61,24 @@ setAppearancePersister((patch) => {
  * old way until they reloaded.
  */
 function applyDirection(page: { props: Record<string, any> }): void {
-    const locale = page.props?.locale
+    const locale = page.props?.locale;
 
     if (!locale) {
-        return
+        return;
     }
 
-    document.documentElement.setAttribute('dir', locale.direction ?? 'ltr')
-    document.documentElement.setAttribute('lang', locale.current ?? 'en')
+    document.documentElement.setAttribute('dir', locale.direction ?? 'ltr');
+    document.documentElement.setAttribute('lang', locale.current ?? 'en');
 }
 
-router.on('success', (event: any) => applyDirection(event.detail.page))
+router.on('success', (event: any) => applyDirection(event.detail.page));
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
             case name === 'Welcome':
-                return null
+                return null;
             /*
              * FULL-SCREEN BY THEMSELVES.
              *
@@ -87,7 +90,7 @@ createInertiaApp({
              */
             case name === 'auth/LockScreen':
             case name === 'auth/VerifyOtp':
-                return null
+                return null;
             /*
              * ERROR PAGES STAND ALONE, and this is not a style choice.
              *
@@ -102,19 +105,19 @@ createInertiaApp({
              * in the first place. The page carries its own way back.
              */
             case name.startsWith('errors/'):
-                return null
+                return null;
             case name.startsWith('auth/'):
-                return AuthLayout
+                return AuthLayout;
             case name.startsWith('settings/'):
-                return [AppLayout, SettingsLayout]
+                return [AppLayout, SettingsLayout];
             default:
-                return AppLayout
+                return AppLayout;
         }
     },
     progress: {
         color: '#4B5563',
     },
-})
+});
 
 /*
  * THE FIRST PAGE NEEDS IT TOO. `router.on('success')` covers every navigation
@@ -126,10 +129,10 @@ createInertiaApp({
  * costs nothing and needs no second source.
  */
 try {
-    const initial = document.getElementById('app')?.dataset.page
+    const initial = document.getElementById('app')?.dataset.page;
 
     if (initial) {
-        applyDirection(JSON.parse(initial))
+        applyDirection(JSON.parse(initial));
     }
 } catch {
     // A malformed payload is Inertia's problem to report, not a reason to stop
@@ -165,8 +168,8 @@ if (typeof window !== 'undefined') {
      * discovered on the very first request. See `lib/sessionExpired.ts` for why
      * this hooks the transport rather than the router.
      */
-    watchForSessionExpiry()
-    installSessionExpiryPreview()
+    watchForSessionExpiry();
+    installSessionExpiryPreview();
 
     /*
      * Appearance is applied HERE, at boot, for EVERY page.
@@ -180,10 +183,13 @@ if (typeof window !== 'undefined') {
         // The account's saved value, rendered into the page by the server. It
         // wins over this browser's copy, which is what makes a second browser
         // adopt the same theme on its first load.
-        (window as unknown as { __panelAppearance?: Record<string, unknown> | null })
-            .__panelAppearance ?? null,
-    )
+        (
+            window as unknown as {
+                __panelAppearance?: Record<string, unknown> | null;
+            }
+        ).__panelAppearance ?? null,
+    );
 
     // This will listen for flash toast data from the server...
-    initializeFlashToast()
+    initializeFlashToast();
 }

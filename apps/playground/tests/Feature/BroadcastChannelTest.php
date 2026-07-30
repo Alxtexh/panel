@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use PanelKit\Panel\Support\Abilities;
 use Tests\TestCase;
 
@@ -53,7 +54,7 @@ final class BroadcastChannelTest extends TestCase
 
     }
 
-    private function authorise(string $channel): \Illuminate\Testing\TestResponse
+    private function authorise(string $channel): TestResponse
     {
         return $this->postJson('/broadcasting/auth', [
             'socket_id' => '1234.5678',

@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
@@ -159,7 +160,7 @@ final class ErrorScreenTest extends TestCase
     {
         config(['app.debug' => false]);
 
-        \Illuminate\Support\Facades\Route::middleware(['web', 'auth'])->get(
+        Route::middleware(['web', 'auth'])->get(
             '/deliberately-broken-2',
             fn () => throw new \RuntimeException('boom'),
         );

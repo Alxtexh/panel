@@ -23,17 +23,19 @@
  * So an organisation with no mark gets its NAME - which is real information,
  * always available, and reads correctly in the one place it has to.
  */
-import { computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
-withDefaults(defineProps<{ showName?: boolean }>(), { showName: false })
+withDefaults(defineProps<{ showName?: boolean }>(), { showName: false });
 
-const page = usePage()
+const page = usePage();
 
 /** The tenant's name, falling back to the product's only outside a tenant. */
-const name = computed(() => String((page.props.panelBrand as string | null) ?? page.props.name))
+const name = computed(() =>
+    String((page.props.panelBrand as string | null) ?? page.props.name),
+);
 
-const logo = computed(() => (page.props.panelLogo as string | null) ?? null)
+const logo = computed(() => (page.props.panelLogo as string | null) ?? null);
 
 /**
  * Initials, for the collapsed rail where a name does not fit.
@@ -48,7 +50,7 @@ const initials = computed(() =>
         .slice(0, 2)
         .map((part) => part[0]!.toUpperCase())
         .join(''),
-)
+);
 </script>
 
 <template>
@@ -74,15 +76,17 @@ const initials = computed(() =>
         -->
         <div
             v-else-if="!showName"
-            class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-md text-xs font-semibold"
+            class="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground"
             :title="name"
         >
             {{ initials }}
         </div>
 
         <!-- A logo replaces the name; the two never sit side by side. -->
-        <span v-if="showName && !logo" class="truncate text-sm leading-tight font-semibold">{{
-            name
-        }}</span>
+        <span
+            v-if="showName && !logo"
+            class="truncate text-sm leading-tight font-semibold"
+            >{{ name }}</span
+        >
     </div>
 </template>

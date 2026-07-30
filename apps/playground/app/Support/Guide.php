@@ -713,7 +713,7 @@ final class Guide
                 'blocks' => [
                     [
                         'kind' => 'shell',
-                        'code' => "* * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1",
+                        'code' => '* * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1',
                     ],
                     [
                         'kind' => 'shell',
@@ -814,7 +814,7 @@ final class Guide
     {
         $out = ["# Building a panel\n"];
 
-        $out[] = "What you need before you start, which command comes next, and the "
+        $out[] = 'What you need before you start, which command comes next, and the '
             ."decisions that are hard to change later.\n";
 
         foreach (self::groups() as $group) {

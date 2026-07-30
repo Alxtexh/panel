@@ -15,9 +15,9 @@ use PanelKit\Panel\PanelManager;
  * are all here in one place rather than spread across config: which guard
  * authenticates it, whether it is scoped to a tenant, what middleware it runs.
  *
-     * TENANT CONTEXT: every query this panel makes is scoped to the resolved
-     * organisation, and it refuses to operate without one. A null tenant key is
-     * a DENY signal here, never "all tenants".
+ * TENANT CONTEXT: every query this panel makes is scoped to the resolved
+ * organisation, and it refuses to operate without one. A null tenant key is
+ * a DENY signal here, never "all tenants".
  *
  * ITS RESOURCES LIVE IN `app/Panel/Reseller/Resources` and carry
  * `protected static string $panel = 'reseller';`. Only those are routable under

@@ -7,6 +7,7 @@ namespace App\Panel\Resources;
 use App\Models\AuditEntry;
 use App\Models\User;
 use PanelKit\Panel\Forms\Form;
+use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
@@ -111,7 +112,7 @@ final class ActivityResource extends Resource
     {
         $out = [];
 
-        foreach (app(\PanelKit\Panel\PanelManager::class)->resources() as $class) {
+        foreach (app(PanelManager::class)->resources() as $class) {
             $out[$class::model()] = $class::label();
         }
 

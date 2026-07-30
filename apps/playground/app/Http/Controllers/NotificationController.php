@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Client;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
 use App\Models\Router;
 use DateTimeImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Alerts\Alert;
-use PanelKit\Panel\Alerts\Announcement;
 use PanelKit\Panel\Alerts\AlertRule;
+use PanelKit\Panel\Alerts\Announcement;
 
 /**
  * The bell: two streams that are deliberately not one list.

@@ -56,7 +56,13 @@ describe('useLiveUpdates batching', () => {
          * is. See the note above for why sync is wrong here.
          */
         let renders = 0
-        watch(rows, () => { renders += 1 }, { deep: true })
+        watch(
+            rows,
+            () => {
+                renders += 1
+            },
+            { deep: true },
+        )
 
         const live = useLiveUpdates({ config, rows })
 

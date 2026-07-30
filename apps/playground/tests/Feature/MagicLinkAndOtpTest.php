@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use PanelKit\Panel\Auth\OneTimeCredential;
 use Tests\TestCase;
 
 /**
@@ -249,7 +250,7 @@ final class MagicLinkAndOtpTest extends TestCase
     {
         $this->magicOn();
 
-        $token = (new \PanelKit\Panel\Auth\OneTimeCredential('magic_login_tokens', 10))
+        $token = (new OneTimeCredential('magic_login_tokens', 10))
             ->issue($this->user->email, $this->tenant->id, numeric: false);
 
         $this->get("/auth/magic-link/consume?email={$this->user->email}&token={$token}")
@@ -299,7 +300,7 @@ final class MagicLinkAndOtpTest extends TestCase
      */
     private function issueCode(): string
     {
-        return (new \PanelKit\Panel\Auth\OneTimeCredential(
+        return (new OneTimeCredential(
             'password_reset_tokens',
             (int) config('panel.auth.otp_lifetime', 10),
         ))->issue($this->user->email, null);
@@ -307,7 +308,7 @@ final class MagicLinkAndOtpTest extends TestCase
 
     private function magicUrl(): string
     {
-        $token = (new \PanelKit\Panel\Auth\OneTimeCredential('magic_login_tokens', 10))
+        $token = (new OneTimeCredential('magic_login_tokens', 10))
             ->issue($this->user->email, null, numeric: false);
 
         return URL::temporarySignedRoute(

@@ -56,18 +56,21 @@ const { isCurrentUrl } = useCurrentUrl();
             what makes it read as descending from the heading rather than as a
             decorative stripe.
         -->
-        <SidebarMenu v-if="nested" class="border-sidebar-border ml-4 gap-0 border-l pl-0">
+        <SidebarMenu
+            v-if="nested"
+            class="ml-4 gap-0 border-l border-sidebar-border pl-0"
+        >
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <Link
                     :href="item.href"
                     prefetch="hover"
                     cache-for="30s"
-                    class="hover:text-sidebar-accent-foreground group/nav relative flex items-center gap-2.5 py-1.5 pl-4 text-sm transition-colors"
+                    class="group/nav relative flex items-center gap-2.5 py-1.5 pl-4 text-sm transition-colors hover:text-sidebar-accent-foreground"
                     @click="emit('navigate')"
                     :aria-current="isCurrentUrl(item.href) ? 'page' : undefined"
                     :class="
                         isCurrentUrl(item.href)
-                            ? 'text-sidebar-accent-foreground font-medium'
+                            ? 'font-medium text-sidebar-accent-foreground'
                             : 'text-muted-foreground'
                     "
                 >
@@ -78,7 +81,7 @@ const { isCurrentUrl } = useCurrentUrl();
                         line rather than a bead beside it.
                     -->
                     <span
-                        class="bg-sidebar absolute -left-[3px] flex size-1.5 items-center justify-center rounded-full"
+                        class="absolute -left-[3px] flex size-1.5 items-center justify-center rounded-full bg-sidebar"
                         aria-hidden="true"
                     >
                         <span
@@ -124,7 +127,9 @@ const { isCurrentUrl } = useCurrentUrl();
                         :href="item.href"
                         prefetch="hover"
                         cache-for="30s"
-                        :aria-current="isCurrentUrl(item.href) ? 'page' : undefined"
+                        :aria-current="
+                            isCurrentUrl(item.href) ? 'page' : undefined
+                        "
                         @click="emit('navigate')"
                     >
                         <component :is="item.icon" />

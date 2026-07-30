@@ -1,16 +1,6 @@
 <?php
 
 use App\Http\Middleware\EnsurePanelIsUnlocked;
-use PanelKit\Panel\Http\Middleware\InitializeTenancyForUser;
-use PanelKit\Panel\Http\Middleware\BlockImpersonatedCredentialChanges;
-use PanelKit\Panel\Http\Middleware\DenySuspendedAccount;
-use PanelKit\Panel\Http\Middleware\RequirePasswordRenewal;
-use PanelKit\Panel\Http\Middleware\DenySuspendedTenant;
-use PanelKit\Panel\Http\Middleware\ResolveTenantByHost;
-use PanelKit\Panel\Http\Middleware\VerifyTurnstile;
-use PanelKit\Panel\Http\Middleware\ScopeSessionToTenant;
-use PanelKit\Panel\Auth\SetPermissionsTeam;
-use PanelKit\Panel\Http\Middleware\SetPanelLocale;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -19,6 +9,17 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use PanelKit\Panel\Alerts\ReportsToTelegram;
+use PanelKit\Panel\Auth\SetPermissionsTeam;
+use PanelKit\Panel\Http\Middleware\BlockImpersonatedCredentialChanges;
+use PanelKit\Panel\Http\Middleware\DenySuspendedAccount;
+use PanelKit\Panel\Http\Middleware\DenySuspendedTenant;
+use PanelKit\Panel\Http\Middleware\InitializeTenancyForUser;
+use PanelKit\Panel\Http\Middleware\RequirePasswordRenewal;
+use PanelKit\Panel\Http\Middleware\ResolveTenantByHost;
+use PanelKit\Panel\Http\Middleware\ScopeSessionToTenant;
+use PanelKit\Panel\Http\Middleware\SetPanelLocale;
+use PanelKit\Panel\Http\Middleware\VerifyTurnstile;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -202,8 +203,8 @@ return Application::configure(basePath: dirname(__DIR__))
          * signature per fifteen minutes; see `ReportsToTelegram` for why that
          * last part is the whole design.
          */
-        $exceptions->report(function (\Throwable $e): void {
-            \PanelKit\Panel\Alerts\ReportsToTelegram::report($e);
+        $exceptions->report(function (Throwable $e): void {
+            ReportsToTelegram::report($e);
         });
 
         /*

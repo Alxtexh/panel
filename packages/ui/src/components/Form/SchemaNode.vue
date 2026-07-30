@@ -311,10 +311,7 @@ function uploadFor(key: string) {
         value would find it gone.
     -->
     <div v-else-if="node.component === 'wizard'" :class="isRoot ? 'bg-card rounded-lg border' : ''">
-        <ol
-            class="flex items-center gap-2 overflow-x-auto p-4"
-            :class="isRoot ? 'border-b' : ''"
-        >
+        <ol class="flex items-center gap-2 overflow-x-auto p-4" :class="isRoot ? 'border-b' : ''">
             <li
                 v-for="(step, i) in node.children ?? []"
                 :key="i"

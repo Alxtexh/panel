@@ -9,9 +9,11 @@ use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\SchemaCache;
 use PanelKit\Panel\Support\TenantContext;
 use RuntimeException;
 use Tests\TestCase;
@@ -150,7 +152,7 @@ final class PanelContextTest extends TestCase
     /** A resource belongs to the tenant admin unless it says otherwise. */
     public function test_a_resource_defaults_to_the_tenant_admin_panel(): void
     {
-        $this->assertSame('admin', \App\Panel\Resources\ClientResource::panel());
+        $this->assertSame('admin', ClientResource::panel());
     }
 
     /**
@@ -175,7 +177,7 @@ final class PanelContextTest extends TestCase
      */
     public function test_the_schema_cache_key_is_panel_scoped(): void
     {
-        $cache = app(\PanelKit\Panel\Support\SchemaCache::class);
+        $cache = app(SchemaCache::class);
 
         $this->assertNotSame(
             $cache->key('admin', 'clients', 'hash'),

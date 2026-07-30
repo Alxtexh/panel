@@ -1,33 +1,18 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { PkBoundary, PkDropdown, useAppearance } from '@panelkit/ui'
-import { usePanelNav } from '@/composables/usePanelNav'
+import { Link, usePage } from '@inertiajs/vue3';
 import {
-    FileQuestion,
     HelpCircle,
     Info,
-    KeyRound,
     LayoutGrid,
-    Lock,
-    Mail,
     MessageCircleQuestion,
-    MessagesSquare,
-    Package,
-    ServerCrash,
-    ShieldAlert,
-    TimerOff,
-    Wrench,
-    Router as RouterIcon,
     Sparkles,
-    Users,
-} from '@lucide/vue'
-import AppLogo from '@/components/AppLogo.vue'
-import NavFooter from '@/components/NavFooter.vue'
-import NavMain from '@/components/NavMain.vue'
-import NavUser from '@/components/NavUser.vue'
-import { useCurrentUrl } from '@/composables/useCurrentUrl'
-import { useSidebarOpener } from '@/lib/mobileNav'
+} from '@lucide/vue';
+import { PkBoundary, PkDropdown, useAppearance } from '@panelkit/ui';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import AppLogo from '@/components/AppLogo.vue';
+import NavFooter from '@/components/NavFooter.vue';
+import NavMain from '@/components/NavMain.vue';
+import NavUser from '@/components/NavUser.vue';
 import {
     Sidebar,
     SidebarContent,
@@ -38,9 +23,12 @@ import {
     SidebarMenuItem,
     SidebarGroup,
     useSidebar,
-} from '@/components/ui/sidebar'
-import { dashboard } from '@/routes'
-import type { NavItem } from '@/types'
+} from '@/components/ui/sidebar';
+import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { usePanelNav } from '@/composables/usePanelNav';
+import { useSidebarOpener } from '@/lib/mobileNav';
+import { dashboard } from '@/routes';
+import type { NavItem } from '@/types';
 
 /**
  * Built from the resource registry, delivered with the initial payload.
@@ -50,7 +38,7 @@ import type { NavItem } from '@/types'
  * editing". Items are already permission-filtered server-side, so a resource
  * the user cannot view never reaches the client at all.
  */
-const page = usePage()
+const page = usePage();
 
 /**
  * Sidebar side comes from the user preference.
@@ -59,7 +47,7 @@ const page = usePage()
  * fixed-positioned, so `flex-direction: row-reverse` moved only the spacer and
  * left the panel sitting on top of the content.
  */
-const { appearance } = useAppearance()
+const { appearance } = useAppearance();
 
 /**
  * COLLAPSED GROUPS BECOME FLYOUTS.
@@ -74,7 +62,7 @@ const { appearance } = useAppearance()
  * requiring a click to discover what an icon contains defeats the point of
  * collapsing.
  */
-const { state, isMobile, setOpenMobile } = useSidebar()
+const { state, isMobile, setOpenMobile } = useSidebar();
 
 /**
  * THE BOTTOM BAR'S "MORE" OPENS THIS, rather than a menu of its own.
@@ -87,33 +75,29 @@ const { state, isMobile, setOpenMobile } = useSidebar()
  * REGISTERED WHILE MOUNTED, because the horizontal layout has no sidebar and
  * the bar has to know the difference between "opened" and "asked into nothing".
  */
-const opener = useSidebarOpener()
+const opener = useSidebarOpener();
 
-onMounted(() => opener.register())
-onUnmounted(() => opener.unregister())
+onMounted(() => opener.register());
+onUnmounted(() => opener.unregister());
 
-watch(opener.requests, () => setOpenMobile(true))
+watch(opener.requests, () => setOpenMobile(true));
 
-const isCollapsed = computed(() => state.value === 'collapsed')
+const isCollapsed = computed(() => state.value === 'collapsed');
 
 /** The flyout opens away from the rail, whichever edge it is on. */
 const flyoutSide = computed<'left' | 'right'>(() =>
     appearance.value.sidebarSide === 'right' ? 'left' : 'right',
-)
+);
 
-const { isCurrentUrl } = useCurrentUrl()
+const { isCurrentUrl } = useCurrentUrl();
 
 function groupIsActive(items: NavItem[]): boolean {
-    return items.some((i) => isCurrentUrl(typeof i.href === 'string' ? i.href : String(i.href)))
+    return items.some((i) =>
+        isCurrentUrl(typeof i.href === 'string' ? i.href : String(i.href)),
+    );
 }
 
-const iconFor: Record<string, typeof LayoutGrid> = {
-    users: Users,
-    router: RouterIcon,
-    package: Package,
-}
-
-const { nav } = usePanelNav()
+const { nav } = usePanelNav();
 
 /**
  * On a phone, choosing a destination closes the drawer.
@@ -129,7 +113,7 @@ const { nav } = usePanelNav()
  */
 function closeOnMobile() {
     if (isMobile.value) {
-        setOpenMobile(false)
+        setOpenMobile(false);
     }
 }
 
@@ -142,9 +126,13 @@ function closeOnMobile() {
  * panel is serving the request; the client should not be guessing.
  */
 const panelHome = computed(
-    () => (page.props.panelHome as { href: string; isDefault: boolean } | undefined)
-        ?? { href: dashboard().url ?? '/dashboard', isDefault: true },
-)
+    () =>
+        (page.props.panelHome as
+            { href: string; isDefault: boolean } | undefined) ?? {
+            href: dashboard().url ?? '/dashboard',
+            isDefault: true,
+        },
+);
 
 const dashboardItem = computed<NavItem>(() => ({
     /*
@@ -157,7 +145,7 @@ const dashboardItem = computed<NavItem>(() => ({
     title: 'Dashboard',
     href: panelHome.value.href,
     icon: LayoutGrid,
-}))
+}));
 
 /**
  * Navigation, grouped by the `group` each resource declares.
@@ -191,10 +179,11 @@ const navGroups = computed(() => ({
         dashboardItem.value,
         ...nav.value.primary.filter((item) => item.title !== 'Dashboard'),
     ],
-    grouped: nav.value.groups.map(
-        (group): [string, NavItem[]] => [group.name, group.items],
-    ),
-}))
+    grouped: nav.value.groups.map((group): [string, NavItem[]] => [
+        group.name,
+        group.items,
+    ]),
+}));
 
 /*
  * The key is versioned because the DEFAULT changed.
@@ -205,7 +194,7 @@ const navGroups = computed(() => ({
  * preferences once, which is the honest cost of changing a default rather than
  * pretending it applies to everybody.
  */
-const NAV_STORAGE_KEY = 'panelkit.nav.collapsed.v2'
+const NAV_STORAGE_KEY = 'panelkit.nav.collapsed.v2';
 
 /**
  * Which groups are CLOSED. Everything starts closed EXCEPT the one you are in.
@@ -221,8 +210,10 @@ const NAV_STORAGE_KEY = 'panelkit.nav.collapsed.v2'
  */
 function defaultCollapsed(): Set<string> {
     return new Set(
-        navGroups.value.grouped.filter(([, items]) => !groupIsActive(items)).map(([name]) => name),
-    )
+        navGroups.value.grouped
+            .filter(([, items]) => !groupIsActive(items))
+            .map(([name]) => name),
+    );
 }
 
 /**
@@ -232,27 +223,37 @@ function defaultCollapsed(): Set<string> {
  * then closes them, which reads as the sidebar flinching on every page load.
  */
 function readCollapsed(): Set<string> {
-    if (typeof window === 'undefined') return new Set()
+    if (typeof window === 'undefined') {
+        return new Set();
+    }
 
     try {
-        const saved = localStorage.getItem(NAV_STORAGE_KEY)
+        const saved = localStorage.getItem(NAV_STORAGE_KEY);
 
-        return saved ? new Set(JSON.parse(saved) as string[]) : defaultCollapsed()
+        return saved
+            ? new Set(JSON.parse(saved) as string[])
+            : defaultCollapsed();
     } catch {
         // Private mode or corrupt storage. The default is still correct.
-        return defaultCollapsed()
+        return defaultCollapsed();
     }
 }
 
-const collapsed = ref<Set<string>>(readCollapsed())
+const collapsed = ref<Set<string>>(readCollapsed());
 
 function toggleGroup(name: string) {
-    const next = new Set(collapsed.value)
-    next.has(name) ? next.delete(name) : next.add(name)
-    collapsed.value = next
+    const next = new Set(collapsed.value);
+
+    if (next.has(name)) {
+        next.delete(name);
+    } else {
+        next.add(name);
+    }
+
+    collapsed.value = next;
 
     try {
-        localStorage.setItem(NAV_STORAGE_KEY, JSON.stringify([...next]))
+        localStorage.setItem(NAV_STORAGE_KEY, JSON.stringify([...next]));
     } catch {
         // Private mode. The group still toggles; only persistence is lost.
     }
@@ -268,16 +269,18 @@ function toggleGroup(name: string) {
 watch(
     () => page.url,
     () => {
-        const active = navGroups.value.grouped.find(([, items]) => groupIsActive(items))
+        const active = navGroups.value.grouped.find(([, items]) =>
+            groupIsActive(items),
+        );
 
         if (active && collapsed.value.has(active[0])) {
-            const next = new Set(collapsed.value)
+            const next = new Set(collapsed.value);
 
-            next.delete(active[0])
-            collapsed.value = next
+            next.delete(active[0]);
+            collapsed.value = next;
         }
     },
-)
+);
 
 /**
  * The application's own support screens - and only in the application's portal.
@@ -295,7 +298,7 @@ const supportNavItems = computed<NavItem[]>(() =>
               { title: 'About', href: '/about', icon: Info },
           ]
         : [],
-)
+);
 </script>
 
 <template>
@@ -318,7 +321,11 @@ const supportNavItems = computed<NavItem[]>(() =>
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="navGroups.ungrouped" label="Platform" @navigate="closeOnMobile" />
+            <NavMain
+                :items="navGroups.ungrouped"
+                label="Platform"
+                @navigate="closeOnMobile"
+            />
 
             <!--
                 Two renderings of one group list.
@@ -334,16 +341,28 @@ const supportNavItems = computed<NavItem[]>(() =>
                     :key="name"
                     class="px-2 py-0"
                 >
-                    <PkDropdown :placement="flyoutSide" width="w-52" :offset="8" hoverable>
+                    <PkDropdown
+                        :placement="flyoutSide"
+                        width="w-52"
+                        :offset="8"
+                        hoverable
+                    >
                         <template #trigger>
                             <button
                                 type="button"
-                                class="hover:bg-sidebar-accent flex size-8 items-center justify-center rounded-md transition-colors"
-                                :class="groupIsActive(items) ? 'bg-sidebar-accent' : ''"
+                                class="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-sidebar-accent"
+                                :class="
+                                    groupIsActive(items)
+                                        ? 'bg-sidebar-accent'
+                                        : ''
+                                "
                                 :aria-label="name"
                                 :title="name"
                             >
-                                <component :is="items[0]?.icon" class="size-4" />
+                                <component
+                                    :is="items[0]?.icon"
+                                    class="size-4"
+                                />
                             </button>
                         </template>
 
@@ -356,27 +375,30 @@ const supportNavItems = computed<NavItem[]>(() =>
                                 said and distinguishes nothing between siblings.
                             -->
                             <p
-                                class="text-muted-foreground flex items-center gap-2 px-2 py-1.5 text-xs font-semibold"
+                                class="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground"
                             >
-                                <component :is="items[0]?.icon" class="size-4 shrink-0" />
+                                <component
+                                    :is="items[0]?.icon"
+                                    class="size-4 shrink-0"
+                                />
                                 {{ name }}
                             </p>
 
-                            <div class="border-border ml-4 border-l">
+                            <div class="ml-4 border-l border-border">
                                 <Link
                                     v-for="item in items"
                                     :key="item.title"
                                     :href="item.href"
-                                    class="hover:text-foreground group/flyout relative flex items-center py-1.5 pl-4 text-sm transition-colors"
+                                    class="group/flyout relative flex items-center py-1.5 pl-4 text-sm transition-colors hover:text-foreground"
                                     :class="
                                         isCurrentUrl(item.href)
-                                            ? 'text-foreground font-medium'
+                                            ? 'font-medium text-foreground'
                                             : 'text-muted-foreground'
                                     "
                                     @click="close()"
                                 >
                                     <span
-                                        class="bg-popover absolute -left-[3px] flex size-1.5 items-center justify-center rounded-full"
+                                        class="absolute -left-[3px] flex size-1.5 items-center justify-center rounded-full bg-popover"
                                         aria-hidden="true"
                                     >
                                         <span
@@ -420,11 +442,15 @@ const supportNavItems = computed<NavItem[]>(() =>
                 -->
                 <button
                     type="button"
-                    class="text-muted-foreground hover:text-foreground flex w-full items-center gap-2 px-2 py-1.5 text-xs font-medium"
+                    class="flex w-full items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
                     :aria-expanded="!collapsed.has(name)"
                     @click="toggleGroup(name)"
                 >
-                    <component :is="items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
+                    <component
+                        :is="items[0]?.icon"
+                        class="size-4 shrink-0"
+                        aria-hidden="true"
+                    />
                     <span class="flex-1 text-left">{{ name }}</span>
                     <svg
                         viewBox="0 0 24 24"
@@ -438,7 +464,12 @@ const supportNavItems = computed<NavItem[]>(() =>
                     </svg>
                 </button>
 
-                <NavMain v-if="!collapsed.has(name)" :items="items" nested @navigate="closeOnMobile" />
+                <NavMain
+                    v-if="!collapsed.has(name)"
+                    :items="items"
+                    nested
+                    @navigate="closeOnMobile"
+                />
             </SidebarGroup>
         </SidebarContent>
 

@@ -17,8 +17,8 @@
 import { Link } from '@inertiajs/vue3';
 import { AppearanceDrawer, PkDropdown } from '@panelkit/ui';
 import AppLogo from '@/components/AppLogo.vue';
-import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import AssistantDrawer from '@/components/AssistantDrawer.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import TopNavUser from '@/components/TopNavUser.vue';
@@ -26,7 +26,9 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { usePanelNav } from '@/composables/usePanelNav';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
-withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), { breadcrumbs: () => [] });
+withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
+    breadcrumbs: () => [],
+});
 
 const { nav, supportItems } = usePanelNav();
 const { isCurrentUrl } = useCurrentUrl();
@@ -45,37 +47,56 @@ function groupIsActive(items: NavItem[]): boolean {
 </script>
 
 <template>
-    <header class="border-sidebar-border/70 bg-background sticky top-0 z-30 border-b">
+    <header
+        class="sticky top-0 z-30 border-b border-sidebar-border/70 bg-background"
+    >
         <div class="flex h-14 items-center gap-3 px-3 sm:px-4">
             <Link :href="nav.primary[0].href" class="shrink-0">
                 <AppLogo />
             </Link>
 
-            <nav class="pk-scroll flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
+            <nav
+                class="pk-scroll flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto"
+            >
                 <Link
                     v-for="item in nav.primary"
                     :key="item.title"
                     :href="item.href"
-                    class="hover:bg-accent flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors"
-                    :class="isCurrentUrl(item.href) ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground'"
+                    class="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-accent"
+                    :class="
+                        isCurrentUrl(item.href)
+                            ? 'bg-accent font-medium text-foreground'
+                            : 'text-muted-foreground'
+                    "
                 >
                     <component :is="item.icon" class="size-4" />
                     {{ item.title }}
                 </Link>
 
-                <PkDropdown v-for="group in nav.groups" :key="group.name" align="start" width="w-52">
+                <PkDropdown
+                    v-for="group in nav.groups"
+                    :key="group.name"
+                    align="start"
+                    width="w-52"
+                >
                     <template #trigger>
                         <button
                             type="button"
-                            class="hover:bg-accent flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors"
+                            class="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-accent"
                             :class="
                                 groupIsActive(group.items)
-                                    ? 'bg-accent text-foreground font-medium'
+                                    ? 'bg-accent font-medium text-foreground'
                                     : 'text-muted-foreground'
                             "
                         >
                             {{ group.name }}
-                            <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <svg
+                                viewBox="0 0 24 24"
+                                class="size-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                            >
                                 <path d="m6 9 6 6 6-6" />
                             </svg>
                         </button>
@@ -86,11 +107,18 @@ function groupIsActive(items: NavItem[]): boolean {
                             v-for="item in group.items"
                             :key="item.title"
                             :href="item.href"
-                            class="hover:bg-accent flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
-                            :class="isCurrentUrl(item.href) ? 'text-foreground font-medium' : ''"
+                            class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+                            :class="
+                                isCurrentUrl(item.href)
+                                    ? 'font-medium text-foreground'
+                                    : ''
+                            "
                             @click="close()"
                         >
-                            <component :is="item.icon" class="size-4 shrink-0" />
+                            <component
+                                :is="item.icon"
+                                class="size-4 shrink-0"
+                            />
                             {{ item.title }}
                         </Link>
                     </template>
@@ -100,10 +128,16 @@ function groupIsActive(items: NavItem[]): boolean {
                     <template #trigger>
                         <button
                             type="button"
-                            class="text-muted-foreground hover:bg-accent flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors"
+                            class="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent"
                         >
                             Support
-                            <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <svg
+                                viewBox="0 0 24 24"
+                                class="size-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                            >
                                 <path d="m6 9 6 6 6-6" />
                             </svg>
                         </button>
@@ -113,10 +147,13 @@ function groupIsActive(items: NavItem[]): boolean {
                             v-for="item in supportItems"
                             :key="item.title"
                             :href="item.href"
-                            class="hover:bg-accent flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+                            class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
                             @click="close()"
                         >
-                            <component :is="item.icon" class="size-4 shrink-0" />
+                            <component
+                                :is="item.icon"
+                                class="size-4 shrink-0"
+                            />
                             {{ item.title }}
                         </Link>
                     </template>
@@ -153,7 +190,7 @@ function groupIsActive(items: NavItem[]): boolean {
         -->
         <div
             v-if="breadcrumbs.length > 1"
-            class="border-sidebar-border/70 hidden border-t px-3 py-2 sm:block sm:px-4"
+            class="hidden border-t border-sidebar-border/70 px-3 py-2 sm:block sm:px-4"
         >
             <Breadcrumbs :breadcrumbs="breadcrumbs" />
         </div>

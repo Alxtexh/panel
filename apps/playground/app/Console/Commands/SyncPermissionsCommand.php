@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Role;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Support\Abilities;
@@ -205,7 +206,7 @@ final class SyncPermissionsCommand extends Command
         }
 
         $held = DB::table('model_has_roles')
-            ->where('model_type', \App\Models\User::class)
+            ->where('model_type', User::class)
             ->where('tenant_id', $tenant->getKey())
             ->pluck('model_id');
 
@@ -222,7 +223,7 @@ final class SyncPermissionsCommand extends Command
             foreach ($roleless as $userId) {
                 DB::table('model_has_roles')->updateOrInsert([
                     'role_id' => $default->getKey(),
-                    'model_type' => \App\Models\User::class,
+                    'model_type' => User::class,
                     'model_id' => $userId,
                     'tenant_id' => $tenant->getKey(),
                 ], []);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Documents\ClientInvoiceKind;
 use App\Models\Client;
 use App\Models\Plan;
 use App\Models\Tenant;
@@ -12,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Documents\DocumentKinds;
 use PanelKit\Panel\Documents\DocumentRenderer;
 use PanelKit\Panel\Documents\DocumentTemplate;
+use PanelKit\Panel\Documents\Kinds\InvoiceKind;
 use PanelKit\Panel\Documents\Kinds\VoucherKind;
 use Tests\TestCase;
 
@@ -233,7 +235,7 @@ final class DocumentTemplateTest extends TestCase
     public function test_the_application_can_replace_a_packaged_kind(): void
     {
         $this->assertInstanceOf(
-            \App\Documents\ClientInvoiceKind::class,
+            ClientInvoiceKind::class,
             app(DocumentKinds::class)->get('invoice'),
         );
     }
@@ -300,7 +302,7 @@ final class DocumentTemplateTest extends TestCase
      */
     public function test_renaming_the_organisation_changes_a_saved_template_document(): void
     {
-        $this->put('/documents/invoice', (new \PanelKit\Panel\Documents\Kinds\InvoiceKind)->defaults());
+        $this->put('/documents/invoice', (new InvoiceKind)->defaults());
 
         $this->tenant->forceFill(['name' => 'Lakeside Fibre'])->save();
 

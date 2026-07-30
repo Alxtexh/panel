@@ -10,8 +10,7 @@
  * the direction alternates. A single header at the top is only correct for a
  * thread of one, which is precisely the case that does not need a thread view.
  */
-import { Head, Link, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { Head, Link, router } from '@inertiajs/vue3';
 import {
     ArrowLeft,
     Bookmark,
@@ -21,31 +20,32 @@ import {
     Forward,
     Paperclip,
     Star,
-} from '@lucide/vue'
+} from '@lucide/vue';
+import { ref } from 'vue';
 
 interface Message {
-    id: number
-    from: string
-    email: string
-    to: string | null
-    toEmail: string | null
-    body: string
-    attachment: boolean
-    at: string | null
+    id: number;
+    from: string;
+    email: string;
+    to: string | null;
+    toEmail: string | null;
+    body: string;
+    attachment: boolean;
+    at: string | null;
 }
 
 const props = defineProps<{
     thread: {
-        id: number
-        subject: string
-        category: string | null
-        folder: string
-        starred: boolean
-        important: boolean
-        count: number
-    }
-    messages: Message[]
-}>()
+        id: number;
+        subject: string;
+        category: string | null;
+        folder: string;
+        starred: boolean;
+        important: boolean;
+        count: number;
+    };
+    messages: Message[];
+}>();
 
 defineOptions({
     layout: {
@@ -54,13 +54,13 @@ defineOptions({
             { title: 'Detail', href: '' },
         ],
     },
-})
+});
 
-const starred = ref(props.thread.starred)
-const important = ref(props.thread.important)
+const starred = ref(props.thread.starred);
+const important = ref(props.thread.important);
 
 /** Which messages have their recipient line expanded. */
-const expanded = ref<Set<number>>(new Set())
+const expanded = ref<Set<number>>(new Set());
 
 function initials(name: string): string {
     return name
@@ -68,28 +68,44 @@ function initials(name: string): string {
         .filter(Boolean)
         .slice(0, 2)
         .map((part) => part[0]!.toUpperCase())
-        .join('')
+        .join('');
 }
 
 function toggleDetails(id: number) {
-    const next = new Set(expanded.value)
+    const next = new Set(expanded.value);
 
-    next.has(id) ? next.delete(id) : next.add(id)
-    expanded.value = next
+    if (next.has(id)) {
+        next.delete(id);
+    } else {
+        next.add(id);
+    }
+
+    expanded.value = next;
 }
 
 function csrf(): string {
-    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
 
-    return match ? decodeURIComponent(match[1]) : ''
+    return match ? decodeURIComponent(match[1]) : '';
 }
 
 /** Optimistic, with the server as the record - same reasoning as the list. */
 async function act(action: string, folder?: string) {
-    if (action === 'star') starred.value = true
-    if (action === 'unstar') starred.value = false
-    if (action === 'important') important.value = true
-    if (action === 'unimportant') important.value = false
+    if (action === 'star') {
+        starred.value = true;
+    }
+
+    if (action === 'unstar') {
+        starred.value = false;
+    }
+
+    if (action === 'important') {
+        important.value = true;
+    }
+
+    if (action === 'unimportant') {
+        important.value = false;
+    }
 
     await fetch(`/apps/mail/${props.thread.id}`, {
         method: 'PATCH',
@@ -101,18 +117,22 @@ async function act(action: string, folder?: string) {
         },
         credentials: 'same-origin',
         body: JSON.stringify({ action, folder }),
-    })
+    });
 
     // A move takes the thread out of the folder it was opened from, so there is
     // nothing left on this page to look at.
-    if (action === 'move') router.visit('/apps/mail')
+    if (action === 'move') {
+        router.visit('/apps/mail');
+    }
 }
 </script>
 
 <template>
     <Head :title="thread.subject" />
 
-    <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-card">
+    <div
+        class="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-card"
+    >
         <header class="flex items-start gap-3 border-b p-4">
             <Link
                 href="/apps/mail"
@@ -139,13 +159,18 @@ async function act(action: string, folder?: string) {
                     :aria-label="starred ? 'Unstar' : 'Star'"
                     @click="act(starred ? 'unstar' : 'star')"
                 >
-                    <Star class="size-4" :class="starred ? 'fill-amber-400 text-amber-400' : ''" />
+                    <Star
+                        class="size-4"
+                        :class="starred ? 'fill-amber-400 text-amber-400' : ''"
+                    />
                 </button>
 
                 <button
                     type="button"
                     class="rounded-md p-1.5 hover:bg-accent"
-                    :aria-label="important ? 'Remove from important' : 'Mark important'"
+                    :aria-label="
+                        important ? 'Remove from important' : 'Mark important'
+                    "
                     @click="act(important ? 'unimportant' : 'important')"
                 >
                     <Bookmark
@@ -180,8 +205,12 @@ async function act(action: string, folder?: string) {
 
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-baseline gap-x-2">
-                            <span class="text-sm font-semibold">{{ message.from }}</span>
-                            <span class="truncate text-xs text-muted-foreground">
+                            <span class="text-sm font-semibold">{{
+                                message.from
+                            }}</span>
+                            <span
+                                class="truncate text-xs text-muted-foreground"
+                            >
                                 &lt;{{ message.email }}&gt;
                             </span>
                         </div>
@@ -195,7 +224,9 @@ async function act(action: string, folder?: string) {
                             to {{ message.to ?? 'me' }}
                             <ChevronDown
                                 class="size-3 transition-transform"
-                                :class="expanded.has(message.id) ? 'rotate-180' : ''"
+                                :class="
+                                    expanded.has(message.id) ? 'rotate-180' : ''
+                                "
                             />
                         </button>
 
@@ -204,18 +235,23 @@ async function act(action: string, folder?: string) {
                             class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs text-muted-foreground"
                         >
                             <dt class="text-right">from:</dt>
-                            <dd>{{ message.from }} &lt;{{ message.email }}&gt;</dd>
+                            <dd>
+                                {{ message.from }} &lt;{{ message.email }}&gt;
+                            </dd>
                             <dt class="text-right">to:</dt>
-                            <dd>{{ message.to }} &lt;{{ message.toEmail }}&gt;</dd>
+                            <dd>
+                                {{ message.to }} &lt;{{ message.toEmail }}&gt;
+                            </dd>
                             <dt class="text-right">date:</dt>
                             <dd>{{ message.at }}</dd>
                         </dl>
                     </div>
 
                     <div class="flex shrink-0 items-center gap-2">
-                        <span class="text-xs whitespace-nowrap text-muted-foreground">{{
-                            message.at
-                        }}</span>
+                        <span
+                            class="text-xs whitespace-nowrap text-muted-foreground"
+                            >{{ message.at }}</span
+                        >
                         <button
                             type="button"
                             class="rounded-md p-1.5 hover:bg-accent"
@@ -242,7 +278,10 @@ async function act(action: string, folder?: string) {
                     <!-- Only the last message gets the reply controls: repeating
                          them on every card asks the reader to work out which one
                          they are answering. -->
-                    <div v-if="index === messages.length - 1" class="mt-4 flex gap-2">
+                    <div
+                        v-if="index === messages.length - 1"
+                        class="mt-4 flex gap-2"
+                    >
                         <button
                             type="button"
                             class="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm hover:bg-accent"

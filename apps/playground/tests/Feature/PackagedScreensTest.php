@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use PanelKit\Panel\Commands\InstallCommand;
 use Tests\TestCase;
 
 /**
@@ -119,7 +120,7 @@ final class PackagedScreensTest extends TestCase
      */
     public function test_the_installer_writes_a_page_file_for_every_screen(): void
     {
-        $command = new \ReflectionClass(\PanelKit\Panel\Commands\InstallCommand::class);
+        $command = new \ReflectionClass(InstallCommand::class);
 
         /** @var list<string> $installed */
         $installed = $command->getConstant('SCREENS');

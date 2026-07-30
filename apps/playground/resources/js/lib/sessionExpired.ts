@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref } from 'vue';
 
 /**
  * Whether the session went stale under us.
@@ -13,10 +13,10 @@ import { ref } from 'vue'
  * after a 419 carries the same stale token and fails the same way, so the only
  * exit is a reload.
  */
-export const sessionExpired = ref(false)
+export const sessionExpired = ref(false);
 
 export function notifySessionExpired(): void {
-    sessionExpired.value = true
+    sessionExpired.value = true;
 }
 
 /**
@@ -57,17 +57,21 @@ export function installSessionExpiryPreview(): void {
      * module safe no matter who imports it, which is the same shape
      * `readAppearance()` in @panelkit/ui already uses.
      */
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') {
+        return;
+    }
 
     document.addEventListener('click', (event) => {
-        const target = event.target as HTMLElement | null
-        const link = target?.closest('a[href="#session-expired"]')
+        const target = event.target as HTMLElement | null;
+        const link = target?.closest('a[href="#session-expired"]');
 
-        if (!link) return
+        if (!link) {
+            return;
+        }
 
-        event.preventDefault()
+        event.preventDefault();
 
-        const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+        const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
 
         void fetch('/screens/expire-session', {
             method: 'POST',
@@ -77,20 +81,24 @@ export function installSessionExpiryPreview(): void {
                 'X-XSRF-TOKEN': match ? decodeURIComponent(match[1]) : '',
             },
             credentials: 'same-origin',
-        })
-    })
+        });
+    });
 }
 
 export function watchForSessionExpiry(): void {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') {
+        return;
+    }
 
-    const original = window.fetch.bind(window)
+    const original = window.fetch.bind(window);
 
     window.fetch = async (...args) => {
-        const response = await original(...args)
+        const response = await original(...args);
 
-        if (response.status === 419) notifySessionExpired()
+        if (response.status === 419) {
+            notifySessionExpired();
+        }
 
-        return response
-    }
+        return response;
+    };
 }

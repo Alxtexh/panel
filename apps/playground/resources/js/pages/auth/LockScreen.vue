@@ -19,19 +19,19 @@
  * unattended machine is the operating system's lock, and this does not pretend
  * otherwise.
  */
-import { Head, Form, Link, usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import InputError from '@/components/InputError.vue'
-import { ThemeToggle } from '@panelkit/ui'
+import { Head, Form, Link, usePage } from '@inertiajs/vue3';
+import { ThemeToggle } from '@panelkit/ui';
+import { computed } from 'vue';
+import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-defineProps<{ status?: string }>()
+defineProps<{ status?: string }>();
 
-const page = usePage()
+const page = usePage();
 
-const user = computed(() => (page.props.auth as any)?.user ?? null)
+const user = computed(() => (page.props.auth as any)?.user ?? null);
 
 const initials = computed(() =>
     String(user.value?.name ?? '?')
@@ -40,14 +40,14 @@ const initials = computed(() =>
         .slice(0, 2)
         .map((part: string) => part[0]!.toUpperCase())
         .join(''),
-)
+);
 </script>
 
 <template>
     <Head title="Locked" />
 
     <div
-        class="bg-background relative flex min-h-svh flex-col items-center justify-center gap-6 p-6"
+        class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6"
     >
         <div class="absolute top-4 right-4">
             <ThemeToggle />
@@ -57,14 +57,16 @@ const initials = computed(() =>
             <div class="flex flex-col items-center gap-3">
                 <!-- The account being unlocked, shown rather than asked for. -->
                 <span
-                    class="bg-accent text-muted-foreground flex size-16 items-center justify-center rounded-full text-lg font-semibold"
+                    class="flex size-16 items-center justify-center rounded-full bg-accent text-lg font-semibold text-muted-foreground"
                 >
                     {{ initials }}
                 </span>
 
                 <div class="text-center">
-                    <h1 class="text-xl font-medium">{{ user?.name ?? 'Locked' }}</h1>
-                    <p class="text-muted-foreground text-sm">
+                    <h1 class="text-xl font-medium">
+                        {{ user?.name ?? 'Locked' }}
+                    </h1>
+                    <p class="text-sm text-muted-foreground">
                         Enter your password to pick up where you left off.
                     </p>
                 </div>
@@ -90,12 +92,19 @@ const initials = computed(() =>
                     <InputError :message="errors.password" />
                 </div>
 
-                <Button type="submit" class="w-full" :disabled="processing">Unlock</Button>
+                <Button type="submit" class="w-full" :disabled="processing"
+                    >Unlock</Button
+                >
             </Form>
 
-            <p class="text-muted-foreground mt-6 text-center text-sm">
+            <p class="mt-6 text-center text-sm text-muted-foreground">
                 Not you?
-                <Link href="/logout" method="post" as="button" class="underline underline-offset-4">
+                <Link
+                    href="/logout"
+                    method="post"
+                    as="button"
+                    class="underline underline-offset-4"
+                >
                     Sign in as someone else
                 </Link>
             </p>

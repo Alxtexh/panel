@@ -11,10 +11,10 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import AppLayout from '@/layouts/AppLayout.vue'
-import DocumentPrint from '@panelkit/inertia/pages/documents/DocumentPrint.vue'
+import DocumentPrint from '@panelkit/inertia/pages/documents/DocumentPrint.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
-defineOptions({ layout: AppLayout, inheritAttrs: false })
+defineOptions({ layout: AppLayout, inheritAttrs: false });
 </script>
 
 <template>
@@ -25,5 +25,5 @@ defineOptions({ layout: AppLayout, inheritAttrs: false })
         either way: these values arrive from the server as JSON and are
         typed where they are USED, inside the packaged component.
     -->
-    <DocumentPrint v-bind="($attrs as any)" />
+    <DocumentPrint v-bind="$attrs as any" />
 </template>

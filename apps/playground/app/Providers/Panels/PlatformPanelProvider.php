@@ -15,10 +15,10 @@ use PanelKit\Panel\PanelManager;
  * are all here in one place rather than spread across config: which guard
  * authenticates it, whether it is scoped to a tenant, what middleware it runs.
  *
-     * CENTRAL CONTEXT: no tenant scoping is applied to anything this panel
-     * queries. That is what a platform portal needs and what a tenant portal
-     * must never have - a central query reached from a tenant request is the
-     * leak the panel split exists to prevent.
+ * CENTRAL CONTEXT: no tenant scoping is applied to anything this panel
+ * queries. That is what a platform portal needs and what a tenant portal
+ * must never have - a central query reached from a tenant request is the
+ * leak the panel split exists to prevent.
  *
  * ITS RESOURCES LIVE IN `app/Panel/Platform/Resources` and carry
  * `protected static string $panel = 'platform';`. Only those are routable under

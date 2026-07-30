@@ -147,7 +147,11 @@ function text(value: unknown): string {
                 </div>
 
                 <dl v-if="metas(block).length" class="text-right text-sm">
-                    <div v-for="(meta, m) in metas(block)" :key="m" class="flex justify-end gap-4 py-0.5">
+                    <div
+                        v-for="(meta, m) in metas(block)"
+                        :key="m"
+                        class="flex justify-end gap-4 py-0.5"
+                    >
                         <dt class="text-neutral-500">{{ meta.label }}</dt>
                         <dd class="tabular-nums">{{ meta.value }}</dd>
                     </div>
@@ -160,7 +164,11 @@ function text(value: unknown): string {
                     {{ block.heading }}
                 </h2>
                 <p class="mt-2 font-medium">{{ block.name }}</p>
-                <p v-for="(line, l) in texts(block.lines)" :key="l" class="text-sm text-neutral-600">
+                <p
+                    v-for="(line, l) in texts(block.lines)"
+                    :key="l"
+                    class="text-sm text-neutral-600"
+                >
                     {{ line }}
                 </p>
             </section>
@@ -198,13 +206,19 @@ function text(value: unknown): string {
                     </thead>
 
                     <tbody>
-                        <tr v-for="(row, r) in rows(block)" :key="r" class="border-b border-neutral-200">
+                        <tr
+                            v-for="(row, r) in rows(block)"
+                            :key="r"
+                            class="border-b border-neutral-200"
+                        >
                             <!-- The description is what gives way when the row
                                  is too wide; a wrapped figure is unreadable and
                                  a wrapped product name is fine. -->
                             <td class="w-full py-3 pr-2">
                                 <p>{{ row.description }}</p>
-                                <p v-if="row.detail" class="text-xs text-neutral-500">{{ row.detail }}</p>
+                                <p v-if="row.detail" class="text-xs text-neutral-500">
+                                    {{ row.detail }}
+                                </p>
                             </td>
                             <td
                                 v-for="(cell, cc) in row.cells"
@@ -240,7 +254,9 @@ function text(value: unknown): string {
                             "
                             :style="total.strong ? { color: ink(), borderColor: ink() } : undefined"
                         >
-                            <dt :class="total.strong ? '' : 'text-neutral-600'">{{ total.label }}</dt>
+                            <dt :class="total.strong ? '' : 'text-neutral-600'">
+                                {{ total.label }}
+                            </dt>
                             <dd class="tabular-nums">{{ total.value }}</dd>
                         </div>
                     </dl>
@@ -265,7 +281,9 @@ function text(value: unknown): string {
                 </h2>
                 <ol class="mt-2 flex flex-col gap-1 text-sm">
                     <li v-for="(item, s) in texts(block.items)" :key="s" class="flex gap-2">
-                        <span class="font-semibold tabular-nums" :style="{ color: ink() }">{{ s + 1 }}.</span>
+                        <span class="font-semibold tabular-nums" :style="{ color: ink() }"
+                            >{{ s + 1 }}.</span
+                        >
                         <span>{{ item }}</span>
                     </li>
                 </ol>

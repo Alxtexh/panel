@@ -62,7 +62,9 @@ const record = ref<string>('')
 const preview = ref<DocumentPayload>(props.document)
 const previewing = ref(false)
 
-const base = computed(() => `${props.prefix === '/' ? '' : props.prefix}/documents/${props.kind.id}`)
+const base = computed(
+    () => `${props.prefix === '/' ? '' : props.prefix}/documents/${props.kind.id}`,
+)
 
 /*
  * SEQUENCING. Every request carries a ticket; a response whose ticket is not the
@@ -85,7 +87,8 @@ async function refresh(): Promise<void> {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN':
-                    document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
+                    document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ??
+                    '',
             },
             body: JSON.stringify({ settings: form.data(), record: record.value || null }),
         })

@@ -8,6 +8,7 @@ use App\Ai\Tools\SearchKnowledge;
 use App\Knowledge\HelpSource;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\HelpArticles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Ai\Tools\Request;
 use PanelKit\Panel\Knowledge\Chunker;
@@ -327,7 +328,7 @@ final class KnowledgeRetrievalTest extends TestCase
 
         $this->assertNotNull($served, 'The help page no longer receives its articles from the server.');
         $this->assertSame(
-            array_column(\App\Support\HelpArticles::all(), 'id'),
+            array_column(HelpArticles::all(), 'id'),
             array_column($served, 'id'),
         );
     }
@@ -342,7 +343,7 @@ final class KnowledgeRetrievalTest extends TestCase
      */
     public function test_every_indexed_link_points_at_a_real_article(): void
     {
-        $ids = array_column(\App\Support\HelpArticles::all(), 'id');
+        $ids = array_column(HelpArticles::all(), 'id');
 
         foreach ((new HelpSource)->documents() as $document) {
             $this->assertContains(

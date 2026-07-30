@@ -11,8 +11,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
-use PanelKit\Panel\Live\LiveConfig;
 use Inertia\Response;
+use PanelKit\Panel\Live\LiveConfig;
 
 /**
  * The chat screen.

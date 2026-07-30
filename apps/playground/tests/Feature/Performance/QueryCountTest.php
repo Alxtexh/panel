@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Performance;
 
 use App\Models\Client;
+use App\Models\ClientSession;
 use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
@@ -247,7 +248,7 @@ final class QueryCountTest extends TestCase
     private function makeSessionsFor(Client $client, int $count): void
     {
         for ($i = 0; $i < $count; $i++) {
-            \App\Models\ClientSession::withoutGlobalScopes()->forceCreate([
+            ClientSession::withoutGlobalScopes()->forceCreate([
                 'tenant_id' => $this->tenant->id,
                 'client_id' => $client->id,
                 'router_id' => $this->router->id,

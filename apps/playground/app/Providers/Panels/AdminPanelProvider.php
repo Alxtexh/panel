@@ -7,6 +7,7 @@ namespace App\Providers\Panels;
 use Illuminate\Support\ServiceProvider;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\TenantContext;
 
 /**
  * The operator portal: the ISP back-office itself.
@@ -57,7 +58,7 @@ final class AdminPanelProvider extends ServiceProvider
                  * refused it.
                  */
                 ->authMiddleware(['auth', 'verified'])
-                ->brandName(fn (): ?string => app(\PanelKit\Panel\Support\TenantContext::class)->tenant()?->name),
+                ->brandName(fn (): ?string => app(TenantContext::class)->tenant()?->name),
         );
     }
 }

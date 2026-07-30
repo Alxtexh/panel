@@ -6,14 +6,22 @@ namespace Tests\Feature;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Illuminate\Validation\ValidationException;
 use PanelKit\Panel\Alerts\ReportsToTelegram;
 use PanelKit\Panel\Alerts\Telegram;
 use PanelKit\Panel\Support\PanelSettings;
 use Psr\Http\Message\RequestInterface;
+use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
+use Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification;
+use Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
 /**
@@ -90,7 +98,7 @@ final class TelegramAlertsTest extends TestCase
         $stack->setHandler(function ($request, $options) use ($respond) {
             $this->sent[] = $request;
 
-            return \GuzzleHttp\Promise\Create::promiseFor(
+            return Create::promiseFor(
                 $respond ? $respond($request) : new Response(200, [], (string) json_encode([
                     'ok' => true,
                     'result' => ['message_id' => 1, 'username' => 'panelkit_bot'],
@@ -154,7 +162,7 @@ final class TelegramAlertsTest extends TestCase
      */
     public function test_a_notification_with_no_telegram_method_still_arrives(): void
     {
-        NotificationFacade::route('telegram', '-100999')->notify(new MailOnlyNotification());
+        NotificationFacade::route('telegram', '-100999')->notify(new MailOnlyNotification);
 
         $this->assertSentCount(1);
 
@@ -178,9 +186,9 @@ final class TelegramAlertsTest extends TestCase
     public function test_the_backup_notifications_still_need_that_fallback(): void
     {
         foreach ([
-            \Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class,
-            \Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification::class,
-            \Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification::class,
+            BackupHasFailedNotification::class,
+            UnhealthyBackupWasFoundNotification::class,
+            CleanupHasFailedNotification::class,
         ] as $notification) {
             $this->assertFalse(
                 method_exists($notification, 'toTelegram'),
@@ -291,11 +299,11 @@ final class TelegramAlertsTest extends TestCase
         config(['panel.alerts.telegram.exceptions' => true]);
 
         $this->assertFalse(ReportsToTelegram::report(
-            new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException(),
+            new NotFoundHttpException,
         ));
 
         $this->assertFalse(ReportsToTelegram::report(
-            \Illuminate\Validation\ValidationException::withMessages(['email' => 'Required']),
+            ValidationException::withMessages(['email' => 'Required']),
         ));
 
         $this->assertSentCount(0);
@@ -326,7 +334,6 @@ final class TelegramAlertsTest extends TestCase
     }
 
     /* ---------------------------------------------------------- the test ping */
-
 
     public function test_the_test_button_sends_a_real_message(): void
     {
@@ -369,7 +376,7 @@ final class TelegramAlertsTest extends TestCase
  * the notification is serialised as it moves through the channel manager, and
  * an anonymous class cannot be named on the way back.
  */
-final class MailOnlyNotification extends \Illuminate\Notifications\Notification
+final class MailOnlyNotification extends Notification
 {
     /** @return list<string> */
     public function via(mixed $notifiable): array
@@ -377,9 +384,9 @@ final class MailOnlyNotification extends \Illuminate\Notifications\Notification
         return ['telegram'];
     }
 
-    public function toMail(mixed $notifiable): \Illuminate\Notifications\Messages\MailMessage
+    public function toMail(mixed $notifiable): MailMessage
     {
-        return (new \Illuminate\Notifications\Messages\MailMessage())
+        return (new MailMessage)
             ->subject('Backup of Acme failed')
             ->line('The disk is full.');
     }

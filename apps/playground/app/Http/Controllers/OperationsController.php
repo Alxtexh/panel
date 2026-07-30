@@ -6,20 +6,23 @@ namespace App\Http\Controllers;
 
 use App\Jobs\RestoreBackup;
 use App\Jobs\RunBackupNow;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use PanelKit\Panel\Alerts\Telegram;
 use PanelKit\Panel\Audit\AuditRecorder;
 use PanelKit\Panel\Support\BackupArchive;
 use PanelKit\Panel\Support\BackupDestinationProbe;
 use PanelKit\Panel\Support\BackupSettings;
 use PanelKit\Panel\Support\BackupStatus;
+use PanelKit\Panel\Support\HealthReport;
 use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\LogReader;
 use PanelKit\Panel\Support\PanelSettings;
-use PanelKit\Panel\Support\HealthReport;
 use PanelKit\Panel\Support\PlatformReport;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -104,7 +107,7 @@ final class OperationsController extends Controller
              * A SHORT LIST, NEWEST FIRST. This is a "what just happened" panel,
              * not an archive; the full trail is the table.
              */
-            'history' => \Illuminate\Support\Facades\DB::table('audit_entries')
+            'history' => DB::table('audit_entries')
                 ->where('scope', AuditRecorder::SCOPE_INSTALLATION)
                 ->orderByDesc('created_at')
                 ->limit(15)
@@ -445,7 +448,7 @@ final class OperationsController extends Controller
             config(['services.telegram.token' => trim((string) $validated['token'])]);
         }
 
-        $result = \PanelKit\Panel\Alerts\Telegram::test($validated['chat_id'] ?? null);
+        $result = Telegram::test($validated['chat_id'] ?? null);
 
         return back()->with('toast', [
             'type' => $result['ok'] ? 'success' : 'error',
@@ -496,7 +499,7 @@ final class OperationsController extends Controller
      * a whole Inertia page with its schema, navigation and shared props. The
      * configuration half does not change between ticks, so it is not resent.
      */
-    public function metrics(Request $request): \Illuminate\Http\JsonResponse
+    public function metrics(Request $request): JsonResponse
     {
         abort_unless($request->user()?->hasPermission('view_operations'), 403);
 

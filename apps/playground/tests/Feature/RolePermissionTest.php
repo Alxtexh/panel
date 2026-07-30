@@ -10,8 +10,11 @@ use App\Models\Role;
 use App\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Support\Abilities;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
@@ -73,7 +76,7 @@ final class RolePermissionTest extends TestCase
     }
 
     /** Save `$model` against a tenant, past the unfillable tenant column. */
-    private function owned(\Illuminate\Database\Eloquent\Model $model, ?int $tenantId = null): \Illuminate\Database\Eloquent\Model
+    private function owned(Model $model, ?int $tenantId = null): Model
     {
         $model->forceFill(['tenant_id' => $tenantId ?? $this->tenant->id])->save();
 
@@ -138,7 +141,7 @@ final class RolePermissionTest extends TestCase
         // was quietly doing nothing produced a test that passed anyway.
         $this->assertSame(
             0,
-            \Illuminate\Support\Facades\DB::table('model_has_roles')
+            DB::table('model_has_roles')
                 ->where('model_type', User::class)
                 ->where('model_id', $user->getKey())
                 ->count(),
@@ -271,7 +274,9 @@ final class RolePermissionTest extends TestCase
             'guard_name' => config('auth.defaults.guard', 'web'),
             'tenant_id' => $other->id,
         ]);
-        foreach (Abilities::all() as $a) { \Spatie\Permission\Models\Permission::findOrCreate($a); }
+        foreach (Abilities::all() as $a) {
+            Permission::findOrCreate($a);
+        }
         $theirRole->syncPermissions(Abilities::all());
 
         $user = User::factory()->roleless()->create([
@@ -280,7 +285,7 @@ final class RolePermissionTest extends TestCase
 
         // Assign ANOTHER organisation's role directly through the pivot - the
         // shape an attacker or a bug would produce.
-        \Illuminate\Support\Facades\DB::table('model_has_roles')->insert([
+        DB::table('model_has_roles')->insert([
             'role_id' => $theirRole->getKey(),
             'model_type' => User::class,
             'model_id' => $user->getKey(),

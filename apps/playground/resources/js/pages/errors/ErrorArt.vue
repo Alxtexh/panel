@@ -23,9 +23,9 @@
  * the sentence is read; a magnifier reads as "not here". That is the whole job
  * of the picture - the words underneath do the rest.
  */
-import { computed } from 'vue'
+import { computed } from 'vue';
 
-const props = defineProps<{ status: number }>()
+const props = defineProps<{ status: number }>();
 
 /**
  * Status → tone and glyph.
@@ -39,26 +39,43 @@ const ART = {
     missing: { tone: 'text-sky-500', glyph: 'search' },
     broken: { tone: 'text-rose-500', glyph: 'alert' },
     waiting: { tone: 'text-slate-400', glyph: 'wrench' },
-} as const
+} as const;
 
 const art = computed(() => {
-    if (props.status >= 500 && props.status !== 503) return ART.broken
-    if (props.status === 503) return ART.waiting
-    if (props.status === 403 || props.status === 429) return ART.denied
+    if (props.status >= 500 && props.status !== 503) {
+        return ART.broken;
+    }
 
-    return ART.missing
-})
+    if (props.status === 503) {
+        return ART.waiting;
+    }
+
+    if (props.status === 403 || props.status === 429) {
+        return ART.denied;
+    }
+
+    return ART.missing;
+});
 </script>
 
 <template>
-    <div class="relative flex h-44 w-full items-center justify-center" :class="art.tone">
+    <div
+        class="relative flex h-44 w-full items-center justify-center"
+        :class="art.tone"
+    >
         <!--
             The bloom. Sits behind everything and is what stops the plate
             looking pasted onto a flat page.
         -->
         <div
             class="absolute size-40 rounded-full opacity-20 blur-2xl"
-            style="background: radial-gradient(circle, currentColor 0%, transparent 70%)"
+            style="
+                background: radial-gradient(
+                    circle,
+                    currentColor 0%,
+                    transparent 70%
+                );
+            "
             aria-hidden="true"
         ></div>
 
@@ -72,17 +89,51 @@ const art = computed(() => {
             <defs>
                 <!-- Top-left light, bottom-right shadow: one consistent source,
                      which is most of what makes a flat shape read as solid. -->
-                <linearGradient :id="`plate-${status}`" x1="0" y1="0" x2="0.7" y2="1">
-                    <stop offset="0%" stop-color="currentColor" stop-opacity="0.28" />
-                    <stop offset="100%" stop-color="currentColor" stop-opacity="0.08" />
+                <linearGradient
+                    :id="`plate-${status}`"
+                    x1="0"
+                    y1="0"
+                    x2="0.7"
+                    y2="1"
+                >
+                    <stop
+                        offset="0%"
+                        stop-color="currentColor"
+                        stop-opacity="0.28"
+                    />
+                    <stop
+                        offset="100%"
+                        stop-color="currentColor"
+                        stop-opacity="0.08"
+                    />
                 </linearGradient>
 
-                <linearGradient :id="`rim-${status}`" x1="0" y1="0" x2="0.6" y2="1">
-                    <stop offset="0%" stop-color="currentColor" stop-opacity="0.55" />
-                    <stop offset="100%" stop-color="currentColor" stop-opacity="0.15" />
+                <linearGradient
+                    :id="`rim-${status}`"
+                    x1="0"
+                    y1="0"
+                    x2="0.6"
+                    y2="1"
+                >
+                    <stop
+                        offset="0%"
+                        stop-color="currentColor"
+                        stop-opacity="0.55"
+                    />
+                    <stop
+                        offset="100%"
+                        stop-color="currentColor"
+                        stop-opacity="0.15"
+                    />
                 </linearGradient>
 
-                <linearGradient :id="`sheen-${status}`" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                    :id="`sheen-${status}`"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                >
                     <stop offset="0%" stop-color="white" stop-opacity="0.35" />
                     <stop offset="100%" stop-color="white" stop-opacity="0" />
                 </linearGradient>
@@ -90,7 +141,14 @@ const art = computed(() => {
 
             <!-- The shadow the plate casts, offset down and right from the same
                  light source. -->
-            <ellipse cx="80" cy="132" rx="46" ry="8" fill="currentColor" opacity="0.12" />
+            <ellipse
+                cx="80"
+                cy="132"
+                rx="46"
+                ry="8"
+                fill="currentColor"
+                opacity="0.12"
+            />
 
             <!-- The plate: a rounded square rotated slightly, so it reads as an
                  object sitting in space rather than an icon on a grid. -->

@@ -1,36 +1,46 @@
 <script setup lang="ts">
-import { Link, router, usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
-import { Activity, DatabaseBackup, Lock, LogOut, ScrollText, Server, Settings, Trash2, UsersRound } from '@lucide/vue'
+import { Link, router, usePage } from '@inertiajs/vue3';
+import {
+    Activity,
+    DatabaseBackup,
+    Lock,
+    LogOut,
+    ScrollText,
+    Server,
+    Settings,
+    Trash2,
+    UsersRound,
+} from '@lucide/vue';
+import { computed } from 'vue';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu'
-import UserInfo from '@/components/UserInfo.vue'
-import { logout, userManagement } from '@/routes'
-import { edit } from '@/routes/profile'
+} from '@/components/ui/dropdown-menu';
+import UserInfo from '@/components/UserInfo.vue';
+import { logout, userManagement } from '@/routes';
 /*
  * GENERATED, not typed out. A literal path here is a string nothing checks:
  * rename the route and this menu silently starts offering a 404.
  */
-import operations from '@/routes/operations'
-import { lock, resource } from '@/routes/panel'
+import operations from '@/routes/operations';
+import { lock, resource } from '@/routes/panel';
+import { edit } from '@/routes/profile';
 
-import type { User } from '@/types'
+import type { User } from '@/types';
 
 type Props = {
-    user: User
-}
+    user: User;
+};
 
 const handleLogout = () => {
-    router.flushAll()
-}
+    router.flushAll();
+};
 
-defineProps<Props>()
+defineProps<Props>();
 
-const page = usePage()
+const page = usePage();
 
 /**
  * Whether this is the application's OWN portal.
@@ -45,8 +55,10 @@ const page = usePage()
  * declares its own pages, and a plugin can install screens into it.
  */
 const isApplicationPortal = computed(
-    () => (page.props.panelHome as { isDefault: boolean } | undefined)?.isDefault ?? true,
-)
+    () =>
+        (page.props.panelHome as { isDefault: boolean } | undefined)
+            ?.isDefault ?? true,
+);
 
 /**
  * This portal's bin, or null where it has none.
@@ -63,8 +75,10 @@ const isApplicationPortal = computed(
  * soft-delete has no bin, and this is null.
  */
 const trash = computed(
-    () => page.props.panelTrash as { title: string; href: string } | null | undefined,
-)
+    () =>
+        page.props.panelTrash as
+            { title: string; href: string } | null | undefined,
+);
 </script>
 
 <template>
@@ -91,7 +105,11 @@ const trash = computed(
             v-if="isApplicationPortal && page.props.auth?.can?.manageRoles"
             :as-child="true"
         >
-            <Link class="block w-full cursor-pointer" :href="userManagement.url({ tab: 'users' })" prefetch>
+            <Link
+                class="block w-full cursor-pointer"
+                :href="userManagement.url({ tab: 'users' })"
+                prefetch
+            >
                 <UsersRound class="mr-2 h-4 w-4" />
                 User management
             </Link>
@@ -111,7 +129,11 @@ const trash = computed(
             v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
             :as-child="true"
         >
-            <Link class="block w-full cursor-pointer" :href="operations.backups.url()" prefetch>
+            <Link
+                class="block w-full cursor-pointer"
+                :href="operations.backups.url()"
+                prefetch
+            >
                 <DatabaseBackup class="mr-2 h-4 w-4" />
                 Backups
             </Link>
@@ -121,7 +143,11 @@ const trash = computed(
             v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
             :as-child="true"
         >
-            <Link class="block w-full cursor-pointer" :href="operations.logs.url()" prefetch>
+            <Link
+                class="block w-full cursor-pointer"
+                :href="operations.logs.url()"
+                prefetch
+            >
                 <ScrollText class="mr-2 h-4 w-4" />
                 Logs
             </Link>
@@ -138,7 +164,11 @@ const trash = computed(
             v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
             :as-child="true"
         >
-            <Link class="block w-full cursor-pointer" :href="operations.monitoring.url()" prefetch>
+            <Link
+                class="block w-full cursor-pointer"
+                :href="operations.monitoring.url()"
+                prefetch
+            >
                 <Server class="mr-2 h-4 w-4" />
                 Monitoring
             </Link>
@@ -154,7 +184,11 @@ const trash = computed(
             v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
             :as-child="true"
         >
-            <Link class="block w-full cursor-pointer" :href="resource.url('activities')" prefetch>
+            <Link
+                class="block w-full cursor-pointer"
+                :href="resource.url('activities')"
+                prefetch
+            >
                 <Activity class="mr-2 h-4 w-4" />
                 Activity
             </Link>
@@ -167,7 +201,11 @@ const trash = computed(
             that portal's own screen. Absent entirely where nothing soft-deletes.
         -->
         <DropdownMenuItem v-if="trash" :as-child="true">
-            <Link class="block w-full cursor-pointer" :href="trash.href" prefetch>
+            <Link
+                class="block w-full cursor-pointer"
+                :href="trash.href"
+                prefetch
+            >
                 <Trash2 class="mr-2 h-4 w-4" />
                 {{ trash.title }}
             </Link>
@@ -179,7 +217,12 @@ const trash = computed(
             were on, signing out throws both away.
         -->
         <DropdownMenuItem v-if="isApplicationPortal" :as-child="true">
-            <Link class="block w-full cursor-pointer" :href="lock.url()" method="post" as="button">
+            <Link
+                class="block w-full cursor-pointer"
+                :href="lock.url()"
+                method="post"
+                as="button"
+            >
                 <Lock class="mr-2 h-4 w-4" />
                 Lock screen
             </Link>

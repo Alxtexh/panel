@@ -8,4 +8,4 @@
  * own screens reads as a layering mistake; this keeps `@/composables` meaning
  * "this application's composables" whoever wrote them.
  */
-export { useListTable, type ListPageProps } from '@panelkit/inertia'
+export { useListTable, type ListPageProps } from '@panelkit/inertia';

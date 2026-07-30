@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -42,7 +43,7 @@ final class TenantSuspensionTest extends TestCase
         ]);
     }
 
-    /** @return \Illuminate\Testing\TestResponse */
+    /** @return TestResponse */
     private function onAcme(string $path)
     {
         return $this->withServerVariables(['HTTP_HOST' => 'acme.localhost'])

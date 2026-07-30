@@ -2,6 +2,9 @@
 
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
+use App\Providers\Panels\AdminPanelProvider;
+use App\Providers\Panels\PlatformPanelProvider;
+use App\Providers\Panels\ResellerPanelProvider;
 use App\Providers\TenancyServiceProvider;
 
 return [
@@ -12,9 +15,9 @@ return [
      | `--panel` is given, and the answer should be the portal somebody is most
      | likely working on.
      */
-    App\Providers\Panels\AdminPanelProvider::class,
-    App\Providers\Panels\PlatformPanelProvider::class,
-    App\Providers\Panels\ResellerPanelProvider::class,
+    AdminPanelProvider::class,
+    PlatformPanelProvider::class,
+    ResellerPanelProvider::class,
     AppServiceProvider::class,
     // Wires stancl's tenancy EVENTS to its bootstrappers. Without it tenancy
     // initialises - the tenant is bound in the container - and nothing else

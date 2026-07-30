@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -115,7 +116,7 @@ return new class extends Migration
          * matches which role they would have held before the migration.
          */
         $assignments = DB::table('model_has_roles')
-            ->where('model_type', App\Models\User::class)
+            ->where('model_type', User::class)
             ->orderBy('role_id')
             ->get();
 

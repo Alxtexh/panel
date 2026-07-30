@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Plugins;
 
 use App\Panel\Resources\AnnouncementResource;
+use PanelKit\Panel\Panel;
 use PanelKit\Panel\Plugins\Plugin;
 use PanelKit\Panel\Plugins\PluginContext;
 
@@ -44,7 +45,7 @@ final class AnnouncementsPlugin extends Plugin
         return 'panelkit/announcements';
     }
 
-    public function appliesTo(\PanelKit\Panel\Panel $panel): bool
+    public function appliesTo(Panel $panel): bool
     {
         return $panel->id === (string) config('panel.default', 'admin');
     }

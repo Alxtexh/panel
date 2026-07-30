@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref } from 'vue';
 
 /**
  * The seam between the bottom bar and the sidebar it opens.
@@ -24,7 +24,7 @@ import { ref } from 'vue'
  * case that matters: open the drawer, dismiss it by tapping the page, tap More
  * again.
  */
-const requests = ref(0)
+const requests = ref(0);
 
 /**
  * Whether a sidebar is mounted and listening.
@@ -34,7 +34,7 @@ const requests = ref(0)
  * second case still needs the sheet, which is the only navigation that layout
  * has on a phone.
  */
-const available = ref(false)
+const available = ref(false);
 
 export function useSidebarOpener() {
     return {
@@ -42,22 +42,22 @@ export function useSidebarOpener() {
 
         /** Called by the sidebar while it is mounted. */
         register(): void {
-            available.value = true
+            available.value = true;
         },
 
         unregister(): void {
-            available.value = false
+            available.value = false;
         },
 
         /** True when a sidebar took the request; false when nothing is listening. */
         request(): boolean {
-            if (! available.value) {
-                return false
+            if (!available.value) {
+                return false;
             }
 
-            requests.value++
+            requests.value++;
 
-            return true
+            return true;
         },
-    }
+    };
 }

@@ -7,15 +7,15 @@ namespace App\Panel\Resources;
 use App\Models\Role;
 use App\Models\Scopes\TenantScope;
 use App\Models\User;
-use PanelKit\Panel\Forms\Fields\MultiSelectField;
-use PanelKit\Panel\Forms\Fields\PasswordField;
-use PanelKit\Panel\Forms\Fields\SelectField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Form;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use PanelKit\Panel\Actions\RecordAction;
 use PanelKit\Panel\Auth\Impersonation;
+use PanelKit\Panel\Forms\Fields\MultiSelectField;
+use PanelKit\Panel\Forms\Fields\PasswordField;
+use PanelKit\Panel\Forms\Fields\TextField;
+use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Table;
@@ -75,7 +75,7 @@ final class UserResource extends Resource
      */
     private static function groupConcat(string $column): string
     {
-        return match (\Illuminate\Support\Facades\DB::getDriverName()) {
+        return match (DB::getDriverName()) {
             'pgsql' => "string_agg({$column}, ', ')",
             'mysql', 'mariadb' => "group_concat({$column} separator ', ')",
             default => "group_concat({$column}, ', ')",
@@ -151,13 +151,13 @@ final class UserResource extends Resource
              */
             ->alsoSelect([
                 'users.id',
-                \Illuminate\Support\Facades\DB::raw(
+                DB::raw(
                     '(select '.self::groupConcat('roles.name')
                     .' from model_has_roles'
                     .' join roles on roles.id = model_has_roles.role_id'
                     .' where model_has_roles.model_id = users.id'
                     .' and model_has_roles.model_type = '
-                    .\Illuminate\Support\Facades\DB::escape(User::class)
+                    .DB::escape(User::class)
                     .') as role_names'
                 ),
             ])
@@ -282,7 +282,7 @@ final class UserResource extends Resource
                         try {
                             app(Impersonation::class)->start(auth()->user(), $user);
                         } catch (\RuntimeException $e) {
-                            throw \Illuminate\Validation\ValidationException::withMessages([
+                            throw ValidationException::withMessages([
                                 'impersonate' => $e->getMessage(),
                             ]);
                         }

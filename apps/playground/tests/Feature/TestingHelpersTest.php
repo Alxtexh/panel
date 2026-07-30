@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Testing\InteractsWithPanels;
+use PHPUnit\Framework\AssertionFailedError;
 use Tests\TestCase;
 
 /**
@@ -103,7 +104,7 @@ final class TestingHelpersTest extends TestCase
             $this->assertResourceRegistered('nonexistent');
 
             $this->fail('A missing resource should have failed the assertion.');
-        } catch (\PHPUnit\Framework\AssertionFailedError $e) {
+        } catch (AssertionFailedError $e) {
             $this->assertStringContainsString('nonexistent', $e->getMessage());
             $this->assertStringContainsString('clients', $e->getMessage());
         }
@@ -151,7 +152,7 @@ final class TestingHelpersTest extends TestCase
             $this->assertTenantIsolation($this->operator, 'clients', $mine);
 
             $this->fail('The isolation helper passed for a visible record.');
-        } catch (\PHPUnit\Framework\AssertionFailedError) {
+        } catch (AssertionFailedError) {
             $this->addToAssertionCount(1);
         }
     }
@@ -181,7 +182,7 @@ final class TestingHelpersTest extends TestCase
             $this->assertResourceRefuses($this->operator, 'clients');
 
             $this->fail('The refusal helper passed for a permitted user.');
-        } catch (\PHPUnit\Framework\AssertionFailedError) {
+        } catch (AssertionFailedError) {
             $this->addToAssertionCount(1);
         }
     }

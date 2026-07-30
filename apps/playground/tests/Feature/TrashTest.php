@@ -12,6 +12,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use PanelKit\Panel\Support\Abilities;
+use PanelKit\Panel\Support\PanelSettings;
+use PanelKit\Panel\Trash\TrashBin;
 use Tests\TestCase;
 
 /**
@@ -472,13 +474,13 @@ final class TrashTest extends TestCase
      */
     public function test_a_stored_value_outside_the_range_is_clamped(): void
     {
-        app(\PanelKit\Panel\Support\PanelSettings::class)->put('trash.retention_days', 365);
+        app(PanelSettings::class)->put('trash.retention_days', 365);
 
-        $this->assertSame(30, \PanelKit\Panel\Trash\TrashBin::retentionDays());
+        $this->assertSame(30, TrashBin::retentionDays());
 
-        app(\PanelKit\Panel\Support\PanelSettings::class)->put('trash.retention_days', 1);
+        app(PanelSettings::class)->put('trash.retention_days', 1);
 
-        $this->assertSame(7, \PanelKit\Panel\Trash\TrashBin::retentionDays());
+        $this->assertSame(7, TrashBin::retentionDays());
     }
 
     /** Somebody without the ability cannot shorten it. */

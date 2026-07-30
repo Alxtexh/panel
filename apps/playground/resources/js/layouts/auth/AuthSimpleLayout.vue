@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3'
-import { ThemeToggle } from '@panelkit/ui'
+import { Link } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
+import { ThemeToggle } from '@panelkit/ui';
 
-import { home } from '@/routes'
-import { computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { computed } from 'vue';
+import { home } from '@/routes';
 
 defineProps<{
-    title?: string
-    description?: string
-}>()
+    title?: string;
+    description?: string;
+}>();
 
-const appName = computed(() => String(usePage().props.name ?? 'Panel'))
+const appName = computed(() => String(usePage().props.name ?? 'Panel'));
 </script>
 
 <template>
     <div
-        class="bg-background relative flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10"
+        class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10"
     >
         <!--
             LIGHT OR DARK ONLY, before sign-in.
@@ -41,7 +41,10 @@ const appName = computed(() => String(usePage().props.name ?? 'Panel'))
         <div class="w-full max-w-sm">
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col items-center gap-4">
-                    <Link :href="home()" class="flex flex-col items-center gap-2 font-medium">
+                    <Link
+                        :href="home()"
+                        class="flex flex-col items-center gap-2 font-medium"
+                    >
                         <!--
                             THE PRODUCT'S NAME, NOT A FRAMEWORK BADGE.
 

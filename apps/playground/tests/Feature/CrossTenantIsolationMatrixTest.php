@@ -11,9 +11,10 @@ use App\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
+use PanelKit\Panel\Alerts\Announcement;
 use PanelKit\Panel\PanelManager;
 use Tests\TestCase;
 
@@ -431,7 +432,7 @@ final class CrossTenantIsolationMatrixTest extends TestCase
             Router::class => $this->foreignRouter(),
             User::class => $this->foreignUser(),
             AuditEntry::class => $this->foreignAuditEntry(),
-            \PanelKit\Panel\Alerts\Announcement::class => $this->foreignAnnouncement(),
+            Announcement::class => $this->foreignAnnouncement(),
             default => null,
         };
     }
@@ -449,7 +450,7 @@ final class CrossTenantIsolationMatrixTest extends TestCase
      */
     private function foreignAnnouncement(): Model
     {
-        return \PanelKit\Panel\Alerts\Announcement::query()->forceCreate([
+        return Announcement::query()->forceCreate([
             'tenant_id' => $this->theirs->id,
             'title' => 'Their internal notice',
             'body' => 'Not for this organisation.',

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import { usePage } from '@inertiajs/vue3';
+import { AppearanceDrawer, useAppearance } from '@panelkit/ui';
+import { computed } from 'vue';
 import AssistantDrawer from '@/components/AssistantDrawer.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
-import { AppearanceDrawer, useAppearance } from '@panelkit/ui';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
-import { usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
 
 const props = withDefaults(
     defineProps<{
@@ -62,10 +62,13 @@ const trail = computed<BreadcrumbItem[]>(() =>
         which. That is the mirror, rather than a second hardcoded layout.
     -->
     <header
-        class="border-sidebar-border/70 flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sm:px-6 md:px-4"
+        class="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-sidebar-border/70 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sm:px-6 md:px-4"
         :class="mirrored ? 'flex-row-reverse' : ''"
     >
-        <div class="flex min-w-0 items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
+        <div
+            class="flex min-w-0 items-center gap-2"
+            :class="mirrored ? 'flex-row-reverse' : ''"
+        >
             <SidebarTrigger :class="mirrored ? '-mr-1' : '-ml-1'" />
             <!-- Breadcrumbs are the first thing to give up on a phone; the
                  search trigger earns that space more. -->
@@ -74,7 +77,10 @@ const trail = computed<BreadcrumbItem[]>(() =>
             </template>
         </div>
 
-        <div class="flex items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
+        <div
+            class="flex items-center gap-2"
+            :class="mirrored ? 'flex-row-reverse' : ''"
+        >
             <CommandPalette />
             <!-- Beside search, because a question about a record is the same
                  kind of interruption as looking one up - and it opens over the

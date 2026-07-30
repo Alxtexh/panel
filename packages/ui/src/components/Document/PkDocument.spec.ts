@@ -18,7 +18,9 @@ describe('PkDocument', () => {
         const wrapper = mount(PkDocument, {
             props: {
                 document: {
-                    blocks: [{ type: 'header', title: 'Invoice', reference: 'INV-000001', meta: [] }],
+                    blocks: [
+                        { type: 'header', title: 'Invoice', reference: 'INV-000001', meta: [] },
+                    ],
                     branding: branding(),
                     version: 1,
                     sample: true,

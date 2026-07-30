@@ -7,9 +7,11 @@ use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
+use PanelKit\Panel\Auth\PasswordPolicy;
 
 class SecurityController extends Controller
 {
@@ -65,7 +67,7 @@ class SecurityController extends Controller
     public function update(PasswordUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $policy = \PanelKit\Panel\Auth\PasswordPolicy::fromConfig();
+        $policy = PasswordPolicy::fromConfig();
 
         /*
          * THE SAME REFUSAL AS THE RENEWAL SCREEN, because this is the other way
@@ -75,7 +77,7 @@ class SecurityController extends Controller
          * already had.
          */
         if ($policy->isReused($user, $request->password)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'password' => 'That is one of your recent passwords. Choose a different one.',
             ]);
         }

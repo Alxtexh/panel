@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Laravel\Dusk\Browser;
+use PanelKit\Panel\Documents\DocumentTemplate;
 use PanelKit\Panel\Documents\Kinds\VoucherKind;
 use Tests\DuskTestCase;
 
@@ -274,7 +275,7 @@ final class DocumentDesignerTest extends DuskTestCase
          * offset - which is a confusing failure about array-to-string
          * conversion rather than about the template.
          */
-        $saved = \PanelKit\Panel\Documents\DocumentTemplate::withoutGlobalScope('tenant')
+        $saved = DocumentTemplate::withoutGlobalScope('tenant')
             ->where('kind', 'voucher')
             ->first();
 

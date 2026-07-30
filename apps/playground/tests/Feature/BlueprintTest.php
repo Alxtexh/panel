@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use PanelKit\Panel\Support\Blueprint;
 use Tests\TestCase;
 
@@ -99,7 +100,7 @@ final class BlueprintTest extends TestCase
     {
         preg_match_all('/php artisan ((?:panel|make):[a-z-]+)/', Blueprint::markdown(), $matches);
 
-        $registered = array_keys(\Illuminate\Support\Facades\Artisan::all());
+        $registered = array_keys(Artisan::all());
 
         $this->assertGreaterThan(5, count($matches[1]));
 

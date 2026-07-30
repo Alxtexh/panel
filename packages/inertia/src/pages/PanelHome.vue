@@ -105,23 +105,33 @@ const groups = computed(() => {
             <div>
                 <p class="text-sm font-medium">This portal has no resources yet.</p>
                 <p class="text-muted-foreground mt-1 text-sm">
-                    It is registered, routed and reachable - there is simply nothing in it. Give
-                    it a screen:
+                    It is registered, routed and reachable - there is simply nothing in it. Give it
+                    a screen:
                 </p>
             </div>
 
-            <code class="bg-muted/60 flex items-center gap-2 rounded-md px-3 py-2 font-mono text-xs">
+            <code
+                class="bg-muted/60 flex items-center gap-2 rounded-md px-3 py-2 font-mono text-xs"
+            >
                 <Terminal class="size-3.5 shrink-0" />
                 php artisan make:panel-resource Model --panel={{ props.panel.id }} --generate
             </code>
 
             <!-- A skeleton of what will be here, so the shape of the page is
                  legible before it has any content. -->
-            <PkSkeleton variant="row" :count="2" label="No resources yet" class="w-full opacity-40" />
+            <PkSkeleton
+                variant="row"
+                :count="2"
+                label="No resources yet"
+                class="w-full opacity-40"
+            />
         </div>
 
         <section v-for="(group, i) in groups" :key="i" class="flex flex-col gap-2">
-            <h2 v-if="group.name" class="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            <h2
+                v-if="group.name"
+                class="text-muted-foreground text-xs font-medium tracking-wide uppercase"
+            >
                 {{ group.name }}
             </h2>
 

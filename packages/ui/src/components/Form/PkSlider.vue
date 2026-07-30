@@ -56,7 +56,9 @@ const current = computed<number>(() => {
     return Number.isFinite(raw) ? raw : min.value
 })
 
-const empty = computed(() => props.modelValue === null || props.modelValue === undefined || props.modelValue === '')
+const empty = computed(
+    () => props.modelValue === null || props.modelValue === undefined || props.modelValue === '',
+)
 
 function emitNumber(raw: string) {
     if (raw === '') {

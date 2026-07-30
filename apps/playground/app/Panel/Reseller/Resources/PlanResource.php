@@ -6,14 +6,14 @@ namespace App\Panel\Reseller\Resources;
 
 use App\Models\Plan;
 use PanelKit\Panel\Forms\Fields\NumberField;
-use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Fields\TextareaField;
+use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Fields\ToggleField;
+use PanelKit\Panel\Forms\Form;
+use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Table;
 
 /**

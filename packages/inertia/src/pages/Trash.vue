@@ -81,9 +81,7 @@ const allSelected = computed(
     () => actionable.value.length > 0 && selected.value.size === actionable.value.length,
 )
 
-const chosen = computed(() =>
-    (group.value?.records ?? []).filter((r) => selected.value.has(r.id)),
-)
+const chosen = computed(() => (group.value?.records ?? []).filter((r) => selected.value.has(r.id)))
 
 const canRestoreSelection = computed(() => chosen.value.some((r) => r.canRestore))
 const canDestroySelection = computed(() => chosen.value.some((r) => r.canForceDelete))
@@ -100,9 +98,7 @@ function toggle(record: TrashedRecord) {
 }
 
 function toggleAll() {
-    selected.value = allSelected.value
-        ? new Set()
-        : new Set(actionable.value.map((r) => r.id))
+    selected.value = allSelected.value ? new Set() : new Set(actionable.value.map((r) => r.id))
 }
 
 /** `/reseller` + `/clients` + `/12`, never assembled from the resource alone. */
@@ -347,7 +343,11 @@ function deletedOn(value: string): string {
                         <p class="truncate text-sm font-medium">{{ record.title }}</p>
                         <p
                             class="text-xs"
-                            :class="urgent(record.purgesAt) ? 'text-destructive' : 'text-muted-foreground'"
+                            :class="
+                                urgent(record.purgesAt)
+                                    ? 'text-destructive'
+                                    : 'text-muted-foreground'
+                            "
                             :title="record.purgesAt"
                         >
                             Deleted {{ deletedOn(record.deletedAt) }} ·
@@ -412,13 +412,17 @@ function deletedOn(value: string): string {
         </div>
     </PkModal>
 
-    <PkModal :open="configuring" title="How long to keep deleted records" @close="configuring = false">
+    <PkModal
+        :open="configuring"
+        title="How long to keep deleted records"
+        @close="configuring = false"
+    >
         <div class="flex flex-col gap-4">
             <p class="text-muted-foreground text-sm">
                 After this many days a deleted record is removed permanently by the nightly sweep.
-                Between {{ retentionRange.min }} and {{ retentionRange.max }} days: shorter and
-                "I deleted it on Friday" is unrecoverable by Monday; longer and the panel is
-                keeping personal data nobody is looking after.
+                Between {{ retentionRange.min }} and {{ retentionRange.max }} days: shorter and "I
+                deleted it on Friday" is unrecoverable by Monday; longer and the panel is keeping
+                personal data nobody is looking after.
             </p>
 
             <div class="flex items-center gap-3">

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use PanelKit\Panel\Http\Middleware\UsePanel;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**
@@ -235,7 +239,7 @@ final class PortalGenerationTest extends TestCase
 
         $this->assertFalse($manager->inCentralContext(), 'The default context is not tenant-scoped.');
 
-        Route::middleware([\PanelKit\Panel\Http\Middleware\UsePanel::class.':platform'])
+        Route::middleware([UsePanel::class.':platform'])
             ->get('/probe-platform-context', fn (): string => app(PanelManager::class)->inCentralContext() ? 'central' : 'tenant');
 
         $this->assertSame('central', $this->get('/probe-platform-context')->getContent());
@@ -244,7 +248,7 @@ final class PortalGenerationTest extends TestCase
     /** And the admin portal does not. */
     public function test_the_admin_portal_stays_tenant_scoped(): void
     {
-        Route::middleware([\PanelKit\Panel\Http\Middleware\UsePanel::class.':admin'])
+        Route::middleware([UsePanel::class.':admin'])
             ->get('/probe-admin-context', fn (): string => app(PanelManager::class)->inCentralContext() ? 'central' : 'tenant');
 
         $this->assertSame('tenant', $this->get('/probe-admin-context')->getContent());
@@ -416,7 +420,7 @@ final class PortalGenerationTest extends TestCase
  */
 final class CollidingClientResource extends \PanelKit\Panel\Resources\Resource
 {
-    protected static string $model = \App\Models\Client::class;
+    protected static string $model = Client::class;
 
     protected static string $panel = 'reseller';
 
@@ -426,8 +430,8 @@ final class CollidingClientResource extends \PanelKit\Panel\Resources\Resource
         return 'clients';
     }
 
-    public static function table(\PanelKit\Panel\Tables\Table $table): \PanelKit\Panel\Tables\Table
+    public static function table(Table $table): Table
     {
-        return $table->model(\App\Models\Client::class);
+        return $table->model(Client::class);
     }
 }

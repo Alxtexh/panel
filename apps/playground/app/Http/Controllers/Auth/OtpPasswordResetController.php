@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AuthCodeMail;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Mail\AuthCodeMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
 use PanelKit\Panel\Auth\OneTimeCredential;

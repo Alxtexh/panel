@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\RunBackupNow;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use PanelKit\Panel\Support\Abilities;
+use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\LogReader;
+use PanelKit\Panel\Support\TenantContext;
 use Tests\TestCase;
 
 /**
@@ -194,25 +198,25 @@ final class OperationsTest extends TestCase
     /** Starting one is offered, and is queued rather than run inline. */
     public function test_a_backup_can_be_started_and_is_queued(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
 
         $user = $this->operator(['view_operations']);
 
         $this->actingAs($user)->post('/operations/backups/run')->assertRedirect();
 
-        \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\RunBackupNow::class);
+        Queue::assertPushed(RunBackupNow::class);
     }
 
     /** And it needs the same ability as reading the page. */
     public function test_starting_a_backup_needs_the_ability(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
 
         $user = $this->operator(array_values(array_diff(Abilities::all(), ['view_operations'])));
 
         $this->actingAs($user)->post('/operations/backups/run')->assertForbidden();
 
-        \Illuminate\Support\Facades\Queue::assertNothingPushed();
+        Queue::assertNothingPushed();
     }
 
     /**
@@ -229,15 +233,15 @@ final class OperationsTest extends TestCase
      */
     public function test_a_second_run_is_skipped_while_one_holds_the_lock(): void
     {
-        $state = app(\PanelKit\Panel\Support\InstallationState::class);
+        $state = app(InstallationState::class);
 
         $this->assertTrue($state->acquire('backup:running', 60));
 
-        (new \App\Jobs\RunBackupNow('Tester'))->handle();
+        (new RunBackupNow('Tester'))->handle();
 
         $this->assertSame(
             'skipped',
-            $state->get(\App\Jobs\RunBackupNow::STATE_KEY)['state'] ?? null,
+            $state->get(RunBackupNow::STATE_KEY)['state'] ?? null,
         );
     }
 
@@ -248,13 +252,13 @@ final class OperationsTest extends TestCase
      */
     public function test_the_lock_is_held_across_organisations(): void
     {
-        $state = app(\PanelKit\Panel\Support\InstallationState::class);
+        $state = app(InstallationState::class);
 
         $this->assertTrue($state->acquire('backup:running', 60));
 
         $other = Tenant::create(['name' => 'Rival', 'slug' => 'rival']);
 
-        app(\PanelKit\Panel\Support\TenantContext::class);
+        app(TenantContext::class);
         tenancy()->initialize($other);
 
         try {

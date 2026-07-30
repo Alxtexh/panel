@@ -17,38 +17,43 @@
  * EACH TABLE IS ITS OWN BOUNDARY. One failing query costs one panel, not the
  * page - the same reasoning as the dashboard widgets.
  */
-import AppLayout from '@/layouts/AppLayout.vue'
-import { DataTable, PkBoundary, TablePagination, useSchemaColumns } from '@panelkit/ui'
-import { Head, router, usePage } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { Head, router, usePage } from '@inertiajs/vue3';
+import {
+    DataTable,
+    PkBoundary,
+    TablePagination,
+    useSchemaColumns,
+} from '@panelkit/ui';
+import { computed, ref } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
 interface TableProps {
-    records: Record<string, any>[]
-    sort: string
-    direction: 'asc' | 'desc'
-    nextCursor: string | null
-    perPage: number
-    perPageOptions: number[]
-    search: string
-    filters: Record<string, unknown>
+    records: Record<string, any>[];
+    sort: string;
+    direction: 'asc' | 'desc';
+    nextCursor: string | null;
+    perPage: number;
+    perPageOptions: number[];
+    search: string;
+    filters: Record<string, unknown>;
 }
 
 const props = defineProps<{
     schema: {
-        key: string
-        heading: string
-        description: string | null
-        tables: Record<string, { name: string; title: string; columns: any[] }>
-    }
-    tables: Record<string, TableProps>
-    breadcrumbs: { title: string; href: string }[]
-}>()
+        key: string;
+        heading: string;
+        description: string | null;
+        tables: Record<string, { name: string; title: string; columns: any[] }>;
+    };
+    tables: Record<string, TableProps>;
+    breadcrumbs: { title: string; href: string }[];
+}>();
 
-defineOptions({ layout: AppLayout })
+defineOptions({ layout: AppLayout });
 
-const page = usePage()
+const page = usePage();
 
-const names = computed(() => Object.keys(props.schema.tables))
+const names = computed(() => Object.keys(props.schema.tables));
 
 /**
  * The cursor trail PER TABLE.
@@ -57,19 +62,19 @@ const names = computed(() => Object.keys(props.schema.tables))
  * cursor that produced the previous page. Keyed by table name because the two
  * tables are at different pages and always will be.
  */
-const trails = ref<Record<string, string[]>>({})
+const trails = ref<Record<string, string[]>>({});
 
 function trail(name: string): string[] {
-    return trails.value[name] ?? []
+    return trails.value[name] ?? [];
 }
 
 function pageNumber(name: string): number {
-    return trail(name).length + 1
+    return trail(name).length + 1;
 }
 
 /** A deferred total arrives as its own top-level prop, one per table. */
 function total(name: string): number | undefined {
-    return (page.props as Record<string, any>)[`total_${name}`]
+    return (page.props as Record<string, any>)[`total_${name}`];
 }
 
 /**
@@ -81,74 +86,87 @@ function total(name: string): number | undefined {
  * cannot reset the live list to page 1.
  */
 function request(name: string, state: Record<string, string | number>) {
-    const current = new URLSearchParams(window.location.search)
-    const params: Record<string, any> = {}
+    const current = new URLSearchParams(window.location.search);
+    const params: Record<string, any> = {};
 
     // Carry every OTHER table's state through untouched. Rebuilding the query
     // string from only this table's params would silently drop the other's.
     for (const [key, value] of current.entries()) {
-        const match = key.match(/^([a-z][a-z0-9_]*)\[(.+)\]$/)
+        const match = key.match(/^([a-z][a-z0-9_]*)\[(.+)\]$/);
 
         if (match && match[1] !== name) {
-            params[match[1]] ??= {}
-            params[match[1]][match[2]] = value
+            params[match[1]] ??= {};
+            params[match[1]][match[2]] = value;
         }
     }
 
-    params[name] = state
+    params[name] = state;
 
     router.get(window.location.pathname, params, {
         only: [`tables.${name}`, `total_${name}`],
         preserveState: true,
         preserveScroll: true,
         replace: true,
-    })
+    });
 }
 
 function sortBy(name: string, key: string) {
-    const table = props.tables[name]
-    const direction = table.sort === key && table.direction === 'asc' ? 'desc' : 'asc'
+    const table = props.tables[name];
+    const direction =
+        table.sort === key && table.direction === 'asc' ? 'desc' : 'asc';
 
     // A sort describes a different result set, so the cursor trail is void.
-    trails.value = { ...trails.value, [name]: [] }
-    request(name, { sort: key, direction })
+    trails.value = { ...trails.value, [name]: [] };
+    request(name, { sort: key, direction });
 }
 
 function nextPage(name: string) {
-    const cursor = props.tables[name].nextCursor
+    const cursor = props.tables[name].nextCursor;
 
-    if (!cursor) return
+    if (!cursor) {
+        return;
+    }
 
-    trails.value = { ...trails.value, [name]: [...trail(name), cursor] }
-    request(name, { ...currentState(name), cursor })
+    trails.value = { ...trails.value, [name]: [...trail(name), cursor] };
+    request(name, { ...currentState(name), cursor });
 }
 
 function previousPage(name: string) {
-    const stack = trail(name)
+    const stack = trail(name);
 
-    if (stack.length === 0) return
+    if (stack.length === 0) {
+        return;
+    }
 
-    const next = stack.slice(0, -1)
-    trails.value = { ...trails.value, [name]: next }
+    const next = stack.slice(0, -1);
+    trails.value = { ...trails.value, [name]: next };
 
-    const cursor = next[next.length - 1]
-    request(name, cursor ? { ...currentState(name), cursor } : currentState(name))
+    const cursor = next[next.length - 1];
+    request(
+        name,
+        cursor ? { ...currentState(name), cursor } : currentState(name),
+    );
 }
 
 function firstPage(name: string) {
-    trails.value = { ...trails.value, [name]: [] }
-    request(name, currentState(name))
+    trails.value = { ...trails.value, [name]: [] };
+    request(name, currentState(name));
 }
 
 function currentState(name: string): Record<string, string | number> {
-    const table = props.tables[name]
+    const table = props.tables[name];
 
-    return { sort: table.sort, direction: table.direction, perPage: table.perPage }
+    return {
+        sort: table.sort,
+        direction: table.direction,
+        perPage: table.perPage,
+    };
 }
 
 /** Column definitions come from the schema, exactly as a resource index does. */
 const columnsFor = (name: string) =>
-    useSchemaColumns(computed(() => props.schema.tables[name].columns as any)).columns
+    useSchemaColumns(computed(() => props.schema.tables[name].columns as any))
+        .columns;
 </script>
 
 <template>
@@ -157,7 +175,7 @@ const columnsFor = (name: string) =>
     <div class="flex flex-col gap-4 p-4">
         <div>
             <h1 class="text-xl font-semibold">{{ schema.heading }}</h1>
-            <p v-if="schema.description" class="text-muted-foreground text-sm">
+            <p v-if="schema.description" class="text-sm text-muted-foreground">
                 {{ schema.description }}
             </p>
         </div>
@@ -188,10 +206,12 @@ const columnsFor = (name: string) =>
             v-for="name in names"
             :key="name"
             :label="schema.tables[name].title"
-            class="bg-card flex h-[26rem] flex-col gap-3 rounded-lg border p-3"
+            class="flex h-[26rem] flex-col gap-3 rounded-lg border bg-card p-3"
         >
             <div>
-                <h2 class="text-sm font-medium">{{ schema.tables[name].title }}</h2>
+                <h2 class="text-sm font-medium">
+                    {{ schema.tables[name].title }}
+                </h2>
             </div>
 
             <DataTable
@@ -216,8 +236,11 @@ const columnsFor = (name: string) =>
                 @first="firstPage(name)"
                 @update:per-page="
                     (value: number) => {
-                        trails[name] = []
-                        request(name, { ...currentState(name), perPage: value })
+                        trails[name] = [];
+                        request(name, {
+                            ...currentState(name),
+                            perPage: value,
+                        });
                     }
                 "
             />

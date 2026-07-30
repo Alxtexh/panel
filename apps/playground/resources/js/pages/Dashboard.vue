@@ -12,6 +12,7 @@
  * Without `only:` this page would re-resolve every deferred prop on every
  * period click, which is the polling-shaped waste §8 exists to avoid.
  */
+import { Deferred, Head, router, usePage } from '@inertiajs/vue3';
 import {
     BarChart,
     ChartCard,
@@ -26,24 +27,23 @@ import {
     StatCard,
     StatStrip,
     TrendBadge,
-} from '@panelkit/ui'
-import type { StatSegment } from '@panelkit/ui'
-import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
-import AnnouncementBanners from '@/components/AnnouncementBanners.vue'
-import DashboardFilterPanel from '@/components/DashboardFilters.vue'
+} from '@panelkit/ui';
+import type { StatSegment } from '@panelkit/ui';
+import { computed, ref } from 'vue';
+import AnnouncementBanners from '@/components/AnnouncementBanners.vue';
+import DashboardFilterPanel from '@/components/DashboardFilters.vue';
 
 interface Widget {
-    key: string
-    label: string
-    description: string | null
-    span: number
+    key: string;
+    label: string;
+    description: string | null;
+    span: number;
 }
 
 interface Chart {
-    key: string
-    label: string
-    description: string | null
+    key: string;
+    label: string;
+    description: string | null;
     type:
         | 'line'
         | 'area'
@@ -59,64 +59,64 @@ interface Chart {
         | 'radar'
         | 'rankedBar'
         | 'heatmap'
-        | 'segments'
-    span: number
-    periods: { value: string; label: string }[] | null
-    thresholds: { max: number; color: string }[] | null
-    maxValue: number | null
+        | 'segments';
+    span: number;
+    periods: { value: string; label: string }[] | null;
+    thresholds: { max: number; color: string }[] | null;
+    maxValue: number | null;
 }
 
 interface Dataset {
-    name: string
-    points: { label: string; value: number }[]
-    axis?: 'left' | 'right'
-    dashed?: boolean
+    name: string;
+    points: { label: string; value: number }[];
+    axis?: 'left' | 'right';
+    dashed?: boolean;
 }
 
 interface Series {
-    points: { label: string; value: number }[]
-    series: Dataset[] | null
-    bars: Dataset[] | null
-    lines: Dataset[] | null
-    total: number | null
+    points: { label: string; value: number }[];
+    series: Dataset[] | null;
+    bars: Dataset[] | null;
+    lines: Dataset[] | null;
+    total: number | null;
     trend: {
-        direction: 'up' | 'down' | 'flat' | 'new'
-        percentage: number | null
-    } | null
-    error: boolean
+        direction: 'up' | 'down' | 'flat' | 'new';
+        percentage: number | null;
+    } | null;
+    error: boolean;
 }
 
 interface AppliedFilters {
-    from: string | null
-    to: string | null
-    routers: number[]
-    active: boolean
-    label: string | null
+    from: string | null;
+    to: string | null;
+    routers: number[];
+    active: boolean;
+    label: string | null;
 }
 
 const props = defineProps<{
     /** Notices somebody wrote, addressed to everybody here. */
     announcements: {
-        id: number
-        title: string
-        body: string | null
-        severity: 'info' | 'success' | 'warning' | 'danger'
-        display: 'banner' | 'toast'
-        actionLabel: string | null
-        actionUrl: string | null
-    }[]
-    widgets: Widget[]
-    charts: Chart[]
-    periods: Record<string, string>
-    filters: AppliedFilters
-    filterOptions: { routers: { value: number; label: string }[] }
-}>()
+        id: number;
+        title: string;
+        body: string | null;
+        severity: 'info' | 'success' | 'warning' | 'danger';
+        display: 'banner' | 'toast';
+        actionLabel: string | null;
+        actionUrl: string | null;
+    }[];
+    widgets: Widget[];
+    charts: Chart[];
+    periods: Record<string, string>;
+    filters: AppliedFilters;
+    filterOptions: { routers: { value: number; label: string }[] };
+}>();
 
 defineOptions({
     layout: { breadcrumbs: [{ title: 'Dashboard', href: '/dashboard' }] },
-})
+});
 
-const page = usePage()
+const page = usePage();
 
 /**
  * Read the resolved value from PAGE PROPS, not from the Deferred slot.
@@ -143,31 +143,32 @@ const STRIP_PLACEHOLDER: StatSegment[] = [
         value: '',
         caption: 'rolling window',
     },
-]
+];
 
 const strip = computed(
     () =>
-        ((page.props as Record<string, any>).strip as StatSegment[] | undefined) ??
-        STRIP_PLACEHOLDER,
-)
+        ((page.props as Record<string, any>).strip as
+            StatSegment[] | undefined) ?? STRIP_PLACEHOLDER,
+);
 
 function stat(key: string) {
     return (page.props as Record<string, any>)[`stat_${key}`] as
         | {
-              value: unknown
-              error: boolean
+              value: unknown;
+              error: boolean;
               trend: {
-                  direction: 'up' | 'down' | 'flat' | 'new'
-                  percentage: number | null
-              } | null
-              sparkline: { label: string; value: number }[] | null
+                  direction: 'up' | 'down' | 'flat' | 'new';
+                  percentage: number | null;
+              } | null;
+              sparkline: { label: string; value: number }[] | null;
           }
-        | undefined
+        | undefined;
 }
 
 function series(key: string): Series {
     return (
-        ((page.props as Record<string, any>)[`chart_${key}`] as Series | undefined) ?? {
+        ((page.props as Record<string, any>)[`chart_${key}`] as
+            Series | undefined) ?? {
             points: [],
             series: null,
             bars: null,
@@ -176,7 +177,7 @@ function series(key: string): Series {
             trend: null,
             error: false,
         }
-    )
+    );
 }
 
 /**
@@ -187,7 +188,9 @@ function series(key: string): Series {
  * parameter.
  */
 function setPeriod(key: string, value: string) {
-    const query = Object.fromEntries(new URLSearchParams(window.location.search))
+    const query = Object.fromEntries(
+        new URLSearchParams(window.location.search),
+    );
 
     router.get(
         window.location.pathname,
@@ -198,7 +201,7 @@ function setPeriod(key: string, value: string) {
             preserveScroll: true,
             replace: true,
         },
-    )
+    );
 }
 
 /**
@@ -210,8 +213,8 @@ function setPeriod(key: string, value: string) {
  * word instead of a bag of style booleans (§6.1).
  */
 function multiSeries(chart: Chart): Dataset[] | undefined {
-    const resolved = series(chart.key)
-    const stepped = chart.type === 'steppedLine'
+    const resolved = series(chart.key);
+    const stepped = chart.type === 'steppedLine';
 
     // A single-dataset stepped chart arrives as `points`, so it has to be
     // promoted to a series before the flag has anywhere to live. Without this
@@ -219,20 +222,34 @@ function multiSeries(chart: Chart): Dataset[] | undefined {
     // not happen - the worst kind of no-op.
     const datasets =
         resolved.series ??
-        (stepped && resolved.points.length ? [{ name: '', points: resolved.points }] : null)
+        (stepped && resolved.points.length
+            ? [{ name: '', points: resolved.points }]
+            : null);
 
-    if (!datasets) return undefined
+    if (!datasets) {
+        return undefined;
+    }
 
-    return stepped ? datasets.map((d) => ({ ...d, stepped: true, filled: false })) : datasets
+    return stepped
+        ? datasets.map((d) => ({ ...d, stepped: true, filled: false }))
+        : datasets;
 }
 
 /** Cards size to their content: a ranked list is tall, a proportion bar short. */
 function bodyHeight(chart: Chart): number {
-    if (chart.type === 'segments') return 64
-    if (chart.type === 'rankedBar') return 380
-    if (chart.type === 'heatmap') return 200
+    if (chart.type === 'segments') {
+        return 64;
+    }
 
-    return 220
+    if (chart.type === 'rankedBar') {
+        return 380;
+    }
+
+    if (chart.type === 'heatmap') {
+        return 200;
+    }
+
+    return 220;
 }
 
 /* ---------------------------------------------------------------------------
@@ -244,45 +261,60 @@ function bodyHeight(chart: Chart): number {
  * through before Back leaves the page.
  * ------------------------------------------------------------------------- */
 
-const filtersOpen = ref(false)
+const filtersOpen = ref(false);
 
-function applyFilters(next: { from: string | null; to: string | null; routers: number[] }) {
-    const query: Record<string, string> = {}
+function applyFilters(next: {
+    from: string | null;
+    to: string | null;
+    routers: number[];
+}) {
+    const query: Record<string, string> = {};
 
-    if (next.from) query.from = next.from
-    if (next.to) query.to = next.to
-    if (next.routers.length) query.routers = next.routers.join(',')
+    if (next.from) {
+        query.from = next.from;
+    }
 
-    filtersOpen.value = false
+    if (next.to) {
+        query.to = next.to;
+    }
+
+    if (next.routers.length) {
+        query.routers = next.routers.join(',');
+    }
+
+    filtersOpen.value = false;
 
     router.get(window.location.pathname, query, {
         preserveState: true,
         preserveScroll: true,
         replace: true,
-    })
+    });
 }
 
 function resetFilters() {
-    filtersOpen.value = false
+    filtersOpen.value = false;
     router.get(
         window.location.pathname,
         {},
         { preserveState: true, preserveScroll: true, replace: true },
-    )
+    );
 }
 
 const filterSummary = computed(() => {
-    const parts: string[] = []
+    const parts: string[] = [];
 
-    if (props.filters.label) parts.push(props.filters.label)
+    if (props.filters.label) {
+        parts.push(props.filters.label);
+    }
+
     if (props.filters.routers.length) {
         parts.push(
             `${props.filters.routers.length} router${props.filters.routers.length === 1 ? '' : 's'}`,
-        )
+        );
     }
 
-    return parts.join(' · ')
-})
+    return parts.join(' · ');
+});
 
 /**
  * A per-chart period selector is HIDDEN while a global range is applied.
@@ -293,7 +325,7 @@ const filterSummary = computed(() => {
  * interface implying otherwise.
  */
 function periodsFor(chart: Chart) {
-    return props.filters.from ? null : chart.periods
+    return props.filters.from ? null : chart.periods;
 }
 
 const comparison: Record<string, string> = {
@@ -302,13 +334,15 @@ const comparison: Record<string, string> = {
     '30d': 'vs previous 30 days',
     '90d': 'vs previous 90 days',
     '12m': 'vs previous 12 months',
-}
+};
 </script>
 
 <template>
     <Head title="Dashboard" />
 
-    <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-3 sm:p-4">
+    <div
+        class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-3 sm:p-4"
+    >
         <!--
             ABOVE EVERYTHING, because a notice below the fold is a notice nobody
             read - which is exactly what the dedicated Announcements page turned
@@ -318,8 +352,13 @@ const comparison: Record<string, string> = {
 
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="min-w-0">
-                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Dashboard</h1>
-                <p v-if="filterSummary" class="truncate text-xs text-muted-foreground">
+                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
+                    Dashboard
+                </h1>
+                <p
+                    v-if="filterSummary"
+                    class="truncate text-xs text-muted-foreground"
+                >
                     {{ filterSummary }}
                 </p>
             </div>
@@ -394,24 +433,33 @@ const comparison: Record<string, string> = {
         </PkBoundary>
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <PkBoundary v-for="widget in widgets" :key="widget.key" :label="widget.label" fill>
-            <Deferred :data="`stat_${widget.key}`">
-                <template #fallback>
-                    <StatCard :label="widget.label" :description="widget.description" loading />
-                </template>
+            <PkBoundary
+                v-for="widget in widgets"
+                :key="widget.key"
+                :label="widget.label"
+                fill
+            >
+                <Deferred :data="`stat_${widget.key}`">
+                    <template #fallback>
+                        <StatCard
+                            :label="widget.label"
+                            :description="widget.description"
+                            loading
+                        />
+                    </template>
 
-                <template #default>
-                    <StatCard
-                        :label="widget.label"
-                        :description="widget.description"
-                        :value="stat(widget.key)?.value"
-                        :trend="stat(widget.key)?.trend"
-                        :sparkline="stat(widget.key)?.sparkline"
-                        :error="stat(widget.key)?.error"
-                        comparison="vs previous 30 days"
-                    />
-                </template>
-            </Deferred>
+                    <template #default>
+                        <StatCard
+                            :label="widget.label"
+                            :description="widget.description"
+                            :value="stat(widget.key)?.value"
+                            :trend="stat(widget.key)?.trend"
+                            :sparkline="stat(widget.key)?.sparkline"
+                            :error="stat(widget.key)?.error"
+                            comparison="vs previous 30 days"
+                        />
+                    </template>
+                </Deferred>
             </PkBoundary>
         </div>
 
@@ -445,13 +493,19 @@ const comparison: Record<string, string> = {
                             :period="periods[chart.key]"
                             :error="series(chart.key).error"
                             :body-height="bodyHeight(chart)"
-                            @update:period="(value: string) => setPeriod(chart.key, value)"
+                            @update:period="
+                                (value: string) => setPeriod(chart.key, value)
+                            "
                         >
                             <template v-if="series(chart.key).trend" #trend>
                                 <TrendBadge
                                     class="mt-1"
-                                    :direction="series(chart.key).trend!.direction"
-                                    :percentage="series(chart.key).trend!.percentage"
+                                    :direction="
+                                        series(chart.key).trend!.direction
+                                    "
+                                    :percentage="
+                                        series(chart.key).trend!.percentage
+                                    "
                                     :comparison="comparison[periods[chart.key]]"
                                 />
                             </template>
@@ -469,9 +523,14 @@ const comparison: Record<string, string> = {
                                 :height="10"
                             />
                             <PieChart
-                                v-else-if="chart.type === 'pie' || chart.type === 'doughnut'"
+                                v-else-if="
+                                    chart.type === 'pie' ||
+                                    chart.type === 'doughnut'
+                                "
                                 :data="series(chart.key).points"
-                                :type="chart.type === 'pie' ? 'pie' : 'doughnut'"
+                                :type="
+                                    chart.type === 'pie' ? 'pie' : 'doughnut'
+                                "
                             />
                             <PolarAreaChart
                                 v-else-if="chart.type === 'polarArea'"
@@ -499,11 +558,14 @@ const comparison: Record<string, string> = {
                                     chart.type === 'rankedBar'
                                 "
                                 :data="
-                                    series(chart.key).series ? undefined : series(chart.key).points
+                                    series(chart.key).series
+                                        ? undefined
+                                        : series(chart.key).points
                                 "
                                 :series="series(chart.key).series ?? undefined"
                                 :orientation="
-                                    chart.type === 'horizontalBar' || chart.type === 'rankedBar'
+                                    chart.type === 'horizontalBar' ||
+                                    chart.type === 'rankedBar'
                                         ? 'horizontal'
                                         : 'vertical'
                                 "
@@ -515,7 +577,11 @@ const comparison: Record<string, string> = {
                             />
                             <LineChart
                                 v-else
-                                :data="multiSeries(chart) ? undefined : series(chart.key).points"
+                                :data="
+                                    multiSeries(chart)
+                                        ? undefined
+                                        : series(chart.key).points
+                                "
                                 :series="multiSeries(chart)"
                                 :type="chart.type === 'area' ? 'area' : 'line'"
                                 show-legend

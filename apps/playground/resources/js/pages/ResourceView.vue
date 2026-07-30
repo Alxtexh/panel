@@ -11,9 +11,9 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import ResourceView from '@panelkit/inertia/pages/ResourceView.vue'
+import ResourceView from '@panelkit/inertia/pages/ResourceView.vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>
@@ -24,5 +24,5 @@ defineOptions({ inheritAttrs: false })
         either way: these values arrive from the server as JSON and are
         typed where they are USED, inside the packaged component.
     -->
-    <ResourceView v-bind="($attrs as any)" />
+    <ResourceView v-bind="$attrs as any" />
 </template>

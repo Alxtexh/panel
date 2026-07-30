@@ -15,8 +15,7 @@
  * SELECTION AND FOLDER LIVE IN THE URL, so a view survives a refresh and the
  * back button does what it looks like it does.
  */
-import { Head, Link, router } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { Head, Link, router } from '@inertiajs/vue3';
 import {
     Archive,
     FileText,
@@ -31,53 +30,54 @@ import {
     Trash2,
     TriangleAlert,
     Users,
-} from '@lucide/vue'
+} from '@lucide/vue';
+import { computed, ref } from 'vue';
 
 interface Folder {
-    key: string
-    label: string
-    unread: number
-    total: number
+    key: string;
+    label: string;
+    unread: number;
+    total: number;
 }
 
 interface Category {
-    key: string
-    label: string
-    total: number
+    key: string;
+    label: string;
+    total: number;
 }
 
 interface Row {
-    id: number
-    from: string
-    email: string
-    subject: string
-    preview: string
-    category: string | null
-    read: boolean
-    starred: boolean
-    important: boolean
-    attachment: boolean
-    count: number
-    at: string | null
+    id: number;
+    from: string;
+    email: string;
+    subject: string;
+    preview: string;
+    category: string | null;
+    read: boolean;
+    starred: boolean;
+    important: boolean;
+    attachment: boolean;
+    count: number;
+    at: string | null;
 }
 
 const props = defineProps<{
-    folder: string
-    category: string | null
-    search: string
-    folders: Folder[]
-    categories: Category[]
-    messages: { rows: Row[]; total: number }
-}>()
+    folder: string;
+    category: string | null;
+    search: string;
+    folders: Folder[];
+    categories: Category[];
+    messages: { rows: Row[]; total: number };
+}>();
 
 defineOptions({
     layout: { breadcrumbs: [{ title: 'Mail', href: '/apps/mail' }] },
-})
+});
 
-const rows = computed(() => props.messages.rows)
+const rows = computed(() => props.messages.rows);
 
-const query = ref(props.search)
-const selected = ref<Set<number>>(new Set())
+const query = ref(props.search);
+const selected = ref<Set<number>>(new Set());
 
 const ICONS: Record<string, typeof Inbox> = {
     inbox: Inbox,
@@ -87,7 +87,7 @@ const ICONS: Record<string, typeof Inbox> = {
     archived: Archive,
     spam: TriangleAlert,
     trash: Trash2,
-}
+};
 
 const CATEGORY_ICONS: Record<string, typeof Users> = {
     Security: TriangleAlert,
@@ -97,7 +97,7 @@ const CATEGORY_ICONS: Record<string, typeof Users> = {
     Update: RefreshCw,
     System: RefreshCw,
     HR: Users,
-}
+};
 
 /**
  * A label needs to be distinguishable at a glance, not merely present. The map
@@ -113,11 +113,11 @@ const CATEGORY_TONE: Record<string, string> = {
     Update: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     System: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
     HR: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
-}
+};
 
 const allSelected = computed(
     () => rows.value.length > 0 && selected.value.size === rows.value.length,
-)
+);
 
 function initials(name: string): string {
     return name
@@ -125,40 +125,44 @@ function initials(name: string): string {
         .filter(Boolean)
         .slice(0, 2)
         .map((part) => part[0]!.toUpperCase())
-        .join('')
+        .join('');
 }
 
 /** Navigation is a visit, so back/forward work and a view is linkable. */
 function go(params: Record<string, string | number | undefined>) {
-    const current = Object.fromEntries(new URLSearchParams(window.location.search))
+    const current = Object.fromEntries(
+        new URLSearchParams(window.location.search),
+    );
 
-    const next: Record<string, string> = {}
+    const next: Record<string, string> = {};
 
     for (const [key, value] of Object.entries({ ...current, ...params })) {
-        if (value !== undefined && value !== '' && value !== null) next[key] = String(value)
+        if (value !== undefined && value !== '' && value !== null) {
+            next[key] = String(value);
+        }
     }
 
-    selected.value = new Set()
+    selected.value = new Set();
 
     router.get('/apps/mail', next, {
         preserveState: true,
         preserveScroll: true,
         replace: true,
-    })
+    });
 }
 
 function openFolder(key: string) {
     // A category narrows a folder, so switching folder clears it rather than
     // silently carrying a filter into a view that may have nothing under it.
-    go({ folder: key, category: undefined })
+    go({ folder: key, category: undefined });
 }
 
 function openCategory(key: string) {
-    go({ category: props.category === key ? undefined : key })
+    go({ category: props.category === key ? undefined : key });
 }
 
 function submitSearch() {
-    go({ q: query.value || undefined })
+    go({ q: query.value || undefined });
 }
 
 /**
@@ -174,30 +178,39 @@ function submitSearch() {
  * top of the links, and it steps aside when the click was already on one.
  */
 function openRow(event: MouseEvent, row: Row) {
-    const target = event.target as HTMLElement | null
+    const target = event.target as HTMLElement | null;
 
     // A click that landed on a link, the checkbox, or the star has already been
     // handled by the thing it landed on.
-    if (target?.closest('a, button, input')) return
+    if (target?.closest('a, button, input')) {
+        return;
+    }
 
-    router.visit(`/apps/mail/${row.id}`)
+    router.visit(`/apps/mail/${row.id}`);
 }
 
 function toggleAll() {
-    selected.value = allSelected.value ? new Set() : new Set(rows.value.map((r) => r.id))
+    selected.value = allSelected.value
+        ? new Set()
+        : new Set(rows.value.map((r) => r.id));
 }
 
 function toggle(id: number) {
-    const next = new Set(selected.value)
+    const next = new Set(selected.value);
 
-    next.has(id) ? next.delete(id) : next.add(id)
-    selected.value = next
+    if (next.has(id)) {
+        next.delete(id);
+    } else {
+        next.add(id);
+    }
+
+    selected.value = next;
 }
 
 function csrf(): string {
-    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
 
-    return match ? decodeURIComponent(match[1]) : ''
+    return match ? decodeURIComponent(match[1]) : '';
 }
 
 /**
@@ -207,11 +220,16 @@ function csrf(): string {
  * request is what makes it true, the local flip is what makes it feel true.
  */
 async function act(id: number, action: string, folder?: string) {
-    const row = rows.value.find((r) => r.id === id)
+    const row = rows.value.find((r) => r.id === id);
 
     if (row) {
-        if (action === 'star') row.starred = true
-        if (action === 'unstar') row.starred = false
+        if (action === 'star') {
+            row.starred = true;
+        }
+
+        if (action === 'unstar') {
+            row.starred = false;
+        }
     }
 
     await fetch(`/apps/mail/${id}`, {
@@ -224,25 +242,32 @@ async function act(id: number, action: string, folder?: string) {
         },
         credentials: 'same-origin',
         body: JSON.stringify({ action, folder }),
-    })
+    });
 
     // A move changes which folder the row belongs to, so the list and the
     // counts both have to catch up; a star only changes a count.
-    if (action === 'move') go({})
-    else router.reload({ only: ['folders', 'categories'] })
+    if (action === 'move') {
+        go({});
+    } else {
+        router.reload({ only: ['folders', 'categories'] });
+    }
 }
 
 async function moveSelected(folder: string) {
-    await Promise.all([...selected.value].map((id) => act(id, 'move', folder)))
+    await Promise.all([...selected.value].map((id) => act(id, 'move', folder)));
 }
 </script>
 
 <template>
     <Head title="Mail" />
 
-    <div class="flex h-full min-h-0 w-full overflow-hidden rounded-xl border bg-card">
+    <div
+        class="flex h-full min-h-0 w-full overflow-hidden rounded-xl border bg-card"
+    >
         <!-- The rail. Hidden on mobile, where the list is the whole screen. -->
-        <aside class="hidden w-56 shrink-0 flex-col gap-1 overflow-y-auto border-r p-4 md:flex">
+        <aside
+            class="hidden w-56 shrink-0 flex-col gap-1 overflow-y-auto border-r p-4 md:flex"
+        >
             <h2 class="mb-3 px-2 text-base font-semibold">Mails</h2>
 
             <p
@@ -263,12 +288,21 @@ async function moveSelected(folder: string) {
                 "
                 @click="openFolder(f.key)"
             >
-                <component :is="ICONS[f.key] ?? Inbox" class="size-4 shrink-0" />
-                <span class="min-w-0 flex-1 truncate text-left">{{ f.label }}</span>
+                <component
+                    :is="ICONS[f.key] ?? Inbox"
+                    class="size-4 shrink-0"
+                />
+                <span class="min-w-0 flex-1 truncate text-left">{{
+                    f.label
+                }}</span>
                 <span
                     v-if="f.unread > 0"
                     class="rounded-full px-1.5 text-[10px] font-semibold"
-                    :class="folder === f.key ? 'bg-primary-foreground/20' : 'bg-accent'"
+                    :class="
+                        folder === f.key
+                            ? 'bg-primary-foreground/20'
+                            : 'bg-accent'
+                    "
                 >
                     {{ f.unread }}
                 </span>
@@ -295,11 +329,17 @@ async function moveSelected(folder: string) {
                     "
                     @click="openCategory(c.key)"
                 >
-                    <component :is="CATEGORY_ICONS[c.key] ?? Tag" class="size-4 shrink-0" />
-                    <span class="min-w-0 flex-1 truncate text-left">{{ c.label }}</span>
-                    <span class="text-[10px] font-semibold text-muted-foreground">{{
-                        c.total
+                    <component
+                        :is="CATEGORY_ICONS[c.key] ?? Tag"
+                        class="size-4 shrink-0"
+                    />
+                    <span class="min-w-0 flex-1 truncate text-left">{{
+                        c.label
                     }}</span>
+                    <span
+                        class="text-[10px] font-semibold text-muted-foreground"
+                        >{{ c.total }}</span
+                    >
                 </button>
             </template>
         </aside>
@@ -338,7 +378,9 @@ async function moveSelected(folder: string) {
                 v-if="selected.size"
                 class="flex items-center gap-2 border-y bg-accent/40 px-4 py-2 text-sm"
             >
-                <span class="text-muted-foreground">{{ selected.size }} selected</span>
+                <span class="text-muted-foreground"
+                    >{{ selected.size }} selected</span
+                >
                 <span class="flex-1"></span>
                 <button
                     type="button"
@@ -363,7 +405,10 @@ async function moveSelected(folder: string) {
                 </button>
             </div>
 
-            <div v-if="rows.length === 0" class="p-12 text-center text-sm text-muted-foreground">
+            <div
+                v-if="rows.length === 0"
+                class="p-12 text-center text-sm text-muted-foreground"
+            >
                 Nothing in {{ category ?? folder }}.
             </div>
 
@@ -380,9 +425,15 @@ async function moveSelected(folder: string) {
                                     @change="toggleAll"
                                 />
                             </th>
-                            <th class="w-44 py-2.5 pl-3 text-left font-medium">From</th>
-                            <th class="w-20 py-2.5 text-left font-medium">Time</th>
-                            <th class="py-2.5 pl-3 text-left font-medium">Message</th>
+                            <th class="w-44 py-2.5 pl-3 text-left font-medium">
+                                From
+                            </th>
+                            <th class="w-20 py-2.5 text-left font-medium">
+                                Time
+                            </th>
+                            <th class="py-2.5 pl-3 text-left font-medium">
+                                Message
+                            </th>
                         </tr>
                     </thead>
 
@@ -424,15 +475,26 @@ async function moveSelected(folder: string) {
                                         <Link
                                             :href="`/apps/mail/${row.id}`"
                                             class="block truncate hover:underline"
-                                            :class="row.read ? '' : 'font-semibold'"
+                                            :class="
+                                                row.read ? '' : 'font-semibold'
+                                            "
                                         >
                                             {{ row.from }}
                                         </Link>
                                         <button
                                             type="button"
                                             class="mt-0.5 flex items-center gap-1"
-                                            :aria-label="row.starred ? 'Unstar' : 'Star'"
-                                            @click="act(row.id, row.starred ? 'unstar' : 'star')"
+                                            :aria-label="
+                                                row.starred ? 'Unstar' : 'Star'
+                                            "
+                                            @click="
+                                                act(
+                                                    row.id,
+                                                    row.starred
+                                                        ? 'unstar'
+                                                        : 'star',
+                                                )
+                                            "
                                         >
                                             <Star
                                                 class="size-3.5"
@@ -465,9 +527,12 @@ async function moveSelected(folder: string) {
                                         :href="`/apps/mail/${row.id}`"
                                         class="min-w-0 flex-1 truncate"
                                     >
-                                        <span :class="row.read ? '' : 'font-semibold'">{{
-                                            row.subject
-                                        }}</span>
+                                        <span
+                                            :class="
+                                                row.read ? '' : 'font-semibold'
+                                            "
+                                            >{{ row.subject }}</span
+                                        >
                                         <span class="text-muted-foreground">
                                             <Paperclip
                                                 v-if="row.attachment"

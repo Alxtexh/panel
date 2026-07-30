@@ -36,11 +36,15 @@ export function useTranslations() {
      * translator sees one syntax rather than two.
      */
     function t(key: string, replace: Record<string, string | number> = {}): string {
-        const found = key.split('.').reduce<unknown>(
-            (carry, part) =>
-                carry && typeof carry === 'object' ? (carry as Record<string, unknown>)[part] : undefined,
-            messages.value,
-        )
+        const found = key
+            .split('.')
+            .reduce<unknown>(
+                (carry, part) =>
+                    carry && typeof carry === 'object'
+                        ? (carry as Record<string, unknown>)[part]
+                        : undefined,
+                messages.value,
+            )
 
         if (typeof found !== 'string') {
             return key

@@ -52,7 +52,7 @@ final class MeterPerTenant
 
                 throw new RuntimeException(
                     'This organisation has reached its assistant limit for now. '
-                    ."Try again in about ".ceil($seconds / 60).' minutes.'
+                    .'Try again in about '.ceil($seconds / 60).' minutes.'
                 );
             }
 

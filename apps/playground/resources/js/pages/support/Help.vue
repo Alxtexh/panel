@@ -26,8 +26,7 @@
  * somebody one thing on screen and something else in chat. They now come from
  * `App\Support\HelpArticles` as a prop.
  */
-import { Head, Link } from '@inertiajs/vue3'
-import { computed, onMounted, ref } from 'vue'
+import { Head, Link } from '@inertiajs/vue3';
 import {
     BookOpen,
     Download,
@@ -38,16 +37,17 @@ import {
     Sparkles,
     Users,
     X,
-} from '@lucide/vue'
+} from '@lucide/vue';
+import { computed, onMounted, ref } from 'vue';
 
-defineOptions({ layout: { breadcrumbs: [{ title: 'Help', href: '/help' }] } })
+defineOptions({ layout: { breadcrumbs: [{ title: 'Help', href: '/help' }] } });
 
 interface Article {
-    id: string
-    category: string
-    title: string
-    keywords: string
-    body: string[]
+    id: string;
+    category: string;
+    title: string;
+    keywords: string;
+    body: string[];
 }
 
 const categories = [
@@ -55,43 +55,48 @@ const categories = [
     { key: 'subscribers', label: 'Subscribers', icon: Users },
     { key: 'data', label: 'Data & exports', icon: Download },
     { key: 'panel', label: 'The panel', icon: Settings2 },
-]
+];
 
-const props = defineProps<{ articles: Article[] }>()
+const props = defineProps<{ articles: Article[] }>();
 
-const query = ref('')
-const category = ref<string | null>(null)
-const open = ref<string | null>(null)
+const query = ref('');
+const category = ref<string | null>(null);
+const open = ref<string | null>(null);
 
 const results = computed(() => {
-    const q = query.value.trim().toLowerCase()
+    const q = query.value.trim().toLowerCase();
 
     return props.articles.filter((a) => {
-        if (category.value && a.category !== category.value) return false
-        if (!q) return true
+        if (category.value && a.category !== category.value) {
+            return false;
+        }
 
-        return `${a.title} ${a.keywords} ${a.body.join(' ')}`.toLowerCase().includes(q)
-    })
-})
+        if (!q) {
+            return true;
+        }
+
+        return `${a.title} ${a.keywords} ${a.body.join(' ')}`
+            .toLowerCase()
+            .includes(q);
+    });
+});
 
 const grouped = computed(() =>
     categories
-        .map((c) => ({ ...c, items: results.value.filter((a) => a.category === c.key) }))
+        .map((c) => ({
+            ...c,
+            items: results.value.filter((a) => a.category === c.key),
+        }))
         .filter((c) => c.items.length > 0),
-)
+);
 
 function toggle(id: string) {
-    open.value = open.value === id ? null : id
-}
-
-/** Searching for a term should reveal the answer, not just the heading. */
-function pick(id: string) {
-    open.value = id
+    open.value = open.value === id ? null : id;
 }
 
 function clearAll() {
-    query.value = ''
-    category.value = null
+    query.value = '';
+    category.value = null;
 }
 
 /**
@@ -103,12 +108,12 @@ function clearAll() {
  * time this runs; all it does is expand it.
  */
 onMounted(() => {
-    const id = window.location.hash.replace('#', '')
+    const id = window.location.hash.replace('#', '');
 
     if (id && props.articles.some((a) => a.id === id)) {
-        open.value = id
+        open.value = id;
     }
-})
+});
 </script>
 
 <template>
@@ -116,21 +121,25 @@ onMounted(() => {
 
     <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-6">
         <header class="flex flex-col items-center gap-4 py-4 text-center">
-            <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">How can we help?</h1>
+            <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
+                How can we help?
+            </h1>
 
             <div class="relative w-full max-w-lg">
-                <Search class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Search
+                    class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                />
                 <input
                     v-model="query"
                     type="search"
-                    class="bg-background focus:ring-ring w-full rounded-full border py-2.5 pr-10 pl-9 text-sm focus:ring-2 focus:outline-none"
+                    class="w-full rounded-full border bg-background py-2.5 pr-10 pl-9 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
                     placeholder="Search help - try “export”, “bulk” or “theme”"
                     aria-label="Search help"
                 />
                 <button
                     v-if="query"
                     type="button"
-                    class="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
+                    class="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     aria-label="Clear search"
                     @click="query = ''"
                 >
@@ -142,7 +151,11 @@ onMounted(() => {
                 <button
                     type="button"
                     class="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-                    :class="category === null ? 'bg-primary text-primary-foreground border-transparent' : 'bg-background hover:bg-accent'"
+                    :class="
+                        category === null
+                            ? 'border-transparent bg-primary text-primary-foreground'
+                            : 'bg-background hover:bg-accent'
+                    "
                     @click="category = null"
                 >
                     All
@@ -152,7 +165,11 @@ onMounted(() => {
                     :key="c.key"
                     type="button"
                     class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-                    :class="category === c.key ? 'bg-primary text-primary-foreground border-transparent' : 'bg-background hover:bg-accent'"
+                    :class="
+                        category === c.key
+                            ? 'border-transparent bg-primary text-primary-foreground'
+                            : 'bg-background hover:bg-accent'
+                    "
                     @click="category = category === c.key ? null : c.key"
                 >
                     <component :is="c.icon" class="size-3.5" />
@@ -162,27 +179,36 @@ onMounted(() => {
         </header>
 
         <!-- An empty result is a dead end unless it offers a way out. -->
-        <div v-if="results.length === 0" class="bg-card flex flex-col items-center gap-3 rounded-lg border p-8 text-center">
+        <div
+            v-if="results.length === 0"
+            class="flex flex-col items-center gap-3 rounded-lg border bg-card p-8 text-center"
+        >
             <p class="text-sm font-medium">Nothing matched “{{ query }}”</p>
-            <p class="text-muted-foreground text-sm">
+            <p class="text-sm text-muted-foreground">
                 Try a shorter word, or browse everything.
             </p>
             <button
                 type="button"
-                class="bg-background hover:bg-accent rounded-md border px-3 py-1.5 text-sm font-medium"
+                class="rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
                 @click="clearAll"
             >
                 Show all articles
             </button>
         </div>
 
-        <section v-for="group in grouped" :key="group.key" class="flex flex-col gap-2">
-            <h2 class="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
+        <section
+            v-for="group in grouped"
+            :key="group.key"
+            class="flex flex-col gap-2"
+        >
+            <h2
+                class="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+            >
                 <component :is="group.icon" class="size-3.5" />
                 {{ group.label }}
             </h2>
 
-            <div class="bg-card divide-y overflow-hidden rounded-lg border">
+            <div class="divide-y overflow-hidden rounded-lg border bg-card">
                 <!--
                     THE ID IS WHAT MAKES A CITATION LAND. The assistant links to
                     /help#exporting; without an anchor here that link opens the
@@ -190,18 +216,22 @@ onMounted(() => {
                     paragraph, which is most of the difference between citing an
                     answer and gesturing at one.
                 -->
-                <article v-for="item in group.items" :id="item.id" :key="item.id">
+                <article
+                    v-for="item in group.items"
+                    :id="item.id"
+                    :key="item.id"
+                >
                     <h3>
                         <button
                             type="button"
-                            class="hover:bg-accent/50 flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-colors"
+                            class="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-accent/50"
                             :aria-expanded="open === item.id"
                             @click="toggle(item.id)"
                         >
                             {{ item.title }}
                             <svg
                                 viewBox="0 0 24 24"
-                                class="text-muted-foreground size-4 shrink-0 transition-transform"
+                                class="size-4 shrink-0 text-muted-foreground transition-transform"
                                 :class="open === item.id ? 'rotate-180' : ''"
                                 fill="none"
                                 stroke="currentColor"
@@ -212,35 +242,50 @@ onMounted(() => {
                         </button>
                     </h3>
 
-                    <div v-if="open === item.id" class="flex flex-col gap-2 px-4 pb-4">
-                        <p v-for="(p, i) in item.body" :key="i" class="text-muted-foreground text-sm">{{ p }}</p>
+                    <div
+                        v-if="open === item.id"
+                        class="flex flex-col gap-2 px-4 pb-4"
+                    >
+                        <p
+                            v-for="(p, i) in item.body"
+                            :key="i"
+                            class="text-sm text-muted-foreground"
+                        >
+                            {{ p }}
+                        </p>
                     </div>
                 </article>
             </div>
         </section>
 
-        <section class="bg-card flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4">
+        <section
+            class="flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-card p-4"
+        >
             <div class="flex items-start gap-3">
-                <span class="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
+                <span
+                    class="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"
+                >
                     <LifeBuoy class="size-4" />
                 </span>
                 <div>
                     <h2 class="text-sm font-semibold">Still stuck?</h2>
-                    <p class="text-muted-foreground text-sm">The FAQ covers the questions people ask most often.</p>
+                    <p class="text-sm text-muted-foreground">
+                        The FAQ covers the questions people ask most often.
+                    </p>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
                 <Link
                     href="/faq"
-                    class="bg-background hover:bg-accent inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium"
+                    class="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
                 >
                     <BookOpen class="size-4" />
                     Read the FAQ
                 </Link>
                 <Link
                     href="/whats-new"
-                    class="bg-background hover:bg-accent inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium"
+                    class="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
                 >
                     <Sparkles class="size-4" />
                     What's new

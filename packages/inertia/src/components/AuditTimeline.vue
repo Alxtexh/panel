@@ -162,7 +162,10 @@ function when(iso: string): string {
                     <!-- The rail, drawn once per row rather than as a border on
                          the list, so the last entry's line stops at its dot. -->
                     <div class="flex flex-col items-center">
-                        <span class="bg-primary mt-1.5 size-2 shrink-0 rounded-full" aria-hidden="true" />
+                        <span
+                            class="bg-primary mt-1.5 size-2 shrink-0 rounded-full"
+                            aria-hidden="true"
+                        />
                         <span class="bg-border w-px grow" aria-hidden="true" />
                     </div>
 
@@ -187,7 +190,9 @@ function when(iso: string): string {
                                     {{ change.field }}:
                                 </dt>
                                 <dd class="inline">
-                                    <span class="text-muted-foreground line-through">{{ change.from }}</span>
+                                    <span class="text-muted-foreground line-through">{{
+                                        change.from
+                                    }}</span>
                                     <span aria-hidden="true"> → </span>
                                     <span class="font-medium">{{ change.to }}</span>
                                 </dd>

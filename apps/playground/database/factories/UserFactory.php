@@ -4,12 +4,12 @@ namespace Database\Factories;
 
 use App\Models\Role;
 use App\Models\User;
-use PanelKit\Panel\Support\Abilities;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * @extends Factory<User>
@@ -84,7 +84,7 @@ class UserFactory extends Factory
              * the wrong reason, or fails confusingly. Writing the pivot directly
              * does not depend on ambient state.
              */
-            \Illuminate\Support\Facades\DB::table('model_has_roles')
+            DB::table('model_has_roles')
                 ->where('model_type', User::class)
                 ->where('model_id', $user->getKey())
                 ->delete();
@@ -119,7 +119,7 @@ class UserFactory extends Factory
 
                 $role->syncPermissions($abilities);
 
-                \Illuminate\Support\Facades\DB::table('model_has_roles')
+                DB::table('model_has_roles')
                     ->where('model_type', User::class)
                     ->where('model_id', $user->getKey())
                     ->delete();
@@ -174,7 +174,7 @@ class UserFactory extends Factory
      */
     private function attach(User $user, Role $role): void
     {
-        \Illuminate\Support\Facades\DB::table('model_has_roles')->updateOrInsert([
+        DB::table('model_has_roles')->updateOrInsert([
             'role_id' => $role->getKey(),
             'model_type' => User::class,
             'model_id' => $user->getKey(),

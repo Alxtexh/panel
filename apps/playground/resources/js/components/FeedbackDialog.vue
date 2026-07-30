@@ -17,6 +17,10 @@
  * this component: a feature request carrying a severity sorts above real bugs in
  * any triage list ordered by it.
  */
+import { useForm } from '@inertiajs/vue3';
+import { Bug, Lightbulb } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -24,17 +28,15 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useForm } from '@inertiajs/vue3'
-import { Bug, Lightbulb } from '@lucide/vue'
-import { computed, ref, watch } from 'vue'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>('open', { required: true });
 
-const props = withDefaults(defineProps<{ kind?: 'feature' | 'bug' }>(), { kind: 'feature' })
+const props = withDefaults(defineProps<{ kind?: 'feature' | 'bug' }>(), {
+    kind: 'feature',
+});
 
 const form = useForm({
     kind: props.kind as 'feature' | 'bug',
@@ -43,9 +45,9 @@ const form = useForm({
     body: '',
     page_url: '',
     viewport: '',
-})
+});
 
-const isBug = computed(() => form.kind === 'bug')
+const isBug = computed(() => form.kind === 'bug');
 
 /**
  * Read afresh on every open, not once on mount.
@@ -57,39 +59,39 @@ const isBug = computed(() => form.kind === 'bug')
  */
 watch(open, (isOpen) => {
     if (!isOpen) {
-        return
+        return;
     }
 
-    form.clearErrors()
-    form.kind = props.kind
-    form.page_url = window.location.href
-    form.viewport = `${window.innerWidth}x${window.innerHeight}`
-})
+    form.clearErrors();
+    form.kind = props.kind;
+    form.page_url = window.location.href;
+    form.viewport = `${window.innerWidth}x${window.innerHeight}`;
+});
 
 // Severity is meaningless on a feature request, and the server rejects it there.
 watch(isBug, (bug) => {
-    form.severity = bug ? 'medium' : null
-})
+    form.severity = bug ? 'medium' : null;
+});
 
 const SEVERITIES = [
     { value: 'low', label: 'Minor' },
     { value: 'medium', label: 'Normal' },
     { value: 'high', label: 'Blocking' },
-]
+];
 
-const bodyRef = ref<HTMLTextAreaElement | null>(null)
+const bodyRef = ref<HTMLTextAreaElement | null>(null);
 
 function submit(): void {
     form.post('/feedback', {
         preserveScroll: true,
         onSuccess: () => {
-            form.reset('subject', 'body')
-            open.value = false
+            form.reset('subject', 'body');
+            open.value = false;
         },
         // Errors stay on screen with the dialog open - closing it on a
         // validation failure would discard what the person just typed.
         onError: () => bodyRef.value?.focus(),
-    })
+    });
 }
 </script>
 
@@ -109,7 +111,11 @@ function submit(): void {
                 <div class="grid grid-cols-2 gap-2">
                     <button
                         v-for="option in [
-                            { value: 'feature', label: 'Feature request', icon: Lightbulb },
+                            {
+                                value: 'feature',
+                                label: 'Feature request',
+                                icon: Lightbulb,
+                            },
                             { value: 'bug', label: 'Bug report', icon: Bug },
                         ]"
                         :key="option.value"
@@ -117,7 +123,7 @@ function submit(): void {
                         class="flex items-center justify-center gap-2 rounded-md border p-3 text-sm transition-colors"
                         :class="
                             form.kind === option.value
-                                ? 'border-primary bg-primary/5 text-foreground font-medium'
+                                ? 'border-primary bg-primary/5 font-medium text-foreground'
                                 : 'text-muted-foreground hover:bg-accent'
                         "
                         :aria-pressed="form.kind === option.value"
@@ -135,10 +141,15 @@ function submit(): void {
                         v-model="form.subject"
                         maxlength="150"
                         :placeholder="
-                            isBug ? 'The export button does nothing' : 'Let me pin a column'
+                            isBug
+                                ? 'The export button does nothing'
+                                : 'Let me pin a column'
                         "
                     />
-                    <p v-if="form.errors.subject" class="text-destructive text-xs">
+                    <p
+                        v-if="form.errors.subject"
+                        class="text-xs text-destructive"
+                    >
                         {{ form.errors.subject }}
                     </p>
                 </div>
@@ -164,21 +175,23 @@ function submit(): void {
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                    <Label for="fb-body">{{ isBug ? 'What happened?' : 'What would it do?' }}</Label>
+                    <Label for="fb-body">{{
+                        isBug ? 'What happened?' : 'What would it do?'
+                    }}</Label>
                     <textarea
                         id="fb-body"
                         ref="bodyRef"
                         v-model="form.body"
                         rows="5"
                         maxlength="5000"
-                        class="border-input bg-background focus-visible:ring-ring min-h-24 rounded-md border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
+                        class="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                         :placeholder="
                             isBug
                                 ? 'What you did, what you expected, and what happened instead.'
                                 : 'What you are trying to do, and why the current way does not work.'
                         "
                     />
-                    <p v-if="form.errors.body" class="text-destructive text-xs">
+                    <p v-if="form.errors.body" class="text-xs text-destructive">
                         {{ form.errors.body }}
                     </p>
                 </div>
@@ -188,14 +201,20 @@ function submit(): void {
                     search term or a record id, so the person filing gets to see
                     what travels with their report.
                 -->
-                <div class="bg-muted/40 text-muted-foreground rounded-md p-3 text-xs">
-                    <p class="text-foreground mb-1 font-medium">Sent with this report</p>
+                <div
+                    class="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground"
+                >
+                    <p class="mb-1 font-medium text-foreground">
+                        Sent with this report
+                    </p>
                     <p class="truncate">{{ form.page_url || '-' }}</p>
                     <p>{{ form.viewport }} · your browser and version</p>
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="ghost" @click="open = false">Cancel</Button>
+                    <Button type="button" variant="ghost" @click="open = false"
+                        >Cancel</Button
+                    >
                     <Button type="submit" :disabled="form.processing">
                         {{ form.processing ? 'Sending…' : 'Send' }}
                     </Button>

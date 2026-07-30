@@ -17,66 +17,71 @@
  * different tomorrow, and a shared link would show the recipient a different
  * window than the sender saw.
  */
-import { PkMultiSelect, PkSlideover } from '@panelkit/ui'
-import { computed, ref, watch } from 'vue'
+import { PkMultiSelect, PkSlideover } from '@panelkit/ui';
+import { computed, ref, watch } from 'vue';
 
 interface Option {
-    value: number
-    label: string
+    value: number;
+    label: string;
 }
 
 const props = defineProps<{
-    open: boolean
+    open: boolean;
     /** Currently applied, from the URL. */
-    from: string | null
-    to: string | null
-    routers: number[]
-    routerOptions: Option[]
-}>()
+    from: string | null;
+    to: string | null;
+    routers: number[];
+    routerOptions: Option[];
+}>();
 
 const emit = defineEmits<{
-    (e: 'close'): void
-    (e: 'apply', filters: { from: string | null; to: string | null; routers: number[] }): void
-    (e: 'reset'): void
-}>()
+    (e: 'close'): void;
+    (
+        e: 'apply',
+        filters: { from: string | null; to: string | null; routers: number[] },
+    ): void;
+    (e: 'reset'): void;
+}>();
 
-const draft = ref({ from: '', to: '', routers: [] as number[] })
+const draft = ref({ from: '', to: '', routers: [] as number[] });
 
 // Re-seed whenever the panel opens, so a cancelled edit does not linger.
 watch(
     () => props.open,
     (isOpen) => {
-        if (!isOpen) return
+        if (!isOpen) {
+            return;
+        }
 
         draft.value = {
             from: props.from ?? '',
             to: props.to ?? '',
             routers: [...props.routers],
-        }
+        };
     },
     { immediate: true },
-)
+);
 
 function iso(date: Date): string {
     // Local date parts, not toISOString(): that converts to UTC first, so
     // anywhere east of Greenwich "today" becomes yesterday after midnight UTC.
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 function preset(days: number) {
-    const end = new Date()
-    const start = new Date()
-    start.setDate(start.getDate() - (days - 1))
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - (days - 1));
 
-    draft.value.from = iso(start)
-    draft.value.to = iso(end)
+    draft.value.from = iso(start);
+    draft.value.to = iso(end);
 }
 
 function thisMonth() {
-    const now = new Date()
+    const now = new Date();
 
-    draft.value.from = iso(new Date(now.getFullYear(), now.getMonth(), 1))
-    draft.value.to = iso(now)
+    draft.value.from = iso(new Date(now.getFullYear(), now.getMonth(), 1));
+    draft.value.to = iso(now);
 }
 
 const presets = [
@@ -84,23 +89,27 @@ const presets = [
     { label: 'Last 30 days', apply: () => preset(30) },
     { label: 'Last 90 days', apply: () => preset(90) },
     { label: 'This month', apply: thisMonth },
-]
+];
 
 /** A range with only an end is meaningless - "until then, from when?" */
-const invalid = computed(() => draft.value.to !== '' && draft.value.from === '')
+const invalid = computed(
+    () => draft.value.to !== '' && draft.value.from === '',
+);
 
 const changeCount = computed(
     () => (draft.value.from ? 1 : 0) + (draft.value.routers.length > 0 ? 1 : 0),
-)
+);
 
 function apply() {
-    if (invalid.value) return
+    if (invalid.value) {
+        return;
+    }
 
     emit('apply', {
         from: draft.value.from || null,
         to: draft.value.to || null,
         routers: draft.value.routers,
-    })
+    });
 }
 </script>
 
@@ -121,7 +130,7 @@ function apply() {
                         v-for="p in presets"
                         :key="p.label"
                         type="button"
-                        class="bg-background hover:bg-accent rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
+                        class="rounded-full border bg-background px-2.5 py-1 text-xs font-medium transition-colors hover:bg-accent"
                         @click="p.apply()"
                     >
                         {{ p.label }}
@@ -130,30 +139,35 @@ function apply() {
 
                 <div class="mt-1 grid grid-cols-2 gap-2">
                     <label class="flex flex-col gap-1">
-                        <span class="text-muted-foreground text-xs">From</span>
+                        <span class="text-xs text-muted-foreground">From</span>
                         <input
                             v-model="draft.from"
                             type="date"
-                            class="bg-background focus:ring-ring rounded-md border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
+                            class="rounded-md border bg-background px-2 py-1.5 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
                         />
                     </label>
                     <label class="flex flex-col gap-1">
-                        <span class="text-muted-foreground text-xs">To</span>
+                        <span class="text-xs text-muted-foreground">To</span>
                         <input
                             v-model="draft.to"
                             type="date"
-                            class="bg-background focus:ring-ring rounded-md border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
+                            class="rounded-md border bg-background px-2 py-1.5 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
                         />
                     </label>
                 </div>
 
-                <p v-if="invalid" class="text-destructive text-xs">Choose a start date as well.</p>
-                <p v-else-if="draft.from && !draft.to" class="text-muted-foreground text-xs">
+                <p v-if="invalid" class="text-xs text-destructive">
+                    Choose a start date as well.
+                </p>
+                <p
+                    v-else-if="draft.from && !draft.to"
+                    class="text-xs text-muted-foreground"
+                >
                     Leaving “To” empty means everything since that date.
                 </p>
-                <p v-else-if="draft.from" class="text-muted-foreground text-xs">
-                    While a range is set, the per-chart period buttons are hidden - every widget
-                    covers the same window.
+                <p v-else-if="draft.from" class="text-xs text-muted-foreground">
+                    While a range is set, the per-chart period buttons are
+                    hidden - every widget covers the same window.
                 </p>
             </section>
 
@@ -163,7 +177,7 @@ function apply() {
                     <button
                         v-if="draft.routers.length"
                         type="button"
-                        class="text-muted-foreground text-xs hover:underline"
+                        class="text-xs text-muted-foreground hover:underline"
                         @click="draft.routers = []"
                     >
                         Clear {{ draft.routers.length }}
@@ -184,21 +198,21 @@ function apply() {
         <template #footer>
             <button
                 type="button"
-                class="text-muted-foreground mr-auto text-xs hover:underline"
+                class="mr-auto text-xs text-muted-foreground hover:underline"
                 @click="emit('reset')"
             >
                 Reset all
             </button>
             <button
                 type="button"
-                class="bg-background hover:bg-accent rounded-md border px-3 py-1.5 text-sm"
+                class="rounded-md border bg-background px-3 py-1.5 text-sm hover:bg-accent"
                 @click="emit('close')"
             >
                 Cancel
             </button>
             <button
                 type="button"
-                class="bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+                class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
                 :disabled="invalid"
                 @click="apply"
             >

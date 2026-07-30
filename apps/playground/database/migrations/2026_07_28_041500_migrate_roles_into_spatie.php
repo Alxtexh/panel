@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -87,7 +88,7 @@ return new class extends Migration
                 DB::table('model_has_roles')->updateOrInsert(
                     [
                         'role_id' => $roleId,
-                        'model_type' => \App\Models\User::class,
+                        'model_type' => User::class,
                         'model_id' => $userId,
                         'tenant_id' => $legacy->tenant_id,
                     ],

@@ -1,4 +1,3 @@
-import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import {
     Activity,
@@ -24,6 +23,7 @@ import {
     Users,
     Wrench,
 } from '@lucide/vue';
+import { computed } from 'vue';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
@@ -90,7 +90,8 @@ export function usePanelNav() {
     const page = usePage();
 
     const nav = computed(() => {
-        const resources = (page.props.panelNav as NavPayload[] | undefined) ?? [];
+        const resources =
+            (page.props.panelNav as NavPayload[] | undefined) ?? [];
         const pages = (page.props.panelPages as NavPayload[] | undefined) ?? [];
 
         const ungrouped: NavItem[] = [];
@@ -117,18 +118,28 @@ export function usePanelNav() {
             // catch-all "Other": a group of one is noise.
             if (!item.group) {
                 ungrouped.push(entry);
+
                 return;
             }
 
-            grouped.set(item.group, [...(grouped.get(item.group) ?? []), entry]);
+            grouped.set(item.group, [
+                ...(grouped.get(item.group) ?? []),
+                entry,
+            ]);
         };
 
         resources.forEach(add);
         pages.forEach(add);
 
         return {
-            primary: [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }, ...ungrouped] as NavItem[],
-            groups: [...grouped.entries()].map(([name, items]): NavGroup => ({ name, items })),
+            primary: [
+                { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+                ...ungrouped,
+            ] as NavItem[],
+            groups: [...grouped.entries()].map(([name, items]): NavGroup => ({
+                name,
+                items,
+            })),
         };
     });
 

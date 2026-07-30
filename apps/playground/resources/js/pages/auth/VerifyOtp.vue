@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { Head, Form, Link } from '@inertiajs/vue3';
+import { ThemeToggle } from '@panelkit/ui';
+import { computed, nextTick, ref } from 'vue';
+import InputError from '@/components/InputError.vue';
 import TurnstileField from '@/components/TurnstileField.vue';
 /**
  * A one-time code, entered as separate boxes.
@@ -23,45 +27,46 @@ import TurnstileField from '@/components/TurnstileField.vue';
  * six digits has finished; making them find a button is asking them to confirm
  * something they already did.
  */
-import { Head, Form, Link } from '@inertiajs/vue3'
-import { computed, nextTick, ref } from 'vue'
-import { Button } from '@/components/ui/button'
-import InputError from '@/components/InputError.vue'
-import { ThemeToggle } from '@panelkit/ui'
+import { Button } from '@/components/ui/button';
 
 const props = withDefaults(
     defineProps<{
         /** Where the code was sent, for the reminder line. Masked already. */
-        sentTo?: string | null
-        length?: number
-        status?: string
+        sentTo?: string | null;
+        length?: number;
+        status?: string;
     }>(),
     { sentTo: null, length: 6 },
-)
+);
 
-const digits = ref<string[]>(Array.from({ length: props.length }, () => ''))
-const boxes = ref<HTMLInputElement[]>([])
-const form = ref<HTMLFormElement | null>(null)
+const digits = ref<string[]>(Array.from({ length: props.length }, () => ''));
+const boxes = ref<HTMLInputElement[]>([]);
+const form = ref<HTMLFormElement | null>(null);
 
-const code = computed(() => digits.value.join(''))
-const complete = computed(() => code.value.length === props.length)
+const code = computed(() => digits.value.join(''));
+const complete = computed(() => code.value.length === props.length);
 
 function focusBox(index: number) {
-    nextTick(() => boxes.value[index]?.focus())
+    nextTick(() => boxes.value[index]?.focus());
 }
 
 function onInput(index: number, event: Event) {
-    const raw = (event.target as HTMLInputElement).value
+    const raw = (event.target as HTMLInputElement).value;
 
     // Digits only, and only the last one typed - so overtyping a filled box
     // replaces it rather than being ignored.
-    const digit = raw.replace(/\D/g, '').slice(-1)
+    const digit = raw.replace(/\D/g, '').slice(-1);
 
-    digits.value[index] = digit
-    ;(event.target as HTMLInputElement).value = digit
+    digits.value[index] = digit;
+    (event.target as HTMLInputElement).value = digit;
 
-    if (digit && index < props.length - 1) focusBox(index + 1)
-    if (digit && index === props.length - 1) submitWhenComplete()
+    if (digit && index < props.length - 1) {
+        focusBox(index + 1);
+    }
+
+    if (digit && index === props.length - 1) {
+        submitWhenComplete();
+    }
 }
 
 /**
@@ -72,42 +77,58 @@ function onInput(index: number, event: Event) {
  */
 function onKeydown(index: number, event: KeyboardEvent) {
     if (event.key === 'Backspace' && !digits.value[index] && index > 0) {
-        event.preventDefault()
-        digits.value[index - 1] = ''
+        event.preventDefault();
+        digits.value[index - 1] = '';
 
-        if (boxes.value[index - 1]) boxes.value[index - 1].value = ''
+        if (boxes.value[index - 1]) {
+            boxes.value[index - 1].value = '';
+        }
 
-        focusBox(index - 1)
+        focusBox(index - 1);
     }
 
-    if (event.key === 'ArrowLeft' && index > 0) focusBox(index - 1)
-    if (event.key === 'ArrowRight' && index < props.length - 1) focusBox(index + 1)
+    if (event.key === 'ArrowLeft' && index > 0) {
+        focusBox(index - 1);
+    }
+
+    if (event.key === 'ArrowRight' && index < props.length - 1) {
+        focusBox(index + 1);
+    }
 }
 
 /** A pasted code fills every box from wherever it landed. */
 function onPaste(index: number, event: ClipboardEvent) {
-    event.preventDefault()
+    event.preventDefault();
 
-    const pasted = (event.clipboardData?.getData('text') ?? '').replace(/\D/g, '')
+    const pasted = (event.clipboardData?.getData('text') ?? '').replace(
+        /\D/g,
+        '',
+    );
 
-    if (!pasted) return
-
-    for (let i = 0; i < pasted.length && index + i < props.length; i++) {
-        digits.value[index + i] = pasted[i]!
-
-        if (boxes.value[index + i]) boxes.value[index + i]!.value = pasted[i]!
+    if (!pasted) {
+        return;
     }
 
-    const next = Math.min(index + pasted.length, props.length - 1)
+    for (let i = 0; i < pasted.length && index + i < props.length; i++) {
+        digits.value[index + i] = pasted[i]!;
 
-    focusBox(next)
-    submitWhenComplete()
+        if (boxes.value[index + i]) {
+            boxes.value[index + i]!.value = pasted[i]!;
+        }
+    }
+
+    const next = Math.min(index + pasted.length, props.length - 1);
+
+    focusBox(next);
+    submitWhenComplete();
 }
 
 function submitWhenComplete() {
     nextTick(() => {
-        if (complete.value) form.value?.requestSubmit()
-    })
+        if (complete.value) {
+            form.value?.requestSubmit();
+        }
+    });
 }
 </script>
 
@@ -115,7 +136,7 @@ function submitWhenComplete() {
     <Head title="Verify your code" />
 
     <div
-        class="bg-background relative flex min-h-svh flex-col items-center justify-center gap-6 p-6"
+        class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6"
     >
         <div class="absolute top-4 right-4">
             <ThemeToggle />
@@ -123,11 +144,14 @@ function submitWhenComplete() {
 
         <div class="w-full max-w-sm text-center">
             <h1 class="text-xl font-medium">Enter your verification code</h1>
-            <p class="text-muted-foreground mt-2 text-sm">
+            <p class="mt-2 text-sm text-muted-foreground">
                 <template v-if="sentTo"
-                    >We sent a {{ length }}-digit code to {{ sentTo }}.</template
+                    >We sent a {{ length }}-digit code to
+                    {{ sentTo }}.</template
                 >
-                <template v-else>Enter the {{ length }}-digit code we sent you.</template>
+                <template v-else
+                    >Enter the {{ length }}-digit code we sent you.</template
+                >
             </p>
 
             <p
@@ -148,13 +172,17 @@ function submitWhenComplete() {
                      the input surface. -->
                 <input type="hidden" name="code" :value="code" />
 
-                <div class="flex justify-center gap-2" role="group" aria-label="Verification code">
+                <div
+                    class="flex justify-center gap-2"
+                    role="group"
+                    aria-label="Verification code"
+                >
                     <input
                         v-for="(_, i) in digits"
                         :key="i"
                         :ref="
                             (el) => {
-                                if (el) boxes[i] = el as HTMLInputElement
+                                if (el) boxes[i] = el as HTMLInputElement;
                             }
                         "
                         type="text"
@@ -163,7 +191,7 @@ function submitWhenComplete() {
                         maxlength="1"
                         :aria-label="`Digit ${i + 1}`"
                         :autofocus="i === 0"
-                        class="border-input bg-background focus:border-primary focus:ring-primary/30 size-12 rounded-lg border text-center text-lg font-semibold tabular-nums focus:ring-2 focus:outline-none"
+                        class="size-12 rounded-lg border border-input bg-background text-center text-lg font-semibold tabular-nums focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none"
                         @input="onInput(i, $event)"
                         @keydown="onKeydown(i, $event)"
                         @paste="onPaste(i, $event)"
@@ -178,13 +206,16 @@ function submitWhenComplete() {
 
                 <TurnstileField name="cf-turnstile-response" />
 
-
-                <Button type="submit" class="w-full" :disabled="!complete || processing">
+                <Button
+                    type="submit"
+                    class="w-full"
+                    :disabled="!complete || processing"
+                >
                     Verify
                 </Button>
             </Form>
 
-            <p class="text-muted-foreground mt-6 text-sm">
+            <p class="mt-6 text-sm text-muted-foreground">
                 Did not get it?
                 <Link
                     href="/verify-otp/resend"

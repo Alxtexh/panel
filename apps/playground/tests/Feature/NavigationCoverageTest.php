@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Panel\Pages;
+use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route as RouteInstance;
 use Illuminate\Support\Facades\Route;
+use PanelKit\Panel\PanelManager;
 use Tests\TestCase;
 
 /**
@@ -146,7 +149,7 @@ final class NavigationCoverageTest extends TestCase
          * Asked of the registry rather than the router, because the registry is
          * what decides the key and therefore the URL.
          */
-        foreach (array_keys(app(\PanelKit\Panel\PanelManager::class)->resourcesFor(
+        foreach (array_keys(app(PanelManager::class)->resourcesFor(
             (string) config('panel.default', 'admin'),
         )) as $key) {
             $paths[] = '/'.$key;
@@ -175,7 +178,7 @@ final class NavigationCoverageTest extends TestCase
                 return true;
             }
 
-            if (str_starts_with($middleware, \Illuminate\Auth\Middleware\Authenticate::class)) {
+            if (str_starts_with($middleware, Authenticate::class)) {
                 return true;
             }
         }
@@ -315,7 +318,7 @@ final class NavigationCoverageTest extends TestCase
      */
     public function test_every_detail_screen_still_opens(): void
     {
-        $client = \App\Models\Client::query()->forceCreate([
+        $client = Client::query()->forceCreate([
             'tenant_id' => $this->tenant->id,
             'name' => 'Coverage Subject',
             'access_code' => 'COVER-1',

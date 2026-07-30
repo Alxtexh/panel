@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\Knowledge\KnowledgeBase;
 use Tests\TestCase;
 
 /**
@@ -147,7 +149,7 @@ final class DoctorTest extends TestCase
      */
     public function test_it_reports_passages_embedded_by_a_different_model(): void
     {
-        \Illuminate\Support\Facades\DB::table('panel_knowledge_chunks')->insert([
+        DB::table('panel_knowledge_chunks')->insert([
             'tenant_id' => 1,
             'source' => 'help',
             'source_id' => 'a#0',
@@ -170,7 +172,7 @@ final class DoctorTest extends TestCase
     {
         config(['panel.tenancy.resolver' => static fn (): int => 1]);
 
-        app(\PanelKit\Panel\Knowledge\KnowledgeBase::class)
+        app(KnowledgeBase::class)
             ->put('help', 'exports', 'Exporting a list', 'Exports run in the background.');
 
         config(['broadcasting.default' => 'pusher']);

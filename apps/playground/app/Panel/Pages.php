@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Panel;
 
+use PanelKit\Panel\PanelManager;
+
 /**
  * Every screen that is NOT a resource, and where it belongs in the navigation.
  *
@@ -50,7 +52,7 @@ final class Pages
      */
     public static function forPanel(?string $panelId = null): array
     {
-        $panelId ??= app(\PanelKit\Panel\PanelManager::class)->currentPanel()?->id
+        $panelId ??= app(PanelManager::class)->currentPanel()?->id
             ?? (string) config('panel.default', 'admin');
 
         return array_values(array_filter(

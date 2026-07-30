@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -131,7 +132,7 @@ final class WidgetVisibilityTest extends TestCase
     {
         return (array) $this->actingAs($user)->get('/dashboard', [
             'X-Inertia' => 'true',
-            'X-Inertia-Version' => (string) (new \App\Http\Middleware\HandleInertiaRequests)->version(request()),
+            'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(request()),
             'X-Inertia-Partial-Component' => 'Dashboard',
             'X-Inertia-Partial-Data' => $prop,
         ])->json('props');
@@ -175,7 +176,7 @@ final class WidgetVisibilityTest extends TestCase
             // The real asset version: a mismatch is answered with a 409 and a
             // redirect, which would make this test pass without ever reaching
             // the prop it is about.
-            'X-Inertia-Version' => (string) (new \App\Http\Middleware\HandleInertiaRequests)->version(request()),
+            'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(request()),
             'X-Inertia-Partial-Component' => 'Dashboard',
             'X-Inertia-Partial-Data' => 'stat_clients_new',
         ]);

@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Tables\Table;
 use PanelKit\Panel\Tables\ViewState;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -142,7 +143,7 @@ final class SavedViewController extends Controller
         }
     }
 
-    private function tableFor(string $resource): \PanelKit\Panel\Tables\Table
+    private function tableFor(string $resource): Table
     {
         $class = app(PanelManager::class)->resource($resource);
 

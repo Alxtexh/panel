@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\RestoreBackup;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Support\DatabaseRestorer;
 use Tests\TestCase;
@@ -67,7 +69,7 @@ final class DatabaseRestoreTest extends TestCase
          * unrelated 503s with no obvious cause.
          */
         if (app()->isDownForMaintenance()) {
-            \Illuminate\Support\Facades\Artisan::call('up');
+            Artisan::call('up');
         }
 
         DB::disconnect('restore_target');
@@ -232,7 +234,7 @@ final class DatabaseRestoreTest extends TestCase
      */
     public function test_the_panel_is_closed_while_the_database_is_swapped(): void
     {
-        $job = new \App\Jobs\RestoreBackup('x.zip', 'Tester', 'secret-token');
+        $job = new RestoreBackup('x.zip', 'Tester', 'secret-token');
 
         $closed = new \ReflectionMethod($job, 'withPanelClosed');
 
@@ -255,7 +257,7 @@ final class DatabaseRestoreTest extends TestCase
      */
     public function test_the_panel_reopens_even_when_the_restore_fails(): void
     {
-        $job = new \App\Jobs\RestoreBackup('x.zip', 'Tester', 'secret-token');
+        $job = new RestoreBackup('x.zip', 'Tester', 'secret-token');
 
         $closed = new \ReflectionMethod($job, 'withPanelClosed');
 

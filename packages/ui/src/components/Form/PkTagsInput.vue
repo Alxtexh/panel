@@ -136,7 +136,10 @@ function onKeydown(event: KeyboardEvent) {
             />
         </div>
 
-        <div v-if="available.length > 0 && !full && !disabled" class="flex flex-wrap items-center gap-1.5">
+        <div
+            v-if="available.length > 0 && !full && !disabled"
+            class="flex flex-wrap items-center gap-1.5"
+        >
             <span class="text-muted-foreground text-xs">Suggestions:</span>
             <button
                 v-for="suggestion in available"

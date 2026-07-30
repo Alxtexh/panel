@@ -2,7 +2,6 @@
 import { Form, Head, router } from '@inertiajs/vue3';
 // Generated from the routes - a rename breaks the build rather than leaving
 // this button pointed at a 404.
-import deviceRoutes from '@/routes/settings/devices';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -14,6 +13,7 @@ import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
+import deviceRoutes from '@/routes/settings/devices';
 
 interface Device {
     id: string;
@@ -158,13 +158,20 @@ defineOptions({
             description="Every browser currently signed in to this account. Sign out anything you do not recognise."
         />
 
-        <div v-if="devices.length === 0" class="text-muted-foreground rounded-lg border border-dashed p-6 text-sm">
+        <div
+            v-if="devices.length === 0"
+            class="rounded-lg border border-dashed p-6 text-sm text-muted-foreground"
+        >
             No other devices are signed in.
         </div>
 
         <ul v-else class="divide-y rounded-lg border">
-            <li v-for="device in devices" :key="device.id" class="flex items-center gap-3 p-3">
-                <span class="text-muted-foreground shrink-0">
+            <li
+                v-for="device in devices"
+                :key="device.id"
+                class="flex items-center gap-3 p-3"
+            >
+                <span class="shrink-0 text-muted-foreground">
                     <svg
                         class="size-5"
                         viewBox="0 0 24 24"
@@ -190,10 +197,11 @@ defineOptions({
                             This device
                         </span>
                     </p>
-                    <p class="text-muted-foreground text-xs">
+                    <p class="text-xs text-muted-foreground">
                         {{ device.ip ?? 'Unknown address' }}
                         <template v-if="device.lastActiveAt">
-                            · last active {{ new Date(device.lastActiveAt).toLocaleString() }}
+                            · last active
+                            {{ new Date(device.lastActiveAt).toLocaleString() }}
                         </template>
                     </p>
                 </div>

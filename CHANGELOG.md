@@ -46,8 +46,6 @@ does not.
   resource records are not searchable by the assistant.
 - **13 tests skip without fixtures** — MariaDB (5) and pgvector (8). They pass
   when their scripts have been run.
-- **No lint step in CI.** 230 violations, 216 auto-fixable; the auto-fix
-  reformats 65 files, so the decision is deferred rather than made badly.
 - **Browser tests need a non-snap Chrome.** They skip with an instruction when
   none is found; a snap-packaged Chromium makes ChromeDriver hang rather than
   fail.

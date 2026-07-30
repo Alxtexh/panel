@@ -17,17 +17,17 @@
  * fetched by anything else that wants it - a client generator, an HTTP client,
  * another team - rather than existing only inside this page's JavaScript.
  */
-import '@scalar/api-reference/style.css'
+import '@scalar/api-reference/style.css';
 
-import AppLayout from '@/layouts/AppLayout.vue'
-import { ApiReference } from '@scalar/api-reference'
-import { Head } from '@inertiajs/vue3'
-import { computed } from 'vue'
-import { useAppearance } from '@panelkit/ui'
+import { Head } from '@inertiajs/vue3';
+import { useAppearance } from '@panelkit/ui';
+import { ApiReference } from '@scalar/api-reference';
+import { computed } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
-defineOptions({ layout: AppLayout })
+defineOptions({ layout: AppLayout });
 
-const { appearance } = useAppearance()
+const { appearance } = useAppearance();
 
 /**
  * Scalar has its own theming, so it is told the panel's scheme rather than
@@ -40,7 +40,7 @@ const configuration = computed(() => ({
     hideDownloadButton: false,
     // The panel is the only server; a picker offering one entry is noise.
     hideModels: false,
-}))
+}));
 </script>
 
 <template>

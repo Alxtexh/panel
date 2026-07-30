@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApiReferenceController;
 use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuditController;
@@ -9,27 +10,26 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ImpersonationController;
-use App\Http\Controllers\OperationsController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserManagementController;
-use App\Http\Controllers\LockController;
-use App\Http\Controllers\MailController;
-use App\Http\Controllers\ApiReferenceController;
-use App\Http\Controllers\Settings\DeviceController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\SavedViewController;
-use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\LockController;
+use App\Http\Controllers\MailController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OperationsController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Settings\DeviceController;
+use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\WorkspaceController;
+use App\Support\Guide;
+use App\Support\HelpArticles;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use PanelKit\Panel\Http\Controllers\BulkController;
 use PanelKit\Panel\Http\PanelRoutes;
-use PanelKit\Panel\Http\Controllers\RecordController;
-use PanelKit\Panel\Http\Controllers\ResourceController;
-use PanelKit\Panel\Http\Controllers\UploadController;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\Blueprint;
 
 /*
  | Resource segments come from the registry rather than a literal list, so a
@@ -79,7 +79,7 @@ Route::middleware('guest')->group(function (): void {
         ->middleware('throttle:10,1')->name('magic-link.consume');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () use ($panelResources) {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /*
@@ -137,14 +137,14 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
      | whatever else it is.
      */
     Route::get('docs/llms.txt', fn () => response(
-        App\Support\Guide::llmsTxt(rtrim((string) config('app.url'), '/')),
+        Guide::llmsTxt(rtrim((string) config('app.url'), '/')),
     )->header('Content-Type', 'text/plain; charset=utf-8'))->name('docs.llms');
 
-    Route::get('docs/guide.md', fn () => response(App\Support\Guide::markdown())
+    Route::get('docs/guide.md', fn () => response(Guide::markdown())
         ->header('Content-Type', 'text/markdown; charset=utf-8'))->name('docs.guide');
 
     Route::get('docs/blueprint.md', fn () => response(
-        PanelKit\Panel\Support\Blueprint::markdown(),
+        Blueprint::markdown(),
     )->header('Content-Type', 'text/markdown; charset=utf-8'))->name('docs.blueprint');
 
     Route::get('screens/locked', fn () => Inertia::render('auth/LockScreen'))->name('screens.locked');
@@ -187,7 +187,7 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
      | how a panel ends up answering one thing on screen and another in chat.
      */
     Route::get('help', fn () => Inertia::render('support/Help', [
-        'articles' => App\Support\HelpArticles::all(),
+        'articles' => HelpArticles::all(),
     ]))->name('support.help');
     Route::inertia('faq', 'support/Faq')->name('support.faq');
     Route::inertia('about', 'support/About')->name('support.about');
@@ -222,14 +222,14 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
      | tens of kilobytes of prose, and a search nobody performs would be paid for
      | by everybody who opens the documentation to read one paragraph.
      */
-    Route::get('about/building/search', fn (Illuminate\Http\Request $request) => response()->json([
-        'results' => App\Support\Guide::search((string) $request->query('q', '')),
+    Route::get('about/building/search', fn (Request $request) => response()->json([
+        'results' => Guide::search((string) $request->query('q', '')),
     ]))->name('support.building.search');
 
-    Route::get('about/building/{page?}', function (Illuminate\Http\Request $request, ?string $page = null) {
-        $page ??= App\Support\Guide::slugs()[0];
+    Route::get('about/building/{page?}', function (Request $request, ?string $page = null) {
+        $page ??= Guide::slugs()[0];
 
-        abort_unless(App\Support\Guide::has($page), 404);
+        abort_unless(Guide::has($page), 404);
 
         // The term travels with the link from a search result, so the page can
         // mark it and scroll to it - the difference between finding a page and
@@ -237,14 +237,14 @@ Route::middleware(['auth', 'verified'])->group(function () use ($panelResources)
         $term = (string) $request->query('q', '');
 
         return Inertia::render('support/BuildGuide', [
-            'groups' => App\Support\Guide::groups(),
+            'groups' => Guide::groups(),
             'titles' => array_map(
                 static fn (array $p): string => $p['title'],
-                App\Support\Guide::pages(),
+                Guide::pages(),
             ),
-            'page' => App\Support\Guide::page($page, $term),
+            'page' => Guide::page($page, $term),
             'query' => $term,
-            ...App\Support\Guide::neighbours($page),
+            ...Guide::neighbours($page),
         ]);
     })->name('support.building');
     Route::inertia('whats-new', 'support/WhatsNew')->name('support.whatsNew');

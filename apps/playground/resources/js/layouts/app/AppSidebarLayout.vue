@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useTenantTheme } from '@panelkit/ui';
 import { usePage } from '@inertiajs/vue3';
+import { useTenantTheme } from '@panelkit/ui';
 import { computed } from 'vue';
 import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
-import ImpersonationBanner from '@/components/ImpersonationBanner.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
+import ImpersonationBanner from '@/components/ImpersonationBanner.vue';
 import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
 
@@ -20,7 +20,9 @@ withDefaults(defineProps<Props>(), {
 
 // Per-tenant branding, applied at runtime rather than compiled per tenant.
 const page = usePage();
-useTenantTheme(computed(() => page.props.panelTheme as Record<string, string> | undefined));
+useTenantTheme(
+    computed(() => page.props.panelTheme as Record<string, string> | undefined),
+);
 </script>
 
 <template>

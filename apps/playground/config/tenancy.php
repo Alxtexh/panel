@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Tenant;
+use PanelKit\Panel\Tenancy\ConditionalDatabaseBootstrapper;
 use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
@@ -73,7 +74,7 @@ return [
          * add a check that is always true.
          */
         // Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper::class,
-        PanelKit\Panel\Tenancy\ConditionalDatabaseBootstrapper::class,
+        ConditionalDatabaseBootstrapper::class,
         /*
          * Cache: KEPT. Tags every cache key with the tenant, so a memoized
          * count or a cached schema cannot be served to the wrong organisation.

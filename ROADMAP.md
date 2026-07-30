@@ -4,7 +4,7 @@
 is the forward view — everything outstanding, why it matters, what it costs, and
 what it depends on.
 
-Written 2026-07-29, last updated 2026-07-30. **§1, §2.2, §2.3 and §3.1–3.3 are
+Written 2026-07-29, last updated 2026-07-30. **§1, §2.1–2.3 and §3.1–3.3 are
 done** — see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
 **S** = an afternoon · **M** = a day or two · **L** = several days · **XL** = a
 week or more.
@@ -84,7 +84,7 @@ script, or a splitter action on push (automation that needs a token in GitHub).
 
 | # | Item | Size | Notes |
 | --- | --- | --- | --- |
-| 2.1 | **Lint** | M | 230 violations, 216 auto-fixable. The auto-fix reformats 65 files and flips the codebase to semicolons — a year of `git blame` buried. **Decision: reformat once and enforce, or relax the rules to match the code as written.** Until then CI has no lint step, deliberately. |
+| 2.1 | ~~**Lint**~~ | **DONE** | Reformatted once, enforced in CI — ESLint, Prettier (all three JS/TS surfaces) and Pint. See below. |
 | 2.2 | ~~**Component tests**~~ | **DONE** | `@panelkit/ui`, Vitest + `@vue/test-utils` + jsdom. 8 spec files, 53 tests. See below. |
 | 2.3 | ~~**Browser tests**~~ | **DONE** | Laravel Dusk, 14 tests, own CI job. See below. |
 | 2.4 | **Accessibility check in CI** | M | The audit was manual and is now stale. `axe` over the main screens would keep it true. |
@@ -452,8 +452,20 @@ available to announcements and scheduled reports is what remains of that item.
 **~~Then — trust.~~ 2.2 and 2.3 done.** Both bugs the browser suite was written
 for now fail it when reintroduced, and the same two are pinned again at the
 component level, in milliseconds rather than minutes. Remaining in that
-section: 2.1 (the lint decision), 2.4 (accessibility check in CI) and 2.5
-(un-gate the fixtures).
+section: 2.4 (accessibility check in CI) and 2.5 (un-gate the fixtures).
+
+**2.1 is done.** ESLint reported 1,289 problems, not the 230 this section
+originally quoted — the figure was stale the moment the document designer and
+the browser-test suite landed. 1,066 were auto-fixable; of the rest, 194 turned
+out to be the Chrome-for-Testing binary Dusk downloads being linted as source
+(added to the ignore list, not fixed), and the remaining ~30 were real: dead
+icon imports, a ternary used for a side effect where an `if` was meant, an
+unused destructure, a route-helper import shadowing a prop of the same name,
+and a `vue/no-deprecated-filter` false positive from a `|` union type inside a
+template `as` cast. Prettier reformatted 66 files in the app and 14 in
+`@panelkit/ui` — mostly the semicolon flip this section warned about. Pint
+found the same story on the PHP side, unenforced and drifted to ~70 files,
+fixed the same way. All four (ESLint, Prettier ×3, Pint) are now CI steps.
 
 **Alongside, cheap and high-leverage.** 7.1 (contrast guard) and 7.5 (API
 parity, applied per feature) cost hours each and are exactly the kind of thing
@@ -477,7 +489,6 @@ neither reference has anything resembling them.
 
 ## What I will not start without you saying so
 
-- The lint reformat (2.1) — it touches 65 files and rewrites history's blame.
 - Publishing anything to Packagist or npm.
 - Any push to a remote. The credentials are yours to run.
 - Ticketing (§6) — it is large and it changes the product's shape.

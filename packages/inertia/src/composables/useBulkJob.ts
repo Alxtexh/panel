@@ -122,7 +122,8 @@ export function useBulkJob(resourceKey: string) {
                     busy.value = false
 
                     if (state.downloadable) {
-                        downloadUrl.value = state.download ?? `/${resourceKey}/jobs/${token}/download`
+                        downloadUrl.value =
+                            state.download ?? `/${resourceKey}/jobs/${token}/download`
                     } else {
                         // A mutation changed rows; the table must catch up.
                         // Partial reload, so the schema does not travel again.

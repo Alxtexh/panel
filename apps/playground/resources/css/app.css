@@ -228,7 +228,7 @@ html {
  * content ended up squeezed into the middle with a dead gutter on one side and
  * the panel overlapping it on the other.
  */
-:root[data-sidebar=right] [data-slot=sidebar-wrapper] {
+:root[data-sidebar='right'] [data-slot='sidebar-wrapper'] {
     flex-direction: row-reverse;
 }
 

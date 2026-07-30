@@ -161,7 +161,9 @@ final class RoleMatrixTest extends TestCase
     {
         $admin = new Role(['name' => 'Administrator', 'guard_name' => config('auth.defaults.guard', 'web')]);
         $admin->forceFill(['tenant_id' => $this->tenant->id, 'grants_all' => true])->save();
-        foreach ((array) (Abilities::all()) as $a) { \Spatie\Permission\Models\Permission::findOrCreate($a); }
+        foreach ((array) (Abilities::all()) as $a) {
+            Permission::findOrCreate($a);
+        }
         $admin->syncPermissions(Abilities::all());
 
         $this->actingAs($this->manager())
@@ -194,7 +196,9 @@ final class RoleMatrixTest extends TestCase
 
         $theirs = new Role(['name' => 'Theirs', 'guard_name' => config('auth.defaults.guard', 'web')]);
         $theirs->forceFill(['tenant_id' => $other->id])->save();
-        foreach ((array) ([]) as $a) { \Spatie\Permission\Models\Permission::findOrCreate($a); }
+        foreach ((array) ([]) as $a) {
+            Permission::findOrCreate($a);
+        }
         $theirs->syncPermissions([]);
 
         $this->actingAs($this->manager())

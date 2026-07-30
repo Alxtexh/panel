@@ -17,42 +17,47 @@
  * saves as you click means a mis-click is already live, with no moment to
  * reconsider and nothing to cancel.
  */
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Button } from '@/components/ui/button'
-import { Head, router, useForm, usePage } from '@inertiajs/vue3'
-import { Plus, ShieldAlert, Trash2, TriangleAlert } from '@lucide/vue'
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { Plus, ShieldAlert, Trash2, TriangleAlert } from '@lucide/vue';
 // IMPORTED, WHICH IT WAS NOT. Nothing registers Pk* globally, so the delete
 // confirmation resolved to nothing: the button opened a dialog that was never
 // rendered, and the build stayed clean because an unresolved component is a
 // runtime console warning rather than a compile error. That is the third time
 // this screen's delete has failed silently.
-import { PkModal } from '@panelkit/ui'
+import { PkModal } from '@panelkit/ui';
 // Generated from the routes, so renaming one breaks the build rather than
 // leaving this screen posting at a 404 nothing reports.
-import roleRoutes from '@/routes/settings/roles'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/AppLayout.vue';
+import roleRoutes from '@/routes/settings/roles';
 
-defineOptions({ layout: AppLayout })
+defineOptions({ layout: AppLayout });
 
 interface RoleRow {
-    id: number
-    name: string
+    id: number;
+    name: string;
     /** The oldest role in the organisation - it cannot be deleted. */
-    isProtected: boolean
-    grantsAll: boolean
-    permissions: string[]
-    userCount: number
+    isProtected: boolean;
+    grantsAll: boolean;
+    permissions: string[];
+    userCount: number;
 }
 
 const props = defineProps<{
-    roles: RoleRow[]
-    groups: Record<string, { action: string; name: string }[]>
+    roles: RoleRow[];
+    groups: Record<string, { action: string; name: string }[]>;
     /** `ability => label`, both from the server - see `Abilities::panelLabelled`. */
-    panelAbilities: Record<string, string>
-    templates: { key: string; name: string; description: string; abilities: string[] }[]
-}>()
+    panelAbilities: Record<string, string>;
+    templates: {
+        key: string;
+        name: string;
+        description: string;
+        abilities: string[];
+    }[];
+}>();
 
-const page = usePage()
+const page = usePage();
 
 /*
  * THE LABELS COME FROM THE SERVER NOW.
@@ -64,12 +69,16 @@ const page = usePage()
  * the words describing it are one declaration, and it lives beside the name.
  */
 
+const selectedId = ref<number | null>(props.roles[0]?.id ?? null);
 
-const selectedId = ref<number | null>(props.roles[0]?.id ?? null)
+const selected = computed(
+    () => props.roles.find((r) => r.id === selectedId.value) ?? null,
+);
 
-const selected = computed(() => props.roles.find((r) => r.id === selectedId.value) ?? null)
-
-const form = useForm<{ name: string; permissions: string[] }>({ name: '', permissions: [] })
+const form = useForm<{ name: string; permissions: string[] }>({
+    name: '',
+    permissions: [],
+});
 
 /**
  * Reloaded whenever the chosen role changes, and on every server round trip.
@@ -83,14 +92,17 @@ watch(
     [selected, () => props.roles],
     () => {
         if (selected.value) {
-            form.defaults({ name: selected.value.name, permissions: [...selected.value.permissions] })
-            form.reset()
+            form.defaults({
+                name: selected.value.name,
+                permissions: [...selected.value.permissions],
+            });
+            form.reset();
         }
     },
     { immediate: true },
-)
+);
 
-const DANGEROUS = new Set(['forceDelete'])
+const DANGEROUS = new Set(['forceDelete']);
 
 /**
  * A superuser role is shown as read-only, and that is not a UI nicety.
@@ -100,36 +112,36 @@ const DANGEROUS = new Set(['forceDelete'])
  * untick "Force Delete", save, see it saved, and still have the role granting
  * it. A permission screen that misreports permissions is worse than no screen.
  */
-const locked = computed(() => selected.value?.grantsAll === true)
+const locked = computed(() => selected.value?.grantsAll === true);
 
 function has(ability: string): boolean {
-    return locked.value || form.permissions.includes(ability)
+    return locked.value || form.permissions.includes(ability);
 }
 
 function toggle(ability: string): void {
     form.permissions = has(ability)
         ? form.permissions.filter((a) => a !== ability)
-        : [...form.permissions, ability]
+        : [...form.permissions, ability];
 }
 
 /** Whole-row convenience: a resource's abilities move together far more often than not. */
 function toggleGroup(abilities: { name: string }[]): void {
-    const names = abilities.map((a) => a.name)
-    const allOn = names.every((n) => has(n))
+    const names = abilities.map((a) => a.name);
+    const allOn = names.every((n) => has(n));
 
     form.permissions = allOn
         ? form.permissions.filter((a) => !names.includes(a))
-        : [...new Set([...form.permissions, ...names])]
+        : [...new Set([...form.permissions, ...names])];
 }
 
 function label(action: string): string {
     return action
         .replace(/([A-Z])/g, ' $1')
         .replace(/^./, (c) => c.toUpperCase())
-        .trim()
+        .trim();
 }
 
-const creating = ref(false)
+const creating = ref(false);
 
 /**
  * A new role, optionally started from a template.
@@ -140,21 +152,24 @@ const creating = ref(false)
  * of a template, which is exactly the kind of thing a permission screen must not
  * accept on trust.
  */
-const newRole = useForm<{ name: string; template: string | null }>({ name: '', template: null })
+const newRole = useForm<{ name: string; template: string | null }>({
+    name: '',
+    template: null,
+});
 
 function create(): void {
     newRole.post(roleRoutes.store.url(), {
         preserveScroll: true,
         onSuccess: () => {
-            newRole.reset()
-            creating.value = false
+            newRole.reset();
+            creating.value = false;
         },
-    })
+    });
 }
 
 const chosenTemplate = computed(
     () => props.templates.find((t) => t.key === newRole.template) ?? null,
-)
+);
 
 /**
  * Apply a template to a role that already exists.
@@ -174,17 +189,17 @@ const chosenTemplate = computed(
  * already ticked produces a role that matches no template and nobody can
  * describe.
  */
-const applying = ref<string>('')
+const applying = ref<string>('');
 
 function applyTemplate(): void {
-    const template = props.templates.find((t) => t.key === applying.value)
+    const template = props.templates.find((t) => t.key === applying.value);
 
     if (!template || locked.value) {
-        return
+        return;
     }
 
-    form.permissions = [...template.abilities]
-    applying.value = ''
+    form.permissions = [...template.abilities];
+    applying.value = '';
 }
 
 /**
@@ -204,27 +219,31 @@ function applyTemplate(): void {
  * cannot be styled or asserted on, which is why `BulkActions` had already
  * stopped using it. This asks in a real modal instead.
  */
-const confirmingDeleteRole = ref<RoleRow | null>(null)
+const confirmingDeleteRole = ref<RoleRow | null>(null);
 
 function destroy(role: RoleRow): void {
-    confirmingDeleteRole.value = role
+    confirmingDeleteRole.value = role;
 }
 
 function reallyDestroyRole(): void {
-    const role = confirmingDeleteRole.value
+    const role = confirmingDeleteRole.value;
 
-    confirmingDeleteRole.value = null
+    confirmingDeleteRole.value = null;
 
     if (!role) {
-        return
+        return;
     }
 
-    router.delete(roleRoutes.destroy.url({ role: role.id }), { preserveScroll: true })
+    router.delete(roleRoutes.destroy.url({ role: role.id }), {
+        preserveScroll: true,
+    });
 }
 
 function save(): void {
     if (selected.value) {
-        form.put(roleRoutes.update.url({ role: selected.value.id }), { preserveScroll: true })
+        form.put(roleRoutes.update.url({ role: selected.value.id }), {
+            preserveScroll: true,
+        });
     }
 }
 </script>
@@ -234,9 +253,12 @@ function save(): void {
 
     <div class="flex flex-col gap-4 p-4 sm:p-6">
         <div>
-            <h1 class="text-xl font-semibold tracking-tight">Roles and permissions</h1>
-            <p class="text-muted-foreground text-sm">
-                What each role may do. Everyone is denied anything not ticked here.
+            <h1 class="text-xl font-semibold tracking-tight">
+                Roles and permissions
+            </h1>
+            <p class="text-sm text-muted-foreground">
+                What each role may do. Everyone is denied anything not ticked
+                here.
             </p>
         </div>
 
@@ -252,13 +274,14 @@ function save(): void {
                     :class="
                         selectedId === role.id
                             ? 'border-primary bg-primary/5'
-                            : 'hover:bg-accent border-transparent'
+                            : 'border-transparent hover:bg-accent'
                     "
                     @click="selectedId = role.id"
                 >
                     <span class="font-medium">{{ role.name }}</span>
-                    <span class="text-muted-foreground text-xs">
-                        {{ role.userCount }} {{ role.userCount === 1 ? 'person' : 'people' }}
+                    <span class="text-xs text-muted-foreground">
+                        {{ role.userCount }}
+                        {{ role.userCount === 1 ? 'person' : 'people' }}
                         <!-- "first" rather than "default": it is the oldest role
                              in the organisation, which is both the one new people
                              are given and the one that cannot be deleted. One
@@ -270,14 +293,21 @@ function save(): void {
                 <!-- Creating and configuring are separate steps: a new role
                      grants nothing until somebody ticks boxes and saves, unless
                      it was started from a template. -->
-                <form v-if="creating" class="mt-1 flex flex-col gap-2" @submit.prevent="create">
+                <form
+                    v-if="creating"
+                    class="mt-1 flex flex-col gap-2"
+                    @submit.prevent="create"
+                >
                     <input
                         v-model="newRole.name"
                         placeholder="Role name"
                         autofocus
-                        class="border-input bg-background h-9 rounded-md border px-3 text-sm"
+                        class="h-9 rounded-md border border-input bg-background px-3 text-sm"
                     />
-                    <p v-if="newRole.errors.name" class="text-destructive text-xs">
+                    <p
+                        v-if="newRole.errors.name"
+                        class="text-xs text-destructive"
+                    >
                         {{ newRole.errors.name }}
                     </p>
 
@@ -293,32 +323,54 @@ function save(): void {
                         fastest way to make a role work is to tick more.
                     -->
                     <label class="flex flex-col gap-1">
-                        <span class="text-muted-foreground text-xs">Start from</span>
+                        <span class="text-xs text-muted-foreground"
+                            >Start from</span
+                        >
                         <select
                             v-model="newRole.template"
-                            class="border-input bg-background h-9 rounded-md border px-2 text-sm"
+                            class="h-9 rounded-md border border-input bg-background px-2 text-sm"
                         >
-                            <option :value="null">Nothing - an empty role</option>
-                            <option v-for="t in templates" :key="t.key" :value="t.key">
+                            <option :value="null">
+                                Nothing - an empty role
+                            </option>
+                            <option
+                                v-for="t in templates"
+                                :key="t.key"
+                                :value="t.key"
+                            >
                                 {{ t.name }}
                             </option>
                         </select>
                     </label>
 
-                    <p v-if="chosenTemplate" class="text-muted-foreground text-xs">
+                    <p
+                        v-if="chosenTemplate"
+                        class="text-xs text-muted-foreground"
+                    >
                         {{ chosenTemplate.description }}
                         <!-- The count is the honest summary: a template is a
                              starting point, and the matrix below is what it
                              actually did. -->
                         <span class="block">
-                            Ticks {{ chosenTemplate.abilities.length }} permission(s). Editable
-                            afterwards like any other role.
+                            Ticks
+                            {{ chosenTemplate.abilities.length }} permission(s).
+                            Editable afterwards like any other role.
                         </span>
                     </p>
 
                     <div class="flex gap-2">
-                        <Button type="submit" size="sm" :disabled="newRole.processing">Create</Button>
-                        <Button type="button" size="sm" variant="ghost" @click="creating = false">
+                        <Button
+                            type="submit"
+                            size="sm"
+                            :disabled="newRole.processing"
+                            >Create</Button
+                        >
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            @click="creating = false"
+                        >
                             Cancel
                         </Button>
                     </div>
@@ -327,7 +379,7 @@ function save(): void {
                 <button
                     v-else
                     type="button"
-                    class="text-muted-foreground hover:text-foreground mt-1 flex items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm transition-colors"
+                    class="mt-1 flex items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                     @click="creating = true"
                 >
                     <Plus class="size-4" />
@@ -339,34 +391,43 @@ function save(): void {
                 <form class="flex flex-col gap-4" @submit.prevent="save">
                     <div
                         v-if="locked"
-                        class="bg-muted/40 flex items-start gap-3 rounded-lg border p-4 text-sm"
+                        class="flex items-start gap-3 rounded-lg border bg-muted/40 p-4 text-sm"
                     >
-                        <ShieldAlert class="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                        <ShieldAlert
+                            class="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                        />
                         <p>
-                            <span class="font-medium">This role holds every ability</span> - including
-                            ones added in future updates. That is deliberate, so it cannot be edited
-                            here. Create another role to grant a narrower set.
+                            <span class="font-medium"
+                                >This role holds every ability</span
+                            >
+                            - including ones added in future updates. That is
+                            deliberate, so it cannot be edited here. Create
+                            another role to grant a narrower set.
                         </p>
                     </div>
 
                     <div
                         v-for="(abilities, group) in groups"
                         :key="group"
-                        class="bg-card rounded-lg border"
+                        class="rounded-lg border bg-card"
                     >
-                        <div class="flex items-center justify-between border-b px-4 py-2.5">
+                        <div
+                            class="flex items-center justify-between border-b px-4 py-2.5"
+                        >
                             <h2 class="text-sm font-medium">{{ group }}</h2>
                             <button
                                 v-if="!locked"
                                 type="button"
-                                class="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
+                                class="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                                 @click="toggleGroup(abilities)"
                             >
                                 Toggle all
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2 p-4 sm:grid-cols-3 lg:grid-cols-4">
+                        <div
+                            class="grid grid-cols-2 gap-x-4 gap-y-2 p-4 sm:grid-cols-3 lg:grid-cols-4"
+                        >
                             <label
                                 v-for="ability in abilities"
                                 :key="ability.name"
@@ -374,19 +435,25 @@ function save(): void {
                             >
                                 <input
                                     type="checkbox"
-                                    class="accent-primary size-4"
+                                    class="size-4 accent-primary"
                                     :checked="has(ability.name)"
                                     :disabled="locked"
                                     @change="toggle(ability.name)"
                                 />
-                                <span :class="DANGEROUS.has(ability.action) ? 'text-destructive' : ''">
+                                <span
+                                    :class="
+                                        DANGEROUS.has(ability.action)
+                                            ? 'text-destructive'
+                                            : ''
+                                    "
+                                >
                                     {{ label(ability.action) }}
                                 </span>
                                 <!-- Permanent deletion has no undo, so it does not
                                      look like the six abilities beside it. -->
                                 <TriangleAlert
                                     v-if="DANGEROUS.has(ability.action)"
-                                    class="text-destructive size-3.5 shrink-0"
+                                    class="size-3.5 shrink-0 text-destructive"
                                     aria-label="No undo"
                                 />
                             </label>
@@ -405,14 +472,20 @@ function save(): void {
                         v-if="!locked && templates.length"
                         class="flex flex-wrap items-center gap-2 rounded-lg border p-3 text-sm"
                     >
-                        <span class="text-muted-foreground text-xs">Replace these with a template:</span>
+                        <span class="text-xs text-muted-foreground"
+                            >Replace these with a template:</span
+                        >
 
                         <select
                             v-model="applying"
-                            class="border-input bg-background h-8 rounded-md border px-2 text-sm"
+                            class="h-8 rounded-md border border-input bg-background px-2 text-sm"
                         >
                             <option value="">Choose one…</option>
-                            <option v-for="t in templates" :key="t.key" :value="t.key">
+                            <option
+                                v-for="t in templates"
+                                :key="t.key"
+                                :value="t.key"
+                            >
                                 {{ t.name }}
                             </option>
                         </select>
@@ -427,29 +500,38 @@ function save(): void {
                             Apply
                         </Button>
 
-                        <span class="text-muted-foreground w-full text-xs">
-                            Ticks the boxes and stops there - nothing is saved until you press
-                            Save changes.
+                        <span class="w-full text-xs text-muted-foreground">
+                            Ticks the boxes and stops there - nothing is saved
+                            until you press Save changes.
                         </span>
                     </div>
 
-                    <div class="border-destructive/30 bg-destructive/5 rounded-lg border">
+                    <div
+                        class="rounded-lg border border-destructive/30 bg-destructive/5"
+                    >
                         <div class="flex items-start gap-3 p-4">
-                            <ShieldAlert class="text-destructive mt-0.5 size-4 shrink-0" />
+                            <ShieldAlert
+                                class="mt-0.5 size-4 shrink-0 text-destructive"
+                            />
                             <div class="min-w-0 flex-1">
-                                <h2 class="text-sm font-medium">Panel administration</h2>
-                                <p class="text-muted-foreground mb-3 text-sm">
-                                    Anybody with this can change permissions, including their own.
+                                <h2 class="text-sm font-medium">
+                                    Panel administration
+                                </h2>
+                                <p class="mb-3 text-sm text-muted-foreground">
+                                    Anybody with this can change permissions,
+                                    including their own.
                                 </p>
 
                                 <label
-                                    v-for="(abilityLabel, ability) in panelAbilities"
+                                    v-for="(
+                                        abilityLabel, ability
+                                    ) in panelAbilities"
                                     :key="ability"
                                     class="flex cursor-pointer items-center gap-2 text-sm"
                                 >
                                     <input
                                         type="checkbox"
-                                        class="accent-destructive size-4"
+                                        class="size-4 accent-destructive"
                                         :checked="has(ability)"
                                         :disabled="locked"
                                         @change="toggle(ability)"
@@ -460,11 +542,17 @@ function save(): void {
                         </div>
                     </div>
 
-                    <p v-if="page.props.errors?.role" class="text-destructive text-sm">
+                    <p
+                        v-if="page.props.errors?.role"
+                        class="text-sm text-destructive"
+                    >
                         {{ page.props.errors.role }}
                     </p>
 
-                    <div v-if="!locked" class="flex items-center justify-end gap-2">
+                    <div
+                        v-if="!locked"
+                        class="flex items-center justify-end gap-2"
+                    >
                         <!-- Destructive, so it sits apart from Save rather than
                              beside it, and is never the default action. -->
                         <!-- The first role cannot be deleted, so the button is
@@ -474,17 +562,23 @@ function save(): void {
                             v-if="!selected.isProtected"
                             type="button"
                             variant="ghost"
-                            class="text-destructive mr-auto"
+                            class="mr-auto text-destructive"
                             @click="destroy(selected)"
                         >
                             <Trash2 class="size-4" />
                             Delete role
                         </Button>
-                        <span v-else class="text-muted-foreground mr-auto text-xs">
+                        <span
+                            v-else
+                            class="mr-auto text-xs text-muted-foreground"
+                        >
                             The first role cannot be deleted.
                         </span>
 
-                        <span v-if="form.isDirty" class="text-muted-foreground text-sm">
+                        <span
+                            v-if="form.isDirty"
+                            class="text-sm text-muted-foreground"
+                        >
                             Unsaved changes.
                         </span>
                         <Button
@@ -495,7 +589,10 @@ function save(): void {
                         >
                             Discard
                         </Button>
-                        <Button type="submit" :disabled="form.processing || !form.isDirty">
+                        <Button
+                            type="submit"
+                            :disabled="form.processing || !form.isDirty"
+                        >
                             {{ form.processing ? 'Saving…' : 'Save changes' }}
                         </Button>
                     </div>
@@ -504,21 +601,25 @@ function save(): void {
         </div>
     </div>
 
-        <!-- Deleting a role is refused server-side when somebody holds it; this
+    <!-- Deleting a role is refused server-side when somebody holds it; this
              only asks, and the controller is what decides. -->
-        <PkModal
-            :open="confirmingDeleteRole !== null"
-            :title="`Delete ${confirmingDeleteRole?.name ?? ''}?`"
-            description="Anybody holding this role loses everything it granted."
-            @close="confirmingDeleteRole = null"
-        >
-            <template #footer>
-                <Button variant="ghost" size="sm" @click="confirmingDeleteRole = null">
-                    Cancel
-                </Button>
-                <Button variant="destructive" size="sm" @click="reallyDestroyRole">
-                    Delete role
-                </Button>
-            </template>
-        </PkModal>
+    <PkModal
+        :open="confirmingDeleteRole !== null"
+        :title="`Delete ${confirmingDeleteRole?.name ?? ''}?`"
+        description="Anybody holding this role loses everything it granted."
+        @close="confirmingDeleteRole = null"
+    >
+        <template #footer>
+            <Button
+                variant="ghost"
+                size="sm"
+                @click="confirmingDeleteRole = null"
+            >
+                Cancel
+            </Button>
+            <Button variant="destructive" size="sm" @click="reallyDestroyRole">
+                Delete role
+            </Button>
+        </template>
+    </PkModal>
 </template>

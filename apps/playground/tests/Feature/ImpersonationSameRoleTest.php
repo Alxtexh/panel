@@ -1,13 +1,19 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tests\Feature;
+
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Support\Abilities;
 use Tests\TestCase;
-final class ImpersonationSameRoleTest extends TestCase {
+
+final class ImpersonationSameRoleTest extends TestCase
+{
     use RefreshDatabase;
+
     /**
      * TWO PEOPLE IN THE SAME ROLE. Neither can do anything the other cannot, so
      * becoming them is not an escalation and must be allowed - otherwise the

@@ -8,17 +8,19 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Hash;
-use PanelKit\Panel\Audit\Auditable;
-use PanelKit\Panel\Support\Abilities;
-use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Support\Str;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use PanelKit\Panel\Audit\Auditable;
+use PanelKit\Panel\Support\Abilities;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
+use Spatie\Permission\PermissionRegistrar;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property int $id
@@ -49,6 +51,8 @@ class User extends Authenticatable implements PasskeyUser
      * trail says a password changed without saying what to.
      */
     use Auditable;
+
+    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
     /*
      * Spatie's trait replaces the hand-rolled single `role_id`. The difference
      * that matters is arity: a person can hold SEVERAL roles, and can be granted
@@ -57,7 +61,6 @@ class User extends Authenticatable implements PasskeyUser
      * every combination.
      */
     use HasRoles;
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -199,7 +202,7 @@ class User extends Authenticatable implements PasskeyUser
     /** Run `$body` with this user's tenant as Spatie's team, then restore. */
     private function withPermissionsTeam(callable $body): mixed
     {
-        $registrar = app(\Spatie\Permission\PermissionRegistrar::class);
+        $registrar = app(PermissionRegistrar::class);
         $previous = $registrar->getPermissionsTeamId();
 
         $registrar->setPermissionsTeamId($this->tenant_id);
@@ -239,7 +242,7 @@ class User extends Authenticatable implements PasskeyUser
          */
         try {
             return $this->hasPermissionTo($ability);
-        } catch (\Spatie\Permission\Exceptions\PermissionDoesNotExist) {
+        } catch (PermissionDoesNotExist) {
             return false;
         }
     }

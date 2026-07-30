@@ -20,12 +20,12 @@
  * An iframe has its own window, so `@media (max-width: 640px)` means what it
  * says - and the sidebar inside it collapses because it genuinely is narrow.
  */
-import AppLayout from '@/layouts/AppLayout.vue'
-import { PkDeviceFrame } from '@panelkit/ui'
-import { Head } from '@inertiajs/vue3'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { Head } from '@inertiajs/vue3';
+import { PkDeviceFrame } from '@panelkit/ui';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
-defineOptions({ layout: AppLayout })
+defineOptions({ layout: AppLayout });
 
 /**
  * Real logical viewports, not round numbers.
@@ -34,11 +34,48 @@ defineOptions({ layout: AppLayout })
  * tidy would mean testing a width no device has - and the interesting breakages
  * live at 375, which is the narrowest anybody still supports.
  */
-const DEVICES = [
-    { id: 'iphone-se', label: 'iPhone SE', width: 375, height: 667, notch: false, kind: 'phone' },
-    { id: 'iphone-13', label: 'iPhone 13', width: 390, height: 844, notch: true, kind: 'phone' },
-    { id: 'pixel-7', label: 'Pixel 7', width: 412, height: 915, notch: false, kind: 'phone' },
-    { id: 'ipad-mini', label: 'iPad mini', width: 744, height: 1000, notch: false, kind: 'phone' },
+interface Device {
+    id: string;
+    label: string;
+    width: number;
+    height: number;
+    notch: boolean;
+    kind: 'phone' | 'laptop';
+}
+
+const DEVICES: Device[] = [
+    {
+        id: 'iphone-se',
+        label: 'iPhone SE',
+        width: 375,
+        height: 667,
+        notch: false,
+        kind: 'phone',
+    },
+    {
+        id: 'iphone-13',
+        label: 'iPhone 13',
+        width: 390,
+        height: 844,
+        notch: true,
+        kind: 'phone',
+    },
+    {
+        id: 'pixel-7',
+        label: 'Pixel 7',
+        width: 412,
+        height: 915,
+        notch: false,
+        kind: 'phone',
+    },
+    {
+        id: 'ipad-mini',
+        label: 'iPad mini',
+        width: 744,
+        height: 1000,
+        notch: false,
+        kind: 'phone',
+    },
     /*
      * THE WIDTHS THE PANEL IS ACTUALLY USED AT, and the reason they were missing
      * is the reason they matter. Every size above is narrower than the sidebar
@@ -51,15 +88,36 @@ const DEVICES = [
      * table stops needing horizontal scroll at all. Logical viewports, not panel
      * sizes - a 16-inch MacBook reports 1728, not 3456.
      */
-    { id: 'laptop-13', label: '13" laptop', width: 1280, height: 800, notch: false, kind: 'laptop' },
-    { id: 'laptop-14', label: '14" laptop', width: 1440, height: 900, notch: false, kind: 'laptop' },
-    { id: 'laptop-16', label: '16" laptop', width: 1680, height: 1050, notch: false, kind: 'laptop' },
-]
+    {
+        id: 'laptop-13',
+        label: '13" laptop',
+        width: 1280,
+        height: 800,
+        notch: false,
+        kind: 'laptop',
+    },
+    {
+        id: 'laptop-14',
+        label: '14" laptop',
+        width: 1440,
+        height: 900,
+        notch: false,
+        kind: 'laptop',
+    },
+    {
+        id: 'laptop-16',
+        label: '16" laptop',
+        width: 1680,
+        height: 1050,
+        notch: false,
+        kind: 'laptop',
+    },
+];
 
-const device = ref(DEVICES[1])
-const landscape = ref(false)
+const device = ref(DEVICES[1]);
+const landscape = ref(false);
 
-const isLaptop = computed(() => device.value.kind === 'laptop')
+const isLaptop = computed(() => device.value.kind === 'laptop');
 
 const size = computed(() =>
     /*
@@ -71,7 +129,7 @@ const size = computed(() =>
     landscape.value && !isLaptop.value
         ? { width: device.value.height, height: device.value.width }
         : { width: device.value.width, height: device.value.height },
-)
+);
 
 /**
  * How much the frame has to shrink to fit on this screen.
@@ -88,36 +146,36 @@ const size = computed(() =>
  * width instead would render a 900px layout and label it a laptop, which is the
  * lie this screen exists to avoid.
  */
-const available = ref(0)
-const viewport = ref<HTMLElement | null>(null)
+const available = ref(0);
+const viewport = ref<HTMLElement | null>(null);
 
 const scale = computed(() => {
     // The bezel and the base sit outside the declared width; 80px covers both
     // with room to breathe. Never magnify - a phone at 3x is not more useful.
-    const needed = size.value.width + 80
+    const needed = size.value.width + 80;
 
     if (available.value === 0 || needed <= available.value) {
-        return 1
+        return 1;
     }
 
-    return Math.max(0.25, available.value / needed)
-})
+    return Math.max(0.25, available.value / needed);
+});
 
-let observer: ResizeObserver | null = null
+let observer: ResizeObserver | null = null;
 
 onMounted(() => {
     if (!viewport.value) {
-        return
+        return;
     }
 
     observer = new ResizeObserver((entries) => {
-        available.value = entries[0]?.contentRect.width ?? 0
-    })
+        available.value = entries[0]?.contentRect.width ?? 0;
+    });
 
-    observer.observe(viewport.value)
-})
+    observer.observe(viewport.value);
+});
 
-onBeforeUnmount(() => observer?.disconnect())
+onBeforeUnmount(() => observer?.disconnect());
 
 /**
  * Changing the size builds a FRESH frame, and that also resets where you are.
@@ -126,7 +184,7 @@ onBeforeUnmount(() => observer?.disconnect())
  * that measured its width on mount keeps the old value and the preview quietly
  * lies. Losing your place is the honest cost of a measurement that is true.
  */
-const frameKey = computed(() => `${device.value.id}-${landscape.value}`)
+const frameKey = computed(() => `${device.value.id}-${landscape.value}`);
 </script>
 
 <template>
@@ -135,13 +193,13 @@ const frameKey = computed(() => `${device.value.id}-${landscape.value}`)
     <div class="flex flex-col gap-4 p-4">
         <div>
             <h1 class="text-xl font-semibold">Device preview</h1>
-            <p class="text-muted-foreground text-sm">
+            <p class="text-sm text-muted-foreground">
                 The panel itself, at real device sizes. Navigate inside it.
             </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <div class="bg-muted/40 flex items-center gap-1 rounded-md p-1">
+            <div class="flex items-center gap-1 rounded-md bg-muted/40 p-1">
                 <button
                     v-for="d in DEVICES"
                     :key="d.id"
@@ -149,7 +207,7 @@ const frameKey = computed(() => `${device.value.id}-${landscape.value}`)
                     class="rounded px-2.5 py-1 text-xs transition-colors"
                     :class="
                         device.id === d.id
-                            ? 'bg-background text-foreground font-medium shadow-sm'
+                            ? 'bg-background font-medium text-foreground shadow-sm'
                             : 'text-muted-foreground hover:text-foreground'
                     "
                     @click="device = d"
@@ -160,7 +218,7 @@ const frameKey = computed(() => `${device.value.id}-${landscape.value}`)
 
             <button
                 type="button"
-                class="text-foreground hover:bg-accent rounded-md border px-2.5 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                class="rounded-md border px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
                 :disabled="isLaptop"
                 :title="isLaptop ? 'Laptops do not rotate' : undefined"
                 @click="landscape = !landscape"
@@ -168,14 +226,16 @@ const frameKey = computed(() => `${device.value.id}-${landscape.value}`)
                 {{ landscape ? 'Portrait' : 'Landscape' }}
             </button>
 
-            <span class="text-muted-foreground text-xs tabular-nums">
+            <span class="text-xs text-muted-foreground tabular-nums">
                 {{ size.width }} × {{ size.height }}
                 <!--
                     THE SCALE IS STATED, because a frame drawn at 55% with a
                     truthful pixel count beside it would otherwise read as a
                     measurement that does not match what is on screen.
                 -->
-                <template v-if="scale < 1"> · shown at {{ Math.round(scale * 100) }}%</template>
+                <template v-if="scale < 1">
+                    · shown at {{ Math.round(scale * 100) }}%</template
+                >
             </span>
         </div>
 
@@ -188,17 +248,17 @@ const frameKey = computed(() => `${device.value.id}-${landscape.value}`)
                     :width="size.width"
                     :height="size.height"
                     :notch="device.notch && !landscape"
-                    :kind="device.kind as 'phone' | 'laptop'"
+                    :kind="device.kind"
                 >
-            <!--
+                    <!--
                 The panel itself, unmodified. Navigate inside it.
             -->
-            <iframe
-                :key="frameKey"
-                src="/dashboard"
-                class="size-full border-0 bg-white"
-                title="The panel at phone size"
-            />
+                    <iframe
+                        :key="frameKey"
+                        src="/dashboard"
+                        class="size-full border-0 bg-white"
+                        title="The panel at phone size"
+                    />
                 </PkDeviceFrame>
             </div>
         </div>

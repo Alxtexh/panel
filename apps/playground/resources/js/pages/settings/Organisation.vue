@@ -16,31 +16,33 @@
  */
 // Generated from the routes: a renamed endpoint breaks the build rather
 // than leaving this form posting at a 404.
-import organisation from '@/routes/organisation'
-import { upload as uploadLogo } from '@/routes/organisation/logo'
-import { Head, router, useForm } from '@inertiajs/vue3'
-import { ref, watch } from 'vue'
-import { PkFileUpload } from '@panelkit/ui'
-import type { UploadedFileValue } from '@panelkit/ui'
-import Heading from '@/components/Heading.vue'
-import InputError from '@/components/InputError.vue'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { toast } from 'vue-sonner'
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { PkFileUpload } from '@panelkit/ui';
+import type { UploadedFileValue } from '@panelkit/ui';
+import { ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
+import Heading from '@/components/Heading.vue';
+import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import organisationRoutes from '@/routes/organisation';
+import { upload as uploadLogo } from '@/routes/organisation/logo';
 
 const props = defineProps<{
     organisation: {
-        name: string
-        logo: (UploadedFileValue & { value: string }) | null
-    }
-}>()
+        name: string;
+        logo: (UploadedFileValue & { value: string }) | null;
+    };
+}>();
 
 defineOptions({
     layout: {
-        breadcrumbs: [{ title: 'Organisation', href: organisation.edit.url() }],
+        breadcrumbs: [
+            { title: 'Organisation', href: organisationRoutes.edit.url() },
+        ],
     },
-})
+});
 
 const form = useForm({
     name: props.organisation.name,
@@ -53,9 +55,9 @@ const form = useForm({
      * upload handle, or null for remove.
      */
     logo: props.organisation.logo ? 'keep' : null,
-})
+});
 
-const logo = ref<UploadedFileValue | null>(props.organisation.logo)
+const logo = ref<UploadedFileValue | null>(props.organisation.logo);
 
 /*
  * Resynced after a save, because the value CHANGES MEANING at that point.
@@ -69,25 +71,28 @@ const logo = ref<UploadedFileValue | null>(props.organisation.logo)
 watch(
     () => props.organisation.logo,
     (next) => {
-        logo.value = next
-        form.logo = next ? 'keep' : null
-        form.defaults({ name: props.organisation.name, logo: next ? 'keep' : null })
+        logo.value = next;
+        form.logo = next ? 'keep' : null;
+        form.defaults({
+            name: props.organisation.name,
+            logo: next ? 'keep' : null,
+        });
     },
-)
+);
 
 function submit() {
-    form.logo = logo.value ? logo.value.value : null
+    form.logo = logo.value ? logo.value.value : null;
 
-    form.put(organisation.update.url(), {
+    form.put(organisationRoutes.update.url(), {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Organisation updated')
+            toast.success('Organisation updated');
             // The sidebar mark is rendered from shared props, so the whole page
             // has to hear about a new logo - a partial reload of this form
             // alone would leave the old one in the corner of the screen.
-            router.reload()
+            router.reload();
         },
-    })
+    });
 }
 
 /**
@@ -95,54 +100,63 @@ function submit() {
  *
  * XHR rather than fetch, because fetch still cannot report UPLOAD progress.
  */
-function upload(file: File, onProgress: (percent: number) => void): Promise<UploadedFileValue> {
+function upload(
+    file: File,
+    onProgress: (percent: number) => void,
+): Promise<UploadedFileValue> {
     return new Promise((resolve, reject) => {
-        const body = new FormData()
+        const body = new FormData();
 
-        body.append('file', file)
+        body.append('file', file);
 
-        const request = new XMLHttpRequest()
+        const request = new XMLHttpRequest();
 
-        request.open('POST', uploadLogo.url())
-        request.setRequestHeader('Accept', 'application/json')
-        request.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
-        request.setRequestHeader('X-XSRF-TOKEN', csrf())
-        request.withCredentials = true
+        request.open('POST', uploadLogo.url());
+        request.setRequestHeader('Accept', 'application/json');
+        request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        request.setRequestHeader('X-XSRF-TOKEN', csrf());
+        request.withCredentials = true;
 
         request.upload.onprogress = (event) => {
-            if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100))
-        }
+            if (event.lengthComputable) {
+                onProgress(Math.round((event.loaded / event.total) * 100));
+            }
+        };
 
         request.onload = () => {
-            let parsed: any = null
+            let parsed: any = null;
 
             try {
-                parsed = JSON.parse(request.responseText)
+                parsed = JSON.parse(request.responseText);
             } catch {
                 // Left null; the status decides below.
             }
 
             if (request.status === 201 && parsed) {
-                resolve({ value: parsed.handle, name: parsed.name, size: parsed.size })
+                resolve({
+                    value: parsed.handle,
+                    name: parsed.name,
+                    size: parsed.size,
+                });
 
-                return
+                return;
             }
 
             // The server's own reason - "the file's contents do not match its
             // .png extension" is actionable, "upload failed" is not.
-            reject(new Error(parsed?.message ?? 'The upload failed.'))
-        }
+            reject(new Error(parsed?.message ?? 'The upload failed.'));
+        };
 
-        request.onerror = () => reject(new Error('The upload failed.'))
+        request.onerror = () => reject(new Error('The upload failed.'));
 
-        request.send(body)
-    })
+        request.send(body);
+    });
 }
 
 function csrf(): string {
-    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
 
-    return match ? decodeURIComponent(match[1]) : ''
+    return match ? decodeURIComponent(match[1]) : '';
 }
 </script>
 
@@ -161,9 +175,14 @@ function csrf(): string {
         <form class="space-y-6" @submit.prevent="submit">
             <div class="grid gap-2">
                 <Label for="org-name">Name</Label>
-                <Input id="org-name" v-model="form.name" required autocomplete="organization" />
+                <Input
+                    id="org-name"
+                    v-model="form.name"
+                    required
+                    autocomplete="organization"
+                />
                 <InputError :message="form.errors.name" />
-                <p class="text-muted-foreground text-xs">
+                <p class="text-xs text-muted-foreground">
                     Shown in the sidebar and on every page of the panel.
                 </p>
             </div>
@@ -180,14 +199,17 @@ function csrf(): string {
                 />
 
                 <InputError :message="form.errors.logo" />
-                <p class="text-muted-foreground text-xs">
-                    A square mark reads best. When a logo is set it replaces the organisation name
-                    in the sidebar, so the two never compete for the same space.
+                <p class="text-xs text-muted-foreground">
+                    A square mark reads best. When a logo is set it replaces the
+                    organisation name in the sidebar, so the two never compete
+                    for the same space.
                 </p>
             </div>
 
             <div class="flex items-center gap-4">
-                <Button type="submit" :disabled="form.processing">Save changes</Button>
+                <Button type="submit" :disabled="form.processing"
+                    >Save changes</Button
+                >
             </div>
         </form>
     </div>

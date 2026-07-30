@@ -30,8 +30,7 @@
  * monitor that implies it is watching a cluster while reading one container is
  * actively misleading.
  */
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Head } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3';
 import {
     Activity,
     CircleCheck,
@@ -44,165 +43,201 @@ import {
     RefreshCw,
     Server,
     TriangleAlert,
-} from '@lucide/vue'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+} from '@lucide/vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
-defineOptions({ layout: AppLayout })
+defineOptions({ layout: AppLayout });
 
 interface Health {
     cpu: {
-        available: boolean
-        one?: number
-        five?: number
-        fifteen?: number
-        cores?: number
-        percent?: number | null
-    }
+        available: boolean;
+        one?: number;
+        five?: number;
+        fifteen?: number;
+        cores?: number;
+        percent?: number | null;
+    };
     memory: {
-        available: boolean
-        total?: number
-        free?: number
-        used?: number
-        percent?: number
-        process: { current: number; peak: number; limit: number | null }
-    }
+        available: boolean;
+        total?: number;
+        free?: number;
+        used?: number;
+        percent?: number;
+        process: { current: number; peak: number; limit: number | null };
+    };
     disk: {
-        available: boolean
-        path?: string
-        total?: number
-        free?: number
-        used?: number
-        percent?: number
-    }
+        available: boolean;
+        path?: string;
+        total?: number;
+        free?: number;
+        used?: number;
+        percent?: number;
+    };
     database: {
-        available: boolean
-        driver?: string
-        latency_ms?: number
-        size?: number | null
-        error?: string
-    }
+        available: boolean;
+        driver?: string;
+        latency_ms?: number;
+        size?: number | null;
+        error?: string;
+    };
     queue: {
-        connection: string
-        available: boolean
-        failed: number | null
-        pending?: number
-        reserved?: number
-        oldest_seconds?: number | null
-    }
-    cache: { store: string; available: boolean; latency_ms?: number; error?: string }
-    scheduler: { running: boolean; last: string | null; seconds_ago: number | null }
+        connection: string;
+        available: boolean;
+        failed: number | null;
+        pending?: number;
+        reserved?: number;
+        oldest_seconds?: number | null;
+    };
+    cache: {
+        store: string;
+        available: boolean;
+        latency_ms?: number;
+        error?: string;
+    };
+    scheduler: {
+        running: boolean;
+        last: string | null;
+        seconds_ago: number | null;
+    };
     process: {
-        php: string
-        sapi: string
-        uptime: number | null
-        storage_writable: boolean
-        default_disk: string
-    }
-    at: string
+        php: string;
+        sapi: string;
+        uptime: number | null;
+        storage_writable: boolean;
+        default_disk: string;
+    };
+    at: string;
 }
 
 const props = defineProps<{
     application: {
-        name: string
-        environment: string
-        debug: boolean
-        url: string
-        php: string
-        laravel: string
-        timezone: string
-        locale: string
-    }
+        name: string;
+        environment: string;
+        debug: boolean;
+        url: string;
+        php: string;
+        laravel: string;
+        timezone: string;
+        locale: string;
+    };
     drivers: {
-        database: { connection: string; driver: string; host: string; version: string | null }
-        cache: string
-        queue: string
-        session: string
-        mail: string
-        filesystem: string
-        live: string
-        broadcast: string
-    }
-    tenancy: { mode: string; meaning: string; resources: number }
-    scheduler: { lastRunAt: string | null; healthy: boolean }
-    findings: { level: string; title: string; detail: string }[]
-    health: Health
-}>()
+        database: {
+            connection: string;
+            driver: string;
+            host: string;
+            version: string | null;
+        };
+        cache: string;
+        queue: string;
+        session: string;
+        mail: string;
+        filesystem: string;
+        live: string;
+        broadcast: string;
+    };
+    tenancy: { mode: string; meaning: string; resources: number };
+    scheduler: { lastRunAt: string | null; healthy: boolean };
+    findings: { level: string; title: string; detail: string }[];
+    health: Health;
+}>();
 
-const health = ref<Health>(props.health)
-const refreshing = ref(false)
-const failedRefreshes = ref(0)
+const health = ref<Health>(props.health);
+const refreshing = ref(false);
+const failedRefreshes = ref(0);
 
-const REFRESH_MS = 10_000
+const REFRESH_MS = 10_000;
 /** ~10 minutes of a tab nobody is looking at. */
-const MAX_FAILURES = 3
+const MAX_FAILURES = 3;
 
-let timer: ReturnType<typeof setInterval> | null = null
+let timer: ReturnType<typeof setInterval> | null = null;
 
 async function refresh() {
-    if (document.hidden || refreshing.value) return
+    if (document.hidden || refreshing.value) {
+        return;
+    }
 
-    refreshing.value = true
+    refreshing.value = true;
 
     try {
         const response = await fetch('/operations/monitoring/metrics', {
-            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
             credentials: 'same-origin',
-        })
+        });
 
-        if (!response.ok) throw new Error('metrics')
+        if (!response.ok) {
+            throw new Error('metrics');
+        }
 
-        health.value = await response.json()
-        failedRefreshes.value = 0
+        health.value = await response.json();
+        failedRefreshes.value = 0;
     } catch {
         /*
          * A FAILING POLL GIVES UP RATHER THAN HAMMERING. If the panel is the
          * thing that is unwell, a monitoring page retrying every ten seconds
          * forever is load on a server that already has a problem.
          */
-        failedRefreshes.value += 1
+        failedRefreshes.value += 1;
 
         if (failedRefreshes.value >= MAX_FAILURES && timer) {
-            clearInterval(timer)
-            timer = null
+            clearInterval(timer);
+            timer = null;
         }
     } finally {
-        refreshing.value = false
+        refreshing.value = false;
     }
 }
 
 onMounted(() => {
-    timer = setInterval(refresh, REFRESH_MS)
-})
+    timer = setInterval(refresh, REFRESH_MS);
+});
 
 onBeforeUnmount(() => {
-    if (timer) clearInterval(timer)
-})
+    if (timer) {
+        clearInterval(timer);
+    }
+});
 
 /* -------------------------------------------------------------- formatting */
 
 function bytes(value: number | null | undefined): string {
-    if (value === null || value === undefined) return '—'
-
-    const units = ['B', 'KB', 'MB', 'GB', 'TB']
-    let size = value
-    let unit = 0
-
-    while (size >= 1024 && unit < units.length - 1) {
-        size /= 1024
-        unit += 1
+    if (value === null || value === undefined) {
+        return '—';
     }
 
-    return `${size.toFixed(unit > 1 ? 1 : 0)} ${units[unit]}`
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = value;
+    let unit = 0;
+
+    while (size >= 1024 && unit < units.length - 1) {
+        size /= 1024;
+        unit += 1;
+    }
+
+    return `${size.toFixed(unit > 1 ? 1 : 0)} ${units[unit]}`;
 }
 
 function duration(seconds: number | null | undefined): string {
-    if (seconds === null || seconds === undefined) return '—'
+    if (seconds === null || seconds === undefined) {
+        return '—';
+    }
 
-    if (seconds < 60) return `${Math.round(seconds)}s`
-    if (seconds < 3600) return `${Math.round(seconds / 60)}m`
-    if (seconds < 86_400) return `${Math.round(seconds / 3600)}h`
+    if (seconds < 60) {
+        return `${Math.round(seconds)}s`;
+    }
 
-    return `${Math.round(seconds / 86_400)}d`
+    if (seconds < 3600) {
+        return `${Math.round(seconds / 60)}m`;
+    }
+
+    if (seconds < 86_400) {
+        return `${Math.round(seconds / 3600)}h`;
+    }
+
+    return `${Math.round(seconds / 86_400)}d`;
 }
 
 /**
@@ -213,22 +248,33 @@ function duration(seconds: number | null | undefined): string {
  * fails.
  */
 function tone(percent: number | null | undefined): string {
-    if (percent === null || percent === undefined) return 'bg-muted-foreground/30'
-    if (percent >= 90) return 'bg-destructive'
-    if (percent >= 75) return 'bg-amber-500'
+    if (percent === null || percent === undefined) {
+        return 'bg-muted-foreground/30';
+    }
 
-    return 'bg-emerald-500'
+    if (percent >= 90) {
+        return 'bg-destructive';
+    }
+
+    if (percent >= 75) {
+        return 'bg-amber-500';
+    }
+
+    return 'bg-emerald-500';
 }
 
-const problems = computed(() => props.findings.filter((f) => f.level === 'problem'))
+const problems = computed(() =>
+    props.findings.filter((f) => f.level === 'problem'),
+);
 
 const debugInProduction = computed(
     () => props.application.debug && props.application.environment !== 'local',
-)
+);
 
-const updated = computed(() => new Date(health.value.at).toLocaleTimeString())
+const updated = computed(() => new Date(health.value.at).toLocaleTimeString());
 
-const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toLocaleString())
+const when = (iso: string | null) =>
+    iso === null ? 'never' : new Date(iso).toLocaleString();
 </script>
 
 <template>
@@ -238,18 +284,22 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
         <header class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h1 class="text-xl font-semibold">Monitoring</h1>
-                <p class="text-muted-foreground text-sm">
-                    This host, measured from inside the application. Refreshes every
+                <p class="text-sm text-muted-foreground">
+                    This host, measured from inside the application. Refreshes
+                    every
                     {{ REFRESH_MS / 1000 }} seconds while this tab is open.
                 </p>
             </div>
 
             <button
                 type="button"
-                class="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs"
+                class="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
                 @click="refresh"
             >
-                <RefreshCw class="size-3.5" :class="refreshing ? 'animate-spin' : ''" />
+                <RefreshCw
+                    class="size-3.5"
+                    :class="refreshing ? 'animate-spin' : ''"
+                />
                 Updated {{ updated }}
             </button>
         </header>
@@ -258,29 +308,31 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
              monitoring, and every screen reporting on those looks normal. -->
         <div
             v-if="!health.scheduler.running"
-            class="border-destructive/40 bg-destructive/5 flex items-start gap-3 rounded-lg border p-4 text-sm"
+            class="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm"
         >
-            <TriangleAlert class="text-destructive mt-0.5 size-4 shrink-0" />
+            <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
             <div>
-                <p class="font-medium">The scheduler does not appear to be running.</p>
+                <p class="font-medium">
+                    The scheduler does not appear to be running.
+                </p>
                 <p class="text-muted-foreground">
-                    Last tick: {{ when(health.scheduler.last) }}. Without it there are no backups,
-                    no cleanup and no scheduled reports - and every screen reporting on those will
-                    look normal.
+                    Last tick: {{ when(health.scheduler.last) }}. Without it
+                    there are no backups, no cleanup and no scheduled reports -
+                    and every screen reporting on those will look normal.
                 </p>
             </div>
         </div>
 
         <div
             v-if="debugInProduction"
-            class="border-destructive/40 bg-destructive/5 flex items-start gap-3 rounded-lg border p-4 text-sm"
+            class="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm"
         >
-            <TriangleAlert class="text-destructive mt-0.5 size-4 shrink-0" />
+            <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
             <div>
                 <p class="font-medium">Debug mode is on outside local.</p>
                 <p class="text-muted-foreground">
-                    Any unhandled error will show stack traces, environment variables and database
-                    credentials to whoever triggered it.
+                    Any unhandled error will show stack traces, environment
+                    variables and database credentials to whoever triggered it.
                 </p>
             </div>
         </div>
@@ -288,9 +340,9 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
         <div
             v-for="(finding, i) in problems"
             :key="`problem-${i}`"
-            class="border-destructive/40 bg-destructive/5 flex items-start gap-3 rounded-lg border p-4 text-sm"
+            class="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm"
         >
-            <TriangleAlert class="text-destructive mt-0.5 size-4 shrink-0" />
+            <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
             <div>
                 <p class="font-medium">{{ finding.title }}</p>
                 <p class="text-muted-foreground">{{ finding.detail }}</p>
@@ -301,55 +353,70 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
 
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <!-- CPU -->
-            <div class="bg-card flex flex-col gap-2 rounded-lg border p-4">
-                <div class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+            <div class="flex flex-col gap-2 rounded-lg border bg-card p-4">
+                <div
+                    class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                >
                     <Cpu class="size-3.5" />
                     CPU load
                 </div>
 
                 <template v-if="health.cpu.available">
-                    <p class="text-2xl font-semibold tabular-nums">{{ health.cpu.percent }}%</p>
-                    <div class="bg-muted h-1.5 overflow-hidden rounded-full">
+                    <p class="text-2xl font-semibold tabular-nums">
+                        {{ health.cpu.percent }}%
+                    </p>
+                    <div class="h-1.5 overflow-hidden rounded-full bg-muted">
                         <div
                             class="h-full rounded-full transition-all"
                             :class="tone(health.cpu.percent)"
                             :style="{ width: `${health.cpu.percent}%` }"
                         />
                     </div>
-                    <p class="text-muted-foreground text-xs">
-                        {{ health.cpu.one }} / {{ health.cpu.five }} / {{ health.cpu.fifteen }}
-                        across {{ health.cpu.cores }} core(s)
+                    <p class="text-xs text-muted-foreground">
+                        {{ health.cpu.one }} / {{ health.cpu.five }} /
+                        {{ health.cpu.fifteen }} across
+                        {{ health.cpu.cores }} core(s)
                     </p>
                 </template>
 
-                <p v-else class="text-muted-foreground text-sm">Not available on this platform.</p>
+                <p v-else class="text-sm text-muted-foreground">
+                    Not available on this platform.
+                </p>
             </div>
 
             <!-- Memory -->
-            <div class="bg-card flex flex-col gap-2 rounded-lg border p-4">
-                <div class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+            <div class="flex flex-col gap-2 rounded-lg border bg-card p-4">
+                <div
+                    class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                >
                     <MemoryStick class="size-3.5" />
                     Memory
                 </div>
 
                 <template v-if="health.memory.available">
-                    <p class="text-2xl font-semibold tabular-nums">{{ health.memory.percent }}%</p>
-                    <div class="bg-muted h-1.5 overflow-hidden rounded-full">
+                    <p class="text-2xl font-semibold tabular-nums">
+                        {{ health.memory.percent }}%
+                    </p>
+                    <div class="h-1.5 overflow-hidden rounded-full bg-muted">
                         <div
                             class="h-full rounded-full transition-all"
                             :class="tone(health.memory.percent)"
                             :style="{ width: `${health.memory.percent}%` }"
                         />
                     </div>
-                    <p class="text-muted-foreground text-xs">
-                        {{ bytes(health.memory.used) }} of {{ bytes(health.memory.total) }} used
+                    <p class="text-xs text-muted-foreground">
+                        {{ bytes(health.memory.used) }} of
+                        {{ bytes(health.memory.total) }} used
                     </p>
                 </template>
 
-                <p v-else class="text-muted-foreground text-sm">Host memory is not readable here.</p>
+                <p v-else class="text-sm text-muted-foreground">
+                    Host memory is not readable here.
+                </p>
 
-                <p class="text-muted-foreground border-t pt-2 text-xs">
-                    This process: {{ bytes(health.memory.process.current) }} now, peak
+                <p class="border-t pt-2 text-xs text-muted-foreground">
+                    This process:
+                    {{ bytes(health.memory.process.current) }} now, peak
                     {{ bytes(health.memory.process.peak) }}
                     <span v-if="health.memory.process.limit">
                         of {{ bytes(health.memory.process.limit) }}
@@ -358,66 +425,88 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
             </div>
 
             <!-- Disk -->
-            <div class="bg-card flex flex-col gap-2 rounded-lg border p-4">
-                <div class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+            <div class="flex flex-col gap-2 rounded-lg border bg-card p-4">
+                <div
+                    class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                >
                     <HardDrive class="size-3.5" />
                     Disk
                 </div>
 
                 <template v-if="health.disk.available">
-                    <p class="text-2xl font-semibold tabular-nums">{{ health.disk.percent }}%</p>
-                    <div class="bg-muted h-1.5 overflow-hidden rounded-full">
+                    <p class="text-2xl font-semibold tabular-nums">
+                        {{ health.disk.percent }}%
+                    </p>
+                    <div class="h-1.5 overflow-hidden rounded-full bg-muted">
                         <div
                             class="h-full rounded-full transition-all"
                             :class="tone(health.disk.percent)"
                             :style="{ width: `${health.disk.percent}%` }"
                         />
                     </div>
-                    <p class="text-muted-foreground text-xs">
-                        {{ bytes(health.disk.free) }} free of {{ bytes(health.disk.total) }}
+                    <p class="text-xs text-muted-foreground">
+                        {{ bytes(health.disk.free) }} free of
+                        {{ bytes(health.disk.total) }}
                     </p>
                     <!-- Measured where the application WRITES, which on a real
                          deployment is often not the root filesystem. -->
-                    <p class="text-muted-foreground truncate font-mono text-[11px]" :title="health.disk.path">
+                    <p
+                        class="truncate font-mono text-[11px] text-muted-foreground"
+                        :title="health.disk.path"
+                    >
                         {{ health.disk.path }}
                     </p>
                 </template>
 
-                <p v-else class="text-muted-foreground text-sm">Not readable.</p>
+                <p v-else class="text-sm text-muted-foreground">
+                    Not readable.
+                </p>
             </div>
 
             <!-- Database -->
-            <div class="bg-card flex flex-col gap-2 rounded-lg border p-4">
-                <div class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+            <div class="flex flex-col gap-2 rounded-lg border bg-card p-4">
+                <div
+                    class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                >
                     <Database class="size-3.5" />
                     Database
                 </div>
 
                 <template v-if="health.database.available">
                     <p class="text-2xl font-semibold tabular-nums">
-                        {{ health.database.latency_ms }}<span class="text-base font-normal">ms</span>
+                        {{ health.database.latency_ms
+                        }}<span class="text-base font-normal">ms</span>
                     </p>
-                    <p class="text-muted-foreground text-xs">
-                        {{ health.database.driver }} · {{ bytes(health.database.size) }} on disk
+                    <p class="text-xs text-muted-foreground">
+                        {{ health.database.driver }} ·
+                        {{ bytes(health.database.size) }} on disk
                     </p>
                 </template>
 
                 <template v-else>
-                    <p class="text-destructive text-sm font-medium">Not answering</p>
-                    <p class="text-muted-foreground text-xs">{{ health.database.error }}</p>
+                    <p class="text-sm font-medium text-destructive">
+                        Not answering
+                    </p>
+                    <p class="text-xs text-muted-foreground">
+                        {{ health.database.error }}
+                    </p>
                 </template>
             </div>
 
             <!-- Queue -->
-            <div class="bg-card flex flex-col gap-2 rounded-lg border p-4">
-                <div class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+            <div class="flex flex-col gap-2 rounded-lg border bg-card p-4">
+                <div
+                    class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                >
                     <Layers class="size-3.5" />
                     Queue
                 </div>
 
                 <template v-if="health.queue.available">
-                    <p class="text-2xl font-semibold tabular-nums">{{ health.queue.pending }}</p>
-                    <p class="text-muted-foreground text-xs">
+                    <p class="text-2xl font-semibold tabular-nums">
+                        {{ health.queue.pending }}
+                    </p>
+                    <p class="text-xs text-muted-foreground">
                         waiting · {{ health.queue.reserved }} in flight
                         <template v-if="health.queue.oldest_seconds">
                             · oldest {{ duration(health.queue.oldest_seconds) }}
@@ -426,9 +515,12 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                 </template>
 
                 <template v-else>
-                    <p class="text-muted-foreground text-sm">
+                    <p class="text-sm text-muted-foreground">
                         Depth is not countable on the
-                        <span class="font-mono">{{ health.queue.connection }}</span> queue.
+                        <span class="font-mono">{{
+                            health.queue.connection
+                        }}</span>
+                        queue.
                     </p>
                 </template>
 
@@ -436,31 +528,40 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                      does not, and each one is work somebody believes happened. -->
                 <p
                     class="border-t pt-2 text-xs"
-                    :class="health.queue.failed ? 'text-destructive font-medium' : 'text-muted-foreground'"
+                    :class="
+                        health.queue.failed
+                            ? 'font-medium text-destructive'
+                            : 'text-muted-foreground'
+                    "
                 >
                     {{ health.queue.failed ?? '—' }} failed job(s)
                 </p>
             </div>
 
             <!-- Cache -->
-            <div class="bg-card flex flex-col gap-2 rounded-lg border p-4">
-                <div class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+            <div class="flex flex-col gap-2 rounded-lg border bg-card p-4">
+                <div
+                    class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                >
                     <Activity class="size-3.5" />
                     Cache
                 </div>
 
                 <template v-if="health.cache.available">
                     <p class="text-2xl font-semibold tabular-nums">
-                        {{ health.cache.latency_ms }}<span class="text-base font-normal">ms</span>
+                        {{ health.cache.latency_ms
+                        }}<span class="text-base font-normal">ms</span>
                     </p>
-                    <p class="text-muted-foreground text-xs">
+                    <p class="text-xs text-muted-foreground">
                         {{ health.cache.store }} · write and read back
                     </p>
                 </template>
 
                 <template v-else>
-                    <p class="text-destructive text-sm font-medium">Not answering</p>
-                    <p class="text-muted-foreground text-xs">
+                    <p class="text-sm font-medium text-destructive">
+                        Not answering
+                    </p>
+                    <p class="text-xs text-muted-foreground">
                         {{ health.cache.store }} · {{ health.cache.error }}
                     </p>
                 </template>
@@ -470,8 +571,10 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
         <!-- ------------------------------------------------- process facts -->
 
         <div class="grid gap-3 sm:grid-cols-2">
-            <div class="bg-card rounded-lg border">
-                <p class="border-b px-4 py-2.5 text-sm font-medium">Scheduler</p>
+            <div class="rounded-lg border bg-card">
+                <p class="border-b px-4 py-2.5 text-sm font-medium">
+                    Scheduler
+                </p>
                 <dl class="divide-y text-sm">
                     <div class="flex items-center justify-between px-4 py-2.5">
                         <dt class="text-muted-foreground">Status</dt>
@@ -480,20 +583,32 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                                 v-if="health.scheduler.running"
                                 class="size-3.5 text-emerald-600"
                             />
-                            <TriangleAlert v-else class="text-destructive size-3.5" />
-                            {{ health.scheduler.running ? 'Ticking' : 'Not running' }}
+                            <TriangleAlert
+                                v-else
+                                class="size-3.5 text-destructive"
+                            />
+                            {{
+                                health.scheduler.running
+                                    ? 'Ticking'
+                                    : 'Not running'
+                            }}
                         </dd>
                     </div>
                     <div class="flex items-center justify-between px-4 py-2.5">
                         <dt class="text-muted-foreground">Last tick</dt>
                         <dd class="font-mono text-xs">
-                            {{ health.scheduler.seconds_ago === null ? 'never' : duration(health.scheduler.seconds_ago) + ' ago' }}
+                            {{
+                                health.scheduler.seconds_ago === null
+                                    ? 'never'
+                                    : duration(health.scheduler.seconds_ago) +
+                                      ' ago'
+                            }}
                         </dd>
                     </div>
                 </dl>
             </div>
 
-            <div class="bg-card rounded-lg border">
+            <div class="rounded-lg border bg-card">
                 <p class="border-b px-4 py-2.5 text-sm font-medium">Process</p>
                 <dl class="divide-y text-sm">
                     <div class="flex items-center justify-between px-4 py-2.5">
@@ -504,12 +619,18 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                     </div>
                     <div class="flex items-center justify-between px-4 py-2.5">
                         <dt class="text-muted-foreground">Host uptime</dt>
-                        <dd class="font-mono text-xs">{{ duration(health.process.uptime) }}</dd>
+                        <dd class="font-mono text-xs">
+                            {{ duration(health.process.uptime) }}
+                        </dd>
                     </div>
                     <div class="flex items-center justify-between px-4 py-2.5">
                         <dt class="text-muted-foreground">Storage</dt>
                         <dd class="font-mono text-xs">
-                            {{ health.process.storage_writable ? 'writable' : 'NOT writable' }}
+                            {{
+                                health.process.storage_writable
+                                    ? 'writable'
+                                    : 'NOT writable'
+                            }}
                         </dd>
                     </div>
                 </dl>
@@ -523,44 +644,56 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                 <Server class="size-4" />
                 What this installation is running
             </h2>
-            <p class="text-muted-foreground mt-0.5 text-sm">
-                Configuration, not health. Nothing here can be changed from this page - it comes
-                from the deploy.
+            <p class="mt-0.5 text-sm text-muted-foreground">
+                Configuration, not health. Nothing here can be changed from this
+                page - it comes from the deploy.
             </p>
         </div>
 
         <div class="grid gap-3 sm:grid-cols-2">
-            <div class="bg-card rounded-lg border">
-                <p class="border-b px-4 py-2.5 text-sm font-medium">Application</p>
+            <div class="rounded-lg border bg-card">
+                <p class="border-b px-4 py-2.5 text-sm font-medium">
+                    Application
+                </p>
                 <dl class="divide-y text-sm">
                     <div class="flex items-center justify-between px-4 py-2.5">
                         <dt class="text-muted-foreground">Environment</dt>
-                        <dd class="font-mono text-xs">{{ application.environment }}</dd>
+                        <dd class="font-mono text-xs">
+                            {{ application.environment }}
+                        </dd>
                     </div>
                     <div class="flex items-center justify-between px-4 py-2.5">
                         <dt class="text-muted-foreground">Debug</dt>
-                        <dd class="font-mono text-xs" :class="debugInProduction ? 'text-destructive' : ''">
+                        <dd
+                            class="font-mono text-xs"
+                            :class="debugInProduction ? 'text-destructive' : ''"
+                        >
                             {{ application.debug ? 'on' : 'off' }}
                         </dd>
                     </div>
                     <div class="flex items-center justify-between px-4 py-2.5">
                         <dt class="text-muted-foreground">Laravel</dt>
-                        <dd class="font-mono text-xs">{{ application.laravel }}</dd>
+                        <dd class="font-mono text-xs">
+                            {{ application.laravel }}
+                        </dd>
                     </div>
                     <div class="flex items-center justify-between px-4 py-2.5">
                         <dt class="text-muted-foreground">Timezone</dt>
-                        <dd class="font-mono text-xs">{{ application.timezone }}</dd>
+                        <dd class="font-mono text-xs">
+                            {{ application.timezone }}
+                        </dd>
                     </div>
                 </dl>
             </div>
 
-            <div class="bg-card rounded-lg border">
+            <div class="rounded-lg border bg-card">
                 <p class="border-b px-4 py-2.5 text-sm font-medium">Drivers</p>
                 <dl class="divide-y text-sm">
                     <div class="flex items-center justify-between px-4 py-2.5">
                         <dt class="text-muted-foreground">Database</dt>
                         <dd class="font-mono text-xs">
-                            {{ drivers.database.driver }} {{ drivers.database.version }}
+                            {{ drivers.database.driver }}
+                            {{ drivers.database.version }}
                         </dd>
                     </div>
                     <div class="flex items-center justify-between px-4 py-2.5">
@@ -583,20 +716,22 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
             </div>
         </div>
 
-        <div class="bg-card rounded-lg border p-4">
+        <div class="rounded-lg border bg-card p-4">
             <p class="text-sm font-medium">Tenancy</p>
             <p class="mt-1 text-sm">
-                <span class="font-mono">{{ tenancy.mode }}</span> — {{ tenancy.meaning }}
+                <span class="font-mono">{{ tenancy.mode }}</span> —
+                {{ tenancy.meaning }}
             </p>
-            <p class="text-muted-foreground mt-1 text-xs">
+            <p class="mt-1 text-xs text-muted-foreground">
                 {{ tenancy.resources }} registered resource(s).
             </p>
         </div>
 
-        <p class="text-muted-foreground flex items-center gap-1.5 text-xs">
+        <p class="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock class="size-3.5" />
-            Measured from inside this application, on this host. There is no agent and nothing to
-            configure - what the PHP process can see is what appears here.
+            Measured from inside this application, on this host. There is no
+            agent and nothing to configure - what the PHP process can see is
+            what appears here.
         </p>
     </div>
 </template>

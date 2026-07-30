@@ -8,10 +8,10 @@ use App\Ai\Middleware\MeterPerTenant;
 use App\Ai\Tools\FindSubscriber;
 use App\Ai\Tools\SearchKnowledge;
 use App\Ai\Tools\SuspendSubscriber;
+use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
-use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Promptable;
 use Stringable;
 

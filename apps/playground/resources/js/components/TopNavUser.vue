@@ -13,12 +13,12 @@
  */
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
 
@@ -31,17 +31,27 @@ const user = computed(() => page.props.auth.user);
         <DropdownMenuTrigger as-child>
             <button
                 type="button"
-                class="hover:bg-accent rounded-full transition-colors"
+                class="rounded-full transition-colors hover:bg-accent"
                 :aria-label="`Account menu for ${user.name}`"
             >
                 <Avatar class="size-8">
-                    <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                    <AvatarFallback class="text-xs">{{ getInitials(user.name) }}</AvatarFallback>
+                    <AvatarImage
+                        v-if="user.avatar"
+                        :src="user.avatar"
+                        :alt="user.name"
+                    />
+                    <AvatarFallback class="text-xs">{{
+                        getInitials(user.name)
+                    }}</AvatarFallback>
                 </Avatar>
             </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent class="min-w-56 rounded-lg" align="end" :side-offset="6">
+        <DropdownMenuContent
+            class="min-w-56 rounded-lg"
+            align="end"
+            :side-offset="6"
+        >
             <UserMenuContent :user="user" />
         </DropdownMenuContent>
     </DropdownMenu>

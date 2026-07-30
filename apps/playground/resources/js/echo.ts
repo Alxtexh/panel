@@ -1,5 +1,5 @@
-import Echo from 'laravel-echo'
-import Pusher from 'pusher-js'
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
 /**
  * The WebSocket connection, created once and hung on `window`.
@@ -22,8 +22,8 @@ import Pusher from 'pusher-js'
  */
 declare global {
     interface Window {
-        Echo?: Echo<'reverb'>
-        Pusher?: typeof Pusher
+        Echo?: Echo<'reverb'>;
+        Pusher?: typeof Pusher;
     }
 }
 
@@ -49,7 +49,7 @@ if (typeof window !== 'undefined') {
      * works against it unchanged and why the broadcaster on the server side is
      * `PusherBroadcaster`.
      */
-    window.Pusher = Pusher
+    window.Pusher = Pusher;
 
     window.Echo = new Echo({
         broadcaster: 'reverb',
@@ -75,5 +75,5 @@ if (typeof window !== 'undefined') {
          * identity, tenancy and permission before any data flows.
          */
         authEndpoint: '/broadcasting/auth',
-    })
+    });
 }

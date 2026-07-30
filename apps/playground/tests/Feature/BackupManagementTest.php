@@ -13,8 +13,12 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\BackupArchive;
+use PanelKit\Panel\Support\BackupDestinationProbe;
 use PanelKit\Panel\Support\BackupSettings;
 use PanelKit\Panel\Support\PanelSettings;
+use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
+use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
+use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays;
 use Tests\TestCase;
 
 /**
@@ -520,7 +524,7 @@ final class BackupManagementTest extends TestCase
         BackupSettings::fromArray(['frequency' => 'monthly'])->apply();
         $monthly = config('backup.monitor_backups.0.health_checks');
 
-        $check = \Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays::class;
+        $check = MaximumAgeInDays::class;
 
         $this->assertGreaterThan($daily[$check], $monthly[$check]);
     }
@@ -696,7 +700,7 @@ final class BackupManagementTest extends TestCase
     /** The probe writes, reads back, and cleans up after itself. */
     public function test_the_probe_leaves_nothing_behind(): void
     {
-        $result = (new \PanelKit\Panel\Support\BackupDestinationProbe)->check('local');
+        $result = (new BackupDestinationProbe)->check('local');
 
         $this->assertTrue($result['ok'], $result['message']);
 
@@ -714,7 +718,7 @@ final class BackupManagementTest extends TestCase
      */
     public function test_the_probe_verifies_the_contents_not_just_the_write(): void
     {
-        $probe = new \PanelKit\Panel\Support\BackupDestinationProbe;
+        $probe = new BackupDestinationProbe;
 
         $this->assertFalse($probe->check('nonexistent-disk')['ok']);
         $this->assertStringContainsString('No such disk', $probe->check('nonexistent-disk')['message']);
@@ -776,7 +780,7 @@ final class BackupManagementTest extends TestCase
         $this->assertSame(
             [],
             config('backup.notifications.notifications.'
-                .\Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class),
+                .BackupWasSuccessfulNotification::class),
         );
     }
 
@@ -788,10 +792,10 @@ final class BackupManagementTest extends TestCase
         ])->apply();
 
         $failure = config('backup.notifications.notifications.'
-            .\Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class);
+            .BackupHasFailedNotification::class);
 
         $success = config('backup.notifications.notifications.'
-            .\Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class);
+            .BackupWasSuccessfulNotification::class);
 
         $this->assertSame($failure, $success);
         $this->assertNotEmpty($success);

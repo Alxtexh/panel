@@ -23,8 +23,8 @@ const props = withDefaults(
 )
 
 const BASE =
-    'inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-medium '
-    + 'w-fit whitespace-nowrap shrink-0 gap-1 overflow-hidden [&>svg]:size-3 [&>svg]:pointer-events-none'
+    'inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-medium ' +
+    'w-fit whitespace-nowrap shrink-0 gap-1 overflow-hidden [&>svg]:size-3 [&>svg]:pointer-events-none'
 
 const VARIANTS: Record<string, string> = {
     default: 'border-transparent bg-primary text-primary-foreground',

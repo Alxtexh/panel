@@ -21,19 +21,19 @@
  * been a write, and replaying a write against a fresh session is how you charge
  * somebody twice. The reader is told what happened and the page starts clean.
  */
-import { Button } from '@/components/ui/button'
-import { sessionExpired } from '@/lib/sessionExpired'
+import { Button } from '@/components/ui/button';
+import { sessionExpired } from '@/lib/sessionExpired';
 
 /*
  * The flag lives in a module, set by the router hook in `app.ts` - see
  * `lib/sessionExpired.ts` for why it is not a prop.
  */
-const open = sessionExpired
+const open = sessionExpired;
 
 function reload() {
     // A hard reload, not an Inertia visit: the whole point is a new session and
     // a new CSRF token, and an Inertia visit would carry the stale one.
-    window.location.reload()
+    window.location.reload();
 }
 </script>
 
@@ -48,13 +48,15 @@ function reload() {
             aria-modal="true"
             aria-labelledby="session-expired-title"
         >
-            <div class="bg-background/80 absolute inset-0 backdrop-blur-sm"></div>
+            <div
+                class="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            ></div>
 
             <div
-                class="bg-card relative w-full max-w-sm rounded-xl border p-6 text-center shadow-lg"
+                class="relative w-full max-w-sm rounded-xl border bg-card p-6 text-center shadow-lg"
             >
                 <div
-                    class="bg-amber-500/10 mx-auto flex size-12 items-center justify-center rounded-full text-amber-600 dark:text-amber-400"
+                    class="mx-auto flex size-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400"
                 >
                     <svg
                         class="size-6"
@@ -71,16 +73,22 @@ function reload() {
                     </svg>
                 </div>
 
-                <h2 id="session-expired-title" class="mt-4 text-base font-semibold">
+                <h2
+                    id="session-expired-title"
+                    class="mt-4 text-base font-semibold"
+                >
                     Your session expired
                 </h2>
 
-                <p class="text-muted-foreground mt-2 text-sm leading-relaxed">
-                    You were away long enough that the page went stale. Reloading will pick things
-                    back up - anything you had already saved is safe.
+                <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    You were away long enough that the page went stale.
+                    Reloading will pick things back up - anything you had
+                    already saved is safe.
                 </p>
 
-                <Button class="mt-5 w-full" autofocus @click="reload">Reload the page</Button>
+                <Button class="mt-5 w-full" autofocus @click="reload"
+                    >Reload the page</Button
+                >
             </div>
         </div>
     </Teleport>

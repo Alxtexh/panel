@@ -2,8 +2,8 @@
 import { Form, Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
-import TurnstileField from '@/components/TurnstileField.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
+import TurnstileField from '@/components/TurnstileField.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -82,7 +82,6 @@ const inputEmail = ref(props.email);
                  without a token either way. -->
 
             <TurnstileField name="cf-turnstile-response" />
-
 
             <Button
                 type="submit"

@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Laravel\Ai\Models\Conversation;
 use RuntimeException;
 use Tests\TestCase;
@@ -61,7 +62,7 @@ final class AiTenancyAndMeteringTest extends TestCase
         tenancy()->initialize($tenant);
 
         $conversation = new Conversation;
-        $conversation->id = (string) \Illuminate\Support\Str::uuid();
+        $conversation->id = (string) Str::uuid();
         $conversation->title = $title;
         $conversation->save();
 

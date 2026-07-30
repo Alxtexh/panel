@@ -281,11 +281,7 @@ function clearEverything() {
             It has an explicit Apply button, and dismissing on any stray click
             discarded a half-built filter draft - see PkDropdown's prop note.
         -->
-        <PkDropdown
-            v-if="filterSchema.length"
-            width="w-80"
-            :dismiss-on-panel-click="false"
-        >
+        <PkDropdown v-if="filterSchema.length" width="w-80" :dismiss-on-panel-click="false">
             <template #trigger>
                 <button
                     type="button"

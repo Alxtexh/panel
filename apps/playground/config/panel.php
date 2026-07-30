@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use App\Knowledge\HelpSource;
+use App\Models\SavedView;
+use App\Plugins\AnnouncementsPlugin;
 
 return [
 
@@ -327,12 +330,12 @@ return [
     | the other supported way in.
     */
     'plugins' => [
-        App\Plugins\AnnouncementsPlugin::class,
+        AnnouncementsPlugin::class,
     ],
 
     'knowledge' => [
         'sources' => [
-            App\Knowledge\HelpSource::class,
+            HelpSource::class,
         ],
     ],
 
@@ -383,7 +386,6 @@ return [
         'retention_days' => (int) env('PANEL_EXPORT_RETENTION_DAYS', 7),
     ],
 
-
     /*
     |--------------------------------------------------------------------------
     | Saved views
@@ -400,6 +402,6 @@ return [
     | kit queried tenant data without it.
     */
     'saved_views' => [
-        'model' => \App\Models\SavedView::class,
+        'model' => SavedView::class,
     ],
 ];

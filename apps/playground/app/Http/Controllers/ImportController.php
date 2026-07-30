@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\Forms\Fields\Field;
 use PanelKit\Panel\Imports\CsvReader;
 use PanelKit\Panel\Imports\Importer;
 use PanelKit\Panel\PanelManager;
@@ -55,7 +56,7 @@ final class ImportController extends Controller
             // The fields available to map ONTO, so the client never has to know
             // the form's shape independently.
             'fields' => array_map(
-                static fn (\PanelKit\Panel\Forms\Fields\Field $f): array => [
+                static fn (Field $f): array => [
                     'key' => $f->key,
                     'label' => $f->toSchema()['label'] ?? $f->key,
                     'required' => in_array('required', $f->rules(), true),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Panel\Resources\ActivityResource;
@@ -229,8 +230,7 @@ final class ApiReferenceTest extends TestCase
 
         $this->assertNotEmpty($expected, 'No field is required, so this proves nothing.');
 
-        $documented = $this->spec()['paths']['/clients']['post']['requestBody']
-            ['content']['application/json']['schema']['required'] ?? [];
+        $documented = $this->spec()['paths']['/clients']['post']['requestBody']['content']['application/json']['schema']['required'] ?? [];
 
         sort($expected);
         sort($documented);
@@ -245,8 +245,7 @@ final class ApiReferenceTest extends TestCase
      */
     public function test_an_update_requires_nothing(): void
     {
-        $schema = $this->spec()['paths']['/clients/{id}']['put']['requestBody']
-            ['content']['application/json']['schema'];
+        $schema = $this->spec()['paths']['/clients/{id}']['put']['requestBody']['content']['application/json']['schema'];
 
         $this->assertArrayNotHasKey('required', $schema);
         $this->assertNotEmpty($schema['properties']);
@@ -254,8 +253,7 @@ final class ApiReferenceTest extends TestCase
 
     public function test_a_list_documents_the_page_it_returns(): void
     {
-        $schema = $this->spec()['paths']['/clients']['get']['responses']['200']
-            ['content']['application/json']['schema'];
+        $schema = $this->spec()['paths']['/clients']['get']['responses']['200']['content']['application/json']['schema'];
 
         $this->assertSame(['rows', 'nextCursor', 'total'], array_keys($schema['properties']));
 
@@ -278,8 +276,7 @@ final class ApiReferenceTest extends TestCase
      */
     public function test_validation_failures_have_a_documented_shape(): void
     {
-        $schema = $this->spec()['paths']['/clients']['post']['responses']['422']
-            ['content']['application/json']['schema'];
+        $schema = $this->spec()['paths']['/clients']['post']['responses']['422']['content']['application/json']['schema'];
 
         $this->assertSame(['message', 'errors'], array_keys($schema['properties']));
     }
@@ -291,8 +288,7 @@ final class ApiReferenceTest extends TestCase
      */
     public function test_the_bulk_body_offers_only_declared_action_keys(): void
     {
-        $schema = $this->spec()['paths']['/clients/bulk']['post']['requestBody']
-            ['content']['application/json']['schema'];
+        $schema = $this->spec()['paths']['/clients/bulk']['post']['requestBody']['content']['application/json']['schema'];
 
         $declared = array_map(
             static fn ($action): string => (string) $action->toArray()['key'],
@@ -314,8 +310,7 @@ final class ApiReferenceTest extends TestCase
      */
     public function test_record_action_keys_include_grouped_ones(): void
     {
-        $schema = $this->spec()['paths']['/clients/{id}/action']['post']['requestBody']
-            ['content']['application/json']['schema'];
+        $schema = $this->spec()['paths']['/clients/{id}/action']['post']['requestBody']['content']['application/json']['schema'];
 
         $expected = [];
 
@@ -339,7 +334,7 @@ final class ApiReferenceTest extends TestCase
         // forceCreate, because tenant_id is guarded - it is set by the scope on
         // a normal write, and this test needs the row to exist rather than to
         // exercise that path.
-        \App\Models\Client::query()->forceCreate([
+        Client::query()->forceCreate([
             'tenant_id' => $this->user->tenant_id,
             'name' => 'Wanjiku Distinctive Name',
             'access_code' => 'DISTINCT-1',

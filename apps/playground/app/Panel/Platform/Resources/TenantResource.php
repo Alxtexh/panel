@@ -6,12 +6,12 @@ namespace App\Panel\Platform\Resources;
 
 use App\Models\Tenant;
 use PanelKit\Panel\Forms\Fields\DateField;
-use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Fields\TextareaField;
-use PanelKit\Panel\Tables\Columns\DateColumn;
-use PanelKit\Panel\Tables\Columns\TextColumn;
+use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Tables\Columns\DateColumn;
+use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Table;
 
 /**

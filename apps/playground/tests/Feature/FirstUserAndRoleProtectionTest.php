@@ -8,7 +8,9 @@ use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Support\Abilities;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
@@ -51,7 +53,7 @@ final class FirstUserAndRoleProtectionTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        \Illuminate\Support\Facades\DB::table('model_has_roles')->updateOrInsert([
+        DB::table('model_has_roles')->updateOrInsert([
             'role_id' => $this->firstRole->getKey(),
             'model_type' => User::class,
             'model_id' => $this->firstUser->getKey(),
@@ -64,7 +66,9 @@ final class FirstUserAndRoleProtectionTest extends TestCase
     {
         $role = new Role(['name' => $name, 'guard_name' => config('auth.defaults.guard', 'web')]);
         $role->forceFill(['tenant_id' => $this->tenant->id])->save();
-        foreach ((array) ($abilities) as $a) { \Spatie\Permission\Models\Permission::findOrCreate($a); }
+        foreach ((array) ($abilities) as $a) {
+            Permission::findOrCreate($a);
+        }
         $role->syncPermissions($abilities);
 
         return $role;

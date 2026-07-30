@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Plugins\AnnouncementsPlugin;
@@ -12,6 +13,9 @@ use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Plugins\Plugin;
 use PanelKit\Panel\Plugins\PluginContext;
+use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Tables\Columns\TextColumn;
+use PanelKit\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**
@@ -147,7 +151,7 @@ final class PluginTest extends TestCase
      */
     public function test_a_plugins_resource_registers_itself_and_may_stay_out_of_the_menu(): void
     {
-        $manager = app(\PanelKit\Panel\PanelManager::class);
+        $manager = app(PanelManager::class);
 
         $this->assertArrayHasKey(
             'announcements',
@@ -284,17 +288,17 @@ final class PluginTest extends TestCase
  */
 final class PluginOwnedResource extends \PanelKit\Panel\Resources\Resource
 {
-    protected static string $model = \App\Models\Plan::class;
+    protected static string $model = Plan::class;
 
     public static function key(): string
     {
         return 'plugin-widgets';
     }
 
-    public static function table(\PanelKit\Panel\Tables\Table $table): \PanelKit\Panel\Tables\Table
+    public static function table(Table $table): Table
     {
         return $table->columns([
-            \PanelKit\Panel\Tables\Columns\TextColumn::make('name'),
+            TextColumn::make('name'),
         ]);
     }
 }

@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Support\BackupArchive;
 use PanelKit\Panel\Support\BackupSettings;
-use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\DatabaseRestorer;
+use PanelKit\Panel\Support\InstallationState;
 
 /**
  * Put a snapshot's DATABASE back.
@@ -232,7 +232,6 @@ final class RestoreBackup implements ShouldQueue
             }
         }
     }
-
 
     /**
      * Unpack the snapshot into a temporary directory and return its path.

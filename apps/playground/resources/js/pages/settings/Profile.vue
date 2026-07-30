@@ -135,7 +135,8 @@ const user = computed(() => page.props.auth.user);
 
             <Button as-child variant="outline" size="sm">
                 <Link :href="editSecurity()">
-                    {{ twoFactorEnabled ? 'Manage' : 'Enable' }} two-factor authentication
+                    {{ twoFactorEnabled ? 'Manage' : 'Enable' }} two-factor
+                    authentication
                 </Link>
             </Button>
         </div>

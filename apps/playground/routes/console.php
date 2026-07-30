@@ -1,8 +1,11 @@
 <?php
 
 use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use PanelKit\Panel\Support\BackupSettings;
+use PanelKit\Panel\Support\InstallationState;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -49,7 +52,7 @@ Artisan::command('inspire', function () {
 | exists, and a backup system that silently stops being scheduled because a
 | migration is pending is the exact failure this whole screen exists to catch.
 */
-$backups = \PanelKit\Panel\Support\BackupSettings::load();
+$backups = BackupSettings::load();
 
 /*
 | APPLIED HERE, WHERE EVERY ARTISAN COMMAND PASSES THROUGH.
@@ -71,7 +74,7 @@ $run = Schedule::command('backup:run')->withoutOverlapping()->onOneServer();
 | night the disk fills, which is the night it matters. On an hourly schedule
 | that means cleaning at half past and backing up on the hour.
 */
-$before = \Illuminate\Support\Carbon::createFromFormat('H:i', $backups->time)->subMinutes(30)->format('H:i');
+$before = Carbon::createFromFormat('H:i', $backups->time)->subMinutes(30)->format('H:i');
 
 match ($backups->frequency) {
     'hourly' => [$cleanup->hourlyAt(30), $run->hourly()],
@@ -126,7 +129,7 @@ Schedule::command('backup:monitor')->dailyAt('09:00')->onOneServer();
 | when the platform screen reads it inside a tenant request. It reported a
 | perfectly healthy scheduler as dead, silently. See `InstallationState`.
 */
-Schedule::call(fn () => app(\PanelKit\Panel\Support\InstallationState::class)->put(
+Schedule::call(fn () => app(InstallationState::class)->put(
     'scheduler:last-run',
     now()->toIso8601String(),
     seconds: 86_400,

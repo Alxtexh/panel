@@ -55,7 +55,9 @@ const emit = defineEmits<{ (e: 'update:modelValue', value: unknown): void }>()
  * the same renderer, and looking it up six times to get the same answer is six
  * chances for the answer to differ mid-render.
  */
-const renderer = computed(() => (props.field.preview ? optionPreview(props.field.preview) : undefined))
+const renderer = computed(() =>
+    props.field.preview ? optionPreview(props.field.preview) : undefined,
+)
 
 /**
  * NAMED A RENDERER, GOT NOTHING. Distinguished from "declared no renderer",
@@ -164,7 +166,12 @@ function isChosen(option: Option): boolean {
                  of sizes in every renderer: one component draws the option and
                  the layout decides how big it is. -->
             <span v-if="renderer" class="flex shrink-0 scale-75 items-center" aria-hidden="true">
-                <component :is="renderer" :value="option.value" :label="option.label" :selected="isChosen(option)" />
+                <component
+                    :is="renderer"
+                    :value="option.value"
+                    :label="option.label"
+                    :selected="isChosen(option)"
+                />
             </span>
 
             <span class="whitespace-nowrap">{{ option.label }}</span>
@@ -219,7 +226,10 @@ function isChosen(option: Option): boolean {
                     :label="option.label"
                     :selected="isChosen(option)"
                 />
-                <span v-else-if="missing" class="text-destructive px-1 text-center text-[10px] leading-tight">
+                <span
+                    v-else-if="missing"
+                    class="text-destructive px-1 text-center text-[10px] leading-tight"
+                >
                     no preview
                 </span>
             </span>

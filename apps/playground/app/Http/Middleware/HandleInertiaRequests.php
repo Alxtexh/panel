@@ -3,12 +3,16 @@
 namespace App\Http\Middleware;
 
 use App\Http\Controllers\OrganisationController;
+use App\Panel\Pages;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
+use PanelKit\Panel\Auth\Impersonation;
+use PanelKit\Panel\Auth\Turnstile;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\Locale;
 use PanelKit\Panel\Support\TenantContext;
+use PanelKit\Panel\Trash\TrashBin;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -48,7 +52,7 @@ class HandleInertiaRequests extends Middleware
      */
     private function impersonationBanner(): ?array
     {
-        $impersonation = app(\PanelKit\Panel\Auth\Impersonation::class);
+        $impersonation = app(Impersonation::class);
 
         if (! $impersonation->isActive()) {
             return null;
@@ -56,7 +60,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             'name' => $impersonation->impersonator()?->name ?? 'Somebody',
-            'since' => session(\PanelKit\Panel\Auth\Impersonation::STARTED_KEY),
+            'since' => session(Impersonation::STARTED_KEY),
         ];
     }
 
@@ -209,7 +213,7 @@ class HandleInertiaRequests extends Middleware
                  | start; the pages were not, and nothing failed because every
                  | one of those links resolves.
                  */
-                ...\App\Panel\Pages::forPanel(),
+                ...Pages::forPanel(),
                 /*
                  | ONE CALL FOR EVERYTHING THE PANEL ITSELF PROVIDES - the trash
                  | screen today, a plugin's screens the moment one is installed.
@@ -256,7 +260,7 @@ class HandleInertiaRequests extends Middleware
              | the portal's path. Neither is a question this application should
              | answer, per portal, to draw a menu.
              */
-            'panelTrash' => fn (): ?array => app(\PanelKit\Panel\Trash\TrashBin::class)->navigationEntry(),
+            'panelTrash' => fn (): ?array => app(TrashBin::class)->navigationEntry(),
 
             'name' => config('app.name'),
             /*
@@ -279,8 +283,8 @@ class HandleInertiaRequests extends Middleware
              | The SITE key is public by design; the secret never leaves the
              | server. See `PanelKit\Panel\Auth\Turnstile`.
              */
-            'turnstileSiteKey' => \PanelKit\Panel\Auth\Turnstile::enabled()
-                ? \PanelKit\Panel\Auth\Turnstile::siteKey()
+            'turnstileSiteKey' => Turnstile::enabled()
+                ? Turnstile::siteKey()
                 : null,
 
             'auth' => [

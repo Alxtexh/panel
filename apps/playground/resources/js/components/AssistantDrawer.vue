@@ -29,8 +29,6 @@
  * The streaming is `fetch` and a reader rather than `EventSource`, because the
  * browser's own SSE client can only issue a GET and this posts a message body.
  */
-import { Button } from '@/components/ui/button'
-import { PkSkeleton } from '@panelkit/ui'
 import {
     ArrowLeft,
     History,
@@ -41,30 +39,40 @@ import {
     TriangleAlert,
     Wrench,
     X,
-} from '@lucide/vue'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+} from '@lucide/vue';
+import { PkSkeleton } from '@panelkit/ui';
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    useTemplateRef,
+    watch,
+} from 'vue';
+import { Button } from '@/components/ui/button';
 
 interface Turn {
-    role: 'you' | 'assistant'
-    text: string
+    role: 'you' | 'assistant';
+    text: string;
     /** Tool names, in the order they were called, for an assistant turn. */
-    tools: string[]
-    error?: string
+    tools: string[];
+    error?: string;
 }
 
 interface PastConversation {
-    id: string
-    title: string
-    at: string | null
+    id: string;
+    title: string;
+    at: string | null;
 }
 
-const open = ref(false)
-const showHistory = ref(false)
-const turns = ref<Turn[]>([])
-const draft = ref('')
-const streaming = ref(false)
-const past = ref<PastConversation[]>([])
-const loadingHistory = ref(false)
+const open = ref(false);
+const showHistory = ref(false);
+const turns = ref<Turn[]>([]);
+const draft = ref('');
+const streaming = ref(false);
+const past = ref<PastConversation[]>([]);
+const loadingHistory = ref(false);
 
 /**
  * Carried, not remembered server-side.
@@ -73,10 +81,10 @@ const loadingHistory = ref(false)
  * between two tabs, and the second tab would silently append to the first one's
  * history.
  */
-const conversation = ref<string | null>(null)
+const conversation = ref<string | null>(null);
 
-const transcript = useTemplateRef<HTMLElement>('transcript')
-const input = useTemplateRef<HTMLTextAreaElement>('input')
+const transcript = useTemplateRef<HTMLElement>('transcript');
+const input = useTemplateRef<HTMLTextAreaElement>('input');
 
 /**
  * The in-flight request, so it can be stopped.
@@ -85,82 +93,95 @@ const input = useTemplateRef<HTMLTextAreaElement>('input')
  * wants to interrupt; without this the only way out is closing the drawer, which
  * leaves the request running and still being billed.
  */
-let controller: AbortController | null = null
+let controller: AbortController | null = null;
 
-const empty = computed(() => turns.value.length === 0)
+const empty = computed(() => turns.value.length === 0);
 
 async function scrollDown() {
-    await nextTick()
-    transcript.value?.scrollTo({ top: transcript.value.scrollHeight, behavior: 'smooth' })
+    await nextTick();
+    transcript.value?.scrollTo({
+        top: transcript.value.scrollHeight,
+        behavior: 'smooth',
+    });
 }
 
 function stop() {
-    controller?.abort()
-    controller = null
-    streaming.value = false
+    controller?.abort();
+    controller = null;
+    streaming.value = false;
 }
 
 /** A fresh conversation, not a fresh drawer - the panel behind it is untouched. */
 function reset() {
-    stop()
-    turns.value = []
-    conversation.value = null
-    draft.value = ''
-    showHistory.value = false
-    nextTick(() => input.value?.focus())
+    stop();
+    turns.value = [];
+    conversation.value = null;
+    draft.value = '';
+    showHistory.value = false;
+    nextTick(() => input.value?.focus());
 }
 
 function close() {
-    open.value = false
+    open.value = false;
 }
 
 /* ------------------------------------------------------------------ history */
 
 async function loadHistory() {
-    showHistory.value = true
-    loadingHistory.value = true
+    showHistory.value = true;
+    loadingHistory.value = true;
 
     try {
         const response = await fetch('/apps/assistant/conversations', {
-            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
             credentials: 'same-origin',
-        })
+        });
 
-        if (!response.ok) throw new Error('history')
+        if (!response.ok) {
+            throw new Error('history');
+        }
 
-        past.value = (await response.json()).conversations ?? []
+        past.value = (await response.json()).conversations ?? [];
     } catch {
         // An unreachable history is not worth an error dialog over the top of a
         // working chat; the list simply stays empty and says so.
-        past.value = []
+        past.value = [];
     } finally {
-        loadingHistory.value = false
+        loadingHistory.value = false;
     }
 }
 
 async function openConversation(id: string) {
-    stop()
-    loadingHistory.value = true
+    stop();
+    loadingHistory.value = true;
 
     try {
         const response = await fetch(`/apps/assistant/conversations/${id}`, {
-            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
             credentials: 'same-origin',
-        })
+        });
 
-        if (!response.ok) throw new Error('conversation')
+        if (!response.ok) {
+            throw new Error('conversation');
+        }
 
-        const payload = await response.json()
+        const payload = await response.json();
 
-        turns.value = payload.turns ?? []
-        conversation.value = payload.id
-        showHistory.value = false
+        turns.value = payload.turns ?? [];
+        conversation.value = payload.id;
+        showHistory.value = false;
 
-        await scrollDown()
+        await scrollDown();
     } catch {
-        showHistory.value = false
+        showHistory.value = false;
     } finally {
-        loadingHistory.value = false
+        loadingHistory.value = false;
     }
 }
 
@@ -170,49 +191,53 @@ async function openConversation(id: string) {
  * only thing that stops a stream is Stop.
  */
 watch(open, async (isOpen) => {
-    if (!isOpen) return
+    if (!isOpen) {
+        return;
+    }
 
-    await nextTick()
-    input.value?.focus()
-    await scrollDown()
-})
+    await nextTick();
+    input.value?.focus();
+    await scrollDown();
+});
 
 /** Escape closes the history first, then the drawer - innermost thing first. */
 function onKeydown(event: KeyboardEvent) {
-    if (event.key !== 'Escape' || !open.value) return
-
-    if (showHistory.value) {
-        showHistory.value = false
-
-        return
+    if (event.key !== 'Escape' || !open.value) {
+        return;
     }
 
-    close()
+    if (showHistory.value) {
+        showHistory.value = false;
+
+        return;
+    }
+
+    close();
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 
 /* ------------------------------------------------------------------ sending */
 
 async function send() {
-    const message = draft.value.trim()
+    const message = draft.value.trim();
 
     if (message === '' || streaming.value) {
-        return
+        return;
     }
 
-    draft.value = ''
-    showHistory.value = false
-    turns.value.push({ role: 'you', text: message, tools: [] })
+    draft.value = '';
+    showHistory.value = false;
+    turns.value.push({ role: 'you', text: message, tools: [] });
 
-    const reply: Turn = { role: 'assistant', text: '', tools: [] }
-    turns.value.push(reply)
+    const reply: Turn = { role: 'assistant', text: '', tools: [] };
+    turns.value.push(reply);
 
-    streaming.value = true
-    controller = new AbortController()
+    streaming.value = true;
+    controller = new AbortController();
 
-    await scrollDown()
+    await scrollDown();
 
     try {
         const response = await fetch('/apps/assistant/stream', {
@@ -221,29 +246,32 @@ async function send() {
                 'Content-Type': 'application/json',
                 Accept: 'text/event-stream',
                 'X-CSRF-TOKEN':
-                    document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ??
-                    '',
+                    document.querySelector<HTMLMetaElement>(
+                        'meta[name="csrf-token"]',
+                    )?.content ?? '',
             },
             body: JSON.stringify({ message, conversation: conversation.value }),
             signal: controller.signal,
-        })
+        });
 
         if (!response.ok || !response.body) {
-            reply.error = 'The assistant could not be reached.'
+            reply.error = 'The assistant could not be reached.';
 
-            return
+            return;
         }
 
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ''
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
 
         for (;;) {
-            const { done, value } = await reader.read()
+            const { done, value } = await reader.read();
 
-            if (done) break
+            if (done) {
+                break;
+            }
 
-            buffer += decoder.decode(value, { stream: true })
+            buffer += decoder.decode(value, { stream: true });
 
             /*
              * FRAMES ARE SEPARATED BY A BLANK LINE and a chunk can end mid-frame,
@@ -251,27 +279,30 @@ async function send() {
              * were whole produces a JSON error on a perfectly good stream - and
              * only under load, when chunks get split.
              */
-            const frames = buffer.split('\n\n')
-            buffer = frames.pop() ?? ''
+            const frames = buffer.split('\n\n');
+            buffer = frames.pop() ?? '';
 
             for (const frame of frames) {
-                const line = frame.replace(/^data: /, '').trim()
+                const line = frame.replace(/^data: /, '').trim();
 
-                if (line === '') continue
-
-                const event = JSON.parse(line)
-
-                if (event.type === 'delta') {
-                    reply.text += event.text
-                } else if (event.type === 'tool') {
-                    reply.tools.push(event.name)
-                } else if (event.type === 'error') {
-                    reply.error = event.message
-                } else if (event.type === 'done') {
-                    conversation.value = event.conversation ?? conversation.value
+                if (line === '') {
+                    continue;
                 }
 
-                await scrollDown()
+                const event = JSON.parse(line);
+
+                if (event.type === 'delta') {
+                    reply.text += event.text;
+                } else if (event.type === 'tool') {
+                    reply.tools.push(event.name);
+                } else if (event.type === 'error') {
+                    reply.error = event.message;
+                } else if (event.type === 'done') {
+                    conversation.value =
+                        event.conversation ?? conversation.value;
+                }
+
+                await scrollDown();
             }
         }
     } catch (e) {
@@ -279,33 +310,34 @@ async function send() {
         // assistant failed" when somebody pressed Stop is the interface
         // misreporting its own state.
         if ((e as Error).name !== 'AbortError') {
-            reply.error = 'The connection dropped part-way through that answer.'
+            reply.error =
+                'The connection dropped part-way through that answer.';
         }
     } finally {
-        streaming.value = false
-        controller = null
+        streaming.value = false;
+        controller = null;
     }
 }
 
 /** `find_subscriber` reads as a log line rather than as something happening. */
-const toolLabel = (name: string) => name.replace(/[-_]/g, ' ')
+const toolLabel = (name: string) => name.replace(/[-_]/g, ' ');
 
 const suggestions = [
     { text: "Is Grace Wanjiku's line active?", hint: 'Looks a subscriber up' },
     { text: 'Who expires this week?', hint: 'Searches your own records' },
     { text: 'How do exports work?', hint: 'Answers from the help centre' },
-]
+];
 
 function ask(question: string) {
-    draft.value = question
-    send()
+    draft.value = question;
+    send();
 }
 </script>
 
 <template>
     <button
         type="button"
-        class="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-2 transition-colors"
+        class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         :class="open ? 'bg-accent text-foreground' : ''"
         aria-label="Assistant"
         title="Assistant"
@@ -343,7 +375,7 @@ function ask(question: string) {
         >
             <aside
                 v-if="open"
-                class="bg-background fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col shadow-2xl sm:inset-y-2 sm:right-2 sm:rounded-xl sm:border"
+                class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-background shadow-2xl sm:inset-y-2 sm:right-2 sm:rounded-xl sm:border"
                 role="dialog"
                 aria-label="Assistant"
             >
@@ -354,20 +386,22 @@ function ask(question: string) {
                     conversation to read as text.
                 -->
                 <header
-                    class="from-primary/10 relative flex items-start justify-between gap-3 rounded-t-xl bg-gradient-to-br to-transparent px-4 py-3.5"
+                    class="relative flex items-start justify-between gap-3 rounded-t-xl bg-gradient-to-br from-primary/10 to-transparent px-4 py-3.5"
                 >
                     <div class="flex min-w-0 items-start gap-2.5">
                         <span
-                            class="bg-primary/15 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg"
+                            class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"
                         >
                             <Sparkles class="size-4" />
                         </span>
 
                         <div class="min-w-0">
                             <h2 class="text-sm font-semibold">Assistant</h2>
-                            <p class="text-muted-foreground mt-0.5 text-xs leading-snug">
-                                Subscribers, and how the panel works. Suspending pauses for your
-                                approval.
+                            <p
+                                class="mt-0.5 text-xs leading-snug text-muted-foreground"
+                            >
+                                Subscribers, and how the panel works. Suspending
+                                pauses for your approval.
                             </p>
                         </div>
                     </div>
@@ -375,17 +409,25 @@ function ask(question: string) {
                     <div class="flex shrink-0 items-center gap-0.5">
                         <button
                             type="button"
-                            class="text-muted-foreground hover:bg-background/70 hover:text-foreground rounded-md p-1.5 transition-colors"
-                            :class="showHistory ? 'bg-background/70 text-foreground' : ''"
+                            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
+                            :class="
+                                showHistory
+                                    ? 'bg-background/70 text-foreground'
+                                    : ''
+                            "
                             aria-label="Previous conversations"
                             title="Previous conversations"
-                            @click="showHistory ? (showHistory = false) : loadHistory()"
+                            @click="
+                                showHistory
+                                    ? (showHistory = false)
+                                    : loadHistory()
+                            "
                         >
                             <History class="size-4" />
                         </button>
                         <button
                             type="button"
-                            class="text-muted-foreground hover:bg-background/70 hover:text-foreground rounded-md p-1.5 transition-colors"
+                            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
                             aria-label="New conversation"
                             title="New conversation"
                             @click="reset"
@@ -394,7 +436,7 @@ function ask(question: string) {
                         </button>
                         <button
                             type="button"
-                            class="text-muted-foreground hover:bg-background/70 hover:text-foreground rounded-md p-1.5 transition-colors"
+                            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
                             aria-label="Close"
                             @click="close"
                         >
@@ -409,7 +451,7 @@ function ask(question: string) {
                     <div class="flex items-center gap-2 border-y px-4 py-2">
                         <button
                             type="button"
-                            class="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs"
+                            class="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
                             @click="showHistory = false"
                         >
                             <ArrowLeft class="size-3.5" />
@@ -428,21 +470,27 @@ function ask(question: string) {
 
                         <p
                             v-else-if="past.length === 0"
-                            class="text-muted-foreground p-4 text-center text-sm"
+                            class="p-4 text-center text-sm text-muted-foreground"
                         >
-                            Nothing here yet. Conversations appear once you have had one.
+                            Nothing here yet. Conversations appear once you have
+                            had one.
                         </p>
 
                         <button
                             v-for="item in past"
                             :key="item.id"
                             type="button"
-                            class="hover:bg-accent flex w-full flex-col gap-0.5 rounded-lg px-3 py-2 text-left transition-colors"
+                            class="flex w-full flex-col gap-0.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
                             :class="conversation === item.id ? 'bg-accent' : ''"
                             @click="openConversation(item.id)"
                         >
-                            <span class="truncate text-sm">{{ item.title }}</span>
-                            <span v-if="item.at" class="text-muted-foreground text-xs">
+                            <span class="truncate text-sm">{{
+                                item.title
+                            }}</span>
+                            <span
+                                v-if="item.at"
+                                class="text-xs text-muted-foreground"
+                            >
                                 {{ item.at }}
                             </span>
                         </button>
@@ -452,7 +500,10 @@ function ask(question: string) {
                 <!-- --------------------------------------------- transcript -->
 
                 <template v-else>
-                    <div ref="transcript" class="flex-1 overflow-y-auto px-4 py-4">
+                    <div
+                        ref="transcript"
+                        class="flex-1 overflow-y-auto px-4 py-4"
+                    >
                         <!--
                             THE EMPTY STATE OFFERS QUESTIONS RATHER THAN A PROMPT.
                             "Ask me anything" says nothing about what this one can
@@ -460,15 +511,20 @@ function ask(question: string) {
                             one it cannot answer. Each card says what it will do.
                         -->
                         <div v-if="empty" class="flex flex-col gap-4 py-6">
-                            <div class="flex flex-col items-center gap-1.5 text-center">
+                            <div
+                                class="flex flex-col items-center gap-1.5 text-center"
+                            >
                                 <span
-                                    class="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-xl"
+                                    class="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"
                                 >
                                     <Sparkles class="size-5" />
                                 </span>
-                                <p class="text-sm font-medium">What would you like to know?</p>
-                                <p class="text-muted-foreground text-xs">
-                                    It can look records up and cite the help centre.
+                                <p class="text-sm font-medium">
+                                    What would you like to know?
+                                </p>
+                                <p class="text-xs text-muted-foreground">
+                                    It can look records up and cite the help
+                                    centre.
                                 </p>
                             </div>
 
@@ -477,11 +533,14 @@ function ask(question: string) {
                                     v-for="s in suggestions"
                                     :key="s.text"
                                     type="button"
-                                    class="hover:border-primary/40 hover:bg-accent/50 group flex flex-col gap-0.5 rounded-lg border px-3 py-2 text-left transition-colors"
+                                    class="group flex flex-col gap-0.5 rounded-lg border px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-accent/50"
                                     @click="ask(s.text)"
                                 >
                                     <span class="text-sm">{{ s.text }}</span>
-                                    <span class="text-muted-foreground text-xs">{{ s.hint }}</span>
+                                    <span
+                                        class="text-xs text-muted-foreground"
+                                        >{{ s.hint }}</span
+                                    >
                                 </button>
                             </div>
                         </div>
@@ -491,7 +550,11 @@ function ask(question: string) {
                                 v-for="(turn, i) in turns"
                                 :key="i"
                                 class="flex flex-col gap-1"
-                                :class="turn.role === 'you' ? 'items-end' : 'items-start'"
+                                :class="
+                                    turn.role === 'you'
+                                        ? 'items-end'
+                                        : 'items-start'
+                                "
                             >
                                 <!--
                                     TOOL CALLS COME FIRST, above the answer,
@@ -506,7 +569,7 @@ function ask(question: string) {
                                     <span
                                         v-for="(tool, t) in turn.tools"
                                         :key="t"
-                                        class="bg-muted text-muted-foreground flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px]"
+                                        class="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
                                     >
                                         <Wrench class="size-3" />
                                         {{ toolLabel(tool) }}
@@ -517,37 +580,52 @@ function ask(question: string) {
                                     class="max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap"
                                     :class="
                                         turn.role === 'you'
-                                            ? 'bg-primary text-primary-foreground rounded-br-sm'
-                                            : 'bg-muted rounded-bl-sm'
+                                            ? 'rounded-br-sm bg-primary text-primary-foreground'
+                                            : 'rounded-bl-sm bg-muted'
                                     "
                                 >
-                                    <template v-if="turn.text">{{ turn.text }}</template>
+                                    <template v-if="turn.text">{{
+                                        turn.text
+                                    }}</template>
 
                                     <!-- Only while nothing has arrived: once text
                                          is streaming it is its own progress. -->
                                     <PkSkeleton
-                                        v-else-if="streaming && i === turns.length - 1 && !turn.error"
+                                        v-else-if="
+                                            streaming &&
+                                            i === turns.length - 1 &&
+                                            !turn.error
+                                        "
                                         variant="text"
                                         :count="2"
                                         label="The assistant is answering"
                                     />
 
-                                    <span v-else-if="turn.error" class="sr-only">Failed</span>
+                                    <span v-else-if="turn.error" class="sr-only"
+                                        >Failed</span
+                                    >
                                 </div>
 
                                 <p
                                     v-if="turn.error"
-                                    class="text-destructive flex items-start gap-1.5 text-xs"
+                                    class="flex items-start gap-1.5 text-xs text-destructive"
                                 >
-                                    <TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
+                                    <TriangleAlert
+                                        class="mt-0.5 size-3.5 shrink-0"
+                                    />
                                     {{ turn.error }}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <form class="flex items-end gap-2 border-t p-3" @submit.prevent="send">
-                        <div class="bg-muted/40 focus-within:border-primary/40 flex flex-1 items-end rounded-xl border px-3 py-2 transition-colors">
+                    <form
+                        class="flex items-end gap-2 border-t p-3"
+                        @submit.prevent="send"
+                    >
+                        <div
+                            class="flex flex-1 items-end rounded-xl border bg-muted/40 px-3 py-2 transition-colors focus-within:border-primary/40"
+                        >
                             <textarea
                                 ref="input"
                                 v-model="draft"
@@ -562,12 +640,23 @@ function ask(question: string) {
                         <!-- Stop replaces Send while streaming rather than
                              sitting beside it: two buttons where only one can do
                              anything is a choice nobody has to make. -->
-                        <Button v-if="streaming" type="button" variant="outline" size="icon" @click="stop">
+                        <Button
+                            v-if="streaming"
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            @click="stop"
+                        >
                             <Square class="size-4" />
                             <span class="sr-only">Stop</span>
                         </Button>
 
-                        <Button v-else type="submit" size="icon" :disabled="!draft.trim()">
+                        <Button
+                            v-else
+                            type="submit"
+                            size="icon"
+                            :disabled="!draft.trim()"
+                        >
                             <Send class="size-4" />
                             <span class="sr-only">Send</span>
                         </Button>

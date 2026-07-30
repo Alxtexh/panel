@@ -12,9 +12,10 @@
  * Rather than delete it and chase every import, it now delegates: there is one
  * source of truth, and the settings page's light/dark tabs keep working.
  */
+import { useAppearance as usePanelAppearance } from '@panelkit/ui';
+import type { Theme } from '@panelkit/ui';
 import type { ComputedRef, Ref } from 'vue';
 import { computed } from 'vue';
-import { useAppearance as usePanelAppearance, type Theme } from '@panelkit/ui';
 
 export type Appearance = Theme;
 export type ResolvedAppearance = 'light' | 'dark';
@@ -38,7 +39,9 @@ export function useAppearance(): UseAppearanceReturn {
      * fall back to `prefers-color-scheme`, which is how a panel defaulting to
      * light still rendered dark on a dark-mode machine.
      */
-    const resolvedAppearance = computed<ResolvedAppearance>(() => panel.value.theme);
+    const resolvedAppearance = computed<ResolvedAppearance>(
+        () => panel.value.theme,
+    );
 
     return {
         appearance,

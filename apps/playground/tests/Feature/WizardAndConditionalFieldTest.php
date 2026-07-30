@@ -11,6 +11,7 @@ use App\Panel\Resources\RouterResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
+use PanelKit\Panel\Schema\Section;
 use PanelKit\Panel\Schema\Step;
 use PanelKit\Panel\Schema\Wizard;
 use Tests\TestCase;
@@ -98,7 +99,7 @@ final class WizardAndConditionalFieldTest extends TestCase
     {
         $wizard = Wizard::make()->steps([
             Step::make('One')->schema([
-                \PanelKit\Panel\Schema\Section::make('Group')->schema([
+                Section::make('Group')->schema([
                     TextField::make('deep')->required(),
                 ]),
             ]),

@@ -82,7 +82,10 @@ const frame = computed(() => {
         -->
         <div
             class="inline-flex items-center justify-center font-mono font-semibold whitespace-nowrap tabular-nums"
-            :class="[frame, compact ? 'px-2 py-1 text-[10px]' : 'px-6 py-3 text-xl tracking-[0.2em]']"
+            :class="[
+                frame,
+                compact ? 'px-2 py-1 text-[10px]' : 'px-6 py-3 text-xl tracking-[0.2em]',
+            ]"
             :style="{ borderColor: ink, color: ink }"
         >
             {{ code }}

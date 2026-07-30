@@ -57,8 +57,8 @@ function toggle(option: Option) {
     emit(
         'update:modelValue',
         isChosen(option)
-            // eslint-disable-next-line eqeqeq
-            ? chosen.value.filter((value) => value != option.value)
+            ? // eslint-disable-next-line eqeqeq
+              chosen.value.filter((value) => value != option.value)
             : [...chosen.value, option.value],
     )
 }

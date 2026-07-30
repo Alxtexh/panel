@@ -12,13 +12,16 @@
  * next; a 500 that names the failing subsystem is a map of the internals. What
  * every message here does instead is say what the reader can DO.
  */
-import { computed } from 'vue'
-import ErrorScreen from './ErrorScreen.vue'
+import { computed } from 'vue';
+import ErrorScreen from './ErrorScreen.vue';
 
-const props = defineProps<{ status: number }>()
+const props = defineProps<{ status: number }>();
 
 /** Status → what to say. Anything unlisted falls back to the generic pair. */
-const COPY: Record<number, { title: string; message: string; canGoBack?: boolean }> = {
+const COPY: Record<
+    number,
+    { title: string; message: string; canGoBack?: boolean }
+> = {
     403: {
         title: 'You do not have access to this',
         message:
@@ -26,7 +29,8 @@ const COPY: Record<number, { title: string; message: string; canGoBack?: boolean
     },
     404: {
         title: 'That page does not exist',
-        message: 'The link may be out of date, or the record it pointed at may have been removed.',
+        message:
+            'The link may be out of date, or the record it pointed at may have been removed.',
     },
     429: {
         title: 'Too many requests',
@@ -42,15 +46,16 @@ const COPY: Record<number, { title: string; message: string; canGoBack?: boolean
         message: 'It will be back shortly. Nothing you have saved is affected.',
         canGoBack: false,
     },
-}
+};
 
 const copy = computed(
     () =>
         COPY[props.status] ?? {
             title: 'Something went wrong',
-            message: 'The page could not be shown. Trying again is usually enough.',
+            message:
+                'The page could not be shown. Trying again is usually enough.',
         },
-)
+);
 </script>
 
 <template>

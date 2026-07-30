@@ -72,12 +72,17 @@ function onText(event: Event) {
                 v-if="!valid"
                 class="border-input size-9 shrink-0 rounded-md border"
                 style="
-                    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%),
+                    background-image:
+                        linear-gradient(45deg, #ccc 25%, transparent 25%),
                         linear-gradient(-45deg, #ccc 25%, transparent 25%),
                         linear-gradient(45deg, transparent 75%, #ccc 75%),
                         linear-gradient(-45deg, transparent 75%, #ccc 75%);
                     background-size: 8px 8px;
-                    background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+                    background-position:
+                        0 0,
+                        0 4px,
+                        4px -4px,
+                        -4px 0;
                 "
                 aria-hidden="true"
             />

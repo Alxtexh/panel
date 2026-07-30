@@ -15,38 +15,39 @@
  * has expired" and "an administrator asked you to change it" send somebody
  * looking for different things, and the wrong one wastes a support call.
  */
-import AuthLayout from '@/layouts/AuthLayout.vue'
-import { Button } from '@/components/ui/button'
-import { Head, useForm } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { Head, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Button } from '@/components/ui/button';
+import AuthLayout from '@/layouts/AuthLayout.vue';
 
-defineOptions({ layout: AuthLayout })
+defineOptions({ layout: AuthLayout });
 
 const props = defineProps<{
     /** `expired` when the age policy caught it, `requested` when somebody asked. */
-    reason: 'expired' | 'requested'
-    maxAgeDays: number
-}>()
+    reason: 'expired' | 'requested';
+    maxAgeDays: number;
+}>();
 
 const form = useForm({
     current_password: '',
     password: '',
     password_confirmation: '',
-})
+});
 
 const explanation = computed(() =>
     props.reason === 'requested'
         ? 'Somebody with administrative access asked for this password to be changed.'
         : `Passwords here are changed every ${props.maxAgeDays} days.`,
-)
+);
 
 function submit() {
     form.put('/password/change', {
         // Only the password fields are cleared on failure: keeping the current
         // password typed would leave a valid credential sitting in a form after
         // an error somebody may walk away from.
-        onError: () => form.reset('current_password', 'password', 'password_confirmation'),
-    })
+        onError: () =>
+            form.reset('current_password', 'password', 'password_confirmation'),
+    });
 }
 </script>
 
@@ -56,7 +57,7 @@ function submit() {
     <div class="mx-auto flex w-full max-w-sm flex-col gap-6">
         <div>
             <h1 class="text-xl font-semibold">Change your password</h1>
-            <p class="text-muted-foreground mt-1 text-sm">{{ explanation }}</p>
+            <p class="mt-1 text-sm text-muted-foreground">{{ explanation }}</p>
         </div>
 
         <form class="flex flex-col gap-4" @submit.prevent="submit">
@@ -67,9 +68,12 @@ function submit() {
                     type="password"
                     autocomplete="current-password"
                     autofocus
-                    class="border-input bg-background rounded-md border px-3 py-2 text-sm"
+                    class="rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
-                <span v-if="form.errors.current_password" class="text-destructive text-xs">
+                <span
+                    v-if="form.errors.current_password"
+                    class="text-xs text-destructive"
+                >
                     {{ form.errors.current_password }}
                 </span>
             </label>
@@ -80,7 +84,7 @@ function submit() {
                     v-model="form.password"
                     type="password"
                     autocomplete="new-password"
-                    class="border-input bg-background rounded-md border px-3 py-2 text-sm"
+                    class="rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
                 <!--
                     The reuse refusal arrives here as a validation message. It is
@@ -88,7 +92,10 @@ function submit() {
                     a renewal satisfied by re-entering the same password changed
                     nothing while recording that it did.
                 -->
-                <span v-if="form.errors.password" class="text-destructive text-xs">
+                <span
+                    v-if="form.errors.password"
+                    class="text-xs text-destructive"
+                >
                     {{ form.errors.password }}
                 </span>
             </label>
@@ -99,7 +106,7 @@ function submit() {
                     v-model="form.password_confirmation"
                     type="password"
                     autocomplete="new-password"
-                    class="border-input bg-background rounded-md border px-3 py-2 text-sm"
+                    class="rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
             </label>
 
@@ -110,7 +117,10 @@ function submit() {
 
         <!-- The one way out. Without it the only exit is clearing cookies. -->
         <form method="POST" action="/logout">
-            <button type="submit" class="text-muted-foreground hover:text-foreground text-sm underline">
+            <button
+                type="submit"
+                class="text-sm text-muted-foreground underline hover:text-foreground"
+            >
                 Sign out instead
             </button>
         </form>

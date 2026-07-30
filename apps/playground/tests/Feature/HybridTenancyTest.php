@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Client;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Support\TenantContext;
+use PanelKit\Panel\Tenancy\ConditionalDatabaseBootstrapper;
 use Tests\TestCase;
 
 /**
@@ -137,7 +139,7 @@ final class HybridTenancyTest extends TestCase
 
         tenancy()->initialize($shared);
 
-        $sql = \App\Models\Client::query()->toSql();
+        $sql = Client::query()->toSql();
 
         tenancy()->end();
 
@@ -258,7 +260,7 @@ final class HybridTenancyTest extends TestCase
         $shared = Tenant::create(['name' => 'Untouched', 'slug' => 'untouched']);
         $before = \DB::connection()->getName();
 
-        app(\PanelKit\Panel\Tenancy\ConditionalDatabaseBootstrapper::class)->bootstrap($shared);
+        app(ConditionalDatabaseBootstrapper::class)->bootstrap($shared);
 
         $this->assertSame($before, \DB::connection()->getName());
     }

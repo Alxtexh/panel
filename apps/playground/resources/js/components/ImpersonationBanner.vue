@@ -22,28 +22,32 @@
  * stop. Rendering nothing when not impersonating is what lets the shells include
  * it unconditionally.
  */
-import { router, usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
-const page = usePage()
+const page = usePage();
 
 const impersonating = computed(
-    () => page.props.impersonating as { name: string; since: string | null } | null,
-)
+    () =>
+        page.props.impersonating as {
+            name: string;
+            since: string | null;
+        } | null,
+);
 
 function stop() {
-    router.post('/impersonate-stop')
+    router.post('/impersonate-stop');
 }
 </script>
 
 <template>
     <div
         v-if="impersonating"
-        class="bg-amber-500 text-amber-950 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-2 text-center text-sm font-medium"
+        class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950"
     >
         <span>
-            Viewing as <strong>{{ page.props.auth?.user?.name }}</strong> -
-            you are really {{ impersonating.name }}.
+            Viewing as <strong>{{ page.props.auth?.user?.name }}</strong> - you
+            are really {{ impersonating.name }}.
         </span>
 
         <button

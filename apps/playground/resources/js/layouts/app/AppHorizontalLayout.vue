@@ -11,18 +11,22 @@ import AppTopNav from '@/components/AppTopNav.vue';
 import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
 
-withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), { breadcrumbs: () => [] });
+withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
+    breadcrumbs: () => [],
+});
 </script>
 
 <template>
-    <div class="bg-sidebar flex min-h-screen w-full flex-col">
+    <div class="flex min-h-screen w-full flex-col bg-sidebar">
         <ImpersonationBanner />
 
         <AppTopNav :breadcrumbs="breadcrumbs" />
 
         <!-- The same rounded content surface the inset sidebar variant uses, so
              switching layouts does not change how a page looks inside. -->
-        <main class="bg-background flex min-h-0 flex-1 flex-col md:m-2 md:rounded-xl md:border">
+        <main
+            class="flex min-h-0 flex-1 flex-col bg-background md:m-2 md:rounded-xl md:border"
+        >
             <slot />
         </main>
 

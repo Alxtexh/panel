@@ -24,9 +24,7 @@
  * refusal to delete the last remaining copy. A client that skipped this page
  * entirely gets a 403 or a 422, not a deletion.
  */
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Button } from '@/components/ui/button'
-import { Head, router, useForm } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3';
 /*
  * GENERATED FROM THE ROUTES, not typed out.
  *
@@ -36,65 +34,77 @@ import { Head, router, useForm } from '@inertiajs/vue3'
  * helpers are regenerated from `route:list` on every build, so the same rename
  * breaks the build instead.
  */
-import backups from '@/routes/operations/backups'
-import alerts from '@/routes/operations/alerts'
-import { PkModal } from '@panelkit/ui'
-import { Download, RotateCcw, Settings2, Trash2, TriangleAlert } from '@lucide/vue'
-import { computed, ref } from 'vue'
+import {
+    Download,
+    RotateCcw,
+    Settings2,
+    Trash2,
+    TriangleAlert,
+} from '@lucide/vue';
+import { PkModal } from '@panelkit/ui';
+import { computed, ref } from 'vue';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/AppLayout.vue';
+import backups from '@/routes/operations/backups';
 
-defineOptions({ layout: AppLayout })
+defineOptions({ layout: AppLayout });
 
 interface Snapshot {
-    path: string
-    bytes: number
-    at: string
+    path: string;
+    bytes: number;
+    at: string;
 }
 
 interface Settings {
-    frequency: string
-    time: string
-    weekday: number
-    dayOfMonth: number
-    keepDays: number
-    maxMegabytes: number | null
-    destinations: string[]
-    alertEmail: string | null
-    alertTelegramChatId: string | null
+    frequency: string;
+    time: string;
+    weekday: number;
+    dayOfMonth: number;
+    keepDays: number;
+    maxMegabytes: number | null;
+    destinations: string[];
+    alertEmail: string | null;
+    alertTelegramChatId: string | null;
     /**
      * ALWAYS NULL ON THE WAY IN. The server redacts it - see `redacted()` - so
      * the field starts empty and an empty submission means "leave it as it is"
      * rather than "clear it".
      */
-    alertTelegramToken: string | null
-    notifyOnSuccess: boolean
+    alertTelegramToken: string | null;
+    notifyOnSuccess: boolean;
 }
 
 /** What the server tells us ABOUT the token, without telling us the token. */
 interface SettingsIn extends Settings {
-    hasTelegramToken: boolean
-    telegramReady: boolean
+    hasTelegramToken: boolean;
+    telegramReady: boolean;
 }
 
 const props = defineProps<{
     status: {
-        configured: boolean
-        disk: string | null
-        healthy: boolean | null
-        newestAt: string | null
-        ageHours: number | null
-        totalBytes: number
-        backups: Snapshot[]
-        problem: string | null
-    }
+        configured: boolean;
+        disk: string | null;
+        healthy: boolean | null;
+        newestAt: string | null;
+        ageHours: number | null;
+        totalBytes: number;
+        backups: Snapshot[];
+        problem: string | null;
+    };
     /** The last manual run, so the button is not a black hole. */
-    lastRun: { state: string; message: string; at: string; by: string | null } | null
+    lastRun: {
+        state: string;
+        message: string;
+        at: string;
+        by: string | null;
+    } | null;
     lastRestore: {
-        state: string
-        message: string
-        at: string
-        by: string | null
-        snapshot: string
-    } | null
+        state: string;
+        message: string;
+        at: string;
+        by: string | null;
+        snapshot: string;
+    } | null;
     /**
      * A one-time maintenance bypass for the restore that was just started.
      *
@@ -102,13 +112,13 @@ const props = defineProps<{
      * link the operator watches their own restore from a 503 page, which is
      * exactly when they most need to see what is happening.
      */
-    restoreBypass: string | null
-    settings: SettingsIn
+    restoreBypass: string | null;
+    settings: SettingsIn;
     /** A sentence built server-side from the same values the scheduler reads. */
-    schedule: string
+    schedule: string;
     /** Who last changed the policy. Null while it is still the shipped default. */
-    settingsChangedBy: { by: string | null; at: string } | null
-    disks: string[]
+    settingsChangedBy: { by: string | null; at: string } | null;
+    disks: string[];
     /**
      * What has been done to the backups, across the whole installation.
      *
@@ -117,16 +127,16 @@ const props = defineProps<{
      * leak. These events belong to the installation, so they belong here.
      */
     history: {
-        event: string
-        actor: string | null
-        snapshot: string | null
-        ip: string | null
-        at: string
-    }[]
-    can: { manage: boolean }
-}>()
+        event: string;
+        actor: string | null;
+        snapshot: string | null;
+        ip: string | null;
+        at: string;
+    }[];
+    can: { manage: boolean };
+}>();
 
-const starting = ref(false)
+const starting = ref(false);
 
 /**
  * Ask for a backup; do not wait for one.
@@ -136,24 +146,26 @@ const starting = ref(false)
  * no way to tell whether it finished.
  */
 function backUpNow() {
-    starting.value = true
+    starting.value = true;
 
     router.post(
         backups.run.url(),
         {},
         { preserveScroll: true, onFinish: () => (starting.value = false) },
-    )
+    );
 }
 
 /* ------------------------------------------------------------------ *
  * Selection
  * ------------------------------------------------------------------ */
 
-const selected = ref<string[]>([])
+const selected = ref<string[]>([]);
 
 const allSelected = computed(
-    () => props.status.backups.length > 0 && selected.value.length === props.status.backups.length,
-)
+    () =>
+        props.status.backups.length > 0 &&
+        selected.value.length === props.status.backups.length,
+);
 
 /**
  * Indeterminate, not just checked/unchecked.
@@ -163,17 +175,21 @@ const allSelected = computed(
  * which selects everything, one keystroke away from deleting everything.
  */
 const someSelected = computed(
-    () => selected.value.length > 0 && selected.value.length < props.status.backups.length,
-)
+    () =>
+        selected.value.length > 0 &&
+        selected.value.length < props.status.backups.length,
+);
 
 function toggleAll() {
-    selected.value = allSelected.value ? [] : props.status.backups.map((b) => b.path)
+    selected.value = allSelected.value
+        ? []
+        : props.status.backups.map((b) => b.path);
 }
 
 function toggle(path: string) {
     selected.value = selected.value.includes(path)
         ? selected.value.filter((p) => p !== path)
-        : [...selected.value, path]
+        : [...selected.value, path];
 }
 
 /**
@@ -184,17 +200,19 @@ function toggle(path: string) {
  * be refused with an error; `BackupArchive` is what actually holds the line.
  */
 const wouldEmpty = computed(
-    () => pendingDelete.value.length > 0 && pendingDelete.value.length >= props.status.backups.length,
-)
+    () =>
+        pendingDelete.value.length > 0 &&
+        pendingDelete.value.length >= props.status.backups.length,
+);
 
 /* ------------------------------------------------------------------ *
  * Delete
  * ------------------------------------------------------------------ */
 
-const pendingDelete = ref<string[]>([])
+const pendingDelete = ref<string[]>([]);
 
 function askDelete(paths: string[]) {
-    pendingDelete.value = paths
+    pendingDelete.value = paths;
 }
 
 function confirmDelete() {
@@ -202,20 +220,24 @@ function confirmDelete() {
         data: { paths: pendingDelete.value },
         preserveScroll: true,
         onFinish: () => {
-            selected.value = selected.value.filter((p) => !pendingDelete.value.includes(p))
-            pendingDelete.value = []
+            selected.value = selected.value.filter(
+                (p) => !pendingDelete.value.includes(p),
+            );
+            pendingDelete.value = [];
         },
-    })
+    });
 }
 
 /* ------------------------------------------------------------------ *
  * Restore
  * ------------------------------------------------------------------ */
 
-const pendingRestore = ref<Snapshot | null>(null)
-const typedConfirmation = ref('')
+const pendingRestore = ref<Snapshot | null>(null);
+const typedConfirmation = ref('');
 
-const restoreName = computed(() => pendingRestore.value?.path.split('/').pop() ?? '')
+const restoreName = computed(
+    () => pendingRestore.value?.path.split('/').pop() ?? '',
+);
 
 /**
  * The name has to be typed out, not clicked past.
@@ -227,56 +249,36 @@ const restoreName = computed(() => pendingRestore.value?.path.split('/').pop() ?
  * so this is a prompt rather than a lock.
  */
 const confirmationMatches = computed(
-    () => typedConfirmation.value.trim() === restoreName.value && restoreName.value !== '',
-)
+    () =>
+        typedConfirmation.value.trim() === restoreName.value &&
+        restoreName.value !== '',
+);
 
 function askRestore(snapshot: Snapshot) {
-    pendingRestore.value = snapshot
-    typedConfirmation.value = ''
+    pendingRestore.value = snapshot;
+    typedConfirmation.value = '';
 }
 
 function confirmRestore() {
-    if (!pendingRestore.value || !confirmationMatches.value) return
+    if (!pendingRestore.value || !confirmationMatches.value) {
+        return;
+    }
 
     router.post(
         backups.restore.url(),
-        { path: pendingRestore.value.path, confirm: typedConfirmation.value.trim() },
+        {
+            path: pendingRestore.value.path,
+            confirm: typedConfirmation.value.trim(),
+        },
         {
             preserveScroll: true,
             onFinish: () => {
-                pendingRestore.value = null
-                typedConfirmation.value = ''
+                pendingRestore.value = null;
+                typedConfirmation.value = '';
             },
         },
-    )
+    );
 }
-
-const FREQUENCIES = [
-    { value: 'hourly', label: 'Every hour' },
-    { value: 'twice-daily', label: 'Twice a day' },
-    { value: 'daily', label: 'Every day' },
-    { value: 'weekly', label: 'Every week' },
-    { value: 'monthly', label: 'Every month' },
-]
-
-/**
- * 1 to 28, and the ceiling is the point.
- *
- * The 29th, 30th and 31st are not days every month has, and a schedule set to
- * one of them simply does not fire in the months that lack it - so "back up on
- * the 31st" would quietly skip February, April, June, September and November.
- */
-const DAYS_OF_MONTH = Array.from({ length: 28 }, (_, i) => i + 1)
-
-const WEEKDAYS = [
-    { value: 1, label: 'Monday' },
-    { value: 2, label: 'Tuesday' },
-    { value: 3, label: 'Wednesday' },
-    { value: 4, label: 'Thursday' },
-    { value: 5, label: 'Friday' },
-    { value: 6, label: 'Saturday' },
-    { value: 7, label: 'Sunday' },
-]
 
 /* ------------------------------------------------------------------ *
  * Formatting
@@ -288,20 +290,24 @@ const runTone: Record<string, string> = {
     skipped: 'text-amber-600 dark:text-amber-500',
     refused: 'text-amber-600 dark:text-amber-500',
     failed: 'text-destructive',
-}
+};
 
 /** Zero stays zero - a `Math.max(1, …)` floor reported "1 MB" of nothing. */
 const mb = (bytes: number) => {
-    if (bytes <= 0) return '0 MB'
+    if (bytes <= 0) {
+        return '0 MB';
+    }
 
-    if (bytes > 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`
+    if (bytes > 1024 * 1024 * 1024) {
+        return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
+    }
 
-    return `${Math.max(1, Math.round(bytes / 1024 / 1024))} MB`
-}
+    return `${Math.max(1, Math.round(bytes / 1024 / 1024))} MB`;
+};
 
-const when = (iso: string) => new Date(iso).toLocaleString()
+const when = (iso: string) => new Date(iso).toLocaleString();
 
-const basename = (path: string) => path.split('/').pop() ?? path
+const basename = (path: string) => path.split('/').pop() ?? path;
 
 /**
  * `backup.restore-started` reads as a log line, not as a sentence.
@@ -314,12 +320,12 @@ const EVENT_LABELS: Record<string, string> = {
     'backup.downloaded': 'Downloaded',
     'backup.restore-started': 'Restore started',
     'backup.settings-changed': 'Settings changed',
-}
+};
 
 const eventLabel = (event: string) =>
-    EVENT_LABELS[event] ?? event.replace(/^backup\./, '').replace(/[-_]/g, ' ')
+    EVENT_LABELS[event] ?? event.replace(/^backup\./, '').replace(/[-_]/g, ' ');
 
-const downloadUrl = (path: string) => backups.download.url({ query: { path } })
+const downloadUrl = (path: string) => backups.download.url({ query: { path } });
 </script>
 
 <template>
@@ -329,8 +335,9 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h1 class="text-xl font-semibold">Backups</h1>
-                <p class="text-muted-foreground text-sm">
-                    {{ props.schedule }}, kept for {{ props.settings.keepDays }} days.
+                <p class="text-sm text-muted-foreground">
+                    {{ props.schedule }}, kept for
+                    {{ props.settings.keepDays }} days.
                 </p>
             </div>
 
@@ -364,13 +371,20 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
             believes a backup exists.
         -->
         <div v-if="props.lastRun" class="rounded-lg border p-3 text-sm">
-            <span class="font-medium" :class="runTone[props.lastRun.state] ?? ''">
+            <span
+                class="font-medium"
+                :class="runTone[props.lastRun.state] ?? ''"
+            >
                 Last manual run: {{ props.lastRun.state }}
             </span>
-            <span class="text-muted-foreground"> - {{ props.lastRun.message }}</span>
-            <span class="text-muted-foreground block text-xs">
-                {{ when(props.lastRun.at) }}<template v-if="props.lastRun.by">
-                    · started by {{ props.lastRun.by }}</template>
+            <span class="text-muted-foreground">
+                - {{ props.lastRun.message }}</span
+            >
+            <span class="block text-xs text-muted-foreground">
+                {{ when(props.lastRun.at)
+                }}<template v-if="props.lastRun.by">
+                    · started by {{ props.lastRun.by }}</template
+                >
             </span>
         </div>
 
@@ -386,30 +400,40 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
             v-if="props.restoreBypass"
             class="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm"
         >
-            <p class="font-medium">The panel will close while the database is restored.</p>
-            <p class="text-muted-foreground mt-1 text-xs">
-                Everyone else sees a maintenance page, so nothing is written to the database
-                being replaced. Open this link first - it is shown once and stops working when
-                the restore finishes.
+            <p class="font-medium">
+                The panel will close while the database is restored.
+            </p>
+            <p class="mt-1 text-xs text-muted-foreground">
+                Everyone else sees a maintenance page, so nothing is written to
+                the database being replaced. Open this link first - it is shown
+                once and stops working when the restore finishes.
             </p>
             <a
                 :href="`/${props.restoreBypass}`"
                 class="mt-2 inline-block font-mono text-xs underline"
                 target="_blank"
                 rel="noopener"
-            >/{{ props.restoreBypass }}</a>
+                >/{{ props.restoreBypass }}</a
+            >
         </div>
 
         <!-- A restore is reported separately and permanently: it is the one
              action here whose outcome somebody may need to account for. -->
         <div v-if="props.lastRestore" class="rounded-lg border p-3 text-sm">
-            <span class="font-medium" :class="runTone[props.lastRestore.state] ?? ''">
+            <span
+                class="font-medium"
+                :class="runTone[props.lastRestore.state] ?? ''"
+            >
                 Last restore: {{ props.lastRestore.state }}
             </span>
-            <span class="text-muted-foreground"> - {{ props.lastRestore.message }}</span>
-            <span class="text-muted-foreground block text-xs">
+            <span class="text-muted-foreground">
+                - {{ props.lastRestore.message }}</span
+            >
+            <span class="block text-xs text-muted-foreground">
                 {{ when(props.lastRestore.at) }}
-                <template v-if="props.lastRestore.by"> · started by {{ props.lastRestore.by }}</template>
+                <template v-if="props.lastRestore.by">
+                    · started by {{ props.lastRestore.by }}</template
+                >
             </span>
         </div>
 
@@ -422,14 +446,19 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
             "
         >
             <p class="text-sm font-medium">
-                <template v-if="props.status.problem">{{ props.status.problem }}</template>
+                <template v-if="props.status.problem">{{
+                    props.status.problem
+                }}</template>
                 <template v-else-if="props.status.ageHours !== null">
                     Newest backup is {{ props.status.ageHours }} hours old.
                 </template>
                 <template v-else>Backups look healthy.</template>
             </p>
 
-            <p v-if="props.status.configured" class="text-muted-foreground mt-1 text-xs">
+            <p
+                v-if="props.status.configured"
+                class="mt-1 text-xs text-muted-foreground"
+            >
                 Disk <span class="font-mono">{{ props.status.disk }}</span> ·
                 {{ props.status.backups.length }} snapshot(s) ·
                 {{ mb(props.status.totalBytes) }} total
@@ -445,12 +474,14 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
             -->
             <div
                 v-if="selected.length"
-                class="bg-muted/40 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm"
+                class="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm"
             >
                 <span>{{ selected.length }} selected</span>
 
                 <div class="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" @click="selected = []">Clear</Button>
+                    <Button variant="ghost" size="sm" @click="selected = []"
+                        >Clear</Button
+                    >
                     <Button
                         v-if="props.can.manage"
                         variant="destructive"
@@ -477,17 +508,25 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
                                     @change="toggleAll"
                                 />
                             </th>
-                            <th class="px-3 py-2 text-left font-medium">Snapshot</th>
-                            <th class="px-3 py-2 text-left font-medium">Taken</th>
-                            <th class="px-3 py-2 text-right font-medium">Size</th>
-                            <th class="w-px px-3 py-2 text-right font-medium">Actions</th>
+                            <th class="px-3 py-2 text-left font-medium">
+                                Snapshot
+                            </th>
+                            <th class="px-3 py-2 text-left font-medium">
+                                Taken
+                            </th>
+                            <th class="px-3 py-2 text-right font-medium">
+                                Size
+                            </th>
+                            <th class="w-px px-3 py-2 text-right font-medium">
+                                Actions
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr
                             v-for="b in props.status.backups"
                             :key="b.path"
-                            class="hover:bg-muted/30 border-t"
+                            class="border-t hover:bg-muted/30"
                         >
                             <td class="px-3 py-2">
                                 <input
@@ -498,11 +537,19 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
                                     @change="toggle(b.path)"
                                 />
                             </td>
-                            <td class="px-3 py-2 font-mono text-xs">{{ b.path }}</td>
-                            <td class="px-3 py-2 whitespace-nowrap">{{ when(b.at) }}</td>
-                            <td class="px-3 py-2 text-right tabular-nums">{{ mb(b.bytes) }}</td>
+                            <td class="px-3 py-2 font-mono text-xs">
+                                {{ b.path }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap">
+                                {{ when(b.at) }}
+                            </td>
+                            <td class="px-3 py-2 text-right tabular-nums">
+                                {{ mb(b.bytes) }}
+                            </td>
                             <td class="px-3 py-2">
-                                <div class="flex items-center justify-end gap-1">
+                                <div
+                                    class="flex items-center justify-end gap-1"
+                                >
                                     <!--
                                         A REAL ANCHOR, not a router call. The
                                         response is a file stream, and Inertia
@@ -510,7 +557,7 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
                                     -->
                                     <a
                                         :href="downloadUrl(b.path)"
-                                        class="hover:bg-muted inline-flex size-8 items-center justify-center rounded-md"
+                                        class="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted"
                                         :title="`Download ${basename(b.path)}`"
                                         :aria-label="`Download ${basename(b.path)}`"
                                     >
@@ -520,7 +567,7 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
                                     <button
                                         v-if="props.can.manage"
                                         type="button"
-                                        class="hover:bg-muted inline-flex size-8 items-center justify-center rounded-md"
+                                        class="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted"
                                         :title="`Restore from ${basename(b.path)}`"
                                         :aria-label="`Restore from ${basename(b.path)}`"
                                         @click="askRestore(b)"
@@ -531,7 +578,7 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
                                     <button
                                         v-if="props.can.manage"
                                         type="button"
-                                        class="hover:bg-destructive/10 text-destructive inline-flex size-8 items-center justify-center rounded-md"
+                                        class="inline-flex size-8 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
                                         :title="`Delete ${basename(b.path)}`"
                                         :aria-label="`Delete ${basename(b.path)}`"
                                         @click="askDelete([b.path])"
@@ -556,13 +603,23 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
             <h2 class="text-sm font-medium">Recent backup activity</h2>
 
             <ul class="divide-y rounded-lg border text-sm">
-                <li v-for="(entry, i) in props.history" :key="i" class="flex flex-wrap gap-x-2 px-3 py-2">
-                    <span class="font-medium">{{ eventLabel(entry.event) }}</span>
-                    <span v-if="entry.snapshot" class="font-mono text-xs self-center">
+                <li
+                    v-for="(entry, i) in props.history"
+                    :key="i"
+                    class="flex flex-wrap gap-x-2 px-3 py-2"
+                >
+                    <span class="font-medium">{{
+                        eventLabel(entry.event)
+                    }}</span>
+                    <span
+                        v-if="entry.snapshot"
+                        class="self-center font-mono text-xs"
+                    >
                         {{ entry.snapshot }}
                     </span>
-                    <span class="text-muted-foreground ml-auto text-xs">
-                        {{ entry.actor ?? 'somebody' }}<template v-if="entry.ip"> · {{ entry.ip }}</template>
+                    <span class="ml-auto text-xs text-muted-foreground">
+                        {{ entry.actor ?? 'somebody'
+                        }}<template v-if="entry.ip"> · {{ entry.ip }}</template>
                         · {{ when(entry.at) }}
                     </span>
                 </li>
@@ -581,24 +638,41 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
         description="The files are removed from the backup disk. This cannot be undone."
         @close="pendingDelete = []"
     >
-        <p v-if="wouldEmpty" class="text-destructive flex items-start gap-2 text-sm">
+        <p
+            v-if="wouldEmpty"
+            class="flex items-start gap-2 text-sm text-destructive"
+        >
             <TriangleAlert class="mt-0.5 size-4 shrink-0" />
             <span>
-                That is every snapshot there is. The server will refuse this - at least one
-                backup must always remain.
+                That is every snapshot there is. The server will refuse this -
+                at least one backup must always remain.
             </span>
         </p>
 
-        <ul v-else class="text-muted-foreground max-h-40 space-y-1 overflow-y-auto text-xs">
+        <ul
+            v-else
+            class="max-h-40 space-y-1 overflow-y-auto text-xs text-muted-foreground"
+        >
             <li v-for="path in pendingDelete" :key="path" class="font-mono">
                 {{ basename(path) }}
             </li>
         </ul>
 
         <template #footer>
-            <Button variant="ghost" size="sm" @click="pendingDelete = []">Cancel</Button>
-            <Button variant="destructive" size="sm" :disabled="wouldEmpty" @click="confirmDelete">
-                {{ pendingDelete.length === 1 ? 'Delete snapshot' : 'Delete snapshots' }}
+            <Button variant="ghost" size="sm" @click="pendingDelete = []"
+                >Cancel</Button
+            >
+            <Button
+                variant="destructive"
+                size="sm"
+                :disabled="wouldEmpty"
+                @click="confirmDelete"
+            >
+                {{
+                    pendingDelete.length === 1
+                        ? 'Delete snapshot'
+                        : 'Delete snapshots'
+                }}
             </Button>
         </template>
     </PkModal>
@@ -611,11 +685,12 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
         @close="pendingRestore = null"
     >
         <div class="flex flex-col gap-3 text-sm">
-            <p class="text-destructive flex items-start gap-2">
+            <p class="flex items-start gap-2 text-destructive">
                 <TriangleAlert class="mt-0.5 size-4 shrink-0" />
                 <span>
-                    Every record in the live database is replaced with the contents of this
-                    snapshot. Anything created since it was taken is lost.
+                    Every record in the live database is replaced with the
+                    contents of this snapshot. Anything created since it was
+                    taken is lost.
                 </span>
             </p>
 
@@ -624,19 +699,21 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
                 DOES. An operator who assumes uploaded files come back too will
                 not go looking for them.
             -->
-            <p class="text-muted-foreground text-xs">
-                Only the database is restored. Application files and uploaded documents are
-                left exactly as they are - download the snapshot if you need those.
+            <p class="text-xs text-muted-foreground">
+                Only the database is restored. Application files and uploaded
+                documents are left exactly as they are - download the snapshot
+                if you need those.
             </p>
 
             <label class="flex flex-col gap-1">
                 <span class="text-xs font-medium">
-                    Type <span class="font-mono">{{ restoreName }}</span> to confirm
+                    Type <span class="font-mono">{{ restoreName }}</span> to
+                    confirm
                 </span>
                 <input
                     v-model="typedConfirmation"
                     type="text"
-                    class="border-input bg-background rounded-md border px-3 py-1.5 font-mono text-xs"
+                    class="rounded-md border border-input bg-background px-3 py-1.5 font-mono text-xs"
                     autocomplete="off"
                     spellcheck="false"
                 />
@@ -644,7 +721,9 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } })
         </div>
 
         <template #footer>
-            <Button variant="ghost" size="sm" @click="pendingRestore = null">Cancel</Button>
+            <Button variant="ghost" size="sm" @click="pendingRestore = null"
+                >Cancel</Button
+            >
             <Button
                 variant="destructive"
                 size="sm"

@@ -40,7 +40,6 @@ const props = defineProps<{
     breadcrumbs: { title: string; href: string }[]
 }>()
 
-
 /**
  * Layout when the resource declares one; a flat list of its table columns
  * otherwise - which is what every resource had before layout existed, so
@@ -80,7 +79,10 @@ const state = ref<Record<string, RelationState>>({})
 
 function relationState(key: string): RelationState {
     if (!state.value[key]) {
-        state.value = { ...state.value, [key]: { rows: [], cursor: null, loading: false, loaded: false } }
+        state.value = {
+            ...state.value,
+            [key]: { rows: [], cursor: null, loading: false, loaded: false },
+        }
     }
 
     return state.value[key]
@@ -99,7 +101,10 @@ async function loadRelation(key: string, cursor: string | null = null) {
 
         const response = await fetch(
             `${props.schema.routes.index}/${props.record.id}/relations/${key}${query}`,
-            { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' },
+            {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            },
         )
 
         if (!response.ok) throw new Error(String(response.status))
@@ -129,7 +134,13 @@ if (activeRelation.value) loadRelation(activeRelation.value)
 
 const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
     date: { year: 'numeric', month: 'long', day: 'numeric' },
-    datetime: { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' },
+    datetime: {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    },
 }
 
 function render(key: string): string {
@@ -178,7 +189,9 @@ function destroy() {
                 <Button v-if="can.update" as-child size="sm">
                     <Link :href="`${schema.routes.index}/${record.id}/edit`">Edit</Link>
                 </Button>
-                <Button v-if="can.delete" variant="outline" size="sm" @click="destroy">Delete</Button>
+                <Button v-if="can.delete" variant="outline" size="sm" @click="destroy"
+                    >Delete</Button
+                >
             </div>
         </div>
 
@@ -204,7 +217,9 @@ function destroy() {
                     >
                         {{ record[column.key] }}
                     </Badge>
-                    <span v-else :class="column.mono ? 'font-mono text-xs' : ''">{{ render(column.key) }}</span>
+                    <span v-else :class="column.mono ? 'font-mono text-xs' : ''">{{
+                        render(column.key)
+                    }}</span>
                 </dd>
             </div>
         </dl>

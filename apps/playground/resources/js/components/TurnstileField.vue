@@ -17,67 +17,68 @@
  * is the correct direction to fail: a blocked script means somebody cannot sign
  * in, not that anybody can.
  */
-import { onMounted, ref, watch } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { usePage } from '@inertiajs/vue3';
+import { onMounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     /** Bound to the form so the token travels with the submission. */
-    modelValue?: string | null
-}>()
+    modelValue?: string | null;
+}>();
 
-const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>();
 
-const page = usePage()
-const container = ref<HTMLElement | null>(null)
+const page = usePage();
+const container = ref<HTMLElement | null>(null);
 
-const siteKey = () => (page.props as any).turnstileSiteKey as string | null
+const siteKey = () => (page.props as any).turnstileSiteKey as string | null;
 
-const SCRIPT_ID = 'cf-turnstile-script'
+const SCRIPT_ID = 'cf-turnstile-script';
 
 function loadScript(): Promise<void> {
     return new Promise((resolve, reject) => {
         if ((window as any).turnstile) {
-            resolve()
+            resolve();
 
-            return
+            return;
         }
 
-        const existing = document.getElementById(SCRIPT_ID)
+        const existing = document.getElementById(SCRIPT_ID);
 
         if (existing) {
-            existing.addEventListener('load', () => resolve())
-            existing.addEventListener('error', () => reject())
+            existing.addEventListener('load', () => resolve());
+            existing.addEventListener('error', () => reject());
 
-            return
+            return;
         }
 
-        const script = document.createElement('script')
+        const script = document.createElement('script');
 
-        script.id = SCRIPT_ID
-        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-        script.async = true
-        script.defer = true
-        script.onload = () => resolve()
-        script.onerror = () => reject()
+        script.id = SCRIPT_ID;
+        script.src =
+            'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject();
 
-        document.head.appendChild(script)
-    })
+        document.head.appendChild(script);
+    });
 }
 
 onMounted(async () => {
     if (!siteKey() || !container.value) {
-        return
+        return;
     }
 
     try {
-        await loadScript()
+        await loadScript();
     } catch {
         // Deliberately silent to the visitor and fatal to the submission: the
         // server refuses without a token, which is the honest outcome.
-        return
+        return;
     }
 
-    ;(window as any).turnstile?.render(container.value, {
+    (window as any).turnstile?.render(container.value, {
         sitekey: siteKey(),
         callback: (token: string) => emit('update:modelValue', token),
         /*
@@ -89,18 +90,18 @@ onMounted(async () => {
          */
         'expired-callback': () => emit('update:modelValue', ''),
         'error-callback': () => emit('update:modelValue', ''),
-    })
-})
+    });
+});
 
 // A failed submission re-renders the form; the spent token must not linger.
 watch(
     () => props.modelValue,
     (value) => {
         if (value === '' && container.value && (window as any).turnstile) {
-            ;(window as any).turnstile.reset(container.value)
+            (window as any).turnstile.reset(container.value);
         }
     },
-)
+);
 </script>
 
 <template>

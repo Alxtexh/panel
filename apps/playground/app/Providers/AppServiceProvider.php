@@ -2,20 +2,29 @@
 
 namespace App\Providers;
 
+use App\Documents\ClientInvoiceKind;
+use App\Documents\OrganisationBranding;
+use App\Models\AuditEntry;
 use App\Models\Client;
 use App\Models\Plan;
-use App\Models\User;
 use App\Models\Router;
+use App\Models\User;
+use App\Policies\AnnouncementPolicy;
+use App\Policies\AuditEntryPolicy;
 use App\Policies\ClientPolicy;
 use App\Policies\PlanPolicy;
-use App\Policies\UserPolicy;
 use App\Policies\RouterPolicy;
+use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use PanelKit\Panel\Alerts\Announcement;
+use PanelKit\Panel\Documents\DocumentBranding;
+use PanelKit\Panel\Documents\DocumentKinds;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -51,7 +60,7 @@ class AppServiceProvider extends ServiceProvider
          * replaces it - userland registration outranks the framework's.
          */
         if ($this->app->runningInConsole()) {
-            \Illuminate\Foundation\DevCommands::artisan('serve --host=127.0.0.1', 'server');
+            DevCommands::artisan('serve --host=127.0.0.1', 'server');
         }
 
         // Explicit registration for now. Filesystem discovery (spec S6
@@ -64,14 +73,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Plan::class, PlanPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         // Read-only by construction - see AuditEntryPolicy.
-        Gate::policy(\App\Models\AuditEntry::class, \App\Policies\AuditEntryPolicy::class);
+        Gate::policy(AuditEntry::class, AuditEntryPolicy::class);
 
         /*
          | THE ANNOUNCEMENT MODEL LIVES IN THE PACKAGE and its policy here,
          | because who may address the whole organisation is an application's
          | decision rather than a framework's.
          */
-        Gate::policy(\PanelKit\Panel\Alerts\Announcement::class, \App\Policies\AnnouncementPolicy::class);
+        Gate::policy(Announcement::class, AnnouncementPolicy::class);
 
         /*
          | THE INVOICE KIND, TAUGHT ABOUT THIS APPLICATION'S SUBSCRIBERS.
@@ -86,8 +95,8 @@ class AppServiceProvider extends ServiceProvider
          | registers its three in `register()`, so anything here is guaranteed
          | to run after them and win without depending on provider order.
          */
-        app(\PanelKit\Panel\Documents\DocumentKinds::class)
-            ->register(new \App\Documents\ClientInvoiceKind);
+        app(DocumentKinds::class)
+            ->register(new ClientInvoiceKind);
 
         /*
          | A DOCUMENT'S LETTERHEAD, FROM THE ORGANISATION SETTINGS SCREEN.
@@ -99,8 +108,8 @@ class AppServiceProvider extends ServiceProvider
          | there is no copy in a template to forget.
          */
         $this->app->scoped(
-            \PanelKit\Panel\Documents\DocumentBranding::class,
-            \App\Documents\OrganisationBranding::class,
+            DocumentBranding::class,
+            OrganisationBranding::class,
         );
 
         $this->configureDefaults();

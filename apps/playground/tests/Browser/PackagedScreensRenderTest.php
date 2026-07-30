@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Laravel\Dusk\Browser;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\DuskTestCase;
 
 /**
@@ -68,7 +69,7 @@ final class PackagedScreensRenderTest extends DuskTestCase
          * calls out as having appeared three times: a guard must not depend on
          * ambient state, and neither must a grant.
          */
-        $registrar = app(\Spatie\Permission\PermissionRegistrar::class);
+        $registrar = app(PermissionRegistrar::class);
         $previous = $registrar->getPermissionsTeamId();
         $registrar->setPermissionsTeamId($tenant->id);
 

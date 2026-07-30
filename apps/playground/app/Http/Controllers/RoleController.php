@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Support\Abilities;
@@ -47,10 +50,10 @@ final class RoleController extends Controller
                 ->select('roles.*')
                 ->where('tenant_id', $request->user()->tenant_id)
                 ->with('permissions:id,name')
-                ->addSelect(['user_count' => \Illuminate\Support\Facades\DB::table('model_has_roles')
+                ->addSelect(['user_count' => DB::table('model_has_roles')
                     ->selectRaw('count(*)')
                     ->whereColumn('model_has_roles.role_id', 'roles.id')
-                    ->where('model_has_roles.model_type', \App\Models\User::class)
+                    ->where('model_has_roles.model_type', User::class)
                     ->where('model_has_roles.tenant_id', $request->user()->tenant_id),
                 ])
                 ->orderBy('id')
@@ -96,7 +99,7 @@ final class RoleController extends Controller
         $validated = $request->validate([
             'name' => [
                 'required', 'string', 'max:80',
-                \Illuminate\Validation\Rule::unique('roles', 'name')
+                Rule::unique('roles', 'name')
                     ->where('tenant_id', $request->user()->tenant_id),
             ],
             /*
@@ -147,7 +150,7 @@ final class RoleController extends Controller
             ));
 
         foreach ($abilities as $ability) {
-            \Spatie\Permission\Models\Permission::findOrCreate($ability, config('auth.defaults.guard', 'web'));
+            Permission::findOrCreate($ability, config('auth.defaults.guard', 'web'));
         }
 
         $role->syncPermissions($abilities);

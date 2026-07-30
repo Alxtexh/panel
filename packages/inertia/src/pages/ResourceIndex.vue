@@ -827,31 +827,31 @@ function badgeLabel(key: string, value: unknown): string {
             read.
         -->
         <PkBoundary label="The table">
-        <DataTable
-            :group-by="schema.table.groupBy ?? null"
-            :reordering="reordering"
-            @reorder="persistOrder"
-            @row-contextmenu="onRowContextMenu"
-            :row-clickable="schema.table.rowClick === 'view'"
-            @row-click="onRowClick"
-            :columns="columns"
-            :rows="t.rows.value"
-            :hidden="hidden"
-            :sort="sort"
-            :direction="direction"
-            :loading="t.loading.value"
-            :filtered="t.isFiltered.value"
-            selectable
-            :selected="t.selected.value"
-            :summaries="columnSummaries"
-            :summary-values="(page.props.summary as any) ?? null"
-            :empty-title="`No ${schema.labelPlural.toLowerCase()} yet`"
-            empty-hint="Seed demo data with: make seed"
-            @sort="t.sortBy"
-            @toggle-row="t.toggleRow"
-            @toggle-page="t.togglePage"
-        >
-            <!--
+            <DataTable
+                :group-by="schema.table.groupBy ?? null"
+                :reordering="reordering"
+                @reorder="persistOrder"
+                @row-contextmenu="onRowContextMenu"
+                :row-clickable="schema.table.rowClick === 'view'"
+                @row-click="onRowClick"
+                :columns="columns"
+                :rows="t.rows.value"
+                :hidden="hidden"
+                :sort="sort"
+                :direction="direction"
+                :loading="t.loading.value"
+                :filtered="t.isFiltered.value"
+                selectable
+                :selected="t.selected.value"
+                :summaries="columnSummaries"
+                :summary-values="(page.props.summary as any) ?? null"
+                :empty-title="`No ${schema.labelPlural.toLowerCase()} yet`"
+                empty-hint="Seed demo data with: make seed"
+                @sort="t.sortBy"
+                @toggle-row="t.toggleRow"
+                @toggle-page="t.togglePage"
+            >
+                <!--
                 ONE slot per column, branching inside.
 
                 Two loops both emitting `cell:<key>` would collide: Vue keeps the
@@ -861,65 +861,65 @@ function badgeLabel(key: string, value: unknown): string {
                 Nothing here names a resource - badge colouring comes from the
                 schema's semantic map, and formatting from the column type.
             -->
-            <template v-for="col in columns" :key="col.key" #[`cell:${col.key}`]="{ row }">
-                <EditableCell
-                    v-if="byKey[col.key]?.editable"
-                    :type="byKey[col.key].type === 'toggle' ? 'toggle' : 'select'"
-                    :value="cellValue(row, col.key)"
-                    :options="byKey[col.key].options ?? {}"
-                    :on-label="byKey[col.key].onLabel"
-                    :off-label="byKey[col.key].offLabel"
-                    :busy="savingCell === `${row.id}:${col.key}`"
-                    :disabled="!can.update"
-                    @change="(value: unknown) => editCell(row, col.key, value)"
-                />
-                <IconCell
-                    v-else-if="byKey[col.key]?.type === 'icon'"
-                    :value="row[col.key]"
-                    :icons="byKey[col.key].icons ?? {}"
-                    :colors="byKey[col.key].colors ?? {}"
-                    :labels="byKey[col.key].labels ?? {}"
-                    :default-icon="byKey[col.key].defaultIcon ?? 'dot'"
-                />
-                <ImageCell
-                    v-else-if="byKey[col.key]?.type === 'image'"
-                    :src="row[col.key]"
-                    :fallback-text="row[byKey[col.key].fallbackFrom ?? 'name']"
-                    :rounded="byKey[col.key].rounded !== false"
-                    :size="byKey[col.key].size ?? 'md'"
-                    :fallback="byKey[col.key].fallback ?? 'initials'"
-                />
-                <Badge
-                    v-else-if="badgeKeys.includes(col.key)"
-                    :variant="badgeVariant(col.key, row[col.key]) as any"
-                    class="capitalize"
-                >
-                    {{ badgeLabel(col.key, row[col.key]) }}
-                </Badge>
-                <Link
-                    v-else-if="col.key === 'name'"
-                    :href="`${schema.routes.index}/${row.id}`"
-                    class="hover:text-primary hover:underline"
-                >
-                    {{ render(col.key, row[col.key]) }}
-                </Link>
-                <span v-else>{{ render(col.key, row[col.key]) }}</span>
-            </template>
+                <template v-for="col in columns" :key="col.key" #[`cell:${col.key}`]="{ row }">
+                    <EditableCell
+                        v-if="byKey[col.key]?.editable"
+                        :type="byKey[col.key].type === 'toggle' ? 'toggle' : 'select'"
+                        :value="cellValue(row, col.key)"
+                        :options="byKey[col.key].options ?? {}"
+                        :on-label="byKey[col.key].onLabel"
+                        :off-label="byKey[col.key].offLabel"
+                        :busy="savingCell === `${row.id}:${col.key}`"
+                        :disabled="!can.update"
+                        @change="(value: unknown) => editCell(row, col.key, value)"
+                    />
+                    <IconCell
+                        v-else-if="byKey[col.key]?.type === 'icon'"
+                        :value="row[col.key]"
+                        :icons="byKey[col.key].icons ?? {}"
+                        :colors="byKey[col.key].colors ?? {}"
+                        :labels="byKey[col.key].labels ?? {}"
+                        :default-icon="byKey[col.key].defaultIcon ?? 'dot'"
+                    />
+                    <ImageCell
+                        v-else-if="byKey[col.key]?.type === 'image'"
+                        :src="row[col.key]"
+                        :fallback-text="row[byKey[col.key].fallbackFrom ?? 'name']"
+                        :rounded="byKey[col.key].rounded !== false"
+                        :size="byKey[col.key].size ?? 'md'"
+                        :fallback="byKey[col.key].fallback ?? 'initials'"
+                    />
+                    <Badge
+                        v-else-if="badgeKeys.includes(col.key)"
+                        :variant="badgeVariant(col.key, row[col.key]) as any"
+                        class="capitalize"
+                    >
+                        {{ badgeLabel(col.key, row[col.key]) }}
+                    </Badge>
+                    <Link
+                        v-else-if="col.key === 'name'"
+                        :href="`${schema.routes.index}/${row.id}`"
+                        class="hover:text-primary hover:underline"
+                    >
+                        {{ render(col.key, row[col.key]) }}
+                    </Link>
+                    <span v-else>{{ render(col.key, row[col.key]) }}</span>
+                </template>
 
-            <template #clear-filters>
-                <Button variant="link" size="sm" @click="t.clearAll">Clear filters</Button>
-            </template>
+                <template #clear-filters>
+                    <Button variant="link" size="sm" @click="t.clearAll">Clear filters</Button>
+                </template>
 
-            <template #actions="{ row }">
-                <RecordActions
-                    :ref="(el: any) => registerRowMenu(row.id, el)"
-                    :groups="menuFor(row)"
-                    :title="row.name ?? `#${row.id}`"
-                    :busy="busyActionFor(row)"
-                    @run="onRecordAction(row, $event)"
-                />
-            </template>
-        </DataTable>
+                <template #actions="{ row }">
+                    <RecordActions
+                        :ref="(el: any) => registerRowMenu(row.id, el)"
+                        :groups="menuFor(row)"
+                        :title="row.name ?? `#${row.id}`"
+                        :busy="busyActionFor(row)"
+                        @run="onRecordAction(row, $event)"
+                    />
+                </template>
+            </DataTable>
         </PkBoundary>
 
         <TablePagination

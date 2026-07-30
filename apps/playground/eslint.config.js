@@ -58,6 +58,18 @@ export default defineConfigWithVueTs(
                 'error',
                 'prefer-top-level',
             ],
+            /*
+             | A LEADING UNDERSCORE IS THE DESTRUCTURE-TO-EXCLUDE IDIOM: pulling
+             | a key out of an object specifically to leave it out of the rest
+             | (`const { secret: _secret, ...safe } = value`) has no other way to
+             | discard it without a separate delete call. The default rule
+             | cannot tell that apart from a genuine unused binding, so it
+             | flagged the exact pattern that names its own intent.
+             */
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                { varsIgnorePattern: '^_', argsIgnorePattern: '^_' },
+            ],
         },
     },
     {
@@ -104,6 +116,10 @@ export default defineConfigWithVueTs(
             'node_modules',
             'public',
             'bootstrap/ssr',
+            // Chrome for Testing, downloaded by `npx @puppeteer/browsers install`
+            // for the Dusk suite. Gitignored and not source; ESLint has no
+            // notion of .gitignore on its own, so it has to be told here too.
+            'chrome/**',
             'tailwind.config.js',
             'vite.config.ts',
             'resources/js/actions/**',

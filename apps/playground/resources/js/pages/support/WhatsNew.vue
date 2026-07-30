@@ -14,32 +14,35 @@
  * Newest first, and the top entry is expanded - the release someone has not
  * seen yet is almost always the most recent one.
  */
-import { Head } from '@inertiajs/vue3'
-import { ref } from 'vue'
-import { Bug, Lightbulb, Sparkles } from '@lucide/vue'
-import FeedbackDialog from '@/components/FeedbackDialog.vue'
+import { Head } from '@inertiajs/vue3';
+import { Bug, Lightbulb, Sparkles } from '@lucide/vue';
+import { ref } from 'vue';
+import FeedbackDialog from '@/components/FeedbackDialog.vue';
 
-defineOptions({ layout: { breadcrumbs: [{ title: "What's new", href: '/whats-new' }] } })
+defineOptions({
+    layout: { breadcrumbs: [{ title: "What's new", href: '/whats-new' }] },
+});
 
 interface Release {
-    version: string
-    date: string
-    highlight?: string
-    added?: string[]
-    changed?: string[]
-    fixed?: string[]
+    version: string;
+    date: string;
+    highlight?: string;
+    added?: string[];
+    changed?: string[];
+    fixed?: string[];
 }
 
 const releases: Release[] = [
     {
         version: '0.8',
         date: '28 July 2026',
-        highlight: 'A trash bin, an extension point for fields, plugins, and documentation with a page per subject.',
+        highlight:
+            'A trash bin, an extension point for fields, plugins, and documentation with a page per subject.',
         added: [
             'A Trash screen covering every resource. Deleted records leave the lists entirely, are restorable from one place, and are removed for good after seven days - stated on each row and enforced by a scheduled sweep.',
             'A registration point for form field types, so a field can be added - or a built-in replaced - without editing the framework. Five new fields go through it: radio, checkbox list, tags, colour and slider.',
             'A plugin API. A package can install resources, routes and navigation entries into a panel; it can only add, never reconfigure the guard or the tenancy context.',
-            'Testing helpers for anybody building on the panel, covering the three failures that matter: a resource that was never discovered, one that shows another organisation\'s rows, and a policy that is never consulted.',
+            "Testing helpers for anybody building on the panel, covering the three failures that matter: a resource that was never discovered, one that shows another organisation's rows, and a policy that is never consulted.",
             'The build guide is now a page per subject with its own URL, walked by a test that checks every documented command still exists.',
         ],
         changed: [
@@ -48,13 +51,14 @@ const releases: Release[] = [
         ],
         fixed: [
             'An export link stopped working an hour after the export finished, while the file sat on disk - including from the notification announcing it, which is stored until it is read.',
-            'Export links carried no portal prefix, so a reseller\'s export pointed into a portal that does not serve it.',
+            "Export links carried no portal prefix, so a reseller's export pointed into a portal that does not serve it.",
         ],
     },
     {
         version: '0.7',
         date: '28 July 2026',
-        highlight: 'Portals from a command, a public API, scheduled reports, and an assistant that cites its sources.',
+        highlight:
+            'Portals from a command, a public API, scheduled reports, and an assistant that cites its sources.',
         added: [
             'make:panel builds a whole portal - provider, routes, guard and navigation - so a superadmin, an admin and a reseller portal are three commands rather than three copies of the routing.',
             'A public REST API with its own tokens, abilities and rate limit, kept separate from the endpoints the panel itself uses.',
@@ -70,7 +74,8 @@ const releases: Release[] = [
     {
         version: '0.6',
         date: '27 July 2026',
-        highlight: 'A full chart gallery, three navigation layouts, and in-panel help.',
+        highlight:
+            'A full chart gallery, three navigation layouts, and in-panel help.',
         added: [
             'Twelve chart types on the dashboard - line, area, stepped, multi-axis, vertical, horizontal, stacked and grouped bars, combo, pie, doughnut, polar area and radar.',
             'Navigation can now sit on the left, on the right, or across the top.',
@@ -120,9 +125,9 @@ const releases: Release[] = [
             'Cross-tenant writes were possible through a validation rule that queried the table directly.',
         ],
     },
-]
+];
 
-const open = ref<string | null>(releases[0]?.version ?? null)
+const open = ref<string | null>(releases[0]?.version ?? null);
 
 /*
  * The dialog is opened WITH a kind, from two buttons rather than one.
@@ -131,19 +136,27 @@ const open = ref<string | null>(releases[0]?.version ?? null)
  * do inside the dialog, which is a decision you had already made before
  * clicking. Two buttons carry it in, and the dialog opens on the right form.
  */
-const feedbackOpen = ref(false)
-const feedbackKind = ref<'feature' | 'bug'>('feature')
+const feedbackOpen = ref(false);
+const feedbackKind = ref<'feature' | 'bug'>('feature');
 
 function openFeedback(kind: 'feature' | 'bug'): void {
-    feedbackKind.value = kind
-    feedbackOpen.value = true
+    feedbackKind.value = kind;
+    feedbackOpen.value = true;
 }
 
 const KINDS = [
-    { key: 'added', label: 'Added', tone: 'text-emerald-600 dark:text-emerald-400' },
-    { key: 'changed', label: 'Changed', tone: 'text-amber-600 dark:text-amber-400' },
+    {
+        key: 'added',
+        label: 'Added',
+        tone: 'text-emerald-600 dark:text-emerald-400',
+    },
+    {
+        key: 'changed',
+        label: 'Changed',
+        tone: 'text-amber-600 dark:text-amber-400',
+    },
     { key: 'fixed', label: 'Fixed', tone: 'text-sky-600 dark:text-sky-400' },
-] as const
+] as const;
 </script>
 
 <template>
@@ -151,12 +164,18 @@ const KINDS = [
 
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 sm:p-6">
         <header class="flex items-start gap-3">
-            <span class="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
+            <span
+                class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+            >
                 <Sparkles class="size-5" />
             </span>
             <div>
-                <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">What's new</h1>
-                <p class="text-muted-foreground text-sm">Recent changes to the panel.</p>
+                <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
+                    What's new
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    Recent changes to the panel.
+                </p>
             </div>
         </header>
 
@@ -167,18 +186,23 @@ const KINDS = [
             writing down. A feedback link buried in a settings page is one nobody
             is looking at when they have something to say.
         -->
-        <div class="bg-muted/40 flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div
+            class="flex flex-col gap-3 rounded-lg border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
             <div>
-                <p class="text-sm font-medium">Something missing, or something broken?</p>
-                <p class="text-muted-foreground text-sm">
-                    Reports arrive with the page and browser details already attached.
+                <p class="text-sm font-medium">
+                    Something missing, or something broken?
+                </p>
+                <p class="text-sm text-muted-foreground">
+                    Reports arrive with the page and browser details already
+                    attached.
                 </p>
             </div>
 
             <div class="flex shrink-0 gap-2">
                 <button
                     type="button"
-                    class="hover:bg-accent inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors"
+                    class="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-accent"
                     @click="openFeedback('feature')"
                 >
                     <Lightbulb class="size-4" />
@@ -186,7 +210,7 @@ const KINDS = [
                 </button>
                 <button
                     type="button"
-                    class="hover:bg-accent inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors"
+                    class="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-accent"
                     @click="openFeedback('bug')"
                 >
                     <Bug class="size-4" />
@@ -198,26 +222,41 @@ const KINDS = [
         <FeedbackDialog v-model:open="feedbackOpen" :kind="feedbackKind" />
 
         <ol class="flex flex-col gap-3">
-            <li v-for="release in releases" :key="release.version" class="bg-card overflow-hidden rounded-lg border">
+            <li
+                v-for="release in releases"
+                :key="release.version"
+                class="overflow-hidden rounded-lg border bg-card"
+            >
                 <button
                     type="button"
-                    class="hover:bg-accent/50 flex w-full items-start justify-between gap-4 p-4 text-left transition-colors"
+                    class="flex w-full items-start justify-between gap-4 p-4 text-left transition-colors hover:bg-accent/50"
                     :aria-expanded="open === release.version"
-                    @click="open = open === release.version ? null : release.version"
+                    @click="
+                        open = open === release.version ? null : release.version
+                    "
                 >
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-semibold">
+                            <span
+                                class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary"
+                            >
                                 v{{ release.version }}
                             </span>
-                            <time class="text-muted-foreground text-xs">{{ release.date }}</time>
+                            <time class="text-xs text-muted-foreground">{{
+                                release.date
+                            }}</time>
                         </div>
-                        <p v-if="release.highlight" class="mt-1.5 text-sm font-medium">{{ release.highlight }}</p>
+                        <p
+                            v-if="release.highlight"
+                            class="mt-1.5 text-sm font-medium"
+                        >
+                            {{ release.highlight }}
+                        </p>
                     </div>
 
                     <svg
                         viewBox="0 0 24 24"
-                        class="text-muted-foreground mt-1 size-4 shrink-0 transition-transform"
+                        class="mt-1 size-4 shrink-0 text-muted-foreground transition-transform"
                         :class="open === release.version ? 'rotate-180' : ''"
                         fill="none"
                         stroke="currentColor"
@@ -227,14 +266,33 @@ const KINDS = [
                     </svg>
                 </button>
 
-                <div v-if="open === release.version" class="flex flex-col gap-4 border-t px-4 py-4">
-                    <section v-for="kind in KINDS" v-show="release[kind.key]?.length" :key="kind.key">
-                        <h3 class="text-xs font-semibold tracking-wide uppercase" :class="kind.tone">
+                <div
+                    v-if="open === release.version"
+                    class="flex flex-col gap-4 border-t px-4 py-4"
+                >
+                    <section
+                        v-for="kind in KINDS"
+                        v-show="release[kind.key]?.length"
+                        :key="kind.key"
+                    >
+                        <h3
+                            class="text-xs font-semibold tracking-wide uppercase"
+                            :class="kind.tone"
+                        >
                             {{ kind.label }}
                         </h3>
-                        <ul class="text-muted-foreground mt-1.5 flex flex-col gap-1.5 text-sm">
-                            <li v-for="(line, i) in release[kind.key] ?? []" :key="i" class="flex gap-2">
-                                <span class="text-muted-foreground/50 select-none">-</span>
+                        <ul
+                            class="mt-1.5 flex flex-col gap-1.5 text-sm text-muted-foreground"
+                        >
+                            <li
+                                v-for="(line, i) in release[kind.key] ?? []"
+                                :key="i"
+                                class="flex gap-2"
+                            >
+                                <span
+                                    class="text-muted-foreground/50 select-none"
+                                    >-</span
+                                >
                                 <span>{{ line }}</span>
                             </li>
                         </ul>

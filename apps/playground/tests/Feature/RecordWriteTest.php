@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Client;
+use App\Models\Feedback;
 use App\Models\Plan;
 use App\Models\Tenant;
-use App\Models\Feedback;
 use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -11,10 +11,10 @@
  * keyboard-navigable and announced as expandable. A div with a click handler
  * looks identical and is unreachable without a mouse.
  */
-import { Head } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
-defineOptions({ layout: { breadcrumbs: [{ title: 'FAQ', href: '/faq' }] } })
+defineOptions({ layout: { breadcrumbs: [{ title: 'FAQ', href: '/faq' }] } });
 
 const groups = [
     {
@@ -60,7 +60,7 @@ const groups = [
             },
         ],
     },
-]
+];
 
 /**
  * A flat list with a stable id per question, computed ONCE.
@@ -74,12 +74,12 @@ const groups = [
 const sections = groups.map((group, g) => ({
     ...group,
     items: group.items.map((item, i) => ({ ...item, id: `${g}-${i}` })),
-}))
+}));
 
-const openId = ref<string | null>('0-0')
+const openId = ref<string | null>('0-0');
 
 function toggle(id: string) {
-    openId.value = openId.value === id ? null : id
+    openId.value = openId.value === id ? null : id;
 }
 </script>
 
@@ -88,28 +88,38 @@ function toggle(id: string) {
 
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 sm:p-6">
         <header class="flex flex-col gap-1">
-            <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Frequently asked questions</h1>
-            <p class="text-muted-foreground text-sm">The things people ask in the first week.</p>
+            <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
+                Frequently asked questions
+            </h1>
+            <p class="text-sm text-muted-foreground">
+                The things people ask in the first week.
+            </p>
         </header>
 
-        <section v-for="group in sections" :key="group.name" class="flex flex-col gap-2">
-            <h2 class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+        <section
+            v-for="group in sections"
+            :key="group.name"
+            class="flex flex-col gap-2"
+        >
+            <h2
+                class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+            >
                 {{ group.name }}
             </h2>
 
-            <div class="bg-card divide-y overflow-hidden rounded-lg border">
+            <div class="divide-y overflow-hidden rounded-lg border bg-card">
                 <div v-for="item in group.items" :key="item.id">
                     <h3>
                         <button
                             type="button"
-                            class="hover:bg-accent/50 flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-colors"
+                            class="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-accent/50"
                             :aria-expanded="openId === item.id"
                             @click="toggle(item.id)"
                         >
                             {{ item.q }}
                             <svg
                                 viewBox="0 0 24 24"
-                                class="text-muted-foreground size-4 shrink-0 transition-transform"
+                                class="size-4 shrink-0 text-muted-foreground transition-transform"
                                 :class="openId === item.id ? 'rotate-180' : ''"
                                 fill="none"
                                 stroke="currentColor"
@@ -120,7 +130,10 @@ function toggle(id: string) {
                         </button>
                     </h3>
 
-                    <p v-if="openId === item.id" class="text-muted-foreground px-4 pb-3 text-sm">
+                    <p
+                        v-if="openId === item.id"
+                        class="px-4 pb-3 text-sm text-muted-foreground"
+                    >
                         {{ item.a }}
                     </p>
                 </div>

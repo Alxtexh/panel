@@ -26,13 +26,28 @@
  * `v-html` over content somebody will one day edit is how documentation becomes
  * an injection point.
  */
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, Link } from '@inertiajs/vue3'
-import { ArrowLeft, ArrowRight, Check, Copy, Search, TriangleAlert, X } from '@lucide/vue'
-import { nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { Head, Link } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
+import {
+    ArrowLeft,
+    ArrowRight,
+    Check,
+    Copy,
+    Search,
+    TriangleAlert,
+    X,
+} from '@lucide/vue';
+import {
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    useTemplateRef,
+    watch,
+} from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
-defineOptions({ layout: AppLayout })
+defineOptions({ layout: AppLayout });
 
 interface Segment {
     /**
@@ -43,54 +58,54 @@ interface Segment {
      * three chips for a search on "visible" is less readable than the thing
      * being searched for.
      */
-    type: 'text' | 'code' | 'match' | 'code-match'
-    value: string
+    type: 'text' | 'code' | 'match' | 'code-match';
+    value: string;
 }
 
 interface SearchResult {
-    slug: string
-    title: string
-    group: string
-    snippet: Segment[]
+    slug: string;
+    title: string;
+    group: string;
+    snippet: Segment[];
 }
 
 interface Paragraph {
-    lead: Segment[] | null
-    text: Segment[]
+    lead: Segment[] | null;
+    text: Segment[];
 }
 
 interface Block {
     /** `shell` renders with a prompt and a copy button; `php` and `text` do not. */
-    kind: 'shell' | 'php' | 'text'
-    code: string
+    kind: 'shell' | 'php' | 'text';
+    code: string;
 }
 
 interface GuidePage {
-    slug: string
-    title: string
-    summary: string
-    body: Paragraph[]
-    blocks: Block[]
-    warning: Segment[] | null
+    slug: string;
+    title: string;
+    summary: string;
+    body: Paragraph[];
+    blocks: Block[];
+    warning: Segment[] | null;
 }
 
 interface Neighbour {
-    slug: string
-    title: string
+    slug: string;
+    title: string;
 }
 
 const props = defineProps<{
-    groups: { title: string; pages: string[] }[]
-    titles: Record<string, string>
-    page: GuidePage
+    groups: { title: string; pages: string[] }[];
+    titles: Record<string, string>;
+    page: GuidePage;
     /** The term this page was opened with, if it came from a result. */
-    query: string
-    previous: Neighbour | null
-    next: Neighbour | null
-}>()
+    query: string;
+    previous: Neighbour | null;
+    next: Neighbour | null;
+}>();
 
-const contents = useTemplateRef<HTMLElement>('contents')
-const article = useTemplateRef<HTMLElement>('article')
+const contents = useTemplateRef<HTMLElement>('contents');
+const article = useTemplateRef<HTMLElement>('article');
 
 /**
  * The article starts at its own top on every navigation.
@@ -103,12 +118,12 @@ const article = useTemplateRef<HTMLElement>('article')
 watch(
     () => props.page.slug,
     async () => {
-        await nextTick()
-        article.value?.scrollTo({ top: 0 })
-        showActiveEntry()
-        showFirstMatch()
+        await nextTick();
+        article.value?.scrollTo({ top: 0 });
+        showActiveEntry();
+        showFirstMatch();
     },
-)
+);
 
 /**
  * And the contents show where you are.
@@ -124,14 +139,14 @@ watch(
 function showActiveEntry() {
     contents.value
         ?.querySelector('[data-active="true"]')
-        ?.scrollIntoView({ block: 'nearest' })
+        ?.scrollIntoView({ block: 'nearest' });
 }
 
 onMounted(() => {
-    showActiveEntry()
-    showFirstMatch()
-    searchAgainIfArrivedFromAResult()
-})
+    showActiveEntry();
+    showFirstMatch();
+    searchAgainIfArrivedFromAResult();
+});
 
 /**
  * Arriving from a result lands on the sentence, not on the page.
@@ -140,9 +155,11 @@ onMounted(() => {
  * typed - on a page whose whole job is to contain a lot of words.
  */
 async function showFirstMatch() {
-    if (!props.query) return
+    if (!props.query) {
+        return;
+    }
 
-    await nextTick()
+    await nextTick();
 
     /*
      * BY ATTRIBUTE, NOT BY TAG. A marked code span renders as `<code>` rather
@@ -151,14 +168,16 @@ async function showFirstMatch() {
      * nothing precisely when the search term was a class name, which is most of
      * the time in this guide.
      */
-    article.value?.querySelector('[data-match]')?.scrollIntoView({ block: 'center' })
+    article.value
+        ?.querySelector('[data-match]')
+        ?.scrollIntoView({ block: 'center' });
 }
 
 /* ------------------------------------------------------------------- search */
 
-const term = ref(props.query ?? '')
-const results = ref<SearchResult[]>([])
-const searching = ref(false)
+const term = ref(props.query ?? '');
+const results = ref<SearchResult[]>([]);
+const searching = ref(false);
 
 /**
  * The term the results on screen belong to.
@@ -168,11 +187,11 @@ const searching = ref(false)
  * - and it replaced the contents with "nothing in the guide mentions that",
  * about a word that had just matched the page being read.
  */
-const searchedFor = ref('')
-const highlighted = ref(0)
-const box = useTemplateRef<HTMLInputElement>('box')
+const searchedFor = ref('');
+const highlighted = ref(0);
+const box = useTemplateRef<HTMLInputElement>('box');
 
-let debounce: ReturnType<typeof setTimeout> | undefined
+let debounce: ReturnType<typeof setTimeout> | undefined;
 
 /**
  * DEBOUNCED, AND NOT FIRED AT ALL BELOW TWO CHARACTERS.
@@ -182,71 +201,82 @@ let debounce: ReturnType<typeof setTimeout> | undefined
  * a broken search rather than as "type more".
  */
 watch(term, (value) => {
-    clearTimeout(debounce)
+    clearTimeout(debounce);
 
     if (value.trim().length < 2) {
-        results.value = []
-        searchedFor.value = ''
-        searching.value = false
+        results.value = [];
+        searchedFor.value = '';
+        searching.value = false;
 
-        return
+        return;
     }
 
-    searching.value = true
+    searching.value = true;
 
-    debounce = setTimeout(() => runSearch(value), 180)
-})
+    debounce = setTimeout(() => runSearch(value), 180);
+});
 
 async function runSearch(value: string) {
-    searching.value = true
+    searching.value = true;
 
     try {
         const response = await fetch(
             `/about/building/search?q=${encodeURIComponent(value.trim())}`,
             {
-                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
                 credentials: 'same-origin',
             },
-        )
+        );
 
-        if (!response.ok) throw new Error('search')
+        if (!response.ok) {
+            throw new Error('search');
+        }
 
-        results.value = (await response.json()).results ?? []
-        searchedFor.value = value.trim()
-        highlighted.value = 0
+        results.value = (await response.json()).results ?? [];
+        searchedFor.value = value.trim();
+        highlighted.value = 0;
     } catch {
         // A failed search leaves the previous results rather than blanking the
         // list, which would read as "no such thing exists".
     } finally {
-        searching.value = false
+        searching.value = false;
     }
 }
 
 /** The term travels with the link, so the page it opens marks and scrolls to it. */
 function open(result: SearchResult) {
-    router.visit(`${href(result.slug)}?q=${encodeURIComponent(term.value.trim())}`)
+    router.visit(
+        `${href(result.slug)}?q=${encodeURIComponent(term.value.trim())}`,
+    );
 }
 
 function onSearchKey(event: KeyboardEvent) {
-    if (results.value.length === 0) return
+    if (results.value.length === 0) {
+        return;
+    }
 
     if (event.key === 'ArrowDown') {
-        event.preventDefault()
-        highlighted.value = (highlighted.value + 1) % results.value.length
+        event.preventDefault();
+        highlighted.value = (highlighted.value + 1) % results.value.length;
     } else if (event.key === 'ArrowUp') {
-        event.preventDefault()
-        highlighted.value = (highlighted.value - 1 + results.value.length) % results.value.length
+        event.preventDefault();
+        highlighted.value =
+            (highlighted.value - 1 + results.value.length) %
+            results.value.length;
     } else if (event.key === 'Enter') {
-        event.preventDefault()
-        open(results.value[highlighted.value])
+        event.preventDefault();
+        open(results.value[highlighted.value]);
     }
 }
 
 function clearSearch() {
-    term.value = ''
-    results.value = []
-    searchedFor.value = ''
-    box.value?.focus()
+    term.value = '';
+    results.value = [];
+    searchedFor.value = '';
+    box.value?.focus();
 }
 
 /**
@@ -260,10 +290,10 @@ function searchAgainIfArrivedFromAResult() {
     if (props.query && props.query.trim().length >= 2) {
         // Assigning the same value would not trigger the watcher, so the search
         // is kicked off directly.
-        term.value = props.query
-        results.value = []
-        searchedFor.value = ''
-        runSearch(props.query)
+        term.value = props.query;
+        results.value = [];
+        searchedFor.value = '';
+        runSearch(props.query);
     }
 }
 
@@ -273,51 +303,51 @@ function searchAgainIfArrivedFromAResult() {
  * would jump the caret out of it.
  */
 function onKeydown(event: KeyboardEvent) {
-    const target = event.target as HTMLElement | null
+    const target = event.target as HTMLElement | null;
     const typing =
         target?.tagName === 'INPUT' ||
         target?.tagName === 'TEXTAREA' ||
-        target?.isContentEditable
+        target?.isContentEditable;
 
     if (event.key === '/' && !typing) {
-        event.preventDefault()
-        box.value?.focus()
+        event.preventDefault();
+        box.value?.focus();
 
-        return
+        return;
     }
 
     if (event.key === 'Escape' && document.activeElement === box.value) {
-        clearSearch()
+        clearSearch();
     }
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
+onMounted(() => window.addEventListener('keydown', onKeydown));
 
 onBeforeUnmount(() => {
-    window.removeEventListener('keydown', onKeydown)
-    clearTimeout(debounce)
-})
+    window.removeEventListener('keydown', onKeydown);
+    clearTimeout(debounce);
+});
 
 /* ------------------------------------------------------------------- copying */
 
-const copied = ref<string | null>(null)
+const copied = ref<string | null>(null);
 
 async function copy(code: string) {
     try {
-        await navigator.clipboard.writeText(code)
-        copied.value = code
-        setTimeout(() => (copied.value = null), 1500)
+        await navigator.clipboard.writeText(code);
+        copied.value = code;
+        setTimeout(() => (copied.value = null), 1500);
     } catch {
         // Clipboard access is refused in some contexts. The code is selectable
         // either way, so a failed copy is not worth an error message.
     }
 }
 
-const href = (slug: string) => `/about/building/${slug}`
+const href = (slug: string) => `/about/building/${slug}`;
 
-const shellLines = (code: string) => code.split('\n')
+const shellLines = (code: string) => code.split('\n');
 
-const isComment = (line: string) => line.trimStart().startsWith('#')
+const isComment = (line: string) => line.trimStart().startsWith('#');
 </script>
 
 <template>
@@ -329,27 +359,30 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
         200px scroller to preserve a desktop behaviour would be trading a real
         problem for a worse one.
     -->
-    <div class="flex flex-col lg:h-[calc(100dvh-4rem)] lg:flex-row lg:overflow-hidden">
+    <div
+        class="flex flex-col lg:h-[calc(100dvh-4rem)] lg:flex-row lg:overflow-hidden"
+    >
         <nav
             ref="contents"
             class="shrink-0 border-b px-4 py-4 lg:w-60 lg:overflow-y-auto lg:border-r lg:border-b-0 lg:py-6"
         >
             <div class="mb-3">
                 <p class="text-sm font-semibold">Building a panel</p>
-                <p class="text-muted-foreground mt-0.5 text-xs">
-                    The order to do things in, and the decisions that are hard to change later.
+                <p class="mt-0.5 text-xs text-muted-foreground">
+                    The order to do things in, and the decisions that are hard
+                    to change later.
                 </p>
             </div>
 
             <div class="relative mb-4">
                 <Search
-                    class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
+                    class="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
                 />
                 <input
                     ref="box"
                     v-model="term"
                     type="search"
-                    class="border-input bg-background focus:ring-ring h-8 w-full rounded-md border pr-7 pl-8 text-sm focus:ring-2 focus:outline-none"
+                    class="h-8 w-full rounded-md border border-input bg-background pr-7 pl-8 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
                     placeholder="Search the guide"
                     aria-label="Search the guide"
                     @keydown="onSearchKey"
@@ -357,7 +390,7 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                 <button
                     v-if="term"
                     type="button"
-                    class="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                    class="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     aria-label="Clear search"
                     @click="clearSearch"
                 >
@@ -365,7 +398,7 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                 </button>
                 <kbd
                     v-else
-                    class="text-muted-foreground pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-[10px]"
+                    class="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-[10px] text-muted-foreground"
                     aria-hidden="true"
                     >/</kbd
                 >
@@ -378,16 +411,23 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                 trying to compare the results against.
             -->
             <div
-                v-if="term.trim().length >= 2 && (searching || searchedFor === term.trim())"
+                v-if="
+                    term.trim().length >= 2 &&
+                    (searching || searchedFor === term.trim())
+                "
                 class="flex flex-col gap-1"
             >
-                <p class="text-muted-foreground px-2 pb-1 text-[11px] font-semibold tracking-wide uppercase">
-                    {{ searching ? 'Searching…' : `${results.length} result(s)` }}
+                <p
+                    class="px-2 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                >
+                    {{
+                        searching ? 'Searching…' : `${results.length} result(s)`
+                    }}
                 </p>
 
                 <p
                     v-if="!searching && results.length === 0"
-                    class="text-muted-foreground px-2 py-3 text-sm"
+                    class="px-2 py-3 text-sm text-muted-foreground"
                 >
                     Nothing in the guide mentions that.
                 </p>
@@ -397,17 +437,24 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                     :key="result.slug"
                     type="button"
                     class="flex flex-col gap-0.5 rounded-md px-2 py-1.5 text-left transition-colors"
-                    :class="i === highlighted ? 'bg-muted' : 'hover:bg-muted/50'"
+                    :class="
+                        i === highlighted ? 'bg-muted' : 'hover:bg-muted/50'
+                    "
                     @click="open(result)"
                     @mouseenter="highlighted = i"
                 >
                     <span class="text-sm font-medium">{{ result.title }}</span>
-                    <span class="text-muted-foreground text-[11px] uppercase">{{ result.group }}</span>
-                    <span class="text-muted-foreground text-xs leading-snug">
-                        <template v-for="(segment, s) in result.snippet" :key="s">
+                    <span class="text-[11px] text-muted-foreground uppercase">{{
+                        result.group
+                    }}</span>
+                    <span class="text-xs leading-snug text-muted-foreground">
+                        <template
+                            v-for="(segment, s) in result.snippet"
+                            :key="s"
+                        >
                             <mark
                                 v-if="segment.type === 'match'"
-                                class="bg-primary/20 text-foreground rounded-sm px-0.5"
+                                class="rounded-sm bg-primary/20 px-0.5 text-foreground"
                                 >{{ segment.value }}</mark
                             >
                             <template v-else>{{ segment.value }}</template>
@@ -417,8 +464,14 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
             </div>
 
             <div v-else class="flex flex-col gap-5">
-                <div v-for="group in groups" :key="group.title" class="flex flex-col gap-0.5">
-                    <p class="text-muted-foreground px-2 pb-1 text-[11px] font-semibold tracking-wide uppercase">
+                <div
+                    v-for="group in groups"
+                    :key="group.title"
+                    class="flex flex-col gap-0.5"
+                >
+                    <p
+                        class="px-2 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                    >
                         {{ group.title }}
                     </p>
 
@@ -431,7 +484,7 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                         :class="
                             page.slug === slug
                                 ? 'bg-muted font-medium'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                         "
                     >
                         {{ titles[slug] }}
@@ -445,9 +498,13 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
             navigation - which is the whole reason the columns are separate.
         -->
         <div ref="article" class="min-w-0 flex-1 lg:overflow-y-auto">
-            <article class="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-6 sm:px-8">
+            <article
+                class="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-6 sm:px-8"
+            >
                 <header class="flex flex-col gap-1.5">
-                    <h1 class="text-2xl font-semibold tracking-tight">{{ page.title }}</h1>
+                    <h1 class="text-2xl font-semibold tracking-tight">
+                        {{ page.title }}
+                    </h1>
                     <p class="text-muted-foreground">{{ page.summary }}</p>
                 </header>
 
@@ -462,37 +519,65 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                         found the right one.
                     -->
                     <h2 v-if="paragraph.lead" class="text-sm font-semibold">
-                        <template v-for="(segment, s) in paragraph.lead" :key="s">
+                        <template
+                            v-for="(segment, s) in paragraph.lead"
+                            :key="s"
+                        >
                             <code
-                                v-if="segment.type === 'code' || segment.type === 'code-match'"
-                                :data-match="segment.type === 'code-match' ? '' : undefined"
+                                v-if="
+                                    segment.type === 'code' ||
+                                    segment.type === 'code-match'
+                                "
+                                :data-match="
+                                    segment.type === 'code-match'
+                                        ? ''
+                                        : undefined
+                                "
                                 class="rounded px-1 py-0.5 font-mono text-[13px] font-normal"
-                                :class="segment.type === 'code-match' ? 'bg-primary/20' : 'bg-muted'"
+                                :class="
+                                    segment.type === 'code-match'
+                                        ? 'bg-primary/20'
+                                        : 'bg-muted'
+                                "
                                 >{{ segment.value }}</code
                             >
                             <mark
                                 v-else-if="segment.type === 'match'"
                                 data-match
-                                class="bg-primary/20 text-foreground rounded-sm px-0.5"
+                                class="rounded-sm bg-primary/20 px-0.5 text-foreground"
                                 >{{ segment.value }}</mark
                             >
                             <template v-else>{{ segment.value }}</template>
                         </template>
                     </h2>
 
-                    <p class="text-muted-foreground text-[15px] leading-7">
-                        <template v-for="(segment, s) in paragraph.text" :key="s">
+                    <p class="text-[15px] leading-7 text-muted-foreground">
+                        <template
+                            v-for="(segment, s) in paragraph.text"
+                            :key="s"
+                        >
                             <code
-                                v-if="segment.type === 'code' || segment.type === 'code-match'"
-                                :data-match="segment.type === 'code-match' ? '' : undefined"
-                                class="text-foreground rounded px-1 py-0.5 font-mono text-[13px]"
-                                :class="segment.type === 'code-match' ? 'bg-primary/20' : 'bg-muted'"
+                                v-if="
+                                    segment.type === 'code' ||
+                                    segment.type === 'code-match'
+                                "
+                                :data-match="
+                                    segment.type === 'code-match'
+                                        ? ''
+                                        : undefined
+                                "
+                                class="rounded px-1 py-0.5 font-mono text-[13px] text-foreground"
+                                :class="
+                                    segment.type === 'code-match'
+                                        ? 'bg-primary/20'
+                                        : 'bg-muted'
+                                "
                                 >{{ segment.value }}</code
                             >
                             <mark
                                 v-else-if="segment.type === 'match'"
                                 data-match
-                                class="bg-primary/20 text-foreground rounded-sm px-0.5"
+                                class="rounded-sm bg-primary/20 px-0.5 text-foreground"
                                 >{{ segment.value }}</mark
                             >
                             <template v-else>{{ segment.value }}</template>
@@ -502,15 +587,20 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
 
                 <div v-for="(block, i) in page.blocks" :key="`b${i}`">
                     <div
-                        class="group bg-muted/40 relative overflow-x-auto rounded-lg border p-3 font-mono text-xs"
+                        class="group relative overflow-x-auto rounded-lg border bg-muted/40 p-3 font-mono text-xs"
                     >
                         <button
                             type="button"
-                            class="bg-background absolute top-2 right-2 rounded-md border p-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                            :aria-label="copied === block.code ? 'Copied' : 'Copy'"
+                            class="absolute top-2 right-2 rounded-md border bg-background p-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                            :aria-label="
+                                copied === block.code ? 'Copied' : 'Copy'
+                            "
                             @click="copy(block.code)"
                         >
-                            <Check v-if="copied === block.code" class="size-3.5 text-emerald-600" />
+                            <Check
+                                v-if="copied === block.code"
+                                class="size-3.5 text-emerald-600"
+                            />
                             <Copy v-else class="size-3.5" />
                         </button>
 
@@ -524,10 +614,16 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                                 v-for="(line, l) in shellLines(block.code)"
                                 :key="l"
                                 class="whitespace-pre"
-                                :class="isComment(line) ? 'text-muted-foreground' : ''"
+                                :class="
+                                    isComment(line)
+                                        ? 'text-muted-foreground'
+                                        : ''
+                                "
                             >
                                 <span
-                                    v-if="line.trim() !== '' && !isComment(line)"
+                                    v-if="
+                                        line.trim() !== '' && !isComment(line)
+                                    "
                                     class="text-muted-foreground select-none"
                                     aria-hidden="true"
                                     >$ </span
@@ -535,7 +631,9 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                             </div>
                         </template>
 
-                        <pre v-else class="whitespace-pre">{{ block.code }}</pre>
+                        <pre v-else class="whitespace-pre">{{
+                            block.code
+                        }}</pre>
                     </div>
                 </div>
 
@@ -545,18 +643,23 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                     v-if="page.warning"
                     class="flex items-start gap-2.5 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3"
                 >
-                    <TriangleAlert class="mt-0.5 size-4 shrink-0 text-amber-600" />
+                    <TriangleAlert
+                        class="mt-0.5 size-4 shrink-0 text-amber-600"
+                    />
                     <p class="text-[15px] leading-7">
                         <template v-for="(segment, s) in page.warning" :key="s">
                             <code
-                                v-if="segment.type === 'code' || segment.type === 'code-match'"
-                                class="bg-muted rounded px-1 py-0.5 font-mono text-[13px]"
+                                v-if="
+                                    segment.type === 'code' ||
+                                    segment.type === 'code-match'
+                                "
+                                class="rounded bg-muted px-1 py-0.5 font-mono text-[13px]"
                                 >{{ segment.value }}</code
                             >
                             <mark
                                 v-else-if="segment.type === 'match'"
                                 data-match
-                                class="bg-primary/20 text-foreground rounded-sm px-0.5"
+                                class="rounded-sm bg-primary/20 px-0.5 text-foreground"
                                 >{{ segment.value }}</mark
                             >
                             <template v-else>{{ segment.value }}</template>
@@ -565,11 +668,13 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                 </div>
 
                 <!-- Read forwards the first time, searched afterwards. -->
-                <nav class="mt-2 flex items-center justify-between gap-3 border-t pt-4">
+                <nav
+                    class="mt-2 flex items-center justify-between gap-3 border-t pt-4"
+                >
                     <Link
                         v-if="previous"
                         :href="href(previous.slug)"
-                        class="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm"
+                        class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                     >
                         <ArrowLeft class="size-3.5" />
                         {{ previous.title }}
@@ -579,7 +684,7 @@ const isComment = (line: string) => line.trimStart().startsWith('#')
                     <Link
                         v-if="next"
                         :href="href(next.slug)"
-                        class="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm"
+                        class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                     >
                         {{ next.title }}
                         <ArrowRight class="size-3.5" />

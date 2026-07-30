@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 use PanelKit\Panel\Imports\CsvReader;
 use PanelKit\Panel\Imports\Importer;
@@ -324,7 +325,7 @@ final class ImportTest extends TestCase
     {
         $this->travel(0); // no-op; keeps the intent explicit below
 
-        \Illuminate\Support\Facades\Gate::define('create', fn (): bool => false);
+        Gate::define('create', fn (): bool => false);
 
         $stranger = User::factory()->create(['tenant_id' => $this->tenant->id]);
 

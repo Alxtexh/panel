@@ -11,22 +11,23 @@
  * with CSS trickery: the vertical and horizontal shells have different DOM, not
  * different styling.
  */
-import { computed, ref, watch } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
-import { PkBottomNav, PkModal, useAppearance, type BottomNavItem } from '@panelkit/ui'
-import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue'
-import AppHorizontalLayout from '@/layouts/app/AppHorizontalLayout.vue'
-import type { BreadcrumbItem } from '@/types'
-import SessionExpired from '@/components/SessionExpired.vue'
-import { useSidebarOpener } from '@/lib/mobileNav'
+import { router, usePage } from '@inertiajs/vue3';
+import { PkBottomNav, PkModal, useAppearance } from '@panelkit/ui';
+import type { BottomNavItem } from '@panelkit/ui';
+import { computed, ref } from 'vue';
+import SessionExpired from '@/components/SessionExpired.vue';
+import AppHorizontalLayout from '@/layouts/app/AppHorizontalLayout.vue';
+import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
+import { useSidebarOpener } from '@/lib/mobileNav';
+import type { BreadcrumbItem } from '@/types';
 
 const { breadcrumbs = [] } = defineProps<{
-    breadcrumbs?: BreadcrumbItem[]
-}>()
+    breadcrumbs?: BreadcrumbItem[];
+}>();
 
-const { appearance } = useAppearance()
+const { appearance } = useAppearance();
 
-const page = usePage()
+const page = usePage();
 
 /** Null unless somebody is wearing another account. Shared on every response. */
 /**
@@ -57,14 +58,14 @@ const bottomNavItems = computed<BottomNavItem[]>(() => {
                 title: item.title,
                 href: item.href,
                 icon: item.icon,
-            }))
+            }));
 
     return [
         { key: 'dashboard', title: 'Home', href: '/dashboard', icon: 'home' },
         ...fromProps('panelNav'),
         ...fromProps('panelPages'),
-    ]
-})
+    ];
+});
 
 /**
  * "More" opens the SIDEBAR, not a menu of its own.
@@ -83,19 +84,21 @@ const bottomNavItems = computed<BottomNavItem[]>(() => {
  * THE SHEET SURVIVES AS A FALLBACK for the horizontal layout, which genuinely
  * has no sidebar. `request()` answers whether anything took it.
  */
-const showAllNav = ref(false)
+const showAllNav = ref(false);
 
-const opener = useSidebarOpener()
+const opener = useSidebarOpener();
 
 function openFullNav() {
-    if (! opener.request()) {
-        showAllNav.value = true
+    if (!opener.request()) {
+        showAllNav.value = true;
     }
 }
 
 const shell = computed(() =>
-    appearance.value.sidebarSide === 'horizontal' ? AppHorizontalLayout : AppSidebarLayout,
-)
+    appearance.value.sidebarSide === 'horizontal'
+        ? AppHorizontalLayout
+        : AppSidebarLayout,
+);
 /**
  * What the live region says after a navigation.
  *
@@ -112,16 +115,15 @@ const shell = computed(() =>
  * when its content CHANGES, so navigating twice to pages with the same title
  * would be silent the second time.
  */
-const announcement = ref('')
+const announcement = ref('');
 
 router.on('success', () => {
-    announcement.value = ''
+    announcement.value = '';
 
     requestAnimationFrame(() => {
-        announcement.value = `${document.title} - page loaded`
-    })
-})
-
+        announcement.value = `${document.title} - page loaded`;
+    });
+});
 </script>
 
 <template>
@@ -130,7 +132,10 @@ router.on('success', () => {
         skip link placed anywhere else is reached after the thing it exists to
         skip.
     -->
-    <a href="#pk-main" class="pk-skip-link bg-background rounded-md border px-3 py-2 text-sm shadow-lg">
+    <a
+        href="#pk-main"
+        class="pk-skip-link rounded-md border bg-background px-3 py-2 text-sm shadow-lg"
+    >
         Skip to content
     </a>
 
@@ -168,17 +173,22 @@ router.on('success', () => {
                 v-for="item in bottomNavItems"
                 :key="item.key"
                 :href="item.href"
-                class="hover:bg-muted -mx-2 rounded-md px-2 py-2 text-sm"
-                :class="page.url === item.href ? 'text-primary font-medium' : ''"
-            >{{ item.title }}</a>
+                class="-mx-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+                :class="
+                    page.url === item.href ? 'font-medium text-primary' : ''
+                "
+                >{{ item.title }}</a
+            >
         </nav>
 
         <template #footer>
             <button
                 type="button"
-                class="text-muted-foreground hover:text-foreground text-sm"
+                class="text-sm text-muted-foreground hover:text-foreground"
                 @click="showAllNav = false"
-            >Close</button>
+            >
+                Close
+            </button>
         </template>
     </PkModal>
 
@@ -191,7 +201,9 @@ router.on('success', () => {
         `polite` rather than `assertive` because a navigation is not an
         emergency; assertive would interrupt whatever is being read mid-word.
     -->
-    <div class="sr-only" role="status" aria-live="polite">{{ announcement }}</div>
+    <div class="sr-only" role="status" aria-live="polite">
+        {{ announcement }}
+    </div>
 
     <!--
         Mounted once, for every panel page, rather than per screen.

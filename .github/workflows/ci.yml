@@ -57,6 +57,18 @@ jobs:
         working-directory: apps/playground
         run: vendor/bin/phpunit
 
+      # Same story as the JS lint step below: Pint had a config and no
+      # enforcement, so it drifted to ~70 files needing a fix - mostly
+      # `ordered_imports` and `fully_qualified_strict_types`, nothing
+      # behavioural. Fixed in the same change that adds this step.
+      #
+      # `packages/panel` is not covered here. It has no Pint dependency and no
+      # config of its own; adding one is a separate decision about that
+      # package's own tooling, not a gap in enforcing what already exists.
+      - name: Pint
+        working-directory: apps/playground
+        run: vendor/bin/pint --test
+
       # Configuration that is silently wrong. It is a command the package ships
       # for its users, so a version of it that fails on its own reference
       # application is worth catching here rather than in an installation.
@@ -127,17 +139,35 @@ jobs:
         working-directory: apps/playground
         run: npx vue-tsc --noEmit
 
-      # NO LINT STEP, AND THAT IS A DECISION RATHER THAN AN OVERSIGHT.
-      #
-      # `npm run lint:check` currently reports 230 violations, because the rule
-      # set was added and never enforced. A red build on the first run is a build
-      # people learn to ignore, and clearing 230 findings means either a
-      # 65-file automated reformat - which buries every real change under
-      # semicolons for a year of `git blame` - or a deliberate pass nobody has
-      # asked for yet. Neither belongs in the commit that adds CI.
-      #
-      # The checks below are the ones that catch failures rather than style. Add
-      # the lint step in the change that makes it pass.
+      # THE REFORMAT LANDED IN THE SAME CHANGE THAT ADDS THIS STEP, not before
+      # it and not after. Enforcing lint on a repository that has never been
+      # clean means either a red build on day one that everybody learns to
+      # ignore, or a silent reformat commit with no enforcement behind it that
+      # drifts again within a week. `npm run lint:check` and `npm run
+      # format:check` are both zero right now, in this same commit, in all
+      # three JS/TS surfaces - the application and both packages via the
+      # basePath blocks above.
+      - name: Lint
+        working-directory: apps/playground
+        run: npm run lint:check
+
+      - name: Format
+        working-directory: apps/playground
+        run: npm run format:check
+
+      # THE PACKAGES ARE FORMAT-CHECKED SEPARATELY, because each carries its
+      # own `.prettierrc` (no semicolons, 100 columns - see the comment on that
+      # file) that only applies from within its own directory. The lint pass
+      # above already covers packages/ui and packages/inertia through the
+      # basePath blocks in the playground's eslint config; format is a
+      # per-directory tool with no such mechanism.
+      - name: Format (packages/ui)
+        working-directory: packages/ui
+        run: npm run format:check
+
+      - name: Format (packages/inertia)
+        working-directory: packages/inertia
+        run: npm run format:check
 
       # THE BUILD IS NOT REDUNDANT WITH THE TYPE CHECK. A production build
       # resolves every import for real and runs the SFC compiler over every

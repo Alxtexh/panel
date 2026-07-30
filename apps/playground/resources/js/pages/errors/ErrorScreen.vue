@@ -18,24 +18,24 @@
  * information - and a 403 that explains WHY access was denied is a 403 that
  * tells an attacker what they are missing.
  */
-import { Head, Link, router } from '@inertiajs/vue3'
-import { computed } from 'vue'
-import { Button } from '@/components/ui/button'
-import ErrorArt from './ErrorArt.vue'
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Button } from '@/components/ui/button';
+import ErrorArt from './ErrorArt.vue';
 
 const props = withDefaults(
     defineProps<{
-        status: number
-        title: string
-        message: string
+        status: number;
+        title: string;
+        message: string;
         /** Hide the "go back" affordance where history is not a way out. */
-        canGoBack?: boolean
+        canGoBack?: boolean;
         /** Where the primary action leads. The panel's home by default. */
-        homeHref?: string
-        homeLabel?: string
+        homeHref?: string;
+        homeLabel?: string;
     }>(),
     { canGoBack: true, homeHref: '/dashboard', homeLabel: 'Back to dashboard' },
-)
+);
 
 /**
  * The tone carries the same information as the words, for the glance before
@@ -43,17 +43,25 @@ const props = withDefaults(
  * something", slate for "it is temporary".
  */
 const tone = computed(() => {
-    if (props.status >= 500) return 'text-rose-600 dark:text-rose-400'
-    if (props.status === 403 || props.status === 419) return 'text-amber-600 dark:text-amber-400'
+    if (props.status >= 500) {
+        return 'text-rose-600 dark:text-rose-400';
+    }
 
-    return 'text-muted-foreground'
-})
+    if (props.status === 403 || props.status === 419) {
+        return 'text-amber-600 dark:text-amber-400';
+    }
+
+    return 'text-muted-foreground';
+});
 
 function goBack() {
     // The panel's own history, not the browser's - `window.history.back()` from
     // a freshly-loaded error page leaves the app entirely.
-    if (window.history.length > 1) router.visit(document.referrer || props.homeHref)
-    else router.visit(props.homeHref)
+    if (window.history.length > 1) {
+        router.visit(document.referrer || props.homeHref);
+    } else {
+        router.visit(props.homeHref);
+    }
 }
 </script>
 
@@ -61,7 +69,7 @@ function goBack() {
     <Head :title="`${status} - ${title}`" />
 
     <div
-        class="bg-background flex min-h-svh flex-col items-center justify-center px-6 py-12 text-center"
+        class="flex min-h-svh flex-col items-center justify-center bg-background px-6 py-12 text-center"
     >
         <ErrorArt :status="status" />
 
@@ -70,13 +78,18 @@ function goBack() {
             reader needs the sentence, and a page whose largest element is a
             three-digit code has told them nothing they can act on.
         -->
-        <p class="mt-2 text-xs font-semibold tracking-[0.25em] tabular-nums" :class="tone">
+        <p
+            class="mt-2 text-xs font-semibold tracking-[0.25em] tabular-nums"
+            :class="tone"
+        >
             ERROR {{ status }}
         </p>
 
-        <h1 class="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{{ title }}</h1>
+        <h1 class="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+            {{ title }}
+        </h1>
 
-        <p class="text-muted-foreground mt-3 max-w-md text-sm leading-relaxed">
+        <p class="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
             {{ message }}
         </p>
 
@@ -86,7 +99,9 @@ function goBack() {
                 <Link :href="homeHref">{{ homeLabel }}</Link>
             </Button>
 
-            <Button v-if="canGoBack" variant="outline" @click="goBack">Go back</Button>
+            <Button v-if="canGoBack" variant="outline" @click="goBack"
+                >Go back</Button
+            >
         </div>
 
         <slot />
