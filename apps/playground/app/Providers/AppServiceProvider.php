@@ -6,12 +6,14 @@ use App\Documents\ClientInvoiceKind;
 use App\Documents\OrganisationBranding;
 use App\Models\AuditEntry;
 use App\Models\Client;
+use App\Models\ClientSession;
 use App\Models\Plan;
 use App\Models\Router;
 use App\Models\User;
 use App\Policies\AnnouncementPolicy;
 use App\Policies\AuditEntryPolicy;
 use App\Policies\ClientPolicy;
+use App\Policies\ClientSessionPolicy;
 use App\Policies\CustomFieldPolicy;
 use App\Policies\PlanPolicy;
 use App\Policies\RouterPolicy;
@@ -71,6 +73,10 @@ class AppServiceProvider extends ServiceProvider
         // The panel denies any ability whose model has no policy, so these are
         // required rather than optional.
         Gate::policy(Client::class, ClientPolicy::class);
+        // The nested sessions resource (roadmap 4.2) - a policy of its own,
+        // because "may view the client" grants the LIST through the parent
+        // check, while each row still answers to its own model's gate.
+        Gate::policy(ClientSession::class, ClientSessionPolicy::class);
         Gate::policy(Router::class, RouterPolicy::class);
         Gate::policy(Plan::class, PlanPolicy::class);
         Gate::policy(User::class, UserPolicy::class);

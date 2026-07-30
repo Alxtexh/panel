@@ -70,6 +70,28 @@ abstract class Resource
      */
     protected static ?string $cluster = null;
 
+    /**
+     * The resource this one nests under, if any - roadmap 4.2.
+     *
+     * UNLIKE `$cluster`, THIS ONE CHANGES ROUTING AND AUTHORISATION. A nested
+     * resource answers only under its parent's URL - `/clients/5/sessions` -
+     * and never flat: `/sessions` does not route at all, because the parent
+     * segment IS the authorisation context. Every request first resolves the
+     * parent record through the parent resource's own model (tenant scopes
+     * and all), checks `view` on it, and then constrains everything below to
+     * rows whose foreign key points at that record. Creation stamps the key
+     * from the URL, never from the form body.
+     *
+     * @var class-string<Resource>|null
+     */
+    protected static ?string $parent = null;
+
+    /**
+     * The column pointing back at the parent. Defaults to the parent's
+     * singular key snake-cased with `_id`: `clients` gives `client_id`.
+     */
+    protected static ?string $parentColumn = null;
+
     protected static ?int $sort = null;
 
     /**
@@ -310,6 +332,25 @@ abstract class Resource
         return static::$cluster;
     }
 
+    /** @return class-string<Resource>|null */
+    public static function parentResource(): ?string
+    {
+        return static::$parent;
+    }
+
+    /** The foreign key column that points at the parent record. */
+    public static function parentColumn(): string
+    {
+        if (static::$parentColumn !== null) {
+            return static::$parentColumn;
+        }
+
+        $parent = static::parentResource();
+
+        return str($parent === null ? 'parent' : $parent::key())
+            ->singular()->snake()->append('_id')->value();
+    }
+
     public static function purpose(): ?string
     {
         return static::$purpose;
@@ -327,7 +368,10 @@ abstract class Resource
      */
     public static function showsInNavigation(): bool
     {
-        return true;
+        // A nested resource has no URL of its own to link - every instance of
+        // its screen belongs to some parent record. It is reached from the
+        // parent, so the sidebar has nothing true to say about it.
+        return static::parentResource() === null;
     }
 
     public static function navigationSort(): int

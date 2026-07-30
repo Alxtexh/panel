@@ -482,6 +482,7 @@ final class Guide
                 'body' => [
                     'A relation manager renders a related list as a tab on the record page - a subscriber\'s invoices, a router\'s connections. It is a resource in miniature: its own columns, its own actions, its own policy checks, scoped to the parent record.',
                     'It queries only when its tab is opened. A record page with four relation tabs that all loaded eagerly is four queries nobody asked for on every view, and the tab most people open is the first one.',
+                    'WHEN A TAB IS TOO SMALL, NEST A RESOURCE INSTEAD. A resource declaring `$parent` answers only under its parent\'s URL - `/clients/5/sessions` - with the WHOLE table apparatus: its own tabs, filters, saved state, a URL you can paste into a ticket. The parent segment is the authorisation context: every request resolves the parent through its own tenant-scoped model, checks `view` on it, constrains the list to its rows, and stamps the foreign key on create from the URL rather than the form body. The flat spelling deliberately does not route.',
                 ],
                 'blocks' => [
                     [

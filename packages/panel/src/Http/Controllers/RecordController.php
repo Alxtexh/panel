@@ -16,6 +16,7 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\CustomFields\CustomFieldFactory;
+use PanelKit\Panel\Http\NestedContext;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\TenantContext;
@@ -66,6 +67,18 @@ final class RecordController extends Controller
 
         // From context, never from input.
         $this->applyTenant($record);
+
+        /*
+         * NESTED - roadmap 4.2: the parent comes from the URL, resolved and
+         * authorised in NestedContext, and is stamped AFTER the form data so
+         * a request body claiming a different parent is overwritten rather
+         * than honoured. Same posture as the tenant, for the same reason.
+         */
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            $record->setAttribute($class::parentColumn(), $parent->getKey());
+        }
 
         $this->save($record);
 
@@ -488,6 +501,22 @@ final class RecordController extends Controller
     {
         $model = $class::model();
 
-        return $model::query()->findOrFail($id);
+        $query = $model::query();
+
+        /*
+         * NESTED - roadmap 4.2. The URL claims this record belongs to a
+         * specific parent, so the FETCH carries the claim: a mismatched
+         * pairing is a 404 from `findOrFail`, indistinguishable from a
+         * record that does not exist. In here rather than per action, so
+         * update, destroy, restore, actions and cell edits all get it from
+         * the one place none of them can forget.
+         */
+        $parent = NestedContext::parent(request(), $class);
+
+        if ($parent !== null) {
+            $query->where($class::parentColumn(), $parent->getKey());
+        }
+
+        return $query->findOrFail($id);
     }
 }

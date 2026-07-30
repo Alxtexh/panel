@@ -419,6 +419,14 @@ final class ClientResource extends Resource
                     ->authorize('update')
                     ->link(fn (array $row): string => '/clients/'.$row['id'].'/edit'),
 
+                // The nested sessions screen - roadmap 4.2. The record page's
+                // Sessions tab is the glance; this is the whole history, with
+                // tabs, filters and a URL that can be pasted into a ticket.
+                RecordAction::make('sessions', 'Sessions')
+                    ->icon('activity')
+                    ->authorize('view')
+                    ->link(fn (array $row): string => '/clients/'.$row['id'].'/sessions'),
+
                 ActionGroup::make('Status')->actions([
                     RecordAction::make('suspend', 'Suspend')
                         ->icon('pause')

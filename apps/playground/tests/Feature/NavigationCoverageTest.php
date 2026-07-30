@@ -157,9 +157,19 @@ final class NavigationCoverageTest extends TestCase
          * Asked of the registry rather than the router, because the registry is
          * what decides the key and therefore the URL.
          */
-        foreach (array_keys(app(PanelManager::class)->resourcesFor(
+        foreach (app(PanelManager::class)->resourcesFor(
             (string) config('panel.default', 'admin'),
-        )) as $key) {
+        ) as $key => $class) {
+            /*
+             * A NESTED RESOURCE HAS NO FLAT URL TO SWEEP - roadmap 4.2. Its
+             * screens exist only under a parent record, are linked from that
+             * record's row, and the flat spelling deliberately does not
+             * route. Sweeping `/{key}` would assert a 404 into a failure.
+             */
+            if ($class::parentResource() !== null) {
+                continue;
+            }
+
             $paths[] = '/'.$key;
         }
 

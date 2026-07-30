@@ -59,7 +59,15 @@ verification):
   test), per-request permission-filtered sub-nav via
   `PanelManager::clusterNavFor()`, strip on ResourceIndex; playground proof
   is the Network cluster (Routers, Plans, + Connections page). Guide and
-  blueprint updated.
+  blueprint updated (`c0cf913`).
+- **4.2** — nested resources: `Resource::$parent`/`$parentColumn`, nested
+  mount in PanelRoutes (flat spelling excluded), `NestedContext` (parent
+  resolved tenant-scoped + view-checked; schema re-addressed per request;
+  breadcrumbs through the parent), `MountNestedResource` middleware (pockets
+  prefix params - Laravel binds scalars POSITIONALLY, so `$resource` was
+  receiving "clients"), fk stamped from URL on store, pairing enforced in
+  `findScoped`. Playground proof: `/clients/{id}/sessions` (read-only
+  telemetry, no form). Isolation matrix gained the ClientSession fixture.
 
 **Local env note:** `apps/playground/.env` now has `CACHE_STORE=database`
 (was redis, which wasn't running and 500'd every request).
@@ -447,7 +455,7 @@ Numbering follows `ROADMAP.md`. Sizes are that file's.
 | # | Item | Size | Note |
 | --- | --- | --- | --- |
 | 4.1 | Clusters | M | **Done.** `Cluster` + `Resource::$cluster`; one sidebar entry, shared permission-filtered sub-nav strip. Proven by the Network cluster (Routers, Plans, Connections). |
-| 4.2 | Nested resources | L | `/clients/5/invoices` as a first-class resource. |
+| 4.2 | Nested resources | L | **Done.** `$parent` on the resource; nested-only routing, parent as the authorisation context, fk stamped from the URL. Proven by `/clients/{id}/sessions`. |
 | 4.3 | Singular resources | S | One-record, settings-shaped screen, no list. |
 | 4.4 | Render hooks | M | Named injection points so a plugin can decorate a screen without forking it. |
 | 4.5 | Missing field types | M | Markdown, code, builder. Build these **after** A.1 — the repeater's row shape is the pattern the builder field should follow. |

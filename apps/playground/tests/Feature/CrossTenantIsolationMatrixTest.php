@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\AuditEntry;
 use App\Models\Client;
+use App\Models\ClientSession;
 use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
@@ -463,8 +464,32 @@ final class CrossTenantIsolationMatrixTest extends TestCase
             User::class => $this->foreignUser(),
             AuditEntry::class => $this->foreignAuditEntry(),
             Announcement::class => $this->foreignAnnouncement(),
+            ClientSession::class => $this->foreignClientSession(),
             default => null,
         };
+    }
+
+    /**
+     * Another organisation's session, under another organisation's client.
+     *
+     * A NESTED resource (roadmap 4.2), so the flat URLs this matrix sweeps do
+     * not even route for it - the refusal these checks record is the route
+     * miss, which is isolation by a stronger rule than a scope. The nested
+     * spelling's own isolation - a foreign PARENT id resolving to nothing -
+     * is asserted in `NestedResourceTest`, where the URL shape lives.
+     */
+    private function foreignClientSession(): Model
+    {
+        $client = $this->foreignClient();
+
+        return ClientSession::query()->forceCreate([
+            'tenant_id' => $this->theirs->id,
+            'client_id' => $client->getKey(),
+            'status' => 'offline',
+            'ip_address' => '10.9.9.9',
+            'started_at' => now()->subHour(),
+            'ended_at' => now(),
+        ]);
     }
 
     /**

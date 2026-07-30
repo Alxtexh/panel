@@ -271,6 +271,61 @@ final class PanelRoutes
     public static function within(array $keys): void
     {
         /*
+         * NESTED RESOURCES MOUNT UNDER THEIR PARENT, AND ONLY THERE - roadmap
+         * 4.2. A resource declaring `$parent` gets the same CRUD surface at
+         * `{parent}/{parentId}/{resource}` and is EXCLUDED from the flat set,
+         * so `/sessions` does not route at all: the parent segment is the
+         * authorisation context, and a flat spelling would be a way to reach
+         * the rows without naming - and passing the policy of - the record
+         * they belong to. One group per parent key, so the constraint can be
+         * a literal.
+         */
+        $registry = app(PanelManager::class)->resources();
+
+        $flat = [];
+        $nested = [];
+
+        foreach ($keys as $key) {
+            $class = $registry[$key] ?? null;
+            $parent = $class === null ? null : $class::parentResource();
+
+            if ($parent === null) {
+                $flat[] = $key;
+            } else {
+                $nested[$parent::key()][] = $key;
+            }
+        }
+
+        foreach ($nested as $parentKey => $childKeys) {
+            Route::prefix('{parent}/{parentId}')
+                ->where(['parent' => $parentKey, 'parentId' => '[0-9]+'])
+                // Pockets the prefix's parameters as request attributes and
+                // forgets them from the route BEFORE controllers bind - see
+                // the middleware for the positional-binding trap it defuses.
+                ->middleware(Middleware\MountNestedResource::class)
+                ->name('nested.'.$parentKey.'.')
+                ->group(static fn () => self::crud($childKeys));
+        }
+
+        self::crud($flat);
+    }
+
+    /**
+     * The CRUD surface for one set of resource keys - flat at the panel root,
+     * or once per parent under a nested prefix. The controllers are the same
+     * either way; a nested mount adds `{parent}` and `{parentId}` route
+     * parameters, which `NestedContext` turns into a resolved, authorised
+     * parent record.
+     *
+     * @param  list<string>  $keys
+     */
+    private static function crud(array $keys): void
+    {
+        if ($keys === []) {
+            return;
+        }
+
+        /*
          * READS BEFORE WRITES, and fixed segments before `{id}` throughout.
          * The grouping below follows the order the routes must be declared in,
          * not the order they are conceptually related in - the constraint is the
