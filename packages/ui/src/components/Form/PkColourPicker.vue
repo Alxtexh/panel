@@ -17,8 +17,15 @@
  * `type="color"` CANNOT SHOW AN EMPTY STATE - it renders black for null, which
  * looks like a choice somebody made. So the swatch is only bound when there is a
  * value, and the absence is shown as a chequerboard instead.
+ *
+ * THE CONTRAST WARNING IS A HINT, NOT A RULE - roadmap 7.1. `checkContrastAgainst`
+ * on the field only declares what surface this colour will render against;
+ * nothing here blocks saving a colour that fails it; the offer is a one-click
+ * fix, not a wall. See `PanelKit\Panel\Support\Contrast` for why the number
+ * shown here is computed the same way the framework itself would compute it.
  */
 import { computed } from 'vue'
+import { AA_NORMAL, contrastRatio, readableShade } from '../../composables/useContrast'
 
 defineOptions({ inheritAttrs: false })
 
@@ -26,6 +33,8 @@ interface ColourSchema {
     key: string
     presets?: string[]
     placeholder?: string
+    contrastBackground?: string | null
+    contrastMinRatio?: number
     [key: string]: unknown
 }
 
@@ -60,6 +69,31 @@ function normalise(raw: string): string {
 
 function onText(event: Event) {
     emit('update:modelValue', normalise((event.target as HTMLInputElement).value))
+}
+
+const ratio = computed(() => {
+    if (
+        !valid.value ||
+        !props.field.contrastBackground ||
+        !HEX.test(props.field.contrastBackground)
+    ) {
+        return null
+    }
+
+    return contrastRatio(value.value, props.field.contrastBackground)
+})
+
+const minRatio = computed(() => props.field.contrastMinRatio ?? AA_NORMAL)
+
+const failsContrast = computed(() => ratio.value !== null && ratio.value < minRatio.value)
+
+function useReadableShade() {
+    if (!props.field.contrastBackground) return
+
+    emit(
+        'update:modelValue',
+        readableShade(value.value, props.field.contrastBackground, minRatio.value),
+    )
 }
 </script>
 
@@ -121,5 +155,28 @@ function onText(event: Event) {
                 @click="emit('update:modelValue', preset.toLowerCase())"
             />
         </div>
+
+        <!--
+            THE WARNING NAMES THE ACTUAL NUMBER, not just "hard to read" -
+            roadmap 7.1. A ratio and a threshold is something the operator
+            can act on; a vague warning is something they dismiss.
+        -->
+        <p
+            v-if="failsContrast"
+            class="text-amber-600 dark:text-amber-500 flex flex-wrap items-center gap-2 text-xs"
+        >
+            <span>
+                This fails contrast at {{ ratio!.toFixed(1) }}:1 - it needs at least
+                {{ minRatio.toFixed(1) }}:1 to stay readable.
+            </span>
+            <button
+                v-if="!disabled"
+                type="button"
+                class="font-medium underline underline-offset-2"
+                @click="useReadableShade"
+            >
+                Use a readable shade
+            </button>
+        </p>
     </div>
 </template>

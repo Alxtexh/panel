@@ -540,16 +540,61 @@ with a status column and everybody is on the same side of it.
 Not in either reference. Each is buildable on something PanelKit already has,
 which is why they are ours to take and not theirs.
 
-### 7.1 A brand colour that refuses to be unreadable — **S**
+### 7.1 A brand colour that refuses to be unreadable — **DONE**
 
-Every panel offers a colour picker. None of them checks it. A dark brand on a
-dark button, or a pale one on white, produces a control nobody can read — and it
-ships, because the person choosing it was looking at a swatch.
+*Ours before this:* there is exactly one operator-facing colour picker in the
+whole application — the document template's accent colour, `ColourField` on
+`StandardDocumentKind`, used as ink and rule colour against the fixed white
+page every document renders on. It checked its own *format* (hex, nothing
+else) and nothing about whether the result could be read once printed.
 
-We compute the contrast of the chosen colour against the surfaces it will
-actually land on and say so before it is saved: *"White text on this fails at
-3.1:1 — the panel will use dark text on primary buttons instead."* Then do that.
-Cheap, and it is an accessibility guarantee rather than an accessibility audit.
+**The illustrative example in this item's own original wording — "the panel
+will use dark text on primary buttons instead" — describes a fallback this
+application does not have.** No brand colour anywhere reaches a button; that
+would mean a second, unbuilt theming path from an organisation's colour
+choice to `--primary`, which is real new plumbing and not what "check the
+picker that exists" asks for. What was implemented instead fits the one real
+picker: the accent colour is always ink on white paper, so there is no
+foreground to swap — only a shade of the operator's own colour to darken or
+lighten until it reads.
+
+`PanelKit\Panel\Support\Contrast` (new) is the WCAG 2 ratio math this
+codebase never had — relative luminance, linearised sRGB, the same
+calculation any accessibility tool would run. `ColourField::checkContrastAgainst()`
+declares which surface a colour field renders against (`#ffffff` for the
+document accent, 4.5:1 — WCAG AA for normal text); it is opt-in per field,
+not a rule on every colour, because not every colour a panel might pick
+later is text on a fixed background. `PkColourPicker.vue` mirrors the same
+maths client-side (`useContrast.ts`, duplicated deliberately — two small
+pure functions cost less than a request to compute one), shows the real
+ratio the moment it fails - *"This fails contrast at 1.2:1 - it needs at
+least 4.5:1 to stay readable"* - and offers **Use a readable shade**, which
+darkens or lightens the same colour along lightness until it clears the
+threshold, never shifting hue into a different colour entirely.
+
+**Not a hard block.** A document's accent colour is the operator's own
+letterhead choice; refusing to save a pale one would be paternalism about a
+printed page, not a guardrail against broken UI. The warning is real, named
+with an exact number, and one click from fixed - which is the actual
+distance between "audit" and "guarantee" this item asked for.
+
+**Positioned for 7.3.** `panel:doctor`'s own future scope explicitly
+includes checking templates for exactly this; `Contrast` is a plain static
+utility with no request/response coupling so that check can call
+`Contrast::meets()` directly against every saved template's accent colour
+when that item is built, without this one needing to guess at doctor's
+shape in advance.
+
+Verified: 7/7 new PHP unit tests for `Contrast` (reference ratios: black on
+white is 21:1, three-digit hex, symmetry, a real pale colour failing/dark
+colour passing normal-text contrast), 12/12 new `@panelkit/ui` Vitest tests
+(6 for `useContrast`, 6 for the picker's warning and one-click fix), full
+suites otherwise unaffected: 1260/1260 PHP, 91/91 Vitest, 21/21 Dusk,
+ESLint/vue-tsc/Prettier clean, production SSR build succeeds. Confirmed live
+in the Invoice template designer: typing a pale blue accent shows the
+warning with its real ratio and visibly washes out in the live preview;
+"Use a readable shade" replaces it with a passing dark shade and the
+preview's heading and total line become legible immediately.
 
 ### 7.2 Settings with a history you can restore — **M**
 

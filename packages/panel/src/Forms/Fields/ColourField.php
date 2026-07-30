@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Forms\Fields;
 
+use PanelKit\Panel\Support\Contrast;
+
 /**
  * A colour, stored as a hex string.
  *
@@ -31,6 +33,10 @@ final class ColourField extends Field
     /** @var list<string> */
     private array $presets = [];
 
+    private ?string $contrastBackground = null;
+
+    private float $contrastMinRatio = Contrast::AA_NORMAL;
+
     /** @param list<string> $presets */
     public function presets(array $presets): static
     {
@@ -40,6 +46,22 @@ final class ColourField extends Field
             $presets,
             static fn (string $colour): bool => preg_match(self::PATTERN, $colour) === 1,
         ));
+
+        return $this;
+    }
+
+    /**
+     * Warn when the chosen colour is unreadable against `$background` -
+     * roadmap 7.1. NOT a validation rule: a colour that fails contrast is
+     * still a valid colour, and this is the operator's own letterhead to
+     * choose badly if they insist. `PkColourPicker` computes the live
+     * ratio and shows the warning; this only declares what to check it
+     * against, the same way `presets` only declares what to offer.
+     */
+    public function checkContrastAgainst(string $background = '#ffffff', float $minRatio = Contrast::AA_NORMAL): static
+    {
+        $this->contrastBackground = $background;
+        $this->contrastMinRatio = $minRatio;
 
         return $this;
     }
@@ -59,6 +81,8 @@ final class ColourField extends Field
         return [
             ...parent::toSchema(),
             'presets' => $this->presets,
+            'contrastBackground' => $this->contrastBackground,
+            'contrastMinRatio' => $this->contrastMinRatio,
         ];
     }
 }
