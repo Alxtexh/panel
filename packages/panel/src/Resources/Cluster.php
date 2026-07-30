@@ -68,10 +68,11 @@ abstract class Cluster
     /**
      * Non-resource screens that belong in this cluster's sub-navigation.
      *
-     * A cluster about "the network" is not only its two resource tables - the
-     * connections workspace is the same subject. Pages have no class in the
-     * resource registry to declare membership on, so the cluster names them.
-     * They appear after the resource members, in this order.
+     * A cluster is a SUBJECT, and a subject is not always only its resource
+     * tables - a report or a monitor can belong to it too. Pages have no
+     * class in the resource registry to declare membership on, so the
+     * cluster names them. They appear after the resource members, in this
+     * order.
      *
      * @return list<array{title: string, href: string}>
      */

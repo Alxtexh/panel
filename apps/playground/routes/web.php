@@ -21,7 +21,6 @@ use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Settings\DeviceController;
 use App\Http\Controllers\UserManagementController;
-use App\Http\Controllers\WorkspaceController;
 use App\Support\Guide;
 use App\Support\HelpArticles;
 use Illuminate\Http\Request;
@@ -400,16 +399,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
      | App screens. Under /apps/ so they never collide with the resource routes,
      | which match a bare {resource} segment.
      */
-    /*
-     | Workspaces: one page, several independent tables.
-     |
-     | Under /workspaces/ for the same reason the app screens are under /apps/ -
-     | the resource routes match a bare {resource} segment, so anything at the
-     | root would have to be excluded from that pattern by hand.
-     */
-    Route::get('workspaces/{workspace}', [WorkspaceController::class, 'show'])
-        ->where('workspace', '[a-z][a-z0-9-]*')
-        ->name('panel.workspace');
+    // No workspace route any more: the Connections screen (two independent
+    // tables on one page) was removed by the user's direct instruction -
+    // Part G.3. The `Workspace` primitive stays in the package, tested
+    // directly in WorkspaceTest, for consumers that want the shape.
 
     Route::get('apps/mail', [MailController::class, 'index'])->name('apps.mail');
     Route::get('apps/mail/{id}', [MailController::class, 'show'])->whereNumber('id')->name('apps.mail.show');

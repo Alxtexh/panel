@@ -347,7 +347,14 @@ onBeforeUnmount(() => {
 <template>
     <Head :title="`${isEdit ? 'Edit' : 'New'} ${schema.label}`" />
 
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-3 sm:p-4">
+    <!--
+        `pb-24` CLEARS THE FLOATING SAVE BAR. The bar is fixed to the bottom
+        of the viewport, so without reserved space it sits ON the last section
+        of a scrolled-to-bottom form - covering the exact fields somebody is
+        trying to fill (the user hit this on the announcement toggles). The
+        padding means fully scrolled content ends above the bar, always.
+    -->
+    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-3 pb-24 sm:p-4 sm:pb-24">
         <div>
             <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
                 {{ isEdit ? `Edit ${schema.label}` : `New ${schema.label}` }}

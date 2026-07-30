@@ -58,7 +58,7 @@ defineEmits<{ (e: 'save'): void; (e: 'cancel'): void }>()
         >
             <div
                 v-if="show"
-                class="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4"
+                class="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4"
                 role="status"
                 aria-live="polite"
             >

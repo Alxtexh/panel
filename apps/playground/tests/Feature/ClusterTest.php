@@ -77,15 +77,13 @@ final class ClusterTest extends TestCase
 
     /**
      * The entry stands for every member, and says so: the coverage test reads
-     * `members` to prove a collapsed resource is still linked. The cluster's
-     * named pages ride along, because the sub-navigation is how they are
-     * reached too.
+     * `members` to prove a collapsed resource is still linked.
      */
     public function test_the_entry_carries_every_member_it_stands_for(): void
     {
         $network = collect($this->nav($this->admin()))->firstWhere('title', 'Network');
 
-        $this->assertSame(['/routers', '/plans', '/workspaces/connections'], $network['members']);
+        $this->assertSame(['/routers', '/plans'], $network['members']);
     }
 
     public function test_a_person_who_may_open_no_member_gets_no_entry_at_all(): void
@@ -122,7 +120,7 @@ final class ClusterTest extends TestCase
 
         $this->assertSame('Network', $cluster['label']);
         $this->assertSame(
-            ['Routers', 'Plans', 'Connections'],
+            ['Routers', 'Plans'],
             array_column($cluster['items'], 'title'),
         );
 
@@ -132,14 +130,18 @@ final class ClusterTest extends TestCase
         $this->assertFalse($current['Routers']);
     }
 
-    /** A sibling this person may not open never reaches the client. */
+    /**
+     * A sibling this person may not open never reaches the client - and with
+     * only ONE member left visible, the strip disappears entirely: a
+     * sub-navigation whose every entry is "where you are" is decoration.
+     */
     public function test_the_sub_navigation_is_permission_filtered(): void
     {
         $cluster = $this->actingAs($this->operator(['view_any_plans', 'view_any_editable_plans']))
             ->get('/plans')->assertOk()
             ->viewData('page')['props']['cluster'];
 
-        $this->assertNotContains('Routers', array_column($cluster['items'], 'title'));
+        $this->assertNull($cluster);
     }
 
     /** A resource outside any cluster sends null - the strip never renders. */

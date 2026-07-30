@@ -549,7 +549,7 @@ final class Guide
                     ],
                     [
                         'kind' => 'php',
-                        'code' => "// One word in the sidebar; the facets appear once you arrive.\nfinal class NetworkCluster extends Cluster\n{\n    protected static string \$icon = 'router';\n\n    public static function pages(): array\n    {\n        return [\n            ['title' => 'Connections', 'href' => '/workspaces/connections'],\n        ];\n    }\n}\n\n// On each member resource:\nprotected static ?string \$cluster = NetworkCluster::class;",
+                        'code' => "// One word in the sidebar; the facets appear once you arrive.\nfinal class NetworkCluster extends Cluster\n{\n    protected static string \$icon = 'router';\n}\n\n// On each member resource:\nprotected static ?string \$cluster = NetworkCluster::class;\n\n// Non-resource screens can join via pages():\n// return [['title' => 'Capacity report', 'href' => '/reports/capacity']];",
                     ],
                 ],
             ],

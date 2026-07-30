@@ -356,7 +356,6 @@ final class NavigationCoverageTest extends TestCase
             '/clients/'.$client->id => 'a record page',
             '/clients/'.$client->id.'/edit' => 'an edit form',
             '/clients/create' => 'a create form',
-            '/workspaces/connections' => 'a workspace',
             '/screens/error/500' => 'an error preview',
             '/user-management/roles' => 'a tab of user management',
         ];
