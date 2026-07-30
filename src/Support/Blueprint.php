@@ -242,6 +242,26 @@ final class Blueprint
         protected static ?string $cluster = NetworkCluster::class;
         ```
 
+        ### Nest a resource under another
+
+        Declare `$parent` and the resource answers ONLY at
+        `/clients/{id}/sessions` - the flat URL does not route, because the
+        parent segment is the authorisation context: every request resolves
+        the parent through its own tenant-scoped model, checks `view` on it,
+        constrains the list to its rows, and stamps the foreign key on create
+        from the URL, never from the form body. Use it when the child only
+        makes sense inside one parent record; a relation manager remains the
+        right tool for a glance on the parent's own page.
+
+        ```php
+        final class ClientSessionResource extends Resource
+        {
+            protected static string $model = ClientSession::class;
+            protected static ?string $parent = ClientResource::class;
+            // foreign key defaults to client_id; override with $parentColumn
+        }
+        ```
+
         ### Add a portal
 
         ```bash

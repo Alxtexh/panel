@@ -12,6 +12,7 @@ use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\CustomFields\CustomField;
+use PanelKit\Panel\Http\NestedContext;
 use PanelKit\Panel\CustomFields\CustomFieldFactory;
 use PanelKit\Panel\CustomFields\CustomFieldStorage;
 use PanelKit\Panel\Forms\Fields\SelectField;
@@ -126,12 +127,18 @@ final class ResourceController extends Controller
         abort_unless($class::can('create'), 403);
         abort_if($class::formDefinition()->fields() === [], 404, "Resource [{$resource}] has no form.");
 
+        $parent = NestedContext::parent($request, $class);
+
         return Inertia::render('ResourceForm', [
-            'schema' => $class::schema(),
+            'schema' => $parent === null
+                ? $class::schema()
+                : NestedContext::schema($class::schema(), $class, $parent),
             'record' => null,
             'values' => $class::formDefinition()->valuesFor(null),
             'formOptions' => $class::formDefinition()->resolveOptions(),
-            'breadcrumbs' => $this->trail($class, 'New'),
+            'breadcrumbs' => $parent === null
+                ? $this->trail($class, 'New')
+                : [...NestedContext::breadcrumbs($class, $parent), ['title' => 'New', 'href' => '#']],
             'customFieldSupport' => $this->customFieldSupport($class),
         ]);
     }
@@ -145,6 +152,15 @@ final class ResourceController extends Controller
 
         abort_unless($class::can('view', $record), 403);
 
+        // Nested: the record must actually belong to the parent in the URL. A
+        // mismatched pairing 404s - the URL is making a claim about ownership,
+        // and serving the record anyway would let the address lie.
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            abort_unless((string) $record->getAttribute($class::parentColumn()) === (string) $parent->getKey(), 404);
+        }
+
         // Fetched through the TABLE's select and joins, so joined columns like
         // plan_name are present. The raw model carries only its own attributes,
         // and a missing joined value renders as an em dash that reads like real
@@ -152,14 +168,18 @@ final class ResourceController extends Controller
         $row = $class::definition()->toListQuery($class::model())->find($id) ?? $record->toArray();
 
         return Inertia::render('ResourceView', [
-            'schema' => $class::schema(),
+            'schema' => $parent === null
+                ? $class::schema()
+                : NestedContext::schema($class::schema(), $class, $parent),
             'record' => [...$row, 'id' => $record->getKey()],
             'can' => $class::permissions(),
 
             // The transport, so the client knows how to stay fresh without any
             // page or component knowing which driver is configured.
             'live' => LiveConfig::fromConfig()->toArray(),
-            'breadcrumbs' => $this->trail($class, (string) ($record->name ?? "#{$record->getKey()}")),
+            'breadcrumbs' => $parent === null
+                ? $this->trail($class, (string) ($record->name ?? "#{$record->getKey()}"))
+                : [...NestedContext::breadcrumbs($class, $parent), ['title' => (string) ($record->name ?? "#{$record->getKey()}"), 'href' => '#']],
         ]);
     }
 
@@ -211,11 +231,20 @@ final class ResourceController extends Controller
 
         abort_unless($class::can('update', $record), 403);
 
+        // Nested: the record must belong to the parent named in the URL.
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            abort_unless((string) $record->getAttribute($class::parentColumn()) === (string) $parent->getKey(), 404);
+        }
+
         $form = $class::formDefinition();
         abort_if($form->fields() === [], 404, "Resource [{$resource}] has no form.");
 
         return Inertia::render('ResourceForm', [
-            'schema' => $class::schema(),
+            'schema' => $parent === null
+                ? $class::schema()
+                : NestedContext::schema($class::schema(), $class, $parent),
             'record' => ['id' => $record->getKey(), 'label' => (string) ($record->name ?? "#{$record->getKey()}")],
             'values' => [
                 ...$form->valuesFor($record),
@@ -231,7 +260,9 @@ final class ResourceController extends Controller
                 '_updated_at' => $record->updated_at?->toIso8601String(),
             ],
             'formOptions' => $form->resolveOptions(),
-            'breadcrumbs' => $this->trail($class, 'Edit'),
+            'breadcrumbs' => $parent === null
+                ? $this->trail($class, 'Edit')
+                : [...NestedContext::breadcrumbs($class, $parent), ['title' => 'Edit', 'href' => '#']],
             'customFieldSupport' => $this->customFieldSupport($class),
         ]);
     }
@@ -344,17 +375,43 @@ final class ResourceController extends Controller
         /** @var class-string<resource> $class */
         // Built ONCE and reused for both the query and the option lists.
         $definition = $class::definition();
-        $result = $class::data($request, $definition);
+
+        /*
+         * NESTED - roadmap 4.2. The parent is resolved, tenant-scoped and
+         * authorised in NestedContext; what remains here is the constraint:
+         * every query this list runs, counts included, carries the foreign
+         * key. The schema is the cached flat one re-addressed per request,
+         * because the screen is identical for every parent.
+         */
+        $parent = NestedContext::parent($request, $class);
+
+        $query = $definition->toListQuery($class::model());
+
+        if ($parent !== null) {
+            $key = $parent->getKey();
+            $column = (new ($class::model()))->getTable().'.'.$class::parentColumn();
+
+            $query->constrain(static fn ($q) => $q->where($column, $key));
+        }
+
+        $result = $query->run($request);
 
         $schema = $class::schema();
+
+        if ($parent !== null) {
+            $schema = NestedContext::schema($schema, $class, $parent);
+        }
 
         return Inertia::render('ResourceIndex', [
             // Cached, tenant-independent, sent once per session.
             'schema' => $schema,
 
             // A generic page cannot declare its breadcrumb statically the way a
-            // bespoke page did, so it comes from the schema instead.
-            'breadcrumbs' => [['title' => $schema['labelPlural'], 'href' => $schema['routes']['index']]],
+            // bespoke page did, so it comes from the schema instead. A nested
+            // list walks in through its parent.
+            'breadcrumbs' => $parent === null
+                ? [['title' => $schema['labelPlural'], 'href' => $schema['routes']['index']]]
+                : NestedContext::breadcrumbs($class, $parent),
 
             /*
              * The cluster sub-navigation, when this resource belongs to one -
