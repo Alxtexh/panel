@@ -89,6 +89,20 @@ class AppServiceProvider extends ServiceProvider
         app(\PanelKit\Panel\Documents\DocumentKinds::class)
             ->register(new \App\Documents\ClientInvoiceKind);
 
+        /*
+         | A DOCUMENT'S LETTERHEAD, FROM THE ORGANISATION SETTINGS SCREEN.
+         |
+         | The package's default reads the name off the tenant and returns no
+         | logo, because the logo is a file on the private disk behind THIS
+         | application's authenticated route. Binding our own supplies both from
+         | one place - so renaming the organisation updates every document and
+         | there is no copy in a template to forget.
+         */
+        $this->app->scoped(
+            \PanelKit\Panel\Documents\DocumentBranding::class,
+            \App\Documents\OrganisationBranding::class,
+        );
+
         $this->configureDefaults();
     }
 

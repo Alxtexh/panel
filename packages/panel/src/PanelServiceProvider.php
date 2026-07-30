@@ -56,6 +56,20 @@ final class PanelServiceProvider extends ServiceProvider
             return $kinds;
         });
 
+        /*
+         * WHERE A DOCUMENT'S LETTERHEAD COMES FROM.
+         *
+         * Bound to the INTERFACE so an application can supply its own without
+         * touching the renderer - which it has to, because the logo is a file on
+         * a private disk behind the application's own authenticated route and
+         * this package cannot construct that URL.
+         *
+         * Scoped, not singleton: it reads the CURRENT organisation, so a
+         * long-lived binding under Octane would serve one customer's name on
+         * another's invoice.
+         */
+        $this->app->scopedIf(Documents\DocumentBranding::class, Documents\TenantBranding::class);
+
         $this->app->singleton(Documents\DocumentRenderer::class);
 
         /*

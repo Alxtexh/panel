@@ -245,6 +245,85 @@ final class DocumentTemplateTest extends TestCase
         app(DocumentKinds::class)->get('postcard');
     }
 
+    /* ------------------------------------------------------------- letterhead */
+
+    /**
+     * THE LETTERHEAD IS NOT A TEMPLATE SETTING, and this is the test that keeps
+     * it that way.
+     *
+     * The company name and logo live on the organisation settings screen. A
+     * template that carried its own copy would let the invoice say "Your
+     * company" while the sidebar says the real name - and a rename would be
+     * three templates to remember, with the forgotten one going to a customer.
+     */
+    public function test_the_letterhead_comes_from_the_organisation(): void
+    {
+        $response = $this->postJson('/documents/invoice/preview', ['settings' => []])->assertOk();
+
+        $this->assertSame('A', $response->json('branding.company'));
+    }
+
+    /**
+     * And it cannot be overridden by asking for it.
+     *
+     * The designer no longer offers the field, but the preview endpoint takes
+     * arbitrary settings - so a crafted request must not be able to put another
+     * name on a document that looks official.
+     */
+    public function test_a_submitted_company_name_is_ignored(): void
+    {
+        $response = $this->postJson('/documents/invoice/preview', [
+            'settings' => ['company' => 'Not This Company', 'logo_url' => 'https://evil.test/l.png'],
+        ])->assertOk();
+
+        $this->assertSame('A', $response->json('branding.company'));
+        $this->assertNull($response->json('branding.logoUrl'));
+    }
+
+    public function test_the_designer_no_longer_asks_for_a_company_name_or_logo(): void
+    {
+        // Asserted on the SCHEMA rather than the rendered HTML: the field is gone
+        // from the declaration, so no client can draw it back.
+        $schema = json_encode(
+            $this->get('/documents/invoice')->viewData('page')['props']['schema']
+        );
+
+        $this->assertStringNotContainsString('logo_url', (string) $schema);
+        $this->assertStringNotContainsString('"key":"company"', (string) $schema);
+    }
+
+    /**
+     * A renamed organisation renames every document, with nothing to re-save.
+     *
+     * This is the whole reason the fields were removed rather than merely
+     * pre-filled: a pre-filled copy is still a copy.
+     */
+    public function test_renaming_the_organisation_changes_a_saved_template_document(): void
+    {
+        $this->put('/documents/invoice', (new \PanelKit\Panel\Documents\Kinds\InvoiceKind)->defaults());
+
+        $this->tenant->forceFill(['name' => 'Lakeside Fibre'])->save();
+
+        /*
+         * A REQUEST BOUNDARY, modelled explicitly.
+         *
+         * `TenantContext` is scoped and memoizes the tenant, and it reaches it
+         * through the signed-in user's `tenant` relation - which the auth guard
+         * holds, already loaded, across every request in one test. So without
+         * this the second request would still see the pre-rename name and the
+         * assertion would fail for a reason that has nothing to do with the
+         * behaviour under test. In production each request loads the user fresh.
+         */
+        $this->app->forgetScopedInstances();
+        $this->actingAs($this->user->fresh());
+
+        $printed = $this->get('/documents/invoice/print')
+            ->assertOk()
+            ->viewData('page')['props']['document'];
+
+        $this->assertSame('Lakeside Fibre', $printed['branding']['company']);
+    }
+
     /* ------------------------------------------------------------ variables */
 
     /**
