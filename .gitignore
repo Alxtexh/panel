@@ -50,3 +50,7 @@
 # The push credential. It lives in the working tree and must never leave it -
 # a token committed here is a token GitHub revokes and a stranger uses first.
 /githubkey.md
+
+# Chrome for Testing, downloaded for the browser suite.
+apps/playground/chrome/
+apps/playground/database/dusk.sqlite

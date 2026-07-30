@@ -263,6 +263,7 @@ function insert(token: string): void {
                     <select
                         v-if="records.length"
                         v-model="record"
+                        dusk="preview-record"
                         class="border-input bg-background h-8 rounded-md border px-2 text-xs"
                         aria-label="Preview against"
                     >

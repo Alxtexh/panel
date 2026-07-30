@@ -48,5 +48,11 @@ does not.
   when their scripts have been run.
 - **No lint step in CI.** 230 violations, 216 auto-fixable; the auto-fix
   reformats 65 files, so the decision is deferred rather than made badly.
+- **Component tests are thin.** `@panelkit/ui` has two spec files. The browser
+  suite covers the rendering failures from the outside, which is where the two
+  real ones were found, but the components are not unit-tested.
+- **Browser tests need a non-snap Chrome.** They skip with an instruction when
+  none is found; a snap-packaged Chromium makes ChromeDriver hang rather than
+  fail.
 
 [UPGRADING.md]: UPGRADING.md

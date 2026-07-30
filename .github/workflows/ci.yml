@@ -152,3 +152,89 @@ jobs:
       - name: Build
         working-directory: apps/playground
         run: npm run build:ssr
+
+  # ---------------------------------------------------------------- browser
+  #
+  # THE ONLY JOB THAT LOADS A PAGE.
+  #
+  # Two bugs shipped in one afternoon that the other two jobs could not see: a
+  # form bound an event the component does not emit - type-checked, built,
+  # flipped the radio in the DOM and never told the form - and an invoice
+  # rendered three correct figures as one number, because right-aligned cells
+  # had no horizontal padding. Both were obvious on a screen and invisible to
+  # 1,237 passing tests and a clean type check.
+  #
+  # A SEPARATE JOB, not a step in the PHP one, because it needs a browser, a
+  # built bundle and a running server. Bolting that onto the fast job would
+  # make every PHP failure wait for Chrome.
+  browser:
+    name: Browser tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: sqlite3, pdo_sqlite, zip, intl, bcmath, gd
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install PHP dependencies
+        working-directory: apps/playground
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare the environment
+        working-directory: apps/playground
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # Wayfinder writes the route helpers the client imports. They are
+      # generated rather than committed, so the build fails without this.
+      - name: Generate the route helpers
+        working-directory: apps/playground
+        run: php artisan wayfinder:generate --with-form
+
+      - name: Install the client half
+        run: |
+          cd packages/ui && npm install --no-audit --no-fund
+          cd ../inertia && npm install --no-audit --no-fund
+          cd ../../apps/playground && npm install --no-audit --no-fund
+
+      # CHROME FOR TESTING, at the major version Dusk's ChromeDriver matches.
+      # The runner's own Chrome would work today and drift the moment either
+      # side updates; pinning the pair is what stops a version mismatch being
+      # reported as a browser that will not start.
+      - name: Install Chrome
+        working-directory: apps/playground
+        run: npx --yes @puppeteer/browsers install chrome@151
+
+      - name: Install ChromeDriver
+        working-directory: apps/playground
+        run: php artisan dusk:chrome-driver --detect
+
+      # The script owns the database, the port and the build. It refuses to run
+      # against the development database, which matters less in CI than on a
+      # laptop but is the same script either way.
+      - name: Browser tests
+        run: scripts/dusk.sh
+
+      # THE SCREENSHOTS ARE THE POINT OF UPLOADING ANYTHING. A browser failure
+      # in CI is otherwise a selector name and a timeout; the screenshot Dusk
+      # takes at the moment of failure is usually the whole diagnosis. The two
+      # times this suite failed while being written, the screenshot showed the
+      # feature working and the assertion wrong.
+      - name: Failure screenshots and console logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dusk-failures
+          path: |
+            apps/playground/tests/Browser/screenshots
+            apps/playground/tests/Browser/console
+          retention-days: 7

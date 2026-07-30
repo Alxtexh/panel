@@ -90,7 +90,17 @@ function text(value: unknown): string {
 </script>
 
 <template>
-    <article class="flex flex-col gap-6 bg-white p-8 text-black">
+    <!--
+        `dusk` IS A TEST HOOK, on purpose and in shipped markup.
+
+        Browser tests need one selector for "the document" that survives a
+        restyle, and every alternative is worse: a CSS class is a thing a
+        refactor is *supposed* to change, and a structural selector like
+        `aside article` breaks the moment the preview moves. One attribute here
+        serves the designer preview and the print page both, so they cannot
+        drift apart. It renders as an inert attribute and costs nothing.
+    -->
+    <article dusk="document" class="flex flex-col gap-6 bg-white p-8 text-black">
         <!-- ---------------------------------------------------- letterhead -->
         <div class="flex items-center gap-3">
             <img

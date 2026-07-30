@@ -34,6 +34,10 @@ fresh: ## Drop everything, re-migrate, re-seed
 test: ## Run the playground test suite
 	@$(ARTISAN) test
 
+.PHONY: browser
+browser: ## Run the browser tests (needs Chrome - see scripts/dusk.sh)
+	@scripts/dusk.sh
+
 .PHONY: tinker
 tinker: ## Open a REPL against the playground
 	@$(ARTISAN) tinker

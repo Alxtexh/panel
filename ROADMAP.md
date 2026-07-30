@@ -15,9 +15,9 @@ week or more.
 
 | | |
 | --- | --- |
-| Tests | 1,233 · 1,220 passing · 13 skipped (MariaDB ×5, pgvector ×8 fixtures) |
+| Tests | 1,239 · 1,226 passing · 13 skipped (MariaDB ×5, pgvector ×8 fixtures), plus 14 browser tests |
 | Types, build, `panel:doctor` | Clean |
-| CI | Runs the suite, doctor, vitest, types and both bundles from a clean clone |
+| CI | Three jobs from a clean clone: the PHP suite + doctor, the client half (vitest, types, both bundles), and the browser suite with failure screenshots |
 | Packages | `panelkit/panel`, `@panelkit/ui`, `@panelkit/inertia` — installable, verified in a fresh `laravel/vue-starter-kit` app |
 | Commits | 75 on `main` |
 | Tags | `v0.1.0` |
@@ -86,11 +86,37 @@ script, or a splitter action on push (automation that needs a token in GitHub).
 | --- | --- | --- | --- |
 | 2.1 | **Lint** | M | 230 violations, 216 auto-fixable. The auto-fix reformats 65 files and flips the codebase to semicolons — a year of `git blame` buried. **Decision: reformat once and enforce, or relax the rules to match the code as written.** Until then CI has no lint step, deliberately. |
 | 2.2 | **Component tests** | L | `@panelkit/ui` has one spec file; `@panelkit/inertia` has none. The table, the form and the five screens are verified only indirectly through Laravel feature tests, which cannot see a render. |
-| 2.3 | **Browser tests** | L | Nothing exercises a real browser. Every bug this session that mattered — the empty page, the missing icons, the sidebar drawer — was invisible to the suite and obvious on screen. |
+| 2.3 | ~~**Browser tests**~~ | **DONE** | Laravel Dusk, 14 tests, own CI job. See below. |
 | 2.4 | **Accessibility check in CI** | M | The audit was manual and is now stale. `axe` over the main screens would keep it true. |
 | 2.5 | **Un-gate the fixtures** | M | MySQL, pgvector, broadcast and the AI provider pass when their scripts run and skip otherwise. CI services would make them permanent. |
 
-**2.3 is the highest-value item in this section** and I would do it before 2.2.
+**2.3 is done.** 14 Dusk tests over two classes, a `browser` job in CI that
+uploads failure screenshots, and `make browser` locally.
+
+**Both motivating bugs were reproduced red before the tests were kept.** That
+matters more than the count: the first version of the invoice-collision test
+PASSED with the bug deliberately reintroduced, because it measured `<td>` rects
+(always contiguous — padding is inside the box) against sample data whose
+`2,500.00` figures are too narrow to collide. It now measures the painted text of
+a six-figure amount on a real record, fails on the bug and passes on the fix. The
+wiring test likewise fails when the form is rebound to the event `RecordForm`
+does not emit.
+
+**Two things worth knowing before touching this:**
+
+- **A snap-packaged Chromium will not work.** `/snap/bin/chromium` is a symlink
+  to `snap`, and ChromeDriver launching a confined snap does not fail — it hangs,
+  with no output from either process. `DuskTestCase` excludes it deliberately and
+  skips with an instruction rather than timing out.
+- **`scripts/dusk.sh` owns the database, and that is the point.** Dusk's
+  migration traits would otherwise run against `.env` — the development database
+  here holds 277,700 seeded subscribers, and emptying it would be silent,
+  instant, and reported as a passing run. The script passes `DB_DATABASE` on the
+  command line where it outranks any env file, serves on its own port, and
+  refuses to run if the path resolves to the development one.
+
+**2.2 (component tests) is now the open item in this section**, and cheaper than
+it was: several things it would have covered are covered from the outside.
 
 ---
 
@@ -409,11 +435,9 @@ designer), with 3.3 (preset chips) alongside. 3.6's variable chips landed inside
 the designer, sourced from the kind rather than hand-written; making them
 available to announcements and scheduled reports is what remains of that item.
 
-**Next — trust, while the new screens are fresh.** 2.3 (browser tests) has just
-paid for itself twice by hand: the wrong emitted event on the designer's form
-(type-checked, built, silently did nothing) and the colliding invoice columns
-were both invisible to 1,233 passing tests and obvious on screen. Then the lint
-decision (2.1).
+**~~Then — trust.~~ 2.3 done.** Both bugs it was written for now fail the suite
+when reintroduced. Remaining in that section: 2.1 (the lint decision) and 2.2
+(component tests), and 2.2 is cheaper than it was.
 
 **Alongside, cheap and high-leverage.** 7.1 (contrast guard) and 7.5 (API
 parity, applied per feature) cost hours each and are exactly the kind of thing
