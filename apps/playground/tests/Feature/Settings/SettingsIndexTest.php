@@ -49,7 +49,13 @@ final class SettingsIndexTest extends TestCase
 
     public function test_the_index_lists_profile_security_and_organisation(): void
     {
-        $user = $this->operator(array_values(array_diff(Abilities::all(), ['manage_roles'])));
+        // Neither gated entry: manage_roles adds User management and
+        // manage_assistant adds Assistant, and this test is about the
+        // ungated baseline.
+        $user = $this->operator(array_values(array_diff(
+            Abilities::all(),
+            ['manage_roles', 'manage_assistant'],
+        )));
 
         $entries = $this->actingAs($user)->get('/settings')->assertOk()
             ->viewData('page')['props']['entries'];
@@ -57,6 +63,20 @@ final class SettingsIndexTest extends TestCase
         $titles = array_column($entries, 'title');
 
         $this->assertSame(['Profile', 'Security', 'Organisation'], $titles);
+    }
+
+    /** The Assistant entry appears only for holders of manage_assistant. */
+    public function test_the_assistant_entry_is_gated(): void
+    {
+        $holder = $this->operator(['manage_assistant']);
+
+        $titles = array_column(
+            $this->actingAs($holder)->get('/settings')->assertOk()
+                ->viewData('page')['props']['entries'],
+            'title',
+        );
+
+        $this->assertContains('Assistant', $titles);
     }
 
     /** THE SAME ABSENCE-NOT-DISABLED RULE THE ACCOUNT MENU FOLLOWS. */

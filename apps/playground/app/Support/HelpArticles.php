@@ -126,6 +126,26 @@ final class HelpArticles
                     'Some columns cannot be hidden - the one carrying the record name, for instance, since a row with no identifier is not useful.',
                 ],
             ],
+
+            /*
+             * THE ASSISTANT'S CHARTER - E.3. This is the one article the
+             * assistant is guaranteed to be able to cite about ITSELF,
+             * because the help centre is what it retrieves from. Asked
+             * "what can you do", it quotes this instead of improvising a
+             * grander answer.
+             */
+            [
+                'id' => 'assistant-charter',
+                'category' => 'panel',
+                'title' => 'What the assistant can and cannot do',
+                'keywords' => 'assistant ai chat helper limits permissions capabilities charter what can you do',
+                'body' => [
+                    'The assistant can look up subscribers, search this help documentation and - with your confirmation - suspend a subscriber. Every answer about how the panel works is drawn from these help articles, and it is instructed to say so when the documentation has nothing rather than improvise.',
+                    'It acts with YOUR permissions, never more. A lookup or an action you could not perform from the screen is one the assistant will refuse on your behalf - the same policy that decides whether a button renders decides whether a tool runs. It also never sees another organisation\'s records or conversations.',
+                    'Anything destructive pauses and asks you first, naming exactly what it is about to do. The assistant cannot delete records, change settings, manage users or roles, or read your colleagues\' conversations - and it can be turned off entirely by removing the AI key under Settings.',
+                    'Its answers can still be wrong. Figures worth acting on are worth checking against the screen they came from; the assistant shows which records it looked up precisely so you can.',
+                ],
+            ],
         ];
     }
 }

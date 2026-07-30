@@ -39,10 +39,53 @@ final class Blueprint
             self::rules(),
             self::shape(),
             self::recipes(),
+            self::assistant(),
             self::inventory(),
             self::commands(),
             self::verification(),
         ]))."\n";
+    }
+
+    /**
+     * The assistant's charter, for an agent EXTENDING it - E.3.
+     *
+     * An agent asked to "add a tool to the assistant" without this section
+     * writes a tool that queries models directly, which is an endpoint with
+     * no authorisation reachable by asking politely. The charter here is the
+     * builder's half; the operator's half is a help article the assistant
+     * itself retrieves and cites.
+     */
+    private static function assistant(): string
+    {
+        return <<<'MD'
+        ## The assistant, if you extend it
+
+        The assistant is `laravel/ai` behind three hard rules. Break any of
+        them and you have built a data leak that answers politely:
+
+        1. **Every tool that touches records extends `PanelTool` and calls
+           `$this->authorise(action, resourceKey, $record)` first.** That is
+           the SAME `Resource::can()` gate the buttons use - not a similar
+           one, and never a prompt instruction. A tool refuses with a
+           returned sentence, not an exception.
+        2. **Anything destructive declares `isDestructive(): true`** and
+           pauses for human approval before running.
+        3. **Retrieval is tenant-scoped by construction.** `KnowledgeBase`
+           refuses to search without a tenant; a new `KnowledgeSource` that
+           indexes RECORDS (not public help text) must also gate retrieval
+           per-asker with `authorise()`, because then it answers questions
+           the screen would refuse.
+
+        Credentials are BYOK: `AiCredentials` (panel settings, encrypted)
+        layered over `.env`. Never read or log the key; `apply()` at the
+        entry point is all any caller needs. With no key at all the
+        assistant degrades to a setup sentence - keep it that way.
+
+        What the assistant may do is documented for operators in the help
+        centre (`assistant-charter`); if you add a capability, update that
+        article in the same change so the assistant keeps citing the truth
+        about itself.
+        MD;
     }
 
     private static function heading(): string

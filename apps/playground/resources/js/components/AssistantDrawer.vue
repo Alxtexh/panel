@@ -543,6 +543,26 @@ function ask(question: string) {
                                     >
                                 </button>
                             </div>
+
+                            <!--
+                                THE CHARTER, ONE CLICK AWAY - E.3. The full
+                                statement of what it can and cannot do is a
+                                help article, which also makes it the one
+                                thing the assistant can always cite about
+                                itself.
+                            -->
+                            <p
+                                class="text-center text-xs text-muted-foreground"
+                            >
+                                It acts with your permissions and asks before
+                                changing anything.
+                                <a
+                                    href="/help#assistant-charter"
+                                    class="underline underline-offset-2 hover:text-foreground"
+                                >
+                                    What it can and cannot do
+                                </a>
+                            </p>
                         </div>
 
                         <div v-else class="flex flex-col gap-4">

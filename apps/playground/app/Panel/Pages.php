@@ -196,6 +196,7 @@ final class Pages
             '/settings/profile' => 'Reached from the account menu; settings have their own sub-navigation.',
             '/settings/security' => 'Reached from the settings sub-navigation.',
             '/settings/organisation' => 'Reached from the settings sub-navigation.',
+            '/settings/assistant' => 'Reached from the settings sub-navigation, for holders of manage_assistant.',
             '/settings/roles' => 'The standalone permission matrix. User management is the linked way in.',
 
             /*
