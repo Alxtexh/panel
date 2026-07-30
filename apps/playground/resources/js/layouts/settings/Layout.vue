@@ -7,6 +7,7 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { toUrl } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
+import { index as settingsIndex } from '@/routes/settings';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
@@ -44,6 +45,19 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 
 <template>
     <div class="px-4 py-6">
+        <!--
+            BACK TO THE INDEX, because arriving here directly (a bookmark, a
+            reload) is not the same as having come from it - roadmap 3.7's
+            searchable list is the front door, and a door only one direction
+            can reach is not a door.
+        -->
+        <Link
+            :href="settingsIndex()"
+            class="mb-2 inline-block text-xs text-muted-foreground hover:text-foreground"
+        >
+            ← All settings
+        </Link>
+
         <Heading
             title="Settings"
             description="Manage your profile, security and organisation"

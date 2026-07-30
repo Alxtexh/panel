@@ -507,9 +507,20 @@ final class NavigationCoverageTest extends TestCase
         $ungated = 0;
 
         foreach ($items[0] as $item) {
-            // The account and the way out of it are the two things that mean the
-            // same in every portal; everything else is the application's.
-            if (str_contains($item, 'edit()') || str_contains($item, 'logout()')) {
+            /*
+             * THE ACCOUNT AND THE WAY OUT OF IT are the two things that mean
+             * the same in every portal; everything else is the application's.
+             *
+             * `settingsIndex()`, NOT `edit()` - roadmap 3.7 replaced the
+             * account menu's direct link to Profile with the searchable
+             * settings index. It stays ungated for the same reason Profile
+             * already was: `/settings` is registered outside every panel's
+             * route group, exactly like `/settings/profile` and
+             * `/settings/organisation` always were, so it resolves to the
+             * default panel regardless of which portal linked here - there
+             * is no boundary at the route level for a menu gate to enforce.
+             */
+            if (str_contains($item, 'settingsIndex()') || str_contains($item, 'logout()')) {
                 $ungated++;
 
                 continue;

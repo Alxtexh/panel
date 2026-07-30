@@ -192,6 +192,7 @@ final class Pages
     {
         return [
             '/dashboard' => 'The home screen: the first item in the sidebar and the target of the logo.',
+            '/settings' => 'The searchable settings index. Reached from the account menu\'s Settings link.',
             '/settings/profile' => 'Reached from the account menu; settings have their own sub-navigation.',
             '/settings/security' => 'Reached from the settings sub-navigation.',
             '/settings/organisation' => 'Reached from the settings sub-navigation.',

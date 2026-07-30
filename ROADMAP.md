@@ -336,11 +336,36 @@ mean inventing that field and a mail template to go with it, which is scope
 belonging to a future report-composer item, not this one. `Field::chips()`
 is ready for it the moment that field is added.
 
-### 3.7 Settings index with descriptions and search — **S**
+### 3.7 Settings index with descriptions and search — **DONE**
 
-Ours is three bare links; it stops working at about six. Theirs is a searchable
-index with a line per entry. **Ours should index the settings the same way the
-build guide indexes itself** — that search already exists and works over prose.
+*Theirs:* three bare links, fine at three and unreadable past six.
+
+**Ours indexes the settings the same way `Help.vue` indexes the build guide**
+— a title, a description, and a search box with no request on keystroke, the
+list itself declared once server-side (`App\Support\SettingsIndex`) rather
+than duplicated in the client. `/settings` now renders that index instead of
+redirecting straight to Profile; role-gated entries (`User management`,
+behind `manage_roles`) are omitted rather than shown disabled, matching the
+account menu's own rule that a link which always 403s is worse than no link.
+
+**Deliberately not portal-gated.** `/settings`, like `/settings/profile`,
+`/settings/security` and `/settings/organisation` before it, is registered
+outside every panel's own route group, so `PanelManager::currentPanel()`
+resolves to the default panel regardless of which portal linked here — there
+was never a portal boundary on this screen to begin with. An early draft
+added portal-aware filtering to `SettingsIndex::entries()` on the theory that
+a generated portal shouldn't offer Organisation or User management; it was
+reverted once that filtering turned out to be unreachable dead code guarding
+a boundary the routes don't have, and the roadmap's own bias against
+speculative code says that's a reason to delete it, not keep it "for later."
+
+One real layout bug surfaced only in the browser, not in any test: the
+Inertia layout resolver in `app.ts` matches page components by name prefix
+(`settings/*` → `[AppLayout, SettingsLayout]`), which drew the new index
+wrapped in the old settings sidebar — the three links rendered twice, once as
+this page's own card list and once beside it. Fixed with a specific
+`settings/Index` case ahead of the general prefix rule, the same pattern
+already used for `auth/LockScreen` and `auth/VerifyOtp`.
 
 ### 3.8 Wizard steps in the page header — **S**
 

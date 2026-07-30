@@ -108,6 +108,16 @@ createInertiaApp({
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
+            /*
+             * THE INDEX IS THE EXCEPTION TO ITS OWN PREFIX. Every OTHER
+             * `settings/*` page is a destination the sidebar navigates
+             * between; this is the screen that sidebar's own links come
+             * from - wrapping it in `SettingsLayout` drew the same three
+             * links twice, once as the searchable list this page renders
+             * and once again in the sidebar beside it.
+             */
+            case name === 'settings/Index':
+                return AppLayout;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];
             default:

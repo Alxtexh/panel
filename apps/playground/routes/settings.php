@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\PasswordRenewalController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Settings\SettingsIndexController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
@@ -29,7 +30,14 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', '/settings/profile');
+    /*
+     | ROADMAP 3.7. This used to be `Route::redirect('settings',
+     | '/settings/profile')` - a fine answer at three pages and a worse one
+     | every page after that, because landing directly on Profile gives
+     | nowhere to discover Security or Organisation exist except a sidebar
+     | with no descriptions. Now it renders a searchable index instead.
+     */
+    Route::get('settings', [SettingsIndexController::class, 'index'])->name('settings.index');
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -26,7 +26,7 @@ import { logout, userManagement } from '@/routes';
  */
 import operations from '@/routes/operations';
 import { lock, resource } from '@/routes/panel';
-import { edit } from '@/routes/profile';
+import { index as settingsIndex } from '@/routes/settings';
 
 import type { User } from '@/types';
 
@@ -90,7 +90,11 @@ const trash = computed(
     <DropdownMenuSeparator />
     <DropdownMenuGroup>
         <DropdownMenuItem :as-child="true">
-            <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
+            <Link
+                class="block w-full cursor-pointer"
+                :href="settingsIndex()"
+                prefetch
+            >
                 <Settings class="mr-2 h-4 w-4" />
                 Settings
             </Link>
