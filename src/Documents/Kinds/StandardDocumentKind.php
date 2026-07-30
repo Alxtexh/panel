@@ -78,7 +78,13 @@ abstract class StandardDocumentKind extends DocumentKind
                      */
                     VisualSelectField::make('colour_mode')
                         ->label('Colour')
-                        ->options(['colour' => 'Colour', 'mono' => 'Black & white'])
+                        /*
+                         * "B & W" rather than "Black & white". A segmented
+                         * control is read at a glance, and one segment three
+                         * times the width of the other stops being a switch and
+                         * becomes two buttons.
+                         */
+                        ->options(['colour' => 'Colour', 'mono' => 'B & W'])
                         ->preview('document-colour-mode')
                         ->segmented()
                         ->help('Most offices print in black and white. Choosing it here shows you what that looks like.'),
@@ -108,7 +114,17 @@ abstract class StandardDocumentKind extends DocumentKind
     protected function standardDefaults(): array
     {
         return [
-            'accent' => '#0f172a',
+            /*
+             * A VISIBLE COLOUR, not near-black.
+             *
+             * This was `#0f172a` - slate ink, perfectly reasonable on paper and
+             * indistinguishable from the body text, so an operator opening the
+             * designer saw an "Accent colour" field that appeared to change
+             * nothing and reasonably concluded it was broken. A default that
+             * demonstrates the control is worth more than a default that is
+             * marginally more conservative, and anyone who wants ink can type it.
+             */
+            'accent' => '#0f766e',
             'colour_mode' => 'colour',
             'support_phone' => '',
             'support_email' => '',
