@@ -869,6 +869,7 @@ function badgeLabel(key: string, value: unknown): string {
                     :actions="allowedBulkActions"
                     :count="t.selected.value.size"
                     :all-matching="t.allMatching.value"
+                    :total="total"
                     :busy="job.busy.value"
                     @run="runBulk"
                     @export="exportSelection"

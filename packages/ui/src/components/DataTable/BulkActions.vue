@@ -23,6 +23,21 @@
  *
  * A destructive action always confirms - the server sets that default too, so
  * a definition that forgets `requiresConfirmation` still gets one.
+ *
+ * EXPORT CONFIRMS TOO NOW - roadmap 3.10. It used to skip the dialog on the
+ * reasoning that reading needs no confirmation, which is true of the WRITE
+ * and beside the point: "how many, and is that what you meant?" is a
+ * question about the SELECTION, not about whether the action mutates
+ * anything, and it is exactly the select-all-matching case - "everything
+ * matching this filter" - where the real number is most likely to surprise
+ * whoever clicked it.
+ *
+ * THE COUNT IS `total`, ALREADY ON THE PAGE - no new request. Every list
+ * defers an exact row count for its own pagination text; select-all-matching
+ * means "everything `total` counts", so the same number that already answers
+ * "how many are showing" also answers "how many would this affect". A
+ * second, capped counter fetched just for this dialog would be duplicate
+ * infrastructure for a number the page already has.
  */
 import { computed, ref } from 'vue'
 import PkModal from '../Overlay/PkModal.vue'
@@ -45,6 +60,8 @@ const props = withDefaults(
         /** How many records the action would touch, for the confirmation copy. */
         count: number
         allMatching: boolean
+        /** The current filtered view's exact row count - deferred, so undefined until it lands. */
+        total?: number
         busy?: boolean
         canExport?: boolean
     }>(),
@@ -57,6 +74,18 @@ const emit = defineEmits<{
 }>()
 
 const pending = ref<BulkActionSchema | null>(null)
+const exportPending = ref(false)
+
+/**
+ * The number the confirm dialog answers "how many?" with.
+ *
+ * An explicit selection is exact and instant - it is however many rows are
+ * ticked, known the moment the dropdown opens. Select-all-matching is
+ * exact too, just not always landed yet - `total` until it resolves.
+ */
+const effectiveCount = computed(() => (props.allMatching ? props.total : props.count))
+const countKnown = computed(() => effectiveCount.value !== undefined)
+const countIsZero = computed(() => countKnown.value && effectiveCount.value === 0)
 
 /** Same split and the same tones as the row menu - see RecordActions.vue. */
 const ordinary = computed(() => props.actions.filter((a) => !a.destructive))
@@ -91,6 +120,11 @@ function confirm() {
     }
 
     pending.value = null
+}
+
+function confirmExport() {
+    exportPending.value = false
+    emit('export')
 }
 
 const format = (n: number) => new Intl.NumberFormat().format(n)
@@ -152,8 +186,7 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
                     EXPORT SITS WITH THEM because it is a bulk action in every
                     sense that matters to the operator - it acts on the same
                     selection and answers the same "do this to these" question.
-                    It is separate only in the payload, because it reads rather
-                    than writes and so needs no confirmation.
+                    It confirms too now - see the file note.
                 -->
                 <button
                     v-if="canExport"
@@ -161,7 +194,7 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
                     role="menuitem"
                     class="text-foreground hover:bg-accent focus:bg-accent flex w-full items-center gap-2.5 rounded px-2.5 py-2 text-left text-sm focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                     :disabled="busy"
-                    @click="emit('export')"
+                    @click="exportPending = true"
                 >
                     <svg
                         class="size-4 shrink-0"
@@ -215,16 +248,36 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
         @close="pending = null"
     >
         <!--
-            The COUNT is restated in the dialog. "Delete the selected records?"
-            reads the same whether it means three rows or ninety thousand, and
-            the select-all-matching case is exactly where someone is most likely
-            to have selected more than they think.
+            THE COUNT IS REAL, NOT A GUESS - roadmap 3.10. "Delete the selected
+            records?" used to read the same whether it meant three rows or
+            ninety thousand; select-all-matching is exactly where someone is
+            most likely to have selected more than they think, so it is the
+            case that most needs the real number rather than "every matching
+            record".
         -->
         <p class="text-muted-foreground text-sm">
             This will affect
             <span class="text-foreground font-medium tabular-nums">
-                {{ allMatching ? 'every matching record' : `${format(count)} records` }} </span
-            >.
+                <template v-if="!countKnown">…</template>
+                <template v-else
+                    >{{ format(effectiveCount!) }} record{{
+                        effectiveCount === 1 ? '' : 's'
+                    }}</template
+                >
+            </span>
+            .
+        </p>
+
+        <!--
+            AN EMPTY MATCH BLOCKS, WITH A REASON - the other half of "count
+            before commit". A filter that now matches nothing is usually a
+            filter changed after select-all was chosen, and running the
+            action anyway would silently do nothing while looking like it
+            worked.
+        -->
+        <p v-if="countIsZero" class="text-destructive mt-1 text-xs">
+            Nothing matches the current filters - there is nothing to
+            {{ pending?.label?.toLowerCase() }}.
         </p>
 
         <template #footer>
@@ -237,15 +290,58 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
             </button>
             <button
                 type="button"
-                class="rounded-md px-3 py-1.5 text-sm font-medium"
+                class="rounded-md px-3 py-1.5 text-sm font-medium disabled:pointer-events-none disabled:opacity-50"
                 :class="
                     pending?.destructive
                         ? 'bg-destructive text-white hover:opacity-90'
                         : 'bg-primary text-primary-foreground hover:opacity-90'
                 "
+                :disabled="!countKnown || countIsZero"
                 @click="confirm"
             >
                 {{ pending?.label }}
+            </button>
+        </template>
+    </PkModal>
+
+    <PkModal
+        :open="exportPending"
+        title="Export CSV"
+        description="A download link appears once the file is ready."
+        @close="exportPending = false"
+    >
+        <p class="text-muted-foreground text-sm">
+            This will export
+            <span class="text-foreground font-medium tabular-nums">
+                <template v-if="!countKnown">…</template>
+                <template v-else
+                    >{{ format(effectiveCount!) }} record{{
+                        effectiveCount === 1 ? '' : 's'
+                    }}</template
+                >
+            </span>
+            .
+        </p>
+
+        <p v-if="countIsZero" class="text-destructive mt-1 text-xs">
+            Nothing matches the current filters - there is nothing to export.
+        </p>
+
+        <template #footer>
+            <button
+                type="button"
+                class="bg-background hover:bg-accent rounded-md border px-3 py-1.5 text-sm"
+                @click="exportPending = false"
+            >
+                Cancel
+            </button>
+            <button
+                type="button"
+                class="bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-sm font-medium hover:opacity-90 disabled:pointer-events-none disabled:opacity-50"
+                :disabled="!countKnown || countIsZero"
+                @click="confirmExport"
+            >
+                Export CSV
             </button>
         </template>
     </PkModal>

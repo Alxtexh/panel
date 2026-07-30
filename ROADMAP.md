@@ -4,8 +4,8 @@
 is the forward view — everything outstanding, why it matters, what it costs, and
 what it depends on.
 
-Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.9
-are done** — see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
+Written 2026-07-29, last updated 2026-07-30. **§1, §2 and §3 are all done** —
+see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
 **S** = an afternoon · **M** = a day or two · **L** = several days · **XL** = a
 week or more.
 
@@ -448,15 +448,42 @@ line under Clients' and Announcements' titles, and - logged in as a freshly
 created, genuinely empty tenant - the empty state reading exactly `No
 clients yet` / `Click "New Client" to add one.`
 
-### 3.10 Count before commit — **S**
+### 3.10 Count before commit — **DONE**
 
 *Theirs:* export scopes carry their row counts and an empty one blocks with a
 reason.
 
-**Ours generalises it to every bulk action.** Export, bulk delete, bulk update
-and a campaign send all answer "how many, and is that what you meant?" before
-the action, from the same counter — and our counts are already the cheap capped
-kind (`countUpTo`), so this costs nothing on 250,000 rows.
+**Ours generalises the confirmation, not the counter.** Bulk delete and bulk
+update already confirmed before this - the gap was that select-all-matching
+showed the string "every matching record" instead of a number, exactly the
+case where an operator is most likely to have selected more than they
+think. Export never confirmed at all. Both now show the real row count and
+block with a reason when it is zero.
+
+**No new counter was built.** `countUpTo` (this roadmap's imagined
+mechanism) exists once today, private to the notification bell, capped at
+500 - reusing it would have meant a second request just for this dialog. It
+turned out unnecessary: every list already defers an EXACT row count for its
+own pagination text (`total`), and select-all-matching means "everything
+`total` counts" by definition. `BulkActions.vue` reads that same number -
+free, already in flight, already exact - rather than fetching a second,
+approximate one. An explicit selection needs no request either: its count is
+however many rows are ticked, known client-side the instant the dropdown
+opens.
+
+**Campaign send does not exist** - `grep` across the whole application
+returns nothing. Building one to wire this into would be scope invention,
+not this item; when a send feature exists, it inherits the same pattern
+(confirm dialog, real count, blocks at zero) because that pattern is not
+specific to any one action.
+
+Verified: 1253/1253 PHP tests, 79/79 `@panelkit/ui` Vitest tests (5 new,
+exercising the teleported confirm dialog directly through the real DOM),
+21/21 Dusk tests, ESLint/vue-tsc/Prettier clean, production SSR build
+succeeds. Confirmed live in the browser on the real 250,000-row Clients
+table: select-all-matching's confirm dialog reading "This will affect
+250,000 records" instead of the old vague string, and Export CSV - which
+used to fire with no dialog at all - now confirming the same way.
 
 ---
 
