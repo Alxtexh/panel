@@ -6,7 +6,6 @@ namespace App\Policies;
 
 use App\Models\User;
 use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\TenantContext;
 
 /**
@@ -53,8 +52,14 @@ final class CustomFieldPolicy
             return false;
         }
 
-        $ability = Abilities::forModel($action, CustomField::class);
-
-        return $ability !== null && $user->hasPermission($ability);
+        /*
+         * ONE PANEL-LEVEL ABILITY, not per-action resource abilities - Part
+         * G.4. With the dedicated screen removed there is no resource in the
+         * registry to derive `create_custom_fields` from, and the surface
+         * that remains is a single dialog: you may define fields or you may
+         * not. Declared in `config('panel.abilities')` so the permission
+         * matrix still offers it by its label.
+         */
+        return $user->hasPermission('manage_custom_fields');
     }
 }

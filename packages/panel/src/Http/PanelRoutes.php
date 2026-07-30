@@ -168,6 +168,15 @@ final class PanelRoutes
                         ->name('singular.'.$key.'.update');
                 }
 
+                /*
+                 * DEFINING A CUSTOM FIELD - Part G.4. The dedicated screen is
+                 * gone; the record forms' "+ Add a field" dialog posts here,
+                 * and this is the only write path a definition has. A fixed
+                 * segment, so it must precede the `{resource}` patterns.
+                 */
+                Route::post('custom-fields', [Controllers\CustomFieldController::class, 'store'])
+                    ->name('custom-fields.store');
+
                 if ($keys !== []) {
                     self::within($keys);
                 }

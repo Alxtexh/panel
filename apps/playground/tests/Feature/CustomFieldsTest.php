@@ -8,10 +8,10 @@ use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Panel\Resources\ClientResource;
-use App\Panel\Resources\CustomFieldResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\CustomFields\CustomField;
+use PanelKit\Panel\CustomFields\CustomFieldStorage;
 use Tests\TestCase;
 
 /**
@@ -269,11 +269,18 @@ final class CustomFieldsTest extends TestCase
         $this->assertSame(['gold' => 'Gold', 'silver' => 'Silver'], $column['labels']);
     }
 
+    /** The endpoint refuses a resource that never reserved storage. */
     public function test_only_the_reserved_resources_are_offered(): void
     {
-        $options = CustomFieldResource::formDefinition()->resolveOptions();
+        $this->assertSame(['clients', 'routers', 'plans'], CustomFieldStorage::resources());
 
-        $this->assertSame(['clients', 'routers', 'plans'], array_column($options['resource'], 'value'));
+        $this->actingAs($this->user)->post('/custom-fields', [
+            'resource' => 'users',
+            'type' => 'text',
+            'key' => 'nope',
+            'label' => 'Nope',
+            'required' => false,
+        ])->assertSessionHasErrors('resource');
     }
 
     /* --------------------------------------- the record-form entry point */

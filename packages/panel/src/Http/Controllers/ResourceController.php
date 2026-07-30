@@ -6,16 +6,17 @@ namespace PanelKit\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\Http\NestedContext;
 use PanelKit\Panel\CustomFields\CustomFieldFactory;
 use PanelKit\Panel\CustomFields\CustomFieldStorage;
 use PanelKit\Panel\Forms\Fields\SelectField;
+use PanelKit\Panel\Http\NestedContext;
 use PanelKit\Panel\Live\LiveConfig;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
@@ -281,7 +282,7 @@ final class ResourceController extends Controller
      * button; hiding is not enforcement (the write path re-authorizes), but
      * offering a control that can only 403 teaches people the panel lies.
      *
-     * @param  class-string<Resource>  $class
+     * @param  class-string<resource>  $class
      * @return array{resource: string, labelPlural: string, types: list<string>, endpoint: string}|null
      */
     private function customFieldSupport(string $class): ?array
@@ -290,9 +291,13 @@ final class ResourceController extends Controller
             return null;
         }
 
-        $definitions = app(PanelManager::class)->resource('custom-fields');
-
-        if ($definitions === null || ! $definitions::can('create')) {
+        /*
+         * THE GATE, NOT A RESOURCE - Part G.4. The dedicated definitions
+         * screen is gone, so there is no resource class to ask; the dialog
+         * is the whole surface, and whether it appears is exactly whether
+         * this person may create a definition.
+         */
+        if (! Gate::allows('create', CustomField::class)) {
             return null;
         }
 
