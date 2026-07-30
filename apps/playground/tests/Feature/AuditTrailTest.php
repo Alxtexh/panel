@@ -11,6 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Audit\AuditRecorder;
+use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\Support\Abilities;
 use Tests\TestCase;
 
@@ -228,6 +229,56 @@ final class AuditTrailTest extends TestCase
             ->assertOk()
             ->assertJsonPath('entries.0.event', 'updated')
             ->assertJsonPath('entries.0.actor', $this->user->name);
+    }
+
+    /**
+     * A JSON COLUMN EXPANDS INTO PER-FIELD LINES - Part G.5. The trail used
+     * to print `Custom: {"fibre_node":"FN-1234"} → {...}`, which is backend
+     * data shown to a person. Each changed key becomes its own line, wearing
+     * the LABEL the field was defined with, and unchanged keys do not appear.
+     */
+    public function test_a_json_change_reads_as_per_field_lines_with_their_labels(): void
+    {
+        CustomField::create([
+            'resource' => 'clients', 'key' => 'fibre_node', 'type' => 'text',
+            'label' => 'Fibre node ID', 'required' => false, 'sort' => 0,
+        ]);
+
+        $client = $this->client();
+        $client->forceFill(['custom' => ['fibre_node' => 'FN-1234']])->save();
+        $client->forceFill(['custom' => ['fibre_node' => 'FN-99', 'tier' => 'gold']])->save();
+
+        $changes = $this->getJson("/clients/{$client->id}/audit")
+            ->assertOk()
+            ->json('entries.0.changes');
+
+        $byField = collect($changes)->keyBy('field');
+
+        $this->assertSame('FN-1234', $byField['Fibre node ID']['from']);
+        $this->assertSame('FN-99', $byField['Fibre node ID']['to']);
+
+        // An added key reads as an addition, under its humanised key.
+        $this->assertSame('-', $byField['tier']['from']);
+        $this->assertSame('gold', $byField['tier']['to']);
+
+        // And no line anywhere is raw JSON.
+        $this->assertStringNotContainsString('{', json_encode(array_column($changes, 'from')));
+    }
+
+    /** Dates render as the panel writes them, not as the column stored them. */
+    public function test_a_date_change_reads_as_dates_not_iso_instants(): void
+    {
+        $client = $this->client();
+        $client->forceFill(['expiry_date' => '2026-01-28 00:00:00'])->save();
+
+        $changes = $this->getJson("/clients/{$client->id}/audit")
+            ->assertOk()
+            ->json('entries.0.changes');
+
+        $expiry = collect($changes)->firstWhere('field', 'expiry date');
+
+        $this->assertSame('Jan 28, 2026', $expiry['to']);
+        $this->assertStringNotContainsString('T', $expiry['from'], 'No ISO instant reaches the reader.');
     }
 
     /**

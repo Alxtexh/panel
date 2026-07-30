@@ -7,7 +7,9 @@ namespace App\Http\Controllers;
 use App\Models\AuditEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use PanelKit\Panel\Audit\AuditRecorder;
+use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\Abilities;
 
@@ -82,14 +84,90 @@ final class AuditController extends Controller
         $out = [];
 
         foreach ((array) $entry->changes as $field => $pair) {
+            $from = $pair['from'] ?? null;
+            $to = $pair['to'] ?? null;
+
+            /*
+             * A JSON COLUMN IS NOT A VALUE, IT IS A BAG OF THEM - Part G.5.
+             * The trail used to print the raw bag on both sides:
+             * `Custom: {"fibre_node":"FN-1234"} → {"fibre_node":"FN-99",...}`
+             * which is backend data shown to a person. Expanded per key, the
+             * same change reads `Fibre node ID: FN-1234 → FN-99` and an added
+             * key reads as an addition - with unchanged keys not shown at
+             * all, because they did not change.
+             */
+            $fromBag = $this->asBag($from);
+            $toBag = $this->asBag($to);
+
+            if ($fromBag !== null || $toBag !== null) {
+                foreach (array_unique([...array_keys($fromBag ?? []), ...array_keys($toBag ?? [])]) as $key) {
+                    $before = ($fromBag ?? [])[$key] ?? null;
+                    $after = ($toBag ?? [])[$key] ?? null;
+
+                    if ($before === $after) {
+                        continue;
+                    }
+
+                    $out[] = [
+                        'field' => $this->labelFor($field, (string) $key),
+                        'from' => $this->stringify($before),
+                        'to' => $this->stringify($after),
+                    ];
+                }
+
+                continue;
+            }
+
             $out[] = [
                 'field' => str_replace('_', ' ', $field),
-                'from' => $this->stringify($pair['from'] ?? null),
-                'to' => $this->stringify($pair['to'] ?? null),
+                'from' => $this->stringify($from),
+                'to' => $this->stringify($to),
             ];
         }
 
         return $out;
+    }
+
+    /**
+     * An associative array when the value is one - decoded when the trail
+     * stored the column's raw JSON string - or null for scalar values.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function asBag(mixed $value): ?array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && str_starts_with(trim($value), '{')) {
+            $decoded = json_decode($value, true);
+
+            return is_array($decoded) ? $decoded : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * The name an operator knows the key by.
+     *
+     * The `custom` bag's keys are custom-field keys, and every one of those
+     * has a LABEL somebody typed when they defined it - `fibre_node` was
+     * christened "Fibre node ID" - so the trail should use it. Any other
+     * bag falls back to its humanised key.
+     */
+    private function labelFor(string $field, string $key): string
+    {
+        if ($field === 'custom') {
+            static $labels = null;
+
+            $labels ??= CustomField::query()->pluck('label', 'key')->all();
+
+            return (string) ($labels[$key] ?? str_replace('_', ' ', $key));
+        }
+
+        return str_replace('_', ' ', $field).' '.str_replace('_', ' ', $key);
     }
 
     private function stringify(mixed $value): string
@@ -112,6 +190,24 @@ final class AuditController extends Controller
         // look like a real value that happened to be short.
         if ($value === AuditRecorder::REDACTED) {
             return $value;
+        }
+
+        /*
+         * DATES READ AS THE PANEL WRITES THEM - Part G.5. The trail stores
+         * whatever the column held, which is an ISO instant on one side and a
+         * database datetime on the other: `2026-01-28T22:22:11.000000Z →
+         * 2026-01-28 00:00:00` is one date change wearing two costumes. Both
+         * render as the panel's own date format, with the time only when it
+         * says something.
+         */
+        if (preg_match('/^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2})?(\.\d+)?Z?)?$/', $value) === 1) {
+            try {
+                $moment = Carbon::parse($value);
+
+                return $moment->format($moment->format('H:i:s') === '00:00:00' ? 'M j, Y' : 'M j, Y H:i');
+            } catch (\Throwable) {
+                // Not a date after all - fall through to the plain string.
+            }
         }
 
         return mb_strlen($value) > 120 ? mb_substr($value, 0, 120).'…' : $value;
