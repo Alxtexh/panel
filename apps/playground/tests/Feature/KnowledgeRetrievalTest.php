@@ -220,6 +220,40 @@ final class KnowledgeRetrievalTest extends TestCase
     }
 
     /**
+     * Roadmap 5.5: the guide and the blueprint are retrievable too, so a
+     * builder's question ("how do I install this?") is answered from the
+     * documentation rather than improvised. Both are static text every
+     * signed-in person can read - records deliberately stay OUT of RAG and
+     * go through the permission-checked tools instead.
+     */
+    public function test_a_builders_question_is_answered_from_the_guide(): void
+    {
+        $this->artisan('panel:knowledge', ['action' => 'index', '--tenant' => (string) $this->acme->id])
+            ->assertSuccessful();
+
+        $matches = $this->knowledge()->search('composer require panelkit installation tenancy mode');
+
+        $this->assertNotEmpty($matches);
+        $this->assertStringContainsString(
+            '/about/building/',
+            implode(' ', array_map(static fn (array $m): string => (string) $m['url'], $matches)),
+            'No guide passage matched a question about installation.',
+        );
+    }
+
+    public function test_the_blueprints_rules_are_retrievable(): void
+    {
+        $this->artisan('panel:knowledge', ['action' => 'index', '--tenant' => (string) $this->acme->id])
+            ->assertSuccessful();
+
+        $matches = $this->knowledge()->search('rules that fail silently schema cache tenant closures');
+
+        $titles = implode(' ', array_map(static fn (array $m): string => $m['title'], $matches));
+
+        $this->assertStringContainsString('Blueprint:', $titles);
+    }
+
+    /**
      * IT REFUSES WITHOUT A TENANT rather than picking one.
      *
      * Run from a shell there is no signed-in user to infer an organisation from,
@@ -266,13 +300,26 @@ final class KnowledgeRetrievalTest extends TestCase
     {
         $this->artisan('panel:knowledge', ['action' => 'index', '--tenant' => (string) $this->acme->id]);
 
+        $before = $this->knowledge()->count();
+
         $this->artisan('panel:knowledge', [
             'action' => 'clear',
             '--tenant' => (string) $this->acme->id,
             '--source' => ['help'],
         ])->assertSuccessful();
 
-        $this->assertSame(0, $this->knowledge()->count());
+        // THE source, not the store: since 5.5 the guide and the blueprint
+        // are indexed beside the help centre, and clearing one must not
+        // take the others with it.
+        $remaining = $this->knowledge()->count();
+
+        $this->assertLessThan($before, $remaining, 'Clearing the help source removed nothing.');
+        $this->assertGreaterThan(0, $remaining, 'Clearing one source emptied the whole store.');
+
+        $matches = $this->knowledge()->search('how do I export a filtered list to csv');
+        $urls = implode(' ', array_map(static fn (array $m): string => (string) $m['url'], $matches));
+
+        $this->assertStringNotContainsString('/help#', $urls, 'A cleared help passage is still retrievable.');
     }
 
     /* -------------------------------------------------------------- the tool */

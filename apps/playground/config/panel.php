@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+use App\Knowledge\BlueprintSource;
+use App\Knowledge\GuideSource;
 use App\Knowledge\HelpSource;
 use App\Models\SavedView;
 use App\Plugins\AnnouncementsPlugin;
@@ -341,8 +343,19 @@ return [
     ],
 
     'knowledge' => [
+        /*
+         * STATIC TEXT ONLY, DELIBERATELY - roadmap 5.5. All three sources
+         * are documentation every signed-in person can already read, so
+         * retrieval needs no per-asker gate. Resource RECORDS stay out of
+         * this list: record questions go through the assistant's TOOLS
+         * (FindSubscriber and friends), which call the same policy the
+         * screen does per request - putting records in RAG would answer
+         * questions the screen refuses. See SearchKnowledge's own note.
+         */
         'sources' => [
             HelpSource::class,
+            GuideSource::class,
+            BlueprintSource::class,
         ],
     ],
 
