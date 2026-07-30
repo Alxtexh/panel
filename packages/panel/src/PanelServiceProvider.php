@@ -205,6 +205,9 @@ final class PanelServiceProvider extends ServiceProvider
          * fork would be silently dropped by the next `composer update`.
          */
         Ai\TenantScopedConversations::attach();
+        // Roadmap 5.4: an announcement whose composer chose the bell or
+        // Telegram delivers there once, on create.
+        Alerts\AnnouncementDelivery::attach();
         $this->registerTelegram();
         $this->registerOctaneFlush();
     }

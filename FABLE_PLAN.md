@@ -35,19 +35,28 @@ verification):
   `KnowledgeRetrievalTest` (tool refusals, cross-tenant unreachability).
 - **E.1 backend** — `AiCredentials` BYOK (encrypted, masked, layered over
   env), graceful unconfigured-assistant stream frame (`d3add08`).
+- **E.1 UI** — Settings → Assistant page, `manage_assistant` ability,
+  key always-masked, remove button (`e20671c`).
+- **E.3** — assistant charter: help article + drawer footer + blueprint
+  section (`da1fd92`).
+- **5.5** — `GuideSource` + `BlueprintSource` registered as knowledge
+  sources; records deliberately stay out of RAG (`d488396`).
+- **5.3** — `MonitorSampler`: sampled history table, thresholds with
+  Telegram edge-detection alerts, 24h sparklines on Monitoring (`e833a03`).
+- **5.4** — announcement composer: notify_bell/notify_telegram transports,
+  `AnnouncementDelivery` (once, on create, tenant-bounded), `BellText`;
+  plus the discovered-and-fixed `ToggleField::presentValue(null)` create-form
+  validation bug, pinned by `AnnouncementDeliveryTest`.
 
 **Local env note:** `apps/playground/.env` now has `CACHE_STORE=database`
 (was redis, which wasn't running and 500'd every request).
 
 **NEXT, in order:**
-1. **E.1 UI** — Settings → Assistant page: provider select, key input
-   (posts to `AiCredentials::set()`), masked display, clear button, and the
-   drawer consulting `available()` for a setup hint.
-2. **E.3** — the assistant capability charter (docs + surfaced in the drawer
-   + fed into panel:blueprint).
-3. **A.5 second pass** — the seven queued screens.
-4. **Roadmap 5.3–5.6, 4.1–4.6, 6.1–6.5, 7.3–7.7** as tracked in tasks
-   #143–#162, then **F** (production-readiness loop).
+1. **5.6** — finish workspaces (create, switch, member management), task #146.
+2. **Roadmap 4.1–4.6, 6.1–6.5, 7.3–7.7** as tracked in tasks #147–#162
+   (6.1 policy matrix tests before any ticketing UI).
+3. **A.5 second pass** — the seven queued screens (#168).
+4. **F** — the production-readiness loop (#179).
 
 ---
 
@@ -417,7 +426,7 @@ Numbering follows `ROADMAP.md`. Sizes are that file's.
 | --- | --- | --- | --- |
 | 5.2 | Trash pagination | S | **In progress, uncommitted.** See section 0. |
 | 5.3 | Monitoring history + thresholds | M | Not started. A point-in-time snapshot; "disk at 91%" does not alert and yesterday is not visible. Telegram alerts exist to carry it. |
-| 5.4 | Announcement composer | M | Not started. Compose once, deliver to banner + bell + Telegram. Transports exist; the composer does not. |
+| 5.4 | Announcement composer | M | **Done.** "Also deliver to" section on the composer; delivery once, on create, tenant-bounded (`AnnouncementDelivery`, `BellText`). |
 | 5.5 | Retrieval beyond the help centre | M | Not started. The knowledge base indexes one source; the guide, the blueprint and resource records are not searchable by the assistant. |
 | 5.6 | Workspaces | M | Not started. Only `show` exists — no create, switch or member management. |
 

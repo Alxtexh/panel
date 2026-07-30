@@ -9,6 +9,7 @@ use PanelKit\Panel\Forms\Fields\DateField;
 use PanelKit\Panel\Forms\Fields\RadioField;
 use PanelKit\Panel\Forms\Fields\TextareaField;
 use PanelKit\Panel\Forms\Fields\TextField;
+use PanelKit\Panel\Forms\Fields\ToggleField;
 use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Schema\Section;
@@ -146,6 +147,24 @@ final class AnnouncementResource extends Resource
                 DateField::make('ends_at')->label('Until')
                     ->help('Leave empty and it stays until somebody deletes it - which nobody ever does.'),
             ]),
+
+            /*
+             * ROADMAP 5.4 - the composer half. The banner is pull: it waits
+             * for the next dashboard load, which is wrong for "the panel
+             * goes down in an hour". These two are push, and they push ONCE,
+             * when the notice is saved - a typo fix must not ring every
+             * phone twice, so edits never re-send.
+             */
+            Section::make('Also deliver to')
+                ->description('Sent once, when you save. The banner keeps its own schedule above.')
+                ->columns(2)
+                ->schema([
+                    ToggleField::make('notify_bell')->label("Everyone's bell")
+                        ->help('A notification for every member of the organisation.'),
+
+                    ToggleField::make('notify_telegram')->label('Telegram')
+                        ->help('The operations chat, if a bot is configured.'),
+                ]),
         ]);
     }
 }
