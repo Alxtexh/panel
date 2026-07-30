@@ -185,3 +185,12 @@ Schedule::command('panel:prune-exports')->dailyAt('03:20')->onOneServer();
  */
 Schedule::command('panel:prune-trash')->dailyAt('03:10')->onOneServer();
 Schedule::command('panel:prune-uploads')->dailyAt('03:30')->onOneServer();
+
+/*
+ | MONITORING HISTORY, EVERY FIVE MINUTES - roadmap 5.3. Each tick stores one
+ | compact row and alerts on any threshold CROSSED since the previous one, so
+ | "disk at 91%" reaches Telegram when it happens rather than when somebody
+ | opens the screen. `onOneServer`: the sample describes a host, and the alert
+ | edge detection depends on samples forming one sequence, not one per worker.
+ */
+Schedule::command('panel:monitor-sample')->everyFiveMinutes()->withoutOverlapping()->onOneServer();

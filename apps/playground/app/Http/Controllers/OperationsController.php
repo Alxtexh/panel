@@ -22,6 +22,7 @@ use PanelKit\Panel\Support\BackupStatus;
 use PanelKit\Panel\Support\HealthReport;
 use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\LogReader;
+use PanelKit\Panel\Support\MonitorSampler;
 use PanelKit\Panel\Support\PanelSettings;
 use PanelKit\Panel\Support\PlatformReport;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -568,6 +569,13 @@ final class OperationsController extends Controller
         return Inertia::render('operations/Monitoring', [
             ...(new PlatformReport)->all(),
             'health' => (new HealthReport)->all(),
+            /*
+             * Roadmap 5.3: yesterday, visible. One compact row per scheduler
+             * tick; empty until `panel:monitor-sample` has run, and the page
+             * says so rather than drawing an empty chart.
+             */
+            'history' => app(MonitorSampler::class)->history(),
+            'thresholds' => MonitorSampler::thresholds(),
         ]);
     }
 

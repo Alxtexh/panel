@@ -44,6 +44,7 @@ import {
     Server,
     TriangleAlert,
 } from '@lucide/vue';
+import { Sparkline } from '@panelkit/ui';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -140,7 +141,47 @@ const props = defineProps<{
     scheduler: { lastRunAt: string | null; healthy: boolean };
     findings: { level: string; title: string; detail: string }[];
     health: Health;
+    /** Roadmap 5.3: one row per scheduler tick, oldest first, last 24h. */
+    history: {
+        cpu_pct: number | null;
+        memory_pct: number | null;
+        disk_pct: number | null;
+        queue_waiting: number | null;
+        failed_jobs: number | null;
+        db_ms: number | null;
+        created_at: string;
+    }[];
+    thresholds: Record<string, number>;
 }>();
+
+/** One sparkline series per metric, skipping unavailable points. */
+function series(
+    metric: 'cpu_pct' | 'memory_pct' | 'disk_pct' | 'failed_jobs',
+): { label: string; value: number }[] {
+    return props.history
+        .filter((row) => row[metric] !== null)
+        .map((row) => ({
+            label: new Date(
+                row.created_at.replace(' ', 'T'),
+            ).toLocaleTimeString(undefined, {
+                hour: '2-digit',
+                minute: '2-digit',
+            }),
+            value: Number(row[metric]),
+        }));
+}
+
+const trendMetrics = [
+    { key: 'cpu_pct', label: 'CPU', unit: '%', threshold: null },
+    { key: 'memory_pct', label: 'Memory', unit: '%', threshold: 'memory_pct' },
+    { key: 'disk_pct', label: 'Disk', unit: '%', threshold: 'disk_pct' },
+    {
+        key: 'failed_jobs',
+        label: 'Failed jobs',
+        unit: '',
+        threshold: 'failed_jobs',
+    },
+] as const;
 
 const health = ref<Health>(props.health);
 const refreshing = ref(false);
@@ -634,6 +675,63 @@ const when = (iso: string | null) =>
                         </dd>
                     </div>
                 </dl>
+            </div>
+        </div>
+
+        <!-- ------------------------------------------------ last 24 hours -->
+
+        <!--
+            Roadmap 5.3: yesterday, visible. One point per scheduler tick;
+            crossings of the thresholds shown here also went to Telegram at
+            the moment they happened.
+        -->
+        <div class="rounded-lg border bg-card">
+            <div
+                class="flex items-baseline justify-between border-b px-4 py-2.5"
+            >
+                <p class="text-sm font-medium">Last 24 hours</p>
+                <p v-if="history.length" class="text-xs text-muted-foreground">
+                    {{ history.length }} samples, every 5 minutes
+                </p>
+            </div>
+
+            <p
+                v-if="!history.length"
+                class="px-4 py-6 text-sm text-muted-foreground"
+            >
+                No samples yet. History appears once the scheduler has run
+                <code class="font-mono text-xs">panel:monitor-sample</code> —
+                every five minutes when cron is ticking.
+            </p>
+
+            <div v-else class="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div
+                    v-for="metric in trendMetrics"
+                    :key="metric.key"
+                    class="flex flex-col gap-1"
+                >
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-xs font-medium">{{
+                            metric.label
+                        }}</span>
+                        <span
+                            v-if="metric.threshold"
+                            class="text-xs text-muted-foreground"
+                        >
+                            alerts at {{ thresholds[metric.threshold]
+                            }}{{ metric.unit }}
+                        </span>
+                    </div>
+                    <Sparkline
+                        v-if="series(metric.key).length > 1"
+                        :data="series(metric.key)"
+                        :height="36"
+                        filled
+                    />
+                    <p v-else class="text-xs text-muted-foreground">
+                        Not enough samples yet.
+                    </p>
+                </div>
             </div>
         </div>
 
