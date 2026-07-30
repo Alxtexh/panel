@@ -11,6 +11,8 @@ use App\Panel\Resources\PlanResource;
 use App\Panel\Resources\RouterResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\CustomFields\CustomField;
+use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\SchemaCache;
 use RuntimeException;
 use Tests\TestCase;
@@ -41,6 +43,20 @@ final class SchemaContractTest extends TestCase
      */
     public function test_building_a_schema_executes_no_queries(): void
     {
+        /*
+         * A WARM-UP READ FIRST, DISCARDED - the same methodology
+         * `ClientsPerformanceTest` uses and for the same reason.
+         *
+         * `Resource::definition()` appends roadmap 5.1's custom-field columns,
+         * and reading the definitions costs ONE query the first time anything
+         * in the process asks (see `CustomField::byResource()` for why it is a
+         * process memo rather than a cache). This test's subject is the
+         * DEFINITION - the option closures and filter lookups §3.3 is about -
+         * not a one-time read of a config table. Not counting it is not the
+         * assertion being relaxed: a query PAST this point still fails.
+         */
+        CustomField::forResource('warm-up');
+
         foreach (self::RESOURCES as $resource) {
             DB::flushQueryLog();
             DB::enableQueryLog();

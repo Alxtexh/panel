@@ -186,24 +186,28 @@ final class ClientResource extends Resource
                     ]),
 
                     /*
-                     * The escape hatch, and the honest name for it.
-                     *
-                     * Every ISP has two or three things its own process needs
-                     * that no schema anticipated - an installer's reference, a
-                     * flag one region uses. The alternative is a column per
-                     * idea, which means a migration every time somebody has one.
+                     * The escape hatch, and the honest name for it - NOT the
+                     * same thing roadmap 5.1's custom fields are. This is
+                     * unstructured, per-record, per-key: the operator makes
+                     * up a key on the spot, for a one-off note this record
+                     * needs and no other one will. A 5.1 custom field is the
+                     * opposite - a structured, typed, installation-wide
+                     * column ("every client has a Fibre node ID") that
+                     * `Resource::customFields()` appends its own labelled
+                     * section for, below - which is why this one is named
+                     * "Free-form fields" rather than sharing that heading.
                      *
                      * `tenant_id` and `id` are reserved because this blob sits
                      * on the same model as real columns, and code that merges
                      * metadata into an attribute array would otherwise overwrite
                      * the thing identifying the row.
                      */
-                    Section::make('Custom fields')
+                    Section::make('Free-form fields')
                         ->description('Anything your process needs that the form above does not cover.')
                         ->collapsible(collapsed: true)
                         ->schema([
                             KeyValueField::make('metadata')
-                                ->label('Custom fields')
+                                ->label('Free-form fields')
                                 ->labels('Field', 'Value')
                                 ->maxPairs(20)
                                 ->reserved(['id', 'tenant_id', 'access_code'])

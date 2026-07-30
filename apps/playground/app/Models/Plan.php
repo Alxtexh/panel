@@ -15,6 +15,9 @@ final class Plan extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'is_active' => 'boolean',
+            'custom' => 'array',
+        ];
     }
 }

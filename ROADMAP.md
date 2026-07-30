@@ -510,7 +510,7 @@ somebody will hit a wall.
 
 | # | Item | Size | Notes |
 | --- | --- | --- | --- |
-| 5.1 | **Custom fields** | L | `Resource::customFields()` and the cache fingerprint exist; nothing populates them, no UI, nothing writes the `custom` column. A hook with no implementation. |
+| 5.1 | ~~**Custom fields**~~ | **DONE** | A `panel_custom_fields` table, a `CustomFieldResource` to edit it, and the field/column/read/write path wired end to end. See below. |
 | 5.2 | **Trash pagination** | S | Capped at 25 per resource. Delete 30 clients and five are unreachable, silently. |
 | 5.3 | **Monitoring history + thresholds** | M | A point-in-time snapshot. "Disk at 91%" does not alert and yesterday is not visible. Telegram alerts now exist to carry it. |
 | 5.4 | **Announcement composer** | M | Compose once, deliver to the panel banner, the bell, and Telegram. The transport landed this session; the composer did not. |
@@ -532,6 +532,94 @@ with a status column and everybody is on the same side of it.
 | 6.3 | Two resource classes | M | One per side — a resource belongs to exactly one panel, and the two sides want different columns and actions. |
 | 6.4 | `TicketingPlugin` | S | Refuses to install where there is no counterpart panel, rather than registering half a feature. |
 | 6.5 | Telegram on new ticket | S | Transport exists. |
+
+### 5.1 A field an operator adds, without a migration — **DONE**
+
+*Ours before this:* `Resource::customFields()` returned `[]` and
+`customFieldsFingerprint()` hashed it, so the schema cache was ready for
+tenant-defined structure and nothing else was. A seam with nothing behind it.
+
+**The definitions are INSTALLATION-WIDE, not per tenant, and that is the
+load-bearing decision.** `Resource::schema()`'s own invariant is that a
+schema is identical for every tenant - cached once per panel and permission
+set, with no tenant column anywhere in the key. A field definition that
+varied by tenant would break that cache exactly the way a tenant-varying
+column list would: two organisations sharing one entry would see whichever
+set warmed it first. So `panel_custom_fields` has no `tenant_id`. What a
+tenant *enters into* a custom field is theirs and lives in that record's own
+`custom` JSON column; which fields *exist* is a decision the installation
+makes once, the same as adding a declared field to `Resource::table()`.
+
+**The form key is prefixed `custom_`.** A definition named `name` or
+`status` must not silently shadow a resource's own declared field once the
+two are merged into one form. Prefixing makes that collision impossible by
+construction rather than by a validation rule somebody could get past;
+`RecordController::foldCustomFields()` unprefixes it again on the way into
+`custom`, and reads the record's existing `custom` first so a definition
+hidden by its own `visibleWhen` keeps its stored value rather than being
+erased - the same "declared but not submitted keeps what is there" guarantee
+`Form::sanitize()` already gives every real column.
+
+**Six types, from an explicit map** (`text`, `textarea`, `number`, `select`,
+`toggle`, `date`). Not "any `Field` subclass by class name": an operator is
+choosing from a list, not writing PHP, and accepting an arbitrary class
+string would let a typo instantiate something that needs constructor
+arguments this factory never supplies. A `select` gets a `BadgeColumn` in the
+list rather than a text one, because it is the only type whose stored value
+(`gold`) is not what it reads as ("Gold").
+
+**Two new append primitives**, because `Table::columns()` and
+`Form::schema()` replace wholesale: `Table::appendColumns()`/`appendSelect()`
+and `Form::appendFields()`. The column and the SQL that fills it travel
+separately - `Column::from()` aliases a real `table.column` and is not a
+place for a raw `json_extract(...)`, whose own `.` inside the JSON path gets
+parsed as another table qualifier and corrupts the expression. The raw
+expression rides in `alsoSelect` instead, exactly like `UserResource`'s
+`role_names`. SQLite and MySQL only, table-qualified (`clients.custom`,
+because `ClientResource` joins `plans` and all three reserved tables carry a
+`custom` column) - Postgres in this installation is the pgvector connection
+for retrieval, never a tenant's own data.
+
+**The definitions are memoized per process, not cached.** The cache was
+tried first and does nothing here: `stancl/tenancy`'s
+`CacheTenancyBootstrapper` swaps the cache manager for the duration of a
+tenant request and restores it afterwards, so an entry written inside one
+request is gone by the next - and it would be keyed per tenant, meaning
+every organisation would warm its own copy of the same installation-wide
+rows. Read per-resource it was six queries in one list request, which
+`ClientsPerformanceTest` caught; read once and grouped in PHP it is one, and
+the model's own `saved`/`deleted` hooks drop the memo so a saved definition
+appears immediately.
+
+**Two bugs the browser found that no test would have.** A `select` column
+rendered its raw stored key in a `capitalize` pill, so `gold` read as
+"Gold" only by accident of CSS - and an *unset* one rendered `String(null)`
+the same way, so an unanswered question read as a value called **"Null"**.
+Any nullable badge column had that second one, not just custom fields; empty
+now renders the em dash every other column uses.
+
+**`CustomFieldResource` dogfoods the generic system on itself** - a
+`Resource` over `CustomField` exactly as `PlanResource` is one over `Plan`,
+with `reorderable('sort')`, a `visibleWhen('type', 'select')` section for the
+choices, and its own `$purpose`. It needed a policy that is *not* a
+`TenantResourcePolicy`: a shared definition has no tenant column to compare
+per-record ownership against. That in turn needed
+`RecordController::applyTenant()` to skip a table with no tenant column at
+all, and `CrossTenantIsolationMatrixTest` to derive its exclusion from the
+table rather than a resource name - a resource that is genuinely tenant-owned
+still has the column, so forgetting *its* policy still fails there.
+
+Verified: 12/12 new PHP feature tests (the round trip through the real HTTP
+write path, an undeclared `custom_` key dropped, an unchanged value
+preserved, the edit form prefilled, the list cell rendered, a duplicate
+definition rejected as a field error rather than a 500), full suites
+otherwise unaffected: 1284/1284 PHP, 91/91 Vitest, 21/21 Dusk,
+ESLint/vue-tsc/Prettier/Pint clean, production SSR build succeeds. Confirmed
+live against the 250,000-row dev database: two definitions added on the
+Custom Fields screen appear as a labelled section on the Clients edit form
+and as two extra columns on the list; typing a value and choosing "Gold"
+saved both into `custom` (verified against the database, not the screen) and
+both render correctly in the list, with em dashes on every row that has none.
 
 ---
 

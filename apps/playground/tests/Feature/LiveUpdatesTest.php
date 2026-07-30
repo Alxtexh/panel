@@ -134,8 +134,20 @@ final class LiveUpdatesTest extends TestCase
         $id = $this->makeClient($this->tenantA, 'alpha');
         DB::table('clients')->where('id', $id)->update(['updated_at' => now()]);
 
-        // Warm the per-request tenant lookup, which is not part of the diff.
-        $this->actingAs($this->userA)->get('/dashboard');
+        /*
+         * WARM THE CLIENTS LIST, not the dashboard - neither is part of the
+         * diff, but only one of them warms what the diff shares.
+         *
+         * The diff endpoint calls `ClientResource::definition()`, which since
+         * roadmap 5.1 reads the custom-field definitions (and the one-time
+         * "has that table been migrated" check). Both are memoized per
+         * process by whichever request touches a resource first - see
+         * `CustomField::byResource()` - and a dashboard request never touches
+         * one. Measuring without this made the diff look like it cost four
+         * queries, when a real poll, arriving after the list the operator is
+         * already watching, costs one.
+         */
+        $this->actingAs($this->userA)->get('/clients');
 
         DB::flushQueryLog();
         DB::enableQueryLog();

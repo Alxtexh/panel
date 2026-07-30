@@ -102,6 +102,10 @@ export const ICON_PATHS: Record<string, string> = {
     'timer-off':
         'M10 2h4 M12 12v-2 M4.6 11a8 8 0 0 0 10.4 10.4 M7.4 7.4a8 8 0 0 1 11.2 11.2 M2 2l20 20',
     wrench: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9Z',
+    // Configuring the SHAPE of something rather than repairing it, which is
+    // what `wrench` already says - the custom-fields screen decides which
+    // fields a resource has, and sliders read as "adjust these settings".
+    sliders: 'M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M12 2v4 M6 10v4 M14 18v4',
     menu: 'M4 6h16M4 12h16M4 18h16',
 }
 

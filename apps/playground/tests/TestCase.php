@@ -5,6 +5,7 @@ namespace Tests;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Laravel\Fortify\Features;
+use PanelKit\Panel\PanelManager;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -32,6 +33,17 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->withoutVite();
+
+        /*
+         * A NEW TEST IS A NEW INSTALLATION, as far as process-level memos are
+         * concerned. `RefreshDatabase` drops and recreates the schema between
+         * tests inside ONE php process, so a memo answering "does this table
+         * exist" from a previous test is stale in exactly the way that
+         * produces a confusing failure - a table the current test migrated
+         * reported absent, or vice versa. This is the same call the Octane
+         * flush listener makes, for the same reason.
+         */
+        PanelManager::flushMemoization();
     }
 
     /**

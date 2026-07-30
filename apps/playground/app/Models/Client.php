@@ -53,6 +53,11 @@ final class Client extends Model
             // handles the JSON round-trip.
             'contacts' => 'array',
             'metadata' => 'array',
+            // Deliberately absent from `$fillable` above - see the
+            // `reserve_custom_field_storage` migration's own note. Only
+            // `RecordController::foldCustomFields()` writes to it, via
+            // `forceFill()`, never mass assignment.
+            'custom' => 'array',
         ];
     }
 

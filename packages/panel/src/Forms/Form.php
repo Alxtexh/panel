@@ -9,6 +9,7 @@ use PanelKit\Panel\Forms\Fields\Field;
 use PanelKit\Panel\Forms\Fields\RepeaterField;
 use PanelKit\Panel\Schema\Component;
 use PanelKit\Panel\Schema\Renderable;
+use PanelKit\Panel\Schema\Section;
 
 /**
  * Declarative form definition.
@@ -45,6 +46,30 @@ final class Form
     public function schema(array $nodes): self
     {
         $this->nodes = $nodes;
+
+        return $this;
+    }
+
+    /**
+     * Adds fields under their own section rather than replacing the form -
+     * roadmap 5.1's custom fields are the only caller today. Grouped under
+     * one labelled `Section` rather than dropped in bare: an operator who
+     * added five fields to Clients over a year should see them as a
+     * recognisable group, not interleaved anonymously among the declared
+     * ones with no sign of where they came from.
+     *
+     * @param  list<Field>  $fields
+     */
+    public function appendFields(array $fields, string $sectionLabel = 'Custom fields'): self
+    {
+        if ($fields === []) {
+            return $this;
+        }
+
+        $this->nodes = [
+            ...$this->nodes,
+            Section::make($sectionLabel)->schema($fields),
+        ];
 
         return $this;
     }

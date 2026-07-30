@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Policies\AnnouncementPolicy;
 use App\Policies\AuditEntryPolicy;
 use App\Policies\ClientPolicy;
+use App\Policies\CustomFieldPolicy;
 use App\Policies\PlanPolicy;
 use App\Policies\RouterPolicy;
 use App\Policies\UserPolicy;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use PanelKit\Panel\Alerts\Announcement;
+use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\Documents\DocumentBranding;
 use PanelKit\Panel\Documents\DocumentKinds;
 
@@ -81,6 +83,11 @@ class AppServiceProvider extends ServiceProvider
          | decision rather than a framework's.
          */
         Gate::policy(Announcement::class, AnnouncementPolicy::class);
+
+        // Same reason: `CustomField` lives in the package, and its policy is
+        // an application decision - see CustomFieldPolicy's own note on why
+        // it is not a TenantResourcePolicy.
+        Gate::policy(CustomField::class, CustomFieldPolicy::class);
 
         /*
          | THE INVOICE KIND, TAUGHT ABOUT THIS APPLICATION'S SUBSCRIBERS.

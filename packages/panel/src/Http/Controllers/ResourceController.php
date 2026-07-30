@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use PanelKit\Panel\CustomFields\CustomField;
+use PanelKit\Panel\CustomFields\CustomFieldFactory;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Live\LiveConfig;
 use PanelKit\Panel\PanelManager;
@@ -214,6 +217,13 @@ final class ResourceController extends Controller
             'record' => ['id' => $record->getKey(), 'label' => (string) ($record->name ?? "#{$record->getKey()}")],
             'values' => [
                 ...$form->valuesFor($record),
+                // `valuesFor()` read `custom_{key}` as a plain attribute and
+                // found nothing - the value actually lives unprefixed inside
+                // `custom`. Overriding those keys here, after the spread, is
+                // cheaper than teaching the generic form layer about one
+                // resource-specific storage convention (see
+                // RecordController::foldCustomFields()'s own note).
+                ...$this->customFieldValues($class::key(), $record),
                 // Carried so a stale save is rejected rather than silently
                 // overwriting another admin (addendum C).
                 '_updated_at' => $record->updated_at?->toIso8601String(),
@@ -221,6 +231,29 @@ final class ResourceController extends Controller
             'formOptions' => $form->resolveOptions(),
             'breadcrumbs' => $this->trail($class, 'Edit'),
         ]);
+    }
+
+    /**
+     * Current custom field values for one record, keyed by their PREFIXED
+     * form key so the result drops straight into the form's `values` payload.
+     *
+     * @return array<string, mixed>
+     */
+    private function customFieldValues(string $resource, Model $record): array
+    {
+        $definitions = CustomField::forResource($resource);
+
+        if ($definitions->isEmpty()) {
+            return [];
+        }
+
+        $custom = $record->getAttribute('custom') ?? [];
+
+        return $definitions
+            ->mapWithKeys(static fn (CustomField $d): array => [
+                CustomFieldFactory::formKey($d) => $custom[$d->key] ?? null,
+            ])
+            ->all();
     }
 
     /** @return list<array{title: string, href: string}> */

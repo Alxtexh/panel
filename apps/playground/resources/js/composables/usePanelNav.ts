@@ -16,6 +16,7 @@ import {
     Router as RouterIcon,
     ServerCrash,
     ShieldAlert,
+    SlidersHorizontal,
     Smartphone,
     Sparkles,
     TimerOff,
@@ -55,6 +56,7 @@ const ICONS: Record<string, typeof LayoutGrid> = {
     router: RouterIcon,
     package: Package,
     activity: Activity,
+    sliders: SlidersHorizontal,
     // Page icons.
     'book-open': BookOpen,
     chat: MessagesSquare,

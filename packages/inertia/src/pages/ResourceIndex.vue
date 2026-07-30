@@ -238,7 +238,9 @@ const canWrite = computed(() => props.schema.form.fields.length > 0)
  * words would only be one more place for the two to drift apart.
  */
 const emptyHint = computed(() =>
-    canWrite.value && props.can.create ? `Click "New ${props.schema.label}" to add one.` : undefined,
+    canWrite.value && props.can.create
+        ? `Click "New ${props.schema.label}" to add one.`
+        : undefined,
 )
 
 /* ---------------------------------------------------------------------------
@@ -949,13 +951,29 @@ function badgeLabel(key: string, value: unknown): string {
                         :size="byKey[col.key].size ?? 'md'"
                         :fallback="byKey[col.key].fallback ?? 'initials'"
                     />
-                    <Badge
-                        v-else-if="badgeKeys.includes(col.key)"
-                        :variant="badgeVariant(col.key, row[col.key]) as any"
-                        class="capitalize"
-                    >
-                        {{ badgeLabel(col.key, row[col.key]) }}
-                    </Badge>
+                    <template v-else-if="badgeKeys.includes(col.key)">
+                        <!--
+                            AN EMPTY BADGE COLUMN IS AN EM DASH, not a badge.
+                            A nullable badge column - roadmap 5.1's custom
+                            `select` fields are the first, but any nullable
+                            enum qualifies - rendered `String(null)` inside a
+                            `capitalize` pill, so an unanswered question read
+                            as a value called "Null". Empty is empty, and it
+                            should look the same here as in every other column.
+                        -->
+                        <Badge
+                            v-if="
+                                row[col.key] !== null &&
+                                row[col.key] !== undefined &&
+                                row[col.key] !== ''
+                            "
+                            :variant="badgeVariant(col.key, row[col.key]) as any"
+                            class="capitalize"
+                        >
+                            {{ badgeLabel(col.key, row[col.key]) }}
+                        </Badge>
+                        <span v-else>{{ render(col.key, row[col.key]) }}</span>
+                    </template>
                     <Link
                         v-else-if="col.key === 'name'"
                         :href="`${schema.routes.index}/${row.id}`"

@@ -13,9 +13,11 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Testing\TestResponse;
 use PanelKit\Panel\Alerts\Announcement;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\TenantContext;
 use Tests\TestCase;
 
 /**
@@ -118,9 +120,37 @@ final class CrossTenantIsolationMatrixTest extends TestCase
             }
         }
 
+        /*
+         * SO IS SHARED, INSTALLATION-WIDE STRUCTURE, and for the same reason:
+         * there is no such thing as a foreign row.
+         *
+         * `CustomFieldResource` (roadmap 5.1) is the first of these - a field
+         * definition is a decision the installation makes once, not something
+         * an organisation owns, so its table deliberately has no `tenant_id`
+         * at all. Every assertion below would be vacuous against it, in the
+         * bad way: `foreignRecordFor` cannot construct a fixture, and one
+         * invented anyway would assert that a shared record is refused, which
+         * is the opposite of what should happen.
+         *
+         * DERIVED FROM THE TABLE, NEVER A NAME LIST, exactly like the central
+         * exclusion above. A resource that is genuinely tenant-owned HAS the
+         * column - so the day somebody adds one and forgets its policy, it
+         * stays in this matrix and fails here. An exclusion keyed on the
+         * resource's name would let it out silently.
+         */
+        $tenantColumn = app(TenantContext::class)->column();
+
         $resources = array_filter(
             $manager->resources(),
-            static fn (string $class): bool => ! in_array($class::panel(), $central, true),
+            static function (string $class) use ($central, $tenantColumn): bool {
+                if (in_array($class::panel(), $central, true)) {
+                    return false;
+                }
+
+                $model = $class::model();
+
+                return Schema::hasColumn((new $model)->getTable(), $tenantColumn);
+            },
         );
 
         // An empty registry would make every test below pass without asserting
