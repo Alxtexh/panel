@@ -83,8 +83,16 @@ const pages = computed(() =>
         <!--
             A SETTING, not a step. Centred so it reads as neither the summary on
             the left nor the movement on the right.
+
+            HIDDEN WHEN THERE IS NOTHING TO CHOOSE. A select offering one option
+            is the dead control this component's own note argues against - it
+            invites a click that cannot change anything. The trash bin pages at a
+            fixed size and passes a single option for exactly that reason.
         -->
-        <label class="text-muted-foreground flex items-center gap-2 text-xs">
+        <label
+            v-if="perPageOptions.length > 1"
+            class="text-muted-foreground flex items-center gap-2 text-xs"
+        >
             <span>Per page</span>
             <select
                 :value="perPage"

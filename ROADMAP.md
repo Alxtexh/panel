@@ -511,7 +511,7 @@ somebody will hit a wall.
 | # | Item | Size | Notes |
 | --- | --- | --- | --- |
 | 5.1 | ~~**Custom fields**~~ | **DONE** | A `panel_custom_fields` table, a `CustomFieldResource` to edit it, and the field/column/read/write path wired end to end. See below. |
-| 5.2 | **Trash pagination** | S | Capped at 25 per resource. Delete 30 clients and five are unreachable, silently. |
+| 5.2 | ~~**Trash pagination**~~ | **DONE** | Real keyset pages per tab; the tab list carries counts only. See below. |
 | 5.3 | **Monitoring history + thresholds** | M | A point-in-time snapshot. "Disk at 91%" does not alert and yesterday is not visible. Telegram alerts now exist to carry it. |
 | 5.4 | **Announcement composer** | M | Compose once, deliver to the panel banner, the bell, and Telegram. The transport landed this session; the composer did not. |
 | 5.5 | **Retrieval beyond the help centre** | M | The knowledge base indexes one source. The guide, the blueprint and resource records are not searchable by the assistant. |
@@ -620,6 +620,43 @@ Custom Fields screen appear as a labelled section on the Clients edit form
 and as two extra columns on the list; typing a value and choosing "Gold"
 saved both into `custom` (verified against the database, not the screen) and
 both render correctly in the list, with em dashes on every row that has none.
+
+### 5.2 The twenty-sixth deleted record — **DONE**
+
+*Ours before this:* `TrashBin::groups()` fetched 25 rows of EVERY resource on
+every visit and the screen showed one tab's worth - so a nine-resource panel
+read and serialised 225 records to render 25, and the twenty-sixth deleted
+client was unreachable with nothing on screen saying so. The count badge said
+32; the list stopped at 25; the missing seven were simply not anywhere.
+
+**The tabs and the rows now travel separately.** `groups()` returns one row
+per resource - key, label, icon, exact count - and a new
+`TrashBin::records(resource, cursor)` returns one page of the tab actually on
+screen. Switching tabs is an Inertia partial reload that swaps `records` and
+leaves the tab strip alone, the same schema/data split every resource list
+already uses.
+
+**Keyset, not offset, for the same reason §10 gives every other list** - and
+one reason specific to this screen: the person paging a bin is *restoring
+things as they go*, and OFFSET skips or repeats a row whenever the set shrinks
+between pages. Seeking on `(deleted_at desc, id desc)` cannot. `id` is the
+tiebreaker because a bulk delete stamps its whole batch with one `deleted_at`,
+and forty rows sharing an ordering value is exactly where a cursor without one
+loops forever. The client keeps a cursor stack so Back re-fetches the previous
+page rather than pretending the cached one is still true.
+
+**`TablePagination` hides its per-page select when there is only one option.**
+The bin's page size is fixed; a dropdown offering exactly one choice is a
+control that cannot do anything, dressed as one that can.
+
+Verified: 28/28 `TrashTest` (four new: the 26th record reachable on page two,
+cursor-back returns the first page, tab counts exact past the page size, a
+foreign tenant's cursor yields nothing), full suites otherwise unaffected:
+1301 PHP / 0 failures, 91/91 Vitest, ESLint/vue-tsc/Prettier/Pint clean.
+Confirmed live: 32 soft-deleted subscribers show "Clients 32", page one says
+"Showing 1–25 of 32", page two says "Showing 26–32 of 32" with the forward
+arrow disabled, and no per-page select renders. (The 32 were then restored;
+the dev database is as it was.)
 
 ---
 

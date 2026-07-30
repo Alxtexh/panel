@@ -101,11 +101,28 @@ final class TrashTest extends TestCase
         return $client;
     }
 
-    /** @return array<int, array<string, mixed>> */
+    /** The tab strip: one entry per resource with something in it, and its count. */
     private function binFor(User $user): array
     {
         return $this->actingAs($user)->get('/trash')->assertOk()
             ->viewData('page')['props']['groups'];
+    }
+
+    /**
+     * One page of one tab's rows - roadmap 5.2.
+     *
+     * The rows travel separately from the tab counts now, so a nine-resource
+     * panel no longer describes 225 records to render 25. Defaults to whichever
+     * tab the server chose, which is what a person opening the screen gets.
+     *
+     * @return array{records: list<array<string, mixed>>, nextCursor: string|null}
+     */
+    private function pageFor(User $user, string $query = ''): array
+    {
+        $props = $this->actingAs($user)->get('/trash'.$query)->assertOk()
+            ->viewData('page')['props'];
+
+        return ['records' => $props['records'], 'nextCursor' => $props['nextCursor']];
     }
 
     /* ------------------------------------------------------------ the screen */
@@ -119,7 +136,7 @@ final class TrashTest extends TestCase
 
         $this->assertCount(1, $groups);
         $this->assertSame('clients', $groups[0]['key']);
-        $this->assertSame('Amina Otieno', $groups[0]['records'][0]['title']);
+        $this->assertSame('Amina Otieno', $this->pageFor($this->owner)['records'][0]['title']);
     }
 
     /** A live record is not in the bin, which is the other half of the claim. */
@@ -144,7 +161,7 @@ final class TrashTest extends TestCase
         $client = $this->client($this->acme, 'Doomed');
         $client->delete();
 
-        $record = $this->binFor($this->owner)[0]['records'][0];
+        $record = $this->pageFor($this->owner)['records'][0];
 
         $this->assertSame(
             '2026-08-11',
@@ -183,7 +200,7 @@ final class TrashTest extends TestCase
 
         $groups = $this->binFor($this->owner);
 
-        $titles = array_column($groups[0]['records'], 'title');
+        $titles = array_column($this->pageFor($this->owner)['records'], 'title');
 
         $this->assertContains('My Customer', $titles);
         $this->assertNotContains('Rival Customer', $titles);
@@ -221,7 +238,7 @@ final class TrashTest extends TestCase
 
         $reader = $this->userFor($this->acme, [Abilities::name('viewAny', 'clients')]);
 
-        $record = $this->binFor($reader)[0]['records'][0];
+        $record = $this->pageFor($reader)['records'][0];
 
         $this->assertFalse($record['canRestore']);
         $this->assertFalse($record['canForceDelete']);
@@ -232,10 +249,108 @@ final class TrashTest extends TestCase
         $client = $this->client($this->acme, 'Recoverable');
         $client->delete();
 
-        $record = $this->binFor($this->owner)[0]['records'][0];
+        $record = $this->pageFor($this->owner)['records'][0];
 
         $this->assertTrue($record['canRestore']);
         $this->assertTrue($record['canForceDelete']);
+    }
+
+    /* ------------------------------------------------------------- paging */
+
+    /**
+     * THE BUG THIS ITEM EXISTS FOR - roadmap 5.2.
+     *
+     * The bin showed the 25 most recently deleted of each resource and offered
+     * nothing else. Delete thirty clients and five of them were unreachable from
+     * the one screen in the panel built to bring records back: the count said
+     * thirty, the list showed twenty-five, and there was no control of any kind
+     * to see the rest.
+     */
+    public function test_every_deleted_record_is_reachable_by_paging(): void
+    {
+        $expected = [];
+
+        for ($i = 1; $i <= TrashBin::PER_PAGE + 5; $i++) {
+            $client = $this->client($this->acme, 'Deleted '.$i);
+            $client->delete();
+            $expected[] = 'Deleted '.$i;
+        }
+
+        $seen = [];
+        $query = '?resource=clients';
+
+        // Bounded, so a cursor that failed to advance fails the test rather than
+        // looping until the suite times out.
+        for ($page = 0; $page < 5; $page++) {
+            $result = $this->pageFor($this->owner, $query);
+
+            $seen = [...$seen, ...array_column($result['records'], 'title')];
+
+            if ($result['nextCursor'] === null) {
+                break;
+            }
+
+            $query = '?resource=clients&cursor='.urlencode($result['nextCursor']);
+        }
+
+        sort($expected);
+        sort($seen);
+
+        $this->assertSame($expected, $seen, 'Every deleted record must be reachable.');
+    }
+
+    public function test_a_page_is_bounded_and_offers_a_cursor_when_more_remain(): void
+    {
+        for ($i = 1; $i <= TrashBin::PER_PAGE + 1; $i++) {
+            $this->client($this->acme, 'Deleted '.$i)->delete();
+        }
+
+        $first = $this->pageFor($this->owner, '?resource=clients');
+
+        $this->assertCount(TrashBin::PER_PAGE, $first['records']);
+        $this->assertNotNull($first['nextCursor']);
+
+        $second = $this->pageFor($this->owner, '?resource=clients&cursor='.urlencode($first['nextCursor']));
+
+        $this->assertCount(1, $second['records']);
+        $this->assertNull($second['nextCursor'], 'The last page must not offer a cursor.');
+    }
+
+    /**
+     * A BULK DELETE STAMPS EVERY ROW WITH THE SAME `deleted_at`, which is
+     * exactly where a cursor without a tiebreaker loops on one page forever.
+     */
+    public function test_records_deleted_in_the_same_instant_still_page(): void
+    {
+        Carbon::setTestNow('2026-08-01 10:00:00');
+
+        for ($i = 1; $i <= TrashBin::PER_PAGE + 3; $i++) {
+            $this->client($this->acme, 'Batch '.$i)->delete();
+        }
+
+        $first = $this->pageFor($this->owner, '?resource=clients');
+        $second = $this->pageFor($this->owner, '?resource=clients&cursor='.urlencode($first['nextCursor']));
+
+        $firstIds = array_column($first['records'], 'id');
+        $secondIds = array_column($second['records'], 'id');
+
+        $this->assertCount(3, $secondIds);
+        $this->assertSame([], array_intersect($firstIds, $secondIds), 'A page must not repeat rows.');
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * A tab that is not in the strip falls back to the first rather than
+     * 404ing - a resource can empty while somebody is looking at it.
+     */
+    public function test_an_unknown_tab_falls_back_rather_than_failing(): void
+    {
+        $this->client($this->acme, 'Only One')->delete();
+
+        $result = $this->pageFor($this->owner, '?resource=not-a-resource');
+
+        $this->assertSame('Only One', $result['records'][0]['title']);
     }
 
     /* ------------------------------------------------------------ restoring */

@@ -26,10 +26,25 @@
  * between a week and a month. A bin that empties on a schedule nobody published
  * is one people learn not to trust; "3 days left" is what makes it something you
  * can plan around.
+ *
+ * THE ROWS ARE PAGED AND THE TAB LIVES IN THE URL - roadmap 5.2. This screen
+ * used to receive a page of every resource's rows at once and pick a tab
+ * client-side, which meant two things: a nine-resource panel described 225
+ * records to render 25, and anything past the first 25 of a resource was
+ * unreachable - delete thirty clients and five of them could not be restored
+ * from the one screen built to restore them. The server now sends the tab
+ * counts plus one keyset page of the resource named in the query string.
+ *
+ * THE SAME `TablePagination` AND CURSOR STACK EVERY OTHER LIST USES, not a
+ * "load older" button - roadmap item 9 removed load-more from this codebase
+ * once already, and a bin is a list somebody works through a page at a time
+ * rather than a feed they scroll. Keyset forward only, with the visited
+ * cursors kept client-side so "previous" is a stack pop; the trail resets on a
+ * tab change, because those cursors point into another resource's ordering.
  */
 import { Head, router } from '@inertiajs/vue3'
 import { PkButton as Button } from '@panelkit/ui'
-import { PkModal } from '@panelkit/ui'
+import { PkModal, TablePagination } from '@panelkit/ui'
 import { Check, RotateCcw, Settings2, Trash2, TriangleAlert } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
@@ -48,11 +63,15 @@ interface TrashGroup {
     label: string
     icon: string
     total: number
-    records: TrashedRecord[]
 }
 
 const props = defineProps<{
     groups: TrashGroup[]
+    /** The tab the server rendered, so a reload lands back on it. */
+    resource: string | null
+    records: TrashedRecord[]
+    nextCursor: string | null
+    perPage: number
     prefix: string
     retentionDays: number
     retentionRange: { min: number; max: number }
@@ -61,33 +80,138 @@ const props = defineProps<{
 
 defineOptions({ layout: { breadcrumbs: [{ title: 'Trash', href: '/trash' }] } })
 
-const active = ref<string>(props.groups[0]?.key ?? '')
 const selected = ref<Set<number | string>>(new Set())
 const confirming = ref<'one' | 'many' | null>(null)
 const confirmingRecord = ref<TrashedRecord | null>(null)
 const configuring = ref(false)
 const days = ref(props.retentionDays)
+const paging = ref(false)
+
+/**
+ * Cursors for the pages already visited, oldest first.
+ *
+ * A keyset cursor only knows how to go FORWARD - it says "everything after
+ * this row", never "everything before it" - so rather than run a second
+ * reversed query to walk back, the pages already stepped through are
+ * remembered here and "previous" is a pop. `stack[i]` is the cursor that
+ * produced page i+2; page 1 needs none. The same shape `useListTable` uses,
+ * because it is the same problem.
+ */
+const stack = ref<string[]>([])
+const page = computed(() => stack.value.length + 1)
+
+const active = computed(() => props.resource ?? props.groups[0]?.key ?? '')
 
 const total = computed(() => props.groups.reduce((sum, g) => sum + g.total, 0))
 
 const group = computed(() => props.groups.find((g) => g.key === active.value) ?? props.groups[0])
 
 /** Rows in this tab the acting user could actually act on. */
-const actionable = computed(() =>
-    (group.value?.records ?? []).filter((r) => r.canRestore || r.canForceDelete),
-)
+const actionable = computed(() => props.records.filter((r) => r.canRestore || r.canForceDelete))
 
 const allSelected = computed(
     () => actionable.value.length > 0 && selected.value.size === actionable.value.length,
 )
 
-const chosen = computed(() => (group.value?.records ?? []).filter((r) => selected.value.has(r.id)))
+const chosen = computed(() => props.records.filter((r) => selected.value.has(r.id)))
 
 const canRestoreSelection = computed(() => chosen.value.some((r) => r.canRestore))
 const canDestroySelection = computed(() => chosen.value.some((r) => r.canForceDelete))
 
-/* A selection belongs to the tab it was made in - see the note above. */
-watch(active, () => selected.value.clear())
+/**
+ * A selection belongs to the page it was made on.
+ *
+ * Cleared on every arriving page, not only on a tab change: a tick carried
+ * onto page 2 names a record that is no longer on screen, and the bulk buttons
+ * would then act on rows the person cannot see - the same class of mistake
+ * carrying ticks across tabs would be.
+ */
+watch(
+    () => props.records,
+    () => {
+        selected.value = new Set()
+        paging.value = false
+    },
+)
+
+/** Fetch one page. `cursor === null` is page 1. */
+function fetchPage(resource: string, cursor: string | null) {
+    paging.value = true
+
+    router.get(
+        path('/trash'),
+        cursor === null ? { resource } : { resource, cursor },
+        {
+            // The tab counts and the retention settings do not change with a
+            // page, so paging moves rows and nothing else.
+            only: ['resource', 'records', 'nextCursor'],
+            preserveState: true,
+            preserveScroll: true,
+            onError: () => (paging.value = false),
+        },
+    )
+}
+
+/**
+ * Switching tab is a REQUEST, because the rows are the server's to page - and
+ * it restarts the trail, since a cursor from one resource's ordering cannot
+ * seek into another's.
+ */
+function openTab(key: string) {
+    if (key === active.value) return
+
+    stack.value = []
+    fetchPage(key, null)
+}
+
+function nextPage() {
+    if (props.nextCursor === null) return
+
+    stack.value = [...stack.value, props.nextCursor]
+    fetchPage(active.value, props.nextCursor)
+}
+
+function previousPage() {
+    if (stack.value.length === 0) return
+
+    const trail = stack.value.slice(0, -1)
+    stack.value = trail
+
+    fetchPage(active.value, trail[trail.length - 1] ?? null)
+}
+
+function firstPage() {
+    if (stack.value.length === 0) return
+
+    stack.value = []
+    fetchPage(active.value, null)
+}
+
+/**
+ * Back to page 1 after a mutation.
+ *
+ * A restore or a permanent delete REMOVES rows from the bin, so every cursor
+ * in the trail points past rows that are no longer there - the page the person
+ * was on may now be short, empty, or gone. Returning to the first page is the
+ * honest answer, and it is also where the thing they just acted on was.
+ */
+function reloadFirstPage() {
+    stack.value = []
+    paging.value = true
+
+    router.get(
+        path('/trash'),
+        { resource: active.value },
+        {
+            // `groups` too, unlike a plain page step: a restore changes the tab
+            // counts, and a tab that just emptied has to stop being a tab.
+            only: ['groups', 'resource', 'records', 'nextCursor'],
+            preserveState: true,
+            preserveScroll: true,
+            onError: () => (paging.value = false),
+        },
+    )
+}
 
 function toggle(record: TrashedRecord) {
     const next = new Set(selected.value)
@@ -110,11 +234,14 @@ function path(suffix: string): string {
 
 function restoreOne(record: TrashedRecord) {
     router.post(
-        path(`/${group.value.key}/${record.id}/restore`),
+        path(`/${active.value}/${record.id}/restore`),
         {},
         {
             preserveScroll: true,
-            onSuccess: () => toast.success(`${record.title} restored`),
+            onSuccess: () => {
+                toast.success(`${record.title} restored`)
+                reloadFirstPage()
+            },
             onError: () => toast.error('That could not be restored.'),
         },
     )
@@ -125,12 +252,12 @@ function restoreSelected() {
 
     router.post(
         path('/trash/restore'),
-        { resource: group.value.key, ids },
+        { resource: active.value, ids },
         {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success(`${ids.length} record(s) restored`)
-                selected.value = new Set()
+                reloadFirstPage()
             },
             onError: () => toast.error('Those could not be restored.'),
         },
@@ -147,9 +274,12 @@ function destroyForever() {
     const single = confirmingRecord.value
 
     if (confirming.value === 'one' && single) {
-        router.delete(path(`/${group.value.key}/${single.id}/force`), {
+        router.delete(path(`/${active.value}/${single.id}/force`), {
             preserveScroll: true,
-            onSuccess: () => toast.success(`${single.title} deleted permanently`),
+            onSuccess: () => {
+                toast.success(`${single.title} deleted permanently`)
+                reloadFirstPage()
+            },
             onError: () => toast.error('That could not be deleted.'),
             onFinish: () => {
                 confirming.value = null
@@ -163,11 +293,11 @@ function destroyForever() {
     const ids = chosen.value.filter((r) => r.canForceDelete).map((r) => r.id)
 
     router.delete(path('/trash'), {
-        data: { resource: group.value.key, ids },
+        data: { resource: active.value, ids },
         preserveScroll: true,
         onSuccess: () => {
             toast.success(`${ids.length} record(s) deleted permanently`)
-            selected.value = new Set()
+            reloadFirstPage()
         },
         onError: () => toast.error('Those could not be deleted.'),
         onFinish: () => (confirming.value = null),
@@ -267,7 +397,8 @@ function deletedOn(value: string): string {
                             ? 'border-primary font-medium'
                             : 'text-muted-foreground hover:text-foreground border-transparent'
                     "
-                    @click="active = g.key"
+                    :disabled="paging"
+                    @click="openTab(g.key)"
                 >
                     {{ g.label }}
                     <span class="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-xs">
@@ -325,8 +456,8 @@ function deletedOn(value: string): string {
 
             <div class="bg-card divide-y overflow-hidden rounded-lg border">
                 <div
-                    v-for="record in group.records"
-                    :key="`${group.key}-${record.id}`"
+                    v-for="record in records"
+                    :key="`${active}-${record.id}`"
                     class="flex flex-wrap items-center gap-3 px-4 py-3"
                     :class="selected.has(record.id) ? 'bg-muted/40' : ''"
                 >
@@ -381,9 +512,24 @@ function deletedOn(value: string): string {
                 </div>
             </div>
 
-            <p v-if="group.total > group.records.length" class="text-muted-foreground text-xs">
-                Showing the {{ group.records.length }} most recently deleted of {{ group.total }}.
-            </p>
+            <!--
+                THE SAME CONTROLS AS EVERY OTHER LIST. This used to be a line of
+                prose - "showing the 25 most recently deleted of 30" - which told
+                somebody five records existed and gave them no way to reach them.
+            -->
+            <TablePagination
+                :page="page"
+                :per-page="perPage"
+                :per-page-options="[perPage]"
+                :rows-on-page="records.length"
+                :has-next="nextCursor !== null"
+                :has-previous="page > 1"
+                :total="group?.total"
+                :loading="paging"
+                @next="nextPage"
+                @previous="previousPage"
+                @first="firstPage"
+            />
         </template>
     </div>
 

@@ -51,8 +51,8 @@ class User extends Authenticatable implements PasskeyUser
      * trail says a password changed without saying what to.
      */
     use Auditable;
-
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
     /*
      * Spatie's trait replaces the hand-rolled single `role_id`. The difference
      * that matters is arity: a person can hold SEVERAL roles, and can be granted
