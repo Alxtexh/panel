@@ -13,6 +13,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\CustomFields\CustomFieldFactory;
+use PanelKit\Panel\CustomFields\CustomFieldStorage;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Live\LiveConfig;
 use PanelKit\Panel\PanelManager;
@@ -131,6 +132,7 @@ final class ResourceController extends Controller
             'values' => $class::formDefinition()->valuesFor(null),
             'formOptions' => $class::formDefinition()->resolveOptions(),
             'breadcrumbs' => $this->trail($class, 'New'),
+            'customFieldSupport' => $this->customFieldSupport($class),
         ]);
     }
 
@@ -230,7 +232,49 @@ final class ResourceController extends Controller
             ],
             'formOptions' => $form->resolveOptions(),
             'breadcrumbs' => $this->trail($class, 'Edit'),
+            'customFieldSupport' => $this->customFieldSupport($class),
         ]);
+    }
+
+    /**
+     * Whether THIS form offers "+ Add a field to every {resource}", and what
+     * the dialog needs if it does.
+     *
+     * The operator adding "one more thing we track" is LOOKING AT the record
+     * form when the thought occurs - a definition screen under Configuration
+     * is where definitions are managed, not where the need arises. So the
+     * form itself carries the entry point, and this decides whether it may:
+     * null - no affordance at all - unless the resource has custom-field
+     * storage AND a CustomField resource is registered AND this user may
+     * create definitions. A user who cannot define fields must not see the
+     * button; hiding is not enforcement (the write path re-authorizes), but
+     * offering a control that can only 403 teaches people the panel lies.
+     *
+     * @param  class-string<Resource>  $class
+     * @return array{resource: string, labelPlural: string, types: list<string>, endpoint: string}|null
+     */
+    private function customFieldSupport(string $class): ?array
+    {
+        if (! in_array($class::key(), CustomFieldStorage::resources(), true)) {
+            return null;
+        }
+
+        $definitions = app(PanelManager::class)->resource('custom-fields');
+
+        if ($definitions === null || ! $definitions::can('create')) {
+            return null;
+        }
+
+        return [
+            'resource' => $class::key(),
+            // Singular, for "every client" - "every clients" is what plural
+            // copy reads as, and the operator will read this sentence at the
+            // exact moment they are deciding whether to commit a schema
+            // change.
+            'label' => $class::label(),
+            'types' => CustomFieldFactory::types(),
+            'endpoint' => '/custom-fields',
+        ];
     }
 
     /**

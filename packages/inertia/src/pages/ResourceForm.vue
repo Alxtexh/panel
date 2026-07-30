@@ -16,8 +16,9 @@ import { PkButton as Button } from '@panelkit/ui'
 import { RecordForm, UnsavedBar } from '@panelkit/ui'
 import type { FormField, UploadedFileValue } from '@panelkit/ui'
 import { Head, router, useForm } from '@inertiajs/vue3'
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
+import DefineFieldDialog from '../components/DefineFieldDialog.vue'
 
 const props = defineProps<{
     schema: {
@@ -31,9 +32,22 @@ const props = defineProps<{
     values: Record<string, any>
     formOptions: Record<string, { value: any; label: string }[]>
     breadcrumbs: { title: string; href: string }[]
+    /**
+     * Null unless this resource has custom-field storage AND this user may
+     * define fields - see ResourceController::customFieldSupport(). The
+     * affordance renders only when acting on it can succeed.
+     */
+    customFieldSupport?: {
+        resource: string
+        label: string
+        types: string[]
+        endpoint: string
+    } | null
 }>()
 
 const isEdit = computed(() => props.record !== null)
+
+const definingField = ref(false)
 
 const form = useForm<Record<string, any>>({ ...withDownloadUrls(props.values) })
 
@@ -363,6 +377,24 @@ onBeforeUnmount(() => {
         </div>
 
         <!--
+            THE DOOR TO A NEW FIELD IS ON THE FORM, because that is where the
+            need arises - see DefineFieldDialog's own note, and Part D of the
+            plan. A ghost button, deliberately quiet: defining a field is an
+            occasional act, not part of filling this form in.
+        -->
+        <div v-if="customFieldSupport" class="flex justify-start">
+            <Button
+                variant="ghost"
+                size="sm"
+                class="text-muted-foreground"
+                :disabled="form.processing"
+                @click="definingField = true"
+            >
+                + Add a field to every {{ customFieldSupport.label.toLowerCase() }}
+            </Button>
+        </div>
+
+        <!--
             The bar reports dirtiness; it does not define it. Shown only while
             there is something to lose, so a page merely looked at stays quiet.
         -->
@@ -382,5 +414,15 @@ onBeforeUnmount(() => {
                 }}
             </Button>
         </div>
+
+        <DefineFieldDialog
+            v-if="customFieldSupport"
+            :open="definingField"
+            :resource="customFieldSupport.resource"
+            :label="customFieldSupport.label"
+            :types="customFieldSupport.types"
+            :endpoint="customFieldSupport.endpoint"
+            @close="definingField = false"
+        />
     </div>
 </template>

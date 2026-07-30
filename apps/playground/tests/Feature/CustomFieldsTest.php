@@ -275,4 +275,55 @@ final class CustomFieldsTest extends TestCase
 
         $this->assertSame(['clients', 'routers', 'plans'], array_column($options['resource'], 'value'));
     }
+
+    /* --------------------------------------- the record-form entry point */
+
+    /**
+     * Part D: the door to a new field is on the record form, because that is
+     * where the need arises. The prop carries what the dialog needs; null
+     * means no affordance renders at all.
+     */
+    public function test_the_record_form_offers_the_define_field_door(): void
+    {
+        $client = $this->makeClient();
+
+        $support = $this->actingAs($this->user)->get("/clients/{$client->id}/edit")
+            ->assertOk()
+            ->viewData('page')['props']['customFieldSupport'];
+
+        $this->assertSame('clients', $support['resource']);
+        $this->assertSame('Client', $support['label']);
+        $this->assertSame(['text', 'textarea', 'number', 'select', 'toggle', 'date'], $support['types']);
+        $this->assertSame('/custom-fields', $support['endpoint']);
+    }
+
+    /** A resource with no custom-field storage gets no door - Users, say. */
+    public function test_a_resource_without_storage_offers_no_door(): void
+    {
+        $support = $this->actingAs($this->user)->get('/users/create')
+            ->assertOk()
+            ->viewData('page')['props']['customFieldSupport'];
+
+        $this->assertNull($support);
+    }
+
+    /**
+     * A user who may edit clients but not define fields sees no door either.
+     * Hiding is not enforcement - the write path re-authorizes - but a
+     * control that can only 403 teaches people the panel lies.
+     */
+    public function test_a_user_who_cannot_define_fields_sees_no_door(): void
+    {
+        $limited = User::factory()
+            ->withAbilities(['view_any_clients', 'view_clients', 'update_clients'])
+            ->create(['tenant_id' => $this->tenant->id, 'email_verified_at' => now()]);
+
+        $client = $this->makeClient();
+
+        $support = $this->actingAs($limited)->get("/clients/{$client->id}/edit")
+            ->assertOk()
+            ->viewData('page')['props']['customFieldSupport'];
+
+        $this->assertNull($support);
+    }
 }
