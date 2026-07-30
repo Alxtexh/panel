@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Support;
 
+use Closure;
 use Illuminate\Support\Facades\Artisan;
 
 /**
@@ -21,8 +22,11 @@ use Illuminate\Support\Facades\Artisan;
  * stops appearing in its output - indistinguishable from a problem that was
  * never there to be fixed. `InstallationState` is the difference: every
  * problem doctor reports is recorded, by title, and stays on this list -
- * marked done - once doctor stops reporting it. An operator watching this
- * card sees progress, not a list that quietly shrinks.
+ * marked done - WHILE SOMETHING IS STILL OUTSTANDING. "Two fixed, one to
+ * go" is progress an operator should see; once the last item resolves the
+ * whole card disappears rather than living on as struck-through history -
+ * a setup guide's job is to get you to a working installation and then get
+ * out of the way.
  *
  * UNDONE ITEMS ARE NEVER TRIMMED, only the done tail is capped. A real
  * problem going silent because the list "got full" would be worse than the
@@ -35,7 +39,18 @@ final class SetupChecklist
     /** Old resolved items are kept, but not without bound. */
     private const MAX_DONE = 10;
 
-    public function __construct(private readonly InstallationState $state) {}
+    /**
+     * @param  (Closure(): array<string, array{title: string, detail: string}>)|null  $findProblems
+     *         Test seam: where the open problems come from. Null - every
+     *         real caller - means `panel:doctor`. The alternative was tests
+     *         at the mercy of whatever doctor happens to report inside the
+     *         suite's environment, which is precisely the nondeterminism
+     *         this class exists to paper over.
+     */
+    public function __construct(
+        private readonly InstallationState $state,
+        private readonly ?Closure $findProblems = null,
+    ) {}
 
     /** @return list<array{key: string, title: string, detail: string, done: bool}> */
     public function items(): array
@@ -78,6 +93,20 @@ final class SetupChecklist
             $this->state->put(self::SEEN_KEY, $toPersist);
         }
 
+        /*
+         * NOTHING OUTSTANDING MEANS NO CHECKLIST AT ALL. The done tail
+         * exists to show progress WHILE something is still wrong - "two
+         * fixed, one to go" is information. Once the last item resolves,
+         * a card of struck-through history is noise on every dashboard
+         * load, forever: a setup guide's job is to get you to a working
+         * installation and then get out of the way. The history is still
+         * persisted above, so the next real problem reappears alongside
+         * its context rather than alone.
+         */
+        if ($undone === []) {
+            return [];
+        }
+
         return $kept;
     }
 
@@ -94,6 +123,10 @@ final class SetupChecklist
      */
     private function openProblems(): array
     {
+        if ($this->findProblems !== null) {
+            return ($this->findProblems)();
+        }
+
         try {
             Artisan::call('panel:doctor', ['--json' => true]);
 
