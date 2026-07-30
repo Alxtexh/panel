@@ -11,6 +11,7 @@ use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Streaming\Events\Error;
 use Laravel\Ai\Streaming\Events\TextDelta;
 use Laravel\Ai\Streaming\Events\ToolCall;
+use PanelKit\Panel\Ai\AiCredentials;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -178,6 +179,30 @@ final class AssistantController extends Controller
         ]);
 
         $user = $request->user();
+
+        /*
+         * BYOK, APPLIED AT THE DOOR - roadmap E.1. An installation-brought
+         * provider and key override the environment for this request; with
+         * neither configured, the reply is a sentence rather than a stack
+         * trace: an unconfigured assistant is a state the operator fixes in
+         * settings, not an error the panel should 500 about.
+         */
+        $credentials = app(AiCredentials::class);
+        $credentials->apply();
+
+        if (! $credentials->available()) {
+            return response()->stream(function (): void {
+                $this->send([
+                    'type' => 'error',
+                    'message' => 'The assistant is not configured yet. An administrator can add an '
+                        .'AI provider key under Settings.',
+                ]);
+            }, 200, [
+                'Content-Type' => 'text/event-stream',
+                'Cache-Control' => 'no-cache',
+                'X-Accel-Buffering' => 'no',
+            ]);
+        }
 
         return response()->stream(function () use ($validated, $user): void {
             /*
