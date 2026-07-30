@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -98,6 +99,18 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * Every workspace this person may switch to - roadmap 5.6.
+     *
+     * `tenant_id` above stays the CURRENT one; this pivot answers only "which
+     * others". The switch endpoint trusts this relation and nothing else, so
+     * membership is the entire authorisation: no row, no switch.
+     */
+    public function memberships(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class, 'tenant_members')->withTimestamps();
+    }
+
+    /**
      * A new account created without a password gets an UNUSABLE one.
      *
      * WHY NOT REQUIRE A PASSWORD ON THE CREATE FORM. The panel's form schema is
@@ -121,6 +134,19 @@ class User extends Authenticatable implements PasskeyUser
         static::creating(function (self $user): void {
             if (blank($user->password)) {
                 $user->password = Hash::make(Str::random(64));
+            }
+        });
+
+        /*
+         * BELONGING TO YOUR OWN WORKSPACE IS AN INVARIANT, not a step someone
+         * remembers. Every path that creates a user - the resource form, an
+         * import, a seeder, a test factory - stamps `tenant_id`; the membership
+         * row that says the same thing must appear with it, or the switcher
+         * would one day tell this person their own workspace is off limits.
+         */
+        static::created(function (self $user): void {
+            if ($user->tenant_id !== null) {
+                $user->memberships()->syncWithoutDetaching([$user->tenant_id]);
             }
         });
     }

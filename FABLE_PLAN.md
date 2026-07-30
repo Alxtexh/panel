@@ -46,17 +46,23 @@ verification):
 - **5.4** — announcement composer: notify_bell/notify_telegram transports,
   `AnnouncementDelivery` (once, on create, tenant-bounded), `BellText`;
   plus the discovered-and-fixed `ToggleField::presentValue(null)` create-form
-  validation bug, pinned by `AnnouncementDeliveryTest`.
+  validation bug, pinned by `AnnouncementDeliveryTest` (`2e52e30`).
+- **5.6** — workspaces: `tenant_members` pivot (backfilled; users.tenant_id
+  stays the CURRENT one), Settings → Workspaces page (list/switch/create),
+  membership-checked switch (404 for non-members), creator becomes
+  grants-all Administrator in the new tenant; plus the discovered-and-fixed
+  `ScopeSessionToTenant::restamp()` - a legitimate switch used to be
+  flushed as a hostile cross-tenant session on the very next request.
+  `WorkspaceMembershipTest` follows the redirect to pin it.
 
 **Local env note:** `apps/playground/.env` now has `CACHE_STORE=database`
 (was redis, which wasn't running and 500'd every request).
 
 **NEXT, in order:**
-1. **5.6** — finish workspaces (create, switch, member management), task #146.
-2. **Roadmap 4.1–4.6, 6.1–6.5, 7.3–7.7** as tracked in tasks #147–#162
+1. **Roadmap 4.1–4.6, 6.1–6.5, 7.3–7.7** as tracked in tasks #147–#162
    (6.1 policy matrix tests before any ticketing UI).
-3. **A.5 second pass** — the seven queued screens (#168).
-4. **F** — the production-readiness loop (#179).
+2. **A.5 second pass** — the seven queued screens (#168).
+3. **F** — the production-readiness loop (#179).
 
 ---
 
@@ -428,7 +434,7 @@ Numbering follows `ROADMAP.md`. Sizes are that file's.
 | 5.3 | Monitoring history + thresholds | M | Not started. A point-in-time snapshot; "disk at 91%" does not alert and yesterday is not visible. Telegram alerts exist to carry it. |
 | 5.4 | Announcement composer | M | **Done.** "Also deliver to" section on the composer; delivery once, on create, tenant-bounded (`AnnouncementDelivery`, `BellText`). |
 | 5.5 | Retrieval beyond the help centre | M | Not started. The knowledge base indexes one source; the guide, the blueprint and resource records are not searchable by the assistant. |
-| 5.6 | Workspaces | M | Not started. Only `show` exists — no create, switch or member management. |
+| 5.6 | Workspaces | M | **Done.** Membership pivot, Settings → Workspaces (list, switch, create), session restamp on switch. Member management stays in User management. |
 
 ### §4 — Framework parity
 

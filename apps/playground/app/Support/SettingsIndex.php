@@ -60,6 +60,13 @@ final class SettingsIndex
             ],
         ];
 
+        $entries[] = [
+            'key' => 'workspaces',
+            'title' => 'Workspaces',
+            'description' => 'The organisations you belong to; switch between them or start a new one.',
+            'href' => route('workspaces.edit'),
+        ];
+
         /*
          * ROLES IS NOT A SEPARATE ENTRY, for the reason the sidebar's own
          * comment already gives: User management has its own Roles tab, and

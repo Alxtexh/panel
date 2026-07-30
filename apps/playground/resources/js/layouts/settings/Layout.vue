@@ -32,6 +32,15 @@ const sidebarNavItems = computed<NavItem[]>(() => [
         href: '/settings/organisation',
     },
     /*
+     * Which organisations you belong to - personal, like Profile, but it
+     * reads most naturally next to Organisation: one is the workspace from
+     * the inside, the other is the list of them.
+     */
+    {
+        title: 'Workspaces',
+        href: '/settings/workspaces',
+    },
+    /*
      * OMITTED, NOT DISABLED, without the ability - the same call the
      * settings index makes: a link that always 403s advertises a page and
      * then refuses it.

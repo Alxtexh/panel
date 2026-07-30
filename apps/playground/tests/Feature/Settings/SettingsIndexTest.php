@@ -47,7 +47,7 @@ final class SettingsIndexTest extends TestCase
             ->create(['tenant_id' => $this->tenant->id, 'email_verified_at' => now()]);
     }
 
-    public function test_the_index_lists_profile_security_and_organisation(): void
+    public function test_the_index_lists_the_ungated_baseline(): void
     {
         // Neither gated entry: manage_roles adds User management and
         // manage_assistant adds Assistant, and this test is about the
@@ -62,7 +62,7 @@ final class SettingsIndexTest extends TestCase
 
         $titles = array_column($entries, 'title');
 
-        $this->assertSame(['Profile', 'Security', 'Organisation'], $titles);
+        $this->assertSame(['Profile', 'Security', 'Organisation', 'Workspaces'], $titles);
     }
 
     /** The Assistant entry appears only for holders of manage_assistant. */

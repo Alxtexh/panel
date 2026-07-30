@@ -47,6 +47,39 @@ final class ScopeSessionToTenant
     /** Not `tenant_id` - that name is taken by application data in the session. */
     public const KEY = '_panel_tenant';
 
+    /**
+     * Move this session to another tenant, deliberately.
+     *
+     * THE ONE SANCTIONED TRANSITION. The mismatch check in `handle()` treats a
+     * session whose stamp disagrees with the resolved tenant as hostile and
+     * flushes it - which is exactly right for a cookie that ARRIVED somewhere
+     * it should not be, and exactly wrong for a workspace switch, where the
+     * disagreement is the intended outcome. An endpoint that has already
+     * authorised the change (checked membership, moved the user's tenant
+     * column) calls this in the same request, so the next request's stamp and
+     * resolution agree again.
+     *
+     * THE ID IS REGENERATED because a tenant change is a privilege change -
+     * the same reason login regenerates. The data survives; only the id an
+     * observer may have seen does not.
+     *
+     * UNDER HOSTNAME RESOLUTION THIS IS NOT ENOUGH, deliberately: the host
+     * still resolves the OLD tenant, so the next request flushes as hostile
+     * no matter what the stamp says. A per-host deployment that wants
+     * switching must redirect to the new workspace's own host instead - a
+     * restamped session on the wrong host is precisely what defence 2 exists
+     * to refuse.
+     */
+    public static function restamp(Request $request, int|string $tenant): void
+    {
+        if (! $request->hasSession()) {
+            return;
+        }
+
+        $request->session()->regenerate();
+        $request->session()->put(self::KEY, $tenant);
+    }
+
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->hasSession()) {

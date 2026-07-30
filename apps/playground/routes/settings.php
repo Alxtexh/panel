@@ -6,6 +6,7 @@ use App\Http\Controllers\Settings\AssistantSettingsController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\SettingsIndexController;
+use App\Http\Controllers\Settings\WorkspacesController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
@@ -64,6 +65,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('settings/organisation', [OrganisationController::class, 'update'])->name('organisation.update');
     Route::post('settings/organisation/logo', [OrganisationController::class, 'uploadLogo'])->name('organisation.logo.upload');
     Route::get('settings/organisation/logo', [OrganisationController::class, 'logo'])->name('organisation.logo');
+
+    /*
+     | Workspaces - roadmap 5.6. The workspaces this person belongs to,
+     | switching between them, and starting a new one. No workspace id in the
+     | switch URL's path: it arrives in the body and is checked against the
+     | MEMBERSHIP PIVOT, which is the entire authorisation - see the
+     | controller.
+     */
+    Route::get('settings/workspaces', [WorkspacesController::class, 'edit'])->name('workspaces.edit');
+    Route::post('settings/workspaces', [WorkspacesController::class, 'store'])->name('workspaces.store');
+    Route::put('settings/workspaces/current', [WorkspacesController::class, 'switch'])->name('workspaces.switch');
 
     /*
      | The assistant's provider and key - E.1. Gated inside the controller on
