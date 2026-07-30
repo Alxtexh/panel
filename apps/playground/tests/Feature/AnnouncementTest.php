@@ -131,8 +131,8 @@ final class AnnouncementTest extends TestCase
         $announcement = $this->announce($this->acme);
 
         $this->actingAs($this->user)
-            ->postJson("/announcements/{$announcement->id}/dismiss")
-            ->assertOk();
+            ->post("/announcements/{$announcement->id}/dismiss")
+            ->assertRedirect();
 
         $this->assertSame([], $this->banners($this->user));
     }
@@ -154,8 +154,8 @@ final class AnnouncementTest extends TestCase
         ]);
 
         $this->actingAs($this->user)
-            ->postJson("/announcements/{$announcement->id}/dismiss")
-            ->assertOk();
+            ->post("/announcements/{$announcement->id}/dismiss")
+            ->assertRedirect();
 
         $this->assertCount(1, $this->banners($colleague));
     }
@@ -175,8 +175,8 @@ final class AnnouncementTest extends TestCase
         ]);
 
         $this->actingAs($this->user)
-            ->postJson("/announcements/{$announcement->id}/dismiss")
-            ->assertOk();
+            ->post("/announcements/{$announcement->id}/dismiss")
+            ->assertRedirect();
 
         $notification = $this->user->fresh()->notifications()->first();
 
@@ -192,8 +192,8 @@ final class AnnouncementTest extends TestCase
     {
         $announcement = $this->announce($this->acme);
 
-        $this->actingAs($this->user)->postJson("/announcements/{$announcement->id}/dismiss")->assertOk();
-        $this->actingAs($this->user)->postJson("/announcements/{$announcement->id}/dismiss")->assertOk();
+        $this->actingAs($this->user)->post("/announcements/{$announcement->id}/dismiss")->assertRedirect();
+        $this->actingAs($this->user)->post("/announcements/{$announcement->id}/dismiss")->assertRedirect();
 
         $this->assertSame(1, $this->user->fresh()->notifications()->count());
     }
@@ -204,7 +204,7 @@ final class AnnouncementTest extends TestCase
         $theirs = $this->announce($this->rival);
 
         $this->actingAs($this->user)
-            ->postJson("/announcements/{$theirs->id}/dismiss")
+            ->post("/announcements/{$theirs->id}/dismiss")
             ->assertNotFound();
     }
 

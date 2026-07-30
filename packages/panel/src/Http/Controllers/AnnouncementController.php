@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use PanelKit\Panel\Alerts\Announcement;
@@ -30,7 +30,7 @@ use PanelKit\Panel\Notifications\AnnouncementDismissed;
  */
 final class AnnouncementController extends Controller
 {
-    public function dismiss(Request $request, int $id): JsonResponse
+    public function dismiss(Request $request, int $id): RedirectResponse
     {
         $user = $request->user();
 
@@ -54,6 +54,6 @@ final class AnnouncementController extends Controller
             $user->notify(new AnnouncementDismissed($announcement));
         }
 
-        return response()->json(['ok' => true]);
+        return back();
     }
 }
