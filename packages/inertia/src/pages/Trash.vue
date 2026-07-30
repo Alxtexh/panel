@@ -138,18 +138,14 @@ watch(
 function fetchPage(resource: string, cursor: string | null) {
     paging.value = true
 
-    router.get(
-        path('/trash'),
-        cursor === null ? { resource } : { resource, cursor },
-        {
-            // The tab counts and the retention settings do not change with a
-            // page, so paging moves rows and nothing else.
-            only: ['resource', 'records', 'nextCursor'],
-            preserveState: true,
-            preserveScroll: true,
-            onError: () => (paging.value = false),
-        },
-    )
+    router.get(path('/trash'), cursor === null ? { resource } : { resource, cursor }, {
+        // The tab counts and the retention settings do not change with a
+        // page, so paging moves rows and nothing else.
+        only: ['resource', 'records', 'nextCursor'],
+        preserveState: true,
+        preserveScroll: true,
+        onError: () => (paging.value = false),
+    })
 }
 
 /**

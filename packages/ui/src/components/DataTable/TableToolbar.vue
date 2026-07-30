@@ -35,8 +35,17 @@ const props = withDefaults(
         columns: { key: string; label: string; locked?: boolean }[]
         hidden: Set<string>
         loading?: boolean
+        /**
+         * Whether this table can be reordered at all. When true, the toolbar
+         * offers the reorder MODE as an icon beside Filters and Columns -
+         * DESIGN_RULES rule 3: a control that toggles how the table behaves
+         * lives with the table, as an icon with a pressed state, never as a
+         * word in the page header among actions that navigate and commit.
+         */
+        reorderable?: boolean
+        reordering?: boolean
     }>(),
-    { searchPlaceholder: 'Search…', loading: false },
+    { searchPlaceholder: 'Search…', loading: false, reorderable: false, reordering: false },
 )
 
 const emit = defineEmits<{
@@ -45,6 +54,7 @@ const emit = defineEmits<{
     (e: 'apply-filters', filters: Record<string, unknown>): void
     (e: 'apply-columns', hidden: string[]): void
     (e: 'clear'): void
+    (e: 'toggle-reorder'): void
 }>()
 
 /* ------------------------------------------------------------------ search */
@@ -532,6 +542,30 @@ function clearEverything() {
                 </button>
             </template>
         </PkDropdown>
+
+        <!-- Reorder: a MODE, so an icon with a pressed state (rule 3). -->
+        <button
+            v-if="reorderable"
+            type="button"
+            class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-9 shrink-0 items-center justify-center rounded-md border transition-colors"
+            :class="reordering ? 'border-primary text-primary' : ''"
+            :aria-pressed="reordering"
+            :aria-label="reordering ? 'Finish reordering' : 'Reorder records'"
+            :title="reordering ? 'Finish reordering' : 'Reorder records'"
+            @click="emit('toggle-reorder')"
+        >
+            <svg
+                viewBox="0 0 24 24"
+                class="size-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path d="m3 16 4 4 4-4M7 20V4m14 4-4-4-4 4m4-4v16" />
+            </svg>
+        </button>
 
         <button
             v-if="hasAnything"

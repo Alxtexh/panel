@@ -776,41 +776,40 @@ function badgeLabel(key: string, value: unknown): string {
                     </span>
                 </div>
                 <!--
-                    Reordering is ENTERED, not always available. See `reordering`.
+                    ONE GROUP, TRAILING EDGE, PRIMARY LAST - DESIGN_RULES rules
+                    1 and 2. The header row has exactly TWO flex children; with
+                    the actions loose, `justify-between` distributed them across
+                    the full width - one left, one centre, one right - which is
+                    not a layout anyone chose, just what the browser does when
+                    nobody groups. (Reorder is not here at all: it is a MODE,
+                    so it lives in the table's own toolbar as an icon - rule 3.)
                 -->
-                <Button
-                    v-if="canReorder"
-                    size="sm"
-                    :variant="reordering ? 'default' : 'outline'"
-                    @click="reordering = !reordering"
-                >
-                    {{ reordering ? 'Done' : 'Reorder' }}
-                </Button>
+                <div class="flex shrink-0 items-center gap-2">
+                    <Button
+                        v-if="canWrite && can.create && !reordering"
+                        variant="outline"
+                        size="sm"
+                        @click="importing = true"
+                    >
+                        Import
+                    </Button>
 
-                <Button
-                    v-if="canWrite && can.create && !reordering"
-                    variant="outline"
-                    size="sm"
-                    @click="importing = true"
-                >
-                    Import
-                </Button>
-
-                <!--
-                    A `<Link>` WEARING BUTTON CLASSES, not a `<Button as-child>`
-                    wrapping one. `PkButton` never merges its classes onto a
-                    child - see its own note - so `as-child` here used to render
-                    as an inert attribute on a real `<button>` with this `<Link>`
-                    as an `<a>` INSIDE it: two interactive elements where a
-                    screen reader or keyboard user expects one.
-                -->
-                <Link
-                    v-if="canWrite && can.create && !reordering"
-                    :href="`${schema.routes.index}/create`"
-                    :class="buttonClasses({ size: 'sm' })"
-                >
-                    New {{ schema.label }}
-                </Link>
+                    <!--
+                        A `<Link>` WEARING BUTTON CLASSES, not a `<Button as-child>`
+                        wrapping one. `PkButton` never merges its classes onto a
+                        child - see its own note - so `as-child` here used to render
+                        as an inert attribute on a real `<button>` with this `<Link>`
+                        as an `<a>` INSIDE it: two interactive elements where a
+                        screen reader or keyboard user expects one.
+                    -->
+                    <Link
+                        v-if="canWrite && can.create && !reordering"
+                        :href="`${schema.routes.index}/create`"
+                        :class="buttonClasses({ size: 'sm' })"
+                    >
+                        New {{ schema.label }}
+                    </Link>
+                </div>
             </div>
 
             <!--
@@ -852,10 +851,13 @@ function badgeLabel(key: string, value: unknown): string {
             :columns="columns"
             :hidden="hidden"
             :loading="t.showSpinner.value"
+            :reorderable="canReorder"
+            :reordering="reordering"
             @update:search="t.setSearch"
             @apply-filters="t.applyFilters"
             @apply-columns="applyColumns"
             @clear="t.clearAll"
+            @toggle-reorder="reordering = !reordering"
         />
 
         <SelectionBar

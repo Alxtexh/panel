@@ -185,7 +185,12 @@ function destroy() {
                 <p class="text-muted-foreground text-sm">{{ schema.label }}</p>
             </div>
 
-            <div class="flex items-center gap-2">
+            <!-- Primary last (DESIGN_RULES rule 2): Edit is the action this
+                 page exists for, so it takes the outside edge. -->
+            <div class="flex shrink-0 items-center gap-2">
+                <Button v-if="can.delete" variant="outline" size="sm" @click="destroy"
+                    >Delete</Button
+                >
                 <!-- A `<Link>` wearing button classes, not `<Button as-child>` wrapping one - see the note beside ResourceIndex's own New button. -->
                 <Link
                     v-if="can.update"
@@ -194,9 +199,6 @@ function destroy() {
                 >
                     Edit
                 </Link>
-                <Button v-if="can.delete" variant="outline" size="sm" @click="destroy"
-                    >Delete</Button
-                >
             </div>
         </div>
 
