@@ -119,7 +119,21 @@ function text(value: unknown): string {
 
         <template v-for="(block, i) in document.blocks" :key="i">
             <!-- -------------------------------------------------- header -->
-            <header v-if="block.type === 'header'" class="flex items-start justify-between gap-8">
+            <!--
+                THE RULES CARRY THE ACCENT, not only the headings.
+
+                The field's own help says "Rules, headings and the total line" and
+                for a while only the second and third were true - so at the
+                default near-black accent the control appeared to do nothing at
+                all, and the honest conclusion from looking at the screen was that
+                the feature was broken. A coloured rule reads as an accent at any
+                darkness.
+            -->
+            <header
+                v-if="block.type === 'header'"
+                class="flex items-start justify-between gap-8 border-b pb-4"
+                :style="{ borderColor: ink() }"
+            >
                 <div>
                     <h1 class="text-2xl font-semibold tracking-tight" :style="{ color: ink() }">
                         {{ block.title }}
@@ -155,7 +169,7 @@ function text(value: unknown): string {
             <section v-else-if="block.type === 'lines'">
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="border-b border-neutral-300 text-left">
+                        <tr class="border-b-2 text-left" :style="{ borderColor: ink() }">
                             <!--
                                 `pl-3` ON EVERY COLUMN BUT THE FIRST, and it is
                                 not cosmetic.
@@ -222,11 +236,9 @@ function text(value: unknown): string {
                             :key="t"
                             class="flex justify-between py-1"
                             :class="
-                                total.strong
-                                    ? 'mt-1 border-t border-neutral-300 pt-2 text-base font-semibold'
-                                    : ''
+                                total.strong ? 'mt-1 border-t-2 pt-2 text-base font-semibold' : ''
                             "
-                            :style="total.strong ? { color: ink() } : undefined"
+                            :style="total.strong ? { color: ink(), borderColor: ink() } : undefined"
                         >
                             <dt :class="total.strong ? '' : 'text-neutral-600'">{{ total.label }}</dt>
                             <dd class="tabular-nums">{{ total.value }}</dd>

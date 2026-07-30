@@ -54,3 +54,4 @@
 # Chrome for Testing, downloaded for the browser suite.
 apps/playground/chrome/
 apps/playground/database/dusk.sqlite
+apps/playground/public/hot.dusk-stashed

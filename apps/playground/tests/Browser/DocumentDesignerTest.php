@@ -35,6 +35,15 @@ use Tests\DuskTestCase;
 final class DocumentDesignerTest extends DuskTestCase
 {
     /*
+     * EVERY INITIAL PAGE WAIT IS 15 SECONDS, NOT DUSK'S DEFAULT 5.
+     *
+     * The first test in a class pays for a cold browser, a cold opcache and a
+     * cold route cache all at once, and 5 seconds is tight for exactly that and
+     * generous for everything after it. A suite that fails once in ten runs on
+     * the first test teaches people to re-run rather than to read, which is
+     * worse than a slower suite.
+     */
+    /*
      * TRUNCATION, NOT MIGRATION, and for two reasons.
      *
      * `DatabaseMigrations` runs `migrate:fresh` before every test and
@@ -116,7 +125,7 @@ final class DocumentDesignerTest extends DuskTestCase
         $this->browse(function (Browser $browser): void {
             $browser->loginAs($this->operator())
                 ->visit('/documents/voucher')
-                ->waitForText('Voucher template')
+                ->waitForText('Voucher template', 15)
 
                 // The preview starts on the default framing, which is dashed.
                 ->waitFor('@document')
@@ -156,7 +165,7 @@ final class DocumentDesignerTest extends DuskTestCase
         $this->browse(function (Browser $browser): void {
             $browser->loginAs($this->operator())
                 ->visit('/documents/voucher')
-                ->waitForText('Voucher template')
+                ->waitForText('Voucher template', 15)
                 ->waitFor('@document')
                 ->type('#f-title', 'Hotspot voucher')
                 ->waitForTextIn('@document', 'Hotspot voucher', 10);
@@ -190,7 +199,7 @@ final class DocumentDesignerTest extends DuskTestCase
         $this->browse(function (Browser $browser): void {
             $browser->loginAs($this->operatorId)
                 ->visit('/documents/invoice')
-                ->waitForText('Invoice template')
+                ->waitForText('Invoice template', 15)
                 ->waitFor('@document')
 
                 // Preview against the real subscriber, not the sample.
@@ -251,7 +260,7 @@ final class DocumentDesignerTest extends DuskTestCase
         $this->browse(function (Browser $browser): void {
             $browser->loginAs($this->operator())
                 ->visit('/documents/voucher')
-                ->waitForText('Voucher template')
+                ->waitForText('Voucher template', 15)
                 ->assertSee('Still on the shipped defaults')
                 ->type('#f-title', 'Wi-Fi voucher')
                 ->press('Save template')
@@ -285,7 +294,7 @@ final class DocumentDesignerTest extends DuskTestCase
         $this->browse(function (Browser $browser): void {
             $browser->loginAs($this->operator())
                 ->visit('/documents/invoice')
-                ->waitForText('Invoice template')
+                ->waitForText('Invoice template', 15)
                 ->waitFor('@document')
                 ->click('label:has(input[name="f-colour_mode"][value="mono"])')
                 ->waitUsing(10, 250, fn (): bool => ($browser->script(
@@ -306,7 +315,7 @@ final class DocumentDesignerTest extends DuskTestCase
         $this->browse(function (Browser $browser): void {
             $browser->loginAs($this->operator())
                 ->visit('/documents/voucher')
-                ->waitForText('Voucher template')
+                ->waitForText('Voucher template', 15)
                 ->waitForText('Sample data shown for layout only', 10);
         });
     }
@@ -323,7 +332,7 @@ final class DocumentDesignerTest extends DuskTestCase
         $this->browse(function (Browser $browser): void {
             $browser->loginAs($this->operator())
                 ->visit('/documents/voucher')
-                ->waitForText('Voucher template')
+                ->waitForText('Voucher template', 15)
                 ->press('Save template')
                 ->waitForText('Version 1', 10)
                 ->visit('/documents/voucher/print')

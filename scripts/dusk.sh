@@ -36,10 +36,20 @@ PORT="${DUSK_PORT:-8001}"
 DB_FILE="$PWD/database/dusk.sqlite"
 SERVER_PID=""
 
+HOT_FILE="$PWD/public/hot"
+HOT_STASH="$PWD/public/hot.dusk-stashed"
+
 cleanup() {
     if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
         kill "$SERVER_PID" 2>/dev/null || true
         wait "$SERVER_PID" 2>/dev/null || true
+    fi
+
+    # Give HMR back. Unconditional, so an interrupted run does not leave a
+    # developer's dev server quietly serving built assets forever.
+    if [[ -f "$HOT_STASH" ]]; then
+        mv "$HOT_STASH" "$HOT_FILE"
+        echo "==> Restored public/hot (HMR is back)"
     fi
 }
 trap cleanup EXIT INT TERM
@@ -55,6 +65,23 @@ fi
 if [[ "$DB_FILE" == *"/database/database.sqlite" ]]; then
     echo "Refusing to run: the browser database resolved to the development one." >&2
     exit 1
+fi
+
+# THE VITE HOT FILE HAS TO GO, and this is not tidiness.
+#
+# `public/hot` exists while `npm run dev` is running, and Laravel's Vite helper
+# treats it as "serve assets from the dev server" - for EVERY server reading that
+# directory, including the one this script starts. So the browser asked for
+# `127.0.0.1:5173/resources/js/app.ts`, got a connection refused, rendered
+# nothing, and the failure read as "waited 15 seconds for the page" while the
+# build this script had just made sat unused.
+#
+# Moved aside rather than deleted, and restored by the trap above. The cost is
+# that a developer's dev server serves built assets instead of hot-reloading for
+# the duration, which is a pause in convenience rather than a broken server.
+if [[ -f "$HOT_FILE" ]]; then
+    echo "==> Pausing HMR: moving public/hot aside so the suite tests the build"
+    mv "$HOT_FILE" "$HOT_STASH"
 fi
 
 echo "==> Throwaway database: ${DB_FILE#"$PWD"/}"

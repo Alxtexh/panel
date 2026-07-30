@@ -119,16 +119,28 @@ function isChosen(option: Option): boolean {
     <div
         v-if="segmented"
         role="radiogroup"
-        class="bg-muted/60 inline-flex w-fit max-w-full items-stretch gap-1 rounded-lg p-1"
+        class="bg-muted inline-flex w-fit max-w-full items-stretch gap-0.5 rounded-full p-1"
         :class="disabled ? 'opacity-50' : ''"
     >
+        <!--
+            THE ACTIVE SEGMENT IS INVERTED, not raised.
+
+            It was a white segment with a shadow on a light grey track, and at a
+            glance that reads as "both look about the same" - the difference was
+            a shadow and a couple of percent of lightness. Filling the chosen
+            segment with the foreground colour makes the answer unmissable, which
+            is the entire job of a two-option control.
+
+            Fully rounded rather than a rounded rectangle, so it reads as one
+            switch rather than as two small buttons that happen to be adjacent.
+        -->
         <label
             v-for="option in options"
             :key="String(option.value)"
-            class="relative flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+            class="relative flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors"
             :class="[
                 isChosen(option)
-                    ? 'bg-background text-foreground shadow-sm'
+                    ? 'bg-foreground text-background'
                     : 'text-muted-foreground hover:text-foreground',
                 disabled ? '' : 'cursor-pointer',
             ]"
@@ -144,7 +156,7 @@ function isChosen(option: Option): boolean {
             />
 
             <span
-                class="ring-ring pointer-events-none absolute inset-0 rounded-md peer-focus-visible:ring-2"
+                class="ring-ring pointer-events-none absolute inset-0 rounded-full peer-focus-visible:ring-2"
                 aria-hidden="true"
             />
 
