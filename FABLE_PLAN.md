@@ -9,33 +9,45 @@ remains.
 
 ---
 
-## 0. State of the tree, before anything else
+## 0. State of the tree (updated 2026-07-30, second pass)
 
-**Last commit:** `8abcf36` — "A seam with nothing behind it now has a field in
-it" (roadmap 5.1, custom fields).
+**DONE and committed** (each with tests, full-suite green, live browser
+verification):
 
-**Uncommitted work in progress — roadmap 5.2, trash pagination.** It is
-functional and its tests pass (28/28 `TrashTest`), but the full suite had not
-been re-run when work stopped, and the browser verification never happened.
-Modified files:
+- **Section 0 / 5.2** — trash pagination (`c3914eb`).
+- **A.0–A.4** — DESIGN_RULES.md, repeater rows (`0c45f78`), grouped header
+  actions + reorder as toolbar icon (`dd61c4a`), TableShell one-card layout
+  (`094e577`).
+- **A.5 first pass** — eleven screens ticked in DESIGN_RULES.md (`c1978be`);
+  queued: backup settings, logs, mail, chat, roles, help pages, portals.
+- **B.1** — checklist disappears when done, operator-copy doctor titles; plus
+  the discovered-and-fixed cache isolation: `PrefixCacheBootstrapper` /
+  `PrefixedStore` / `TenantCacheManager` replace stancl's tags bootstrapper —
+  tenant cache isolation on ANY store, proven by `PrefixCacheIsolationTest`
+  (`4d00bb2`).
+- **B.2/B.3/C.1/C.3** — pgsql arm for custom fields + `DriverCoverageTest`,
+  `hasBadgeValue` spec, Reverb/predis/pusher demoted to require-dev, support
+  matrix in DEPLOYMENT.md (`830901e`).
+- **C.2** — verified: doctor healthy on plain serve+SQLite+database-cache.
+- **D** — "+ Add a field to every client" on the record form, warning banner,
+  same validated path, permission-gated prop (`df4cdcb`).
+- **E.2** — verified already covered by `AiToolAuthorisationTest` +
+  `KnowledgeRetrievalTest` (tool refusals, cross-tenant unreachability).
+- **E.1 backend** — `AiCredentials` BYOK (encrypted, masked, layered over
+  env), graceful unconfigured-assistant stream frame (`d3add08`).
 
-| File | What changed |
-| --- | --- |
-| `packages/panel/src/Trash/TrashBin.php` | `groups()` returns tab counts only; new `records()` gives one keyset page; `PER_RESOURCE` → `PER_PAGE` |
-| `packages/panel/src/Http/Controllers/TrashController.php` | `index()` reads `?resource=` and `?cursor=`, sends `resource`/`records`/`nextCursor`/`perPage` |
-| `packages/inertia/src/pages/Trash.vue` | cursor stack, `TablePagination`, tab switch is a partial reload |
-| `packages/ui/src/components/DataTable/TablePagination.vue` | hides the per-page select when there is only one option |
-| `apps/playground/tests/Feature/TrashTest.php` | new `pageFor()` helper + 4 paging tests |
+**Local env note:** `apps/playground/.env` now has `CACHE_STORE=database`
+(was redis, which wasn't running and 500'd every request).
 
-**First action:** finish it. Run `php artisan test`, then `npm run lint:check`,
-`npm run types:check`, `npm run format:check` (in `apps/playground`),
-`./vendor/bin/pint --test`, `npx vitest run` (in `packages/ui`), then verify the
-Trash screen in the browser and commit. Do not start Part A on top of an
-unverified diff.
-
-> Note: Part A step A.3 will move the reorder control out of the page header and
-> into the table toolbar. `Trash.vue` uses `TablePagination` but no toolbar, so
-> the two do not collide.
+**NEXT, in order:**
+1. **E.1 UI** — Settings → Assistant page: provider select, key input
+   (posts to `AiCredentials::set()`), masked display, clear button, and the
+   drawer consulting `available()` for a setup hint.
+2. **E.3** — the assistant capability charter (docs + surfaced in the drawer
+   + fed into panel:blueprint).
+3. **A.5 second pass** — the seven queued screens.
+4. **Roadmap 5.3–5.6, 4.1–4.6, 6.1–6.5, 7.3–7.7** as tracked in tasks
+   #143–#162, then **F** (production-readiness loop).
 
 ---
 
