@@ -74,9 +74,18 @@ final class DoctorCommand extends Command
     {
         foreach ($panels->resources() as $key => $class) {
             if (\Illuminate\Support\Facades\Gate::getPolicyFor($class::model()) === null) {
+                /*
+                 * THE TITLE IS OPERATOR COPY, NOT CONSOLE SHORTHAND. It used
+                 * to read "[custom-fields] has no policy" - the bracketed
+                 * resource key - which is fine in a terminal and jarring as a
+                 * dashboard headline, because the SetupChecklist surfaces
+                 * these findings verbatim. One register serves both: the
+                 * human label up front, the precise key in the detail where
+                 * whoever fixes it needs it.
+                 */
                 $this->problem(
-                    "[{$key}] has no policy",
-                    'The panel denies every ability when no policy is registered, so this resource '
+                    "{$class::pluralLabel()} has no policy - nobody can open it until one exists",
+                    "The panel denies every ability when no policy is registered, so [{$key}] "
                     .'is invisible to everybody. That is the safe default and it looks exactly like '
                     .'a permissions bug.',
                 );
@@ -164,11 +173,12 @@ final class DoctorCommand extends Command
         }
 
         $this->problem(
-            "Cache store [{$store}] cannot tag, but tenant cache isolation needs it",
-            'CacheTenancyBootstrapper tags cache entries per tenant, and only redis, array and '
-            .'memcached support tagging. On this store a tagged read throws and the isolation it '
-            .'promises does not happen - use redis, or remove the bootstrapper and accept that the '
-            .'cache is shared across tenants.',
+            'Tenant cache isolation is configured in a way this cache store cannot honour',
+            "stancl's CacheTenancyBootstrapper tags cache entries per tenant, and only redis, "
+            ."array and memcached support tagging - the [{$store}] store does not, so a tagged "
+            .'read throws and the isolation it promises does not happen. Swap it for '
+            .'PanelKit\\Panel\\Tenancy\\PrefixCacheBootstrapper, which isolates by key prefix '
+            .'and works on every store - no Redis required.',
         );
     }
 

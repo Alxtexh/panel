@@ -12,7 +12,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Support\TenantContext;
-use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
+use PanelKit\Panel\Tenancy\PrefixCacheBootstrapper;
 use Tests\TestCase;
 
 /**
@@ -246,15 +246,18 @@ final class TenancyOverheadTest extends TestCase
      * the property that matters is correctness: without it, a memoized count or
      * a cached schema can be served to the wrong organisation.
      *
-     * The cost it adds is a tenant tag on each cache key - string work, no
-     * query - which is why the assertion below is a query count of zero.
+     * PrefixCacheBootstrapper now, not stancl's tags one: the guarantee is the
+     * same, but a prefix works on every store where tags need redis - see the
+     * bootstrapper's own docblock. The cost it adds is a prefix on each cache
+     * key - string work, no query - which is why the assertion below is a
+     * query count of zero on the suite's array store.
      */
     public function test_the_cache_bootstrapper_is_enabled_and_adds_no_queries(): void
     {
         $this->assertContains(
-            CacheTenancyBootstrapper::class,
+            PrefixCacheBootstrapper::class,
             config('tenancy.bootstrappers'),
-            'Tenant-tagged cache keys are a correctness property, not an optimisation.',
+            'Tenant-prefixed cache keys are a correctness property, not an optimisation.',
         );
 
         tenancy()->initialize($this->tenant);
@@ -274,7 +277,7 @@ final class TenancyOverheadTest extends TestCase
         $this->assertSame(
             0,
             $count,
-            "Tenant-tagged cache access fired {$count} queries. Tagging is string work; "
+            "Tenant-prefixed cache access fired {$count} queries. Prefixing is string work; "
             .'a query here means the cache store itself is backed by the database.',
         );
     }

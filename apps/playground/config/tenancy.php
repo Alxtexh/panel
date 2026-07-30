@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Tenant;
 use PanelKit\Panel\Tenancy\ConditionalDatabaseBootstrapper;
-use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
+use PanelKit\Panel\Tenancy\PrefixCacheBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
 use Stancl\Tenancy\Database\Models\Domain;
@@ -76,11 +76,16 @@ return [
         // Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper::class,
         ConditionalDatabaseBootstrapper::class,
         /*
-         * Cache: KEPT. Tags every cache key with the tenant, so a memoized
-         * count or a cached schema cannot be served to the wrong organisation.
-         * That is a correctness property, not an optimisation.
+         * Cache: ISOLATED BY PREFIX, NOT TAGS. A memoized count or a cached
+         * schema must never be served to the wrong organisation - that is a
+         * correctness property, not an optimisation - but stancl's own
+         * tags-based bootstrapper only works on redis, array and memcached,
+         * which quietly made isolation depend on Redis. The prefix
+         * bootstrapper gives the same guarantee on ANY store, including the
+         * database and file stores a plain installation runs on. See its
+         * own docblock for the one semantic difference (bulk flush).
          */
-        CacheTenancyBootstrapper::class,
+        PrefixCacheBootstrapper::class,
 
         /*
          * Filesystem: OFF for this panel, deliberately.

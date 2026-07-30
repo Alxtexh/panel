@@ -116,12 +116,19 @@ final class DashboardChecklistTest extends TestCase
         $this->assertSame($expectedTitles, $undoneTitles);
     }
 
+    /** A checklist with deterministic open problems, via the class's test seam. */
+    private function checklistReporting(array $problems): SetupChecklist
+    {
+        return new SetupChecklist(app(InstallationState::class), static fn (): array => $problems);
+    }
+
     /**
-     * THE CLAIM THE WHOLE FEATURE RESTS ON. A problem `panel:doctor` reported
-     * once and does not report now must still appear - marked done - rather
-     * than vanishing as if it had never happened.
+     * THE CLAIM THE WHOLE FEATURE RESTS ON, amended: a resolved problem stays
+     * visible - marked done - WHILE something else is still outstanding.
+     * "Two fixed, one to go" is progress; the outstanding item is what makes
+     * the card worth showing at all.
      */
-    public function test_a_previously_seen_problem_stays_visible_once_resolved(): void
+    public function test_a_previously_seen_problem_stays_visible_while_another_is_open(): void
     {
         app(InstallationState::class)->put('checklist:doctor-findings', [
             'deadbeefcafef00d' => [
@@ -130,13 +137,43 @@ final class DashboardChecklistTest extends TestCase
             ],
         ]);
 
-        $items = app(SetupChecklist::class)->items();
+        $items = $this->checklistReporting([
+            'stillbroken00001' => ['title' => 'Something is still wrong', 'detail' => 'Genuinely.'],
+        ])->items();
 
         $match = collect($items)->firstWhere('key', 'deadbeefcafef00d');
 
         $this->assertNotNull($match, 'a previously-seen problem disappeared instead of showing as done');
         $this->assertTrue($match['done']);
         $this->assertSame('A problem this installation has since fixed', $match['title']);
+    }
+
+    /**
+     * ONCE NOTHING IS OUTSTANDING, THE CARD IS GONE. A setup guide's job is
+     * to get you to a working installation and then get out of the way -
+     * struck-through history on every dashboard load, forever, is noise.
+     * The widget already hides itself on an empty array; this is the server
+     * sending one.
+     */
+    public function test_the_checklist_is_empty_once_every_problem_is_resolved(): void
+    {
+        app(InstallationState::class)->put('checklist:doctor-findings', [
+            'deadbeefcafef00d' => [
+                'title' => 'A problem this installation has since fixed',
+                'detail' => 'Long gone.',
+            ],
+        ]);
+
+        $this->assertSame([], $this->checklistReporting([])->items());
+
+        // The history is persistence, not presentation: the next real problem
+        // brings the resolved context back with it.
+        $items = $this->checklistReporting([
+            'freshproblem0001' => ['title' => 'A brand new problem', 'detail' => 'Just appeared.'],
+        ])->items();
+
+        $this->assertNotNull(collect($items)->firstWhere('key', 'deadbeefcafef00d'));
+        $this->assertNotNull(collect($items)->firstWhere('key', 'freshproblem0001'));
     }
 
     /** Undone items are never trimmed by the done-tail cap - only resolved ones are. */
@@ -150,10 +187,34 @@ final class DashboardChecklistTest extends TestCase
 
         app(InstallationState::class)->put('checklist:doctor-findings', $seeded);
 
-        $items = app(SetupChecklist::class)->items();
+        $items = $this->checklistReporting([
+            'stillbroken00001' => ['title' => 'Something is still wrong', 'detail' => 'Genuinely.'],
+        ])->items();
 
         $done = collect($items)->where('done', true);
 
         $this->assertLessThanOrEqual(10, $done->count(), 'the done tail grew past its cap');
+        $this->assertNotNull(collect($items)->firstWhere('key', 'stillbroken00001'));
+    }
+
+    /**
+     * The dashboard headline is operator copy, never console shorthand -
+     * "[custom-fields] has no policy" belongs in a terminal, not on the one
+     * screen everybody opens. The precise key still travels in the detail,
+     * where whoever fixes it needs it.
+     */
+    public function test_no_finding_title_leads_with_a_bracketed_key(): void
+    {
+        Artisan::call('panel:doctor', ['--json' => true]);
+        $decoded = json_decode(Artisan::output(), true);
+
+        foreach (is_array($decoded) ? $decoded : [] as $finding) {
+            $this->assertDoesNotMatchRegularExpression(
+                '/^\[/',
+                (string) ($finding['title'] ?? ''),
+                'A doctor finding title starts with a bracketed key - that is console shorthand, '
+                .'and the setup checklist shows these titles verbatim on the dashboard.',
+            );
+        }
     }
 }
