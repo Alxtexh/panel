@@ -75,6 +75,15 @@ final class SettingsIndex
             ];
         }
 
+        if ($user !== null && $user->hasPermission('manage_assistant')) {
+            $entries[] = [
+                'key' => 'assistant',
+                'title' => 'Assistant',
+                'description' => 'The AI provider the assistant runs on, and its key.',
+                'href' => route('assistant-settings.edit'),
+            ];
+        }
+
         return $entries;
     }
 }

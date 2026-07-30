@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -10,7 +11,9 @@ import { edit as editSecurity } from '@/routes/security';
 import { index as settingsIndex } from '@/routes/settings';
 import type { NavItem } from '@/types';
 
-const sidebarNavItems: NavItem[] = [
+const page = usePage();
+
+const sidebarNavItems = computed<NavItem[]>(() => [
     {
         title: 'Profile',
         href: editProfile(),
@@ -28,7 +31,15 @@ const sidebarNavItems: NavItem[] = [
         title: 'Organisation',
         href: '/settings/organisation',
     },
-];
+    /*
+     * OMITTED, NOT DISABLED, without the ability - the same call the
+     * settings index makes: a link that always 403s advertises a page and
+     * then refuses it.
+     */
+    ...((page.props.auth as any)?.can?.manageAssistant
+        ? [{ title: 'Assistant', href: '/settings/assistant' }]
+        : []),
+]);
 
 /*
  * ROLES IS NOT LISTED HERE, and its absence is deliberate.

@@ -113,4 +113,57 @@ final class AiCredentialsTest extends TestCase
         $response->assertOk();
         $this->assertStringContainsString('not configured', $response->streamedContent());
     }
+
+    /* -------------------------------------------------- the settings page */
+
+    private function operator(array $abilities): User
+    {
+        $slug = 'acme-'.fake()->unique()->numberBetween(1, 999999);
+        $tenant = Tenant::create(['name' => 'Acme', 'slug' => $slug]);
+
+        return User::factory()->withAbilities($abilities)
+            ->create(['tenant_id' => $tenant->id, 'email_verified_at' => now()]);
+    }
+
+    public function test_the_settings_page_is_gated_on_manage_assistant(): void
+    {
+        $this->actingAs($this->operator(['view_operations']))
+            ->get('/settings/assistant')->assertForbidden();
+
+        $this->actingAs($this->operator(['manage_assistant']))
+            ->get('/settings/assistant')->assertOk();
+    }
+
+    public function test_saving_through_the_page_stores_and_masks(): void
+    {
+        $user = $this->operator(['manage_assistant']);
+
+        $this->actingAs($user)->put('/settings/assistant', [
+            'provider' => 'anthropic',
+            'key' => 'sk-ant-page-test-4321',
+        ])->assertRedirect();
+
+        $props = $this->actingAs($user)->get('/settings/assistant')
+            ->assertOk()->viewData('page')['props'];
+
+        $this->assertSame('anthropic', $props['provider']);
+        $this->assertSame('••••4321', $props['maskedKey']);
+        $this->assertTrue($props['byok']);
+
+        // The page never carries the secret itself - only the masked tail.
+        $this->assertArrayNotHasKey('key', $props);
+
+        $this->actingAs($user)->delete('/settings/assistant')->assertRedirect();
+
+        $this->assertFalse($this->credentials()->configured());
+    }
+
+    public function test_a_user_without_the_ability_cannot_write_credentials(): void
+    {
+        $this->actingAs($this->operator(['view_operations']))
+            ->put('/settings/assistant', ['provider' => 'anthropic', 'key' => 'sk-whatever-123'])
+            ->assertForbidden();
+
+        $this->assertFalse($this->credentials()->configured());
+    }
 }

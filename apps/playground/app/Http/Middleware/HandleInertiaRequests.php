@@ -301,6 +301,7 @@ class HandleInertiaRequests extends Middleware
                 'can' => [
                     'manageRoles' => (bool) $request->user()?->hasPermission('manage_roles'),
                     'viewOperations' => (bool) $request->user()?->hasPermission('view_operations'),
+                    'manageAssistant' => (bool) $request->user()?->hasPermission('manage_assistant'),
                 ],
             ],
             /*

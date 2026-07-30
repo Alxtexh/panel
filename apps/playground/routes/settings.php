@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\PasswordRenewalController;
 use App\Http\Controllers\OrganisationController;
+use App\Http\Controllers\Settings\AssistantSettingsController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\SettingsIndexController;
@@ -63,6 +64,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('settings/organisation', [OrganisationController::class, 'update'])->name('organisation.update');
     Route::post('settings/organisation/logo', [OrganisationController::class, 'uploadLogo'])->name('organisation.logo.upload');
     Route::get('settings/organisation/logo', [OrganisationController::class, 'logo'])->name('organisation.logo');
+
+    /*
+     | The assistant's provider and key - E.1. Gated inside the controller on
+     | `manage_assistant`, because whoever holds it decides which AI provider
+     | reads the organisation's questions. The key itself never travels back
+     | out of these routes; see the controller.
+     */
+    Route::get('settings/assistant', [AssistantSettingsController::class, 'edit'])->name('assistant-settings.edit');
+    Route::put('settings/assistant', [AssistantSettingsController::class, 'update'])->name('assistant-settings.update');
+    Route::delete('settings/assistant', [AssistantSettingsController::class, 'destroy'])->name('assistant-settings.destroy');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

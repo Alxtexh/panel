@@ -33,6 +33,13 @@ return [
     'abilities' => [
         'view_commercial_widgets' => 'Dashboard: sign-ups, plans and renewals',
         'view_network_widgets' => 'Dashboard: sessions, routers and service areas',
+        /*
+         * A SEPARATE ABILITY, not folded into manage_roles: whoever holds
+         * this configures which AI provider reads the organisation's
+         * questions and pays that provider's bill. That is an act worth
+         * being able to grant and withhold on its own.
+         */
+        'manage_assistant' => 'Configure the AI assistant and its provider key',
     ],
 
     /*
