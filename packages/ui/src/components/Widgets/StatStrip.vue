@@ -180,9 +180,19 @@ function display(value: string | number): string {
                 <div class="flex h-8 items-center">
                     <PkSkeleton v-if="loading" variant="number" />
 
+                    <!--
+                        `role="img"` IS LOAD-BEARING, not decoration. A plain
+                        `<span>` has no accessible-name-supporting role, so
+                        `aria-label` on it is dropped by assistive tech - the
+                        five dots would announce as nothing at all rather than
+                        "Active hidden". `role="img"` is what makes this one
+                        thing with a text alternative, the same contract an
+                        `<img alt="...">` has.
+                    -->
                     <span
                         v-else-if="masked"
                         class="flex items-center gap-1.5"
+                        role="img"
                         :aria-label="`${segment.label} hidden`"
                     >
                         <span

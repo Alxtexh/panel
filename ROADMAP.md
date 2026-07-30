@@ -87,7 +87,7 @@ script, or a splitter action on push (automation that needs a token in GitHub).
 | 2.1 | ~~**Lint**~~ | **DONE** | Reformatted once, enforced in CI — ESLint, Prettier (all three JS/TS surfaces) and Pint. See below. |
 | 2.2 | ~~**Component tests**~~ | **DONE** | `@panelkit/ui`, Vitest + `@vue/test-utils` + jsdom. 8 spec files, 53 tests. See below. |
 | 2.3 | ~~**Browser tests**~~ | **DONE** | Laravel Dusk, 14 tests, own CI job. See below. |
-| 2.4 | **Accessibility check in CI** | M | The audit was manual and is now stale. `axe` over the main screens would keep it true. |
+| 2.4 | ~~**Accessibility check in CI**~~ | **DONE** | axe-core over 7 main screens via Dusk, part of the existing browser job. Found and fixed 5 real violations. See below. |
 | 2.5 | **Un-gate the fixtures** | M | MySQL, pgvector, broadcast and the AI provider pass when their scripts run and skip otherwise. CI services would make them permanent. |
 
 **2.3 is done.** 14 Dusk tests over two classes, a `browser` job in CI that
@@ -452,7 +452,31 @@ available to announcements and scheduled reports is what remains of that item.
 **~~Then — trust.~~ 2.2 and 2.3 done.** Both bugs the browser suite was written
 for now fail it when reintroduced, and the same two are pinned again at the
 component level, in milliseconds rather than minutes. Remaining in that
-section: 2.4 (accessibility check in CI) and 2.5 (un-gate the fixtures).
+section: 2.5 (un-gate the fixtures).
+
+**2.4 is done, and it found five real bugs on its first run** - the argument
+for the check made by the check. `AccessibilityTest.php` runs axe-core (via
+`executeAsyncScript`, since `axe.run()` is a Promise Dusk's synchronous
+`script()` cannot await) against the login screen, the dashboard, the resource
+list, the create form, a record page, trash, and the document designer -
+asserting zero serious/critical violations, the same threshold a real user
+actually hits. Runs inside the existing browser CI job, no new one.
+
+What it found: **positive `tabindex` on Login and Register**, overriding an
+order that was already correct and duplicating a value across two links;
+**`aria-label` on a plain `<span>`** in `StatStrip`'s masked-value dots, which
+ARIA drops silently on any role that does not support naming - fixed with
+`role="img"`; **a systemic contrast shortfall** in `--muted-foreground`
+(45.1% lightness measured at 4.27:1 against `--muted`, needing 4.5) and in
+`text-sidebar-foreground/70` (opacity blending measured at 4.26:1) - both
+darkened with a margin rather than to the exact line; and **a button
+containing a link** at three sites in `@panelkit/inertia`, from `as-child`
+passed to `PkButton`, which has never implemented reka-ui's slot-merging and
+rendered it as an inert attribute while the `<Link>` in the slot rendered
+inside the `<button>` regardless - two interactive elements where one was
+intended. Fixed by exporting `buttonClasses()` from `@panelkit/ui` so a
+caller's own element (the `<Link>` itself) can wear button styling without a
+wrapper.
 
 **2.1 is done.** ESLint reported 1,289 problems, not the 230 this section
 originally quoted — the figure was stale the moment the document designer and

@@ -6,6 +6,7 @@ use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Illuminate\Support\Collection;
+use Laravel\Dusk\Browser;
 use Laravel\Dusk\TestCase as BaseTestCase;
 use PHPUnit\Framework\Attributes\BeforeClass;
 
@@ -171,5 +172,87 @@ abstract class DuskTestCase extends BaseTestCase
         }
 
         return null;
+    }
+
+    /**
+     * axe-core's bundled source, read once and reused across every call.
+     *
+     * READ FROM DISK, NOT SHIPPED AS A ROUTE OR A PUBLIC ASSET. The suite is
+     * the only consumer, so giving it a URL of its own would be adding a
+     * surface to the application for a tool that only ever runs in a test
+     * process - the file is loaded straight into the page instead, the same
+     * way a `<script>` tag would, just without needing one to exist.
+     */
+    private static ?string $axeSource = null;
+
+    /**
+     * Run axe-core against the current page and fail on serious violations.
+     *
+     * `executeAsyncScript`, NOT `$browser->script()`. axe-core's `axe.run()`
+     * returns a Promise - Selenium's synchronous script execution has no way
+     * to wait on one, so calling it through `$browser->script()` would return
+     * before the scan finished. The async variant is given a callback as its
+     * last argument and the scan calls it when done, which is what actually
+     * blocks this method until axe has an answer.
+     *
+     * MODERATE AND BELOW ARE NOT ASSERTED ON, DELIBERATELY. A moderate finding
+     * is real and worth reading, but axe reports some against markup this
+     * project does not control (third-party icon SVGs, browser-native form
+     * chrome) - failing the build on those teaches people to silence the
+     * check rather than read it. Serious and critical are the ones that block
+     * a real user, and the ones the previous manual audit's own findings
+     * (§Stage 11: missing skip link, silent SPA navigation) would have landed
+     * in.
+     */
+    protected function assertNoSeriousAccessibilityViolations(Browser $browser, string $context = ''): void
+    {
+        self::$axeSource ??= file_get_contents(base_path('node_modules/axe-core/axe.min.js'));
+
+        $browser->driver->manage()->timeouts()->setScriptTimeout(30);
+
+        $violations = $browser->driver->executeAsyncScript(
+            self::$axeSource.<<<'JS'
+                var callback = arguments[arguments.length - 1];
+
+                axe.run(document, { resultTypes: ['violations'] }).then(function (results) {
+                    callback(results.violations
+                        .filter(function (v) { return v.impact === 'serious' || v.impact === 'critical'; })
+                        .map(function (v) {
+                            return {
+                                id: v.id,
+                                impact: v.impact,
+                                help: v.help,
+                                // `failureSummary` is where the number lives -
+                                // "insufficient color contrast of 3.96 ...
+                                // Expected contrast ratio of 4.5:1" - the
+                                // difference between a message that names a
+                                // selector and one that says what to fix.
+                                nodes: v.nodes.map(function (n) {
+                                    return { target: n.target.join(' '), summary: n.failureSummary };
+                                }),
+                            };
+                        }));
+                }, function (err) {
+                    callback([{ id: 'axe-run-failed', impact: 'critical', help: String(err), nodes: [] }]);
+                });
+                JS
+        );
+
+        $description = collect($violations)
+            ->map(fn (array $v) => sprintf(
+                "[%s] %s (%s):\n%s",
+                $v['impact'],
+                $v['id'],
+                $v['help'],
+                collect($v['nodes'])
+                    ->map(fn (array $n) => '  '.$n['target']."\n    ".str_replace("\n", "\n    ", (string) $n['summary']))
+                    ->implode("\n"),
+            ))
+            ->implode("\n");
+
+        $this->assertEmpty(
+            $violations,
+            ($context !== '' ? $context.': ' : '')."axe found serious/critical accessibility violations:\n".$description,
+        );
     }
 }

@@ -26,7 +26,7 @@
  *   schema cache key drop the tenant id entirely.
  */
 import { PkBadge as Badge } from '@panelkit/ui'
-import { PkButton as Button } from '@panelkit/ui'
+import { PkButton as Button, buttonClasses } from '@panelkit/ui'
 import { useListTable, type ListPageProps } from '../composables/useListTable'
 import { useBulkJob } from '../composables/useBulkJob'
 import {
@@ -758,9 +758,21 @@ function badgeLabel(key: string, value: unknown): string {
                 {{ reordering ? 'Done' : 'Reorder' }}
             </Button>
 
-            <Button v-if="canWrite && can.create && !reordering" as-child size="sm">
-                <Link :href="`${schema.routes.index}/create`">New {{ schema.label }}</Link>
-            </Button>
+            <!--
+                A `<Link>` WEARING BUTTON CLASSES, not a `<Button as-child>`
+                wrapping one. `PkButton` never merges its classes onto a
+                child - see its own note - so `as-child` here used to render
+                as an inert attribute on a real `<button>` with this `<Link>`
+                as an `<a>` INSIDE it: two interactive elements where a
+                screen reader or keyboard user expects one.
+            -->
+            <Link
+                v-if="canWrite && can.create && !reordering"
+                :href="`${schema.routes.index}/create`"
+                :class="buttonClasses({ size: 'sm' })"
+            >
+                New {{ schema.label }}
+            </Link>
         </div>
 
         <!--

@@ -12,7 +12,7 @@
  */
 import { PkBadge as Badge } from '@panelkit/ui'
 import AuditTimeline from '../components/AuditTimeline.vue'
-import { PkButton as Button } from '@panelkit/ui'
+import { PkButton as Button, buttonClasses } from '@panelkit/ui'
 import { InfoNode, RelationPanel, useSchemaColumns, type SchemaColumn } from '@panelkit/ui'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, ref, toRef } from 'vue'
@@ -186,9 +186,14 @@ function destroy() {
             </div>
 
             <div class="flex items-center gap-2">
-                <Button v-if="can.update" as-child size="sm">
-                    <Link :href="`${schema.routes.index}/${record.id}/edit`">Edit</Link>
-                </Button>
+                <!-- A `<Link>` wearing button classes, not `<Button as-child>` wrapping one - see the note beside ResourceIndex's own New button. -->
+                <Link
+                    v-if="can.update"
+                    :href="`${schema.routes.index}/${record.id}/edit`"
+                    :class="buttonClasses({ size: 'sm' })"
+                >
+                    Edit
+                </Link>
                 <Button v-if="can.delete" variant="outline" size="sm" @click="destroy"
                     >Delete</Button
                 >
@@ -265,9 +270,12 @@ function destroy() {
         <AuditTimeline :resource="schema.key" :record-id="record.id" />
 
         <div>
-            <Button as-child variant="ghost" size="sm">
-                <Link :href="schema.routes.index">← Back to {{ schema.labelPlural }}</Link>
-            </Button>
+            <Link
+                :href="schema.routes.index"
+                :class="buttonClasses({ variant: 'ghost', size: 'sm' })"
+            >
+                ← Back to {{ schema.labelPlural }}
+            </Link>
         </div>
     </div>
 </template>

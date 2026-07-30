@@ -128,7 +128,15 @@
     --secondary: hsl(0 0% 92.1%);
     --secondary-foreground: hsl(0 0% 9%);
     --muted: hsl(0 0% 96.1%);
-    --muted-foreground: hsl(0 0% 45.1%);
+    /*
+     * 40%, NOT THE FILAMENT-STANDARD 45.1%. axe measured this exact grey
+     * (#737373, 45.1% lightness) at 4.27:1 on the `--muted` background and
+     * 4.46:1 against the lighter panels it also lands on - both short of the
+     * 4.5:1 WCAG AA floor for normal text, on the token this app's kbd
+     * badges, help text and footer links all draw from. 40% clears both with
+     * a margin (measured ~5.0-5.7:1) rather than sitting on the line.
+     */
+    --muted-foreground: hsl(0 0% 40%);
     --accent: hsl(0 0% 96.1%);
     --accent-foreground: hsl(0 0% 9%);
     --destructive: hsl(0 84.2% 60.2%);

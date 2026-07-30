@@ -88,6 +88,15 @@ export { default as PkMultiSelect } from './components/primitives/PkMultiSelect.
  */
 export { default as PkButton } from './components/primitives/PkButton.vue'
 export { default as PkBadge } from './components/primitives/PkBadge.vue'
+/*
+ * FOR A CALLER THAT NEEDS BUTTON STYLING ON ITS OWN ELEMENT, not PkButton's.
+ * `@inertiajs/vue3`'s `<Link>` is a component, not a tag name `PkButton`'s
+ * `as` prop can name - see the note on `PkButton` itself for the bug this
+ * replaced: `<Link :class="buttonClasses({ size: 'sm' })">` is one real
+ * element, where `<Button as-child><Link>...</Link></Button>` was two.
+ */
+export { buttonClasses } from './components/primitives/buttonClasses'
+export type { ButtonClassesOptions } from './components/primitives/buttonClasses'
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
 export { useLiveUpdates } from './composables/useLiveUpdates'
