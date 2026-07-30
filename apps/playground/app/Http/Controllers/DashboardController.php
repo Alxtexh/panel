@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Alerts\Announcement;
+use PanelKit\Panel\Support\SetupChecklist;
 use PanelKit\Panel\Support\TenantContext;
 use PanelKit\Panel\Widgets\Bucket;
 use PanelKit\Panel\Widgets\ChartWidget;
@@ -159,6 +160,20 @@ final class DashboardController extends Controller
             $props['strip'] = Inertia::defer(
                 fn (): array => $this->sessionStrip($tenantKey, $now, $filters),
                 'strip',
+            );
+        }
+
+        /*
+         * SAME GATE AS MONITORING, deliberately. This card surfaces the exact
+         * same `panel:doctor` findings that page does - a resource with no
+         * policy, an inert broadcast channel - which is installation-health
+         * detail, not something every tenant user should see about the
+         * installation they happen to be logged into.
+         */
+        if ($user !== null && $user->hasPermission('view_operations')) {
+            $props['checklist'] = Inertia::defer(
+                fn (): array => app(SetupChecklist::class)->items(),
+                'checklist',
             );
         }
 

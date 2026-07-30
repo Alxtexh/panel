@@ -24,11 +24,12 @@ import {
     RadarChart,
     PkBoundary,
     SegmentedBar,
+    SetupChecklist,
     StatCard,
     StatStrip,
     TrendBadge,
 } from '@panelkit/ui';
-import type { StatSegment } from '@panelkit/ui';
+import type { SetupChecklistItem, StatSegment } from '@panelkit/ui';
 import { computed, ref } from 'vue';
 import AnnouncementBanners from '@/components/AnnouncementBanners.vue';
 import DashboardFilterPanel from '@/components/DashboardFilters.vue';
@@ -149,6 +150,18 @@ const strip = computed(
     () =>
         ((page.props as Record<string, any>).strip as
             StatSegment[] | undefined) ?? STRIP_PLACEHOLDER,
+);
+
+/**
+ * Absent, not empty, for a user without `view_operations` - the controller
+ * never adds the prop at all rather than sending an empty array, so a tenant
+ * user without the ability cannot see from the network tab that the check
+ * even ran. `Deferred` below only renders once the key is present either way.
+ */
+const checklist = computed(
+    () =>
+        ((page.props as Record<string, any>).checklist as
+            SetupChecklistItem[] | undefined) ?? [],
 );
 
 function stat(key: string) {
@@ -349,6 +362,33 @@ const comparison: Record<string, string> = {
             out to be.
         -->
         <AnnouncementBanners :announcements="announcements" />
+
+        <!--
+            GUARDED ON THE PROP'S PRESENCE, not just its resolved value. The
+            controller never registers `checklist` at all for a user without
+            `view_operations` - unlike `strip` below, which is always given a
+            <Deferred> regardless and would otherwise sit on its loading
+            skeleton forever for a user who was never going to receive it.
+        -->
+        <PkBoundary
+            v-if="'checklist' in page.props"
+            label="The setup checklist"
+        >
+            <Deferred data="checklist">
+                <template #fallback>
+                    <div
+                        class="h-24 animate-pulse rounded-lg border bg-muted/30"
+                    />
+                </template>
+
+                <template #default>
+                    <SetupChecklist
+                        :items="checklist"
+                        report-href="/operations/monitoring"
+                    />
+                </template>
+            </Deferred>
+        </PkBoundary>
 
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="min-w-0">

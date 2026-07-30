@@ -4,8 +4,8 @@
 is the forward view — everything outstanding, why it matters, what it costs, and
 what it depends on.
 
-Written 2026-07-29, last updated 2026-07-30. **§1, §2.1–2.3 and §3.1–3.3 are
-done** — see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
+Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.4
+are done** — see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
 **S** = an afternoon · **M** = a day or two · **L** = several days · **XL** = a
 week or more.
 
@@ -256,7 +256,7 @@ the free input coexist — the chips carry the sensible answers, the input stays
 for the case that genuinely is arbitrary, and the min/max we already validate
 bounds both. Fixes trash retention today.
 
-### 3.4 Dashboard setup checklist — **M**
+### 3.4 Dashboard setup checklist — **DONE**
 
 *Theirs:* a static list of six onboarding steps.
 
@@ -264,6 +264,18 @@ bounds both. Fixes trash retention today.
 onboarding checklist that goes stale after week one — it keeps surfacing what is
 silently wrong for the life of the installation. Doctor already computes it and
 nothing shows it. One highlighted next step; the finished ones stay visible.
+
+Shipped as `PanelKit\Panel\Support\SetupChecklist` — every item is a live
+`panel:doctor` problem, not a fixed step; `InstallationState` records every
+title doctor has ever reported, by a stable hash, so a fixed problem shows as
+struck-through rather than silently disappearing (the exact thing a
+point-in-time command cannot do on its own). The undone tail is never
+trimmed; only the done tail is capped, so a real problem can never be
+crowded off the list by old history. Presentational half is
+`@panelkit/ui`'s `SetupChecklist.vue`, gated on the dashboard by the same
+`view_operations` ability Monitoring uses — this card surfaces the same
+installation-health detail, and a tenant user who cannot open that page must
+not receive it a second way, on a screen everybody opens.
 
 ### 3.5 Conditional sections — **M**
 
