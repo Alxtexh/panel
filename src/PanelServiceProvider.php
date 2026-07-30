@@ -153,6 +153,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\JourneyCommand::class,
             Commands\DoctorCommand::class,
             Commands\SuspendTenantCommand::class,
+            Commands\MonitorSampleCommand::class,
             Commands\BenchmarkCommand::class,
             Commands\RefreshRollupsCommand::class,
             Commands\PruneExportsCommand::class,
