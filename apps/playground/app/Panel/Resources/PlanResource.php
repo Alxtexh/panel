@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Panel\Resources;
 
 use App\Models\Plan;
+use App\Panel\Clusters\NetworkCluster;
 use PanelKit\Panel\Actions\BulkAction;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
@@ -21,7 +22,9 @@ final class PlanResource extends Resource
 
     protected static ?string $purpose = 'The catalogue of plans subscribers can be sold.';
 
-    protected static ?string $group = 'Network';
+    // A cluster member, not a group entry - the sidebar says "Network" once
+    // and this screen is reached from its sub-navigation. Roadmap 4.1.
+    protected static ?string $cluster = NetworkCluster::class;
 
     protected static ?int $sort = 30;
 

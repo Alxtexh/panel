@@ -93,6 +93,14 @@ final class NavigationCoverageTest extends TestCase
          */
         return [
             ...array_column($props['panelNav'], 'href'),
+            /*
+             * A CLUSTER ENTRY STANDS FOR EVERY MEMBER - roadmap 4.1. The
+             * sidebar shows one item, but each member is linked through the
+             * sub-navigation on every cluster screen, and the entry carries
+             * their hrefs precisely so this test can see that a collapsed
+             * resource is still reachable rather than lost.
+             */
+            ...collect($props['panelNav'])->flatMap(fn (array $item): array => $item['members'] ?? [])->all(),
             ...array_column($props['panelPages'], 'href'),
             ...array_keys(Pages::intentionallyUnlinked()),
         ];

@@ -134,6 +134,16 @@ const props = defineProps<
         }
         total?: number
         tabCounts?: Record<string, number>
+        /**
+         * The cluster this resource belongs to, if any - roadmap 4.1. Items
+         * are permission-filtered on the server, so a sibling this person may
+         * not open never reaches the client.
+         */
+        cluster?: {
+            key: string
+            label: string
+            items: { title: string; href: string; current: boolean }[]
+        } | null
     }
 >()
 
@@ -746,6 +756,33 @@ function badgeLabel(key: string, value: unknown): string {
     <Head :title="schema.labelPlural" />
 
     <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-3 p-3 sm:p-4">
+        <!--
+            THE CLUSTER SUB-NAVIGATION - roadmap 4.1. The sidebar shows one
+            entry for the whole cluster; this strip is where its members
+            actually live. Links, not buttons: each one is a page with its own
+            URL, history entry and refresh behaviour. Rendered above the page
+            title because it is navigation BETWEEN screens, not a control of
+            this one - putting it any lower would read as a table mode.
+        -->
+        <nav
+            v-if="cluster"
+            :aria-label="`${cluster.label} sections`"
+            class="text-muted-foreground -mb-1 flex flex-wrap items-center gap-1 text-sm"
+        >
+            <Link
+                v-for="item in cluster.items"
+                :key="item.href"
+                :href="item.href"
+                :aria-current="item.current ? 'page' : undefined"
+                class="rounded-md px-2.5 py-1 transition-colors"
+                :class="
+                    item.current ? 'bg-muted text-foreground font-medium' : 'hover:text-foreground'
+                "
+            >
+                {{ item.title }}
+            </Link>
+        </nav>
+
         <div class="flex flex-col gap-1">
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2">

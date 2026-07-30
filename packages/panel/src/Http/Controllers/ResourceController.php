@@ -356,6 +356,14 @@ final class ResourceController extends Controller
             // bespoke page did, so it comes from the schema instead.
             'breadcrumbs' => [['title' => $schema['labelPlural'], 'href' => $schema['routes']['index']]],
 
+            /*
+             * The cluster sub-navigation, when this resource belongs to one -
+             * roadmap 4.1. Per request rather than in the schema, because the
+             * items are filtered by what THIS person may open and the schema
+             * is cached across people.
+             */
+            'cluster' => app(PanelManager::class)->clusterNavFor($class),
+
             ...$result->toProps(),
 
             // Tenant data, so it rides with the records rather than the schema.

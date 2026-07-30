@@ -246,7 +246,15 @@ final class KnowledgeRetrievalTest extends TestCase
         $this->artisan('panel:knowledge', ['action' => 'index', '--tenant' => (string) $this->acme->id])
             ->assertSuccessful();
 
-        $matches = $this->knowledge()->search('rules that fail silently schema cache tenant closures');
+        /*
+         * PHRASES ONLY THE BLUEPRINT USES, deliberately. The first version of
+         * this query shared too much vocabulary with the guide, so every time
+         * the guide grew a paragraph the ranking reshuffled and this test
+         * failed about content that was still perfectly retrievable. The
+         * assertion is "blueprint chunks are indexed and findable", not "the
+         * blueprint outranks the guide on generic words".
+         */
+        $matches = $this->knowledge()->search('never write a controller for a resource screen null tenant deny fails closed');
 
         $titles = implode(' ', array_map(static fn (array $m): string => $m['title'], $matches));
 

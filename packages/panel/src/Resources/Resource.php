@@ -58,6 +58,18 @@ abstract class Resource
 
     protected static ?string $group = null;
 
+    /**
+     * The cluster this resource belongs to, if any - a `Cluster` class-string.
+     *
+     * A NAVIGATION FACT ONLY, like `$group` and `showsInNavigation()`: the
+     * routes, the policy and the schema are untouched. Members leave the
+     * sidebar in favour of the cluster's single entry, and every member's
+     * list page gains a sub-navigation to its siblings. See `Cluster`.
+     *
+     * @var class-string<Cluster>|null
+     */
+    protected static ?string $cluster = null;
+
     protected static ?int $sort = null;
 
     /**
@@ -290,6 +302,12 @@ abstract class Resource
     public static function group(): ?string
     {
         return static::$group;
+    }
+
+    /** @return class-string<Cluster>|null */
+    public static function cluster(): ?string
+    {
+        return static::$cluster;
     }
 
     public static function purpose(): ?string

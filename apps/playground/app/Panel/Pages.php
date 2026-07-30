@@ -68,19 +68,6 @@ final class Pages
     {
         return [
             /*
-             * This one JOINS A GROUP THE RESOURCES ALREADY CREATED rather than
-             * making its own: connections are about the same network as Routers
-             * and Plans, and a separate heading would split one subject across
-             * two places in the column.
-             */
-            [
-                'title' => 'Connections',
-                'href' => '/workspaces/connections',
-                'icon' => 'activity',
-                'group' => 'Network',
-            ],
-
-            /*
              * App screens are a GROUP, not top-level items. They are not
              * resources - no table, no policy, no model behind a registry entry
              * - so grouping them keeps the top level for the things the panel

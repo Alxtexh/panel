@@ -539,11 +539,16 @@ final class Guide
                     'ANYTHING THAT IS NOT A RESOURCE HAS TO BE DECLARED, and this is the failure worth guarding. A page that is in no menu is indistinguishable from a page nobody has written - finished screens ended up reachable from nowhere here more than once, with their own tests still green.',
                     'So non-resource pages are declared on the SERVER, where a test can see them, and a coverage test renders every authenticated screen and fails on any that is neither a resource, nor declared, nor listed as deliberately unlinked WITH A REASON.',
                     'The panel contributes its own entries too - the trash screen, and anything a plugin added - so a generated portal links them without the application editing a list.',
+                    'A CLUSTER COLLAPSES SEVERAL RESOURCES INTO ONE ENTRY. A group is a heading - every member still owns a line of the column - which is right for peers and wrong for facets of one subject. Declaring a `Cluster` class and pointing each member\'s `$cluster` at it puts one word in the sidebar; the members appear as a sub-navigation strip on every screen inside, permission-filtered like everything else. Non-resource screens that belong to the same subject - a workspace, say - are named by the cluster\'s `pages()`, because they have no class to declare membership on.',
                 ],
                 'blocks' => [
                     [
                         'kind' => 'php',
                         'code' => "// app/Panel/Pages.php\npublic static function all(): array\n{\n    return [\n        ['title' => 'Mail', 'href' => '/apps/mail', 'icon' => 'mail', 'group' => 'Apps'],\n        ['title' => 'API reference', 'href' => '/docs', 'icon' => 'book-open', 'group' => 'Building'],\n    ];\n}\n\npublic static function intentionallyUnlinked(): array\n{\n    return [\n        '/dashboard' => 'The home screen: first in the sidebar and the logo target.',\n        '/help' => 'Linked from the sidebar footer.',\n    ];\n}",
+                    ],
+                    [
+                        'kind' => 'php',
+                        'code' => "// One word in the sidebar; the facets appear once you arrive.\nfinal class NetworkCluster extends Cluster\n{\n    protected static string \$icon = 'router';\n\n    public static function pages(): array\n    {\n        return [\n            ['title' => 'Connections', 'href' => '/workspaces/connections'],\n        ];\n    }\n}\n\n// On each member resource:\nprotected static ?string \$cluster = NetworkCluster::class;",
                     ],
                 ],
             ],

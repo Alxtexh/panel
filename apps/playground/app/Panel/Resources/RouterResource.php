@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Panel\Resources;
 
 use App\Models\Router;
+use App\Panel\Clusters\NetworkCluster;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
@@ -25,7 +26,9 @@ final class RouterResource extends Resource
 
     protected static ?string $purpose = 'The network hardware that serves connections, and its live state.';
 
-    protected static ?string $group = 'Network';
+    // A cluster member, not a group entry - the sidebar says "Network" once
+    // and this screen is reached from its sub-navigation. Roadmap 4.1.
+    protected static ?string $cluster = NetworkCluster::class;
 
     protected static ?int $sort = 20;
 

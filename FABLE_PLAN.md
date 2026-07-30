@@ -53,7 +53,13 @@ verification):
   grants-all Administrator in the new tenant; plus the discovered-and-fixed
   `ScopeSessionToTenant::restamp()` - a legitimate switch used to be
   flushed as a hostile cross-tenant session on the very next request.
-  `WorkspaceMembershipTest` follows the redirect to pin it.
+  `WorkspaceMembershipTest` follows the redirect to pin it (`4bd2a2f`).
+- **4.1** — clusters: `Cluster` class + `Resource::$cluster`, sidebar
+  collapse in the nav middleware (entry carries `members` for the coverage
+  test), per-request permission-filtered sub-nav via
+  `PanelManager::clusterNavFor()`, strip on ResourceIndex; playground proof
+  is the Network cluster (Routers, Plans, + Connections page). Guide and
+  blueprint updated.
 
 **Local env note:** `apps/playground/.env` now has `CACHE_STORE=database`
 (was redis, which wasn't running and 500'd every request).
@@ -440,7 +446,7 @@ Numbering follows `ROADMAP.md`. Sizes are that file's.
 
 | # | Item | Size | Note |
 | --- | --- | --- | --- |
-| 4.1 | Clusters | M | Grouped resources under one nav parent with a shared sub-nav. Do **after** Part A — it changes navigation, and navigation is one of the surfaces being straightened. |
+| 4.1 | Clusters | M | **Done.** `Cluster` + `Resource::$cluster`; one sidebar entry, shared permission-filtered sub-nav strip. Proven by the Network cluster (Routers, Plans, Connections). |
 | 4.2 | Nested resources | L | `/clients/5/invoices` as a first-class resource. |
 | 4.3 | Singular resources | S | One-record, settings-shaped screen, no list. |
 | 4.4 | Render hooks | M | Named injection points so a plugin can decorate a screen without forking it. |
