@@ -97,7 +97,7 @@ final class Table
 
     private ?string $keyColumn = null;
 
-    /** @var list<string> extra database columns to select that no column declares */
+    /** @var list<string|\Illuminate\Database\Query\Expression> extra database columns to select that no column declares */
     private array $additionalSelect = [];
 
     public static function make(): self
@@ -109,6 +109,21 @@ final class Table
     public function columns(array $columns): self
     {
         $this->columns = $columns;
+
+        return $this;
+    }
+
+    /**
+     * Adds to the declared columns rather than replacing them - roadmap
+     * 5.1's custom-field columns are the only caller today. `columns()`
+     * stays a replace: a resource author who calls it twice by mistake
+     * should see their first list vanish, not silently gain an extra one.
+     *
+     * @param  list<Column>  $columns
+     */
+    public function appendColumns(array $columns): self
+    {
+        $this->columns = [...$this->columns, ...$columns];
 
         return $this;
     }
@@ -403,6 +418,24 @@ final class Table
     public function alsoSelect(array $columns): self
     {
         $this->additionalSelect = $columns;
+
+        return $this;
+    }
+
+    /**
+     * Adds to the raw SELECT list rather than replacing it - roadmap 5.1's
+     * custom-field JSON extractions are the only caller today, for the same
+     * reason `appendColumns()` exists rather than reusing `columns()`:
+     * `alsoSelect()` stays a replace, called once by the resource's own
+     * `table()` for whatever it needs (a joined id, a correlated subquery -
+     * see `UserResource`'s `role_names`), and a second, unrelated caller
+     * appending here must not silently discard that.
+     *
+     * @param  list<string|\Illuminate\Database\Query\Expression>  $columns
+     */
+    public function appendSelect(array $columns): self
+    {
+        $this->additionalSelect = [...$this->additionalSelect, ...$columns];
 
         return $this;
     }

@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Resources;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use PanelKit\Panel\CustomFields\CustomField;
+use PanelKit\Panel\CustomFields\CustomFieldFactory;
+use PanelKit\Panel\Forms\Fields\Field;
 use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Schema\Component;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\SchemaCache;
 use PanelKit\Panel\Support\TenantContext;
+use PanelKit\Panel\Tables\Columns\Column;
 use PanelKit\Panel\Tables\Columns\EditableColumn;
 use PanelKit\Panel\Tables\ListResult;
 use PanelKit\Panel\Tables\Table;
@@ -82,7 +87,14 @@ abstract class Resource
 
     public static function formDefinition(): Form
     {
-        return static::form(Form::make());
+        $form = static::form(Form::make());
+
+        $fields = array_map(
+            static fn (CustomField $f): Field => CustomFieldFactory::field($f),
+            static::customFields(),
+        );
+
+        return $form->appendFields($fields);
     }
 
     /**
@@ -338,7 +350,28 @@ abstract class Resource
 
     public static function definition(): Table
     {
-        return static::table(Table::make());
+        $table = static::table(Table::make());
+
+        $definitions = static::customFields();
+
+        if ($definitions === []) {
+            return $table;
+        }
+
+        // The COLUMN and the SQL that fills it travel separately - see
+        // `CustomFieldFactory::column()`'s own note on why a raw JSON
+        // extraction cannot go through `Column::from()`.
+        $columns = array_map(
+            static fn (CustomField $f): Column => CustomFieldFactory::column($f),
+            $definitions,
+        );
+
+        $select = array_map(
+            static fn (CustomField $f): Expression => CustomFieldFactory::selectExpression($f),
+            $definitions,
+        );
+
+        return $table->appendColumns($columns)->appendSelect($select);
     }
 
     /**
@@ -407,29 +440,6 @@ abstract class Resource
     }
 
     /**
-     * Fields this TENANT has added to the resource, beyond the declared ones.
-     *
-     * A SEAM, NOT A FEATURE. It returns nothing today and exists so that adding
-     * tenant-defined fields later is ADDITIVE rather than structural.
-     *
-     * WHY IT HAS TO BE DECIDED BEFORE MORE RESOURCES ARE WRITTEN: two of the
-     * panel's load-bearing assumptions are that a schema is identical for every
-     * tenant, and that every column names a real database column. Custom fields
-     * break both, and retrofitting them afterwards means changing the schema
-     * cache, the column engine, the form layer, validation and import/export at
-     * the same time. With the seam in place, each of those can be taught about
-     * custom fields on its own.
-     *
-     * WHAT IT MUST EVENTUALLY RETURN is a list of field definitions in the same
-     * shape a declared field produces, resolved from wherever an installation
-     * stores them - a `custom_fields` table, a config file, anything. What it
-     * must NOT do is read the request: this runs inside a CACHED closure, so
-     * anything request-varying would be baked into an entry other requests then
-     * receive.
-     *
-     * @return list<array<string, mixed>>
-     */
-    /**
      * The actions this resource supports at all.
      *
      * EVERY ACTION BY DEFAULT, narrowed by resources that genuinely cannot do
@@ -448,22 +458,24 @@ abstract class Resource
         return Abilities::ACTIONS;
     }
 
+    /** @return list<CustomField> */
     protected static function customFields(): array
     {
-        return [];
+        return CustomField::forResource(static::key())->all();
     }
 
     /**
-     * A fingerprint of this tenant's custom fields, or an empty string.
+     * A fingerprint of this resource's custom field definitions, or an empty
+     * string.
      *
      * EMPTY IS THE IMPORTANT CASE. It is what keeps the schema cache key
-     * unchanged - and therefore shared across every tenant - for an
-     * installation that uses no custom fields, which is every installation
-     * today. See `SchemaCache::key`.
+     * unchanged for a resource nobody has added a custom field to, which is
+     * most resources most of the time. See `SchemaCache::key`.
      *
-     * The hash covers the DEFINITIONS, so changing one invalidates only the
-     * schemas that contain it, and does so without anybody remembering to clear
-     * a cache.
+     * The hash covers the DEFINITIONS (installation-wide, not per tenant -
+     * see the migration's own note), so adding, editing or removing one
+     * invalidates only the schemas that contain it, and does so without
+     * anybody remembering to clear a cache.
      */
     protected static function customFieldsFingerprint(): string
     {

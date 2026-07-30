@@ -547,14 +547,14 @@ final class PanelManager
     /**
      * Cleared by the Octane flush listener in PanelServiceProvider.
      *
-     * Static because the listener has no instance to reach, and empty because
-     * nothing tenant-derived is permitted in a static in the first place. It
-     * exists so that when Phase 4 adds process-level caches there is already a
-     * single, obvious place to clear them.
+     * Static because the listener has no instance to reach. Nothing
+     * TENANT-derived is permitted in a static in the first place - what
+     * belongs here is process-level state about the INSTALLATION, which a
+     * long-lived worker may outlive.
      */
     public static function flushMemoization(): void
     {
-        // Intentionally empty in Phase 0. See the class docblock.
+        CustomFields\CustomField::flushMemoization();
     }
 
     public function remember(string $key, \Closure $resolve): mixed

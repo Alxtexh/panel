@@ -6,12 +6,16 @@ namespace PanelKit\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+use PanelKit\Panel\CustomFields\CustomField;
+use PanelKit\Panel\CustomFields\CustomFieldFactory;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\TenantContext;
@@ -58,12 +62,12 @@ final class RecordController extends Controller
         $record = new $model;
 
         // Only declared keys. Nothing else can reach the model.
-        $record->forceFill($form->sanitize($validated));
+        $record->forceFill($this->foldCustomFields($class::key(), $form->sanitize($validated), $record));
 
         // From context, never from input.
         $this->applyTenant($record);
 
-        $record->save();
+        $this->save($record);
 
         return back()->with('success', $class::label().' created.');
     }
@@ -81,8 +85,8 @@ final class RecordController extends Controller
 
         $this->assertNotStale($request, $record);
 
-        $record->forceFill($form->sanitize($validated));
-        $record->save();
+        $record->forceFill($this->foldCustomFields($class::key(), $form->sanitize($validated), $record));
+        $this->save($record);
 
         return back()->with('success', $class::label().' updated.');
     }
@@ -362,6 +366,18 @@ final class RecordController extends Controller
             return;
         }
 
+        /*
+         * A RECORD WHOSE OWN TABLE HAS NO TENANT COLUMN IS NOT TENANT DATA,
+         * whatever the tenancy mode. `CustomField` (roadmap 5.1) is the
+         * first of these - an installation-wide definition, not something a
+         * single tenant owns (see the migration's and the model's own
+         * notes) - so its table was never given one. Writing it anyway would
+         * throw the same way a dedicated-database write would.
+         */
+        if (! Schema::hasColumn($record->getTable(), $context->column())) {
+            return;
+        }
+
         $key = $context->currentKey();
 
         // No tenant is always a bug in a panel, never a valid state
@@ -369,6 +385,85 @@ final class RecordController extends Controller
         abort_if($key === null, 403, 'No tenant resolved; refusing to write an unscoped record.');
 
         $record->setAttribute($context->column(), $key);
+    }
+
+    /**
+     * Saves a record, turning a unique-constraint collision into a field
+     * error instead of a 500.
+     *
+     * GENERIC ON PURPOSE - roadmap 5.1 is what needed this first (two custom
+     * field definitions both called `notes` on `clients`, caught by the
+     * migration's own `unique(['resource', 'key'])`), but nothing about it is
+     * specific to that table. Every resource's `store()`/`update()` already
+     * runs through here, so any declared unique constraint - present or
+     * future - gets the same friendly rejection rather than a stack trace,
+     * without every resource needing its own `Rule::unique()` wired up by
+     * hand (which would also need `->ignore()` on update, and nothing in the
+     * form layer today has the current record's id at schema-build time to
+     * give it).
+     */
+    private function save(Model $record): void
+    {
+        try {
+            $record->save();
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages([
+                '_conflict' => 'This would duplicate a record that already exists.',
+            ]);
+        }
+    }
+
+    /**
+     * Moves each sanitized `custom_{key}` entry into the record's `custom`
+     * JSON column, unprefixed - roadmap 5.1.
+     *
+     * READS THE RECORD'S OWN EXISTING `custom` FIRST, because a definition
+     * can be hidden by its own `visibleWhen` (Form::sanitize already dropped
+     * it from `$sanitized` in that case) or simply absent from an older
+     * client's payload. Starting from `[]` every time would erase a value
+     * the operator never had a chance to see, let alone change - the same
+     * "declared but not submitted keeps its stored value" guarantee
+     * `Form::sanitize()` already gives every real column.
+     *
+     * FROM `CustomField::forResource()`, NOT the schema's already-serialised
+     * `customFields()`: this needs both the prefixed form key (to find the
+     * value in `$sanitized`) and the bare stored key (to write into
+     * `custom`) for the same definition, and the schema array only kept the
+     * prefixed one - re-deriving the bare key by stripping `custom_` would
+     * be re-encoding a fact `CustomFieldFactory` already owns.
+     *
+     * A NO-OP FOR EVERY RESOURCE WITHOUT DEFINITIONS - the common case - so
+     * `$sanitized['custom']` is never set, and a model with no `custom`
+     * column (nothing has defined one for it yet) is never asked to save
+     * one.
+     *
+     * @param  array<string, mixed>  $sanitized
+     * @return array<string, mixed>
+     */
+    private function foldCustomFields(string $resource, array $sanitized, Model $record): array
+    {
+        $definitions = CustomField::forResource($resource);
+
+        if ($definitions->isEmpty()) {
+            return $sanitized;
+        }
+
+        $custom = $record->getAttribute('custom') ?? [];
+
+        foreach ($definitions as $definition) {
+            $formKey = CustomFieldFactory::formKey($definition);
+
+            if (! array_key_exists($formKey, $sanitized)) {
+                continue;
+            }
+
+            $custom[$definition->key] = $sanitized[$formKey];
+            unset($sanitized[$formKey]);
+        }
+
+        $sanitized['custom'] = $custom;
+
+        return $sanitized;
     }
 
     /** @return class-string<resource> */
