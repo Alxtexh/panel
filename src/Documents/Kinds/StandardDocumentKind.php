@@ -70,7 +70,16 @@ abstract class StandardDocumentKind extends DocumentKind
                 ->schema([
                     ColourField::make('accent')
                         ->label('Accent colour')
-                        ->help('Rules, headings and the total line.'),
+                        ->help('Rules, headings and the total line.')
+                        /*
+                         * AGAINST WHITE, BECAUSE THAT IS THE ONLY SURFACE THIS
+                         * COLOUR EVER RENDERS ON - see `PkDocument.vue`, which
+                         * draws every document on a fixed white page. A pale
+                         * accent that looks fine as a small swatch in this
+                         * form can be nearly invisible as the total line on
+                         * an actual printed invoice - roadmap 7.1.
+                         */
+                        ->checkContrastAgainst('#ffffff'),
                     /*
                      * SEGMENTED, because this is one decision with two answers.
                      * As two tiles it took a quarter of the form and read as a
