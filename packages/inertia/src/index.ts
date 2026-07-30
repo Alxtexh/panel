@@ -33,6 +33,9 @@ export { default as ResourceForm } from './pages/ResourceForm.vue'
 export { default as ResourceView } from './pages/ResourceView.vue'
 export { default as Trash } from './pages/Trash.vue'
 export { default as PanelHome } from './pages/PanelHome.vue'
+export { default as DocumentTemplates } from './pages/documents/Templates.vue'
+export { default as DocumentTemplateDesigner } from './pages/documents/TemplateDesigner.vue'
+export { default as DocumentPrint } from './pages/documents/DocumentPrint.vue'
 
 export { default as AuditTimeline } from './components/AuditTimeline.vue'
 
@@ -63,4 +66,13 @@ export const PANEL_PAGES = {
     ResourceView: () => import('./pages/ResourceView.vue'),
     Trash: () => import('./pages/Trash.vue'),
     PanelHome: () => import('./pages/PanelHome.vue'),
+
+    /*
+     * The document designer. Nested names, because the server sends
+     * `documents/TemplateDesigner` - a flat key here would not match and the
+     * failure is a white page.
+     */
+    'documents/Templates': () => import('./pages/documents/Templates.vue'),
+    'documents/TemplateDesigner': () => import('./pages/documents/TemplateDesigner.vue'),
+    'documents/DocumentPrint': () => import('./pages/documents/DocumentPrint.vue'),
 } as const

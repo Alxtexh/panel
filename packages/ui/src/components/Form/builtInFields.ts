@@ -1,5 +1,7 @@
 import { registerFieldControl } from '../../composables/useFieldControls'
 import { registerOptionPreview } from '../../composables/useOptionPreviews'
+import PkColourModePreview from '../Document/PkColourModePreview.vue'
+import PkVoucherCodeBoxPreview from '../Document/PkVoucherCodeBoxPreview.vue'
 import PkCheckboxList from './PkCheckboxList.vue'
 import PkColourPicker from './PkColourPicker.vue'
 import PkRadioGroup from './PkRadioGroup.vue'
@@ -43,4 +45,13 @@ export function registerBuiltInFieldControls(): void {
      * not use is one nobody has exercised.
      */
     registerOptionPreview('swatch', PkSwatchPreview)
+
+    /*
+     * The document designer's two pickers. `voucher-code-box` draws each framing
+     * by rendering the SAME component the voucher prints - a picker that drew
+     * its own approximation could be wrong, and the way you find that out is a
+     * batch of two hundred vouchers.
+     */
+    registerOptionPreview('voucher-code-box', PkVoucherCodeBoxPreview)
+    registerOptionPreview('document-colour-mode', PkColourModePreview)
 }

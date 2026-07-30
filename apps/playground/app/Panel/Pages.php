@@ -86,6 +86,20 @@ final class Pages
              */
             ['title' => 'Mail', 'href' => '/apps/mail', 'icon' => 'mail', 'group' => 'Apps'],
             ['title' => 'Chat', 'href' => '/apps/chat', 'icon' => 'chat', 'group' => 'Apps'],
+
+            /*
+             * IN "APPS" RATHER THAN A SETTINGS GROUP, because designing an
+             * invoice is a thing an operator DOES rather than a preference they
+             * set. It sits beside Mail and Chat for the same reason those do:
+             * they are all screens somebody opens to produce something, not
+             * knobs somebody turns once.
+             */
+            [
+                'title' => 'Documents',
+                'href' => '/documents',
+                'icon' => 'file-text',
+                'group' => 'Apps',
+            ],
             /*
              * Development surfaces, kept apart from the operator's screens. A
              * device workbench and an API reference are for whoever is BUILDING
@@ -260,6 +274,21 @@ final class Pages
              */
             '/platform/trash' => 'The platform portal links its own bin; this portal links its own.',
             '/reseller/trash' => 'The reseller portal links its own bin; this portal links its own.',
+            /*
+             * THE DESIGNER IS ROUTED IN EVERY PORTAL AND LINKED IN ONE.
+             *
+             * Panel routes are registered per panel, so the package mounts the
+             * document designer wherever a panel exists - which is right: a
+             * template is tenant data, and an application may well want a
+             * reseller designing their own letterhead.
+             *
+             * THIS application links it only from the operator portal, because
+             * that is where its documents are produced. An application that
+             * wants it in a generated portal adds the entry; nothing here
+             * prevents that, and the route is already waiting.
+             */
+            '/platform/documents' => 'Routed in every portal; this application links the designer from the operator portal only.',
+            '/reseller/documents' => 'Routed in every portal; this application links the designer from the operator portal only.',
         ];
     }
 }

@@ -4,7 +4,8 @@
 is the forward view — everything outstanding, why it matters, what it costs, and
 what it depends on.
 
-Written 2026-07-29. Sizes are relative, not calendar estimates:
+Written 2026-07-29, last updated 2026-07-30. **§1 and §3.1–3.3 are done** — see
+[CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
 **S** = an afternoon · **M** = a day or two · **L** = several days · **XL** = a
 week or more.
 
@@ -14,12 +15,12 @@ week or more.
 
 | | |
 | --- | --- |
-| Tests | 1,205 · 1,192 passing · 13 skipped (MariaDB ×5, pgvector ×8 fixtures) |
+| Tests | 1,233 · 1,220 passing · 13 skipped (MariaDB ×5, pgvector ×8 fixtures) |
 | Types, build, `panel:doctor` | Clean |
 | CI | Runs the suite, doctor, vitest, types and both bundles from a clean clone |
 | Packages | `panelkit/panel`, `@panelkit/ui`, `@panelkit/inertia` — installable, verified in a fresh `laravel/vue-starter-kit` app |
-| Commits | 72 on `main`, pushed |
-| Tags | **None** |
+| Commits | 75 on `main` |
+| Tags | `v0.1.0` |
 
 The panel works, installs elsewhere, and is covered. What follows is the gap
 between that and a product somebody else can adopt without you in the room.
@@ -60,20 +61,22 @@ should be held to:
 
 ---
 
-## 1. Ship it
+## 1. Ship it — **DONE**
 
-Nothing here is interesting and all of it blocks adoption.
+| # | Item | Where |
+| --- | --- | --- |
+| 1.1 | Tag `v0.1.0` | `git tag v0.1.0`, annotated |
+| 1.2 | Subtree split script | [scripts/split.sh](scripts/split.sh) — verified locally; refuses a dirty tree, remotes are config not constants |
+| 1.3 | Upgrade guide + version policy | [UPGRADING.md](UPGRADING.md) |
+| 1.4 | Deployment notes | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| — | Changelog, with the limits stated | [CHANGELOG.md](CHANGELOG.md) |
 
-| # | Item | Size | Notes |
-| --- | --- | --- | --- |
-| 1.1 | **Tag `v0.1.0` on both packages** | S | No tags exist, so `composer require panelkit/panel` needs `@dev` or a path repo. |
-| 1.2 | **Subtree split script** | M | Composer cannot install a subdirectory of a monorepo. `scripts/split.sh` pushes `packages/panel` and `packages/ui` to standalone repos so a version is installable. You run the push; I cannot. |
-| 1.3 | **Upgrade guide + version policy** | S | What breaks between minors, what a `0.x` bump means, how to upgrade a panel. |
-| 1.4 | **Deployment notes** | S | Queue worker, scheduler, Redis for tagged cache, the `@source` lines Tailwind needs. Half of this exists scattered across READMEs. |
+**Still yours to run:** creating the destination repositories and the push. The
+script takes them as configuration precisely because a force-push to a hardcoded
+wrong remote rewrites somebody else's main branch.
 
-**Decision for you:** two standalone repos (splits) or one monorepo published via
-a splitter action on push? The first is a script you run; the second is
-automation that needs a token in GitHub.
+**Still open — the same decision:** two standalone repos you push with the
+script, or a splitter action on push (automation that needs a token in GitHub).
 
 ---
 
@@ -97,7 +100,36 @@ From [mds/centipid-notes.md](mds/centipid-notes.md) and
 [mds/portal-designer-notes.md](mds/portal-designer-notes.md). Ordered so each one
 makes the next cheaper.
 
-### 3.1 Document template designer — **XL, the flagship**
+### 3.1 Document template designer — **DONE**
+
+Shipped as `PanelKit\Panel\Documents`: a kind registry, a versioned tenant-scoped
+`DocumentTemplate`, one `DocumentRenderer` that the designer preview and the
+print route both go through, and `PkDocument` — one Vue component that draws
+blocks and has never heard of an invoice. Invoice, receipt and voucher ship; the
+playground replaces `invoice` with its own subclass to prove the override.
+
+**What previewing against a real record found on its first use**, and would not
+have found otherwise: a quantity of `1`, a unit of `100,000.00` and an amount of
+`100,000.00` rendered as `1100,000.00100,000.00`, because right-aligned numeric
+cells had no horizontal padding. Sample data has a tidy `2,500.00` line and three
+comfortable columns. That is the argument for the record picker, made by the
+record picker.
+
+**Not built, and named rather than implied:**
+
+- **Email and web surfaces.** The renderer is shared by the preview and the
+  print, which is the pair that could diverge dangerously. Nothing emails a
+  document yet, so there is no third caller to keep honest.
+- **Version history.** `version` is a counter stamped onto each rendered
+  document, so you can tell *which* version printed something. Reading an old
+  version back needs a second table, and that belongs with the first feature
+  that has to re-render an old document.
+- **One template per kind per tenant**, enforced by a unique index. Multiple
+  named templates per kind is a deliberate later decision, not an oversight.
+
+The original plan, for reference:
+
+### 3.1a Document template designer — the original breakdown
 
 A tenant-owned template for the documents that leave the system: **voucher,
 invoice, receipt**. Form on the left, the artefact rendered live on the right,
@@ -141,7 +173,18 @@ Breaks into:
 **Decision for you:** which kind first? Invoice already exists as a hardcoded
 screen and every installation needs it. Voucher is what the video showed.
 
-### 3.2 Visual option pickers — **M**
+### 3.2 Visual option pickers — **DONE**
+
+`VisualSelectField` in PHP, `PkVisualSelect` plus a `registerOptionPreview`
+registry in Vue. Three renderers ship: `swatch`, `voucher-code-box` and
+`document-colour-mode`. The code-box picker draws each option by rendering
+**the same `PkCodeBox` the voucher prints**, so the tile and the paper cannot
+disagree.
+
+Declaring no renderer is a supported mode; naming one nothing registered says so
+in the tile and lists what is registered.
+
+### 3.2a Visual option pickers — the original note
 
 *When a choice changes appearance, the option must show the appearance.*
 
@@ -156,7 +199,15 @@ the boundary.
 
 **Do this first.** Everything visual after it is cheaper.
 
-### 3.3 Numeric presets as chips — **S**
+### 3.3 Numeric presets as chips — **DONE**
+
+`->presets([7, 14, 30])` on `NumberField`, chips beside the input rather than
+instead of it. A preset outside the field's own `min`/`max` throws at schema
+build, because a chip that fails validation when pressed reads as "you typed
+something wrong" about a value the panel supplied. Applied to the backup
+retention box.
+
+### 3.3a Numeric presets as chips — the original note
 
 *Theirs:* a fixed row of day chips.
 
@@ -350,15 +401,19 @@ panel adds its own proof that nothing leaks across the boundary.
 
 ## Suggested sequence
 
-**Now — make it adoptable.** 1.1 → 1.2 → 1.3. Small, and everything else is
-theoretical until a version can be installed.
+**~~Now — make it adoptable.~~ Done.** §1: tagged, split script, upgrade and
+deployment notes, changelog.
 
-**Then — the flagship.** 3.2 (visual pickers) → 3.1 (template designer). The
-designer is the biggest single gain and 3.2 is its foundation. Pick up 3.3, 3.6
-and 3.10 along the way; they are hours each and 3.1 wants two of them.
+**~~Then — the flagship.~~ Done.** 3.2 (visual pickers) → 3.1 (template
+designer), with 3.3 (preset chips) alongside. 3.6's variable chips landed inside
+the designer, sourced from the kind rather than hand-written; making them
+available to announcements and scheduled reports is what remains of that item.
 
-**Then — trust.** 2.3 (browser tests) while the new screens are fresh, then the
-lint decision (2.1).
+**Next — trust, while the new screens are fresh.** 2.3 (browser tests) has just
+paid for itself twice by hand: the wrong emitted event on the designer's form
+(type-checked, built, silently did nothing) and the colliding invoice columns
+were both invisible to 1,233 passing tests and obvious on screen. Then the lint
+decision (2.1).
 
 **Alongside, cheap and high-leverage.** 7.1 (contrast guard) and 7.5 (API
 parity, applied per feature) cost hours each and are exactly the kind of thing

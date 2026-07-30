@@ -6,6 +6,8 @@ namespace PanelKit\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use PanelKit\Panel\Documents;
 use PanelKit\Panel\Knowledge;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\TenantContext;
@@ -51,6 +53,7 @@ final class DoctorCommand extends Command
         $this->checkTenancy($context);
         $this->checkIndexes($context);
         $this->checkKnowledge();
+        $this->checkDocumentTemplates();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -277,6 +280,75 @@ final class DoctorCommand extends Command
      * and the assistant simply says it has no documentation. Nothing in a log,
      * nothing on a screen, and the feature looks like it was never turned on.
      */
+    /**
+     * Templates still writing a variable the document no longer has.
+     *
+     * THE FAILURE THIS CATCHES IS SILENT AND PRINTED. A kind renames `@expiry`
+     * to `@expires`; every stored template that used the old token keeps
+     * rendering, because an unknown token is left alone rather than blanked. So
+     * the voucher comes off the printer reading "Valid until @expiry" - correct
+     * everywhere in the panel, wrong on the paper, and discovered by a customer.
+     *
+     * IT READS EVERY TENANT'S TEMPLATES, which is why the scope is removed
+     * explicitly rather than by accident. This is an operator command run from a
+     * console with no tenant resolved, and the scope would otherwise deny every
+     * row and report a clean bill of health for an installation full of broken
+     * templates - the worst possible answer.
+     */
+    private function checkDocumentTemplates(): void
+    {
+        if (! Schema::hasTable('panel_document_templates')) {
+            // The migration has not run. That is a fresh install, not a fault.
+            return;
+        }
+
+        $kinds = app(Documents\DocumentKinds::class);
+
+        $templates = Documents\DocumentTemplate::query()
+            ->withoutGlobalScope('tenant')
+            ->get(['id', 'tenant_id', 'kind', 'settings']);
+
+        foreach ($templates as $template) {
+            if (! $kinds->has((string) $template->kind)) {
+                $this->problem(
+                    "A stored template is for the unregistered kind [{$template->kind}]",
+                    'Nothing can render it, so whatever used to print this document now prints '
+                    .'nothing. Either the plugin that registered the kind was removed, or its '
+                    .'service provider is no longer running.',
+                );
+
+                continue;
+            }
+
+            $known = array_keys($kinds->get((string) $template->kind)->variables());
+            $used = [];
+
+            foreach ((array) $template->settings as $value) {
+                if (is_string($value)) {
+                    preg_match_all('/@[a-z_][a-z0-9_]*/i', $value, $matches);
+                    $used = [...$used, ...$matches[0]];
+                }
+            }
+
+            $unknown = array_values(array_unique(array_diff($used, $known)));
+
+            if ($unknown !== []) {
+                $this->problem(
+                    sprintf(
+                        'The %s template (tenant %s) uses %s, which %s not exist',
+                        $template->kind,
+                        (string) $template->tenant_id,
+                        implode(', ', $unknown),
+                        count($unknown) === 1 ? 'does' : 'do',
+                    ),
+                    'An unknown variable is printed as written rather than blanked, so the '
+                    .'document reads "@expiry" where a date belongs. Known variables for this '
+                    .'kind: '.(implode(', ', $known) ?: 'none').'.',
+                );
+            }
+        }
+    }
+
     private function checkKnowledge(): void
     {
         if ((array) config('panel.knowledge.sources', []) === []) {

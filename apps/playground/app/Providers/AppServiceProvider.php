@@ -73,6 +73,22 @@ class AppServiceProvider extends ServiceProvider
          */
         Gate::policy(\PanelKit\Panel\Alerts\Announcement::class, \App\Policies\AnnouncementPolicy::class);
 
+        /*
+         | THE INVOICE KIND, TAUGHT ABOUT THIS APPLICATION'S SUBSCRIBERS.
+         |
+         | The package ships an invoice that previews against invented data,
+         | because it has never heard of a `clients` table. Registering a
+         | subclass under the SAME id replaces it - which is the registry's
+         | documented override, and the thing that makes "a plugin can add a
+         | document kind" true rather than aspirational.
+         |
+         | In `boot()` rather than `register()`, deliberately: the package
+         | registers its three in `register()`, so anything here is guaranteed
+         | to run after them and win without depending on provider order.
+         */
+        app(\PanelKit\Panel\Documents\DocumentKinds::class)
+            ->register(new \App\Documents\ClientInvoiceKind);
+
         $this->configureDefaults();
     }
 

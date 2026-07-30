@@ -194,6 +194,47 @@ final class PanelRoutes
                     ->whereNumber('id')
                     ->name('announcements.dismiss');
 
+                /*
+                 * DESIGNING THE DOCUMENTS THAT LEAVE THE SYSTEM.
+                 *
+                 * DECLARED HERE RATHER THAN IN `within()`, like trash, because
+                 * none of it takes a `{resource}` segment: a document kind is
+                 * not a resource and a template is not one of its records.
+                 *
+                 * `{kind}` IS CONSTRAINED so it cannot swallow the resource
+                 * routes below. Without the pattern, `documents/print` would
+                 * match a kind called "print", and the failure would be a page
+                 * that renders the wrong thing rather than a 404.
+                 */
+                Route::prefix('documents')->name('documents.')->group(function (): void {
+                    Route::get('/', [Controllers\DocumentTemplateController::class, 'index'])
+                        ->name('index');
+
+                    Route::get('{kind}', [Controllers\DocumentTemplateController::class, 'edit'])
+                        ->where('kind', '[a-z0-9_-]+')
+                        ->name('edit');
+
+                    Route::put('{kind}', [Controllers\DocumentTemplateController::class, 'update'])
+                        ->where('kind', '[a-z0-9_-]+')
+                        ->name('update');
+
+                    /*
+                     * THE PREVIEW IS A POST, and not because it changes
+                     * anything - it changes nothing. It carries the whole
+                     * unsaved template, which is far past what belongs in a
+                     * query string, and a GET would put a tenant's letterhead,
+                     * support number and body copy into every access log and
+                     * browser history entry on the way past.
+                     */
+                    Route::post('{kind}/preview', [Controllers\DocumentTemplateController::class, 'preview'])
+                        ->where('kind', '[a-z0-9_-]+')
+                        ->name('preview');
+
+                    Route::get('{kind}/print', [Controllers\DocumentTemplateController::class, 'print'])
+                        ->where('kind', '[a-z0-9_-]+')
+                        ->name('print');
+                });
+
                 foreach (self::extensions() as $extension) {
                     $extension($keys, $panel);
                 }
