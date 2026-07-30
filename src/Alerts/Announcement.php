@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Alerts;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use PanelKit\Panel\Documents\DocumentBranding;
 use PanelKit\Panel\Support\TenantContext;
 
 /**
@@ -107,13 +109,54 @@ final class Announcement extends Model
             ->get();
     }
 
+    /**
+     * Tokens `body` may contain, drawn from what a banner actually knows -
+     * not a per-record field the way an invoice's `@customer` is, because an
+     * announcement has no record of its own. What it does have is who is
+     * reading it and which organisation it was written for, so those are the
+     * two names on offer.
+     *
+     * THE SAME MAP DRIVES THREE THINGS FROM ONE DECLARATION: the chip strip
+     * under the field (via `->chips()` on the `body` field in
+     * `AnnouncementResource`), the substitution in `substitute()` below, and
+     * `panel:doctor`'s check for a token that does not exist - the same
+     * three-way reuse `DocumentKind::variables()` already gets for templates.
+     *
+     * @return array<string, string>
+     */
+    public static function variables(): array
+    {
+        return [
+            '@user' => "The reader's name",
+            '@organisation' => 'The organisation this announcement was written for',
+        ];
+    }
+
+    /**
+     * Replace this announcement's tokens for one specific reader.
+     *
+     * AN UNKNOWN TOKEN IS PRINTED AS WRITTEN, not blanked - the same choice
+     * `DocumentRenderer` makes, for the same reason: a banner that silently
+     * ate "@expiry" would read as finished prose with a word missing, which
+     * is a worse failure than "@expiry" being visibly wrong.
+     */
+    public static function substitute(string $text, ?Authenticatable $user): string
+    {
+        $name = ($user !== null && isset($user->name)) ? (string) $user->name : 'there';
+
+        return strtr($text, [
+            '@user' => $name,
+            '@organisation' => app(DocumentBranding::class)->company(),
+        ]);
+    }
+
     /** @return array<string, mixed> */
-    public function toBanner(): array
+    public function toBanner(?Authenticatable $user = null): array
     {
         return [
             'id' => $this->getKey(),
             'title' => $this->title,
-            'body' => $this->body,
+            'body' => $this->body === null ? null : self::substitute($this->body, $user),
             'severity' => $this->severity,
             'display' => $this->display,
             'actionLabel' => $this->action_label,

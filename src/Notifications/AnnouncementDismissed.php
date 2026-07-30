@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Notifications;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Notifications\Notification;
 use PanelKit\Panel\Alerts\Announcement;
 
@@ -33,12 +34,24 @@ final class AnnouncementDismissed extends Notification
         return ['database'];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * SUBSTITUTED FOR THIS SPECIFIC RECIPIENT, the same as the banner was
+     * before it was dismissed - the copy in the bell is the second place this
+     * text is shown, not a second declaration of it, and it would be a
+     * regression for a name to resolve on the dashboard and then revert to
+     * "@user" the moment the notice moves into the bell.
+     *
+     * @return array<string, mixed>
+     */
     public function toArray(object $notifiable): array
     {
+        $user = $notifiable instanceof Authenticatable ? $notifiable : null;
+
         return [
             'title' => $this->announcement->title,
-            'body' => $this->announcement->body,
+            'body' => $this->announcement->body === null
+                ? null
+                : Announcement::substitute($this->announcement->body, $user),
             'href' => $this->announcement->action_url,
             /*
              * THE SEVERITY TRAVELS, so an outage notice does not become an
