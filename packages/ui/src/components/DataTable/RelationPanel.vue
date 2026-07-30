@@ -59,8 +59,10 @@ function format(column: SchemaColumn, value: unknown): string {
 </script>
 
 <template>
-    <div class="flex flex-col gap-3">
-        <div class="pk-scroll w-full overflow-x-auto rounded-lg border">
+    <!-- ONE CARD - DESIGN_RULES rule 4: the load-more band shares the table's
+         border rather than floating beneath it as a separate object. -->
+    <div class="bg-card overflow-hidden rounded-lg border">
+        <div class="pk-scroll w-full overflow-x-auto">
             <table class="w-full border-collapse text-sm">
                 <thead class="bg-muted/40">
                     <tr>
@@ -118,7 +120,7 @@ function format(column: SchemaColumn, value: unknown): string {
         </div>
 
         <!-- "More", not a page number. There is no total to count against. -->
-        <div v-if="nextCursor" class="flex justify-center">
+        <div v-if="nextCursor" class="flex justify-center border-t px-3 py-2">
             <button
                 type="button"
                 class="bg-background hover:bg-accent rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50"

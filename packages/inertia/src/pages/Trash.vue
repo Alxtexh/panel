@@ -44,7 +44,7 @@
  */
 import { Head, router } from '@inertiajs/vue3'
 import { PkButton as Button } from '@panelkit/ui'
-import { PkModal, TablePagination } from '@panelkit/ui'
+import { PkModal, TablePagination, TableShell } from '@panelkit/ui'
 import { Check, RotateCcw, Settings2, Trash2, TriangleAlert } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
@@ -380,77 +380,88 @@ function deletedOn(value: string): string {
             </p>
         </div>
 
-        <template v-else>
+        <!--
+            ONE CARD - DESIGN_RULES rule 4. Tabs, selection controls, the rows
+            and the pagination share the shell's single border, the same frame
+            every resource list uses.
+        -->
+        <TableShell v-else>
             <!-- ONE RESOURCE ON SCREEN AT A TIME, with its count on the tab. -->
-            <div class="flex gap-1 overflow-x-auto border-b">
-                <button
-                    v-for="g in groups"
-                    :key="g.key"
-                    type="button"
-                    class="flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm whitespace-nowrap transition-colors"
-                    :class="
-                        active === g.key
-                            ? 'border-primary font-medium'
-                            : 'text-muted-foreground hover:text-foreground border-transparent'
-                    "
-                    :disabled="paging"
-                    @click="openTab(g.key)"
-                >
-                    {{ g.label }}
-                    <span class="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-xs">
-                        {{ g.total }}
-                    </span>
-                </button>
-            </div>
+            <template #tabs>
+                <div class="flex gap-1 overflow-x-auto">
+                    <button
+                        v-for="g in groups"
+                        :key="g.key"
+                        type="button"
+                        class="flex items-center gap-1.5 rounded-md border-b-2 px-3 py-2 text-sm whitespace-nowrap transition-colors"
+                        :class="
+                            active === g.key
+                                ? 'border-primary font-medium'
+                                : 'text-muted-foreground hover:text-foreground border-transparent'
+                        "
+                        :disabled="paging"
+                        @click="openTab(g.key)"
+                    >
+                        {{ g.label }}
+                        <span
+                            class="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-xs"
+                        >
+                            {{ g.total }}
+                        </span>
+                    </button>
+                </div>
+            </template>
 
             <!--
-                THE SELECTION BAR REPLACES THE HEADER ROW rather than appearing
-                beside it: a bar that is always present but usually disabled is a
-                row of dead controls people stop reading.
+                THE SELECTION CONTROLS APPEAR WITH THE SELECTION rather than
+                sitting beside it always: a bar that is present but usually
+                disabled is a row of dead controls people stop reading.
             -->
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <label class="flex items-center gap-2 text-sm">
-                    <input
-                        type="checkbox"
-                        class="text-primary size-4 rounded border"
-                        :checked="allSelected"
-                        :indeterminate="selected.size > 0 && !allSelected"
-                        :disabled="actionable.length === 0"
-                        @change="toggleAll"
-                    />
-                    <span v-if="selected.size === 0" class="text-muted-foreground">
-                        Select all on this tab
-                    </span>
-                    <span v-else class="font-medium">{{ selected.size }} selected</span>
-                </label>
+            <template #toolbar>
+                <div class="flex flex-wrap items-center justify-between gap-2 px-2">
+                    <label class="flex items-center gap-2 text-sm">
+                        <input
+                            type="checkbox"
+                            class="text-primary size-4 rounded border"
+                            :checked="allSelected"
+                            :indeterminate="selected.size > 0 && !allSelected"
+                            :disabled="actionable.length === 0"
+                            @change="toggleAll"
+                        />
+                        <span v-if="selected.size === 0" class="text-muted-foreground">
+                            Select all on this tab
+                        </span>
+                        <span v-else class="font-medium">{{ selected.size }} selected</span>
+                    </label>
 
-                <div v-if="selected.size > 0" class="flex items-center gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        :disabled="!canRestoreSelection"
-                        @click="restoreSelected"
-                    >
-                        <RotateCcw class="size-3.5" />
-                        Restore
-                    </Button>
+                    <div v-if="selected.size > 0" class="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            :disabled="!canRestoreSelection"
+                            @click="restoreSelected"
+                        >
+                            <RotateCcw class="size-3.5" />
+                            Restore
+                        </Button>
 
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        class="text-destructive hover:text-destructive"
-                        :disabled="!canDestroySelection"
-                        @click="confirming = 'many'"
-                    >
-                        <Trash2 class="size-3.5" />
-                        Delete forever
-                    </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            class="text-destructive hover:text-destructive"
+                            :disabled="!canDestroySelection"
+                            @click="confirming = 'many'"
+                        >
+                            <Trash2 class="size-3.5" />
+                            Delete forever
+                        </Button>
+                    </div>
                 </div>
-            </div>
+            </template>
 
-            <div class="bg-card divide-y overflow-hidden rounded-lg border">
+            <div class="divide-y">
                 <div
                     v-for="record in records"
                     :key="`${active}-${record.id}`"
@@ -513,20 +524,22 @@ function deletedOn(value: string): string {
                 prose - "showing the 25 most recently deleted of 30" - which told
                 somebody five records existed and gave them no way to reach them.
             -->
-            <TablePagination
-                :page="page"
-                :per-page="perPage"
-                :per-page-options="[perPage]"
-                :rows-on-page="records.length"
-                :has-next="nextCursor !== null"
-                :has-previous="page > 1"
-                :total="group?.total"
-                :loading="paging"
-                @next="nextPage"
-                @previous="previousPage"
-                @first="firstPage"
-            />
-        </template>
+            <template #pagination>
+                <TablePagination
+                    :page="page"
+                    :per-page="perPage"
+                    :per-page-options="[perPage]"
+                    :rows-on-page="records.length"
+                    :has-next="nextCursor !== null"
+                    :has-previous="page > 1"
+                    :total="group?.total"
+                    :loading="paging"
+                    @next="nextPage"
+                    @previous="previousPage"
+                    @first="firstPage"
+                />
+            </template>
+        </TableShell>
     </div>
 
     <PkModal :open="confirming !== null" title="Delete permanently?" @close="confirming = null">

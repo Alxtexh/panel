@@ -85,6 +85,15 @@ const props = withDefaults(
         > | null
         /** The computed values, once the deferred prop lands. */
         summaryValues?: Record<string, number | null> | null
+        /**
+         * Whether the table draws its own border and rounding.
+         *
+         * False inside a `TableShell`, which owns the ONE border around
+         * tabs, toolbar, rows and pagination together (DESIGN_RULES rule
+         * 4) - a second border here would draw a box inside the box. True
+         * by default so a bare table dropped anywhere still looks finished.
+         */
+        framed?: boolean
     }>(),
     {
         rowKey: 'id',
@@ -95,6 +104,7 @@ const props = withDefaults(
         summaries: null,
         summaryValues: null,
         emptyTitle: 'Nothing here yet',
+        framed: true,
     },
 )
 
@@ -351,7 +361,8 @@ function summaryValue(key: string): string {
         only when it genuinely cannot. min-h-0 is what allows the shrink at all.
     -->
     <div
-        class="pk-scroll relative min-h-0 w-full min-w-0 shrink grow-0 overflow-auto rounded-lg border"
+        class="pk-scroll relative min-h-0 w-full min-w-0 shrink grow-0 overflow-auto"
+        :class="framed ? 'rounded-lg border' : ''"
     >
         <table class="w-full border-collapse text-sm">
             <thead class="bg-background sticky top-0 z-10">

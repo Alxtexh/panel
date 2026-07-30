@@ -40,6 +40,7 @@ import {
     RecordActions,
     SelectionBar,
     TablePagination,
+    TableShell,
     TableTabs,
     TableToolbar,
     PkModal,
@@ -834,54 +835,68 @@ function badgeLabel(key: string, value: unknown): string {
             Drag rows to change their order. Changes save as you drop them.
         </p>
 
-        <TableTabs
-            v-if="schema.table.tabs.length"
-            :tabs="schema.table.tabs"
-            :active="tab"
-            :counts="tabCounts"
-            @select="t.setTab"
-        />
+        <!--
+            ONE CARD, NOT FOUR - DESIGN_RULES rule 4. Tabs, toolbar, rows and
+            pagination were four sibling cards with gaps, so the controls read
+            as separate widgets that happened to be nearby. The shell owns the
+            border; the bands own their content.
+        -->
+        <TableShell>
+            <template v-if="schema.table.tabs.length" #tabs>
+                <TableTabs
+                    :tabs="schema.table.tabs"
+                    :active="tab"
+                    :counts="tabCounts"
+                    @select="t.setTab"
+                />
+            </template>
 
-        <TableToolbar
-            :search="search"
-            :search-placeholder="`Search ${schema.labelPlural.toLowerCase()}…`"
-            search-hint="Matches the start of any word in the searchable columns"
-            :filter-schema="filterSchema"
-            :filters="filters"
-            :columns="columns"
-            :hidden="hidden"
-            :loading="t.showSpinner.value"
-            :reorderable="canReorder"
-            :reordering="reordering"
-            @update:search="t.setSearch"
-            @apply-filters="t.applyFilters"
-            @apply-columns="applyColumns"
-            @clear="t.clearAll"
-            @toggle-reorder="reordering = !reordering"
-        />
-
-        <SelectionBar
-            v-if="t.selected.value.size"
-            :count="t.selected.value.size"
-            :all-matching="t.allMatching.value"
-            :total="total"
-            @select-all-matching="t.selectAllMatching"
-            @clear="t.clearSelection"
-        >
-            <template #actions>
-                <BulkActions
-                    :actions="allowedBulkActions"
+            <!-- The selection bar REPLACES the toolbar while rows are chosen:
+                 search and filters would change the set out from under the
+                 selection, so the two never make sense at once. -->
+            <template #toolbar>
+                <SelectionBar
+                    v-if="t.selected.value.size"
                     :count="t.selected.value.size"
                     :all-matching="t.allMatching.value"
                     :total="total"
-                    :busy="job.busy.value"
-                    @run="runBulk"
-                    @export="exportSelection"
+                    @select-all-matching="t.selectAllMatching"
+                    @clear="t.clearSelection"
+                >
+                    <template #actions>
+                        <BulkActions
+                            :actions="allowedBulkActions"
+                            :count="t.selected.value.size"
+                            :all-matching="t.allMatching.value"
+                            :total="total"
+                            :busy="job.busy.value"
+                            @run="runBulk"
+                            @export="exportSelection"
+                        />
+                    </template>
+                </SelectionBar>
+
+                <TableToolbar
+                    v-else
+                    :search="search"
+                    :search-placeholder="`Search ${schema.labelPlural.toLowerCase()}…`"
+                    search-hint="Matches the start of any word in the searchable columns"
+                    :filter-schema="filterSchema"
+                    :filters="filters"
+                    :columns="columns"
+                    :hidden="hidden"
+                    :loading="t.showSpinner.value"
+                    :reorderable="canReorder"
+                    :reordering="reordering"
+                    @update:search="t.setSearch"
+                    @apply-filters="t.applyFilters"
+                    @apply-columns="applyColumns"
+                    @clear="t.clearAll"
+                    @toggle-reorder="reordering = !reordering"
                 />
             </template>
-        </SelectionBar>
 
-        <!--
+            <!--
             One boundary around the table, not one per row.
 
             A row that throws does so because of the SHAPE of the data - a
@@ -890,32 +905,33 @@ function badgeLabel(key: string, value: unknown): string {
             failure cards is not more useful than one, and it is much harder to
             read.
         -->
-        <PkBoundary label="The table">
-            <DataTable
-                :group-by="schema.table.groupBy ?? null"
-                :reordering="reordering"
-                @reorder="persistOrder"
-                @row-contextmenu="onRowContextMenu"
-                :row-clickable="schema.table.rowClick === 'view'"
-                @row-click="onRowClick"
-                :columns="columns"
-                :rows="t.rows.value"
-                :hidden="hidden"
-                :sort="sort"
-                :direction="direction"
-                :loading="t.loading.value"
-                :filtered="t.isFiltered.value"
-                selectable
-                :selected="t.selected.value"
-                :summaries="columnSummaries"
-                :summary-values="(page.props.summary as any) ?? null"
-                :empty-title="`No ${schema.labelPlural.toLowerCase()} yet`"
-                :empty-hint="emptyHint"
-                @sort="t.sortBy"
-                @toggle-row="t.toggleRow"
-                @toggle-page="t.togglePage"
-            >
-                <!--
+            <PkBoundary label="The table" class="flex min-h-0 shrink grow-0 flex-col">
+                <DataTable
+                    :framed="false"
+                    :group-by="schema.table.groupBy ?? null"
+                    :reordering="reordering"
+                    @reorder="persistOrder"
+                    @row-contextmenu="onRowContextMenu"
+                    :row-clickable="schema.table.rowClick === 'view'"
+                    @row-click="onRowClick"
+                    :columns="columns"
+                    :rows="t.rows.value"
+                    :hidden="hidden"
+                    :sort="sort"
+                    :direction="direction"
+                    :loading="t.loading.value"
+                    :filtered="t.isFiltered.value"
+                    selectable
+                    :selected="t.selected.value"
+                    :summaries="columnSummaries"
+                    :summary-values="(page.props.summary as any) ?? null"
+                    :empty-title="`No ${schema.labelPlural.toLowerCase()} yet`"
+                    :empty-hint="emptyHint"
+                    @sort="t.sortBy"
+                    @toggle-row="t.toggleRow"
+                    @toggle-page="t.togglePage"
+                >
+                    <!--
                 ONE slot per column, branching inside.
 
                 Two loops both emitting `cell:<key>` would collide: Vue keeps the
@@ -925,36 +941,36 @@ function badgeLabel(key: string, value: unknown): string {
                 Nothing here names a resource - badge colouring comes from the
                 schema's semantic map, and formatting from the column type.
             -->
-                <template v-for="col in columns" :key="col.key" #[`cell:${col.key}`]="{ row }">
-                    <EditableCell
-                        v-if="byKey[col.key]?.editable"
-                        :type="byKey[col.key].type === 'toggle' ? 'toggle' : 'select'"
-                        :value="cellValue(row, col.key)"
-                        :options="byKey[col.key].options ?? {}"
-                        :on-label="byKey[col.key].onLabel"
-                        :off-label="byKey[col.key].offLabel"
-                        :busy="savingCell === `${row.id}:${col.key}`"
-                        :disabled="!can.update"
-                        @change="(value: unknown) => editCell(row, col.key, value)"
-                    />
-                    <IconCell
-                        v-else-if="byKey[col.key]?.type === 'icon'"
-                        :value="row[col.key]"
-                        :icons="byKey[col.key].icons ?? {}"
-                        :colors="byKey[col.key].colors ?? {}"
-                        :labels="byKey[col.key].labels ?? {}"
-                        :default-icon="byKey[col.key].defaultIcon ?? 'dot'"
-                    />
-                    <ImageCell
-                        v-else-if="byKey[col.key]?.type === 'image'"
-                        :src="row[col.key]"
-                        :fallback-text="row[byKey[col.key].fallbackFrom ?? 'name']"
-                        :rounded="byKey[col.key].rounded !== false"
-                        :size="byKey[col.key].size ?? 'md'"
-                        :fallback="byKey[col.key].fallback ?? 'initials'"
-                    />
-                    <template v-else-if="badgeKeys.includes(col.key)">
-                        <!--
+                    <template v-for="col in columns" :key="col.key" #[`cell:${col.key}`]="{ row }">
+                        <EditableCell
+                            v-if="byKey[col.key]?.editable"
+                            :type="byKey[col.key].type === 'toggle' ? 'toggle' : 'select'"
+                            :value="cellValue(row, col.key)"
+                            :options="byKey[col.key].options ?? {}"
+                            :on-label="byKey[col.key].onLabel"
+                            :off-label="byKey[col.key].offLabel"
+                            :busy="savingCell === `${row.id}:${col.key}`"
+                            :disabled="!can.update"
+                            @change="(value: unknown) => editCell(row, col.key, value)"
+                        />
+                        <IconCell
+                            v-else-if="byKey[col.key]?.type === 'icon'"
+                            :value="row[col.key]"
+                            :icons="byKey[col.key].icons ?? {}"
+                            :colors="byKey[col.key].colors ?? {}"
+                            :labels="byKey[col.key].labels ?? {}"
+                            :default-icon="byKey[col.key].defaultIcon ?? 'dot'"
+                        />
+                        <ImageCell
+                            v-else-if="byKey[col.key]?.type === 'image'"
+                            :src="row[col.key]"
+                            :fallback-text="row[byKey[col.key].fallbackFrom ?? 'name']"
+                            :rounded="byKey[col.key].rounded !== false"
+                            :size="byKey[col.key].size ?? 'md'"
+                            :fallback="byKey[col.key].fallback ?? 'initials'"
+                        />
+                        <template v-else-if="badgeKeys.includes(col.key)">
+                            <!--
                             AN EMPTY BADGE COLUMN IS AN EM DASH, not a badge.
                             A nullable badge column - roadmap 5.1's custom
                             `select` fields are the first, but any nullable
@@ -963,59 +979,62 @@ function badgeLabel(key: string, value: unknown): string {
                             as a value called "Null". Empty is empty, and it
                             should look the same here as in every other column.
                         -->
-                        <Badge
-                            v-if="
-                                row[col.key] !== null &&
-                                row[col.key] !== undefined &&
-                                row[col.key] !== ''
-                            "
-                            :variant="badgeVariant(col.key, row[col.key]) as any"
-                            class="capitalize"
+                            <Badge
+                                v-if="
+                                    row[col.key] !== null &&
+                                    row[col.key] !== undefined &&
+                                    row[col.key] !== ''
+                                "
+                                :variant="badgeVariant(col.key, row[col.key]) as any"
+                                class="capitalize"
+                            >
+                                {{ badgeLabel(col.key, row[col.key]) }}
+                            </Badge>
+                            <span v-else>{{ render(col.key, row[col.key]) }}</span>
+                        </template>
+                        <Link
+                            v-else-if="col.key === 'name'"
+                            :href="`${schema.routes.index}/${row.id}`"
+                            class="hover:text-primary hover:underline"
                         >
-                            {{ badgeLabel(col.key, row[col.key]) }}
-                        </Badge>
+                            {{ render(col.key, row[col.key]) }}
+                        </Link>
                         <span v-else>{{ render(col.key, row[col.key]) }}</span>
                     </template>
-                    <Link
-                        v-else-if="col.key === 'name'"
-                        :href="`${schema.routes.index}/${row.id}`"
-                        class="hover:text-primary hover:underline"
-                    >
-                        {{ render(col.key, row[col.key]) }}
-                    </Link>
-                    <span v-else>{{ render(col.key, row[col.key]) }}</span>
-                </template>
 
-                <template #clear-filters>
-                    <Button variant="link" size="sm" @click="t.clearAll">Clear filters</Button>
-                </template>
+                    <template #clear-filters>
+                        <Button variant="link" size="sm" @click="t.clearAll">Clear filters</Button>
+                    </template>
 
-                <template #actions="{ row }">
-                    <RecordActions
-                        :ref="(el: any) => registerRowMenu(row.id, el)"
-                        :groups="menuFor(row)"
-                        :title="row.name ?? `#${row.id}`"
-                        :busy="busyActionFor(row)"
-                        @run="onRecordAction(row, $event)"
-                    />
-                </template>
-            </DataTable>
-        </PkBoundary>
+                    <template #actions="{ row }">
+                        <RecordActions
+                            :ref="(el: any) => registerRowMenu(row.id, el)"
+                            :groups="menuFor(row)"
+                            :title="row.name ?? `#${row.id}`"
+                            :busy="busyActionFor(row)"
+                            @run="onRecordAction(row, $event)"
+                        />
+                    </template>
+                </DataTable>
+            </PkBoundary>
 
-        <TablePagination
-            :page="t.page.value"
-            :per-page="perPage"
-            :per-page-options="perPageOptions"
-            :rows-on-page="t.rows.value.length"
-            :has-next="t.hasNext.value"
-            :has-previous="t.hasPrevious.value"
-            :total="total"
-            :loading="t.loading.value"
-            @first="t.firstPage"
-            @update:per-page="t.setPerPage"
-            @next="t.nextPage"
-            @previous="t.previousPage"
-        />
+            <template #pagination>
+                <TablePagination
+                    :page="t.page.value"
+                    :per-page="perPage"
+                    :per-page-options="perPageOptions"
+                    :rows-on-page="t.rows.value.length"
+                    :has-next="t.hasNext.value"
+                    :has-previous="t.hasPrevious.value"
+                    :total="total"
+                    :loading="t.loading.value"
+                    @first="t.firstPage"
+                    @update:per-page="t.setPerPage"
+                    @next="t.nextPage"
+                    @previous="t.previousPage"
+                />
+            </template>
+        </TableShell>
 
         <PkModal
             :open="!!confirmingDelete"
