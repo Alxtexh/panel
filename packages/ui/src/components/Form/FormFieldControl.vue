@@ -198,7 +198,14 @@ function insertChip(token: string) {
 
 <template>
     <div class="flex flex-col gap-1.5">
-        <label :for="`f-${field.key}`" class="text-sm font-medium">
+        <!-- `sr-only`, never removed: the input keeps its accessible name
+             when a container hides a visually redundant label (see
+             FormField.labelHidden). -->
+        <label
+            :for="`f-${field.key}`"
+            class="text-sm font-medium"
+            :class="{ 'sr-only': field.labelHidden }"
+        >
             {{ field.label }}
             <span v-if="field.required" class="text-destructive" aria-hidden="true">*</span>
         </label>

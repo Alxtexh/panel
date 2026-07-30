@@ -27,6 +27,17 @@ export interface FormField {
     placeholder?: string
     disabled?: boolean
     span?: number
+
+    /**
+     * Render the label for screen readers only.
+     *
+     * Set by CONTAINERS, not by field definitions: a single-child repeater
+     * hides its rows' repeated label because the section heading already
+     * names it (DESIGN_RULES rule 6), and the input still needs an
+     * accessible name - so the label stays in the DOM as `sr-only` rather
+     * than being removed.
+     */
+    labelHidden?: boolean
     inputType?: string
     rows?: number
     min?: number

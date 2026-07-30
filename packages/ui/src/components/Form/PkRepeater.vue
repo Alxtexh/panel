@@ -128,6 +128,16 @@ function publish() {
 const atMax = computed(() => props.maxItems !== null && rows.value.length >= props.maxItems)
 const atMin = computed(() => props.minItems !== null && rows.value.length <= props.minItems)
 
+/**
+ * One child field means one input per row, and the row drops the repeated
+ * label (DESIGN_RULES rule 6): the section heading already names it, and
+ * "Instruction" three times above three inputs says nothing the first one
+ * didn't. The label stays in the DOM as `sr-only` so the input keeps its
+ * accessible name. Two or more children keep their labels - there they
+ * disambiguate.
+ */
+const singleChild = computed(() => props.children.length === 1)
+
 function add() {
     if (atMax.value || props.disabled) {
         return
@@ -188,93 +198,112 @@ function errorFor(index: number, childKey: string): string | undefined {
 </script>
 
 <template>
+    <!--
+        ROWS, NOT CARDS - DESIGN_RULES rule 6. An item is an ordinal badge,
+        its input(s) and its controls on one line. The bordered per-item card
+        with its own heading and control strip made three short entries taller
+        than the rest of the form put together.
+    -->
     <div class="flex flex-col gap-2">
-        <div
-            v-for="(row, index) in rows"
-            :key="row.uid"
-            class="bg-muted/30 flex flex-col gap-3 rounded-lg border p-3"
-        >
-            <div class="flex items-center justify-between">
-                <p class="text-muted-foreground text-xs font-medium">
-                    {{ itemLabel }} {{ index + 1 }}
-                </p>
+        <div v-for="(row, index) in rows" :key="row.uid" class="flex items-start gap-2">
+            <span
+                class="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium tabular-nums"
+                :class="singleChild ? 'mt-1.5' : 'mt-0.5'"
+                aria-hidden="true"
+            >
+                {{ index + 1 }}
+            </span>
 
-                <div class="flex items-center gap-0.5">
-                    <button
-                        type="button"
-                        class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
-                        :disabled="disabled || index === 0"
-                        :aria-label="`Move ${itemLabel} ${index + 1} up`"
-                        @click="move(index, -1)"
-                    >
-                        <svg
-                            class="size-3.5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
-                            <path d="m18 15-6-6-6 6" />
-                        </svg>
-                    </button>
+            <div class="min-w-0 flex-1">
+                <FormFieldControl
+                    v-if="singleChild"
+                    :field="{
+                        ...children[0],
+                        disabled: children[0].disabled || disabled,
+                        labelHidden: true,
+                    }"
+                    :value="row.data[children[0].key]"
+                    :error="errorFor(index, children[0].key)"
+                    :options="childOptions[children[0].key] ?? []"
+                    @change="(value) => setChild(row.uid, children[0].key, value)"
+                />
 
-                    <button
-                        type="button"
-                        class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
-                        :disabled="disabled || index === rows.length - 1"
-                        :aria-label="`Move ${itemLabel} ${index + 1} down`"
-                        @click="move(index, 1)"
-                    >
-                        <svg
-                            class="size-3.5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
-                            <path d="m6 9 6 6 6-6" />
-                        </svg>
-                    </button>
-
-                    <button
-                        type="button"
-                        class="text-muted-foreground hover:bg-destructive/10 hover:text-destructive inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
-                        :disabled="disabled || atMin"
-                        :title="atMin ? `At least ${minItems} required` : undefined"
-                        :aria-label="`Remove ${itemLabel} ${index + 1}`"
-                        @click="remove(row.uid)"
-                    >
-                        <svg
-                            class="size-3.5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            aria-hidden="true"
-                        >
-                            <path d="M18 6 6 18M6 6l12 12" />
-                        </svg>
-                    </button>
+                <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <FormFieldControl
+                        v-for="child in children"
+                        :key="child.key"
+                        :field="{ ...child, disabled: child.disabled || disabled }"
+                        :value="row.data[child.key]"
+                        :error="errorFor(index, child.key)"
+                        :options="childOptions[child.key] ?? []"
+                        @change="(value) => setChild(row.uid, child.key, value)"
+                    />
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <FormFieldControl
-                    v-for="child in children"
-                    :key="child.key"
-                    :field="{ ...child, disabled: child.disabled || disabled }"
-                    :value="row.data[child.key]"
-                    :error="errorFor(index, child.key)"
-                    :options="childOptions[child.key] ?? []"
-                    @change="(value) => setChild(row.uid, child.key, value)"
-                />
+            <div class="flex shrink-0 items-center gap-0.5" :class="singleChild ? 'mt-1' : 'mt-0'">
+                <button
+                    type="button"
+                    class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
+                    :disabled="disabled || index === 0"
+                    :aria-label="`Move ${itemLabel} ${index + 1} up`"
+                    @click="move(index, -1)"
+                >
+                    <svg
+                        class="size-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="m18 15-6-6-6 6" />
+                    </svg>
+                </button>
+
+                <button
+                    type="button"
+                    class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
+                    :disabled="disabled || index === rows.length - 1"
+                    :aria-label="`Move ${itemLabel} ${index + 1} down`"
+                    @click="move(index, 1)"
+                >
+                    <svg
+                        class="size-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </button>
+
+                <button
+                    type="button"
+                    class="text-muted-foreground hover:bg-destructive/10 hover:text-destructive inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
+                    :disabled="disabled || atMin"
+                    :title="atMin ? `At least ${minItems} required` : undefined"
+                    :aria-label="`Remove ${itemLabel} ${index + 1}`"
+                    @click="remove(row.uid)"
+                >
+                    <svg
+                        class="size-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -285,30 +314,31 @@ function errorFor(index: number, childKey: string): string | undefined {
             No {{ itemLabel.toLowerCase() }}s yet.
         </p>
 
-        <div class="flex items-center gap-3">
-            <button
-                type="button"
-                class="text-foreground hover:bg-accent inline-flex w-fit items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors disabled:pointer-events-none disabled:opacity-50"
-                :disabled="disabled || atMax"
-                @click="add"
+        <!--
+            HIDDEN AT THE LIMIT, not disabled, and no "n of max" counter -
+            DESIGN_RULES rule 5. A disabled Add next to a live count was two
+            controls describing a state instead of offering an action; when
+            nothing more can be added, the honest UI is nothing.
+        -->
+        <button
+            v-if="!atMax"
+            type="button"
+            class="text-foreground hover:bg-accent inline-flex w-fit items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors disabled:pointer-events-none disabled:opacity-50"
+            :disabled="disabled"
+            @click="add"
+        >
+            <svg
+                class="size-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                aria-hidden="true"
             >
-                <svg
-                    class="size-3.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    aria-hidden="true"
-                >
-                    <path d="M12 5v14M5 12h14" />
-                </svg>
-                Add {{ itemLabel.toLowerCase() }}
-            </button>
-
-            <p v-if="maxItems !== null" class="text-muted-foreground text-xs tabular-nums">
-                {{ rows.length }} of {{ maxItems }}
-            </p>
-        </div>
+                <path d="M12 5v14M5 12h14" />
+            </svg>
+            Add {{ itemLabel.toLowerCase() }}
+        </button>
     </div>
 </template>
