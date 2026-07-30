@@ -46,6 +46,7 @@ import {
     PkModal,
     useColumnVisibility,
     useLiveUpdates,
+    hasBadgeValue,
     useSchemaColumns,
     type RecordActionGroup,
     type RecordActionItem,
@@ -971,20 +972,14 @@ function badgeLabel(key: string, value: unknown): string {
                         />
                         <template v-else-if="badgeKeys.includes(col.key)">
                             <!--
-                            AN EMPTY BADGE COLUMN IS AN EM DASH, not a badge.
-                            A nullable badge column - roadmap 5.1's custom
-                            `select` fields are the first, but any nullable
-                            enum qualifies - rendered `String(null)` inside a
-                            `capitalize` pill, so an unanswered question read
-                            as a value called "Null". Empty is empty, and it
-                            should look the same here as in every other column.
+                            AN EMPTY BADGE COLUMN IS AN EM DASH, not a badge -
+                            the decision lives in `hasBadgeValue`, with its own
+                            spec, because the inline version of this check once
+                            rendered String(null) in a capitalize pill and an
+                            unanswered question read as a value called "Null".
                         -->
                             <Badge
-                                v-if="
-                                    row[col.key] !== null &&
-                                    row[col.key] !== undefined &&
-                                    row[col.key] !== ''
-                                "
+                                v-if="hasBadgeValue(row[col.key])"
                                 :variant="badgeVariant(col.key, row[col.key]) as any"
                                 class="capitalize"
                             >

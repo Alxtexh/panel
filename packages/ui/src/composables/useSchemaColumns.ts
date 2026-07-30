@@ -60,6 +60,20 @@ export const BADGE_VARIANTS: Record<string, string> = {
     neutral: 'outline',
 }
 
+/**
+ * Whether a badge column's value deserves a pill at all.
+ *
+ * AN EMPTY BADGE COLUMN IS AN EM DASH, NOT A BADGE. A nullable enum -
+ * roadmap 5.1's custom `select` fields were the first, but any nullable
+ * badge column qualifies - once rendered `String(null)` inside a
+ * `capitalize` pill, so an unanswered question read as a value called
+ * "Null". This is the ONE place that decision lives; the pages branch on
+ * it rather than restating the three empty shapes inline.
+ */
+export function hasBadgeValue(value: unknown): boolean {
+    return value !== null && value !== undefined && value !== ''
+}
+
 function cellClassFor(column: SchemaColumn): string {
     const classes: string[] = []
 

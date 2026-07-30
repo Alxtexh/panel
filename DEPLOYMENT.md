@@ -64,6 +64,24 @@ On more than one app server, `->onOneServer()` is already set on the jobs where
 it matters, but it needs a **shared lock store** to mean anything — see cache
 below.
 
+## The support matrix
+
+**SQLite, MySQL/MariaDB and Postgres are all first-class for panel data.** No
+screen, field or column may require a specific driver; a driver-specific
+feature ships with an arm for all three or it does not ship
+(`DriverCoverageTest` enforces this). Two things remain optional
+*optimisations* on Postgres, never requirements: pgvector for assistant
+retrieval (every other driver scores in PHP against the same schema), and
+`reltuples` row estimates (every other driver counts exactly).
+
+**Redis, Reverb and Octane are accelerants, not dependencies.** A plain
+`php artisan serve` with SQLite and the `database` cache store is a fully
+supported, fully *healthy* installation — `panel:doctor` treats it as such,
+live updates fall back to polling, and tenant cache isolation works on any
+store (see below). Add Redis for cache speed, Reverb for push-based live
+updates, Octane for request throughput — when the installation needs them,
+not before.
+
 ## Cache and sessions
 
 Any driver works for a single server. On more than one, the cache must be
@@ -73,7 +91,11 @@ gets its own lock, every server thinks it is the only one, and the nightly
 backup runs once per server.
 
 There is no requirement for a *tagged* cache store; the schema cache is keyed
-rather than tagged, deliberately, so that a file or database store works.
+rather than tagged, deliberately, so that a file or database store works. The
+same goes for **tenant cache isolation**: `PrefixCacheBootstrapper` isolates by
+key prefix at the store contract, which works on every driver — do not use
+stancl's tags-based `CacheTenancyBootstrapper`, which silently requires a
+tagging store (`panel:doctor` flags that arrangement).
 
 Redis in development is `scripts/redis-dev.sh` (binds 127.0.0.1:6381).
 

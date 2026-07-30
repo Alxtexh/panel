@@ -113,7 +113,7 @@ export {
     setAppearancePersister,
 } from './composables/useAppearance'
 export { useTenantTheme } from './composables/useTenantTheme'
-export { useSchemaColumns, BADGE_VARIANTS } from './composables/useSchemaColumns'
+export { useSchemaColumns, BADGE_VARIANTS, hasBadgeValue } from './composables/useSchemaColumns'
 
 export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
 export type { BulkActionSchema } from './components/DataTable/BulkActions.vue'
