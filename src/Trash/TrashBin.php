@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Trash;
 
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\PanelSettings;
+use PanelKit\Panel\Tables\Cursor;
 
 /**
  * Everything this person has deleted, across every resource, in one place.
@@ -38,16 +40,18 @@ use PanelKit\Panel\Support\PanelSettings;
  */
 final class TrashBin
 {
-    /** How many rows of each resource the screen shows. */
-    private const PER_RESOURCE = 25;
+    /** How many rows one page of one resource's bin holds. */
+    public const PER_PAGE = 25;
 
     /**
-     * The trash, grouped by resource.
+     * The tabs: one per resource with something in it, and its exact count.
      *
-     * @return list<array{
-     *     key: string, label: string, icon: string, total: int,
-     *     records: list<array{id: int|string, title: string, deletedAt: string, purgesAt: string, canRestore: bool, canForceDelete: bool}>
-     * }>
+     * COUNTS ONLY, NO RECORDS - roadmap 5.2. This used to return a page of
+     * rows for EVERY resource, of which the screen showed one tab's worth, so
+     * a nine-resource panel read and described 225 records to render 25. The
+     * rows now come from `records()` for the resource actually on screen.
+     *
+     * @return list<array{key: string, label: string, icon: string, total: int}>
      */
     public function groups(?string $panelId = null): array
     {
@@ -64,36 +68,90 @@ final class TrashBin
                 continue;
             }
 
-            $model = $class::model();
-
-            $query = $model::query()->onlyTrashed();
-
-            $total = (clone $query)->count();
+            $total = $class::model()::query()->onlyTrashed()->count();
 
             if ($total === 0) {
                 continue;
             }
-
-            $records = $query
-                // Most recently deleted first: the thing somebody is looking for
-                // is almost always the thing they just removed.
-                ->orderByDesc($this->deletedColumn($model))
-                ->limit(self::PER_RESOURCE)
-                ->get();
 
             $groups[] = [
                 'key' => $key,
                 'label' => $class::pluralLabel(),
                 'icon' => $class::icon(),
                 'total' => $total,
-                'records' => array_map(
-                    fn (Model $record): array => $this->describe($class, $record),
-                    $records->all(),
-                ),
             ];
         }
 
         return $groups;
+    }
+
+    /**
+     * One page of one resource's bin, newest deletion first.
+     *
+     * KEYSET, NOT OFFSET - roadmap 5.2, and the same reason §10 gives for
+     * every other list: `OFFSET 5000` makes the database walk five thousand
+     * rows to skip them, so the last page of a bin costs more than the first.
+     * Seeking on `(deleted_at, id)` costs the same at any depth. It also
+     * cannot skip or repeat a row when something is restored between pages,
+     * which OFFSET can - and on this screen restoring things IS what the
+     * person is doing while they page.
+     *
+     * `id` IS THE TIEBREAKER because `deleted_at` is not unique: a bulk delete
+     * stamps every row in the batch with the same timestamp, and forty rows
+     * sharing one ordering value is precisely where a cursor without a
+     * tiebreaker loops on the same page forever.
+     *
+     * @return array{
+     *     records: list<array{id: int|string, title: string, deletedAt: string, purgesAt: string, canRestore: bool, canForceDelete: bool}>,
+     *     nextCursor: string|null,
+     * }
+     */
+    public function records(string $resource, ?string $cursor = null, ?string $panelId = null): array
+    {
+        $class = $this->resources($panelId)[$resource] ?? null;
+
+        if ($class === null || ! $class::can('viewAny')) {
+            return ['records' => [], 'nextCursor' => null];
+        }
+
+        $model = $class::model();
+        $deletedAt = $this->deletedColumn($model);
+        $key = (new $model)->getKeyName();
+
+        $query = $model::query()->onlyTrashed()
+            // Most recently deleted first: the thing somebody is looking for
+            // is almost always the thing they just removed.
+            ->orderByDesc($deletedAt)
+            ->orderByDesc($key);
+
+        $decoded = Cursor::decode($cursor);
+
+        if ($decoded !== null) {
+            $query->where(function (Builder $seek) use ($deletedAt, $key, $decoded): void {
+                $seek->where($deletedAt, '<', $decoded->value())
+                    ->orWhere(function (Builder $tie) use ($deletedAt, $key, $decoded): void {
+                        $tie->where($deletedAt, '=', $decoded->value())
+                            ->where($key, '<', $decoded->id);
+                    });
+            });
+        }
+
+        // One extra row, discarded: the only way to know a further page exists
+        // without a second COUNT over the same predicate.
+        $rows = $query->limit(self::PER_PAGE + 1)->get();
+
+        $hasMore = $rows->count() > self::PER_PAGE;
+        $page = $rows->take(self::PER_PAGE);
+        $last = $page->last();
+
+        return [
+            'records' => $page->map(
+                fn (Model $record): array => $this->describe($class, $record)
+            )->values()->all(),
+            'nextCursor' => $hasMore && $last !== null
+                ? Cursor::encode((string) $last->{$deletedAt}, (int) $last->getKey())
+                : null,
+        ];
     }
 
     /**

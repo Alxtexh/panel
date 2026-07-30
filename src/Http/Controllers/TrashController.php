@@ -126,12 +126,47 @@ final class TrashController extends Controller
         return back()->with('success', 'Deleted records are now kept for '.$validated['days'].' days.');
     }
 
-    public function index(TrashBin $bin, PanelManager $panels): Response
+    public function index(Request $request, TrashBin $bin, PanelManager $panels): Response
     {
         $panel = $panels->currentPanel();
 
+        $groups = $bin->groups($panel?->id);
+
+        /*
+         * WHICH TAB, FROM THE REQUEST, AND VALIDATED AGAINST THE TABS - roadmap
+         * 5.2.
+         *
+         * The screen used to pick the tab client-side out of a payload that
+         * already held every resource's rows. Paging needs the server to know
+         * which resource is on screen, so the choice moves into the URL - which
+         * also makes a tab linkable and survive a reload, the same properties
+         * every other list already has.
+         *
+         * A KEY THAT IS NOT A TAB FALLS BACK TO THE FIRST rather than 404ing. A
+         * resource can empty while somebody is looking at it - they restored the
+         * last row, or the pruner ran - and answering "not found" for a screen
+         * that plainly exists is worse than showing them what is left.
+         */
+        $keys = array_column($groups, 'key');
+        $requested = (string) $request->query('resource', '');
+        $resource = in_array($requested, $keys, true) ? $requested : ($keys[0] ?? null);
+
+        $page = $resource === null
+            ? ['records' => [], 'nextCursor' => null]
+            : $bin->records($resource, (string) $request->query('cursor', '') ?: null, $panel?->id);
+
         return Inertia::render('Trash', [
-            'groups' => $bin->groups($panel?->id),
+            'groups' => $groups,
+
+            // The tab on screen, so a reload and a shared link both land back
+            // on it rather than on whichever resource happens to be first.
+            'resource' => $resource,
+
+            // So the pagination control's "showing 26-50" arithmetic uses the
+            // server's page size rather than a number the client restates.
+            'perPage' => TrashBin::PER_PAGE,
+
+            ...$page,
 
             /*
              * THE PORTAL PREFIX TRAVELS WITH THE PAGE. Restore posts to
