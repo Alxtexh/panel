@@ -481,6 +481,74 @@ final class PanelManager
     }
 
     /**
+     * The sub-navigation for one resource's cluster, or null - roadmap 4.1.
+     *
+     * BUILT PER REQUEST, NEVER CACHED WITH THE SCHEMA. The items are filtered
+     * by what THIS person may open (`can('viewAny')`), and a schema is cached
+     * across people; baking a permission-filtered list into it would show the
+     * first visitor's abilities to everyone after them.
+     *
+     * A CLUSTER OF ONE STILL SHOWS ITS STRIP when the cluster declares pages -
+     * the strip is how those pages are reached - and shows nothing when the
+     * only content is the screen already open: a sub-navigation whose every
+     * entry is "where you are" is decoration.
+     *
+     * @param  class-string  $resourceClass
+     * @return array{key: string, label: string, items: list<array{title: string, href: string, current: bool}>}|null
+     */
+    public function clusterNavFor(string $resourceClass): ?array
+    {
+        $cluster = $resourceClass::cluster();
+
+        if ($cluster === null) {
+            return null;
+        }
+
+        $prefix = rtrim('/'.trim((string) $this->currentPanel()?->getPath(), '/'), '/');
+
+        $items = [];
+
+        foreach ($this->resourcesFor($resourceClass::panel()) as $class) {
+            if ($class::cluster() !== $cluster || ! $class::can('viewAny')) {
+                continue;
+            }
+
+            $items[] = [
+                'title' => $class::pluralLabel(),
+                'href' => $prefix.'/'.$class::key(),
+                'current' => $class === $resourceClass,
+                'sort' => $class::navigationSort(),
+            ];
+        }
+
+        usort($items, static fn (array $a, array $b): int => [$a['sort'], $a['title']] <=> [$b['sort'], $b['title']]);
+
+        $items = array_map(static function (array $item): array {
+            unset($item['sort']);
+
+            return $item;
+        }, $items);
+
+        foreach ($cluster::pages() as $page) {
+            $items[] = [
+                'title' => $page['title'],
+                'href' => $page['href'],
+                'current' => false,
+            ];
+        }
+
+        if (count($items) < 2) {
+            return null;
+        }
+
+        return [
+            'key' => $cluster::key(),
+            'label' => $cluster::label(),
+            'items' => $items,
+        ];
+    }
+
+    /**
      * Resources belonging to one panel.
      *
      * WHY THIS EXISTS RATHER THAN ONE FLAT LIST: the super admin's Tenants

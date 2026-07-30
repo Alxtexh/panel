@@ -224,6 +224,24 @@ final class Blueprint
         route, the navigation entry and the abilities already exist. Nothing needs
         adding to `routes/web.php`.
 
+        ### Group several resources under one sidebar entry
+
+        Write a `Cluster` class and point each member's `$cluster` at it. The
+        sidebar shows the cluster's label once; the members become a shared
+        sub-navigation on every screen inside, permission-filtered per person.
+        Use a cluster for facets of ONE subject; keep an ordinary `$group` for
+        peers someone jumps between from anywhere.
+
+        ```php
+        final class NetworkCluster extends Cluster
+        {
+            protected static string $icon = 'router';
+        }
+
+        // on each member resource:
+        protected static ?string $cluster = NetworkCluster::class;
+        ```
+
         ### Add a portal
 
         ```bash
