@@ -139,10 +139,15 @@ final class CustomFieldFactory
      * string, which nothing here has a route to without a resource registry
      * lookup this factory does not otherwise need.
      *
-     * SQLITE AND MYSQL ONLY - the two drivers `stancl/tenancy`'s dedicated
-     * database mode actually registers a manager for (`config/tenancy.php`).
-     * Postgres in this installation is the pgvector connection for
-     * retrieval, never a tenant's own data, so it is not handled here.
+     * ALL THREE FIRST-CLASS DRIVERS, no favourites. The first version
+     * handled SQLite and MySQL and excluded Postgres on reasoning about
+     * THIS playground's connections - which is exactly the "locked to a
+     * specific database" trap a framework must not ship: a consumer running
+     * Postgres would have had a custom-fields column that silently reads
+     * nothing. `->>'key'` extracts as text on both `json` and `jsonb`; the
+     * `default` arm is SQLite's rather than a silent assumption -
+     * `DriverCoverageTest` fails any driver-specific feature that misses
+     * one of the three.
      */
     public static function selectExpression(CustomField $definition): Expression
     {
@@ -151,7 +156,8 @@ final class CustomFieldFactory
         $column = $definition->resource.'.custom';
 
         $expression = match (DB::connection()->getDriverName()) {
-            'mysql' => "JSON_UNQUOTE(JSON_EXTRACT({$column}, '{$path}'))",
+            'mysql', 'mariadb' => "JSON_UNQUOTE(JSON_EXTRACT({$column}, '{$path}'))",
+            'pgsql' => "{$column}->>'{$definition->key}'",
             default => "json_extract({$column}, '{$path}')",
         };
 
