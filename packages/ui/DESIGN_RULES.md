@@ -103,23 +103,23 @@ its tick gets re-checked.
 
 | Screen | Status |
 | --- | --- |
-| Resource index (generic) | |
-| Resource create/edit form | |
-| Resource view page | |
-| Dashboard | |
-| Trash | |
-| Backups | |
-| Backup settings | |
-| Monitoring | |
-| Logs explorer | |
-| Documents designer | |
-| Mail | |
-| Chat | |
-| Activity | |
-| Users | |
-| Roles & permissions | |
-| Announcements | |
-| Custom fields | |
-| Settings index | |
-| Help / FAQ / About / What's new | |
-| Generated portals (reseller, platform) | |
+| Resource index (generic) | 2026-07-30 — rules 1–5 applied (action group, reorder icon, TableShell); verified on Clients, Plans, Users, Custom Fields |
+| Resource create/edit form | 2026-07-30 — repeater rows (rule 6) verified on the voucher designer; generic form shares the components |
+| Resource view page | 2026-07-30 — rule 2 fix (Edit primary, last) |
+| Dashboard | 2026-07-30 — checklist gone when done; tiles conform |
+| Trash | 2026-07-30 — TableShell adopted; header conforms |
+| Backups | 2026-07-30 — grouped [Settings][Back up now], one card |
+| Backup settings | queued |
+| Monitoring | 2026-07-30 — tiles + tables conform, no Redis nagging |
+| Logs explorer | queued |
+| Documents designer | 2026-07-30 — repeater rows verified live |
+| Mail | queued |
+| Chat | queued |
+| Activity | 2026-07-30 — inherits the generic index |
+| Users | 2026-07-30 — verified directly |
+| Roles & permissions | queued |
+| Announcements | 2026-07-30 — inherits the generic index |
+| Custom fields | 2026-07-30 — verified directly |
+| Settings index | 2026-07-30 — verified directly |
+| Help / FAQ / About / What's new | queued |
+| Generated portals (reseller, platform) | queued — inherit the generic pages; re-check after regeneration |
