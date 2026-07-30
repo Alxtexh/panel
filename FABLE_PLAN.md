@@ -73,10 +73,30 @@ verification):
 (was redis, which wasn't running and 500'd every request).
 
 **NEXT, in order:**
-1. **Roadmap 4.1–4.6, 6.1–6.5, 7.3–7.7** as tracked in tasks #147–#162
+1. **Part G (user directives, 2026-07-30)** — tasks #180–#188, see below.
+   These take precedence over the remaining roadmap.
+2. **Roadmap 4.4–4.6, 6.1–6.5, 7.3–7.7** as tracked in tasks #150–#162
    (6.1 policy matrix tests before any ticketing UI).
-2. **A.5 second pass** — the seven queued screens (#168).
-3. **F** — the production-readiness loop (#179).
+3. **A.5 second pass** — the seven queued screens (#168).
+4. **F** — the production-readiness loop (#179).
+
+---
+
+## Part G — User directives, 2026-07-30
+
+Verbatim intent from the mid-session message, each its own task:
+
+| # | Task | Directive |
+| --- | --- | --- |
+| G.1 | #180 | ONE save bar. The floating "Unsaved changes / Cancel / Save" bar is the reliable one; remove the inline duplicate Cancel/Save at the bottom of forms. |
+| G.2 | #181 | Remove the green "live" badge next to page titles COMPLETELY, everywhere. |
+| G.3 | #182 | Two tables on one page "is just not logical" — remove the Connections workspace page. |
+| G.4 | #183 | Remove the Custom fields dedicated page completely; the inline record-form dialog remains the only entry. |
+| G.5 | #184 | Audit history must read human: no raw ISO dates, no raw JSON like `{"fibre_node":"FN-1234"}` — per-field diffs with formatted values. |
+| G.6 | #185 | The Network page opens slower — find out why, fix it. |
+| G.7 | #186 | Verify virtual scrolling is implemented well for large lists; add where missing. |
+| G.8 | #187 | UI foundation: evaluate Nuxt UI / Naive UI / Reka (Radix Vue) / Headless UI / Ark UI for Vue 3 + Inertia; name the Enterprise Workhorse and the Lightweight Pick; CENTRALIZE components in @panelkit/ui (no duplicate copies in the app) and centralize scattered functions the same way. |
+| G.9 | #188 | Ship several SaaS landing page designs with PanelKit. |
 
 ---
 

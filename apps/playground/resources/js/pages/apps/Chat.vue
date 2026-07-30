@@ -101,7 +101,7 @@ const visibleMessages = computed(() => [
  * screen: a gap in delivery is invisible from the client, so the only safe
  * assumption after a disconnect is that something was missed.
  */
-const { status: liveStatus } = useLiveUpdates({
+useLiveUpdates({
     config: props.live,
     rows: computed(
         () => visibleMessages.value as unknown as Record<string, any>[],
@@ -337,33 +337,9 @@ function initials(name: string): string {
                         >
                             <span class="capitalize">{{ thread.status }}</span>
 
-                            <!--
-                                        THE CONNECTION STATE IS SHOWN, because a
-                                        thread that has silently stopped
-                                        receiving looks exactly like a thread
-                                        where nobody has replied. Hidden only
-                                        when live updates are off entirely -
-                                        there is nothing to be reassured about.
-                                    -->
-                            <template v-if="liveStatus !== 'off'">
-                                <span aria-hidden="true">·</span>
-                                <span
-                                    class="inline-flex items-center gap-1"
-                                    :title="`Live updates: ${liveStatus}`"
-                                >
-                                    <span
-                                        class="size-1.5 rounded-full"
-                                        :class="
-                                            liveStatus === 'live'
-                                                ? 'bg-emerald-500'
-                                                : liveStatus === 'paused'
-                                                  ? 'bg-amber-500'
-                                                  : 'bg-muted-foreground/40'
-                                        "
-                                    />
-                                    {{ liveStatus }}
-                                </span>
-                            </template>
+                            <!-- No live chip - removed everywhere by the
+                                 user's direct instruction (Part G.2). The
+                                 transport still runs; messages still arrive. -->
                         </p>
                     </div>
                 </header>

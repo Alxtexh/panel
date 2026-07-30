@@ -703,7 +703,9 @@ function destroy() {
  * not import Inertia or ship an HTTP client (spec §4).
  * ------------------------------------------------------------------------- */
 
-const { status: liveStatus, recentlyChanged } = useLiveUpdates({
+// `status` deliberately unused since the live badge was removed (Part G.2):
+// the transport still runs and rows still move; nothing advertises it.
+const { recentlyChanged } = useLiveUpdates({
     config: props.live,
     rows: t.rows,
     fetchChanges: async (ids, since) => {
@@ -785,35 +787,17 @@ function badgeLabel(key: string, value: unknown): string {
 
         <div class="flex flex-col gap-1">
             <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-2">
-                    <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
-                        {{ schema.labelPlural }}
-                    </h1>
-
-                    <!-- Rule 8: show connection state, so a table that silently
-                         lost its transport is never mistaken for a quiet one. -->
-                    <span
-                        v-if="live.driver !== 'none'"
-                        class="inline-flex items-center gap-1 text-[11px]"
-                        :class="
-                            liveStatus === 'live'
-                                ? 'text-muted-foreground'
-                                : 'text-amber-600 dark:text-amber-500'
-                        "
-                        :title="`Live updates: ${liveStatus} (${live.driver})`"
-                    >
-                        <span
-                            class="size-1.5 rounded-full"
-                            :class="{
-                                'bg-emerald-500': liveStatus === 'live',
-                                'bg-amber-500': liveStatus === 'connecting',
-                                'bg-muted-foreground':
-                                    liveStatus === 'paused' || liveStatus === 'off',
-                            }"
-                        />
-                        {{ liveStatus }}
-                    </span>
-                </div>
+                <!--
+                    NO LIVE BADGE, by the user's direct instruction. The green
+                    "live" chip sat beside every title and said the same thing
+                    on every screen, which is how a signal becomes wallpaper.
+                    The transport still runs and rows still move; a DEGRADED
+                    transport is the only state worth a mark, and that arrives
+                    with its own treatment when it matters.
+                -->
+                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
+                    {{ schema.labelPlural }}
+                </h1>
                 <!--
                     ONE GROUP, TRAILING EDGE, PRIMARY LAST - DESIGN_RULES rules
                     1 and 2. The header row has exactly TWO flex children; with

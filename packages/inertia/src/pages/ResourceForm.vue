@@ -395,25 +395,27 @@ onBeforeUnmount(() => {
         </div>
 
         <!--
-            The bar reports dirtiness; it does not define it. Shown only while
-            there is something to lose, so a page merely looked at stays quiet.
+            THE BAR IS THE ONLY SAVE UI. There used to be a second Cancel/Save
+            pair at the bottom of the form, and with the bar floating above it
+            the same two buttons rendered twice on every dirty form - two
+            controls claiming the same act, one of them half-hidden behind the
+            other. The floating bar is the reliable one (visible wherever the
+            scroll is), so the inline pair is gone.
+
+            ON EDIT it appears when there is something to lose, so a page
+            merely looked at stays quiet. ON CREATE it is always there -
+            a create form's entire purpose is the submit, and a screen whose
+            only save control appears after the first keystroke reads as
+            broken for exactly one keystroke too long.
         -->
         <UnsavedBar
-            :show="form.isDirty && !form.processing"
+            :show="isEdit ? form.isDirty : true"
             :processing="form.processing"
+            :message="isEdit ? 'Unsaved changes' : `New ${schema.label.toLowerCase()}`"
             :save-label="isEdit ? 'Save changes' : `Create ${schema.label}`"
             @save="submit"
             @cancel="cancel"
         />
-
-        <div class="flex items-center justify-end gap-2">
-            <Button variant="ghost" :disabled="form.processing" @click="cancel">Cancel</Button>
-            <Button :disabled="form.processing" @click="submit">
-                {{
-                    form.processing ? 'Saving…' : isEdit ? 'Save changes' : `Create ${schema.label}`
-                }}
-            </Button>
-        </div>
 
         <DefineFieldDialog
             v-if="customFieldSupport"
