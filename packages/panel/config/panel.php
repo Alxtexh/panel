@@ -452,6 +452,18 @@ return [
 
     'abilities' => [],
 
+    /*
+    |---------------------------------------------------------------------------
+    | Singular resources
+    |---------------------------------------------------------------------------
+    |
+    | One-record, settings-shaped screens (roadmap 4.3) - `SingularResource`
+    | subclasses, listed by class. Each mounts at /{key} inside its panel,
+    | with PUT /{key}/current as its save. A config list rather than
+    | discovery, because a screen with one record is a considered decision.
+    */
+    'singulars' => [],
+
     'tenancy' => [
         'mode' => env('PANEL_TENANCY_MODE', 'column'),
         'column' => 'tenant_id',

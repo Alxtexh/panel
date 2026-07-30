@@ -559,6 +559,7 @@ final class Guide
                 'summary' => 'A screen that is not a resource, inside the panel.',
                 'body' => [
                     'Not everything is a table. A workspace, a monitor, a reconciliation screen - these are ordinary Inertia pages with ordinary controllers, and they live inside the panel so they inherit its prefix, guard and middleware.',
+                    'A SETTINGS-SHAPED SCREEN NEEDS NONE OF THAT. A `SingularResource` is a form and two functions: declare the fields exactly as a resource does, say where the one record\'s values come from (`values()`) and go to (`save()`), list the class in `config(\'panel.singulars\')`, and the screen mounts at `/{key}` rendered through the same form page every edit screen uses - validation, unsaved-changes guard and all. Gate it with a panel-level ability. Billing preferences is the reference app\'s example.',
                     'Application routes that belong inside EVERY panel go through the route extension point. That is what stops a generated portal getting the resource screens and silently losing import, saved views and the audit trail - which is precisely what happened when those routes lived in the application\'s own route file.',
                 ],
                 'blocks' => [

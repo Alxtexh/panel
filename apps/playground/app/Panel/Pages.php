@@ -77,6 +77,14 @@ final class Pages
             ['title' => 'Chat', 'href' => '/apps/chat', 'icon' => 'chat', 'group' => 'Apps'],
 
             /*
+             * The billing preferences SINGULAR (roadmap 4.3) - one record,
+             * settings-shaped. It joins the Configuration group the Custom
+             * fields resource already created, because both are knobs the
+             * organisation turns once rather than screens worked in all day.
+             */
+            ['title' => 'Billing', 'href' => '/billing-settings', 'icon' => 'sliders', 'group' => 'Configuration'],
+
+            /*
              * IN "APPS" RATHER THAN A SETTINGS GROUP, because designing an
              * invoice is a thing an operator DOES rather than a preference they
              * set. It sits beside Mail and Chat for the same reason those do:

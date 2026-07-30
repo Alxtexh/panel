@@ -456,7 +456,7 @@ Numbering follows `ROADMAP.md`. Sizes are that file's.
 | --- | --- | --- | --- |
 | 4.1 | Clusters | M | **Done.** `Cluster` + `Resource::$cluster`; one sidebar entry, shared permission-filtered sub-nav strip. Proven by the Network cluster (Routers, Plans, Connections). |
 | 4.2 | Nested resources | L | **Done.** `$parent` on the resource; nested-only routing, parent as the authorisation context, fk stamped from the URL. Proven by `/clients/{id}/sessions`. |
-| 4.3 | Singular resources | S | One-record, settings-shaped screen, no list. |
+| 4.3 | Singular resources | S | **Done.** `SingularResource` (form + values() + save()), config-mounted at /{key}, rendered through ResourceForm, ability-gated. Proven by Billing preferences. |
 | 4.4 | Render hooks | M | Named injection points so a plugin can decorate a screen without forking it. |
 | 4.5 | Missing field types | M | Markdown, code, builder. Build these **after** A.1 — the repeater's row shape is the pattern the builder field should follow. |
 | 4.6 | Missing column types | S | Colour, checkbox. |

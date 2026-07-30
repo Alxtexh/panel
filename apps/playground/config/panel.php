@@ -5,6 +5,7 @@ use App\Knowledge\BlueprintSource;
 use App\Knowledge\GuideSource;
 use App\Knowledge\HelpSource;
 use App\Models\SavedView;
+use App\Panel\Singulars\BillingSettingsResource;
 use App\Plugins\AnnouncementsPlugin;
 
 return [
@@ -42,6 +43,22 @@ return [
          * being able to grant and withhold on its own.
          */
         'manage_assistant' => 'Configure the AI assistant and its provider key',
+        // Gates the billing preferences singular (roadmap 4.3): whoever holds
+        // it decides what every invoice says about money.
+        'manage_billing' => 'Set the currency, tax rate and due window invoices use',
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Singular resources
+    |---------------------------------------------------------------------------
+    |
+    | One-record, settings-shaped screens - roadmap 4.3. Each mounts at /{key}
+    | inside its panel with PUT /{key}/current as its save, and renders through
+    | the same form page every resource edit screen uses.
+    */
+    'singulars' => [
+        BillingSettingsResource::class,
     ],
 
     /*

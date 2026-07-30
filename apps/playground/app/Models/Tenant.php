@@ -102,6 +102,8 @@ class Tenant extends Model implements TenantWithDatabase
             'suspended_at' => 'datetime',
             'theme_colors' => 'array',
             'features' => 'array',
+            // Roadmap 4.3: the billing preferences singular's one record.
+            'billing' => 'array',
         ];
     }
 
