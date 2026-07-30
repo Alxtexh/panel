@@ -151,6 +151,23 @@ final class PanelRoutes
                     Route::get('/', [Controllers\PanelHomeController::class, 'index'])->name('home');
                 }
 
+                /*
+                 * SINGULAR RESOURCES FIRST - roadmap 4.3. Each mounts at a
+                 * FIXED segment, and fixed segments must be declared before
+                 * the `{resource}` patterns or `/billing-settings` is
+                 * captured as a resource key and 404s inside the controller
+                 * instead of reaching its screen.
+                 */
+                foreach (app(PanelManager::class)->singularsFor($panel->id) as $key => $class) {
+                    Route::get($key, [Controllers\SingularController::class, 'edit'])
+                        ->defaults('singular', $key)
+                        ->name('singular.'.$key);
+
+                    Route::put($key.'/current', [Controllers\SingularController::class, 'update'])
+                        ->defaults('singular', $key)
+                        ->name('singular.'.$key.'.update');
+                }
+
                 if ($keys !== []) {
                     self::within($keys);
                 }

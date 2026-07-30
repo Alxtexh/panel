@@ -242,6 +242,25 @@ final class Blueprint
         protected static ?string $cluster = NetworkCluster::class;
         ```
 
+        ### Add a one-record settings screen
+
+        A `SingularResource` is a form and two functions - no list, no create,
+        no hand-written controller. Declare the form exactly as a resource
+        does, say where the one record's values come from and go to, list the
+        class in `config('panel.singulars')`, and the screen mounts at
+        `/{key}` with `PUT /{key}/current` as its save. Gate it with a
+        panel-level ability from `config('panel.abilities')`.
+
+        ```php
+        final class BillingSettingsResource extends SingularResource
+        {
+            public static function form(Form $form): Form { /* fields */ }
+            public static function values(): array { /* current state */ }
+            public static function save(array $validated): void { /* persist */ }
+            public static function ability(): ?string { return 'manage_billing'; }
+        }
+        ```
+
         ### Nest a resource under another
 
         Declare `$parent` and the resource answers ONLY at
