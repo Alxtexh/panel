@@ -29,6 +29,7 @@ import { PkBadge as Badge } from '@panelkit/ui'
 import { PkButton as Button, buttonClasses } from '@panelkit/ui'
 import { useListTable, type ListPageProps } from '../composables/useListTable'
 import { useBulkJob } from '../composables/useBulkJob'
+import ImportDialog from '../components/ImportDialog.vue'
 import {
     BulkActions,
     DataTable,
@@ -611,6 +612,16 @@ async function exportSelection() {
     if (job.error.value) toast.error(job.error.value)
 }
 
+const importing = ref(false)
+
+function onImported(written: number) {
+    importing.value = false
+    toast.success(
+        `${written.toLocaleString()} ${(written === 1 ? props.schema.label : props.schema.labelPlural).toLowerCase()} imported`,
+    )
+    router.reload({ only: ['records', 'total', 'tabCounts'] })
+}
+
 /**
  * A finished export announces itself rather than downloading silently.
  *
@@ -756,6 +767,15 @@ function badgeLabel(key: string, value: unknown): string {
                 @click="reordering = !reordering"
             >
                 {{ reordering ? 'Done' : 'Reorder' }}
+            </Button>
+
+            <Button
+                v-if="canWrite && can.create && !reordering"
+                variant="outline"
+                size="sm"
+                @click="importing = true"
+            >
+                Import
             </Button>
 
             <!--
@@ -965,5 +985,13 @@ function badgeLabel(key: string, value: unknown): string {
                 <Button variant="destructive" size="sm" @click="destroy">Delete</Button>
             </template>
         </PkModal>
+
+        <ImportDialog
+            :open="importing"
+            :base-url="schema.routes.index"
+            :resource-label="schema.labelPlural"
+            @close="importing = false"
+            @imported="onImported"
+        />
     </div>
 </template>

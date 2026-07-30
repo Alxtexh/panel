@@ -15,6 +15,7 @@ use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\BackupArchive;
 use PanelKit\Panel\Support\BackupDestinationProbe;
 use PanelKit\Panel\Support\BackupSettings;
+use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\PanelSettings;
 use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
 use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
@@ -357,6 +358,47 @@ final class BackupManagementTest extends TestCase
         ])->assertForbidden();
 
         Queue::assertNothingPushed();
+    }
+
+    /**
+     * A restore that never got to run because another one is already in
+     * progress has not entered either phase - `step` must say so rather
+     * than leaving the page's step indicator to guess.
+     */
+    public function test_a_restore_refused_because_another_job_is_running_reports_no_step(): void
+    {
+        $state = app(InstallationState::class);
+        $state->acquire('backup:running', 60);
+
+        try {
+            (new RestoreBackup('irrelevant.zip'))->handle();
+        } finally {
+            $state->release('backup:running');
+        }
+
+        $recorded = $state->get(RestoreBackup::STATE_KEY);
+
+        $this->assertSame('skipped', $recorded['state']);
+        $this->assertNull($recorded['step']);
+    }
+
+    /** The page hands the step straight through - it is what the indicator reads. */
+    public function test_the_page_reports_which_step_the_last_restore_reached(): void
+    {
+        app(InstallationState::class)->put(RestoreBackup::STATE_KEY, [
+            'state' => 'failed',
+            'message' => 'The safety backup failed, so nothing was restored.',
+            'step' => RestoreBackup::STEP_SAFETY_BACKUP,
+            'at' => now()->toIso8601String(),
+            'by' => 'Tester',
+            'snapshot' => 'x.zip',
+        ]);
+
+        $lastRestore = $this->actingAs($this->manager())
+            ->get('/operations/backups')
+            ->viewData('page')['props']['lastRestore'];
+
+        $this->assertSame(RestoreBackup::STEP_SAFETY_BACKUP, $lastRestore['step']);
     }
 
     /* ------------------------------------------------------------- settings */

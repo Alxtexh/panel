@@ -59,7 +59,25 @@ final class RestoreBackup implements ShouldQueue
     /** Where the page looks for what happened. */
     public const STATE_KEY = 'panel:backup:restore';
 
+    /**
+     * The phases the page's step indicator draws: safety backup, then the
+     * restore itself. Kept here, next to the `record()` calls that name
+     * them, so a step number can never drift from the phase it labels.
+     */
+    public const STEP_SAFETY_BACKUP = 0;
+
+    public const STEP_RESTORE = 1;
+
     private const LOCK_SECONDS = 3600;
+
+    /**
+     * The last phase actually entered, for a failure that has no phase of
+     * its own to report - an unexpected exception, a queue timeout. `record`
+     * remembers this across calls so "restore failed" still says how far it
+     * got, rather than reporting nothing because the crash was not one of
+     * the two named checkpoints.
+     */
+    private ?int $step = null;
 
     public int $timeout = 3600;
 
@@ -136,7 +154,7 @@ final class RestoreBackup implements ShouldQueue
             return;
         }
 
-        $this->record('running', 'Taking a safety backup before restoring.');
+        $this->record('running', 'Taking a safety backup before restoring.', self::STEP_SAFETY_BACKUP);
 
         if (Artisan::call('backup:run') !== 0) {
             $this->record('failed', 'The safety backup failed, so nothing was restored.');
@@ -144,7 +162,7 @@ final class RestoreBackup implements ShouldQueue
             return;
         }
 
-        $this->record('running', 'Restoring the database.');
+        $this->record('running', 'Restoring the database.', self::STEP_RESTORE);
 
         /*
          * UNPACKED BEFORE THE DOORS CLOSE. Copying a snapshot off an off-site
@@ -167,7 +185,7 @@ final class RestoreBackup implements ShouldQueue
                 (new DatabaseRestorer)->restore($dump);
             });
 
-            $this->record('succeeded', 'The database was restored from '.basename($this->path).'.');
+            $this->record('succeeded', 'The database was restored from '.basename($this->path).'.', self::STEP_RESTORE + 1);
         } finally {
             $this->removeDirectory($workspace);
         }
@@ -345,11 +363,16 @@ final class RestoreBackup implements ShouldQueue
         $this->record('failed', $e->getMessage());
     }
 
-    private function record(string $state, string $message): void
+    private function record(string $state, string $message, ?int $step = null): void
     {
+        if ($step !== null) {
+            $this->step = $step;
+        }
+
         app(InstallationState::class)->put(self::STATE_KEY, [
             'state' => $state,
             'message' => $message,
+            'step' => $this->step,
             'at' => now()->toIso8601String(),
             'by' => $this->startedBy,
             'snapshot' => $this->path,

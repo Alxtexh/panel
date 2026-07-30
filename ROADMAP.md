@@ -4,7 +4,7 @@
 is the forward view — everything outstanding, why it matters, what it costs, and
 what it depends on.
 
-Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.6
+Written 2026-07-29, last updated 2026-07-30. **§1, §2 (all of it) and §3.1–3.8
 are done** — see [CHANGELOG.md](CHANGELOG.md). Sizes are relative, not calendar estimates:
 **S** = an afternoon · **M** = a day or two · **L** = several days · **XL** = a
 week or more.
@@ -367,10 +367,53 @@ this page's own card list and once beside it. Fixed with a specific
 `settings/Index` case ahead of the general prefix rule, the same pattern
 already used for `auth/LockScreen` and `auth/VerifyOtp`.
 
-### 3.8 Wizard steps in the page header — **S**
+### 3.8 Wizard steps in the page header — **DONE**
 
-Import and restore are multi-step and never say where you are. We already have a
-wizard *field*; this is the same idea at page level.
+*Ours before:* Import had no client at all — `ImportController` (headers,
+mapping, dry run, chunked writes) had existed since Stage 7 with no page ever
+calling it, and `panel:doctor`-adjacent research for this item is what
+surfaced the gap. Restore's confirmation dialog was one undifferentiated
+block of warnings, and its outcome was a single status line with no sense of
+how far a failed attempt actually got.
+
+**The step strip is the wizard field's own markup, pulled out.** The numbered
+circles, the tick/cross states and the click-back-only interaction in
+`SchemaNode.vue`'s `wizard` branch are now `PkStepIndicator.vue`, and the
+wizard field itself is that component plus the tab-switching logic it always
+had — same behaviour, same tests, one definition instead of a second copy
+waiting to drift from the first.
+
+**Import got a real client**, `ImportDialog.vue` (new, in `@panelkit/inertia`,
+opened from an `Import` button beside `New {Resource}`): upload, map columns,
+review. No column is ever guessed — `ImportController`'s own note explains
+why: a heuristic match is right often enough to be trusted and wrong often
+enough to import a phone number into the name field, so every mapping starts
+at "don't import this column." The review step runs the exact same request as
+the real import, `dryRun` true instead of false, and only offers to commit
+once it comes back clean — `Importer`'s "one bad row must not abort the
+batch" is what the reviewed failures are actually reporting.
+
+**Restore's phases are now named, not just narrated.** `RestoreBackup::record()`
+gained a `step` alongside its existing state and message — `STEP_SAFETY_BACKUP`,
+`STEP_RESTORE` — remembered across calls so an unexpected exception still
+reports the last phase actually entered rather than nothing. The confirm
+dialog previews the two phases before anything starts; the "last restore"
+status block renders them against what was actually recorded, a cross rather
+than a tick on the phase that failed, everything after it read as never
+reached rather than "upcoming." No live polling: the maintenance-mode bypass
+lets the initiating browser watch, but nothing else here changed to make
+polling meaningful, and building that is a separate feature, not this one.
+
+Verified: 1251/1251 PHP tests (2 new, covering the no-step "another job is
+running" refusal and the page's passthrough of a recorded step), 74/74
+`@panelkit/ui` Vitest tests (6 new for `PkStepIndicator`, 2 new for the
+wizard branch's re-wiring), 21/21 Dusk tests, ESLint/Pint/Prettier/vue-tsc
+clean across all three JS surfaces, production SSR build succeeds. Confirmed
+live in the browser: the Import dialog against the real `/clients/import/*`
+endpoints (upload, live-reactive required-field mapping, Preview correctly
+disabled until every required field is mapped), and the Restore step
+indicator both as a pre-flight preview and, with a seeded failure state, with
+a cross on the phase that actually failed.
 
 ### 3.9 List-page conventions — **M**
 

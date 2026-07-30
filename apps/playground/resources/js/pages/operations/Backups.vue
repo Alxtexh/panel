@@ -41,7 +41,7 @@ import {
     Trash2,
     TriangleAlert,
 } from '@lucide/vue';
-import { PkModal } from '@panelkit/ui';
+import { PkModal, PkStepIndicator } from '@panelkit/ui';
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -101,6 +101,12 @@ const props = defineProps<{
     lastRestore: {
         state: string;
         message: string;
+        /**
+         * Which of `RESTORE_STEPS` this reached: 0 for the safety backup, 1
+         * for the restore itself, 2 (one past the last step) once it
+         * succeeded, or null if it never got past the pre-flight checks.
+         */
+        step: number | null;
         at: string;
         by: string | null;
         snapshot: string;
@@ -292,6 +298,36 @@ const runTone: Record<string, string> = {
     failed: 'text-destructive',
 };
 
+/**
+ * The two phases `RestoreBackup` reports, plus the arrival step - matches
+ * `RestoreBackup::STEP_SAFETY_BACKUP` / `STEP_RESTORE` exactly, so a step
+ * number from the server always points at the right label here.
+ */
+const RESTORE_STEPS = [
+    {
+        label: 'Safety backup',
+        description: 'Taken first, so this can be undone',
+    },
+    { label: 'Restore', description: 'The live database is replaced' },
+    { label: 'Done' },
+];
+
+/** Where the indicator sits: past every step once succeeded, otherwise the phase last entered. */
+const restoreActiveStep = computed(() => props.lastRestore?.step ?? 0);
+
+/** A cross rather than a tick on the phase that failed; later phases read as never reached. */
+const restoreFailedStep = computed(() => {
+    const restore = props.lastRestore;
+
+    if (!restore || restore.step === null) {
+        return null;
+    }
+
+    return restore.state === 'failed' || restore.state === 'refused'
+        ? restore.step
+        : null;
+});
+
 /** Zero stays zero - a `Math.max(1, …)` floor reported "1 MB" of nothing. */
 const mb = (bytes: number) => {
     if (bytes <= 0) {
@@ -435,6 +471,21 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } });
                     · started by {{ props.lastRestore.by }}</template
                 >
             </span>
+
+            <!--
+                ONLY WHEN A PHASE WAS ACTUALLY ENTERED. A refusal or a
+                missing snapshot is rejected before either phase starts, and
+                a step strip on a restore that never ran would claim it got
+                somewhere it did not.
+            -->
+            <PkStepIndicator
+                v-if="props.lastRestore.step !== null"
+                class="mt-3"
+                :steps="RESTORE_STEPS"
+                :active-step="restoreActiveStep"
+                :failed-step="restoreFailedStep"
+                :interactive="false"
+            />
         </div>
 
         <div
@@ -685,6 +736,12 @@ const downloadUrl = (path: string) => backups.download.url({ query: { path } });
         @close="pendingRestore = null"
     >
         <div class="flex flex-col gap-3 text-sm">
+            <PkStepIndicator
+                :steps="RESTORE_STEPS"
+                :active-step="0"
+                :interactive="false"
+            />
+
             <p class="flex items-start gap-2 text-destructive">
                 <TriangleAlert class="mt-0.5 size-4 shrink-0" />
                 <span>

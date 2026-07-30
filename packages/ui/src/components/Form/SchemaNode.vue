@@ -17,6 +17,7 @@
  * (antipatterns §6.1).
  */
 import { computed, ref } from 'vue'
+import PkStepIndicator from '../Layout/PkStepIndicator.vue'
 import FormFieldControl from './FormFieldControl.vue'
 import type { UploadedFileValue } from './PkFileUpload.vue'
 import type { FormField } from './types'
@@ -64,6 +65,19 @@ const activeTab = ref(0)
 
 /** Which wizard step is showing. Separate from `activeTab`: one node is one or the other. */
 const activeStep = ref(0)
+
+/**
+ * `PkStepIndicator` requires a label; a schema node's is optional because
+ * every OTHER node kind may omit one. A wizard step never actually does -
+ * `Step::class` on the PHP side requires it - so this is a type-shape fix,
+ * not a fallback for data that is expected to arrive.
+ */
+const wizardSteps = computed(() =>
+    (props.node.children ?? []).map((step) => ({
+        label: step.label ?? '',
+        description: step.description,
+    })),
+)
 
 const isRoot = computed(() => props.depth === 0)
 
@@ -320,74 +334,14 @@ function uploadFor(key: string) {
         value would find it gone.
     -->
     <div v-else-if="node.component === 'wizard'" :class="isRoot ? 'bg-card rounded-lg border' : ''">
-        <ol class="flex items-center gap-2 overflow-x-auto p-4" :class="isRoot ? 'border-b' : ''">
-            <li
-                v-for="(step, i) in node.children ?? []"
-                :key="i"
-                class="flex shrink-0 items-center gap-2"
-            >
-                <button
-                    type="button"
-                    class="flex items-center gap-2 text-left text-sm transition-colors disabled:cursor-default"
-                    :class="
-                        activeStep === i
-                            ? 'text-foreground font-medium'
-                            : i < activeStep
-                              ? 'text-muted-foreground hover:text-foreground'
-                              : 'text-muted-foreground/60'
-                    "
-                    :disabled="i > activeStep"
-                    @click="activeStep = i"
-                >
-                    <span
-                        class="flex size-6 shrink-0 items-center justify-center rounded-full border text-xs tabular-nums"
-                        :class="
-                            i < activeStep
-                                ? 'bg-primary text-primary-foreground border-primary'
-                                : activeStep === i
-                                  ? 'border-primary text-primary'
-                                  : ''
-                        "
-                    >
-                        <!-- A tick for a step already passed; its number otherwise. -->
-                        <svg
-                            v-if="i < activeStep"
-                            class="size-3"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="3"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
-                            <path d="M20 6 9 17l-5-5" />
-                        </svg>
-                        <template v-else>{{ i + 1 }}</template>
-                    </span>
-
-                    <span class="flex flex-col">
-                        <span>{{ step.label }}</span>
-                        <span v-if="step.description" class="text-muted-foreground text-xs">
-                            {{ step.description }}
-                        </span>
-                    </span>
-
-                    <!-- An error on a step you are not looking at is invisible. -->
-                    <span
-                        v-if="tabHasError(step)"
-                        class="bg-destructive size-1.5 shrink-0 rounded-full"
-                        aria-label="has errors"
-                    />
-                </button>
-
-                <span
-                    v-if="i < (node.children ?? []).length - 1"
-                    class="bg-border h-px w-6 shrink-0"
-                    aria-hidden="true"
-                />
-            </li>
-        </ol>
+        <PkStepIndicator
+            class="p-4"
+            :class="isRoot ? 'border-b' : ''"
+            :steps="wizardSteps"
+            :active-step="activeStep"
+            :has-error="(i: number) => tabHasError((node.children ?? [])[i])"
+            @update:active-step="activeStep = $event"
+        />
 
         <div
             v-for="(step, i) in node.children ?? []"

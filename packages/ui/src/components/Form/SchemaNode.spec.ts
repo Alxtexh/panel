@@ -68,3 +68,60 @@ describe('SchemaNode - conditional sections', () => {
         expect(wrapper.find('section').exists()).toBe(true)
     })
 })
+
+describe('SchemaNode - wizard', () => {
+    const wizard: SchemaNodeType = {
+        component: 'wizard',
+        children: [
+            {
+                component: 'step',
+                label: 'Basics',
+                children: [{ component: 'field', key: 'name', label: 'Name', type: 'text' }],
+            },
+            {
+                component: 'step',
+                label: 'Details',
+                children: [{ component: 'field', key: 'notes', label: 'Notes', type: 'text' }],
+            },
+        ],
+    }
+
+    /**
+     * THE STEP STRIP IS `PkStepIndicator` NOW, not a second copy of it - this
+     * only re-asserts the behaviour that component already covers on its
+     * own, to catch the wizard branch wiring the wrong prop rather than the
+     * indicator itself breaking.
+     */
+    it('shows only the active step and advances on Next', async () => {
+        const wrapper = mount(SchemaNode, { props: { node: wizard, values: {} } })
+
+        // Every step stays mounted (v-show, not v-if) - see the wizard
+        // branch's own note - so visibility, not presence, is what "only
+        // the active step shows" actually means. `v-show` writes a plain
+        // inline style, which is what this checks directly rather than
+        // `isVisible()` - that helper reads computed style, and jsdom does
+        // not resolve an inline `display: none` through it here.
+        const panels = wrapper.findAll('.flex.flex-col.gap-5')
+        const hidden = (el: (typeof panels)[number]) =>
+            (el.attributes('style') ?? '').includes('display: none')
+        expect(hidden(panels[0])).toBe(false)
+        expect(hidden(panels[1])).toBe(true)
+        expect(wrapper.find('[aria-label="has errors"]').exists()).toBe(false)
+
+        await wrapper
+            .findAll('button')
+            .find((b) => b.text() === 'Next')
+            ?.trigger('click')
+
+        expect(hidden(panels[0])).toBe(true)
+        expect(hidden(panels[1])).toBe(false)
+    })
+
+    it('flags the step containing the errored field', () => {
+        const wrapper = mount(SchemaNode, {
+            props: { node: wizard, values: {}, errors: { notes: 'Required' } },
+        })
+
+        expect(wrapper.find('[aria-label="has errors"]').exists()).toBe(true)
+    })
+})
