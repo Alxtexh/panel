@@ -14,20 +14,25 @@ use PanelKit\Panel\Schema\Section;
 /**
  * The parts every printed document has, so three kinds do not write them thrice.
  *
- * Letterhead, a title, a footer with somebody to call. A voucher and an invoice
- * disagree about almost everything in between and agree completely about these,
- * and a kind that had to redeclare them would be one where the invoice designer
- * and the receipt designer slowly stopped matching.
+ * How it prints, a title, and a footer with somebody to call. A voucher and an
+ * invoice disagree about almost everything in between and agree completely about
+ * these, and a kind that had to redeclare them would be one where the invoice
+ * designer and the receipt designer slowly stopped matching.
+ *
+ * THE LETTERHEAD IS NOT HERE, and that is a decision rather than an omission.
+ * The company name and logo live on the organisation's settings screen and
+ * arrive through `DocumentBranding`; a template that carried its own copy would
+ * be a second answer to a question already answered.
  *
  * A BASE CLASS RATHER THAN A TRAIT, because these are not just fields: the
- * header and footer BLOCKS are built here too, and the two have to agree. A
- * trait supplying fields whose values nothing read would be the same bug as a
- * settings page wired to nothing.
+ * footer BLOCK is built here too, and the two have to agree. A trait supplying
+ * fields whose values nothing read would be the same bug as a settings page
+ * wired to nothing.
  */
 abstract class StandardDocumentKind extends DocumentKind
 {
     /**
-     * Branding, header and footer, in that order.
+     * Printing, header and footer, in that order.
      *
      * SUBCLASSES SPLICE THEIR OWN SECTIONS INTO THE MIDDLE - the document's own
      * body sits between letterhead and footer on the page, so it reads in the
@@ -40,19 +45,34 @@ abstract class StandardDocumentKind extends DocumentKind
     protected function standardFields(array $body): array
     {
         return [
-            Section::make('Branding')
-                ->description('The letterhead. Everything here appears on every document of this kind.')
+            /*
+             * NO COMPANY NAME AND NO LOGO FIELD HERE, and their absence is the
+             * point.
+             *
+             * Both already exist on the organisation's own settings screen. A
+             * template that asked again would produce two answers to one
+             * question - the invoice saying "Your company" while the sidebar
+             * says the real name - and a rename would be three templates to
+             * remember, with the forgotten one going to a customer.
+             *
+             * What is left is genuinely about PRINTING rather than identity: an
+             * accent for paper, and whether the office prints in colour at all.
+             * A teal that reads well on a monitor can be unreadable on a
+             * monochrome laser printer, which is a different decision from the
+             * one made on the appearance screen.
+             */
+            Section::make('Printing')
+                ->description(
+                    'How this document is printed. The company name and logo come from '
+                    .'your organisation settings - they are not repeated here.'
+                )
                 ->columns(2)
                 ->schema([
-                    TextField::make('company')->label('Company name')->required(),
-                    TextField::make('logo_url')
-                        ->label('Logo URL')
-                        ->help('Left empty, the company name is used as the letterhead.'),
                     ColourField::make('accent')
                         ->label('Accent colour')
                         ->help('Rules, headings and the total line.'),
                     VisualSelectField::make('colour_mode')
-                        ->label('Printing')
+                        ->label('Colour')
                         ->options(['colour' => 'Colour', 'mono' => 'Black & white'])
                         ->preview('document-colour-mode')
                         ->columns(2)
@@ -83,8 +103,6 @@ abstract class StandardDocumentKind extends DocumentKind
     protected function standardDefaults(): array
     {
         return [
-            'company' => 'Your company',
-            'logo_url' => null,
             'accent' => '#0f172a',
             'colour_mode' => 'colour',
             'support_phone' => '',

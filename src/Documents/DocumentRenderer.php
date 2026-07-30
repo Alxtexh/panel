@@ -22,6 +22,14 @@ namespace PanelKit\Panel\Documents;
  */
 final class DocumentRenderer
 {
+    /*
+     * `$brand`, not `$branding`, because there is a `branding()` method below.
+     * PHP keeps properties and methods in separate namespaces so both forms
+     * resolve - and a reader hitting `$this->branding` two lines from
+     * `$this->branding(...)` has to work out which is which every time.
+     */
+    public function __construct(private readonly DocumentBranding $brand) {}
+
     /**
      * The rendered document.
      *
@@ -118,6 +126,19 @@ final class DocumentRenderer
     /**
      * The look every block shares.
      *
+     * THE NAME AND THE LOGO DO NOT COME FROM THE TEMPLATE. They come from the
+     * organisation, because that is where they already are - one settings screen
+     * with the name and an uploaded mark. A template that carried its own copy
+     * would let the invoice say "Your company" while the sidebar says the real
+     * name, and a rename would be three templates to remember with the forgotten
+     * one going to a customer.
+     *
+     * WHAT DOES BELONG TO THE TEMPLATE is how the document is PRINTED: the
+     * accent colour and whether the office prints in colour at all. A screen
+     * accent and a paper accent are not the same decision - a teal that reads
+     * well on a monitor can be unreadable on a monochrome laser printer, which
+     * is exactly why `colour_mode` exists.
+     *
      * SEMANTIC VALUES ONLY. `accent` is a colour an operator picked, so it
      * reaches the client as a value it puts in a style attribute - the one thing
      * that cannot be a class, because Tailwind never saw it. `mono` is intent,
@@ -129,8 +150,8 @@ final class DocumentRenderer
     private function branding(array $settings): array
     {
         return [
-            'company' => (string) ($settings['company'] ?? ''),
-            'logoUrl' => $settings['logo_url'] ?? null,
+            'company' => $this->brand->company(),
+            'logoUrl' => $this->brand->logoUrl(),
             'accent' => (string) ($settings['accent'] ?? '#0f172a'),
             'mono' => ($settings['colour_mode'] ?? 'colour') === 'mono',
         ];
