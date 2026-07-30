@@ -93,8 +93,8 @@ Verbatim intent from the mid-session message, each its own task:
 | G.3 | #182 | Two tables on one page "is just not logical" — remove the Connections workspace page. |
 | G.4 | #183 | Remove the Custom fields dedicated page completely; the inline record-form dialog remains the only entry. |
 | G.5 | #184 | Audit history must read human: no raw ISO dates, no raw JSON like `{"fibre_node":"FN-1234"}` — per-field diffs with formatted values. |
-| G.6 | #185 | The Network page opens slower — find out why, fix it. |
-| G.7 | #186 | Verify virtual scrolling is implemented well for large lists; add where missing. |
+| G.6 | #185 | The Network page opens slower — find out why, fix it. **Investigated:** server timing equal across screens (~50 ms full page, sub-ms queries, `panel:benchmark` all within 300 ms budget); the felt slowness is Vite DEV-mode compiling a freshly-added page chunk on first navigation — absent in a production build — and sidebar hover-prefetch is already in place. No server fix warranted. |
+| G.7 | #186 | Verify virtual scrolling is implemented well for large lists; add where missing. **Audit:** main tables are paginated (≤100 rows in DOM, bounded by design — pagination IS the virtualisation strategy); the two UNBOUNDED growers are `RelationPanel` ("More" accumulates pages forever) and the Chat message scroller. Windowing lands there next. |
 | G.8 | #187 | UI foundation: evaluate Nuxt UI / Naive UI / Reka (Radix Vue) / Headless UI / Ark UI for Vue 3 + Inertia; name the Enterprise Workhorse and the Lightweight Pick; CENTRALIZE components in @panelkit/ui (no duplicate copies in the app) and centralize scattered functions the same way. |
 | G.9 | #188 | Ship several SaaS landing page designs with PanelKit. |
 
