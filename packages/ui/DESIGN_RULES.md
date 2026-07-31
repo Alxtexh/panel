@@ -31,7 +31,7 @@ identity block and the action group:
 </div>
 ```
 
-**The failure this prevents:** `justify-between` distributes *every* child, so
+**The failure this prevents:** `justify-between` distributes _every_ child, so
 a row with four children scatters them across the full width. That is not a
 style choice anyone made — it is what the browser does when nobody groups.
 
@@ -101,25 +101,42 @@ Every screen, checked against all six rules. Ticked with the date it was
 brought into line (or confirmed already conforming). A screen changed after
 its tick gets re-checked.
 
-| Screen | Status |
-| --- | --- |
-| Resource index (generic) | 2026-07-30 — rules 1–5 applied (action group, reorder icon, TableShell); verified on Clients, Plans, Users, Custom Fields |
-| Resource create/edit form | 2026-07-30 — repeater rows (rule 6) verified on the voucher designer; generic form shares the components |
-| Resource view page | 2026-07-30 — rule 2 fix (Edit primary, last) |
-| Dashboard | 2026-07-30 — checklist gone when done; tiles conform |
-| Trash | 2026-07-30 — TableShell adopted; header conforms |
-| Backups | 2026-07-30 — grouped [Settings][Back up now], one card |
-| Backup settings | queued |
-| Monitoring | 2026-07-30 — tiles + tables conform, no Redis nagging |
-| Logs explorer | queued |
-| Documents designer | 2026-07-30 — repeater rows verified live |
-| Mail | queued |
-| Chat | queued |
-| Activity | 2026-07-30 — inherits the generic index |
-| Users | 2026-07-30 — verified directly |
-| Roles & permissions | queued |
-| Announcements | 2026-07-30 — inherits the generic index |
-| Custom fields | 2026-07-30 — verified directly |
-| Settings index | 2026-07-30 — verified directly |
-| Help / FAQ / About / What's new | queued |
-| Generated portals (reseller, platform) | queued — inherit the generic pages; re-check after regeneration |
+| Screen                                                           | Status                                                                                                                                                           |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Resource index (generic)                                         | 2026-07-30 — rules 1–5 applied (action group, reorder icon, TableShell); verified on Clients, Plans, Users, Custom Fields                                        |
+| Resource create/edit form                                        | 2026-07-30 — repeater rows (rule 6) verified on the voucher designer; generic form shares the components                                                         |
+| Resource view page                                               | 2026-07-30 — rule 2 fix (Edit primary, last)                                                                                                                     |
+| Dashboard                                                        | 2026-07-30 — checklist gone when done; tiles conform                                                                                                             |
+| Trash                                                            | 2026-07-30 — TableShell adopted; header conforms                                                                                                                 |
+| Backups                                                          | 2026-07-30 — grouped [Settings][Back up now], one card                                                                                                           |
+| Backup settings                                                  | 2026-07-31 — conforms; every disabled control is permission- or in-flight-gated, so none is dead                                                                 |
+| Monitoring                                                       | 2026-07-30 — tiles + tables conform, no Redis nagging                                                                                                            |
+| Logs explorer                                                    | 2026-07-31 — **fixed**: controls were floating above the pane (rule 4); one card now, and the file picker only renders when there is more than one file (rule 5) |
+| Documents designer                                               | 2026-07-30 — repeater rows verified live                                                                                                                         |
+| Mail                                                             | 2026-07-31 — conforms; app shell is one card, rail and toolbar inside it                                                                                         |
+| Chat                                                             | 2026-07-31 — conforms; search sits in the list's own band, send is disabled only on an empty draft                                                               |
+| Activity                                                         | 2026-07-30 — inherits the generic index                                                                                                                          |
+| Users                                                            | 2026-07-30 — verified directly                                                                                                                                   |
+| Roles & permissions                                              | 2026-07-31 — conforms; role list is a list rather than a select, by choice                                                                                       |
+| Announcements                                                    | 2026-07-30 — inherits the generic index                                                                                                                          |
+| Custom fields                                                    | 2026-07-30 — verified directly                                                                                                                                   |
+| Settings index                                                   | 2026-07-30 — verified directly                                                                                                                                   |
+| Settings: Profile, Security, Organisation, Assistant, Workspaces | 2026-07-31 — conforms; all share the `Heading` component                                                                                                         |
+| Settings: User management                                        | 2026-07-31 — conforms                                                                                                                                            |
+| Ticket analysis                                                  | 2026-07-31 — conforms                                                                                                                                            |
+| Documents (templates list), Docs, Build guide, Device preview    | 2026-07-31 — conforms; section pages with no page header of their own                                                                                            |
+| Auth, error and landing screens                                  | 2026-07-31 — conforms; landing footer is identity + one nav group                                                                                                |
+| Help / FAQ / About / What's new                                  | 2026-07-31 — conforms; "Still stuck?" is identity + grouped actions                                                                                              |
+| Generated portals (reseller, platform)                           | 2026-07-31 — inherit the generic index; `/platform` home asserted in the Dusk suite                                                                              |
+
+**Swept in full on 2026-07-31.** Every `.vue` page in the playground was checked,
+not only the ones named above — the earlier table listed sixteen screens and the
+app has fifty-one files. Rules 1 and 5 were checked mechanically across all of
+them (a `justify-between` row with more than two children; a `<select>` that can
+only ever hold one option), and the three hits that scan produced were read by
+hand and were all artifacts of the scanner mis-nesting multi-line component tags.
+
+Rule 6 holds by construction rather than by inspection: no page hand-rolls a
+repeating input. Every one goes through `PkRepeater`, which A.1 rebuilt as rows
+and which has its own spec — so a regression there fails a test rather than
+needing another sweep.

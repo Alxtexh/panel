@@ -83,46 +83,87 @@ watch(() => props.tail, toBottom);
             </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <select
-                class="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                :value="props.tail.name ?? ''"
-                @change="open(($event.target as HTMLSelectElement).value)"
-            >
-                <option v-for="f in props.files" :key="f.name" :value="f.name">
-                    {{ f.name }} - {{ Math.round(f.bytes / 1024) }} KB
-                </option>
-            </select>
+        <!--
+            ONE CARD, AND THE CONTROLS ARE INSIDE IT - design rule 4.
 
-            <input
-                v-model="search"
-                type="search"
-                placeholder="Filter lines…"
-                class="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm"
-                @keyup.enter="runSearch"
-            />
-        </div>
+            The picker, the filter, the truncation notice and the lines were
+            four siblings with gaps between them, so the controls read as a
+            widget that happened to sit above a log rather than as the log's
+            own controls. Same reasoning as the table shell: one border round
+            the whole object, `divide-y` between the bands, nothing floating.
+        -->
+        <div class="flex min-h-0 flex-col divide-y rounded-lg border bg-card">
+            <div class="flex flex-wrap items-center gap-2 p-3">
+                <!--
+                    A PICKER ONLY WHERE THERE IS SOMETHING TO PICK - design
+                    rule 5. Most installations have one log file, and a select
+                    holding a single option is a control that looks operable,
+                    invites a click and does nothing. The name is worth showing
+                    either way, so the one-file case states it instead.
+                -->
+                <select
+                    v-if="props.files.length > 1"
+                    class="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                    :value="props.tail.name ?? ''"
+                    aria-label="Log file"
+                    @change="open(($event.target as HTMLSelectElement).value)"
+                >
+                    <option
+                        v-for="f in props.files"
+                        :key="f.name"
+                        :value="f.name"
+                    >
+                        {{ f.name }} - {{ Math.round(f.bytes / 1024) }} KB
+                    </option>
+                </select>
 
-        <p v-if="props.tail.truncated" class="text-xs text-muted-foreground">
-            Showing the end of the file - earlier entries are on disk.
-        </p>
+                <p
+                    v-else-if="props.files.length === 1"
+                    class="text-sm font-medium"
+                >
+                    {{ props.files[0].name }}
+                    <span class="font-normal text-muted-foreground">
+                        - {{ Math.round(props.files[0].bytes / 1024) }} KB
+                    </span>
+                </p>
 
-        <div
-            ref="pane"
-            class="max-h-[65vh] overflow-auto rounded-lg border bg-muted/30 p-3 font-mono text-xs leading-relaxed"
-        >
-            <p v-if="!props.tail.lines.length" class="text-muted-foreground">
-                Nothing to show.
-            </p>
+                <input
+                    v-model="search"
+                    type="search"
+                    placeholder="Filter lines…"
+                    aria-label="Filter lines"
+                    class="h-9 min-w-40 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                    @keyup.enter="runSearch"
+                />
+            </div>
 
             <p
-                v-for="(line, i) in props.tail.lines"
-                :key="i"
-                class="whitespace-pre-wrap"
-                :class="tone(line)"
+                v-if="props.tail.truncated"
+                class="px-3 py-2 text-xs text-muted-foreground"
             >
-                {{ line }}
+                Showing the end of the file - earlier entries are on disk.
             </p>
+
+            <div
+                ref="pane"
+                class="max-h-[65vh] min-h-0 overflow-auto p-3 font-mono text-xs leading-relaxed"
+            >
+                <p
+                    v-if="!props.tail.lines.length"
+                    class="text-muted-foreground"
+                >
+                    Nothing to show.
+                </p>
+
+                <p
+                    v-for="(line, i) in props.tail.lines"
+                    :key="i"
+                    class="whitespace-pre-wrap"
+                    :class="tone(line)"
+                >
+                    {{ line }}
+                </p>
+            </div>
         </div>
     </div>
 </template>
