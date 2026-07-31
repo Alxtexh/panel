@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\Budgets;
 use PanelKit\Panel\Support\TenantContext;
 use PanelKit\Panel\Tables\Filters\BooleanFilter;
 use PanelKit\Panel\Tables\Filters\Filter;
@@ -77,9 +78,30 @@ final class BenchmarkCommand extends Command
         foreach ($panels->resources() as $key => $class) {
             $definition = $class::definition();
 
+            /*
+             * A RESOURCE MAY DECLARE ITS OWN CEILING. Most do not and take the
+             * command's - a generated list has one query shape, so one number
+             * describes them all. The ones that differ differ for a reason
+             * somebody wrote down next to the screen.
+             */
+            $resourceBudget = $class::budgetMs() ?? $budget;
+
             foreach ($this->surfaces($class, $definition) as $label => $work) {
-                $results[] = $this->measure("{$key}: {$label}", $work, $runs);
+                $results[] = $this->measure("{$key}: {$label}", $work, $runs, $resourceBudget);
             }
+        }
+
+        /*
+         * AND THE SCREENS SOMEBODY WROTE - roadmap 7.6.
+         *
+         * Until this loop the benchmark covered what the panel GENERATES and
+         * nothing an application built: the dashboard, the designer, a bulk
+         * send. Those are the ones that get slow, because a generated list has
+         * one query shape and a hand-written screen has however many somebody
+         * added. See `Budgets`, which is where a screen states its promise.
+         */
+        foreach (Budgets::all() as $label => $declared) {
+            $results[] = $this->measure($label, $declared['work'], $runs, (float) $declared['budget']);
         }
 
         if ($results === []) {
@@ -241,7 +263,7 @@ final class BenchmarkCommand extends Command
      * current request in places - leaving the console's empty request in there
      * would silently measure an unfiltered page.
      *
-     * @param array<string, mixed> $query
+     * @param  array<string, mixed>  $query
      */
     private function request(array $query = []): Request
     {
@@ -290,7 +312,7 @@ final class BenchmarkCommand extends Command
      *
      * @return array{surface: string, ms: float, queries: int, samples: list<float>}
      */
-    private function measure(string $surface, Closure|SurfaceWork $work, int $runs): array
+    private function measure(string $surface, Closure|SurfaceWork $work, int $runs, float $budget): array
     {
         $setup = $work instanceof SurfaceWork ? $work->setup : static fn (): mixed => null;
         $run = $work instanceof SurfaceWork ? $work->work : static fn (mixed $_) => $work();
@@ -328,6 +350,9 @@ final class BenchmarkCommand extends Command
         return [
             'surface' => $surface,
             'ms' => round($samples[intdiv(count($samples), 2)], 2),
+            // Carried with the measurement, so the verdict travels with the
+            // number rather than being recomputed by whoever reads it.
+            'budget' => $budget,
             'queries' => $queries,
             'samples' => array_map(static fn (float $s): float => round($s, 2), $samples),
         ];
@@ -341,10 +366,16 @@ final class BenchmarkCommand extends Command
         $this->newLine();
         $this->components->info('Median of '.count($results[0]['samples']).' warm runs');
 
+        /*
+         * THE BUDGET IS A COLUMN NOW, because it is no longer one number. A
+         * report that says "! 340 ms" without saying what was promised leaves
+         * the reader to guess whether that is a regression or a screen that
+         * always cost that.
+         */
         $this->table(
-            ['Surface', 'Median', 'Queries', 'Samples'],
-            array_map(static function (array $r) use ($budget, &$breached): array {
-                $over = $r['ms'] > $budget;
+            ['Surface', 'Median', 'Budget', 'Queries', 'Samples'],
+            array_map(static function (array $r) use (&$breached): array {
+                $over = $r['ms'] > $r['budget'];
 
                 if ($over) {
                     $breached[] = $r['surface'];
@@ -353,6 +384,7 @@ final class BenchmarkCommand extends Command
                 return [
                     $r['surface'],
                     sprintf('%s%.2f ms', $over ? '! ' : '  ', $r['ms']),
+                    sprintf('%.0f ms', $r['budget']),
                     $r['queries'],
                     implode(' / ', $r['samples']),
                 ];
@@ -361,7 +393,7 @@ final class BenchmarkCommand extends Command
 
         if ($breached !== []) {
             $this->components->error(
-                count($breached).' surface(s) over the '.$budget.' ms budget: '
+                count($breached).' surface(s) over their budget: '
                 .implode(', ', $breached)
             );
 
@@ -370,7 +402,7 @@ final class BenchmarkCommand extends Command
             return self::FAILURE;
         }
 
-        $this->components->info('Every surface is within '.$budget.' ms.');
+        $this->components->info('Every surface is within its budget.');
 
         return self::SUCCESS;
     }
@@ -380,11 +412,13 @@ final class BenchmarkCommand extends Command
     {
         $breached = array_values(array_filter(
             $results,
-            static fn (array $r): bool => $r['ms'] > $budget,
+            static fn (array $r): bool => $r['ms'] > $r['budget'],
         ));
 
         $this->line((string) json_encode([
-            'budgetMs' => $budget,
+            // The command's DEFAULT. Each surface carries the budget it was
+            // actually judged against, which may be its own.
+            'defaultBudgetMs' => $budget,
             'runs' => count($results[0]['samples']),
             'surfaces' => $results,
             'breached' => array_column($breached, 'surface'),
