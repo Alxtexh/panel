@@ -44,6 +44,18 @@ final class RunBulkAction implements ShouldQueue
     public int $tries = 1;
 
     /**
+     * ITS OWN BUDGET, rather than whatever the worker was launched with.
+     *
+     * Without this the job inherits the `queue:work` default of 60 seconds -
+     * a number that lives in a deploy script or a supervisor config this
+     * package cannot see. A bulk action over a few thousand records crosses
+     * it, and with `$tries = 1` the kill is final: the mutation is applied to
+     * the records processed so far, to none of the rest, and nothing anywhere
+     * says which. Its siblings already declare theirs; this one was missed.
+     */
+    public int $timeout = 900;
+
+    /**
      * @param  array<string, mixed>  $query  The filter parameters from the table.
      */
     public function __construct(
