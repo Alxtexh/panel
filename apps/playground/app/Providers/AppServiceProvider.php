@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\ClientSession;
 use App\Models\Plan;
 use App\Models\Router;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Policies\AnnouncementPolicy;
 use App\Policies\AuditEntryPolicy;
@@ -17,6 +18,7 @@ use App\Policies\ClientSessionPolicy;
 use App\Policies\CustomFieldPolicy;
 use App\Policies\PlanPolicy;
 use App\Policies\RouterPolicy;
+use App\Policies\TicketPolicy;
 use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\DevCommands;
@@ -80,6 +82,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Router::class, RouterPolicy::class);
         Gate::policy(Plan::class, PlanPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+        /*
+         | THE ONE RECORD TWO SIDES READ UNDER DIFFERENT RULES, which is why
+         | it is not a `TenantResourcePolicy` subclass like its neighbours: an
+         | opener reads their own ticket holding no ticket ability at all,
+         | while an operator reads the organisation's without having opened
+         | any. See TicketPolicy's own note - it was written before any ticket
+         | screen existed, so the screens answer to it rather than the reverse.
+         */
+        Gate::policy(Ticket::class, TicketPolicy::class);
         // Read-only by construction - see AuditEntryPolicy.
         Gate::policy(AuditEntry::class, AuditEntryPolicy::class);
 
