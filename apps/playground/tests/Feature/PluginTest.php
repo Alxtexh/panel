@@ -104,6 +104,54 @@ final class PluginTest extends TestCase
         $this->actingAs($this->user)->get('/reseller/announcements')->assertNotFound();
     }
 
+    /**
+     * A PLUGIN'S RESOURCES SURVIVE THE NEXT BOOT, which they did not.
+     *
+     * THE BUG THIS PINS, because it is the kind that reads as an unrelated
+     * flake. `PanelManager` is a SCOPED binding: `$this->resources` is rebuilt
+     * for every request. The flag recording "this panel's plugins have already
+     * run" was a STATIC, so it outlived the registry it was guarding - the
+     * first boot in a process registered the plugin's resources, and every
+     * boot after it saw "already applied" against an empty registry and
+     * registered nothing at all.
+     *
+     * Under Octane that is a plugin's screens working on a worker's first
+     * request and 404ing on its second, with the navigation still linking
+     * them. In a test suite it is a class whose first test can reach a screen
+     * and whose second cannot.
+     *
+     * IT HID BEHIND THE ANNOUNCEMENTS PLUGIN. That resource is ALSO discovered
+     * from `app/Panel/Resources`, so it was registered twice over and
+     * discovery covered for the plugin path. `TicketingPlugin` was the first
+     * whose classes come from the plugin alone, and it failed at once - which
+     * is why this test forces a fresh manager rather than trusting a screen.
+     *
+     * `forgetScopedInstances()` is exactly what Laravel does between requests,
+     * so this is the real second request rather than an imitation of one.
+     */
+    public function test_a_plugins_resources_are_still_registered_on_the_next_boot(): void
+    {
+        $first = app(PanelManager::class);
+
+        $this->assertArrayHasKey('tickets', $first->resourcesFor('admin'));
+        $this->assertArrayHasKey('my-tickets', $first->resourcesFor('reseller'));
+
+        // What the framework does between one request and the next.
+        app()->forgetScopedInstances();
+
+        $second = app(PanelManager::class);
+
+        $this->assertNotSame($first, $second, 'The manager is meant to be scoped.');
+
+        $this->assertArrayHasKey(
+            'tickets',
+            $second->resourcesFor('admin'),
+            "A plugin's resource vanished on the second boot - the applied flag outlived the registry.",
+        );
+
+        $this->assertArrayHasKey('my-tickets', $second->resourcesFor('reseller'));
+    }
+
     /** And registering one class for two panels is refused rather than silently overwritten. */
     public function test_registering_a_resource_for_two_panels_throws(): void
     {

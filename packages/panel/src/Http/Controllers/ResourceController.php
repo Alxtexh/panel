@@ -337,10 +337,19 @@ final class ResourceController extends Controller
     }
 
     /** @return list<array{title: string, href: string}> */
+    /**
+     * THE CRUMB BACK TO THE LIST, in the panel this screen belongs to.
+     *
+     * Taken from the schema's own `routes.index` rather than rebuilt from the
+     * key, which is the whole reason that route carries the panel's path now.
+     * Assembling `'/'.$class::key()` here was correct in one portal and wrong
+     * in every other - a breadcrumb that navigates out of the portal you are
+     * standing in.
+     */
     private function trail(string $class, string $leaf): array
     {
         return [
-            ['title' => $class::pluralLabel(), 'href' => '/'.$class::key()],
+            ['title' => $class::pluralLabel(), 'href' => $class::schema()['routes']['index']],
             ['title' => $leaf, 'href' => '#'],
         ];
     }

@@ -7,6 +7,7 @@ use App\Knowledge\HelpSource;
 use App\Models\SavedView;
 use App\Panel\Singulars\BillingSettingsResource;
 use App\Plugins\AnnouncementsPlugin;
+use App\Plugins\TicketingPlugin;
 
 return [
 
@@ -371,6 +372,33 @@ return [
     */
     'plugins' => [
         AnnouncementsPlugin::class,
+        TicketingPlugin::class,
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Ticketing
+    |---------------------------------------------------------------------------
+    |
+    | WHICH TWO PORTALS THE TWO ENDS OF A TICKET LIVE IN.
+    |
+    | A ticket is the one record two sides read under different rules, so it
+    | needs both: `operator` gets the queue - the whole organisation's tickets,
+    | with assignment and resolution - and `opener` gets the screen where
+    | somebody raises one and follows their own.
+    |
+    | NAMED HERE RATHER THAN HARDCODED because a package cannot know what an
+    | installation called its portals. An operator portal keyed `isp` is
+    | perfectly ordinary, and a plugin that assumed `admin` would install into
+    | nothing on that installation while looking installed.
+    |
+    | `TicketingPlugin` REFUSES TO INSTALL ONE END WITHOUT THE OTHER, and names
+    | the missing panel when it does. A queue nobody can write to and a form
+    | nobody reads are both worse than the feature being absent.
+    */
+    'ticketing' => [
+        'operator' => env('PANEL_TICKETING_OPERATOR', 'admin'),
+        'opener' => env('PANEL_TICKETING_OPENER', 'reseller'),
     ],
 
     'knowledge' => [

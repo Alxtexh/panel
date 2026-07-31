@@ -96,6 +96,15 @@ final class AnnouncementResource extends Resource
             ->perPage(25);
     }
 
+    /**
+     * NO IMPORT EITHER. A notice is written, once, by somebody choosing their
+     * words - a CSV of announcements is not a thing anybody has.
+     */
+    public static function importable(): bool
+    {
+        return false;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

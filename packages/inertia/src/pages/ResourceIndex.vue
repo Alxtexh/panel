@@ -125,7 +125,13 @@ const props = defineProps<
         /** Form option lists - tenant data, so they arrive with the payload. */
         formOptions: Record<string, { value: any; label: string }[]>
         /** UI hints only. Every write re-authorizes server-side. */
-        can: { viewAny: boolean; create: boolean; update: boolean; delete: boolean }
+        can: {
+            viewAny: boolean
+            create: boolean
+            update: boolean
+            delete: boolean
+            import: boolean
+        }
         /** Transport for staying fresh. The page does not know which driver. */
         live: {
             driver: 'none' | 'poll' | 'broadcast'
@@ -819,7 +825,7 @@ function badgeLabel(key: string, value: unknown): string {
                 -->
                 <div class="flex shrink-0 items-center gap-2">
                     <Button
-                        v-if="canWrite && can.create && !reordering"
+                        v-if="canWrite && can.import && !reordering"
                         variant="outline"
                         size="sm"
                         @click="importing = true"

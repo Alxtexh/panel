@@ -48,6 +48,26 @@ final class TicketPolicy
         return $this->hasTenant() && $this->may($user, 'viewAny');
     }
 
+    /**
+     * MAY YOU OPEN A SCREEN OF YOUR OWN TICKETS - which is a different
+     * question from `viewAny`, and the reason the opener's side works at all.
+     *
+     * `viewAny` asks whether you may list the RESOURCE, and for tickets that
+     * means the organisation's: it is the operator's grant. Asking it of a
+     * subscriber would leave them unable to open a screen showing nothing but
+     * their own requests, which is the portal being useless in the name of
+     * security.
+     *
+     * So this grants the SCREEN and nothing else. What appears on it is
+     * settled by `MyTicketResource`'s `constrain()` - the gate says you may
+     * look, the query decides at what - and every record request still
+     * answers to `view` below.
+     */
+    public function viewOwn(User $user): bool
+    {
+        return $this->hasTenant();
+    }
+
     public function view(User $user, ?Ticket $ticket = null): bool
     {
         if (! $this->hasTenant()) {

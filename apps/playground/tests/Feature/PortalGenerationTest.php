@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Client;
+use App\Panel\Resources\ClientResource;
+use App\Panel\Reseller\Resources\PlanResource;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -97,6 +99,42 @@ final class PortalGenerationTest extends TestCase
 
         $this->assertArrayHasKey('reseller-plans', $reseller);
         $this->assertArrayNotHasKey('plans', $reseller);
+    }
+
+    /**
+     * A PORTAL'S SCHEMA CARRIES THAT PORTAL'S PATH, and until now it did not.
+     *
+     * THE BUG, WHICH MADE EVERY GENERATED PORTAL A ONE-SCREEN PORTAL. The
+     * routes in a resource schema were built from the key alone -
+     * `/reseller-plans/create`, `/reseller-plans/{id}` - which is correct in
+     * exactly one panel: the one mounted at the root. Everywhere else the
+     * index rendered perfectly and every link off it went to a URL that panel
+     * does not serve. New, each row, the form's own submit target, the upload
+     * endpoint and the field-options lookup are ALL built from
+     * `routes.index` on the client, so all of them missed.
+     *
+     * IT SURVIVED BECAUSE THE INDEX IS THE ONE SCREEN THAT NEEDS NO LINK, and
+     * the index is what anybody opens to check whether a generated portal
+     * works. `make:panel` looked like it produced a working portal because the
+     * first thing you look at is the one thing that was fine.
+     *
+     * This is the export download's bug one layer up - see the note on that
+     * one about assembling a path from a resource key - so the assertion is
+     * the same shape: the prefix comes from the PANEL, and the root panel gets
+     * none rather than a special case.
+     */
+    public function test_a_portals_resource_routes_carry_its_path(): void
+    {
+        $reseller = PlanResource::schema('reseller')['routes'];
+
+        $this->assertSame('/reseller/reseller-plans', $reseller['index']);
+        $this->assertSame('/reseller/reseller-plans/{id}', $reseller['update']);
+
+        // And a panel mounted at the root gets no prefix rather than a slash.
+        $admin = ClientResource::schema('admin')['routes'];
+
+        $this->assertSame('/clients', $admin['index']);
+        $this->assertSame('/clients/{id}', $admin['update']);
     }
 
     /**

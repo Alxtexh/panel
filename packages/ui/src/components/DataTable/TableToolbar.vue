@@ -243,7 +243,18 @@ function clearEverything() {
 </script>
 
 <template>
-    <div class="flex flex-wrap items-center gap-2">
+    <!--
+        THE WHOLE GROUP SITS AT THE TRAILING EDGE, which is where the page
+        header's actions already are - so a screen has one vertical line that
+        controls hang off rather than two competing ones. Search, Filters and
+        Columns are things you REACH FOR; the rows are what you read, and the
+        reading starts on the left.
+
+        `justify-end` on the row, and the search box keeps `flex-1` only until
+        `sm`, where it becomes a fixed width - on a phone a right-aligned
+        stub of a search field would be worse than a full-width one.
+    -->
+    <div class="flex flex-wrap items-center justify-end gap-2">
         <!-- Geometry deliberately identical to the topbar search: two search
              boxes that are almost-but-not-quite alike read as inconsistency. -->
         <div class="relative min-w-0 flex-1 sm:w-72 sm:flex-none">

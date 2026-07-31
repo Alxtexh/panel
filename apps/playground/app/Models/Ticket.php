@@ -8,6 +8,7 @@ use App\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 use PanelKit\Panel\Audit\Auditable;
 use PanelKit\Panel\Support\TenantContext;
 
@@ -59,6 +60,18 @@ final class Ticket extends Model
         self::creating(static function (self $ticket): void {
             if ($ticket->tenant_id === null) {
                 $ticket->tenant_id = app(TenantContext::class)->currentKey();
+            }
+
+            /*
+             * AND SO IS THE OPENER, for a sharper reason. `opened_by` is half
+             * the policy - it is what "read your own" reads - so a form field
+             * for it would be a way to file a complaint under somebody else's
+             * name AND to hand that person read access to it. Neither of the
+             * two ticket resources exposes one, and this is what makes that
+             * true rather than a habit two authors have to keep.
+             */
+            if ($ticket->opened_by === null) {
+                $ticket->opened_by = Auth::id();
             }
         });
 

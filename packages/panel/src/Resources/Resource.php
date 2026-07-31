@@ -14,6 +14,7 @@ use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\CustomFields\CustomFieldFactory;
 use PanelKit\Panel\Forms\Fields\Field;
 use PanelKit\Panel\Forms\Form;
+use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Schema\Component;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\SchemaCache;
@@ -82,7 +83,7 @@ abstract class Resource
      * rows whose foreign key points at that record. Creation stamps the key
      * from the URL, never from the form body.
      *
-     * @var class-string<Resource>|null
+     * @var class-string<resource>|null
      */
     protected static ?string $parent = null;
 
@@ -105,9 +106,21 @@ abstract class Resource
      */
     protected static string $panel = 'admin';
 
+    /**
+     * WHERE IT WAS REGISTERED BEATS WHAT IT DECLARES, and that order matters
+     * for anything a plugin installs.
+     *
+     * A plugin cannot know what an installation called its portals, so its
+     * resource classes leave `$panel` at the default and the manager records
+     * the panel each registration happened FOR. Reading the declaration here
+     * meant a plugin's resource reported `admin` no matter where it was
+     * actually mounted - which fed the schema cache the wrong key and, once
+     * routes learned to carry their panel's path, produced a screen whose own
+     * links pointed at a portal it does not live in.
+     */
     public static function panel(): string
     {
-        return static::$panel;
+        return app(PanelManager::class)->panelFor(static::class) ?? static::$panel;
     }
 
     /** Declarative definition. MUST NOT query. */
@@ -181,6 +194,30 @@ abstract class Resource
         // Absent means DISABLED. A missing flag is not permission - the whole
         // point of a flag is that it must be turned on deliberately.
         return (bool) ($flags[$feature] ?? false);
+    }
+
+    /**
+     * Whether records may be brought in in BULK, from a file.
+     *
+     * A SEPARATE QUESTION FROM `create`, and separating them is the point.
+     * Import used to appear wherever creating did, on the reasonable-sounding
+     * theory that importing is creating many at once. It is not: creating is
+     * something anybody who uses a screen does, and importing a spreadsheet is
+     * an administrative act with a wizard, a mapping step and a write of
+     * hundreds of rows behind it.
+     *
+     * THE SCREEN THAT MADE THE DIFFERENCE OBVIOUS is a subscriber's own
+     * support requests. They may open a ticket - that is the whole point of
+     * the screen - so `create` is true, so an Import button appeared beside
+     * it, offering to upload a CSV of complaints. Nothing was broken and
+     * nothing would have failed; it was simply a control that makes no sense
+     * where it was, which DESIGN_RULES rule 5 is about.
+     *
+     * True by default, because most resources are administered.
+     */
+    public static function importable(): bool
+    {
+        return true;
     }
 
     /** Whether a create or edit PAGE can be rendered at all. */
@@ -273,6 +310,12 @@ abstract class Resource
                 || static::definition()->getReorderColumn() !== null)
                 && static::can('update'),
             'delete' => static::can('delete'),
+
+            // Its own flag rather than a reading of `create` - see
+            // `importable()` for the screen that made the difference clear.
+            'import' => static::importable()
+                && static::isWritable()
+                && static::can('create'),
         ];
     }
 
@@ -461,11 +504,35 @@ abstract class Resource
 
         $cache = app(SchemaCache::class);
 
+        /*
+         * THE PANEL'S PATH, IN FRONT OF EVERY URL THIS SCHEMA HANDS OUT.
+         *
+         * IT WAS MISSING, AND THE SECOND PORTAL WAS BROKEN PAST ITS FIRST
+         * SCREEN. The routes below were built from the resource key alone -
+         * `/reseller-plans/create`, `/reseller-plans/{id}` - which is correct
+         * in exactly one panel: the one mounted at the root. On a portal
+         * mounted at `/reseller`, the index rendered perfectly and then every
+         * link off it went to a URL that panel does not serve. New, the row
+         * links, the form's own submit target, the upload endpoint, the
+         * field-options lookup - all of them, because they are all built from
+         * `routes.index` on the client.
+         *
+         * It survived because the index page is the one screen that needs no
+         * link to work, and it is the screen anybody checks when asking
+         * whether a generated portal works.
+         *
+         * This is the export download's bug one layer up, and the fix is the
+         * same shape: the prefix comes from the PANEL, resolved where the
+         * panel is known, rather than assembled by each caller. Cached safely
+         * because the schema cache key already includes the panel id.
+         */
+        $prefix = rtrim('/'.trim(app(PanelManager::class)->panel($panelId)?->getPath() ?? '', '/'), '/');
+
         return $cache->remember(
             $panelId,
             static::key(),
             static::permissionsFingerprint(),
-            static function (): array {
+            static function () use ($prefix): array {
                 $table = static::definition();
 
                 return [
@@ -478,10 +545,10 @@ abstract class Resource
                     'icon' => static::icon(),
                     'group' => static::group(),
                     'routes' => [
-                        'index' => '/'.static::key(),
-                        'store' => '/'.static::key(),
-                        'update' => '/'.static::key().'/{id}',
-                        'destroy' => '/'.static::key().'/{id}',
+                        'index' => $prefix.'/'.static::key(),
+                        'store' => $prefix.'/'.static::key(),
+                        'update' => $prefix.'/'.static::key().'/{id}',
+                        'destroy' => $prefix.'/'.static::key().'/{id}',
                     ],
                     'table' => $table->toSchema(),
                     'form' => static::formDefinition()->toSchema(),

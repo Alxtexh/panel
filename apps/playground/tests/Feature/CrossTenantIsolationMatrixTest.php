@@ -10,6 +10,7 @@ use App\Models\ClientSession;
 use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
+use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -465,6 +466,7 @@ final class CrossTenantIsolationMatrixTest extends TestCase
             AuditEntry::class => $this->foreignAuditEntry(),
             Announcement::class => $this->foreignAnnouncement(),
             ClientSession::class => $this->foreignClientSession(),
+            Ticket::class => $this->foreignTicket(),
             default => null,
         };
     }
@@ -478,6 +480,32 @@ final class CrossTenantIsolationMatrixTest extends TestCase
      * spelling's own isolation - a foreign PARENT id resolving to nothing -
      * is asserted in `NestedResourceTest`, where the URL shape lives.
      */
+    /**
+     * A ticket raised inside the OTHER organisation.
+     *
+     * ONE FIXTURE SERVES BOTH TICKET RESOURCES, which is the interesting part.
+     * The operator's queue and the opener's own list are two screens over one
+     * table, and the matrix asks each of them separately - so this row proves
+     * the boundary holds on the side that lists everything AND on the side
+     * that lists only yours. The second is the one worth having: its policy
+     * grants a read to whoever opened the ticket, and the opener here is a
+     * user of the other organisation.
+     *
+     * `forceCreate` and an explicit `opened_by`, because the model stamps both
+     * columns from the acting context - which would hand this row to the very
+     * tenant it is supposed to be foreign to.
+     */
+    private function foreignTicket(): Model
+    {
+        return Ticket::query()->forceCreate([
+            'tenant_id' => $this->theirs->id,
+            'opened_by' => $this->foreignUser()->getKey(),
+            'subject' => 'Their outage, not ours',
+            'status' => Ticket::OPEN,
+            'priority' => 'normal',
+        ]);
+    }
+
     private function foreignClientSession(): Model
     {
         $client = $this->foreignClient();
