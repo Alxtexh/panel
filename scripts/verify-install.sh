@@ -124,11 +124,42 @@ php artisan migrate --force --no-interaction 2>&1 | tail -2
 say "Generating a resource"
 php artisan make:panel-resource Customer --generate --no-interaction 2>&1 | tail -5
 
-# THE ASSERTION WORTH MAKING. Not "files were written" - that a route exists
-# means discovery ran, the resource was found and the panel mounted it.
-say "Checking the resource is routable"
-php artisan route:list --no-ansi 2>/dev/null | grep -q 'customers' \
-    || fail "No route for the generated resource - discovery or panel mounting did not happen."
+# A PANEL NEEDS AN APPLICATION THAT CAN AUTHENTICATE. `laravel/laravel` ships
+# no auth scaffolding, so there is no `login` route for the guard to send an
+# anonymous visitor to - and the first visit dies with "Route [login] not
+# defined", which names nothing a newcomer can act on. A real installation has
+# Fortify, Breeze or a starter kit; this stands in for one.
+say "Adding a login route (standing in for auth scaffolding)"
+cat >> routes/web.php <<'ROUTE'
+
+Route::get('/login', fn () => 'login')->name('login');
+ROUTE
+
+# THE ASSERTION WORTH MAKING, and it is not a grep of route:list. Panel routes
+# use a `{resource}` placeholder constrained by `whereIn`, so no route URI ever
+# contains the literal "customers" - an earlier version of this script asserted
+# exactly that and reported a bug that did not exist. Resolving the URL is the
+# only honest check: 404 means unrouted, 500 means broken, a redirect to login
+# means the route matched and the guard ran.
+say "Checking the resource URL resolves"
+cat > verify-hit.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$status = $kernel->handle(Illuminate\Http\Request::create('/customers', 'GET'))->getStatusCode();
+echo $status, PHP_EOL;
+HIT
+status="$(php verify-hit.php 2>/dev/null | tail -1)"
+rm -f verify-hit.php
+
+case "$status" in
+    404) fail "/customers is not routed - discovery or panel mounting did not happen." ;;
+    5*)  fail "/customers is routed but returns $status - the panel errors on a clean install." ;;
+    "")  fail "/customers could not be requested at all." ;;
+esac
+
+say "/customers resolved with HTTP $status"
 
 echo
 echo "PASS - panelkit/panel installs into a fresh Laravel app, is discovered,"

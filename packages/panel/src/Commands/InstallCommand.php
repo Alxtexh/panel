@@ -59,6 +59,7 @@ final class InstallCommand extends Command
         $this->createDefaultPanel();
         $this->writePageFiles();
         $this->checkTenancy();
+        $this->checkAuthScaffolding();
 
         $this->newLine();
         $this->components->info('Done. Next:');
@@ -129,8 +130,8 @@ final class InstallCommand extends Command
 
         if (file_exists($provider)) {
             file_put_contents($provider, str_replace(
-                ["Panel/Admin/Resources", "App\\\\Panel\\\\Admin\\\\Resources"],
-                ["Panel/Resources", "App\\\\Panel\\\\Resources"],
+                ['Panel/Admin/Resources', 'App\\\\Panel\\\\Admin\\\\Resources'],
+                ['Panel/Resources', 'App\\\\Panel\\\\Resources'],
                 (string) file_get_contents($provider),
             ));
 
@@ -338,5 +339,36 @@ final class InstallCommand extends Command
                 .'column, or set panel.tenancy.mode to "none" for a single-tenant app.'
             );
         }
+    }
+
+    /**
+     * A PANEL NEEDS AN APPLICATION THAT CAN AUTHENTICATE, and saying so at
+     * install time is the difference between a sentence and an afternoon.
+     *
+     * Every panel route runs behind a guard, and a guard turning an anonymous
+     * visitor away redirects to `route('login')`. A bare `laravel/laravel` has
+     * no auth scaffolding, so that route does not exist - and the FIRST page
+     * anybody opens dies with `Route [login] not defined`, thrown from deep
+     * inside the framework's URL generator. Nothing in that message mentions
+     * authentication, a starter kit, or this package.
+     *
+     * This was found by installing into a fresh application rather than by any
+     * of the suite, because inside the monorepo the reference app has had
+     * Fortify since long before the panel existed. See `scripts/verify-install.sh`.
+     */
+    private function checkAuthScaffolding(): void
+    {
+        if (app('router')->has('login')) {
+            return;
+        }
+
+        $this->newLine();
+        $this->components->warn('No `login` route is defined.');
+        $this->line('  Panel routes sit behind a guard, and turning an anonymous visitor');
+        $this->line('  away means redirecting to route(\'login\'). Without one, the first');
+        $this->line('  panel page fails with "Route [login] not defined" - which does not');
+        $this->line('  mention authentication and is not obviously about this package.');
+        $this->line('  Install a starter kit (Breeze, Jetstream) or Fortify, or define a');
+        $this->line('  route named `login` yourself.');
     }
 }

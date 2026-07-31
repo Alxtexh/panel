@@ -49,6 +49,12 @@ more rows, because it was never about the data.
 ## Install
 
 ```bash
+# PREREQUISITE: an application that can authenticate. Every panel route sits
+# behind a guard, and turning an anonymous visitor away means redirecting to
+# route('login'). A bare `laravel/laravel` has no such route, so without a
+# starter kit the first panel page fails with "Route [login] not defined".
+# Breeze, Jetstream, Fortify or your own named `login` route all satisfy this.
+
 composer require panelkit/panel
 npm install @panelkit/ui @panelkit/inertia
 php artisan panel:install
