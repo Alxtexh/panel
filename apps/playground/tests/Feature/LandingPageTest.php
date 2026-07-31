@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Support\LandingPresets;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -32,12 +33,48 @@ final class LandingPageTest extends TestCase
         ];
     }
 
+    /**
+     * EVERY DESIGN IS THE SAME COMPONENT NOW, and differs by its sections. A
+     * design that renders zero sections is the failure this catches: the page
+     * would return 200 and be blank, which is exactly how the front door broke
+     * once before.
+     */
     #[DataProvider('designs')]
     public function test_each_shipped_design_renders_to_a_guest(string $design, string $component): void
     {
-        $response = $this->get("/?design={$design}")->assertOk();
+        $page = $this->get("/?design={$design}")->assertOk()->viewData('page');
 
-        $this->assertSame($component, $response->viewData('page')['component']);
+        $this->assertSame('landing/Composed', $page['component']);
+        $this->assertNotEmpty($page['props']['sections'], "The {$design} design rendered no sections.");
+        $this->assertSame('hero', $page['props']['sections'][0]['type'], 'A landing page must open with a hero.');
+    }
+
+    /** The designs are genuinely different arrangements, not one page thrice. */
+    public function test_the_designs_are_different_compositions(): void
+    {
+        $shape = fn (string $d): string => implode(',', array_column(
+            $this->get("/?design={$d}")->assertOk()->viewData('page')['props']['sections'],
+            'type',
+        ));
+
+        $this->assertNotSame($shape('aurora'), $shape('editorial'));
+        $this->assertNotSame($shape('aurora'), $shape('console'));
+    }
+
+    /** Every section a preset names must be one the renderer knows. */
+    public function test_no_preset_names_a_section_the_client_cannot_draw(): void
+    {
+        $known = ['hero', 'logos', 'features', 'steps', 'stats', 'testimonials', 'pricing', 'faq', 'cta'];
+
+        foreach (LandingPresets::names() as $design) {
+            foreach (LandingPresets::get($design) as $section) {
+                $this->assertContains(
+                    $section['type'],
+                    $known,
+                    "The {$design} preset uses section [{$section['type']}], which PkLandingSections would skip.",
+                );
+            }
+        }
     }
 
     /** The configured design is what an installation shows without a parameter. */
@@ -45,9 +82,10 @@ final class LandingPageTest extends TestCase
     {
         config(['panel.landing' => 'console']);
 
-        $response = $this->get('/')->assertOk();
+        $page = $this->get('/')->assertOk()->viewData('page');
 
-        $this->assertSame('landing/ConsoleLanding', $response->viewData('page')['component']);
+        $this->assertSame('landing/Composed', $page['component']);
+        $this->assertNotEmpty($page['props']['sections']);
     }
 
     /**
@@ -60,9 +98,10 @@ final class LandingPageTest extends TestCase
     {
         config(['panel.landing' => 'editorial']);
 
-        $response = $this->get('/?design=../Dashboard')->assertOk();
+        $page = $this->get('/?design=../Dashboard')->assertOk()->viewData('page');
 
-        $this->assertSame('landing/EditorialLanding', $response->viewData('page')['component']);
+        $this->assertSame('landing/Composed', $page['component']);
+        $this->assertNotEmpty($page['props']['sections']);
     }
 
     /* ------------------------------------------- somebody who already signed up */
@@ -92,11 +131,12 @@ final class LandingPageTest extends TestCase
      */
     public function test_an_explicit_design_is_still_shown_to_a_signed_in_operator(): void
     {
-        $response = $this->actingAs($this->operator())
+        $page = $this->actingAs($this->operator())
             ->get('/?design=editorial')
-            ->assertOk();
+            ->assertOk()
+            ->viewData('page');
 
-        $this->assertSame('landing/EditorialLanding', $response->viewData('page')['component']);
+        $this->assertSame('landing/Composed', $page['component']);
     }
 
     private function operator(): User

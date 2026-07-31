@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\LandingPresets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -28,12 +29,14 @@ use Inertia\Response;
  */
 final class LandingController extends Controller
 {
-    /** @var array<string, string> design key => Inertia component */
-    private const DESIGNS = [
-        'aurora' => 'landing/AuroraLanding',
-        'editorial' => 'landing/EditorialLanding',
-        'console' => 'landing/ConsoleLanding',
-    ];
+    /**
+     * ONE COMPONENT, MANY COMPOSITIONS.
+     *
+     * There were three page components here, one per design. A design is now a
+     * named list of SECTIONS - see `LandingPresets` - so the component is the
+     * same for all of them and adding a fourth costs no file at all.
+     */
+    private const PAGE = 'landing/Composed';
 
     public function __invoke(Request $request): Response|RedirectResponse
     {
@@ -63,8 +66,15 @@ final class LandingController extends Controller
 
         // Unknown names fall back rather than 404: this is the front door,
         // and a typo in a shared link should show the product, not an error.
-        $design = self::DESIGNS[$requested] ?? self::DESIGNS[$configured] ?? self::DESIGNS['aurora'];
+        $design = in_array($requested, LandingPresets::names(), true)
+            ? $requested
+            : (in_array($configured, LandingPresets::names(), true) ? $configured : 'aurora');
 
-        return Inertia::render($design);
+        return Inertia::render(self::PAGE, [
+            'sections' => LandingPresets::get($design),
+            // The switcher names the design it is showing, so the demo explains
+            // itself rather than needing the query string read back.
+            'design' => $design,
+        ]);
     }
 }

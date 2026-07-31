@@ -188,3 +188,24 @@ export { registerBuiltInFieldControls }
 registerBuiltInFieldControls()
 
 export const version = '0.0.1'
+
+/*
+ * LANDING SECTIONS - the front door, composed rather than hand-written.
+ *
+ * `PkLandingSections` renders an ordered list of stored blocks; the individual
+ * sections are exported too, so an application can compose a page in a template
+ * when it wants one that is not editable at all.
+ */
+export { default as PkLandingSections } from './components/Landing/PkLandingSections.vue'
+export { default as PkSection } from './components/Landing/PkSection.vue'
+export { default as PkSectionHeading } from './components/Landing/PkSectionHeading.vue'
+export { default as PkHero } from './components/Landing/PkHero.vue'
+export { default as PkLogoCloud } from './components/Landing/PkLogoCloud.vue'
+export { default as PkFeatureGrid } from './components/Landing/PkFeatureGrid.vue'
+export { default as PkSteps } from './components/Landing/PkSteps.vue'
+export { default as PkStats } from './components/Landing/PkStats.vue'
+export { default as PkTestimonials } from './components/Landing/PkTestimonials.vue'
+export { default as PkPricing } from './components/Landing/PkPricing.vue'
+export { default as PkFaq } from './components/Landing/PkFaq.vue'
+export { default as PkCta } from './components/Landing/PkCta.vue'
+export type { LandingSection, LandingItem } from './components/Landing/types'
