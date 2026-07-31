@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Documents\ClientInvoiceKind;
 use App\Documents\OrganisationBranding;
+use App\Listeners\RecordLastLogin;
 use App\Models\AuditEntry;
 use App\Models\Client;
 use App\Models\ClientSession;
@@ -22,10 +23,12 @@ use App\Policies\TicketPolicy;
 use App\Policies\UserPolicy;
 use App\Support\TicketStats;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -51,6 +54,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        /*
+         * WHO IS STILL USING THE PANEL. Registered here rather than discovered,
+         * so the one guard that matters - impersonation is not a sign-in - is
+         * visible from the listener itself. See `RecordLastLogin`.
+         */
+        Event::listen(Login::class, RecordLastLogin::class);
+
         /*
          * THE DEV SERVER BINDS 127.0.0.1, NOT `localhost`.
          *

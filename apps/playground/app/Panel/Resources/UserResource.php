@@ -7,6 +7,7 @@ namespace App\Panel\Resources;
 use App\Models\Role;
 use App\Models\Scopes\TenantScope;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use PanelKit\Panel\Actions\RecordAction;
@@ -17,7 +18,6 @@ use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\CheckboxColumn;
-use PanelKit\Panel\Tables\Columns\DateColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Table;
 
@@ -69,6 +69,25 @@ final class UserResource extends Resource
     }
 
     /**
+     * COLLEAGUES ARE INVITED, NOT UPLOADED.
+     *
+     * This resource has a form, so the framework would offer Import - and a
+     * spreadsheet of people is the wrong shape for what creating an account
+     * actually is. Every row would need a role, which is a grant of
+     * permissions; the invitation flow, the password rules and the "you cannot
+     * create somebody more powerful than yourself" check all live on the paths
+     * an import would go around. A mistyped column in a CSV is a quiet
+     * privilege escalation, and it is the sort nobody reviews.
+     *
+     * User management already has the screen for bringing people in, with
+     * invitations, and it is the one that keeps those guarantees.
+     */
+    public static function importable(): bool
+    {
+        return false;
+    }
+
+    /**
      * The driver's "join these rows into one string" function.
      *
      * THE THREE DATABASES SPELL IT DIFFERENTLY and none of them accepts the
@@ -83,6 +102,53 @@ final class UserResource extends Resource
             'mysql', 'mariadb' => "group_concat({$column} separator ', ')",
             default => "group_concat({$column}, ', ')",
         };
+    }
+
+    /** Whether there is a `sessions` table to ask about live sessions. */
+    private static function sessionsAreQueryable(): bool
+    {
+        return config('session.driver') === 'database';
+    }
+
+    /**
+     * The moment before which a session is no longer live.
+     *
+     * `last_activity` IS A UNIX TIMESTAMP, so this is an integer computed here
+     * rather than a date the three drivers each spell differently. It is also
+     * why nothing needs binding: there is no user input anywhere near it.
+     */
+    private static function liveSessionCutoff(): int
+    {
+        return now()->subMinutes((int) config('session.lifetime', 120))->getTimestamp();
+    }
+
+    /**
+     * What the "Last seen" cell says for one row.
+     *
+     * THE ORDER OF THE BRANCHES IS THE DESIGN. Being here now beats any
+     * timestamp; today's date is noise once you have the time; and an account
+     * nobody has signed into is a fact, not a gap.
+     *
+     * @param  array<string, mixed>  $row
+     */
+    private static function lastSeen(array $row): string
+    {
+        if ((int) ($row['signed_in'] ?? 0) === 1) {
+            return 'Logged in';
+        }
+
+        $at = $row['last_login_at'] ?? null;
+
+        if ($at === null || $at === '') {
+            return 'Never';
+        }
+
+        $when = Carbon::parse((string) $at)
+            ->setTimezone(config('app.timezone', 'UTC'));
+
+        return $when->isToday()
+            ? $when->format('H:i')
+            : $when->format('j M Y');
     }
 
     public static function table(Table $table): Table
@@ -172,8 +238,53 @@ final class UserResource extends Resource
              * becomes three people in the table, and the pagination silently
              * disagrees with the count.
              */
-            ->alsoSelect([
+            /*
+             * "LOGGED IN" IS A FACT ABOUT SESSIONS, not about the user row.
+             *
+             * A live session row is the only honest definition of somebody
+             * being here now: it is what the framework itself consults to keep
+             * them signed in, so this cannot drift from reality the way a
+             * heartbeat column written by the app would.
+             *
+             * ONLY WHEN SESSIONS ARE IN THE DATABASE. On the file or cookie
+             * driver there is no table to ask, and inventing one would be a
+             * query against something that does not exist - so the column
+             * quietly falls back to reporting the last sign-in, which is still
+             * the useful answer.
+             */
+            /*
+             * THE CELL IS DECIDED HERE, over the page's rows, in PHP and
+             * without a query - see the column for why the choice cannot be
+             * made on the client.
+             */
+            ->transform(static function (array $row): array {
+                $row['last_seen'] = self::lastSeen($row);
+
+                return $row;
+            })
+            ->alsoSelect(array_values(array_filter([
                 'users.id',
+                'users.last_login_at',
+                /*
+                 * "LOGGED IN" IS A FACT ABOUT SESSIONS, not about the user row.
+                 * A live session row is the only honest definition of somebody
+                 * being here now: it is what the framework consults to keep
+                 * them signed in, so it cannot drift from reality the way a
+                 * heartbeat column written by the app would.
+                 *
+                 * ONLY WHEN SESSIONS ARE IN THE DATABASE. On the file or cookie
+                 * driver there is no table to ask, so the cell falls back to
+                 * reporting the last sign-in, which is still the useful answer.
+                 */
+                self::sessionsAreQueryable()
+                    ? DB::raw(
+                        '(select case when exists ('
+                        .'select 1 from sessions'
+                        .' where sessions.user_id = users.id'
+                        .' and sessions.last_activity >= '.self::liveSessionCutoff()
+                        .') then 1 else 0 end) as signed_in'
+                    )
+                    : null,
                 DB::raw(
                     '(select '.self::groupConcat('roles.name')
                     .' from model_has_roles'
@@ -183,7 +294,7 @@ final class UserResource extends Resource
                     .DB::escape(User::class)
                     .') as role_names'
                 ),
-            ])
+            ])))
             ->columns([
                 TextColumn::make('name')->from('users.name')->sortAs('users.name')
                     ->sortable()->searchable()->locked(),
@@ -212,8 +323,46 @@ final class UserResource extends Resource
                     ->sortAs('users.email_verified_at')->label('Verified')->sortable()
                     ->labels('Email verified', 'Email not verified'),
 
-                DateColumn::make('created_at')->from('users.created_at')
-                    ->sortAs('users.created_at')->label('Joined')->sortable(),
+                /*
+                 * LAST SEEN, NOT JOINED.
+                 *
+                 * The date an account was created stops being interesting the
+                 * week after it happens, and it was the only time column here.
+                 * What somebody scans this list for is who is still using the
+                 * panel - which accounts to revoke, who to chase, whether an
+                 * invitation was ever taken up - and none of that is answerable
+                 * from a join date.
+                 *
+                 * "NEVER" RATHER THAN A DASH, because the two mean different
+                 * things and this column is read to make decisions about
+                 * accounts. A blank cell says the panel does not know; this one
+                 * knows, and the answer is that the person has not been here.
+                 * On the day the column ships that is every row, which is
+                 * honest and would look like a fault written as "-".
+                 */
+                /*
+                 * ONE CELL, THREE ANSWERS, because the useful reading changes
+                 * with how recent it is:
+                 *
+                 *   "Logged in"  they are signed in RIGHT NOW, which is the
+                 *                answer to the question being asked and is not
+                 *                a time at all
+                 *   "14:32"      earlier today - the date is today, saying so
+                 *                is noise, and the time is the whole content
+                 *   "12 Jun"     any older, where the date is what matters and
+                 *                the minute it happened does not
+                 *   "Never"      not missing data: the person has not been here
+                 *
+                 * BUILT SERVER-SIDE, which is a deliberate exception to this
+                 * panel's rule that dates are formatted on the client in the
+                 * viewer's locale. The rule assumes a cell is one value being
+                 * formatted; this one is a choice BETWEEN values, and the
+                 * choice needs the session state that only the server has.
+                 * Splitting it would mean shipping "logged in" as a second
+                 * column and letting the two disagree.
+                 */
+                TextColumn::make('last_seen')->label('Last seen')
+                    ->sortAs('users.last_login_at')->sortable(),
             ])
             /*
              * NO ROLE FILTER FOR NOW. Filtering a many-to-many needs an EXISTS
@@ -392,7 +541,19 @@ final class UserResource extends Resource
                         $user->forceFill(['must_change_password' => true])->save();
                     }),
             ])
-            ->defaultSort('users.created_at', 'desc');
+            /*
+             * MOST RECENTLY HERE FIRST, which is the order the "Last seen"
+             * column exists to be read in. It was `created_at`, and that stopped
+             * being a legal default the moment the join date left the columns:
+             * the panel refuses a default sort that is not in the sortable
+             * allowlist, so this was a 500 rather than a silent fallback, which
+             * is the right way round.
+             *
+             * NEVER-SIGNED-IN SORT LAST under `desc` on all three drivers, which
+             * is also where they belong - an account nobody has used is the tail
+             * of "who is active", not the head.
+             */
+            ->defaultSort('users.last_login_at', 'desc');
     }
 
     public static function form(Form $form): Form

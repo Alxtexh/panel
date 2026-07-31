@@ -60,6 +60,45 @@ final class Impersonation
     /** When it started, for the banner and for the audit trail. */
     public const STARTED_KEY = 'panel.impersonator_since';
 
+    /**
+     * True while this class is swapping who is signed in.
+     *
+     * BECAUSE BECOMING SOMEBODY IS NOT THAT PERSON SIGNING IN. `auth()->login()`
+     * fires `Illuminate\Auth\Events\Login`, the same event a real sign-in
+     * fires, and nothing in that event says which of the two happened. A
+     * listener that records "last seen" would therefore stamp a CUSTOMER's
+     * account every time an operator looked at their screen - and that column
+     * is exactly what somebody later reads to decide whether an account is
+     * still in use, or to answer "was this person online when it happened".
+     *
+     * The return leg is suppressed for the same reason: the operator did not
+     * sign in again, they stopped wearing somebody else.
+     *
+     * A flag rather than a session key, because it is true for the duration of
+     * one method call and must not survive it. `isImpersonating()` cannot serve
+     * here - by the time `stop()` logs the original back in, it has already
+     * been cleared.
+     */
+    private static bool $switching = false;
+
+    /** Whether a login happening right now is an impersonation swap. */
+    public static function isSwitching(): bool
+    {
+        return self::$switching;
+    }
+
+    /** @param callable(): void $swap */
+    private static function whileSwitching(callable $swap): void
+    {
+        self::$switching = true;
+
+        try {
+            $swap();
+        } finally {
+            self::$switching = false;
+        }
+    }
+
     public function __construct(private readonly Request $request) {}
 
     public function isActive(): bool
@@ -153,7 +192,7 @@ final class Impersonation
         $session->put(self::SESSION_KEY, $actor->getAuthIdentifier());
         $session->put(self::STARTED_KEY, now()->toIso8601String());
 
-        auth()->login($target);
+        self::whileSwitching(static fn () => auth()->login($target));
         $session->regenerate();
     }
 
@@ -186,7 +225,7 @@ final class Impersonation
             return;
         }
 
-        auth()->login($original);
+        self::whileSwitching(static fn () => auth()->login($original));
         $session->regenerate();
     }
 

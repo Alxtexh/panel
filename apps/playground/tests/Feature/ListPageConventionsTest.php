@@ -69,4 +69,38 @@ final class ListPageConventionsTest extends TestCase
             );
         }
     }
+
+    /* ------------------------------------------------------------- import */
+
+    /**
+     * A SCREEN THAT CANNOT TAKE A TYPED RECORD CANNOT TAKE A THOUSAND.
+     *
+     * Import writes through the fields the form declares, so a resource with no
+     * form has nothing to map a spreadsheet column onto. Four screens offered
+     * the button anyway - among them the AUDIT TRAIL, a record of what happened
+     * that was inviting somebody to upload things that did not, and the live
+     * sessions list, which describes connections the panel itself observes.
+     *
+     * Derived, never a list of names: `importable()` now answers from
+     * `isWritable()`, so a new read-only resource is covered the day it is
+     * written rather than the day somebody notices.
+     */
+    public function test_no_read_only_resource_offers_import(): void
+    {
+        $wrong = [];
+
+        foreach ($this->everyResource() as $class) {
+            if (! $class::isWritable() && $class::importable()) {
+                $wrong[] = $class;
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $wrong,
+            "These resources have no form and still advertise Import:\n"
+            .implode("\n", $wrong)."\n"
+            .'Import writes through form fields; with none there is nothing to map onto.',
+        );
+    }
 }
