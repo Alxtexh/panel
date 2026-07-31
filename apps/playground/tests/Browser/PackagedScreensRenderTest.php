@@ -204,7 +204,18 @@ final class PackagedScreensRenderTest extends DuskTestCase
 
         $this->browse(function (Browser $browser): void {
             $browser->loginAs($this->operatorId)
-                ->visit('/')
+                /*
+                 * THE DASHBOARD BY ITS OWN ADDRESS, not by `/`.
+                 *
+                 * This visited the root, which was the dashboard until G.9 put
+                 * a landing page there - and the failure it then produced was
+                 * "waited 15 seconds for main", on a marketing page that had
+                 * rendered perfectly. A test that reaches its subject through
+                 * a redirect reports a routing change as a rendering fault.
+                 * Where `/` sends a signed-in operator is asserted in
+                 * `LandingPageTest`, which is the thing that actually knows.
+                 */
+                ->visit('/dashboard')
                 ->waitFor('main', 15)
                 /*
                  * THE BOUNDARY'S OWN MESSAGE IS THE ASSERTION. A widget that

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,8 +35,28 @@ final class LandingController extends Controller
         'console' => 'landing/ConsoleLanding',
     ];
 
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request): Response|RedirectResponse
     {
+        /*
+         * SOMEBODY WHO IS ALREADY SIGNED IN IS NOT A PROSPECT.
+         *
+         * The front door was the dashboard until G.9 put a marketing page on
+         * it, and nothing reconciled the panel behind it - so an operator who
+         * typed the bare domain, or followed a bookmark from before, got the
+         * pricing table and the FAQ instead of their work. There is no error
+         * to notice and no failed request to find in a log: the app is simply
+         * showing the wrong person the wrong screen, forever, and the only
+         * symptom is somebody saying the demo does not open.
+         *
+         * `?design=` STILL WINS, because this reference app exists to show all
+         * three designs and whoever is demonstrating them is signed in. An
+         * explicit request for a named design is a request to see that page;
+         * the bare address is not.
+         */
+        if ($request->user() !== null && $request->query('design') === null) {
+            return redirect()->route('dashboard');
+        }
+
         $configured = (string) config('panel.landing', 'aurora');
 
         $requested = (string) $request->query('design', $configured);

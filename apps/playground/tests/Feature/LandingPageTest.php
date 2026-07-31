@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -62,5 +63,44 @@ final class LandingPageTest extends TestCase
         $response = $this->get('/?design=../Dashboard')->assertOk();
 
         $this->assertSame('landing/EditorialLanding', $response->viewData('page')['component']);
+    }
+
+    /* ------------------------------------------- somebody who already signed up */
+
+    /**
+     * THE FRONT DOOR IS NOT A PITCH TO SOMEBODY WHO ALREADY BOUGHT.
+     *
+     * `/` was the dashboard until G.9 put a marketing page on it, so every
+     * bookmark and every bare-domain visit by a signed-in operator started
+     * landing on the pricing table. Nothing errors, nothing is logged and the
+     * response is a healthy 200 - the only symptom is a person saying the
+     * panel will not open, which is why this is asserted rather than left to
+     * be noticed.
+     */
+    public function test_a_signed_in_operator_is_sent_to_their_dashboard(): void
+    {
+        $this->actingAs($this->operator())
+            ->get('/')
+            ->assertRedirect(route('dashboard'));
+    }
+
+    /**
+     * BUT AN EXPLICIT DESIGN REQUEST STILL WINS. This reference app exists to
+     * demonstrate all three designs and whoever is demonstrating them is
+     * signed in; redirecting them would make the feature unviewable by the
+     * only people who ever look at it.
+     */
+    public function test_an_explicit_design_is_still_shown_to_a_signed_in_operator(): void
+    {
+        $response = $this->actingAs($this->operator())
+            ->get('/?design=editorial')
+            ->assertOk();
+
+        $this->assertSame('landing/EditorialLanding', $response->viewData('page')['component']);
+    }
+
+    private function operator(): User
+    {
+        return User::factory()->create(['email_verified_at' => now()]);
     }
 }
