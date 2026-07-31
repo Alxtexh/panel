@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\RestoreBackup;
+use App\Jobs\RunBackupNow;
 use App\Models\Tenant;
 use App\Models\Ticket;
 use App\Models\TicketReply;
@@ -13,6 +15,9 @@ use Illuminate\Database\LazyLoadingViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use PanelKit\Panel\Jobs\DeliverScheduledReport;
+use PanelKit\Panel\Jobs\ExportRecords;
+use PanelKit\Panel\Jobs\RunBulkAction;
 use PanelKit\Panel\Knowledge\KnowledgeBase;
 use Tests\TestCase;
 
@@ -69,6 +74,73 @@ final class DoctorTest extends TestCase
          */
         Storage::fake('doctor-has-no-backups');
         config(['backup.backup.destination.disks' => ['doctor-has-no-backups']]);
+    }
+
+    /* ------------------------------------------------------------- queue */
+
+    /**
+     * `retry_after` MUST EXCEED EVERY JOB TIMEOUT, and this is arithmetic
+     * rather than opinion.
+     *
+     * It is how long the queue waits before deciding a reserved job was
+     * abandoned and handing it to ANOTHER worker. It is not a retry in the
+     * `$tries` sense - a job with `$tries = 1` is still re-delivered this way,
+     * because as far as the queue is concerned nothing failed.
+     *
+     * At Laravel's stock 90 seconds this panel was wrong for four of its five
+     * jobs. `ExportRecords` is allowed 900 and measures 54 seconds against the
+     * reference tenant's 250,000 subscribers, so a larger organisation crosses
+     * 90 comfortably and gets two workers writing the same file. A re-run
+     * `RunBulkAction` applies its mutation twice. A re-run `RestoreBackup`
+     * starts a database restore over one already in progress.
+     *
+     * ASSERTED BY READING THE JOBS, not by restating a number here. A test
+     * that hardcoded "3700" would pass while somebody raised a timeout past
+     * it, which is the only way this breaks.
+     */
+    public function test_the_queue_reclaims_no_job_before_it_could_have_finished(): void
+    {
+        $jobs = [
+            ExportRecords::class,
+            RunBulkAction::class,
+            DeliverScheduledReport::class,
+            RestoreBackup::class,
+            RunBackupNow::class,
+        ];
+
+        $longest = 0;
+        $worst = '';
+
+        foreach ($jobs as $job) {
+            $timeout = (new \ReflectionClass($job))->getDefaultProperties()['timeout'] ?? null;
+
+            $this->assertNotNull(
+                $timeout,
+                "[{$job}] declares no \$timeout, so it inherits whatever queue:work was launched with - "
+                .'a number that lives in a deploy script this package cannot see.',
+            );
+
+            if ($timeout > $longest) {
+                $longest = (int) $timeout;
+                $worst = $job;
+            }
+        }
+
+        foreach (array_keys((array) config('queue.connections')) as $connection) {
+            $retryAfter = config("queue.connections.{$connection}.retry_after");
+
+            if ($retryAfter === null) {
+                continue; // sync and sqs have no reservation window.
+            }
+
+            $this->assertGreaterThan(
+                $longest,
+                $retryAfter,
+                "The [{$connection}] queue reclaims a job after {$retryAfter}s while [{$worst}] is "
+                ."allowed {$longest}s - so a long job is handed to a second worker while the first "
+                .'is still running it.',
+            );
+        }
     }
 
     /* -------------------------------------------------------- strict mode */

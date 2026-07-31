@@ -47,6 +47,17 @@ final class RunBackupNow implements ShouldQueue
     /** Long enough for a large install; short enough that a crash unblocks. */
     private const LOCK_SECONDS = 3600;
 
+    /**
+     * ONE ATTEMPT, matching `RestoreBackup`.
+     *
+     * Without this the job inherits the worker's `--tries=3`, so a backup that
+     * failed half way through writing a snapshot is attempted twice more -
+     * three partial archives in the destination, and the newest of them is
+     * what the staleness check will report on. Its sibling made this choice
+     * deliberately; this one simply had not.
+     */
+    public int $tries = 1;
+
     public int $timeout = 3600;
 
     public function __construct(public readonly ?string $startedBy = null) {}

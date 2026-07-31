@@ -39,8 +39,23 @@ A panel with only a web server works until the first export.
 Without a worker they queue silently — the user gets "your export is being
 prepared" and nothing ever arrives.
 
+`--timeout` MATTERS AND THE DEFAULT IS 60 SECONDS. An export of a large
+tenant measures around a minute on the reference data, so the stock timeout
+kills it just as it finishes. The jobs declare their own budgets — 900 seconds
+for exports and bulk actions, an hour for backup and restore — and the worker
+must be allowed at least the longest of them, or the process is killed before
+the job's own timeout ever applies.
+
+`queue.connections.*.retry_after` MUST STAY ABOVE THAT. It is how long the
+queue waits before handing a reserved job to another worker, and it is not a
+retry: a job with `$tries = 1` is still re-delivered this way. Set below the
+longest job, it produces two workers running the same export, a bulk mutation
+applied twice, or a restore started over one already in progress. A test
+enforces the relationship by reading the jobs, so raising a `$timeout` past
+`retry_after` fails the build rather than production.
+
 ```
-php artisan queue:work --queue=default --tries=3 --max-time=3600
+php artisan queue:work --queue=default --tries=3 --max-time=3600 --timeout=3600
 ```
 
 **Scheduler.** One cron entry, every minute:
