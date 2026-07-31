@@ -131,18 +131,47 @@ final class OperationsTest extends TestCase
         $this->assertLessThanOrEqual(25, count($result['lines']));
     }
 
+    /**
+     * THE FILTER, AGAINST A LOG THIS TEST WROTE.
+     *
+     * It used to read whatever happened to be in `storage/logs` and skip when
+     * that was empty - so on a clean machine it proved nothing and reported
+     * green, and on a developer's machine it passed for reasons that had
+     * nothing to do with the filter. Now that the suite logs to `null` (see
+     * phpunit.xml) the ambient version would have skipped ALWAYS, which is the
+     * useful kind of forcing function: a test that depends on its environment
+     * eventually gets an environment that empties it.
+     *
+     * Both directions are asserted. A filter that returns nothing for every
+     * term would pass a test that only checks the miss.
+     */
     public function test_the_filter_narrows_the_lines(): void
     {
-        $reader = new LogReader;
-        $all = $reader->tail(null, lines: 500);
+        $path = storage_path('logs/filter-fixture.log');
 
-        if ($all['lines'] === []) {
-            $this->markTestSkipped('No log content to filter in this environment.');
+        file_put_contents($path, implode("\n", [
+            '[2026-07-31 09:00:00] testing.INFO: a needle in here',
+            '[2026-07-31 09:00:01] testing.INFO: nothing of interest',
+            '[2026-07-31 09:00:02] testing.INFO: another needle',
+        ])."\n");
+
+        try {
+            $reader = new LogReader;
+
+            $this->assertCount(3, $reader->tail('filter-fixture.log', lines: 500)['lines']);
+
+            $this->assertCount(
+                2,
+                $reader->tail('filter-fixture.log', lines: 500, needle: 'needle')['lines'],
+            );
+
+            $this->assertSame(
+                [],
+                $reader->tail('filter-fixture.log', lines: 500, needle: 'zzz-nothing-matches')['lines'],
+            );
+        } finally {
+            @unlink($path);
         }
-
-        $filtered = $reader->tail(null, lines: 500, needle: 'zzz-nothing-matches-this');
-
-        $this->assertSame([], $filtered['lines']);
     }
 
     /* --------------------------------------------------------------- backups */

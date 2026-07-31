@@ -24,6 +24,23 @@
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <!--
+            THE SUITE DOES NOT WRITE INTO THE DEVELOPMENT LOG.
+
+            Without this, every test that deliberately provokes an exception -
+            an unwritable backup destination, a refused restore, a 500 asserted
+            on purpose - files its stack trace into the same storage/logs the
+            Logs screen reads. It reached 256 MB and 1.5 million lines here,
+            which cost two things: the Logs screen showed test failures instead
+            of application events, and the file rode into every backup.
+
+            `null` rather than a testing.log, because a second file would grow
+            the same way and `LogReader` globs *.log - it would simply move the
+            noise onto the same screen under a different name. A test that
+            cares what was logged asserts against `Log::spy()`, which does not
+            involve a channel at all.
+        -->
+        <env name="LOG_CHANNEL" value="null"/>
+        <!--
             THE SAME BROADCASTER THE APPLICATION USES, set here rather than in a
             test, because `Broadcast::channel()` registers callbacks on whichever
             driver exists at BOOT. Switching the driver inside setUp() builds a
