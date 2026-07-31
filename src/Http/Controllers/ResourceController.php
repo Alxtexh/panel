@@ -175,6 +175,17 @@ final class ResourceController extends Controller
             'record' => [...$row, 'id' => $record->getKey()],
             'can' => $class::permissions(),
 
+            /*
+             * PLUGIN MARKUP ON THE RECORD PAGE TOO - roadmap 4.4.
+             *
+             * The list had these from the start and the record page did not,
+             * which made the whole mechanism half a feature: the interesting
+             * things a plugin wants to add to a screen - a conversation, a
+             * payment history, a device's live status - all belong ON a
+             * record, not above a table of them.
+             */
+            'renderHooks' => app(PanelManager::class)->renderHooks($class::key()),
+
             // The transport, so the client knows how to stay fresh without any
             // page or component knowing which driver is configured.
             'live' => LiveConfig::fromConfig()->toArray(),
