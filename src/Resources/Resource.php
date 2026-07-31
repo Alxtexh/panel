@@ -253,11 +253,29 @@ abstract class Resource
      * nothing would have failed; it was simply a control that makes no sense
      * where it was, which DESIGN_RULES rule 5 is about.
      *
-     * True by default, because most resources are administered.
+     * DERIVED FROM THE FORM, not defaulted to true.
+     *
+     * It used to return true flatly, and the result was an Import button on
+     * screens that cannot accept a written record at all. The audit trail
+     * advertised one - a log of what happened, offering to accept a CSV of
+     * things that did not - and so did the live sessions list, the plans
+     * catalogue and the read-only plan view. Every one of those has no form,
+     * which is the same as having no answer to "which column goes where"; the
+     * wizard would have had nothing to map onto.
+     *
+     * So the question is answered from the thing that decides it. An import
+     * writes records through the fields the form declares, so a resource with
+     * no fields cannot be imported into, and no list of screen names has to be
+     * kept in step with reality. The same reasoning as the isolation matrix and
+     * the N+1 sweep: derive it, do not enumerate it.
+     *
+     * Resources that HAVE a form and still should not take a spreadsheet -
+     * people, tickets, announcements - say so themselves. See
+     * `UserResource::importable()`.
      */
     public static function importable(): bool
     {
-        return true;
+        return static::isWritable();
     }
 
     /** Whether a create or edit PAGE can be rendered at all. */
@@ -415,7 +433,7 @@ abstract class Resource
         return static::$cluster;
     }
 
-    /** @return class-string<Resource>|null */
+    /** @return class-string<resource>|null */
     public static function parentResource(): ?string
     {
         return static::$parent;
