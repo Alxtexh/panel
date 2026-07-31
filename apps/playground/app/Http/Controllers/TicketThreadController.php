@@ -69,6 +69,18 @@ final class TicketThreadController extends Controller
     {
         Gate::authorize('view', $ticket);
 
+        /*
+         * OPENING THE THREAD IS READING IT, and this is the only honest place
+         * to say so - a "mark as read" button is a chore nobody performs, and
+         * a badge that only clears when somebody remembers is a badge people
+         * learn to ignore.
+         *
+         * WHICH SIDE IS DECIDED BY THE POLICY, not by which URL was used. The
+         * same person can hold both roles; what marks the desk's copy read is
+         * being entitled to the desk's view of it.
+         */
+        $ticket->markRead(Gate::allows('note', $ticket) ? 'desk' : 'opener');
+
         return response()->json(self::thread($ticket));
     }
 

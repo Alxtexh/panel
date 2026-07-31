@@ -6,6 +6,7 @@ namespace App\Policies;
 
 use App\Models\Ticket;
 use App\Models\User;
+use DateTimeInterface;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\TenantContext;
 
@@ -87,10 +88,50 @@ final class TicketPolicy
         return $this->opened($user, $ticket) || $this->may($user, 'view');
     }
 
-    /** Anybody signed into an organisation may ask it something. */
+    /**
+     * Anybody signed into an organisation may ask it something - up to a
+     * point.
+     *
+     * THE LIMIT IS HERE, IN THE POLICY, so it covers every path into a
+     * ticket: the portal form, the API, an import, anything added later. A
+     * check in one controller is a check the next entry point does not have,
+     * and the next entry point is the one an integration uses.
+     *
+     * IT IS NOT SPAM FILTERING, and the difference matters. Every ticket here
+     * comes from somebody signed into a tenant, so there is no anonymous
+     * submitter to block by keyword or address - that would be theatre. What
+     * this catches is a broken integration or somebody hammering a form
+     * because nothing appeared to happen, either of which fills a queue
+     * nobody can then work through.
+     *
+     * DELIBERATELY GENEROUS. A person having a genuinely bad day may open
+     * several in an hour, and refusing them is refusing the customer who most
+     * needs help. The limits are set where only a machine reaches them.
+     */
     public function create(User $user): bool
     {
-        return $this->hasTenant();
+        if (! $this->hasTenant()) {
+            return false;
+        }
+
+        return $this->withinRate($user, 'max_per_hour', 10, now()->subHour())
+            && $this->withinRate($user, 'max_per_day', 30, now()->subDay());
+    }
+
+    private function withinRate(User $user, string $key, int $default, DateTimeInterface $since): bool
+    {
+        $limit = (int) config("panel.ticketing.{$key}", $default);
+
+        // Zero or less turns the limit OFF rather than blocking everything -
+        // an installation writing 0 means "no cap", never "no tickets".
+        if ($limit <= 0) {
+            return true;
+        }
+
+        return Ticket::query()
+            ->where('opened_by', $user->getKey())
+            ->where('created_at', '>=', $since)
+            ->count() < $limit;
     }
 
     /**

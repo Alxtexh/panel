@@ -799,7 +799,12 @@ function badgeLabel(key: string, value: unknown): string {
             </Link>
         </nav>
 
-        <RenderHook position="list.before-header" :hooks="renderHooks" />
+        <RenderHook
+            position="list.before-header"
+            :hooks="renderHooks"
+            :resource="schema.key"
+            :base-url="schema.routes.index"
+        />
 
         <div class="flex flex-col gap-1">
             <div class="flex items-center justify-between gap-3">
@@ -873,7 +878,17 @@ function badgeLabel(key: string, value: unknown): string {
             Drag rows to change their order. Changes save as you drop them.
         </p>
 
-        <RenderHook position="list.before-table" :hooks="renderHooks" />
+        <!--
+            The list page's context, forwarded the same way the record page
+            forwards its record - so a plugin's component can address this
+            resource's endpoints without knowing which portal it is in.
+        -->
+        <RenderHook
+            position="list.before-table"
+            :hooks="renderHooks"
+            :resource="schema.key"
+            :base-url="schema.routes.index"
+        />
 
         <!--
             ONE CARD, NOT FOUR - DESIGN_RULES rule 4. Tabs, toolbar, rows and

@@ -152,6 +152,19 @@ final class MyTicketResource extends Resource
                 TextColumn::make('subject')->from('tickets.subject')
                     ->sortable()->searchable()->locked(),
 
+                /*
+                 * THE OPENER'S SIDE OF THE SAME IDEA, and it starts from the
+                 * opposite place: a ticket you just raised is not "new" to
+                 * you. Only a REPLY makes it unread here, which is why this
+                 * requires `last_reply_at` where the desk's version does not.
+                 */
+                BadgeColumn::make('unread')->label('')->fromRaw(
+                    '(case when tickets.last_reply_at is not null'
+                    .' and (tickets.opener_read_at is null'
+                    .' or tickets.last_reply_at >= tickets.opener_read_at)'
+                    ." then 'Reply' else '' end)"
+                )->colors(['Reply' => 'success']),
+
                 BadgeColumn::make('status')->from('tickets.status')->colors([
                     Ticket::OPEN => 'warning',
                     Ticket::PENDING => 'neutral',

@@ -399,6 +399,33 @@ return [
     'ticketing' => [
         'operator' => env('PANEL_TICKETING_OPERATOR', 'admin'),
         'opener' => env('PANEL_TICKETING_OPENER', 'reseller'),
+
+        /*
+        | WHICH PRIORITIES REACH TELEGRAM - roadmap 6.5.
+        |
+        | URGENT ONLY, and the restraint is what makes the channel worth
+        | having. An alert on every ticket is noise inside a week, and a muted
+        | channel is worse than no channel: it is one everybody believes is
+        | working. Widen this deliberately, per installation.
+        */
+        'alert_priorities' => ['urgent'],
+
+        /*
+        | HOW MANY TICKETS ONE PERSON MAY OPEN - roadmap H.6.
+        |
+        | NOT SPAM FILTERING. Every ticket here is raised by somebody signed
+        | into an organisation, so keyword and IP blocking would be theatre -
+        | there is no anonymous submitter to block. What this guards against
+        | is the real failure: a broken integration, or somebody hammering the
+        | form because nothing seemed to happen, filling a queue nobody can
+        | then work through.
+        |
+        | DELIBERATELY GENEROUS. A person having a bad day with their
+        | connection may legitimately open several; the limit is set where
+        | only a machine reaches it.
+        */
+        'max_per_hour' => 10,
+        'max_per_day' => 30,
     ],
 
     'knowledge' => [

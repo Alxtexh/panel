@@ -119,6 +119,26 @@ final class TicketResource extends Resource
                 TextColumn::make('subject')->from('tickets.subject')
                     ->sortable()->searchable()->locked(),
 
+                /*
+                 * NEW, COMPUTED IN THE QUERY rather than per row in PHP.
+                 *
+                 * The alternative is a "does this ticket have replies newer
+                 * than the desk's last read" lookup per row, which is the N+1
+                 * a badge is not worth. A CASE in the SELECT costs the same as
+                 * reading the two columns it compares.
+                 *
+                 * A TICKET NOBODY HAS OPENED IS NEW, even with no replies -
+                 * the subject IS the first message. A badge that only appeared
+                 * once somebody replied would leave every brand-new ticket
+                 * looking attended to, which is exactly backwards.
+                 */
+                BadgeColumn::make('unread')->label('')->fromRaw(
+                    '(case when tickets.desk_read_at is null'
+                    .' or (tickets.last_reply_at is not null'
+                    .' and tickets.last_reply_at >= tickets.desk_read_at)'
+                    ." then 'New' else '' end)"
+                )->colors(['New' => 'danger']),
+
                 BadgeColumn::make('status')->from('tickets.status')->colors([
                     Ticket::OPEN => 'warning',
                     Ticket::PENDING => 'neutral',

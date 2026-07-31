@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Listeners\AnnounceNewTicket;
 use App\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
@@ -52,6 +53,8 @@ final class Ticket extends Model
             'resolved_at' => 'datetime',
             'first_response_at' => 'datetime',
             'last_reply_at' => 'datetime',
+            'desk_read_at' => 'datetime',
+            'opener_read_at' => 'datetime',
         ];
     }
 
@@ -78,6 +81,17 @@ final class Ticket extends Model
             if ($ticket->opened_by === null) {
                 $ticket->opened_by = Auth::id();
             }
+        });
+
+        /*
+         * THE DESK IS TOLD, AFTER the row exists - roadmap 6.5.
+         *
+         * `created`, not `creating`: an alert naming ticket #0 because the id
+         * had not been assigned yet is an alert nobody can act on. And it
+         * cannot block the save - see the listener's own note.
+         */
+        self::created(static function (self $ticket): void {
+            app(AnnounceNewTicket::class)->handle($ticket);
         });
 
         /*
@@ -109,6 +123,53 @@ final class Ticket extends Model
     public function replies(): HasMany
     {
         return $this->hasMany(TicketReply::class)->oldest();
+    }
+
+    /**
+     * Has this side got unread messages waiting?
+     *
+     * COMPARED AGAINST `last_reply_at`, so it needs no query - the list page
+     * already selects both columns, and a per-row "are there newer replies"
+     * lookup is the N+1 that a NEW badge is not worth.
+     *
+     * A TICKET WITH NO REPLIES IS UNREAD FOR THE DESK, because the SUBJECT is
+     * the first message. A queue that only badges tickets somebody has
+     * replied to would leave every brand-new ticket looking attended to,
+     * which is precisely backwards.
+     */
+    public function isUnreadFor(string $side): bool
+    {
+        $readAt = $side === 'desk' ? $this->desk_read_at : $this->opener_read_at;
+
+        if ($readAt === null) {
+            return $side === 'desk' || $this->last_reply_at !== null;
+        }
+
+        /*
+         * `gte`, NOT `gt`, and the second matters. Timestamps here are stored
+         * to the second, so a reply arriving in the same second as somebody
+         * opening the thread is indistinguishable from one arriving just
+         * before it - and the two readings fail in opposite directions. A
+         * badge that lingers is noise; a badge that never appears is a
+         * customer's reply nobody saw. So the comparison fails towards
+         * showing it, and the next read clears it.
+         */
+        return $this->last_reply_at !== null && $this->last_reply_at->gte($readAt);
+    }
+
+    /**
+     * Mark this side as caught up.
+     *
+     * `saveQuietly`, DELIBERATELY. Opening a ticket is not an edit of it -
+     * auditing "read the ticket" would bury the changes that matter under a
+     * line per page view, and `updated_at` moving on a read would make the
+     * queue re-sort itself because somebody looked.
+     */
+    public function markRead(string $side): void
+    {
+        $column = $side === 'desk' ? 'desk_read_at' : 'opener_read_at';
+
+        $this->forceFill([$column => now()])->saveQuietly();
     }
 
     /**

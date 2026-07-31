@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Plugins;
 
+use App\Http\Controllers\TicketStatsController;
 use App\Http\Controllers\TicketThreadController;
 use App\Panel\Ticketing\MyTicketResource;
 use App\Panel\Ticketing\TicketResource;
@@ -103,6 +104,16 @@ final class TicketingPlugin extends Plugin
         $context->render(RenderHooks::VIEW_AFTER, 'TicketThread', [], [$key]);
 
         /*
+         * THE NUMBERS, ON THE OPERATOR'S QUEUE ONLY. A subscriber's own
+         * screen has nothing to summarise - four tickets do not need a chart -
+         * and the endpoint behind this is authorised as "may list the whole
+         * organisation's", which they are not.
+         */
+        if ($key === 'tickets') {
+            $context->render(RenderHooks::LIST_BEFORE_TABLE, 'TicketStats', [], [$key]);
+        }
+
+        /*
          * MOUNTED INSIDE THE PANEL'S GROUP, so the route is authenticated and
          * tenant-scoped exactly like a built-in one and carries the portal's
          * own prefix. A plugin registering this in a service provider would
@@ -114,6 +125,16 @@ final class TicketingPlugin extends Plugin
 
             Route::post("{$key}/{ticket}/thread", [TicketThreadController::class, 'store'])
                 ->name("{$panel->id}.{$key}.thread.store");
+
+            /*
+             * BEFORE the `{resource}/{id}` routes would see it, which they
+             * cannot here - a plugin's routes are registered inside the
+             * panel's group ahead of the generic resource ones. `stats` is a
+             * word, not an id, and this is what stops it being looked up as
+             * one.
+             */
+            Route::get("{$key}/stats", TicketStatsController::class)
+                ->name("{$panel->id}.{$key}.stats");
         });
     }
 
