@@ -106,7 +106,11 @@ start() {
     echo "MariaDB is on 127.0.0.1:$PORT, database [$DATABASE]."
     echo
     echo "Run the restore tests with:"
-    echo "  eval \"\$($0 env)\" && php \$PANELKIT_PHP_FLAGS artisan test --filter=MysqlRestore"
+    # PHPUNIT DIRECTLY, NOT `artisan test`. That command re-spawns PHPUnit as a
+    # subprocess, so the -d extension flags are consumed by the artisan process
+    # and never reach the one running the tests - the suite skips, and the
+    # instruction that was supposed to prevent that is what caused it.
+    echo "  eval \"\$($0 env)\" && php \$PANELKIT_PHP_FLAGS vendor/bin/phpunit --filter=MysqlRestore"
 }
 
 stop() {

@@ -50,8 +50,25 @@ final class MysqlRestoreTest extends TestCase
         parent::setUp();
 
         if (! extension_loaded('pdo_mysql')) {
+            /*
+             * THE COMMAND MATTERS, AND IT IS NOT `artisan test`.
+             *
+             * This message used to name one, and following it could never
+             * work: `artisan test` re-spawns PHPUnit as a SUBPROCESS, so the
+             * `-d extension=` flags that load pdo_mysql are consumed by the
+             * artisan process and never reach the one running the tests. The
+             * suite skipped, the message said how to fix it, doing what the
+             * message said changed nothing, and there was no way to tell which
+             * of the two had gone wrong.
+             *
+             * A skip is only useful if the instruction in it works. This one
+             * runs PHPUnit directly, which is where the extension has to land.
+             */
             $this->markTestSkipped(
-                'pdo_mysql is not loaded. Run tests/bin/mysql-fixture.sh and use the php.ini it prints.'
+                'pdo_mysql is not loaded. Start the fixture and run PHPUnit directly - '
+                .'`artisan test` re-spawns PHPUnit and loses the -d flags: '
+                .'eval "$(tests/bin/mysql-fixture.sh env)" && '
+                .'php $PANELKIT_PHP_FLAGS vendor/bin/phpunit --filter=MysqlRestore'
             );
         }
 
@@ -59,7 +76,8 @@ final class MysqlRestoreTest extends TestCase
 
         if (! $this->serverIsUp()) {
             $this->markTestSkipped(
-                'No MariaDB on 127.0.0.1:'.self::PORT.'. Start one with tests/bin/mysql-fixture.sh.'
+                'No MariaDB on 127.0.0.1:'.self::PORT.'. Start one with '
+                .'`tests/bin/mysql-fixture.sh start`, then run PHPUnit directly.'
             );
         }
 
