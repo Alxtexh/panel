@@ -110,15 +110,38 @@ final class PanelManager
      */
     private static array $plugins = [];
 
-    /** Panels whose plugins have already run, so they run exactly once. */
-    private static array $pluginsApplied = [];
+    /**
+     * Panels whose plugins have already run, so they run exactly once.
+     *
+     * PER INSTANCE, NOT STATIC, AND THAT DISTINCTION IS A BUG THAT SHIPPED.
+     *
+     * It guards `$this->resources`, which is instance state on a SCOPED
+     * binding - rebuilt for every request and every test boot. Held in a
+     * static, the flag outlived the thing it guards: the first boot in a
+     * process ran the plugins and registered their resources, and every boot
+     * after it saw "already applied" against an empty registry and registered
+     * nothing. A plugin's screens existed on the first request of a worker and
+     * 404ed on the second, with the navigation still linking them.
+     *
+     * It hid for as long as it did because the only plugin resource was also
+     * discovered from a directory, so it was registered twice over and the
+     * second path covered for the first. `TicketingPlugin` is the first whose
+     * classes come from the plugin ALONE, and it failed immediately - the
+     * second test in a class could not reach a screen the first one could.
+     *
+     * A flag must live wherever the state it protects lives.
+     */
+    private array $pluginsApplied = [];
 
     /**
      * What plugins contributed, per panel.
      *
+     * Instance state for the same reason as `$pluginsApplied`: it describes
+     * this boot's registrations, so it has to be rebuilt whenever they are.
+     *
      * @var array<string, list<Plugins\PluginContext>>
      */
-    private static array $pluginContexts = [];
+    private array $pluginContexts = [];
 
     public function registerPanel(Panel $panel): void
     {
@@ -172,13 +195,13 @@ final class PanelManager
      */
     public function applyPlugins(Panel $panel): void
     {
-        if (isset(self::$pluginsApplied[$panel->id])) {
+        if (isset($this->pluginsApplied[$panel->id])) {
             return;
         }
 
         // Marked BEFORE the loop: a plugin that resolves something which itself
         // asks for the panel's pages would otherwise recurse forever.
-        self::$pluginsApplied[$panel->id] = true;
+        $this->pluginsApplied[$panel->id] = true;
 
         foreach ((array) config('panel.plugins', []) as $class) {
             $instance = is_string($class) ? app($class) : $class;
@@ -202,7 +225,7 @@ final class PanelManager
             $contexts[] = $context;
         }
 
-        self::$pluginContexts[$panel->id] = $contexts;
+        $this->pluginContexts[$panel->id] = $contexts;
     }
 
     /**
@@ -242,7 +265,7 @@ final class PanelManager
          * an application does not have to know a bin exists, or where it lives,
          * or whether this portal has one at all.
          */
-        foreach (self::$pluginContexts[$panel->id] ?? [] as $context) {
+        foreach ($this->pluginContexts[$panel->id] ?? [] as $context) {
             foreach ($context->registeredPages() as $page) {
                 $pages[] = $page;
             }
@@ -275,7 +298,7 @@ final class PanelManager
 
         $out = [];
 
-        foreach (self::$pluginContexts[$panel->id] ?? [] as $context) {
+        foreach ($this->pluginContexts[$panel->id] ?? [] as $context) {
             foreach ($context->registeredRenders() as $hook) {
                 $scoped = $hook['resources'];
 
@@ -311,7 +334,7 @@ final class PanelManager
 
         $routes = [];
 
-        foreach (self::$pluginContexts[$panelId] ?? [] as $context) {
+        foreach ($this->pluginContexts[$panelId] ?? [] as $context) {
             foreach ($context->registeredRoutes() as $callback) {
                 $routes[] = $callback;
             }
@@ -323,15 +346,41 @@ final class PanelManager
     /**
      * Forget every plugin. TESTS ONLY.
      *
-     * The registry is static - boot-time configuration, like the panel list - so
-     * a test that installs a plugin would otherwise leave it installed for every
-     * test after it, in a suite that passes in order and fails alone.
+     * The plugin registry is static - boot-time configuration, like the panel
+     * list - so a test that installs a plugin would otherwise leave it
+     * installed for every test after it, in a suite that passes in order and
+     * fails alone.
+     *
+     * WHAT HAS ALREADY RUN IS NOT STATIC (see `$pluginsApplied`), so clearing
+     * it means reaching the live instance. Forgetting the registry without
+     * clearing that flag would leave the panels marked as applied with nothing
+     * left to apply - the same shape as the bug that made the flag an instance
+     * member in the first place.
      */
     public static function forgetPlugins(): void
     {
         self::$plugins = [];
-        self::$pluginsApplied = [];
-        self::$pluginContexts = [];
+
+        $manager = app(self::class);
+
+        $manager->pluginsApplied = [];
+        $manager->pluginContexts = [];
+    }
+
+    /**
+     * The panel a resource CLASS was registered for, or null if nothing
+     * recorded one.
+     *
+     * NULL RATHER THAN A FALLBACK, deliberately. `Resource::panel()` consults
+     * this and returns its own declaration when the answer is null, so the two
+     * cannot recurse - and the fallback lives in exactly one place instead of
+     * at every call site that needs to know where a resource lives.
+     *
+     * @param  class-string  $class
+     */
+    public function panelFor(string $class): ?string
+    {
+        return self::$resourcePanels[$class] ?? null;
     }
 
     public function panel(string $id): ?Panel
