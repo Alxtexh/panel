@@ -57,8 +57,25 @@ The reason is the one the user gave, and it is the correct one: duplicated
 copies drift, and drift is invisible until the day two screens disagree in
 front of a customer.
 
-**Status:** the primitive/foundation decision is settled and recorded here.
-The mechanical de-duplication sweep — moving every remaining shared component
-out of `apps/playground/resources/js/components/ui` and into the package — is
-tracked separately, because it touches many files and deserves its own
-verification pass rather than being smuggled into a decision document.
+## The de-duplication sweep: what is done, and the trap in the rest
+
+**Done:** three duplicate component folders in the application — `badge`,
+`collapsible` and `select`, fifteen files — were **dead**. Nothing imported
+them; `PkBadge` had already replaced the first, and the other two were starter-
+kit scaffolding no screen ever used. Deleted.
+
+**The trap, for whoever finishes this:** the remaining overlaps are **not
+drop-in swaps**, and treating them as a find-and-replace would break real
+behaviour.
+
+| Pair | Why it is not a rename |
+| --- | --- |
+| app `button` (34 files) ↔ `PkButton` | The app's is a reka-ui `Primitive` and supports **`as-child`**; `PkButton` deliberately does not — see its own note on the two-interactive-elements bug that omission was made to prevent. Call sites using `as-child` need `buttonClasses()` on their own element instead. |
+| app `skeleton` ↔ `PkSkeleton` | Different concepts wearing one name. The app's is a bare `class`-driven `div`; `PkSkeleton` is a **named-variant** placeholder (`text`, `row`, `circle`, with counts) so six call sites cannot each invent a height. Its one consumer, `SidebarMenuSkeleton`, wants the bare div. |
+| app `dropdown-menu` (4 files) ↔ `PkDropdown` | Composed parts versus one component with an items prop. Genuinely different APIs. |
+
+So the right finish is **per-pair migration with the call sites read**, not a
+sed. The rule stands — one copy of every shared component, in the package —
+but reaching it means moving the *application's* implementation into
+`@panelkit/ui` where the package's version is the thinner one, rather than
+forcing every screen onto a primitive that was scoped for packaged use.
