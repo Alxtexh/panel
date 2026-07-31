@@ -235,6 +235,39 @@ final class TicketQueueTest extends TestCase
         $this->assertTrue(Gate::allows('create', Ticket::class));
     }
 
+    /* ------------------------------------------------------ the desks */
+
+    /**
+     * A DESK IS OPTIONAL, and "not triaged yet" is a real state.
+     *
+     * Forcing a choice when a ticket is filed means whoever files it guesses,
+     * and a ticket in the WRONG queue is worse than one in no queue - the
+     * wrong queue looks handled.
+     */
+    public function test_a_ticket_may_have_no_desk(): void
+    {
+        $ticket = $this->ticket('Not triaged');
+
+        $this->assertNull($ticket->department);
+    }
+
+    /** And the filter is what makes routing worth anything. */
+    public function test_a_desk_can_see_only_its_own_queue(): void
+    {
+        $this->ticket('Fibre cut')->forceFill(['department' => 'network'])->save();
+        $this->ticket('Wrong invoice')->forceFill(['department' => 'billing'])->save();
+        $this->ticket('Not triaged');
+
+        $props = $this->actingAs($this->operator)
+            ->get('/tickets?department=network')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $subjects = array_column($props['records'], 'subject');
+
+        $this->assertSame(['Fibre cut'], $subjects);
+    }
+
     /* ------------------------------------------------------- the alert */
 
     /**

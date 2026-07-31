@@ -89,6 +89,16 @@ final class TicketResource extends Resource
                 ->options(['low' => 'Low', 'normal' => 'Normal', 'urgent' => 'Urgent']),
 
             /*
+             * WHICH DESK, and it is not required. "Not triaged yet" is a real
+             * state a queue has to be able to show - forcing a choice at the
+             * moment a ticket is filed means whoever files it guesses, and a
+             * ticket in the wrong queue is worse than one in no queue, because
+             * the wrong queue looks handled.
+             */
+            SelectField::make('department')->label('Desk')
+                ->options((array) config('panel.ticketing.departments', [])),
+
+            /*
              * WHO IS HANDLING IT. Nullable on purpose - unassigned is the
              * normal state of a new ticket, and a queue that cannot express it
              * is a queue that lies about its backlog.
@@ -145,6 +155,13 @@ final class TicketResource extends Resource
                     Ticket::RESOLVED => 'success',
                 ]),
 
+                // Muted, not a badge. The desk a ticket belongs to is
+                // context for whoever is scanning; the status and priority
+                // are the things being scanned FOR, and three badges in a row
+                // means none of them stands out.
+                TextColumn::make('department')->from('tickets.department')
+                    ->label('Desk')->muted(),
+
                 BadgeColumn::make('priority')->from('tickets.priority')->colors([
                     'urgent' => 'danger',
                     'normal' => 'neutral',
@@ -164,6 +181,17 @@ final class TicketResource extends Resource
             ->filters([
                 SelectFilter::make('priority')->column('tickets.priority')
                     ->options(['low', 'normal', 'urgent']),
+
+                /*
+                 * THE FILTER IS THE POINT OF DEPARTMENTS. Routing a ticket to
+                 * the network desk achieves nothing on its own; what the desk
+                 * needs is to see only theirs, and this is that - saveable as
+                 * a view, so somebody on the network rota opens the queue
+                 * already narrowed to their own.
+                 */
+                SelectFilter::make('department')->label('Desk')
+                    ->column('tickets.department')
+                    ->options(array_keys((array) config('panel.ticketing.departments', []))),
             ])
             ->tabs('tickets.status', [Ticket::OPEN, Ticket::PENDING, Ticket::RESOLVED])
             /*

@@ -426,6 +426,27 @@ return [
         */
         'max_per_hour' => 10,
         'max_per_day' => 30,
+
+        /*
+        | THE DESKS A TICKET CAN BE ROUTED TO - roadmap H.5.
+        |
+        | A CONFIGURED LIST, NOT A TABLE, deliberately. A `departments` table
+        | buys names an operator can edit at runtime and costs a second CRUD
+        | screen, a foreign key, a join on every queue render and the question
+        | "what happens to tickets when a department is deleted" - all to model
+        | a list that changes about once a year. The column stores the KEY, so
+        | the day this genuinely needs to be per-tenant it becomes a table
+        | without anything stored having to change.
+        |
+        | THESE ARE AN ISP'S DESKS, which is why they are here and not in the
+        | package. A framework guessing at them would ship a confidently wrong
+        | default, the same reason the role templates live here.
+        */
+        'departments' => [
+            'support' => 'Support',
+            'network' => 'Network operations',
+            'billing' => 'Billing',
+        ],
     ],
 
     'knowledge' => [
