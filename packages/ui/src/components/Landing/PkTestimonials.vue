@@ -27,7 +27,7 @@ defineProps<{
                 <li
                     v-for="(item, i) in items ?? []"
                     :key="i"
-                    class="flex flex-col gap-4 rounded-lg border bg-card p-5"
+                    class="flex flex-col gap-4 rounded-lg border bg-card p-5 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg motion-reduce:transform-none motion-reduce:transition-none"
                 >
                     <blockquote class="text-pretty text-sm leading-relaxed">
                         “{{ item.quote }}”

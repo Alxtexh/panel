@@ -7,6 +7,7 @@
  * unmeasured does not belong here: a stats band of aspirations is the fastest
  * way to make every other number on the page look invented too.
  */
+import PkCountUp from './PkCountUp.vue'
 import PkSection from './PkSection.vue'
 import PkSectionHeading from './PkSectionHeading.vue'
 
@@ -15,6 +16,27 @@ defineProps<{
     body?: string
     items?: { value?: string; label?: string }[]
 }>()
+
+/**
+ * Split "250k" into 250 and "k" so the number can count and the unit cannot.
+ *
+ * ANYTHING THAT IS NOT A LEADING NUMBER IS LEFT ALONE - "Talk to us" is a
+ * legitimate stat value and animating it would be nonsense. The parse is
+ * deliberately strict for that reason.
+ */
+function parts(
+    value?: string,
+): { prefix: string; number: number; suffix: string; decimals: number } | null {
+    const match = /^([^0-9]*)([0-9]+(?:\.[0-9]+)?)(.*)$/.exec((value ?? '').trim())
+
+    if (!match) {
+        return null
+    }
+
+    const decimals = match[2].includes('.') ? match[2].split('.')[1].length : 0
+
+    return { prefix: match[1], number: Number(match[2]), suffix: match[3], decimals }
+}
 </script>
 
 <template>

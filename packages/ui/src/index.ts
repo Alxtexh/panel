@@ -208,4 +208,8 @@ export { default as PkTestimonials } from './components/Landing/PkTestimonials.v
 export { default as PkPricing } from './components/Landing/PkPricing.vue'
 export { default as PkFaq } from './components/Landing/PkFaq.vue'
 export { default as PkCta } from './components/Landing/PkCta.vue'
+export { default as PkAuroraBackdrop } from './components/Landing/PkAuroraBackdrop.vue'
+export { default as PkReveal } from './components/Landing/PkReveal.vue'
+export { default as PkCountUp } from './components/Landing/PkCountUp.vue'
+export { useReveal } from './composables/useReveal'
 export type { LandingSection, LandingItem } from './components/Landing/types'

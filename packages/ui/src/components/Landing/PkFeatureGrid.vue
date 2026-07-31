@@ -19,7 +19,7 @@ defineProps<{
                 <li
                     v-for="(item, i) in items ?? []"
                     :key="i"
-                    class="flex flex-col gap-2 rounded-lg border bg-card p-5"
+                    class="flex flex-col gap-2 rounded-lg border bg-card p-5 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg motion-reduce:transform-none motion-reduce:transition-none"
                 >
                     <h3 class="text-sm font-semibold">{{ item.title }}</h3>
                     <p class="text-sm text-pretty text-muted-foreground">{{ item.body }}</p>
