@@ -8,7 +8,6 @@ import './echo';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { registerRenderHookComponent } from '@panelkit/inertia';
 import { initializeAppearance, setAppearancePersister } from '@panelkit/ui';
-import TicketStats from '@/components/TicketStats.vue';
 import TicketThread from '@/components/TicketThread.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
@@ -32,7 +31,6 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
  * else's package.
  */
 registerRenderHookComponent('TicketThread', TicketThread);
-registerRenderHookComponent('TicketStats', TicketStats);
 
 /**
  * Save a preference change to the account.

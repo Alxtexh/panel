@@ -7,6 +7,7 @@ namespace App\Panel\Ticketing;
 use App\Models\Ticket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use PanelKit\Panel\Actions\RecordAction;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
@@ -186,6 +187,25 @@ final class MyTicketResource extends Resource
              */
             ->constrain(fn ($q) => $q->where('tickets.opened_by', Auth::id()))
             ->tabs('tickets.status', [Ticket::OPEN, Ticket::PENDING, Ticket::RESOLVED])
+            /*
+             * SO A ROW CLICK OPENS THE CONVERSATION, which is the only reason
+             * a subscriber opens this screen at all. `baseUrl()` carries this
+             * portal's own path - see `Resource::baseUrl()`.
+             */
+            ->recordActions([
+                RecordAction::make('view', 'View')
+                    ->icon('eye')->color('primary')->authorize('view')
+                    ->link(fn (array $row): string => self::baseUrl((string) $row['id'])),
+            ])
+            /*
+             * CLICKING A ROW OPENS THE TICKET, which is the only thing anybody
+             * wants from a queue row - the record page is where the
+             * conversation is, and the conversation is the ticket. It has to
+             * be asked for: a table whose records are edited in place would be
+             * ruined by a click that navigated away mid-edit, so the default
+             * is off and this says otherwise.
+             */
+            ->rowClick()
             ->keyColumn('tickets.id')
             ->alsoSelect(['tickets.id', 'tickets.status'])
             ->defaultSort('created_at', 'desc')

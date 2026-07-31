@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Plugins;
 
+use App\Http\Controllers\TicketAnalysisController;
 use App\Http\Controllers\TicketStatsController;
 use App\Http\Controllers\TicketThreadController;
 use App\Panel\Ticketing\MyTicketResource;
@@ -99,7 +100,8 @@ final class TicketingPlugin extends Plugin
          * a record page without a line changing in a screen every other
          * resource shares.
          */
-        $key = $context->panel->id === $this->operatorPanel() ? 'tickets' : 'my-tickets';
+        $operator = $context->panel->id === $this->operatorPanel();
+        $key = $operator ? 'tickets' : 'my-tickets';
 
         $context->render(RenderHooks::VIEW_AFTER, 'TicketThread', [], [$key]);
 
@@ -109,8 +111,13 @@ final class TicketingPlugin extends Plugin
          * and the endpoint behind this is authorised as "may list the whole
          * organisation's", which they are not.
          */
-        if ($key === 'tickets') {
-            $context->render(RenderHooks::LIST_BEFORE_TABLE, 'TicketStats', [], [$key]);
+        /*
+         * A NAVIGATION ENTRY FOR THE ANALYSIS, beside the queue it describes.
+         * The prefix is added by `page()` from the panel's own path, so this
+         * lands correctly in whichever portal accepted the plugin.
+         */
+        if ($operator) {
+            $context->page('Ticket analysis', "{$key}/analysis", 'chart', 'Organisation');
         }
 
         /*
@@ -119,7 +126,7 @@ final class TicketingPlugin extends Plugin
          * own prefix. A plugin registering this in a service provider would
          * get none of that.
          */
-        $context->routes(function (Panel $panel) use ($key): void {
+        $context->routes(function (Panel $panel) use ($key, $operator): void {
             Route::get("{$key}/{ticket}/thread", [TicketThreadController::class, 'show'])
                 ->name("{$panel->id}.{$key}.thread");
 
@@ -127,14 +134,29 @@ final class TicketingPlugin extends Plugin
                 ->name("{$panel->id}.{$key}.thread.store");
 
             /*
-             * BEFORE the `{resource}/{id}` routes would see it, which they
-             * cannot here - a plugin's routes are registered inside the
-             * panel's group ahead of the generic resource ones. `stats` is a
-             * word, not an id, and this is what stops it being looked up as
-             * one.
+             * THE SUMMARY IS THE OPERATOR PORTAL'S ONLY, matching the widget
+             * it feeds. Registered here it would exist on the subscriber's
+             * portal too and answer 403 to everybody who could reach it - a
+             * route that can only ever refuse is a dead control with a URL,
+             * and dead controls are what DESIGN_RULES rule 5 is about.
+             *
+             * BEFORE the `{resource}/{id}` routes would see it, which a
+             * plugin's routes are: they are registered inside the panel's
+             * group ahead of the generic resource ones, so `stats` is matched
+             * as a word rather than looked up as an id.
              */
-            Route::get("{$key}/stats", TicketStatsController::class)
-                ->name("{$panel->id}.{$key}.stats");
+            if ($operator) {
+                Route::get("{$key}/stats", TicketStatsController::class)
+                    ->name("{$panel->id}.{$key}.stats");
+
+                /*
+                 * THE ANALYSIS IS ITS OWN SCREEN. See the controller for why
+                 * it is not a strip above the queue: two questions, two
+                 * audiences, two rhythms of opening.
+                 */
+                Route::get("{$key}/analysis", TicketAnalysisController::class)
+                    ->name("{$panel->id}.{$key}.analysis");
+            }
         });
     }
 

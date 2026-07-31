@@ -203,18 +203,27 @@ final class TicketResource extends Resource
             ->query(fn (Builder $q) => $q
                 ->leftJoin('users as openers', 'openers.id', '=', 'tickets.opened_by')
                 ->leftJoin('users as assignees', 'assignees.id', '=', 'tickets.assigned_to'))
-            /*
-             * NO HAND-BUILT `View` OR `Edit` LINK, and that is deliberate
-             * rather than an omission. A link written here would have to say
-             * `/tickets/{id}` - correct only while this portal is mounted at
-             * the root, and this resource is installed by a PLUGIN into
-             * whichever panel an installation nominates. The row already links
-             * to the record from `routes.index`, which carries the panel's own
-             * prefix, and the record page offers Edit.
-             *
-             * What stays are the acts that have no URL at all.
-             */
             ->recordActions([
+                /*
+                 * VIEW IS FIRST, AND IT IS WHAT A ROW CLICK FOLLOWS. Clicking
+                 * a ticket opens the ticket - with its conversation - which is
+                 * the only thing anybody wants from a queue row. The list page
+                 * finds this action to decide where a row leads, so removing
+                 * it made the rows inert.
+                 *
+                 * The URL comes from `baseUrl()` rather than a literal,
+                 * because this resource is installed by a PLUGIN into whichever
+                 * panel an installation nominates - `/tickets/{id}` would be
+                 * correct only while that panel is mounted at the root.
+                 */
+                RecordAction::make('view', 'View')
+                    ->icon('eye')->color('primary')->authorize('view')
+                    ->link(fn (array $row): string => self::baseUrl((string) $row['id'])),
+
+                RecordAction::make('edit', 'Edit')
+                    ->icon('pencil')->authorize('update')
+                    ->link(fn (array $row): string => self::baseUrl($row['id'].'/edit')),
+
                 ActionGroup::make('Status')->actions([
                     /*
                      * AUTHORISED AS `resolve`, NOT `update`, which is the whole
@@ -245,6 +254,15 @@ final class TicketResource extends Resource
                         ->visible(fn (array $row): bool => ($row['status'] ?? null) === Ticket::RESOLVED),
                 ]),
             ])
+            /*
+             * CLICKING A ROW OPENS THE TICKET, which is the only thing anybody
+             * wants from a queue row - the record page is where the
+             * conversation is, and the conversation is the ticket. It has to
+             * be asked for: a table whose records are edited in place would be
+             * ruined by a click that navigated away mid-edit, so the default
+             * is off and this says otherwise.
+             */
+            ->rowClick()
             ->keyColumn('tickets.id')
             ->alsoSelect(['tickets.id', 'tickets.status'])
             /*

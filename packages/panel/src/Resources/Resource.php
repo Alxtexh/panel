@@ -123,6 +123,27 @@ abstract class Resource
         return app(PanelManager::class)->panelFor(static::class) ?? static::$panel;
     }
 
+    /**
+     * This resource's own URL, carrying the panel's path.
+     *
+     * THE ONE PLACE A RESOURCE'S URL IS SPELT, so a link written in a
+     * resource class is correct in whichever portal it is mounted in. Writing
+     * `'/tickets/'.$id` by hand is right in exactly one panel - the one at the
+     * root - and that is how the second portal ended up with a list whose
+     * every link left it.
+     *
+     * Resolved from where the resource was REGISTERED, not what it declares,
+     * which is what makes it right for a plugin's classes too - see `panel()`.
+     */
+    public static function baseUrl(string $suffix = ''): string
+    {
+        $path = trim(app(PanelManager::class)->panel(static::panel())?->getPath() ?? '', '/');
+
+        $prefix = $path === '' ? '' : '/'.$path;
+
+        return $prefix.'/'.static::key().($suffix === '' ? '' : '/'.ltrim($suffix, '/'));
+    }
+
     /** Declarative definition. MUST NOT query. */
     abstract public static function table(Table $table): Table;
 
