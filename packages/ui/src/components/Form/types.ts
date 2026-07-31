@@ -20,6 +20,10 @@ export interface FormField {
         | 'repeater'
         | 'keyvalue'
         | 'richtext'
+        /* Roadmap 4.5 - see the matching Pk* components for why each exists. */
+        | 'markdown'
+        | 'code'
+        | 'builder'
         /** Rendered as an <input type="password">, and never carries a value back. */
         | 'password'
     required?: boolean
@@ -71,6 +75,16 @@ export interface FormField {
     itemLabel?: string
     minItems?: number | null
     maxItems?: number | null
+
+    /**
+     * Builder blocks - roadmap 4.5. Each is a named set of fields, and the
+     * stored value is an ordered list of `{type, data}`.
+     */
+    blocks?: { type: string; label: string; fields: FormField[] }[]
+    maxBlocks?: number | null
+
+    /** Code: which language to highlight and validate as - roadmap 4.5. */
+    language?: string
 
     /** Key-value: what the two columns are called, and the pair ceiling. */
     keyLabel?: string

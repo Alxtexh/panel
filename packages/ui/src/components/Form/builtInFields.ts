@@ -3,7 +3,9 @@ import { registerOptionPreview } from '../../composables/useOptionPreviews'
 import PkColourModePreview from '../Document/PkColourModePreview.vue'
 import PkVoucherCodeBoxPreview from '../Document/PkVoucherCodeBoxPreview.vue'
 import PkCheckboxList from './PkCheckboxList.vue'
+import PkCodeInput from './PkCodeInput.vue'
 import PkColourPicker from './PkColourPicker.vue'
+import PkMarkdownInput from './PkMarkdownInput.vue'
 import PkRadioGroup from './PkRadioGroup.vue'
 import PkSlider from './PkSlider.vue'
 import PkSwatchPreview from './PkSwatchPreview.vue'
@@ -36,6 +38,14 @@ export function registerBuiltInFieldControls(): void {
     registerFieldControl('colour', PkColourPicker)
     registerFieldControl('slider', PkSlider)
     registerFieldControl('visual-select', PkVisualSelect)
+    /*
+     * ROADMAP 4.5. Markdown stores the SOURCE (diffable, re-targetable)
+     * rather than a rendering; code keeps whitespace exactly and makes Tab
+     * indent. Both are controls with real behaviour, so both come through
+     * the registry like everything else here.
+     */
+    registerFieldControl('markdown', PkMarkdownInput)
+    registerFieldControl('code', PkCodeInput)
 
     /*
      * The option renderers, which are a second registry one level down: this one

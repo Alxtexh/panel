@@ -45,6 +45,10 @@ import type { FormField } from './types'
  */
 const PkRepeater = defineAsyncComponent(() => import('./PkRepeater.vue'))
 
+// Same cycle, same fix: a builder renders this component for each block's
+// fields, so the import must be deferred to render time (roadmap 4.5).
+const PkBuilder = defineAsyncComponent(() => import('./PkBuilder.vue'))
+
 const props = withDefaults(
     defineProps<{
         field: FormField
@@ -260,6 +264,22 @@ function insertChip(token: string) {
             :disabled="field.disabled || processing"
             :errors="errors"
             :child-options="childOptions"
+            @update:model-value="(next) => emit('change', next)"
+        />
+
+        <!--
+            ROADMAP 4.5. A builder is blocks of DIFFERENT shapes in a chosen
+            order - see PkBuilder for why that is not a repeater. It renders
+            its blocks' fields through this very component, so a field type
+            works identically inside a block and outside one.
+        -->
+        <PkBuilder
+            v-else-if="field.type === 'builder'"
+            :model-value="(value as any) ?? null"
+            :blocks="(field.blocks as any) ?? []"
+            :max-blocks="field.maxBlocks ?? null"
+            :disabled="field.disabled || processing"
+            :errors="errors"
             @update:model-value="(next) => emit('change', next)"
         />
 

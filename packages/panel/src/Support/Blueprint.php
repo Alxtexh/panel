@@ -311,6 +311,23 @@ final class Blueprint
         A provider, a resource directory and the routes. Use `--central` only for a
         portal that must see every organisation at once; it turns tenant scoping off.
 
+        ### Choose the right text field
+
+        - `TextareaField` — plain text, no formatting.
+        - `MarkdownField` — prose whose SOURCE you want stored: diffable in an
+          audit entry, readable in a database client, renderable to email, PDF
+          or plain text later.
+        - `RichEditorField` — prose stored as sanitised HTML, when the stored
+          value IS the rendering.
+        - `CodeField` — config and snippets: monospace, Tab indents, line
+          numbers, and `->language('json')` adds a server-side `json` rule.
+        - `BuilderField` — blocks of DIFFERENT shapes in a chosen order
+          (heading, paragraph, image). A `RepeaterField` is many rows of ONE
+          shape; reach for the builder only when the shapes genuinely differ.
+
+        A builder drops any block type or inner field it did not declare, on
+        the way to storage - the same allow-list posture as `Form::sanitize()`.
+
         ### Add a field type
 
         Subclass `Field`, return a new `type()`, add your keys to `toSchema()`, and

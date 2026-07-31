@@ -35,6 +35,15 @@ export { default as PkBoundary } from './components/Layout/PkBoundary.vue'
 export { default as PkDeviceFrame } from './components/Layout/PkDeviceFrame.vue'
 export { default as PkStepIndicator } from './components/Layout/PkStepIndicator.vue'
 export { default as PkRepeater } from './components/Form/PkRepeater.vue'
+/*
+ | ROADMAP 4.5. Markdown stores the source rather than a rendering; code
+ | keeps whitespace and indents with Tab; a builder is blocks of different
+ | shapes in a chosen order - see each component for why none of the three
+ | is served by an existing field.
+ */
+export { default as PkMarkdownInput } from './components/Form/PkMarkdownInput.vue'
+export { default as PkCodeInput } from './components/Form/PkCodeInput.vue'
+export { default as PkBuilder } from './components/Form/PkBuilder.vue'
 export { default as PkKeyValue } from './components/Form/PkKeyValue.vue'
 export { default as PkRichEditor } from './components/Form/PkRichEditor.vue'
 export { default as PkRadioGroup } from './components/Form/PkRadioGroup.vue'
