@@ -37,6 +37,8 @@ type Reply = {
 };
 
 const replies = ref<Reply[]>([]);
+const capped = ref(false);
+const total = ref(0);
 const canReply = ref(false);
 const canNote = ref(false);
 const loading = ref(true);
@@ -65,6 +67,8 @@ async function load() {
         const data = await response.json();
 
         replies.value = data.replies;
+        capped.value = data.capped;
+        total.value = data.total;
         canReply.value = data.canReply;
         canNote.value = data.canNote;
     } catch {
@@ -127,7 +131,21 @@ function send() {
             Nothing has been said yet.
         </p>
 
-        <ol v-else class="flex flex-col gap-3">
+        <!--
+            SAID, NOT HIDDEN. Showing the last three hundred of four hundred
+            without a word is how somebody scrolls up, fails to find what they
+            were promised, and concludes the ticket was edited.
+        -->
+        <p
+            v-else-if="capped"
+            class="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"
+        >
+            Showing the most recent {{ replies.length }} of
+            {{ total }} messages. The conversation is read from the bottom, so
+            the older ones are above this point in the ticket's history.
+        </p>
+
+        <ol v-if="replies.length > 0" class="flex flex-col gap-3">
             <li
                 v-for="reply in replies"
                 :key="reply.id"

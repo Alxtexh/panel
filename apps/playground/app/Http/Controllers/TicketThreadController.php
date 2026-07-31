@@ -30,20 +30,56 @@ use Illuminate\Validation\Rule;
 final class TicketThreadController extends Controller
 {
     /**
+     * How many messages a thread returns at once.
+     *
+     * Matched to the relation panels' cap rather than chosen afresh: two
+     * different ceilings for "how much of a long list arrives at once" is a
+     * number somebody has to look up twice and will eventually set
+     * differently for no reason.
+     */
+    private const MAX_REPLIES = 300;
+
+    /**
      * The thread as this reader may see it.
      *
-     * @return array{replies: list<array<string, mixed>>, canReply: bool, canNote: bool}
+     * @return array{capped: bool, total: int, replies: list<array<string, mixed>>, canReply: bool, canNote: bool}
      */
     public static function thread(Ticket $ticket): array
     {
         $seesInternal = Gate::allows('note', $ticket);
 
-        $replies = $ticket->replies()
+        /*
+         * CAPPED, AND THE READER IS TOLD - the same conclusion the relation
+         * panels reached (roadmap G.7), for the same reason.
+         *
+         * A thread is unbounded in principle: a ticket reopened weekly for a
+         * year is a page that gets slower every month and one nobody notices
+         * getting slower, because it degrades for one customer at a time. The
+         * cap is on the MOST RECENT, because a conversation is read from the
+         * bottom - the last exchange is what somebody opened it for, and the
+         * first message is already the subject at the top of the page.
+         *
+         * `capped` travels with the payload so the screen can SAY so. Silently
+         * showing the last two hundred of four hundred is the version that
+         * loses an argument: somebody scrolls up, does not find what they were
+         * promised, and concludes the ticket was edited.
+         */
+        $query = $ticket->replies()
             ->visibleTo($seesInternal)
-            ->with('author:id,name')
-            ->get();
+            ->with('author:id,name');
+
+        $total = (clone $query)->count();
+
+        $replies = $query
+            ->reorder('created_at', 'desc')
+            ->limit(self::MAX_REPLIES)
+            ->get()
+            ->reverse()
+            ->values();
 
         return [
+            'capped' => $total > self::MAX_REPLIES,
+            'total' => $total,
             'replies' => $replies->map(static fn (TicketReply $reply): array => [
                 'id' => $reply->id,
                 'body' => $reply->body,

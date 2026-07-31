@@ -118,6 +118,31 @@ final class TicketQueueTest extends TestCase
     }
 
     /**
+     * AN EVEN SET HAS NO SINGLE MIDDLE, so the median is the average of the
+     * two - which is what a median IS.
+     *
+     * Worth its own test because the ordering and slicing moved into SQL: the
+     * offset for an even count is one less than for an odd one, and getting it
+     * wrong shifts the reported figure by one ticket's wait on every
+     * even-sized set. Nobody would ever notice that from the card.
+     */
+    public function test_the_median_averages_the_middle_two_when_the_count_is_even(): void
+    {
+        $this->actingAs($this->operator);
+
+        // Middle two are 20 and 40, so the median is 30. A mean would be 42.5.
+        foreach ([10, 20, 40, 100] as $minutes) {
+            $ticket = $this->ticket("Waited {$minutes}");
+
+            $ticket->forceFill([
+                'first_response_at' => $ticket->created_at->copy()->addMinutes($minutes),
+            ])->save();
+        }
+
+        $this->assertSame(30, TicketStats::for()['medianFirstResponse']);
+    }
+
+    /**
      * NULL, NOT ZERO, when nothing has been answered. Zero is a claim - "we
      * answer instantly" - that a desk with no answered tickets has not earned.
      */

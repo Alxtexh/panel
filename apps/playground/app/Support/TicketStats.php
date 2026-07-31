@@ -77,23 +77,72 @@ final class TicketStats
      */
     private static function medianFirstResponse(Carbon $since): ?int
     {
-        $minutes = Ticket::query()
+        /*
+         * ORDERED AND SLICED BY THE DATABASE, not hydrated and sorted in PHP.
+         *
+         * This read every answered ticket in the window into Eloquent models
+         * to sort them - which is fine on the playground's four and is the
+         * shape that falls over on a tenant with a busy fortnight: thousands
+         * of models, each with casts and an attribute bag, built to throw all
+         * but one of them away. A summary card must not cost more as the
+         * organisation grows; that is the whole difference between a number
+         * and a number you can afford to look at.
+         *
+         * TWO SCALAR QUERIES, whatever the volume: how many, then the middle
+         * one or two. The count is needed anyway to know WHICH row is the
+         * middle, so there is no cheaper shape than this.
+         */
+        $base = Ticket::query()
             ->whereNotNull('first_response_at')
-            ->where('created_at', '>=', $since)
-            ->get(['created_at', 'first_response_at'])
-            ->map(static fn (Ticket $t): int => (int) $t->created_at->diffInMinutes($t->first_response_at))
-            ->sort()
-            ->values();
+            ->where('created_at', '>=', $since);
 
-        if ($minutes->isEmpty()) {
+        $total = (clone $base)->count();
+
+        if ($total === 0) {
             return null;
         }
 
-        $middle = intdiv($minutes->count(), 2);
+        $expression = self::minutesBetween();
 
-        return $minutes->count() % 2 === 1
-            ? $minutes[$middle]
-            : (int) round(($minutes[$middle - 1] + $minutes[$middle]) / 2);
+        /*
+         * AN EVEN COUNT HAS NO SINGLE MIDDLE, so both are taken and averaged -
+         * which is what a median IS, and what the PHP version did. Getting
+         * this wrong shifts the reported figure by one ticket's wait on every
+         * even-sized set, which nobody would ever notice.
+         */
+        $odd = $total % 2 === 1;
+
+        $values = (clone $base)
+            ->orderByRaw($expression)
+            ->offset($odd ? intdiv($total, 2) : intdiv($total, 2) - 1)
+            ->limit($odd ? 1 : 2)
+            ->pluck(DB::raw($expression.' as minutes'))
+            ->map(static fn ($m): float => (float) $m)
+            ->all();
+
+        if ($values === []) {
+            return null;
+        }
+
+        return (int) round(array_sum($values) / count($values));
+    }
+
+    /**
+     * Minutes between opening and the first answer, in this driver's dialect.
+     *
+     * NO USER INPUT REACHES THIS - both column names are literals written
+     * here - so there is nothing to bind. The panel supports three drivers
+     * (see the database support matrix) and each spells date arithmetic
+     * differently; a single expression that happened to work on SQLite would
+     * be a silent wrong answer on the other two rather than an error.
+     */
+    private static function minutesBetween(): string
+    {
+        return match (DB::connection()->getDriverName()) {
+            'sqlite' => '(julianday(first_response_at) - julianday(created_at)) * 1440',
+            'pgsql' => 'extract(epoch from (first_response_at - created_at)) / 60',
+            default => 'timestampdiff(minute, created_at, first_response_at)',
+        };
     }
 
     /**

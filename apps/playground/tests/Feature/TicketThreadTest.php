@@ -202,6 +202,67 @@ final class TicketThreadTest extends TestCase
         $this->assertEquals($first, $this->ticket->fresh()->first_response_at);
     }
 
+    /* ---------------------------------------------------------- the cap */
+
+    /**
+     * A LONG THREAD IS CAPPED, AND SAYS SO.
+     *
+     * Unbounded in principle: a ticket reopened weekly for a year gets slower
+     * every month, and it degrades for one customer at a time so nobody
+     * notices. Silently returning the last few hundred is the version that
+     * loses an argument - somebody scrolls up, does not find what they were
+     * promised, and concludes the ticket was edited.
+     *
+     * THE MOST RECENT ARE KEPT, because a conversation is read from the
+     * bottom. The oldest message is already the subject at the top of the
+     * page.
+     */
+    public function test_a_long_thread_is_capped_and_the_reader_is_told(): void
+    {
+        $this->actingAs($this->operator);
+
+        $rows = [];
+
+        for ($i = 1; $i <= 305; $i++) {
+            $rows[] = [
+                'tenant_id' => $this->tenant->id,
+                'ticket_id' => $this->ticket->id,
+                'author_id' => $this->operator->id,
+                'visibility' => TicketReply::PUBLIC,
+                'body' => "message {$i}",
+                'created_at' => now()->addSeconds($i),
+                'updated_at' => now()->addSeconds($i),
+            ];
+        }
+
+        TicketReply::query()->insert($rows);
+
+        $body = $this->actingAs($this->operator)
+            ->getJson("/tickets/{$this->ticket->id}/thread")
+            ->assertOk()
+            ->assertJsonPath('capped', true)
+            ->assertJsonPath('total', 305)
+            ->assertJsonCount(300, 'replies')
+            ->getContent();
+
+        // The newest survived and the oldest were dropped - not the reverse.
+        $this->assertStringContainsString('message 305', $body);
+        $this->assertStringNotContainsString('message 1"', $body);
+    }
+
+    /** And a short one is not flagged, or the notice becomes noise. */
+    public function test_a_short_thread_is_not_flagged_as_capped(): void
+    {
+        $this->actingAs($this->operator);
+        $this->ticket->addReply('Just the one.', TicketReply::PUBLIC);
+
+        $this->actingAs($this->operator)
+            ->getJson("/tickets/{$this->ticket->id}/thread")
+            ->assertOk()
+            ->assertJsonPath('capped', false)
+            ->assertJsonPath('total', 1);
+    }
+
     /* ------------------------------------------------------ another tenant */
 
     /** Nothing about a thread escapes the organisation that owns the ticket. */
