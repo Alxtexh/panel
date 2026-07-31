@@ -12,6 +12,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\NotificationController;
@@ -47,7 +48,12 @@ use PanelKit\Panel\Support\Blueprint;
  */
 $panelResources = array_keys(app(PanelManager::class)->resourcesFor('admin'));
 
-Route::inertia('/', 'Welcome')->name('home');
+/*
+ | THE PUBLIC FACE - Part G.9. PanelKit ships SEVERAL landing designs; which
+ | one an installation shows is config, and `?design=` lets this reference
+ | app demonstrate all three. See LandingController.
+ */
+Route::get('/', LandingController::class)->name('home');
 
 /*
 | PASSWORDLESS AND OTP AUTH.

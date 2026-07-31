@@ -77,7 +77,15 @@ createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
-            case name === 'Welcome':
+            /*
+             * THE LANDING PAGES DRAW THEIR OWN WORLD - Part G.9.
+             *
+             * They are the public face: their own header, their own footer,
+             * no operator sidebar. Wrapping one in the panel shell puts a
+             * navigation column for an application the visitor has not signed
+             * into beside a page whose entire job is to persuade them to.
+             */
+            case name.startsWith('landing/'):
                 return null;
             /*
              * FULL-SCREEN BY THEMSELVES.

@@ -53,6 +53,17 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Landing design
+    |---------------------------------------------------------------------------
+    |
+    | Which of the shipped public landing pages this installation shows at `/`
+    | - `aurora` (modern SaaS), `editorial` (quiet and typographic) or
+    | `console` (developer tool, shows real code). Part G.9.
+    */
+    'landing' => env('PANEL_LANDING', 'aurora'),
+
+    /*
+    |---------------------------------------------------------------------------
     | Singular resources
     |---------------------------------------------------------------------------
     |
