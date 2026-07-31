@@ -25,6 +25,7 @@ use App\Http\Controllers\Settings\DeviceController;
 use App\Http\Controllers\UserManagementController;
 use App\Support\Guide;
 use App\Support\HelpArticles;
+use App\Support\LandingPresets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -55,6 +56,22 @@ $panelResources = array_keys(app(PanelManager::class)->resourcesFor('admin'));
  | app demonstrate all three. See LandingController.
  */
 Route::get('/', LandingController::class)->name('home');
+
+/*
+| PREVIEWING THE OTHER SHIPPED DESIGNS.
+|
+| A PATH RATHER THAN `?design=`. The front door is a URL people share, and a
+| marketing address carrying a query parameter is both ugly and misleading -
+| somebody passes on `/?design=console` and the recipient sees a design the
+| installation does not use. `/` is now only ever the configured design, and
+| trying the others is a route of its own that says what it is.
+|
+| The reference app needs this to demonstrate all three; an installation that
+| ships one design simply never links to it.
+*/
+Route::get('preview/{design}', LandingController::class)
+    ->whereIn('design', LandingPresets::names())
+    ->name('landing.preview');
 
 /*
 | PASSWORDLESS AND OTP AUTH.

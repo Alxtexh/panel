@@ -40,7 +40,7 @@ const page = usePage();
                 <Link
                     v-for="d in ['aurora', 'editorial', 'console']"
                     :key="d"
-                    :href="`/?design=${d}`"
+                    :href="`/preview/${d}`"
                     class="rounded-md px-2.5 py-1 capitalize transition-colors"
                     :class="
                         d === design

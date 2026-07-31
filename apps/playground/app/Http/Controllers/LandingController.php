@@ -56,13 +56,18 @@ final class LandingController extends Controller
          * explicit request for a named design is a request to see that page;
          * the bare address is not.
          */
-        if ($request->user() !== null && $request->query('design') === null) {
+        if ($request->user() !== null && $request->route('design') === null) {
             return redirect()->route('dashboard');
         }
 
         $configured = (string) config('panel.landing', 'aurora');
 
-        $requested = (string) $request->query('design', $configured);
+        /*
+         * THE ROUTE SEGMENT, NOT A QUERY PARAMETER - see the preview route.
+         * `/` carries no design at all and always renders what the
+         * installation configured.
+         */
+        $requested = (string) ($request->route('design') ?? $configured);
 
         // Unknown names fall back rather than 404: this is the front door,
         // and a typo in a shared link should show the product, not an error.

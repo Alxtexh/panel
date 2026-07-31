@@ -336,3 +336,62 @@ html {
 .pk-skip-link:focus-visible {
     translate: 0 0;
 }
+
+/*
+ * PER-DESIGN TYPOGRAPHY for the landing pages.
+ *
+ * Set on the page wrapper rather than inside the section components, because a
+ * section must stay identical whichever design it is composed into - that is
+ * the whole point of a library. What changes is the typographic environment it
+ * inherits, which is exactly how a print designer would put it.
+ */
+.pk-editorial {
+    --pk-heading-family: ui-serif, Georgia, 'Times New Roman', serif;
+}
+
+.pk-editorial h1,
+.pk-editorial h2,
+.pk-editorial h3 {
+    font-family: var(--pk-heading-family);
+    letter-spacing: -0.01em;
+}
+
+.pk-editorial p {
+    font-family: var(--pk-heading-family);
+}
+
+/* The opening paragraph of the hero gets a drop cap, as a page would. */
+.pk-editorial main section:first-of-type p:first-of-type::first-letter {
+    float: left;
+    margin-right: 0.08em;
+    font-size: 3.1em;
+    line-height: 0.82;
+    font-weight: 600;
+}
+
+.pk-console h1,
+.pk-console h2,
+.pk-console h3,
+.pk-console dd {
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+    letter-spacing: -0.02em;
+}
+
+/* A caret after the hero headline: this design is a prompt. */
+.pk-console main section:first-of-type h1::after {
+    content: '_';
+    margin-left: 0.08em;
+    animation: pk-caret 1.1s steps(2, start) infinite;
+}
+
+@keyframes pk-caret {
+    to {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pk-console main section:first-of-type h1::after {
+        animation: none;
+    }
+}

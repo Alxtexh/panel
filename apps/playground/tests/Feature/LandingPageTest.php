@@ -42,7 +42,7 @@ final class LandingPageTest extends TestCase
     #[DataProvider('designs')]
     public function test_each_shipped_design_renders_to_a_guest(string $design, string $component): void
     {
-        $page = $this->get("/?design={$design}")->assertOk()->viewData('page');
+        $page = $this->get("/preview/{$design}")->assertOk()->viewData('page');
 
         $this->assertSame('landing/Composed', $page['component']);
         $this->assertNotEmpty($page['props']['sections'], "The {$design} design rendered no sections.");
@@ -53,7 +53,7 @@ final class LandingPageTest extends TestCase
     public function test_the_designs_are_different_compositions(): void
     {
         $shape = fn (string $d): string => implode(',', array_column(
-            $this->get("/?design={$d}")->assertOk()->viewData('page')['props']['sections'],
+            $this->get("/preview/{$d}")->assertOk()->viewData('page')['props']['sections'],
             'type',
         ));
 
@@ -98,10 +98,14 @@ final class LandingPageTest extends TestCase
     {
         config(['panel.landing' => 'editorial']);
 
-        $page = $this->get('/?design=../Dashboard')->assertOk()->viewData('page');
-
-        $this->assertSame('landing/Composed', $page['component']);
-        $this->assertNotEmpty($page['props']['sections']);
+        /*
+         * A PATH CANNOT NAME A COMPONENT NOW. The preview route is constrained
+         * to the shipped design names, so an unknown one is a 404 rather than
+         * a fallback - which is the right answer for a URL somebody typed,
+         * and removes the "arbitrary string reaches Inertia::render" shape
+         * entirely.
+         */
+        $this->get('/preview/../Dashboard')->assertNotFound();
     }
 
     /* ------------------------------------------- somebody who already signed up */
@@ -132,7 +136,7 @@ final class LandingPageTest extends TestCase
     public function test_an_explicit_design_is_still_shown_to_a_signed_in_operator(): void
     {
         $page = $this->actingAs($this->operator())
-            ->get('/?design=editorial')
+            ->get('/preview/editorial')
             ->assertOk()
             ->viewData('page');
 
