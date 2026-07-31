@@ -30,8 +30,8 @@ import {
     Timer,
 } from '@lucide/vue';
 import { PkModal } from '@panelkit/ui';
+import { PkButton as Button } from '@panelkit/ui';
 import { computed, ref } from 'vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import operations from '@/routes/operations';
 import alerts from '@/routes/operations/alerts';

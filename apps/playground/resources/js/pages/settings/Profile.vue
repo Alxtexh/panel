@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Form, Head, usePage } from '@inertiajs/vue3';
 import { Link } from '@inertiajs/vue3';
+import { PkButton as Button, buttonClasses } from '@panelkit/ui';
 import { computed } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/profile';
@@ -133,12 +133,14 @@ const user = computed(() => page.props.auth.user);
                 {{ twoFactorEnabled ? 'Enabled' : 'Not enabled' }}
             </span>
 
-            <Button as-child variant="outline" size="sm">
-                <Link :href="editSecurity()">
-                    {{ twoFactorEnabled ? 'Manage' : 'Enable' }} two-factor
-                    authentication
-                </Link>
-            </Button>
+            <!-- Classes on the link's own element - see ErrorScreen's note. -->
+            <Link
+                :href="editSecurity()"
+                :class="buttonClasses({ variant: 'outline', size: 'sm' })"
+            >
+                {{ twoFactorEnabled ? 'Manage' : 'Enable' }} two-factor
+                authentication
+            </Link>
         </div>
     </div>
 

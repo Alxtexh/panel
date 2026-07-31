@@ -21,7 +21,7 @@
  * been a write, and replaying a write against a fresh session is how you charge
  * somebody twice. The reader is told what happened and the page starts clean.
  */
-import { Button } from '@/components/ui/button';
+import { PkButton as Button } from '@panelkit/ui';
 import { sessionExpired } from '@/lib/sessionExpired';
 
 /*

@@ -16,8 +16,8 @@
  * looking for different things, and the wrong one wastes a support call.
  */
 import { Head, useForm } from '@inertiajs/vue3';
+import { PkButton as Button } from '@panelkit/ui';
 import { computed } from 'vue';
-import { Button } from '@/components/ui/button';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 
 defineOptions({ layout: AuthLayout });

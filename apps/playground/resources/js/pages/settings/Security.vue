@@ -2,6 +2,7 @@
 import { Form, Head, router } from '@inertiajs/vue3';
 // Generated from the routes - a rename breaks the build rather than leaving
 // this button pointed at a 404.
+import { PkButton as Button } from '@panelkit/ui';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -10,7 +11,6 @@ import ManagePasskeys from '@/components/ManagePasskeys.vue';
 import type { Props as ManageTwoFactorProps } from '@/components/ManageTwoFactor.vue';
 import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
 import deviceRoutes from '@/routes/settings/devices';

@@ -42,8 +42,8 @@ import {
     TriangleAlert,
 } from '@lucide/vue';
 import { PkModal, PkStepIndicator } from '@panelkit/ui';
+import { PkButton as Button } from '@panelkit/ui';
 import { computed, ref } from 'vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import backups from '@/routes/operations/backups';
 

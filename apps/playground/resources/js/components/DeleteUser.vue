@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
+import { PkButton as Button } from '@panelkit/ui';
 import { useTemplateRef } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
-import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogClose,

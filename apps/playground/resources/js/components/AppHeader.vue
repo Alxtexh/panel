@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from '@lucide/vue';
+import { PkButton as Button, buttonClasses } from '@panelkit/ui';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -207,26 +207,28 @@ const rightNavItems: NavItem[] = [
                                 <TooltipProvider :delay-duration="0">
                                     <Tooltip>
                                         <TooltipTrigger>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                as-child
-                                                class="group h-9 w-9 cursor-pointer"
+                                            <!-- Classes on the anchor itself -
+                                                 see ErrorScreen's note. -->
+                                            <a
+                                                :href="toUrl(item.href)"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                :class="[
+                                                    buttonClasses({
+                                                        variant: 'ghost',
+                                                        size: 'icon',
+                                                    }),
+                                                    'group h-9 w-9 cursor-pointer',
+                                                ]"
                                             >
-                                                <a
-                                                    :href="toUrl(item.href)"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    <span class="sr-only">{{
-                                                        item.title
-                                                    }}</span>
-                                                    <component
-                                                        :is="item.icon"
-                                                        class="size-5 opacity-80 group-hover:opacity-100"
-                                                    />
-                                                </a>
-                                            </Button>
+                                                <span class="sr-only">{{
+                                                    item.title
+                                                }}</span>
+                                                <component
+                                                    :is="item.icon"
+                                                    class="size-5 opacity-80 group-hover:opacity-100"
+                                                />
+                                            </a>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <p>{{ item.title }}</p>

@@ -19,8 +19,8 @@
  */
 import { useForm } from '@inertiajs/vue3';
 import { Bug, Lightbulb } from '@lucide/vue';
+import { PkButton as Button } from '@panelkit/ui';
 import { computed, ref, watch } from 'vue';
-import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,

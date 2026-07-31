@@ -41,6 +41,7 @@ import {
     X,
 } from '@lucide/vue';
 import { PkSkeleton } from '@panelkit/ui';
+import { PkButton as Button } from '@panelkit/ui';
 import {
     computed,
     nextTick,
@@ -50,7 +51,6 @@ import {
     useTemplateRef,
     watch,
 } from 'vue';
-import { Button } from '@/components/ui/button';
 
 interface Turn {
     role: 'you' | 'assistant';

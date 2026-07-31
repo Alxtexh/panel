@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { PkButton as Button } from '@panelkit/ui';
 import InputError from '@/components/InputError.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
 import TurnstileField from '@/components/TurnstileField.vue';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

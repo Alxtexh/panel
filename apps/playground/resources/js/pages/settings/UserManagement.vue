@@ -36,6 +36,7 @@ import {
     usePage,
 } from '@inertiajs/vue3';
 import { Plus, ShieldAlert, Trash2, TriangleAlert } from '@lucide/vue';
+import type { RecordActionGroup, RecordActionItem } from '@panelkit/ui';
 import {
     BulkActions,
     DataTable,
@@ -44,9 +45,8 @@ import {
     SelectionBar,
     PkModal,
 } from '@panelkit/ui';
-import type { RecordActionGroup, RecordActionItem } from '@panelkit/ui';
+import { PkButton as Button } from '@panelkit/ui';
 import { computed, ref, watch } from 'vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 // Generated from the routes, so a rename breaks the build rather than leaving
 // these tabs pointing at a 404.

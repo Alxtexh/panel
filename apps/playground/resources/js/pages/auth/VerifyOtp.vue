@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Form, Link } from '@inertiajs/vue3';
 import { ThemeToggle } from '@panelkit/ui';
+import { PkButton as Button } from '@panelkit/ui';
 import { computed, nextTick, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import TurnstileField from '@/components/TurnstileField.vue';
@@ -27,7 +28,6 @@ import TurnstileField from '@/components/TurnstileField.vue';
  * six digits has finished; making them find a button is asking them to confirm
  * something they already did.
  */
-import { Button } from '@/components/ui/button';
 
 const props = withDefaults(
     defineProps<{

@@ -19,8 +19,8 @@
  * tells an attacker what they are missing.
  */
 import { Head, Link, router } from '@inertiajs/vue3';
+import { PkButton as Button, buttonClasses } from '@panelkit/ui';
 import { computed } from 'vue';
-import { Button } from '@/components/ui/button';
 import ErrorArt from './ErrorArt.vue';
 
 const props = withDefaults(
@@ -95,9 +95,16 @@ function goBack() {
 
         <!-- The way out is the loudest thing here, on purpose. -->
         <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button as-child>
-                <Link :href="homeHref">{{ homeLabel }}</Link>
-            </Button>
+            <!--
+                A `<Link>` WEARING BUTTON CLASSES, not a Button wrapping one.
+                `as-child` slot-merging is not something PkButton does, so the
+                pattern that used to render an <a> INSIDE a <button> - two
+                interactive elements where a keyboard user expects one - is
+                now the classes handed to the link's own element.
+            -->
+            <Link :href="homeHref" :class="buttonClasses()">{{
+                homeLabel
+            }}</Link>
 
             <Button v-if="canGoBack" variant="outline" @click="goBack"
                 >Go back</Button

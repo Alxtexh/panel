@@ -27,8 +27,8 @@ import { Plus, ShieldAlert, Trash2, TriangleAlert } from '@lucide/vue';
 import { PkModal } from '@panelkit/ui';
 // Generated from the routes, so renaming one breaks the build rather than
 // leaving this screen posting at a 404 nothing reports.
+import { PkButton as Button } from '@panelkit/ui';
 import { computed, ref, watch } from 'vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import roleRoutes from '@/routes/settings/roles';
 

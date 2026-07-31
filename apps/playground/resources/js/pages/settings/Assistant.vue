@@ -8,10 +8,10 @@
  * blank on an unrelated visit changes nothing because blank never submits.
  */
 import { Head, useForm } from '@inertiajs/vue3';
+import { PkButton as Button } from '@panelkit/ui';
 import { toast } from 'vue-sonner';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import assistantRoutes from '@/routes/assistant-settings';
