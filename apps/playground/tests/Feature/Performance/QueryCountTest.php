@@ -9,6 +9,7 @@ use App\Models\ClientSession;
 use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
+use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -102,23 +103,174 @@ final class QueryCountTest extends TestCase
     /**
      * And the same for every registered resource, so a NEW resource is covered
      * without editing this file - the same reasoning as the isolation matrix.
+     *
+     * MEASURING A LIST OF NOTHING PROVES NOTHING, which is the trap this test
+     * fell into and the reason for the second assertion below. An N+1 costs one
+     * extra query PER ROW, so on a list of one row it costs one extra query at
+     * `perPage=5` and one at `perPage=25` - identical counts, test green, N+1
+     * present. On a list of zero rows, or a URL that 404s, it costs nothing at
+     * either size and the comparison is between two numbers that were never
+     * about the resource at all.
+     *
+     * This enumerated twelve resources and genuinely exercised two. The rest
+     * returned one row, no rows, or 404 - including `tickets`, the newest and
+     * most join-heavy list in the panel - and the file reported that every
+     * registered resource was covered.
+     *
+     * SO THE UNMEASURED ONES ARE NAMED. A resource this test cannot put rows in
+     * front of is not a pass and must not read like one; it is listed in
+     * `UNMEASURED` with the reason, and anything that falls out of measurement
+     * later fails here by name rather than going quiet. The list is meant to
+     * shrink.
      */
     public function test_no_registered_resource_queries_per_row(): void
     {
         $this->makeClients(30);
+        $this->makeTickets(30);
 
         $failures = [];
+        $unmeasured = [];
 
         foreach (array_keys(app(PanelManager::class)->resources()) as $resource) {
+            $rows = $this->rowsRendered("/{$resource}?perPage=25");
+
+            if ($rows < self::ROWS_TO_MEAN_ANYTHING) {
+                $unmeasured[] = $resource;
+
+                continue;
+            }
+
             $small = $this->countQueries(fn () => $this->get("/{$resource}?perPage=5"));
             $large = $this->countQueries(fn () => $this->get("/{$resource}?perPage=25"));
 
-            if ($large > $small) {
+            $grew = $large > $small;
+
+            if ($grew && ! array_key_exists($resource, self::ACCEPTED_PER_ROW)) {
                 $failures[] = "[{$resource}] cost {$small} queries at 5 rows and {$large} at 25.";
+            }
+
+            /*
+             * AN EXCEPTION THAT EXPIRES BY ITSELF. If a listed resource stops
+             * growing, the entry is stale and this says so - otherwise the list
+             * becomes a place where fixed problems go on being described as
+             * problems, and nobody trusts it enough to shorten it.
+             */
+            if (! $grew && array_key_exists($resource, self::ACCEPTED_PER_ROW)) {
+                $failures[] = "[{$resource}] no longer queries per row. "
+                    .'Remove it from ACCEPTED_PER_ROW.';
             }
         }
 
         $this->assertSame([], $failures, "\n".implode("\n", $failures)."\n");
+
+        sort($unmeasured);
+        $expected = self::UNMEASURED;
+        sort($expected);
+
+        $this->assertSame(
+            $expected,
+            $unmeasured,
+            "\nThis test only proves something about a list it can actually fill.\n"
+            .'Resources it could not fill this run: '.(implode(', ', $unmeasured) ?: '(none)')."\n"
+            .'Declared as unmeasurable in UNMEASURED: '.implode(', ', $expected)."\n"
+            ."Seed the resource so it is measured, or add it to UNMEASURED with the reason.\n",
+        );
+    }
+
+    /**
+     * A list has to be long enough for a per-row cost to show up as a
+     * DIFFERENCE between two page sizes. Five is the smaller page this test
+     * requests, so anything at or above it separates a join from a loop.
+     */
+    private const ROWS_TO_MEAN_ANYTHING = 5;
+
+    /**
+     * Lists that still cost something per row, with the cause and the reason it
+     * is tolerated for now.
+     *
+     * MEASURED, NOT ASSUMED. Each entry was found by this test, traced to a
+     * specific query, and left in place deliberately - which is a different
+     * thing from an N+1 nobody has noticed, and it is written here so it keeps
+     * being a decision rather than becoming the status quo.
+     *
+     * @var array<string, string>
+     */
+    private const ACCEPTED_PER_ROW = [
+        /*
+         * One `grants_all` existence check per person listed, and only for a
+         * viewer who may impersonate.
+         *
+         * The "Impersonate" entry asks whether the target holds an ability the
+         * viewer does not, which needs that person's roles. `grantsEverything()`
+         * memoises per User instance - right for one person asked about many
+         * times, useless for a page of many people asked about once each.
+         *
+         * NOT BATCHED YET, on purpose. Reading the eager-loaded `roles`
+         * relation instead would mean trusting a relation loaded outside the
+         * team context Spatie scopes it by, and hand-writing that scoping here
+         * would put a second copy of an authorisation predicate in a
+         * performance fix. A wrong answer there is a permissions bug, not a
+         * slow page, so this stays a query until it can be batched through the
+         * same code path that answers it now.
+         */
+        'users' => 'grants_all is checked once per listed person for an impersonating viewer',
+    ];
+
+    /**
+     * Resources this test cannot currently put rows in front of, and why.
+     *
+     * NOT AN EXCUSE LIST. Every name here is a resource whose list is
+     * unguarded against N+1, written down so that is a known fact rather than
+     * an assumption. The four panel-mounted ones are the honest kind: they
+     * belong to other panels and 404 at the admin panel's root, so this test
+     * is asking for a URL that does not exist rather than measuring a screen.
+     *
+     * @var list<string>
+     */
+    private const UNMEASURED = [
+        // Served by other panels - these URLs 404 under the admin panel.
+        'sessions',
+        'tenants',
+        'reseller-plans',
+        'my-tickets',
+
+        // No fixture in this file yet. `users` left this list when the ticket
+        // fixture began creating people - which is the list working as intended.
+        'announcements',
+        'plans',
+        'routers',
+        'editable-plans',
+    ];
+
+    /**
+     * THE TICKET QUEUE, WITH ENOUGH ROWS TO MEAN SOMETHING.
+     *
+     * The list joins two rows of `users` per ticket - who opened it and who it
+     * is assigned to - so it is precisely the shape that becomes two queries
+     * per row the moment somebody writes `$row->opener->name` instead of
+     * selecting through the join. It renders the names, so the temptation is
+     * always there.
+     *
+     * DISTINCT PEOPLE PER TICKET, not one shared opener. Fifty tickets opened
+     * by the same person would let a per-row lookup be answered from Eloquent's
+     * identity map after the first, and the count would come out flat on a list
+     * that queries per row against real data.
+     */
+    public function test_the_tickets_list_does_not_query_per_row(): void
+    {
+        $this->makeTickets(5);
+        $small = $this->countQueries(fn () => $this->get('/tickets?perPage=50'));
+
+        $this->makeTickets(45);
+        $large = $this->countQueries(fn () => $this->get('/tickets?perPage=50'));
+
+        $this->assertSame(
+            $small,
+            $large,
+            "The ticket queue cost {$small} queries for 5 tickets and {$large} for 50. "
+            .'The opener and assignee names come from a join; a count that grows '
+            .'with rows means something is loading them per ticket.',
+        );
     }
 
     /**
@@ -219,6 +371,44 @@ final class QueryCountTest extends TestCase
         DB::disableQueryLog();
 
         return $count;
+    }
+
+    /**
+     * How many rows a list actually put on the page.
+     *
+     * The list ships its rows as `records`; a 404, a redirect or an empty
+     * table all come back as zero, which is the point - each of those is a
+     * measurement that did not happen.
+     */
+    private function rowsRendered(string $url): int
+    {
+        $response = $this->get($url);
+
+        if ($response->status() !== 200) {
+            return 0;
+        }
+
+        $records = $response->viewData('page')['props']['records'] ?? null;
+
+        return is_array($records) ? count($records) : 0;
+    }
+
+    /** Tickets, each opened by and assigned to a different person. */
+    private function makeTickets(int $count): void
+    {
+        for ($i = 0; $i < $count; $i++) {
+            $opener = User::factory()->create(['tenant_id' => $this->tenant->id]);
+            $assignee = User::factory()->create(['tenant_id' => $this->tenant->id]);
+
+            Ticket::query()->forceCreate([
+                'tenant_id' => $this->tenant->id,
+                'opened_by' => $opener->id,
+                'assigned_to' => $assignee->id,
+                'subject' => 'Ticket '.uniqid('t', true),
+                'status' => Ticket::OPEN,
+                'priority' => 'normal',
+            ]);
+        }
     }
 
     /** @return list<Client> */

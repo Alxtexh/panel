@@ -71,6 +71,9 @@ final class ListQuery
 
     private ?Closure $transform = null;
 
+    /** @var Closure(list<array<string, mixed>>): void|null */
+    private ?Closure $prepareRows = null;
+
     /**
      * The declared record actions, for per-row availability.
      *
@@ -308,7 +311,7 @@ final class ListQuery
     }
 
     /**
-     * @param  list<\PanelKit\Panel\Actions\RecordAction|\PanelKit\Panel\Actions\ActionGroup>  $actions
+     * @param  list<RecordAction|ActionGroup>  $actions
      */
     /**
      * Read this table's state from `?{namespace}[sort]=…` instead of `?sort=…`.
@@ -319,7 +322,7 @@ final class ListQuery
     public function within(string $namespace): self
     {
         if (preg_match('/^[a-z][a-z0-9_]*$/', $namespace) !== 1) {
-            throw new \InvalidArgumentException("[{$namespace}] is not a valid table namespace.");
+            throw new InvalidArgumentException("[{$namespace}] is not a valid table namespace.");
         }
 
         $this->namespace = $namespace;
@@ -402,6 +405,23 @@ final class ListQuery
             return $rows;
         }
 
+        /*
+         * ONE LOOK AT THE WHOLE PAGE BEFORE ANY ROW IS ASKED ABOUT.
+         *
+         * An action's `visible()` sees one row and nothing else, so a predicate
+         * that needs the record - not the row, the RECORD - has no choice but to
+         * load it, and it does that once per row. That is an N+1 that no column
+         * declares and no query log attributes to the list: it is spent deciding
+         * which menu entries to draw.
+         *
+         * This hook is the batch point that was missing. It runs once with every
+         * row on the page, which is where a predicate's dependencies can be
+         * fetched in a single query and held for the per-row pass below.
+         */
+        if ($this->prepareRows !== null) {
+            ($this->prepareRows)($rows);
+        }
+
         return array_map(function (array $row): array {
             $resolved = $this->actionsFor($row);
 
@@ -414,6 +434,19 @@ final class ListQuery
     public function transform(Closure $transform): self
     {
         $this->transform = $transform;
+
+        return $this;
+    }
+
+    /**
+     * Run `$prepare` once with the whole page of rows, before per-row action
+     * visibility is resolved.
+     *
+     * @param  Closure(list<array<string, mixed>>): void  $prepare
+     */
+    public function prepareRows(Closure $prepare): self
+    {
+        $this->prepareRows = $prepare;
 
         return $this;
     }

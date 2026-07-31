@@ -87,6 +87,26 @@ final class UserResource extends Resource
 
     public static function table(Table $table): Table
     {
+        /**
+         * The page's people, filled by `prepareRows` and read by `visible`.
+         *
+         * Declared here so both closures share one array by reference: the
+         * preparer writes it once per page, the predicate reads it once per row.
+         *
+         * @var array<int, User>
+         */
+        $targets = [];
+
+        /*
+         * ONE OF THESE FOR THE PAGE, not one per row.
+         *
+         * `app()` inside the predicate built a fresh object for every person
+         * listed, which threw away the ability answers it had just worked out -
+         * so the actor's own "may I impersonate at all" was re-asked, as a
+         * query, once per row. Resolved here it is asked once.
+         */
+        $impersonation = app(Impersonation::class);
+
         return $table
             /*
              * NO ROLE FILTER FOR NOW. Filtering a many-to-many needs an EXISTS
@@ -244,6 +264,32 @@ final class UserResource extends Resource
              * It is presentation only: hiding the entry is a courtesy, and the
              * controller refuses regardless (§9 item 3).
              */
+            /*
+             * THE WHOLE PAGE'S PEOPLE, IN ONE QUERY.
+             *
+             * `Impersonation::allows()` needs the target as a record - it
+             * compares abilities, and abilities live on roles, not on a row of
+             * the list. Asking for that record inside `visible()` meant one
+             * SELECT per row plus the permission read behind it, so the users
+             * list cost roughly two extra queries for every person on it and
+             * grew with the page size. Nothing named it: no column asked for a
+             * relation, so no eager load was missing, and the queries appeared
+             * in the log with no clue which feature spent them.
+             *
+             * `roles` COMES WITH THEM, because the ability comparison walks the
+             * registry and would otherwise fetch each person's roles again on
+             * the first ability it checks.
+             */
+            ->prepareRows(function (array $rows) use (&$targets): void {
+                $ids = array_filter(array_map(
+                    static fn (array $row): int => (int) ($row['id'] ?? 0),
+                    $rows,
+                ));
+
+                $targets = $ids === []
+                    ? []
+                    : User::query()->with('roles')->findMany($ids)->keyBy('id')->all();
+            })
             ->recordActions([
                 /*
                  * VIEW AND EDIT WERE MISSING, and that was a real gap rather
@@ -271,13 +317,20 @@ final class UserResource extends Resource
                     ->color('warning')
                     ->authorize('view')
                     ->confirm('Everything you do next is recorded as this person. Continue?')
-                    ->visible(function (array $row): bool {
+                    /*
+                     * THE PAGE'S PEOPLE ARE ALREADY LOADED - see `prepareRows`
+                     * above. This asked the database for the target one row at a
+                     * time, which is the N+1 that hid the longest in this
+                     * codebase: it belongs to no column, appears in no eager
+                     * load, and is spent deciding which menu entries to draw.
+                     */
+                    ->visible(function (array $row) use (&$targets, $impersonation): bool {
                         $actor = auth()->user();
-                        $target = $actor === null ? null : User::query()->find($row['id'] ?? null);
+                        $target = $targets[(int) ($row['id'] ?? 0)] ?? null;
 
                         return $actor !== null
                             && $target !== null
-                            && app(Impersonation::class)->allows($actor, $target);
+                            && $impersonation->allows($actor, $target);
                     })
                     /*
                      * THE ACTION ENDPOINT DOES THE SWAP ITSELF rather than
