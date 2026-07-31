@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
+use App\Models\ConnectedAccount;
+use App\Support\SocialProviders;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
@@ -30,6 +32,27 @@ class SecurityController extends Controller
              * beside the password and two-factor controls they will use next.
              */
             'devices' => DeviceController::forUser($request),
+
+            /*
+             * WHICH PROVIDERS COULD BE ATTACHED, and which already are. Both
+             * are needed: the screen offers what is missing and lists what is
+             * there, and sending only the second would leave nothing to
+             * connect from.
+             */
+            'socialProviders' => SocialProviders::enabled(),
+            'connectedAccounts' => ConnectedAccount::query()
+                ->where('user_id', $request->user()?->getKey())
+                ->orderBy('provider')
+                ->get()
+                ->map(static fn (ConnectedAccount $a): array => [
+                    'id' => $a->id,
+                    'provider' => $a->provider,
+                    'label' => SocialProviders::label($a->provider),
+                    'email' => $a->email,
+                    'nickname' => $a->nickname,
+                    'lastUsedAt' => $a->last_used_at?->toIso8601String(),
+                ])
+                ->all(),
             'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
             'canManagePasskeys' => Features::canManagePasskeys(),
             'passkeys' => Features::canManagePasskeys()

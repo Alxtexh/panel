@@ -51,4 +51,28 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Sign-in providers
+    |--------------------------------------------------------------------------
+    |
+    | CREDENTIALS ARE THE SWITCH. A provider with no client id is not offered
+    | on the sign-in screen at all - see `App\Support\SocialProviders` - so
+    | there is never a button that cannot work. Leave these unset to ship
+    | without social sign-in.
+    |
+    */
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
+
+    'github' => [
+        'client_id' => env('GITHUB_CLIENT_ID'),
+        'client_secret' => env('GITHUB_CLIENT_SECRET'),
+        'redirect' => env('GITHUB_REDIRECT_URI', '/auth/github/callback'),
+    ],
+
 ];

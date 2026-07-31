@@ -3,6 +3,7 @@ import { Form, Head, router } from '@inertiajs/vue3';
 // Generated from the routes - a rename breaks the build rather than leaving
 // this button pointed at a 404.
 import { PkButton as Button } from '@panelkit/ui';
+import { computed } from 'vue';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -15,6 +16,15 @@ import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
 import deviceRoutes from '@/routes/settings/devices';
 
+interface ConnectedAccountRow {
+    id: number;
+    provider: string;
+    label: string;
+    email: string | null;
+    nickname: string | null;
+    lastUsedAt: string | null;
+}
+
 interface Device {
     id: string;
     current: boolean;
@@ -25,12 +35,29 @@ interface Device {
 }
 
 type Props = {
+    /** Provider key => human name. Absent or empty when none are configured. */
+    socialProviders?: Record<string, string>;
+    connectedAccounts?: ConnectedAccountRow[];
     passwordRules: string;
     devices: Device[];
 } & ManagePasskeysProps &
     ManageTwoFactorProps;
 
 const props = defineProps<Props>();
+
+/** Providers configured but not yet attached to this account. */
+const unconnected = computed(() =>
+    Object.entries(props.socialProviders ?? {}).filter(
+        ([key]) =>
+            !(props.connectedAccounts ?? []).some((a) => a.provider === key),
+    ),
+);
+
+function disconnect(id: number) {
+    router.delete(`/settings/connected-accounts/${id}`, {
+        preserveScroll: true,
+    });
+}
 
 /**
  * Signing out deletes the session row, which is what makes it immediate.
@@ -153,6 +180,67 @@ defineOptions({
         somebody reaches for next.
     -->
     <div class="space-y-6">
+        <!--
+            CONNECTED ACCOUNTS SIT BESIDE THE DEVICE LIST, for the same reason
+            that list is here: "what else can get into my account" is one
+            worry, and splitting it across two screens means somebody audits
+            half of it.
+        -->
+        <template v-if="Object.keys(props.socialProviders ?? {}).length > 0">
+            <Heading
+                title="Connected accounts"
+                description="Sign in with a provider instead of typing your password. Removing one does not close any session it opened."
+            />
+
+            <ul
+                v-if="(props.connectedAccounts ?? []).length > 0"
+                class="divide-y rounded-lg border"
+            >
+                <li
+                    v-for="account in props.connectedAccounts"
+                    :key="account.id"
+                    class="flex items-center gap-3 p-3"
+                >
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium">{{ account.label }}</p>
+                        <p class="text-xs text-muted-foreground">
+                            {{
+                                account.email ?? account.nickname ?? 'Connected'
+                            }}
+                            <template v-if="account.lastUsedAt">
+                                · last used
+                                {{
+                                    new Date(
+                                        account.lastUsedAt,
+                                    ).toLocaleDateString()
+                                }}
+                            </template>
+                        </p>
+                    </div>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        @click="disconnect(account.id)"
+                    >
+                        Disconnect
+                    </Button>
+                </li>
+            </ul>
+
+            <div v-if="unconnected.length > 0" class="flex flex-wrap gap-2">
+                <!-- A real navigation: the provider redirect leaves the app. -->
+                <a
+                    v-for="[key, label] in unconnected"
+                    :key="key"
+                    :href="`/auth/${key}/redirect`"
+                    class="inline-flex h-9 items-center justify-center gap-2 rounded-md border bg-background px-3 text-sm font-medium transition-colors hover:bg-accent"
+                >
+                    Connect {{ label }}
+                </a>
+            </div>
+        </template>
+
         <Heading
             title="Signed-in devices"
             description="Every browser currently signed in to this account. Sign out anything you do not recognise."

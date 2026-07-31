@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
 import { PkButton as Button } from '@panelkit/ui';
+import { computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -21,10 +22,14 @@ defineOptions({
     },
 });
 
-defineProps<{
+const props = defineProps<{
     status?: string;
     canResetPassword: boolean;
+    /** Provider key => human name. Empty when none are configured. */
+    socialProviders?: Record<string, string>;
 }>();
+
+const providers = computed(() => Object.entries(props.socialProviders ?? {}));
 </script>
 
 <template>
@@ -103,6 +108,45 @@ defineProps<{
                 <Spinner v-if="processing" />
                 Log in
             </Button>
+        </div>
+
+        <!--
+            THE PROVIDER BUTTONS SIT AFTER THE PASSWORD FORM, not before it.
+            Putting them first pushes the field most people use below a row of
+            alternatives, and an operator signing in to a work panel is
+            overwhelmingly using their password.
+
+            NOTHING RENDERS WHEN NONE ARE CONFIGURED - not a divider, not an
+            empty row. An installation without social sign-in should look like
+            one that never offered it.
+        -->
+        <div v-if="providers.length > 0" class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+                <span class="h-px flex-1 bg-border" />
+                <span class="text-xs text-muted-foreground"
+                    >or continue with</span
+                >
+                <span class="h-px flex-1 bg-border" />
+            </div>
+
+            <div
+                class="grid gap-2"
+                :class="providers.length > 1 ? 'sm:grid-cols-2' : ''"
+            >
+                <!--
+                    A LINK, NOT A FETCH. The provider redirect leaves the app
+                    entirely, so this has to be a real navigation; an XHR would
+                    be answered with an opaque redirect the page cannot follow.
+                -->
+                <a
+                    v-for="[key, label] in providers"
+                    :key="key"
+                    :href="`/auth/${key}/redirect`"
+                    class="inline-flex h-10 items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium transition-colors hover:bg-accent"
+                >
+                    {{ label }}
+                </a>
+            </div>
         </div>
 
         <div class="text-center text-sm text-muted-foreground">

@@ -6,6 +6,7 @@ use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\OtpPasswordResetController;
+use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeedbackController;
@@ -66,6 +67,30 @@ Route::get('/', LandingController::class)->name('home');
 | enumerate addresses by timing. The limits are per minute and deliberately low -
 | a person asking twice is normal, a person asking twenty times is not.
 */
+/*
+| SIGNING IN WITH A PROVIDER, AND ATTACHING ONE.
+|
+| DELIBERATELY NOT INSIDE THE `guest` GROUP. The same two URLs serve both
+| purposes - a signed-out person signing in, and a signed-in person connecting
+| an account from their security settings - and `guest` would bounce the second
+| one away from the screen that offers it. Which of the two is happening is
+| decided from the session, in the controller, not from where the route sits.
+|
+| THROTTLED, because a callback is an authentication endpoint: it takes a code
+| from a query string and can end with somebody signed in. The limit is per
+| minute and generous enough that a person retrying after denying consent never
+| meets it.
+*/
+Route::middleware('throttle:10,1')->group(function (): void {
+    Route::get('auth/{provider}/redirect', [SocialLoginController::class, 'redirect'])
+        ->whereIn('provider', ['google', 'github'])
+        ->name('social.redirect');
+
+    Route::get('auth/{provider}/callback', [SocialLoginController::class, 'callback'])
+        ->whereIn('provider', ['google', 'github'])
+        ->name('social.callback');
+});
+
 Route::middleware('guest')->group(function (): void {
     Route::post('auth/otp/send', [OtpPasswordResetController::class, 'send'])
         ->middleware('throttle:5,1')->name('otp.send');
@@ -514,6 +539,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
      | meant client connections, which is a different thing wearing the same
      | word.
      */
+    Route::delete('settings/connected-accounts/{connectedAccount}', [SocialLoginController::class, 'destroy'])
+        ->name('social.destroy');
+
     Route::delete('settings/devices/{id}', [DeviceController::class, 'destroy'])
         ->name('settings.devices.destroy');
 
