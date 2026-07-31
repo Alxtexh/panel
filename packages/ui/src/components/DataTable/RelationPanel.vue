@@ -24,6 +24,8 @@ const props = withDefaults(
         loading?: boolean
         /** Present when there is another page. */
         nextCursor?: string | null
+        /** True once the retained-row ceiling stopped the appending. */
+        capped?: boolean
         /** True once at least one page has been requested. */
         loaded?: boolean
         emptyText?: string
@@ -31,6 +33,7 @@ const props = withDefaults(
     {
         loading: false,
         nextCursor: null,
+        capped: false,
         loaded: false,
         emptyText: 'Nothing here yet.',
     },
@@ -130,5 +133,17 @@ function format(column: SchemaColumn, value: unknown): string {
                 {{ loading ? 'Loading…' : 'Load more' }}
             </button>
         </div>
+
+        <!--
+            THE CEILING, SAID OUT LOUD. This panel appends every page it
+            fetches, so an unattended "Load more" grows the DOM without limit -
+            the one unbounded list left after the tables were paginated. It
+            stops at a cap and says why, rather than degrading the record page
+            for somebody who kept clicking. A relation this long has a real
+            home: its own screen, with tabs, filters and paging.
+        -->
+        <p v-else-if="capped" class="text-muted-foreground border-t px-3 py-2 text-center text-xs">
+            Showing the first {{ rows.length }}. Open the full list to search or filter the rest.
+        </p>
     </div>
 </template>

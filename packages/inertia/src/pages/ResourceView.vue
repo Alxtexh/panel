@@ -70,7 +70,19 @@ interface RelationState {
     cursor: string | null
     loading: boolean
     loaded: boolean
+    /** True once the ceiling below stopped the appending. */
+    capped: boolean
 }
+
+/**
+ * How many related rows this panel will hold at once - Part G.7.
+ *
+ * A related list appends every page it fetches, so without a ceiling the DOM
+ * grows for as long as somebody keeps clicking. Twelve pages of twenty-five
+ * is far past what anybody reads inside a record page, and the full list has
+ * its own screen for the cases that need searching.
+ */
+const MAX_RELATION_ROWS = 300
 
 const relations = computed(() => props.schema.relations ?? [])
 const activeRelation = ref<string | null>(relations.value[0]?.key ?? null)
@@ -81,7 +93,7 @@ function relationState(key: string): RelationState {
     if (!state.value[key]) {
         state.value = {
             ...state.value,
-            [key]: { rows: [], cursor: null, loading: false, loaded: false },
+            [key]: { rows: [], cursor: null, loading: false, loaded: false, capped: false },
         }
     }
 
@@ -113,8 +125,20 @@ async function loadRelation(key: string, cursor: string | null = null) {
 
         // Appended, not replaced: "load more" continues the list rather than
         // jumping to a page, which is what a keyset cursor expresses.
-        current.rows = cursor ? [...current.rows, ...data.records] : data.records
-        current.cursor = data.nextCursor ?? null
+        const appended = cursor ? [...current.rows, ...data.records] : data.records
+
+        /*
+         * BOUNDED - Part G.7. Appending forever is the one unbounded list
+         * left after the tables were paginated: a relation with 40,000 rows
+         * and somebody leaning on "Load more" puts all of them in the DOM,
+         * and the record page they are reading gets slower with every click.
+         * The panel keeps a ceiling's worth and says so; a relation that long
+         * has a real home now - its own nested screen, with tabs, filters and
+         * paging - which is where searching it belongs anyway.
+         */
+        current.rows = appended.slice(0, MAX_RELATION_ROWS)
+        current.capped = appended.length > MAX_RELATION_ROWS
+        current.cursor = current.capped ? null : (data.nextCursor ?? null)
         current.loaded = true
     } catch {
         current.loaded = true
@@ -258,6 +282,7 @@ function destroy() {
                     :loading="relationState(relation.key).loading"
                     :loaded="relationState(relation.key).loaded"
                     :next-cursor="relationState(relation.key).cursor"
+                    :capped="relationState(relation.key).capped"
                     :empty-text="`No ${relation.label.toLowerCase()} for this ${schema.label.toLowerCase()}.`"
                     @load="(cursor) => loadRelation(relation.key, cursor)"
                 />
