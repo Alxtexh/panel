@@ -276,9 +276,13 @@ final class UserResource extends Resource
              * relation, so no eager load was missing, and the queries appeared
              * in the log with no clue which feature spent them.
              *
-             * `roles` COMES WITH THEM, because the ability comparison walks the
-             * registry and would otherwise fetch each person's roles again on
-             * the first ability it checks.
+             * AND THEIR "DOES THIS PERSON HOLD EVERYTHING" ANSWER COMES WITH
+             * THEM. That check is memoised per User instance, which does nothing
+             * for a page of one-question-each people, so it cost a second query
+             * per row on top of the first. `primeGrantsEverything` answers it for
+             * the whole page under the team context the check itself uses - see
+             * the method, where the reason it is not a query written here is the
+             * point.
              */
             ->prepareRows(function (array $rows) use (&$targets): void {
                 $ids = array_filter(array_map(
@@ -286,9 +290,17 @@ final class UserResource extends Resource
                     $rows,
                 ));
 
-                $targets = $ids === []
-                    ? []
-                    : User::query()->with('roles')->findMany($ids)->keyBy('id')->all();
+                if ($ids === []) {
+                    $targets = [];
+
+                    return;
+                }
+
+                $people = User::query()->findMany($ids);
+
+                User::primeGrantsEverything($people);
+
+                $targets = $people->keyBy('id')->all();
             })
             ->recordActions([
                 /*

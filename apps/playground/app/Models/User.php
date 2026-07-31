@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -171,6 +172,67 @@ class User extends Authenticatable implements PasskeyUser
 
     /** Per-instance memo for grantsEverything(). */
     private ?bool $grantsEverything = null;
+
+    /**
+     * Answer `grantsEverything()` for a whole page of people at once.
+     *
+     * THE MEMO ABOVE IS PER INSTANCE, which is right for one person asked about
+     * many times and useless for many people asked about once each. A list that
+     * compares abilities per row - the users screen deciding where to offer
+     * "Impersonate" - therefore paid one EXISTS per person listed, and the cost
+     * grew with the page. The N+1 guard has now caught this same reasoning three
+     * times, twice on this method.
+     *
+     * THE RELATION IS THE ONE `grantsEverything()` WOULD HAVE USED, loaded under
+     * the team context `withPermissionsTeam()` sets. That is the whole reason
+     * this is safe to do at all, and why it is here rather than in a query
+     * written at the call site: Spatie scopes `roles` by the registrar's team id,
+     * so a relation loaded under the wrong team - or a hand-written join that
+     * reproduces the scoping approximately - answers a DIFFERENT question and
+     * gets it wrong in the direction that grants access. Same relation, same
+     * team, one query per tenant instead of one per person.
+     *
+     * GROUPED BY TENANT because the team id is per user. In a tenant-scoped list
+     * that is one group and one query; the grouping exists so this cannot be
+     * quietly wrong when somebody passes a mixed set.
+     *
+     * @param  iterable<mixed>  $users
+     */
+    public static function primeGrantsEverything(iterable $users): void
+    {
+        $people = collect($users)
+            ->filter(static fn ($u): bool => $u instanceof self)
+            ->filter(static fn (self $u): bool => $u->grantsEverything === null)
+            ->values();
+
+        if ($people->isEmpty()) {
+            return;
+        }
+
+        $registrar = app(PermissionRegistrar::class);
+        $previous = $registrar->getPermissionsTeamId();
+
+        try {
+            foreach ($people->groupBy('tenant_id') as $tenantId => $group) {
+                $registrar->setPermissionsTeamId($tenantId === '' ? null : $tenantId);
+
+                /*
+                 * `load`, not `loadMissing`: anything already on the models was
+                 * loaded under whatever team happened to be set at the time, and
+                 * an authorisation answer must not depend on that.
+                 */
+                $group = new EloquentCollection($group->values()->all());
+                $group->load('roles');
+
+                foreach ($group as $person) {
+                    $person->grantsEverything = $person->roles
+                        ->contains(static fn ($role): bool => (bool) $role->grants_all);
+                }
+            }
+        } finally {
+            $registrar->setPermissionsTeamId($previous);
+        }
+    }
 
     /**
      * The FIRST account in this organisation, which cannot be deleted.

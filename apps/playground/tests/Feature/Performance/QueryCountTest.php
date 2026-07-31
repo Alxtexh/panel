@@ -197,23 +197,18 @@ final class QueryCountTest extends TestCase
      */
     private const ACCEPTED_PER_ROW = [
         /*
-         * One `grants_all` existence check per person listed, and only for a
-         * viewer who may impersonate.
+         * EMPTY, AND THAT IS THE POINT. `users` lived here for one commit: the
+         * "Impersonate" entry asked whether each listed person holds an ability
+         * the viewer does not, and the answer needed that person's roles, so it
+         * cost one EXISTS per row.
          *
-         * The "Impersonate" entry asks whether the target holds an ability the
-         * viewer does not, which needs that person's roles. `grantsEverything()`
-         * memoises per User instance - right for one person asked about many
-         * times, useless for a page of many people asked about once each.
-         *
-         * NOT BATCHED YET, on purpose. Reading the eager-loaded `roles`
-         * relation instead would mean trusting a relation loaded outside the
-         * team context Spatie scopes it by, and hand-writing that scoping here
-         * would put a second copy of an authorisation predicate in a
-         * performance fix. A wrong answer there is a permissions bug, not a
-         * slow page, so this stays a query until it can be batched through the
-         * same code path that answers it now.
+         * It was batched by `User::primeGrantsEverything()`, which loads the
+         * page's roles under the same team context the check itself uses rather
+         * than by reproducing Spatie's scoping in a query written here - the
+         * distinction that kept it a performance fix instead of a permissions
+         * bug. The assertion below then failed because the entry had gone stale,
+         * which is exactly what it is for.
          */
-        'users' => 'grants_all is checked once per listed person for an impersonating viewer',
     ];
 
     /**
