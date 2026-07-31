@@ -43,6 +43,22 @@ final class Contrast
     }
 
     /**
+     * Whether this is a colour this class can measure at all.
+     *
+     * FOR CALLERS READING STORED SETTINGS, which is a different situation
+     * from the field that wrote them. `ColourField` validates on the way in,
+     * so anything arriving through a form is already hex - but `panel:doctor`
+     * reads a settings blob that may have been written by an import, an older
+     * release, or a `settings` key that means something else entirely. Asking
+     * first is the difference between skipping a value and dividing by a
+     * luminance computed from nonsense.
+     */
+    public static function isHex(string $value): bool
+    {
+        return preg_match('/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i', $value) === 1;
+    }
+
+    /**
      * Relative luminance per the WCAG 2 definition - linearised sRGB,
      * weighted by how much each channel contributes to perceived brightness.
      */

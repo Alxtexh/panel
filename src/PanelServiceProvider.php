@@ -157,6 +157,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\BenchmarkCommand::class,
             Commands\RefreshRollupsCommand::class,
             Commands\PruneExportsCommand::class,
+            Commands\DoctorAlertCommand::class,
             Commands\PruneTrashCommand::class,
             Commands\PruneUploadsCommand::class,
         ]);
