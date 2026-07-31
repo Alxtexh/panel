@@ -144,6 +144,25 @@ abstract class Resource
         return $prefix.'/'.static::key().($suffix === '' ? '' : '/'.ltrim($suffix, '/'));
     }
 
+    /**
+     * What this resource's screens may cost, in milliseconds - roadmap 7.6.
+     *
+     * NULL MEANS THE COMMAND'S DEFAULT, which is right for almost every
+     * resource: a generated list has one query shape, so one number describes
+     * them all. Override it where a screen is legitimately dearer - a table
+     * over a joined view, a summary that aggregates - and put the reason next
+     * to it, because a budget with no reasoning is a number the next person
+     * raises rather than investigates.
+     *
+     * RAISE IT DELIBERATELY OR NOT AT ALL. A budget that is never breached is
+     * not a budget, and the moment to decide whether a screen is allowed to
+     * cost more is the diff that made it cost more.
+     */
+    public static function budgetMs(): ?int
+    {
+        return null;
+    }
+
     /** Declarative definition. MUST NOT query. */
     abstract public static function table(Table $table): Table;
 

@@ -92,6 +92,85 @@ final class PortalGenerationTest extends TestCase
         $manager->registerResources([CollidingClientResource::class]);
     }
 
+    /**
+     * A GENERATED PORTAL SHIPS WITH ITS OWN PROOF - roadmap 7.7.
+     *
+     * Multi-panel scoping is the structural claim this package makes, and a
+     * claim proved by a test somebody has to go and find is a claim that
+     * quietly stops being true. `make:panel` writes the isolation matrix
+     * pointed at the new portal, so adding one adds its own evidence - and,
+     * more usefully, the day somebody adds a resource to that portal without
+     * a policy or without a tenant column, the portal's OWN test says so.
+     *
+     * THE GENERATED TEST MUST ENUMERATE, NOT LIST. A generated file containing
+     * a hand-written list of resources is correct on the day the portal was
+     * made and wrong from the first resource after it - the exact failure the
+     * isolation matrix exists to avoid - so that property is asserted here
+     * rather than trusted.
+     */
+    public function test_make_panel_writes_an_isolation_test_for_the_new_portal(): void
+    {
+        $provider = app_path('Providers/Panels/DisposablePanelProvider.php');
+        $test = base_path('tests/Feature/DisposablePanelIsolationTest.php');
+        $resources = app_path('Panel/Disposable');
+
+        try {
+            $this->artisan('make:panel', ['id' => 'disposable', '--path' => 'disposable'])
+                ->assertSuccessful();
+
+            $this->assertFileExists($test, 'A generated portal must arrive with its isolation test.');
+
+            $written = (string) file_get_contents($test);
+
+            $this->assertStringContainsString(
+                'resourcesFor',
+                $written,
+                'The generated test must ENUMERATE the registry, not name resources.',
+            );
+
+            $this->assertStringContainsString('has no policy', $written);
+            $this->assertStringContainsString('refuses_a_request_with_no_tenant', $written);
+
+            // It has to be valid PHP, not just plausible text.
+            $this->assertSame(
+                0,
+                $this->lint($test),
+                'The generated isolation test does not parse.',
+            );
+        } finally {
+            @unlink($provider);
+            @unlink($test);
+
+            if (is_dir($resources.'/Resources')) {
+                @rmdir($resources.'/Resources');
+                @rmdir($resources);
+            }
+
+            $this->removeProviderRegistration('DisposablePanelProvider');
+        }
+    }
+
+    private function lint(string $path): int
+    {
+        exec(escapeshellcmd(PHP_BINARY).' -l '.escapeshellarg($path).' 2>&1', $out, $code);
+
+        return $code;
+    }
+
+    /** `make:panel` registers the provider; this test must not leave it behind. */
+    private function removeProviderRegistration(string $class): void
+    {
+        $path = base_path('bootstrap/providers.php');
+
+        $contents = (string) file_get_contents($path);
+
+        file_put_contents($path, (string) preg_replace(
+            '/^.*'.preg_quote($class, '/').'::class,\n/m',
+            '',
+            $contents,
+        ));
+    }
+
     /** And the generated reseller resource has one of its own. */
     public function test_the_second_portals_resource_has_a_distinct_key(): void
     {

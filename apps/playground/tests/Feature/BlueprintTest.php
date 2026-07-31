@@ -8,6 +8,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use PanelKit\Panel\Alerts\Announcement;
+use PanelKit\Panel\Documents\DocumentKinds;
 use PanelKit\Panel\Support\Blueprint;
 use Tests\TestCase;
 
@@ -110,6 +112,63 @@ final class BlueprintTest extends TestCase
     }
 
     /** It tells the agent how to know it worked, which is the part they skip. */
+    /**
+     * WHAT OPERATORS OWN, GENERATED FROM THE REGISTRIES - roadmap 7.4.
+     *
+     * The variables are the part that matters. An agent asked to "add a
+     * receipt template matching our invoice" and given the wrong token list
+     * produces a document that renders perfectly with `@expiry` printed on
+     * it - the failure is silent, which is exactly why the vocabulary has to
+     * be generated rather than remembered.
+     */
+    public function test_it_names_every_document_kind_and_its_variables(): void
+    {
+        $markdown = Blueprint::markdown();
+
+        foreach (app(DocumentKinds::class)->all() as $kind) {
+            $this->assertStringContainsString(
+                $kind->id(),
+                $markdown,
+                "The blueprint does not mention the [{$kind->id()}] document kind.",
+            );
+
+            foreach (array_keys($kind->variables()) as $variable) {
+                $this->assertStringContainsString(
+                    $variable,
+                    $markdown,
+                    "The blueprint omits {$variable}, which templates for [{$kind->id()}] may use.",
+                );
+            }
+        }
+    }
+
+    /** The same for announcement copy, from the one declaration that feeds it. */
+    public function test_it_names_every_announcement_token(): void
+    {
+        $markdown = Blueprint::markdown();
+
+        foreach (array_keys(Announcement::variables()) as $token) {
+            $this->assertStringContainsString($token, $markdown);
+        }
+    }
+
+    /**
+     * AND WHAT THE PANEL WILL INTERRUPT SOMEBODY ABOUT, with its current
+     * setting rather than a description of one. An agent asked to "alert us
+     * about X" otherwise adds a channel; the useful answer is nearly always a
+     * threshold, because the channel already exists.
+     */
+    public function test_it_states_the_alert_rules_with_their_current_values(): void
+    {
+        config(['panel.ticketing.alert_priorities' => ['urgent', 'normal']]);
+
+        $markdown = Blueprint::markdown();
+
+        $this->assertStringContainsString('panel.ticketing.alert_priorities', $markdown);
+        $this->assertStringContainsString('`urgent`, `normal`', $markdown);
+        $this->assertStringContainsString('panel:doctor-alert', $markdown);
+    }
+
     public function test_it_says_how_to_verify(): void
     {
         $markdown = Blueprint::markdown();

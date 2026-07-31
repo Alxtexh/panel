@@ -43,11 +43,24 @@ final class DoctorAlertTest extends TestCase
     {
         parent::setUp();
 
-        // A disk of this test's own - see DoctorTest for why doctor must never
-        // read whatever backups happen to be on the machine.
-        Storage::fake('doctor-test');
+        /*
+         * DOCTOR MUST NOT READ THIS MACHINE'S BACKUP DESTINATION.
+         *
+         * It reports a destination whose newest snapshot has gone stale, which
+         * on a laptop is whatever is left from the last `backup:run`. Without
+         * this, every assertion here that doctor is QUIET starts failing three
+         * days after that - a suite going red because of the calendar, which
+         * is the worst kind of flake because the diff explains nothing.
+         *
+         * A DISK OF THIS FILE'S OWN rather than a fake of the configured one:
+         * spatie resolves the destination through its own registry, and only a
+         * name that exists nowhere else is guaranteed to hold nothing. It is
+         * NOT in the base TestCase, because the backup tests configure their
+         * own destination and a blanket override in setUp takes it away.
+         */
+        Storage::fake('doctor-has-no-backups');
+        config(['backup.backup.destination.disks' => ['doctor-has-no-backups']]);
         config([
-            'backup.backup.destination.disks' => ['doctor-test'],
             'services.telegram.token' => 'test-token',
             'services.telegram.chat_id' => '-100999',
         ]);

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Support;
 
 use Illuminate\Support\Facades\Artisan;
+use PanelKit\Panel\Alerts;
+use PanelKit\Panel\Documents;
 use PanelKit\Panel\PanelManager;
 
 /**
@@ -42,6 +44,7 @@ final class Blueprint
             self::recipes(),
             self::assistant(),
             self::inventory(),
+            self::operatorOwned(),
             self::commands(),
             self::verification(),
         ]))."\n";
@@ -392,6 +395,162 @@ final class Blueprint
 
         Ability names are derived from the key: `view_any_clients`, `update_clients`,
         `restore_clients`, `force_delete_clients`.
+        MD;
+    }
+
+    /**
+     * WHAT OPERATORS OWN, not what developers wrote - roadmap 7.4.
+     *
+     * Everything above this describes the code: resources, panels, recipes for
+     * adding one. That was enough while an agent's only job was "add a screen
+     * for a model". Once operators own document TEMPLATES, announcement COPY
+     * and alert RULES, an agent asked to "add a receipt template matching our
+     * invoice" is working with a vocabulary nothing tells it - and the failure
+     * is silent in the specific way this whole codebase is written against: an
+     * unknown variable is printed as written, so the receipt reads `@expiry`
+     * where a date belongs and renders perfectly.
+     *
+     * GENERATED FROM THE SAME REGISTRIES THE PANEL READS, which is the only
+     * reason this is worth doing at all. A hand-written list of variables is a
+     * list that drifts, and an agent writing against a drifted list produces
+     * something that looks right and prints wrong. Nobody else can generate
+     * this: it needs a registry of what exists, which the schema layer already
+     * is.
+     */
+    private static function operatorOwned(): string
+    {
+        $sections = array_filter([
+            self::documentVocabulary(),
+            self::announcementVocabulary(),
+            self::alertRules(),
+        ]);
+
+        if ($sections === []) {
+            return '';
+        }
+
+        return "## What operators configure\n\n"
+            ."These are edited in the panel, not in code. An agent asked to add or\n"
+            ."change one needs the vocabulary below - the variables are the part that\n"
+            ."fails silently, because an unrecognised token is printed as written\n"
+            ."rather than blanked.\n\n"
+            .implode("\n\n", $sections);
+    }
+
+    /**
+     * Every document kind and the variables its templates may use.
+     *
+     * THE VARIABLES ARE THE POINT. A kind's name an agent could guess; its
+     * variable list it cannot, and getting one wrong produces a document that
+     * renders with `@total` printed on it.
+     */
+    private static function documentVocabulary(): string
+    {
+        $kinds = app(Documents\DocumentKinds::class)->all();
+
+        if ($kinds === []) {
+            return '';
+        }
+
+        $rows = [];
+
+        foreach ($kinds as $kind) {
+            $variables = array_keys($kind->variables());
+
+            $rows[] = sprintf(
+                '| `%s` | %s | %s |',
+                $kind->id(),
+                $kind->label(),
+                $variables === [] ? '_none_' : '`'.implode('`, `', $variables).'`',
+            );
+        }
+
+        $table = implode("\n", $rows);
+
+        return <<<MD
+        ### Document templates
+
+        | Kind | Label | Variables a template may use |
+        | --- | --- | --- |
+        {$table}
+
+        A template is a row in `panel_document_templates` scoped to one tenant, edited
+        through the designer. Register a NEW kind by extending `DocumentKind` and
+        adding it to `DocumentKinds` from a service provider - registering under an
+        existing id REPLACES it, which is how an application teaches the package's
+        invoice about its own subscribers.
+
+        `panel:doctor` reports a template using a variable its kind does not declare,
+        and one whose accent colour fails contrast against white.
+        MD;
+    }
+
+    /** The tokens an announcement or a scheduled report may contain. */
+    private static function announcementVocabulary(): string
+    {
+        $variables = Alerts\Announcement::variables();
+
+        if ($variables === []) {
+            return '';
+        }
+
+        $rows = [];
+
+        foreach ($variables as $token => $meaning) {
+            $rows[] = sprintf('| `%s` | %s |', $token, $meaning);
+        }
+
+        $table = implode("\n", $rows);
+
+        return <<<MD
+        ### Announcement and report copy
+
+        | Token | Means |
+        | --- | --- |
+        {$table}
+
+        One declaration feeds three things: the chip strip in the composer, the
+        substitution at delivery, and `panel:doctor`'s check. Adding a token means
+        adding it to `Announcement::variables()` - anywhere else and two of the three
+        will not know about it.
+        MD;
+    }
+
+    /**
+     * When the panel decides to interrupt somebody, and where that is set.
+     *
+     * AN AGENT ASKED TO "ALERT US ABOUT X" WILL OTHERWISE ADD A CHANNEL. The
+     * useful answer is almost always a threshold in config, because the
+     * channel already exists and the hard part of alerting is deciding what
+     * is worth saying - see how narrowly each of these is set, and why.
+     */
+    private static function alertRules(): string
+    {
+        $ticketing = (array) config('panel.ticketing.alert_priorities', []);
+
+        $ticketRate = sprintf(
+            '%s an hour, %s a day',
+            (int) config('panel.ticketing.max_per_hour', 0) ?: 'unlimited',
+            (int) config('panel.ticketing.max_per_day', 0) ?: 'unlimited',
+        );
+
+        $priorities = $ticketing === [] ? '_not configured_' : '`'.implode('`, `', $ticketing).'`';
+
+        return <<<MD
+        ### When the panel interrupts somebody
+
+        | Rule | Where | Currently |
+        | --- | --- | --- |
+        | Which ticket priorities page the desk | `panel.ticketing.alert_priorities` | {$priorities} |
+        | How many tickets one person may open | `panel.ticketing.max_per_hour` / `max_per_day` | {$ticketRate} |
+        | Monitoring thresholds | Monitoring settings, per tenant | edited in the panel |
+        | Backup staleness | `BackupStatus`, 26 hours | fixed |
+        | Doctor's daily report | `panel:doctor-alert`, scheduled | changes only |
+
+        EVERY ONE OF THESE IS SET NARROWLY ON PURPOSE. A channel people mute is
+        worse than no channel - it keeps working and nobody reads it. Widen a
+        threshold deliberately; do not add a second channel because the first was
+        too quiet.
         MD;
     }
 

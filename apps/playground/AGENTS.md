@@ -80,6 +80,83 @@ Then: register a policy, check the columns it guessed, and add filters. The
 route, the navigation entry and the abilities already exist. Nothing needs
 adding to `routes/web.php`.
 
+### Group several resources under one sidebar entry
+
+Write a `Cluster` class and point each member's `$cluster` at it. The
+sidebar shows the cluster's label once; the members become a shared
+sub-navigation on every screen inside, permission-filtered per person.
+Use a cluster for facets of ONE subject; keep an ordinary `$group` for
+peers someone jumps between from anywhere.
+
+```php
+final class NetworkCluster extends Cluster
+{
+    protected static string $icon = 'router';
+}
+
+// on each member resource:
+protected static ?string $cluster = NetworkCluster::class;
+```
+
+### Add a one-record settings screen
+
+A `SingularResource` is a form and two functions - no list, no create,
+no hand-written controller. Declare the form exactly as a resource
+does, say where the one record's values come from and go to, list the
+class in `config('panel.singulars')`, and the screen mounts at
+`/{key}` with `PUT /{key}/current` as its save. Gate it with a
+panel-level ability from `config('panel.abilities')`.
+
+```php
+final class BillingSettingsResource extends SingularResource
+{
+    public static function form(Form $form): Form { /* fields */ }
+    public static function values(): array { /* current state */ }
+    public static function save(array $validated): void { /* persist */ }
+    public static function ability(): ?string { return 'manage_billing'; }
+}
+```
+
+### Nest a resource under another
+
+Declare `$parent` and the resource answers ONLY at
+`/clients/{id}/sessions` - the flat URL does not route, because the
+parent segment is the authorisation context: every request resolves
+the parent through its own tenant-scoped model, checks `view` on it,
+constrains the list to its rows, and stamps the foreign key on create
+from the URL, never from the form body. Use it when the child only
+makes sense inside one parent record; a relation manager remains the
+right tool for a glance on the parent's own page.
+
+```php
+final class ClientSessionResource extends Resource
+{
+    protected static string $model = ClientSession::class;
+    protected static ?string $parent = ClientResource::class;
+    // foreign key defaults to client_id; override with $parentColumn
+}
+```
+
+### Add markup to a screen you do not own
+
+A plugin can put a component at a NAMED position on an existing
+screen, instead of forking it. Positions come from `RenderHooks`; a
+typo is refused at registration rather than rendering nowhere. Scope
+it to resource keys, or leave it null for every screen.
+
+```php
+$context->render(
+    RenderHooks::LIST_BEFORE_TABLE,
+    'TrialNotice',                 // resolved by the APP's registry
+    ['daysLeft' => 3],
+    ['clients'],                   // this resource only
+);
+```
+
+The application decides what that name resolves to
+(`registerRenderHookComponent`), because a component name straight
+from the server would let a plugin mount anything in the bundle.
+
 ### Add a portal
 
 ```bash
@@ -88,6 +165,23 @@ php artisan make:panel reseller --path=reseller
 
 A provider, a resource directory and the routes. Use `--central` only for a
 portal that must see every organisation at once; it turns tenant scoping off.
+
+### Choose the right text field
+
+- `TextareaField` — plain text, no formatting.
+- `MarkdownField` — prose whose SOURCE you want stored: diffable in an
+  audit entry, readable in a database client, renderable to email, PDF
+  or plain text later.
+- `RichEditorField` — prose stored as sanitised HTML, when the stored
+  value IS the rendering.
+- `CodeField` — config and snippets: monospace, Tab indents, line
+  numbers, and `->language('json')` adds a server-side `json` rule.
+- `BuilderField` — blocks of DIFFERENT shapes in a chosen order
+  (heading, paragraph, image). A `RepeaterField` is many rows of ONE
+  shape; reach for the builder only when the shapes genuinely differ.
+
+A builder drops any block type or inner field it did not declare, on
+the way to storage - the same allow-list posture as `Form::sanitize()`.
 
 ### Add a field type
 
@@ -114,22 +208,104 @@ Implement `PanelPlugin`, call `PanelManager::plugin(new YourPlugin)` from your
 service provider, and register resources, pages and routes through the
 `PluginContext`. A plugin can only add; it never receives the `Panel`.
 
+## The assistant, if you extend it
+
+The assistant is `laravel/ai` behind three hard rules. Break any of
+them and you have built a data leak that answers politely:
+
+1. **Every tool that touches records extends `PanelTool` and calls
+   `$this->authorise(action, resourceKey, $record)` first.** That is
+   the SAME `Resource::can()` gate the buttons use - not a similar
+   one, and never a prompt instruction. A tool refuses with a
+   returned sentence, not an exception.
+2. **Anything destructive declares `isDestructive(): true`** and
+   pauses for human approval before running.
+3. **Retrieval is tenant-scoped by construction.** `KnowledgeBase`
+   refuses to search without a tenant; a new `KnowledgeSource` that
+   indexes RECORDS (not public help text) must also gate retrieval
+   per-asker with `authorise()`, because then it answers questions
+   the screen would refuse.
+
+Credentials are BYOK: `AiCredentials` (panel settings, encrypted)
+layered over `.env`. Never read or log the key; `apply()` at the
+entry point is all any caller needs. With no key at all the
+assistant degrades to a setup sentence - keep it that way.
+
+What the assistant may do is documented for operators in the help
+centre (`assistant-charter`); if you add a capability, update that
+article in the same change so the assistant keeps citing the truth
+about itself.
+
 ## Resources in this installation
 
 | Key | Class | Panel |
 | --- | --- | --- |
 | `announcements` | `AnnouncementResource` | `admin` |
+| `tickets` | `TicketResource` | `admin` |
 | `activities` | `ActivityResource` | `admin` |
 | `clients` | `ClientResource` | `admin` |
+| `sessions` | `ClientSessionResource` | `admin` |
 | `editable-plans` | `EditablePlanResource` | `admin` |
 | `plans` | `PlanResource` | `admin` |
 | `routers` | `RouterResource` | `admin` |
 | `users` | `UserResource` | `admin` |
 | `tenants` | `TenantResource` | `platform` |
 | `reseller-plans` | `PlanResource` | `reseller` |
+| `my-tickets` | `MyTicketResource` | `reseller` |
 
 Ability names are derived from the key: `view_any_clients`, `update_clients`,
 `restore_clients`, `force_delete_clients`.
+
+## What operators configure
+
+These are edited in the panel, not in code. An agent asked to add or
+change one needs the vocabulary below - the variables are the part that
+fails silently, because an unrecognised token is printed as written
+rather than blanked.
+
+### Document templates
+
+| Kind | Label | Variables a template may use |
+| --- | --- | --- |
+| `invoice` | Invoice | `@number`, `@customer`, `@due`, `@total` |
+| `receipt` | Receipt | `@number`, `@customer`, `@paid`, `@total`, `@method` |
+| `voucher` | Voucher | `@code`, `@value`, `@expires`, `@duration` |
+
+A template is a row in `panel_document_templates` scoped to one tenant, edited
+through the designer. Register a NEW kind by extending `DocumentKind` and
+adding it to `DocumentKinds` from a service provider - registering under an
+existing id REPLACES it, which is how an application teaches the package's
+invoice about its own subscribers.
+
+`panel:doctor` reports a template using a variable its kind does not declare,
+and one whose accent colour fails contrast against white.
+
+### Announcement and report copy
+
+| Token | Means |
+| --- | --- |
+| `@user` | The reader's name |
+| `@organisation` | The organisation this announcement was written for |
+
+One declaration feeds three things: the chip strip in the composer, the
+substitution at delivery, and `panel:doctor`'s check. Adding a token means
+adding it to `Announcement::variables()` - anywhere else and two of the three
+will not know about it.
+
+### When the panel interrupts somebody
+
+| Rule | Where | Currently |
+| --- | --- | --- |
+| Which ticket priorities page the desk | `panel.ticketing.alert_priorities` | `urgent` |
+| How many tickets one person may open | `panel.ticketing.max_per_hour` / `max_per_day` | 10 an hour, 30 a day |
+| Monitoring thresholds | Monitoring settings, per tenant | edited in the panel |
+| Backup staleness | `BackupStatus`, 26 hours | fixed |
+| Doctor's daily report | `panel:doctor-alert`, scheduled | changes only |
+
+EVERY ONE OF THESE IS SET NARROWLY ON PURPOSE. A channel people mute is
+worse than no channel - it keeps working and nobody reads it. Widen a
+threshold deliberately; do not add a second channel because the first was
+too quiet.
 
 ## Commands
 
@@ -139,10 +315,12 @@ Ability names are derived from the key: `view_any_clients`, `update_clients`,
 - `php artisan panel:benchmark` — Time the panel's list surfaces, warm, and report medians
 - `php artisan panel:blueprint` — Write the panel conventions an AI agent should follow into the project
 - `php artisan panel:cache-clear` — Invalidate every cached panel schema
+- `php artisan panel:doctor-alert` — Run panel:doctor and announce changes through Telegram
 - `php artisan panel:doctor` — Check for configuration that is silently wrong
-- `php artisan panel:install` — Publish config, create the app/Panel tree, and print next steps
+- `php artisan panel:install` — Publish config, create the app/Panel tree and the page files, and print next steps
 - `php artisan panel:journey` — Time a full signed-in journey through the panel over real HTTP
 - `php artisan panel:knowledge` — Index panel content so the assistant can cite it instead of guessing
+- `php artisan panel:monitor-sample` — Record one monitoring sample and alert on any crossed threshold
 - `php artisan panel:permissions` — Reconcile roles and permissions against the registered resources
 - `php artisan panel:prune-exports` — Delete exports past their retention window, file and record together
 - `php artisan panel:prune-trash` — Permanently delete records that have been in the trash past their retention window

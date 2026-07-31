@@ -20,6 +20,7 @@ use App\Policies\PlanPolicy;
 use App\Policies\RouterPolicy;
 use App\Policies\TicketPolicy;
 use App\Policies\UserPolicy;
+use App\Support\TicketStats;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Date;
@@ -31,6 +32,8 @@ use PanelKit\Panel\Alerts\Announcement;
 use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\Documents\DocumentBranding;
 use PanelKit\Panel\Documents\DocumentKinds;
+use PanelKit\Panel\Support\Budgets;
+use PanelKit\Panel\Trash\TrashBin;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -136,7 +139,56 @@ class AppServiceProvider extends ServiceProvider
             OrganisationBranding::class,
         );
 
+        $this->declareBudgets();
+
         $this->configureDefaults();
+    }
+
+    /**
+     * What the screens THIS APPLICATION wrote may cost - roadmap 7.6.
+     *
+     * `panel:benchmark` measures every resource list for free, because the
+     * panel generates them and knows their shape. It knew nothing about the
+     * screens written here, which are exactly the ones that get slow: a
+     * generated list has one query shape and a hand-written screen has
+     * however many somebody added.
+     *
+     * THE NUMBERS COME FROM MEASURING, NOT FROM WISHING. Each was read off a
+     * run on this machine against tenant 50's ~250k subscribers and then given
+     * headroom - roughly three times the observed median, which is wide enough
+     * that ordinary variance never trips it and narrow enough that a query
+     * added in a loop does.
+     *
+     * A BUDGET THAT IS NEVER BREACHED IS NOT A BUDGET. If one of these starts
+     * failing, the two honest responses are to make the screen cheaper or to
+     * decide, in the same diff, that it is allowed to cost more. Raising it
+     * because the build is red is neither.
+     */
+    private function declareBudgets(): void
+    {
+        /*
+         * THE TICKET SUMMARY. One pass over the queue for the counts, plus a
+         * grouped read per series - the sort of screen where somebody later
+         * adds "and the median per department" inside a foreach.
+         */
+        Budgets::register(
+            'analysis: ticket stats',
+            120,
+            static fn (): array => TicketStats::for(),
+        );
+
+        /*
+         * THE TRASH BIN, which reads across EVERY soft-deleting resource. It
+         * is the widest fan-out in the panel: one query per resource, so its
+         * cost grows with the number of resources rather than with the number
+         * of rows, and nothing else in the benchmark would notice a resource
+         * being added badly.
+         */
+        Budgets::register(
+            'trash: every resource counted',
+            250,
+            static fn (): array => app(TrashBin::class)->groups(),
+        );
     }
 
     /**
