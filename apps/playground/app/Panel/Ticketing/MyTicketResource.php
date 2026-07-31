@@ -113,6 +113,26 @@ final class MyTicketResource extends Resource
     }
 
     /**
+     * NOT AN API SURFACE, and this one is a safety property rather than a
+     * preference.
+     *
+     * `documented()` gates the public API as well as the reference, and this
+     * resource is the wrong thing to expose through it twice over. It is a
+     * VIEW of a table `tickets` already exposes - two endpoints over one
+     * table, differing only in a WHERE clause, is an ambiguity nobody
+     * integrating should have to resolve. And it contributes no ability names
+     * (see `actions()`), so a token could not be scoped to it in the terms
+     * every other endpoint is scoped in: the narrowing half of "the token
+     * narrows, the policy decides" would have nothing to say.
+     *
+     * An integration that wants somebody's tickets asks `tickets` and filters.
+     */
+    public static function documented(): bool
+    {
+        return false;
+    }
+
+    /**
      * NO IMPORT BUTTON. Opening a ticket is what this screen is for, so
      * `create` is true - and Import used to follow `create`, which put an
      * "upload a CSV" control on a subscriber's list of their own complaints.

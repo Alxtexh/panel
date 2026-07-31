@@ -8,6 +8,8 @@ use App\Models\Tenant;
 use App\Models\Ticket;
 use App\Models\TicketReply;
 use App\Models\User;
+use App\Panel\Ticketing\MyTicketResource;
+use App\Panel\Ticketing\TicketResource;
 use App\Support\TicketStats;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
@@ -266,6 +268,23 @@ final class TicketQueueTest extends TestCase
         $subjects = array_column($props['records'], 'subject');
 
         $this->assertSame(['Fibre cut'], $subjects);
+    }
+
+    /* --------------------------------------------------------- the API */
+
+    /**
+     * THE OPENER'S SIDE IS NOT AN API SURFACE.
+     *
+     * It is a VIEW of a table `tickets` already exposes, and it contributes no
+     * ability names - so a token could not be scoped to it in the terms every
+     * other endpoint is scoped in. Two endpoints over one table differing only
+     * in a WHERE clause is an ambiguity nobody integrating should have to
+     * resolve.
+     */
+    public function test_the_openers_resource_is_not_reachable_through_the_api(): void
+    {
+        $this->assertTrue(TicketResource::documented());
+        $this->assertFalse(MyTicketResource::documented());
     }
 
     /* ------------------------------------------------------- the alert */
