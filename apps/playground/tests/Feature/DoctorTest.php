@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Tenant;
+use App\Models\Ticket;
+use App\Models\TicketReply;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\LazyLoadingViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -63,6 +69,67 @@ final class DoctorTest extends TestCase
          */
         Storage::fake('doctor-has-no-backups');
         config(['backup.backup.destination.disks' => ['doctor-has-no-backups']]);
+    }
+
+    /* -------------------------------------------------------- strict mode */
+
+    /**
+     * AN N+1 IS AN EXCEPTION IN DEVELOPMENT AND CI.
+     *
+     * The query-count guard proves the shape for ONE resource - it counts
+     * queries for /clients at ten rows and a thousand and fails if the number
+     * moved. That is a good test, and it is one test: every resource added
+     * since is unguarded, and the twelfth will be too. Eloquent refusing to
+     * lazy-load is the version that scales, because the mistake cannot be
+     * written without something failing immediately.
+     *
+     * PINNED HERE BECAUSE IT IS ONE LINE IN A PROVIDER. A setting whose only
+     * evidence is its own presence is one somebody removes while chasing an
+     * unrelated failure, and nothing says so until a list page starts firing a
+     * query per row in production.
+     *
+     * THE FRAMEWORK ONLY FLAGS COLLECTIONS OF MORE THAN ONE - see
+     * `Builder::hydrate`, which sets the per-instance flag under
+     * `count($items) > 1`, because a single model cannot cause an N+1. So the
+     * fixture below has TWO replies. With one, this test would pass against a
+     * guard that was switched off, which is the failure it exists to prevent.
+     */
+    public function test_lazy_loading_is_refused_outside_production(): void
+    {
+        $this->assertTrue(
+            Model::preventsLazyLoading(),
+            'Eloquent strict mode is off, so an N+1 would go unnoticed until production.',
+        );
+
+        $tenant = Tenant::create(['name' => 'Acme', 'slug' => 'acme']);
+
+        config(['panel.tenancy.resolver' => fn () => $tenant->id]);
+
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+
+        $ticket = Ticket::query()->forceCreate([
+            'tenant_id' => $tenant->id,
+            'opened_by' => $user->id,
+            'subject' => 'Two replies, so the framework arms the guard',
+            'status' => Ticket::OPEN,
+            'priority' => 'normal',
+        ]);
+
+        foreach (['first', 'second'] as $body) {
+            TicketReply::query()->forceCreate([
+                'tenant_id' => $tenant->id,
+                'ticket_id' => $ticket->id,
+                'author_id' => $user->id,
+                'visibility' => TicketReply::PUBLIC,
+                'body' => $body,
+            ]);
+        }
+
+        $this->expectException(LazyLoadingViolationException::class);
+
+        foreach (TicketReply::query()->get() as $reply) {
+            $reply->author?->name;
+        }
     }
 
     /* --------------------------------------------------------- broadcasting */

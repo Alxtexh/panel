@@ -22,6 +22,7 @@ use App\Policies\TicketPolicy;
 use App\Policies\UserPolicy;
 use App\Support\TicketStats;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -197,6 +198,41 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        /*
+         * AN N+1 IS AN EXCEPTION HERE, AND A SLOW PAGE IN PRODUCTION.
+         *
+         * The query-count guard proves the shape for ONE resource - it counts
+         * queries for /clients at ten rows and at a thousand and fails if the
+         * number moved. That is a good test and it is one test: every resource
+         * added since is unguarded, and the twelfth will be too. This is the
+         * version that scales, because it is not a test at all - it is
+         * Eloquent refusing to lazy-load, so the mistake cannot be written
+         * without something failing immediately.
+         *
+         * OFF IN PRODUCTION, deliberately. A lazy load that reached production
+         * is a slow page; an exception is a white screen for a customer over a
+         * performance problem. Development and CI are where this is worth
+         * being loud.
+         */
+        Model::preventLazyLoading(! app()->isProduction());
+
+        /*
+         * THE OTHER TWO STRICTNESSES ARE DELIBERATELY OFF, and the reasons are
+         * specific to this panel rather than taste.
+         *
+         * `preventSilentlyDiscardingAttributes` FIGHTS THE MASS-ASSIGNMENT
+         * GUARD. The panel deliberately does NOT declare a custom field as
+         * fillable - being dropped on the way in is exactly what stops a
+         * crafted request writing a column nobody exposed, and there is a test
+         * asserting that drop. Turning the exception on converts that defence
+         * into a 500.
+         *
+         * `preventAccessingMissingAttributes` FIGHTS PARTIAL SELECTION. Every
+         * list query selects exactly the columns a table declares - which is
+         * what keeps them fast - so reading anything else is normal here and
+         * would throw on every screen.
+         */
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
