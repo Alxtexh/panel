@@ -19,7 +19,17 @@ import type { TableColumn } from '../components/DataTable/types'
 export interface SchemaColumn {
     key: string
     label: string
-    type: 'text' | 'badge' | 'date' | 'datetime' | 'icon' | 'image' | 'toggle' | 'select'
+    type:
+        | 'text'
+        | 'badge'
+        | 'date'
+        | 'datetime'
+        | 'icon'
+        | 'image'
+        | 'toggle'
+        | 'select'
+        | 'colour'
+        | 'checkbox'
     sortable?: boolean
     sortKey?: string
     copyable?: boolean
@@ -50,6 +60,13 @@ export interface SchemaColumn {
     options?: Record<string, string>
     onLabel?: string | null
     offLabel?: string | null
+
+    /* colour - roadmap 4.6 */
+    showValue?: boolean
+
+    /* checkbox - roadmap 4.6. Read-only state, not a control. */
+    trueLabel?: string | null
+    falseLabel?: string | null
 }
 
 /** Semantic intent to badge variant. The only place the mapping exists. */

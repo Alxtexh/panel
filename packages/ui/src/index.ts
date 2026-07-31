@@ -20,6 +20,13 @@ export { default as BulkActions } from './components/DataTable/BulkActions.vue'
 export { default as RelationPanel } from './components/DataTable/RelationPanel.vue'
 export { default as IconCell } from './components/DataTable/IconCell.vue'
 export { default as ImageCell } from './components/DataTable/ImageCell.vue'
+/*
+ | ROADMAP 4.6. A colour you can SEE rather than a hex string you can read,
+ | and a boolean rendered as state rather than as a control - see each
+ | component for why neither is a badge and why the checkbox is disabled.
+ */
+export { default as ColourCell } from './components/DataTable/ColourCell.vue'
+export { default as CheckboxCell } from './components/DataTable/CheckboxCell.vue'
 export { default as EditableCell } from './components/DataTable/EditableCell.vue'
 export { default as RecordActions } from './components/DataTable/RecordActions.vue'
 export { default as AppearanceDrawer } from './components/Layout/AppearanceDrawer.vue'

@@ -479,7 +479,7 @@ Numbering follows `ROADMAP.md`. Sizes are that file's.
 | 4.3 | Singular resources | S | **Done.** `SingularResource` (form + values() + save()), config-mounted at /{key}, rendered through ResourceForm, ability-gated. Proven by Billing preferences. |
 | 4.4 | Render hooks | M | Named injection points so a plugin can decorate a screen without forking it. |
 | 4.5 | Missing field types | M | Markdown, code, builder. Build these **after** A.1 — the repeater's row shape is the pattern the builder field should follow. |
-| 4.6 | Missing column types | S | Colour, checkbox. |
+| 4.6 | Missing column types | S | **Done.** `ColourColumn` (swatch + code, validated before it reaches a style attribute) and `CheckboxColumn` (read-only state, disabled + aria-readonly, record-level labels). Users' Verified column demonstrates it. |
 
 ### §6 — Ticketing
 

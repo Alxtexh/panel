@@ -37,6 +37,8 @@ import {
     EditableCell,
     IconCell,
     ImageCell,
+    ColourCell,
+    CheckboxCell,
     PkBoundary,
     RecordActions,
     SelectionBar,
@@ -992,6 +994,17 @@ function badgeLabel(key: string, value: unknown): string {
                             :colors="byKey[col.key].colors ?? {}"
                             :labels="byKey[col.key].labels ?? {}"
                             :default-icon="byKey[col.key].defaultIcon ?? 'dot'"
+                        />
+                        <ColourCell
+                            v-else-if="byKey[col.key]?.type === 'colour'"
+                            :value="row[col.key]"
+                            :show-value="byKey[col.key].showValue !== false"
+                        />
+                        <CheckboxCell
+                            v-else-if="byKey[col.key]?.type === 'checkbox'"
+                            :value="row[col.key]"
+                            :true-label="byKey[col.key].trueLabel"
+                            :false-label="byKey[col.key].falseLabel"
                         />
                         <ImageCell
                             v-else-if="byKey[col.key]?.type === 'image'"

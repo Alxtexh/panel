@@ -16,6 +16,7 @@ use PanelKit\Panel\Forms\Fields\PasswordField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Tables\Columns\CheckboxColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Table;
@@ -178,8 +179,18 @@ final class UserResource extends Resource
                  */
                 TextColumn::make('role_names')->label('Roles'),
 
-                DateColumn::make('email_verified_at')->from('users.email_verified_at')
-                    ->sortAs('users.email_verified_at')->label('Verified')->sortable(),
+                /*
+                 * WHETHER, NOT WHEN - roadmap 4.6. The date this address was
+                 * confirmed is a fact nobody scans a list for; whether it was
+                 * confirmed at all is the only question anybody asks of this
+                 * column, and forty rows of ticks and blanks answer it at a
+                 * glance where forty dates do not. Read-only by construction:
+                 * verification is something the person does, not something an
+                 * operator ticks on their behalf.
+                 */
+                CheckboxColumn::make('email_verified_at')->from('users.email_verified_at')
+                    ->sortAs('users.email_verified_at')->label('Verified')->sortable()
+                    ->labels('Email verified', 'Email not verified'),
 
                 DateColumn::make('created_at')->from('users.created_at')
                     ->sortAs('users.created_at')->label('Joined')->sortable(),
