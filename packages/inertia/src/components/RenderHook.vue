@@ -16,6 +16,10 @@
 import { computed } from 'vue'
 import { resolveRenderHookComponent } from './renderHookRegistry'
 
+// The page's context is forwarded explicitly to each hook (see the template),
+// so Vue must not also stamp it on the first root node.
+defineOptions({ inheritAttrs: false })
+
 const props = defineProps<{
     /** The position this instance stands at, e.g. `list.before-table`. */
     position: string
@@ -32,10 +36,17 @@ const mine = computed(() =>
 </script>
 
 <template>
+    <!--
+        THE PAGE'S OWN ATTRIBUTES PASS THROUGH FIRST, then the plugin's props.
+        A record page hands down which record it is showing and where the
+        resource is mounted; the plugin's registered props win a collision
+        because those were written deliberately for this hook, while the
+        page's are ambient context.
+    -->
     <component
         :is="hook.resolved"
         v-for="(hook, i) in mine"
         :key="`${hook.component}-${i}`"
-        v-bind="hook.props"
+        v-bind="{ ...$attrs, ...hook.props }"
     />
 </template>

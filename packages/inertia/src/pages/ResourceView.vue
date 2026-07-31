@@ -12,6 +12,7 @@
  */
 import { PkBadge as Badge } from '@panelkit/ui'
 import AuditTimeline from '../components/AuditTimeline.vue'
+import RenderHook from '../components/RenderHook.vue'
 import { PkButton as Button, buttonClasses } from '@panelkit/ui'
 import { InfoNode, RelationPanel, useSchemaColumns, type SchemaColumn } from '@panelkit/ui'
 import { Head, Link, router } from '@inertiajs/vue3'
@@ -37,6 +38,8 @@ const props = defineProps<{
     }
     record: Record<string, any>
     can: { update: boolean; delete: boolean }
+    /** Markup contributed by plugins, at named positions - roadmap 4.4. */
+    renderHooks?: { position: string; component: string; props: Record<string, unknown> }[]
     breadcrumbs: { title: string; href: string }[]
 }>()
 
@@ -288,6 +291,19 @@ function destroy() {
                 />
             </template>
         </section>
+
+        <!--
+            ANYTHING A PLUGIN ADDS TO THIS RECORD goes here: below the record
+            and its related lists, above the history. A ticket's conversation
+            arrives through this - see `TicketingPlugin`.
+        -->
+        <RenderHook
+            position="view.after"
+            :hooks="renderHooks"
+            :record-id="record.id"
+            :resource="schema.key"
+            :base-url="schema.routes.index"
+        />
 
         <!--
             History last, and collapsed. It is the least-read part of a detail

@@ -133,6 +133,38 @@ final class TicketPolicy
     }
 
     /**
+     * MAY YOU WRITE - AND READ - A NOTE THE CUSTOMER NEVER SEES.
+     *
+     * THE SHARPEST ABILITY IN THIS POLICY, and the reason it is its own
+     * method. An internal note says things nobody writes for a customer:
+     * "third time this month, escalate", "waive the fee, do not tell them
+     * why". A ticketing system that leaks one has done more damage than one
+     * that loses a ticket.
+     *
+     * SO IT IS THE OPERATOR'S GRANT AND NOTHING ELSE - never the opener's,
+     * however the request arrives, and no matter that they may read every
+     * other line of the same thread. Being the person who asked entitles you
+     * to the conversation, not to the desk's private margin notes.
+     *
+     * READ AND WRITE ARE THE SAME QUESTION HERE, deliberately: anybody
+     * entitled to write on the desk's side is on the desk. Splitting them
+     * would create a role that can add notes and cannot see the ones already
+     * there, which is worse than either.
+     *
+     * IT IS THE ABILITY ALONE THAT DECIDES, not the ability plus "and you did
+     * not open this one". An operator who raises a ticket themselves is still
+     * an operator, and the extra clause would have made this stricter than
+     * `resolve` - two rules about the same side of the desk disagreeing about
+     * where it ends.
+     */
+    public function note(User $user, Ticket $ticket): bool
+    {
+        return $this->hasTenant()
+            && $this->owns($ticket)
+            && $this->may($user, 'update');
+    }
+
+    /**
      * RESOLUTION IS AN OPERATOR JUDGEMENT. The opener may reply forever and
      * may not close: a customer marking their own ticket resolved is a queue
      * reporting success nobody verified.

@@ -6,7 +6,9 @@
 import './echo';
 
 import { createInertiaApp, router } from '@inertiajs/vue3';
+import { registerRenderHookComponent } from '@panelkit/inertia';
 import { initializeAppearance, setAppearancePersister } from '@panelkit/ui';
+import TicketThread from '@/components/TicketThread.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
@@ -17,6 +19,18 @@ import {
 } from '@/lib/sessionExpired';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+/*
+ * COMPONENTS A PLUGIN MAY PLACE, registered by the APPLICATION.
+ *
+ * A plugin names a component; this application decides what that name
+ * resolves to. That indirection is the whole safety of the render-hook
+ * mechanism - a package cannot inject arbitrary markup into a screen, it can
+ * only ask for something the application already agreed to ship. An
+ * unregistered name renders nothing rather than an error about somebody
+ * else's package.
+ */
+registerRenderHookComponent('TicketThread', TicketThread);
 
 /**
  * Save a preference change to the account.

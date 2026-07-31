@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Plugins;
 
+use App\Http\Controllers\TicketThreadController;
 use App\Panel\Ticketing\MyTicketResource;
 use App\Panel\Ticketing\TicketResource;
+use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Plugins\Plugin;
 use PanelKit\Panel\Plugins\PluginContext;
+use PanelKit\Panel\Plugins\RenderHooks;
 use RuntimeException;
 
 /**
@@ -80,6 +83,38 @@ final class TicketingPlugin extends Plugin
                 ? TicketResource::class
                 : MyTicketResource::class,
         ]);
+
+        /*
+         * THE CONVERSATION, ON WHICHEVER RECORD PAGE THIS PORTAL SERVES.
+         *
+         * Both ends get the same component and the same endpoint; what
+         * differs is what comes back, which is decided by the policy rather
+         * than by which screen asked. An opener's thread contains no internal
+         * notes because the query excludes them - not because the opener's
+         * portal was given a quieter component.
+         *
+         * A RENDER HOOK RATHER THAN AN EDIT TO `ResourceView`, which is the
+         * point of the hook mechanism: ticketing adds a whole conversation to
+         * a record page without a line changing in a screen every other
+         * resource shares.
+         */
+        $key = $context->panel->id === $this->operatorPanel() ? 'tickets' : 'my-tickets';
+
+        $context->render(RenderHooks::VIEW_AFTER, 'TicketThread', [], [$key]);
+
+        /*
+         * MOUNTED INSIDE THE PANEL'S GROUP, so the route is authenticated and
+         * tenant-scoped exactly like a built-in one and carries the portal's
+         * own prefix. A plugin registering this in a service provider would
+         * get none of that.
+         */
+        $context->routes(function (Panel $panel) use ($key): void {
+            Route::get("{$key}/{ticket}/thread", [TicketThreadController::class, 'show'])
+                ->name("{$panel->id}.{$key}.thread");
+
+            Route::post("{$key}/{ticket}/thread", [TicketThreadController::class, 'store'])
+                ->name("{$panel->id}.{$key}.thread.store");
+        });
     }
 
     /**

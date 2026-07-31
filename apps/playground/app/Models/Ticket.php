@@ -8,6 +8,7 @@ use App\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 use PanelKit\Panel\Audit\Auditable;
 use PanelKit\Panel\Support\TenantContext;
@@ -22,10 +23,12 @@ use PanelKit\Panel\Support\TenantContext;
  * having opened any - which is why the policy came first and the screens
  * second.
  *
- * THE MESSAGES ARE NOT HERE. `conversation_id` points at the chat thread that
- * already stores messages, authorship and read state; a `ticket_messages`
- * table beside it would be a second messaging system to keep in step, and the
- * one that drifts is always the one somebody reads at 3am.
+ * THE THREAD IS `ticket_replies`, NOT THE CHAT TABLE, and that is a reversal
+ * of what this note used to say. Pointing at the existing chat thread avoided
+ * a second messaging system, which was the right instinct and the wrong call:
+ * `chat_messages` records a DIRECTION, not an author, and has no notion of a
+ * message the customer may not read. A rota needs both. See the replies
+ * migration for the whole argument.
  *
  * AUDITED, because "who closed this and when" is the question every disputed
  * ticket ends in.
@@ -47,6 +50,8 @@ final class Ticket extends Model
     {
         return [
             'resolved_at' => 'datetime',
+            'first_response_at' => 'datetime',
+            'last_reply_at' => 'datetime',
         ];
     }
 
@@ -100,8 +105,50 @@ final class Ticket extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
-    public function conversation(): BelongsTo
+    /** The thread, oldest first - which is how a conversation reads. */
+    public function replies(): HasMany
     {
-        return $this->belongsTo(ChatConversation::class, 'conversation_id');
+        return $this->hasMany(TicketReply::class)->oldest();
+    }
+
+    /**
+     * Record a message on this ticket and move the ticket's own clocks.
+     *
+     * ONE PLACE, because three columns have to agree and they are the three a
+     * support desk is measured on. Written as a method rather than a model
+     * event on `TicketReply` so that the ordering is visible: the reply is
+     * saved first, and the ticket only claims a first response once one
+     * exists.
+     *
+     * `first_response_at` COUNTS ONLY PUBLIC REPLIES BY SOMEBODY OTHER THAN
+     * THE OPENER. An internal note is not an answer - nobody outside the desk
+     * can see it - and a customer replying to their own ticket is not the desk
+     * responding. Counting either would make the response-time report flatter
+     * than the truth, which is the direction nobody questions.
+     *
+     * @param  list<array<string, mixed>>  $attachments
+     */
+    public function addReply(string $body, string $visibility, ?int $authorId = null, array $attachments = []): TicketReply
+    {
+        $authorId ??= Auth::id();
+
+        $reply = $this->replies()->create([
+            'author_id' => $authorId,
+            'visibility' => $visibility,
+            'body' => $body,
+            'attachments' => $attachments === [] ? null : $attachments,
+        ]);
+
+        $this->last_reply_at = $reply->created_at;
+
+        if ($this->first_response_at === null
+            && $visibility === TicketReply::PUBLIC
+            && (string) $authorId !== (string) $this->opened_by) {
+            $this->first_response_at = $reply->created_at;
+        }
+
+        $this->save();
+
+        return $reply;
     }
 }

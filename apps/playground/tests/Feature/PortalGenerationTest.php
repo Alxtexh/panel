@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Client;
-use App\Panel\Resources\ClientResource;
-use App\Panel\Reseller\Resources\PlanResource;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Panel\Reseller\Resources\PlanResource;
+use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Http\Middleware\UsePanel;
