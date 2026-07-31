@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Knowledge\KnowledgeBase;
 use Tests\TestCase;
 
@@ -25,6 +26,36 @@ use Tests\TestCase;
 final class DoctorTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * NO DOCTOR TEST MAY DEPEND ON WHAT IS ON THIS MACHINE'S DISK.
+     *
+     * `checkBackupFreshness` reads the real backup destination, which on a
+     * developer's laptop holds whatever snapshots happen to be there from
+     * whenever they last ran `backup:run`. Left alone, every assertion in this
+     * file that doctor is QUIET starts failing three days after somebody's
+     * last backup - a suite that goes red because of the calendar, which is
+     * the worst kind of flake because the diff explains nothing.
+     *
+     * Faked in `setUp` rather than per test, because the coupling is to the
+     * whole file: any check added later that reads a disk inherits the same
+     * hazard, and a fake that is already in place is one nobody has to
+     * remember.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /*
+         * A DISK OF OUR OWN, not a fake of whichever one is configured.
+         * Faking the configured disk still leaves spatie resolving the
+         * destination through its own registry, which found the real files;
+         * naming a disk that exists only for this test is the version that
+         * cannot see them.
+         */
+        Storage::fake('doctor-test');
+        config(['backup.backup.destination.disks' => ['doctor-test']]);
+    }
 
     /* --------------------------------------------------------- broadcasting */
 

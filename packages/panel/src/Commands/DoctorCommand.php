@@ -6,11 +6,14 @@ namespace PanelKit\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use PanelKit\Panel\Alerts;
 use PanelKit\Panel\Documents;
 use PanelKit\Panel\Knowledge;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\BackupStatus;
+use PanelKit\Panel\Support\Contrast;
 use PanelKit\Panel\Support\TenantContext;
 
 /**
@@ -47,6 +50,23 @@ final class DoctorCommand extends Command
 
     public function handle(PanelManager $panels, TenantContext $context): int
     {
+        /*
+         * EMPTIED FIRST, because the console kernel keeps command INSTANCES.
+         *
+         * A second run in the same process appended to the first run's
+         * findings, so doctor reported every problem twice, then three times.
+         * Nothing notices from a terminal - a command exits and the process
+         * ends - and everything notices where it matters: an Octane worker
+         * serving the dashboard checklist, and `panel:doctor-alert`, whose
+         * whole design is comparing this run's findings with the last one's.
+         * It announced the same standing problem every day because the SET
+         * kept changing.
+         *
+         * A property initialised at declaration is initialised once per
+         * OBJECT, and the object outlives the run.
+         */
+        $this->findings = [];
+
         $this->checkPolicies($panels);
         $this->checkBroadcasting();
         $this->checkSessionLimit();
@@ -56,6 +76,8 @@ final class DoctorCommand extends Command
         $this->checkKnowledge();
         $this->checkDocumentTemplates();
         $this->checkAnnouncementVariables();
+        $this->checkTemplateContrast();
+        $this->checkBackupFreshness();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -73,7 +95,7 @@ final class DoctorCommand extends Command
     private function checkPolicies(PanelManager $panels): void
     {
         foreach ($panels->resources() as $key => $class) {
-            if (\Illuminate\Support\Facades\Gate::getPolicyFor($class::model()) === null) {
+            if (Gate::getPolicyFor($class::model()) === null) {
                 /*
                  * THE TITLE IS OPERATOR COPY, NOT CONSOLE SHORTHAND. It used
                  * to read "[custom-fields] has no policy" - the bracketed
@@ -498,6 +520,118 @@ final class DoctorCommand extends Command
             ) !== null;
         } catch (\Throwable) {
             return false;
+        }
+    }
+
+    /**
+     * TEMPLATES AN OPERATOR CHOSE THE COLOURS FOR - roadmap 7.3.
+     *
+     * THE CHECKS ABOVE THIS ONE ARE ABOUT WHAT DEVELOPERS CONFIGURE; this is
+     * the first about what OPERATORS configure, and that is the whole point
+     * of the item. A missing policy is caught in review by somebody who reads
+     * code. A pale yellow accent chosen in a colour picker at 5pm is caught
+     * by a customer who cannot read their invoice.
+     *
+     * A NOTE RATHER THAN A PROBLEM, deliberately. The document still renders
+     * and the panel still works; what is wrong is that some people cannot
+     * read it. Failing a deploy over a colour would teach people to stop
+     * running this, and `panel:doctor` is only useful while it is run.
+     *
+     * The designer already warns at the moment of choosing (roadmap 7.1) and
+     * offers a one-click fix; this catches the templates saved before that
+     * existed, and the ones somebody dismissed the warning on.
+     */
+    private function checkTemplateContrast(): void
+    {
+        if (! Schema::hasTable('panel_document_templates')) {
+            return;
+        }
+
+        $templates = Documents\DocumentTemplate::query()
+            ->withoutGlobalScope('tenant')
+            ->get(['id', 'tenant_id', 'kind', 'settings']);
+
+        foreach ($templates as $template) {
+            $accent = (string) (((array) $template->settings)['accent'] ?? '');
+
+            if ($accent === '' || ! Contrast::isHex($accent)) {
+                continue;
+            }
+
+            /*
+             * AGAINST WHITE, because that is what a document is printed on -
+             * not against the panel's background, which is a screen colour and
+             * changes with the theme. The paper does not have a dark mode.
+             */
+            if (! Contrast::meets($accent, '#ffffff')) {
+                $this->note(
+                    sprintf(
+                        'The %s template (tenant %s) uses %s, which is hard to read on paper',
+                        $template->kind,
+                        (string) $template->tenant_id,
+                        $accent,
+                    ),
+                    sprintf(
+                        'Against white it measures %.1f:1, below the 4.5:1 that normal text needs. '
+                        .'It renders - it is simply faint for anybody with less than perfect sight, '
+                        .'and worse once printed. The designer offers a darker shade of the same '
+                        .'hue in one click.',
+                        Contrast::ratio($accent, '#ffffff'),
+                    ),
+                );
+            }
+        }
+    }
+
+    /**
+     * A DESTINATION NOBODY HAS WRITTEN TO - roadmap 7.3.
+     *
+     * `backup:monitor` already reports this DAILY, at nine, through the
+     * Telegram channel. This is the same fact asked at a different moment:
+     * whenever anybody runs doctor, and on the dashboard checklist, which is
+     * where somebody who has just inherited an installation looks.
+     *
+     * THE FAILURE IT CATCHES is the one with no symptom. A destination full of
+     * snapshots from March looks exactly like a healthy one until somebody
+     * reads the dates - and the day they read the dates is the day they needed
+     * a restore. See `BackupStatus`, which is the one place age is computed.
+     *
+     * NOT CONFIGURED IS NOT A FAULT. An installation that has deliberately not
+     * set backups up is a choice; a configured destination that stopped
+     * receiving them is a broken promise, and only the second is reported.
+     */
+    private function checkBackupFreshness(): void
+    {
+        $summary = app(BackupStatus::class)->summary();
+
+        if ($summary['configured'] !== true) {
+            return;
+        }
+
+        /*
+         * NEVER BACKED UP IS NOT THE SAME AS STOPPED BACKING UP.
+         *
+         * A destination with nothing in it is an installation that has not run
+         * its first backup - which is the setup checklist's business, and it
+         * says so there. Reporting it here would fail the deploy of every
+         * brand-new installation on its first day, teaching whoever set it up
+         * that this command cries wolf. What is worth failing a deploy over is
+         * a destination that USED to receive backups and no longer does.
+         */
+        if ($summary['backups'] === []) {
+            return;
+        }
+
+        if ($summary['healthy'] === false || $summary['problem'] !== null) {
+            $this->problem(
+                'The backup destination has nothing recent in it',
+                ($summary['problem'] ?? sprintf(
+                    'The newest backup is %.0f hours old.',
+                    (float) ($summary['ageHours'] ?? 0),
+                )).' A destination full of old snapshots looks identical to a healthy one until '
+                .'somebody reads the dates, and that is always the day they needed a restore. '
+                .'Check the scheduler is running and that backup:run is not failing.',
+            );
         }
     }
 

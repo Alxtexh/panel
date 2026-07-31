@@ -112,6 +112,26 @@ match ($backups->frequency) {
 Schedule::command('backup:monitor')->dailyAt('09:00')->onOneServer();
 
 /*
+| DOCTOR, DAILY, THROUGH THE SAME CHANNEL - roadmap 7.3.
+|
+| The command doctor exists to answer is "what is silently wrong", and until
+| this line it was only ever asked by somebody who already suspected
+| something. The failures it catches are precisely the ones nobody suspects:
+| a scheduler that stopped, a destination that quietly went stale, a template
+| whose variable was renamed out from under it.
+|
+| A FEW MINUTES AFTER THE BACKUP MONITOR, so that a night where backups failed
+| produces the specific message first and the general one second. Two alerts
+| about the same fact is noise; two alerts where the first is precise and the
+| second is context is a morning somebody can act on.
+|
+| It announces only when the answer CHANGES - see `DoctorAlertCommand`. A
+| daily "everything is fine" is a message people filter, and the filter
+| catches the one that says otherwise.
+*/
+Schedule::command('panel:doctor-alert')->dailyAt('09:05')->onOneServer();
+
+/*
 | A HEARTBEAT, SO THE PLATFORM SCREEN CAN SAY WHETHER CRON IS RUNNING AT ALL.
 |
 | A missing cron entry is the most commonly broken thing in a Laravel

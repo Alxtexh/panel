@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\SetupChecklist;
@@ -36,6 +37,24 @@ final class DashboardChecklistTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        /*
+         * NO CHECKLIST TEST MAY DEPEND ON THIS MACHINE'S DISK. The checklist
+         * renders `panel:doctor`'s findings, and doctor now reads the real
+         * backup destination - so without this, every assertion here about a
+         * quiet checklist starts failing three days after somebody's last
+         * local backup. A suite that goes red because of the calendar is the
+         * worst kind of flake: the diff explains nothing.
+         */
+        /*
+         * A DISK OF OUR OWN, not a fake of whichever one is configured.
+         * Faking the configured disk still leaves spatie resolving the
+         * destination through its own registry, which found the real files;
+         * naming a disk that exists only for this test is the version that
+         * cannot see them.
+         */
+        Storage::fake('doctor-test');
+        config(['backup.backup.destination.disks' => ['doctor-test']]);
 
         $this->tenant = Tenant::create(['name' => 'Acme', 'slug' => 'acme']);
     }
