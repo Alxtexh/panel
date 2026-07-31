@@ -426,6 +426,13 @@ final class ResourceController extends Controller
              */
             'cluster' => app(PanelManager::class)->clusterNavFor($class),
 
+            /*
+             * PLUGIN MARKUP AT NAMED POSITIONS - roadmap 4.4. Scoped to this
+             * resource server-side, so a hook meant for invoices never
+             * travels to the clients page.
+             */
+            'renderHooks' => app(PanelManager::class)->renderHooks($class::key()),
+
             ...$result->toProps(),
 
             // Tenant data, so it rides with the records rather than the schema.

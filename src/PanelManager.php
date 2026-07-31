@@ -252,6 +252,49 @@ final class PanelManager
     }
 
     /**
+     * Markup plugins put at a named position - roadmap 4.4.
+     *
+     * FILTERED BY SCREEN HERE, not in the browser. A hook scoped to
+     * `invoices` must not travel to the clients page at all: shipping every
+     * plugin's every hook to every screen and hiding the wrong ones with
+     * `v-if` is a payload that grows with the plugin list and leaks what a
+     * plugin does on screens it has nothing to do with.
+     *
+     * @param  string|null  $resource  The resource key being rendered, when there is one.
+     * @return list<array{position: string, component: string, props: array<string, mixed>}>
+     */
+    public function renderHooks(?string $resource = null, ?string $panelId = null): array
+    {
+        $panel = $panelId === null ? $this->currentPanel() : $this->panel($panelId);
+
+        if ($panel === null) {
+            return [];
+        }
+
+        $this->applyPlugins($panel);
+
+        $out = [];
+
+        foreach (self::$pluginContexts[$panel->id] ?? [] as $context) {
+            foreach ($context->registeredRenders() as $hook) {
+                $scoped = $hook['resources'];
+
+                if ($scoped !== null && ($resource === null || ! in_array($resource, $scoped, true))) {
+                    continue;
+                }
+
+                $out[] = [
+                    'position' => $hook['position'],
+                    'component' => $hook['component'],
+                    'props' => $hook['props'],
+                ];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Route callbacks contributed by plugins, for `PanelRoutes` to mount.
      *
      * @return list<\Closure>
