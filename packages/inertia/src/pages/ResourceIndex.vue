@@ -30,6 +30,7 @@ import { PkButton as Button, buttonClasses } from '@panelkit/ui'
 import { useListTable, type ListPageProps } from '../composables/useListTable'
 import { useBulkJob } from '../composables/useBulkJob'
 import ImportDialog from '../components/ImportDialog.vue'
+import RenderHook from '../components/RenderHook.vue'
 import {
     BulkActions,
     DataTable,
@@ -144,6 +145,11 @@ const props = defineProps<
             label: string
             items: { title: string; href: string; current: boolean }[]
         } | null
+        /**
+         * Markup plugins asked to put on this screen - roadmap 4.4. Already
+         * scoped to this resource server-side.
+         */
+        renderHooks?: { position: string; component: string; props: Record<string, unknown> }[]
     }
 >()
 
@@ -785,6 +791,8 @@ function badgeLabel(key: string, value: unknown): string {
             </Link>
         </nav>
 
+        <RenderHook position="list.before-header" :hooks="renderHooks" />
+
         <div class="flex flex-col gap-1">
             <div class="flex items-center justify-between gap-3">
                 <!--
@@ -856,6 +864,8 @@ function badgeLabel(key: string, value: unknown): string {
         >
             Drag rows to change their order. Changes save as you drop them.
         </p>
+
+        <RenderHook position="list.before-table" :hooks="renderHooks" />
 
         <!--
             ONE CARD, NOT FOUR - DESIGN_RULES rule 4. Tabs, toolbar, rows and

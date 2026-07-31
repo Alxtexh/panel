@@ -177,8 +177,15 @@ final class PluginTest extends TestCase
      * THE CONTEXT CANNOT RECONFIGURE THE PANEL.
      *
      * Asserted structurally rather than by trying: `PluginContext` exposes the
-     * panel as readable and offers only `resources`, `page` and `routes`. If a
-     * setter is ever added, this fails and somebody has to argue for it.
+     * panel as readable and offers only ADD-ONLY verbs - `resources`, `page`,
+     * `routes` and `render` - plus their readers. If a setter is ever added,
+     * this fails and somebody has to argue for it.
+     *
+     * `render` (roadmap 4.4) earned its place by the same rule as the rest:
+     * it APPENDS markup at a named position and cannot reach the guard, the
+     * tenancy context or the middleware. The position is validated against a
+     * fixed list, and what it names is resolved by the APPLICATION's own
+     * registry rather than mounted from a server-supplied string.
      */
     public function test_a_plugin_is_given_no_way_to_change_the_panel(): void
     {
@@ -193,6 +200,8 @@ final class PluginTest extends TestCase
                 'resources',
                 'page',
                 'routes',
+                'render',
+                'registeredRenders',
                 'registeredResources',
                 'registeredPages',
                 'registeredRoutes',

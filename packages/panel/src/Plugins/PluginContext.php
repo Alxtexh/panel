@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Plugins;
 
 use Closure;
+use InvalidArgumentException;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
 
@@ -33,6 +34,13 @@ final class PluginContext
 
     /** @var list<Closure> */
     private array $routes = [];
+
+    /**
+     * Markup a plugin injects at a named position - roadmap 4.4.
+     *
+     * @var list<array{position: string, component: string, props: array<string, mixed>, resources: list<string>|null}>
+     */
+    private array $renders = [];
 
     public function __construct(
         public readonly Panel $panel,
@@ -103,10 +111,56 @@ final class PluginContext
         return $this;
     }
 
+    /**
+     * Put a component at a named position on screens the panel already owns.
+     *
+     * WITHOUT THIS A PLUGIN THAT WANTED ONE SENTENCE ON AN EXISTING SCREEN
+     * HAD TO FORK THE SCREEN - and a fork is a copy that stops receiving
+     * fixes, discovered by a customer. See `RenderHooks` for the positions
+     * and for why this takes a component name rather than HTML.
+     *
+     * THE POSITION IS VALIDATED HERE, at registration, rather than being
+     * looked up at render time and quietly matching nothing. A typo that
+     * renders nowhere costs somebody an hour of debugging their own code.
+     *
+     * @param  array<string, mixed>  $props  Serialised into the page payload.
+     * @param  list<string>|null  $resources  Resource keys to limit this to; null is everywhere.
+     */
+    public function render(
+        string $position,
+        string $component,
+        array $props = [],
+        ?array $resources = null,
+    ): self {
+        if (! RenderHooks::isPosition($position)) {
+            throw new InvalidArgumentException(
+                "[{$position}] is not a render position. One of: "
+                .implode(', ', RenderHooks::positions()).'.'
+            );
+        }
+
+        $this->renders[] = [
+            'position' => $position,
+            'component' => $component,
+            'props' => $props,
+            'resources' => $resources,
+        ];
+
+        return $this;
+    }
+
     /** @return list<class-string> */
     public function registeredResources(): array
     {
         return $this->resources;
+    }
+
+    /**
+     * @return list<array{position: string, component: string, props: array<string, mixed>, resources: list<string>|null}>
+     */
+    public function registeredRenders(): array
+    {
+        return $this->renders;
     }
 
     /** @return list<array{title: string, href: string, icon: string, group: string|null}> */

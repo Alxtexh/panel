@@ -76,3 +76,16 @@ export const PANEL_PAGES = {
     'documents/TemplateDesigner': () => import('./pages/documents/TemplateDesigner.vue'),
     'documents/DocumentPrint': () => import('./pages/documents/DocumentPrint.vue'),
 } as const
+
+/*
+ | RENDER HOOKS - roadmap 4.4. `RenderHook` is dropped at named positions
+ | inside the packaged pages; an application registers which components a
+ | plugin is allowed to mount, because a name from the server that resolved
+ | to any component in the bundle would be a plugin mounting anything
+ | anywhere.
+ */
+export { default as RenderHook } from './components/RenderHook.vue'
+export {
+    registerRenderHookComponent,
+    resolveRenderHookComponent,
+} from './components/renderHookRegistry'

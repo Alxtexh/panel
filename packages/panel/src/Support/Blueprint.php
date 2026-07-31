@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Support;
 
+use Illuminate\Support\Facades\Artisan;
 use PanelKit\Panel\PanelManager;
 
 /**
@@ -281,6 +282,26 @@ final class Blueprint
         }
         ```
 
+        ### Add markup to a screen you do not own
+
+        A plugin can put a component at a NAMED position on an existing
+        screen, instead of forking it. Positions come from `RenderHooks`; a
+        typo is refused at registration rather than rendering nowhere. Scope
+        it to resource keys, or leave it null for every screen.
+
+        ```php
+        $context->render(
+            RenderHooks::LIST_BEFORE_TABLE,
+            'TrialNotice',                 // resolved by the APP's registry
+            ['daysLeft' => 3],
+            ['clients'],                   // this resource only
+        );
+        ```
+
+        The application decides what that name resolves to
+        (`registerRenderHookComponent`), because a component name straight
+        from the server would let a plugin mount anything in the bundle.
+
         ### Add a portal
 
         ```bash
@@ -361,7 +382,7 @@ final class Blueprint
     {
         $lines = [];
 
-        foreach (\Illuminate\Support\Facades\Artisan::all() as $name => $command) {
+        foreach (Artisan::all() as $name => $command) {
             if (! str_starts_with($name, 'panel:') && ! str_starts_with($name, 'make:panel')) {
                 continue;
             }
