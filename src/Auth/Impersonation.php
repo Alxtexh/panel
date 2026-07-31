@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use PanelKit\Panel\Audit\AuditRecorder;
+use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\TenantContext;
 use RuntimeException;
 
@@ -190,14 +193,38 @@ final class Impersonation
     /** @param array<string, mixed> $_ */
     private function audit(?Authenticatable $subject, string $event): void
     {
-        if ($subject instanceof \Illuminate\Database\Eloquent\Model) {
+        if ($subject instanceof Model) {
             app(AuditRecorder::class)->record($subject, $event);
         }
     }
 
+    /**
+     * @var array<string, bool> "id|ability" => held
+     */
+    private array $abilityCache = [];
+
+    /**
+     * MEMOISED FOR THIS INSTANCE, which is one request's worth.
+     *
+     * `hasPermission` is an EXISTS against the role tables every time it is
+     * asked - it does not use a loaded relation - and the two callers ask it a
+     * great many times. `grantsMoreThan` walks the whole ability registry, so a
+     * single comparison of two people is two queries per registered ability;
+     * and a list that offers "Impersonate" per row asks the same question about
+     * the same actor once for every person on the page.
+     *
+     * A grant cannot change between the start and end of one request, so the
+     * cached answer is the same answer. It is deliberately NOT static: a
+     * long-lived worker would then serve a decision about somebody's permissions
+     * made before those permissions were edited, which is precisely the kind of
+     * staleness an authorisation check must never have.
+     */
     private function can(Authenticatable $user, string $ability): bool
     {
-        return method_exists($user, 'hasPermission') && $user->hasPermission($ability);
+        $key = $user->getAuthIdentifier().'|'.$ability;
+
+        return $this->abilityCache[$key] ??= method_exists($user, 'hasPermission')
+            && $user->hasPermission($ability);
     }
 
     /**
@@ -209,7 +236,7 @@ final class Impersonation
      */
     private function grantsMoreThan(Authenticatable $a, Authenticatable $b): bool
     {
-        foreach (\PanelKit\Panel\Support\Abilities::all() as $ability) {
+        foreach (Abilities::all() as $ability) {
             if ($this->can($a, $ability) && ! $this->can($b, $ability)) {
                 return true;
             }
@@ -218,7 +245,7 @@ final class Impersonation
         return false;
     }
 
-    /** @return \Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model> */
+    /** @return Builder<Model> */
     private function users()
     {
         $model = config('auth.providers.users.model');

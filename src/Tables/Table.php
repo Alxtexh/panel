@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Tables;
 
 use Closure;
+use Illuminate\Database\Query\Expression;
 use InvalidArgumentException;
 use PanelKit\Panel\Actions\ActionGroup;
 use PanelKit\Panel\Actions\BulkAction;
@@ -95,9 +96,12 @@ final class Table
 
     private ?Closure $transform = null;
 
+    /** @var Closure(list<array<string, mixed>>): void|null */
+    private ?Closure $prepareRows = null;
+
     private ?string $keyColumn = null;
 
-    /** @var list<string|\Illuminate\Database\Query\Expression> extra database columns to select that no column declares */
+    /** @var list<string|Expression> extra database columns to select that no column declares */
     private array $additionalSelect = [];
 
     public static function make(): self
@@ -414,6 +418,21 @@ final class Table
         return $this;
     }
 
+    /**
+     * Prepare once for the whole page, before per-row action visibility runs.
+     *
+     * For a `visible()` predicate that needs the record rather than the row:
+     * fetch what the page needs here, in one query, instead of once per row.
+     *
+     * @param  Closure(list<array<string, mixed>>): void  $prepare
+     */
+    public function prepareRows(Closure $prepare): self
+    {
+        $this->prepareRows = $prepare;
+
+        return $this;
+    }
+
     /** @param list<string> $columns */
     public function alsoSelect(array $columns): self
     {
@@ -431,7 +450,7 @@ final class Table
      * see `UserResource`'s `role_names`), and a second, unrelated caller
      * appending here must not silently discard that.
      *
-     * @param  list<string|\Illuminate\Database\Query\Expression>  $columns
+     * @param  list<string|Expression>  $columns
      */
     public function appendSelect(array $columns): self
     {
@@ -612,6 +631,10 @@ final class Table
 
         if ($this->constrain !== null) {
             $query->constrain($this->constrain);
+        }
+
+        if ($this->prepareRows !== null) {
+            $query->prepareRows($this->prepareRows);
         }
 
         if ($this->transform !== null) {
