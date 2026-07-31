@@ -78,6 +78,7 @@ final class DoctorCommand extends Command
         $this->checkAnnouncementVariables();
         $this->checkTemplateContrast();
         $this->checkBackupFreshness();
+        $this->checkViteDevServer();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -633,6 +634,74 @@ final class DoctorCommand extends Command
                 .'Check the scheduler is running and that backup:run is not failing.',
             );
         }
+    }
+
+    /**
+     * A HOT FILE POINTING AT A DEV SERVER THAT IS NOT THERE.
+     *
+     * THIS ONE COSTS AN AFTERNOON AND PRESENTS AS NOTHING AT ALL. When
+     * `public/hot` exists, every asset URL in the page points at the Vite dev
+     * server instead of the built manifest. If that server has stopped - or
+     * has stopped being able to serve one component, which is the same thing
+     * from the browser's side - the page loads, returns 200, contains a
+     * complete Inertia payload, and renders a white rectangle. Nothing is
+     * logged. `panel:doctor` said "nothing silently wrong" while the panel
+     * showed nothing at all, which is exactly the gap this command exists to
+     * close.
+     *
+     * A PROBLEM RATHER THAN A NOTE, because a blank panel is not a degraded
+     * panel. The fix is one of two commands and the message says both.
+     *
+     * IT IS SKIPPED WHEN THERE IS NO HOT FILE, which is every production
+     * installation - `npm run build` does not write one and `php artisan
+     * serve` does not either. This can only fire where somebody ran the dev
+     * server, which is the only place it is a problem.
+     */
+    private function checkViteDevServer(): void
+    {
+        $hot = public_path('hot');
+
+        if (! is_file($hot)) {
+            return;
+        }
+
+        $url = trim((string) file_get_contents($hot));
+
+        $parts = parse_url($url);
+        $host = $parts['host'] ?? '127.0.0.1';
+        /*
+         * PARENTHESISED DELIBERATELY. Written without them, `??` binds tighter
+         * than `?:` and the expression becomes
+         * `($parts['port'] ?? (scheme === 'https')) ? 443 : 80` - the actual
+         * port is never read, the check dials 80 or 443, and it reports a dead
+         * dev server on every installation that has a live one. It did exactly
+         * that on the first run.
+         */
+        $port = (int) ($parts['port'] ?? (($parts['scheme'] ?? 'http') === 'https' ? 443 : 80));
+
+        /*
+         * A CONNECT, NOT A REQUEST. Whether Vite can COMPILE a given module is
+         * not knowable from here and changes per file; whether anything is
+         * listening at all is the question that separates "the dev server
+         * stopped" from "the dev server is fine". One second is generous for
+         * a loopback connection and short enough that a doctor run does not
+         * hang on a firewall.
+         */
+        $socket = @fsockopen($host, $port, $code, $message, 1.0);
+
+        if ($socket !== false) {
+            fclose($socket);
+
+            return;
+        }
+
+        $this->problem(
+            'The panel is pointed at a Vite dev server that is not running',
+            "public/hot says assets come from {$url}, and nothing is listening there. Every page "
+            .'will load, return 200 with a complete payload, and render blank - no error, nothing '
+            .'in the log. Either start the dev server with `npm run dev`, or delete public/hot and '
+            .'serve the built assets with `npm run build`.',
+        );
     }
 
     /* ------------------------------------------------------------ plumbing */
