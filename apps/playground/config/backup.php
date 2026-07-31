@@ -39,6 +39,66 @@ return [
                     base_path('vendor'),
                     base_path('node_modules'),
                     storage_path('framework'),
+
+                    /*
+                     * THE BACKUPS THEMSELVES. The `local` disk is rooted at
+                     * storage/app/private, which is INSIDE the tree being
+                     * zipped - so without this every backup contains all the
+                     * previous ones. It compounds: 48 MB, then 41, then 222,
+                     * and the fourth would have been half a gigabyte of
+                     * nothing but earlier copies of itself.
+                     *
+                     * Spatie excludes its own TEMP directory automatically; it
+                     * does not know where you told it to put the finished
+                     * file. On this installation that is here.
+                     */
+                    storage_path('app/private/'.env('APP_NAME', 'Laravel')),
+
+                    /*
+                     * THE RAW DATABASE FILE - the FILE, not the directory.
+                     *
+                     * The dump below already captures this connection, so
+                     * zipping the file too doubles the largest thing in the
+                     * archive. It is also the less trustworthy copy: a file
+                     * read while the application is writing to it can land
+                     * torn between two pages, while the dump is taken through
+                     * the driver and is consistent. Keeping both invites
+                     * somebody restoring at 3am to reach for the wrong one.
+                     *
+                     * `database_path()` WOULD BE WRONG and was, briefly:
+                     * migrations, factories and seeders live there and are
+                     * source, not data. A backup that cannot rebuild the
+                     * schema is a backup of rows nothing can load.
+                     *
+                     * TENANT DATABASES STAY IN. Only the default connection is
+                     * dumped - see `databases` below - so a dedicated tenant's
+                     * SQLite file is captured HERE or nowhere.
+                     */
+                    database_path('database.sqlite'),
+                    database_path('dusk.sqlite'),
+
+                    /*
+                     * EXPORTS ARE REGENERABLE AND SHORT-LIVED. They are a CSV
+                     * somebody asked for, already expiring on their own
+                     * schedule - see `panel:prune-exports`. Restoring a
+                     * fortnight-old export helps nobody, and they are bulky
+                     * enough to crowd out what does.
+                     */
+                    storage_path('app/private/panel-exports'),
+
+                    /*
+                     * THE BROWSER DUSK DOWNLOADED. 169 MB of Chrome, which is
+                     * a TOOL rather than anything this installation produced -
+                     * `php artisan dusk:chrome-driver` fetches it again in
+                     * seconds, and restoring a five-month-old build of a
+                     * browser onto a new machine is worse than not having one.
+                     *
+                     * It was 91% of the archive. Worth saying because the
+                     * obvious suspects - vendor and node_modules - were
+                     * already excluded and were not the problem: the thing
+                     * filling a backup is rarely the thing you assume.
+                     */
+                    base_path('chrome'),
                 ],
 
                 /*
