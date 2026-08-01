@@ -4,6 +4,64 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.2.0
+
+**Breaking.** PanelKit now owns the permission system. `panelkit/panel` requires
+`spatie/laravel-permission`, ships `PanelKit\Panel\Models\Role`, a migration, the
+`grants_all` column, `panel:permissions` and the permission matrix screen.
+
+### If you are upgrading from 0.1.0
+
+**You get a `roles` migration.** It creates nothing that already exists — if your
+application has been using Spatie for years, it adds only the `grants_all` column
+and leaves every table and row alone. `down()` drops nothing, because it cannot
+tell a table it made from one that predates it.
+
+**Set `permission.teams` if you are multi-tenant.** Spatie defaults it to `false`,
+and that default fails open here: roles carry a tenant, the panel sets a team id
+on every request, and the permission package ignores both — one role granting
+across every organisation at once, with no error and nothing in a log.
+
+```php
+// config/permission.php
+'teams' => true,
+'column_names' => ['team_foreign_key' => 'tenant_id'],
+```
+
+`panel:doctor` reports this as a problem, so a deploy that runs it will fail
+rather than serve the union of everybody's permissions.
+
+**Set `panel.tenancy.model`** to your tenant class if you have one, so
+`panel:permissions` can visit every organisation. Null is a real answer — a
+single-tenant installation reconciles once with a null team id.
+
+**The matrix mounts itself at `/roles`.** If you already mount your own, set
+`panel.routes.roles` to `false`; two URLs rendering one screen is how a bookmark
+comes to disagree with a menu. If you have a *resource* keyed `roles`, it wins
+the URL and the matrix becomes unreachable — `panel:doctor` now reports that too,
+because the failure is otherwise silent.
+
+### Added
+
+- `panel:permissions list|sync`, with `--prune` and `--dry-run`. Ability names are
+  derived from the resource registry, so the interesting work is pruning names
+  that no longer correspond to anything.
+- `grants_all`: a role that holds every ability *including ones invented later*.
+  Inferring it from "currently holds all of them" would make a role become a
+  superuser the moment somebody ticked the last box.
+- `panel:doctor` checks `permission.teams` under tenancy, and the `roles` route
+  collision.
+- `@panelkit/inertia` ships `settings/Roles`.
+
+### Changed
+
+- `panel:journey` moved to the reference app. It walks *that* app's routes.
+- `panel:benchmark` stays: it is the only reader of `Budgets::register()` and
+  `Resource::budgetMs()`, both public API.
+- The seeders (`panel:seed-reference`, `panel:seed-demo`) are no longer shipped.
+  They invented an ISP's subscribers, which no other installation wants, and
+  created accounts whose password is written in the file.
+
 ## 0.1.0
 
 First tagged release. Everything is new, so rather than list it, here is what
