@@ -43,6 +43,16 @@ final class PanelManager
      */
     private array $resources = [];
 
+    /**
+     * Screens the package itself provides.
+     *
+     * @var list<class-string<Pages\Page>>
+     */
+    private const PACKAGE_PAGES = [
+        Pages\ChangelogPage::class,
+        Pages\EnvironmentPage::class,
+    ];
+
     /** @var array<string, class-string<Pages\Page>> slug => class */
     private array $pages = [];
 
@@ -772,6 +782,23 @@ final class PanelManager
         if (! $this->pagesDiscovered) {
             $this->pagesDiscovered = true;
 
+            /*
+             * THE PACKAGE'S OWN PAGES FIRST, because discovery cannot find them.
+             *
+             * `discover_pages` scans the APPLICATION's directory - which is
+             * right, and meant `ChangelogPage` and `EnvironmentPage` shipped
+             * into a namespace nothing scanned. Both were exported, both had
+             * page files written by `panel:install`, and neither was ever
+             * routed: a screen that exists in every sense except the one that
+             * matters.
+             *
+             * That is the third time this shape has shipped here - widgets with
+             * no host, a roles route with no page file - so these are registered
+             * the way commands and routes are, by the package that owns them.
+             * Each still hides itself until configured.
+             */
+            $this->registerPages(self::PACKAGE_PAGES);
+
             foreach ((array) config('panel.discover_pages', []) as $directory => $namespace) {
                 $this->discoverPages($directory, $namespace);
             }
@@ -834,6 +861,15 @@ final class PanelManager
     public function registerPages(array $classes): void
     {
         foreach ($classes as $class) {
+            /*
+             * A DISABLED PAGE IS NOT REGISTERED, so it routes nothing and
+             * collides with nothing - see `Page::isEnabled()` for the screen
+             * this rule exists to have not replaced.
+             */
+            if (! $class::isEnabled()) {
+                continue;
+            }
+
             $slug = $class::slug();
 
             /*

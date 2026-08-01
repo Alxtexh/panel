@@ -57,7 +57,11 @@ final class EnvironmentPage extends Page
         return ['update' => ''];
     }
 
-    public static function shouldShowInNavigation(): bool
+    /**
+     * NOT PRESENT AT ALL unless keys are declared editable. A routed screen
+     * saying "nothing is editable" is a dead end reachable from no menu.
+     */
+    public static function isEnabled(): bool
     {
         return EnvFile::isEditable();
     }
