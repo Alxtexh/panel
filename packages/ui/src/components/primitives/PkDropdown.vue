@@ -34,6 +34,18 @@ const props = withDefaults(
          * so a menu holding one "Delete" was 224 pixels wide - the panel never
          * measured what was in it, and every short menu looked like a mistake.
          *
+         * AN ARBITRARY VALUE, NOT A SCALE STEP, and that is not fussiness. The
+         * first fix used `min-w-44`, which generated NO CSS at all - so the only
+         * rule that survived was `w-max` and the panel hugged its text with no
+         * minimum whatsoever. A menu that had been too wide became too tight,
+         * and nothing reported either. `min-w-[13rem]` cannot be silently
+         * dropped, and the built stylesheet is checked for it.
+         *
+         * 10rem IS A JUDGEMENT, and the two wrong answers either side of it are
+         * on record: 13rem is exactly the old `w-52` that made a one-word menu
+         * look like an empty box, and no minimum at all made the same menu look
+         * cramped. It is one constant - move it if the eye disagrees.
+         *
          * Pass a `w-…` class where a fixed width is genuinely wanted: the filter
          * panel is a form, and a form that reflows as its contents change is
          * worse than one that does not.
@@ -70,7 +82,7 @@ const props = withDefaults(
     }>(),
     {
         align: 'end',
-        width: 'min-w-44 max-w-xs',
+        width: 'min-w-[10rem] max-w-sm',
         offset: 4,
         placement: 'bottom',
         hoverable: false,
@@ -366,7 +378,7 @@ defineExpose({ close, openAt })
                     v-if="open"
                     ref="panel"
                     :class="[
-                        'bg-popover text-popover-foreground fixed z-[100] w-max overflow-hidden rounded-md border p-1 shadow-lg',
+                        'bg-popover text-popover-foreground fixed z-[100] w-max overflow-hidden rounded-md border p-1.5 shadow-lg',
                         width,
                     ]"
                     :style="{

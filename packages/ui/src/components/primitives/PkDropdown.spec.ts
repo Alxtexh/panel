@@ -64,12 +64,18 @@ describe('PkDropdown sizing', () => {
         expect(classes).toContain('w-max')
     })
 
+    /*
+     * THE MINIMUM MUST BE A CLASS THAT COMPILES. `min-w-44` generated no CSS at
+     * all, so the only surviving rule was `w-max` and a menu that had been too
+     * wide became too tight - with nothing failing either time. An arbitrary
+     * value cannot be silently dropped.
+     */
     it('keeps a minimum so a one-word menu is not a sliver', async () => {
-        expect((await open()).classes()).toContain('min-w-44')
+        expect((await open()).classes()).toContain('min-w-[10rem]')
     })
 
     it('caps the width so a long label cannot stretch it across the screen', async () => {
-        expect((await open()).classes()).toContain('max-w-xs')
+        expect((await open()).classes()).toContain('max-w-sm')
     })
 
     /**
