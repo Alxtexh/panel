@@ -64,6 +64,35 @@ final class SeedReferenceCommand extends Command
 
     public function handle(): int
     {
+        /*
+         * LOCAL ONLY, AND THIS SHIPS IN THE PACKAGE.
+         *
+         * `panel:seed-demo` has refused to run outside local since it was
+         * written; this one never did, and it is the more dangerous of the two:
+         * it creates operator accounts whose password is the literal string
+         * "password", written in this file, which is public. Anybody who
+         * installs PanelKit gets this command in `artisan list`, and running it
+         * on a server hands out known credentials to every tenant it invents.
+         *
+         * Nothing about that fails. The command succeeds, the panel works, and
+         * the installation is simply open - which is why the guard has to be
+         * here rather than in the documentation.
+         */
+        if (! app()->environment('local', 'testing')) {
+            $this->components->error(
+                'panel:seed-reference refuses to run outside the local environment.'
+            );
+
+            $this->line(
+                '  It creates demo tenants and operator accounts with a fixed, published'
+            );
+            $this->line(
+                '  password. Use panel:install and make your own administrator instead.'
+            );
+
+            return self::FAILURE;
+        }
+
         $only = $this->option('tenant');
         $started = hrtime(true);
 
