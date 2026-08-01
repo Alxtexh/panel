@@ -64,7 +64,7 @@ final class LandingPageTest extends TestCase
     /** Every section a preset names must be one the renderer knows. */
     public function test_no_preset_names_a_section_the_client_cannot_draw(): void
     {
-        $known = ['hero', 'logos', 'features', 'steps', 'stats', 'testimonials', 'pricing', 'faq', 'cta'];
+        $known = ['hero', 'logos', 'features', 'bento', 'showcase', 'steps', 'stats', 'testimonials', 'pricing', 'faq', 'cta'];
 
         foreach (LandingPresets::names() as $design) {
             foreach (LandingPresets::get($design) as $section) {

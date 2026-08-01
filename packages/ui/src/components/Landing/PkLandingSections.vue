@@ -16,6 +16,7 @@
  */
 import { computed } from 'vue'
 import type { LandingSection } from './types'
+import PkBento from './PkBento.vue'
 import PkCta from './PkCta.vue'
 import PkFaq from './PkFaq.vue'
 import PkFeatureGrid from './PkFeatureGrid.vue'
@@ -23,6 +24,7 @@ import PkHero from './PkHero.vue'
 import PkLogoCloud from './PkLogoCloud.vue'
 import PkPricing from './PkPricing.vue'
 import PkStats from './PkStats.vue'
+import PkShowcase from './PkShowcase.vue'
 import PkSteps from './PkSteps.vue'
 import PkTestimonials from './PkTestimonials.vue'
 
@@ -38,6 +40,8 @@ const REGISTRY: Record<string, unknown> = {
     hero: PkHero,
     logos: PkLogoCloud,
     features: PkFeatureGrid,
+    bento: PkBento,
+    showcase: PkShowcase,
     steps: PkSteps,
     stats: PkStats,
     testimonials: PkTestimonials,

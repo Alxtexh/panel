@@ -55,18 +55,37 @@ final class LandingPresets
                 'title' => 'Running operator screens at',
                 'items' => [['name' => 'Nairobi Fibre'], ['name' => 'Coastal ISP'], ['name' => 'Rift Networks'], ['name' => 'Lakeside Telecom']],
             ]],
-            ['type' => 'features', 'data' => [
+            /*
+             * A BENTO RATHER THAN NINE EQUAL CARDS. Weighting the tiles is the
+             * difference between a list of capabilities and a claim about which
+             * ones matter - and the two that sell this product are the table
+             * that stays fast and the tenancy that refuses.
+             */
+            ['type' => 'bento', 'data' => [
                 'title' => 'One PHP class per screen',
                 'body' => 'The schema travels once and is cached. The rows travel on every interaction. Nothing else has to.',
                 'items' => [
-                    ['title' => 'Tables that scale', 'body' => 'Keyset pagination, deferred counts and no SELECT * - a list costs the same at a million rows as at ten.'],
-                    ['title' => 'Forms from the model', 'body' => 'Thirty field types, validation, conditional sections and repeaters as rows.'],
-                    ['title' => 'Tenancy that denies', 'body' => 'An unresolved tenant denies rather than leaks. Enforced by an enumerated isolation matrix.'],
-                    ['title' => 'Backups you have restored', 'body' => 'Scheduled, monitored, and proven by a restore test rather than by a green tick.'],
-                    ['title' => 'Roles and permissions', 'body' => 'Per-ability grants, prebuilt role templates, and a panel that denies anything unticked.'],
-                    ['title' => 'Generated portals', 'body' => 'make:panel produces a working portal with its own guard, routes and navigation.'],
+                    ['title' => 'Tables that stay fast', 'span' => 'large', 'accent' => true, 'body' => 'Keyset pagination, deferred counts and no SELECT * - a list of a million rows costs what a list of ten does. Four queries a page, asserted on every commit.'],
+                    ['title' => 'Tenancy that denies', 'span' => 'tall', 'body' => 'An unresolved tenant refuses rather than leaking. Enforced by an enumerated isolation matrix, not by remembering to add a where clause.'],
+                    ['title' => 'Forms from the model', 'body' => 'Thirty field types, validation, conditional sections.'],
+                    ['title' => 'Backups you have restored', 'body' => 'Proven by a restore test, not by a green tick.'],
+                    ['title' => 'Roles and permissions', 'span' => 'wide', 'body' => 'Per-ability grants and prebuilt templates. The panel denies anything unticked, so an unreviewed policy grants nothing.'],
+                    ['title' => 'Generated portals', 'body' => 'make:panel gives you a working portal with its own guard.'],
                 ],
             ]],
+
+            /*
+             * THE PRODUCT, ASSEMBLING ITSELF as the reader scrolls past. It is
+             * drawn rather than screenshotted - see `PkShowcase` - so it cannot
+             * go stale and costs no request on the page that must be fastest.
+             */
+            ['type' => 'showcase', 'data' => [
+                'title' => 'This is the screen you get',
+                'body' => 'Declared in PHP, rendered by the packages, routed by discovery. No Vue was written to make it.',
+                'caption' => 'yourpanel.example / subscribers',
+                'rows' => 6,
+            ]],
+
             ['type' => 'stats', 'data' => [
                 'title' => 'Measured, not asserted',
                 'items' => [
@@ -112,6 +131,28 @@ final class LandingPresets
         ];
     }
 
+    /**
+     * The flat feature grid, kept for the designs that should NOT have a bento.
+     *
+     * Editorial is a magazine and Console is a terminal; both want even weight
+     * and a predictable rhythm, which is the opposite of what a bento is for.
+     */
+    private static function featureGrid(): array
+    {
+        return ['type' => 'features', 'data' => [
+            'title' => 'One PHP class per screen',
+            'body' => 'The schema travels once and is cached. The rows travel on every interaction.',
+            'items' => [
+                ['title' => 'Tables that scale', 'body' => 'Keyset pagination, deferred counts and no SELECT * - a list costs the same at a million rows as at ten.'],
+                ['title' => 'Forms from the model', 'body' => 'Thirty field types, validation, conditional sections and repeaters as rows.'],
+                ['title' => 'Tenancy that denies', 'body' => 'An unresolved tenant denies rather than leaks. Enforced by an enumerated isolation matrix.'],
+                ['title' => 'Backups you have restored', 'body' => 'Scheduled, monitored, and proven by a restore test rather than by a green tick.'],
+                ['title' => 'Roles and permissions', 'body' => 'Per-ability grants, prebuilt role templates, and a panel that denies anything unticked.'],
+                ['title' => 'Generated portals', 'body' => 'make:panel produces a working portal with its own guard, routes and navigation.'],
+            ],
+        ]];
+    }
+
     /** The quiet typographic page: fewer sections, more prose, no logos. */
     private static function editorial(): array
     {
@@ -127,7 +168,7 @@ final class LandingPresets
                 'secondaryLabel' => 'Get started',
                 'secondaryHref' => '/register',
             ]],
-            $by('features'),
+            self::featureGrid(),
             ['type' => 'steps', 'data' => [
                 'title' => 'Three commands',
                 'items' => [
@@ -161,7 +202,7 @@ final class LandingPresets
                 'note' => 'PHP 8.3+, Laravel 11+',
             ]],
             $by('stats'),
-            $by('features'),
+            self::featureGrid(),
             $by('pricing'),
             $by('faq'),
             $by('cta'),

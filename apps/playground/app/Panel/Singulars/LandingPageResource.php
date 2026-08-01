@@ -6,6 +6,7 @@ namespace App\Panel\Singulars;
 
 use App\Support\LandingPresets;
 use PanelKit\Panel\Forms\Fields\BuilderField;
+use PanelKit\Panel\Forms\Fields\NumberField;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextareaField;
 use PanelKit\Panel\Forms\Fields\TextField;
@@ -151,6 +152,28 @@ final class LandingPageResource extends SingularResource
                                     TextField::make('title')->required(),
                                     TextareaField::make('body')->rows(2),
                                 ]),
+                        ])
+                        ->block('bento', 'Bento grid', [
+                            TextField::make('title'),
+                            TextareaField::make('body')->rows(2),
+                            BuilderField::make('items')->label('Tiles')
+                                ->block('tile', 'Tile', [
+                                    TextField::make('title')->required(),
+                                    TextareaField::make('body')->rows(2),
+                                    SelectField::make('span')->label('Size')->options([
+                                        '' => 'Normal',
+                                        'wide' => 'Two columns wide',
+                                        'tall' => 'Two rows tall',
+                                        'large' => 'Wide and tall',
+                                    ])->help('Which capability deserves the big tile is an editorial call.'),
+                                    ToggleField::make('accent')->label('Tint this tile'),
+                                ]),
+                        ])
+                        ->block('showcase', 'Product showcase', [
+                            TextField::make('title')->required(),
+                            TextareaField::make('body')->rows(2),
+                            TextField::make('caption')->help('The address shown in the window chrome.'),
+                            NumberField::make('rows')->label('Table rows')->min(3)->max(12),
                         ])
                         ->block('steps', 'How it works', [
                             TextField::make('title'),
