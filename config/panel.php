@@ -464,6 +464,20 @@ return [
     */
     'singulars' => [],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Screens the package mounts for you
+    |--------------------------------------------------------------------------
+    |
+    | PanelKit routes the permission matrix by default, so an installation has a
+    | working roles screen without writing a controller. Set this to false if you
+    | mount `RoleController` yourself - two URLs rendering the same screen is how
+    | a bookmark comes to disagree with a menu.
+    */
+    'routes' => [
+        'roles' => true,
+    ],
+
     'tenancy' => [
         'mode' => env('PANEL_TENANCY_MODE', 'column'),
         'column' => 'tenant_id',
