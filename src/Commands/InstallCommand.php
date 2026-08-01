@@ -67,6 +67,7 @@ final class InstallCommand extends Command
         $this->writePageFiles();
         $this->checkTenancy();
         $this->checkAuthScaffolding();
+        $this->writeBlueprint();
 
         $this->newLine();
         $this->components->info('Done. Next:');
@@ -84,8 +85,44 @@ final class InstallCommand extends Command
         $this->line('  4. Review the generated policy - the panel DENIES any ability whose');
         $this->line('     model has no policy, so an unreviewed stub is a real grant.');
         $this->line('  5. Visit /your-models. Discovery registers it; there is no route to add.');
+        $this->newLine();
+        $this->line('  AGENTS.md now holds the conventions and the full list of fields,');
+        $this->line('  columns, filters and actions available. Re-run `panel:blueprint`');
+        $this->line('  after adding resources - it is generated, so it stays true.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * THE GUIDE ARRIVES WITH THE INSTALL, rather than waiting to be discovered.
+     *
+     * `panel:blueprint` has existed since the beginning and nothing ran it. So
+     * the conventions that fail silently - never write a controller for a
+     * resource screen, a resource with no policy is invisible, definitions must
+     * not query - were written down in a command nobody knew to type, which is
+     * the same as not having written them down.
+     *
+     * IT MATTERS MOST FOR AGENTS, and they are now most of the readers. An agent
+     * opens a repository, looks for `AGENTS.md` or `CLAUDE.md`, and builds from
+     * whatever it finds. Absent that file it builds from a guess about what a
+     * Laravel admin panel probably looks like, and the guesses are all the
+     * mistakes this framework has names for.
+     *
+     * FAILURE IS NOT FATAL. The blueprint reads the running application, and an
+     * install that has just created its first panel may have nothing to say
+     * about resources yet. A broken guide should not fail an install that
+     * otherwise worked - it should say so and let the install finish.
+     */
+    private function writeBlueprint(): void
+    {
+        try {
+            $this->callSilently('panel:blueprint');
+            $this->components->task('  wrote AGENTS.md', fn () => true);
+        } catch (\Throwable $e) {
+            $this->components->warn(
+                '  AGENTS.md was not written ('.$e->getMessage().'). Run `php artisan panel:blueprint`.'
+            );
+        }
     }
 
     /**
