@@ -190,6 +190,27 @@ final class PanelRoutes
                  * hard-deleting still routes it, showing an empty bin rather
                  * than a 404.
                  */
+                /*
+                 * THE PERMISSION MATRIX, mounted by default.
+                 *
+                 * A framework that ships roles, a roles model and a reconciler
+                 * and then leaves the SCREEN unrouted has shipped a permission
+                 * system nobody can operate without writing a controller first.
+                 * So it routes itself, beside trash, for the same reason: it
+                 * takes no `{resource}` segment because it spans all of them.
+                 *
+                 * TURNED OFF BY AN APPLICATION THAT MOUNTS ITS OWN. The
+                 * reference app puts this under `/settings/roles`, where its
+                 * operators look for it, and two URLs rendering one screen is
+                 * a way to make a bookmark disagree with a menu.
+                 */
+                if (config('panel.routes.roles', true)) {
+                    Route::get('roles', [Controllers\RoleController::class, 'index'])->name('roles');
+                    Route::post('roles', [Controllers\RoleController::class, 'store'])->name('roles.store');
+                    Route::put('roles/{role}', [Controllers\RoleController::class, 'update'])->name('roles.update');
+                    Route::delete('roles/{role}', [Controllers\RoleController::class, 'destroy'])->name('roles.destroy');
+                }
+
                 Route::get('trash', [Controllers\TrashController::class, 'index'])->name('trash');
 
                 /*

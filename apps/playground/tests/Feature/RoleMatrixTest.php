@@ -100,6 +100,26 @@ final class RoleMatrixTest extends TestCase
         $this->actingAs($this->manager())->get('/settings/roles')->assertOk();
     }
 
+    /**
+     * THE SCREEN IS TOLD WHERE IT LIVES, because it is the package's now.
+     *
+     * The component moved into `@panelkit/inertia`, so it can no longer import
+     * the application's Wayfinder route table to find out where to POST - and
+     * would name the wrong URL anyway for anybody who mounted it elsewhere. The
+     * route passes its own URL down; every create, update and delete on that
+     * screen hangs off this one string, so it failing is the whole screen
+     * failing silently on save rather than on load.
+     */
+    public function test_the_matrix_is_told_the_url_it_posts_back_to(): void
+    {
+        $props = $this->actingAs($this->manager())
+            ->get('/settings/roles')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertSame(url('/settings/roles'), $props['endpoint']);
+    }
+
     /* ------------------------------------------------------------ the payload */
 
     public function test_permissions_are_saved(): void

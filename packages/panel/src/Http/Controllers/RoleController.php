@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace PanelKit\Panel\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -48,13 +48,13 @@ final class RoleController extends Controller
              */
             'roles' => Role::query()
                 ->select('roles.*')
-                ->where('tenant_id', $request->user()->tenant_id)
+                ->where($this->teamColumn(), $this->tenantOf($request))
                 ->with('permissions:id,name')
                 ->addSelect(['user_count' => DB::table('model_has_roles')
                     ->selectRaw('count(*)')
                     ->whereColumn('model_has_roles.role_id', 'roles.id')
-                    ->where('model_has_roles.model_type', User::class)
-                    ->where('model_has_roles.tenant_id', $request->user()->tenant_id),
+                    ->where('model_has_roles.model_type', $this->userModel())
+                    ->where('model_has_roles.'.$this->teamColumn(), $this->tenantOf($request)),
                 ])
                 ->orderBy('id')
                 ->get()
@@ -66,6 +66,16 @@ final class RoleController extends Controller
                     'permissions' => $role->permissions->pluck('name')->all(),
                     'userCount' => (int) $role->user_count,
                 ])->values(),
+
+            /*
+             * WHERE THIS SCREEN LIVES, told to the screen.
+             *
+             * The page used to reach for Wayfinder's generated route table,
+             * which is the APPLICATION's - not something a packaged component
+             * can import, and wrong for anybody who mounted the screen at a
+             * path of their own. The route knows its own URL; it passes it on.
+             */
+            'endpoint' => $request->url(),
 
             // Grouped by resource so the matrix has rows to render, and derived
             // from the registry so a new resource appears without a migration.
@@ -100,7 +110,7 @@ final class RoleController extends Controller
             'name' => [
                 'required', 'string', 'max:80',
                 Rule::unique('roles', 'name')
-                    ->where('tenant_id', $request->user()->tenant_id),
+                    ->where($this->teamColumn(), $this->tenantOf($request)),
             ],
             /*
              * ONLY THE KEY IS ACCEPTED, never a list of abilities.
@@ -124,7 +134,7 @@ final class RoleController extends Controller
         $role = Role::create([
             'name' => $validated['name'],
             'guard_name' => config('auth.defaults.guard', 'web'),
-            'tenant_id' => $request->user()->tenant_id,
+            $this->teamColumn() => $this->tenantOf($request),
         ]);
 
         /*
@@ -310,11 +320,52 @@ final class RoleController extends Controller
      */
     private function authoriseTenant(Request $request, Role $role): void
     {
-        abort_unless((string) $role->tenant_id === (string) $request->user()?->tenant_id, 404);
+        abort_unless(
+            (string) $role->getAttribute($this->teamColumn()) === (string) $this->tenantOf($request),
+            404,
+        );
     }
 
     private function authoriseManagement(Request $request): void
     {
         abort_unless($request->user()?->hasPermission('manage_roles'), 403);
+    }
+
+    /* --------------------------------------------------- what is not ours */
+
+    /**
+     * The column roles are scoped by, ASKED rather than assumed.
+     *
+     * `tenant_id` is this project's name for it and `team_id` is Spatie's own
+     * default, so a consumer who published that config before installing
+     * PanelKit has whichever they chose. Hardcoding one would scope a query by a
+     * column the permission package never reads - every role visible to every
+     * organisation, with no error anywhere.
+     */
+    private function teamColumn(): string
+    {
+        return (string) config(
+            'permission.column_names.team_foreign_key',
+            config('panel.tenancy.column', 'tenant_id'),
+        );
+    }
+
+    /** The application's authenticatable, which `model_has_roles` stores by name. */
+    private function userModel(): string
+    {
+        return (string) config('auth.providers.users.model');
+    }
+
+    /**
+     * Which organisation this request belongs to.
+     *
+     * READ FROM THE USER, not from `TenantContext`, and deliberately: a role is
+     * created for the organisation the person creating it belongs to, and an
+     * operator impersonating across tenants must not thereby write a role into
+     * the tenant the hostname resolved.
+     */
+    private function tenantOf(Request $request): int|string|null
+    {
+        return $request->user()?->getAttribute(config('panel.tenancy.column', 'tenant_id'));
     }
 }

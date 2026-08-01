@@ -48,6 +48,13 @@ final class InstallCommand extends Command
         'documents/Templates',
         'documents/TemplateDesigner',
         'documents/DocumentPrint',
+
+        /*
+         * THE PERMISSION MATRIX, nested for the same reason. The package now
+         * ships the roles system - model, migration, reconciler - and a matrix
+         * nobody can open is a permission system nobody can operate.
+         */
+        'settings/Roles',
     ];
 
     public function handle(): int

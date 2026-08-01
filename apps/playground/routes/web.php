@@ -18,7 +18,7 @@ use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationsController;
-use App\Http\Controllers\RoleController;
+use PanelKit\Panel\Http\Controllers\RoleController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Settings\DeviceController;
