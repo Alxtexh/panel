@@ -39,6 +39,7 @@ final class PanelPages
          */
         'PanelDashboard',
         'Changelog',
+        'Environment',
 
         /*
          * NESTED NAMES, because the server renders `documents/Templates` and a

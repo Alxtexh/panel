@@ -35,6 +35,7 @@ export { default as Trash } from './pages/Trash.vue'
 export { default as PanelHome } from './pages/PanelHome.vue'
 export { default as PanelDashboard } from './pages/PanelDashboard.vue'
 export { default as Changelog } from './pages/Changelog.vue'
+export { default as Environment } from './pages/Environment.vue'
 export { default as Roles } from './pages/settings/Roles.vue'
 export { default as DocumentTemplates } from './pages/documents/Templates.vue'
 export { default as DocumentTemplateDesigner } from './pages/documents/TemplateDesigner.vue'
@@ -71,6 +72,7 @@ export const PANEL_PAGES = {
     PanelHome: () => import('./pages/PanelHome.vue'),
     PanelDashboard: () => import('./pages/PanelDashboard.vue'),
     Changelog: () => import('./pages/Changelog.vue'),
+    Environment: () => import('./pages/Environment.vue'),
 
     /*
      * The document designer. Nested names, because the server sends

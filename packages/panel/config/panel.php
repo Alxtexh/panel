@@ -512,6 +512,28 @@ return [
     */
     'changelog' => [],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Environment keys an operator may change
+    |--------------------------------------------------------------------------
+    |
+    | EMPTY BY DEFAULT, and the screen does not exist until this is not. A
+    | framework shipping a browser-reachable way to change an application's
+    | secrets, switched on, would be shipping that to everybody who installed it.
+    |
+    | Name only what an operator legitimately changes without a deploy - a
+    | Telegram chat id, a support address, a feature flag. `APP_KEY`, `APP_ENV`,
+    | `APP_DEBUG` and every `DB_*` are REFUSED whatever appears here: changing
+    | them breaks the running application in a way this screen cannot undo.
+    |
+    | Keys whose name contains KEY, SECRET, PASSWORD, TOKEN, DSN or CREDENTIAL
+    | are never displayed - the form shows whether they are set, and blank means
+    | leave alone.
+    */
+    'env' => [
+        'editable' => [],
+    ],
+
     'tenancy' => [
         'mode' => env('PANEL_TENANCY_MODE', 'column'),
         'column' => 'tenant_id',
