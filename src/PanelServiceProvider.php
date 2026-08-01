@@ -148,6 +148,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\DispatchScheduledReportsCommand::class,
             Commands\IndexKnowledgeCommand::class,
             Commands\MakeApiTokenCommand::class,
+            Commands\MakePageCommand::class,
             Commands\MakePanelCommand::class,
             Commands\MakeResourceCommand::class,
             Commands\ReindexTenantCommand::class,
