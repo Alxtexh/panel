@@ -82,7 +82,6 @@ final class DoctorCommand extends Command
         $this->checkViteDevServer();
         $this->checkShippedDefaults();
         $this->checkPermissionTeams($context);
-        $this->checkRolesRouteCollision($panels);
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -867,40 +866,6 @@ final class DoctorCommand extends Command
             .'ignores it, so a role grants across every organisation at once. Set '
             ."teams => true, and column_names.team_foreign_key => '"
             .config('panel.tenancy.column', 'tenant_id')."'.",
-        );
-    }
-
-    /**
-     * A resource named `roles`, which quietly swallows the permission matrix.
-     *
-     * THE SCREEN LOSES A RACE IT CANNOT SEE. Resource routes are registered
-     * before this one and match `/roles` through their `{resource}` placeholder,
-     * so an application with a resource keyed `roles` gets its own list at that
-     * URL and the matrix becomes unreachable. Nothing 404s and nothing throws:
-     * the screen is simply gone, and the way you find out is going to change
-     * somebody's permissions and arriving somewhere else.
-     *
-     * NOT SOLVED BY REGISTERING FIRST, which would shadow the consumer's own
-     * resource instead - the same silence pointed the other way. Whichever wins,
-     * the fix is for a human to choose, so this says which one won and what the
-     * switch is called.
-     */
-    private function checkRolesRouteCollision(PanelManager $panels): void
-    {
-        if (config('panel.routes.roles', true) !== true) {
-            return;
-        }
-
-        if (! array_key_exists('roles', $panels->resources())) {
-            return;
-        }
-
-        $this->problem(
-            'A resource keyed [roles] hides the permission matrix',
-            'Resource routes are registered first, so /roles serves that resource and the '
-            .'roles screen is unreachable - with no error to notice. Either rename the '
-            .'resource, or set panel.routes.roles to false and mount RoleController at a '
-            .'path of your own.',
         );
     }
 
