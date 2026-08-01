@@ -172,29 +172,7 @@ grep -q 'VERDICT pass' <<<"$perms" \
 
 say "Permissions reconciled: an Administrator role holds the generated resource's abilities"
 
-# AND THE SCREEN THAT OPERATES IT. The package mounts the permission matrix by
-# default - `panel.routes.roles` - because shipping roles, a model and a
-# reconciler while leaving the screen unrouted means a permission system nobody
-# can use without writing a controller first. The reference app turns this off
-# and mounts its own, so this is the only place the default is exercised.
-say "Checking the roles screen is routed"
-cat > verify-roles.php <<'HIT'
-<?php
-require __DIR__.'/vendor/autoload.php';
-$app = require_once __DIR__.'/bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
-echo $kernel->handle(Illuminate\Http\Request::create('/roles', 'GET'))->getStatusCode(), PHP_EOL;
-HIT
-roles_status="$(php verify-roles.php 2>/dev/null | tail -1)"
-rm -f verify-roles.php
 
-case "$roles_status" in
-    404) fail "/roles is not routed - the package ships a permission matrix nobody can open." ;;
-    5*)  fail "/roles is routed but returns $roles_status." ;;
-    "")  fail "/roles could not be requested at all." ;;
-esac
-
-say "/roles resolved with HTTP $roles_status"
 
 # A PANEL NEEDS AN APPLICATION THAT CAN AUTHENTICATE. `laravel/laravel` ships
 # no auth scaffolding, so there is no `login` route for the guard to send an
@@ -232,6 +210,37 @@ case "$status" in
 esac
 
 say "/customers resolved with HTTP $status"
+
+# AND THE SCREEN THAT OPERATES IT - CHECKED AFTER THE LOGIN ROUTE EXISTS.
+#
+# This block sat above that step at first and reported a 500 that had nothing to
+# do with roles: an auth-guarded route reached by a guest redirects to
+# `route('login')`, and in an app with no auth scaffolding that throws
+# `Route [login] not defined`. Which is the very trap documented a few lines up,
+# walked into by the check that was added to avoid trusting anything.
+# The package mounts the permission matrix by
+# default - `panel.routes.roles` - because shipping roles, a model and a
+# reconciler while leaving the screen unrouted means a permission system nobody
+# can use without writing a controller first. The reference app turns this off
+# and mounts its own, so this is the only place the default is exercised.
+say "Checking the roles screen is routed"
+cat > verify-roles.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+echo $kernel->handle(Illuminate\Http\Request::create('/roles', 'GET'))->getStatusCode(), PHP_EOL;
+HIT
+roles_status="$(php verify-roles.php 2>/dev/null | tail -1)"
+rm -f verify-roles.php
+
+case "$roles_status" in
+    404) fail "/roles is not routed - the package ships a permission matrix nobody can open." ;;
+    5*)  fail "/roles is routed but returns $roles_status." ;;
+    "")  fail "/roles could not be requested at all." ;;
+esac
+
+say "/roles resolved with HTTP $roles_status"
 
 echo
 echo "PASS - panelkit/panel installs into a fresh Laravel app, is discovered,"
