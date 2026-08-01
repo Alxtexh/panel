@@ -239,10 +239,40 @@ abstract class Page
     {
         return [
             'title' => static::label(),
-            'href' => rtrim($prefix, '/').'/'.static::slug(),
+            'href' => rtrim($prefix, '/').'/'.static::navigationPath(),
             'icon' => static::icon(),
             'group' => static::group(),
             'sort' => static::sort(),
         ];
+    }
+
+    /**
+     * The URI with its parameters dropped - what a menu entry can link to.
+     *
+     * BUILT FROM `uri()`, NOT `slug()`, and getting that wrong shipped a broken
+     * link: a page slugged `organisation` but mounted at `settings/organisation`
+     * appeared in the sidebar pointing at `/organisation`, which is routed to
+     * nothing. The slug is the IDENTITY; the uri is the address, and a menu
+     * needs the address.
+     *
+     * OPTIONAL SEGMENTS ARE DROPPED so `user-management/{tab?}` links to
+     * `user-management` and the page picks its own default. A REQUIRED
+     * parameter cannot be guessed at all - a page that needs one is not
+     * something a static menu entry can reach, and should say
+     * `shouldShowInNavigation(): false` and be linked from wherever supplies it.
+     */
+    public static function navigationPath(): string
+    {
+        $segments = [];
+
+        foreach (explode('/', static::uri()) as $segment) {
+            if (str_starts_with($segment, '{')) {
+                break;
+            }
+
+            $segments[] = $segment;
+        }
+
+        return implode('/', $segments);
     }
 }
