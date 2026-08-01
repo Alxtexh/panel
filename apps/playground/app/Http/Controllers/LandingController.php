@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Panel\Singulars\LandingPageResource;
 use App\Support\LandingPresets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use PanelKit\Panel\Support\InstallationState;
 
 /**
  * The public face - Part G.9.
@@ -75,8 +77,25 @@ final class LandingController extends Controller
             ? $requested
             : (in_array($configured, LandingPresets::names(), true) ? $configured : 'aurora');
 
+        /*
+         * WHAT WAS EDITED BEATS WHAT SHIPPED, except on a preview - `/preview`
+         * exists to show the shipped designs, so it would be useless if it
+         * showed the edited page instead.
+         *
+         * AN EMPTY SAVE IS NOT A BLANK SITE. Deleting every block hands the page
+         * back to the preset rather than serving nothing, so the worst an editor
+         * can do is return to what shipped.
+         */
+        $stored = $request->route('design') === null
+            ? app(InstallationState::class)->get(LandingPageResource::KEY)
+            : null;
+
+        $sections = is_array($stored) && $stored !== []
+            ? $stored
+            : LandingPresets::get($design);
+
         return Inertia::render(self::PAGE, [
-            'sections' => LandingPresets::get($design),
+            'sections' => $sections,
             // The switcher names the design it is showing, so the demo explains
             // itself rather than needing the query string read back.
             'design' => $design,

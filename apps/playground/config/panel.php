@@ -6,6 +6,7 @@ use App\Knowledge\GuideSource;
 use App\Knowledge\HelpSource;
 use App\Models\SavedView;
 use App\Panel\Singulars\BillingSettingsResource;
+use App\Panel\Singulars\LandingPageResource;
 use App\Plugins\AnnouncementsPlugin;
 use App\Plugins\TicketingPlugin;
 
@@ -47,6 +48,14 @@ return [
         // Gates the billing preferences singular (roadmap 4.3): whoever holds
         // it decides what every invoice says about money.
         'manage_billing' => 'Set the currency, tax rate and due window invoices use',
+        /*
+         * ITS OWN ABILITY, because this one is PUBLISHING. Everything else in
+         * the panel changes what operators see; the landing page is what the
+         * world sees, and "may edit the marketing site" is a decision an
+         * organisation should be able to grant to a person it would not trust
+         * with roles or billing.
+         */
+        'manage_landing_page' => 'Edit the public landing page',
         // Part G.4: with the dedicated screen removed, defining a custom
         // field is one dialog on the record forms, gated by one grant.
         'manage_custom_fields' => 'Add custom fields to records from their forms',
@@ -74,6 +83,7 @@ return [
     */
     'singulars' => [
         BillingSettingsResource::class,
+        LandingPageResource::class,
     ],
 
     /*
