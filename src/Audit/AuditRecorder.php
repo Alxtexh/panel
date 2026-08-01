@@ -73,8 +73,8 @@ final class AuditRecorder
 
     /**
      * @param  array<string, mixed>  $context
-     *   Detail for an event that is not a model change - which snapshot was
-     *   deleted, which report was exported.
+     *                                         Detail for an event that is not a model change - which snapshot was
+     *                                         deleted, which report was exported.
      *
      *   IT EXISTS BECAUSE THE ALTERNATIVE WAS SMUGGLING. Only `updated` produces
      *   a change set, so an action like "a backup was deleted" wrote an entry

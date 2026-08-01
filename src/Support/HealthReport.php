@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Support;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -351,7 +352,7 @@ final class HealthReport
         }
 
         try {
-            $at = \Illuminate\Support\Carbon::parse($last);
+            $at = Carbon::parse($last);
         } catch (\Throwable) {
             return ['running' => false, 'last' => null, 'seconds_ago' => null];
         }

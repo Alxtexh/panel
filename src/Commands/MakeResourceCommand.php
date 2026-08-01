@@ -7,6 +7,7 @@ namespace PanelKit\Panel\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use PanelKit\Panel\PanelManager;
 
 /**
  * php artisan make:panel-resource {Model} [--generate]
@@ -127,7 +128,7 @@ final class MakeResourceCommand extends Command
              * message naming the root sends somebody to a 404 and then to the
              * routing code looking for a bug that is not there.
              */
-            $prefix = trim((string) app(\PanelKit\Panel\PanelManager::class)->panel($panelId)?->getPath(), '/');
+            $prefix = trim((string) app(PanelManager::class)->panel($panelId)?->getPath(), '/');
             $url = '/'.($prefix === '' ? '' : $prefix.'/').Str::of($model)->plural()->kebab();
 
             $this->components->info("Introspected [{$table}]. Visit {$url} - no registration needed.");
@@ -148,7 +149,7 @@ final class MakeResourceCommand extends Command
      */
     private function panelTarget(): array
     {
-        $panels = app(\PanelKit\Panel\PanelManager::class)->panels();
+        $panels = app(PanelManager::class)->panels();
         $requested = $this->option('panel');
 
         /*
@@ -382,8 +383,7 @@ final class MakeResourceCommand extends Command
         array $imports,
         string $panelId,
         string $namespace,
-    ): string
-    {
+    ): string {
         $use = collect($imports)
             ->map(static fn (string $i): string => 'use PanelKit\\Panel\\'
                 .(str_starts_with($i, 'Columns') ? 'Tables\\' : 'Forms\\').$i.';')

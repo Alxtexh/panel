@@ -56,7 +56,7 @@ final class Reorderer
      * than reordering something it should not be able to see.
      *
      * @param  list<int|string>  $orderedIds  The page's ids, in their new order.
-     * @return int  How many rows were actually written.
+     * @return int How many rows were actually written.
      */
     public function apply(Builder $query, array $orderedIds): int
     {

@@ -10,6 +10,7 @@ use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Resources\SingularResource;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -64,7 +65,7 @@ final class SingularController extends Controller
         return back()->with('success', $class::label().' updated.');
     }
 
-    /** @return class-string<\PanelKit\Panel\Resources\SingularResource> */
+    /** @return class-string<SingularResource> */
     private function guard(Request $request, string $singular): string
     {
         $class = app(PanelManager::class)->singular($singular);

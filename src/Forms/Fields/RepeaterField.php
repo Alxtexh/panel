@@ -61,7 +61,7 @@ final class RepeaterField extends Field
             if ($field instanceof self || $field instanceof KeyValueField) {
                 throw new InvalidArgumentException(
                     "[{$field->key}] cannot be nested inside a repeater. A repeating group of "
-                    . 'repeating groups is a table with a foreign key - use a relation manager.'
+                    .'repeating groups is a table with a foreign key - use a relation manager.'
                 );
             }
         }

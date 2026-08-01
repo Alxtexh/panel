@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Support;
 
 use Illuminate\Support\Facades\Config;
+use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
+use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
+use Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification;
+use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays;
+use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes;
 
 /**
  * How this installation backs itself up, as an operator set it.
@@ -231,8 +236,8 @@ final class BackupSettings
          */
         Config::set('backup.monitor_backups.0.disks', $this->destinations);
         Config::set('backup.monitor_backups.0.health_checks', [
-            \Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays::class => $this->maxAgeDays(),
-            \Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes::class => $this->maxMegabytes ?? 100_000,
+            MaximumAgeInDays::class => $this->maxAgeDays(),
+            MaximumStorageInMegabytes::class => $this->maxMegabytes ?? 100_000,
         ]);
 
         /*
@@ -313,11 +318,11 @@ final class BackupSettings
     {
         $channels = (array) config('backup.notifications.notifications', []);
 
-        $viaFailure = (array) ($channels[\Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class] ?? ['mail']);
+        $viaFailure = (array) ($channels[BackupHasFailedNotification::class] ?? ['mail']);
 
         $success = [
-            \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class,
-            \Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification::class,
+            BackupWasSuccessfulNotification::class,
+            CleanupWasSuccessfulNotification::class,
         ];
 
         foreach ($success as $notification) {

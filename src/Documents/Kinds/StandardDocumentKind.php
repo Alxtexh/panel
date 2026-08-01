@@ -9,6 +9,7 @@ use PanelKit\Panel\Forms\Fields\ColourField;
 use PanelKit\Panel\Forms\Fields\TextareaField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Fields\VisualSelectField;
+use PanelKit\Panel\Schema\Renderable;
 use PanelKit\Panel\Schema\Section;
 
 /**
@@ -39,8 +40,8 @@ abstract class StandardDocumentKind extends DocumentKind
      * same order in the form. A designer whose fields run in a different order
      * from the document they describe makes somebody scroll to check.
      *
-     * @param  list<\PanelKit\Panel\Schema\Renderable>  $body
-     * @return list<\PanelKit\Panel\Schema\Renderable>
+     * @param  list<Renderable>  $body
+     * @return list<Renderable>
      */
     protected function standardFields(array $body): array
     {

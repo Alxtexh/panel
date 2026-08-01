@@ -9,6 +9,7 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 /**
  * A whole session, end to end, through the real HTTP stack.
@@ -110,7 +111,7 @@ final class JourneyCommand extends Command
         if ($user === null) {
             $this->components->error($negative
                 ? "No user outside [{$slug}] exists, so there is nobody to refuse."
-                : "Tenant [{$slug}] has no users, so nothing can sign in. Run panel:seed-reference first."
+                : "Tenant [{$slug}] has no users, so nothing can sign in. Create one, or seed the tenant, first."
             );
 
             return self::FAILURE;
@@ -261,8 +262,8 @@ final class JourneyCommand extends Command
              * status column was added to catch, and it caught it on the first
              * run, which is the only reason these numbers mean anything.
              */
-            if (class_exists(\Inertia\Inertia::class)) {
-                $request->headers->set('X-Inertia-Version', (string) \Inertia\Inertia::getVersion());
+            if (class_exists(Inertia::class)) {
+                $request->headers->set('X-Inertia-Version', (string) Inertia::getVersion());
             }
 
             DB::flushQueryLog();

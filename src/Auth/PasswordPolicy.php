@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -70,7 +72,7 @@ final class PasswordPolicy
      */
     public function mustChange(?Authenticatable $user): bool
     {
-        if (! $user instanceof \Illuminate\Database\Eloquent\Model) {
+        if (! $user instanceof Model) {
             return false;
         }
 
@@ -92,7 +94,7 @@ final class PasswordPolicy
             return false;
         }
 
-        return \Illuminate\Support\Carbon::parse($changedAt)
+        return Carbon::parse($changedAt)
             ->addDays($this->maxAgeDays)
             ->isPast();
     }
@@ -100,7 +102,7 @@ final class PasswordPolicy
     /** Days until this password expires, or null when nothing will expire. */
     public function daysUntilExpiry(?Authenticatable $user): ?int
     {
-        if (! $this->expiryEnabled() || ! $user instanceof \Illuminate\Database\Eloquent\Model) {
+        if (! $this->expiryEnabled() || ! $user instanceof Model) {
             return null;
         }
 
@@ -111,7 +113,7 @@ final class PasswordPolicy
         }
 
         return (int) floor(now()->diffInDays(
-            \Illuminate\Support\Carbon::parse($changedAt)->addDays($this->maxAgeDays),
+            Carbon::parse($changedAt)->addDays($this->maxAgeDays),
             absolute: false,
         ));
     }
@@ -125,7 +127,7 @@ final class PasswordPolicy
      */
     public function isReused(?Authenticatable $user, string $plain): bool
     {
-        if (! $this->refuseReuse || ! $user instanceof \Illuminate\Database\Eloquent\Model) {
+        if (! $this->refuseReuse || ! $user instanceof Model) {
             return false;
         }
 
@@ -152,7 +154,7 @@ final class PasswordPolicy
      * NEW password onto the history and immediately refuse it as reused - which
      * is the sort of bug that looks like the feature working.
      */
-    public function recordChange(\Illuminate\Database\Eloquent\Model $user): void
+    public function recordChange(Model $user): void
     {
         $previous = (string) $user->getOriginal('password');
 
@@ -172,7 +174,7 @@ final class PasswordPolicy
     }
 
     /** @return list<string> */
-    private function history(\Illuminate\Database\Eloquent\Model $user): array
+    private function history(Model $user): array
     {
         $stored = $user->getAttribute('password_history');
 

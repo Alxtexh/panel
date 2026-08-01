@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Alerts;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Notification;
 use PanelKit\Panel\Notifications\BellText;
 
@@ -45,7 +46,7 @@ final class AnnouncementDelivery
 
     private static function toBells(Announcement $announcement): void
     {
-        /** @var class-string<\Illuminate\Database\Eloquent\Model>|null $model */
+        /** @var class-string<Model>|null $model */
         $model = config('auth.providers.users.model');
 
         if ($model === null || ! class_exists($model)) {

@@ -42,7 +42,7 @@ final class DocumentTemplate extends Model
          * misconfigured resolver render nothing rather than somebody else's
          * letterhead.
          */
-        static::addGlobalScope('tenant', static function (Builder $builder): void {
+        self::addGlobalScope('tenant', static function (Builder $builder): void {
             $context = app(TenantContext::class);
 
             if (! $context->shouldScopeByColumn()) {
@@ -55,7 +55,7 @@ final class DocumentTemplate extends Model
             );
         });
 
-        static::creating(static function (self $template): void {
+        self::creating(static function (self $template): void {
             if ($template->tenant_id === null) {
                 $template->tenant_id = app(TenantContext::class)->currentKey();
             }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Alerts;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -114,7 +115,7 @@ final class ReportsToTelegram
 
         $lines = [
             $app.' — '.class_basename($e),
-            $message === '' ? '(no message)' : \Illuminate\Support\Str::limit($message, 300),
+            $message === '' ? '(no message)' : Str::limit($message, 300),
             '',
             $where,
         ];

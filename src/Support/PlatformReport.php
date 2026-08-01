@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Support;
 
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\PanelManager;
@@ -63,7 +65,7 @@ final class PlatformReport
             'debug' => (bool) config('app.debug'),
             'url' => (string) config('app.url'),
             'php' => PHP_VERSION,
-            'laravel' => \Illuminate\Foundation\Application::VERSION,
+            'laravel' => Application::VERSION,
             'timezone' => (string) config('app.timezone'),
             'locale' => (string) config('app.locale'),
         ];
@@ -165,7 +167,7 @@ final class PlatformReport
              * indicator that cries wolf is one that gets ignored.
              */
             'healthy' => $lastRun !== null
-                && \Illuminate\Support\Carbon::parse($lastRun)->diffInMinutes(now()) < 5,
+                && Carbon::parse($lastRun)->diffInMinutes(now()) < 5,
         ];
     }
 

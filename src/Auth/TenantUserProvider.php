@@ -6,6 +6,8 @@ namespace PanelKit\Panel\Auth;
 
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use PanelKit\Panel\Support\TenantContext;
 
 /**
@@ -58,8 +60,8 @@ final class TenantUserProvider extends EloquentUserProvider
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Model|null  $model
-     * @return \Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model>
+     * @param  Model|null  $model
+     * @return Builder<Model>
      */
     protected function newModelQuery($model = null)
     {

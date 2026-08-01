@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Notifications\Channels;
 
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Telegram\Telegram;
 use NotificationChannels\Telegram\TelegramChannel as BaseChannel;
 use NotificationChannels\Telegram\TelegramMessage;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * The Telegram channel, with the two things a panel needs on top of it.
@@ -76,8 +78,8 @@ final class TelegramChannel extends BaseChannel
          * on the way out; a subclass that forgot to would satisfy no type but
          * its own.
          */
-        return $response instanceof \Psr\Http\Message\ResponseInterface
-            ? \NotificationChannels\Telegram\Telegram::decodeResponse($response)
+        return $response instanceof ResponseInterface
+            ? Telegram::decodeResponse($response)
             : $response;
     }
 

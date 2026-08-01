@@ -43,8 +43,8 @@ final class Turnstile
      * Is this token good for this visitor?
      *
      * @param  string|null  $token  What the widget put in the form.
-     * @param  string|null  $ip     Passed to Cloudflare so a token minted for one
-     *                              visitor cannot be replayed from elsewhere.
+     * @param  string|null  $ip  Passed to Cloudflare so a token minted for one
+     *                           visitor cannot be replayed from elsewhere.
      */
     public function verify(?string $token, ?string $ip = null): bool
     {

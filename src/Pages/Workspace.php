@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Pages;
 
 use Illuminate\Http\Request;
 use InvalidArgumentException;
+use PanelKit\Panel\Tables\ListResult;
 use PanelKit\Panel\Tables\Table;
 
 /**
@@ -158,7 +159,7 @@ final class Workspace
     /**
      * Run every table, each against its own namespace.
      *
-     * @return array<string, \PanelKit\Panel\Tables\ListResult>
+     * @return array<string, ListResult>
      */
     public function results(Request $request): array
     {

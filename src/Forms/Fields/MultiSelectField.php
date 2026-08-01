@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Forms\Fields;
 
 use Closure;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 /**
  * A field holding SEVERAL values from a fixed list.
@@ -52,9 +54,9 @@ final class MultiSelectField extends Field
      */
     public function presentValue(mixed $value): mixed
     {
-        if ($value instanceof \Illuminate\Support\Collection) {
+        if ($value instanceof Collection) {
             return $value
-                ->map(fn (mixed $item): mixed => $item instanceof \Illuminate\Database\Eloquent\Model
+                ->map(fn (mixed $item): mixed => $item instanceof Model
                     ? $item->getAttribute($this->optionAttribute)
                     : $item)
                 ->values()

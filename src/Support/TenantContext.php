@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Support\Facades\Auth;
 use PanelKit\Panel\PanelManager;
 use RuntimeException;
+use Stancl\Tenancy\Contracts\TenantWithDatabase;
 
 /**
  * Resolves "which tenant is this request for" without binding the package to any
@@ -138,7 +139,7 @@ final class TenantContext
 
         // stancl marks a tenant as database-backed by implementing this
         // contract; a tenant model without it never gets its own connection.
-        if (! $tenant instanceof \Stancl\Tenancy\Contracts\TenantWithDatabase) {
+        if (! $tenant instanceof TenantWithDatabase) {
             return false;
         }
 
