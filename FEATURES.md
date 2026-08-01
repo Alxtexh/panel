@@ -183,4 +183,4 @@ pointing composer at a `git subtree split` branch.
 external security review** — the isolation matrix and the authorisation tests
 check my own assumptions.
 
-Current state: **v0.2.0**, 1,584 tests passing, 13 skipped.
+Current state: **v0.3.0**, 1,586 tests passing, 13 skipped.

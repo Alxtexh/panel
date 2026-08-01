@@ -1,6 +1,6 @@
 {
   "name": "@panelkit/inertia",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The screens PanelKit's PHP half renders: the resource list, the form, the record page, the trash and a portal's home. Inertia-bound, layout-free.",
   "type": "module",
   "license": "MIT",
@@ -17,7 +17,7 @@
   "peerDependencies": {
     "@inertiajs/vue3": "^2.0.0 || ^3.0.0",
     "@lucide/vue": "^0.5.0 || ^1.0.0",
-    "@panelkit/ui": "^0.2.0",
+    "@panelkit/ui": "^0.3.0",
     "vue": "^3.5.0",
     "vue-sonner": "^2.0.0"
   },

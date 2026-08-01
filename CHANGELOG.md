@@ -4,6 +4,56 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.3.0
+
+**A panel could declare a list of records and nothing else.** This release adds
+the other kind of screen.
+
+### Pages — anything that is not a resource
+
+`php artisan make:panel-page ServerHealth` writes a class and its one-line Vue
+file; discovery registers it. The route, the sidebar entry, the ability, the
+permission-matrix entry and the page header all follow from the class.
+
+`actions()` declares endpoints the page owns — `PUT` on its own address for the
+ordinary save, or a sub-path — **each with its own ability**, because seeing and
+doing are different grants.
+
+### Dashboards — a host for the widgets
+
+`StatWidget` and `ChartWidget` have shipped since the beginning and were
+referenced nowhere in the package: correct value objects that nothing could
+mount. `DashboardPage` declares `stats()` and `charts()`, and the packaged
+`PanelDashboard` draws them. Every widget resolves as its own deferred prop, and
+a widget the operator may not see is never queried.
+
+### Also new
+
+- `panel:update` — what to run after `composer update`. Writes page files a new
+  version added, **reports** pending migrations by name without running them, and
+  runs `panel:doctor` last with its exit code.
+- **Passkeys** (`Auth\Passkeys`) over Fortify's WebAuthn, as a soft dependency.
+- An in-panel **changelog** (`ChangelogPage`), content from `panel.changelog`.
+- An **environment editor** (`EnvironmentPage`) — allowlisted keys only,
+  boot-critical keys refused, secrets never sent to the browser, atomic writes,
+  and it restarts nothing.
+- **`CountryField`** — 173 countries, ISO or dialling code.
+- `make:panel-page`, and `Countries` as reference data.
+
+### If you are upgrading from 0.2.0
+
+**Page slugs share a namespace with resource keys.** Both are URL segments in the
+same panel prefix, so a clash now throws at boot naming both classes rather than
+leaving one screen silently unreachable.
+
+**The package registers two pages of its own** — `whats-new` and `environment` —
+but only once configured. Both are absent entirely until `panel.changelog` or
+`panel.env.editable` is non-empty, precisely so they cannot claim a URI an
+application already uses. If you have your own screen at either address and want
+the packaged one instead, remove yours first.
+
+**`panel.discover_pages`** is a new key, defaulting to `app/Panel/Pages`.
+
 ## 0.2.0
 
 **Breaking.** PanelKit now owns the permission system. `panelkit/panel` requires
