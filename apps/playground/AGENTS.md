@@ -3,7 +3,7 @@
 # Building in this panel
 
 This application uses PanelKit: administration screens are declared as PHP
-classes and rendered by Inertia and Vue. `Laravel` is the application; the
+classes and rendered by Inertia and Vue. `PanelKit` is the application; the
 panel is the framework it is built with.
 
 Read this before adding a screen. It describes the conventions that are not
@@ -208,6 +208,32 @@ Implement `PanelPlugin`, call `PanelManager::plugin(new YourPlugin)` from your
 service provider, and register resources, pages and routes through the
 `PluginContext`. A plugin can only add; it never receives the `Panel`.
 
+## What you can build with
+
+Every name below is a real class in the installed package. If something
+you want is not here it does not exist - do not invent a field type, and do
+not hand-roll one in Vue. Ask for it, or compose what is here.
+
+EXISTING AND BEING MOUNTABLE ARE DIFFERENT CLAIMS, so each group says how it
+is used. Read that line before planning around anything below.
+
+**Form fields** (23): `BuilderField` `CheckboxListField` `CodeField` `ColourField` `DateField` `Field` `FileUploadField` `HasChoices` `KeyValueField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `RadioField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleField` `VisualSelectField`
+_How to use them: name them in `form()`._
+**Table columns** (11): `BadgeColumn` `CheckboxColumn` `ColourColumn` `Column` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `SelectColumn` `TextColumn` `ToggleColumn`
+_How to use them: name them in `table()`._
+**Table filters** (7): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `MultiSelectFilter` `SelectFilter` `TrashedFilter`
+_How to use them: name them in `table()`._
+**Actions** (7): `ActionGroup` `BulkAction` `BulkRunner` `ExportedFile` `JobStatus` `RecordAction` `ReplicateAction`
+_How to use them: name them in `table()` or the resource's actions._
+**Schema (form layout)** (8): `Component` `Grid` `Renderable` `Section` `Step` `Tab` `Tabs` `Wizard`
+_How to use them: wrap fields with them inside `form()`._
+**Dashboard widgets** (9): `Bucket` `ChartWidget` `DashboardFilters` `Period` `Rollup` `StatWidget` `TimeSeries` `Trend` `Window`
+_How to use them: **these have no host in the package.** They shape data correctly and nothing renders them - PanelKit routes no dashboard and has no mechanism for a non-resource page, so the route, the controller, the Vue page and the permission wiring are all yours. The reference app spends around 1,500 lines on exactly that. Do not plan a dashboard as a port of screens; it is package work first._
+
+Abstract bases and traits appear in those lists - `Field`, `Column`,
+`HasChoices` - because they are what you extend when a genuinely new one is
+needed. Everything else is `::make()` and chained.
+
 ## The assistant, if you extend it
 
 The assistant is `laravel/ai` behind three hard rules. Break any of
@@ -331,6 +357,7 @@ too quiet.
 - `php artisan panel:seed-demo` — Seed realistic multi-tenant demo data at scale
 - `php artisan panel:seed-reference` — Seed the five-tenant reference estate used by panel:benchmark
 - `php artisan panel:tenant-suspension` — Suspend a tenant from the panel, or lift a suspension
+- `php artisan panel:update` — Reconcile page files, config and the agent guide after upgrading the package
 
 ## Before you call it done
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use PanelKit\Panel\Commands\InstallCommand;
+use PanelKit\Panel\Support\PanelPages;
 use Tests\TestCase;
 
 /**
@@ -110,20 +110,18 @@ final class PackagedScreensTest extends TestCase
     }
 
     /**
-     * AND THE INSTALLER WRITES A FILE FOR EVERY ONE.
+     * AND A PAGE FILE IS WRITTEN FOR EVERY ONE.
      *
-     * `panel:install` holds its own list of screens, which is a second place the
-     * set is written down and therefore a second place it can go stale. A screen
-     * missing from that list installs no page file, so a consumer gets the
-     * failure this whole arrangement exists to prevent - on one screen instead
-     * of all five, which is harder to notice, not easier.
+     * ONE LIST, READ BY BOTH COMMANDS. It used to live inside `panel:install`,
+     * which made it invisible to `panel:update` - and a screen written by the
+     * installer and not the updater is a route that resolves to nothing for
+     * everybody who upgraded rather than installed fresh. That is not
+     * hypothetical: `settings/Roles` shipped exactly that way.
      */
-    public function test_the_installer_writes_a_page_file_for_every_screen(): void
+    public function test_a_page_file_is_written_for_every_screen(): void
     {
-        $command = new \ReflectionClass(InstallCommand::class);
-
         /** @var list<string> $installed */
-        $installed = $command->getConstant('SCREENS');
+        $installed = PanelPages::SCREENS;
 
         foreach ($this->renderedPageNames() as $name) {
             $this->assertContains(
