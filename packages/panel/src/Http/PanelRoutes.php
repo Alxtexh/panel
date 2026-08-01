@@ -245,6 +245,28 @@ final class PanelRoutes
                  * a way to make a bookmark disagree with a menu.
                  */
                 if (config('panel.routes.roles', true)) {
+                    /*
+                     * THE SAME COLLISION, FAILING THE SAME WAY.
+                     *
+                     * A resource keyed `roles` takes this URL - resource routes
+                     * register first - and the permission matrix becomes
+                     * unreachable with no error to notice. `registerPages()`
+                     * throws for exactly this between a page and a resource;
+                     * this route is not a page, so it has to say so itself, or
+                     * the identical fault has two different outcomes depending
+                     * on which screen happens to lose.
+                     *
+                     * `panel.routes.roles => false` is the escape: mount
+                     * `RoleController` wherever you like and keep your resource.
+                     */
+                    if (array_key_exists('roles', app(PanelManager::class)->resources())) {
+                        throw new \RuntimeException(
+                            'A resource keyed [roles] collides with the panel\'s permission matrix at '
+                            .'/roles, which would leave the matrix unreachable. Rename the resource, or '
+                            .'set panel.routes.roles to false and mount RoleController at a path of your own.'
+                        );
+                    }
+
                     Route::get('roles', [Controllers\RoleController::class, 'index'])->name('roles');
                     Route::post('roles', [Controllers\RoleController::class, 'store'])->name('roles.store');
                     Route::put('roles/{role}', [Controllers\RoleController::class, 'update'])->name('roles.update');

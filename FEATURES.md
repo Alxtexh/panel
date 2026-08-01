@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 221 files, 36,368 lines | 120 files, 18,075 lines |
-| Vue | 98 components | **196 components** |
+| PHP | 227 files, 37,736 lines | 122 files, 18,295 lines |
+| Vue | 99 components | **197 components** |
 
 The demo carries twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -81,28 +81,36 @@ A resource belongs to exactly one panel. Clusters group resources under one nav
 parent; nested resources give `/clients/5/invoices`; singular resources are
 one-record settings screens.
 
-### What there is **no mechanism for**
+### Pages — screens that are not resources
 
-Worth stating plainly, because the catalogue lists classes and a class existing is
-not the same as a class being mountable.
+**A page is one class.** `php artisan make:panel-page ServerHealth` writes the
+class and the one-line Vue file; discovery registers it. Route, sidebar entry,
+ability, permission-matrix entry and page header all follow from the class, the
+same deal a resource gets.
 
-**No dashboard.** The package routes none. `StatWidget` and `ChartWidget` are
-referenced nowhere inside the package — they shape data correctly and nothing
-renders them. The reference app's dashboard is ~1,500 lines of its own controller
-and Vue page.
+**A page is not only a render.** `actions()` declares endpoints the page owns —
+`PUT` on its own address for the ordinary save, or a sub-path — each carrying its
+**own ability**, because seeing and doing are different grants. Half the
+reference app's page controllers do something as well as show something; a
+mechanism that only rendered would have handled the easy half.
 
-**No non-resource pages.** The whole package route table is `/`, `{resource}/…`,
-`trash`, `documents/{kind}`, `custom-fields`, `announcements/{id}/dismiss` and
-`roles`. A screen that is not a resource — a settings centre, a health page, a
-device manager — has no declaration point. `App\Panel\Pages` in the reference app
-is an application convention plus a coverage test, not a framework feature.
+**One namespace for slugs and resource keys**, enforced at registration. Both are
+URL segments in the same prefix, so a clash throws at boot naming both classes
+rather than leaving one screen silently unreachable.
 
-**`Workspace`** — the intended widget host — is referenced exactly once, in a
-comment in `ListQuery`. It is a name, not a mechanism.
+### Dashboards — a host for the widgets
 
-The consequence for planning: a super-admin panel of, say, 13 resources and 13
-non-resource pages is **13 supported and 13 not**. The resources are a day; the
-pages are package work, and no amount of page-by-page porting substitutes for it.
+`DashboardPage` declares `stats()` and `charts()`; the packaged `PanelDashboard`
+screen draws them.
+
+**Every widget is its own deferred prop.** The layout is on screen before
+anything has been counted, so one slow aggregate delays itself rather than the
+page, and a failed query reports itself in place instead of blanking its
+neighbours.
+
+**Permissions apply before resolution.** A widget the signed-in operator may not
+see is never queried and never serialised — filtering client-side would ship the
+number to somebody forbidden from it and rely on CSS to keep the secret.
 
 ### Also shipped
 
@@ -111,10 +119,11 @@ a designer · scheduled reports by email · announcements · a REST API with tok
 and OpenAPI · knowledge indexing and retrieval · Telegram alerts · audit trail ·
 render hooks and a plugin API · i18n · `InteractsWithPanels` test helpers.
 
-### 19 commands
+### 21 commands
 
-`install` `doctor` `doctor-alert` `permissions` `benchmark` `blueprint`
-`make:panel` `make:panel-resource` `make:api-token` `cache-clear`
+`install` `update` `doctor` `doctor-alert` `permissions` `benchmark`
+`blueprint` `make:panel` `make:panel-page` `make:panel-resource`
+`make:api-token` `cache-clear`
 `prune-exports` `prune-trash` `prune-uploads` `refresh-rollups`
 `reindex-tenant` `suspend-tenant` `index-knowledge` `monitor-sample`
 `dispatch-scheduled-reports`
@@ -126,7 +135,7 @@ data, where every page returns 200 and every test passes.
 ### Screens (`@panelkit/inertia`)
 
 `ResourceIndex` `ResourceForm` `ResourceView` `Trash` `PanelHome`
-`settings/Roles` `documents/Templates` `documents/TemplateDesigner`
+`PanelDashboard` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
 `documents/DocumentPrint`
 
 Layout-free by design: the shell stays yours. A one-line page file per screen is
@@ -171,4 +180,4 @@ pointing composer at a `git subtree split` branch.
 external security review** — the isolation matrix and the authorisation tests
 check my own assumptions.
 
-Current state: **v0.2.0**, 1,531 tests passing, 13 skipped.
+Current state: **v0.2.0**, 1,551 tests passing, 13 skipped.

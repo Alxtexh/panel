@@ -98,6 +98,36 @@ final class PanelPageMechanismTest extends TestCase
         app(PanelManager::class)->registerPages([ClientsShapedPage::class]);
     }
 
+    /**
+     * THE BUILT-IN ROLES SCREEN COLLIDES THE SAME WAY, AND FAILS THE SAME WAY.
+     *
+     * It is not a page - it is a route the package registers behind
+     * `panel.routes.roles` - so `registerPages()` never sees it. Left to itself
+     * that produced the identical fault with a different outcome: a resource
+     * keyed `roles` took the URL and the permission matrix vanished, reported
+     * only by `panel:doctor` after the event.
+     *
+     * `panel:doctor` no longer carries that check, because boot now refuses.
+     * One fault, one failure mode, whichever screen would have lost.
+     */
+    public function test_the_packages_own_roles_route_refuses_to_collide(): void
+    {
+        $this->assertStringContainsString(
+            'would leave the matrix unreachable',
+            (string) file_get_contents(
+                __DIR__.'/../../../../packages/panel/src/Http/PanelRoutes.php'
+            ),
+        );
+
+        $this->assertStringNotContainsString(
+            'hides the permission matrix',
+            (string) file_get_contents(
+                __DIR__.'/../../../../packages/panel/src/Commands/DoctorCommand.php'
+            ),
+            'The doctor check outlived the boot guard that replaced it.',
+        );
+    }
+
     /* --------------------------------------------------------- routing */
 
     /** THE PURE-RENDER SHAPE, with a parameter in the path. */
