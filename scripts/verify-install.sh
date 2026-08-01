@@ -137,14 +137,38 @@ php artisan make:panel-resource Customer --generate --no-interaction 2>&1 | tail
 say "php artisan panel:permissions sync"
 php artisan panel:permissions sync --no-interaction 2>&1 | tail -5
 
-php artisan tinker --execute="
-    exit(
-        Schema::hasColumn('roles', 'grants_all')
-        && PanelKit\Panel\Models\Role::query()->where('grants_all', true)->exists()
-        && Spatie\Permission\Models\Permission::query()->where('name', 'view_any_customers')->exists()
-            ? 0 : 1
-    );
-" 2>/dev/null || fail "panel:permissions ran but left no working role - the shipped permission system does not work on a clean install."
+# NOT `tinker --execute`. Psy Shell INTERCEPTS `exit()` - it prints "Goodbye" and
+# returns its own status - so an exit code threaded through tinker reports nothing
+# about the code that ran. The first version of this check did exactly that and
+# failed a sync that had plainly worked, which is worse than no check: it accuses
+# the product of a fault that is in the harness. A standalone script bootstrapping
+# the app is the pattern the route checks already use, and it prints its verdict
+# rather than encoding it.
+cat > verify-perms.php <<'PERM'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+$checks = [
+    'grants_all column' => Illuminate\Support\Facades\Schema::hasColumn('roles', 'grants_all'),
+    'a role that grants everything' => PanelKit\Panel\Models\Role::query()->where('grants_all', true)->exists(),
+    'the generated resource\'s ability' => Spatie\Permission\Models\Permission::query()
+        ->where('name', 'view_any_customers')->exists(),
+];
+
+foreach ($checks as $what => $ok) {
+    echo ($ok ? 'ok   ' : 'MISS '), $what, PHP_EOL;
+}
+
+echo in_array(false, $checks, true) ? 'VERDICT fail' : 'VERDICT pass', PHP_EOL;
+PERM
+perms="$(php verify-perms.php 2>&1)"
+rm -f verify-perms.php
+
+echo "$perms"
+grep -q 'VERDICT pass' <<<"$perms" \
+    || fail "panel:permissions ran but left no working role - the shipped permission system does not work on a clean install."
 
 say "Permissions reconciled: an Administrator role holds the generated resource's abilities"
 
