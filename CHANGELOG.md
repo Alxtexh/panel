@@ -4,6 +4,35 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## Unreleased
+
+### Fixed
+
+- **`panel:update` did not invalidate the schema cache.** The manual sequence it
+  replaced had that as its first step. The fingerprint is computed from your
+  resource class, which an upgrade does not change — so a release that added a
+  key to the payload kept serving the old shape to a bundle rebuilt for the new
+  one, as a successful 200 with a control missing.
+- **The agent guide said widgets could not be mounted.** `AGENTS.md` carried
+  "these have no host in the package … PanelKit routes no dashboard and has no
+  mechanism for a non-resource page" — true for two releases, and false from the
+  moment 0.3.0 shipped `DashboardPage`. A test pinned that sentence, so the
+  guide told every agent reading it that this release's flagship feature did not
+  exist, and the test defended the claim.
+- **`UPGRADING.md` said `0.1.0` was the first and only tagged release**, with
+  version-specific notes reading "Nothing here yet". Two releases had shipped
+  past it, one of them breaking. It now carries notes for both and names
+  `panel:update`, which it had never mentioned.
+
+### Added
+
+- `panel:update` reports config keys a new version reads that a **published**
+  `config/panel.php` does not have. Only the ones `mergeConfigFrom` cannot
+  supply — a key added inside an array you publish, which `config()` then reads
+  as unset however the package file reads.
+- The guide gained recipes for **a page that is not a resource** and **a
+  dashboard**, and a catalogue entry for the `Pages` namespace.
+
 ## 0.3.0
 
 **A panel could declare a list of records and nothing else.** This release adds

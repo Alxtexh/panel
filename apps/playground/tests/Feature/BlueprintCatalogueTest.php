@@ -88,25 +88,61 @@ final class BlueprintCatalogueTest extends TestCase
     }
 
     /**
-     * THE ONE GROUP THAT IS NOT MOUNTABLE SAYS SO.
+     * THE WIDGET GROUP NAMES ITS HOST.
      *
      * `Widgets` sat in this catalogue beside `Forms/Fields` under one sentence -
      * "every name below is a real class" - which is true of both and useful for
-     * only one. A field is mounted by naming it in `form()`. A widget has no
-     * host: the package routes no dashboard and has no non-resource page
-     * mechanism, so `StatWidget::make()` composes a value object that nothing
-     * renders.
+     * only one. A field is mounted by naming it in `form()`. A widget had no
+     * host at all: the package routed no dashboard, so `StatWidget::make()`
+     * composed a value object that nothing rendered, and an agent reading the
+     * list could not tell the two apart. The dashboard it then built was clean,
+     * tested and invisible.
      *
-     * An agent could not tell those apart from the list, and the resulting
-     * dashboard is clean, tested and invisible - which is the precise failure
-     * this whole section was added to prevent, reproduced inside it.
+     * 0.3.0 GAVE THEM A HOST, and this assertion inverted with it. The previous
+     * version of this test pinned the words "no host in the package" - which
+     * was the honest answer for two releases and became, on the day
+     * `DashboardPage` shipped, a test enforcing a lie about the package's own
+     * flagship feature. A doc test is only as true as the day it was written;
+     * what it must pin is that the group states A host, not which one it was.
      */
-    public function test_it_says_widgets_have_no_host(): void
+    public function test_the_widget_group_names_what_mounts_a_widget(): void
     {
         $markdown = $this->markdown();
 
-        $this->assertStringContainsString('no host in the package', $markdown);
-        $this->assertStringContainsString('routes no dashboard', $markdown);
+        $this->assertStringContainsString('DashboardPage', $markdown);
+        $this->assertStringContainsString('make:panel-page Overview --dashboard', $markdown);
+
+        $this->assertStringNotContainsString(
+            'no host in the package',
+            $markdown,
+            'The guide still tells an agent that widgets cannot be mounted. They can, since 0.3.0.',
+        );
+    }
+
+    /**
+     * AND THE PAGE MECHANISM IS IN THE CATALOGUE AT ALL.
+     *
+     * An agent plans from this list. For two releases it named no way to build
+     * a screen that is not a list of records, and the report that came back
+     * from a real installation said PanelKit had none - correctly, from the
+     * only document it was given.
+     */
+    public function test_it_names_the_page_mechanism(): void
+    {
+        $markdown = $this->markdown();
+
+        $this->assertStringContainsString('make:panel-page', $markdown);
+        $this->assertStringContainsString('app/Panel/Pages', $markdown);
+
+        foreach (glob(__DIR__.'/../../../../packages/panel/src/Pages/*.php') ?: [] as $file) {
+            $class = basename($file, '.php');
+
+            $this->assertStringContainsString(
+                $class,
+                $markdown,
+                "The blueprint does not mention [{$class}], so an agent has no way to know it exists.",
+            );
+        }
     }
 
     /** And every group states how it is used, so none of them can overclaim again. */

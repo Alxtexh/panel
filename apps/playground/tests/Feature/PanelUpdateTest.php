@@ -7,7 +7,9 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\Support\ConfigDrift;
 use PanelKit\Panel\Support\PanelPages;
+use PanelKit\Panel\Support\SchemaCache;
 use Tests\TestCase;
 
 /**
@@ -119,5 +121,97 @@ final class PanelUpdateTest extends TestCase
     {
         $this->assertContains($this->screen, PanelPages::SCREENS);
         $this->assertContains('ResourceIndex', PanelPages::SCREENS);
+    }
+
+    /**
+     * THE SCHEMA CACHE IS INVALIDATED, because its fingerprint cannot notice.
+     *
+     * The fingerprint is computed from the resource class. A release that adds a
+     * key to the payload changes neither that class nor its fingerprint, so
+     * every cached schema keeps serving the OLD shape - to a client bundle that
+     * was just rebuilt expecting the new one. The screen renders, missing a
+     * control, in a successful 200.
+     *
+     * The manual sequence this command replaced had `panel:cache-clear` as its
+     * first step. The command shipped without it, which is a worse failure than
+     * forgetting a documented step: nobody is looking for a step the tool is
+     * supposed to have taken.
+     */
+    public function test_it_invalidates_the_schema_cache(): void
+    {
+        $before = app(SchemaCache::class)->generation();
+
+        $this->artisan('panel:update')
+            ->expectsOutputToContain('invalidated the schema cache');
+
+        $this->assertGreaterThan(
+            $before,
+            app(SchemaCache::class)->generation(),
+            'panel:update left the schema cache intact, so resources may still serve the previous version.',
+        );
+    }
+
+    /**
+     * A KEY THE MERGE CANNOT SUPPLY IS NAMED.
+     *
+     * `mergeConfigFrom` is shallow: a published `config/panel.php` that has an
+     * array wins that array WHOLE, so a key a new version added inside it is
+     * read as unset however the package file reads. Where the call site has no
+     * default of its own, the feature simply never appears - which is
+     * indistinguishable from a version that did not ship it.
+     */
+    public function test_a_key_inside_a_published_array_is_reported(): void
+    {
+        $missing = ConfigDrift::keysNotSuppliedByMerge(
+            ['env' => ['editable' => [], 'backup' => true], 'discover_pages' => 'app/Panel/Pages'],
+            ['env' => ['editable' => ['MAIL_HOST']]],
+        );
+
+        $this->assertSame(['env.backup'], $missing);
+    }
+
+    /**
+     * A TOP-LEVEL KEY IS NOT REPORTED, because the shallow merge does supply it.
+     * Naming it would put a line in front of every upgrader that needs no
+     * action - and a report where most rows need nothing is one nobody reads to
+     * the end, including on the release where a row mattered.
+     */
+    public function test_a_top_level_key_is_left_alone(): void
+    {
+        $this->assertSame(
+            [],
+            ConfigDrift::keysNotSuppliedByMerge(['changelog' => []], []),
+        );
+    }
+
+    /**
+     * AND A SHORTENED LIST IS A CHOICE, NOT DRIFT. An application that cut
+     * `abilities` to the four it uses configured that key; reporting the
+     * difference would be telling somebody their deliberate edit is a mistake.
+     */
+    public function test_a_narrowed_list_is_not_drift(): void
+    {
+        $this->assertSame(
+            [],
+            ConfigDrift::keysNotSuppliedByMerge(
+                ['abilities' => ['view', 'create', 'delete']],
+                ['abilities' => ['view']],
+            ),
+        );
+    }
+
+    /**
+     * AND IT REPORTS RATHER THAN REWRITES. `config/panel.php` holds the
+     * application's abilities, templates and tenancy decisions; the ones an
+     * overwrite would revert are exactly the ones that fail open.
+     */
+    public function test_it_does_not_rewrite_published_config(): void
+    {
+        $path = config_path('panel.php');
+        $before = (string) file_get_contents($path);
+
+        Artisan::call('panel:update');
+
+        $this->assertSame($before, (string) file_get_contents($path), 'panel:update rewrote config/panel.php.');
     }
 }

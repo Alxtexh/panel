@@ -148,10 +148,16 @@ Two rules the UI package holds and a test enforces:
 
 | Command | Does |
 |---|---|
-| `panel:install` | Publishes config, creates `app/Panel/`, checks tenancy is resolvable |
+| `panel:install` | Publishes config, creates `app/Panel/`, writes `AGENTS.md`, checks tenancy is resolvable |
+| `panel:update` | **What you run after `composer update`.** Writes page files a new version added, invalidates the schema cache, names pending migrations without running them, refreshes the guide, ends with doctor |
 | `make:panel-resource {Model} --generate` | Introspects the table and writes a working resource plus a policy stub |
+| `make:panel-page {Name} [--dashboard]` | A screen that is not a list of records; `--dashboard` hosts the widgets |
+| `panel:doctor` | The checks whose failures are silent — a resource with no policy, a filter with no index, permissions that fail open |
 | `panel:seed-demo --scale=large` | 500k clients across 5 tenants, 2M sessions (reference app only) |
 | `panel:cache-clear` | Invalidates every cached schema by bumping a generation counter |
+
+Upgrading an existing installation is [UPGRADING.md](UPGRADING.md) — `composer update`
+alone leaves the *screens* unreconciled, which is what `panel:update` is for.
 
 ---
 
@@ -170,6 +176,11 @@ Then `http://localhost:8000`. `make help` lists everything.
 
 ## Status
 
+**v0.3.0.** [FEATURES.md](FEATURES.md) is the inventory — what the *package*
+gives you, kept separate from what the demo shows.
+[CHANGELOG.md](CHANGELOG.md) is what each release changed, and
+[UPGRADING.md](UPGRADING.md) is how to move between them.
+
 Phases 0–9 of [panelbuilder.md](panelbuilder.md) are built, with
 [panel_antipatterns.md](panel_antipatterns.md) and
 [panelkit addendum 01.md](panelkit%20addendum%2001.md) applied. See
@@ -183,8 +194,12 @@ changed.
 - Precognition: rules live in exactly one place, but live per-keystroke
   validation is not wired — `laravel-precognition-vue-inertia` peers on Inertia
   ^1 || ^2 and this app is on Inertia 3.
-- Bulk actions: selection and the action bar exist; the mutations and the
-  auto-queue threshold do not.
-- The database engine is still SQLite, so every performance number demonstrates
-  that the query *shape* is sound rather than transferring to Postgres.
+- Bulk actions: the mutations ship — `BulkRunner` walks a selection in keyset
+  chunks and every bulk mutation counts before it commits. There is **no
+  automatic queue threshold**: a job that should run in the background is
+  declared so, rather than crossing a row count and becoming asynchronous on its
+  own.
+- The playground's development database is SQLite, so every performance number
+  here demonstrates that the query *shape* is sound rather than transferring to
+  Postgres unchanged.
 - Every page logs a Vue hydration mismatch, pre-existing from the starter kit.

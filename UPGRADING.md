@@ -10,10 +10,10 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.1.0"
+"panelkit/panel": "^0.3.0"
 ```
 
-Composer reads `^0.1.0` on a `0.x` package as `>=0.1.0 <0.2.0`, which is what you
+Composer reads `^0.3.0` on a `0.x` package as `>=0.3.0 <0.4.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
 The three packages are **versioned together**. `panelkit/panel@0.2.0` expects
@@ -44,25 +44,51 @@ failure is a rendered screen with a missing control, not an error.
 ```bash
 composer update panelkit/panel
 npm update @panelkit/ui @panelkit/inertia
-```
-
-Then, in order:
-
-```bash
-php artisan panel:cache-clear     # the schema cache is keyed by a fingerprint,
-                                  # but the fingerprint does not know the
-                                  # package changed under it
-php artisan migrate               # if the release published new migrations
+php artisan panel:update
 php artisan wayfinder:generate --with-form
 npm run build
-php artisan panel:doctor          # the actual check that the upgrade landed
 ```
 
-**`panel:doctor` is the verification step, not a formality.** It walks the
-registered resources, the policies, the indexes, the queue and the schema cache,
-and reports what is silently wrong. An upgrade that leaves a resource without a
-policy or a filter without an index produces a working panel that is slow or
-over-permissive — exactly the class of failure that does not announce itself.
+**`panel:update` is the step that reconciles what `composer update` cannot.**
+The PHP half upgrades itself; the *screens* do not. A release that adds a routed
+screen ships the route inside the package and the page file into your
+`resources/js/pages` — and Inertia resolves page names by globbing that
+directory, so until the file exists the route answers and the browser renders a
+white page with a console error naming a file you have never seen.
+
+That happened for real: 0.2.0 added `settings/Roles`, the page file came from
+`panel:install`, and nobody re-runs an installer after an upgrade. `panel:update`
+exists because a package that ships screens has to ship the step that reconciles
+them.
+
+It does four things and refuses a fifth:
+
+| | |
+|---|---|
+| **invalidates** the schema cache | the fingerprint is computed from your resource class, which did not change — so without this, a release that adds a key to the payload serves last version's shape to a bundle rebuilt for the new one, as a successful 200 |
+| **writes** page files for screens this version routes and the last one did not | adding a missing file cannot lose data |
+| **reports** pending migrations, **by name** | "3 pending" does not distinguish a column default from a table rewrite at 2am — that decision is the deploy owner's |
+| **reports** config keys this version reads that your published `config/panel.php` does not have | only the ones the shallow merge cannot supply — a key added *inside* an array you publish. `config()` reads those as unset whatever the package file says: at best the value cannot be edited from the file that appears to hold it, at worst the feature it enables never appears and nothing errors |
+| **refreshes** `AGENTS.md` | so an agent working in your repository is told what this version added, rather than the last one |
+| **never** runs migrations, never rewrites your config, and never restarts anything | those are decisions with a maintenance window attached, and a command that took them is one nobody dares run in production |
+
+Then run migrations yourself, when you have decided to:
+
+```bash
+php artisan migrate
+```
+
+**It ends with `panel:doctor`, whose exit code becomes its own.** That is not a
+formality — an upgrade is exactly when a check starts failing that passed under
+the old version. Doctor walks the registered resources, the policies, the
+indexes, the queue and the schema cache, and reports what is *silently* wrong: a
+resource with no policy, a filter with no index, a permission config that fails
+open. Those produce a working panel that is slow or over-permissive, which is the
+class of failure that does not announce itself. A deploy step that exits non-zero
+is one somebody has to look at.
+
+You do not need `panel:cache-clear` separately — `panel:update` covers the schema
+cache, whose fingerprint does not know the package changed under it.
 
 If you have published views or overridden a packaged component, re-diff them:
 
@@ -72,9 +98,69 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 ## Version-specific notes
 
-Nothing here yet — `0.1.0` is the first tagged release. Each subsequent version
-that requires action gets a section, newest first, naming the change, what
-breaks, and the edit.
+Newest first. Each names the change, what breaks, and the edit.
+
+### 0.2.0 → 0.3.0
+
+**Nothing breaks.** This release adds screens that are not resources; it changes
+nothing about the ones that are.
+
+Two things to know:
+
+**Page slugs and resource keys share one namespace.** Both are URL segments in
+the same panel prefix. A clash now throws at boot naming both classes — before
+there were no pages, so there was nothing to clash with. If you registered a
+resource whose key matches a page you then add, you will hear about it at boot
+rather than by finding one screen unreachable.
+
+**The package registers two pages of its own** — `whats-new` and `environment` —
+and both are **absent entirely** until configured. `whats-new` needs
+`panel.changelog` to be non-empty; `environment` needs `panel.env.editable`.
+That is deliberate rather than tidy: registering them unconditionally took
+`/whats-new` from an application that already had its own screen there, because
+the same URI registered later wins. If you want the packaged one at an address
+you already use, remove yours first.
+
+**`panel.discover_pages` is a new key**, defaulting to `app/Panel/Pages`. If you
+have published `config/panel.php`, `panel:update` names it — it is top-level, so
+the merge actually does supply it, but you cannot edit what you cannot see.
+
+Your existing `StatWidget` and `ChartWidget` classes did not change. What changed
+is that there is now something to mount them on: `DashboardPage`, drawn by the
+packaged `PanelDashboard`. Nothing forces you to move a dashboard you already
+hand-rolled.
+
+### 0.1.0 → 0.2.0
+
+**Breaking. PanelKit now owns the permission system.**
+
+`panelkit/panel` requires `spatie/laravel-permission`. If you already have it,
+nothing conflicts — it is the same package, and your `roles` and `permissions`
+tables stay the source of truth. If you had your own permission layer, the panel
+now expects Spatie's.
+
+```bash
+php artisan migrate            # the package publishes one migration (grants_all)
+php artisan panel:permissions sync
+```
+
+**`panel:permissions sync` does not prune by default,** because a name it does
+not recognise may be one your application defined. Use `--prune` when you have
+read the list it prints.
+
+**`grants_all` covers only registered ability names.** A role holding it gets
+every ability the registry derives — including ones a later version invents —
+which is the point, and also the reason it is not a general wildcard.
+
+**`settings/Roles` is a routed screen, and its page file comes from the
+installer.** This is the release that proved `panel:update` had to exist: every
+0.1.0 installation that ran `composer update` got a route the server answers, a
+component the client cannot resolve, and a white page naming a file the developer
+has never seen. If you upgraded before `panel:update` existed, run it now.
+
+**Check `teams` in `config/permission.php`.** Under tenancy, `teams => false`
+fails *open* — abilities stop being scoped. `panel:doctor` reports it as a
+problem rather than a note.
 
 ## If an upgrade goes wrong
 

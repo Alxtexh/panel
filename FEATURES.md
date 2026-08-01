@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 234 files, 38,839 lines | 122 files, 18,287 lines |
+| PHP | 235 files, 39,183 lines | 122 files, 18,287 lines |
 | Vue | 102 components | **199 components** |
 
 The demo carries twice the Vue the framework does. Most of what makes it look
@@ -183,4 +183,24 @@ pointing composer at a `git subtree split` branch.
 external security review** — the isolation matrix and the authorisation tests
 check my own assumptions.
 
-Current state: **v0.3.0**, 1,586 tests passing, 13 skipped.
+## Upgrading
+
+`composer update` upgrades the PHP half. It does **not** reconcile the screens —
+a release that routes a new one ships the route inside the package and the page
+file into your `resources/js/pages`, and Inertia cannot see into `node_modules`.
+
+```bash
+php artisan panel:update
+```
+
+Writes the page files a new version added, invalidates the schema cache, names
+pending migrations without running them, names config keys your published
+`config/panel.php` is missing, refreshes `AGENTS.md`, and ends with
+`panel:doctor` — whose exit code becomes its own.
+
+[UPGRADING.md](UPGRADING.md) has the version-by-version notes and what counts as
+a breaking change.
+
+---
+
+Current state: **v0.3.0**, 1,596 tests passing, 13 skipped.
