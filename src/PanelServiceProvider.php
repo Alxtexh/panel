@@ -153,6 +153,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\ReindexTenantCommand::class,
             Commands\DoctorCommand::class,
             Commands\SuspendTenantCommand::class,
+            Commands\UpdateCommand::class,
             Commands\MonitorSampleCommand::class,
             Commands\PermissionsCommand::class,
             Commands\BenchmarkCommand::class,
