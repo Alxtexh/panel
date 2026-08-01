@@ -76,6 +76,7 @@ export { default as TablePagination } from './components/DataTable/TablePaginati
 export { default as TableShell } from './components/DataTable/TableShell.vue'
 export { default as TableTabs } from './components/DataTable/TableTabs.vue'
 export { default as TableToolbar } from './components/DataTable/TableToolbar.vue'
+export { default as PkPasskeyRegister } from './components/Auth/PkPasskeyRegister.vue'
 export { default as PkModal } from './components/Overlay/PkModal.vue'
 /*
  * ONE SKELETON, WITH NAMED SHAPES. There were six different ones in this package

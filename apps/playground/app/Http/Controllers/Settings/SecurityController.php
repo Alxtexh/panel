@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
+use PanelKit\Panel\Auth\Passkeys;
 use PanelKit\Panel\Auth\PasswordPolicy;
 
 class SecurityController extends Controller
@@ -54,23 +55,14 @@ class SecurityController extends Controller
                 ])
                 ->all(),
             'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
-            'canManagePasskeys' => Features::canManagePasskeys(),
-            'passkeys' => Features::canManagePasskeys()
-                ? $request->user()
-                    ->passkeys()
-                    ->select(['id', 'name', 'credential', 'created_at', 'last_used_at'])
-                    ->latest()
-                    ->get()
-                    ->map(fn ($passkey) => [
-                        'id' => $passkey->id,
-                        'name' => $passkey->name,
-                        'authenticator' => $passkey->authenticator,
-                        'created_at_diff' => $passkey->created_at->diffForHumans(),
-                        'last_used_at_diff' => $passkey->last_used_at?->diffForHumans(),
-                    ])
-                    ->values()
-                    ->all()
-                : [],
+            /*
+             * SERIALISED BY THE PACKAGE, not here. `Passkeys::forUser` returns
+             * the same fields under the same names for every panel that shows
+             * them - and answers honestly when Fortify is absent, so this screen
+             * renders without the section rather than failing to render.
+             */
+            'canManagePasskeys' => Passkeys::available($request->user()),
+            'passkeys' => Passkeys::forUser($request->user()),
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ];
 

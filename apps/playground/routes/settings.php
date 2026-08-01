@@ -83,9 +83,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('settings/assistant', [AssistantSettingsController::class, 'destroy'])->name('assistant-settings.destroy');
 });
 
-Route::get('.well-known/passkey-endpoints', function () {
-    return response()->json([
-        'enroll' => route('security.edit'),
-        'manage' => route('security.edit'),
-    ]);
-})->name('well-known.passkeys');

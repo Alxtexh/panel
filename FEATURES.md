@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 227 files, 37,736 lines | 122 files, 18,295 lines |
-| Vue | 99 components | **197 components** |
+| PHP | 228 files, 37,886 lines | 122 files, 18,287 lines |
+| Vue | 100 components | **197 components** |
 
 The demo carries twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -117,7 +117,9 @@ number to somebody forbidden from it and rely on CSS to keep the secret.
 Trash across resources · custom fields · import wizard · document templates and
 a designer · scheduled reports by email · announcements · a REST API with tokens
 and OpenAPI · knowledge indexing and retrieval · Telegram alerts · audit trail ·
-render hooks and a plugin API · i18n · `InteractsWithPanels` test helpers.
+render hooks and a plugin API · i18n · **passkeys** (Fortify's WebAuthn, a soft
+dependency — present when Fortify is, absent without it) · `InteractsWithPanels`
+test helpers.
 
 ### 21 commands
 
@@ -180,4 +182,4 @@ pointing composer at a `git subtree split` branch.
 external security review** — the isolation matrix and the authorisation tests
 check my own assumptions.
 
-Current state: **v0.2.0**, 1,551 tests passing, 13 skipped.
+Current state: **v0.2.0**, 1,554 tests passing, 13 skipped.
