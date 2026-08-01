@@ -42,12 +42,99 @@ final class Blueprint
             self::rules(),
             self::shape(),
             self::recipes(),
+            self::catalogue(),
             self::assistant(),
             self::inventory(),
             self::operatorOwned(),
             self::commands(),
             self::verification(),
         ]))."\n";
+    }
+
+    /**
+     * WHAT THERE IS TO BUILD WITH - read off the source tree, never listed.
+     *
+     * THE REST OF THIS FILE TELLS AN AGENT HOW TO BEHAVE and never told it what
+     * exists. That gap has one failure mode and it is expensive: an agent that
+     * does not know `ColourField` is there writes a `TextField` with a hex
+     * validation rule, or invents `ImageField` because it sounds like it should
+     * exist and gets a fatal on a name nothing defines. Both look like
+     * reasonable code in review.
+     *
+     * DERIVED FROM THE DIRECTORIES, so it cannot drift. A hand-written list is
+     * accurate the day it is written and wrong at the next release - and wrong
+     * here means an agent building against a field that was renamed, which is
+     * exactly the drift `panel:blueprint` exists to avoid. Adding a field type
+     * adds a line here by existing.
+     */
+    private static function catalogue(): string
+    {
+        $out = ["## What you can build with\n"];
+        $out[] = "Every name below is a real class in the installed package. If something\n"
+            ."you want is not here it does not exist - do not invent a field type, and do\n"
+            ."not hand-roll one in Vue. Ask for it, or compose what is here.\n";
+
+        $groups = [
+            'Form fields' => ['Forms/Fields', 'Field'],
+            'Table columns' => ['Tables/Columns', 'Column'],
+            'Table filters' => ['Tables/Filters', 'Filter'],
+            'Actions' => ['Actions', ''],
+            'Schema (form layout)' => ['Schema', ''],
+            'Dashboard widgets' => ['Widgets', ''],
+        ];
+
+        foreach ($groups as $label => [$dir, $suffix]) {
+            $names = self::classesIn($dir);
+
+            if ($names === []) {
+                continue;
+            }
+
+            /*
+             * THE SUFFIX COMES OFF because that is how they are written in a
+             * schema - `TextField::make()` is the class, and an agent copying
+             * `Text` from a list would write a name that does not resolve.
+             * So the class name is what is printed, exactly.
+             */
+            $out[] = "**{$label}** (".count($names).'): `'.implode('` `', $names).'`';
+        }
+
+        $out[] = "\nAbstract bases and traits appear in those lists - `Field`, `Column`,\n"
+            ."`HasChoices` - because they are what you extend when a genuinely new one is\n"
+            .'needed. Everything else is `::make()` and chained.';
+
+        return implode("\n", $out);
+    }
+
+    /**
+     * The class names in one of the package's directories.
+     *
+     * READ FROM THE INSTALLED PACKAGE, not from a constant, so this reports what
+     * the consumer actually has rather than what this file remembers.
+     *
+     * @return list<string>
+     */
+    private static function classesIn(string $directory): array
+    {
+        $path = dirname(__DIR__).'/'.$directory;
+
+        if (! is_dir($path)) {
+            return [];
+        }
+
+        $names = [];
+
+        foreach ((array) scandir($path) as $entry) {
+            if (! is_string($entry) || ! str_ends_with($entry, '.php')) {
+                continue;
+            }
+
+            $names[] = substr($entry, 0, -4);
+        }
+
+        sort($names);
+
+        return $names;
     }
 
     /**
