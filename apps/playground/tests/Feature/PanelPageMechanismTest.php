@@ -128,6 +128,67 @@ final class PanelPageMechanismTest extends TestCase
         );
     }
 
+    /**
+     * EVERY PAGE THE PACKAGE SHIPS IS ACTUALLY REACHABLE.
+     *
+     * `discover_pages` scans the APPLICATION's directory, so pages living in
+     * `PanelKit\Panel\Pages` are invisible to it. `ChangelogPage` and
+     * `EnvironmentPage` shipped that way: exported from the package, page files
+     * written by `panel:install`, and never routed - screens that existed in
+     * every sense except the one that matters.
+     *
+     * This is the third time that shape has shipped here (widgets with no host,
+     * a roles route with no page file), which is why it is now a test rather
+     * than a resolution.
+     */
+    public function test_every_page_the_package_ships_is_registered_once_enabled(): void
+    {
+        /*
+         * ENABLED FIRST, because both of the package's pages are dormant until
+         * an installation configures them - and a page that is dormant for the
+         * right reason must not be mistaken for one nothing registers.
+         */
+        config([
+            'panel.changelog' => [['version' => '1.0']],
+            'panel.env.editable' => ['SUPPORT_EMAIL'],
+        ]);
+
+        $manager = new PanelManager;
+        $registered = $manager->pages();
+
+        foreach (glob(__DIR__.'/../../../../packages/panel/src/Pages/*Page.php') ?: [] as $file) {
+            $class = 'PanelKit\\Panel\\Pages\\'.basename($file, '.php');
+
+            if ((new \ReflectionClass($class))->isAbstract()) {
+                continue;
+            }
+
+            $this->assertContains(
+                $class,
+                $registered,
+                "{$class} ships with the package but nothing registers it, so it is routed nowhere.",
+            );
+        }
+    }
+
+    /**
+     * AND A PAGE WITH NOTHING TO OFFER IS NOT ROUTED AT ALL.
+     *
+     * `ChangelogPage` registered itself into an installation with no release
+     * notes and took `/whats-new` from the application's own changelog - same
+     * URI, later registration wins, 304 lines of real content replaced by an
+     * empty state. Not-enabled has to mean absent, not merely hidden.
+     */
+    public function test_a_dormant_package_page_is_not_registered(): void
+    {
+        config(['panel.changelog' => [], 'panel.env.editable' => []]);
+
+        $pages = (new PanelManager)->pages();
+
+        $this->assertArrayNotHasKey('whats-new', $pages);
+        $this->assertArrayNotHasKey('environment', $pages);
+    }
+
     /* --------------------------------------------------------- routing */
 
     /** THE PURE-RENDER SHAPE, with a parameter in the path. */

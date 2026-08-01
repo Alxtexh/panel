@@ -217,6 +217,25 @@ abstract class Page
     }
 
     /**
+     * Whether this page exists in this installation at all.
+     *
+     * DIFFERENT FROM `shouldShowInNavigation()`, and the distinction cost a real
+     * screen. Hidden-from-the-menu means routed and reached from somewhere else
+     * - a record, an account menu, a link in an email. NOT ENABLED means there
+     * is nothing here: no route, no navigation entry, nothing to collide with.
+     *
+     * The package's own pages need it. `ChangelogPage` registered itself into an
+     * installation with no release notes and took `/whats-new` from the
+     * application's own changelog - same URI, later registration, and 304 lines
+     * of real content replaced by an empty state. A page with nothing to offer
+     * should not be routed at all.
+     */
+    public static function isEnabled(): bool
+    {
+        return true;
+    }
+
+    /**
      * Whether this page appears in the navigation at all.
      *
      * A PAGE HIDDEN HERE IS STILL ROUTED. Some screens are reached from

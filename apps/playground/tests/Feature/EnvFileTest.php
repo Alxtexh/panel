@@ -188,13 +188,15 @@ final class EnvFileTest extends TestCase
     /* ------------------------------------------------------------- the screen */
 
     /** The page hides itself unless an installation asked for it. */
-    public function test_the_page_is_hidden_until_keys_are_declared(): void
+    public function test_the_page_does_not_exist_until_keys_are_declared(): void
     {
+        // Absent, not hidden - a routed screen saying "nothing is editable" is a
+        // dead end reachable from no menu.
         $this->editable([]);
-        $this->assertFalse(EnvironmentPage::shouldShowInNavigation());
+        $this->assertFalse(EnvironmentPage::isEnabled());
 
         $this->editable(['SUPPORT_EMAIL']);
-        $this->assertTrue(EnvironmentPage::shouldShowInNavigation());
+        $this->assertTrue(EnvironmentPage::isEnabled());
     }
 
     /** And seeing is a different grant from saving. */

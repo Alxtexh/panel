@@ -89,13 +89,18 @@ final class ChangelogAndCountryTest extends TestCase
      * has no releases, and a menu entry leading to an empty page reads as a
      * broken screen rather than an unused feature.
      */
-    public function test_the_page_is_hidden_until_there_is_a_release(): void
+    public function test_the_page_does_not_exist_until_there_is_a_release(): void
     {
+        /*
+         * NOT ENABLED, not merely hidden. Registering unconditionally took
+         * `/whats-new` from an application that already had its own changelog
+         * there - same URI, later registration wins.
+         */
         config(['panel.changelog' => []]);
-        $this->assertFalse(ChangelogPage::shouldShowInNavigation());
+        $this->assertFalse(ChangelogPage::isEnabled());
 
         config(['panel.changelog' => [['version' => '1.0']]]);
-        $this->assertTrue(ChangelogPage::shouldShowInNavigation());
+        $this->assertTrue(ChangelogPage::isEnabled());
     }
 
     /** And it is open to everybody - a grant here withholds the answer to "what changed". */

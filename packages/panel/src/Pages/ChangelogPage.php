@@ -44,7 +44,14 @@ final class ChangelogPage extends Page
         return null;
     }
 
-    public static function shouldShowInNavigation(): bool
+    /**
+     * NOT PRESENT AT ALL until an installation declares releases.
+     *
+     * Registering unconditionally took `/whats-new` from an application that
+     * already had its own changelog there - same URI, later registration wins,
+     * and real content was replaced by an empty state.
+     */
+    public static function isEnabled(): bool
     {
         return ! Changelog::isEmpty();
     }
