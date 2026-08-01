@@ -81,6 +81,29 @@ A resource belongs to exactly one panel. Clusters group resources under one nav
 parent; nested resources give `/clients/5/invoices`; singular resources are
 one-record settings screens.
 
+### What there is **no mechanism for**
+
+Worth stating plainly, because the catalogue lists classes and a class existing is
+not the same as a class being mountable.
+
+**No dashboard.** The package routes none. `StatWidget` and `ChartWidget` are
+referenced nowhere inside the package — they shape data correctly and nothing
+renders them. The reference app's dashboard is ~1,500 lines of its own controller
+and Vue page.
+
+**No non-resource pages.** The whole package route table is `/`, `{resource}/…`,
+`trash`, `documents/{kind}`, `custom-fields`, `announcements/{id}/dismiss` and
+`roles`. A screen that is not a resource — a settings centre, a health page, a
+device manager — has no declaration point. `App\Panel\Pages` in the reference app
+is an application convention plus a coverage test, not a framework feature.
+
+**`Workspace`** — the intended widget host — is referenced exactly once, in a
+comment in `ListQuery`. It is a name, not a mechanism.
+
+The consequence for planning: a super-admin panel of, say, 13 resources and 13
+non-resource pages is **13 supported and 13 not**. The resources are a day; the
+pages are package work, and no amount of page-by-page porting substitutes for it.
+
 ### Also shipped
 
 Trash across resources · custom fields · import wizard · document templates and
@@ -148,4 +171,4 @@ pointing composer at a `git subtree split` branch.
 external security review** — the isolation matrix and the authorisation tests
 check my own assumptions.
 
-Current state: **v0.2.0**, 1,524 tests passing, 13 skipped.
+Current state: **v0.2.0**, 1,531 tests passing, 13 skipped.

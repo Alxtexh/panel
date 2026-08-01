@@ -88,6 +88,44 @@ final class BlueprintCatalogueTest extends TestCase
     }
 
     /**
+     * THE ONE GROUP THAT IS NOT MOUNTABLE SAYS SO.
+     *
+     * `Widgets` sat in this catalogue beside `Forms/Fields` under one sentence -
+     * "every name below is a real class" - which is true of both and useful for
+     * only one. A field is mounted by naming it in `form()`. A widget has no
+     * host: the package routes no dashboard and has no non-resource page
+     * mechanism, so `StatWidget::make()` composes a value object that nothing
+     * renders.
+     *
+     * An agent could not tell those apart from the list, and the resulting
+     * dashboard is clean, tested and invisible - which is the precise failure
+     * this whole section was added to prevent, reproduced inside it.
+     */
+    public function test_it_says_widgets_have_no_host(): void
+    {
+        $markdown = $this->markdown();
+
+        $this->assertStringContainsString('no host in the package', $markdown);
+        $this->assertStringContainsString('routes no dashboard', $markdown);
+    }
+
+    /** And every group states how it is used, so none of them can overclaim again. */
+    public function test_every_group_says_how_it_is_used(): void
+    {
+        $markdown = $this->markdown();
+
+        preg_match_all('/^\*\*(.+?)\*\* \(\d+\):/m', $markdown, $matches);
+
+        $this->assertNotEmpty($matches[1], 'The catalogue listed no groups at all.');
+
+        $this->assertSame(
+            count($matches[1]),
+            substr_count($markdown, '_How to use them:'),
+            'A catalogue group lists classes without saying how they are mounted.',
+        );
+    }
+
+    /**
      * THE INSTALLER WRITES IT, because a guide nobody knows to generate is a
      * guide nobody has. `panel:blueprint` shipped from the beginning and
      * nothing ran it.
