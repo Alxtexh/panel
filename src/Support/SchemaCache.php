@@ -143,7 +143,13 @@ final class SchemaCache
         }
     }
 
-    private function generation(): int
+    /**
+     * PUBLIC SO AN UPGRADE CAN BE PROVED TO HAVE INVALIDATED IT. `panel:update`
+     * bumps this, and the failure it prevents - resources serving the previous
+     * version's schema shape into a freshly built bundle - is only observable
+     * by reading the counter.
+     */
+    public function generation(): int
     {
         try {
             return (int) $this->store()->get(self::GENERATION_KEY, 0);

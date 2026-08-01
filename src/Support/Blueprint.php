@@ -68,12 +68,38 @@ final class Blueprint
      * adds a line here by existing.
      */
     /** Said once, because it is the sentence that stops a wasted week. */
-    private const WIDGET_CAVEAT = '**these have no host in the package.** They shape data '
-        .'correctly and nothing renders them - PanelKit routes no dashboard and has no '
-        .'mechanism for a non-resource page, so the route, the controller, the Vue page and '
-        .'the permission wiring are all yours. The reference app spends around 1,500 lines '
-        .'on exactly that. Do not plan a dashboard as a port of screens; it is package work '
-        .'first';
+    /**
+     * WHAT MOUNTS A WIDGET, stated because for two releases nothing did.
+     *
+     * `StatWidget` and `ChartWidget` shipped from the beginning and the package
+     * routed no dashboard, so `StatWidget::make()` composed a correct value
+     * object that nothing rendered. This line used to say exactly that, and it
+     * was the honest answer until 0.3.0 gave them a host.
+     *
+     * IT IS STILL A CAVEAT, because the failure it prevents did not go away: a
+     * widget declared anywhere other than a `DashboardPage` is still a value
+     * object nothing draws. The host is the sentence that matters, not the
+     * class list.
+     */
+    private const WIDGET_CAVEAT = '**declare them on a `DashboardPage`, which is what draws '
+        .'them.** `php artisan make:panel-page Overview --dashboard` writes one; its '
+        .'`stats()` and `charts()` return these classes and the packaged `PanelDashboard` '
+        .'screen renders them, each as its own deferred prop. A widget built anywhere else '
+        .'is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 '
+        .'that was true of every widget, which is why this line exists';
+
+    /**
+     * TWO OF THESE ARE THE PACKAGE'S OWN SCREENS, not base classes, and saying
+     * so is the difference between enabling one and reimplementing it. Both are
+     * absent until configured - so an agent that finds no `/whats-new` concludes
+     * the package has no changelog, and writes a second one.
+     */
+    private const PAGE_HOW = 'extend `Page` (or `DashboardPage`) in `app/Panel/Pages` and '
+        .'discovery routes it - `php artisan make:panel-page ServerHealth` writes the class '
+        .'and its Vue file. `ChangelogPage` and `EnvironmentPage` are the package\'s OWN '
+        .'screens rather than things to extend: each appears only once configured '
+        .'(`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so '
+        .'check those keys before concluding the capability is missing';
 
     private static function catalogue(): string
     {
@@ -106,6 +132,7 @@ final class Blueprint
             'Actions' => ['Actions', 'name them in `table()` or the resource\'s actions'],
             'Schema (form layout)' => ['Schema', 'wrap fields with them inside `form()`'],
             'Dashboard widgets' => ['Widgets', self::WIDGET_CAVEAT],
+            'Pages (screens that are not resources)' => ['Pages', self::PAGE_HOW],
         ];
 
         foreach ($groups as $label => [$dir, $how]) {
@@ -320,7 +347,7 @@ final class Blueprint
     }
 
     /**
-     * The five things somebody actually asks for.
+     * The things somebody actually asks for.
      *
      * WHOLE COMMANDS AND WHOLE CLASSES, because a recipe that stops at "then
      * configure the resource" is one an agent finishes by inventing. Each of
@@ -340,6 +367,78 @@ final class Blueprint
         Then: register a policy, check the columns it guessed, and add filters. The
         route, the navigation entry and the abilities already exist. Nothing needs
         adding to `routes/web.php`.
+
+        ### Add a screen that is NOT a list of records
+
+        ```bash
+        php artisan make:panel-page ServerHealth
+        ```
+
+        A page is one class in `app/Panel/Pages` plus the one-line Vue file the
+        command writes. Discovery routes it; the sidebar entry, the ability, the
+        permission-matrix row and the page header all follow from the class. Do
+        not add a controller and do not touch `routes/web.php` - that is the
+        same deal a resource gets, for the same reason.
+
+        ```php
+        final class ServerHealthPage extends Page
+        {
+            public static function component(): string { return 'ServerHealth'; }
+
+            public static function data(Request $request): array
+            {
+                return ['nodes' => Node::status()];
+            }
+
+            // Endpoints this page owns. THE ABILITY IS SEPARATE from the
+            // page's own, because seeing a thing and changing it are
+            // different grants.
+            public static function actions(): array
+            {
+                return ['restart' => 'restart_nodes'];
+            }
+        }
+        ```
+
+        `uri()` may carry `{parameters}`; the navigation entry uses the path
+        with them stripped. A page slug and a resource key share ONE namespace -
+        both are URL segments in the same prefix - so a clash throws at boot
+        naming both classes rather than leaving one screen unreachable.
+
+        Return `false` from `isEnabled()` for a page that should be ABSENT
+        rather than merely hidden. Hidden still routes, and a routed screen the
+        menu never shows is how a package quietly takes a URI the application
+        was already using.
+
+        ### Add a dashboard
+
+        ```bash
+        php artisan make:panel-page Overview --dashboard
+        ```
+
+        A `DashboardPage` declares `stats()` and `charts()`; the packaged
+        `PanelDashboard` screen draws them. There is no dashboard Vue to write.
+
+        ```php
+        final class OverviewPage extends DashboardPage
+        {
+            public static function stats(): array
+            {
+                return [
+                    StatWidget::make('clients', 'Clients')
+                        ->value(fn () => Client::count())
+                        ->visibleTo(fn ($user) => $user->can('view_any_clients')),
+                ];
+            }
+        }
+        ```
+
+        EVERY WIDGET IS ITS OWN DEFERRED PROP, so the layout is on screen before
+        anything has been counted and one slow aggregate delays itself rather
+        than the page. `visibleTo` is applied BEFORE resolution - a widget
+        somebody may not see is never queried and never serialised, because
+        filtering it client-side would ship the number to them and rely on CSS
+        to keep the secret.
 
         ### Group several resources under one sidebar entry
 
