@@ -151,7 +151,6 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\MakePanelCommand::class,
             Commands\MakeResourceCommand::class,
             Commands\ReindexTenantCommand::class,
-            Commands\JourneyCommand::class,
             Commands\DoctorCommand::class,
             Commands\SuspendTenantCommand::class,
             Commands\MonitorSampleCommand::class,
