@@ -79,6 +79,7 @@ final class DoctorCommand extends Command
         $this->checkTemplateContrast();
         $this->checkBackupFreshness();
         $this->checkViteDevServer();
+        $this->checkShippedDefaults();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -702,6 +703,126 @@ final class DoctorCommand extends Command
             .'in the log. Either start the dev server with `npm run dev`, or delete public/hot and '
             .'serve the built assets with `npm run build`.',
         );
+    }
+
+    /**
+     * The defaults nobody changed, which are how an installation announces it
+     * is still somebody's laptop.
+     *
+     * NONE OF THESE BREAK ANYTHING, and that is exactly why they survive to
+     * production: everything works, so nothing prompts anybody to look. They
+     * are found by the person who receives an email from "Laravel", or by
+     * whoever reads a stack trace on a public error page.
+     *
+     * THE ONLY ONE THAT IS AN EMERGENCY is debug in production, and it is
+     * reported as a problem rather than a note because the failure is not
+     * cosmetic: Laravel's error page prints environment variables, and that
+     * includes the database password and the application key.
+     */
+    private function checkShippedDefaults(): void
+    {
+        $production = app()->isProduction();
+
+        if ($production && config('app.debug') === true) {
+            $this->problem(
+                'Debug mode is on in production',
+                'APP_DEBUG=true makes every uncaught error render a page listing environment '
+                .'variables - the database password, the mail credentials and APP_KEY among them - '
+                .'to whoever triggered it. Set APP_DEBUG=false.',
+            );
+        }
+
+        if ((string) config('app.name') === 'Laravel') {
+            $this->note(
+                'The application is still called "Laravel"',
+                'APP_NAME is the shipped default, so it is what page titles, the sign-in screen '
+                .'and every notification email say this product is called. Set APP_NAME.',
+            );
+        }
+
+        /*
+         * A `.test` ADDRESS IS A SEED, NOT A COLLEAGUE. The reserved TLD is the
+         * signal: nobody receives mail there, so an account holding one was
+         * created by a seeder and its password is in the repository. Matching
+         * on the domain rather than on a name means a demo account renamed to
+         * something plausible is still found.
+         */
+        [$demo, $total] = $this->demoAccounts();
+
+        if ($demo !== []) {
+            $level = $production ? 'problem' : 'note';
+
+            // THE COUNT, NOT JUST A SAMPLE. Five addresses and no total reads as
+            // "there are five", and somebody deletes those and believes they are
+            // finished.
+            $more = $total > count($demo) ? ' and '.($total - count($demo)).' more' : '';
+
+            $detail = 'Seeded accounts sign in with a password that is written in the seeder, '
+                ."which is public. {$total} exist; delete them once a real administrator does: "
+                .implode(', ', $demo).$more.'.';
+
+            $level === 'problem'
+                ? $this->problem('Seeded demo accounts can still sign in', $detail)
+                : $this->note('Seeded demo accounts are present', $detail);
+        }
+
+        /*
+         * AN UNPINNED PACKAGE IS NOT A VERSION. `@dev` resolves to whatever the
+         * branch happened to be when composer last ran, so two deploys of "the
+         * same" release can differ and neither can be rolled back to. Right for
+         * the monorepo that develops the package, wrong for anything serving
+         * real traffic.
+         */
+        if ($production && $this->requiresPanelAtDev()) {
+            $this->problem(
+                'The panel package is required at @dev',
+                'composer.json asks for panelkit/panel at @dev, so the installed code is whatever '
+                .'the branch was when composer last ran - not a version anybody can name or roll '
+                .'back to. Require a tagged release.',
+            );
+        }
+    }
+
+    /**
+     * Accounts on the reserved `.test` TLD, which cannot be real people.
+     *
+     * @return array{0: list<string>, 1: int} a sample, and how many there are
+     */
+    private function demoAccounts(): array
+    {
+        $model = config('auth.providers.users.model');
+
+        if (! is_string($model) || ! class_exists($model)) {
+            return [[], 0];
+        }
+
+        try {
+            $query = $model::query()->withoutGlobalScopes()->where('email', 'like', '%.test');
+
+            return [
+                (clone $query)->orderBy('email')->limit(5)->pluck('email')->all(),
+                (clone $query)->count(),
+            ];
+        } catch (\Throwable) {
+            // No users table yet, or a provider that is not Eloquent. Either way
+            // there is nothing to report rather than something to crash over.
+            return [[], 0];
+        }
+    }
+
+    private function requiresPanelAtDev(): bool
+    {
+        $path = base_path('composer.json');
+
+        if (! is_file($path)) {
+            return false;
+        }
+
+        $composer = json_decode((string) file_get_contents($path), true);
+
+        $constraint = $composer['require']['panelkit/panel'] ?? null;
+
+        return is_string($constraint) && str_contains($constraint, 'dev');
     }
 
     /* ------------------------------------------------------------ plumbing */
