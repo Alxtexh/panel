@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Http;
 
 use Illuminate\Support\Facades\Route;
+use PanelKit\Panel\Auth\Passkeys;
 use PanelKit\Panel\Http\Controllers\BulkController;
 use PanelKit\Panel\Http\Controllers\RecordController;
 use PanelKit\Panel\Http\Controllers\ResourceController;
@@ -53,6 +54,10 @@ final class PanelRoutes
      */
     public static function registerAll(): void
     {
+        // Once for the installation, not once per portal - the path is fixed by
+        // the spec and a second registration would collide.
+        self::wellKnown();
+
         foreach (app(PanelManager::class)->panels() as $panel) {
             self::register($panel);
         }
@@ -85,6 +90,24 @@ final class PanelRoutes
     private const EXTENSIONS = 'panelkit.route-extensions';
 
     /** @param callable(list<string>, Panel): void $routes */
+    /**
+     * The passkey discovery document, served once for the installation.
+     *
+     * OUTSIDE ANY PANEL PREFIX, because the spec fixes the path: a password
+     * manager looks for `/.well-known/passkey-endpoints` and nowhere else, so it
+     * cannot live inside `/admin` or `/platform`.
+     *
+     * REGISTERED EVEN WITHOUT FORTIFY, answering with an empty document rather
+     * than a 404. A 404 tells a client the site is broken; an empty document
+     * tells it there is nothing here to enrol, which is the true answer.
+     */
+    public static function wellKnown(): void
+    {
+        Route::get('.well-known/passkey-endpoints', static fn () => response()->json(
+            Passkeys::available() ? Passkeys::endpoints() : []
+        ))->name('panel.well-known.passkeys');
+    }
+
     public static function extend(callable $routes): void
     {
         $extensions = app()->bound(self::EXTENSIONS) ? app(self::EXTENSIONS) : [];
