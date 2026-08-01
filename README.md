@@ -131,6 +131,35 @@ registry that can disagree with it — and it disagrees in the dangerous directi
 renamed resource leaves stale names in a role that looks fully populated and grants
 nothing.
 
+### What ships, and what you bring
+
+The roles themselves **come with the package**. It depends on
+`spatie/laravel-permission`, ships the migration, the `Role` model and the one column
+Spatie has no equivalent for:
+
+`grants_all` marks a role that holds every ability **including ones invented later**.
+Inferring that from "currently holds all of them" would make a role become a superuser the
+moment somebody ticked the last box; storing it means `panel:permissions sync` tops such a
+role up, so registering a resource cannot lock its own administrators out of it.
+
+The migration **creates nothing that already exists**. An application already using
+Spatie keeps its tables and gains only the `grants_all` column, so adopting PanelKit does
+not disturb a permission system that predates it.
+
+You still bring the **policies** — a resource with no policy is denied entirely (below) —
+and, if you are multi-tenant, `permission.teams`:
+
+```php
+// config/permission.php
+'teams' => true,
+'column_names' => ['team_foreign_key' => 'tenant_id'],
+```
+
+Spatie defaults `teams` to **false**, and that default fails open here: roles carry a
+tenant, the panel sets a team id on every request, and the permission package ignores
+both — so one role grants across every organisation at once, with no error and nothing in
+a log. `panel:doctor` reports it as a problem.
+
 **A resource with no policy is denied entirely.** Forgetting to write one locks the
 resource down rather than opening it up. `panel:doctor` tells you which are missing.
 
