@@ -67,23 +67,48 @@ final class Blueprint
      * exactly the drift `panel:blueprint` exists to avoid. Adding a field type
      * adds a line here by existing.
      */
+    /** Said once, because it is the sentence that stops a wasted week. */
+    private const WIDGET_CAVEAT = '**these have no host in the package.** They shape data '
+        .'correctly and nothing renders them - PanelKit routes no dashboard and has no '
+        .'mechanism for a non-resource page, so the route, the controller, the Vue page and '
+        .'the permission wiring are all yours. The reference app spends around 1,500 lines '
+        .'on exactly that. Do not plan a dashboard as a port of screens; it is package work '
+        .'first';
+
     private static function catalogue(): string
     {
         $out = ["## What you can build with\n"];
         $out[] = "Every name below is a real class in the installed package. If something\n"
             ."you want is not here it does not exist - do not invent a field type, and do\n"
-            ."not hand-roll one in Vue. Ask for it, or compose what is here.\n";
+            ."not hand-roll one in Vue. Ask for it, or compose what is here.\n\n"
+            ."EXISTING AND BEING MOUNTABLE ARE DIFFERENT CLAIMS, so each group says how it\n"
+            ."is used. Read that line before planning around anything below.\n";
 
+        /*
+         * THE SECOND ELEMENT IS THE HONEST PART, and it is here because the
+         * first version of this catalogue failed in the exact way the catalogue
+         * was written to prevent.
+         *
+         * It listed `Widgets` beside `Forms/Fields` under one sentence - every
+         * name below is a real class - which is true and useless. A field is
+         * mounted by naming it in `form()`. A WIDGET HAS NO HOST: the package
+         * routes no dashboard and has no mechanism for a non-resource page, so
+         * `StatWidget::make()` composes a value object that nothing will render.
+         * Nothing in the list distinguished those two, so an agent could write a
+         * dashboard that was clean, tested and invisible.
+         *
+         * Being on disk is not being usable. Where it is not, this says so.
+         */
         $groups = [
-            'Form fields' => ['Forms/Fields', 'Field'],
-            'Table columns' => ['Tables/Columns', 'Column'],
-            'Table filters' => ['Tables/Filters', 'Filter'],
-            'Actions' => ['Actions', ''],
-            'Schema (form layout)' => ['Schema', ''],
-            'Dashboard widgets' => ['Widgets', ''],
+            'Form fields' => ['Forms/Fields', 'name them in `form()`'],
+            'Table columns' => ['Tables/Columns', 'name them in `table()`'],
+            'Table filters' => ['Tables/Filters', 'name them in `table()`'],
+            'Actions' => ['Actions', 'name them in `table()` or the resource\'s actions'],
+            'Schema (form layout)' => ['Schema', 'wrap fields with them inside `form()`'],
+            'Dashboard widgets' => ['Widgets', self::WIDGET_CAVEAT],
         ];
 
-        foreach ($groups as $label => [$dir, $suffix]) {
+        foreach ($groups as $label => [$dir, $how]) {
             $names = self::classesIn($dir);
 
             if ($names === []) {
@@ -91,12 +116,13 @@ final class Blueprint
             }
 
             /*
-             * THE SUFFIX COMES OFF because that is how they are written in a
-             * schema - `TextField::make()` is the class, and an agent copying
-             * `Text` from a list would write a name that does not resolve.
-             * So the class name is what is printed, exactly.
+             * THE CLASS NAME IS PRINTED EXACTLY, suffix included, because that
+             * is how it is written in a schema. `TextField::make()` is the
+             * class; an agent copying a tidied-up `Text` from a list would write
+             * a name that does not resolve.
              */
-            $out[] = "**{$label}** (".count($names).'): `'.implode('` `', $names).'`';
+            $out[] = "**{$label}** (".count($names).'): `'.implode('` `', $names).'`'
+                ."\n_How to use them: {$how}._";
         }
 
         $out[] = "\nAbstract bases and traits appear in those lists - `Field`, `Column`,\n"
