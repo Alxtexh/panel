@@ -27,7 +27,20 @@ final class UserManagementPage extends Page
 {
     protected static string $icon = 'users';
 
-    protected static ?string $group = 'Settings';
+    /**
+     * NOT IN THE SIDEBAR. It is reached from the account menu, and
+     * `App\Panel\Pages` states the rule plainly: one destination, one place to
+     * find it. A link that appears twice teaches nobody where it lives and makes
+     * the shorter list longer for no gain.
+     *
+     * Converting this screen to a Page put it in the sidebar because the class
+     * declared a group - which is the mechanism working correctly and me using
+     * it wrongly.
+     */
+    public static function shouldShowInNavigation(): bool
+    {
+        return false;
+    }
 
     /**
      * THE TAB IS IN THE PATH, not a query string - `/user-management/roles` is

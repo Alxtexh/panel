@@ -180,19 +180,40 @@ final class PanelPageMechanismTest extends TestCase
         $this->assertContains('manage_roles', Abilities::all());
     }
 
-    /** Declared pages place themselves in the sidebar, as resources do. */
-    public function test_a_page_places_itself_in_the_navigation(): void
+    /**
+     * A PAGE MAY BE ROUTED AND DELIBERATELY ABSENT FROM THE MENU, which both
+     * converted screens are.
+     *
+     * `App\Panel\Pages` states the rule: one destination, one place to find it.
+     * User management is reached from the account menu and the organisation
+     * from the settings index, so putting either in the sidebar as well makes
+     * the shorter list longer and teaches nobody where the screen lives.
+     *
+     * Converting them put both there, because the classes declared a group -
+     * the mechanism working correctly and being used wrongly.
+     */
+    public function test_both_converted_pages_stay_out_of_the_sidebar(): void
     {
         $titles = array_column(app(PanelManager::class)->panelPages(), 'title');
 
-        $this->assertContains(UserManagementPage::label(), $titles);
-        $this->assertContains(OrganisationPage::label(), $titles);
+        $this->assertNotContains(UserManagementPage::label(), $titles);
+        $this->assertNotContains(OrganisationPage::label(), $titles);
     }
 
-    /** A page may be routed and deliberately absent from the menu. */
-    public function test_a_page_can_opt_out_of_the_navigation(): void
+    /**
+     * AND A NAVIGATION HREF IS BUILT FROM THE URI, NOT THE SLUG.
+     *
+     * `OrganisationPage` is slugged `organisation` and mounted at
+     * `settings/organisation`. Building the entry from the slug produced a
+     * sidebar link to `/organisation`, which is routed to nothing - a menu item
+     * that 404s, shipped and unnoticed because the page itself worked.
+     */
+    public function test_a_navigation_href_uses_the_pages_real_address(): void
     {
-        $this->assertTrue(UserManagementPage::shouldShowInNavigation());
+        $this->assertSame('settings/organisation', OrganisationPage::navigationPath());
+
+        // Optional segments are dropped; the page picks its own default tab.
+        $this->assertSame('user-management', UserManagementPage::navigationPath());
     }
 }
 

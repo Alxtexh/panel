@@ -33,7 +33,14 @@ final class OrganisationPage extends Page
 {
     protected static string $icon = 'building';
 
-    protected static ?string $group = 'Settings';
+    /**
+     * NOT IN THE SIDEBAR either - it is one entry in the settings index, which
+     * is where every other settings screen is found. See `UserManagementPage`.
+     */
+    public static function shouldShowInNavigation(): bool
+    {
+        return false;
+    }
 
     public static function uri(): string
     {
