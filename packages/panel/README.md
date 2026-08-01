@@ -167,7 +167,6 @@ the connection for **every** tenant unconditionally and throws on the first shar
 | `panel:permissions` | List or reconcile abilities and roles |
 | `panel:doctor` | **Find configuration that is silently wrong** |
 | `panel:benchmark` | Time every list surface, warm, as a median |
-| `panel:journey` | Time a whole signed-in session over real HTTP |
 | `panel:reindex-tenant` | Fix index shape inside a dedicated database |
 `panel:doctor` is the one to run first on a new installation. Every check in it exists
 because the failure is **silent** — a working panel serving wrong or unprotected data,
@@ -184,8 +183,6 @@ exist, from one measurement taken on a busy machine.
 
 ```bash
 php artisan panel:benchmark --tenant=acme --runs=3 --json
-php artisan panel:journey   --tenant=acme --host=acme.example.com
-php artisan panel:journey   --tenant=acme --host=acme.example.com --negative
 ```
 
 The **negative journey** is the one worth running. It signs in as somebody from another
