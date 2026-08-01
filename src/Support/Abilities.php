@@ -150,7 +150,27 @@ final class Abilities
             }
         }
 
-        return array_merge($out, array_keys(self::panelLabelled()));
+        /*
+         * PAGES CONTRIBUTE THEIR ABILITY TOO. A page declares one name and
+         * an ability per action; if they are not in this list they are not in
+         * the permission matrix, `grants_all` never tops them up, and
+         * `panel:permissions --prune` deletes them as names that correspond to
+         * nothing. All three failures are silent, and the third is the one that
+         * revokes a grant somebody deliberately made.
+         */
+        foreach (app(PanelManager::class)->pages() as $class) {
+            if ($class::ability() !== null) {
+                $out[] = $class::ability();
+            }
+
+            foreach ($class::actions() as $ability) {
+                if ($ability !== null) {
+                    $out[] = $ability;
+                }
+            }
+        }
+
+        return array_values(array_unique(array_merge($out, array_keys(self::panelLabelled()))));
     }
 
     /**
