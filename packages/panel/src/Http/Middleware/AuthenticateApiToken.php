@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use PanelKit\Panel\Api\ApiToken;
@@ -47,7 +48,7 @@ final class AuthenticateApiToken
             return $this->refuse();
         }
 
-        $model = (string) config('auth.providers.users.model', \App\Models\User::class);
+        $model = (string) config('auth.providers.users.model', User::class);
         $user = $model::query()->find($token->user_id);
 
         /*

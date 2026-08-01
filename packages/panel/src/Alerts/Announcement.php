@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Alerts;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use PanelKit\Panel\Documents\DocumentBranding;
@@ -66,7 +67,7 @@ final class Announcement extends Model
          * misconfigured resolver show an empty dashboard rather than every
          * organisation's notices at once.
          */
-        static::addGlobalScope('tenant', static function (Builder $builder): void {
+        self::addGlobalScope('tenant', static function (Builder $builder): void {
             $context = app(TenantContext::class);
 
             if (! $context->shouldScopeByColumn()) {
@@ -79,7 +80,7 @@ final class Announcement extends Model
             );
         });
 
-        static::creating(static function (self $announcement): void {
+        self::creating(static function (self $announcement): void {
             if ($announcement->tenant_id === null) {
                 $announcement->tenant_id = app(TenantContext::class)->currentKey();
             }
@@ -99,9 +100,9 @@ final class Announcement extends Model
      * sitting on the dashboard forever, because nobody ever goes back to delete
      * one.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, self>
+     * @return Collection<int, self>
      */
-    public static function activeFor(int|string $userId): \Illuminate\Database\Eloquent\Collection
+    public static function activeFor(int|string $userId): Collection
     {
         return self::query()
             ->where(fn (Builder $q) => $q->whereNull('starts_at')->orWhere('starts_at', '<=', now()))

@@ -7,6 +7,7 @@ namespace PanelKit\Panel\Trash;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\PanelSettings;
@@ -211,7 +212,7 @@ final class TrashBin
      * there is immediate and always was; listing an empty section for it would
      * suggest a recovery that does not exist.
      *
-     * @return array<string, class-string<Resource>>
+     * @return array<string, class-string<resource>>
      */
     public function resources(?string $panelId = null): array
     {
@@ -245,11 +246,11 @@ final class TrashBin
      * nobody can plan around - somebody has to be able to look at this and know
      * whether it will still be here on Monday.
      */
-    public function purgesAt(Model $record): \Illuminate\Support\Carbon
+    public function purgesAt(Model $record): Carbon
     {
         $deleted = $record->{$record->getDeletedAtColumn()};
 
-        return \Illuminate\Support\Carbon::parse($deleted)->addDays(self::retentionDays());
+        return Carbon::parse($deleted)->addDays(self::retentionDays());
     }
 
     /** The shortest and longest a bin may keep something. */
@@ -287,7 +288,7 @@ final class TrashBin
         return max(self::MINIMUM_DAYS, min(self::MAXIMUM_DAYS, (int) $configured));
     }
 
-    /** @param  class-string<Resource>  $class */
+    /** @param  class-string<resource>  $class */
     private function describe(string $class, Model $record): array
     {
         return [
@@ -313,7 +314,7 @@ final class TrashBin
      * when scanning the list. Falling back to the key means a record with an
      * empty first column is still actionable rather than a blank line.
      *
-     * @param  class-string<Resource>  $class
+     * @param  class-string<resource>  $class
      */
     private function titleFor(string $class, Model $record): string
     {

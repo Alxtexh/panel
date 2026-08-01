@@ -65,8 +65,8 @@ final class CustomField extends Model
      */
     protected static function booted(): void
     {
-        static::saved(static fn (): mixed => self::$byResource = null);
-        static::deleted(static fn (): mixed => self::$byResource = null);
+        self::saved(static fn (): mixed => self::$byResource = null);
+        self::deleted(static fn (): mixed => self::$byResource = null);
     }
 
     /**
@@ -108,7 +108,7 @@ final class CustomField extends Model
             return new Collection;
         }
 
-        return self::$byResource ??= static::query()
+        return self::$byResource ??= self::query()
             ->orderBy('sort')->orderBy('id')->get()
             ->groupBy('resource');
     }

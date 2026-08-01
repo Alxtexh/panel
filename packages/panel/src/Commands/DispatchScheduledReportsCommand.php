@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 use PanelKit\Panel\Jobs\DeliverScheduledReport;
 use PanelKit\Panel\Reports\ScheduledReport;
 
@@ -39,7 +40,7 @@ final class DispatchScheduledReportsCommand extends Command
     public function handle(): int
     {
         $now = $this->option('now') !== null
-            ? \Illuminate\Support\Carbon::parse((string) $this->option('now'))
+            ? Carbon::parse((string) $this->option('now'))
             : now();
 
         $dispatched = 0;

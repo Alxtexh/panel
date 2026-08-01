@@ -150,7 +150,7 @@ Two rules the UI package holds and a test enforces:
 |---|---|
 | `panel:install` | Publishes config, creates `app/Panel/`, checks tenancy is resolvable |
 | `make:panel-resource {Model} --generate` | Introspects the table and writes a working resource plus a policy stub |
-| `panel:seed-demo --scale=large` | 500k clients across 5 tenants, 2M sessions |
+| `panel:seed-demo --scale=large` | 500k clients across 5 tenants, 2M sessions (reference app only) |
 | `panel:cache-clear` | Invalidates every cached schema by bumping a generation counter |
 
 ---

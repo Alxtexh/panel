@@ -6,6 +6,8 @@ namespace PanelKit\Panel\Ai;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Ai\Models\Conversation;
+use Laravel\Ai\Models\ConversationMessage;
 use PanelKit\Panel\Support\TenantContext;
 
 /**
@@ -35,8 +37,8 @@ final class TenantScopedConversations
 {
     /** @var list<class-string<Model>> */
     private const MODELS = [
-        \Laravel\Ai\Models\Conversation::class,
-        \Laravel\Ai\Models\ConversationMessage::class,
+        Conversation::class,
+        ConversationMessage::class,
     ];
 
     public static function attach(): void

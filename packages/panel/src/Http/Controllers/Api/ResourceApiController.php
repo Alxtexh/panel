@@ -10,7 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use PanelKit\Panel\Api\ApiToken;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\Abilities;
+use PanelKit\Panel\Support\TenantContext;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -154,7 +156,7 @@ final class ResourceApiController extends Controller
      */
     private function applyTenant(Model $record): void
     {
-        $context = app(\PanelKit\Panel\Support\TenantContext::class);
+        $context = app(TenantContext::class);
 
         if (! $context->shouldScopeByColumn()) {
             // Dedicated-database tenancy: the connection is the boundary and the

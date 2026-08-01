@@ -169,8 +169,6 @@ the connection for **every** tenant unconditionally and throws on the first shar
 | `panel:benchmark` | Time every list surface, warm, as a median |
 | `panel:journey` | Time a whole signed-in session over real HTTP |
 | `panel:reindex-tenant` | Fix index shape inside a dedicated database |
-| `panel:seed-demo` | Realistic data at scale |
-
 `panel:doctor` is the one to run first on a new installation. Every check in it exists
 because the failure is **silent** — a working panel serving wrong or unprotected data,
 where every page returns 200 and every test passes. For example: with

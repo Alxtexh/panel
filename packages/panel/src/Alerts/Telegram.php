@@ -7,6 +7,8 @@ namespace PanelKit\Panel\Alerts;
 use Illuminate\Support\Facades\Notification;
 use NotificationChannels\Telegram\Telegram as Client;
 use PanelKit\Panel\Notifications\TelegramText;
+use PanelKit\Panel\Support\BackupSettings;
+use PanelKit\Panel\Support\PanelSettings;
 
 /**
  * Telegram, as one call from anywhere in the panel.
@@ -159,7 +161,7 @@ final class Telegram
          * the install rather than the feature.
          */
         try {
-            $settings = app(\PanelKit\Panel\Support\PanelSettings::class);
+            $settings = app(PanelSettings::class);
 
             /*
              * THE BACKUP SCREEN IS WHERE THESE WERE FIRST TYPED, and they stay
@@ -173,7 +175,7 @@ final class Telegram
              * general statement, and the one an administrator sets when they
              * want Telegram for more than backups.
              */
-            $backup = (array) ($settings->get(\PanelKit\Panel\Support\BackupSettings::KEY) ?? []);
+            $backup = (array) ($settings->get(BackupSettings::KEY) ?? []);
 
             return [
                 'token' => $settings->get('alerts.telegram.token')

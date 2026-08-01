@@ -11,6 +11,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use PanelKit\Panel\Documents\DocumentKind;
 use PanelKit\Panel\Documents\DocumentKinds;
 use PanelKit\Panel\Documents\DocumentRenderer;
 use PanelKit\Panel\Documents\DocumentTemplate;
@@ -191,7 +192,7 @@ final class DocumentTemplateController extends Controller
      * rather than a broken installation - and `DocumentKinds::get()` throws,
      * which would otherwise surface as a 500 on a typo.
      */
-    private function kindOr404(string $kind, DocumentKinds $kinds): \PanelKit\Panel\Documents\DocumentKind
+    private function kindOr404(string $kind, DocumentKinds $kinds): DocumentKind
     {
         if (! $kinds->has($kind)) {
             throw new NotFoundHttpException("No document kind [{$kind}].");

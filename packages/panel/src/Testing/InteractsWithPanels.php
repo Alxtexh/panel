@@ -105,8 +105,6 @@ trait InteractsWithPanels
 
     /**
      * `$user` can open the list screen and it renders.
-     *
-     * @return TestResponse
      */
     protected function assertResourceListsFor(object $user, string $resourceKey): TestResponse
     {
@@ -322,7 +320,7 @@ trait InteractsWithPanels
             ->post($this->panelUrl($resourceKey), $payload)
             ->assertSessionHasNoErrors();
 
-        /** @var class-string<Resource> $class */
+        /** @var class-string<resource> $class */
         $model = $class::model();
 
         $this->assertDatabaseHas((new $model)->getTable(), $expect === [] ? $payload : $expect);

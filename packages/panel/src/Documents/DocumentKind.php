@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Documents;
 
+use PanelKit\Panel\Schema\Renderable;
+
 /**
  * One sort of document that leaves the system: an invoice, a receipt, a voucher.
  *
@@ -61,7 +63,7 @@ abstract class DocumentKind
     /**
      * The designer's form, as ordinary schema nodes.
      *
-     * @return list<\PanelKit\Panel\Schema\Renderable>
+     * @return list<Renderable>
      */
     abstract public function fields(): array;
 
@@ -80,7 +82,7 @@ abstract class DocumentKind
      * The document itself: settings plus one record's data, as blocks.
      *
      * @param  array<string, mixed>  $settings  the template being previewed or printed
-     * @param  array<string, mixed>  $data      one record, from `data()` or `sample()`
+     * @param  array<string, mixed>  $data  one record, from `data()` or `sample()`
      * @return list<array<string, mixed>>
      */
     abstract public function blocks(array $settings, array $data): array;

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel;
 
+use Illuminate\Auth\Events\Login;
+use Illuminate\Notifications\ChannelManager;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -147,8 +150,6 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\MakeApiTokenCommand::class,
             Commands\MakePanelCommand::class,
             Commands\MakeResourceCommand::class,
-            Commands\SeedDemoCommand::class,
-            Commands\SeedReferenceCommand::class,
             Commands\ReindexTenantCommand::class,
             Commands\JourneyCommand::class,
             Commands\DoctorCommand::class,
@@ -227,7 +228,7 @@ final class PanelServiceProvider extends ServiceProvider
         }
 
         $this->app['events']->listen(
-            \Illuminate\Auth\Events\Login::class,
+            Login::class,
             Auth\EnforceSessionLimit::class,
         );
     }
@@ -300,8 +301,8 @@ final class PanelServiceProvider extends ServiceProvider
     {
         Alerts\Telegram::configure();
 
-        \Illuminate\Support\Facades\Notification::resolved(
-            static function (\Illuminate\Notifications\ChannelManager $manager): void {
+        Notification::resolved(
+            static function (ChannelManager $manager): void {
                 $manager->extend(
                     'telegram',
                     static fn ($app) => $app->make(Notifications\Channels\TelegramChannel::class),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Support;
 
 use Illuminate\Support\Facades\Storage;
+use Spatie\Backup\BackupDestination\BackupDestination;
 
 /**
  * What the backups look like right now.
@@ -59,7 +60,7 @@ final class BackupStatus
             'problem' => null,
         ];
 
-        if (! class_exists(\Spatie\Backup\BackupDestination\BackupDestination::class)) {
+        if (! class_exists(BackupDestination::class)) {
             return [...$empty, 'problem' => 'spatie/laravel-backup is not installed.'];
         }
 

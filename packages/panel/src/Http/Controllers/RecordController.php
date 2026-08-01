@@ -182,7 +182,7 @@ final class RecordController extends Controller
         }
 
         $validated = $request->validate([
-            'ids' => ['required', 'array', 'min:1', 'max:' . $table->largestPage()],
+            'ids' => ['required', 'array', 'min:1', 'max:'.$table->largestPage()],
             'ids.*' => ['required', 'integer'],
         ]);
 

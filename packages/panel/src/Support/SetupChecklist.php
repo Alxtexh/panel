@@ -41,11 +41,11 @@ final class SetupChecklist
 
     /**
      * @param  (Closure(): array<string, array{title: string, detail: string}>)|null  $findProblems
-     *         Test seam: where the open problems come from. Null - every
-     *         real caller - means `panel:doctor`. The alternative was tests
-     *         at the mercy of whatever doctor happens to report inside the
-     *         suite's environment, which is precisely the nondeterminism
-     *         this class exists to paper over.
+     *                                                                                               Test seam: where the open problems come from. Null - every
+     *                                                                                               real caller - means `panel:doctor`. The alternative was tests
+     *                                                                                               at the mercy of whatever doctor happens to report inside the
+     *                                                                                               suite's environment, which is precisely the nondeterminism
+     *                                                                                               this class exists to paper over.
      */
     public function __construct(
         private readonly InstallationState $state,

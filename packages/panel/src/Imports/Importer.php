@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Imports;
 
 use Illuminate\Support\Facades\Validator;
 use InvalidArgumentException;
+use PanelKit\Panel\Forms\Fields\Field;
 use PanelKit\Panel\Forms\Form;
 
 /**
@@ -44,7 +45,7 @@ final class Importer
         private readonly array $mapping,
     ) {
         $declared = array_map(
-            static fn (\PanelKit\Panel\Forms\Fields\Field $f): string => $f->key,
+            static fn (Field $f): string => $f->key,
             $form->fields(),
         );
 

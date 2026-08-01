@@ -7,6 +7,7 @@ namespace PanelKit\Panel\Commands;
 use Illuminate\Console\Command;
 use PanelKit\Panel\Knowledge\Chunker;
 use PanelKit\Panel\Knowledge\Document;
+use PanelKit\Panel\Knowledge\HashEmbedder;
 use PanelKit\Panel\Knowledge\KnowledgeBase;
 use PanelKit\Panel\Knowledge\KnowledgeSource;
 use PanelKit\Panel\Support\TenantContext;
@@ -150,7 +151,7 @@ final class IndexKnowledgeCommand extends Command
          */
         $this->components->twoColumnDetail(
             'Embedder',
-            (string) config('panel.knowledge.embedder', \PanelKit\Panel\Knowledge\HashEmbedder::class),
+            (string) config('panel.knowledge.embedder', HashEmbedder::class),
         );
 
         return self::SUCCESS;

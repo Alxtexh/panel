@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Support\DemoData;
 use Illuminate\Support\Facades\Schema;
+use PanelKit\Panel\Support\DemoData;
 
 /**
  * php artisan panel:seed-demo --scale=large|medium|small

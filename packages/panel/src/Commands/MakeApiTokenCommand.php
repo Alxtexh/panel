@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Commands;
 
+use App\Models\User;
 use Illuminate\Console\Command;
 use PanelKit\Panel\Api\ApiToken;
 use PanelKit\Panel\Support\Abilities;
@@ -38,7 +39,7 @@ final class MakeApiTokenCommand extends Command
 
     public function handle(): int
     {
-        $model = (string) config('auth.providers.users.model', \App\Models\User::class);
+        $model = (string) config('auth.providers.users.model', User::class);
 
         $user = $model::query()->where('email', $this->argument('email'))->first();
 

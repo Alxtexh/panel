@@ -7,9 +7,11 @@ namespace PanelKit\Panel\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\PanelSettings;
 use PanelKit\Panel\Trash\TrashBin;
 
@@ -206,7 +208,7 @@ final class TrashController extends Controller
      * applies and another organisation's ids simply match nothing - the same
      * property the bulk endpoints on the tables have.
      *
-     * @return array{0: class-string<\PanelKit\Panel\Resources\Resource>, 1: \Illuminate\Support\Collection}
+     * @return array{0: class-string<\PanelKit\Panel\Resources\Resource>, 1: Collection}
      */
     private function selection(Request $request, TrashBin $bin): array
     {
