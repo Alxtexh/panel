@@ -65,13 +65,22 @@ describe('PkDropdown sizing', () => {
     })
 
     /*
-     * THE MINIMUM MUST BE A CLASS THAT COMPILES. `min-w-44` generated no CSS at
-     * all, so the only surviving rule was `w-max` and a menu that had been too
-     * wide became too tight - with nothing failing either time. An arbitrary
-     * value cannot be silently dropped.
+     * THE MINIMUM IS AN INLINE STYLE, NOT A CLASS, and this test only exists
+     * because the two were both present and the class lost. An inline
+     * `min-width` beats a class, so a 30-pixel icon trigger set
+     * `min-width: 30px` and cancelled a perfectly valid `min-w-[10rem]` sitting
+     * right beside it. The menu rendered at 96 pixels with the correct class on
+     * it, which is exactly why a class assertion could not catch it.
+     *
+     * jsdom gives every element a zero-size box, so the computed floor here is
+     * the constant rather than a trigger measurement - which is the half worth
+     * pinning: that the constant is applied at all.
      */
-    it('keeps a minimum so a one-word menu is not a sliver', async () => {
-        expect((await open()).classes()).toContain('min-w-[10rem]')
+    it('sets its minimum width as a style rather than a class', async () => {
+        const panel = await open()
+
+        expect(panel.classes().filter((c) => c.startsWith('min-w-'))).toEqual([])
+        expect(panel.attributes('style')).toContain('min-width: 160px')
     })
 
     it('caps the width so a long label cannot stretch it across the screen', async () => {

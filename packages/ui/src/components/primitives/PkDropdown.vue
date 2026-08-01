@@ -34,17 +34,9 @@ const props = withDefaults(
          * so a menu holding one "Delete" was 224 pixels wide - the panel never
          * measured what was in it, and every short menu looked like a mistake.
          *
-         * AN ARBITRARY VALUE, NOT A SCALE STEP, and that is not fussiness. The
-         * first fix used `min-w-44`, which generated NO CSS at all - so the only
-         * rule that survived was `w-max` and the panel hugged its text with no
-         * minimum whatsoever. A menu that had been too wide became too tight,
-         * and nothing reported either. `min-w-[13rem]` cannot be silently
-         * dropped, and the built stylesheet is checked for it.
-         *
-         * 10rem IS A JUDGEMENT, and the two wrong answers either side of it are
-         * on record: 13rem is exactly the old `w-52` that made a one-word menu
-         * look like an empty box, and no minimum at all made the same menu look
-         * cramped. It is one constant - move it if the eye disagrees.
+         * THE MINIMUM IS NOT HERE. It lives in `MIN_PANEL_WIDTH`, because a
+         * class and an inline style both setting `min-width` is a fight the
+         * class loses - see that constant for the 96-pixel menu it produced.
          *
          * Pass a `w-…` class where a fixed width is genuinely wanted: the filter
          * panel is a form, and a form that reflows as its contents change is
@@ -82,7 +74,7 @@ const props = withDefaults(
     }>(),
     {
         align: 'end',
-        width: 'min-w-[10rem] max-w-sm',
+        width: 'max-w-sm',
         offset: 4,
         placement: 'bottom',
         hoverable: false,
@@ -93,6 +85,22 @@ const props = withDefaults(
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 const panel = ref<HTMLElement | null>(null)
+/**
+ * The narrowest a menu may be, in pixels.
+ *
+ * IN JAVASCRIPT AND NOT A CLASS, because the two fought and the class lost. The
+ * panel carried `min-w-[10rem]` AND an inline `min-width` taken from the
+ * trigger - and an inline style beats a class, so a 30-pixel icon button set
+ * `min-width: 30px` and cancelled the minimum entirely. The menu rendered at 96
+ * pixels with the correct class sitting on it, which is why nothing caught it:
+ * the class was there, it simply never won.
+ *
+ * One source of truth. The floor is whichever is larger - this, or the trigger,
+ * since a menu narrower than the button that opened it reads as belonging to
+ * something else.
+ */
+const MIN_PANEL_WIDTH = 160
+
 const position = ref({ top: 0, left: 0, minWidth: 0 })
 
 /**
@@ -263,7 +271,7 @@ function place() {
     left = Math.min(Math.max(margin, left), window.innerWidth - size.width - margin)
     top = Math.min(Math.max(margin, top), window.innerHeight - size.height - margin)
 
-    position.value = { top, left, minWidth: anchor.width }
+    position.value = { top, left, minWidth: Math.max(anchor.width, MIN_PANEL_WIDTH) }
 }
 
 function onDocumentPointerDown(e: PointerEvent) {
