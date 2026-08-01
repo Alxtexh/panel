@@ -38,6 +38,7 @@ final class PanelPages
          * to render; `DashboardPage` routes this and this draws them.
          */
         'PanelDashboard',
+        'Changelog',
 
         /*
          * NESTED NAMES, because the server renders `documents/Templates` and a

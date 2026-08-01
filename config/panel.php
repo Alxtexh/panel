@@ -495,6 +495,23 @@ return [
         'roles' => true,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Release notes
+    |--------------------------------------------------------------------------
+    |
+    | What `ChangelogPage` shows, newest first. THE ORDER GIVEN IS THE ORDER
+    | SHOWN - version strings do not sort, and dates are free text because a
+    | release note is written for people.
+    |
+    | Each entry: version, date, an optional highlight, and any of added /
+    | changed / fixed. Empty here means the page hides itself rather than
+    | offering a menu entry that leads nowhere.
+    |
+    |   ['version' => '1.4', 'date' => '3 March', 'added' => ['...']],
+    */
+    'changelog' => [],
+
     'tenancy' => [
         'mode' => env('PANEL_TENANCY_MODE', 'column'),
         'column' => 'tenant_id',
