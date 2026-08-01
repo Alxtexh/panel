@@ -124,6 +124,30 @@ php artisan migrate --force --no-interaction 2>&1 | tail -2
 say "Generating a resource"
 php artisan make:panel-resource Customer --generate --no-interaction 2>&1 | tail -5
 
+# THE PERMISSION SYSTEM IS THE PACKAGE'S NOW, so a fresh install must arrive with
+# one that works rather than with instructions for building one. This is the only
+# place that can prove it: inside the monorepo the reference app's own migration
+# chain built these tables long before the package owned them, so every test in
+# the suite runs against a schema the package migration merely declines to touch.
+#
+# `sync` is the honest assertion - it derives ability names from the generated
+# resource, creates the permission rows, and creates an Administrator role holding
+# them. If the migration did not run, or `grants_all` is missing, or the model is
+# not autoloaded, this is where it surfaces.
+say "php artisan panel:permissions sync"
+php artisan panel:permissions sync --no-interaction 2>&1 | tail -5
+
+php artisan tinker --execute="
+    exit(
+        Schema::hasColumn('roles', 'grants_all')
+        && PanelKit\Panel\Models\Role::query()->where('grants_all', true)->exists()
+        && Spatie\Permission\Models\Permission::query()->where('name', 'view_any_customers')->exists()
+            ? 0 : 1
+    );
+" 2>/dev/null || fail "panel:permissions ran but left no working role - the shipped permission system does not work on a clean install."
+
+say "Permissions reconciled: an Administrator role holds the generated resource's abilities"
+
 # A PANEL NEEDS AN APPLICATION THAT CAN AUTHENTICATE. `laravel/laravel` ships
 # no auth scaffolding, so there is no `login` route for the guard to send an
 # anonymous visitor to - and the first visit dies with "Route [login] not

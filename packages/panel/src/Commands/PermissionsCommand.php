@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Console\Commands;
+namespace PanelKit\Panel\Commands;
 
-use App\Models\Role;
-use App\Models\Tenant;
-use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\Models\Role;
 use PanelKit\Panel\Support\Abilities;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
@@ -32,7 +31,7 @@ use Spatie\Permission\PermissionRegistrar;
  * IT IS IDEMPOTENT. Provisioning re-runs and deploys re-run; a command that is
  * only safe the first time is one somebody will run twice.
  */
-final class SyncPermissionsCommand extends Command
+final class PermissionsCommand extends Command
 {
     protected $signature = 'panel:permissions
                             {action=sync : sync|list}
@@ -64,7 +63,7 @@ final class SyncPermissionsCommand extends Command
 
         $this->ensurePermissionsExist($known, $guard, $dry);
 
-        foreach (Tenant::query()->orderBy('id')->get() as $tenant) {
+        foreach ($this->tenants() as $tenant) {
             $this->reconcile($tenant, $known, $guard, $dry);
         }
 
@@ -76,6 +75,89 @@ final class SyncPermissionsCommand extends Command
         $this->components->info($dry ? 'Dry run: nothing was written.' : 'Permissions reconciled.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The organisations to reconcile, which the package cannot name for itself.
+     *
+     * A PANEL DOES NOT OWN THE TENANT MODEL - it is the consumer's, with their
+     * columns and their relations - so `panel.tenancy.model` names it and this
+     * asks that. Configured as null, a SINGLE-TENANT INSTALLATION still gets one
+     * pass with a null team id, which is the shape `SetPermissionsTeam` sets when
+     * nothing resolved and therefore the shape those roles are stored under.
+     * Returning nothing instead would make the command silently do nothing at
+     * all, which reads as "already reconciled".
+     *
+     * @return iterable<Model|null>
+     */
+    private function tenants(): iterable
+    {
+        $model = config('panel.tenancy.model');
+
+        if (! is_string($model) || ! class_exists($model)) {
+            return [null];
+        }
+
+        return $model::query()->orderBy((new $model)->getKeyName())->get();
+    }
+
+    /** The tenant's key, or null in a single-tenant installation. */
+    private function keyFor(?Model $tenant): int|string|null
+    {
+        return $tenant?->getKey();
+    }
+
+    /**
+     * What to call this organisation in the console.
+     *
+     * `slug` IS A CONVENTION, NOT A CONTRACT. The reference app has one; a
+     * consumer's tenant model may not, and reading a missing attribute to build a
+     * progress line would fail the whole reconciliation over a label.
+     */
+    private function labelFor(?Model $tenant): string
+    {
+        if ($tenant === null) {
+            return 'default';
+        }
+
+        foreach (['slug', 'name'] as $attribute) {
+            $value = $tenant->getAttribute($attribute);
+
+            if (is_string($value) && $value !== '') {
+                return $value;
+            }
+        }
+
+        return (string) $tenant->getKey();
+    }
+
+    /** The application's authenticatable, which `model_has_roles` stores by name. */
+    private function userModel(): string
+    {
+        return (string) config('auth.providers.users.model');
+    }
+
+    /**
+     * The column Spatie scopes roles by - ASKED, NEVER ASSUMED.
+     *
+     * It is `tenant_id` here and `team_id` in Spatie's own default, and a
+     * consumer who published the config before installing PanelKit has whichever
+     * they chose. Hardcoding the panel's name would write assignments into a
+     * column the runtime then never reads: the sync reports success, every role
+     * looks correct in the database, and nobody can do anything.
+     */
+    private function teamColumn(): string
+    {
+        return (string) config(
+            'permission.column_names.team_foreign_key',
+            config('panel.tenancy.column', 'tenant_id'),
+        );
+    }
+
+    /** Likewise the pivot, which a consumer may have renamed. */
+    private function pivotTable(): string
+    {
+        return (string) config('permission.table_names.model_has_roles', 'model_has_roles');
     }
 
     /**
@@ -104,15 +186,19 @@ final class SyncPermissionsCommand extends Command
     }
 
     /** @param list<string> $known */
-    private function reconcile(Tenant $tenant, array $known, string $guard, bool $dry): void
+    private function reconcile(?Model $tenant, array $known, string $guard, bool $dry): void
     {
-        app(PermissionRegistrar::class)->setPermissionsTeamId($tenant->getKey());
+        $key = $this->keyFor($tenant);
+        $team = $this->teamColumn();
 
-        $roles = Role::query()->where('tenant_id', $tenant->getKey())->get();
+        app(PermissionRegistrar::class)->setPermissionsTeamId($key);
+
+        $label = $this->labelFor($tenant);
+        $roles = Role::query()->where($team, $key)->get();
 
         if ($roles->isEmpty()) {
             $this->createAdministrator($tenant, $known, $guard, $dry);
-            $roles = Role::query()->where('tenant_id', $tenant->getKey())->get();
+            $roles = Role::query()->where($team, $key)->get();
         }
 
         foreach ($roles as $role) {
@@ -131,7 +217,7 @@ final class SyncPermissionsCommand extends Command
                     }
 
                     $this->components->task(
-                        "  {$tenant->slug}/{$role->name}: granted ".count($missing).' new abilit(y/ies)',
+                        "  {$label}/{$role->name}: granted ".count($missing).' new abilit(y/ies)',
                         fn () => true,
                     );
                 }
@@ -148,7 +234,7 @@ final class SyncPermissionsCommand extends Command
 
             if (! $this->option('prune')) {
                 $this->components->warn(
-                    "  {$tenant->slug}/{$role->name}: ".count($stale)
+                    "  {$label}/{$role->name}: ".count($stale)
                     .' granted abilit(y/ies) name nothing - re-run with --prune to remove: '
                     .implode(', ', array_slice($stale, 0, 5))
                 );
@@ -160,17 +246,19 @@ final class SyncPermissionsCommand extends Command
                 $role->syncPermissions(array_values(array_intersect($granted, $known)));
             }
 
-            $this->components->task("  {$tenant->slug}/{$role->name}: pruned ".count($stale), fn () => true);
+            $this->components->task("  {$label}/{$role->name}: pruned ".count($stale), fn () => true);
         }
 
         $this->adoptRoleless($tenant, $dry);
     }
 
     /** @param list<string> $known */
-    private function createAdministrator(Tenant $tenant, array $known, string $guard, bool $dry): void
+    private function createAdministrator(?Model $tenant, array $known, string $guard, bool $dry): void
     {
+        $label = $this->labelFor($tenant);
+
         if ($dry) {
-            $this->components->task("  {$tenant->slug}: would create Administrator", fn () => true);
+            $this->components->task("  {$label}: would create Administrator", fn () => true);
 
             return;
         }
@@ -178,7 +266,7 @@ final class SyncPermissionsCommand extends Command
         $role = Role::create([
             'name' => 'Administrator',
             'guard_name' => $guard,
-            'tenant_id' => $tenant->getKey(),
+            $this->teamColumn() => $this->keyFor($tenant),
         ]);
 
         // The administrator role is the one that must never fall behind the
@@ -186,7 +274,7 @@ final class SyncPermissionsCommand extends Command
         $role->forceFill(['grants_all' => true])->save();
         $role->syncPermissions($known);
 
-        $this->components->task("  {$tenant->slug}: created Administrator with ".count($known).' abilities', fn () => true);
+        $this->components->task("  {$label}: created Administrator with ".count($known).' abilities', fn () => true);
     }
 
     /**
@@ -197,21 +285,28 @@ final class SyncPermissionsCommand extends Command
      * existing account at once. A silent, total lockout looks like the panel is
      * broken rather than like a provisioning step was missed.
      */
-    private function adoptRoleless(Tenant $tenant, bool $dry): void
+    private function adoptRoleless(?Model $tenant, bool $dry): void
     {
-        $default = Role::query()->where('tenant_id', $tenant->getKey())->orderBy('id')->first();
+        $key = $this->keyFor($tenant);
+        $team = $this->teamColumn();
+        $label = $this->labelFor($tenant);
+        $users = $this->userModel();
+
+        $default = Role::query()->where($team, $key)->orderBy('id')->first();
 
         if ($default === null) {
             return;
         }
 
-        $held = DB::table('model_has_roles')
-            ->where('model_type', User::class)
-            ->where('tenant_id', $tenant->getKey())
+        $held = DB::table($this->pivotTable())
+            ->where('model_type', $users)
+            ->where($team, $key)
             ->pluck('model_id');
 
-        $roleless = DB::table('users')
-            ->where('tenant_id', $tenant->getKey())
+        $table = (new $users)->getTable();
+
+        $roleless = DB::table($table)
+            ->where(config('panel.tenancy.column', 'tenant_id'), $key)
             ->whereNotIn('id', $held)
             ->pluck('id');
 
@@ -221,17 +316,17 @@ final class SyncPermissionsCommand extends Command
 
         if (! $dry) {
             foreach ($roleless as $userId) {
-                DB::table('model_has_roles')->updateOrInsert([
+                DB::table($this->pivotTable())->updateOrInsert([
                     'role_id' => $default->getKey(),
-                    'model_type' => User::class,
+                    'model_type' => $users,
                     'model_id' => $userId,
-                    'tenant_id' => $tenant->getKey(),
+                    $team => $key,
                 ], []);
             }
         }
 
         $this->components->task(
-            "  {$tenant->slug}: gave {$roleless->count()} user(s) the {$default->name} role",
+            "  {$label}: gave {$roleless->count()} user(s) the {$default->name} role",
             fn () => true,
         );
     }

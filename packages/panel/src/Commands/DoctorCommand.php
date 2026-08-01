@@ -15,6 +15,7 @@ use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\BackupStatus;
 use PanelKit\Panel\Support\Contrast;
 use PanelKit\Panel\Support\TenantContext;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Check for the configurations that are wrong in ways nothing else reports.
@@ -80,6 +81,7 @@ final class DoctorCommand extends Command
         $this->checkBackupFreshness();
         $this->checkViteDevServer();
         $this->checkShippedDefaults();
+        $this->checkPermissionTeams($context);
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -823,6 +825,48 @@ final class DoctorCommand extends Command
         $constraint = $composer['require']['panelkit/panel'] ?? null;
 
         return is_string($constraint) && str_contains($constraint, 'dev');
+    }
+
+    /**
+     * A tenant-aware panel whose permission package is not team-aware.
+     *
+     * THE ONE SETTING THAT FAILS OPEN. spatie/laravel-permission ships
+     * `teams => false`, and PanelKit now depends on it - so an installation
+     * that never published that config has a `tenant_id` column on every role,
+     * `SetPermissionsTeam` dutifully setting a team id on every request, and a
+     * permission package IGNORING BOTH.
+     *
+     * What that produces is not an error. Roles look right in the database and
+     * right on the roles screen. `hasPermissionTo` simply considers every
+     * tenant's roles at once, so somebody who administers one organisation
+     * holds, in effect, the union of their permissions across all of them - and
+     * the only way to notice is for the wrong person to open the wrong record.
+     *
+     * A PROBLEM, NOT A NOTE, and only when tenancy is on: in `mode => none`
+     * there are no teams to scope by and the default is correct.
+     */
+    private function checkPermissionTeams(TenantContext $context): void
+    {
+        if (! class_exists(PermissionRegistrar::class)) {
+            return;
+        }
+
+        if ($context->mode() === 'none') {
+            return;
+        }
+
+        if (config('permission.teams') === true) {
+            return;
+        }
+
+        $this->problem(
+            'Permissions are not tenant-scoped',
+            'config/permission.php has teams => false while panel.tenancy.mode is '
+            .$context->mode().'. Roles carry a tenant but the permission package '
+            .'ignores it, so a role grants across every organisation at once. Set '
+            ."teams => true, and column_names.team_foreign_key => '"
+            .config('panel.tenancy.column', 'tenant_id')."'.",
+        );
     }
 
     /* ------------------------------------------------------------ plumbing */

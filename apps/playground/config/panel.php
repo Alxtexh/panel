@@ -489,6 +489,7 @@ return [
         'mode' => env('PANEL_TENANCY_MODE', 'column'),
         'column' => 'tenant_id',
         'resolver' => null,
+        'model' => App\Models\Tenant::class,
 
         /*
         | Per-tenant feature flags, as name => bool. A Closure, or null to read

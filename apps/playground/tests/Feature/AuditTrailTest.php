@@ -6,12 +6,12 @@ namespace Tests\Feature;
 
 use App\Models\AuditEntry;
 use App\Models\Client;
-use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Audit\AuditRecorder;
 use PanelKit\Panel\CustomFields\CustomField;
+use PanelKit\Panel\Models\Role;
 use PanelKit\Panel\Support\Abilities;
 use Tests\TestCase;
 

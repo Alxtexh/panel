@@ -470,6 +470,17 @@ return [
         'resolver' => null,
 
         /*
+        | The model that holds organisations, for the commands that must visit
+        | every one of them - `panel:permissions` reconciles roles per tenant.
+        |
+        | NULL IS A REAL ANSWER, not an omission: a single-tenant installation
+        | has no such model, and those commands then make one pass with a null
+        | team id, which is the shape roles are stored under when nothing
+        | resolves a tenant.
+        */
+        'model' => null,
+
+        /*
         | Per-tenant feature flags, as name => bool. A Closure, or null to read
         | them from the acting user's tenant relation.
         |

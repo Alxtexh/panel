@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PanelKit\Panel\Models\Role;
 use PanelKit\Panel\Support\Abilities;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;

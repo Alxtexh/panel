@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -16,6 +15,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Audit\AuditRecorder;
 use PanelKit\Panel\Http\Middleware\ScopeSessionToTenant;
+use PanelKit\Panel\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**

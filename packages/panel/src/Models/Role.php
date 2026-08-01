@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Models;
+namespace PanelKit\Panel\Models;
 
 use Spatie\Permission\Models\Role as SpatieRole;
 
@@ -20,7 +20,7 @@ use Spatie\Permission\Models\Role as SpatieRole;
  * disagree. The tenant column is still there and still enforced; it is enforced
  * once.
  */
-final class Role extends SpatieRole
+class Role extends SpatieRole
 {
     protected $casts = [
         'grants_all' => 'boolean',

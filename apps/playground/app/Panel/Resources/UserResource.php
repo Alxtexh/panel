@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Panel\Resources;
 
-use App\Models\Role;
 use App\Models\Scopes\TenantScope;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -16,6 +15,7 @@ use PanelKit\Panel\Forms\Fields\MultiSelectField;
 use PanelKit\Panel\Forms\Fields\PasswordField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
+use PanelKit\Panel\Models\Role;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\CheckboxColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
