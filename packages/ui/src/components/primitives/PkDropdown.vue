@@ -26,6 +26,18 @@ import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 const props = withDefaults(
     defineProps<{
         align?: 'start' | 'end'
+        /**
+         * A width class for the panel.
+         *
+         * A MINIMUM BY DEFAULT, NOT A FIXED SIZE, and that distinction is the
+         * whole bug this replaced. It used to be `w-56` and applied literally,
+         * so a menu holding one "Delete" was 224 pixels wide - the panel never
+         * measured what was in it, and every short menu looked like a mistake.
+         *
+         * Pass a `w-…` class where a fixed width is genuinely wanted: the filter
+         * panel is a form, and a form that reflows as its contents change is
+         * worse than one that does not.
+         */
         width?: string
         /** Gap between trigger and panel, in px. */
         offset?: number
@@ -58,7 +70,7 @@ const props = withDefaults(
     }>(),
     {
         align: 'end',
-        width: 'w-56',
+        width: 'min-w-44 max-w-xs',
         offset: 4,
         placement: 'bottom',
         hoverable: false,
@@ -354,10 +366,23 @@ defineExpose({ close, openAt })
                     v-if="open"
                     ref="panel"
                     :class="[
-                        'bg-popover text-popover-foreground fixed z-[100] overflow-hidden rounded-md border p-1 shadow-lg',
+                        'bg-popover text-popover-foreground fixed z-[100] w-max overflow-hidden rounded-md border p-1 shadow-lg',
                         width,
                     ]"
-                    :style="{ top: `${position.top}px`, left: `${position.left}px` }"
+                    :style="{
+                        top: `${position.top}px`,
+                        left: `${position.left}px`,
+                        /*
+                         * AT LEAST AS WIDE AS WHAT OPENED IT. A menu narrower
+                         * than its own trigger reads as a different control
+                         * belonging to something else.
+                         *
+                         * This was computed on every open and never applied -
+                         * the template set only `top` and `left` - so the
+                         * measurement existed and did nothing.
+                         */
+                        minWidth: `${position.minWidth}px`,
+                    }"
                     data-pk-overlay
                     role="menu"
                     @pointerenter="hoverable && openNow()"

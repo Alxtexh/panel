@@ -491,7 +491,7 @@ function clearEverything() {
         </PkDropdown>
 
         <!-- Columns -->
-        <PkDropdown width="w-60">
+        <PkDropdown>
             <template #trigger>
                 <button
                     type="button"

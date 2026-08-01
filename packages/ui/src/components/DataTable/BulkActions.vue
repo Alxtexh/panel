@@ -131,7 +131,7 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
 </script>
 
 <template>
-    <PkDropdown width="w-52">
+    <PkDropdown>
         <template #trigger>
             <button
                 type="button"
