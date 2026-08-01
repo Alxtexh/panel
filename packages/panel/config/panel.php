@@ -100,6 +100,23 @@ return [
     ],
 
     /*
+    |--------------------------------------------------------------------------
+    | Where pages live
+    |--------------------------------------------------------------------------
+    |
+    | Directories scanned for `Page` subclasses, as path => namespace - the same
+    | shape as `discover` above.
+    |
+    | A PAGE IS A SCREEN THAT IS NOT A RESOURCE: a settings centre, a health
+    | page, a dashboard. It declares its own slug, navigation entry, ability and
+    | endpoints, so adding one costs a class rather than a controller, a route,
+    | a menu entry and a permission check written separately.
+    */
+    'discover_pages' => [
+        app_path('Panel/Pages') => 'App\\Panel\\Pages',
+    ],
+
+    /*
     |---------------------------------------------------------------------------
     | Live updates
     |---------------------------------------------------------------------------

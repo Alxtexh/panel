@@ -50,7 +50,7 @@ import { computed, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 // Generated from the routes, so a rename breaks the build rather than leaving
 // these tabs pointing at a 404.
-import { userManagement } from '@/routes';
+import { userManagement } from '@/routes/panel/pages';
 import roleRoutes from '@/routes/settings/roles';
 
 defineOptions({ layout: AppLayout });

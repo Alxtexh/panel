@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Auth\PasswordRenewalController;
-use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\Settings\AssistantSettingsController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
@@ -61,10 +60,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
      | routes on purpose - the tenant comes from context, and a route that
      | accepted one would be a route for renaming somebody else's company.
      */
-    Route::get('settings/organisation', [OrganisationController::class, 'edit'])->name('organisation.edit');
-    Route::put('settings/organisation', [OrganisationController::class, 'update'])->name('organisation.update');
-    Route::post('settings/organisation/logo', [OrganisationController::class, 'uploadLogo'])->name('organisation.logo.upload');
-    Route::get('settings/organisation/logo', [OrganisationController::class, 'logo'])->name('organisation.logo');
 
     /*
      | Workspaces - roadmap 5.6. The workspaces this person belongs to,

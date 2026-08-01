@@ -177,6 +177,46 @@ final class PanelRoutes
                 Route::post('custom-fields', [Controllers\CustomFieldController::class, 'store'])
                     ->name('custom-fields.store');
 
+                /*
+                 * PAGES FIRST, BEFORE THE `{resource}` PATTERNS, and the order
+                 * is the whole correctness of it.
+                 *
+                 * Resource routes match through a `{resource}` placeholder
+                 * constrained by `whereIn`, so `/settings` would be tried
+                 * against that list before ever reaching a literal `settings`
+                 * route declared afterwards. Registering pages second means any
+                 * page whose slug the constraint happens to accept is
+                 * unreachable, with a navigation entry still pointing at it -
+                 * absent rather than 404, which is the hardest kind to notice.
+                 *
+                 * A SLUG THAT CLASHES CANNOT REACH HERE ANYWAY: `registerPages`
+                 * throws when a page and a resource claim the same name. This
+                 * ordering is the second line, for the case where the two are
+                 * registered against different panels and the constraint is
+                 * still wide enough to overlap.
+                 */
+                foreach (app(PanelManager::class)->pagesFor($panel->id) as $slug => $class) {
+                    Route::get($class::uri(), [Controllers\PageController::class, 'show'])
+                        ->defaults('page', $slug)
+                        ->name('pages.'.$slug);
+
+                    foreach ($class::actions() as $action => $ability) {
+                        $method = strtolower($class::actionMethods()[$action] ?? 'post');
+                        $suffix = $class::actionUris()[$action] ?? $action;
+
+                        // An empty suffix puts the action on the page's own URI -
+                        // `PUT /settings/organisation`, the ordinary save.
+                        $uri = $suffix === ''
+                            ? $class::uri()
+                            : rtrim($class::uri(), '/').'/'.$suffix;
+
+                        Route::{$method}($uri, [Controllers\PageController::class, 'action'])
+                            ->defaults('page', $slug)
+                            ->defaults('action', $action)
+                            ->name('pages.'.$slug.'.'.$action);
+                    }
+                }
+
                 if ($keys !== []) {
                     self::within($keys);
                 }

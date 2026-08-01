@@ -19,13 +19,14 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import UserInfo from '@/components/UserInfo.vue';
-import { logout, userManagement } from '@/routes';
+import { logout } from '@/routes';
 /*
  * GENERATED, not typed out. A literal path here is a string nothing checks:
  * rename the route and this menu silently starts offering a 404.
  */
 import operations from '@/routes/operations';
 import { lock, resource } from '@/routes/panel';
+import { userManagement } from '@/routes/panel/pages';
 import { index as settingsIndex } from '@/routes/settings';
 
 import type { User } from '@/types';

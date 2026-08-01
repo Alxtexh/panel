@@ -1,0 +1,248 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PanelKit\Panel\Pages;
+
+use Illuminate\Http\Request;
+
+/**
+ * A screen that is not a resource.
+ *
+ * WHY THIS EXISTS. Until now the panel could declare exactly one kind of thing:
+ * a list of records with a form behind it. Everything else - a settings centre,
+ * a health page, a device manager, a dashboard - had no declaration point at
+ * all. The whole package route table was `{resource}/…` plus a handful of named
+ * exceptions, so a screen that was not a resource meant a hand-written
+ * controller, a hand-written route, a hand-written navigation entry and a
+ * hand-written permission check. Four things to get right, none of them checked
+ * by anything, per screen.
+ *
+ * The reference app has twenty-two of those and seventy routes to carry them.
+ * That is the cost this class removes.
+ *
+ * ONE CLASS, ONE SCREEN, and this is the constraint that makes the rest work. It
+ * would be easy to allow a controller-shaped page that renders three different
+ * things depending on the request - the reference app's mail and operations
+ * controllers do exactly that today. But then "which page am I" becomes a
+ * runtime question, and a navigation entry, an ability name and a URL cannot be
+ * derived from the class at all. A resource gets one key and one URL segment; a
+ * page gets the same deal.
+ *
+ * A PAGE IS NOT ONLY A RENDER. Half the reference app's page controllers do
+ * something as well as show something - restore a backup, invite a member, send
+ * a message. A base class offering only `data()` would have covered the easy
+ * half and sent the interesting half back to hand-written routes, which is how
+ * this kind of work reaches "most of the pages, mostly". So `actions()` is here
+ * from the start, each action carrying its own ability.
+ *
+ * WHAT A SUBCLASS MUST SAY: `component()`, the Vue page to render, and `data()`,
+ * what to hand it. Everything else has a default derived from the class name.
+ */
+abstract class Page
+{
+    /**
+     * Lucide icon name for the navigation entry.
+     *
+     * A NAME, NEVER A CLASS. The client decides what an icon looks like; a page
+     * that shipped markup would be a page that cannot be restyled.
+     */
+    protected static string $icon = 'file';
+
+    /** Sidebar heading this page sits under, or null for the top level. */
+    protected static ?string $group = null;
+
+    /** Which portal shows it. A page belongs to exactly one, like a resource. */
+    protected static string $panel = 'admin';
+
+    /** Lower sorts first within a group. */
+    protected static ?int $sort = null;
+
+    /**
+     * The URL segment and the identity.
+     *
+     * SHARED NAMESPACE WITH RESOURCE KEYS, deliberately, and enforced at
+     * registration. A page slugged `roles` beside a resource keyed `roles` is
+     * two screens claiming one URL, and whichever registers first wins silently
+     * - the loser is not a 404, it is simply gone. That exact collision shipped
+     * in 0.2.0 and had to be papered over with a doctor check.
+     */
+    public static function slug(): string
+    {
+        return str(class_basename(static::class))->beforeLast('Page')->kebab()->value();
+    }
+
+    /**
+     * The route URI, which is the slug unless the page needs parameters.
+     *
+     * FOUND BY CONVERTING A REAL SCREEN. The first version routed `slug()` and
+     * nothing else, and the first page picked up to test it was
+     * `/user-management/{tab?}` - a tab in the path, not a query string. A
+     * mechanism that could not express that would have sent exactly the pages
+     * with any structure back to hand-written routes, which is the failure this
+     * class exists to remove.
+     *
+     * THE SLUG STILL IDENTIFIES IT. The URI may carry segments; the slug remains
+     * the key, the ability stem and the navigation href, so a parameterised page
+     * is still one nameable thing.
+     */
+    public static function uri(): string
+    {
+        return static::slug();
+    }
+
+    /** What the sidebar calls it. */
+    public static function label(): string
+    {
+        return str(class_basename(static::class))->beforeLast('Page')->headline()->value();
+    }
+
+    public static function icon(): string
+    {
+        return static::$icon;
+    }
+
+    public static function group(): ?string
+    {
+        return static::$group;
+    }
+
+    public static function panel(): string
+    {
+        return static::$panel;
+    }
+
+    public static function sort(): ?int
+    {
+        return static::$sort;
+    }
+
+    /**
+     * The ability required to open this page, or null for anyone signed in.
+     *
+     * AN ABILITY NAME, NOT A POLICY, and that is the difference from a resource.
+     * `Resource::can()` asks the Gate for a policy on a model; a page has no
+     * model, so there is nothing to write a policy for. The name is checked
+     * against the permission system directly - the pattern already carrying
+     * `view_operations` and `manage_billing` in the reference app.
+     *
+     * DEFAULTS TO ONE DERIVED FROM THE SLUG, so a page is protected by having
+     * been written rather than by somebody remembering. Returning null is
+     * allowed and is a deliberate act: it means every authenticated operator.
+     */
+    public static function ability(): ?string
+    {
+        return 'view_'.str(static::slug())->snake()->value();
+    }
+
+    /**
+     * Endpoints this page owns, as `name => ability`.
+     *
+     * ROUTED UNDER THE PAGE'S OWN SLUG - `POST /organisation/invite` - so a page
+     * and the things it does travel together. The handler is a method on the
+     * page named for the action.
+     *
+     * EACH CARRIES ITS OWN ABILITY because seeing and doing are different
+     * grants. A support operator reading the backup page is not the same person
+     * as one restoring over the live database, and a mechanism that could not
+     * express that would push everything that mutates back out to hand-written
+     * routes - which is most of what a panel is for.
+     *
+     * @return array<string, string|null>
+     */
+    public static function actions(): array
+    {
+        return [];
+    }
+
+    /**
+     * The HTTP method for each action, when it is not POST.
+     *
+     * @return array<string, string>
+     */
+    public static function actionMethods(): array
+    {
+        return [];
+    }
+
+    /**
+     * Where each action sits, relative to the page - the action's name by default.
+     *
+     * AN EMPTY STRING MEANS THE PAGE'S OWN URI, which is the ordinary save: a
+     * settings screen is `GET /settings/organisation` and `PUT` to the same
+     * address. The first version of this routed every action at
+     * `slug/{action}`, so saving a page meant `PUT /settings/organisation/update`
+     * - a URL nobody writes by hand, invented by a mechanism rather than chosen.
+     *
+     * Found by converting a real screen rather than by thinking about it, which
+     * is why the two conversions were worth doing before calling this finished.
+     *
+     * @return array<string, string>
+     */
+    public static function actionUris(): array
+    {
+        return [];
+    }
+
+    /** The Vue page name this renders - resolved exactly as a resource screen is. */
+    abstract public static function component(): string;
+
+    /**
+     * The props the screen needs.
+     *
+     * MAY QUERY, unlike a resource's `table()` and `form()`. Those build a
+     * cached description of a screen and run before anybody has asked for a row;
+     * this runs per request, for one signed-in person, and returns their data.
+     * It is the ordinary controller body, with the routing and the authorising
+     * already done.
+     *
+     * @return array<string, mixed>
+     */
+    abstract public static function data(Request $request): array;
+
+    /**
+     * Shown in the page header, above whatever `component()` draws.
+     *
+     * Optional, and separate from `label()`: a sidebar entry wants two words and
+     * a heading can afford a sentence.
+     */
+    public static function heading(): ?string
+    {
+        return null;
+    }
+
+    public static function description(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Whether this page appears in the navigation at all.
+     *
+     * A PAGE HIDDEN HERE IS STILL ROUTED. Some screens are reached from
+     * somewhere specific - a record, an account menu, a link in an email - and
+     * putting them in the sidebar as well makes the sidebar longer for no gain.
+     * The navigation coverage rule accounts for them as somebody else's entry
+     * rather than as missing.
+     */
+    public static function shouldShowInNavigation(): bool
+    {
+        return true;
+    }
+
+    /**
+     * The navigation entry, in the shape the sidebar already consumes.
+     *
+     * @return array{title: string, href: string, icon: string, group: string|null, sort: int|null}
+     */
+    public static function navigationEntry(string $prefix = ''): array
+    {
+        return [
+            'title' => static::label(),
+            'href' => rtrim($prefix, '/').'/'.static::slug(),
+            'icon' => static::icon(),
+            'group' => static::group(),
+            'sort' => static::sort(),
+        ];
+    }
+}

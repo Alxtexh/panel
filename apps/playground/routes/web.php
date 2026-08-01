@@ -22,7 +22,6 @@ use PanelKit\Panel\Http\Controllers\RoleController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Settings\DeviceController;
-use App\Http\Controllers\UserManagementController;
 use App\Support\Guide;
 use App\Support\HelpArticles;
 use App\Support\LandingPresets;
@@ -314,9 +313,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
      | unrelated places and are one job - granting somebody access meant knowing
      | that two screens in different sections had to agree.
      */
-    Route::get('user-management/{tab?}', [UserManagementController::class, 'index'])
-        ->whereIn('tab', ['users', 'roles'])
-        ->name('user-management');
 
     /*
      | Impersonation.

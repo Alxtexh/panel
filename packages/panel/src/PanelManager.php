@@ -43,6 +43,11 @@ final class PanelManager
      */
     private array $resources = [];
 
+    /** @var array<string, class-string<Pages\Page>> slug => class */
+    private array $pages = [];
+
+    private bool $pagesDiscovered = false;
+
     private bool $discovered = false;
 
     /**
@@ -269,6 +274,23 @@ final class PanelManager
             foreach ($context->registeredPages() as $page) {
                 $pages[] = $page;
             }
+        }
+
+        /*
+         * DECLARED PAGES PLACE THEMSELVES, exactly as resources do.
+         *
+         * This list used to hold only what plugins contributed, so an
+         * application's own non-resource screens had to be typed into a second
+         * array by hand - and a screen that shipped, worked and was tested could
+         * still appear in no menu at all. Nothing failed when that happened,
+         * which is what made it keep happening.
+         */
+        foreach ($this->pagesFor($panel->id) as $class) {
+            if (! $class::shouldShowInNavigation()) {
+                continue;
+            }
+
+            $pages[] = $class::navigationEntry($panel->getPath());
         }
 
         return $pages;
@@ -554,6 +576,21 @@ final class PanelManager
                 );
             }
 
+            /*
+             * THE COLLISION CHECK POINTS BOTH WAYS, because discovery order is
+             * not something either side can rely on. A resource registered
+             * after a page of the same name would otherwise take the URL and
+             * leave the page routed-but-unreachable, which is the same fault
+             * read from the other end.
+             */
+            if (isset($this->pages[$key])) {
+                throw new \RuntimeException(
+                    "The resource {$class} uses the key [{$key}], which is already the slug of the page "
+                    .$this->pages[$key].'. Both are URL segments in the same panel, so one of them would '
+                    .'be unreachable. Rename one.'
+                );
+            }
+
             $this->resources[$key] = $class;
         }
     }
@@ -721,6 +758,118 @@ final class PanelManager
      *
      * @return array<string, class-string>
      */
+    /**
+     * Every page this installation declares, keyed by slug.
+     *
+     * DISCOVERED LAZILY AND ONCE, exactly as resources are - the directories
+     * come from `panel.discover_pages`, so an application says where its pages
+     * live in the same breath as where its resources do.
+     *
+     * @return array<string, class-string<Pages\Page>>
+     */
+    public function pages(): array
+    {
+        if (! $this->pagesDiscovered) {
+            $this->pagesDiscovered = true;
+
+            foreach ((array) config('panel.discover_pages', []) as $directory => $namespace) {
+                $this->discoverPages($directory, $namespace);
+            }
+        }
+
+        return $this->pages;
+    }
+
+    /** @return class-string<Pages\Page>|null */
+    public function page(string $slug): ?string
+    {
+        return $this->pages()[$slug] ?? null;
+    }
+
+    /**
+     * Pages belonging to one portal.
+     *
+     * @return array<string, class-string<Pages\Page>>
+     */
+    public function pagesFor(string $panelId): array
+    {
+        return array_filter(
+            $this->pages(),
+            static fn (string $class): bool => $class::panel() === $panelId,
+        );
+    }
+
+    public function discoverPages(string $directory, string $namespace): void
+    {
+        if (! is_dir($directory)) {
+            return;
+        }
+
+        $classes = [];
+
+        foreach (glob(rtrim($directory, '/').'/*.php') ?: [] as $file) {
+            $class = rtrim($namespace, '\\').'\\'.basename($file, '.php');
+
+            if (! class_exists($class)) {
+                continue;
+            }
+
+            $reflection = new \ReflectionClass($class);
+
+            // An abstract base or a helper sitting in the folder must not
+            // become a route, for the same reason it must not become a resource.
+            if ($reflection->isAbstract() || ! $reflection->isSubclassOf(Pages\Page::class)) {
+                continue;
+            }
+
+            $classes[] = $class;
+        }
+
+        $this->registerPages($classes);
+    }
+
+    /**
+     * @param  list<class-string<Pages\Page>>  $classes
+     */
+    public function registerPages(array $classes): void
+    {
+        foreach ($classes as $class) {
+            $slug = $class::slug();
+
+            /*
+             * ONE NAMESPACE FOR SLUGS AND RESOURCE KEYS, and a clash throws HERE
+             * rather than resolving itself at request time.
+             *
+             * Both are URL segments inside the same panel prefix, so a page
+             * slugged `roles` beside a resource keyed `roles` is two screens
+             * claiming one address. Whichever route registers first answers, and
+             * the loser does not 404 - it is simply absent, with a navigation
+             * entry still pointing at it. That precise collision shipped in
+             * 0.2.0 and had to be reported by `panel:doctor` after the fact.
+             *
+             * Throwing at registration turns a screen that silently disappears
+             * into a boot failure naming both classes, which is the difference
+             * between a bug found in five seconds and one found by an operator
+             * who could not change somebody's permissions.
+             */
+            if (isset($this->resources[$slug])) {
+                throw new \RuntimeException(
+                    "The page {$class} uses the slug [{$slug}], which is already the key of the resource "
+                    .$this->resources[$slug].'. Both are URL segments in the same panel, so one of them '
+                    .'would be unreachable. Rename one.'
+                );
+            }
+
+            if (isset($this->pages[$slug]) && $this->pages[$slug] !== $class) {
+                throw new \RuntimeException(
+                    "Two pages claim the slug [{$slug}]: {$this->pages[$slug]} and {$class}."
+                );
+            }
+
+            $this->pages[$slug] = $class;
+        }
+    }
+
     public function resources(): array
     {
         if (! $this->discovered) {

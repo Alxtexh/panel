@@ -9,7 +9,6 @@ use App\Panel\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use Inertia\Response;
 use PanelKit\Panel\Models\Role;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\RoleTemplates;
@@ -31,20 +30,23 @@ use PanelKit\Panel\Support\RoleTemplates;
  */
 final class UserManagementController extends Controller
 {
-    public function index(Request $request, string $tab = 'users'): Response
+    /**
+     * The props this screen needs.
+     *
+     * NO LONGER RENDERS, AND NO LONGER AUTHORISES. `UserManagementPage` declares
+     * the component and the ability, and `PageController` enforces it before
+     * this is reached - so a guard here would be a second copy of a rule that is
+     * now stated once. What is left is the part that was always the interesting
+     * bit: the tenant-scoped query.
+     *
+     * @return array<string, mixed>
+     */
+    public function props(Request $request): array
     {
-        /*
-         * BOTH TABS NEED `manage_roles`.
-         *
-         * The users tab could arguably sit behind `view_any_users` instead, and
-         * splitting them would mean a screen where one tab 403s - which teaches
-         * people that half a page failing is normal. One guard, one screen.
-         */
-        abort_unless($request->user()?->hasPermission('manage_roles'), 403);
-
+        $tab = $request->route('tab');
         $tab = in_array($tab, ['users', 'roles'], true) ? $tab : 'users';
 
-        return Inertia::render('settings/UserManagement', [
+        return [
             'tab' => $tab,
 
             /*
@@ -112,6 +114,6 @@ final class UserManagementController extends Controller
                 'schema' => UserResource::schema(),
                 'data' => UserResource::data($request),
             ]),
-        ]);
+        ];
     }
 }

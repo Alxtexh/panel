@@ -10,7 +10,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
 use Inertia\Response;
 use InvalidArgumentException;
 use PanelKit\Panel\Files\FileStore;
@@ -64,14 +63,23 @@ final class OrganisationController extends Controller
             return null;
         }
 
-        return route('organisation.logo').'?v='.substr(sha1($path), 0, 12);
+        return route('panel.pages.organisation.logo').'?v='.substr(sha1($path), 0, 12);
     }
 
-    public function edit(Request $request): Response
+    /**
+     * The props this screen needs.
+     *
+     * NO LONGER RENDERS. `OrganisationPage` declares the component, the URL and
+     * the abilities; this keeps the part that is actually this application's -
+     * what a tenant's branding looks like.
+     *
+     * @return array<string, mixed>
+     */
+    public function props(Request $request): array
     {
         $tenant = $this->tenant();
 
-        return Inertia::render('settings/Organisation', [
+        return [
             /*
              * The slug is NOT sent.
              *
@@ -85,7 +93,7 @@ final class OrganisationController extends Controller
                 'name' => $tenant->name,
                 'logo' => $this->describeLogo($tenant),
             ],
-        ]);
+        ];
     }
 
     public function update(Request $request): RedirectResponse

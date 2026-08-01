@@ -187,7 +187,7 @@ final class OrganisationTest extends TestCase
     public function test_an_svg_logo_is_rejected(): void
     {
         $this->actingAs($this->alice)
-            ->postJson('/settings/organisation/logo', [
+            ->postJson('/settings/organisation/logo/upload', [
                 'file' => $this->realFile('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
             ])
             ->assertStatus(422);
@@ -197,7 +197,7 @@ final class OrganisationTest extends TestCase
     public function test_a_script_renamed_as_a_logo_is_rejected(): void
     {
         $this->actingAs($this->alice)
-            ->postJson('/settings/organisation/logo', [
+            ->postJson('/settings/organisation/logo/upload', [
                 'file' => $this->realFile('logo.png', "<?php system(\$_GET['c']); ?>"),
             ])
             ->assertStatus(422);
@@ -303,7 +303,7 @@ final class OrganisationTest extends TestCase
     private function uploadLogo(): string
     {
         return $this->actingAs($this->alice)
-            ->postJson('/settings/organisation/logo', [
+            ->postJson('/settings/organisation/logo/upload', [
                 'file' => $this->realFile('logo.png', self::PNG_BYTES),
             ])
             ->assertCreated()

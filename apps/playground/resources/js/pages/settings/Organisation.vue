@@ -26,8 +26,16 @@ import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import organisationRoutes from '@/routes/organisation';
-import { upload as uploadLogo } from '@/routes/organisation/logo';
+/*
+ * GENERATED, NOT TYPED OUT - the same rule the account menu follows.
+ *
+ * The module path moved when `OrganisationPage` took over the routing, because
+ * Wayfinder derives it from route NAMES. The URLs did not move: the page
+ * declares `settings/organisation` precisely so adopting the mechanism does not
+ * relocate a screen people have bookmarked.
+ */
+import { organisation as organisationPage } from '@/routes/panel/pages';
+import { update as updateOrganisation, uploadLogo } from '@/routes/panel/pages/organisation';
 
 const props = defineProps<{
     organisation: {
@@ -39,7 +47,7 @@ const props = defineProps<{
 defineOptions({
     layout: {
         breadcrumbs: [
-            { title: 'Organisation', href: organisationRoutes.edit.url() },
+            { title: 'Organisation', href: organisationPage.url() },
         ],
     },
 });
@@ -83,7 +91,7 @@ watch(
 function submit() {
     form.logo = logo.value ? logo.value.value : null;
 
-    form.put(organisationRoutes.update.url(), {
+    form.put(updateOrganisation.url(), {
         preserveScroll: true,
         onSuccess: () => {
             toast.success('Organisation updated');

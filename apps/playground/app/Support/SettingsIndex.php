@@ -56,7 +56,7 @@ final class SettingsIndex
                 'key' => 'organisation',
                 'title' => 'Organisation',
                 'description' => 'The name and logo everyone in this organisation sees.',
-                'href' => route('organisation.edit'),
+                'href' => route('panel.pages.organisation'),
             ],
         ];
 
@@ -78,7 +78,7 @@ final class SettingsIndex
                 'key' => 'user-management',
                 'title' => 'User management',
                 'description' => 'Invite teammates, and assign roles and permissions.',
-                'href' => route('user-management'),
+                'href' => route('panel.pages.user-management'),
             ];
         }
 
