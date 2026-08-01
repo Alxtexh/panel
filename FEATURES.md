@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 228 files, 37,886 lines | 122 files, 18,287 lines |
-| Vue | 100 components | **197 components** |
+| PHP | 232 files, 38,416 lines | 122 files, 18,287 lines |
+| Vue | 101 components | **198 components** |
 
 The demo carries twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -34,12 +34,12 @@ Counts here are class and file counts taken from the tree, not from memory.
 no route to add and no Vue to write — the list, the form, the record page and the
 trash are all served from the schema that class declares.
 
-### Forms — 23 field types
+### Forms — 24 field types
 
 `Text` `Textarea` `Number` `Password` `Select` `MultiSelect` `Radio`
 `CheckboxList` `Toggle` `Date` `Slider` `Tags` `Colour` `Code` `Markdown`
 `RichEditor` `FileUpload` `KeyValue` `Repeater` `Builder` `VisualSelect`
-`Field` `HasChoices`
+`Field` `HasChoices` `Country` (ISO or dialling code, 173 countries)
 
 Layout comes from `Schema`: `Section` `Grid` `Tabs` `Tab` `Step` `Wizard`,
 with `visibleWhen` at section level.
@@ -117,7 +117,7 @@ number to somebody forbidden from it and rely on CSS to keep the secret.
 Trash across resources · custom fields · import wizard · document templates and
 a designer · scheduled reports by email · announcements · a REST API with tokens
 and OpenAPI · knowledge indexing and retrieval · Telegram alerts · audit trail ·
-render hooks and a plugin API · i18n · **passkeys** (Fortify's WebAuthn, a soft
+render hooks and a plugin API · i18n · an in-panel **changelog** · **passkeys** (Fortify's WebAuthn, a soft
 dependency — present when Fortify is, absent without it) · `InteractsWithPanels`
 test helpers.
 
@@ -137,7 +137,7 @@ data, where every page returns 200 and every test passes.
 ### Screens (`@panelkit/inertia`)
 
 `ResourceIndex` `ResourceForm` `ResourceView` `Trash` `PanelHome`
-`PanelDashboard` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
+`PanelDashboard` `Changelog` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
 `documents/DocumentPrint`
 
 Layout-free by design: the shell stays yours. A one-line page file per screen is
@@ -182,4 +182,4 @@ pointing composer at a `git subtree split` branch.
 external security review** — the isolation matrix and the authorisation tests
 check my own assumptions.
 
-Current state: **v0.2.0**, 1,554 tests passing, 13 skipped.
+Current state: **v0.2.0**, 1,572 tests passing, 13 skipped.
