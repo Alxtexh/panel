@@ -34,6 +34,12 @@ final class PanelPages
         'PanelHome',
 
         /*
+         * THE WIDGET HOST. `StatWidget` and `ChartWidget` shipped with nowhere
+         * to render; `DashboardPage` routes this and this draws them.
+         */
+        'PanelDashboard',
+
+        /*
          * NESTED NAMES, because the server renders `documents/Templates` and a
          * page name is a path. The writer creates the directory; the component
          * identifier is the basename, since `documents/Templates` is not a

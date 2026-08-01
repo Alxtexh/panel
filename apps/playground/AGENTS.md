@@ -335,6 +335,7 @@ too quiet.
 
 ## Commands
 
+- `php artisan make:panel-page` — Create a panel page (a screen that is not a resource)
 - `php artisan make:panel-resource` — Create a panel resource
 - `php artisan make:panel` — Create a panel: a provider, a resource directory, and its routes
 - `php artisan panel:api-token` — Issue an API token for the public API

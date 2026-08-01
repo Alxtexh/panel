@@ -33,6 +33,7 @@ export { default as ResourceForm } from './pages/ResourceForm.vue'
 export { default as ResourceView } from './pages/ResourceView.vue'
 export { default as Trash } from './pages/Trash.vue'
 export { default as PanelHome } from './pages/PanelHome.vue'
+export { default as PanelDashboard } from './pages/PanelDashboard.vue'
 export { default as Roles } from './pages/settings/Roles.vue'
 export { default as DocumentTemplates } from './pages/documents/Templates.vue'
 export { default as DocumentTemplateDesigner } from './pages/documents/TemplateDesigner.vue'
@@ -67,6 +68,7 @@ export const PANEL_PAGES = {
     ResourceView: () => import('./pages/ResourceView.vue'),
     Trash: () => import('./pages/Trash.vue'),
     PanelHome: () => import('./pages/PanelHome.vue'),
+    PanelDashboard: () => import('./pages/PanelDashboard.vue'),
 
     /*
      * The document designer. Nested names, because the server sends
