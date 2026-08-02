@@ -530,8 +530,12 @@ update_output="$(php artisan panel:update 2>&1)" && update_status=0 || update_st
 # `resources/js/pages` to write into and the command has to say so rather than
 # claim success. Whichever answer it gives, it must be about the page files -
 # silence there is the failure this command exists to prevent.
+# THREE ACCEPTABLE ANSWERS, and the third is the interesting one. Turning
+# ticketing on above routes `TicketAnalysis`, so a correct `panel:update` WRITES
+# a page file here rather than finding them complete - and an assertion that
+# only accepted the idle answers failed the command for doing its job.
 case "$update_output" in
-    *"page files already complete"*|*"no resources/js/pages directory"*) ;;
+    *"page files already complete"*|*"no resources/js/pages directory"*|*"new page file(s)"*) ;;
     *) fail "panel:update said nothing about page files, which is the reason it exists:
 $update_output" ;;
 esac
