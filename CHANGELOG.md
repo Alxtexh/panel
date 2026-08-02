@@ -15,9 +15,10 @@ right on the first try. It is now `panelkit/panel`.
 
 - **A support desk in the package.** `TicketResource` (the operator's queue),
   `MyTicketResource` (the customer's own), and `TicketingPlugin`, which mounts
-  each on the panel named in `panel.ticketing.operator` / `.opener` and
-  **refuses to mount both on the same panel** — a customer reading the
-  operator's queue is the failure the pairing exists to prevent.
+  each on the panel named in `panel.ticketing.operator` / `.opener`. **Both or
+  neither**: one end alone, or one portal named for both, throws at boot with
+  the key to fix. Neither set is off, and the plugin ships registered so that
+  turning it on is two config lines rather than a service provider.
 - **`TicketPolicy`, which is where the two sides are separated.** The opener
   reads and replies to their own holding no ticket ability at all, and may never
   resolve; the operator reads the organisation's on an ordinary ability; the

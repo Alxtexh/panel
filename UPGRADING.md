@@ -124,8 +124,10 @@ panel until you say which panel is which:
 ],
 ```
 
-**The same panel id in both is refused at boot**, by name, rather than left as a
-portal where a customer reads the whole organisation's support queue.
+**Both or neither.** Naming one key and not the other throws at boot, and so
+does naming one portal for both ends — `register()` would mount the queue and
+skip the customer side entirely. Leaving both unset is the supported off state:
+nothing mounts and nothing complains.
 
 **If you already have ticket tables, do not migrate — rename nothing.** Point
 config at what you have:

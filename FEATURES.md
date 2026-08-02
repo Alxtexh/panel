@@ -116,9 +116,10 @@ number to somebody forbidden from it and rely on CSS to keep the secret.
 
 **A support desk is not an example, so it ships.** Two resources over one table:
 `TicketResource` is the operator's queue, `MyTicketResource` is the customer's
-own, and `TicketingPlugin` mounts each on the panel named in config — refusing
-to mount both on the same one, because a customer reading the operator's queue
-is the failure this pairing exists to prevent.
+own, and `TicketingPlugin` mounts each on the panel named in config. It insists on
+both or neither: one end alone, or one portal named for both, throws at boot
+rather than leaving a queue nobody can write to or a customer side that was
+never mounted.
 
 **The policy is where the two sides are actually separated.** The opener reads
 and replies to their own holding *no ticket ability at all* — being the person
@@ -244,4 +245,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.3.2**, 1,596 tests passing, 13 skipped.
+Current state: **v0.3.2**, 1,599 tests passing, 13 skipped.

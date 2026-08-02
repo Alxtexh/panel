@@ -16,6 +16,7 @@ use PanelKit\Panel\Plugins\PluginContext;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Table;
+use PanelKit\Panel\Ticketing\TicketingPlugin;
 use Tests\TestCase;
 
 /**
@@ -163,6 +164,57 @@ final class PluginTest extends TestCase
         $this->expectExceptionMessage('belongs to one panel');
 
         $manager->registerResources([PluginOwnedResource::class], 'admin');
+    }
+
+    /**
+     * TICKETING'S THREE CONFIGURATIONS, one of which is a mistake said out loud
+     * and one of which used to be a mistake said not at all.
+     *
+     * THE PLUGIN SHIPS REGISTERED, so "nobody asked for a support desk" is a
+     * state it has to hold rather than an absence. Neither key set means no
+     * route, no navigation entry and no exception - and it is asserted here
+     * because the alternative failure is an application that will not boot over
+     * a feature it never enabled.
+     *
+     * ONE KEY SET IS REFUSED, because half a support desk is a screen that
+     * returns 200 and helps nobody - the class's own note argues this at
+     * length. What it did NOT refuse was the same portal named twice, which
+     * `register()` resolves by mounting the queue and skipping the customer
+     * side entirely: configured, successful, and missing the half the customer
+     * uses.
+     */
+    public function test_ticketing_is_inert_when_no_panel_is_named(): void
+    {
+        config(['panel.ticketing.operator' => null, 'panel.ticketing.opener' => null]);
+
+        $plugin = new TicketingPlugin;
+
+        foreach (app(PanelManager::class)->panels() as $panel) {
+            $this->assertFalse(
+                $plugin->appliesTo($panel),
+                "Ticketing mounted on [{$panel->id}] with neither end configured.",
+            );
+        }
+    }
+
+    public function test_ticketing_refuses_one_end_without_the_other(): void
+    {
+        config(['panel.ticketing.operator' => 'admin', 'panel.ticketing.opener' => null]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('half configured');
+
+        (new TicketingPlugin)->appliesTo(app(PanelManager::class)->panel('admin'));
+    }
+
+    public function test_ticketing_refuses_one_portal_named_as_both_ends(): void
+    {
+        config(['panel.ticketing.operator' => 'admin', 'panel.ticketing.opener' => 'admin']);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('both ends');
+
+        (new TicketingPlugin)->appliesTo(app(PanelManager::class)->panel('admin'));
     }
 
     /**

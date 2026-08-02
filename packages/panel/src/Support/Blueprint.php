@@ -688,9 +688,11 @@ final class Blueprint
         ],
         ```
 
-        The same panel id in both is REFUSED AT BOOT, by name. Leave either null
-        and that side does not mount, which is how an installation that wants
-        only an internal queue configures it.
+        BOTH OR NEITHER. Naming one and not the other throws at boot, and so
+        does naming ONE portal for both ends - the customer side would not be
+        mounted at all. Neither key set is off: no route, no navigation entry,
+        no error. There is no "internal queue only" configuration; a queue
+        nobody can write to has nothing in it.
 
         The tables are `panel.ticketing.tables` - `panel_tickets` and
         `panel_ticket_replies` by default. An installation that already has
