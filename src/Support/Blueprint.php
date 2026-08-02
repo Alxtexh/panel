@@ -632,6 +632,26 @@ final class Blueprint
         A provider, a resource directory and the routes. Use `--central` only for a
         portal that must see every organisation at once; it turns tenant scoping off.
 
+        ### Show an amount of money
+
+        `MoneyColumn`, not a `TextColumn` with a prefix and not two columns.
+
+        ```php
+        MoneyColumn::make('amount')->currency('KES')->sortable(),
+
+        // ...or, when rows differ:
+        MoneyColumn::make('amount')->currencyFrom('currency_code'),
+        ```
+
+        MINOR UNITS BY DEFAULT - the stored value is an integer count of the
+        smallest unit, because money in a float drifts and a total out by a cent
+        is a support ticket nobody can reproduce. Call `->major()` for a column
+        that genuinely stores decimals.
+
+        FORMATTED IN THE VIEWER'S LOCALE, in the browser, like dates. Formatting
+        on the server prints the SERVER's grouping and decimal separators to
+        everybody, which is wrong for most of the world.
+
         ### Choose the right text field
 
         - `TextareaField` — plain text, no formatting.
