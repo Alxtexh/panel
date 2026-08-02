@@ -64,6 +64,18 @@ final class RunBulkAction implements ShouldQueue
         private readonly array $query,
         private readonly int|string $userId,
         private readonly string $token,
+
+        /**
+         * What the action's form collected, ALREADY VALIDATED by the controller
+         * that queued this.
+         *
+         * Re-validating here would be validating twice and reporting the second
+         * failure into a worker log, where the person who typed the value never
+         * sees it. The queue carries a decision that has already been checked.
+         *
+         * @var array<string, mixed>
+         */
+        private readonly array $data = [],
     ) {}
 
     public function handle(BulkRunner $runner): void
@@ -92,6 +104,7 @@ final class RunBulkAction implements ShouldQueue
                 $class::model(),
                 $list->keyColumnName(),
                 fn (int $done) => JobStatus::progress($this->token, $done),
+                $this->data,
             );
 
             JobStatus::finish($this->token, ['done' => $affected]);
