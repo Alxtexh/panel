@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 258 files, 43,216 lines | 108 files, 16,190 lines |
+| PHP | 259 files, 43,525 lines | 108 files, 16,190 lines |
 | Vue | 111 components | **197 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
@@ -44,10 +44,14 @@ trash are all served from the schema that class declares.
 Layout comes from `Schema`: `Section` `Grid` `Tabs` `Tab` `Step` `Wizard`,
 with `visibleWhen` at section level.
 
-### Tables — 11 column types, 6 filters
+### Tables — 12 column types, 6 filters
 
 Columns: `Text` `Badge` `Date` `Icon` `Image` `Colour` `Checkbox` `Toggle`
-`Select` `Editable` (edit in place)
+`Select` `Editable` (edit in place) `Money`
+
+`MoneyColumn` takes a fixed currency or reads each row's own, defaults to minor
+units — an integer count of the smallest unit cannot drift the way a float does
+— and formats in the **viewer's** locale rather than the server's.
 
 Filters: `Select` `MultiSelect` `Boolean` `DateRange` `Trashed`
 
@@ -274,4 +278,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.5.0**, 1,614 tests passing, 13 skipped.
+Current state: **v0.5.0**, 1,621 tests passing, 13 skipped.

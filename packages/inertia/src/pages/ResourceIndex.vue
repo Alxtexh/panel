@@ -201,7 +201,7 @@ const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
     },
 }
 
-function render(key: string, value: unknown): string {
+function render(key: string, value: unknown, row?: Record<string, unknown>): string {
     const column = byKey.value[key]
 
     if (value === null || value === undefined || value === '') return '-'
@@ -210,9 +210,62 @@ function render(key: string, value: unknown): string {
         return new Date(String(value)).toLocaleDateString(undefined, dateFormats[column.type])
     }
 
+    if (column?.type === 'money') {
+        return money(column, value, row)
+    }
+
     // Units and currency codes come from the schema, so no resource needs its
     // own Vue slot just to write "Mbps" after a number.
     return [column?.prefix, String(value), column?.suffix].filter(Boolean).join(' ')
+}
+
+/**
+ * An amount of money, in the VIEWER'S locale.
+ *
+ * FORMATTED HERE RATHER THAN ON THE SERVER, the same rule dates follow.
+ * `Intl.NumberFormat` knows that this reader groups with a space and decimals
+ * with a comma; PHP knows what the server's locale is, which is nobody's.
+ *
+ * MINOR UNITS BY DEFAULT. Money stored as an integer count of the smallest unit
+ * cannot drift the way a float does - `0.1 + 0.2` is not `0.3` in binary
+ * floating point, and a total out by a cent is a support ticket nobody can
+ * reproduce. A column that genuinely stores decimals declares `->major()`.
+ *
+ * AN UNKNOWN CURRENCY DEGRADES TO A PLAIN NUMBER rather than throwing.
+ * `Intl.NumberFormat` raises a RangeError on a code it does not recognise, and
+ * a typo in one row's currency column should cost that cell its symbol, not
+ * take the table down.
+ */
+function money(
+    column: { currency?: string; currencyColumn?: string; major?: boolean },
+    value: unknown,
+    row?: Record<string, unknown>,
+): string {
+    const raw = Number(value)
+
+    if (Number.isNaN(raw)) return String(value)
+
+    const amount = column.major ? raw : raw / 100
+
+    const code = column.currencyColumn
+        ? String(row?.[column.currencyColumn] ?? '')
+        : (column.currency ?? '')
+
+    if (!code) {
+        return new Intl.NumberFormat(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(amount)
+    }
+
+    try {
+        return new Intl.NumberFormat(undefined, {
+            style: 'currency',
+            currency: code,
+        }).format(amount)
+    } catch {
+        return `${new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)} ${code}`
+    }
 }
 
 /** Columns the schema marks as badges get badge rendering, generically. */
@@ -1050,16 +1103,16 @@ function badgeLabel(key: string, value: unknown): string {
                             >
                                 {{ badgeLabel(col.key, row[col.key]) }}
                             </Badge>
-                            <span v-else>{{ render(col.key, row[col.key]) }}</span>
+                            <span v-else>{{ render(col.key, row[col.key], row) }}</span>
                         </template>
                         <Link
                             v-else-if="col.key === 'name'"
                             :href="`${schema.routes.index}/${row.id}`"
                             class="hover:text-primary hover:underline"
                         >
-                            {{ render(col.key, row[col.key]) }}
+                            {{ render(col.key, row[col.key], row) }}
                         </Link>
-                        <span v-else>{{ render(col.key, row[col.key]) }}</span>
+                        <span v-else>{{ render(col.key, row[col.key], row) }}</span>
                     </template>
 
                     <template #clear-filters>

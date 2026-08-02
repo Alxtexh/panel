@@ -319,6 +319,26 @@ php artisan make:panel reseller --path=reseller
 A provider, a resource directory and the routes. Use `--central` only for a
 portal that must see every organisation at once; it turns tenant scoping off.
 
+### Show an amount of money
+
+`MoneyColumn`, not a `TextColumn` with a prefix and not two columns.
+
+```php
+MoneyColumn::make('amount')->currency('KES')->sortable(),
+
+// ...or, when rows differ:
+MoneyColumn::make('amount')->currencyFrom('currency_code'),
+```
+
+MINOR UNITS BY DEFAULT - the stored value is an integer count of the
+smallest unit, because money in a float drifts and a total out by a cent
+is a support ticket nobody can reproduce. Call `->major()` for a column
+that genuinely stores decimals.
+
+FORMATTED IN THE VIEWER'S LOCALE, in the browser, like dates. Formatting
+on the server prints the SERVER's grouping and decimal separators to
+everybody, which is wrong for most of the world.
+
 ### Choose the right text field
 
 - `TextareaField` — plain text, no formatting.
@@ -454,7 +474,7 @@ is used. Read that line before planning around anything below.
 
 **Form fields** (24): `BuilderField` `CheckboxListField` `CodeField` `ColourField` `CountryField` `DateField` `Field` `FileUploadField` `HasChoices` `KeyValueField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `RadioField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleField` `VisualSelectField`
 _How to use them: name them in `form()`._
-**Table columns** (11): `BadgeColumn` `CheckboxColumn` `ColourColumn` `Column` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `SelectColumn` `TextColumn` `ToggleColumn`
+**Table columns** (12): `BadgeColumn` `CheckboxColumn` `ColourColumn` `Column` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `MoneyColumn` `SelectColumn` `TextColumn` `ToggleColumn`
 _How to use them: name them in `table()`._
 **Table filters** (7): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `MultiSelectFilter` `SelectFilter` `TrashedFilter`
 _How to use them: name them in `table()`._

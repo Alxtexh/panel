@@ -30,6 +30,7 @@ export interface SchemaColumn {
         | 'select'
         | 'colour'
         | 'checkbox'
+        | 'money'
     sortable?: boolean
     sortKey?: string
     copyable?: boolean
@@ -42,6 +43,18 @@ export interface SchemaColumn {
     suffix?: string
     colors?: Record<string, string>
     defaultColor?: string
+
+    /*
+     * money
+     *
+     * `currency` OR `currencyColumn`, never both - a fixed code for a
+     * single-currency installation, or the name of the attribute holding this
+     * row's own. `major` is present only when the stored value is decimal;
+     * absent means minor units, which is the default and the safer storage.
+     */
+    currency?: string
+    currencyColumn?: string
+    major?: boolean
 
     /* icon */
     icons?: Record<string, string>
