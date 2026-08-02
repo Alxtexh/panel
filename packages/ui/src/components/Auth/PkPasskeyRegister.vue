@@ -11,16 +11,26 @@
  * `@laravel/passkeys/vue` IS A PEER DEPENDENCY, not a bundled one. It is the
  * browser half of Fortify's own WebAuthn support, and PanelKit does not require
  * Fortify - an installation on a different auth stack should not be made to
- * carry it. Applications that have it get this component working; applications
- * that do not never render it, because the server says `available` is false.
+ * carry it.
+ *
+ * WHICH MEANS THE IMPORT HAS TO BE LAZY, and this was a STATIC import for two
+ * releases. "Optional peer" was true of the PHP half and false of this file: a
+ * bare `import { usePasskeyRegister } from '@laravel/passkeys/vue'` is resolved
+ * at BUILD time, so any application without the package failed
+ * `npm run build` outright - not the passkey screen, the whole bundle. The
+ * server saying `available` is false never got a chance to matter, because
+ * there was nothing to serve.
+ *
+ * Found by building a FRESH application rather than the reference one, where
+ * Fortify has always been installed.
  *
  * `isSupported` IS ANSWERED BEFORE THE BUTTON IS DRAWN. Passkeys need a platform
  * authenticator, and a browser without one produces a registration dialog that
  * fails after the user has committed to it. Saying so up front is a sentence;
  * finding out afterwards is a support ticket.
  */
-import { usePasskeyRegister } from '@laravel/passkeys/vue'
-import { ref } from 'vue'
+import { computed, onMounted, ref, shallowRef } from 'vue'
+import type { Ref } from 'vue'
 import PkButton from '../primitives/PkButton.vue'
 
 const emit = defineEmits<{ success: [] }>()
@@ -58,22 +68,64 @@ const defaultName = (): string => {
 const name = ref(defaultName())
 const showForm = ref(false)
 
-const { register, isLoading, error, isSupported } = usePasskeyRegister({
-    onSuccess: () => {
-        name.value = ''
-        showForm.value = false
-        emit('success')
-    },
+/*
+ * RESOLVED AT RUNTIME, INSIDE A TRY. `import()` of a module that is not
+ * installed is a rejected promise rather than a build failure, so an
+ * application without `@laravel/passkeys` builds, runs, and simply never offers
+ * enrolment - which is what "optional" was always meant to mean.
+ *
+ * `isSupported` STARTS FALSE, so the button cannot be drawn before the module
+ * has answered. Starting true would show a control that throws on click for
+ * however long the import takes.
+ */
+type Passkeys = {
+    register: (name: string) => Promise<void>
+    isLoading: Ref<boolean>
+    error: Ref<string | null>
+    isSupported: Ref<boolean>
+}
+
+/*
+ * THE COMPOSABLE'S OWN REFS ARE HELD, not copied into new ones. Copying reads
+ * their value once - at mount, before any registration has run - so the button
+ * would never show a loading state and an error would never appear.
+ */
+const passkeys = shallowRef<Passkeys | null>(null)
+
+const isLoading = computed(() => passkeys.value?.isLoading.value ?? false)
+const error = computed(() => passkeys.value?.error.value ?? null)
+const isSupported = computed(() => passkeys.value?.isSupported.value ?? false)
+
+onMounted(async () => {
+    try {
+        const { usePasskeyRegister } = await import('@laravel/passkeys/vue')
+
+        passkeys.value = usePasskeyRegister({
+            onSuccess: () => {
+                name.value = ''
+                showForm.value = false
+                emit('success')
+            },
+        }) as Passkeys
+    } catch {
+        /*
+         * NOT AN ERROR MESSAGE. The application does not have passkeys
+         * installed, which is a supported configuration - telling somebody
+         * about a missing npm package on their security screen would be
+         * reporting our own optionality as their problem.
+         */
+        passkeys.value = null
+    }
 })
 
 const submit = async (event: Event) => {
     event.preventDefault()
 
-    if (!name.value.trim()) {
+    if (!name.value.trim() || passkeys.value === null) {
         return
     }
 
-    await register(name.value)
+    await passkeys.value.register(name.value)
 }
 
 const cancel = () => {
