@@ -128,9 +128,14 @@ that check runs first: reversed, "the opener always reads their own" becomes a
 cross-tenant read that looks like a feature.
 
 A thread with replies, internal notes the customer never sees, and attachments ·
-first-response and SLA due times · departments · unread indicators per side ·
-stats and a volume chart · creation rate-limited in the policy, so every entry
-point is covered rather than the one form somebody remembered.
+departments · unread indicators per side · a volume chart, and a median
+first-response time measured from the first PUBLIC reply by somebody other than
+the person who asked · creation rate-limited in the policy, so every entry point
+is covered rather than the one form somebody remembered.
+
+**There is no SLA due time**, and the stats screen does not pretend otherwise —
+it reports how long first replies actually took, not how long they were supposed
+to take. A target nobody set is a red badge that means nothing.
 
 **`TicketOpened` is an event, not a call.** The packaged listener alerts on
 urgent tickets over Telegram and never throws — a failed notification is one

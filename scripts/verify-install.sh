@@ -270,8 +270,8 @@ $checks = [
     'panel_tickets' => Schema::hasTable('panel_tickets'),
     'panel_ticket_replies' => Schema::hasTable('panel_ticket_replies'),
     'the reply thread has a body' => Schema::hasColumn('panel_ticket_replies', 'body'),
-    'an internal note is distinguishable' => Schema::hasColumn('panel_ticket_replies', 'internal'),
-    'the SLA clock has somewhere to live' => Schema::hasColumn('panel_tickets', 'due_at'),
+    'an internal note is distinguishable' => Schema::hasColumn('panel_ticket_replies', 'visibility'),
+    'the first-response clock has somewhere to live' => Schema::hasColumn('panel_tickets', 'first_response_at'),
     'nothing mounted, because no panel was named'
         => ! array_key_exists('tickets', app(PanelKit\Panel\PanelManager::class)->resources()),
 ];

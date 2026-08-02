@@ -23,8 +23,9 @@ right on the first try. It is now `panelkit/panel`.
   resolve; the operator reads the organisation's on an ordinary ability; the
   tenant check runs before either. Internal notes are their own grant.
 - **The thread, promoted whole** — replies, internal notes, attachments,
-  first-response and SLA due times, departments, per-side unread indicators, and
-  `TicketAnalysis` with stats and a volume chart.
+  departments, per-side unread indicators, the first-response stamp, and
+  `TicketAnalysis` with a volume chart and a median first-response time. There
+  is no SLA target and nothing claims one.
 - **`TicketOpened`, an event rather than a call.** The packaged listener alerts
   on urgent tickets over Telegram and never throws. Adding a webhook or an email
   to a rota is now a listener, not an edit to a vendored model.

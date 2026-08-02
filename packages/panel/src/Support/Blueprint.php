@@ -671,8 +671,11 @@ final class Blueprint
         ### Turn on ticketing - do NOT write one
 
         A support desk ships in the package: two resources over one table, the
-        policy that separates the two sides, the thread, SLA times, departments,
-        unread indicators and a stats screen. AN AGENT ASKED FOR "SUPPORT
+        policy that separates the two sides, the thread, departments, unread
+        indicators, a first-response stamp and a stats screen. THERE IS NO SLA
+        TARGET - `TicketStats` reports how long first replies took, and nothing
+        stores how long they were meant to take. Do not write code against a
+        `due_at`; there is no such column. AN AGENT ASKED FOR "SUPPORT
         TICKETS" MUST TURN THIS ON RATHER THAN BUILD IT. A hand-rolled one gets
         the two-sided authorisation wrong, and that failure is a customer
         reading another customer's ticket.
