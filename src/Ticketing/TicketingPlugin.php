@@ -93,6 +93,25 @@ final class TicketingPlugin extends Plugin
             );
         }
 
+        /*
+         * THE SAME PORTAL NAMED TWICE IS NOT A CONFIGURATION, and it read as
+         * one for a release. `register()` branches on whether the panel it is
+         * given is the operator's, so naming one portal for both ends mounted
+         * the queue and nothing else: the customer side simply did not exist,
+         * silently, in the one place somebody had gone to the trouble of
+         * configuring it.
+         *
+         * That is the same failure as installing one end - which this class
+         * throws over three lines down - reached by a different typo.
+         */
+        if ($operator === $opener) {
+            throw new RuntimeException(
+                "Ticketing names panel [{$operator}] as both ends. The operator's queue and a "
+                .'customer\'s own tickets are different screens with different rules and cannot '
+                .'share a portal - the customer side would not be mounted at all.',
+            );
+        }
+
         if ($panel->id !== $operator && $panel->id !== $opener) {
             return false;
         }
