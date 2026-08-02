@@ -22,6 +22,7 @@ use PanelKit\Panel\Forms\Fields\RepeaterField;
 use PanelKit\Panel\Forms\Fields\RichEditorField;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
+use PanelKit\Panel\Forms\Fields\TextareaField;
 use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Forms\Rules\ExistsInScope;
 use PanelKit\Panel\Resources\RelationManager;
@@ -426,6 +427,45 @@ final class ClientResource extends Resource
                     ->icon('activity')
                     ->authorize('view')
                     ->link(fn (array $row): string => '/clients/'.$row['id'].'/sessions'),
+
+                /*
+                 * A FORM ACTION - roadmap D, and the first real one.
+                 *
+                 * Moving a subscriber to a different plan is the shape most row
+                 * actions in a billing panel actually have: it needs a value
+                 * from the operator before it can do anything. Before
+                 * `->form()` this was a dedicated screen, or an edit page visit
+                 * to change one field.
+                 *
+                 * THE OPTIONS ARE SEARCHED, NOT LISTED, because a reseller with
+                 * two hundred plans should not ship two hundred options to
+                 * every row menu on the page. The same field the record form
+                 * uses, declared the same way.
+                 *
+                 * `ExistsInScope`, NOT `exists:plans,id`. The raw rule queries
+                 * the table and would confirm the existence of another
+                 * organisation's plan; this asks the MODEL, so the tenant
+                 * global scope applies and a foreign id is simply invalid.
+                 */
+                RecordAction::make('change-plan', 'Change plan')
+                    ->icon('package')
+                    ->authorize('update')
+                    ->form(fn (Form $form): Form => $form->schema([
+                        SelectField::make('plan_id')->label('New plan')
+                            ->required()
+                            ->searchable(fn (string $term): array => Plan::query()
+                                ->when($term !== '', fn ($q) => $q->where('name', 'like', $term.'%'))
+                                ->orderBy('name')->limit(25)->pluck('name', 'id')->all())
+                            ->rule(ExistsInScope::of(Plan::class)),
+
+                        TextareaField::make('note')->label('Why')
+                            ->rows(2)
+                            ->rule('max:280')
+                            ->help('Recorded on the subscriber\'s activity log.'),
+                    ]))
+                    ->handle(function (Client $client, array $data): void {
+                        $client->forceFill(['plan_id' => $data['plan_id']])->save();
+                    }),
 
                 ActionGroup::make('Status')->actions([
                     RecordAction::make('suspend', 'Suspend')

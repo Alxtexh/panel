@@ -10,6 +10,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use PanelKit\Panel\Actions\RecordAction;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -146,9 +147,45 @@ final class RecordController extends Controller
             'That action does not apply to this record.',
         );
 
-        $action->run($record);
+        $action->run($record, $this->actionInput($request, $action));
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * The values a form action collected, validated and reduced to its own keys.
+     *
+     * THE DECLARATION IS THE AUTHORITY, not the request. Rules come from the
+     * fields the RESOURCE declared, and `sanitize()` drops everything else - so
+     * a request that names a column the form never offered has that key
+     * discarded rather than passed to `handle()` and written. That is the same
+     * allow-list posture the record form takes, and it is the whole reason a
+     * form action is not a mass-assignment endpoint with a nicer label.
+     *
+     * NESTED UNDER `data`, so an action key and a field called `action` cannot
+     * collide - which they would, on any resource with an `action` column.
+     *
+     * AN ACTION WITH NO FORM IGNORES INPUT ENTIRELY. Reading `data` for one
+     * would let a caller submit values to an action that declared none, and
+     * whether anything came of that would depend on what its `handle()` did
+     * with a second argument it never expected.
+     *
+     * @return array<string, mixed>
+     */
+    private function actionInput(Request $request, RecordAction $action): array
+    {
+        $form = $action->formDefinition();
+
+        if ($form === null) {
+            return [];
+        }
+
+        $validated = validator(
+            (array) $request->input('data', []),
+            $form->rules(),
+        )->validate();
+
+        return $form->sanitize($validated);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Actions;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use PanelKit\Panel\Forms\Form;
 use InvalidArgumentException;
 
 /**
@@ -34,6 +35,19 @@ use InvalidArgumentException;
  *   `link()`     no mutation at all: View and Edit are record actions too, and
  *                keeping them in the same list is what lets a resource reorder
  *                or hide them without editing a Vue file.
+ *
+ * AND ANY OF THEM MAY ASK FOR INPUT FIRST - `form()`, added in v0.6.0 because a
+ * port off Filament found that 67 of 229 actions needed to collect something
+ * before doing anything: a reason for a suspension, an amount to credit, a
+ * department to route to. Without it every one of those became a hand-written
+ * screen, which is the largest functional gap this package had.
+ *
+ * THE FIELDS ARE DECLARED HERE, WHICH IS WHAT KEEPS THE ENDPOINT SAFE. The rule
+ * at the top of this file does not bend: the client still sends an action key
+ * and never an attribute set. What it may additionally send are VALUES FOR KEYS
+ * THIS RESOURCE OFFERED - validated against the declaration's own rules and
+ * reduced to its own keys before `handle()` sees them. A request naming a
+ * column the form did not declare gets that key dropped, not written.
  */
 final class RecordAction
 {
@@ -56,6 +70,13 @@ final class RecordAction
 
     /** @var array<string, mixed> */
     private array $mutate = [];
+
+    /**
+     * The fields to collect before running, or null for an action that asks
+     * nothing. See the class note on why declaring them here is the whole
+     * security property.
+     */
+    private ?Form $form = null;
 
     private ?Closure $handle = null;
 
@@ -150,7 +171,47 @@ final class RecordAction
         return $this;
     }
 
-    /** @param Closure(Model): mixed $handle */
+    /**
+     * Collect input before running.
+     *
+     * ```php
+     * RecordAction::make('suspend', 'Suspend')
+     *     ->form(fn (Form $form): Form => $form->schema([
+     *         TextareaField::make('reason')->required()->rule('max:280'),
+     *         DateField::make('until')->help('Leave empty for indefinite.'),
+     *     ]))
+     *     ->handle(fn (Client $client, array $data) => $client->suspend($data));
+     * ```
+     *
+     * THE SCHEMA TRAVELS WITH THE ACTION, so the modal opens with **zero
+     * network requests** - the same promise the record form makes, and for the
+     * same reason: a dialog that fetches its own fields is a dialog that stalls
+     * on a slow connection at the moment somebody has already committed to
+     * acting.
+     *
+     * IT PAIRS WITH `handle()`, NOT `mutate()`. A mutation is a fixed set of
+     * columns declared at definition time; if the values come from a person,
+     * something has to decide what to do with them, and that is a closure.
+     * Declaring both is refused at `run()` rather than silently preferring one.
+     *
+     * @param  Closure(Form): Form  $form
+     */
+    public function form(Closure $form): self
+    {
+        $this->form = $form(Form::make());
+
+        return $this;
+    }
+
+    /** The declared form, or null when this action asks for nothing. */
+    public function formDefinition(): ?Form
+    {
+        return $this->form;
+    }
+
+    /**
+     * @param  Closure(Model, array<string, mixed>): mixed  $handle
+     */
     public function handle(Closure $handle): self
     {
         $this->handle = $handle;
@@ -242,14 +303,34 @@ final class RecordAction
      * the endpoint "run" one would turn a navigation into a POST that quietly
      * did nothing.
      */
-    public function run(Model $record): void
+    /**
+     * @param  array<string, mixed>  $data  Values collected by `form()`, already
+     *                                      validated and reduced to declared keys
+     *                                      by the caller. Empty for an action
+     *                                      that asks nothing.
+     */
+    public function run(Model $record, array $data = []): void
     {
         if ($this->link !== null) {
             throw new InvalidArgumentException("[{$this->key}] is a link and cannot be executed.");
         }
 
+        /*
+         * A FORM WITH NOWHERE TO SEND WHAT IT COLLECTED. `mutate()` is a fixed
+         * set of columns fixed at definition time, so it has no use for values
+         * a person typed - and an action that collected a reason and then wrote
+         * a hardcoded status would be a dialog that lies about what it does.
+         * Refused here rather than at the endpoint, so it fails for whoever
+         * wrote it rather than for whoever used it.
+         */
+        if ($this->form !== null && $this->handle === null) {
+            throw new InvalidArgumentException(
+                "[{$this->key}] declares a form but no handle(), so the values it collects go nowhere."
+            );
+        }
+
         if ($this->handle !== null) {
-            ($this->handle)($record);
+            ($this->handle)($record, $data);
 
             return;
         }
@@ -278,6 +359,14 @@ final class RecordAction
             'destructive' => $this->destructive,
             'confirmation' => $this->confirmation,
             'link' => $this->isLink(),
+
+            /*
+             * THE FIELDS, SENT WITH THE LIST. This is what lets the modal open
+             * without a request - see `form()`. Null for the common case, and
+             * `array_filter` below drops the key entirely so an action that
+             * asks nothing carries nothing.
+             */
+            'form' => $this->form?->toSchema(),
             'removesRow' => $this->removesRow,
             'color' => $this->color,
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
