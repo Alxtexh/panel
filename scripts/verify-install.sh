@@ -297,7 +297,7 @@ printf '\nPANEL_TICKETING_OPERATOR=%s\n' "$(php -r '
 require __DIR__."/vendor/autoload.php";
 $app = require_once __DIR__."/bootstrap/app.php";
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-echo array_key_first(app(PanelKit\Panel\PanelManager::class)->all());
+echo array_key_first(app(PanelKit\Panel\PanelManager::class)->panels());
 ')" >> .env
 
 php artisan config:clear >/dev/null 2>&1 || true
