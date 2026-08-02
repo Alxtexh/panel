@@ -37,6 +37,14 @@ export interface RecordActionItem {
     confirmation?: string
     link?: boolean
     removesRow?: boolean
+    /**
+     * Fields to collect before running, sent WITH the action.
+     *
+     * The shape `SchemaNode` renders. Present only for a form action; the page
+     * opens its own modal on it, so this component neither renders nor knows
+     * about the dialog - it emits `run` exactly as before.
+     */
+    form?: { nodes: unknown[] }
     url?: string
     /** Filament's palette: primary | gray | success | warning | danger | info. */
     color?: string

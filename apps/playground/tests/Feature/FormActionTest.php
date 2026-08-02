@@ -163,6 +163,25 @@ final class FormActionTest extends TestCase
         $this->assertNotSame($foreign->getKey(), $client->refresh()->plan_id);
     }
 
+    /**
+     * A SEARCHABLE SELECT INSIDE AN ACTION FORM CAN BE SEARCHED.
+     *
+     * `field-options` walked the RECORD FORM's fields only, and the first form
+     * action shipped working anyway - because its select happened to share a
+     * key with a field on the record form. An action asking for something the
+     * form does not have would have rendered a searchable select that finds
+     * nothing, with no error anywhere: the exact shape of failure this codebase
+     * keeps naming.
+     */
+    public function test_an_action_forms_select_can_be_searched(): void
+    {
+        $this->client();
+
+        $this->getJson('/clients/field-options?field=plan_id&q=Bas')
+            ->assertOk()
+            ->assertJsonPath('options.0.label', 'Basic');
+    }
+
     /* ------------------------------------------------------- the definition */
 
     /**

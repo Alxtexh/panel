@@ -47,6 +47,7 @@ import {
     TableTabs,
     TableToolbar,
     PkModal,
+    SchemaNode,
     useColumnVisibility,
     useLiveUpdates,
     hasBadgeValue,
@@ -544,7 +545,100 @@ function onRecordAction(row: Record<string, any>, action: RecordActionItem) {
         return
     }
 
+    /*
+     * A FORM ACTION OPENS ITS DIALOG INSTEAD OF RUNNING.
+     *
+     * WITH NO NETWORK REQUEST, which is the point: the fields arrived with the
+     * action in the schema, so this is local state. A dialog that fetched its
+     * own fields would stall at the moment somebody has already committed to
+     * acting - and on a row menu that is the worst possible moment for a
+     * spinner.
+     */
+    if (action.form) {
+        actionForm.value = { row, action, values: {}, errors: {}, processing: false }
+
+        return
+    }
+
     runRecordAction(row, action)
+}
+
+/**
+ * The open form action, or null.
+ *
+ * ONE AT A TIME, and holding the ROW rather than its id: the dialog names the
+ * record it is about, and re-finding the row by id after a partial reload would
+ * be a lookup that can fail while the dialog is open.
+ */
+const actionForm = ref<{
+    row: Record<string, any>
+    action: RecordActionItem
+    values: Record<string, any>
+    errors: Record<string, string>
+    processing: boolean
+} | null>(null)
+
+/**
+ * Submit what the dialog collected.
+ *
+ * ERRORS ARE SHOWN IN PLACE, not as a toast. The server validates against the
+ * fields the RESOURCE declared, so a 422 names a field this dialog is
+ * displaying - and a toast saying "the given data was invalid" over a form that
+ * shows nothing wrong is the least useful thing it could do.
+ */
+async function submitActionForm() {
+    const open = actionForm.value
+
+    if (!open) return
+
+    open.processing = true
+    open.errors = {}
+
+    try {
+        const response = await fetch(
+            `${props.schema.routes.index}/${open.row.id}/action`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': csrfToken(),
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ action: open.action.key, data: open.values }),
+            },
+        )
+
+        if (response.status === 422) {
+            const body = await response.json().catch(() => null)
+
+            open.errors = Object.fromEntries(
+                Object.entries(body?.errors ?? {}).map(([key, messages]) => [
+                    key,
+                    Array.isArray(messages) ? String(messages[0]) : String(messages),
+                ]),
+            )
+
+            return
+        }
+
+        if (!response.ok) {
+            const body = await response.json().catch(() => null)
+
+            toast.error(body?.message ?? 'That action could not be completed.')
+
+            return
+        }
+
+        toast.success(`${open.action.label} done`)
+        actionForm.value = null
+
+        // The list, not the row - see `runRecordAction` for why.
+        router.reload({ only: ['records', 'total', 'tabCounts'] })
+    } finally {
+        if (actionForm.value) actionForm.value.processing = false
+    }
 }
 
 /** Which action is in flight, as `rowId:actionKey`. */
@@ -607,6 +701,29 @@ async function runRecordAction(row: Record<string, any>, action: any) {
     } finally {
         runningAction.value = null
     }
+}
+
+/**
+ * Options for a searchable select inside an action dialog.
+ *
+ * THE SAME ENDPOINT THE RECORD FORM USES, and it needs no new one: the field
+ * key identifies which declaration to search, and a form action's fields are
+ * declared on the same resource. `@panelkit/ui` may not import an HTTP client,
+ * which is why this lives here rather than in the control.
+ */
+async function searchActionOptions(
+    field: string,
+    term: string,
+): Promise<{ value: any; label: string }[]> {
+    const query = new URLSearchParams({ field, q: term })
+
+    const res = await fetch(`${props.schema.routes.index}/field-options?${query}`, {
+        headers: { Accept: 'application/json' },
+    })
+
+    if (!res.ok) throw new Error(String(res.status))
+
+    return (await res.json()).options
 }
 
 function csrfToken(): string {
@@ -1163,6 +1280,55 @@ function badgeLabel(key: string, value: unknown): string {
             <template #footer>
                 <Button variant="ghost" size="sm" @click="confirmingDelete = null">Cancel</Button>
                 <Button variant="destructive" size="sm" @click="destroy">Delete</Button>
+            </template>
+        </PkModal>
+
+        <!--
+            THE FORM ACTION DIALOG.
+
+            IT RENDERS THE SAME `SchemaNode` THE RECORD FORM DOES, so a field
+            type works here the day it works there - including the ones with
+            behaviour, like a searchable select. A parallel set of controls for
+            dialogs would be the same components again, drifting.
+        -->
+        <PkModal
+            :open="!!actionForm"
+            :title="actionForm?.action.label ?? ''"
+            :description="actionForm?.action.confirmation ?? undefined"
+            @close="actionForm = null"
+        >
+            <form class="flex flex-col gap-4" @submit.prevent="submitActionForm">
+                <SchemaNode
+                    v-for="(node, index) in actionForm?.action.form?.nodes ?? []"
+                    :key="index"
+                    :node="(node as any)"
+                    :values="actionForm!.values"
+                    :errors="actionForm!.errors"
+                    :processing="actionForm!.processing"
+                    :search-options="searchActionOptions"
+                    @update="
+                        (key: string, value: any) => (actionForm!.values[key] = value)
+                    "
+                />
+            </form>
+
+            <template #footer>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    :disabled="actionForm?.processing"
+                    @click="actionForm = null"
+                >
+                    Cancel
+                </Button>
+
+                <Button
+                    size="sm"
+                    :disabled="actionForm?.processing"
+                    @click="submitActionForm"
+                >
+                    {{ actionForm?.processing ? 'Working…' : actionForm?.action.label }}
+                </Button>
             </template>
         </PkModal>
 

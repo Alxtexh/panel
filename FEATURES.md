@@ -64,6 +64,12 @@ density, and keyset pagination that holds up at 250,000 rows.
 and `JobStatus` for long jobs, count-before-commit on every bulk mutation, and
 filtered export.
 
+**A row action can ask for input first.** `->form()` declares fields; the modal
+opens with **no network request** because the schema travels with the action,
+and the endpoint validates against that declaration and drops every key it does
+not name. Without it, an action needing a reason or an amount had to become a
+dedicated screen — 67 of 229 actions in one real port.
+
 ### Authorisation
 
 **`TenantResourcePolicy` is the base you extend**, and `make:panel-resource
