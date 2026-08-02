@@ -218,51 +218,41 @@ final class MakeResourceCommand extends Command
 
         namespace App\\Policies;
 
-        use App\\Models\\User;
-        use Illuminate\\Database\\Eloquent\\Model;
+        use PanelKit\\Panel\\Policies\\TenantResourcePolicy;
 
         /**
          * Generated alongside {$model}Resource.
          *
-         * REVIEW THIS. It currently permits any authenticated user, which is
-         * almost certainly not what you want. The panel denies every ability whose
-         * model has no policy, so this file is what makes the resource visible at
-         * all - that is deliberate, and so is the fact that you have to edit it.
+         * THE BASE CLASS IS THE POLICY. It answers two questions in order -
+         * is this record yours, and does your role permit the action - and
+         * denies unless both pass. Ability names are derived from the
+         * resource key, so `view_any_*` and friends exist without anything
+         * being written down.
+         *
+         * NOTHING IS PERMITTED UNTIL PERMISSIONS ARE SYNCED:
+         *
+         *     php artisan panel:permissions sync
+         *
+         * That is the correct direction. A policy that granted everything
+         * until edited is one somebody forgets to edit, and forgetting is
+         * silent.
+         *
+         * TO ADD A RULE, override a method - and use the base class's
+         * parameter type exactly:
+         *
+         *     public function delete(Authenticatable&Authorizable \$user, ?Model \$record = null): bool
+         *
+         * PHP forbids narrowing that to your own `User`, and doing so is a
+         * fatal thrown while the class loads rather than a readable error.
          */
-        final class {$model}Policy
-        {
-            public function viewAny(User \$user): bool
-            {
-                return true;
-            }
-
-            public function view(User \$user, ?Model \$record = null): bool
-            {
-                return true;
-            }
-
-            public function create(User \$user): bool
-            {
-                return true;
-            }
-
-            public function update(User \$user, ?Model \$record = null): bool
-            {
-                return true;
-            }
-
-            public function delete(User \$user, ?Model \$record = null): bool
-            {
-                return true;
-            }
-        }
+        final class {$model}Policy extends TenantResourcePolicy {}
 
         PHP;
 
         file_put_contents($path, $stub);
 
         $this->components->info("Created {$path}");
-        $this->components->warn("Review {$model}Policy - it permits any authenticated user.");
+        $this->components->info("{$model}Policy denies until `panel:permissions sync` grants the abilities.");
     }
 
     /**

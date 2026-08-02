@@ -26,18 +26,23 @@ import { router } from '@inertiajs/vue3';
 import { CircleCheck, Info, TriangleAlert, X } from '@lucide/vue';
 import { onMounted, ref } from 'vue';
 import { toast } from 'vue-sonner';
+import type { Announcement } from '../types';
 
-interface Announcement {
-    id: number;
-    title: string;
-    body: string | null;
-    severity: 'info' | 'success' | 'warning' | 'danger';
-    display: 'banner' | 'toast';
-    actionLabel: string | null;
-    actionUrl: string | null;
-}
-
-const props = defineProps<{ announcements: Announcement[] }>();
+const props = withDefaults(
+    defineProps<{
+        announcements: Announcement[]
+        /**
+         * The panel's path prefix, because the dismiss route is mounted INSIDE
+         * the panel group. This was a bare `/announcements/...` while the
+         * component lived in the reference app, whose default panel is mounted
+         * at the root - correct there and a 404 in any portal with a path, which
+         * is most of them. The server knows the prefix; the component should not
+         * guess it. Same shape as `Trash`.
+         */
+        prefix?: string
+    }>(),
+    { prefix: '' },
+);
 
 /** Locally hidden the moment × is clicked, so the row goes without a round trip. */
 const closed = ref<Set<number>>(new Set());
@@ -91,7 +96,7 @@ function dismiss(announcement: Announcement) {
      * error dialog about a notice somebody was trying to get rid of.
      */
     router.post(
-        `/announcements/${announcement.id}/dismiss`,
+        `${props.prefix.replace(/\/$/, '')}/announcements/${announcement.id}/dismiss`,
         {},
         { preserveScroll: true, preserveState: true, only: [] },
     );

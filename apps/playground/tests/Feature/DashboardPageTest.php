@@ -11,7 +11,9 @@ use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\DeferProp;
+use PanelKit\Panel\Alerts\Announcement;
 use PanelKit\Panel\Pages\DashboardPage;
+use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Widgets\ChartWidget;
 use PanelKit\Panel\Widgets\Period;
 use PanelKit\Panel\Widgets\StatWidget;
@@ -82,6 +84,67 @@ final class DashboardPageTest extends TestCase
         $this->assertSame(['subscribers', 'active'], array_column($data['widgets'], 'key'));
         $this->assertSame(['signups'], array_column($data['charts'], 'key'));
         $this->assertSame('Subscribers', $data['widgets'][0]['label']);
+    }
+
+    /**
+     * THE OTHER HALF OF ANNOUNCEMENTS, and until this release the package had
+     * only one of them.
+     *
+     * The model, the composer screen, the Telegram delivery and the per-person
+     * dismissal all shipped. The BANNER did not - it lived in the reference
+     * app's own dashboard - so an installation could write a notice addressed
+     * to everybody and it would appear to nobody. Every test passed, because
+     * what was tested was the writing.
+     *
+     * SUPPLIED BY `DashboardPage`, so any dashboard gets it without asking.
+     * NOT DEFERRED, unlike every widget: a banner arriving after the numbers
+     * pushes the page down under somebody's cursor.
+     */
+    public function test_a_dashboard_carries_the_notices_for_whoever_is_signed_in(): void
+    {
+        $tenant = $this->tenant();
+
+        Announcement::query()->forceCreate([
+            'tenant_id' => $tenant->getKey(),
+            'title' => 'Maintenance on Sunday',
+            'body' => 'Between 02:00 and 04:00.',
+            'severity' => 'warning',
+            'display' => 'banner',
+        ]);
+
+        $data = $this->dataFor($this->operator());
+
+        $this->assertNotInstanceOf(
+            DeferProp::class,
+            $data['announcements'] ?? null,
+            'The banner is deferred, so it arrives after the layout and shifts it.',
+        );
+
+        $this->assertSame(
+            ['Maintenance on Sunday'],
+            array_column($data['announcements'], 'title'),
+        );
+    }
+
+    /**
+     * AND THE PREFIX TRAVELS WITH THEM, because the dismiss route is mounted
+     * inside the panel's group.
+     *
+     * The component posted to a bare `/announcements/{id}/dismiss` while it
+     * lived in the reference app, whose default panel sits at the root. That is
+     * correct there and a 404 in any portal with a path - the × would appear to
+     * work, because the row is hidden locally before the request, and the
+     * banner would return on the next page load with nothing to explain why.
+     */
+    public function test_the_dismiss_prefix_travels_with_them(): void
+    {
+        $data = $this->dataFor($this->operator());
+
+        $this->assertArrayHasKey('prefix', $data);
+        $this->assertSame(
+            rtrim((string) app(PanelManager::class)->panel(FixtureDashboard::panel())?->getPath(), '/'),
+            $data['prefix'],
+        );
     }
 
     /**

@@ -30,8 +30,8 @@ import {
     TrendBadge,
 } from '@panelkit/ui';
 import type { SetupChecklistItem, StatSegment } from '@panelkit/ui';
+import { AnnouncementBanners } from '@panelkit/inertia';
 import { computed, ref } from 'vue';
-import AnnouncementBanners from '@/components/AnnouncementBanners.vue';
 import DashboardFilterPanel from '@/components/DashboardFilters.vue';
 
 interface Widget {

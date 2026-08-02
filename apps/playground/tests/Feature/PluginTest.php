@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Plugins\AnnouncementsPlugin;
+use PanelKit\Panel\Alerts\AnnouncementsPlugin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;

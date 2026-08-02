@@ -10,10 +10,10 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.3.0"
+"panelkit/panel": "^0.4.0"
 ```
 
-Composer reads `^0.3.0` on a `0.x` package as `>=0.3.0 <0.4.0`, which is what you
+Composer reads `^0.4.0` on a `0.x` package as `>=0.4.0 <0.5.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
 The three packages are **versioned together**. `panelkit/panel@0.2.0` expects
@@ -107,6 +107,52 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.3.3 → 0.4.0
+
+**Nothing breaks. Two things arrive and one thing you should add by hand.**
+
+`composer update`, `npm update`, `php artisan panel:update`, then:
+
+```bash
+php artisan panel:permissions sync
+```
+
+That last one matters more than usual: announcements now register a resource, so
+`view_any_announcements` and friends are new ability names your roles do not
+hold yet.
+
+**Add the plugin to `config/panel.php`.** Your published config supplies its
+`plugins` array whole, so the package's default never reaches you:
+
+```php
+'plugins' => [
+    // ...whatever is already there
+    PanelKit\Panel\Alerts\AnnouncementsPlugin::class,
+],
+```
+
+Without it the composer screen does not exist. The banner, the model and the
+delivery are unaffected — they are the package's, not the plugin's.
+
+**Your own base policy can go.** `PanelKit\Panel\Policies\TenantResourcePolicy`
+is the same class the reference app carried for a year. Point your policies at
+it and delete yours — but read this before you do:
+
+An override must use the base class's parameter type **exactly**:
+
+```php
+public function update(Authenticatable&Authorizable $user, ?Model $record = null): bool
+```
+
+Not `update(User $user, ...)`. PHP forbids narrowing a parameter in an override,
+and the failure is a **compile-time fatal** thrown while the class loads — PHPUnit
+reports it only as "Premature end of PHP process" and a web request dies with a
+blank page. Reach for your own model inside the method with an `instanceof`.
+
+**`make:panel-resource --generate` now writes a policy that denies** rather than
+one that permits everybody and warns. Nothing you have already generated
+changes; new ones need `panel:permissions sync` before the screen opens.
 
 ### 0.3.2 → 0.3.3
 

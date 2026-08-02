@@ -19,6 +19,8 @@
  * because a payload containing markup is a payload that cannot be restyled.
  */
 import { Deferred, router } from '@inertiajs/vue3'
+import AnnouncementBanners from '../components/AnnouncementBanners.vue'
+import type { Announcement } from '../types'
 import {
     BarChart,
     ChartCard,
@@ -56,6 +58,18 @@ const props = withDefaults(
         charts?: ChartDeclaration[]
         pageHeading?: string
         pageDescription?: string | null
+        /**
+         * Notices for whoever is signed in, supplied by `DashboardPage`.
+         *
+         * THE DASHBOARD IS WHERE AN ANNOUNCEMENT IS READ, and until this
+         * release the package had nowhere at all: the model, the composer, the
+         * delivery and the dismissal all shipped, and the banner lived in the
+         * reference app - so every other installation could write a notice that
+         * appeared to nobody.
+         */
+        announcements?: Announcement[]
+        /** Panel path prefix; the dismiss route is inside the panel group. */
+        prefix?: string
     }>(),
     { widgets: () => [], charts: () => [], pageHeading: 'Dashboard', pageDescription: null },
 )
@@ -111,6 +125,18 @@ const setPeriod = (key: string, period: string) => {
 
 <template>
     <div class="space-y-6">
+        <!--
+            ABOVE THE HEADING, deliberately. A notice under the page title is a
+            notice below the fold on a laptop, and the whole reason these are
+            banners rather than a screen of their own is that nobody navigates
+            to something they have not been shown.
+        -->
+        <AnnouncementBanners
+            v-if="announcements?.length"
+            :announcements="announcements"
+            :prefix="prefix ?? ''"
+        />
+
         <header v-if="pageHeading">
             <h1 class="text-2xl font-semibold tracking-tight">
                 {{ pageHeading }}

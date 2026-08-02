@@ -7,6 +7,8 @@ namespace PanelKit\Panel\Pages;
 use DateTimeImmutable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use PanelKit\Panel\Alerts\Announcement;
+use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\TenantContext;
 use PanelKit\Panel\Widgets\ChartWidget;
 use PanelKit\Panel\Widgets\Period;
@@ -102,6 +104,30 @@ abstract class DashboardPage extends Page
             // has been counted.
             'widgets' => array_map(static fn (StatWidget $w): array => $w->toArray(), $stats),
             'charts' => array_map(static fn (ChartWidget $c): array => $c->toArray(), $charts),
+
+            /*
+             * THE NOTICES, WHICH ARE THE REASON ANNOUNCEMENTS WORK AT ALL.
+             *
+             * The package shipped the model, the delivery, the dismissal and -
+             * as of this release - the screen that composes one, and had
+             * nowhere any of it was READ. The banner lived in the reference
+             * app's own dashboard, so every other installation could write an
+             * announcement that appeared to nobody.
+             *
+             * NOT DEFERRED, unlike every widget below. A banner that arrives
+             * after the numbers is a banner that pushes the page down under
+             * somebody's cursor, and this is one cheap indexed query rather
+             * than an aggregate.
+             *
+             * The prefix travels with them because the dismiss route is mounted
+             * inside the panel's group; see the component.
+             */
+            'announcements' => $user === null ? [] : array_values(
+                Announcement::activeFor($user->getAuthIdentifier())
+                    ->map(static fn (Announcement $a): array => $a->toBanner($user))
+                    ->all(),
+            ),
+            'prefix' => rtrim((string) app(PanelManager::class)->panel(static::panel())?->getPath(), '/'),
         ];
 
         $tenantKey = (string) (app(TenantContext::class)->currentKey() ?? '');

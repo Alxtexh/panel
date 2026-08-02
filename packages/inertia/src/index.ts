@@ -96,6 +96,8 @@ export const PANEL_PAGES = {
  */
 export { default as RenderHook } from './components/RenderHook.vue'
 export { default as TicketThread } from './components/TicketThread.vue'
+export { default as AnnouncementBanners } from './components/AnnouncementBanners.vue'
+export type { Announcement } from './types'
 export {
     registerRenderHookComponent,
     resolveRenderHookComponent,

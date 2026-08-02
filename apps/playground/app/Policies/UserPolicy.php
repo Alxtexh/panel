@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Contracts\Auth\Authenticatable;
+use PanelKit\Panel\Policies\TenantResourcePolicy;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,7 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class UserPolicy extends TenantResourcePolicy
 {
-    public function delete(User $user, ?Model $record = null): bool
+    public function delete(Authenticatable&Authorizable $user, ?Model $record = null): bool
     {
         if ($record instanceof User && ($this->isSelf($user, $record) || $record->isProtected())) {
             return false;
@@ -33,7 +36,7 @@ final class UserPolicy extends TenantResourcePolicy
         return parent::delete($user, $record);
     }
 
-    public function forceDelete(User $user, ?Model $record = null): bool
+    public function forceDelete(Authenticatable&Authorizable $user, ?Model $record = null): bool
     {
         if ($record instanceof User && ($this->isSelf($user, $record) || $record->isProtected())) {
             return false;
@@ -55,7 +58,7 @@ final class UserPolicy extends TenantResourcePolicy
      * set the organisation up. Refusing that would be locking them out of their
      * own account in a different way.
      */
-    public function update(User $user, ?Model $record = null): bool
+    public function update(Authenticatable&Authorizable $user, ?Model $record = null): bool
     {
         if ($record instanceof User && $record->isProtected() && ! $this->isSelf($user, $record)) {
             return false;
@@ -64,8 +67,14 @@ final class UserPolicy extends TenantResourcePolicy
         return parent::update($user, $record);
     }
 
-    private function isSelf(User $user, User $record): bool
+    /**
+     * `Authenticatable`, not `User`, because the packaged base types the actor
+     * as the two contracts a package can name and PHP forbids narrowing a
+     * parameter in an override - so the value arriving here is only ever known
+     * to be authenticatable. Identity is all this needs of it.
+     */
+    private function isSelf(Authenticatable $user, User $record): bool
     {
-        return $record->getKey() === $user->getKey();
+        return (string) $record->getKey() === (string) $user->getAuthIdentifier();
     }
 }

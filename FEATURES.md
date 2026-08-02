@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 249 files, 41,423 lines | 112 files, 16,600 lines |
-| Vue | 105 components | **198 components** |
+| PHP | 254 files, 42,166 lines | 108 files, 16,190 lines |
+| Vue | 106 components | **197 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -61,6 +61,12 @@ and `JobStatus` for long jobs, count-before-commit on every bulk mutation, and
 filtered export.
 
 ### Authorisation
+
+**`TenantResourcePolicy` is the base you extend**, and `make:panel-resource
+--generate` writes a policy that does exactly that — one line, tenant-checked
+and permission-checked. It used to write five methods returning `true` and a
+console warning; a generated resource was readable by every authenticated user
+until somebody acted on a line of output.
 
 Ability names are **derived** from the registry (`view_any_clients`), never
 stored. `Role` with `grants_all` — a role that holds every ability *including
@@ -150,6 +156,28 @@ use and a migration that succeeds against somebody else's table is worse than
 one that collides. An installation that had ticketing before it was packaged
 points config at what it has; that is the whole migration.
 
+### Announcements
+
+**A notice addressed to everybody, written on one screen and read on another.**
+`AnnouncementResource` composes one — severity, banner or toast, a window, an
+optional button — and the packaged dashboard renders the banners at the top,
+above the heading. Both halves ship; until v0.4.0 only the writing did, so an
+installation could address the whole organisation and reach nobody.
+
+**Dismissing is not deleting.** Closing a banner records that *this* person read
+it and writes them a notification, so the thing they cleared on Tuesday is still
+in the bell on Saturday. A × that destroyed the only copy would let the first
+person to click hide it from everyone.
+
+**No sidebar entry, deliberately.** A screen called Announcements is one people
+open once. Reading happens where they already are; the composer is reached from
+the bell.
+
+`AnnouncementsPlugin` is registered by default and needs no configuration.
+Remove it from `panel.plugins` to drop the composer — the banner, the model and
+the delivery are unaffected, because they are the package's rather than the
+plugin's.
+
 ### Also shipped
 
 Trash across resources · custom fields · import wizard · document templates and
@@ -177,8 +205,8 @@ data, where every page returns 200 and every test passes.
 
 `ResourceIndex` `ResourceForm` `ResourceView` `Trash` `PanelHome`
 `PanelDashboard` `Changelog` `Environment` `TicketAnalysis` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
-`documents/DocumentPrint`, plus the `TicketThread` component the two ticket
-resources render into.
+`documents/DocumentPrint`, plus the `TicketThread` and `AnnouncementBanners`
+components the packaged screens render into.
 
 Layout-free by design: the shell stays yours. A one-line page file per screen is
 what `panel:install` writes.
@@ -191,15 +219,16 @@ Everything below is `apps/playground`. It exists to prove the framework under
 load and to be somewhere real screens live. Treat it as worked examples.
 
 **Resources** — Client, Router, Plan, EditablePlan, ClientSession, Activity,
-User, Announcement. An ISP's domain, on ~250,000 seeded subscribers.
+User. An ISP's domain, on ~250,000 seeded subscribers.
 
 **Screens** — Dashboard and its charts, AI assistant drawer, mail, chat,
 invoices, operations, monitoring, backups, organisation and user management, API
 reference, device preview, docs, lock screen, the searchable build guide.
 
-Ticketing was here until v0.3.2 and is now in Part 1. What is left in the demo
-is configuration: which panel is the operator's, which is the customer's, and
-the two table names it already had rows in.
+Ticketing was here until v0.3.2 and announcements until v0.4.0; both are now in
+Part 1. What is left of them in the demo is configuration — which panel is the
+operator's, which is the customer's, the two ticket table names — and, for
+announcements, one line in `panel.plugins`.
 
 **Three landing designs** — Aurora, Editorial, Console, composed from a section
 library in `@panelkit/ui`, editable from the admin as stored blocks. The
@@ -245,4 +274,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.3.3**, 1,602 tests passing, 13 skipped.
+Current state: **v0.4.0**, 1,604 tests passing, 13 skipped.

@@ -178,9 +178,29 @@ final class GeneratorTest extends TestCase
         $policy = File::get($this->policyPath);
 
         $this->assertStringContainsString('final class UserPolicy', $policy);
-        // The stub must say plainly that it needs review, or it becomes an
-        // accidental grant nobody revisits.
-        $this->assertStringContainsString('REVIEW THIS', $policy);
+
+        /*
+         * IT IS NOT AN ACCIDENTAL GRANT, and this assertion changed shape once
+         * the package began shipping a base policy.
+         *
+         * The stub used to write five methods that all `return true` and a
+         * warning telling you to review it. This test then asserted the WARNING
+         * was present - guarding the apology rather than the behaviour - and a
+         * generated resource really was readable by every authenticated user
+         * until somebody acted on a line of console output.
+         *
+         * Extending `TenantResourcePolicy` makes it deny by construction:
+         * tenancy and the role are both checked, and the abilities do not exist
+         * until `panel:permissions sync` creates them. So what is pinned now is
+         * the base class and the ABSENCE of a blanket allow.
+         */
+        $this->assertStringContainsString('extends TenantResourcePolicy', $policy);
+
+        $this->assertStringNotContainsString(
+            'return true;',
+            $policy,
+            'The generated policy grants something unconditionally.',
+        );
     }
 
     public function test_it_refuses_to_overwrite_without_force(): void

@@ -4,6 +4,63 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.4.0
+
+**Announcements ship whole, and the base policy an application had to write
+itself now comes with the package.**
+
+### Added
+
+- **The announcement composer, and the banner that reads it.** The model, the
+  Telegram delivery, the per-person dismissal and the notification all shipped
+  since 0.2.0 — the *screen that writes one* and the *banner that shows it* did
+  not. So the package could address an entire organisation and reach nobody,
+  and every test passed, because what was tested was the writing.
+  `AnnouncementResource`, `AnnouncementPolicy` and `AnnouncementsPlugin` are now
+  the package's, the plugin is registered by default, and `DashboardPage`
+  supplies the notices to any dashboard without being asked.
+- **`PanelKit\Panel\Policies\TenantResourcePolicy`.** The panel denies any
+  resource whose model has no policy — so the first thing every installation had
+  to write was a base policy, from scratch, and getting it subtly wrong opens a
+  screen to somebody it should not. Extend this instead: tenancy first,
+  permission second, both required, record-level checks re-asserting ownership.
+- **`Support\Ability`**, the one place that answers "does this person hold this
+  ability". `hasPermission()` when the application has one, `can()` when it does
+  not, Spatie's team set from `TenantContext` either way. Both halves were got
+  wrong once each while promoting `TicketPolicy`; the class carries the notes.
+
+### Changed
+
+- **`make:panel-resource --generate` writes a policy that denies.** It used to
+  write five methods returning `true` plus a console warning telling you to
+  review it — and the test guarding it asserted the *warning* was present rather
+  than that the behaviour was safe. A generated resource really was readable by
+  every authenticated user until somebody acted on a line of output. The stub is
+  now one line extending `TenantResourcePolicy`, and nothing is permitted until
+  `panel:permissions sync` creates the abilities.
+
+### Upgrading
+
+Nothing breaks; both additions are opt-in. Two things are worth doing:
+
+**Add the plugin to your published config**, or the composer screen will not
+appear — `mergeConfigFrom` is shallow, so your `plugins` array replaces the
+package's whole:
+
+```php
+'plugins' => [
+    PanelKit\Panel\Alerts\AnnouncementsPlugin::class,
+],
+```
+
+**If you wrote your own base policy, you can delete it** and extend the packaged
+one. One caveat, and it produces an unusually unhelpful error: an override must
+use the base class's parameter type exactly —
+`update(Authenticatable&Authorizable $user, ?Model $record = null)`, never your
+own `User`. PHP forbids narrowing a parameter, and the failure is a fatal thrown
+while the class loads: PHPUnit reports only "Premature end of PHP process" and a
+web request dies blank.
+
 ## 0.3.3
 
 **One check, for the way 0.3.2 fails on an application that already exists.**

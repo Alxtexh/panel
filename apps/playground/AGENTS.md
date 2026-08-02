@@ -354,6 +354,52 @@ RecordAction::make('suspend')
 The ability is checked against THAT record before the button renders and
 again before it runs.
 
+### Write a policy - extend the base, do NOT hand-roll one
+
+`TenantResourcePolicy` ships. It checks tenancy first and the role
+second, both required, and re-asserts ownership on every record-level
+call. `make:panel-resource --generate` already writes this for you.
+
+```php
+final class InvoicePolicy extends TenantResourcePolicy {}
+```
+
+TO ADD A RULE, override a method - and USE THE BASE CLASS'S PARAMETER
+TYPE EXACTLY:
+
+```php
+public function delete(Authenticatable&Authorizable $user, ?Model $record = null): bool
+{
+    if ($record instanceof Invoice && $record->isPaid()) {
+        return false;
+    }
+
+    return parent::delete($user, $record);
+}
+```
+
+NOT `delete(User $user, ...)`. PHP forbids narrowing a parameter in an
+override, so your own model class there is a COMPILE-TIME fatal thrown
+while the class loads - reported as "Premature end of PHP process" under
+PHPUnit and a blank page in a browser. Reach for your model INSIDE the
+method with `instanceof`.
+
+### Announcements are already there
+
+A notice addressed to everybody in the organisation: composed on a
+packaged screen, rendered as a banner at the top of any `DashboardPage`,
+dismissed per person into that person's notifications. DO NOT BUILD A
+NOTIFICATIONS BANNER - this is it.
+
+`AnnouncementsPlugin` is in the package's default `plugins` and needs no
+configuration. If the application has a PUBLISHED `config/panel.php`,
+its `plugins` array replaces the package's whole, so the entry has to be
+added there by hand:
+
+```php
+'plugins' => [PanelKit\Panel\Alerts\AnnouncementsPlugin::class],
+```
+
 ### Turn on ticketing - do NOT write one
 
 A support desk ships in the package: two resources over one table, the
@@ -465,8 +511,8 @@ about itself.
 
 | Key | Class | Panel |
 | --- | --- | --- |
-| `announcements` | `AnnouncementResource` | `admin` |
 | `tickets` | `TicketResource` | `admin` |
+| `announcements` | `AnnouncementResource` | `admin` |
 | `activities` | `ActivityResource` | `admin` |
 | `clients` | `ClientResource` | `admin` |
 | `sessions` | `ClientSessionResource` | `admin` |

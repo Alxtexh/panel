@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Panel\Resources;
+namespace PanelKit\Panel\Alerts;
 
-use PanelKit\Panel\Alerts\Announcement;
 use PanelKit\Panel\Forms\Fields\DateField;
 use PanelKit\Panel\Forms\Fields\RadioField;
 use PanelKit\Panel\Forms\Fields\TextareaField;

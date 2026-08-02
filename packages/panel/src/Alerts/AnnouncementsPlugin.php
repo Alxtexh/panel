@@ -2,29 +2,26 @@
 
 declare(strict_types=1);
 
-namespace App\Plugins;
+namespace PanelKit\Panel\Alerts;
 
-use App\Panel\Resources\AnnouncementResource;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\Plugins\Plugin;
 use PanelKit\Panel\Plugins\PluginContext;
 
 /**
- * A plugin, living where a real one would.
+ * A plugin that now ships in the package it was written to imitate.
  *
- * IT IS HERE TO BE THE PROOF, and to be the example. Everything a published
- * package would do it does - installs a whole CRUD screen with its routes, its
- * policy checks, its tenant scope and its navigation entry, and chooses which
- * portals it belongs in - and it does all of it without a line being added to
- * `routes/web.php`, `Pages.php` or any panel provider.
+ * IT WAS THE PROOF AND IS NOW THE THING. Everything a published package would do
+ * it does - installs a whole CRUD screen with its routes, its policy checks, its
+ * tenant scope and its navigation decision - without a line being added to
+ * `routes/web.php` or any panel provider. It lived in the reference app as a
+ * demonstration of that, which meant an installation wanting somewhere to WRITE
+ * an announcement had to copy it: the model, the banner, the delivery and the
+ * dismissal all shipped, and the one screen that composes one did not.
  *
- * IN A REAL PACKAGE this class and its resource would ship in
- * `vendor/acme/announcements`, and the package's own service provider would call
- * `PanelManager::plugin(new AnnouncementsPlugin)`. Laravel discovers the
- * provider, the provider registers the plugin, and `composer require` is the
- * whole installation. It sits in the application here only because the
- * playground is one repository - the code is identical either way, which is the
- * point.
+ * REGISTERED FROM `config/panel.php`'s `plugins` list, like `TicketingPlugin`.
+ * Read that class's note on why a plugin nobody hands to the manager is a plugin
+ * that does not exist.
  *
  * ONE PORTAL, NOT EVERY TENANT PORTAL, and that limit is worth understanding.
  * A resource belongs to exactly one panel - its key is a URL segment and an

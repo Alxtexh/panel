@@ -9,8 +9,8 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use PanelKit\Panel\Models\Ticket;
 use DateTimeInterface;
 use PanelKit\Panel\Support\Abilities;
+use PanelKit\Panel\Support\Ability;
 use PanelKit\Panel\Support\TenantContext;
-use Spatie\Permission\PermissionRegistrar;
 
 /**
  * PROMOTED FROM THE REFERENCE APP, with two substitutions and no change of
@@ -25,7 +25,7 @@ use Spatie\Permission\PermissionRegistrar;
  * application's `hasPermission()` when it has one, `can()` when it does not,
  * and Spatie's team told which organisation to filter by either way. Both
  * halves are load-bearing and both were got wrong once while promoting this
- * file; `may()` and `withPermissionsTeam()` below each carry the note.
+ * file; `Support\Ability` carries the note.
  *
  * Who may read and act on a ticket - roadmap 6.1, written BEFORE any screen.
  *
@@ -288,72 +288,13 @@ final class TicketPolicy
     }
 
     /**
-     * DOES THIS PERSON HOLD THE ABILITY.
-     *
-     * `hasPermission()` FIRST, AND THAT IS NOT A STYLE CHOICE. It is the same
-     * duck-typed check `PageController`, `SingularController`, `StatWidget`,
-     * `ChartWidget` and `Impersonation` already make, and the reason is that
-     * `can()` CANNOT EXPRESS A `grants_all` ROLE: a role that holds every
-     * ability including ones invented later is PanelKit's concept, stored in a
-     * column Spatie has never heard of. Spatie's `Gate::before` answers from the
-     * pivot tables alone, so a superuser reads as holding nothing.
-     *
-     * Promoting this policy replaced `hasPermission()` with `can()` on the
-     * grounds that a package cannot name an application method - true, and the
-     * substitution was still wrong. It denied every administrator the ticket
-     * list while every ticket test stayed green, because the tests grant named
-     * abilities and administrators hold none: the failure lived exactly where
-     * nothing looked.
-     *
-     * `can()` IS THE FALLBACK, for an application that has no such method - a
-     * fresh install with a plain user model, where Spatie's pivot rows are the
-     * whole answer and `grants_all` does not exist to be missed.
+     * DOES THIS PERSON HOLD THE ABILITY - asked through `Support\Ability`,
+     * which carries the two notes that matter: why `hasPermission()` is tried
+     * before `can()`, and why Spatie's team is set first. Both were got wrong
+     * while promoting this file; read that class before changing this line.
      */
     private function may(Authenticatable&Authorizable $user, string $action): bool
     {
-        $ability = Abilities::name($action, 'tickets');
-
-        return $this->withPermissionsTeam(static fn (): bool => method_exists($user, 'hasPermission')
-            ? (bool) $user->hasPermission($ability)
-            : $user->can($ability));
-    }
-
-    /**
-     * RUN THE CHECK WITH THIS ORGANISATION AS SPATIE'S TEAM.
-     *
-     * `can()` reaches Spatie through its `Gate::before` hook, and that hook
-     * filters roles by the team id held in the registrar. A REQUEST sets it -
-     * see `SetPermissionsTeam` - and a test, a console command and a queued job
-     * do not. So without this the same person with the same roles is permitted
-     * inside a request and denied everywhere else, with nothing at the call site
-     * to explain why: `panel:permissions`, a scheduled escalation, a job that
-     * closes stale tickets, all silently authorising nobody.
-     *
-     * That is the FOURTH appearance of this exact bug in this codebase, and the
-     * reference app's `hasPermission()` names the other three. A guard must not
-     * depend on ambient state.
-     *
-     * SET FROM `TenantContext`, NOT FROM THE USER, and not left to whatever was
-     * there. It is the same value the middleware sets, so inside a request this
-     * changes nothing; everywhere else it supplies what nothing else did. The
-     * previous id is restored in a `finally` - under a long-lived worker an id
-     * left behind is the next request's default, for a different tenant.
-     */
-    private function withPermissionsTeam(callable $body): bool
-    {
-        if (! class_exists(PermissionRegistrar::class)) {
-            return (bool) $body();
-        }
-
-        $registrar = app(PermissionRegistrar::class);
-        $previous = $registrar->getPermissionsTeamId();
-
-        $registrar->setPermissionsTeamId(app(TenantContext::class)->currentKey());
-
-        try {
-            return (bool) $body();
-        } finally {
-            $registrar->setPermissionsTeamId($previous);
-        }
+        return Ability::held($user, Abilities::name($action, 'tickets'));
     }
 }

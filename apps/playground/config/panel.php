@@ -7,7 +7,7 @@ use App\Models\SavedView;
 use App\Models\Tenant;
 use App\Panel\Singulars\BillingSettingsResource;
 use App\Panel\Singulars\LandingPageResource;
-use App\Plugins\AnnouncementsPlugin;
+use PanelKit\Panel\Alerts\AnnouncementsPlugin;
 use PanelKit\Panel\Ticketing\TicketingPlugin;
 
 return [
@@ -381,8 +381,17 @@ return [
     | the other supported way in.
     */
     'plugins' => [
-        AnnouncementsPlugin::class,
         TicketingPlugin::class,
+
+        /*
+        | LISTED EVEN THOUGH THE PACKAGE DEFAULTS TO IT, because this file is a
+        | PUBLISHED config and `mergeConfigFrom` is shallow: this array replaces
+        | the package's whole, so anything the package adds to its own `plugins`
+        | never reaches an installation that published one. That is the upgrade
+        | every existing consumer has to make by hand, and the demo makes it the
+        | same way rather than pretending the default arrives.
+        */
+        AnnouncementsPlugin::class,
     ],
 
     /*

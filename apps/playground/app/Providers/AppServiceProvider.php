@@ -12,7 +12,6 @@ use App\Models\Plan;
 use App\Models\Router;
 use PanelKit\Panel\Models\Ticket;
 use App\Models\User;
-use App\Policies\AnnouncementPolicy;
 use App\Policies\AuditEntryPolicy;
 use App\Policies\ClientPolicy;
 use App\Policies\ClientSessionPolicy;
@@ -109,11 +108,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(AuditEntry::class, AuditEntryPolicy::class);
 
         /*
-         | THE ANNOUNCEMENT MODEL LIVES IN THE PACKAGE and its policy here,
-         | because who may address the whole organisation is an application's
-         | decision rather than a framework's.
+         | ANNOUNCEMENTS ARE NOT MAPPED HERE ANY MORE. The model, its policy and
+         | the screen that writes one all ship in the package, which registers
+         | the mapping in its own `boot()`. An application that disagrees about
+         | who may address the whole organisation calls `Gate::policy` here and
+         | wins, because application providers boot after package ones.
          */
-        Gate::policy(Announcement::class, AnnouncementPolicy::class);
 
         // Same reason: `CustomField` lives in the package, and its policy is
         // an application decision - see CustomFieldPolicy's own note on why
