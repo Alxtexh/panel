@@ -4,57 +4,6 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
-## Unreleased
-
-### Added
-
-- **`PkCard`** — the ordinary block of content the package did not have.
-  `StatCard` and `ChartCard` are dashboard widgets; everything else hand-rolled
-  `rounded-lg border bg-card` on a div, fifteen times in the reference app
-  alone. Optional title, description, `#actions` and `#footer`; `:padded="false"`
-  for a table that fills its card. **No tone or variant props**, deliberately -
-  those grow one at a time until the component is a styling language, and a card
-  that needs a red border takes one through `class`, which merges.
-
-- **`useUnsavedChanges` + `useUnsavedGuard`** — the half `UnsavedBar` does not
-  do. The bar shipped and was exported, and a custom page still could not use
-  it, because a bar draws a decision it does not make: `RecordForm` knows it is
-  dirty, and a page holding its own state had to write the snapshot, the
-  comparison and the `beforeunload` handler itself.
-
-  The comparison is **key-order-insensitive**, which is the part a hand-rolled
-  version gets wrong - `JSON.stringify` preserves insertion order, so state
-  rebuilt from a response compares as changed and the page announces unsaved
-  changes for a save that just succeeded. `useUnsavedGuard` (in
-  `@panelkit/inertia`, because it needs the router) confirms before a visit
-  abandons the work, which `beforeunload` cannot see: an Inertia navigation
-  never unloads the document.
-
-- **`panel:install --auth`.** `make:panel --auth` covered a portal you
-  *generate*; the path everybody actually walks - `composer require`,
-  `panel:install`, open the panel - still ended at "install a starter kit",
-  which is half of the blocker the port report filed.
-
-  The `verify-install.sh` harness was the evidence: it worked around the gap by
-  re-running `make:panel admin --path='' --auth --force`, and `--force`
-  **replaces the provider `panel:install` had just written and patched** - so
-  the harness was quietly undoing part of the install it was verifying. It now
-  uses the flag and asserts both artefacts exist.
-
-  The scaffolding moved into a shared trait rather than being written twice.
-  Two commands producing sign-in flows separately is how they end up differing
-  in throttling, session regeneration and post-authentication checks - the
-  failure the report describes happening *across* applications, and there is no
-  reason to reproduce it inside one package.
-
-### Changed
-
-- **The "no `login` route" advice is no longer stale.** `panel:install` sent
-  people to Breeze or Fortify without mentioning that this package now ships a
-  sign-in. It stays silent when a panel scaffolds its own, and names the flag
-  when nothing does. The README says the same, and now also warns about a
-  composer `path` repository composer **copied** rather than symlinked.
-
 ## 0.6.0
 
 **Everything a real port asked for that was still open.** This release closes the
@@ -144,6 +93,45 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
   the log. `panel:update` writes these; the check is for the installation that
   ran `composer update` and did not.
 
+- **`PkCard`** — the ordinary block of content the package did not have.
+  `StatCard` and `ChartCard` are dashboard widgets; everything else hand-rolled
+  `rounded-lg border bg-card` on a div, fifteen times in the reference app
+  alone. Optional title, description, `#actions` and `#footer`; `:padded="false"`
+  for a table that fills its card. **No tone or variant props**, deliberately -
+  those grow one at a time until the component is a styling language, and a card
+  that needs a red border takes one through `class`, which merges.
+
+- **`useUnsavedChanges` + `useUnsavedGuard`** — the half `UnsavedBar` does not
+  do. The bar shipped and was exported, and a custom page still could not use
+  it, because a bar draws a decision it does not make: `RecordForm` knows it is
+  dirty, and a page holding its own state had to write the snapshot, the
+  comparison and the `beforeunload` handler itself.
+
+  The comparison is **key-order-insensitive**, which is the part a hand-rolled
+  version gets wrong - `JSON.stringify` preserves insertion order, so state
+  rebuilt from a response compares as changed and the page announces unsaved
+  changes for a save that just succeeded. `useUnsavedGuard` (in
+  `@panelkit/inertia`, because it needs the router) confirms before a visit
+  abandons the work, which `beforeunload` cannot see: an Inertia navigation
+  never unloads the document.
+
+- **`panel:install --auth`.** `make:panel --auth` covered a portal you
+  *generate*; the path everybody actually walks - `composer require`,
+  `panel:install`, open the panel - still ended at "install a starter kit",
+  which is half of the blocker the port report filed.
+
+  The `verify-install.sh` harness was the evidence: it worked around the gap by
+  re-running `make:panel admin --path='' --auth --force`, and `--force`
+  **replaces the provider `panel:install` had just written and patched** - so
+  the harness was quietly undoing part of the install it was verifying. It now
+  uses the flag and asserts both artefacts exist.
+
+  The scaffolding moved into a shared trait rather than being written twice.
+  Two commands producing sign-in flows separately is how they end up differing
+  in throttling, session regeneration and post-authentication checks - the
+  failure the report describes happening *across* applications, and there is no
+  reason to reproduce it inside one package.
+
 ### Changed
 
 - **`panel:update` reports uninstalled plugins rather than unmergeable config
@@ -151,6 +139,12 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
   shallow merge could not supply; the deep merge supplies them, so that report
   could never fire again - and a report that always says "nothing" is worse
   than no report, because it is read as evidence.
+
+- **The "no `login` route" advice is no longer stale.** `panel:install` sent
+  people to Breeze or Fortify without mentioning that this package now ships a
+  sign-in. It stays silent when a panel scaffolds its own, and names the flag
+  when nothing does. The README says the same, and now also warns about a
+  composer `path` repository composer **copied** rather than symlinked.
 
 ### Fixed
 

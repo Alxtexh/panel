@@ -153,6 +153,13 @@ the old one could no longer report anything.
   `resources/js/pages`, which routes fine and renders blank.
 - `make:panel-resource --generate` writes a commented action example into the
   table chain.
+- `panel:install --auth` scaffolds sign-in for the **default** panel, not just
+  for a portal you generate with `make:panel`. Both write it through one shared
+  trait, so there is only ever one set of throttling and session rules.
+- `PkCard` — the ordinary block of content, with title, description, `#actions`
+  and `#footer` slots. `useUnsavedChanges` (in `@panelkit/ui`) and
+  `useUnsavedGuard` (in `@panelkit/inertia`) give a page that is not a record
+  form the same dirty tracking and navigation guard `UnsavedBar` draws.
 
 ### 0.4.0 → 0.5.0
 
