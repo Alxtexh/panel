@@ -103,6 +103,13 @@ done
 
 # ------------------------------------------------------------------ the install
 
+# THE VUE PLUGIN, which npm's peer resolution does not supply: `vue` and
+# `@inertiajs/vue3` arrive as peers of @panelkit/inertia, and the Vite plugin
+# that compiles a `.vue` file is a BUILD dependency of the application rather
+# than of either package.
+say "npm install @vitejs/plugin-vue"
+npm install --silent --no-audit --no-fund --save-dev @vitejs/plugin-vue 2>&1 | tail -2
+
 say "php artisan panel:install"
 php artisan panel:install --no-interaction 2>&1 | tail -5
 
@@ -134,6 +141,19 @@ php artisan make:panel-resource Customer --generate --no-interaction 2>&1 | tail
 # resource, creates the permission rows, and creates an Administrator role holding
 # them. If the migration did not run, or `grants_all` is missing, or the model is
 # not autoloaded, this is where it surfaces.
+# THE BUILD. This is the one step Filament does not need and we do: it renders
+# Blade on the server and publishes precompiled assets, we send a schema once
+# and render on the client. `panel:install` has published the root view, the
+# bootstrap, the layout and the stylesheet, and wired Vite - so this is a plain
+# `npm run build` rather than four files somebody has to write first.
+say "npm run build"
+npm run build 2>&1 | tail -3
+
+[[ -f public/build/manifest.json ]] \
+    || fail "npm run build produced no manifest - the published bootstrap does not compile."
+
+say "Assets built from the published bootstrap"
+
 say "php artisan panel:permissions sync"
 php artisan panel:permissions sync --no-interaction 2>&1 | tail -5
 

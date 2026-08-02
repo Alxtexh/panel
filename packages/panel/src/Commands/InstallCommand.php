@@ -33,6 +33,7 @@ final class InstallCommand extends Command
         $this->publishConfig();
         $this->createTree();
         $this->publishBootstrap();
+        $this->wireVite();
         $this->createDefaultPanel();
         $this->writePageFiles();
         $this->checkTenancy();
@@ -41,7 +42,7 @@ final class InstallCommand extends Command
 
         $this->newLine();
         $this->components->info('Done. Next:');
-        $this->line('  1. npm install @panelkit/ui @panelkit/inertia && npm run build');
+        $this->line('  1. npm install @panelkit/ui @panelkit/inertia @vitejs/plugin-vue && npm run build');
         $this->line('     The screens are Vue, so they are built rather than published. The');
         $this->line('     published resources/css/app.css already points Tailwind at both');
         $this->line('     packages - without that every utility used only inside them is');
@@ -117,6 +118,71 @@ final class InstallCommand extends Command
         foreach ($skipped as $file) {
             $this->components->twoColumnDetail('Kept yours', $file);
         }
+    }
+
+    /**
+     * POINT VITE AT THE BOOTSTRAP AND TEACH IT VUE.
+     *
+     * A STOCK LARAVEL APPLICATION BUILDS `resources/js/app.js` AND HAS NO VUE
+     * PLUGIN, so the file published above is compiled by nothing and the first
+     * panel page renders "Vite manifest not found" - or worse, builds and then
+     * fails on the first `.vue` import with a message about unexpected syntax.
+     *
+     * EDITED ONLY WHEN IT IS THE STOCK SHAPE, and REPORTED when it is not. An
+     * earlier version of this pattern regex-searched `bootstrap/app.php` for a
+     * closure a stock application does not have, found nothing, and silently
+     * did nothing - so the generator reported success and the routes it wrote
+     * were never loaded. A patch that cannot apply must say so and print the
+     * edit, which is the difference between a minute and an afternoon.
+     */
+    private function wireVite(): void
+    {
+        $path = collect(['vite.config.ts', 'vite.config.js'])
+            ->map(static fn (string $f): string => base_path($f))
+            ->first(static fn (string $f): bool => file_exists($f));
+
+        if ($path === null) {
+            $this->components->warn('No vite.config found. Add the Vue plugin and point the input at resources/js/app.ts yourself.');
+
+            return;
+        }
+
+        $config = (string) file_get_contents($path);
+        $name = basename($path);
+
+        if (str_contains($config, '@vitejs/plugin-vue')) {
+            $this->components->twoColumnDetail('Kept yours', $name);
+
+            return;
+        }
+
+        if (! str_contains($config, "resources/js/app.js")) {
+            $this->components->warn("{$name} is not the stock shape, so it was left alone. Add:");
+            $this->line("  import vue from '@vitejs/plugin-vue';   // and put vue() in plugins");
+            $this->line("  input: ['resources/css/app.css', 'resources/js/app.ts']");
+
+            return;
+        }
+
+        $config = str_replace("resources/js/app.js", "resources/js/app.ts", $config);
+
+        $config = preg_replace(
+            "/^import laravel from 'laravel-vite-plugin';$/m",
+            "import laravel from 'laravel-vite-plugin';\nimport vue from '@vitejs/plugin-vue';",
+            $config,
+            1,
+        );
+
+        /*
+         * AFTER `laravel(...)`, because plugin order decides who transforms a
+         * `.vue` file first and the Laravel plugin expects to see the entry
+         * before Vue rewrites it.
+         */
+        $config = (string) preg_replace('/^(\s*)tailwindcss\(\),$/m', "$1vue(),\n$1tailwindcss(),", $config, 1);
+
+        file_put_contents($path, $config);
+
+        $this->components->twoColumnDetail('Wired', $name);
     }
 
     /**
