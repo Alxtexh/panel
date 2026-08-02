@@ -142,12 +142,13 @@ final class IndexKnowledgeCommand extends Command
                 : 'in PHP, capped at '.config('panel.knowledge.scan_limit', 5000).' passages',
         );
         /*
-         * THE DEFAULT IS REPEATED HERE ON PURPOSE. `mergeConfigFrom` merges only
-         * the top level, so an application that sets `knowledge.sources` and
-         * nothing else replaces the package's whole `knowledge` array - every
-         * reader has to carry its own fallback or it reads null. Printing an
-         * empty embedder on the status screen would be a small lie about which
-         * one is running.
+         * THE DEFAULT IS REPEATED HERE, and now only as a belt. `ConfigMerge`
+         * merges the package's config into a published one key by key, so an
+         * application that sets `knowledge.sources` and nothing else keeps the
+         * packaged embedder rather than replacing the whole `knowledge` array -
+         * which is what the shallow `mergeConfigFrom` did, leaving every reader
+         * to carry its own fallback or read null. A blank embedder on the status
+         * screen would be a small lie about which one is running.
          */
         $this->components->twoColumnDetail(
             'Embedder',

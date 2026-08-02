@@ -152,50 +152,37 @@ final class PanelUpdateTest extends TestCase
     }
 
     /**
-     * A KEY THE MERGE CANNOT SUPPLY IS NAMED.
+     * A PLUGIN THIS VERSION SHIPS AND A PUBLISHED CONFIG DOES NOT INSTALL.
      *
-     * `mergeConfigFrom` is shallow: a published `config/panel.php` that has an
-     * array wins that array WHOLE, so a key a new version added inside it is
-     * read as unset however the package file reads. Where the call site has no
-     * default of its own, the feature simply never appears - which is
-     * indistinguishable from a version that did not ship it.
+     * The merge is deliberately not a union for lists, so `plugins` stays
+     * whatever the application published - and a plugin added to the packaged
+     * default afterwards reaches nobody. That is how `TicketingPlugin` shipped
+     * to a release of installations that could configure it and never see it.
      */
-    public function test_a_key_inside_a_published_array_is_reported(): void
-    {
-        $missing = ConfigDrift::keysNotSuppliedByMerge(
-            ['env' => ['editable' => [], 'backup' => true], 'discover_pages' => 'app/Panel/Pages'],
-            ['env' => ['editable' => ['MAIL_HOST']]],
-        );
-
-        $this->assertSame(['env.backup'], $missing);
-    }
-
-    /**
-     * A TOP-LEVEL KEY IS NOT REPORTED, because the shallow merge does supply it.
-     * Naming it would put a line in front of every upgrader that needs no
-     * action - and a report where most rows need nothing is one nobody reads to
-     * the end, including on the release where a row mattered.
-     */
-    public function test_a_top_level_key_is_left_alone(): void
+    public function test_a_plugin_the_published_config_lacks_is_reported(): void
     {
         $this->assertSame(
-            [],
-            ConfigDrift::keysNotSuppliedByMerge(['changelog' => []], []),
+            ['Packaged\\NewPlugin'],
+            ConfigDrift::pluginsNotSuppliedByMerge(
+                ['plugins' => ['Packaged\\OldPlugin', 'Packaged\\NewPlugin']],
+                ['plugins' => ['Packaged\\OldPlugin', 'Their\\OwnPlugin']],
+            ),
         );
     }
 
     /**
-     * AND A SHORTENED LIST IS A CHOICE, NOT DRIFT. An application that cut
-     * `abilities` to the four it uses configured that key; reporting the
-     * difference would be telling somebody their deliberate edit is a mistake.
+     * A CONFIG THAT NEVER NAMES `plugins` IS NOT REPORTED, because the merge
+     * supplies the packaged list whole - nothing is missing. Reporting it would
+     * name every packaged plugin to somebody who has all of them, and a report
+     * where most rows need nothing is one nobody reads to the end.
      */
-    public function test_a_narrowed_list_is_not_drift(): void
+    public function test_an_absent_plugins_key_is_left_alone(): void
     {
         $this->assertSame(
             [],
-            ConfigDrift::keysNotSuppliedByMerge(
-                ['abilities' => ['view', 'create', 'delete']],
-                ['abilities' => ['view']],
+            ConfigDrift::pluginsNotSuppliedByMerge(
+                ['plugins' => ['Packaged\\OnlyPlugin']],
+                ['tenancy' => ['mode' => 'single']],
             ),
         );
     }

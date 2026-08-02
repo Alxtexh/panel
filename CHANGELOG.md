@@ -27,6 +27,30 @@ Versioning policy, and what counts as a breaking change, are in
   select-all-matching run is validated **before the job is queued**: a failure
   an operator can fix belongs in the response they are looking at.
 
+- **A setting added inside an array reaches an existing install.** The
+  package's config is merged into a published `config/panel.php` **key by
+  key**. `mergeConfigFrom` is one level deep, so a published `auth` block won
+  whole and `auth.password.max_age_days` was read as unset - which, where the
+  call site has no default of its own, is shaped like an absent feature rather
+  than a missing setting: the screen does not appear, nothing errors, and "this
+  version did not ship it" is the reasonable and wrong conclusion. It was
+  reported from a real port and it was true of this repository's own reference
+  app, whose published config had no `auth.max_attempts`.
+
+  **A list is still yours whole**, deliberately: shortening `abilities` is a
+  decision, and unioning `plugins` back would reinstall something somebody
+  removed. `panel:update` therefore reports plugins this version ships that
+  your config does not install - the one thing the merge cannot fix, and how
+  `TicketingPlugin` reached nobody for a release.
+
+### Changed
+
+- **`panel:update` reports uninstalled plugins rather than unmergeable config
+  keys.** The old report walked for keys inside a published array that the
+  shallow merge could not supply; the deep merge supplies them, so that report
+  could never fire again - and a report that always says "nothing" is worse
+  than no report, because it is read as evidence.
+
 ### Fixed
 
 - **A searchable select inside an action form now searches.** `field-options`

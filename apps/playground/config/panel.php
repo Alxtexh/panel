@@ -384,12 +384,14 @@ return [
         TicketingPlugin::class,
 
         /*
-        | LISTED EVEN THOUGH THE PACKAGE DEFAULTS TO IT, because this file is a
-        | PUBLISHED config and `mergeConfigFrom` is shallow: this array replaces
-        | the package's whole, so anything the package adds to its own `plugins`
-        | never reaches an installation that published one. That is the upgrade
-        | every existing consumer has to make by hand, and the demo makes it the
-        | same way rather than pretending the default arrives.
+        | LISTED EVEN THOUGH THE PACKAGE DEFAULTS TO IT, because a LIST does not
+        | merge. `ConfigMerge` fills in settings the package added inside an
+        | array this file publishes, but a list is a value, not a namespace -
+        | unioning this one would reinstall a plugin somebody deliberately
+        | removed. So this array replaces the package's whole, anything the
+        | package adds to its own `plugins` never arrives, and `panel:update`
+        | reports it by name. The demo makes that upgrade by hand rather than
+        | pretending the default reaches it.
         */
         AnnouncementsPlugin::class,
     ],
@@ -429,11 +431,11 @@ return [
         | history stay where it is: no rename on a live table, no data copy, no
         | downtime.
         |
-        | AND IT HAD TO BE WRITTEN HERE RATHER THAN INHERITED. `mergeConfigFrom`
-        | is shallow, so this `ticketing` array wins whole and the package's
-        | `tables` key never reaches it - which `panel:update` reports by name,
-        | and which would otherwise have sent every query to a table that does
-        | not exist.
+        | THESE ARE A CHOICE, NOT A WORKAROUND. `ConfigMerge` would supply the
+        | package's `tables` key into this published `ticketing` array on its
+        | own - it did not, while the merge was shallow, which sent every query
+        | to a table that does not exist - but the defaults are the wrong names
+        | for this application, so it names the two it has.
         */
         'tables' => [
             'tickets' => 'tickets',

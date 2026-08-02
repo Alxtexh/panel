@@ -25,7 +25,7 @@ final class PanelServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/panel.php', 'panel');
+        $this->mergePanelConfig();
 
         // Scoped, not singleton. See note above - this is load-bearing.
         $this->app->scoped(PanelManager::class, fn () => new PanelManager);
@@ -218,6 +218,34 @@ final class PanelServiceProvider extends ServiceProvider
         Alerts\AnnouncementDelivery::attach();
         $this->registerTelegram();
         $this->registerOctaneFlush();
+    }
+
+    /**
+     * The package's config, merged INTO a published one KEY BY KEY.
+     *
+     * `mergeConfigFrom` is shallow, so a published `config/panel.php` supplies
+     * each top-level array WHOLE and every key a later version added inside one
+     * is read as unset - the shape of an absent feature rather than of a
+     * missing setting. `ConfigMerge` carries the rule and the reasoning; the
+     * short version is that maps are namespaces and lists are values.
+     *
+     * THE CACHE CHECK IS `mergeConfigFrom`'s OWN and is not optional. A cached
+     * config file already holds the merged result, and merging again would
+     * quietly reinstate package defaults over an installation that changed them
+     * since - the opposite of the bug this method exists to fix.
+     */
+    private function mergePanelConfig(): void
+    {
+        if ($this->app->configurationIsCached()) {
+            return;
+        }
+
+        $config = $this->app->make('config');
+
+        $config->set('panel', Support\ConfigMerge::deep(
+            require __DIR__.'/../config/panel.php',
+            (array) $config->get('panel', []),
+        ));
     }
 
     /**

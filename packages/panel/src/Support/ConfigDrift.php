@@ -5,71 +5,58 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Support;
 
 /**
- * The config keys a new version added that `mergeConfigFrom` will NOT supply.
+ * The one thing the config merge cannot fix: a plugin added to the package's
+ * own `plugins` list after an installation published its config.
  *
- * THIS IS NARROWER THAN "NEW KEYS", deliberately. `mergeConfigFrom` is a
- * shallow merge: a top-level key absent from a published `config/panel.php`
- * still gets the package default, so naming those would be noise on every
- * upgrade. What the merge cannot rescue is a key added INSIDE an array the
- * application already publishes - the published `['env' => [...]]` wins whole,
- * and `env.editable` is simply not there.
+ * THIS CLASS USED TO REPORT SOMETHING ELSE. It walked the two files for keys
+ * inside a published array - `auth.password.max_age_days` and its kind - which
+ * `mergeConfigFrom` could not supply because it merges one level deep.
+ * `ConfigMerge` now supplies them, so that report could never fire again, and a
+ * report that always says "nothing" is worse than no report: it is read as
+ * evidence.
  *
- * `config()` THEN READS THAT KEY AS UNSET. How bad that is depends on the call
- * site: one that passes its own default degrades quietly to it, and one that
- * does not gets null. The first case is merely invisible - the value cannot be
- * edited from the file that appears to hold it. The second is silent and shaped
- * like an ABSENT FEATURE: the screen the key enables does not appear, nothing
- * errors, and the reasonable conclusion - "this version did not ship it" - is
- * wrong.
+ * WHAT SURVIVES THE MERGE IS THE LIST, deliberately. A list is a value, not a
+ * namespace - an application that cut `abilities` to the four it uses
+ * configured that key, and unioning the package's back in would silently
+ * reinstall a plugin somebody removed on purpose. So `plugins` stays whatever
+ * the application published, and the cost is that a plugin a NEW VERSION ships
+ * reaches nobody who published a config before it existed.
  *
- * IT IS A SEPARATE CLASS BECAUSE IT HAD TO BE TESTABLE WITHOUT A COMMAND. As a
- * private method it could only be reached through `panel:update`'s output, and
- * that command ends by calling `panel:doctor` - so `Artisan::output()` returns
- * DOCTOR's buffer, not the one being asserted on. The test passed run alone and
- * failed in the suite, which is the shape of an assertion that was never really
- * reading what it claimed to.
+ * THAT IS NOT HYPOTHETICAL. `TicketingPlugin` shipped in the package for a
+ * release and was registered nowhere: `composer require` installed the classes,
+ * somebody set `panel.ticketing.operator`, and got no route, no navigation
+ * entry and no error - because the plugin they were configuring had never been
+ * handed to the manager. `AnnouncementsPlugin` has exactly the same exposure.
+ *
+ * ONLY `plugins`, and not every list. `pagination.per_page_options` and
+ * `alerts.telegram.ignore` are lists an installation is EXPECTED to shorten;
+ * reporting those differences would put lines needing no action in front of
+ * every upgrader, and a report where most rows need nothing is one nobody reads
+ * to the end - including on the release where a row mattered.
  */
 final class ConfigDrift
 {
     /**
      * @param  array<mixed>  $ours  The package's own config file, as an array.
      * @param  array<mixed>  $theirs  The application's published copy.
-     * @return list<string> Dot paths, without the `panel.` prefix.
+     * @return list<string> Plugin classes the package registers and they do not.
      */
-    public static function keysNotSuppliedByMerge(array $ours, array $theirs, string $prefix = ''): array
+    public static function pluginsNotSuppliedByMerge(array $ours, array $theirs): array
     {
-        $missing = [];
+        $packaged = array_filter((array) ($ours['plugins'] ?? []), 'is_string');
 
-        foreach ($ours as $key => $value) {
-            /*
-             * A LIST IS A VALUE, NOT A NAMESPACE. An application that shortened
-             * `abilities` to the four it actually uses has configured that key,
-             * not lost three - reporting the difference would be telling
-             * somebody their deliberate edit is drift.
-             */
-            if (is_int($key)) {
-                continue;
-            }
-
-            $path = $prefix === '' ? (string) $key : $prefix.'.'.$key;
-
-            if (! array_key_exists($key, $theirs)) {
-                // Top level is skipped: the shallow merge covers it.
-                if ($prefix !== '') {
-                    $missing[] = $path;
-                }
-
-                continue;
-            }
-
-            // Both sides have the key and both are arrays, so the published one
-            // replaces the default whole - which is the condition that makes
-            // anything missing below here unreachable.
-            if (is_array($value) && is_array($theirs[$key])) {
-                $missing = [...$missing, ...self::keysNotSuppliedByMerge($value, $theirs[$key], $path)];
-            }
+        /*
+         * A CONFIG THAT NEVER NAMES `plugins` GETS THE DEFAULT WHOLE, because
+         * the merge is only blocked by a key the application actually supplies.
+         * Treating an absent key as an empty list would report every packaged
+         * plugin to somebody who has all of them.
+         */
+        if (! array_key_exists('plugins', $theirs)) {
+            return [];
         }
 
-        return $missing;
+        $installed = array_filter((array) $theirs['plugins'], 'is_string');
+
+        return array_values(array_diff($packaged, $installed));
     }
 }

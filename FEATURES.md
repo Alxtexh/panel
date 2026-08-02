@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 259 files, 43,525 lines | 108 files, 16,190 lines |
+| PHP | 260 files, 44,081 lines | 108 files, 16,190 lines |
 | Vue | 111 components | **197 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
@@ -285,13 +285,21 @@ php artisan panel:update
 ```
 
 Writes the page files a new version added, invalidates the schema cache, names
-pending migrations without running them, names config keys your published
-`config/panel.php` is missing, refreshes `AGENTS.md`, and ends with
-`panel:doctor` — whose exit code becomes its own.
+pending migrations without running them, names plugins this version ships that
+your published `config/panel.php` does not install, refreshes `AGENTS.md`, and
+ends with `panel:doctor` — whose exit code becomes its own.
+
+**Settings added inside an array arrive on their own.** The package's config is
+merged into a published one *key by key*, so a version that adds
+`auth.password.max_age_days` does not need you to notice — the shallow
+`mergeConfigFrom` handed the published `auth` block over whole and the new key
+read as unset, which looks like a feature that was never shipped. Lists are the
+exception and stay yours whole: shortening `abilities` is a decision, and a
+merge that unioned `plugins` back would reinstall what you removed.
 
 [UPGRADING.md](UPGRADING.md) has the version-by-version notes and what counts as
 a breaking change.
 
 ---
 
-Current state: **v0.5.0**, 1,625 tests passing, 13 skipped.
+Current state: **v0.5.0**, 1,653 tests passing, 13 skipped.
