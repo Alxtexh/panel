@@ -242,6 +242,51 @@ esac
 
 say "/roles resolved with HTTP $roles_status"
 
+# ---------------------------------------------------------------------------
+# THE UPGRADE PATH, on the only kind of installation that can prove it.
+#
+# Everything above verifies `composer require`. `panel:update` is what somebody
+# runs AFTER that, on every release from then on - and it is the command with
+# the most to touch: it writes page files, invalidates the schema cache, reads
+# the application's published `config/panel.php` and ends by running doctor.
+#
+# NONE OF THAT CAN BE TRUSTED FROM INSIDE THE MONOREPO, for the same reason the
+# rest of this script exists: there the package is a symlink and the config is
+# the playground's, edited by hand over months. A fresh application is the only
+# place where "the published config matches the package" is a fact rather than
+# an accident, so it is the only place a drift report can be checked against a
+# known answer.
+#
+# The exit code IS doctor's - that is the command's deliberate design - so a
+# zero here means the whole chain came back clean.
+# ---------------------------------------------------------------------------
+say "php artisan panel:update"
+
+update_output="$(php artisan panel:update 2>&1)" || fail "panel:update exited non-zero on a fresh install:
+$update_output"
+
+case "$update_output" in
+    *"page files already complete"*) ;;
+    *) fail "panel:update did not report the page files install just wrote:
+$update_output" ;;
+esac
+
+case "$update_output" in
+    *"invalidated the schema cache"*) ;;
+    *) fail "panel:update did not invalidate the schema cache - an upgrade would serve the old schema shape:
+$update_output" ;;
+esac
+
+# A config published minutes ago by `panel:install` cannot be missing a key.
+# Anything reported here is the CHECK being wrong, not the installation.
+case "$update_output" in
+    *"config key(s) missing"*) fail "panel:update reports config drift against a config it just published, so the check is wrong:
+$update_output" ;;
+esac
+
+say "panel:update is a no-op on a fresh install, and says so"
+
 echo
 echo "PASS - panelkit/panel installs into a fresh Laravel app, is discovered,"
-echo "       installs its pages, generates a resource and routes it."
+echo "       installs its pages, generates a resource, routes it, and survives"
+echo "       panel:update."
