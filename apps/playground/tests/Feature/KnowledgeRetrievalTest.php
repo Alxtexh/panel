@@ -241,24 +241,64 @@ final class KnowledgeRetrievalTest extends TestCase
         );
     }
 
-    public function test_the_blueprints_rules_are_retrievable(): void
+    /**
+     * THE BLUEPRINT IS NOT IN THE ASSISTANT'S CORPUS, and this test used to
+     * assert the opposite.
+     *
+     * `AGENTS.md` is written for an agent WRITING the panel. The assistant
+     * answers somebody USING it. Indexing one into the other put recipes for
+     * declaring a table into the same ranking as "how do I export a list", and
+     * the store is searched by a hash embedder that ranks on crude similarity.
+     *
+     * SO THE GUIDE SIMPLY GREW AND THE ANSWERS GOT WORSE. Adding two recipes
+     * pushed `/help#exporting` out of the three passages the tool returns
+     * entirely - the results became a testing page and two blueprint chunks
+     * about clusters, for a question about exporting. Nobody touched
+     * retrieval. That is the shape of the problem: every improvement to the
+     * developer guide was a regression for the operator asking a question.
+     *
+     * The previous version of this test had already been weakened once for the
+     * same reason - its comment describes rewriting the query because "every
+     * time the guide grew a paragraph the ranking reshuffled". That was the
+     * warning, and it was read as a flaky test rather than as two documents
+     * competing.
+     */
+    public function test_the_blueprint_is_not_indexed_for_the_assistant(): void
     {
         $this->artisan('panel:knowledge', ['action' => 'index', '--tenant' => (string) $this->acme->id])
             ->assertSuccessful();
 
-        /*
-         * PHRASES ONLY THE BLUEPRINT USES, deliberately. The first version of
-         * this query shared too much vocabulary with the guide, so every time
-         * the guide grew a paragraph the ranking reshuffled and this test
-         * failed about content that was still perfectly retrievable. The
-         * assertion is "blueprint chunks are indexed and findable", not "the
-         * blueprint outranks the guide on generic words".
-         */
         $matches = $this->knowledge()->search('never write a controller for a resource screen null tenant deny fails closed');
 
         $titles = implode(' ', array_map(static fn (array $m): string => $m['title'], $matches));
 
-        $this->assertStringContainsString('Blueprint:', $titles);
+        $this->assertStringNotContainsString(
+            'Blueprint:',
+            $titles,
+            'The developer blueprint is back in the assistant corpus, where it competes with operator help.',
+        );
+    }
+
+    /**
+     * AND THE OPERATOR QUESTION STILL LANDS ON OPERATOR HELP.
+     *
+     * The half that actually matters. Removing a source is only right if what
+     * remains answers the question the blueprint was crowding out.
+     */
+    public function test_an_operator_question_reaches_the_help_centre(): void
+    {
+        $this->artisan('panel:knowledge', ['action' => 'index', '--tenant' => (string) $this->acme->id])
+            ->assertSuccessful();
+
+        $matches = $this->knowledge()->search('how do I export a filtered list to csv');
+
+        $urls = implode(' ', array_map(static fn (array $m): string => (string) $m['url'], $matches));
+
+        $this->assertStringContainsString(
+            '/help#exporting',
+            $urls,
+            'An export question no longer reaches the exporting help passage.',
+        );
     }
 
     /**

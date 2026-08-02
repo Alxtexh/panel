@@ -80,6 +80,86 @@ Then: register a policy, check the columns it guessed, and add filters. The
 route, the navigation entry and the abilities already exist. Nothing needs
 adding to `routes/web.php`.
 
+### Declare the list itself - columns, filters, tabs
+
+`--generate` writes a first draft from the table. This is what you edit
+it into. EVERYTHING BELOW IS ONE METHOD - there is no separate place to
+register a filter, wire a tab or add a sort; the schema is the feature.
+
+```php
+public static function table(Table $table): Table
+{
+    return $table
+        ->columns([
+            TextColumn::make('name')->from('routers.name')
+                ->sortable()->searchable()->locked(),
+
+            // Semantic values, never class names - the client decides
+            // what an icon or a colour intent looks like.
+            IconColumn::make('status')->from('routers.status')->sortable()
+                ->icons(['online' => 'wifi', 'offline' => 'wifi-off'])
+                ->colors(['online' => 'success', 'offline' => 'danger'])
+                ->labels(['online' => 'Online', 'offline' => 'Offline']),
+
+            DateColumn::make('created_at')->from('routers.created_at')
+                ->sortable()->muted(),
+        ])
+        ->filters([
+            SelectFilter::make('status')->column('routers.status')
+                ->options(['online', 'degraded', 'offline']),
+
+            // A CLOSURE for data-derived options, so they resolve per
+            // request against a TENANT-SCOPED query. Building them
+            // eagerly bakes one organisation's values into a schema
+            // every organisation reads.
+            SelectFilter::make('model')->column('routers.model')
+                ->options(fn (): array => Router::query()->toBase()
+                    ->select('model')->distinct()->pluck('model')->all()),
+        ])
+        // The row of counted tabs above the table - "All 40, Online 24,
+        // Degraded 8". One line, and the counts are computed for you.
+        ->tabs('routers.status', ['online', 'degraded', 'offline'])
+        ->keyColumn('routers.id')
+        ->defaultSort('created_at', 'desc');
+}
+```
+
+Search, sort, pagination, column visibility, density, saved views,
+selection, export and the empty state are NOT in this file because they
+are not optional - they come with the table. What you declare is the
+part that is specific to your data.
+
+Add `RecordAction` and `BulkAction` to `actions()` and `bulkActions()`;
+every bulk mutation counts before it commits, and long ones queue with a
+`JobStatus`.
+
+### Lay a form out - sections, tabs, steps
+
+Fields go in `form()`, and `Schema` is how they are arranged. Reach for
+`Section` first; `Tabs` when a form is long enough that scrolling loses
+people; `Wizard` ONLY when step two genuinely depends on step one, and
+a form somebody dips into to change one field should never be a wizard.
+
+```php
+public static function form(Form $form): Form
+{
+    return $form->schema([
+        Section::make('Identity')->columns(2)->schema([
+            TextField::make('name')->required(),
+            CountryField::make('country'),
+        ]),
+
+        // Shown only when it applies. The condition is declared, not
+        // wired up in Vue - the client evaluates it as the form changes.
+        Section::make('Billing')
+            ->visibleWhen('plan_type', 'postpaid')
+            ->schema([
+                SelectField::make('cycle')->options(['monthly', 'annual']),
+            ]),
+    ]);
+}
+```
+
 ### Add a screen that is NOT a list of records
 
 ```bash
@@ -303,6 +383,13 @@ _How to use them: wrap fields with them inside `form()`._
 _How to use them: **declare them on a `DashboardPage`, which is what draws them.** `php artisan make:panel-page Overview --dashboard` writes one; its `stats()` and `charts()` return these classes and the packaged `PanelDashboard` screen renders them, each as its own deferred prop. A widget built anywhere else is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 that was true of every widget, which is why this line exists._
 **Pages (screens that are not resources)** (5): `ChangelogPage` `DashboardPage` `EnvironmentPage` `Page` `Workspace`
 _How to use them: extend `Page` (or `DashboardPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._
+**Client-side components** (`@panelkit/ui`, no PHP equivalent): `StatStrip`
+`MiniStatCard` `SegmentedBar` `HeatmapChart` `ComboChart` `PolarAreaChart`
+`RadarChart` `SetupChecklist`
+_How to reach them: import them into YOUR OWN Vue page. `DashboardPage`
+renders `StatCard` and `ChartCard` only, so a `StatWidget` cannot produce
+a `StatStrip` - if you want one card split into four windows of the same
+metric, that screen is hand-written today._
 
 Abstract bases and traits appear in those lists - `Field`, `Column`,
 `HasChoices` - because they are what you extend when a genuinely new one is

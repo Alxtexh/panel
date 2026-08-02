@@ -1,10 +1,10 @@
 <?php
 
 declare(strict_types=1);
-use App\Knowledge\BlueprintSource;
 use App\Knowledge\GuideSource;
 use App\Knowledge\HelpSource;
 use App\Models\SavedView;
+use App\Models\Tenant;
 use App\Panel\Singulars\BillingSettingsResource;
 use App\Panel\Singulars\LandingPageResource;
 use App\Plugins\AnnouncementsPlugin;
@@ -469,10 +469,28 @@ return [
          * screen does per request - putting records in RAG would answer
          * questions the screen refuses. See SearchKnowledge's own note.
          */
+        /*
+         * THE BLUEPRINT IS NOT IN THIS LIST, and that is a correction.
+         *
+         * `AGENTS.md` is written for an agent WRITING the panel - recipes for
+         * declaring a table, laying out a form, adding a portal. The assistant
+         * answers somebody USING the panel. Indexing one into the other put
+         * developer recipes in the same ranking as operator help, and the
+         * corpus is searched by a hash embedder that ranks on crude similarity.
+         *
+         * So the guide simply grew, and "how do I export a filtered list"
+         * started returning cluster recipes: the three passages the tool
+         * returns were a testing page and two blueprint chunks, and the
+         * exporting help was pushed out of the results entirely. Nobody
+         * changed retrieval - the corpus got bigger and the answer got worse,
+         * which is what happens every time the guide is improved.
+         *
+         * `BlueprintSource` still exists and is still generated. It is read
+         * from disk by whoever is building, which is its audience.
+         */
         'sources' => [
             HelpSource::class,
             GuideSource::class,
-            BlueprintSource::class,
         ],
     ],
 
@@ -494,7 +512,7 @@ return [
         'mode' => env('PANEL_TENANCY_MODE', 'column'),
         'column' => 'tenant_id',
         'resolver' => null,
-        'model' => App\Models\Tenant::class,
+        'model' => Tenant::class,
 
         /*
         | Per-tenant feature flags, as name => bool. A Closure, or null to read
