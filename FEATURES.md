@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 261 files, 44,261 lines | 108 files, 16,190 lines |
+| PHP | 262 files, 44,531 lines | 108 files, 16,190 lines |
 | Vue | 111 components | **197 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
@@ -225,7 +225,11 @@ test helpers.
 `reindex-tenant` `suspend-tenant` `index-knowledge` `monitor-sample`
 `dispatch-scheduled-reports`
 
-`panel:doctor` is the one to run first. Every check in it exists because the
+`panel:doctor` is the one to run first. It also catches the two shapes of silent
+404 a real port lost hours to: a resource or page on disk that **nothing
+registered** (a `discover` path one directory too high registers nothing and
+says nothing), and a packaged screen with **no page file**, which routes fine and
+renders blank. Every check in it exists because the
 failure it finds is **silent** — a working panel serving wrong or unprotected
 data, where every page returns 200 and every test passes.
 
@@ -310,4 +314,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.6.0**, 1,663 tests passing, 13 skipped.
+Current state: **v0.6.0**, 1,668 tests passing, 13 skipped.

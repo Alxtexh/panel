@@ -11,9 +11,13 @@ use Illuminate\Support\Facades\Schema;
 use PanelKit\Panel\Alerts;
 use PanelKit\Panel\Documents;
 use PanelKit\Panel\Knowledge;
+use PanelKit\Panel\Pages\Page;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\BackupStatus;
 use PanelKit\Panel\Support\Contrast;
+use PanelKit\Panel\Support\Discovery;
+use PanelKit\Panel\Support\PanelPages;
 use PanelKit\Panel\Support\TenantContext;
 use PanelKit\Panel\Support\TicketTables;
 use PanelKit\Panel\Support\VendoredCopy;
@@ -87,6 +91,8 @@ final class DoctorCommand extends Command
         $this->checkPermissionTeams($context);
         $this->checkTicketing($panels);
         $this->checkVendoredCopy();
+        $this->checkDiscovery($panels);
+        $this->checkPageFiles();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -709,6 +715,84 @@ final class DoctorCommand extends Command
             .'will load, return 200 with a complete payload, and render blank - no error, nothing '
             .'in the log. Either start the dev server with `npm run dev`, or delete public/hot and '
             .'serve the built assets with `npm run build`.',
+        );
+    }
+
+    /**
+     * A RESOURCE OR PAGE ON DISK THAT NOTHING REGISTERED.
+     *
+     * Reported from a real port twice, an hour lost each time: `panel.discover`
+     * pointed one directory too high, so discovery globbed a tree whose
+     * namespaces did not match and registered nothing without saying so; and
+     * `discover_pages` was absent from a published config entirely.
+     *
+     * BOTH LOOK LIKE A 404 ON A SCREEN YOU JUST WROTE - indistinguishable from
+     * code you have not finished, so the reasonable next move is to go and read
+     * the code, which is not where the fault is.
+     *
+     * A PROBLEM, NOT A NOTE. A class written and unreachable is not a
+     * preference, and unlike most of what is checked here the person affected
+     * is actively looking for it.
+     */
+    private function checkDiscovery(PanelManager $panels): void
+    {
+        $orphans = [
+            'resource' => Discovery::unregistered(
+                app_path(),
+                app()->getNamespace(),
+                Resource::class,
+                array_values($panels->resources()),
+            ),
+            'page' => Discovery::unregistered(
+                app_path(),
+                app()->getNamespace(),
+                Page::class,
+                array_values($panels->pages()),
+            ),
+        ];
+
+        foreach ($orphans as $kind => $classes) {
+            if ($classes === []) {
+                continue;
+            }
+
+            $key = $kind === 'page' ? 'panel.discover_pages' : 'panel.discover';
+
+            $this->problem(
+                count($classes)." {$kind}(s) exist and are registered nowhere",
+                implode(', ', $classes).' - so nothing routes them and every URL they '
+                .'should serve is a 404 that looks like unwritten code. Check '.$key.': the '
+                .'directory must be the one the class is IN, and the namespace must be the one '
+                .'the file declares. A mismatch registers nothing and reports nothing.',
+            );
+        }
+    }
+
+    /**
+     * A PACKAGED SCREEN WITH NO FILE IN `resources/js/pages`.
+     *
+     * Inertia resolves a page by globbing that directory, so a screen living in
+     * `node_modules` cannot be found however correctly it is routed. An upgrade
+     * that adds one therefore ships a route that answers, a component that
+     * cannot be resolved, and a BLANK PAGE UNDER A WORKING HEADER - no server
+     * error, nothing in the log.
+     *
+     * `panel:update` writes these. This check is for the installation that ran
+     * `composer update` and did not, which is the only way to arrive here.
+     */
+    private function checkPageFiles(): void
+    {
+        $missing = PanelPages::missing();
+
+        if ($missing === []) {
+            return;
+        }
+
+        $this->problem(
+            count($missing).' packaged screen(s) have no page file',
+            implode(', ', $missing).' - the routes answer and Inertia cannot resolve the '
+            .'components, so those screens render blank rather than failing. Run '
+            .'`php artisan panel:update` to write them, then rebuild.',
         );
     }
 
