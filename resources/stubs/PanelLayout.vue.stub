@@ -1,149 +1,42 @@
 <script setup lang="ts">
 /**
- * The panel chrome: a sidebar, a header, and your screen.
+ * The frame every panel screen renders inside.
  *
- * PUBLISHED BY `panel:install` AND YOURS TO EDIT - the whole point of the
- * package being layout-free is that this file belongs to you. It is published
- * rather than shipped so that changing it is an edit, not a fork.
+ * PUBLISHED BY `panel:install` AND YOURS TO EDIT. It is published rather than
+ * shipped so that changing it is an edit, not a fork - delete this comment
+ * while you are here.
  *
- * THE SIDEBAR COMES FROM THE SERVER, and that is the part worth keeping. The
- * `panelNav` prop is built by `PanelNavigation` from the resource registry:
- * every entry has already been filtered by what the signed-in person may open,
- * and every href already carries this panel's path prefix. A menu hand-written
- * here is one that goes stale the day somebody adds a resource - which is the
- * exact failure the registry exists to prevent.
+ * IT IS A WRAPPER NOW, AND IT USED TO BE THE WHOLE SHELL. The sidebar, topbar
+ * and account menu were a hundred and fifty lines of markup in this file, on
+ * the principle that a panel should not dictate your chrome. What that
+ * produced was a generated portal wearing the packaged SCREENS inside a
+ * plainer frame - the same tables as the reference app, reading as a less
+ * finished product, because every consumer was rebuilding a sidebar worse than
+ * the one they were comparing themselves to.
  *
- * DELIBERATELY PLAIN. This is a floor, not a design: a column, a heading and a
- * list. The reference app's shell adds a command palette, a notification bell,
- * collapsed flyouts and a mobile bar - all of it application code, none of it
- * needed to have a working panel on the first afternoon.
+ * So the frame lives in `@panelkit/inertia` and improves with the package, and
+ * this file exists so you can put your own things around it - a workspace
+ * switcher, a search box, an environment banner - without forking it.
+ *
+ * `PanelShell` READS WHAT THE SERVER ALREADY SHARES: the navigation, already
+ * filtered by ability and by panel; the brand and palette; the signed-in
+ * person; and where sign-out posts. There is nothing to wire up.
+ *
+ * TO REPLACE IT ENTIRELY, stop importing `PanelShell` and write your own
+ * markup here. Every screen goes through this file, so nothing else changes -
+ * `usePage().props.panelNav` is the same array the shell reads.
  */
-import { Link, usePage } from '@inertiajs/vue3'
-import { ThemeToggle } from '@panelkit/ui'
-import { computed } from 'vue'
-
-type NavItem = {
-    key: string
-    title: string
-    href: string
-    icon: string | null
-    group: string | null
-}
-
-const page = usePage()
-
-const nav = computed(() => (page.props.panelNav ?? []) as NavItem[])
-const panel = computed(
-    () =>
-        page.props.panel as {
-            path: string
-            brand: string | null
-            colors: Record<string, string>
-        } | null,
-)
-
-/**
- * The panel's own palette, as inline CSS variables.
- *
- * WITHOUT THE `--color-` PREFIX. `@theme` declares
- * `--color-primary: var(--primary)`, and Tailwind resolves that at BUILD time -
- * so `bg-primary` compiles to `var(--primary)` and setting `--color-primary`
- * here writes a property nothing reads. A whole release shipped with per-tenant
- * branding doing exactly that: the colours were stored, resolved and applied,
- * and rendered nowhere.
- */
-const palette = computed(() =>
-    Object.fromEntries(
-        Object.entries(panel.value?.colors ?? {}).map(([token, value]) => [
-            `--${token}`,
-            value,
-        ]),
-    ),
-)
-const user = computed(() => (page.props.auth as { user?: { name?: string } } | undefined)?.user ?? null)
-
-/** Entries grouped by their declared group, ungrouped ones first. */
-const groups = computed(() => {
-    const out = new Map<string, NavItem[]>()
-
-    for (const item of nav.value) {
-        const key = item.group ?? ''
-        out.set(key, [...(out.get(key) ?? []), item])
-    }
-
-    return [...out.entries()]
-})
-
-const current = (href: string) => page.url === href || page.url.startsWith(`${href}/`)
+import { PanelShell } from '@panelkit/inertia'
 </script>
 
 <template>
-    <div class="flex min-h-svh bg-background text-foreground" :style="palette">
-        <aside class="hidden w-60 shrink-0 border-r border-border p-4 md:block">
-            <Link
-                :href="panel?.path ?? '/'"
-                class="mb-6 block text-sm font-semibold tracking-tight"
-            >
-                {{ panel?.brand ?? 'Panel' }}
-            </Link>
+    <PanelShell>
+        <!--
+            Two slots, when you want them:
 
-            <nav class="flex flex-col gap-6">
-                <div v-for="[group, items] in groups" :key="group" class="flex flex-col gap-1">
-                    <p
-                        v-if="group"
-                        class="px-2 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase"
-                    >
-                        {{ group }}
-                    </p>
-
-                    <Link
-                        v-for="item in items"
-                        :key="item.key"
-                        :href="item.href"
-                        class="rounded-md px-2 py-1.5 text-sm transition-colors"
-                        :class="
-                            current(item.href)
-                                ? 'bg-muted font-medium text-foreground'
-                                : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-                        "
-                    >
-                        {{ item.title }}
-                    </Link>
-                </div>
-
-                <!--
-                    A PANEL WITH NO RESOURCES SAYS SO. An empty column reads as
-                    a broken menu; this reads as a next step, which is what it
-                    is - discovery registers a resource the moment its class
-                    exists, with no route to add.
-                -->
-                <p v-if="nav.length === 0" class="px-2 text-sm text-muted-foreground">
-                    No screens yet. Generate one with
-                    <code class="text-xs">make:panel-resource</code>.
-                </p>
-            </nav>
-        </aside>
-
-        <div class="flex min-w-0 flex-1 flex-col">
-            <header
-                class="flex items-center justify-between gap-4 border-b border-border px-4 py-3"
-            >
-                <span class="text-sm text-muted-foreground md:hidden">
-                    {{ panel?.brand ?? 'Panel' }}
-                </span>
-
-                <div class="ml-auto flex items-center gap-3">
-                    <span v-if="user" class="text-sm text-muted-foreground">
-                        {{ user.name }}
-                    </span>
-
-                    <ThemeToggle />
-                </div>
-            </header>
-
-            <main class="min-w-0 flex-1 p-4 sm:p-6">
-                <slot />
-            </main>
-        </div>
-    </div>
+              <template #topbar>   a heading, breadcrumbs, a search box
+              <template #actions>  trailing controls, before the theme toggle
+        -->
+        <slot />
+    </PanelShell>
 </template>
