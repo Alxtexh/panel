@@ -6,9 +6,8 @@
 import './echo';
 
 import { createInertiaApp, router } from '@inertiajs/vue3';
-import { registerRenderHookComponent } from '@panelkit/inertia';
+import { registerRenderHookComponent, TicketThread } from '@panelkit/inertia';
 import { initializeAppearance, setAppearancePersister } from '@panelkit/ui';
-import TicketThread from '@/components/TicketThread.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
@@ -29,6 +28,10 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
  * only ask for something the application already agreed to ship. An
  * unregistered name renders nothing rather than an error about somebody
  * else's package.
+ *
+ * THE COMPONENT ITSELF NOW COMES FROM THE PACKAGE, and the indirection is
+ * unchanged by that: `@panelkit/inertia` exports it, this file decides the
+ * name resolves to it, and swapping in a local one is still a one-line edit.
  */
 registerRenderHookComponent('TicketThread', TicketThread);
 
