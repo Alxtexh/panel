@@ -98,6 +98,19 @@ export { default as RenderHook } from './components/RenderHook.vue'
 export { default as TicketThread } from './components/TicketThread.vue'
 export { default as AnnouncementBanners } from './components/AnnouncementBanners.vue'
 export type { Announcement } from './types'
+
+/*
+ * THE SIGN-IN SCREENS - v0.5.0.
+ *
+ * Exported like every other page, and routed like none of them: they belong to
+ * a PANEL rather than to the application, so `make:panel --auth` writes the
+ * routes and the page shims. See `PanelAuthController`.
+ */
+export { default as AuthLayout } from './pages/auth/AuthLayout.vue'
+export { default as Login } from './pages/auth/Login.vue'
+export { default as ForgotPassword } from './pages/auth/ForgotPassword.vue'
+export { default as ResetPassword } from './pages/auth/ResetPassword.vue'
+export { default as AuthField } from './components/AuthField.vue'
 export {
     registerRenderHookComponent,
     resolveRenderHookComponent,

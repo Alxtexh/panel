@@ -174,16 +174,20 @@ say "Permissions reconciled: an Administrator role holds the generated resource'
 
 
 
-# A PANEL NEEDS AN APPLICATION THAT CAN AUTHENTICATE. `laravel/laravel` ships
-# no auth scaffolding, so there is no `login` route for the guard to send an
-# anonymous visitor to - and the first visit dies with "Route [login] not
-# defined", which names nothing a newcomer can act on. A real installation has
-# Fortify, Breeze or a starter kit; this stands in for one.
-say "Adding a login route (standing in for auth scaffolding)"
-cat >> routes/web.php <<'ROUTE'
-
-Route::get('/login', fn () => 'login')->name('login');
-ROUTE
+# THE PANEL BRINGS ITS OWN SIGN-IN NOW, and the four lines that used to sit
+# here are the clearest evidence of what was missing.
+#
+# THIS HARNESS USED TO PASTE A FAKE `login` ROUTE INTO `routes/web.php` before
+# it could test anything, because `laravel/laravel` ships no auth scaffolding
+# and every panel route redirects an anonymous visitor to `route('login')`. A
+# test harness having to fabricate the thing under test is the loudest possible
+# statement that the product did not have it.
+#
+# `make:panel --auth` generates it: routes under the PANEL'S prefix, bound to
+# the panel's own guard, pointing at packaged screens. Nothing claims `/login`,
+# so a starter kit's own sign-in is untouched.
+say "Generating the default panel's sign-in with --auth"
+php artisan make:panel admin --path='' --auth --force --no-interaction 2>&1 | tail -6
 
 # THE ASSERTION WORTH MAKING, and it is not a grep of route:list. Panel routes
 # use a `{resource}` placeholder constrained by `whereIn`, so no route URI ever
@@ -210,6 +214,89 @@ case "$status" in
 esac
 
 say "/customers resolved with HTTP $status"
+
+# ---------------------------------------------------------------------------
+# AND NOW THE THING THIS HARNESS COULD NEVER TEST: SIGNING IN.
+#
+# Every check above proves a route ANSWERS. None of them proved anybody could
+# get past it, because until `--auth` there was nothing to get past it with -
+# the harness pasted a fake `login` route in and stopped there.
+#
+# THE ACCOUNT IS MADE BY `panel:make-user`, which is the other half nobody had:
+# `panel:permissions sync` creates an Administrator ROLE and no person to hold
+# it, so a fresh install was a sign-in screen with nobody who could use it.
+# ---------------------------------------------------------------------------
+say "Checking the sign-in screen renders"
+cat > verify-login.php <<'LOGIN'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$res = $kernel->handle(Illuminate\Http\Request::create('/login', 'GET'));
+echo $res->getStatusCode(), PHP_EOL;
+LOGIN
+login_status="$(php verify-login.php 2>/dev/null | tail -1)"
+rm -f verify-login.php
+
+[[ "$login_status" == "200" ]] \
+    || fail "/login returned $login_status - the generated sign-in screen does not render."
+
+say "/login resolved with HTTP 200"
+
+# THE ACCOUNT. Non-interactive on purpose: `panel:make-user` REFUSES to take a
+# password as an argument, so this asserts the refusal rather than working
+# around it, and creates the row directly for the sign-in test below.
+say "Checking panel:make-user refuses a non-interactive run"
+if php artisan panel:make-user --name=Ada --email=ada@example.test --no-interaction >/dev/null 2>&1; then
+    fail "panel:make-user created an account without an interactive password prompt."
+fi
+
+say "It refused, as designed"
+
+say "Creating an account and signing in with it"
+cat > verify-signin.php <<'SIGNIN'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+$model = config('auth.providers.users.model');
+$model::query()->create([
+    'name' => 'Ada',
+    'email' => 'ada@example.test',
+    'password' => Illuminate\Support\Facades\Hash::make('correct-horse-battery'),
+]);
+
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+// A GET first, for the session and the CSRF token - posting without them is a
+// 419 that has nothing to do with the credentials.
+$get = $kernel->handle(Illuminate\Http\Request::create('/login', 'GET'));
+$token = csrf_token();
+
+$post = Illuminate\Http\Request::create('/login', 'POST', [
+    'email' => 'ada@example.test',
+    'password' => 'correct-horse-battery',
+    '_token' => $token,
+]);
+$post->setLaravelSession(app('session.store'));
+
+$res = $kernel->handle($post);
+
+echo 'status=', $res->getStatusCode(), PHP_EOL;
+echo 'location=', (string) $res->headers->get('Location'), PHP_EOL;
+echo 'authenticated=', Illuminate\Support\Facades\Auth::check() ? 'yes' : 'no', PHP_EOL;
+SIGNIN
+signin="$(php verify-signin.php 2>&1)"
+rm -f verify-signin.php
+
+echo "$signin"
+
+grep -q 'authenticated=yes' <<<"$signin" \
+    || fail "The generated sign-in did not authenticate a real account:
+$signin"
+
+say "Signed in through the generated login"
 
 # AND THE SCREEN THAT OPERATES IT - CHECKED AFTER THE LOGIN ROUTE EXISTS.
 #

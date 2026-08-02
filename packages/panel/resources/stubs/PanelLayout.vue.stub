@@ -1,0 +1,123 @@
+<script setup lang="ts">
+/**
+ * The panel chrome: a sidebar, a header, and your screen.
+ *
+ * PUBLISHED BY `panel:install` AND YOURS TO EDIT - the whole point of the
+ * package being layout-free is that this file belongs to you. It is published
+ * rather than shipped so that changing it is an edit, not a fork.
+ *
+ * THE SIDEBAR COMES FROM THE SERVER, and that is the part worth keeping. The
+ * `panelNav` prop is built by `PanelNavigation` from the resource registry:
+ * every entry has already been filtered by what the signed-in person may open,
+ * and every href already carries this panel's path prefix. A menu hand-written
+ * here is one that goes stale the day somebody adds a resource - which is the
+ * exact failure the registry exists to prevent.
+ *
+ * DELIBERATELY PLAIN. This is a floor, not a design: a column, a heading and a
+ * list. The reference app's shell adds a command palette, a notification bell,
+ * collapsed flyouts and a mobile bar - all of it application code, none of it
+ * needed to have a working panel on the first afternoon.
+ */
+import { Link, usePage } from '@inertiajs/vue3'
+import { ThemeToggle } from '@panelkit/ui'
+import { computed } from 'vue'
+
+type NavItem = {
+    key: string
+    title: string
+    href: string
+    icon: string | null
+    group: string | null
+}
+
+const page = usePage()
+
+const nav = computed(() => (page.props.panelNav ?? []) as NavItem[])
+const panel = computed(() => page.props.panel as { path: string; brand: string | null } | null)
+const user = computed(() => (page.props.auth as { user?: { name?: string } } | undefined)?.user ?? null)
+
+/** Entries grouped by their declared group, ungrouped ones first. */
+const groups = computed(() => {
+    const out = new Map<string, NavItem[]>()
+
+    for (const item of nav.value) {
+        const key = item.group ?? ''
+        out.set(key, [...(out.get(key) ?? []), item])
+    }
+
+    return [...out.entries()]
+})
+
+const current = (href: string) => page.url === href || page.url.startsWith(`${href}/`)
+</script>
+
+<template>
+    <div class="flex min-h-svh bg-background text-foreground">
+        <aside class="hidden w-60 shrink-0 border-r border-border p-4 md:block">
+            <Link
+                :href="panel?.path ?? '/'"
+                class="mb-6 block text-sm font-semibold tracking-tight"
+            >
+                {{ panel?.brand ?? 'Panel' }}
+            </Link>
+
+            <nav class="flex flex-col gap-6">
+                <div v-for="[group, items] in groups" :key="group" class="flex flex-col gap-1">
+                    <p
+                        v-if="group"
+                        class="px-2 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                    >
+                        {{ group }}
+                    </p>
+
+                    <Link
+                        v-for="item in items"
+                        :key="item.key"
+                        :href="item.href"
+                        class="rounded-md px-2 py-1.5 text-sm transition-colors"
+                        :class="
+                            current(item.href)
+                                ? 'bg-muted font-medium text-foreground'
+                                : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                        "
+                    >
+                        {{ item.title }}
+                    </Link>
+                </div>
+
+                <!--
+                    A PANEL WITH NO RESOURCES SAYS SO. An empty column reads as
+                    a broken menu; this reads as a next step, which is what it
+                    is - discovery registers a resource the moment its class
+                    exists, with no route to add.
+                -->
+                <p v-if="nav.length === 0" class="px-2 text-sm text-muted-foreground">
+                    No screens yet. Generate one with
+                    <code class="text-xs">make:panel-resource</code>.
+                </p>
+            </nav>
+        </aside>
+
+        <div class="flex min-w-0 flex-1 flex-col">
+            <header
+                class="flex items-center justify-between gap-4 border-b border-border px-4 py-3"
+            >
+                <span class="text-sm text-muted-foreground md:hidden">
+                    {{ panel?.brand ?? 'Panel' }}
+                </span>
+
+                <div class="ml-auto flex items-center gap-3">
+                    <span v-if="user" class="text-sm text-muted-foreground">
+                        {{ user.name }}
+                    </span>
+
+                    <ThemeToggle />
+                </div>
+            </header>
+
+            <main class="min-w-0 flex-1 p-4 sm:p-6">
+                <slot />
+            </main>
+        </div>
+    </div>
+</template>

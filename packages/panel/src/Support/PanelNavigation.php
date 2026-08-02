@@ -1,0 +1,113 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PanelKit\Panel\Support;
+
+use Illuminate\Support\Collection;
+use PanelKit\Panel\PanelManager;
+
+/**
+ * The sidebar, built from the registry.
+ *
+ * PROMOTED FROM THE REFERENCE APP'S `HandleInertiaRequests`, where it had been
+ * a hundred-line closure - which meant every consuming application rebuilt it,
+ * and rebuilt the parts that are easy to get wrong: the panel PREFIX, the
+ * cluster collapse, and the ability filter.
+ *
+ * THE PREFIX IS THE ONE THAT BITES. The operator portal usually sits at the
+ * root, so a bare `/clients` link works and nothing looks wrong; a generated
+ * portal is mounted under its own path, where the same link points at a route
+ * that does not exist. Worse in the other direction: without filtering by the
+ * CURRENT panel, a reseller's screens appear in the operator's sidebar, linking
+ * to paths this portal does not route. Nothing fails - the menu simply starts
+ * advertising other people's screens.
+ *
+ * ABILITIES ARE APPLIED HERE, not in the component. A menu filtered in Vue is a
+ * menu whose hidden entries were still sent, which tells anybody reading the
+ * payload exactly which screens exist and relies on CSS to keep the rest.
+ */
+final class PanelNavigation
+{
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public static function build(?string $panelId = null): array
+    {
+        $panels = app(PanelManager::class);
+
+        $panelId ??= $panels->currentPanel()?->id ?? (string) config('panel.default', 'admin');
+
+        $prefix = rtrim('/'.trim((string) $panels->panel($panelId)?->getPath(), '/'), '/');
+
+        $visible = collect($panels->resourcesFor($panelId))
+            ->filter(static fn (string $class): bool => $class::showsInNavigation())
+            ->filter(static fn (string $class): bool => $class::can('viewAny'));
+
+        return self::resources($visible, $prefix)
+            ->merge(self::clusters($visible, $prefix))
+            ->sortBy([['sort', 'asc'], ['title', 'asc']])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  Collection<int|string, class-string>  $visible
+     * @return Collection<int, array<string, mixed>>
+     */
+    private static function resources(Collection $visible, string $prefix): Collection
+    {
+        return $visible
+            ->filter(static fn (string $class): bool => $class::cluster() === null)
+            ->map(static fn (string $class): array => [
+                'key' => $class::key(),
+                'title' => $class::pluralLabel(),
+                'href' => $prefix.'/'.$class::key(),
+                'icon' => $class::icon(),
+                'group' => $class::group(),
+                'sort' => $class::navigationSort(),
+            ])
+            ->values();
+    }
+
+    /**
+     * CLUSTERS COLLAPSE TO ONE ENTRY EACH - roadmap 4.1. The entry wears the
+     * cluster's own name and icon and links to the first member this person may
+     * open; the members are reached from the sub-navigation on every cluster
+     * screen.
+     *
+     * `members` CARRIES EVERY HREF THE ENTRY STANDS FOR, so a coverage test can
+     * see that a collapsed resource is still linked - through the cluster -
+     * rather than lost.
+     *
+     * @param  Collection<int|string, class-string>  $visible
+     * @return Collection<int, array<string, mixed>>
+     */
+    private static function clusters(Collection $visible, string $prefix): Collection
+    {
+        return $visible
+            ->filter(static fn (string $class): bool => $class::cluster() !== null)
+            ->groupBy(static fn (string $class): string => $class::cluster())
+            ->map(static function (Collection $classes, string $cluster) use ($prefix): array {
+                $sorted = $classes->sortBy([
+                    static fn (string $class): int => $class::navigationSort(),
+                    static fn (string $class): string => $class::pluralLabel(),
+                ])->values();
+
+                $hrefs = $sorted
+                    ->map(static fn (string $class): string => $prefix.'/'.$class::key())
+                    ->merge(array_column($cluster::pages(), 'href'));
+
+                return [
+                    'key' => $cluster::key(),
+                    'title' => $cluster::label(),
+                    'href' => $prefix.'/'.$sorted->first()::key(),
+                    'icon' => $cluster::icon(),
+                    'group' => $cluster::group(),
+                    'sort' => $cluster::navigationSort(),
+                    'members' => $hrefs->values()->all(),
+                ];
+            })
+            ->values();
+    }
+}

@@ -52,6 +52,7 @@ Panels registered in this application:
 - `admin` — mounted at `/`, guard `web`, tenant context
 - `platform` — mounted at `/platform`, guard `web`, central context
 - `reseller` — mounted at `/reseller`, guard `web`, tenant context
+- `authfixture` — mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
 
@@ -592,6 +593,7 @@ too quiet.
 - `php artisan panel:install` — Publish config, create the app/Panel tree and the page files, and print next steps
 - `php artisan panel:journey` — Time a full signed-in journey through the panel over real HTTP
 - `php artisan panel:knowledge` — Index panel content so the assistant can cite it instead of guessing
+- `php artisan panel:make-user` — Create an account that can sign in to the panel
 - `php artisan panel:monitor-sample` — Record one monitoring sample and alert on any crossed threshold
 - `php artisan panel:permissions` — Reconcile roles and permissions against the registered resources
 - `php artisan panel:prune-exports` — Delete exports past their retention window, file and record together

@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 254 files, 42,166 lines | 108 files, 16,190 lines |
-| Vue | 106 components | **197 components** |
+| PHP | 258 files, 43,216 lines | 108 files, 16,190 lines |
+| Vue | 111 components | **197 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -188,11 +188,11 @@ secrets never shown, atomic writes, boot-critical keys refused) · **passkeys** 
 dependency — present when Fortify is, absent without it) · `InteractsWithPanels`
 test helpers.
 
-### 21 commands
+### 22 commands
 
 `install` `update` `doctor` `doctor-alert` `permissions` `benchmark`
 `blueprint` `make:panel` `make:panel-page` `make:panel-resource`
-`make:api-token` `cache-clear`
+`make:api-token` `make-user` `cache-clear`
 `prune-exports` `prune-trash` `prune-uploads` `refresh-rollups`
 `reindex-tenant` `suspend-tenant` `index-knowledge` `monitor-sample`
 `dispatch-scheduled-reports`
@@ -274,4 +274,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.4.0**, 1,604 tests passing, 13 skipped.
+Current state: **v0.5.0**, 1,614 tests passing, 13 skipped.

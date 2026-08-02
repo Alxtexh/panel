@@ -42,6 +42,25 @@ final class PanelPages
         'Environment',
 
         /*
+         * THE SIGN-IN SCREENS, mirrored even in an application that has not run
+         * `make:panel --auth` yet.
+         *
+         * WHY UNCONDITIONALLY. The invariant this list exists to hold is that
+         * every name the PHP half renders has a file Inertia can glob - and the
+         * failure when it does not is a white page with a console error naming
+         * a file nobody has heard of. Making these conditional would mean an
+         * installation that turns auth on LATER gets that failure, and one that
+         * upgrades into a changed auth screen gets it silently.
+         *
+         * AN EXISTING FILE IS NEVER OVERWRITTEN, which is what makes this safe
+         * beside Breeze or Jetstream: they put their own `auth/Login.vue` in the
+         * same place, and the writer leaves whatever is already there alone.
+         */
+        'auth/Login',
+        'auth/ForgotPassword',
+        'auth/ResetPassword',
+
+        /*
          * NESTED NAMES, because the server renders `documents/Templates` and a
          * page name is a path. The writer creates the directory; the component
          * identifier is the basename, since `documents/Templates` is not a

@@ -239,6 +239,37 @@ return [
     */
     'auth' => [
         /*
+        | SIGNING IN TO A GENERATED PANEL - only read by panels made with
+        | `make:panel --auth`. An application whose sign-in comes from Breeze,
+        | Jetstream or Fortify uses none of these; the two coexist because the
+        | packaged routes live under the PANEL'S prefix and never claim
+        | `/login`.
+        |
+        | THE THROTTLE IS KEYED ON ADDRESS AND IP TOGETHER. Address alone lets
+        | anybody lock a colleague out by failing to sign in as them; ip alone
+        | makes one office share a budget with whoever is behind the same NAT.
+        */
+        'max_attempts' => 5,
+        'decay_seconds' => 60,
+
+        /*
+        | The password broker, or null for the default. A portal whose users
+        | live in their own table needs its own broker in `config/auth.php`.
+        */
+        'broker' => null,
+
+        /*
+        | AND PER PANEL, KEYED BY PANEL ID. `make:panel --auth` writes one:
+        |
+        |   'reseller' => [
+        |       'heading' => 'Reseller portal',
+        |       'description' => 'Sign in to manage your customers',
+        |       'passwords' => true,   // route the reset pair
+        |       'prefill' => null,     // local only, refused elsewhere
+        |   ],
+        */
+
+        /*
         | PASSWORD RENEWAL, OFF BY DEFAULT.
         |
         | Forced rotation is no longer recommended practice - NIST dropped it,

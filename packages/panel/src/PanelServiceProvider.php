@@ -150,6 +150,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\MakeApiTokenCommand::class,
             Commands\MakePageCommand::class,
             Commands\MakePanelCommand::class,
+            Commands\MakeUserCommand::class,
             Commands\MakeResourceCommand::class,
             Commands\ReindexTenantCommand::class,
             Commands\DoctorCommand::class,
@@ -203,6 +204,7 @@ final class PanelServiceProvider extends ServiceProvider
         $this->registerTenantUserProvider();
         $this->registerSessionLimit();
         $this->registerPackagedPolicies();
+        $this->loadGeneratedAuthRoutes();
 
         /*
          * The AI SDK's conversation tables are tenant data and arrive without a
@@ -248,6 +250,36 @@ final class PanelServiceProvider extends ServiceProvider
             Events\TicketOpened::class,
             Listeners\AnnounceNewTicket::class,
         );
+    }
+
+    /**
+     * SIGN-IN ROUTES WRITTEN BY `make:panel --auth`.
+     *
+     * THE FILE IS THE APPLICATION'S AND LOADING IT IS THE PACKAGE'S, which is
+     * the split that makes this work at all. The generator's first version
+     * edited `bootstrap/app.php` with a regex looking for a `then:` closure - a
+     * stock Laravel application has none, so the routes were written, never
+     * loaded, and `route:list` was empty while the command reported success.
+     * A glob has nothing to miss.
+     *
+     * DELETING THE FILE REMOVES THE ROUTES, which is what somebody reading it
+     * would expect and the reason this is a glob rather than a config list that
+     * could disagree with what is on disk.
+     *
+     * `web` IS APPLIED HERE, not in the generated file, because these need the
+     * session and the CSRF token and forgetting that produces a login form that
+     * 419s on submit - an error nobody reads as "the middleware group is
+     * missing".
+     */
+    private function loadGeneratedAuthRoutes(): void
+    {
+        if (! $this->app->bound('router')) {
+            return;
+        }
+
+        foreach (glob($this->app->basePath('routes/panel-*-auth.php')) ?: [] as $file) {
+            \Illuminate\Support\Facades\Route::middleware('web')->group($file);
+        }
     }
 
     /**
