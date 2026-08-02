@@ -257,17 +257,27 @@ say "/roles resolved with HTTP $roles_status"
 # an accident, so it is the only place a drift report can be checked against a
 # known answer.
 #
-# The exit code IS doctor's - that is the command's deliberate design - so a
-# zero here means the whole chain came back clean.
+# ITS EXIT CODE IS DOCTOR'S, and this fixture FAILS doctor on purpose. A bare
+# `laravel/laravel` publishes Spatie's config with `teams => false` while the
+# panel's tenancy mode defaults to `column`, which is fail-open - a role would
+# grant across every organisation at once - so doctor errors and `panel:update`
+# returns non-zero. That is the design working, not a break, and asserting a
+# zero here would mean asserting that doctor stays quiet about it.
+#
+# So the exit code is CAPTURED rather than trusted, and what is checked is what
+# each step reported.
 # ---------------------------------------------------------------------------
 say "php artisan panel:update"
 
-update_output="$(php artisan panel:update 2>&1)" || fail "panel:update exited non-zero on a fresh install:
-$update_output"
+update_output="$(php artisan panel:update 2>&1)" && update_status=0 || update_status=$?
 
+# A BARE LARAVEL IS NOT AN INERTIA APPLICATION, so there is no
+# `resources/js/pages` to write into and the command has to say so rather than
+# claim success. Whichever answer it gives, it must be about the page files -
+# silence there is the failure this command exists to prevent.
 case "$update_output" in
-    *"page files already complete"*) ;;
-    *) fail "panel:update did not report the page files install just wrote:
+    *"page files already complete"*|*"no resources/js/pages directory"*) ;;
+    *) fail "panel:update said nothing about page files, which is the reason it exists:
 $update_output" ;;
 esac
 
@@ -284,7 +294,20 @@ case "$update_output" in
 $update_output" ;;
 esac
 
-say "panel:update is a no-op on a fresh install, and says so"
+# AND THE EXIT CODE IS DOCTOR'S. Non-zero is expected here, for the fail-open
+# permission config a bare Laravel ships; what would be wrong is doctor passing
+# a fixture nobody configured, which would mean it had stopped looking.
+if [ "$update_status" -eq 0 ]; then
+    fail "panel:update exited zero on an unconfigured install - doctor should have refused a fail-open permission config."
+fi
+
+case "$update_output" in
+    *"Permissions are not tenant-scoped"*) ;;
+    *) fail "panel:update exited $update_status for a reason other than the expected permission-scoping error:
+$update_output" ;;
+esac
+
+say "panel:update reconciles what it should, and carries doctor's non-zero verdict on an unconfigured install"
 
 echo
 echo "PASS - panelkit/panel installs into a fresh Laravel app, is discovered,"
