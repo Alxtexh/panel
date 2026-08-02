@@ -95,6 +95,7 @@ export const PANEL_PAGES = {
  | anywhere.
  */
 export { default as RenderHook } from './components/RenderHook.vue'
+export { default as TicketThread } from './components/TicketThread.vue'
 export {
     registerRenderHookComponent,
     resolveRenderHookComponent,

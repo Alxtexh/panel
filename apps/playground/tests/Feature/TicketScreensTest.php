@@ -6,9 +6,9 @@ namespace Tests\Feature;
 
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Tenant;
-use App\Models\Ticket;
+use PanelKit\Panel\Models\Ticket;
 use App\Models\User;
-use App\Plugins\TicketingPlugin;
+use PanelKit\Panel\Ticketing\TicketingPlugin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\Abilities;

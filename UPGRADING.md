@@ -108,6 +108,50 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.3.1 → 0.3.2
+
+**Nothing breaks. Ticketing arrives, switched off.**
+
+`composer update`, `npm update`, `php artisan panel:update`. The migration
+creates `panel_tickets` and `panel_ticket_replies`, and nothing appears in any
+panel until you say which panel is which:
+
+```php
+// config/panel.php
+'ticketing' => [
+    'operator' => 'admin',   // the queue: everybody's tickets
+    'opener' => 'portal',    // the customer's own, and only their own
+],
+```
+
+**The same panel id in both is refused at boot**, by name, rather than left as a
+portal where a customer reads the whole organisation's support queue.
+
+**If you already have ticket tables, do not migrate — rename nothing.** Point
+config at what you have:
+
+```php
+'ticketing' => [
+    'tables' => ['tickets' => 'tickets', 'replies' => 'ticket_replies'],
+],
+```
+
+No data moves and there is no downtime; the packaged migration skips a table
+that already exists. This is the path the reference app itself took.
+
+**Your own ticket classes, if you wrote any, can go** — models, policy, resources,
+controllers and the thread component are all in the package now. What cannot go
+is anything of yours that a `Ticket` model referenced by class name; the packaged
+model is `PanelKit\Panel\Models\Ticket`.
+
+**One authorisation note, and it is the reason to read this section.** The
+packaged policy asks your user model for `hasPermission()` if it has one and
+falls back to `can()` if it does not. If your user model has neither a
+`hasPermission()` nor Spatie roles reachable through the gate, the ticket screens
+deny everybody — which is the correct posture, and looks exactly like a broken
+install. `php artisan panel:permissions sync` first, and confirm
+`view_any_tickets` exists.
+
 ### 0.3.0 → 0.3.1
 
 **Nothing breaks, and nothing needs doing.** `composer update` and `npm update`,

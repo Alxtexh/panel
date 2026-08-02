@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Support;
+namespace PanelKit\Panel\Support;
 
-use App\Models\Ticket;
+use PanelKit\Panel\Models\Ticket;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 

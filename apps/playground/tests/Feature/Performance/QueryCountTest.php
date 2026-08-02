@@ -9,7 +9,7 @@ use App\Models\ClientSession;
 use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
-use App\Models\Ticket;
+use PanelKit\Panel\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;

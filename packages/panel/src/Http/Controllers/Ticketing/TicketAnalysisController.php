@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace PanelKit\Panel\Http\Controllers\Ticketing;
 
-use App\Models\Ticket;
-use App\Panel\Ticketing\TicketResource;
+use Illuminate\Routing\Controller;
+use PanelKit\Panel\Models\Ticket;
+use PanelKit\Panel\Ticketing\TicketResource;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 

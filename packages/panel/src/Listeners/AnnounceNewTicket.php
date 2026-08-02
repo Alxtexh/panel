@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Listeners;
+namespace PanelKit\Panel\Listeners;
 
-use App\Models\Ticket;
 use PanelKit\Panel\Alerts\Telegram;
+use PanelKit\Panel\Events\TicketOpened;
 
 /**
  * Tell the desk when somebody opens a ticket - roadmap 6.5.
@@ -28,8 +28,10 @@ use PanelKit\Panel\Alerts\Telegram;
  */
 final class AnnounceNewTicket
 {
-    public function handle(Ticket $ticket): void
+    public function handle(TicketOpened $event): void
     {
+        $ticket = $event->ticket;
+
         if (! in_array($ticket->priority, self::priorities(), true)) {
             return;
         }

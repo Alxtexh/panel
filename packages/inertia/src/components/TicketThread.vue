@@ -2,6 +2,18 @@
 /**
  * A ticket's conversation, on the record page.
  *
+ * PACKAGED, AND IT MOVED WITHOUT AN EDIT. Every import here was already
+ * `@inertiajs/vue3`, `@panelkit/ui`, `vue` or `vue-sonner` - not one `@/` alias
+ * into an application. That is what made ticketing the cheapest thing on the
+ * promotable list: it was written against the package from the start.
+ *
+ * IT IS MOUNTED THROUGH A RENDER HOOK rather than routed. The thread belongs on
+ * the ticket's own record page, beneath the fields, and a render hook is how a
+ * package puts markup on a screen the application owns. The application still
+ * decides the name resolves to this - `registerRenderHookComponent` - because a
+ * component name arriving from the server would otherwise let a plugin mount
+ * anything in the bundle.
+ *
  * INSTALLED BY A PLUGIN, NOT BY THIS PAGE. It arrives through the
  * `view.after` render hook, so `ResourceView` knows nothing about tickets and
  * ticketing needs no change to a shared screen - see `TicketingPlugin`.

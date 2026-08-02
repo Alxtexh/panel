@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Tenant;
-use App\Models\Ticket;
-use App\Models\TicketReply;
+use PanelKit\Panel\Models\Ticket;
+use PanelKit\Panel\Models\TicketReply;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace PanelKit\Panel\Http\Controllers\Ticketing;
 
-use App\Models\Ticket;
-use App\Support\TicketStats;
+use Illuminate\Routing\Controller;
+use PanelKit\Panel\Models\Ticket;
+use PanelKit\Panel\Support\TicketStats;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 

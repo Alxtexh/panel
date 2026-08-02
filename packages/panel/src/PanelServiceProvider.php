@@ -233,6 +233,20 @@ final class PanelServiceProvider extends ServiceProvider
             Login::class,
             Auth\EnforceSessionLimit::class,
         );
+
+        /*
+         * THE PACKAGED ANSWER TO A NEW TICKET, and the only one it ships.
+         *
+         * Registered here rather than called from the model so an installation
+         * can add its own - a webhook, an email to a rota - without editing a
+         * vendored class. It alerts on urgent tickets only and never throws:
+         * see the listener, where that restraint is the reason the channel
+         * stays worth having.
+         */
+        $this->app['events']->listen(
+            Events\TicketOpened::class,
+            Listeners\AnnounceNewTicket::class,
+        );
     }
 
     /**

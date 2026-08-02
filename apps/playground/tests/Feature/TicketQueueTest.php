@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Tenant;
-use App\Models\Ticket;
-use App\Models\TicketReply;
+use PanelKit\Panel\Models\Ticket;
+use PanelKit\Panel\Models\TicketReply;
 use App\Models\User;
-use App\Panel\Ticketing\MyTicketResource;
-use App\Panel\Ticketing\TicketResource;
-use App\Support\TicketStats;
+use PanelKit\Panel\Ticketing\MyTicketResource;
+use PanelKit\Panel\Ticketing\TicketResource;
+use PanelKit\Panel\Support\TicketStats;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Promise\Create;

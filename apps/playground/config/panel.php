@@ -8,7 +8,7 @@ use App\Models\Tenant;
 use App\Panel\Singulars\BillingSettingsResource;
 use App\Panel\Singulars\LandingPageResource;
 use App\Plugins\AnnouncementsPlugin;
-use App\Plugins\TicketingPlugin;
+use PanelKit\Panel\Ticketing\TicketingPlugin;
 
 return [
 
@@ -409,6 +409,27 @@ return [
     'ticketing' => [
         'operator' => env('PANEL_TICKETING_OPERATOR', 'admin'),
         'opener' => env('PANEL_TICKETING_OPENER', 'reseller'),
+
+        /*
+        | THE TABLES THIS APP ALREADY HAS, which is the whole of its migration
+        | to the packaged ticketing.
+        |
+        | The package defaults to `panel_tickets` / `panel_ticket_replies`,
+        | because `tickets` is a name an application might already be using -
+        | this one is. Naming them here is what lets four years of support
+        | history stay where it is: no rename on a live table, no data copy, no
+        | downtime.
+        |
+        | AND IT HAD TO BE WRITTEN HERE RATHER THAN INHERITED. `mergeConfigFrom`
+        | is shallow, so this `ticketing` array wins whole and the package's
+        | `tables` key never reaches it - which `panel:update` reports by name,
+        | and which would otherwise have sent every query to a table that does
+        | not exist.
+        */
+        'tables' => [
+            'tickets' => 'tickets',
+            'replies' => 'ticket_replies',
+        ],
 
         /*
         | WHICH PRIORITIES REACH TELEGRAM - roadmap 6.5.

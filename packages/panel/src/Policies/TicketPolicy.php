@@ -2,15 +2,31 @@
 
 declare(strict_types=1);
 
-namespace App\Policies;
+namespace PanelKit\Panel\Policies;
 
-use App\Models\Ticket;
-use App\Models\User;
+use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Contracts\Auth\Authenticatable;
+use PanelKit\Panel\Models\Ticket;
 use DateTimeInterface;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\TenantContext;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
+ * PROMOTED FROM THE REFERENCE APP, with two substitutions and no change of
+ * meaning.
+ *
+ * THE USER IS TWO CONTRACTS, NOT A CLASS. A package cannot name the
+ * application's user model, and this policy needs exactly two things of it: an
+ * identity, to compare against `opened_by`, and an ability check.
+ * `Authenticatable&Authorizable` says that and nothing more.
+ *
+ * ABILITIES ARE ASKED THE WAY THE REST OF THE PACKAGE ASKS THEM - the
+ * application's `hasPermission()` when it has one, `can()` when it does not,
+ * and Spatie's team told which organisation to filter by either way. Both
+ * halves are load-bearing and both were got wrong once while promoting this
+ * file; `may()` and `withPermissionsTeam()` below each carry the note.
+ *
  * Who may read and act on a ticket - roadmap 6.1, written BEFORE any screen.
  *
  * A TICKET IS THE FIRST RECORD TWO SIDES READ UNDER DIFFERENT RULES, and that
@@ -41,7 +57,7 @@ use PanelKit\Panel\Support\TenantContext;
  */
 final class TicketPolicy
 {
-    public function viewAny(User $user): bool
+    public function viewAny(Authenticatable&Authorizable $user): bool
     {
         // A list is the operator's surface. The opener's own tickets reach
         // them through their own screen, which constrains by `opened_by`
@@ -64,12 +80,12 @@ final class TicketPolicy
      * look, the query decides at what - and every record request still
      * answers to `view` below.
      */
-    public function viewOwn(User $user): bool
+    public function viewOwn(Authenticatable&Authorizable $user): bool
     {
         return $this->hasTenant();
     }
 
-    public function view(User $user, ?Ticket $ticket = null): bool
+    public function view(Authenticatable&Authorizable $user, ?Ticket $ticket = null): bool
     {
         if (! $this->hasTenant()) {
             return false;
@@ -108,7 +124,7 @@ final class TicketPolicy
      * several in an hour, and refusing them is refusing the customer who most
      * needs help. The limits are set where only a machine reaches them.
      */
-    public function create(User $user): bool
+    public function create(Authenticatable&Authorizable $user): bool
     {
         if (! $this->hasTenant()) {
             return false;
@@ -118,7 +134,7 @@ final class TicketPolicy
             && $this->withinRate($user, 'max_per_day', 30, now()->subDay());
     }
 
-    private function withinRate(User $user, string $key, int $default, DateTimeInterface $since): bool
+    private function withinRate(Authenticatable&Authorizable $user, string $key, int $default, DateTimeInterface $since): bool
     {
         $limit = (int) config("panel.ticketing.{$key}", $default);
 
@@ -129,7 +145,7 @@ final class TicketPolicy
         }
 
         return Ticket::query()
-            ->where('opened_by', $user->getKey())
+            ->where('opened_by', $user->getAuthIdentifier())
             ->where('created_at', '>=', $since)
             ->count() < $limit;
     }
@@ -138,7 +154,7 @@ final class TicketPolicy
      * Editing the RECORD - subject, priority, assignment - is operator work.
      * The opener's way to add to a ticket is the conversation, not this.
      */
-    public function update(User $user, ?Ticket $ticket = null): bool
+    public function update(Authenticatable&Authorizable $user, ?Ticket $ticket = null): bool
     {
         if (! $this->hasTenant()) {
             return false;
@@ -160,7 +176,7 @@ final class TicketPolicy
      * both - reopening is an operator action, so a reply after resolution
      * cannot silently revive it.
      */
-    public function reply(User $user, Ticket $ticket): bool
+    public function reply(Authenticatable&Authorizable $user, Ticket $ticket): bool
     {
         if (! $this->hasTenant() || ! $this->owns($ticket)) {
             return false;
@@ -198,7 +214,7 @@ final class TicketPolicy
      * `resolve` - two rules about the same side of the desk disagreeing about
      * where it ends.
      */
-    public function note(User $user, Ticket $ticket): bool
+    public function note(Authenticatable&Authorizable $user, Ticket $ticket): bool
     {
         return $this->hasTenant()
             && $this->owns($ticket)
@@ -210,7 +226,7 @@ final class TicketPolicy
      * may not close: a customer marking their own ticket resolved is a queue
      * reporting success nobody verified.
      */
-    public function resolve(User $user, Ticket $ticket): bool
+    public function resolve(Authenticatable&Authorizable $user, Ticket $ticket): bool
     {
         return $this->hasTenant()
             && $this->owns($ticket)
@@ -221,7 +237,7 @@ final class TicketPolicy
      * DELETING A TICKET DESTROYS THE RECORD OF A COMPLAINT, so it is the
      * narrowest grant here - never the opener's, whatever else they hold.
      */
-    public function delete(User $user, ?Ticket $ticket = null): bool
+    public function delete(Authenticatable&Authorizable $user, ?Ticket $ticket = null): bool
     {
         if (! $this->hasTenant()) {
             return false;
@@ -234,12 +250,12 @@ final class TicketPolicy
         return $this->may($user, 'delete');
     }
 
-    public function restore(User $user, ?Ticket $ticket = null): bool
+    public function restore(Authenticatable&Authorizable $user, ?Ticket $ticket = null): bool
     {
         return $this->delete($user, $ticket);
     }
 
-    public function forceDelete(User $user, ?Ticket $ticket = null): bool
+    public function forceDelete(Authenticatable&Authorizable $user, ?Ticket $ticket = null): bool
     {
         return $this->delete($user, $ticket);
     }
@@ -266,13 +282,78 @@ final class TicketPolicy
         return $key !== null && (string) $ticket->tenant_id === (string) $key;
     }
 
-    private function opened(User $user, Ticket $ticket): bool
+    private function opened(Authenticatable&Authorizable $user, Ticket $ticket): bool
     {
-        return (string) $ticket->opened_by === (string) $user->getKey();
+        return (string) $ticket->opened_by === (string) $user->getAuthIdentifier();
     }
 
-    private function may(User $user, string $action): bool
+    /**
+     * DOES THIS PERSON HOLD THE ABILITY.
+     *
+     * `hasPermission()` FIRST, AND THAT IS NOT A STYLE CHOICE. It is the same
+     * duck-typed check `PageController`, `SingularController`, `StatWidget`,
+     * `ChartWidget` and `Impersonation` already make, and the reason is that
+     * `can()` CANNOT EXPRESS A `grants_all` ROLE: a role that holds every
+     * ability including ones invented later is PanelKit's concept, stored in a
+     * column Spatie has never heard of. Spatie's `Gate::before` answers from the
+     * pivot tables alone, so a superuser reads as holding nothing.
+     *
+     * Promoting this policy replaced `hasPermission()` with `can()` on the
+     * grounds that a package cannot name an application method - true, and the
+     * substitution was still wrong. It denied every administrator the ticket
+     * list while every ticket test stayed green, because the tests grant named
+     * abilities and administrators hold none: the failure lived exactly where
+     * nothing looked.
+     *
+     * `can()` IS THE FALLBACK, for an application that has no such method - a
+     * fresh install with a plain user model, where Spatie's pivot rows are the
+     * whole answer and `grants_all` does not exist to be missed.
+     */
+    private function may(Authenticatable&Authorizable $user, string $action): bool
     {
-        return $user->hasPermission(Abilities::name($action, 'tickets'));
+        $ability = Abilities::name($action, 'tickets');
+
+        return $this->withPermissionsTeam(static fn (): bool => method_exists($user, 'hasPermission')
+            ? (bool) $user->hasPermission($ability)
+            : $user->can($ability));
+    }
+
+    /**
+     * RUN THE CHECK WITH THIS ORGANISATION AS SPATIE'S TEAM.
+     *
+     * `can()` reaches Spatie through its `Gate::before` hook, and that hook
+     * filters roles by the team id held in the registrar. A REQUEST sets it -
+     * see `SetPermissionsTeam` - and a test, a console command and a queued job
+     * do not. So without this the same person with the same roles is permitted
+     * inside a request and denied everywhere else, with nothing at the call site
+     * to explain why: `panel:permissions`, a scheduled escalation, a job that
+     * closes stale tickets, all silently authorising nobody.
+     *
+     * That is the FOURTH appearance of this exact bug in this codebase, and the
+     * reference app's `hasPermission()` names the other three. A guard must not
+     * depend on ambient state.
+     *
+     * SET FROM `TenantContext`, NOT FROM THE USER, and not left to whatever was
+     * there. It is the same value the middleware sets, so inside a request this
+     * changes nothing; everywhere else it supplies what nothing else did. The
+     * previous id is restored in a `finally` - under a long-lived worker an id
+     * left behind is the next request's default, for a different tenant.
+     */
+    private function withPermissionsTeam(callable $body): bool
+    {
+        if (! class_exists(PermissionRegistrar::class)) {
+            return (bool) $body();
+        }
+
+        $registrar = app(PermissionRegistrar::class);
+        $previous = $registrar->getPermissionsTeamId();
+
+        $registrar->setPermissionsTeamId(app(TenantContext::class)->currentKey());
+
+        try {
+            return (bool) $body();
+        } finally {
+            $registrar->setPermissionsTeamId($previous);
+        }
     }
 }

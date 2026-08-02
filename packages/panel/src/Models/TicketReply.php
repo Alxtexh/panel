@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Models;
+namespace PanelKit\Panel\Models;
 
-use App\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
+use PanelKit\Panel\Models\Scopes\TenantScope;
 use PanelKit\Panel\Support\TenantContext;
+use PanelKit\Panel\Support\TicketTables;
 
 /**
  * One message on a ticket - a reply the customer sees, or a note only the
@@ -38,6 +39,12 @@ final class TicketReply extends Model
     public const INTERNAL = 'internal';
 
     protected $guarded = [];
+
+    /** Asked, not declared - see `TicketTables`. */
+    public function getTable(): string
+    {
+        return TicketTables::replies();
+    }
 
     protected function casts(): array
     {
@@ -87,6 +94,6 @@ final class TicketReply extends Model
 
     public function author(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'author_id');
+        return $this->belongsTo((string) config('auth.providers.users.model'), 'author_id');
     }
 }

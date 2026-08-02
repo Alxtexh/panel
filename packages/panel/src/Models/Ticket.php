@@ -2,20 +2,27 @@
 
 declare(strict_types=1);
 
-namespace App\Models;
+namespace PanelKit\Panel\Models;
 
-use App\Listeners\AnnounceNewTicket;
-use App\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 use PanelKit\Panel\Audit\Auditable;
+use PanelKit\Panel\Events\TicketOpened;
+use PanelKit\Panel\Models\Scopes\TenantScope;
 use PanelKit\Panel\Support\TenantContext;
+use PanelKit\Panel\Support\TicketTables;
 
 /**
- * A conversation with two ends - roadmap 6.2.
+ * A conversation with two ends.
+ *
+ * PROMOTED FROM THE REFERENCE APP. Three things were application-shaped and are
+ * now asked rather than assumed: the table name, the user model, and what
+ * happens when a ticket opens - a direct call to one announcer became
+ * `TicketOpened`, so an installation can add a webhook without editing a
+ * packaged model.
  *
  * WHY A TICKET IS NOT JUST ANOTHER RESOURCE. Every other record in this panel
  * is read by one side: an operator reads clients, a reseller reads plans. A
@@ -46,6 +53,17 @@ final class Ticket extends Model
     public const RESOLVED = 'resolved';
 
     protected $guarded = [];
+
+    /**
+     * ASKED, NOT DECLARED. `tickets` is a name an application might already be
+     * using, so the package defaults to `panel_tickets` and an installation
+     * that had ticketing before it was promoted points the config at the tables
+     * it already has. See `TicketTables`.
+     */
+    public function getTable(): string
+    {
+        return TicketTables::tickets();
+    }
 
     protected function casts(): array
     {
@@ -91,7 +109,7 @@ final class Ticket extends Model
          * cannot block the save - see the listener's own note.
          */
         self::created(static function (self $ticket): void {
-            app(AnnounceNewTicket::class)->handle($ticket);
+            TicketOpened::dispatch($ticket);
         });
 
         /*
@@ -109,14 +127,24 @@ final class Ticket extends Model
         });
     }
 
+    /**
+     * THE USER MODEL IS THE APPLICATION'S, and the package does not know its
+     * name. `auth.providers.users.model` does; importing `App\Models\User`
+     * would work in exactly one application and fatal in every other.
+     */
+    private static function userModel(): string
+    {
+        return (string) config('auth.providers.users.model');
+    }
+
     public function opener(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'opened_by');
+        return $this->belongsTo(self::userModel(), 'opened_by');
     }
 
     public function assignee(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(self::userModel(), 'assigned_to');
     }
 
     /** The thread, oldest first - which is how a conversation reads. */

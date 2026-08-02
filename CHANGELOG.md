@@ -4,6 +4,65 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.3.2
+
+**Ticketing ships.** It was written in the reference app, which meant every
+installation that wanted a support desk had to write one — the policy, the
+thread, the SLA clock, the unread rules — and get the two-sided authorisation
+right on the first try. It is now `panelkit/panel`.
+
+### Added
+
+- **A support desk in the package.** `TicketResource` (the operator's queue),
+  `MyTicketResource` (the customer's own), and `TicketingPlugin`, which mounts
+  each on the panel named in `panel.ticketing.operator` / `.opener` and
+  **refuses to mount both on the same panel** — a customer reading the
+  operator's queue is the failure the pairing exists to prevent.
+- **`TicketPolicy`, which is where the two sides are separated.** The opener
+  reads and replies to their own holding no ticket ability at all, and may never
+  resolve; the operator reads the organisation's on an ordinary ability; the
+  tenant check runs before either. Internal notes are their own grant.
+- **The thread, promoted whole** — replies, internal notes, attachments,
+  first-response and SLA due times, departments, per-side unread indicators, and
+  `TicketAnalysis` with stats and a volume chart.
+- **`TicketOpened`, an event rather than a call.** The packaged listener alerts
+  on urgent tickets over Telegram and never throws. Adding a webhook or an email
+  to a rota is now a listener, not an edit to a vendored model.
+- **`panel.ticketing.tables`**, defaulting to `panel_tickets` /
+  `panel_ticket_replies`. `tickets` is a name an application may already use, and
+  a migration that succeeds against somebody else's table is worse than one that
+  collides.
+
+### Fixed
+
+- **The promoted policy authorised nobody who was not named individually.**
+  Replacing the reference app's `hasPermission()` with the framework's `can()`
+  read as the correct package-side substitution and was not: `can()` answers
+  from Spatie's pivot rows, and a **`grants_all` role is PanelKit's concept, in
+  a column Spatie has never heard of**. Every administrator lost the ticket list
+  while every ticket test stayed green, because the tests grant named abilities
+  and administrators hold none. It now asks the way the rest of the package
+  already does — `hasPermission()` when the application has one, `can()` when it
+  does not.
+- **And the fallback needed the other half.** `can()` reaches Spatie through
+  `Gate::before`, which filters roles by a team id that a *request* sets and a
+  command, a queued job or a test does not — so the same person with the same
+  role was permitted inside a request and denied everywhere else, silently. The
+  policy now sets it from `TenantContext` and restores it in a `finally`.
+  `TicketPolicyPlainUserTest` exercises this against a user model with no
+  `hasPermission()`, which is the path nothing was covering.
+
+### Upgrading
+
+If you had no ticketing, `php artisan panel:update` writes the new page files
+and the migration creates `panel_tickets` / `panel_ticket_replies`; set
+`panel.ticketing.operator` and `.opener` to your panel ids and nothing appears
+until you do.
+
+If you already have ticket tables, **point config at them instead of migrating**
+— set `panel.ticketing.tables` to the names you have. No data moves. The
+packaged migration skips a table that exists.
+
 ## 0.3.1
 
 **A release of things that were never true.** Nothing here is a new capability;

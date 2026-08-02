@@ -354,6 +354,37 @@ RecordAction::make('suspend')
 The ability is checked against THAT record before the button renders and
 again before it runs.
 
+### Turn on ticketing - do NOT write one
+
+A support desk ships in the package: two resources over one table, the
+policy that separates the two sides, the thread, SLA times, departments,
+unread indicators and a stats screen. AN AGENT ASKED FOR "SUPPORT
+TICKETS" MUST TURN THIS ON RATHER THAN BUILD IT. A hand-rolled one gets
+the two-sided authorisation wrong, and that failure is a customer
+reading another customer's ticket.
+
+```php
+// config/panel.php
+'ticketing' => [
+    'operator' => 'admin',   // the queue: the organisation's tickets
+    'opener' => 'portal',    // a customer's own, and only their own
+],
+```
+
+The same panel id in both is REFUSED AT BOOT, by name. Leave either null
+and that side does not mount, which is how an installation that wants
+only an internal queue configures it.
+
+The tables are `panel.ticketing.tables` - `panel_tickets` and
+`panel_ticket_replies` by default. An installation that already has
+ticket tables points these at them and migrates nothing.
+
+`TicketOpened` is the extension point: listen to it for a webhook, an
+email to a rota, a row in your own queue. The packaged listener alerts
+on urgent tickets over Telegram. A LISTENER MUST NOT THROW - a failed
+notification is one somebody misses, a failed save is a complaint that
+vanished.
+
 ### Ship it as a package
 
 Implement `PanelPlugin`, call `PanelManager::plugin(new YourPlugin)` from your
@@ -383,6 +414,8 @@ _How to use them: wrap fields with them inside `form()`._
 _How to use them: **declare them on a `DashboardPage`, which is what draws them.** `php artisan make:panel-page Overview --dashboard` writes one; its `stats()` and `charts()` return these classes and the packaged `PanelDashboard` screen renders them, each as its own deferred prop. A widget built anywhere else is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 that was true of every widget, which is why this line exists._
 **Pages (screens that are not resources)** (5): `ChangelogPage` `DashboardPage` `EnvironmentPage` `Page` `Workspace`
 _How to use them: extend `Page` (or `DashboardPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._
+**Ticketing** (3): `MyTicketResource` `TicketResource` `TicketingPlugin`
+_How to use them: do not name these directly - `TicketingPlugin` mounts them from `panel.ticketing.operator` / `.opener`. See the recipe._
 **Client-side components** (`@panelkit/ui`, no PHP equivalent): `StatStrip`
 `MiniStatCard` `SegmentedBar` `HeatmapChart` `ComboChart` `PolarAreaChart`
 `RadarChart` `SetupChecklist`

@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Panel\Ticketing;
+namespace PanelKit\Panel\Ticketing;
 
-use App\Models\Ticket;
-use App\Models\User;
+use PanelKit\Panel\Models\Ticket;
 use Illuminate\Database\Eloquent\Builder;
 use PanelKit\Panel\Actions\ActionGroup;
 use PanelKit\Panel\Actions\RecordAction;
@@ -42,6 +41,20 @@ use PanelKit\Panel\Tables\Table;
  */
 final class TicketResource extends Resource
 {
+    /**
+     * The application's user model, asked rather than named.
+     *
+     * The assignee picker lists operators and the rule checks one exists in
+     * scope; both need the class, and a package importing `App\Models\User`
+     * would fatal in every application that calls it something else.
+     *
+     * @return class-string<\Illuminate\Database\Eloquent\Model>
+     */
+    private static function userModel(): string
+    {
+        return (string) config('auth.providers.users.model');
+    }
+
     protected static string $model = Ticket::class;
 
     protected static string $icon = 'mail';
@@ -108,10 +121,10 @@ final class TicketResource extends Resource
              * which is a way to assign this ticket outside the tenant.
              */
             SelectField::make('assigned_to')->label('Assigned to')
-                ->searchable(fn (string $term): array => User::query()
+                ->searchable(fn (string $term): array => self::userModel()::query()
                     ->when($term !== '', fn ($q) => $q->where('name', 'like', $term.'%'))
                     ->orderBy('name')->limit(25)->pluck('name', 'id')->all())
-                ->rule(ExistsInScope::of(User::class)),
+                ->rule(ExistsInScope::of(self::userModel())),
         ]);
 
         /*

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Panel\Ticketing;
+namespace PanelKit\Panel\Ticketing;
 
-use App\Models\Ticket;
+use PanelKit\Panel\Models\Ticket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use PanelKit\Panel\Actions\RecordAction;

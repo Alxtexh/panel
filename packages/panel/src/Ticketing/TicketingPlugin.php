@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Plugins;
+namespace PanelKit\Panel\Ticketing;
 
-use App\Http\Controllers\TicketAnalysisController;
-use App\Http\Controllers\TicketStatsController;
-use App\Http\Controllers\TicketThreadController;
-use App\Panel\Ticketing\MyTicketResource;
-use App\Panel\Ticketing\TicketResource;
+use PanelKit\Panel\Http\Controllers\Ticketing\TicketAnalysisController;
+use PanelKit\Panel\Http\Controllers\Ticketing\TicketStatsController;
+use PanelKit\Panel\Http\Controllers\Ticketing\TicketThreadController;
 use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;

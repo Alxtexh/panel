@@ -9,10 +9,10 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 235 files, 39,183 lines | 123 files, 18,368 lines |
-| Vue | 103 components | **199 components** |
+| PHP | 249 files, 41,423 lines | 112 files, 16,600 lines |
+| Vue | 105 components | **198 components** |
 
-The demo carries twice the Vue the framework does. Most of what makes it look
+The demo carries nearly twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
 the landing pages — is application code written to exercise the framework, not
 part of it. That is deliberate: a framework that shipped an ISP's dashboard would
@@ -112,6 +112,38 @@ neighbours.
 see is never queried and never serialised — filtering client-side would ship the
 number to somebody forbidden from it and rely on CSS to keep the secret.
 
+### Ticketing
+
+**A support desk is not an example, so it ships.** Two resources over one table:
+`TicketResource` is the operator's queue, `MyTicketResource` is the customer's
+own, and `TicketingPlugin` mounts each on the panel named in config — refusing
+to mount both on the same one, because a customer reading the operator's queue
+is the failure this pairing exists to prevent.
+
+**The policy is where the two sides are actually separated.** The opener reads
+and replies to their own holding *no ticket ability at all* — being the person
+who asked is the entitlement — and may never resolve. The operator reads the
+organisation's on an ordinary ability. Neither reads another organisation's, and
+that check runs first: reversed, "the opener always reads their own" becomes a
+cross-tenant read that looks like a feature.
+
+A thread with replies, internal notes the customer never sees, and attachments ·
+first-response and SLA due times · departments · unread indicators per side ·
+stats and a volume chart · creation rate-limited in the policy, so every entry
+point is covered rather than the one form somebody remembered.
+
+**`TicketOpened` is an event, not a call.** The packaged listener alerts on
+urgent tickets over Telegram and never throws — a failed notification is one
+somebody misses, a failed save is a complaint that vanished. An installation
+adds a webhook or an email to a rota by listening, without editing a vendored
+model.
+
+**The tables are named in config.** They default to `panel_tickets` /
+`panel_ticket_replies`, because `tickets` is a name an application may already
+use and a migration that succeeds against somebody else's table is worse than
+one that collides. An installation that had ticketing before it was packaged
+points config at what it has; that is the whole migration.
+
 ### Also shipped
 
 Trash across resources · custom fields · import wizard · document templates and
@@ -138,8 +170,9 @@ data, where every page returns 200 and every test passes.
 ### Screens (`@panelkit/inertia`)
 
 `ResourceIndex` `ResourceForm` `ResourceView` `Trash` `PanelHome`
-`PanelDashboard` `Changelog` `Environment` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
-`documents/DocumentPrint`
+`PanelDashboard` `Changelog` `Environment` `TicketAnalysis` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
+`documents/DocumentPrint`, plus the `TicketThread` component the two ticket
+resources render into.
 
 Layout-free by design: the shell stays yours. A one-line page file per screen is
 what `panel:install` writes.
@@ -154,10 +187,13 @@ load and to be somewhere real screens live. Treat it as worked examples.
 **Resources** — Client, Router, Plan, EditablePlan, ClientSession, Activity,
 User, Announcement. An ISP's domain, on ~250,000 seeded subscribers.
 
-**Screens** — Dashboard and its charts, AI assistant drawer, ticketing (threads,
-SLA, departments, stats), mail, chat, invoices, operations, monitoring, backups,
-organisation and user management, API reference, device preview, docs, lock
-screen, the searchable build guide.
+**Screens** — Dashboard and its charts, AI assistant drawer, mail, chat,
+invoices, operations, monitoring, backups, organisation and user management, API
+reference, device preview, docs, lock screen, the searchable build guide.
+
+Ticketing was here until v0.3.2 and is now in Part 1. What is left in the demo
+is configuration: which panel is the operator's, which is the customer's, and
+the two table names it already had rows in.
 
 **Three landing designs** — Aurora, Editorial, Console, composed from a section
 library in `@panelkit/ui`, editable from the admin as stored blocks. The
@@ -203,4 +239,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.3.1**, 1,602 tests passing, 13 skipped.
+Current state: **v0.3.2**, 1,596 tests passing, 13 skipped.
