@@ -93,30 +93,48 @@ describe('useTenantTheme', () => {
         expect(apply({}).cssText).toBe('')
     })
 
-    /**
-     * THE BRAND SURVIVES THE NEXT APPEARANCE CHANGE, which is the whole reason
-     * the two are connected at all.
+    /*
+     * THE BRAND IS THE DEFAULT, NOT AN OVERRIDE - the three cases below are
+     * that rule, and they are worth spelling out because the first version got
+     * it wrong in a way tests would not have caught.
      *
-     * Writing `--primary` here would be enough on its own - this effect runs
-     * after boot - but only until somebody opens the drawer and picks an
-     * accent. `applyAppearance` rewrites every token from the preference, so
-     * without the registry the organisation's colour would vanish on a click
-     * that had nothing to do with it.
+     * "The brand always wins" is coherent and passes every assertion you would
+     * think to write. It also makes the drawer's Primary swatches a control
+     * that responds to a click and changes nothing, which is only visible by
+     * looking at the panel.
      *
-     * ASSERTED BY ACTUALLY CALLING IT, not by inspecting the registry. A test
-     * that checked the variable was recorded would pass whether or not
-     * anything merged it.
+     * ASSERTED THROUGH `applyAppearance`, not by inspecting the registry: a
+     * test that checked the variable was recorded would pass whether or not
+     * anything ever read it.
      */
-    it('survives an accent change made in the drawer', () => {
+    it('applies the brand while the accent is the shipped default', () => {
+        apply({ primary: '#b91c1c' })
+
+        applyAppearance({ ...readAppearance(), primary: 'slate' })
+
+        expect(document.documentElement.style.getPropertyValue('--primary')).toBe('#b91c1c')
+    })
+
+    it('gives way once somebody picks an accent of their own', () => {
         apply({ primary: '#b91c1c' })
 
         applyAppearance({ ...readAppearance(), primary: 'emerald' })
 
         const style = document.documentElement.style
 
-        expect(style.getPropertyValue('--primary')).toBe('#b91c1c')
+        expect(style.getPropertyValue('--primary')).toBe('oklch(0.60 0.14 163)')
 
-        // And the rest of the preference still applies - only the brand is held.
+        // The rest of the preference applies either way.
         expect(style.getPropertyValue('--pk-font-size')).not.toBe('')
+    })
+
+    /** And Reset is the way back to the company colour. */
+    it('returns when the accent goes back to the default', () => {
+        apply({ primary: '#b91c1c' })
+
+        applyAppearance({ ...readAppearance(), primary: 'emerald' })
+        applyAppearance({ ...readAppearance(), primary: 'slate' })
+
+        expect(document.documentElement.style.getPropertyValue('--primary')).toBe('#b91c1c')
     })
 })

@@ -387,13 +387,26 @@ export function setAppearancePersister(fn: ((patch: Partial<Appearance>) => void
 }
 
 /**
- * The organisation's colours, which beat the personal accent.
+ * The organisation's colours - the DEFAULT accent, not an override of it.
  *
- * BOTH WANT `--primary`, so one of them has to be last and it should not be
- * whichever happened to mount later. A personal accent is already scoped to one
- * person; an organisation that has set its colour has said what the panel looks
- * like for everyone in it. Nothing else the appearance drawer controls - dark
- * mode, density, font size, surfaces - is affected.
+ * BOTH WANT `--primary`, so one has to win, and it should not be whichever
+ * mounted later. The first version of this rule was "the brand always wins",
+ * which is coherent right up until you look at the drawer: the Primary swatches
+ * sit there, respond to a click, and change nothing. A control that does
+ * nothing is worse than a colour somebody disagrees with.
+ *
+ * So the rule is DEFAULT-AND-OVERRIDE. While the accent is the shipped one, the
+ * organisation's colour applies - a new colleague sees company branding without
+ * touching anything. Pick any other swatch and that is a deliberate choice
+ * about your own panel, so it wins.
+ *
+ * `slate` IS THEREFORE ALSO "USE THE COMPANY COLOUR", because it is the
+ * default, and Reset returns to it. That is the way back to the brand, and it
+ * is the one wrinkle in an otherwise invisible rule: somebody who genuinely
+ * wants slate on a branded panel cannot have it.
+ *
+ * Nothing else the drawer controls - dark mode, density, font size, surfaces -
+ * is affected either way.
  */
 let tenantVars: Record<string, string> = {}
 
@@ -412,6 +425,26 @@ let tenantVars: Record<string, string> = {}
  */
 export function setTenantVars(vars: Record<string, string>): void {
     tenantVars = vars
+
+    if (typeof document === 'undefined') {
+        return
+    }
+
+    /*
+     * READ FROM STORAGE, NOT FROM THE REACTIVE STATE. This is called from
+     * inside `useTenantTheme`'s `watchEffect`, so touching `state` here would
+     * make the effect depend on something it also causes to change. An earlier
+     * version re-applied the whole appearance from this function and the panel
+     * mounted into a synchronous loop: a blank page, and NO console error,
+     * because the thread never yielded.
+     */
+    if (readAppearance().primary !== DEFAULTS.primary) {
+        return
+    }
+
+    for (const [property, value] of Object.entries(vars)) {
+        document.documentElement.style.setProperty(property, value)
+    }
 }
 
 /** Apply a preference to the document, and cache it for the next first paint. */
@@ -421,7 +454,14 @@ export function applyAppearance(next: Appearance): void {
     }
 
     const root = document.documentElement
-    const vars = { ...appearanceVars(next), ...tenantVars }
+    // One condition rather than a second stored flag. A "has chosen" field
+    // would have to survive localStorage, the account column and the endpoint's
+    // key allowlist - three places to keep in step for something the value
+    // already says.
+    const vars = {
+        ...appearanceVars(next),
+        ...(next.primary === DEFAULTS.primary ? tenantVars : {}),
+    }
 
     root.classList.toggle('dark', isDark(next))
 

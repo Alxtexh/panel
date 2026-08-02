@@ -48,7 +48,6 @@ export function useTenantTheme(colors: Ref<Record<string, string> | undefined>) 
             return
         }
 
-        const root = document.documentElement
         const vars: Record<string, string> = {}
 
         for (const [token, value] of Object.entries(colors.value ?? {})) {
@@ -59,17 +58,12 @@ export function useTenantTheme(colors: Ref<Record<string, string> | undefined>) 
             }
 
             vars[`--${token}`] = value
-            root.style.setProperty(`--${token}`, value)
         }
 
         /*
-         * WRITTEN HERE, RECORDED THERE. The properties are set directly - this
-         * effect runs after boot, so the brand lands on top of the accent
-         * without anything having to be re-applied.
-         *
-         * The registry is what keeps it there. `applyAppearance` merges these
-         * last, so the next visit to the appearance drawer restyles everything
-         * else and leaves the organisation's colour alone.
+         * SANITISED HERE, APPLIED THERE. This file decides what is safe to
+         * write; `setTenantVars` decides whether the organisation's colour
+         * beats the person's, and it is the only place that rule exists.
          */
         setTenantVars(vars)
     })
