@@ -51,7 +51,7 @@ final class UpdateCommand extends Command
             $this->invalidateSchemaCache(),
             $this->reconcilePages(),
             $this->reportPendingMigrations(),
-            $this->reportUnmergeableConfigKeys(),
+            $this->reportUninstalledPlugins(),
             $this->refreshBlueprint(),
         ]);
 
@@ -185,31 +185,29 @@ final class UpdateCommand extends Command
     }
 
     /**
-     * The config keys a new version added that `mergeConfigFrom` will NOT supply.
+     * A PLUGIN THIS VERSION SHIPS THAT A PUBLISHED CONFIG DOES NOT INSTALL.
      *
-     * THIS IS NARROWER THAN "NEW KEYS", deliberately. `mergeConfigFrom` is a
-     * shallow merge: a top-level key absent from a published `config/panel.php`
-     * still gets the package default, so naming those would be noise on every
-     * upgrade. What the merge cannot rescue is a key added INSIDE an array the
-     * application already publishes - the published `['env' => [...]]` wins
-     * whole, and `env.editable` is simply not there.
+     * `ConfigMerge` now merges the package's config into a published one key by
+     * key, so a setting added inside `auth` or `tenancy` arrives on its own and
+     * there is nothing to report about it. WHAT IT DELIBERATELY DOES NOT MERGE
+     * IS A LIST: an application that cut `abilities` to the four it uses
+     * configured that key, and unioning the package's back in would reinstall a
+     * plugin somebody removed on purpose.
      *
-     * `config()` THEN READS THAT KEY AS UNSET. How bad this is depends on the
-     * call site: one that passes its own default degrades quietly to it, and
-     * one that does not gets null. The first case is merely invisible - the
-     * value cannot be edited from the file that appears to hold it. The second
-     * is silent and shaped like an ABSENT FEATURE: the screen the key enables
-     * does not appear, nothing errors, and the reasonable conclusion - "this
-     * version did not ship it" - is wrong. That is the same mistake a real
-     * installation already reported about the page mechanism, arriving by a
-     * different route.
+     * So `plugins` is the one place an upgrade can still hand you something you
+     * never receive - which is not hypothetical. `TicketingPlugin` shipped in
+     * the package for a release and was registered nowhere: somebody set
+     * `panel.ticketing.operator`, reloaded, and got no route, no navigation
+     * entry and no error.
      *
      * IT REPORTS AND DOES NOT WRITE. `config/panel.php` belongs to the
      * application the moment it is published; it holds their abilities, their
      * templates and their tenancy decisions, and the ones an overwrite would
-     * revert are exactly the ones that fail open.
+     * revert are exactly the ones that fail open. Here it is also the only
+     * correct behaviour: an absent plugin may be a removal, and only the
+     * installation knows which.
      */
-    private function reportUnmergeableConfigKeys(): ?string
+    private function reportUninstalledPlugins(): ?string
     {
         $published = base_path('config/panel.php');
 
@@ -229,23 +227,23 @@ final class UpdateCommand extends Command
             return null;
         }
 
-        $missing = ConfigDrift::keysNotSuppliedByMerge($ours, $theirs);
+        $missing = ConfigDrift::pluginsNotSuppliedByMerge($ours, $theirs);
 
         if ($missing === []) {
-            $this->components->task('  config/panel.php has every key this version reads', fn () => true);
+            $this->components->task('  config/panel.php installs every plugin this version ships', fn () => true);
 
             return null;
         }
 
-        $this->components->warn('  '.count($missing).' config key(s) missing from config/panel.php:');
+        $this->components->warn('  '.count($missing).' plugin(s) this version ships are not installed:');
 
-        foreach ($missing as $key) {
-            $this->line('      panel.'.$key);
+        foreach ($missing as $class) {
+            $this->line('      '.$class);
         }
 
-        return 'Copy the listed key(s) into config/panel.php from vendor/panelkit/panel/config/panel.php'
-            .' - they sit inside arrays you publish, so `config()` reads them as unset'
-            .' whatever the package file says.';
+        return 'Add the listed plugin(s) to the `plugins` array in config/panel.php, or ignore this'
+            .' if you removed them on purpose - your list wins whole, so the package cannot tell'
+            .' a deliberate removal from a version you published before it existed.';
     }
 
     /**
