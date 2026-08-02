@@ -534,6 +534,57 @@ return [
         'editable' => [],
     ],
 
+    /*
+    |---------------------------------------------------------------------------
+    | Ticketing
+    |---------------------------------------------------------------------------
+    |
+    | A ticket has TWO ENDS, and which panel is which is an installation's
+    | decision. Hardcoding them would work in exactly one application.
+    |
+    | `operator` is the desk - the panel that sees the organisation's queue.
+    | `opener` is the panel where somebody raises one and sees only their own.
+    | Set `opener` to null for a single-panel installation, where the desk is
+    | the only side and tickets arrive some other way.
+    |
+    | THE FEATURE IS ABSENT UNTIL A PANEL IS NAMED. `TicketingPlugin` registers
+    | nothing when the operator panel does not exist, so an installation that
+    | has not asked for ticketing has no screens to find rather than empty ones.
+    */
+    'ticketing' => [
+        'operator' => env('PANEL_TICKETING_OPERATOR'),
+        'opener' => env('PANEL_TICKETING_OPENER'),
+
+        /*
+        | WHERE THE ROWS LIVE. Prefixed, because `tickets` is a name an
+        | application might already use for something of its own - see
+        | `Support\TicketTables`. An installation that had ticketing before it
+        | was packaged points these at the tables it already has, which is the
+        | whole of that migration.
+        */
+        'tables' => [
+            'tickets' => 'panel_tickets',
+            'replies' => 'panel_ticket_replies',
+        ],
+
+        /*
+        | WHICH PRIORITIES RAISE AN ALERT.
+        |
+        | URGENT ONLY, and the restraint is what makes the channel worth having.
+        | An alert on every ticket is noise inside a week, and a muted channel is
+        | worse than no channel: it is one everybody believes is working.
+        */
+        'alert_priorities' => ['urgent'],
+
+        /*
+        | The departments a ticket can be routed to, as value => label. Empty
+        | means the panel does not ask - a desk of four people does not need a
+        | routing decision on every ticket, and a required field with one real
+        | answer is a field that gets a wrong answer.
+        */
+        'departments' => [],
+    ],
+
     'tenancy' => [
         'mode' => env('PANEL_TENANCY_MODE', 'column'),
         'column' => 'tenant_id',

@@ -155,6 +155,8 @@ final class Blueprint
             'Schema (form layout)' => ['Schema', 'wrap fields with them inside `form()`'],
             'Dashboard widgets' => ['Widgets', self::WIDGET_CAVEAT],
             'Pages (screens that are not resources)' => ['Pages', self::PAGE_HOW],
+            'Ticketing' => ['Ticketing', 'do not name these directly - `TicketingPlugin` '
+                .'mounts them from `panel.ticketing.operator` / `.opener`. See the recipe'],
         ];
 
         foreach ($groups as $label => [$dir, $how]) {
@@ -665,6 +667,37 @@ final class Blueprint
 
         The ability is checked against THAT record before the button renders and
         again before it runs.
+
+        ### Turn on ticketing - do NOT write one
+
+        A support desk ships in the package: two resources over one table, the
+        policy that separates the two sides, the thread, SLA times, departments,
+        unread indicators and a stats screen. AN AGENT ASKED FOR "SUPPORT
+        TICKETS" MUST TURN THIS ON RATHER THAN BUILD IT. A hand-rolled one gets
+        the two-sided authorisation wrong, and that failure is a customer
+        reading another customer's ticket.
+
+        ```php
+        // config/panel.php
+        'ticketing' => [
+            'operator' => 'admin',   // the queue: the organisation's tickets
+            'opener' => 'portal',    // a customer's own, and only their own
+        ],
+        ```
+
+        The same panel id in both is REFUSED AT BOOT, by name. Leave either null
+        and that side does not mount, which is how an installation that wants
+        only an internal queue configures it.
+
+        The tables are `panel.ticketing.tables` - `panel_tickets` and
+        `panel_ticket_replies` by default. An installation that already has
+        ticket tables points these at them and migrates nothing.
+
+        `TicketOpened` is the extension point: listen to it for a webhook, an
+        email to a rota, a row in your own queue. The packaged listener alerts
+        on urgent tickets over Telegram. A LISTENER MUST NOT THROW - a failed
+        notification is one somebody misses, a failed save is a complaint that
+        vanished.
 
         ### Ship it as a package
 

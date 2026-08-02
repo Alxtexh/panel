@@ -52,6 +52,16 @@ final class PanelPages
         'documents/DocumentPrint',
 
         /*
+         * THE TICKET ANALYSIS SCREEN. Routed by `TicketingPlugin` and only when
+         * an installation has named an operator panel - but the page file has
+         * to exist either way, because `panel:install` cannot know today what
+         * `config/panel.php` will say tomorrow, and a screen whose route
+         * appears later with no component is the white page this whole class
+         * was written to prevent.
+         */
+        'TicketAnalysis',
+
+        /*
          * THE PERMISSION MATRIX, nested for the same reason. The package now
          * ships the roles system - model, migration, reconciler - and a matrix
          * nobody can open is a permission system nobody can operate.
