@@ -194,11 +194,32 @@ final class PermissionsCommand extends Command
         app(PermissionRegistrar::class)->setPermissionsTeamId($key);
 
         $label = $this->labelFor($tenant);
-        $roles = Role::query()->where($team, $key)->get();
+        /*
+         * EAGER LOADED, because this command crashed in any application that
+         * follows Laravel's own advice.
+         *
+         * `$role->permissions` a few lines down is a lazy load, and
+         * `Model::preventLazyLoading()` - which the framework recommends and
+         * every recent starter kit enables outside production - turns that into
+         * a thrown exception. So `panel:permissions sync`, the command that
+         * reconciles the permission system, failed on any panel in development.
+         *
+         * NOTHING CAUGHT IT, and the two reasons are worth keeping:
+         *
+         *   `verify-install.sh` builds a bare `laravel/laravel`, which does NOT
+         *   enable strict mode. The harness that exists to prove a real install
+         *   is quieter than a real installation.
+         *
+         *   And a freshly created model is EXEMPT from the check - see
+         *   `HasAttributes::handleLazyLoadingViolation`, which returns early
+         *   when `wasRecentlyCreated`. Every test here made its roles and then
+         *   synced, so the object was always new enough to be excused.
+         */
+        $roles = Role::query()->with('permissions')->where($team, $key)->get();
 
         if ($roles->isEmpty()) {
             $this->createAdministrator($tenant, $known, $guard, $dry);
-            $roles = Role::query()->where($team, $key)->get();
+            $roles = Role::query()->with('permissions')->where($team, $key)->get();
         }
 
         foreach ($roles as $role) {
