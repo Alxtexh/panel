@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
+use PanelKit\Panel\PanelManager;
 
 /**
  * Generate a panel page, and the one-line Vue file that resolves it.
@@ -25,6 +26,7 @@ final class MakePageCommand extends Command
     protected $signature = 'make:panel-page
                             {name : The page class, e.g. ServerHealth}
                             {--dashboard : A widget host, extending DashboardPage}
+                            {--panel= : The panel this screen belongs to. Defaults to panel.default}
                             {--force : Overwrite an existing class or component}';
 
     protected $description = 'Create a panel page (a screen that is not a resource)';
@@ -50,11 +52,20 @@ final class MakePageCommand extends Command
 
         $dashboard = (bool) $this->option('dashboard');
 
+        try {
+            $panel = $this->targetPanel();
+        } catch (\RuntimeException $e) {
+            $this->components->error($e->getMessage());
+
+            return self::FAILURE;
+        }
+
         file_put_contents($path, $dashboard
-            ? $this->dashboardStub($class, $slug)
-            : $this->pageStub($class, $slug, $name));
+            ? $this->dashboardStub($class, $slug, $panel)
+            : $this->pageStub($class, $slug, $name, $panel));
 
         $this->components->info("Created app/Panel/Pages/{$class}.php");
+        $this->components->twoColumnDetail('Panel', $panel);
 
         if (! $dashboard) {
             $this->writeComponent($name, $slug);
@@ -139,7 +150,42 @@ final class MakePageCommand extends Command
         $this->components->info("Created resources/js/pages/{$name}.vue");
     }
 
-    private function pageStub(string $class, string $slug, string $name): string
+    /**
+     * WHICH PANEL THIS SCREEN BELONGS TO.
+     *
+     * `make:panel-resource` HAS TAKEN `--panel` SINCE IT EXISTED AND THIS DID
+     * NOT, which on a multi-panel application put every generated page in the
+     * DEFAULT panel - so thirteen platform screens landed in a tenant sidebar
+     * and had `panel()` patched into each of them afterwards by a script. That
+     * is the exact failure `Pages` warns about in its own docblock.
+     *
+     * THE PROPERTY IS ALWAYS WRITTEN, even for the default panel. `Page` carries
+     * `protected static string $panel = 'admin'` - a literal, not the configured
+     * default - so an application that renamed its only panel generated pages
+     * declaring one that does not exist: discovered, registered and reachable
+     * from nowhere, with no error.
+     *
+     * THE DIRECTORY DOES NOT CHANGE. Unlike resources, pages are discovered from
+     * one place and say which panel they are for, so a second portal's screens
+     * live beside the first's and nothing needs a new discovery path.
+     */
+    private function targetPanel(): string
+    {
+        $requested = $this->option('panel');
+        $id = $requested !== null ? (string) $requested : (string) config('panel.default', 'admin');
+
+        $panels = app(PanelManager::class)->panels();
+
+        if ($requested !== null && ! array_key_exists($id, $panels)) {
+            $known = $panels === [] ? 'none are registered' : implode(', ', array_keys($panels));
+
+            throw new \RuntimeException("No panel [{$id}]. Registered: {$known}.");
+        }
+
+        return $id;
+    }
+
+    private function pageStub(string $class, string $slug, string $name, string $panel): string
     {
         return <<<PHP
         <?php
@@ -156,6 +202,8 @@ final class MakePageCommand extends Command
          */
         final class {$class} extends Page
         {
+            protected static string \$panel = '{$panel}';
+
             protected static string \$icon = 'file';
 
             protected static ?string \$group = null;
@@ -191,7 +239,7 @@ final class MakePageCommand extends Command
         PHP;
     }
 
-    private function dashboardStub(string $class, string $slug): string
+    private function dashboardStub(string $class, string $slug, string $panel): string
     {
         return <<<PHP
         <?php
@@ -209,6 +257,8 @@ final class MakePageCommand extends Command
          */
         final class {$class} extends DashboardPage
         {
+            protected static string \$panel = '{$panel}';
+
             protected static ?string \$group = null;
 
             /**

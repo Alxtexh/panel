@@ -56,6 +56,20 @@ final class SharePanelProps
                     'id' => $panel->id,
                     'path' => '/'.trim($panel->getPath(), '/'),
                     'brand' => $panel->resolveBrandName(),
+
+                    /*
+                     * THE PANEL'S OWN PALETTE, resolved per request because a
+                     * portal may wear the signed-in reseller's colours. Empty
+                     * for a panel that declared none, which is most of them -
+                     * the published layout applies nothing in that case and the
+                     * stylesheet's defaults stand.
+                     *
+                     * `Panel::colors()` was dead code until this line existed:
+                     * the builder method and its resolver both shipped and
+                     * nothing read either, so configuring a palette did
+                     * nothing at all.
+                     */
+                    'colors' => $panel->resolveColors(),
                 ];
             },
 
