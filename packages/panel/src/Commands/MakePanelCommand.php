@@ -557,10 +557,20 @@ PHP;
 
     private function authRoutes(string $id, string $path, string $guard): string
     {
-        // `Route::prefix(...)->defaults(...)` versus `Route::defaults(...)`:
-        // a panel mounted at the root has no prefix to apply, and passing an
-        // empty one registers `//login`.
-        $prefix = $path === '' ? '' : "prefix('{$path}')->";
+        /*
+         * THE OPENING LINE DIFFERS FOR A PANEL AT THE ROOT, and getting it
+         * wrong is a 500 on every page rather than a bad login URL.
+         *
+         * `Route::group(fn)` IS NOT VALID. The facade's `group` takes an
+         * attributes ARRAY first, so a closure alone is a TypeError thrown
+         * while routes load - which takes down the whole application, not just
+         * the sign-in screen. The registrar form (`Route::prefix(..)->group`)
+         * accepts a bare closure, which is why the prefixed branch reads
+         * differently.
+         */
+        $open = $path === ''
+            ? 'Route::group([], function (): void {'
+            : "Route::prefix('{$path}')->group(function (): void {";
 
         return <<<PHP
 <?php
@@ -592,7 +602,7 @@ use PanelKit\Panel\Http\Controllers\PanelAuthController;
  * throws BadMethodCallException at boot, which is how the first version of this
  * generator shipped and why `route:list` refused to run at all.
  */
-Route::{$prefix}group(function (): void {
+{$open}
     \$panel = '{$id}';
 
     /*
