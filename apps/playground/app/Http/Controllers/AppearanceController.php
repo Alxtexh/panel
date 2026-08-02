@@ -67,6 +67,16 @@ final class AppearanceController extends Controller
             'sidebarSide' => ['sometimes', 'string', 'in:'.implode(',', self::SIDES)],
             'cardStyle' => ['sometimes', 'string', 'in:'.implode(',', self::CARD_STYLES)],
             'primary' => ['sometimes', 'string', 'in:'.implode(',', self::PRIMARIES)],
+
+            /*
+             * WHETHER THE ACCENT WAS CHOSEN OR IS JUST THE DEFAULT.
+             *
+             * It decides whether the organisation's brand colour applies, so it
+             * has to persist per ACCOUNT rather than per browser - otherwise
+             * signing in somewhere else shows the company colour over a choice
+             * already made, and the person has to make it again.
+             */
+            'primaryChosen' => ['sometimes', 'boolean'],
             'surface' => ['sometimes', 'string', 'in:'.implode(',', self::SURFACES)],
             'fontSize' => ['sometimes', 'integer', 'between:'.self::FONT_MIN.','.self::FONT_MAX],
         ]);

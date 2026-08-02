@@ -107,10 +107,10 @@ describe('useTenantTheme', () => {
      * test that checked the variable was recorded would pass whether or not
      * anything ever read it.
      */
-    it('applies the brand while the accent is the shipped default', () => {
+    it('applies the brand while nobody has chosen an accent', () => {
         apply({ primary: '#b91c1c' })
 
-        applyAppearance({ ...readAppearance(), primary: 'slate' })
+        applyAppearance({ ...readAppearance(), primaryChosen: false })
 
         expect(document.documentElement.style.getPropertyValue('--primary')).toBe('#b91c1c')
     })
@@ -118,7 +118,7 @@ describe('useTenantTheme', () => {
     it('gives way once somebody picks an accent of their own', () => {
         apply({ primary: '#b91c1c' })
 
-        applyAppearance({ ...readAppearance(), primary: 'emerald' })
+        applyAppearance({ ...readAppearance(), primary: 'emerald', primaryChosen: true })
 
         const style = document.documentElement.style
 
@@ -128,13 +128,20 @@ describe('useTenantTheme', () => {
         expect(style.getPropertyValue('--pk-font-size')).not.toBe('')
     })
 
-    /** And Reset is the way back to the company colour. */
-    it('returns when the accent goes back to the default', () => {
+    /**
+     * AND CHOOSING THE DEFAULT COLOUR IS STILL CHOOSING.
+     *
+     * This is the case the first version got wrong. `slate` was inferred to
+     * mean "untouched", so clicking the first swatch showed the organisation's
+     * colour instead - a picker whose first option does something else.
+     */
+    it('honours slate when slate is what somebody picked', () => {
         apply({ primary: '#b91c1c' })
 
-        applyAppearance({ ...readAppearance(), primary: 'emerald' })
-        applyAppearance({ ...readAppearance(), primary: 'slate' })
+        applyAppearance({ ...readAppearance(), primary: 'slate', primaryChosen: true })
 
-        expect(document.documentElement.style.getPropertyValue('--primary')).toBe('#b91c1c')
+        expect(document.documentElement.style.getPropertyValue('--primary')).toBe(
+            'oklch(0.32 0.02 260)',
+        )
     })
 })

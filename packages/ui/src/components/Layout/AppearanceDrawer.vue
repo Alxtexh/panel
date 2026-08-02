@@ -33,6 +33,12 @@ const themes: { value: Theme; label: string }[] = [
     { value: 'dark', label: 'Dark' },
 ]
 
+/*
+ * LABELLED "Table density" RATHER THAN "Density", because that is all it is.
+ * `--pk-row-padding` is read by `.pk-row td` and nothing else, so on a
+ * dashboard the control moves and the screen does not - which reads as broken
+ * rather than as not applicable. Naming what it affects costs one word.
+ */
 const densities: { value: Density; label: string }[] = [
     { value: 'compact', label: 'Compact' },
     { value: 'comfortable', label: 'Comfortable' },
@@ -223,7 +229,7 @@ function surfaceSwatch(hue: number, chroma: number): string {
                         v-for="group in [
                             { label: 'Color scheme', key: 'theme', options: themes },
                             { label: 'Card style', key: 'cardStyle', options: cardStyles },
-                            { label: 'Density', key: 'density', options: densities },
+                            { label: 'Table density', key: 'density', options: densities },
                             { label: 'Sidebar', key: 'sidebarSide', options: sides },
                         ]"
                         :key="group.key"

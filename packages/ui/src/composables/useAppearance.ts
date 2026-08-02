@@ -56,6 +56,17 @@ export interface Appearance {
     cardStyle: CardStyle
     /** Key into PRIMARY_COLORS. */
     primary: string
+    /**
+     * Whether `primary` is a DELIBERATE choice or just the shipped default.
+     *
+     * A separate field because the value cannot say this on its own. The first
+     * version inferred it - "if the accent is not `slate`, they chose it" -
+     * which made the first swatch a lie: click the black one and the panel
+     * showed the organisation's purple, because slate and "untouched" were the
+     * same state. A picker whose first option does something else is worse than
+     * no picker.
+     */
+    primaryChosen?: boolean
     /** Key into SURFACE_TINTS. */
     surface: string
 }
@@ -188,6 +199,9 @@ const DEFAULTS: Appearance = {
     sidebarSide: 'left',
     cardStyle: 'transparent',
     primary: 'slate',
+    // Untouched. `reset()` restores these defaults, so Reset is also the way
+    // back to the organisation's colour.
+    primaryChosen: false,
     surface: 'neutral',
 }
 
@@ -438,7 +452,7 @@ export function setTenantVars(vars: Record<string, string>): void {
      * mounted into a synchronous loop: a blank page, and NO console error,
      * because the thread never yielded.
      */
-    if (readAppearance().primary !== DEFAULTS.primary) {
+    if (readAppearance().primaryChosen) {
         return
     }
 
@@ -454,14 +468,7 @@ export function applyAppearance(next: Appearance): void {
     }
 
     const root = document.documentElement
-    // One condition rather than a second stored flag. A "has chosen" field
-    // would have to survive localStorage, the account column and the endpoint's
-    // key allowlist - three places to keep in step for something the value
-    // already says.
-    const vars = {
-        ...appearanceVars(next),
-        ...(next.primary === DEFAULTS.primary ? tenantVars : {}),
-    }
+    const vars = { ...appearanceVars(next), ...(next.primaryChosen ? {} : tenantVars) }
 
     root.classList.toggle('dark', isDark(next))
 
@@ -493,7 +500,15 @@ export function useAppearance() {
     }
 
     function set(patch: Partial<Appearance>) {
-        state.value = { ...state.value, ...patch }
+        /*
+         * TOUCHING THE ACCENT IS WHAT MAKES IT A CHOICE. Recorded here rather
+         * than in the drawer so every caller gets it - a swatch, a keyboard
+         * shortcut, anything added later - and so the flag cannot drift from
+         * the value it describes.
+         */
+        const chosen = patch.primary !== undefined ? { primaryChosen: true } : {}
+
+        state.value = { ...state.value, ...patch, ...chosen }
 
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state.value))
@@ -507,7 +522,9 @@ export function useAppearance() {
         // Local first, account second: the change is visible immediately and
         // the request is fire-and-forget. A failed save costs this browser
         // nothing and only means another browser will not see the change yet.
-        persist?.(patch)
+        // The flag travels with the value it describes, or a second browser
+        // signs in and shows the company colour over a choice already made.
+        persist?.({ ...patch, ...chosen })
     }
 
     function reset() {
