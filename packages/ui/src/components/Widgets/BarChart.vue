@@ -441,12 +441,15 @@ const active = computed(() => {
                     rx="3"
                     class="transition-[fill-opacity]"
                     pointer-events="none"
-                >
-                    <title>
-                        {{ b.name ? `${b.name} - ` : '' }}{{ b.label }}:
-                        {{ format(b.value) }}
-                    </title>
-                </rect>
+                />
+                <!--
+                    THE `<title>` THAT WAS HERE COULD NEVER APPEAR. A native
+                    tooltip needs the element to receive pointer events, and
+                    this rect sets `pointer-events="none"` so the hover band
+                    above it can do the tracking. It was dead markup that read
+                    like the tooltip's source - the real one is the rendered
+                    card below, which is what actually shows.
+                -->
 
                 <!-- Category labels. -->
                 <template v-if="horizontal">

@@ -130,6 +130,7 @@ its tick gets re-checked.
 | Generated portals (reseller, platform)                           | 2026-07-31 — inherit the generic index; `/platform` home asserted in the Dusk suite                                                                              |
 | Environment editor (packaged)                                    | 2026-08-02 — **fixed**: had no page padding, no grouping and full-width fields for one-word values; now one card per key prefix and Save at the trailing edge (rule 1) |
 | Changelog (packaged)                                             | 2026-08-02 — conforms; a read-only list with no controls to group                                                                                               |
+| Charts (pie, polar area, radar, segmented bar, bar)              | 2026-08-02 — **fixed**: three used a native SVG `<title>`, which the browser draws in its own styling and never shows on touch. All now share `ChartTooltip`      |
 
 **Swept in full on 2026-07-31.** Every `.vue` page in the playground was checked,
 not only the ones named above — the earlier table listed sixteen screens and the

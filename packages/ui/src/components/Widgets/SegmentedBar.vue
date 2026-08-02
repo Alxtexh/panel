@@ -17,7 +17,8 @@
  * a bar that always fills completely cannot show an under-spend, which is
  * exactly what a spending limit is for.
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import ChartTooltip from './ChartTooltip.vue'
 
 interface Segment {
     label: string
@@ -66,11 +67,18 @@ const resolved = computed(() =>
 
 const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberFormat().format(v))
 
+/*
+ * A BAND IS OFTEN THIN. Dimming the others is what makes the one under the
+ * cursor findable at all - on a bar where a segment is a few pixels wide, the
+ * readout alone leaves you unsure which band you are actually reading.
+ */
+const hover = ref<number | null>(null)
+
 const percent = (share: number) => `${(share * 100).toFixed(share > 0 && share < 0.01 ? 1 : 0)}%`
 </script>
 
 <template>
-    <div class="flex flex-col gap-2">
+    <div class="relative flex flex-col gap-2">
         <div
             class="bg-muted flex w-full overflow-hidden rounded-full"
             :style="{ height: `${height}px` }"
@@ -85,8 +93,13 @@ const percent = (share: number) => `${(share * 100).toFixed(share > 0 && share <
                     i === 0 ? 'rounded-l-full' : '',
                     i === resolved.length - 1 && !total ? 'rounded-r-full' : '',
                 ]"
-                :style="{ width: s.width, background: s.color }"
-                :title="`${s.label}: ${format(s.value)} (${percent(s.share)})`"
+                :style="{
+                    width: s.width,
+                    background: s.color,
+                    opacity: hover === null || hover === i ? 1 : 0.4,
+                }"
+                @mouseenter="hover = i"
+                @mouseleave="hover = null"
             />
         </div>
 
@@ -99,5 +112,12 @@ const percent = (share: number) => `${(share * 100).toFixed(share > 0 && share <
                 <span class="text-sm font-semibold tabular-nums">{{ format(s.value) }}</span>
             </div>
         </div>
+
+        <ChartTooltip
+            v-if="hover !== null"
+            :label="resolved[hover].label"
+            :value="format(resolved[hover].value)"
+            :share="percent(resolved[hover].share)"
+        />
     </div>
 </template>

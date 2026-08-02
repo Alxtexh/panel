@@ -14,7 +14,8 @@
  * common way this chart type is drawn wrong, and it exaggerates every
  * difference on the chart.
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import ChartTooltip from './ChartTooltip.vue'
 import type { ChartPoint } from './types'
 
 const props = withDefaults(
@@ -35,6 +36,13 @@ const PALETTE = [
     'var(--chart-5)',
     'var(--chart-1)',
 ]
+
+/*
+ * HOVER IS TRACKED HERE rather than handed to the browser. This chart shipped
+ * with an SVG `<title>`, which the browser draws in its own styling, after its
+ * own delay, and not at all on touch - see `ChartTooltip`.
+ */
+const hover = ref<number | null>(null)
 
 const size = computed(() => props.height)
 const centre = computed(() => size.value / 2)
@@ -106,7 +114,7 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
         No data
     </div>
 
-    <div v-else class="flex flex-wrap items-center justify-center gap-4 sm:flex-nowrap">
+    <div v-else class="relative flex flex-wrap items-center justify-center gap-4 sm:flex-nowrap">
         <svg :width="size" :height="size" :viewBox="`0 0 ${size} ${size}`" class="shrink-0">
             <circle
                 v-for="r in rings"
@@ -124,13 +132,13 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
                 :key="i"
                 :d="s.path"
                 :fill="s.color"
-                fill-opacity="0.75"
                 stroke="var(--card)"
                 stroke-width="1.5"
-                class="transition-opacity hover:opacity-80"
-            >
-                <title>{{ s.label }}: {{ format(s.value) }}</title>
-            </path>
+                class="cursor-default transition-opacity"
+                :fill-opacity="hover === null || hover === i ? 0.75 : 0.3"
+                @mouseenter="hover = i"
+                @mouseleave="hover = null"
+            />
         </svg>
 
         <ul v-if="showLegend" class="flex min-w-0 flex-col gap-1.5">
@@ -140,5 +148,11 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
                 <span class="font-medium tabular-nums">{{ format(s.value) }}</span>
             </li>
         </ul>
+
+        <ChartTooltip
+            v-if="hover !== null"
+            :label="segments[hover].label"
+            :value="format(segments[hover].value)"
+        />
     </div>
 </template>

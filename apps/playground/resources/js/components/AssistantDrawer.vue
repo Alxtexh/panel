@@ -322,8 +322,26 @@ async function send() {
 /** `find_subscriber` reads as a log line rather than as something happening. */
 const toolLabel = (name: string) => name.replace(/[-_]/g, ' ');
 
+/*
+ * NO SUGGESTION NAMES A RECORD, and that is the whole of this list's design.
+ *
+ * The first one used to read "Is Grace Wanjiku's line active?" - a name written
+ * by hand against seed data that has since changed. There is no Grace Wanjiku in
+ * this database. So the headline example on the screen that exists to show the
+ * assistant working asked it about somebody who is not there, and answered
+ * "not found".
+ *
+ * A CLICKABLE SUGGESTION IS A PROMISE that the thing will work. One built from
+ * a literal that only matches a particular seed run is a promise with an expiry
+ * date nobody wrote down, and it expires silently - the chip still renders, and
+ * only the answer is wrong.
+ *
+ * Each of these is answerable against ANY data: two search the records the
+ * signed-in person may see, one reads the help centre. If the panel is empty
+ * they return nothing, which is the truth rather than a miss.
+ */
 const suggestions = [
-    { text: "Is Grace Wanjiku's line active?", hint: 'Looks a subscriber up' },
+    { text: 'Which subscribers are suspended?', hint: 'Searches your own records' },
     { text: 'Who expires this week?', hint: 'Searches your own records' },
     { text: 'How do exports work?', hint: 'Answers from the help centre' },
 ];

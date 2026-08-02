@@ -16,7 +16,8 @@
  * one to a point - so it degrades to a message rather than drawing something
  * meaningless.
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import ChartTooltip from './ChartTooltip.vue'
 import type { ChartSeries } from './types'
 
 const props = withDefaults(
@@ -135,6 +136,13 @@ const labels = computed(() =>
     }),
 )
 
+/*
+ * SERIES AND AXIS TOGETHER, because a radar point means nothing without both -
+ * "56,535" is unreadable; "Active - hotspot" is the answer. Held as one object
+ * rather than two refs so the two can never disagree mid-hover.
+ */
+const hover = ref<{ series: string; axis: string; value: number } | null>(null)
+
 const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberFormat().format(v))
 </script>
 
@@ -147,7 +155,7 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
         A radar needs at least three axes
     </div>
 
-    <div v-else class="flex flex-wrap items-center justify-center gap-4 sm:flex-nowrap">
+    <div v-else class="relative flex flex-wrap items-center justify-center gap-4 sm:flex-nowrap">
         <svg :width="size" :height="size" :viewBox="`0 0 ${size} ${size}`" class="shrink-0">
             <!-- Rings and spokes. -->
             <polygon
@@ -186,11 +194,16 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
                     :fill="s.color"
                     stroke="var(--card)"
                     stroke-width="1.5"
-                >
-                    <title>
-                        {{ s.name }} - {{ axes[j] }}: {{ format(s.values[j]?.value ?? 0) }}
-                    </title>
-                </circle>
+                    class="cursor-default"
+                    @mouseenter="
+                        hover = {
+                            series: s.name,
+                            axis: axes[j],
+                            value: s.values[j]?.value ?? 0,
+                        }
+                    "
+                    @mouseleave="hover = null"
+                />
             </g>
 
             <text
@@ -211,5 +224,11 @@ const format = (v: number) => (props.format ? props.format(v) : new Intl.NumberF
                 <span class="truncate">{{ s.name }}</span>
             </li>
         </ul>
+
+        <ChartTooltip
+            v-if="hover"
+            :label="`${hover.series} — ${hover.axis}`"
+            :value="format(hover.value)"
+        />
     </div>
 </template>

@@ -25,6 +25,7 @@
  * is often the easier thing to aim at.
  */
 import { computed, ref } from 'vue'
+import ChartTooltip from './ChartTooltip.vue'
 
 interface Slice {
     label: string
@@ -223,19 +224,11 @@ const percent = (share: number) => `${(share * 100).toFixed(share < 0.01 ? 2 : 0
         </ul>
 
         <!-- A pie has no hole to write into, so it gets a floating readout. -->
-        <div
+        <ChartTooltip
             v-if="hover !== null && type === 'pie'"
-            class="bg-popover pointer-events-none absolute top-2 left-2 rounded-lg border px-2.5 py-1.5 shadow-lg"
-        >
-            <p class="text-muted-foreground text-[11px] capitalize">
-                {{ slices[hover].label }}
-            </p>
-            <p class="text-sm font-semibold tabular-nums">
-                {{ format(slices[hover].value) }}
-                <span class="text-muted-foreground text-xs font-normal">
-                    ({{ percent(slices[hover].share) }})
-                </span>
-            </p>
-        </div>
+            :label="slices[hover].label"
+            :value="format(slices[hover].value)"
+            :share="percent(slices[hover].share)"
+        />
     </div>
 </template>
