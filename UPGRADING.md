@@ -119,6 +119,15 @@ the stylesheet never read, so a brand colour rendered nowhere. It writes
 `--{token}` now. If your organisations carry `theme_colors`, expect the panel to
 start using them — that is the fix, not a side effect.
 
+**If you index the blueprint for your assistant, stop.** `BlueprintSource` is out
+of `panel.knowledge.sources` in the reference app, because a developer guide in
+the same store as operator help crowds it out — an export question started
+returning recipes about clusters. Remove it from your own config and reindex:
+
+```bash
+php artisan panel:knowledge index --tenant=<id>
+```
+
 The accent in the appearance drawer still wins for anybody who has picked one.
 `primaryChosen` is a new key in the per-user appearance record; it defaults to
 false, so existing accounts are treated as "has not chosen" and see their
