@@ -508,6 +508,43 @@ return [
         'roles' => false,
     ],
 
+    /*
+    |---------------------------------------------------------------------------
+    | Environment editor
+    |---------------------------------------------------------------------------
+    |
+    | ONE LIST IS THE WHOLE FEATURE. `EnvironmentPage` does not exist until this
+    | is non-empty - absent, not hidden, so an installation that has not thought
+    | about it has no screen to find rather than a locked one to wonder about.
+    |
+    | THE DEMO SHIPPED WITH IT EMPTY, which meant the panel carried a working
+    | environment editor that nobody could see, and there was no way to tell
+    | that from the outside. A feature only demonstrated in its own tests is one
+    | people conclude does not exist.
+    |
+    | These are the keys somebody running THIS panel might genuinely change
+    | without a deploy. `APP_KEY`, `APP_ENV`, `APP_DEBUG` and everything `DB_*`
+    | are refused by `EnvFile` whatever appears here - listing them by mistake
+    | still cannot reach them.
+    |
+    | `MAIL_PASSWORD` IS DELIBERATE. It is the one secret in this list, and it
+    | is here to show what the screen does with one: the value is never sent to
+    | the browser, the field arrives blank, and saving blank leaves it alone. A
+    | real installation should still ask whether a credential belongs on a web
+    | form at all - the answer is often no, and the answer being "no" is why the
+    | allowlist exists rather than an "edit anything" screen.
+    */
+    'env' => [
+        'editable' => [
+            'MAIL_HOST',
+            'MAIL_FROM_ADDRESS',
+            'MAIL_FROM_NAME',
+            'MAIL_PASSWORD',
+            'BACKUP_NOTIFY_EMAIL',
+            'LOG_LEVEL',
+        ],
+    ],
+
     'tenancy' => [
         'mode' => env('PANEL_TENANCY_MODE', 'column'),
         'column' => 'tenant_id',
