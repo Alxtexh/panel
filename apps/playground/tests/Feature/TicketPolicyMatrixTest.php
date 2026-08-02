@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Tenant;
-use PanelKit\Panel\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use PanelKit\Panel\Models\Ticket;
 use Tests\TestCase;
 
 /**

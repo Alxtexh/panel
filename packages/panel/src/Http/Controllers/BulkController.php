@@ -65,6 +65,14 @@ final class BulkController extends Controller
         // against the resource policy, exactly like a single-record write.
         abort_unless($class::can($action->getAbility()), 403);
 
+        /*
+         * WHAT THE ACTION'S FORM COLLECTED, validated against the DECLARATION
+         * and reduced to its own keys - the same allow-list a record action
+         * gets, and it matters more here: these values land on every row in the
+         * selection rather than on one.
+         */
+        $data = $this->actionInput($request, $action);
+
         $all = (bool) ($validated['all'] ?? false);
         $ids = $this->ids($validated);
 
@@ -83,6 +91,10 @@ final class BulkController extends Controller
                 $this->filterParameters($request),
                 $this->actorId(),
                 $token,
+                // VALIDATED BEFORE THE JOB IS QUEUED, not inside it. A failure
+                // an operator can fix belongs in the response they are looking
+                // at, not in a worker's log twenty seconds later.
+                $data,
             );
 
             return response()->json(['status' => JobStatus::PENDING, 'token' => $token]);
@@ -95,9 +107,37 @@ final class BulkController extends Controller
             $list->matching($request, $ids),
             $class::model(),
             $list->keyColumnName(),
+            null,
+            $data,
         );
 
         return response()->json(['status' => JobStatus::DONE, 'affected' => $affected]);
+    }
+
+    /**
+     * The values a bulk action's form collected.
+     *
+     * IDENTICAL IN SHAPE TO THE RECORD VERSION, deliberately: rules from the
+     * declaration, `sanitize()` to drop everything else, and an action with no
+     * form ignores input entirely. A second, subtly different allow-list would
+     * be the one that turns out to be weaker.
+     *
+     * @return array<string, mixed>
+     */
+    private function actionInput(Request $request, \PanelKit\Panel\Actions\BulkAction $action): array
+    {
+        $form = $action->formDefinition();
+
+        if ($form === null) {
+            return [];
+        }
+
+        $validated = validator(
+            (array) $request->input('data', []),
+            $form->rules(),
+        )->validate();
+
+        return $form->sanitize($validated);
     }
 
     /** Export the current filtered view. Always queued (addendum C). */

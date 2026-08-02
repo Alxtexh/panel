@@ -4,6 +4,37 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## Unreleased
+
+### Added
+
+- **An action can ask for something first — `->form()`, on both
+  `RecordAction` and `BulkAction`.** The largest functional gap this package
+  had by a port's own count: 67 of 229 tenant-admin actions needed a value
+  before they could run — a reason, an amount, a plan, a department — and every
+  one of them became a dedicated screen. The modal opens with **no network
+  request**, because the schema travels with the action in the list payload.
+
+  **The fields are declared server-side and that is the security property.**
+  The endpoint validates against *that* declaration's rules and `sanitize()`
+  drops every key it does not name, so an endpoint whose whole design was "the
+  client sends a key and never an attribute set" did not quietly become a
+  mass-assignment endpoint. `form()` pairs with `handle()` and never `mutate()`
+  — a mutation is fixed at definition time and has nowhere to put what somebody
+  typed — and declaring both throws for whoever wrote it, at the first run.
+
+  In bulk, the values are collected once and reused for every chunk, and a
+  select-all-matching run is validated **before the job is queued**: a failure
+  an operator can fix belongs in the response they are looking at.
+
+### Fixed
+
+- **A searchable select inside an action form now searches.** `field-options`
+  walked the *record* form's fields only, so the first form action shipped
+  working purely because its select happened to share a key with a field on the
+  record form. An action asking for something the form did not have rendered a
+  select that found nothing, with no error anywhere.
+
 ## 0.5.0
 
 **A fresh application now installs, builds, renders and signs in.** Everything

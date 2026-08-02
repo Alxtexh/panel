@@ -6,12 +6,12 @@ namespace Tests\Feature;
 
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Tenant;
-use PanelKit\Panel\Models\Ticket;
 use App\Models\User;
-use PanelKit\Panel\Ticketing\TicketingPlugin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PanelKit\Panel\Models\Ticket;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\Abilities;
+use PanelKit\Panel\Ticketing\TicketingPlugin;
 use RuntimeException;
 use Tests\TestCase;
 

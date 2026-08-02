@@ -25,10 +25,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <AuthLayout
-        title="Reset password"
-        description="Please choose a new password"
-    >
+    <AuthLayout title="Reset password" description="Please choose a new password">
         <Head title="Reset password" />
 
         <Form

@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Inertia;
 use PanelKit\Panel\Http\Middleware\SharePanelProps;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
@@ -110,7 +111,7 @@ final class SharedPanelPropsTest extends TestCase
 
         return array_map(
             static fn (mixed $value): mixed => is_callable($value) ? $value() : $value,
-            \Inertia\Inertia::getShared(),
+            Inertia::getShared(),
         );
     }
 }

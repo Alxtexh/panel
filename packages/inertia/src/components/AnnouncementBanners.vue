@@ -22,11 +22,11 @@
  * that removed the only copy of something you were told once would be a
  * trapdoor.
  */
-import { router } from '@inertiajs/vue3';
-import { CircleCheck, Info, TriangleAlert, X } from '@lucide/vue';
-import { onMounted, ref } from 'vue';
-import { toast } from 'vue-sonner';
-import type { Announcement } from '../types';
+import { router } from '@inertiajs/vue3'
+import { CircleCheck, Info, TriangleAlert, X } from '@lucide/vue'
+import { onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
+import type { Announcement } from '../types'
 
 const props = withDefaults(
     defineProps<{
@@ -42,17 +42,14 @@ const props = withDefaults(
         prefix?: string
     }>(),
     { prefix: '' },
-);
+)
 
 /** Locally hidden the moment × is clicked, so the row goes without a round trip. */
-const closed = ref<Set<number>>(new Set());
+const closed = ref<Set<number>>(new Set())
 
-const banners = () => props.announcements.filter((a) => a.display === 'banner');
+const banners = () => props.announcements.filter((a) => a.display === 'banner')
 
-const TONES: Record<
-    string,
-    { border: string; background: string; icon: string }
-> = {
+const TONES: Record<string, { border: string; background: string; icon: string }> = {
     danger: {
         border: 'border-destructive/40',
         background: 'bg-destructive/5',
@@ -73,21 +70,21 @@ const TONES: Record<
         background: 'bg-card',
         icon: 'text-muted-foreground',
     },
-};
+}
 
-const tone = (severity: string) => TONES[severity] ?? TONES.info;
+const tone = (severity: string) => TONES[severity] ?? TONES.info
 
 const ICONS: Record<string, typeof Info> = {
     danger: TriangleAlert,
     warning: TriangleAlert,
     success: CircleCheck,
     info: Info,
-};
+}
 
-const icon = (severity: string) => ICONS[severity] ?? Info;
+const icon = (severity: string) => ICONS[severity] ?? Info
 
 function dismiss(announcement: Announcement) {
-    closed.value = new Set([...closed.value, announcement.id]);
+    closed.value = new Set([...closed.value, announcement.id])
 
     /*
      * FIRE AND FORGET, DELIBERATELY. The row is already gone from the screen and
@@ -99,7 +96,7 @@ function dismiss(announcement: Announcement) {
         `${props.prefix.replace(/\/$/, '')}/announcements/${announcement.id}/dismiss`,
         {},
         { preserveScroll: true, preserveState: true, only: [] },
-    );
+    )
 }
 
 /*
@@ -108,10 +105,8 @@ function dismiss(announcement: Announcement) {
  * notice popping up each time somebody changes a chart period.
  */
 onMounted(() => {
-    for (const announcement of props.announcements.filter(
-        (a) => a.display === 'toast',
-    )) {
-        const show = announcement.severity === 'danger' ? toast.error : toast;
+    for (const announcement of props.announcements.filter((a) => a.display === 'toast')) {
+        const show = announcement.severity === 'danger' ? toast.error : toast
 
         show(announcement.title, {
             description: announcement.body ?? undefined,
@@ -122,13 +117,13 @@ onMounted(() => {
                           onClick: () => router.visit(announcement.actionUrl!),
                       }
                     : undefined,
-        });
+        })
 
         // A toast is transient by definition, so it is dismissed on the way out
         // rather than waiting for somebody to close something already gone.
-        dismiss(announcement);
+        dismiss(announcement)
     }
-});
+})
 </script>
 
 <template>
@@ -137,10 +132,7 @@ onMounted(() => {
             v-for="announcement in banners().filter((a) => !closed.has(a.id))"
             :key="announcement.id"
             class="flex items-start gap-3 rounded-lg border p-3 text-sm"
-            :class="[
-                tone(announcement.severity).border,
-                tone(announcement.severity).background,
-            ]"
+            :class="[tone(announcement.severity).border, tone(announcement.severity).background]"
         >
             <component
                 :is="icon(announcement.severity)"
@@ -150,10 +142,7 @@ onMounted(() => {
 
             <div class="min-w-0 flex-1">
                 <p class="font-medium">{{ announcement.title }}</p>
-                <p
-                    v-if="announcement.body"
-                    class="mt-0.5 text-muted-foreground"
-                >
+                <p v-if="announcement.body" class="mt-0.5 text-muted-foreground">
                     {{ announcement.body }}
                 </p>
             </div>

@@ -143,15 +143,9 @@ const cancel = () => {
         Add passkey
     </PkButton>
 
-    <form
-        v-else
-        class="border-border bg-muted/50 space-y-4 rounded-lg border p-4"
-        @submit="submit"
-    >
+    <form v-else class="border-border bg-muted/50 space-y-4 rounded-lg border p-4" @submit="submit">
         <div class="grid gap-2">
-            <label for="pk-passkey-name" class="text-sm font-medium">
-                Passkey name
-            </label>
+            <label for="pk-passkey-name" class="text-sm font-medium"> Passkey name </label>
 
             <!--
                 A PLAIN INPUT, styled with the same tokens the form fields use.
@@ -180,9 +174,7 @@ const cancel = () => {
                 {{ isLoading ? 'Registering…' : 'Register passkey' }}
             </PkButton>
 
-            <PkButton type="button" variant="ghost" @click="cancel">
-                Cancel
-            </PkButton>
+            <PkButton type="button" variant="ghost" @click="cancel"> Cancel </PkButton>
         </div>
     </form>
 </template>

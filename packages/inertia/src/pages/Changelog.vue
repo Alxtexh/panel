@@ -39,9 +39,7 @@ const props = withDefaults(
 )
 
 /** Only the newest starts open — see the note above. */
-const open = ref<Set<string>>(
-    new Set(props.releases.length ? [props.releases[0].version] : []),
-)
+const open = ref<Set<string>>(new Set(props.releases.length ? [props.releases[0].version] : []))
 
 const toggle = (version: string) => {
     const next = new Set(open.value)

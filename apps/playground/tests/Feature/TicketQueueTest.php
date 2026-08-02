@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Tenant;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Models\TicketReply;
 use App\Models\User;
-use PanelKit\Panel\Ticketing\MyTicketResource;
-use PanelKit\Panel\Ticketing\TicketResource;
-use PanelKit\Panel\Support\TicketStats;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use PanelKit\Panel\Models\Ticket;
+use PanelKit\Panel\Models\TicketReply;
+use PanelKit\Panel\Support\TicketStats;
+use PanelKit\Panel\Ticketing\MyTicketResource;
+use PanelKit\Panel\Ticketing\TicketResource;
 use Psr\Http\Message\RequestInterface;
 use Tests\TestCase;
 

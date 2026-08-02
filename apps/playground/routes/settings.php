@@ -82,4 +82,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('settings/assistant', [AssistantSettingsController::class, 'update'])->name('assistant-settings.update');
     Route::delete('settings/assistant', [AssistantSettingsController::class, 'destroy'])->name('assistant-settings.destroy');
 });
-

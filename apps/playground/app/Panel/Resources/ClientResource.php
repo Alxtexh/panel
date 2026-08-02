@@ -21,8 +21,8 @@ use PanelKit\Panel\Forms\Fields\RadioField;
 use PanelKit\Panel\Forms\Fields\RepeaterField;
 use PanelKit\Panel\Forms\Fields\RichEditorField;
 use PanelKit\Panel\Forms\Fields\SelectField;
-use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Fields\TextareaField;
+use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Forms\Rules\ExistsInScope;
 use PanelKit\Panel\Resources\RelationManager;
@@ -511,6 +511,32 @@ final class ClientResource extends Resource
                     ->color('success')
                     ->authorize('update')
                     ->mutate(['status' => 'active']),
+
+                /*
+                 * A BULK FORM ACTION - the shape most selection actions have.
+                 *
+                 * Moving forty subscribers to a plan is one decision applied
+                 * forty times, not forty decisions: the value is collected ONCE
+                 * and reused for every chunk the runner walks. Before `->form()`
+                 * this was a mutation with the plan hardcoded per action, or a
+                 * screen.
+                 */
+                BulkAction::make('move-plan', 'Move to plan')
+                    ->icon('package')
+                    ->authorize('update')
+                    ->form(fn (Form $form): Form => $form->schema([
+                        SelectField::make('plan_id')->label('New plan')
+                            ->required()
+                            ->searchable(fn (string $term): array => Plan::query()
+                                ->when($term !== '', fn ($q) => $q->where('name', 'like', $term.'%'))
+                                ->orderBy('name')->limit(25)->pluck('name', 'id')->all())
+                            ->rule(ExistsInScope::of(Plan::class)),
+                    ]))
+                    ->handle(function ($records, array $data): void {
+                        foreach ($records as $client) {
+                            $client->forceFill(['plan_id' => $data['plan_id']])->save();
+                        }
+                    }),
 
                 BulkAction::make('suspend', 'Suspend')
                     ->icon('pause')

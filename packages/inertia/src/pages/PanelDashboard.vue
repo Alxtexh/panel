@@ -104,9 +104,7 @@ const spanClass = (span: number) =>
         4: 'md:col-span-4',
     })[Math.min(Math.max(span || 1, 1), 4)] ?? 'md:col-span-1'
 
-const hasAnything = computed(
-    () => props.widgets.length > 0 || props.charts.length > 0,
-)
+const hasAnything = computed(() => props.widgets.length > 0 || props.charts.length > 0)
 
 /**
  * Changing one chart's window reloads THAT CHART, not the page.
@@ -157,11 +155,7 @@ const setPeriod = (key: string, period: string) => {
         </p>
 
         <div v-if="widgets.length" class="grid gap-4 md:grid-cols-4">
-            <Deferred
-                v-for="widget in widgets"
-                :key="widget.key"
-                :data="`stat_${widget.key}`"
-            >
+            <Deferred v-for="widget in widgets" :key="widget.key" :data="`stat_${widget.key}`">
                 <!--
                     THE FALLBACK IS THE SAME CARD, loading. Swapping in a
                     skeleton of a different shape makes the layout jump when the
@@ -182,20 +176,14 @@ const setPeriod = (key: string, period: string) => {
                     :description="widget.description"
                     :value="($page.props as any)[`stat_${widget.key}`]?.value"
                     :trend="($page.props as any)[`stat_${widget.key}`]?.trend"
-                    :sparkline="
-                        ($page.props as any)[`stat_${widget.key}`]?.sparkline
-                    "
+                    :sparkline="($page.props as any)[`stat_${widget.key}`]?.sparkline"
                     :error="($page.props as any)[`stat_${widget.key}`]?.error"
                 />
             </Deferred>
         </div>
 
         <div v-if="charts.length" class="grid gap-4 md:grid-cols-4">
-            <Deferred
-                v-for="chart in charts"
-                :key="chart.key"
-                :data="`chart_${chart.key}`"
-            >
+            <Deferred v-for="chart in charts" :key="chart.key" :data="`chart_${chart.key}`">
                 <template #fallback>
                     <ChartCard
                         :class="spanClass(chart.span)"
@@ -216,12 +204,8 @@ const setPeriod = (key: string, period: string) => {
                 >
                     <component
                         :is="chartComponent(chart.type)"
-                        :points="
-                            ($page.props as any)[`chart_${chart.key}`]?.points
-                        "
-                        :series="
-                            ($page.props as any)[`chart_${chart.key}`]?.series
-                        "
+                        :points="($page.props as any)[`chart_${chart.key}`]?.points"
+                        :series="($page.props as any)[`chart_${chart.key}`]?.series"
                         :thresholds="chart.thresholds"
                         :max-value="chart.maxValue"
                     />

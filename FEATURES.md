@@ -70,6 +70,12 @@ and the endpoint validates against that declaration and drops every key it does
 not name. Without it, an action needing a reason or an amount had to become a
 dedicated screen — 67 of 229 actions in one real port.
 
+**So can a bulk action**, through the same `->form()`, asked **once** for the
+whole selection — the reason "move these forty to a plan" is one action rather
+than forty clicks. The handler runs once per keyset chunk and gets the same
+values each time, and a select-all-matching run is validated *before* it is
+queued, so a mistake comes back in the response rather than in a worker's log.
+
 ### Authorisation
 
 **`TenantResourcePolicy` is the base you extend**, and `make:panel-resource

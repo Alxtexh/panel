@@ -7,8 +7,6 @@ namespace Tests\Feature;
 use App\Jobs\RestoreBackup;
 use App\Jobs\RunBackupNow;
 use App\Models\Tenant;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Models\TicketReply;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\LazyLoadingViolationException;
@@ -20,6 +18,8 @@ use PanelKit\Panel\Jobs\DeliverScheduledReport;
 use PanelKit\Panel\Jobs\ExportRecords;
 use PanelKit\Panel\Jobs\RunBulkAction;
 use PanelKit\Panel\Knowledge\KnowledgeBase;
+use PanelKit\Panel\Models\Ticket;
+use PanelKit\Panel\Models\TicketReply;
 use PanelKit\Panel\PanelManager;
 use Tests\TestCase;
 

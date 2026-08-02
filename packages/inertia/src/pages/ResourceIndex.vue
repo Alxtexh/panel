@@ -112,6 +112,8 @@ interface ResourceSchema {
             icon: string | null
             destructive: boolean
             confirmation: string | null
+            /** Present when the action collects input first. */
+            form?: { nodes: unknown[] } | null
         }[]
     }
     /** Only the count matters here; the form pages own the field shapes. */
@@ -571,7 +573,8 @@ function onRecordAction(row: Record<string, any>, action: RecordActionItem) {
  * be a lookup that can fail while the dialog is open.
  */
 const actionForm = ref<{
-    row: Record<string, any>
+    /** Null for a bulk action, which applies to the selection rather than a row. */
+    row: Record<string, any> | null
     action: RecordActionItem
     values: Record<string, any>
     errors: Record<string, string>
@@ -594,21 +597,32 @@ async function submitActionForm() {
     open.processing = true
     open.errors = {}
 
+    /*
+     * A BULK FORM GOES THROUGH THE BULK PATH, which is not a detail: that path
+     * chunks, can queue, and reports progress. Posting a selection to the
+     * single-record endpoint would work for twenty rows and quietly fail for
+     * forty thousand.
+     */
+    if (open.row === null) {
+        actionForm.value = null
+
+        await runBulk(open.action.key, open.values)
+
+        return
+    }
+
     try {
-        const response = await fetch(
-            `${props.schema.routes.index}/${open.row.id}/action`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-XSRF-TOKEN': csrfToken(),
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({ action: open.action.key, data: open.values }),
+        const response = await fetch(`${props.schema.routes.index}/${open.row.id}/action`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': csrfToken(),
             },
-        )
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: open.action.key, data: open.values }),
+        })
 
         if (response.status === 422) {
             const body = await response.json().catch(() => null)
@@ -803,8 +817,8 @@ async function persistOrder(ids: (string | number)[]) {
     router.reload({ only: ['records'] })
 }
 
-async function runBulk(action: string) {
-    await job.run(action, bulkTarget())
+async function runBulk(action: string, data?: Record<string, unknown>) {
+    await job.run(action, bulkTarget(), data)
 
     if (job.error.value) {
         toast.error(job.error.value)
@@ -816,6 +830,29 @@ async function runBulk(action: string) {
         toast.success(`${job.progress.value.done.toLocaleString()} records updated`)
         t.clearSelection()
     }
+}
+
+/**
+ * A bulk action that asks for something opens the SAME dialog a record action
+ * does - see `actionForm`. What differs is only what the footer says it will
+ * touch, which is the count the selection already knows.
+ */
+function onBulkAction(key: string) {
+    const action = allowedBulkActions.value.find((a) => a.key === key)
+
+    if (action?.form) {
+        actionForm.value = {
+            row: null,
+            action: action as any,
+            values: {},
+            errors: {},
+            processing: false,
+        }
+
+        return
+    }
+
+    runBulk(key)
 }
 
 async function exportSelection() {
@@ -1095,7 +1132,7 @@ function badgeLabel(key: string, value: unknown): string {
                             :all-matching="t.allMatching.value"
                             :total="total"
                             :busy="job.busy.value"
-                            @run="runBulk"
+                            @run="onBulkAction"
                             @export="exportSelection"
                         />
                     </template>
@@ -1301,14 +1338,12 @@ function badgeLabel(key: string, value: unknown): string {
                 <SchemaNode
                     v-for="(node, index) in actionForm?.action.form?.nodes ?? []"
                     :key="index"
-                    :node="(node as any)"
+                    :node="node as any"
                     :values="actionForm!.values"
                     :errors="actionForm!.errors"
                     :processing="actionForm!.processing"
                     :search-options="searchActionOptions"
-                    @update="
-                        (key: string, value: any) => (actionForm!.values[key] = value)
-                    "
+                    @update="(key: string, value: any) => (actionForm!.values[key] = value)"
                 />
             </form>
 
@@ -1322,11 +1357,7 @@ function badgeLabel(key: string, value: unknown): string {
                     Cancel
                 </Button>
 
-                <Button
-                    size="sm"
-                    :disabled="actionForm?.processing"
-                    @click="submitActionForm"
-                >
+                <Button size="sm" :disabled="actionForm?.processing" @click="submitActionForm">
                     {{ actionForm?.processing ? 'Working…' : actionForm?.action.label }}
                 </Button>
             </template>

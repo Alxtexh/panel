@@ -62,9 +62,7 @@ const props = defineProps<{
 
         <p class="text-center text-sm text-muted-foreground">
             Or,
-            <a :href="props.loginUrl" class="underline underline-offset-4">
-                return to log in
-            </a>
+            <a :href="props.loginUrl" class="underline underline-offset-4"> return to log in </a>
         </p>
     </AuthLayout>
 </template>

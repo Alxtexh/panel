@@ -13,6 +13,7 @@
  * period click, which is the polling-shaped waste §8 exists to avoid.
  */
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3';
+import { AnnouncementBanners } from '@panelkit/inertia';
 import {
     BarChart,
     ChartCard,
@@ -30,7 +31,6 @@ import {
     TrendBadge,
 } from '@panelkit/ui';
 import type { SetupChecklistItem, StatSegment } from '@panelkit/ui';
-import { AnnouncementBanners } from '@panelkit/inertia';
 import { computed, ref } from 'vue';
 import DashboardFilterPanel from '@/components/DashboardFilters.vue';
 

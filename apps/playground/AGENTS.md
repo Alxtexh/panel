@@ -52,6 +52,7 @@ Panels registered in this application:
 - `admin` — mounted at `/`, guard `web`, tenant context
 - `platform` — mounted at `/platform`, guard `web`, central context
 - `reseller` — mounted at `/reseller`, guard `web`, tenant context
+- `authfixture` — mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
 
@@ -505,6 +506,27 @@ the reason it does is here rather than in the handler.
 
 THE MODAL OPENS WITH NO REQUEST, because the schema travels with the
 action in the list payload.
+
+THE SAME `->form()` IS ON `BulkAction`, and it asks ONCE for the whole
+selection - which is the entire reason "move these forty to a plan" is
+a bulk action rather than forty clicks:
+
+```php
+BulkAction::make('move-plan', 'Move to plan')
+    ->authorize('update')
+    ->form(fn (Form $form): Form => $form->schema([
+        SelectField::make('plan_id')->required()
+            ->rule(ExistsInScope::of(Plan::class)),
+    ]))
+    ->handle(fn (Collection $records, array $data) => $records
+        ->each->update(['plan_id' => $data['plan_id']]));
+```
+
+THE HANDLER RUNS ONCE PER CHUNK, not once per record, and receives the
+SAME collected values every time - `BulkRunner` walks the selection in
+keyset chunks. Values are validated BEFORE the job is queued, so a
+select-all-matching run that is going to fail on `plan_id` fails in the
+response the operator is reading rather than in a worker's log.
 
 ### Ship it as a package
 

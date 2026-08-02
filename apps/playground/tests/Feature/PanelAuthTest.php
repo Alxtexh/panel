@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ViewErrorBag;
 use PanelKit\Panel\Http\Controllers\PanelAuthController;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
@@ -98,7 +99,7 @@ final class PanelAuthTest extends TestCase
     {
         $errors = session()->get('errors');
 
-        return $errors instanceof \Illuminate\Support\ViewErrorBag
+        return $errors instanceof ViewErrorBag
             ? (string) $errors->first('email')
             : '';
     }

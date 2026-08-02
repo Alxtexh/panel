@@ -9,10 +9,10 @@ use App\Models\ClientSession;
 use App\Models\Plan;
 use App\Models\Router;
 use App\Models\Tenant;
-use PanelKit\Panel\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\Models\Ticket;
 use PanelKit\Panel\PanelManager;
 use Tests\TestCase;
 

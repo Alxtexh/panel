@@ -52,6 +52,14 @@ export interface BulkActionSchema {
     confirmation: string | null
     /** Filament's palette: primary | gray | success | warning | danger | info. */
     color?: string | null
+
+    /**
+     * Fields to collect before running, sent WITH the action.
+     *
+     * The page opens the dialog; this component emits `run` either way, so a
+     * form action and a plain one look identical from here.
+     */
+    form?: { nodes: unknown[] } | null
 }
 
 const props = withDefaults(

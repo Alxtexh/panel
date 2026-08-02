@@ -53,8 +53,13 @@ final class FormActionTest extends TestCase
         $this->actingAs($this->operator);
     }
 
+    /** Unique per call: `access_code` is unique per tenant, so two collide. */
+    private int $made = 0;
+
     private function client(): Client
     {
+        $n = ++$this->made;
+
         $plan = Plan::withoutGlobalScopes()->forceCreate([
             'tenant_id' => $this->tenant->getKey(),
             'name' => 'Basic',
@@ -66,8 +71,8 @@ final class FormActionTest extends TestCase
             'tenant_id' => $this->tenant->getKey(),
             'plan_id' => $plan->getKey(),
             'name' => 'Subscriber',
-            'phone' => '+254700000001',
-            'access_code' => 'FORMACTION',
+            'phone' => '+25470000000'.$n,
+            'access_code' => 'FORMACTION'.$n,
             'status' => 'active',
             'plan_type' => 'pppoe',
             'expiry_date' => '2026-12-31',
@@ -180,6 +185,53 @@ final class FormActionTest extends TestCase
         $this->getJson('/clients/field-options?field=plan_id&q=Bas')
             ->assertOk()
             ->assertJsonPath('options.0.label', 'Basic');
+    }
+
+    /* ------------------------------------------------------------ in bulk */
+
+    /**
+     * ONE DECISION, APPLIED TO THE SELECTION.
+     *
+     * `BulkRunner` walks the selection in keyset chunks and calls the handler
+     * once per chunk, so the collected values are reused rather than re-asked -
+     * which is the whole reason "move these forty to a plan" is a bulk action
+     * rather than forty clicks.
+     */
+    public function test_a_bulk_form_action_applies_to_every_selected_row(): void
+    {
+        $first = $this->client();
+        $second = $this->client();
+
+        $target = Plan::withoutGlobalScopes()->forceCreate([
+            'tenant_id' => $this->tenant->getKey(),
+            'name' => 'Bulk target',
+            'speed_mbps' => 50,
+            'price_cents' => 2500,
+        ]);
+
+        $this->postJson('/clients/bulk', [
+            'action' => 'move-plan',
+            'ids' => [$first->getKey(), $second->getKey()],
+            'data' => ['plan_id' => $target->getKey()],
+        ])->assertOk()->assertJsonPath('affected', 2);
+
+        $this->assertSame($target->getKey(), $first->refresh()->plan_id);
+        $this->assertSame($target->getKey(), $second->refresh()->plan_id);
+    }
+
+    /** And the declaration's rules are enforced before anything is touched. */
+    public function test_a_bulk_form_action_validates_before_running(): void
+    {
+        $client = $this->client();
+        $before = $client->plan_id;
+
+        $this->postJson('/clients/bulk', [
+            'action' => 'move-plan',
+            'ids' => [$client->getKey()],
+            'data' => [],
+        ])->assertStatus(422)->assertJsonValidationErrors('plan_id');
+
+        $this->assertSame($before, $client->refresh()->plan_id);
     }
 
     /* ------------------------------------------------------- the definition */

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Models\User;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
-use PanelKit\Panel\Policies\TenantResourcePolicy;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use PanelKit\Panel\Policies\TenantResourcePolicy;
 
 /**
  * Managing colleagues.

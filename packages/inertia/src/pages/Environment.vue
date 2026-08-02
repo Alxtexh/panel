@@ -53,10 +53,7 @@ const props = withDefaults(
  */
 const form = useForm<{ values: Record<string, string> }>({
     values: Object.fromEntries(
-        props.entries.map((entry) => [
-            entry.key,
-            entry.secret ? '' : (entry.value ?? ''),
-        ]),
+        props.entries.map((entry) => [entry.key, entry.secret ? '' : (entry.value ?? '')]),
     ),
 })
 
@@ -127,14 +124,11 @@ const submit = () => form.put(window.location.pathname, { preserveScroll: true }
             v-if="!writable"
             class="border-destructive/40 bg-destructive/5 rounded-lg border p-4 text-sm"
         >
-            The .env file is not writable by the web process, or no keys are
-            declared as editable. Nothing here can be changed.
+            The .env file is not writable by the web process, or no keys are declared as editable.
+            Nothing here can be changed.
         </p>
 
-        <p
-            v-else
-            class="bg-muted/40 text-muted-foreground rounded-md border px-3 py-2 text-sm"
-        >
+        <p v-else class="bg-muted/40 text-muted-foreground rounded-md border px-3 py-2 text-sm">
             {{ notice }}
         </p>
 

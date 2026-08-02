@@ -44,6 +44,7 @@ final class BulkRunner
         string $model,
         string $keyColumn,
         ?Closure $onProgress = null,
+        array $data = [],
     ): int {
         $affected = 0;
         $after = null;
@@ -64,7 +65,7 @@ final class BulkRunner
 
             $after = end($chunk);
 
-            $affected += $this->apply($action, $model, $keyColumn, $chunk);
+            $affected += $this->apply($action, $model, $keyColumn, $chunk, $data);
 
             if ($onProgress !== null) {
                 $onProgress($affected);
@@ -83,7 +84,16 @@ final class BulkRunner
     /**
      * @param  list<int|string>  $ids
      */
-    private function apply(BulkAction $action, string $model, string $keyColumn, array $ids): int
+    /**
+     * @param  list<int|string>  $ids
+     * @param  array<string, mixed>  $data  Values the action's form collected,
+     *                                      already validated and reduced to
+     *                                      declared keys by the caller. THE SAME
+     *                                      VALUES FOR EVERY CHUNK - collected
+     *                                      once, which is what makes this one
+     *                                      decision rather than one per batch.
+     */
+    private function apply(BulkAction $action, string $model, string $keyColumn, array $ids, array $data = []): int
     {
         /*
          * Through the MODEL, not the raw builder handed in.
@@ -101,7 +111,7 @@ final class BulkRunner
         if ($handler !== null) {
             $records = $query->get();
 
-            $handler($records);
+            $handler($records, $data);
 
             return $records->count();
         }

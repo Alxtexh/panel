@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Actions;
 
 use Closure;
+use PanelKit\Panel\Forms\Form;
 use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
 
@@ -48,6 +49,17 @@ final class BulkAction
     private array $mutate = [];
 
     private ?Closure $handle = null;
+
+    /**
+     * Fields to collect ONCE, before the selection is touched.
+     *
+     * The bulk twin of `RecordAction::form()` and the shape most selection
+     * actions in a real panel have: "assign these to a department", "move these
+     * to a plan", "cancel these with a reason". The values are collected once
+     * and applied to every row, which is the whole reason it is a bulk action
+     * rather than a hundred clicks.
+     */
+    private ?Form $form = null;
 
     private int $chunkSize = 1000;
 
@@ -131,6 +143,34 @@ final class BulkAction
      *
      * @param  Closure(Collection): void  $handle
      */
+    /**
+     * Collect input before running - see the property note.
+     *
+     * PAIRS WITH `handle()`, NEVER `mutate()`, for the same reason as the
+     * record version: a mutation is a fixed set of columns decided at
+     * definition time and has nowhere to put what a person typed.
+     *
+     * THE VALUES ARE COLLECTED ONCE AND REUSED FOR EVERY CHUNK. `BulkRunner`
+     * walks the selection in keyset chunks, so the handler is called repeatedly
+     * with the same data - which is what makes "apply this to 40,000 rows"
+     * one decision rather than a prompt per batch.
+     *
+     * @param  Closure(Form): Form  $form
+     */
+    public function form(Closure $form): self
+    {
+        $this->form = $form(Form::make());
+
+        return $this;
+    }
+
+    /** The declared form, or null when this action asks for nothing. */
+    public function formDefinition(): ?Form
+    {
+        return $this->form;
+    }
+
+    /** @param Closure(mixed, array<string, mixed>): mixed $handle */
     public function handle(Closure $handle): self
     {
         $this->handle = $handle;
@@ -177,6 +217,15 @@ final class BulkAction
         return $this->handle;
     }
 
+    /**
+     * A FORM WITH NOWHERE TO SEND WHAT IT COLLECTED is refused, exactly as for
+     * a record action - it would be a dialog that lies about what it does.
+     */
+    public function requiresHandler(): bool
+    {
+        return $this->form !== null;
+    }
+
     public function isRunnable(): bool
     {
         return $this->mutate !== [] || $this->handle !== null;
@@ -199,6 +248,13 @@ final class BulkAction
             // forgot to say so.
             'confirmation' => $this->confirmation
                 ?? ($this->destructive ? "{$this->label} the selected records?" : null),
+
+            /*
+             * THE FIELDS, SENT WITH THE ACTION so the dialog opens with no
+             * request. Null for the common case; the client checks for its
+             * presence rather than its truthiness.
+             */
+            'form' => $this->form?->toSchema(),
         ];
     }
 }

@@ -49,9 +49,7 @@ const props = defineProps<{
 <template>
     <AuthLayout
         :title="props.heading ?? 'Log in to your account'"
-        :description="
-            props.description ?? 'Enter your email and password below to log in'
-        "
+        :description="props.description ?? 'Enter your email and password below to log in'"
     >
         <Head title="Log in" />
 

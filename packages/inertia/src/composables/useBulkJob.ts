@@ -147,7 +147,12 @@ export function useBulkJob(resourceKey: string) {
         }, POLL_MS)
     }
 
-    async function run(action: string, target: BulkTarget) {
+    /**
+     * @param data Values a bulk action's form collected, or undefined for one
+     *             that asks nothing. Sent nested so a field named `action`
+     *             cannot collide with the action key.
+     */
+    async function run(action: string, target: BulkTarget, data?: Record<string, unknown>) {
         busy.value = true
         error.value = null
         progress.value = null
@@ -158,6 +163,7 @@ export function useBulkJob(resourceKey: string) {
                 action,
                 all: target.all ?? false,
                 ids: target.all ? [] : (target.ids ?? []),
+                ...(data ? { data } : {}),
             })
 
             if (result.status === 'done') {
