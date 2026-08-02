@@ -243,6 +243,84 @@ esac
 say "/roles resolved with HTTP $roles_status"
 
 # ---------------------------------------------------------------------------
+# TICKETING, WHICH ARRIVES SWITCHED OFF AND MUST STILL ARRIVE.
+#
+# THIS IS THE ONLY PLACE THE PACKAGED MIGRATION RUNS. Inside the monorepo the
+# reference app built `tickets` / `ticket_replies` long before the package owned
+# them and config points at those, so the migration this ships takes the branch
+# where the table already exists - in every one of the 1,596 tests. A fresh app
+# is the first database it has ever actually created a table in.
+#
+# AND OFF IS A REAL STATE, not an absence. With neither panel named, nothing
+# mounts: no route, no navigation entry, no screen. That is the correct posture
+# for an installation that did not ask for a support desk, and it is also
+# indistinguishable from a plugin that silently failed to register - so both
+# halves are checked here rather than one.
+# ---------------------------------------------------------------------------
+say "Checking the ticket tables were created"
+cat > verify-tickets.php <<'TIX'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+use Illuminate\Support\Facades\Schema;
+
+$checks = [
+    'panel_tickets' => Schema::hasTable('panel_tickets'),
+    'panel_ticket_replies' => Schema::hasTable('panel_ticket_replies'),
+    'the reply thread has a body' => Schema::hasColumn('panel_ticket_replies', 'body'),
+    'an internal note is distinguishable' => Schema::hasColumn('panel_ticket_replies', 'internal'),
+    'the SLA clock has somewhere to live' => Schema::hasColumn('panel_tickets', 'due_at'),
+    'nothing mounted, because no panel was named'
+        => ! array_key_exists('tickets', app(PanelKit\Panel\PanelManager::class)->resources()),
+];
+
+foreach ($checks as $what => $ok) {
+    echo ($ok ? 'ok   ' : 'MISS '), $what, PHP_EOL;
+}
+
+echo in_array(false, $checks, true) ? 'VERDICT fail' : 'VERDICT pass', PHP_EOL;
+TIX
+tickets="$(php verify-tickets.php 2>&1)"
+rm -f verify-tickets.php
+
+echo "$tickets"
+grep -q 'VERDICT pass' <<<"$tickets" \
+    || fail "the packaged ticketing migration did not produce a usable schema on a clean install."
+
+# NOW TURN IT ON, which is the half that matters: the tables are worth nothing
+# if naming a panel does not produce a screen. `PANEL_TICKETING_OPERATOR` is
+# read by the published config, so this is the same edit a consumer makes.
+say "Turning ticketing on and checking the queue routes"
+printf '\nPANEL_TICKETING_OPERATOR=%s\n' "$(php -r '
+require __DIR__."/vendor/autoload.php";
+$app = require_once __DIR__."/bootstrap/app.php";
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+echo array_key_first(app(PanelKit\Panel\PanelManager::class)->all());
+')" >> .env
+
+php artisan config:clear >/dev/null 2>&1 || true
+
+cat > verify-queue.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+echo $kernel->handle(Illuminate\Http\Request::create('/tickets', 'GET'))->getStatusCode(), PHP_EOL;
+HIT
+tickets_status="$(php verify-queue.php 2>/dev/null | tail -1)"
+rm -f verify-queue.php
+
+case "$tickets_status" in
+    404) fail "ticketing was configured and /tickets is still unrouted - the plugin did not mount." ;;
+    5*)  fail "/tickets is routed but returns $tickets_status on a clean install." ;;
+    "")  fail "/tickets could not be requested at all." ;;
+esac
+
+say "/tickets resolved with HTTP $tickets_status"
+
+# ---------------------------------------------------------------------------
 # THE UPGRADE PATH, on the only kind of installation that can prove it.
 #
 # Everything above verifies `composer require`. `panel:update` is what somebody
