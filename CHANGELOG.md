@@ -4,7 +4,16 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
-## Unreleased
+## 0.6.0
+
+**Everything a real port asked for that was still open.** This release closes the
+last of a gaps report written by somebody moving two production portals off
+Filament: actions that ask for input, config that survives an upgrade, a
+generator that shows its own API, and the vendored-copy trap that costs an
+afternoon.
+
+**One behaviour change to read before upgrading** — the config merge is now
+deep. See [UPGRADING.md](UPGRADING.md#050--060).
 
 ### Added
 

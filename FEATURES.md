@@ -310,4 +310,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.5.0**, 1,663 tests passing, 13 skipped.
+Current state: **v0.6.0**, 1,663 tests passing, 13 skipped.

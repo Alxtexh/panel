@@ -10,10 +10,10 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.5.0"
+"panelkit/panel": "^0.6.0"
 ```
 
-Composer reads `^0.5.0` on a `0.x` package as `>=0.5.0 <0.6.0`, which is what you
+Composer reads `^0.6.0` on a `0.x` package as `>=0.6.0 <0.7.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
 The three packages are **versioned together**. `panelkit/panel@0.2.0` expects
@@ -107,6 +107,48 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.5.0 → 0.6.0
+
+**One behaviour change, and it is the reason to read this section.**
+
+**The package's config is now merged into yours KEY BY KEY.** Before,
+`mergeConfigFrom` merged one level: a published `config/panel.php` supplied
+`auth` *whole*, so `auth.password.max_age_days` was read as unset however the
+package file read. That is why a setting a release added could be invisible on
+an existing install - and where the call site had no default of its own, the
+feature it enabled simply never appeared.
+
+**What that changes for you:** a nested key you deleted, or never had, now
+resolves to the package default instead of `null`. If your code branched on a
+`panel.*` key being absent - `config('panel.auth.broker') ?? $mine` - check
+those call sites. **Setting the key explicitly always wins**, at any depth, so
+the fix is to write the value you want rather than to rely on its absence.
+
+**Lists are unchanged and still win whole**: `abilities`, `plugins`,
+`pagination.per_page_options` and every other list stay exactly as you published
+them. A merge that unioned them would reinstall a plugin you removed. The two
+path-keyed maps - `discover` and `discover_pages` - are treated the same way for
+the same reason.
+
+**`panel:update` reports something different.** It used to name config keys the
+shallow merge could not supply; the deep merge supplies them, so it now names
+**plugins this version ships that your `plugins` array does not install**. That
+is the one gap the merge deliberately cannot close.
+
+**Removed:** `ConfigDrift::keysNotSuppliedByMerge()`, replaced by
+`ConfigDrift::pluginsNotSuppliedByMerge()`. Only relevant if you called it -
+the old one could no longer report anything.
+
+**Everything else is additive:**
+
+- `->form()` on `RecordAction` and `BulkAction` - an action that asks for a
+  reason, an amount or a plan before it runs, in a modal that opens with no
+  network request. Fields are declared server-side and are the allow-list.
+- `panel:doctor` notes a `path`-installed package composer **copied** instead of
+  symlinking, which is why a fix in the package sometimes does not happen.
+- `make:panel-resource --generate` writes a commented action example into the
+  table chain.
 
 ### 0.4.0 → 0.5.0
 
