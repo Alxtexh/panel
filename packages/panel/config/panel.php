@@ -384,7 +384,21 @@ return [
     | middleware - which would make "install this" a way to turn off tenant
     | scoping as a side effect.
     */
-    'plugins' => [],
+    'plugins' => [
+        /*
+        | TICKETING SHIPS REGISTERED AND SWITCHED OFF, which is not a
+        | contradiction. It was registered nowhere for a release: the classes
+        | were in the package, `composer require` installed them, and a consumer
+        | who set `panel.ticketing.operator` got no route and no error - the
+        | plugin they were configuring had never been handed to the manager.
+        |
+        | It is inert until BOTH `panel.ticketing.operator` and `.opener` name a
+        | panel. See `TicketingPlugin`: one end without the other is refused
+        | loudly rather than half-installed, because a queue nobody can write to
+        | and a form nobody reads both return 200.
+        */
+        PanelKit\Panel\Ticketing\TicketingPlugin::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------

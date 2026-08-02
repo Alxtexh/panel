@@ -60,6 +60,39 @@ final class TicketingPlugin extends Plugin
         $operator = $this->operatorPanel();
         $opener = $this->openerPanel();
 
+        /*
+         * NEITHER NAMED IS OFF, and off is a supported state rather than an
+         * oversight. The package registers this plugin by default, so every
+         * installation that never asked for a support desk boots with it
+         * present - and must get no route, no navigation entry and no error.
+         *
+         * THE DEFAULT USED TO BE `admin` AND `reseller`, which read as harmless
+         * and was not: registered by default it would have demanded a
+         * `reseller` portal from every fresh application, throwing at boot over
+         * a feature nobody had turned on.
+         */
+        if ($operator === null && $opener === null) {
+            return false;
+        }
+
+        /*
+         * ONE NAMED IS A MISTAKE, AND IT IS SAID HERE rather than resolved into
+         * silence. Skipping quietly is the same failure as installing one end:
+         * somebody configured a support desk, everything reported success and
+         * no screen exists. See the class note - the only version of this that
+         * reaches them is the one that throws.
+         */
+        if ($operator === null || $opener === null) {
+            $named = $operator ?? $opener;
+            $missing = $operator === null ? 'operator' : 'opener';
+
+            throw new RuntimeException(
+                "Ticketing is half configured: panel [{$named}] is named and panel.ticketing.{$missing} is not. "
+                .'Name both, or neither. One end alone is either a queue nobody can write to '
+                .'or a form nobody reads.',
+            );
+        }
+
         if ($panel->id !== $operator && $panel->id !== $opener) {
             return false;
         }
@@ -182,13 +215,24 @@ final class TicketingPlugin extends Plugin
         }
     }
 
-    private function operatorPanel(): string
+    /**
+     * NULL MEANS NOT CONFIGURED, which is why neither of these falls back to a
+     * panel id. A default of `admin` / `reseller` is a guess about somebody
+     * else's application, and the guess is load-bearing now that the plugin
+     * ships registered: it would mount ticketing on a portal nobody chose, or
+     * demand one that does not exist.
+     */
+    private function operatorPanel(): ?string
     {
-        return (string) config('panel.ticketing.operator', config('panel.default', 'admin'));
+        $id = config('panel.ticketing.operator');
+
+        return is_string($id) && $id !== '' ? $id : null;
     }
 
-    private function openerPanel(): string
+    private function openerPanel(): ?string
     {
-        return (string) config('panel.ticketing.opener', 'reseller');
+        $id = config('panel.ticketing.opener');
+
+        return is_string($id) && $id !== '' ? $id : null;
     }
 }

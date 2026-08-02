@@ -290,15 +290,27 @@ grep -q 'VERDICT pass' <<<"$tickets" \
     || fail "the packaged ticketing migration did not produce a usable schema on a clean install."
 
 # NOW TURN IT ON, which is the half that matters: the tables are worth nothing
-# if naming a panel does not produce a screen. `PANEL_TICKETING_OPERATOR` is
-# read by the published config, so this is the same edit a consumer makes.
-say "Turning ticketing on and checking the queue routes"
-printf '\nPANEL_TICKETING_OPERATOR=%s\n' "$(php -r '
+# if naming a panel does not produce a screen.
+#
+# A SECOND PORTAL IS GENERATED FIRST, because the plugin refuses one end without
+# the other and is right to - a queue nobody can write to and a form nobody
+# reads both return 200. So this is also the only end-to-end proof that
+# `make:panel` produces a portal a package can install into.
+say "Generating a customer portal for the other end of ticketing"
+php artisan make:panel portal --path=portal --no-interaction 2>&1 | tail -3
+
+operator_panel="$(php -r '
 require __DIR__."/vendor/autoload.php";
 $app = require_once __DIR__."/bootstrap/app.php";
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 echo array_key_first(app(PanelKit\Panel\PanelManager::class)->panels());
-')" >> .env
+')"
+
+say "Turning ticketing on ($operator_panel + portal) and checking the queue routes"
+{
+    printf '\nPANEL_TICKETING_OPERATOR=%s\n' "$operator_panel"
+    printf 'PANEL_TICKETING_OPENER=portal\n'
+} >> .env
 
 php artisan config:clear >/dev/null 2>&1 || true
 
