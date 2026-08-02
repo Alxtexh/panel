@@ -189,11 +189,17 @@ changed.
 
 **Known gaps**, stated rather than implied:
 
-- Live updates: `useLiveUpdates` implements the §8 rules but is not wired to a
-  running Reverb server, so it is unexercised end to end.
+- Live updates: the **poll** driver is the default and is exercised end to end —
+  `LiveUpdatesTest` drives the real endpoint, including tenant isolation, the
+  bounded id list, one query per poll and a guest refusal. What no test drives
+  is a **socket**: `BroadcastChannelTest` proves who may subscribe to what, and
+  then nothing connects, because nothing here runs Reverb (it is a `require-dev`
+  dependency and `BROADCAST_CONNECTION=log`). So the broadcast driver's
+  authorisation is tested and its transport is not.
 - Precognition: rules live in exactly one place, but live per-keystroke
-  validation is not wired — `laravel-precognition-vue-inertia` peers on Inertia
-  ^1 || ^2 and this app is on Inertia 3.
+  validation is not wired, and the package is not installed. Still blocked, and
+  checked rather than assumed: `laravel-precognition-vue-inertia@0.8.0` declares
+  a peer of `@inertiajs/vue3: ^1.0.0 || ^2.0.0`, and this app is on `^3.0.0`.
 - Bulk actions: the mutations ship — `BulkRunner` walks a selection in keyset
   chunks and every bulk mutation counts before it commits. There is **no
   automatic queue threshold**: a job that should run in the background is
@@ -202,4 +208,7 @@ changed.
 - The playground's development database is SQLite, so every performance number
   here demonstrates that the query *shape* is sound rather than transferring to
   Postgres unchanged.
-- Every page logs a Vue hydration mismatch, pre-existing from the starter kit.
+- SSR is **off** — `INERTIA_SSR_ENABLED` defaults to false. The starter kit
+  ships it on with nothing serving it, so every request paid a failed connection
+  to port 13714 before falling back. Turning it on is three commands, in
+  `config/inertia.php`.

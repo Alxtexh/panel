@@ -19,6 +19,15 @@ Versioning policy, and what counts as a breaking change, are in
   moment 0.3.0 shipped `DashboardPage`. A test pinned that sentence, so the
   guide told every agent reading it that this release's flagship feature did not
   exist, and the test defended the claim.
+- **README listed two gaps that had closed and one that never existed.** Bulk
+  mutations were described as unbuilt; `BulkRunner` has been walking selections
+  in keyset chunks for a long time. Live updates were called "unexercised end to
+  end"; the poll driver is the default and `LiveUpdatesTest` drives the real
+  endpoint — it is the socket, not the feature, that no test connects to. And
+  "every page logs a Vue hydration mismatch" cannot happen here at all: SSR is
+  off, so there is no server-rendered markup to hydrate against. Each of the
+  four gaps has now been checked against the tree or the browser rather than
+  carried forward.
 - **`UPGRADING.md` said `0.1.0` was the first and only tagged release**, with
   version-specific notes reading "Nothing here yet". Two releases had shipped
   past it, one of them breaking. It now carries notes for both and names
