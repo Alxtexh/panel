@@ -29,7 +29,7 @@ import {
     Megaphone,
     Timer,
 } from '@lucide/vue';
-import { PkModal } from '@panelkit/ui';
+import { PkCard, PkModal } from '@panelkit/ui';
 import { PkButton as Button } from '@panelkit/ui';
 import { computed, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -277,10 +277,8 @@ const telegramHalfDone = computed(
         <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <div class="flex flex-col gap-4">
                 <!-- ------------------------------------------------ schedule -->
-                <section class="rounded-lg border bg-card">
-                    <header
-                        class="flex items-center justify-between border-b px-4 py-3"
-                    >
+                <PkCard :padded="false">
+                    <template #header>
                         <h2
                             class="flex items-center gap-2 text-sm font-semibold"
                         >
@@ -289,10 +287,14 @@ const telegramHalfDone = computed(
                             />
                             Schedule
                         </h2>
+                    </template>
+
+                    <template #actions>
                         <span class="text-xs text-muted-foreground"
                             >when it runs</span
                         >
-                    </header>
+                    </template>
+
 
                     <div class="flex flex-col gap-3 p-4">
                         <div class="grid gap-3 sm:grid-cols-3">
@@ -379,23 +381,25 @@ const telegramHalfDone = computed(
                             </label>
                         </div>
                     </div>
-                </section>
+                </PkCard>
 
                 <!-- ----------------------------------------------- retention -->
-                <section class="rounded-lg border bg-card">
-                    <header
-                        class="flex items-center justify-between border-b px-4 py-3"
-                    >
+                <PkCard :padded="false">
+                    <template #header>
                         <h2
                             class="flex items-center gap-2 text-sm font-semibold"
                         >
                             <Timer class="size-4 text-muted-foreground" />
                             Retention
                         </h2>
+                    </template>
+
+                    <template #actions>
                         <span class="text-xs text-muted-foreground"
                             >how long copies live</span
                         >
-                    </header>
+                    </template>
+
 
                     <div class="flex flex-col gap-3 p-4">
                         <div class="grid gap-3 sm:grid-cols-2">
@@ -483,23 +487,25 @@ const telegramHalfDone = computed(
                             these say.
                         </p>
                     </div>
-                </section>
+                </PkCard>
 
                 <!-- -------------------------------------------- destinations -->
-                <section class="rounded-lg border bg-card">
-                    <header
-                        class="flex items-center justify-between border-b px-4 py-3"
-                    >
+                <PkCard :padded="false">
+                    <template #header>
                         <h2
                             class="flex items-center gap-2 text-sm font-semibold"
                         >
                             <HardDrive class="size-4 text-muted-foreground" />
                             Destinations
                         </h2>
+                    </template>
+
+                    <template #actions>
                         <span class="text-xs text-muted-foreground"
                             >where copies are kept</span
                         >
-                    </header>
+                    </template>
+
 
                     <div class="flex flex-col gap-3 p-4">
                         <p class="text-xs text-muted-foreground">
@@ -567,23 +573,25 @@ const telegramHalfDone = computed(
                             {{ form.errors.destinations }}
                         </span>
                     </div>
-                </section>
+                </PkCard>
 
                 <!-- -------------------------------------------------- alerts -->
-                <section class="rounded-lg border bg-card">
-                    <header
-                        class="flex items-center justify-between border-b px-4 py-3"
-                    >
+                <PkCard :padded="false">
+                    <template #header>
                         <h2
                             class="flex items-center gap-2 text-sm font-semibold"
                         >
                             <Megaphone class="size-4 text-muted-foreground" />
                             Alerts
                         </h2>
+                    </template>
+
+                    <template #actions>
                         <span class="text-xs text-muted-foreground"
                             >who is told, and how</span
                         >
-                    </header>
+                    </template>
+
 
                     <div class="flex flex-col gap-4 p-4">
                         <label class="flex flex-col gap-1">
@@ -713,7 +721,7 @@ const telegramHalfDone = computed(
                             </span>
                         </label>
                     </div>
-                </section>
+                </PkCard>
             </div>
 
             <!-- ------------------------------------------------------- rail -->

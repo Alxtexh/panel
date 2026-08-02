@@ -45,6 +45,7 @@ export { default as AuditTimeline } from './components/AuditTimeline.vue'
 
 export { useListTable, type ListPageProps } from './composables/useListTable'
 export { useBulkJob } from './composables/useBulkJob'
+export { useUnsavedGuard } from './composables/useUnsavedGuard'
 export { useTranslations } from './composables/useTranslations'
 
 /**

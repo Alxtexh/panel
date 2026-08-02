@@ -10,7 +10,7 @@ Those are not the same thing, by a wide margin:
 | | package (installed) | reference app only |
 |---|---|---|
 | PHP | 263 files, 44,614 lines | 108 files, 16,190 lines |
-| Vue | 111 components | **197 components** |
+| Vue | 112 components | **197 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -83,6 +83,21 @@ and the two rules that are easy to get wrong (`form()` pairs with `handle()`,
 never `mutate()`; an action without `authorize()` is refused). A test
 uncomments the block mechanically and compiles the result, because a stub whose
 promise is "uncomment this" fails by sitting somewhere the chain cannot take it.
+
+### Layout and page state
+
+`PkCard` is the block of content everything that is not a widget sits in — title,
+description, trailing actions, an optional footer, and `:padded="false"` for a
+table that fills it. It carries no tone or variant props: `class` merges, and a
+styling language that grows one prop at a time is how a component becomes
+unreadable.
+
+`useUnsavedChanges` gives a page that is **not** a record form the same
+protection one gets — `dirty`, `commit()`, `discard()` and the `beforeunload`
+guard, with a comparison that does not mistake reordered keys for an edit.
+`useUnsavedGuard` adds the half that needs the router: an Inertia visit never
+unloads the document, so nothing else can stop a sidebar click from discarding
+a half-finished page.
 
 ### Authorisation
 

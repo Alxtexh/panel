@@ -8,6 +8,28 @@ Versioning policy, and what counts as a breaking change, are in
 
 ### Added
 
+- **`PkCard`** — the ordinary block of content the package did not have.
+  `StatCard` and `ChartCard` are dashboard widgets; everything else hand-rolled
+  `rounded-lg border bg-card` on a div, fifteen times in the reference app
+  alone. Optional title, description, `#actions` and `#footer`; `:padded="false"`
+  for a table that fills its card. **No tone or variant props**, deliberately -
+  those grow one at a time until the component is a styling language, and a card
+  that needs a red border takes one through `class`, which merges.
+
+- **`useUnsavedChanges` + `useUnsavedGuard`** — the half `UnsavedBar` does not
+  do. The bar shipped and was exported, and a custom page still could not use
+  it, because a bar draws a decision it does not make: `RecordForm` knows it is
+  dirty, and a page holding its own state had to write the snapshot, the
+  comparison and the `beforeunload` handler itself.
+
+  The comparison is **key-order-insensitive**, which is the part a hand-rolled
+  version gets wrong - `JSON.stringify` preserves insertion order, so state
+  rebuilt from a response compares as changed and the page announces unsaved
+  changes for a save that just succeeded. `useUnsavedGuard` (in
+  `@panelkit/inertia`, because it needs the router) confirms before a visit
+  abandons the work, which `beforeunload` cannot see: an Inertia navigation
+  never unloads the document.
+
 - **`panel:install --auth`.** `make:panel --auth` covered a portal you
   *generate*; the path everybody actually walks - `composer require`,
   `panel:install`, open the panel - still ended at "install a starter kit",

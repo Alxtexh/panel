@@ -32,6 +32,14 @@ export { default as RecordActions } from './components/DataTable/RecordActions.v
 export { default as AppearanceDrawer } from './components/Layout/AppearanceDrawer.vue'
 export { default as PkBottomNav } from './components/Layout/PkBottomNav.vue'
 export { default as PkBoundary } from './components/Layout/PkBoundary.vue'
+
+/*
+ * A PANEL OF CONTENT, which the package did not have and every screen wrote by
+ * hand - fifteen copies of `rounded-lg border bg-card` in the reference app
+ * alone. `StatCard` and `ChartCard` are dashboard widgets; this is the ordinary
+ * block everything else sits in.
+ */
+export { default as PkCard } from './components/Layout/PkCard.vue'
 export { default as PkDeviceFrame } from './components/Layout/PkDeviceFrame.vue'
 export { default as PkStepIndicator } from './components/Layout/PkStepIndicator.vue'
 export { default as PkRepeater } from './components/Form/PkRepeater.vue'
@@ -88,6 +96,14 @@ export { default as PkSkeleton } from './components/primitives/PkSkeleton.vue'
 export { default as PkSlideover } from './components/Overlay/PkSlideover.vue'
 export { default as RecordForm } from './components/Form/RecordForm.vue'
 export { default as UnsavedBar } from './components/Form/UnsavedBar.vue'
+
+/*
+ * THE HALF `UnsavedBar` DOES NOT DO. The bar draws a decision it does not make,
+ * so a page holding its own state had to write the snapshot, the comparison and
+ * the `beforeunload` handler itself. `useUnsavedGuard` in `@panelkit/inertia`
+ * adds the navigation half, which needs the router and so cannot live here.
+ */
+export { useUnsavedChanges } from './composables/useUnsavedChanges'
 export { default as InfoNode } from './components/Form/InfoNode.vue'
 export { default as SchemaNode } from './components/Form/SchemaNode.vue'
 export { default as FormFieldControl } from './components/Form/FormFieldControl.vue'
