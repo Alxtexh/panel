@@ -33,7 +33,33 @@ type NavItem = {
 const page = usePage()
 
 const nav = computed(() => (page.props.panelNav ?? []) as NavItem[])
-const panel = computed(() => page.props.panel as { path: string; brand: string | null } | null)
+const panel = computed(
+    () =>
+        page.props.panel as {
+            path: string
+            brand: string | null
+            colors: Record<string, string>
+        } | null,
+)
+
+/**
+ * The panel's own palette, as inline CSS variables.
+ *
+ * WITHOUT THE `--color-` PREFIX. `@theme` declares
+ * `--color-primary: var(--primary)`, and Tailwind resolves that at BUILD time -
+ * so `bg-primary` compiles to `var(--primary)` and setting `--color-primary`
+ * here writes a property nothing reads. A whole release shipped with per-tenant
+ * branding doing exactly that: the colours were stored, resolved and applied,
+ * and rendered nowhere.
+ */
+const palette = computed(() =>
+    Object.fromEntries(
+        Object.entries(panel.value?.colors ?? {}).map(([token, value]) => [
+            `--${token}`,
+            value,
+        ]),
+    ),
+)
 const user = computed(() => (page.props.auth as { user?: { name?: string } } | undefined)?.user ?? null)
 
 /** Entries grouped by their declared group, ungrouped ones first. */
@@ -52,7 +78,7 @@ const current = (href: string) => page.url === href || page.url.startsWith(`${hr
 </script>
 
 <template>
-    <div class="flex min-h-svh bg-background text-foreground">
+    <div class="flex min-h-svh bg-background text-foreground" :style="palette">
         <aside class="hidden w-60 shrink-0 border-r border-border p-4 md:block">
             <Link
                 :href="panel?.path ?? '/'"

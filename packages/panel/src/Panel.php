@@ -138,7 +138,28 @@ final class Panel
         return $this;
     }
 
-    /** @param Closure(): array<string, string> $colors */
+    /**
+     * PER-PANEL COLOUR TOKENS, applied as CSS variables on every screen.
+     *
+     * A CLOSURE, NOT AN ARRAY, because the answer may depend on the request -
+     * a reseller portal wearing the reseller's own colours has to read who is
+     * signed in, and a value computed at boot would serve the first visitor's
+     * brand to everybody on that worker.
+     *
+     * KEYS ARE TOKEN NAMES WITHOUT THE DASHES: `['primary' => 'oklch(...)']`
+     * becomes `--primary`. That is the variable the stylesheet's `@theme` block
+     * resolves, which is why components read `bg-primary` and never a literal.
+     * The prefixed form `--color-primary` is what Tailwind COMPILES TO and
+     * writing that instead sets a property nothing reads - a whole release
+     * shipped with per-tenant branding doing exactly that.
+     *
+     * THIS WAS DEAD CODE UNTIL v0.5.0. The method existed, `resolveColors()`
+     * existed, and nothing called either - so an installation could configure
+     * a panel's palette and watch nothing happen, which is worse than the
+     * method being absent. It is read by `SharePanelProps` now.
+     *
+     * @param Closure(): array<string, string> $colors
+     */
     public function colors(Closure $colors): self
     {
         $this->colors = $colors;

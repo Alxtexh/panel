@@ -1,0 +1,116 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Models\Tenant;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use PanelKit\Panel\Http\Middleware\SharePanelProps;
+use PanelKit\Panel\Panel;
+use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\PanelNavigation;
+use Tests\TestCase;
+
+/**
+ * The props every panel screen needs, and the one that was dead code.
+ *
+ * WHY THIS FILE EXISTS. `panelPages()` and the resource registry have always
+ * been available server-side and nothing handed them to Inertia, so every
+ * consuming application wrote its own middleware - rebuilding the sidebar, the
+ * panel prefix and the ability filter, each differently. This pins the packaged
+ * version so a port has something to rely on rather than something to copy.
+ */
+final class SharedPanelPropsTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /**
+     * `Panel::colors()` WAS DEFINED, RESOLVED AND CALLED FROM NOWHERE.
+     *
+     * A configuration method that silently does nothing is worse than an absent
+     * one: an installation sets a palette, sees no change, and has no way to
+     * tell a broken feature from a misunderstanding of the API. It was reported
+     * from a real port, and this is the assertion that stops it recurring -
+     * `resolveColors()` having a caller is the whole point.
+     *
+     * WITHOUT THE `--color-` PREFIX, and that distinction is not cosmetic.
+     * `@theme` declares `--color-primary: var(--primary)`, which Tailwind
+     * resolves at BUILD time, so `bg-primary` compiles to `var(--primary)`.
+     * Sending the prefixed name sets a property nothing reads - which is
+     * exactly how per-tenant branding shipped for a release, storing, resolving
+     * and applying colours that rendered nowhere.
+     */
+    public function test_a_panels_colours_are_shared_with_the_client(): void
+    {
+        app(PanelManager::class)->registerPanel(
+            Panel::make('paletteprobe')
+                ->path('paletteprobe')
+                ->guard('web')
+                ->middleware(['web'])
+                ->colors(fn (): array => ['primary' => 'oklch(0.5 0.2 250)']),
+        );
+
+        $shared = $this->sharedFor('paletteprobe');
+
+        $this->assertSame(
+            ['primary' => 'oklch(0.5 0.2 250)'],
+            $shared['panel']['colors'],
+            'Panel::colors() resolves to nothing on the client, so configuring a palette does nothing.',
+        );
+    }
+
+    /**
+     * THE SIDEBAR CARRIES THIS PANEL'S PREFIX, which is the half that fails
+     * silently.
+     *
+     * The operator portal usually sits at the root, so a bare `/clients` link
+     * works and nothing looks wrong. A generated portal is mounted under its own
+     * path, where the same link points at a route that does not exist - and the
+     * menu happily renders it.
+     */
+    public function test_navigation_hrefs_carry_the_panels_prefix(): void
+    {
+        $tenant = Tenant::query()->first() ?? Tenant::create(['name' => 'Acme', 'slug' => 'acme']);
+
+        $this->actingAs(
+            User::factory()->withAbilities(['view_any_reseller_plans'])
+                ->create(['tenant_id' => $tenant->getKey(), 'email_verified_at' => now()]),
+        );
+
+        foreach (PanelNavigation::build('reseller') as $item) {
+            $this->assertStringStartsWith(
+                '/reseller/',
+                $item['href'],
+                "[{$item['key']}] links outside its own portal, to a route that portal does not mount.",
+            );
+        }
+    }
+
+    /**
+     * AND NOTHING FROM ANOTHER PANEL APPEARS. Without the current-panel filter a
+     * reseller's screens turn up in the operator's sidebar, advertising other
+     * people's portals.
+     */
+    public function test_navigation_contains_only_this_panels_screens(): void
+    {
+        $keys = array_column(PanelNavigation::build('reseller'), 'key');
+
+        $this->assertNotContains('clients', $keys);
+        $this->assertNotContains('routers', $keys);
+    }
+
+    /** @return array<string, mixed> */
+    private function sharedFor(string $panelId): array
+    {
+        app(PanelManager::class)->usePanel($panelId);
+
+        (new SharePanelProps)->handle(request(), static fn () => response(''));
+
+        return array_map(
+            static fn (mixed $value): mixed => is_callable($value) ? $value() : $value,
+            \Inertia\Inertia::getShared(),
+        );
+    }
+}
