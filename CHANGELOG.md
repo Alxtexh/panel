@@ -41,6 +41,12 @@ Versioning policy, and what counts as a breaking change, are in
   as unset however the package file reads.
 - The guide gained recipes for **a page that is not a resource** and **a
   dashboard**, and a catalogue entry for the `Pages` namespace.
+- `verify-install.sh` now runs `panel:update` in the fresh application it built.
+  It verified `composer require` and stopped there — leaving the command
+  somebody runs on *every release after the first* checked only from inside the
+  monorepo, where the package is a symlink and `config/panel.php` has been
+  edited by hand for months. A fresh install is the only place the config-drift
+  report has a known correct answer.
 
 ## 0.3.0
 

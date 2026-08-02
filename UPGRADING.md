@@ -90,6 +90,14 @@ is one somebody has to look at.
 You do not need `panel:cache-clear` separately — `panel:update` covers the schema
 cache, whose fingerprint does not know the package changed under it.
 
+**Expect a non-zero exit on an installation that is not configured yet.** Because
+the exit code is doctor's, `panel:update` returns non-zero whenever doctor finds
+a problem — and a brand-new installation has at least one: a bare Laravel
+publishes Spatie's config with `teams => false`, which under column-mode tenancy
+is fail-open, so a role would grant across every organisation at once. That is
+the check doing its job. If you put `panel:update` in a deploy pipeline, fix what
+doctor names rather than adding `|| true`.
+
 If you have published views or overridden a packaged component, re-diff them:
 
 ```bash
