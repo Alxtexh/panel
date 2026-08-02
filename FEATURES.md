@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 260 files, 44,081 lines | 108 files, 16,190 lines |
+| PHP | 261 files, 44,261 lines | 108 files, 16,190 lines |
 | Vue | 111 components | **197 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
@@ -302,4 +302,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.5.0**, 1,653 tests passing, 13 skipped.
+Current state: **v0.5.0**, 1,662 tests passing, 13 skipped.

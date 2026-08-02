@@ -43,6 +43,16 @@ Versioning policy, and what counts as a breaking change, are in
   your config does not install - the one thing the merge cannot fix, and how
   `TicketingPlugin` reached nobody for a release.
 
+- **`panel:doctor` notices a vendored copy composer did not symlink.** A `path`
+  repository is how you develop against a package you also maintain, and
+  composer either symlinks it or takes a **snapshot** at install time - falling
+  back to copying *without failing* where symlinks do not work (Windows without
+  developer mode, some bind mounts, a CI runner). The two are indistinguishable
+  from the application: classes autoload, pages return 200, tests pass. What
+  differs is everything afterwards, because a fix made in the source does not
+  happen and `panel:update` writes the previous version's page files. Reported
+  from a real port; it costs an afternoon each time, and now it names itself.
+
 ### Changed
 
 - **`panel:update` reports uninstalled plugins rather than unmergeable config

@@ -16,6 +16,7 @@ use PanelKit\Panel\Support\BackupStatus;
 use PanelKit\Panel\Support\Contrast;
 use PanelKit\Panel\Support\TenantContext;
 use PanelKit\Panel\Support\TicketTables;
+use PanelKit\Panel\Support\VendoredCopy;
 use PanelKit\Panel\Ticketing\TicketingPlugin;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -85,6 +86,7 @@ final class DoctorCommand extends Command
         $this->checkShippedDefaults();
         $this->checkPermissionTeams($context);
         $this->checkTicketing($panels);
+        $this->checkVendoredCopy();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -707,6 +709,52 @@ final class DoctorCommand extends Command
             .'will load, return 200 with a complete payload, and render blank - no error, nothing '
             .'in the log. Either start the dev server with `npm run dev`, or delete public/hot and '
             .'serve the built assets with `npm run build`.',
+        );
+    }
+
+    /**
+     * A PATH-INSTALLED PACKAGE THAT COMPOSER COPIED RATHER THAN SYMLINKED.
+     *
+     * Reported from a real port, and it costs an afternoon each time: the
+     * running code is a SNAPSHOT of the package taken at install time, so a fix
+     * made in the source does not happen, `panel:update` writes the previous
+     * version's page files, and nothing anywhere says so. `VendoredCopy` holds
+     * the reasoning and the rule.
+     *
+     * A NOTE RATHER THAN A PROBLEM. Nothing is misconfigured - the application
+     * runs exactly what it was given - and failing a build over a stale vendor
+     * directory would fail every CI run that installs from a path repository
+     * and then edits nothing.
+     */
+    private function checkVendoredCopy(): void
+    {
+        $manifest = base_path('composer.json');
+
+        if (! is_file($manifest)) {
+            return;
+        }
+
+        $composer = json_decode((string) file_get_contents($manifest), true);
+
+        if (! is_array($composer)) {
+            return;
+        }
+
+        $source = VendoredCopy::sourceFor($composer, base_path(), 'panelkit/panel');
+        $vendor = base_path('vendor/panelkit/panel');
+
+        if ($source === null || ! VendoredCopy::isStale($source, $vendor)) {
+            return;
+        }
+
+        $this->note(
+            'The vendored copy of panelkit/panel is older than its source',
+            "composer COPIED {$source} into vendor/panelkit/panel instead of symlinking it, and the "
+            .'source has changed since. The application is running the snapshot: a fix made in the '
+            .'package does not happen, and `panel:update` writes page files from the old copy. Run '
+            .'`composer update panelkit/panel` after each change, or set `"options": {"symlink": true}` '
+            .'on the path repository - composer falls back to copying without failing where symlinks '
+            .'do not work.',
         );
     }
 
