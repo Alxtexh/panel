@@ -214,4 +214,60 @@ final class GeneratorTest extends TestCase
     {
         $this->artisan('make:panel-resource', ['model' => 'NoSuchModel'])->assertFailed();
     }
+
+    /**
+     * THE COMMENTED ACTIONS COMPILE WHEN UNCOMMENTED.
+     *
+     * A stub whose whole promise is "uncomment this" fails in exactly one way:
+     * it sits somewhere the chain cannot take it, and the person following the
+     * instruction gets a parse error from a file the generator wrote. That is a
+     * worse first hour than no example at all, and nothing else would catch it -
+     * a comment is valid PHP however wrong it is.
+     */
+    public function test_the_commented_actions_are_valid_where_they_sit(): void
+    {
+        $this->artisan('make:panel-resource User --generate --force')->assertSuccessful();
+
+        $code = (string) file_get_contents(app_path('Panel/Resources/UserResource.php'));
+
+        /*
+         * WHAT THE INSTRUCTION SAYS TO DO, mechanically: take the block's
+         * example lines, drop the ` * ` each carries, and leave them where the
+         * comment sat. Only the example is touched - the prose around it is
+         * dropped with the comment markers, exactly as a person would.
+         */
+        $pattern = '/^([ ]*)\/\*\n(?:[ ]*\*.*\n)*?[ ]*\* '
+            .'(->recordActions.*\n(?:[ ]*\*.*\n)*?[ ]*\* \]\)\n)'
+            // The blank comment line that ends the example and starts the
+            // prose - without it the lazy match stops at the FIRST `])` and
+            // the bulk half is silently dropped from what gets compiled.
+            .'[ ]*\*\n(?:[ ]*\*.*\n)*?[ ]*\*\/\n/m';
+
+        $this->assertSame(
+            1,
+            preg_match($pattern, $code, $block),
+            'The generated resource carries no commented action example where one is expected.',
+        );
+
+        $uncommented = str_replace(
+            $block[0],
+            preg_replace('/^ *\* ?/m', $block[1], rtrim($block[2]))."\n",
+            $code,
+        );
+
+        $this->assertStringContainsString('->recordActions([', $uncommented);
+        $this->assertStringContainsString('->bulkActions([', $uncommented);
+
+        $file = tempnam(sys_get_temp_dir(), 'panelkit').'.php';
+        file_put_contents($file, $uncommented);
+
+        exec('php -l '.escapeshellarg($file).' 2>&1', $output, $status);
+        unlink($file);
+
+        $this->assertSame(
+            0,
+            $status,
+            "Uncommenting the generated example does not parse:\n".implode("\n", $output),
+        );
+    }
 }

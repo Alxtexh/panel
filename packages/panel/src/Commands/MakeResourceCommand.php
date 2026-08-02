@@ -433,6 +433,54 @@ final class MakeResourceCommand extends Command
                     ])
                     ->keyColumn('{$table}.id')
                     ->alsoSelect(['{$table}.id'])
+                    /*
+                     * ROW AND BULK ACTIONS ARE NOT GENERATED, because what may
+                     * be DONE to a {$model} is the one thing a table cannot be
+                     * read off. Uncomment into this chain and edit:
+                     *
+                     * ->recordActions([
+                     *     RecordAction::make('suspend', 'Suspend')
+                     *         ->authorize('update')
+                     *         ->confirm('Suspend this {$model}?')
+                     *         ->mutate(['status' => 'suspended']),
+                     *
+                     *     // ASKING FOR SOMETHING FIRST is `->form()`. The modal
+                     *     // opens with no request - the schema travels with the
+                     *     // action - so do NOT write a screen for this.
+                     *     RecordAction::make('note', 'Add a note')
+                     *         ->authorize('update')
+                     *         ->form(fn (Form \$form): Form => \$form->schema([
+                     *             TextareaField::make('note')->required()->rule('max:280'),
+                     *         ]))
+                     *         ->handle(fn ({$model} \$record, array \$data) => \$record
+                     *             ->notes()->create(\$data)),
+                     * ])
+                     * ->bulkActions([
+                     *     // The same `->form()` works here and is asked ONCE for
+                     *     // the whole selection; the handler runs once per chunk
+                     *     // with the same values.
+                     *     BulkAction::make('suspend', 'Suspend selected')
+                     *         ->authorize('update')
+                     *         ->mutate(['status' => 'suspended']),
+                     * ])
+                     *
+                     * `->form()` PAIRS WITH `->handle()`, NEVER `->mutate()` - a
+                     * mutation is fixed at definition time and has nowhere to
+                     * put what somebody typed, and declaring both throws. The
+                     * declared FIELDS are the allow-list: the endpoint validates
+                     * against them and drops every key they do not name.
+                     *
+                     * `->authorize()` NAMES A POLICY METHOD, and an action
+                     * without one is refused rather than permitted.
+                     *
+                     * IMPORT WHAT YOU UNCOMMENT - they are not imported above,
+                     * because an import for code nobody wrote yet is one every
+                     * linter deletes:
+                     *
+                     *     use PanelKit\Panel\Actions\BulkAction;
+                     *     use PanelKit\Panel\Actions\RecordAction;
+                     *     use PanelKit\Panel\Forms\Fields\TextareaField;
+                     */
                     ->defaultSort('created_at', 'desc');
             }
         }

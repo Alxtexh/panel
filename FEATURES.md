@@ -76,6 +76,14 @@ than forty clicks. The handler runs once per keyset chunk and gets the same
 values each time, and a select-all-matching run is validated *before* it is
 queued, so a mistake comes back in the response rather than in a worker's log.
 
+**A generated resource carries the example.** `make:panel-resource --generate`
+writes a commented `->recordActions([...])` / `->bulkActions([...])` block *in
+the chain*, so uncommenting it is the whole edit — including the form variant
+and the two rules that are easy to get wrong (`form()` pairs with `handle()`,
+never `mutate()`; an action without `authorize()` is refused). A test
+uncomments the block mechanically and compiles the result, because a stub whose
+promise is "uncomment this" fails by sitting somewhere the chain cannot take it.
+
 ### Authorisation
 
 **`TenantResourcePolicy` is the base you extend**, and `make:panel-resource
@@ -302,4 +310,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.5.0**, 1,662 tests passing, 13 skipped.
+Current state: **v0.5.0**, 1,663 tests passing, 13 skipped.

@@ -43,6 +43,16 @@ Versioning policy, and what counts as a breaking change, are in
   your config does not install - the one thing the merge cannot fix, and how
   `TicketingPlugin` reached nobody for a release.
 
+- **A generated resource shows how to add an action.** `make:panel-resource
+  --generate` wrote a table with no actions and no hint that actions exist, so
+  the API was discoverable only by reading somebody else's resource. It now
+  carries a commented `->recordActions([...])` / `->bulkActions([...])` block
+  positioned **inside the chain**, covering the plain case, the `->form()` case
+  and the two rules that are easy to get wrong. A test uncomments it and
+  compiles the result: a stub whose whole promise is "uncomment this" fails by
+  sitting where the chain cannot take it, and nothing else would catch that -
+  a comment is valid PHP however wrong it is.
+
 - **`panel:doctor` notices a vendored copy composer did not symlink.** A `path`
   repository is how you develop against a package you also maintain, and
   composer either symlinks it or takes a **snapshot** at install time - falling
