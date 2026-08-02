@@ -69,6 +69,44 @@ gets a subclass with its own `key()`.
 - Non-resource pages: declared in `app/Panel/Pages`, rendered from `resources/js/pages`
 - Panel providers: `app/Providers/Panels`
 
+## Before reporting that something is missing
+
+THIS SECTION EXISTS BECAUSE THREE SEPARATE REVIEWS GOT THE SAME ANSWER
+WRONG, each by reading the package's own directory tree and concluding a
+feature was absent. Almost nothing this package ships stays where it is
+written, so the tree is the wrong place to look:
+
+| You are looking for | It is NOT in | It is in |
+|---|---|---|
+| the root view, `app.ts`, the layout | `vendor/panelkit/panel/resources/views` | `resources/stubs/*.stub`, **published into your app** by `panel:install` |
+| the screens (`ResourceIndex`, `auth/Login`, …) | the PHP package at all | `@panelkit/inertia` in `node_modules`, **mirrored** into `resources/js/pages` |
+| sign-in routes | the package's routes | `routes/panel-*-auth.php` in YOUR app, written by `--auth` |
+
+**`resources/views` holds one file** - the tenant-suspension wall - and
+that is correct: it is the only thing the package renders itself.
+Everything else is published or mirrored, so that you can edit it.
+
+THE THREE COMMANDS THAT ANSWER THE QUESTION, in order:
+
+```bash
+php artisan panel:doctor    # names what is genuinely missing or wrong
+php artisan panel:update    # writes page files a new version added
+composer show panelkit/panel
+```
+
+`panel:doctor` reports a packaged screen with no page file, a resource
+or page nothing registered, and - the one that wastes an afternoon - a
+package composer **copied** instead of symlinking from a `path`
+repository. In that arrangement `vendor/` is a snapshot: the fix you
+made is not the code running, and every symptom looks like the feature
+was never built. If doctor is silent on all three, the installation is
+current and the file is somewhere the table above names.
+
+AND CHECK THE VERSION BEFORE THE CODE. Features arrive in releases: the
+Inertia bootstrap and the mirrored auth screens in 0.5.0, action stubs
+in generated resources in 0.6.0. "It is not there" and "it is not there
+*yet*" are different reports, and `composer show` distinguishes them.
+
 ## Recipes
 
 ### Add a screen for a model

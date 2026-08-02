@@ -115,6 +115,14 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
   abandons the work, which `beforeunload` cannot see: an Inertia navigation
   never unloads the document.
 
+- **`AGENTS.md` answers "is this missing?" before somebody guesses.** Three
+  separate reviews reported the same features absent, each after reading the
+  package's directory tree - where almost nothing this package ships actually
+  stays. `panel:blueprint` now writes a table of where each thing really lands
+  (stubs are *published*, screens are *mirrored*, auth routes are written into
+  your app), the three commands that answer the question, and the reminder that
+  "not there" and "not there **yet**" are different reports.
+
 - **`panel:install --auth`.** `make:panel --auth` covered a portal you
   *generate*; the path everybody actually walks - `composer require`,
   `panel:install`, open the panel - still ended at "install a starter kit",
