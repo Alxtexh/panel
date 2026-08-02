@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { ref } from 'vue'
+import { applyAppearance, readAppearance } from './useAppearance'
 import { useTenantTheme } from './useTenantTheme'
 
 /**
@@ -75,8 +76,14 @@ describe('useTenantTheme', () => {
             primary: '#00ff00',
         })
 
-        expect(style.getPropertyValue('--ring')).toBe('')
+        /*
+         * `--ring` HAS A VALUE - the appearance defaults set one - so what is
+         * asserted is that the REJECTED string did not land, not that the
+         * property is empty. Checking for emptiness would pass for the wrong
+         * reason and go red the day the accent stopped setting a ring colour.
+         */
         expect(style.cssText).not.toContain('example.test')
+        expect(style.getPropertyValue('--ring')).not.toContain('url(')
 
         // A bad neighbour does not stop a good one: the panel still themes.
         expect(style.getPropertyValue('--primary')).toBe('#00ff00')
@@ -84,5 +91,32 @@ describe('useTenantTheme', () => {
 
     it('writes nothing when a tenant has set no colours', () => {
         expect(apply({}).cssText).toBe('')
+    })
+
+    /**
+     * THE BRAND SURVIVES THE NEXT APPEARANCE CHANGE, which is the whole reason
+     * the two are connected at all.
+     *
+     * Writing `--primary` here would be enough on its own - this effect runs
+     * after boot - but only until somebody opens the drawer and picks an
+     * accent. `applyAppearance` rewrites every token from the preference, so
+     * without the registry the organisation's colour would vanish on a click
+     * that had nothing to do with it.
+     *
+     * ASSERTED BY ACTUALLY CALLING IT, not by inspecting the registry. A test
+     * that checked the variable was recorded would pass whether or not
+     * anything merged it.
+     */
+    it('survives an accent change made in the drawer', () => {
+        apply({ primary: '#b91c1c' })
+
+        applyAppearance({ ...readAppearance(), primary: 'emerald' })
+
+        const style = document.documentElement.style
+
+        expect(style.getPropertyValue('--primary')).toBe('#b91c1c')
+
+        // And the rest of the preference still applies - only the brand is held.
+        expect(style.getPropertyValue('--pk-font-size')).not.toBe('')
     })
 })

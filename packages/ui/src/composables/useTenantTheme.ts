@@ -1,5 +1,6 @@
 import { watchEffect } from 'vue'
 import type { Ref } from 'vue'
+import { setTenantVars } from './useAppearance'
 
 /**
  * Applies per-tenant branding as CSS custom properties on :root.
@@ -48,6 +49,7 @@ export function useTenantTheme(colors: Ref<Record<string, string> | undefined>) 
         }
 
         const root = document.documentElement
+        const vars: Record<string, string> = {}
 
         for (const [token, value] of Object.entries(colors.value ?? {})) {
             if (!SAFE_TOKEN.test(token) || typeof value !== 'string' || !SAFE_VALUE.test(value)) {
@@ -56,7 +58,19 @@ export function useTenantTheme(colors: Ref<Record<string, string> | undefined>) 
                 continue
             }
 
+            vars[`--${token}`] = value
             root.style.setProperty(`--${token}`, value)
         }
+
+        /*
+         * WRITTEN HERE, RECORDED THERE. The properties are set directly - this
+         * effect runs after boot, so the brand lands on top of the accent
+         * without anything having to be re-applied.
+         *
+         * The registry is what keeps it there. `applyAppearance` merges these
+         * last, so the next visit to the appearance drawer restyles everything
+         * else and leaves the organisation's colour alone.
+         */
+        setTenantVars(vars)
     })
 }

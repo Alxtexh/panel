@@ -386,6 +386,34 @@ export function setAppearancePersister(fn: ((patch: Partial<Appearance>) => void
     persist = fn
 }
 
+/**
+ * The organisation's colours, which beat the personal accent.
+ *
+ * BOTH WANT `--primary`, so one of them has to be last and it should not be
+ * whichever happened to mount later. A personal accent is already scoped to one
+ * person; an organisation that has set its colour has said what the panel looks
+ * like for everyone in it. Nothing else the appearance drawer controls - dark
+ * mode, density, font size, surfaces - is affected.
+ */
+let tenantVars: Record<string, string> = {}
+
+/**
+ * IT RECORDS AND DOES NOT RE-APPLY, which is not a detail.
+ *
+ * The first version called `applyAppearance` here so the brand took effect
+ * immediately. `useTenantTheme` calls this from inside a `watchEffect`, so that
+ * turned a reactive effect into something that reached back into the state the
+ * effect was watching - the panel mounted into a synchronous loop and rendered
+ * a blank page, with no console error at all, because the thread never yielded.
+ *
+ * The caller writes the properties itself. This exists so that the NEXT
+ * `applyAppearance` - somebody changing a colour in the drawer - does not undo
+ * them.
+ */
+export function setTenantVars(vars: Record<string, string>): void {
+    tenantVars = vars
+}
+
 /** Apply a preference to the document, and cache it for the next first paint. */
 export function applyAppearance(next: Appearance): void {
     if (typeof document === 'undefined') {
@@ -393,7 +421,7 @@ export function applyAppearance(next: Appearance): void {
     }
 
     const root = document.documentElement
-    const vars = appearanceVars(next)
+    const vars = { ...appearanceVars(next), ...tenantVars }
 
     root.classList.toggle('dark', isDark(next))
 
