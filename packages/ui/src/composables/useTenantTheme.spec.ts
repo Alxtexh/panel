@@ -75,33 +75,14 @@ describe('useTenantTheme', () => {
             primary: '#00ff00',
         })
 
-        /*
-         * `--ring` IS SET, by the appearance defaults - so the assertion is
-         * that the REJECTED value did not land, not that the property is
-         * unset. Checking for emptiness here would pass for the wrong reason
-         * and go red the day appearance stopped setting a ring colour.
-         */
+        expect(style.getPropertyValue('--ring')).toBe('')
         expect(style.cssText).not.toContain('example.test')
-        expect(style.getPropertyValue('--ring')).not.toContain('url(')
 
         // A bad neighbour does not stop a good one: the panel still themes.
         expect(style.getPropertyValue('--primary')).toBe('#00ff00')
     })
 
-    /**
-     * WITH NO BRAND COLOUR, THE PERSONAL ACCENT STANDS. The appearance vars are
-     * still written - this composable now hands its overrides to
-     * `applyAppearance` rather than writing them itself, so "no overrides"
-     * means the accent is untouched rather than that nothing happens.
-     */
-    it('leaves the accent alone when a tenant has set no colours', () => {
-        const style = apply({})
-
-        expect(style.getPropertyValue('--primary')).toBe('oklch(0.32 0.02 260)')
-    })
-
-    /** And a brand colour beats the personal accent, deliberately. */
-    it('overrides the accent rather than losing to it', () => {
-        expect(apply({ primary: '#b91c1c' }).getPropertyValue('--primary')).toBe('#b91c1c')
+    it('writes nothing when a tenant has set no colours', () => {
+        expect(apply({}).cssText).toBe('')
     })
 })

@@ -1,6 +1,5 @@
 import { watchEffect } from 'vue'
 import type { Ref } from 'vue'
-import { setTenantVars } from './useAppearance'
 
 /**
  * Applies per-tenant branding as CSS custom properties on :root.
@@ -48,7 +47,7 @@ export function useTenantTheme(colors: Ref<Record<string, string> | undefined>) 
             return
         }
 
-        const vars: Record<string, string> = {}
+        const root = document.documentElement
 
         for (const [token, value] of Object.entries(colors.value ?? {})) {
             if (!SAFE_TOKEN.test(token) || typeof value !== 'string' || !SAFE_VALUE.test(value)) {
@@ -57,14 +56,7 @@ export function useTenantTheme(colors: Ref<Record<string, string> | undefined>) 
                 continue
             }
 
-            vars[`--${token}`] = value
+            root.style.setProperty(`--${token}`, value)
         }
-
-        /*
-         * HANDED TO `applyAppearance` RATHER THAN WRITTEN HERE, because the
-         * accent preference wants `--primary` too. Two writers meant the last
-         * one to run won, and which that was depended on mount order.
-         */
-        setTenantVars(vars)
     })
 }
