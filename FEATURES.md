@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 262 files, 44,531 lines | 108 files, 16,190 lines |
+| PHP | 263 files, 44,614 lines | 108 files, 16,190 lines |
 | Vue | 111 components | **197 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
@@ -108,7 +108,10 @@ and a cross-tenant isolation matrix that is a test rather than an intention.
 
 `make:panel` generates a portal with its own guard, navigation and account menu
 — and with `--auth`, its own sign-in, sign-out and password reset, mounted under
-its own prefix rather than at `/login`. `->without(['trash', 'roles',
+its own prefix rather than at `/login`. **`panel:install --auth` does the same
+for the default panel**, so the first path anybody walks ends at a working
+sign-in rather than at "bring a starter kit"; both write it through one shared
+trait, because two sign-in flows are two sets of throttling and session rules. `->without(['trash', 'roles',
 'documents'])` drops packaged screens a portal should not offer; the **route**
 goes, not just the menu entry.
 A resource belongs to exactly one panel. Clusters group resources under one nav

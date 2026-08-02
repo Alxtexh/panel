@@ -4,6 +4,35 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## Unreleased
+
+### Added
+
+- **`panel:install --auth`.** `make:panel --auth` covered a portal you
+  *generate*; the path everybody actually walks - `composer require`,
+  `panel:install`, open the panel - still ended at "install a starter kit",
+  which is half of the blocker the port report filed.
+
+  The `verify-install.sh` harness was the evidence: it worked around the gap by
+  re-running `make:panel admin --path='' --auth --force`, and `--force`
+  **replaces the provider `panel:install` had just written and patched** - so
+  the harness was quietly undoing part of the install it was verifying. It now
+  uses the flag and asserts both artefacts exist.
+
+  The scaffolding moved into a shared trait rather than being written twice.
+  Two commands producing sign-in flows separately is how they end up differing
+  in throttling, session regeneration and post-authentication checks - the
+  failure the report describes happening *across* applications, and there is no
+  reason to reproduce it inside one package.
+
+### Changed
+
+- **The "no `login` route" advice is no longer stale.** `panel:install` sent
+  people to Breeze or Fortify without mentioning that this package now ships a
+  sign-in. It stays silent when a panel scaffolds its own, and names the flag
+  when nothing does. The README says the same, and now also warns about a
+  composer `path` repository composer **copied** rather than symlinked.
+
 ## 0.6.0
 
 **Everything a real port asked for that was still open.** This release closes the
