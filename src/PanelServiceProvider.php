@@ -202,6 +202,7 @@ final class PanelServiceProvider extends ServiceProvider
 
         $this->registerTenantUserProvider();
         $this->registerSessionLimit();
+        $this->registerPackagedPolicies();
 
         /*
          * The AI SDK's conversation tables are tenant data and arrive without a
@@ -246,6 +247,32 @@ final class PanelServiceProvider extends ServiceProvider
         $this->app['events']->listen(
             Events\TicketOpened::class,
             Listeners\AnnounceNewTicket::class,
+        );
+    }
+
+    /**
+     * POLICIES FOR THE MODELS THIS PACKAGE OWNS.
+     *
+     * A model that ships without one is a model the panel DENIES - that is the
+     * deliberate posture everywhere else, and applied to the package's own
+     * tables it means a feature that installs itself and then refuses every
+     * request. `Announcement` spent a release like that in every application
+     * except the reference one, which registered the mapping by hand.
+     *
+     * `Gate::policy` RATHER THAN DISCOVERY, because Laravel's convention maps
+     * `App\Models\X` to `App\Policies\XPolicy` and neither half of that is
+     * where these live.
+     *
+     * AN APPLICATION CAN STILL REPLACE IT. This runs in `boot()`, and an
+     * application's own provider boots later, so a `Gate::policy` call there
+     * wins - which is what somebody with a different idea of who may address
+     * the whole organisation should do.
+     */
+    private function registerPackagedPolicies(): void
+    {
+        \Illuminate\Support\Facades\Gate::policy(
+            Alerts\Announcement::class,
+            Alerts\AnnouncementPolicy::class,
         );
     }
 

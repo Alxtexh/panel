@@ -398,6 +398,18 @@ return [
         | and a form nobody reads both return 200.
         */
         PanelKit\Panel\Ticketing\TicketingPlugin::class,
+
+        /*
+        | ANNOUNCEMENTS NEED NO CONFIGURATION, so unlike ticketing this one is
+        | simply on. It installs a screen for WRITING a notice into the default
+        | panel and stays out of the navigation - an announcement is read from
+        | the dashboard banner and the bell, and a permanent sidebar entry for
+        | the form that writes one earns nothing.
+        |
+        | Remove this line to turn it off. The banner, the model and the
+        | delivery are unaffected: they are the package's, not the plugin's.
+        */
+        PanelKit\Panel\Alerts\AnnouncementsPlugin::class,
     ],
 
     /*
