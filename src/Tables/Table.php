@@ -332,6 +332,34 @@ final class Table
         return null;
     }
 
+    /**
+     * Every declared record action, flattened out of its groups.
+     *
+     * `recordAction()` answers "which one is this key"; this answers "what are
+     * they all", which is what anything walking their declarations needs -
+     * `field-options` searching the selects an action form declares, for one.
+     *
+     * @return list<RecordAction>
+     */
+    public function recordActionList(): array
+    {
+        $out = [];
+
+        foreach ($this->recordActions as $entry) {
+            if ($entry instanceof RecordAction) {
+                $out[] = $entry;
+
+                continue;
+            }
+
+            foreach ($entry->getActions() as $action) {
+                $out[] = $action;
+            }
+        }
+
+        return $out;
+    }
+
     public function bulkAction(string $key): ?BulkAction
     {
         foreach ($this->bulkActions as $action) {

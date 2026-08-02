@@ -55,7 +55,20 @@ final class ResourceController extends Controller
         $key = (string) $request->query('field', '');
         $term = trim((string) $request->query('q', ''));
 
-        foreach ($class::formDefinition()->fields() as $field) {
+        /*
+         * THE RECORD FORM'S FIELDS AND EVERY ACTION FORM'S.
+         *
+         * Actions were missing when `form()` landed, and it worked anyway in
+         * the one place it was tried - because that action's select happened to
+         * share a key with a field on the record form. An action asking for
+         * something the form does not have would have returned an empty list
+         * and rendered a searchable select that finds nothing, with no error.
+         *
+         * ORDER IS DELIBERATE: the record form wins a shared key. Both declare
+         * the same searchable select in practice, and preferring the form keeps
+         * the answer identical to what it was before actions could ask.
+         */
+        foreach ($this->searchableFields($class) as $field) {
             if ($field->key !== $key) {
                 continue;
             }
@@ -296,6 +309,37 @@ final class ResourceController extends Controller
      * @param  class-string<resource>  $class
      * @return array{resource: string, labelPlural: string, types: list<string>, endpoint: string}|null
      */
+    /**
+     * Every field this resource could legitimately be asked to search.
+     *
+     * THE RECORD FORM'S AND EVERY ACTION FORM'S. Actions were missing when
+     * `RecordAction::form()` landed, and it worked anyway in the one place it
+     * was tried - because that action's select happened to share a key with a
+     * field on the record form. An action asking for something the form does
+     * not have would have rendered a searchable select that finds nothing, with
+     * no error anywhere.
+     *
+     * ORDER IS DELIBERATE: the record form wins a shared key, which keeps the
+     * answer identical to what it was before actions could ask.
+     *
+     * @param  class-string  $class
+     * @return list<\PanelKit\Panel\Forms\Fields\Field>
+     */
+    private function searchableFields(string $class): array
+    {
+        $fields = $class::formDefinition()->fields();
+
+        foreach ($class::definition()->recordActionList() as $action) {
+            $form = $action->formDefinition();
+
+            if ($form !== null) {
+                $fields = [...$fields, ...$form->fields()];
+            }
+        }
+
+        return $fields;
+    }
+
     private function customFieldSupport(string $class): ?array
     {
         if (! in_array($class::key(), CustomFieldStorage::resources(), true)) {

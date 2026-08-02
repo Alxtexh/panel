@@ -786,6 +786,40 @@ final class Blueprint
         notification is one somebody misses, a failed save is a complaint that
         vanished.
 
+        ### An action that asks for something first
+
+        Most row actions in a real panel need a value before they can do
+        anything - a reason, an amount, a plan, a department. `->form()` collects
+        it; do NOT write a screen for this.
+
+        ```php
+        RecordAction::make('change-plan', 'Change plan')
+            ->authorize('update')
+            ->form(fn (Form $form): Form => $form->schema([
+                SelectField::make('plan_id')->required()
+                    ->searchable(fn (string $t): array => Plan::where('name', 'like', $t.'%')
+                        ->limit(25)->pluck('name', 'id')->all())
+                    ->rule(ExistsInScope::of(Plan::class)),
+
+                TextareaField::make('note')->rule('max:280'),
+            ]))
+            ->handle(fn (Client $client, array $data) => $client->moveTo($data['plan_id']));
+        ```
+
+        `form()` PAIRS WITH `handle()`, NEVER `mutate()` - a mutation is fixed at
+        definition time and has nowhere to put what a person typed. Declaring
+        both throws.
+
+        THE FIELDS ARE DECLARED HERE AND THAT IS THE SECURITY PROPERTY. The
+        endpoint validates against THIS declaration's rules and drops every key
+        it does not name, so a request carrying `status` alongside `plan_id`
+        has that key discarded rather than written. Never trust `$data` to
+        contain only what you declared by reading it carelessly - it does, and
+        the reason it does is here rather than in the handler.
+
+        THE MODAL OPENS WITH NO REQUEST, because the schema travels with the
+        action in the list payload.
+
         ### Ship it as a package
 
         Implement `PanelPlugin`, call `PanelManager::plugin(new YourPlugin)` from your
