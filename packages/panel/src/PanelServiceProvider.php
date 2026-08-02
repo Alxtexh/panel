@@ -205,6 +205,7 @@ final class PanelServiceProvider extends ServiceProvider
         $this->registerSessionLimit();
         $this->registerPackagedPolicies();
         $this->loadGeneratedAuthRoutes();
+        $this->redirectGuestsToTheirPanel();
 
         /*
          * The AI SDK's conversation tables are tenant data and arrive without a
@@ -250,6 +251,48 @@ final class PanelServiceProvider extends ServiceProvider
             Events\TicketOpened::class,
             Listeners\AnnounceNewTicket::class,
         );
+    }
+
+    /**
+     * SEND AN UNAUTHENTICATED VISITOR TO **THIS PANEL'S** SIGN-IN.
+     *
+     * Laravel's `Authenticate` middleware redirects to `route('login')`, a name
+     * this package deliberately never registers - the whole point of generating
+     * sign-in under the panel's own prefix is that a starter kit keeps `/login`.
+     * The consequence, until this existed, was that a fresh install with a
+     * generated portal answered every guarded page with `Route [login] not
+     * defined`: an error about a route nobody said you needed.
+     *
+     * THE PANEL IS ASKED FIRST, then the application. A second portal has its
+     * own guard and its own door, so a guest at `/reseller/clients` belongs at
+     * `/reseller/login` rather than at whatever the application calls its main
+     * sign-in - sending them there would authenticate them against the wrong
+     * guard and bounce them straight back.
+     *
+     * AN APPLICATION WITH ITS OWN `login` STILL WINS WHERE THERE IS NO PANEL
+     * ROUTE. This is a fallback, not a takeover: Breeze, Jetstream and Fortify
+     * installations behave exactly as before, because the panel branch simply
+     * does not match.
+     */
+    private function redirectGuestsToTheirPanel(): void
+    {
+        \Illuminate\Auth\Middleware\Authenticate::redirectUsing(static function ($request): ?string {
+            $routes = \Illuminate\Support\Facades\Route::getRoutes();
+
+            $panel = app(PanelManager::class)->currentPanel();
+
+            if ($panel !== null && $routes->getByName("{$panel->id}.login") !== null) {
+                return route("{$panel->id}.login");
+            }
+
+            /*
+             * NULL RATHER THAN A GUESS. Returning `/login` unconditionally would
+             * turn a missing route into a 404 loop; null lets the framework
+             * raise its own AuthenticationException, which an API client reads
+             * as a 401 and a browser as the application's own handling.
+             */
+            return $routes->getByName('login') === null ? null : route('login');
+        });
     }
 
     /**
