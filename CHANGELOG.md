@@ -4,6 +4,71 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.5.0
+
+**A fresh application now installs, builds, renders and signs in.** Everything
+here came from two things: a report from somebody porting two real portals off
+Filament, and installing Filament into an empty app to measure what it does that
+we did not.
+
+The measurement, for the record: `composer require filament/filament` plus
+`php artisan filament:install --panels` gives you `/admin/login` answering 200
+with 30KB of HTML, **no npm at all**. Ours needed a root view, an `app.ts`, a
+layout and a login route — four files nobody names, written differently in every
+install. The build step is not the gap and never was: Filament renders Blade on
+the server and publishes precompiled assets, we send a schema once and render on
+the client. But *"needs a bundler"* is not *"the user writes the bootstrap"*.
+
+### Added
+
+- **`panel:install` publishes the shell** — root view, Inertia bootstrap, a
+  default layout and the stylesheet, and it patches `vite.config` when that file
+  is the stock shape. When it is not, it prints the exact edit rather than
+  silently doing nothing.
+- **Sign-in, per panel.** `make:panel <id> --auth` writes routes bound to that
+  panel's own guard, pointing at packaged Login / ForgotPassword / ResetPassword
+  screens. **Never at `/login`**, so Breeze, Jetstream or Fortify keep the
+  application's own sign-in. Fortify serves one guard and a second portal has its
+  own, which is why this could not simply be "use Fortify".
+- **`panel:make-user`.** `panel:permissions sync` creates an Administrator
+  *role* and nobody to hold it, so a fresh install had a sign-in screen and no
+  account. It refuses to take a password as an argument.
+- **`SharePanelProps` and `PanelNavigation`** — the sidebar, the panel and the
+  signed-in person handed to Inertia. Promoted from the reference app's
+  hundred-line closure, because every port was rebuilding the panel prefix and
+  the ability filter, which are the two parts whose failure is silent.
+- **`MoneyColumn`** — a fixed currency or each row's own, minor units by
+  default, formatted in the **viewer's** locale.
+- **`Panel::without(['trash', 'roles', 'documents'])`** — packaged screens a
+  portal should not offer. The route goes, not just the menu entry.
+- **`--panel` on `make:panel-page`**, which `make:panel-resource` has always
+  had. Without it every generated page landed in the default panel.
+
+### Fixed
+
+- **`Panel::colors()` was dead code.** The builder method and its resolver both
+  shipped and nothing called either, so an installation could configure a palette
+  and watch nothing happen.
+- **The passkey component broke `npm run build` outright.** It imported an
+  *optional* peer statically, so any application without `@laravel/passkeys`
+  could not build at all — not the passkey screen, the whole bundle. This file
+  has described it as "a soft dependency" for two releases; that was true of
+  `composer.json` and false of the bundle.
+- **A panel mounted at the root generated `Route::group(closure)`**, which is a
+  TypeError thrown while routes load — taking down every page, in the default
+  panel of a fresh install.
+- **Every guarded page answered `Route [login] not defined`.** Laravel redirects
+  to a name this package deliberately never registers; the panel now names its
+  own door and falls back to the application's.
+
+### Upgrading
+
+Nothing breaks. `composer update`, `npm update`, `php artisan panel:update`.
+
+`panel:install` will not overwrite a root view, `app.ts` or layout you already
+have — it reports what it kept. To adopt the published bootstrap in an existing
+application, move yours aside and re-run it.
+
 ## 0.4.0
 
 **Announcements ship whole, and the base policy an application had to write

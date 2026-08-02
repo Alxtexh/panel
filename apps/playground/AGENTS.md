@@ -52,6 +52,7 @@ Panels registered in this application:
 - `admin` — mounted at `/`, guard `web`, tenant context
 - `platform` — mounted at `/platform`, guard `web`, central context
 - `reseller` — mounted at `/reseller`, guard `web`, tenant context
+- `authfixture` — mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
 

@@ -10,10 +10,10 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.4.0"
+"panelkit/panel": "^0.5.0"
 ```
 
-Composer reads `^0.4.0` on a `0.x` package as `>=0.4.0 <0.5.0`, which is what you
+Composer reads `^0.5.0` on a `0.x` package as `>=0.5.0 <0.6.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
 The three packages are **versioned together**. `panelkit/panel@0.2.0` expects
@@ -107,6 +107,35 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.4.0 → 0.5.0
+
+**Nothing breaks, and there is nothing you must do.** `composer update`,
+`npm update`, `php artisan panel:update`.
+
+Everything this release adds is opt-in or new. Three things are worth knowing.
+
+**`panel:install` now publishes an Inertia bootstrap** — `resources/views/app.blade.php`,
+`resources/js/app.ts`, `resources/js/layouts/PanelLayout.vue` and
+`resources/css/app.css`. **It never overwrites a file you already have** and
+reports what it kept. An existing application is unaffected; to adopt the
+published versions, move yours aside and re-run it.
+
+**Sign-in for a generated portal:**
+
+```bash
+php artisan make:panel reseller --path=reseller --auth
+php artisan panel:make-user
+```
+
+The routes live under the panel's prefix (`/reseller/login`) and authenticate
+that panel's guard. **Your application's own `/login` is untouched**, which is
+the point: a starter kit serves one guard and a second portal has its own.
+
+**If you use passkeys, nothing changes; if you do not, your build now works.**
+The component imported `@laravel/passkeys/vue` statically, so an application
+without that package could not run `npm run build` at all. It is a runtime
+import now.
 
 ### 0.3.3 → 0.4.0
 
