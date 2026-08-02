@@ -4,6 +4,34 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.3.3
+
+**One check, for the way 0.3.2 fails on an application that already exists.**
+
+### Added
+
+- **`panel:doctor` reports ticketing that is configured and not installed.**
+  0.3.2 registers `TicketingPlugin` in the package's own `config/panel.php` — so
+  a fresh install gets it and **an existing one does not**. `mergeConfigFrom` is
+  shallow: a published config supplies its `plugins` array whole and the
+  packaged default never arrives. Somebody upgrades, sets
+  `panel.ticketing.operator`, reloads, and gets no route and no error.
+
+  **`panel:update`'s drift report cannot see this.** It skips list values by
+  design — an application shortening a list has configured it, not lost keys —
+  so a missing entry *inside* `plugins` is invisible there. This check is the
+  compensating one. It asks every place a plugin can legitimately come from
+  (config, self-registration from a provider, a panel's own list), so a
+  correctly installed panel is not reported as broken.
+
+- **And a ticket table that does not exist.** The other half of the same
+  upgrade is pointing `panel.ticketing.tables` at tables you already have. A
+  typo there produces a schema that *looks* complete — the packaged migration
+  skips the table it believes exists under the configured name — and fails as
+  SQL on the first person to open the queue.
+
+Both are `problem` level, so `panel:doctor` and `panel:update` exit non-zero.
+
 ## 0.3.2
 
 **Ticketing ships.** It was written in the reference app, which meant every

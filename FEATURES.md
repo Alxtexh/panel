@@ -245,4 +245,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.3.2**, 1,599 tests passing, 13 skipped.
+Current state: **v0.3.3**, 1,602 tests passing, 13 skipped.

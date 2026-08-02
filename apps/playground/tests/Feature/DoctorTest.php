@@ -13,12 +13,14 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\LazyLoadingViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Jobs\DeliverScheduledReport;
 use PanelKit\Panel\Jobs\ExportRecords;
 use PanelKit\Panel\Jobs\RunBulkAction;
 use PanelKit\Panel\Knowledge\KnowledgeBase;
+use PanelKit\Panel\PanelManager;
 use Tests\TestCase;
 
 /**
@@ -356,6 +358,96 @@ final class DoctorTest extends TestCase
         config(['broadcasting.default' => 'pusher']);
 
         $this->artisan('panel:doctor')->assertSuccessful();
+    }
+
+    /**
+     * THE CHECK THAT EXISTS BECAUSE THE DRIFT REPORT CANNOT SEE THE PROBLEM.
+     *
+     * `mergeConfigFrom` is shallow, so an application's published `plugins`
+     * array replaces the package's whole - and the package is where
+     * `TicketingPlugin` is now listed. An installation upgrading into 0.3.2
+     * therefore names a portal in `panel.ticketing`, reloads, and gets no ticket
+     * screen and no error. `panel:update`'s drift check skips list values by
+     * design, so it says nothing either.
+     */
+    public function test_doctor_reports_ticketing_configured_without_its_plugin(): void
+    {
+        config([
+            'panel.ticketing.operator' => 'admin',
+            'panel.ticketing.opener' => 'reseller',
+            // What a published config from before 0.3.2 looks like: its own
+            // plugins, and no idea the package added one.
+            'panel.plugins' => [],
+        ]);
+
+        /*
+         * THE STATIC REGISTRY IS EMPTIED, and that is not test scaffolding - it
+         * is the difference between this test and no test. `PanelManager::
+         * $plugins` is static and survives the whole process, so by the time
+         * this runs an earlier boot has already registered ticketing from the
+         * reference app's config and doctor would report a healthy install. The
+         * condition being reproduced is a FRESH PROCESS whose config never named
+         * it, which is what a production request is.
+         */
+        $registry = new \ReflectionProperty(PanelManager::class, 'plugins');
+        $before = $registry->getValue();
+        $registry->setValue(null, []);
+
+        try {
+            $this->artisan('panel:doctor')
+                ->expectsOutputToContain('Ticketing is configured and its plugin is not installed')
+                ->assertFailed();
+        } finally {
+            $registry->setValue(null, $before);
+        }
+    }
+
+    /**
+     * AND SAYS NOTHING WHEN IT IS INSTALLED, which is the half that decides
+     * whether the check is worth having. A report that cries wolf on a correct
+     * installation is one people stop reading.
+     */
+    public function test_doctor_is_quiet_when_ticketing_is_installed(): void
+    {
+        $findings = $this->findings();
+
+        $this->assertSame(
+            [],
+            array_values(array_filter(
+                $findings,
+                static fn (array $f): bool => str_contains($f['title'], 'Ticketing'),
+            )),
+            'Doctor reported ticketing as broken on the reference app, where it works.',
+        );
+    }
+
+    /**
+     * A NAME THAT POINTS AT NOTHING is the other half of the same upgrade: an
+     * installation with existing ticket tables sets `tables` to what it has, and
+     * a typo there produces a schema that looks complete - the packaged
+     * migration skips the table it believes exists - failing as SQL on the first
+     * person to open the queue.
+     */
+    public function test_doctor_reports_a_ticket_table_that_does_not_exist(): void
+    {
+        config(['panel.ticketing.tables.tickets' => 'tickets_typo']);
+
+        $this->artisan('panel:doctor')
+            ->expectsOutputToContain('[tickets_typo] does not exist')
+            ->assertFailed();
+    }
+
+    /** Doctor's own findings, decoded. */
+    private function findings(): array
+    {
+        /*
+         * `Artisan::call`, NOT `$this->artisan()`. The latter returns a pending
+         * assertion object that runs on destruction, so reading the output here
+         * decoded an empty string.
+         */
+        Artisan::call('panel:doctor', ['--json' => true]);
+
+        return (array) json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR);
     }
 
     public function test_it_emits_machine_readable_findings(): void

@@ -108,6 +108,33 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.3.2 → 0.3.3
+
+**Nothing breaks, and one thing you should run.** `composer update`,
+`npm update`, `php artisan panel:update`.
+
+If you upgraded to 0.3.2 and turned ticketing on but no screens appeared, this
+release tells you why instead of leaving you to find it:
+
+```bash
+php artisan panel:doctor
+```
+
+A published `config/panel.php` supplies its own `plugins` array whole, so the
+`TicketingPlugin` entry 0.3.2 added to the package default never reached you.
+Add it by hand:
+
+```php
+'plugins' => [
+    // ...whatever is already there
+    PanelKit\Panel\Ticketing\TicketingPlugin::class,
+],
+```
+
+Doctor also now checks that the tables `panel.ticketing.tables` names actually
+exist, which catches the typo that the migration's "skip a table that exists"
+branch would otherwise hide.
+
 ### 0.3.1 → 0.3.2
 
 **Nothing breaks. Ticketing arrives, switched off.**

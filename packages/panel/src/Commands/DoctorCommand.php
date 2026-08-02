@@ -15,6 +15,8 @@ use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\BackupStatus;
 use PanelKit\Panel\Support\Contrast;
 use PanelKit\Panel\Support\TenantContext;
+use PanelKit\Panel\Support\TicketTables;
+use PanelKit\Panel\Ticketing\TicketingPlugin;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -82,6 +84,7 @@ final class DoctorCommand extends Command
         $this->checkViteDevServer();
         $this->checkShippedDefaults();
         $this->checkPermissionTeams($context);
+        $this->checkTicketing($panels);
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -870,6 +873,107 @@ final class DoctorCommand extends Command
     }
 
     /* ------------------------------------------------------------ plumbing */
+
+
+    /**
+     * TICKETING CONFIGURED AND NOT INSTALLED - the upgrade this check exists for.
+     *
+     * THE PACKAGE REGISTERS `TicketingPlugin` IN ITS OWN `panel.plugins`, and a
+     * fresh install therefore gets it. AN EXISTING INSTALL DOES NOT, and that is
+     * the whole problem: `mergeConfigFrom` is SHALLOW, so a published
+     * `config/panel.php` supplies its own `plugins` array whole and the packaged
+     * default never arrives. Somebody upgrades, sets `panel.ticketing.operator`,
+     * reloads, and gets no route, no navigation entry and no error - because the
+     * plugin they were configuring was never handed to the manager.
+     *
+     * `panel:update`'s drift report CANNOT SEE THIS. It walks the two configs
+     * for keys the merge will not supply and skips list values deliberately - an
+     * application shortening a list has configured it, not lost keys - so a
+     * missing entry INSIDE `plugins` is invisible there by design. This check is
+     * the compensating one, and it is the reason it exists as its own thing
+     * rather than as a line in the drift report.
+     *
+     * ASKED OF EVERY PLACE A PLUGIN CAN COME FROM, not just config: a plugin may
+     * self-register from a service provider or be attached to one panel. Checking
+     * only `panel.plugins` would report a correctly installed panel as broken,
+     * which is the kind of false alarm that gets a whole command ignored.
+     *
+     * SILENT WHEN TICKETING IS OFF. Neither key named is the supported state for
+     * an installation that never wanted a support desk, and saying anything
+     * about it would be noise in a report whose value is that every line matters.
+     */
+    private function checkTicketing(PanelManager $panels): void
+    {
+        $operator = config('panel.ticketing.operator');
+        $opener = config('panel.ticketing.opener');
+
+        if (! is_string($operator) && ! is_string($opener)) {
+            return;
+        }
+
+        if ($this->ticketingIsInstalled($panels)) {
+            $this->checkTicketTables();
+
+            return;
+        }
+
+        $this->problem(
+            'Ticketing is configured and its plugin is not installed',
+            'panel.ticketing names a portal, so somebody has turned ticketing on - but '
+            .TicketingPlugin::class.' is not registered, so no ticket screen exists and '
+            .'nothing reports it. The package lists it in its own config/panel.php; a '
+            .'published config supplies `plugins` whole, so the default never reaches you. '
+            .'Add it to the `plugins` array in your config/panel.php.',
+        );
+    }
+
+    /** Every place a plugin can legitimately come from, asked in turn. */
+    private function ticketingIsInstalled(PanelManager $panels): bool
+    {
+        $registered = [
+            ...array_values((array) config('panel.plugins', [])),
+            ...array_values($panels->plugins()),
+        ];
+
+        foreach ($panels->panels() as $panel) {
+            $registered = [...$registered, ...array_values($panel->getPlugins())];
+        }
+
+        return array_any(
+            $registered,
+            static fn (mixed $p): bool => is_string($p)
+                ? is_a($p, TicketingPlugin::class, true)
+                : $p instanceof TicketingPlugin,
+        );
+    }
+
+    /**
+     * AND THE TABLES IT WAS POINTED AT, because the second half of the same
+     * upgrade is renaming them.
+     *
+     * An installation that had ticketing before it was packaged sets
+     * `panel.ticketing.tables` to the tables it already has - that IS the
+     * migration. A typo there is not caught by anything: the packaged migration
+     * skips a table it thinks exists under the configured name, so the schema
+     * looks complete, and the failure arrives as SQL on the first person to open
+     * the queue.
+     */
+    private function checkTicketTables(): void
+    {
+        foreach (['tickets' => TicketTables::tickets(), 'replies' => TicketTables::replies()] as $which => $table) {
+            if (Schema::hasTable($table)) {
+                continue;
+            }
+
+            $this->problem(
+                "The ticket {$which} table [{$table}] does not exist",
+                "Ticketing is installed and panel.ticketing.tables.{$which} names [{$table}], which "
+                .'is not in this database. The packaged migration creates the table it is '
+                .'CONFIGURED to use, so a name that is wrong here was never created and the queue '
+                .'fails on the first query. Correct the name, or run migrate.',
+            );
+        }
+    }
 
     private function problem(string $title, string $detail): void
     {
