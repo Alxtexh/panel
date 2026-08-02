@@ -52,7 +52,6 @@ Panels registered in this application:
 - `admin` — mounted at `/`, guard `web`, tenant context
 - `platform` — mounted at `/platform`, guard `web`, central context
 - `reseller` — mounted at `/reseller`, guard `web`, tenant context
-- `authfixture` — mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
 
@@ -313,11 +312,27 @@ from the server would let a plugin mount anything in the bundle.
 ### Add a portal
 
 ```bash
-php artisan make:panel reseller --path=reseller
+php artisan make:panel reseller --path=reseller --auth
 ```
 
-A provider, a resource directory and the routes. Use `--central` only for a
-portal that must see every organisation at once; it turns tenant scoping off.
+A provider, a resource directory and the routes. `--auth` adds sign-in,
+sign-out and password reset bound to THIS panel's guard, under its own
+prefix - never at `/login`, so a starter kit's own sign-in is untouched.
+Use `--central` only for a portal that must see every organisation at
+once; it turns tenant scoping off.
+
+DROP THE PACKAGED SCREENS A PORTAL SHOULD NOT HAVE. Trash, the
+permission matrix and the document designer mount on every panel unless
+told otherwise, which for a customer-facing portal means an environment
+for records its readers never delete and a letterhead designer for
+invoices they only receive:
+
+```php
+Panel::make('reseller')->without(['trash', 'roles', 'documents'])
+```
+
+THE ROUTE GOES, not the menu entry - hiding an entry leaves the URL
+answering, and a bookmark reaches it however the sidebar looks.
 
 ### Show an amount of money
 

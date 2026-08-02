@@ -86,7 +86,11 @@ and a cross-tenant isolation matrix that is a test rather than an intention.
 
 ### Multi-panel
 
-`make:panel` generates a portal with its own guard, navigation and account menu.
+`make:panel` generates a portal with its own guard, navigation and account menu
+— and with `--auth`, its own sign-in, sign-out and password reset, mounted under
+its own prefix rather than at `/login`. `->without(['trash', 'roles',
+'documents'])` drops packaged screens a portal should not offer; the **route**
+goes, not just the menu entry.
 A resource belongs to exactly one panel. Clusters group resources under one nav
 parent; nested resources give `/clients/5/invoices`; singular resources are
 one-record settings screens.
@@ -278,4 +282,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.5.0**, 1,621 tests passing, 13 skipped.
+Current state: **v0.5.0**, 1,625 tests passing, 13 skipped.

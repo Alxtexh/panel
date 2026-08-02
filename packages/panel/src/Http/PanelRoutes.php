@@ -281,7 +281,11 @@ final class PanelRoutes
                  * operators look for it, and two URLs rendering one screen is
                  * a way to make a bookmark disagree with a menu.
                  */
-                if (config('panel.routes.roles', true)) {
+                // THE GLOBAL SWITCH AND THE PANEL'S OWN, both honoured. The
+                // config key turns the matrix off everywhere; `->without()`
+                // drops it from one portal, which is what a customer-facing
+                // panel needs - its readers do not administer anybody's roles.
+                if (config('panel.routes.roles', true) && $panel->offers('roles')) {
                     /*
                      * THE SAME COLLISION, FAILING THE SAME WAY.
                      *
@@ -310,7 +314,15 @@ final class PanelRoutes
                     Route::delete('roles/{role}', [Controllers\RoleController::class, 'destroy'])->name('roles.destroy');
                 }
 
-                Route::get('trash', [Controllers\TrashController::class, 'index'])->name('trash');
+                /*
+                 * THE BIN, ON PANELS THAT ASKED FOR IT. `->without(['trash'])`
+                 * drops the ROUTE and not just the menu entry: hiding the entry
+                 * would leave the URL answering, and a customer portal whose
+                 * readers never delete anything does not need a recovery screen
+                 * for records they cannot see.
+                 */
+                if ($panel->offers('trash')) {
+                    Route::get('trash', [Controllers\TrashController::class, 'index'])->name('trash');
 
                 /*
                  * BULK RESTORE AND BULK DESTROY. Emptying a bin one row at a
@@ -319,16 +331,17 @@ final class PanelRoutes
                  * worse. Both check the policy PER RECORD; the endpoint is a
                  * convenience, not a shortcut past the gate.
                  */
-                Route::post('trash/restore', [Controllers\TrashController::class, 'restore'])
-                    ->name('trash.restore');
+                    Route::post('trash/restore', [Controllers\TrashController::class, 'restore'])
+                        ->name('trash.restore');
 
-                Route::delete('trash', [Controllers\TrashController::class, 'destroy'])
-                    ->name('trash.destroy');
+                    Route::delete('trash', [Controllers\TrashController::class, 'destroy'])
+                        ->name('trash.destroy');
 
                 // How long the bin keeps things - an operational decision, so a
                 // setting rather than a deploy. Clamped server-side.
-                Route::patch('trash/settings', [Controllers\TrashController::class, 'updateSettings'])
-                    ->name('trash.settings');
+                    Route::patch('trash/settings', [Controllers\TrashController::class, 'updateSettings'])
+                        ->name('trash.settings');
+                }
 
                 /*
                  * CLOSING AN ANNOUNCEMENT BANNER. Per person, and it writes the
@@ -352,7 +365,13 @@ final class PanelRoutes
                  * match a kind called "print", and the failure would be a page
                  * that renders the wrong thing rather than a 404.
                  */
-                Route::prefix('documents')->name('documents.')->group(function (): void {
+                /*
+                 * DOCUMENT TEMPLATES, on panels that asked for them. A portal
+                 * whose readers receive invoices has no business designing the
+                 * letterhead they arrive on.
+                 */
+                if ($panel->offers('documents')) {
+                    Route::prefix('documents')->name('documents.')->group(function (): void {
                     Route::get('/', [Controllers\DocumentTemplateController::class, 'index'])
                         ->name('index');
 
@@ -379,7 +398,8 @@ final class PanelRoutes
                     Route::get('{kind}/print', [Controllers\DocumentTemplateController::class, 'print'])
                         ->where('kind', '[a-z0-9_-]+')
                         ->name('print');
-                });
+                    });
+                }
 
                 foreach (self::extensions() as $extension) {
                     $extension($keys, $panel);

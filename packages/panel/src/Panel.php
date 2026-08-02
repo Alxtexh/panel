@@ -64,6 +64,9 @@ final class Panel
 
     private ?Closure $colors = null;
 
+    /** @var list<string> */
+    private array $without = [];
+
     private function __construct(public readonly string $id) {}
 
     public static function make(string $id): self
@@ -136,6 +139,40 @@ final class Panel
         $this->brandName = $brandName;
 
         return $this;
+    }
+
+    /**
+     * PACKAGED SCREENS THIS PANEL DOES NOT WANT.
+     *
+     * REPORTED FROM A REAL PORT: `Changelog`, `Environment`, `Trash` and the
+     * document designer mount on EVERY panel, so a customer portal grew an
+     * environment editor and a bin for records its readers never delete. There
+     * was one global switch - `panel.routes.roles` - and no way to say "not on
+     * this one".
+     *
+     * NAMED HERE RATHER THAN IN CONFIG, beside the guard and the middleware,
+     * because which screens a portal offers is the same KIND of decision as
+     * which guard it authenticates with: a property of the panel rather than of
+     * the installation. A config list keyed by panel id would be a second place
+     * to look and a second place to forget.
+     *
+     * THE ROUTE GOES, NOT JUST THE MENU ENTRY. Hiding an entry leaves the URL
+     * answering, and a bookmarked `/portal/environment` would still edit the
+     * application's environment file for somebody the panel meant to keep out.
+     *
+     * @param  list<string>  $screens  any of: roles, trash, documents
+     */
+    public function without(array $screens): self
+    {
+        $this->without = array_values(array_unique([...$this->without, ...$screens]));
+
+        return $this;
+    }
+
+    /** Whether a packaged screen is mounted on this panel. */
+    public function offers(string $screen): bool
+    {
+        return ! in_array($screen, $this->without, true);
     }
 
     /**
