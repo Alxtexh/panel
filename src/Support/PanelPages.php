@@ -100,6 +100,32 @@ final class PanelPages
      *
      * @return array{written: list<string>, skipped: list<string>, directory: ?string}
      */
+    /**
+     * Packaged screens with no file in `resources/js/pages`.
+     *
+     * SEPARATE FROM `write()` BECAUSE ASKING IS NOT FIXING. `panel:doctor`
+     * reports and never writes, and the case worth reporting is precisely the
+     * one where somebody upgraded with composer and did not run `panel:update`:
+     * the route answers, the component cannot be resolved, and Inertia renders
+     * a blank page under a working header. Nothing errors server-side, so the
+     * only signal is a screen that looks unfinished.
+     *
+     * @return list<string> Screen names, e.g. `panel/Changelog`.
+     */
+    public static function missing(): array
+    {
+        $directory = resource_path('js/pages');
+
+        if (! is_dir($directory)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            self::SCREENS,
+            static fn (string $screen): bool => ! file_exists($directory.'/'.$screen.'.vue'),
+        ));
+    }
+
     public static function write(bool $force = false): array
     {
         $directory = resource_path('js/pages');
