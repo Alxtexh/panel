@@ -1,0 +1,82 @@
+/**
+ * The panel's stylesheet.
+ *
+ * PUBLISHED BY `panel:install` AND YOURS TO EDIT.
+ *
+ * THE TWO `@source` LINES ARE THE ONES THAT MATTER, and leaving them out is the
+ * most common way a first install ends up looking broken. Tailwind 4 scans your
+ * project for class names and does not scan `node_modules` - so every utility
+ * used ONLY inside the packaged components is purged, and you get a correctly
+ * structured table with no styling at all. Nothing errors; the page is simply
+ * unreadable.
+ */
+@import 'tailwindcss';
+
+@source '../../node_modules/@panelkit/ui/src/**/*.{vue,ts}';
+@source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';
+
+/**
+ * The design tokens every packaged component reads.
+ *
+ * SEMANTIC NAMES, NOT COLOURS. A component asks for `bg-card` and
+ * `text-muted-foreground`; what those mean is decided here, once, and a panel
+ * is rebranded by editing this block rather than by finding every component
+ * that hardcoded a slate.
+ *
+ * `--primary` IS THE ONE TO CHANGE FIRST. It is the accent on buttons, links
+ * and active navigation; an organisation's brand colour overrides it per tenant
+ * at runtime, which is why components read the variable rather than a class.
+ */
+@theme {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+}
+
+:root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
+}
+
+/*
+ * DARK IS A CLASS, NOT A MEDIA QUERY. The root view sets it from a cookie
+ * before the first paint, so somebody on dark does not get a white flash on
+ * every full page load - and so a person can choose a theme that differs from
+ * their operating system's.
+ */
+.dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --primary: oklch(0.985 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --destructive-foreground: oklch(0.985 0 0);
+}

@@ -151,6 +151,20 @@ final class PanelRoutes
         Route::middleware([
             Middleware\UsePanel::class.':'.$panel->id,
             ...$panel->getMiddleware(),
+
+            /*
+             * THE SHARED PROPS - the sidebar, the panel and the signed-in
+             * person. AFTER `UsePanel`, which is what makes "the current panel"
+             * a fact rather than a guess, and after the application's own
+             * middleware so anything it shares still wins.
+             *
+             * IN THE PACKAGE BECAUSE EVERY CONSUMER WAS WRITING IT. The registry
+             * and `panelPages()` have always existed server-side and nothing
+             * handed them to Inertia, so each application rebuilt the sidebar -
+             * including the panel prefix and the ability filter, which are the
+             * two parts whose failure is silent.
+             */
+            Middleware\SharePanelProps::class,
         ])
             ->prefix($panel->getPath())
             ->name($panel->getRouteName())

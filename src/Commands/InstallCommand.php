@@ -32,6 +32,7 @@ final class InstallCommand extends Command
 
         $this->publishConfig();
         $this->createTree();
+        $this->publishBootstrap();
         $this->createDefaultPanel();
         $this->writePageFiles();
         $this->checkTenancy();
@@ -40,13 +41,11 @@ final class InstallCommand extends Command
 
         $this->newLine();
         $this->components->info('Done. Next:');
-        $this->line('  1. npm install @panelkit/ui @panelkit/inertia');
-        $this->line('     The page files above import from it. Without the package they are');
-        $this->line('     imports of nothing, which fails in the browser rather than at build time.');
-        $this->line('     Then point Tailwind at them, or every utility used only inside the');
-        $this->line('     packages is purged - a styled table inside an unstyled page:');
-        $this->line("     @source '../../node_modules/@panelkit/ui/src/**/*.{vue,ts}';");
-        $this->line("     @source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';");
+        $this->line('  1. npm install @panelkit/ui @panelkit/inertia && npm run build');
+        $this->line('     The screens are Vue, so they are built rather than published. The');
+        $this->line('     published resources/css/app.css already points Tailwind at both');
+        $this->line('     packages - without that every utility used only inside them is');
+        $this->line('     purged, and you get a correct table with no styling at all.');
         $this->line('  2. Add a `tenant_id` column to your admin users table, or configure');
         $this->line('     panel.tenancy.resolver for stancl/tenancy. For a single-tenant app,');
         $this->line('     set panel.tenancy.mode to "none" instead.');
@@ -60,6 +59,64 @@ final class InstallCommand extends Command
         $this->line('  after adding resources - it is generated, so it stays true.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * THE FILES THAT MAKE AN INSTALL RENDER.
+     *
+     * WITHOUT THESE, `panel:install` WROTE PAGE FILES AND TOLD YOU TO BRING A
+     * STARTER KIT. A fresh Laravel application has no root view, no Inertia
+     * bootstrap and no layout, so the first panel route answered with "View
+     * [app] not found" - and the fix was three files nobody had named. Every
+     * install solved it differently, which is the same as the package not
+     * having an answer.
+     *
+     * PUBLISHED, NOT SHIPPED. The layout in particular is meant to be replaced:
+     * the package is layout-free by design and this is a floor, not a house
+     * style. Publishing means changing it is an edit rather than a fork.
+     *
+     * NEVER OVERWRITES. `resources/js/app.ts` in an application that has one is
+     * that application's, and replacing it would take out their bootstrap to
+     * install ours. What is skipped is REPORTED - a generator that silently
+     * declines to write a file leaves somebody believing it wrote one, and they
+     * find out when nothing they expected is there.
+     */
+    private function publishBootstrap(): void
+    {
+        $stubs = dirname(__DIR__, 2).'/resources/stubs';
+
+        $files = [
+            "{$stubs}/app.blade.php.stub" => resource_path('views/app.blade.php'),
+            "{$stubs}/app.ts.stub" => resource_path('js/app.ts'),
+            "{$stubs}/app.css.stub" => resource_path('css/app.css'),
+            "{$stubs}/PanelLayout.vue.stub" => resource_path('js/layouts/PanelLayout.vue'),
+        ];
+
+        $written = [];
+        $skipped = [];
+
+        foreach ($files as $stub => $target) {
+            if (file_exists($target)) {
+                $skipped[] = str_replace(base_path().'/', '', $target);
+
+                continue;
+            }
+
+            if (! is_dir(dirname($target))) {
+                mkdir(dirname($target), 0755, true);
+            }
+
+            copy($stub, $target);
+            $written[] = str_replace(base_path().'/', '', $target);
+        }
+
+        foreach ($written as $file) {
+            $this->components->twoColumnDetail('Wrote', $file);
+        }
+
+        foreach ($skipped as $file) {
+            $this->components->twoColumnDetail('Kept yours', $file);
+        }
     }
 
     /**
