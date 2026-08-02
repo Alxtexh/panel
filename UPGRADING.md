@@ -108,6 +108,24 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.3.0 → 0.3.1
+
+**Nothing breaks, and nothing needs doing.** `composer update` and `npm update`,
+then `php artisan panel:update` as always.
+
+One behaviour changes, and only in an installation that had per-tenant brand
+colours set: **they now apply.** `useTenantTheme` wrote `--color-{token}`, which
+the stylesheet never read, so a brand colour rendered nowhere. It writes
+`--{token}` now. If your organisations carry `theme_colors`, expect the panel to
+start using them — that is the fix, not a side effect.
+
+The accent in the appearance drawer still wins for anybody who has picked one.
+`primaryChosen` is a new key in the per-user appearance record; it defaults to
+false, so existing accounts are treated as "has not chosen" and see their
+organisation's colour until they touch the picker. If you have published your own
+appearance endpoint, add `primaryChosen` to its validation allowlist or the flag
+will not persist across browsers.
+
 ### 0.2.0 → 0.3.0
 
 **Nothing breaks.** This release adds screens that are not resources; it changes

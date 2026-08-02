@@ -4,9 +4,29 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
-## Unreleased
+## 0.3.1
+
+**A release of things that were never true.** Nothing here is a new capability;
+every entry is a feature that existed, passed its tests, and did not work — or a
+document that described a version that had already shipped past it.
 
 ### Fixed
+
+- **Per-tenant branding never applied.** `useTenantTheme` wrote `--color-{token}`;
+  the stylesheet declares `--color-primary: var(--primary)` inside `@theme`,
+  which Tailwind resolves at build time, so `bg-primary` compiles to
+  `var(--primary)`. The prefixed name had no reader. Every seeded organisation
+  carried a colour that rendered nowhere.
+- **The brand colour now applies, and a personal accent still overrides it.**
+  `primaryChosen` records whether somebody picked their accent or is simply on
+  the default; the organisation's colour applies until they do, and Reset gives
+  it back. It is stored per account, so a choice made on one machine is not
+  re-made on the next.
+- **The appearance drawer's "Density" is now "Table density"**, because
+  `--pk-row-padding` is read by `.pk-row td` and nothing else — on a dashboard
+  the control moved and the screen did not.
+
+### Also fixed
 
 - **`panel:update` did not invalidate the schema cache.** The manual sequence it
   replaced had that as its first step. The fingerprint is computed from your
