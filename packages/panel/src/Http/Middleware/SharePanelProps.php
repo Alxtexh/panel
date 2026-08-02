@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\PanelNavigation;
@@ -70,6 +71,23 @@ final class SharePanelProps
                      * nothing at all.
                      */
                     'colors' => $panel->resolveColors(),
+
+                    /*
+                     * WHERE "SIGN OUT" POSTS, decided by the SERVER because
+                     * only the server knows whether this panel scaffolded its
+                     * own auth. `--auth` names the route `{id}.logout`; an
+                     * application on Breeze or Fortify has a plain `logout`.
+                     *
+                     * NULL WHEN NEITHER EXISTS, and the packaged shell then
+                     * renders no sign-out item at all. A menu entry posting to
+                     * a route that does not exist is a 404 on the one action
+                     * somebody takes when they want to be safe.
+                     */
+                    'logout' => match (true) {
+                        Route::has($panel->id.'.logout') => route($panel->id.'.logout'),
+                        Route::has('logout') => route('logout'),
+                        default => null,
+                    },
                 ];
             },
 

@@ -10,7 +10,7 @@ Those are not the same thing, by a wide margin:
 | | package (installed) | reference app only |
 |---|---|---|
 | PHP | 263 files, 44,652 lines | 108 files, 16,190 lines |
-| Vue | 112 components | **197 components** |
+| Vue | 115 components | **198 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -258,8 +258,18 @@ data, where every page returns 200 and every test passes.
 `documents/DocumentPrint`, plus the `TicketThread` and `AnnouncementBanners`
 components the packaged screens render into.
 
-Layout-free by design: the shell stays yours. A one-line page file per screen is
-what `panel:install` writes.
+**The shell ships too, as of v0.6.0.** `PanelShell` is the frame those screens
+sit in — a sidebar built from the navigation the server already shares, a topbar
+with slots for a heading and your own controls, a collapsing rail that remembers
+itself, a mobile drawer, and an account menu whose sign-out posts wherever the
+server says it should. `panel:install` publishes a `PanelLayout.vue` that is a
+thin wrapper over it, so the frame arrives working and stays yours to edit.
+
+It used to be layout-free on principle, and the cost was measurable: a generated
+portal wore the packaged screens inside a scaffold, and read as a less finished
+product than the reference app it was copied from — while every consumer
+rebuilt a sidebar worse than the one they were comparing themselves to. A one-line
+page file per screen is still what `panel:install` writes.
 
 ---
 

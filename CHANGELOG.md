@@ -4,6 +4,33 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## Unreleased
+
+### Added
+
+- **The shell ships.** `PanelShell`, `PanelSidebar` and `PanelAccountMenu` in
+  `@panelkit/inertia`, and the `PanelLayout.vue` that `panel:install` publishes
+  is now a thin wrapper over them.
+
+  **Why the boundary moved.** The package shipped the screens and published a
+  scaffold for the frame, on the principle that a panel should not dictate your
+  chrome. Measured against the reference app, that produced a generated portal
+  wearing the packaged tables inside a plainer frame - reading as a less
+  finished product, while every consumer rebuilt a sidebar worse than the one
+  they were comparing themselves to. A sidebar is not business-specific.
+
+  The sidebar builds from the `panelNav` the server already shares, so it is
+  filtered by ability and carries each panel's prefix; the rail collapses and
+  **remembers**; the mobile drawer closes on navigation; and the account menu's
+  sign-out posts wherever the SERVER says - `{panel}.logout` when `--auth`
+  scaffolded one, a plain `logout` when Fortify did, and no item at all when
+  neither exists, because a menu entry posting to a route that does not exist
+  is a 404 on the one action somebody takes to be safe.
+
+  **It is still yours.** The published layout is a file you edit, and stopping
+  the `PanelShell` import replaces the frame entirely - `usePage().props.panelNav`
+  is the same array.
+
 ## 0.6.0
 
 **Everything a real port asked for that was still open.** This release closes the

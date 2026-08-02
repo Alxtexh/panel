@@ -196,6 +196,15 @@ final class Pages
     public static function intentionallyUnlinked(): array
     {
         return [
+            /*
+             * THE PACKAGED SHELL, rendered so a browser test can prove it
+             * draws. This application has its own chrome, so it is the one
+             * place that cannot otherwise demonstrate the chrome the PACKAGE
+             * ships - see `PanelShellRenderTest` and the page's own note on why
+             * it sits under `errors/`.
+             */
+            '/shell-preview' => 'A fixture for the packaged shell\'s browser test. Deliberately in no menu.',
+
             '/dashboard' => 'The home screen: the first item in the sidebar and the target of the logo.',
             '/settings' => 'The searchable settings index. Reached from the account menu\'s Settings link.',
             '/settings/profile' => 'Reached from the account menu; settings have their own sub-navigation.',

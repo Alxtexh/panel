@@ -46,6 +46,23 @@ export { default as AuditTimeline } from './components/AuditTimeline.vue'
 export { useListTable, type ListPageProps } from './composables/useListTable'
 export { useBulkJob } from './composables/useBulkJob'
 export { useUnsavedGuard } from './composables/useUnsavedGuard'
+
+/*
+ * THE SHELL, which the package did not ship until now.
+ *
+ * `panel:install` published a scaffold layout and the reference app built its
+ * own sidebar, topbar and account menu - so a generated portal got the
+ * packaged SCREENS inside a plainer frame, and read as a less finished product
+ * than the demo it was supposed to look like. A sidebar is not
+ * business-specific; every panel has one, and every consumer rebuilt it.
+ *
+ * The published `PanelLayout.vue` is now a thin wrapper over `PanelShell`, so
+ * the frame arrives working and stays editable - the file is still yours.
+ */
+export { default as PanelShell } from './components/shell/PanelShell.vue'
+export { default as PanelSidebar } from './components/shell/PanelSidebar.vue'
+export { default as PanelAccountMenu } from './components/shell/PanelAccountMenu.vue'
+export type { NavItem } from './components/shell/PanelSidebar.vue'
 export { useTranslations } from './composables/useTranslations'
 
 /**

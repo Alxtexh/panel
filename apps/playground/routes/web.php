@@ -28,6 +28,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use PanelKit\Panel\Http\Controllers\RoleController;
+use PanelKit\Panel\Http\Middleware\SharePanelProps;
+use PanelKit\Panel\Http\Middleware\UsePanel;
 use PanelKit\Panel\Http\PanelRoutes;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\Blueprint;
@@ -623,3 +625,12 @@ PanelRoutes::extend(function (array $resources): void {
             ->whereNumber('client')->name('invoice');
     }
 });
+
+// Scratch preview of the packaged shell.
+Route::get('/shell-preview', fn () => Inertia::render('errors/ShellPreview'))
+    ->middleware([
+        'web',
+        'auth',
+        UsePanel::class.':admin',
+        SharePanelProps::class,
+    ]);
