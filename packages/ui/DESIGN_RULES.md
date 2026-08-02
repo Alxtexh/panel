@@ -128,6 +128,8 @@ its tick gets re-checked.
 | Auth, error and landing screens                                  | 2026-07-31 — conforms; landing footer is identity + one nav group                                                                                                |
 | Help / FAQ / About / What's new                                  | 2026-07-31 — conforms; "Still stuck?" is identity + grouped actions                                                                                              |
 | Generated portals (reseller, platform)                           | 2026-07-31 — inherit the generic index; `/platform` home asserted in the Dusk suite                                                                              |
+| Environment editor (packaged)                                    | 2026-08-02 — **fixed**: had no page padding, no grouping and full-width fields for one-word values; now one card per key prefix and Save at the trailing edge (rule 1) |
+| Changelog (packaged)                                             | 2026-08-02 — conforms; a read-only list with no controls to group                                                                                               |
 
 **Swept in full on 2026-07-31.** Every `.vue` page in the playground was checked,
 not only the ones named above — the earlier table listed sixteen screens and the
@@ -140,3 +142,15 @@ Rule 6 holds by construction rather than by inspection: no page hand-rolls a
 repeating input. Every one goes through `PkRepeater`, which A.1 rebuilt as rows
 and which has its own spec — so a regression there fails a test rather than
 needing another sweep.
+
+## A sweep is a date, not a property
+
+The two rows dated 2026-08-02 are the reason this section exists. The sweep ran
+on 2026-07-30 and 07-31 and was complete on those days; `Environment` and
+`Changelog` shipped in 0.3.0 **after** it, so they were never in the table at
+all — and nothing about the table said so. The environment editor went out as
+the worst-looking screen in the package while this document read as though every
+screen had been checked.
+
+**A screen added after a sweep is unswept, and the table is the only place that
+can say so.** Adding a row is part of adding a screen.

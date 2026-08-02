@@ -66,15 +66,58 @@ const notice = computed(() =>
         : 'A change here takes effect on the next request.',
 )
 
+/**
+ * Grouped by the first segment of the name - `MAIL_*` together, `LOG_*`
+ * together.
+ *
+ * A FLAT STACK IS WHAT THIS SCREEN SHIPPED AS, and six unrelated boxes down the
+ * page read as a form with one long question rather than as three settings.
+ * Environment names already carry their grouping in the prefix; using it costs
+ * nothing and is the difference between a list and a screen.
+ *
+ * A GROUP OF ONE IS NOT A GROUP. A lone `LOG_LEVEL` under a heading saying
+ * "LOG" is a box drawn around a single field, which is noise - those collect
+ * into one final group instead.
+ */
+const groups = computed(() => {
+    const byPrefix = new Map<string, Entry[]>()
+
+    for (const entry of props.entries) {
+        const prefix = entry.key.includes('_') ? entry.key.split('_')[0] : ''
+
+        byPrefix.set(prefix, [...(byPrefix.get(prefix) ?? []), entry])
+    }
+
+    const named: { label: string; entries: Entry[] }[] = []
+    const rest: Entry[] = []
+
+    for (const [prefix, entries] of byPrefix) {
+        if (prefix === '' || entries.length < 2) {
+            rest.push(...entries)
+
+            continue
+        }
+
+        named.push({ label: prefix, entries })
+    }
+
+    return rest.length > 0 ? [...named, { label: 'Other', entries: rest }] : named
+})
+
 const submit = () => form.put(window.location.pathname, { preserveScroll: true })
 </script>
 
 <template>
     <Head :title="pageHeading" />
 
-    <div class="max-w-2xl space-y-6">
+    <!--
+        THE PAGE PADDING IS THE SCREEN'S OWN, matching `settings/Roles`. This
+        rendered flush against the shell because it had none, which is most of
+        why it looked unfinished next to every other screen.
+    -->
+    <div class="flex max-w-3xl flex-col gap-4 p-4 sm:p-6">
         <header>
-            <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading }}</h1>
+            <h1 class="text-xl font-semibold tracking-tight">{{ pageHeading }}</h1>
             <p v-if="pageDescription" class="text-muted-foreground mt-1 text-sm">
                 {{ pageDescription }}
             </p>
@@ -88,41 +131,82 @@ const submit = () => form.put(window.location.pathname, { preserveScroll: true }
             declared as editable. Nothing here can be changed.
         </p>
 
-        <p v-else class="text-muted-foreground text-sm">{{ notice }}</p>
+        <p
+            v-else
+            class="bg-muted/40 text-muted-foreground rounded-md border px-3 py-2 text-sm"
+        >
+            {{ notice }}
+        </p>
 
         <p v-if="form.errors.values" class="text-destructive text-sm">
             {{ form.errors.values }}
         </p>
 
-        <form v-if="writable && entries.length" class="space-y-4" @submit.prevent="submit">
-            <div v-for="entry in entries" :key="entry.key" class="grid gap-1.5">
-                <label :for="`env-${entry.key}`" class="font-mono text-sm font-medium">
-                    {{ entry.key }}
-                </label>
+        <form
+            v-if="writable && entries.length"
+            class="flex flex-col gap-4"
+            @submit.prevent="submit"
+        >
+            <!--
+                ONE CARD PER PREFIX. Six unrelated boxes down a page read as one
+                long question; `MAIL_*` under a heading reads as a setting.
+            -->
+            <section
+                v-for="group in groups"
+                :key="group.label"
+                class="flex flex-col gap-4 rounded-lg border p-4"
+            >
+                <h2 class="text-muted-foreground font-mono text-xs tracking-wide uppercase">
+                    {{ group.label }}
+                </h2>
 
-                <input
-                    :id="`env-${entry.key}`"
-                    v-model="form.values[entry.key]"
-                    :type="entry.secret ? 'password' : 'text'"
-                    :placeholder="
-                        entry.secret
-                            ? entry.set
-                                ? 'Set — leave blank to keep it'
-                                : 'Not set'
-                            : ''
-                    "
-                    autocomplete="off"
-                    class="border-input bg-background focus-visible:ring-ring h-9 w-full rounded-md border px-3 font-mono text-sm focus-visible:ring-2 focus-visible:outline-none"
-                />
+                <!--
+                    LABEL BESIDE THE FIELD ON A WIDE SCREEN, stacked on a narrow
+                    one. Full-width inputs for values like `debug` were most of
+                    the congestion - the box was six times the length of
+                    anything anyone types into it.
+                -->
+                <div
+                    v-for="entry in group.entries"
+                    :key="entry.key"
+                    class="grid gap-1.5 sm:grid-cols-[minmax(0,14rem)_1fr] sm:items-baseline sm:gap-4"
+                >
+                    <label
+                        :for="`env-${entry.key}`"
+                        class="font-mono text-sm font-medium break-all"
+                    >
+                        {{ entry.key }}
+                    </label>
 
-                <p v-if="entry.secret" class="text-muted-foreground text-xs">
-                    Never displayed. Leave blank to keep the current value.
-                </p>
+                    <div class="flex flex-col gap-1">
+                        <input
+                            :id="`env-${entry.key}`"
+                            v-model="form.values[entry.key]"
+                            :type="entry.secret ? 'password' : 'text'"
+                            :placeholder="
+                                entry.secret
+                                    ? entry.set
+                                        ? 'Set — leave blank to keep it'
+                                        : 'Not set'
+                                    : ''
+                            "
+                            autocomplete="off"
+                            class="border-input bg-background focus-visible:ring-ring h-9 w-full rounded-md border px-3 font-mono text-sm focus-visible:ring-2 focus-visible:outline-none"
+                        />
+
+                        <p v-if="entry.secret" class="text-muted-foreground text-xs">
+                            Never displayed. Leave blank to keep the current value.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Design rule 1: actions in one group, at the trailing edge. -->
+            <div class="flex justify-end">
+                <Button type="submit" :disabled="form.processing">
+                    {{ form.processing ? 'Saving…' : 'Save' }}
+                </Button>
             </div>
-
-            <Button type="submit" :disabled="form.processing">
-                {{ form.processing ? 'Saving…' : 'Save' }}
-            </Button>
         </form>
 
         <p v-else-if="writable" class="text-muted-foreground text-sm">
