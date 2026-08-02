@@ -4,31 +4,6 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
-## Unreleased
-
-### Added
-
-- **`panel:doctor` names a resource or page that nothing registered.** The last
-  two silent 404s from the port report. `panel.discover` pointed one directory
-  too high scans a tree whose namespaces do not match, registers **nothing**,
-  and says nothing; `discover_pages` absent from a published config discovers
-  pages nowhere. Both present as a 404 on a screen you just wrote - which is
-  indistinguishable from code you have not finished, so the reasonable next move
-  is to go and read the code, which is not where the fault is. An hour each,
-  twice, per the report.
-
-  It compares **disk against the registry**, not config against convention. A
-  resource installed by a plugin or an explicit `registerResources()` call *is*
-  registered, so it is never reported - and a class sitting somewhere no config
-  names still is.
-
-- **And a packaged screen with no page file.** Inertia resolves components by
-  globbing `resources/js/pages`, so a screen in `node_modules` cannot be found
-  however correctly it is routed: the route answers, the component does not
-  resolve, and the page renders **blank under a working header** with nothing in
-  the log. `panel:update` writes these; the check is for the installation that
-  ran `composer update` and did not.
-
 ## 0.6.0
 
 **Everything a real port asked for that was still open.** This release closes the
@@ -96,6 +71,27 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
   differs is everything afterwards, because a fix made in the source does not
   happen and `panel:update` writes the previous version's page files. Reported
   from a real port; it costs an afternoon each time, and now it names itself.
+
+- **`panel:doctor` names a resource or page that nothing registered.** The last
+  two silent 404s from the port report. `panel.discover` pointed one directory
+  too high scans a tree whose namespaces do not match, registers **nothing**,
+  and says nothing; `discover_pages` absent from a published config discovers
+  pages nowhere. Both present as a 404 on a screen you just wrote - which is
+  indistinguishable from code you have not finished, so the reasonable next move
+  is to go and read the code, which is not where the fault is. An hour each,
+  twice, per the report.
+
+  It compares **disk against the registry**, not config against convention. A
+  resource installed by a plugin or an explicit `registerResources()` call *is*
+  registered, so it is never reported - and a class sitting somewhere no config
+  names still is.
+
+- **And a packaged screen with no page file.** Inertia resolves components by
+  globbing `resources/js/pages`, so a screen in `node_modules` cannot be found
+  however correctly it is routed: the route answers, the component does not
+  resolve, and the page renders **blank under a working header** with nothing in
+  the log. `panel:update` writes these; the check is for the installation that
+  ran `composer update` and did not.
 
 ### Changed
 

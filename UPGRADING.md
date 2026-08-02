@@ -147,6 +147,10 @@ the old one could no longer report anything.
   network request. Fields are declared server-side and are the allow-list.
 - `panel:doctor` notes a `path`-installed package composer **copied** instead of
   symlinking, which is why a fix in the package sometimes does not happen.
+- `panel:doctor` also reports a resource or page **on disk that nothing
+  registered** (a `discover` path one directory too high registers nothing and
+  says nothing), and a packaged screen with **no page file** in
+  `resources/js/pages`, which routes fine and renders blank.
 - `make:panel-resource --generate` writes a commented action example into the
   table chain.
 
