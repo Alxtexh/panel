@@ -1,5 +1,6 @@
 import { watchEffect } from 'vue'
 import type { Ref } from 'vue'
+import { setTenantVars } from './useAppearance'
 
 /**
  * Applies per-tenant branding as CSS custom properties on :root.
@@ -7,6 +8,26 @@ import type { Ref } from 'vue'
  * Spec §8: branding overrides tokens at RUNTIME. Never compile a per-tenant CSS
  * bundle - that turns a colour change into a deploy, and multiplies build output
  * by the tenant count.
+ *
+ * IT WRITES `--primary`, NOT `--color-primary`, AND THAT IS THE WHOLE FEATURE.
+ *
+ * This composable spent its entire life setting `--color-{token}` and branding
+ * never once applied. The stylesheet declares `--color-primary: var(--primary)`
+ * inside `@theme`, and Tailwind resolves that at BUILD time - `bg-primary`
+ * compiles to `background-color: var(--primary)`. So `--color-primary` is a
+ * property with no reader: setting it succeeds, computes, inherits down the
+ * whole tree, and changes nothing.
+ *
+ * Measured rather than reasoned about, on a probe element in the live panel:
+ *
+ *     before                     oklch(0.32 0.02 260)
+ *     with --color-primary set   oklch(0.32 0.02 260)   <- no effect
+ *     with --primary set         rgb(0, 0, 255)         <- applies
+ *
+ * `useAppearance` writes the unprefixed names and has always worked, which is
+ * what made this survivable for so long: the panel was visibly themeable, just
+ * never BY A TENANT. Seeded organisations carried brand colours that rendered
+ * nowhere.
  *
  * Values are written through UNCHANGED. antipatterns §6.2 is the failure to
  * avoid: a token was wrapped in `rgb()` on the assumption it held a
@@ -27,7 +48,7 @@ export function useTenantTheme(colors: Ref<Record<string, string> | undefined>) 
             return
         }
 
-        const root = document.documentElement
+        const vars: Record<string, string> = {}
 
         for (const [token, value] of Object.entries(colors.value ?? {})) {
             if (!SAFE_TOKEN.test(token) || typeof value !== 'string' || !SAFE_VALUE.test(value)) {
@@ -36,7 +57,14 @@ export function useTenantTheme(colors: Ref<Record<string, string> | undefined>) 
                 continue
             }
 
-            root.style.setProperty(`--color-${token}`, value)
+            vars[`--${token}`] = value
         }
+
+        /*
+         * HANDED TO `applyAppearance` RATHER THAN WRITTEN HERE, because the
+         * accent preference wants `--primary` too. Two writers meant the last
+         * one to run won, and which that was depended on mount order.
+         */
+        setTenantVars(vars)
     })
 }

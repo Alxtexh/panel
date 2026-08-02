@@ -386,6 +386,31 @@ export function setAppearancePersister(fn: ((patch: Partial<Appearance>) => void
     persist = fn
 }
 
+/**
+ * The organisation's own colours, which win over the personal accent.
+ *
+ * ONE FUNCTION WRITES `--primary`, AND THIS IS WHY. Both an appearance
+ * preference and a tenant's brand want that property, and for a while both set
+ * it - whichever ran last won, which is a race decided by mount order rather
+ * than by a decision anybody made. Registering the tenant's values here makes
+ * the precedence a line of code instead.
+ *
+ * THE BRAND WINS BECAUSE IT IS A FACT ABOUT THE WORKSPACE. A personal accent is
+ * already scoped to one person; an organisation that has set its colour has
+ * said what the panel looks like for everyone in it. The appearance screen's
+ * other controls - dark mode, density, font size, surfaces - are untouched,
+ * because none of them is anybody else's decision.
+ */
+let tenantVars: Record<string, string> = {}
+
+export function setTenantVars(vars: Record<string, string>): void {
+    tenantVars = vars
+
+    // Applied immediately: this arrives with a page's props, which is after
+    // boot has already written the accent.
+    applyAppearance(readAppearance())
+}
+
 /** Apply a preference to the document, and cache it for the next first paint. */
 export function applyAppearance(next: Appearance): void {
     if (typeof document === 'undefined') {
@@ -393,7 +418,7 @@ export function applyAppearance(next: Appearance): void {
     }
 
     const root = document.documentElement
-    const vars = appearanceVars(next)
+    const vars = { ...appearanceVars(next), ...tenantVars }
 
     root.classList.toggle('dark', isDark(next))
 

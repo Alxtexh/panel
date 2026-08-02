@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Support\DemoLogin;
 use App\Support\SocialProviders;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -59,6 +60,16 @@ class FortifyServiceProvider extends ServiceProvider
              * buttons fail.
              */
             'socialProviders' => SocialProviders::enabled(),
+
+            /*
+             * A SEEDED ACCOUNT, TYPED IN FOR YOU, on a local machine only.
+             *
+             * Null everywhere else, and `DemoLogin` decides that from the
+             * ENVIRONMENT rather than from a config key alone - a prop that
+             * carried a password would otherwise be one bad `.env` copy away
+             * from a real sign-in page.
+             */
+            'prefill' => DemoLogin::credentials(),
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/ResetPassword', [
