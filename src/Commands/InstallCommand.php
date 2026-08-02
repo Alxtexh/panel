@@ -21,7 +21,10 @@ use PanelKit\Panel\Support\PanelPages;
  */
 final class InstallCommand extends Command
 {
+    use Concerns\ScaffoldsPanelAuth;
+
     protected $signature = 'panel:install
+                            {--auth : Also scaffold sign-in, sign-out and password reset for the default panel}
                             {--force : Overwrite the published config and page files}';
 
     protected $description = 'Publish config, create the app/Panel tree and the page files, and print next steps';
@@ -36,6 +39,11 @@ final class InstallCommand extends Command
         $this->wireVite();
         $this->createDefaultPanel();
         $this->writePageFiles();
+
+        if ($this->option('auth')) {
+            $this->scaffoldAuth();
+        }
+
         $this->checkTenancy();
         $this->checkAuthScaffolding();
         $this->writeBlueprint();
@@ -279,6 +287,31 @@ final class InstallCommand extends Command
     }
 
     /**
+     * SIGN-IN FOR THE PANEL AN INSTALLATION ALREADY HAS.
+     *
+     * `make:panel --auth` covers a portal you are GENERATING, and covered only
+     * that - so the first path anybody walks (`composer require`,
+     * `panel:install`, open the panel) still ended at a starter kit. The report
+     * asked for exactly this flag by name.
+     *
+     * OUTSIDE `createDefaultPanel()` DELIBERATELY, because that method returns
+     * early when the provider already exists - which is the ordinary case for
+     * somebody adding sign-in to an install they made last week. Scaffolding
+     * hung inside it would silently do nothing for them.
+     *
+     * THE DEFAULT PANEL IS AT THE ROOT and authenticates `web`, which is what
+     * `createDefaultPanel()` generates. A panel on another path or guard is a
+     * `make:panel` job.
+     */
+    private function scaffoldAuth(): void
+    {
+        $this->newLine();
+        $this->components->info('Scaffolding sign-in for the default panel');
+
+        $this->scaffoldPanelAuth((string) config('panel.default', 'admin'), '', 'web', (bool) $this->option('force'));
+    }
+
+    /**
      * The five page files, one line each.
      *
      * WITHOUT THESE THE PACKAGE IS HALF INSTALLED, and the half that is missing
@@ -416,13 +449,26 @@ final class InstallCommand extends Command
             return;
         }
 
+        /*
+         * A PANEL THAT SCAFFOLDED ITS OWN SIGN-IN NEEDS NO STARTER KIT, and
+         * saying otherwise sends somebody to install Breeze over a working
+         * login. `Authenticate::redirectUsing()` asks the panel first, so a
+         * route named `login` is no longer required for a panel to turn a
+         * guest away - only for whatever else the application routes.
+         */
+        if (glob(base_path('routes/panel-*-auth.php')) !== []) {
+            return;
+        }
+
         $this->newLine();
-        $this->components->warn('No `login` route is defined.');
+        $this->components->warn('No `login` route is defined, and no panel scaffolds its own.');
         $this->line('  Panel routes sit behind a guard, and turning an anonymous visitor');
-        $this->line('  away means redirecting to route(\'login\'). Without one, the first');
-        $this->line('  panel page fails with "Route [login] not defined" - which does not');
-        $this->line('  mention authentication and is not obviously about this package.');
-        $this->line('  Install a starter kit (Breeze, Jetstream) or Fortify, or define a');
+        $this->line('  away means sending them somewhere to sign in. Without either, the');
+        $this->line('  first panel page fails with "Route [login] not defined" - which does');
+        $this->line('  not mention authentication and is not obviously about this package.');
+        $this->line('  Either:');
+        $this->line('    php artisan panel:install --auth    # this package\'s sign-in, on this panel\'s guard');
+        $this->line('  or install a starter kit (Breeze, Jetstream) or Fortify, or define a');
         $this->line('  route named `login` yourself.');
     }
 }
