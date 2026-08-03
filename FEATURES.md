@@ -10,7 +10,7 @@ Those are not the same thing, by a wide margin:
 | | package (installed) | reference app only |
 |---|---|---|
 | PHP | 265 files, 45,239 lines | 108 files, 16,102 lines |
-| Vue | 117 components | **198 components** |
+| Vue | 118 components | **199 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,

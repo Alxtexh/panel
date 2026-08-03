@@ -131,6 +131,7 @@ export { default as Login } from './pages/auth/Login.vue'
 export { default as ForgotPassword } from './pages/auth/ForgotPassword.vue'
 export { default as ResetPassword } from './pages/auth/ResetPassword.vue'
 export { default as AuthField } from './components/AuthField.vue'
+export { default as AuthTurnstile } from './components/AuthTurnstile.vue'
 export {
     registerRenderHookComponent,
     resolveRenderHookComponent,

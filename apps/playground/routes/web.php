@@ -633,3 +633,12 @@ Route::get('/shell-preview', fn () => Inertia::render('errors/ShellPreview'))
         UsePanel::class.':admin',
         SharePanelProps::class,
     ]);
+
+/*
+ | THE PACKAGED SIGN-IN SCREEN, for the same reason and with one difference:
+ | it is deliberately NOT behind `auth`, because a login screen that requires a
+ | session is a login screen nobody can see. See `errors/LoginPreview` for why
+ | it is not simply `auth/Login`.
+ */
+Route::get('/login-preview', fn () => Inertia::render('errors/LoginPreview'))
+    ->middleware(['web']);

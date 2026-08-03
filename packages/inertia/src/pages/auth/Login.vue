@@ -22,7 +22,9 @@
  */
 import { Form, Head, Link } from '@inertiajs/vue3'
 import { PkButton as Button } from '@panelkit/ui'
+import { computed } from 'vue'
 import AuthField from '../../components/AuthField.vue'
+import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{
@@ -43,7 +45,36 @@ const props = defineProps<{
      * it is in production. See the controller.
      */
     prefill?: { email: string; password: string } | null
+    /**
+     * Sign-in providers this installation has, as label and URL.
+     *
+     * EMPTY IS THE NORMAL CASE and renders nothing at all - not a divider, not
+     * an empty row. An installation without social sign-in should look like one
+     * that never offered it.
+     *
+     * THE URL IS THE APPLICATION'S, not guessed here. Where a provider redirect
+     * lives depends on how that application wired Socialite, and a package that
+     * assumed `/auth/{key}/redirect` would send half its consumers to a 404.
+     */
+    socialProviders?: { key: string; label: string; url: string }[]
+    /** Where "Sign up" goes, or null when registration is not offered. */
+    registerUrl?: string | null
+    /** Turnstile's public key, or null when it is off. See `AuthTurnstile`. */
+    turnstileSiteKey?: string | null
 }>()
+
+/*
+ * THE PASSKEY BUTTON IS A SLOT, NOT A COMPONENT THIS SHIPS, and the reason is
+ * the one failure this package keeps naming: a seam with nothing behind it.
+ *
+ * Verifying a passkey needs a WebAuthn client AND challenge endpoints, and both
+ * belong to whichever package the application chose - `laravel/passkeys` in the
+ * reference app. The package can see whether passkeys are AVAILABLE, so it draws
+ * the placement and the divider; what goes in the slot is the application's,
+ * because a button here that posted to endpoints nobody serves would look like
+ * support and behave like a bug.
+ */
+const providers = computed(() => props.socialProviders ?? [])
 </script>
 
 <template>
@@ -58,6 +89,26 @@ const props = defineProps<{
             class="mb-4 text-center text-sm font-medium text-emerald-600 dark:text-emerald-400"
         >
             {{ props.status }}
+        </div>
+
+        <!--
+            ABOVE THE FORM, because a passkey is the faster path for somebody
+            who has one, and burying it under the password field means they type
+            the password anyway. Nothing renders when the slot is empty.
+        -->
+        <div v-if="$slots.passkey">
+            <slot name="passkey" />
+
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <span class="bg-border h-px w-full" />
+                </div>
+                <div class="relative flex justify-center text-xs uppercase">
+                    <span class="bg-background text-muted-foreground px-2">
+                        Or continue with email
+                    </span>
+                </div>
+            </div>
         </div>
 
         <Form
@@ -103,19 +154,100 @@ const props = defineProps<{
                     </template>
                 </AuthField>
 
+                <!--
+                    SAID OUT LOUD, because a form that has quietly filled in an
+                    administrator's password should never be mistaken for one
+                    the browser remembered. It names the account, so the person
+                    about to click Log in knows who they are about to be.
+                -->
+                <p
+                    v-if="props.prefill"
+                    class="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs"
+                >
+                    Local development: filled in with the seeded account
+                    <span class="font-medium">{{ props.prefill.email }}</span
+                    >.
+                </p>
+
                 <label class="flex items-center gap-3 text-sm">
                     <input
                         type="checkbox"
                         name="remember"
                         value="1"
-                        class="size-4 rounded border-input accent-primary"
+                        class="border-input accent-primary size-4 rounded"
                     />
                     Remember me
                 </label>
 
-                <Button type="submit" class="w-full" :disabled="processing">
+                <!--
+                    Renders nothing when Turnstile is off; the server refuses
+                    without a token either way.
+                -->
+                <AuthTurnstile :site-key="props.turnstileSiteKey" />
+
+                <Button
+                    type="submit"
+                    class="w-full"
+                    :disabled="processing"
+                    data-test="login-button"
+                >
+                    <!--
+                        A SPINNER RATHER THAN ONLY A WORD. On a slow connection
+                        the gap between clicking and the next screen is seconds,
+                        and a button that merely changes its label reads as one
+                        that did not register the click - so people click again.
+                    -->
+                    <svg
+                        v-if="processing"
+                        class="mr-2 size-4 animate-spin"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle cx="12" cy="12" r="9" class="opacity-25" />
+                        <path d="M21 12a9 9 0 0 0-9-9" stroke-linecap="round" />
+                    </svg>
                     {{ processing ? 'Signing in…' : 'Log in' }}
                 </Button>
+            </div>
+
+            <!--
+                THE PROVIDER BUTTONS SIT AFTER THE PASSWORD FORM, not before it.
+                Putting them first pushes the field most people use below a row
+                of alternatives, and an operator signing in to a work panel is
+                overwhelmingly using their password.
+            -->
+            <div v-if="providers.length > 0" class="flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="bg-border h-px flex-1" />
+                    <span class="text-muted-foreground text-xs">or continue with</span>
+                    <span class="bg-border h-px flex-1" />
+                </div>
+
+                <div class="grid gap-2" :class="providers.length > 1 ? 'sm:grid-cols-2' : ''">
+                    <!--
+                        A LINK, NOT A FETCH. The provider redirect leaves the
+                        application entirely, so this has to be a real
+                        navigation; an XHR would be answered with an opaque
+                        redirect the page cannot follow.
+                    -->
+                    <a
+                        v-for="provider in providers"
+                        :key="provider.key"
+                        :href="provider.url"
+                        class="bg-background hover:bg-accent inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors"
+                    >
+                        {{ provider.label }}
+                    </a>
+                </div>
+            </div>
+
+            <div v-if="props.registerUrl" class="text-muted-foreground text-center text-sm">
+                Don't have an account?
+                <Link :href="props.registerUrl" class="underline-offset-4 hover:underline">
+                    Sign up
+                </Link>
             </div>
         </Form>
     </AuthLayout>

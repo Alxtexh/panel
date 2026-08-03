@@ -308,4 +308,109 @@ final class PanelAuthTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('prefill.email', 'demo@example.test'));
     }
+
+    /* --------------------------------------------- the optional halves */
+
+    /**
+     * A PLAIN INSTALLATION OFFERS NONE OF THEM.
+     *
+     * This is the assertion that matters more than the ones below it. The
+     * reference app's login carries Turnstile, social providers and a sign-up
+     * link, and the temptation when bringing the packaged screen to parity is to
+     * ship all three ON - which gives every fresh installation a Turnstile
+     * widget with no site key and a "Sign up" link to a route nobody registered.
+     * Absent is the default; present is opt-in.
+     */
+    public function test_a_plain_installation_offers_no_optional_sign_in_extras(): void
+    {
+        $this->get('/authfixture/login')
+            ->assertOk()
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('turnstileSiteKey', null)
+                    ->where('socialProviders', [])
+                    ->where('registerUrl', null),
+            );
+    }
+
+    public function test_a_declared_provider_is_offered_with_the_url_the_app_gave(): void
+    {
+        config([
+            'panel.auth.authfixture.social' => [
+                'google' => ['label' => 'Google', 'url' => '/auth/google/redirect'],
+            ],
+        ]);
+
+        $this->get('/authfixture/login')
+            ->assertOk()
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('socialProviders.0.key', 'google')
+                    ->where('socialProviders.0.label', 'Google')
+                    // NEVER DERIVED. Where a provider redirect lives depends on
+                    // how the application wired Socialite.
+                    ->where('socialProviders.0.url', '/auth/google/redirect'),
+            );
+    }
+
+    /**
+     * A PROVIDER WITH NO URL IS DROPPED, not rendered as a dead button. Half a
+     * configuration is the normal state of somebody mid-setup, and a button that
+     * goes nowhere on a sign-in screen is worse than no button.
+     */
+    public function test_a_provider_without_a_url_is_not_offered(): void
+    {
+        config([
+            'panel.auth.authfixture.social' => [
+                'github' => ['label' => 'GitHub'],
+                'google' => ['label' => 'Google', 'url' => '/auth/google/redirect'],
+            ],
+        ]);
+
+        $this->get('/authfixture/login')
+            ->assertOk()
+            ->assertInertia(
+                fn ($page) => $page
+                    ->has('socialProviders', 1)
+                    ->where('socialProviders.0.key', 'google'),
+            );
+    }
+
+    /**
+     * THE SITE KEY TRAVELS ONLY WHEN TURNSTILE IS ON.
+     *
+     * `enabled` false with a key still configured is the ordinary shape of an
+     * installation that turned it off for a staging box, and sending the key
+     * anyway would render a widget whose token the middleware never checks.
+     */
+    public function test_the_turnstile_key_is_sent_only_when_it_is_enabled(): void
+    {
+        config([
+            'panel.auth.turnstile.enabled' => false,
+            'panel.auth.turnstile.site_key' => 'site-key-here',
+        ]);
+
+        $this->get('/authfixture/login')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('turnstileSiteKey', null));
+
+        config(['panel.auth.turnstile.enabled' => true]);
+
+        $this->get('/authfixture/login')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('turnstileSiteKey', 'site-key-here'));
+    }
+
+    /**
+     * SIGN-UP IS OFF UNLESS SOMEBODY SAYS OTHERWISE. A panel is a staff tool far
+     * more often than a product people join.
+     */
+    public function test_the_register_link_appears_only_when_declared(): void
+    {
+        config(['panel.auth.authfixture.register' => '/register']);
+
+        $this->get('/authfixture/login')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('registerUrl', '/register'));
+    }
 }
