@@ -10,9 +10,13 @@ Those are not the same thing, by a wide margin:
 | | package (installed) | reference app only |
 |---|---|---|
 | PHP | 268 files, 46,222 lines | 105 files, 15,775 lines |
-| Vue | 134 components | **199 components** |
+| Vue | 201 components | **161 components** |
 
-The demo carries nearly twice the Vue the framework does. Most of what makes it look
+The Vue column inverted in v0.6.3, and that is the headline. The demo used to
+carry nearly twice what the framework did; the shell, the auth screens and the
+shadcn families it was built from have all moved, so the package now carries
+more. What is left in the demo is its own screens - the dashboard, the
+assistant, mail, invoices, the landing pages. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
 the landing pages — is application code written to exercise the framework, not
 part of it. That is deliberate: a framework that shipped an ISP's dashboard would

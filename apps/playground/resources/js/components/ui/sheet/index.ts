@@ -1,8 +1,11 @@
-export { default as Sheet } from "./Sheet.vue"
-export { default as SheetClose } from "./SheetClose.vue"
-export { default as SheetContent } from "./SheetContent.vue"
-export { default as SheetDescription } from "./SheetDescription.vue"
-export { default as SheetFooter } from "./SheetFooter.vue"
-export { default as SheetHeader } from "./SheetHeader.vue"
-export { default as SheetTitle } from "./SheetTitle.vue"
-export { default as SheetTrigger } from "./SheetTrigger.vue"
+/**
+ * This family lives in `@panelkit/ui` now.
+ *
+ * RE-EXPORTED RATHER THAN DELETED because the import path appears in dozens of
+ * this application's own screens, and because ONE COPY IS THE WHOLE POINT: the
+ * sidebar's provide/inject context is identity-based, so a second copy of
+ * `SidebarProvider` and `useSidebar` do not talk to each other. That is exactly
+ * what happened when the shell moved and this file still held the old ones -
+ * `AppSidebar` threw in setup and the whole page rendered blank.
+ */
+export * from '@panelkit/ui';

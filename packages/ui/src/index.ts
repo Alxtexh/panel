@@ -41,6 +41,32 @@ export { default as PkTextInput } from './components/Primitives/PkTextInput.vue'
 export { default as PkFieldLabel } from './components/Primitives/PkFieldLabel.vue'
 export { default as PkSpinner } from './components/Primitives/PkSpinner.vue'
 export { default as PkOtpInput } from './components/Primitives/PkOtpInput.vue'
+
+/* The class merger every moved shadcn component composes with. */
+export { cn, toUrl } from './lib/cn'
+
+/*
+ | THE REFERENCE APP'S SHADCN FAMILIES, MOVED WHOLE.
+ |
+ | The sidebar is the reason: the demo's is 509 lines of behaviour - flyouts
+ | when collapsed, a horizontal mode, collapsible groups, a mobile sheet - and
+ | rebuilding that against a thinner primitive is how a generated portal ends up
+ | looking almost right. Moving it meant moving what it composes, which is
+ | `sheet`, `separator`, `input` and `tooltip`: 45 files, and the closure stops
+ | there.
+ |
+ | THIS IS WHY THIS PACKAGE NOW HAS DEPENDENCIES. It had none by design, and the
+ | design cost more than it saved - reka-ui, @vueuse/core and the class helpers
+ | are what these components are BUILT from, and a re-implementation without
+ | them is a second component library that drifts from the first.
+ */
+export * from './components/shadcn/sidebar'
+export * from './components/shadcn/sheet'
+export * from './components/shadcn/separator'
+export * from './components/shadcn/tooltip'
+export * from './components/shadcn/dropdown-menu'
+export * from './components/shadcn/avatar'
+export { Input as ShadcnInput } from './components/shadcn/input'
 export { default as PkBoundary } from './components/Layout/PkBoundary.vue'
 
 /*

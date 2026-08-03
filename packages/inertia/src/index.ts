@@ -67,6 +67,33 @@ export { default as PanelNotificationBell } from './components/shell/PanelNotifi
 export { default as PanelBreadcrumbs } from './components/shell/PanelBreadcrumbs.vue'
 export { default as PanelImpersonationBanner } from './components/shell/PanelImpersonationBanner.vue'
 export type { NavItem } from './components/shell/types'
+
+/*
+ * THE REFERENCE APP'S SHELL, MOVED WHOLE.
+ *
+ * `PanelShell` above is the thin frame written for consumers who had nothing;
+ * this is the one the demo actually uses - 509 lines of sidebar with flyouts
+ * when collapsed, collapsible groups, a mobile sheet and a horizontal mode.
+ * Rebuilding that against a thinner primitive is exactly how a generated portal
+ * ends up looking almost right, so it moved instead.
+ *
+ * `NavUser` TAKES ITS MENU AS A SLOT. The reference app links from there to its
+ * settings centre, its operations screen and its lock screen - its routes,
+ * which a package cannot name. The trigger, the avatar and the placement are
+ * packaged; the items are passed in.
+ */
+export { default as AppSidebar } from './components/shell/AppSidebar.vue'
+export { default as AppLogo } from './components/shell/AppLogo.vue'
+export { default as AppLogoIcon } from './components/shell/AppLogoIcon.vue'
+export { default as NavMain } from './components/shell/NavMain.vue'
+export { default as NavFooter } from './components/shell/NavFooter.vue'
+export { default as NavUser } from './components/shell/NavUser.vue'
+export { default as UserInfo } from './components/shell/UserInfo.vue'
+export { default as CommandPalette } from './components/shell/CommandPalette.vue'
+export { usePanelNav } from './composables/usePanelNav'
+export { useCurrentUrl } from './composables/useCurrentUrl'
+export { getInitials } from './composables/useInitials'
+export { useSidebarOpener } from './lib/mobileNav'
 export { useTranslations } from './composables/useTranslations'
 
 /**

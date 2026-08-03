@@ -1,3 +1,4 @@
+import type { InertiaLinkProps } from '@inertiajs/vue3'
 /**
  * Payload shapes the server sends that MORE THAN ONE component reads.
  *
@@ -26,4 +27,36 @@ export interface Announcement {
     display: 'banner' | 'toast'
     actionLabel: string | null
     actionUrl: string | null
+}
+
+/**
+ * A navigation entry, as the moved shell components consume it.
+ *
+ * FROM THE REFERENCE APP's `@/types`. `href` is loose because Inertia accepts a
+ * string or a route object and the shell normalises with `toUrl`; `icon` is a
+ * component rather than a name because these components render it directly.
+ */
+export interface NavItem {
+    title: string
+    /*
+     * INERTIA'S OWN TYPE, not `string`. A link may be a route object with a
+     * method, which is what `Link` accepts and what the demo's helpers return -
+     * widening it to `unknown` made every `<Link :href>` in the moved shell fail
+     * to type-check, and narrowing it to `string` would refuse the objects the
+     * reference app actually passes.
+     */
+    href: NonNullable<InertiaLinkProps['href']>
+    icon?: unknown
+    isActive?: boolean
+    items?: NavItem[]
+    group?: string | null
+    badge?: string | number | null
+}
+
+/** The signed-in person, as the account menu and avatar read them. */
+export interface User {
+    id?: number | string
+    name?: string
+    email?: string
+    avatar?: string | null
 }
