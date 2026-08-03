@@ -7,6 +7,8 @@ namespace Tests\Browser;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -149,8 +151,57 @@ final class PanelShellRenderTest extends DuskTestCase
                 ->assertPathIs('/clients');
 
             $browser->screenshot('command-palette');
+        });
+    }
 
-            $browser->screenshot('command-palette');
+    /**
+     * THE BELL COUNTS, OPENS AND CLEARS.
+     *
+     * The badge is seeded from the page payload, the list arrives from a real
+     * endpoint on open, and "mark all as read" is an optimistic write - three
+     * things that each look fine in isolation and are only honest together.
+     *
+     * IT OPENS ON THE INBOX because no alert condition holds in a truncated
+     * database and one notification is unread. That is the deliberate behaviour:
+     * landing on an empty Alerts tab while something waits behind it is the
+     * panel hiding the thing you opened it for.
+     */
+    public function test_the_bell_shows_a_notification_and_marks_it_read(): void
+    {
+        $this->seedOperator();
+
+        DB::table('notifications')->insert([
+            'id' => (string) Str::uuid(),
+            'type' => 'panel.test',
+            'notifiable_type' => User::class,
+            'notifiable_id' => $this->operatorId,
+            'data' => json_encode([
+                'title' => 'Subscriber export finished',
+                'body' => '4,120 rows.',
+                'severity' => 'info',
+            ]),
+            'read_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser): void {
+            $browser->loginAs($this->operatorId)
+                ->visit('/shell-preview')
+                ->waitForText('Subscribers', 15)
+
+                // Seeded from the payload: correct before any request is made.
+                ->assertSeeIn('[data-notification-bell]', '1')
+
+                ->click('[data-notification-bell]')
+                ->waitForText('Subscriber export finished', 10)
+                ->assertSee('4,120 rows.')
+
+                // The optimistic write: the badge clears without a reload.
+                ->click('[data-mark-all-read]')
+                ->waitUntilMissingText('Mark all as read', 5);
+
+            $browser->screenshot('notification-bell');
         });
     }
 }

@@ -16,7 +16,6 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SearchController;
@@ -565,13 +564,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::put('settings/appearance', [AppearanceController::class, 'update'])->name('appearance.update');
 
-    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications');
-    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])
-        ->name('notifications.readAll');
-    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])
-        ->name('notifications.read');
-    Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])
-        ->name('notifications.destroy');
+    /*
+     | THE BELL IS THE PACKAGE'S NOW. These four routes moved into
+     | `PanelRoutes` - see `PanelKit\Panel\Http\Controllers\NotificationController`
+     | - and the rules this ISP watches are declared in `AlertServiceProvider`.
+     | Left registered here they would shadow the packaged pair at the same
+     | paths, which is a duplicate nobody would notice until the second panel.
+     */
 });
 
 require __DIR__.'/settings.php';

@@ -25,6 +25,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import PanelAccountMenu from './PanelAccountMenu.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
+import PanelNotificationBell from './PanelNotificationBell.vue'
 import PanelSidebar from './PanelSidebar.vue'
 import type { NavItem } from './types'
 
@@ -180,6 +181,13 @@ watch(
                 <PanelCommandPalette />
 
                 <slot name="actions" />
+
+                <!--
+                    THE BELL IS THE PANEL'S TOO, and sits with the palette rather
+                    than with the account menu: what needs attention is about the
+                    system, not about who is signed in.
+                -->
+                <PanelNotificationBell />
 
                 <ThemeToggle />
 

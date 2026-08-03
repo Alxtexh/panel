@@ -1,5 +1,6 @@
 <?php
 
+use App\Providers\AlertServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Providers\Panels\AdminPanelProvider;
@@ -19,6 +20,8 @@ return [
     PlatformPanelProvider::class,
     ResellerPanelProvider::class,
     AppServiceProvider::class,
+    // What this ISP considers wrong, for the packaged bell to resolve.
+    AlertServiceProvider::class,
     // Wires stancl's tenancy EVENTS to its bootstrappers. Without it tenancy
     // initialises - the tenant is bound in the container - and nothing else
     // happens: no connection switch, no cache tag, no filesystem root. The

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Alerts;
 
 use Closure;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -28,10 +30,50 @@ final class AlertRule
         private readonly Closure $resolver,
     ) {}
 
+    /**
+     * How many matches a rule counts before it stops caring.
+     *
+     * A BELL IS NOT A REPORT. "84,846 subscribers are past their expiry date"
+     * and "500+ subscribers are past their expiry date" prompt exactly the same
+     * action, and only one of them costs a fifth of a second every time somebody
+     * opens the dropdown.
+     */
+    public const CAP = 500;
+
     /** @param Closure(): ?Alert $resolver */
     public static function make(string $key, Closure $resolver): self
     {
         return new self($key, $resolver);
+    }
+
+    /**
+     * Count matches, giving up at `$cap`.
+     *
+     * THIS IS IN THE PACKAGE BECAUSE THE MISTAKE IS. The reference app's rules
+     * each read `->count()`, which walks every matching row: on its estate the
+     * expiry rule matched 84,846 of them and the bell took 303 ms - sixty times
+     * the next slowest screen - while issuing only eight queries, so nothing
+     * about the query count looked wrong and the benchmark never touched the
+     * path at all. The right index took it to 185 ms and no further, because the
+     * cost was never the lookup: an exact count of 84,846 rows costs 84,846
+     * steps however good the index is. The fix is to stop asking for one.
+     *
+     * `limit()` INSIDE A SUBQUERY rather than on the count itself, because
+     * `count()` collapses the whole result to one row and a LIMIT applies to
+     * THAT - so `->limit(500)->count()` returns the true total and reads every
+     * row, which is the bug it looks like it is fixing.
+     */
+    public static function countUpTo(Builder $query, int $cap = self::CAP): int
+    {
+        return DB::query()
+            ->fromSub($query->select(DB::raw('1'))->limit($cap), 'capped')
+            ->count();
+    }
+
+    /** "500+" once the cap is hit, so a label never claims more precision than was paid for. */
+    public static function describeCount(int $count, int $cap = self::CAP): string
+    {
+        return $count >= $cap ? $cap.'+' : (string) $count;
     }
 
     public function resolve(): ?Alert

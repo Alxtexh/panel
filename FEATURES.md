@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 264 files, 44,936 lines | 108 files, 16,190 lines |
-| Vue | 115 components | **198 components** |
+| PHP | 265 files, 45,239 lines | 108 files, 16,102 lines |
+| Vue | 117 components | **198 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -270,6 +270,40 @@ portal wore the packaged screens inside a scaffold, and read as a less finished
 product than the reference app it was copied from — while every consumer
 rebuilt a sidebar worse than the one they were comparing themselves to. A one-line
 page file per screen is still what `panel:install` writes.
+
+**The topbar's two controls ship with it.** The **command palette** (⌘K) filters
+pages from the navigation the client already holds — no request — and searches
+records through `{panel}/panel-search`, which reuses each resource's own list
+query, so a column marked searchable is searchable in the palette with nothing
+else edited, and a resource somebody may not view is not searched at all.
+
+The **bell** serves two streams from `{panel}/notifications` that are
+deliberately not one list. *Alerts* are recomputed on every open from
+`AlertRule`s your application registers with `PanelManager::alertRule()` — no
+stored row, no read state, gone when the condition clears. *Notifications* are
+Laravel database notifications addressed to one person, with read state and
+deletion; the package already writes them for finished exports, queued actions
+and dismissed announcements. The badge counts unread notifications only, because
+a badge that stays lit while a condition persists teaches people to ignore it.
+
+Declaring a rule is the whole integration:
+
+```php
+$panels->alertRule(AlertRule::make('routers_offline', function (): ?Alert {
+    $count = Router::query()->where('status', 'offline')->count();
+
+    return $count === 0 ? null : Alert::make(
+        'routers_offline', Alert::DANGER,
+        "{$count} routers are offline",
+        'Subscribers served by these routers cannot connect.',
+        '/routers?status=offline', $count,
+    );
+}));
+```
+
+Use `AlertRule::countUpTo()` for anything that might match a lot of rows: it
+stops at 500 and `describeCount()` renders "500+". An exact count of 84,846 rows
+costs 84,846 steps whatever the index says, and it is the same action either way.
 
 ---
 
