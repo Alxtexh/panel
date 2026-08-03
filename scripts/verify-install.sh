@@ -152,7 +152,38 @@ npm run build 2>&1 | tail -3
 [[ -f public/build/manifest.json ]] \
     || fail "npm run build produced no manifest - the published bootstrap does not compile."
 
-say "Assets built from the published bootstrap"
+# ---------------------------------------------------------------- the design
+#
+# THIS CHECK EXISTS BECAUSE THE ONE ABOVE PASSED ON A COMPLETELY UNSTYLED PANEL.
+#
+# "A manifest was produced" says the bootstrap compiles. It says nothing about
+# whether the CSS in it covers the packaged components - and it did not, on every
+# install this script has ever verified. `panel:install` refused to overwrite the
+# `app.css` that stock Laravel always ships, so Tailwind never scanned
+# node_modules, generated none of the packaged utilities, and defined none of the
+# tokens. Every route answered 200. Every assertion in this file passed. The
+# panel rendered dark text on a dark background with no card and no spacing.
+#
+# TWO CLASSES THAT EXIST ONLY INSIDE THE PACKAGE. `bg-popover` is the command
+# palette's and the account menu's; `bg-card` is the table shell's. Neither
+# appears anywhere in a stock Laravel application, so finding them in the built
+# stylesheet proves Tailwind reached `node_modules/@panelkit`.
+say "Checking the built CSS covers the packaged components"
+
+css="$(cat public/build/assets/*.css 2>/dev/null)"
+
+[[ -n "$css" ]] || fail "npm run build produced no stylesheet at all."
+
+grep -q 'bg-popover' <<<"$css" \
+    || fail "The built CSS has no .bg-popover - Tailwind never scanned the packaged components, so the panel renders unstyled. resources/css/app.css needs the two @source lines."
+
+grep -q 'bg-card' <<<"$css" \
+    || fail "The built CSS has no .bg-card - the table shell and every panel card will render without a surface."
+
+grep -q -- '--background' <<<"$css" \
+    || fail "The built CSS defines no --background token - the packaged components ask for bg-background, which resolves to nothing."
+
+say "Assets built from the published bootstrap, and they cover the packaged components"
 
 say "php artisan panel:permissions sync"
 php artisan panel:permissions sync --no-interaction 2>&1 | tail -5

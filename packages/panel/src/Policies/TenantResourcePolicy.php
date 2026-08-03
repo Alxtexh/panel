@@ -164,14 +164,42 @@ abstract class TenantResourcePolicy
         return app()->getNamespace().'Models\\'.str_replace('Policy', '', class_basename(static::class));
     }
 
+    /**
+     * Is there an organisation in force - and does the question even apply?
+     *
+     * `MODE_NONE` IS NOT A MISSING TENANT, and conflating the two locked every
+     * single-tenant installation out of its own panel. A fresh
+     * `composer require` generates a resource, generates this policy, tells you
+     * to run `panel:permissions sync`, and then refuses every screen with
+     * "Forbidden" - because `currentKey()` correctly returns null when there is
+     * no tenancy, and this gate read that as "no tenant resolved, deny".
+     *
+     * Null still means deny in every mode that HAS tenants: an unresolved tenant
+     * there is a request that would otherwise read across all of them, which is
+     * exactly what this base class exists to prevent. What changed is that a
+     * business with one organisation is no longer treated as one whose
+     * organisation went missing.
+     */
     private function hasTenant(): bool
     {
-        return app(TenantContext::class)->currentKey() !== null;
+        $context = app(TenantContext::class);
+
+        if ($context->mode() === TenantContext::MODE_NONE) {
+            return true;
+        }
+
+        return $context->currentKey() !== null;
     }
 
     private function owns(Model $record): bool
     {
         $context = app(TenantContext::class);
+
+        // Single-tenant: every record belongs to the only organisation there is,
+        // and the column this would compare does not exist.
+        if ($context->mode() === TenantContext::MODE_NONE) {
+            return true;
+        }
 
         // Dedicated-database tenancy: the connection is the boundary and the
         // record carries no tenant column to compare.

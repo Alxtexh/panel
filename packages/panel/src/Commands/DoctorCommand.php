@@ -94,6 +94,7 @@ final class DoctorCommand extends Command
         $this->checkVendoredCopy();
         $this->checkDiscovery($panels);
         $this->checkPageFiles();
+        $this->checkStylesheet();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -810,6 +811,76 @@ final class DoctorCommand extends Command
     }
 
     /**
+     * A STYLESHEET THAT DOES NOT REACH THE PACKAGED COMPONENTS.
+     *
+     * THE MOST EXPENSIVE SILENT FAILURE THIS PACKAGE HAS SHIPPED, and it looked
+     * exactly like the feature never existing. Tailwind 4 scans the project for
+     * class names and deliberately does not scan `node_modules`, so without the
+     * two `@source` lines every utility used ONLY inside the packaged components
+     * is purged. Nothing errors. Every route answers 200. The screens render
+     * with correct markup and no styling at all - dark text on a dark
+     * background, no card, no spacing - which reads as "the design does not come
+     * with the package".
+     *
+     * IT WENT UNNOTICED BECAUSE THE INSTALLER REFUSED TO OVERWRITE. A stock
+     * Laravel application always ships `resources/css/app.css`, so the stub was
+     * skipped on every first install and the skip was reported as one line among
+     * several. `panel:install` merges now; this is the check that says so when
+     * somebody's stylesheet was written before that, or by hand.
+     *
+     * A PROBLEM RATHER THAN A NOTE, because an unstyled panel is not usable and
+     * the person looking at it has no way to tell this from a broken build.
+     */
+    private function checkStylesheet(): void
+    {
+        $path = resource_path('css/app.css');
+
+        if (! file_exists($path)) {
+            $this->problem(
+                'No resources/css/app.css',
+                'The packaged screens have no stylesheet at all. Run `php artisan panel:install`.',
+            );
+
+            return;
+        }
+
+        $css = (string) file_get_contents($path);
+
+        /*
+         * THE PACKAGE NAME IS THE MARKER, not the exact `@source` line. An
+         * application may glob both packages in one directive, point at a
+         * pnpm store, or use a path outside `node_modules` in a monorepo - all
+         * of which are correct and none of which match a literal.
+         */
+        if (! str_contains($css, '@panelkit/ui') && ! str_contains($css, 'packages/ui')) {
+            $this->problem(
+                'resources/css/app.css does not point Tailwind at the packaged components',
+                'Tailwind does not scan node_modules, so every utility used only inside '
+                .'@panelkit/ui and @panelkit/inertia is purged and the panel renders unstyled. '
+                .'Add: @source \'../../node_modules/@panelkit/ui/src/**/*.{vue,ts}\'; and the '
+                .'same for @panelkit/inertia - or re-run `php artisan panel:install`, which '
+                .'merges them in.',
+            );
+
+            return;
+        }
+
+        /*
+         * THE TOKENS ARE THE OTHER HALF. The utilities can be generated and the
+         * panel still be unreadable if `--background` and friends are undefined,
+         * because `bg-background` then resolves to nothing.
+         */
+        if (! str_contains($css, '--background')) {
+            $this->problem(
+                'resources/css/app.css defines no design tokens',
+                'The packaged components ask for `bg-background`, `text-muted-foreground` and '
+                .'`border-border`. Without `--background` and the rest those resolve to nothing '
+                .'and the panel renders unreadable. Re-run `php artisan panel:install`.',
+            );
+        }
+    }
+
+    /**
      * A PATH-INSTALLED PACKAGE THAT COMPOSER COPIED RATHER THAN SYMLINKED.
      *
      * Reported from a real port, and it costs an afternoon each time: the
@@ -1018,7 +1089,6 @@ final class DoctorCommand extends Command
     }
 
     /* ------------------------------------------------------------ plumbing */
-
 
     /**
      * TICKETING CONFIGURED AND NOT INSTALLED - the upgrade this check exists for.

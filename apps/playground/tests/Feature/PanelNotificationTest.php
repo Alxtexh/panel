@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use PanelKit\Panel\Alerts\Alert;
 use PanelKit\Panel\Alerts\AlertRule;
@@ -190,6 +191,39 @@ final class PanelNotificationTest extends TestCase
             ->getJson('/notifications')
             ->assertOk()
             ->assertJsonPath('alerts.0.title', 'Still here');
+    }
+
+    /**
+     * A FRESH LARAVEL APPLICATION HAS NO `notifications` TABLE.
+     *
+     * `Notifiable` is on the default User model; the MIGRATION is opt-in. So
+     * `method_exists` said yes, the query ran, and every panel page on a brand
+     * new installation died with "no such table: notifications" - including the
+     * sign-in landing page, which made the panel look broken on first run.
+     *
+     * "NOTHING UNREAD" IS THE HONEST ANSWER, and it is also the true one.
+     */
+    public function test_the_bell_answers_when_the_notifications_table_is_absent(): void
+    {
+        $user = $this->person('mine@example.test');
+
+        Schema::drop('notifications');
+
+        $this->actingAs($user)
+            ->getJson('/notifications')
+            ->assertOk()
+            ->assertJsonPath('notifications', [])
+            ->assertJsonPath('unread', 0);
+    }
+
+    /** And so does every ordinary panel screen, which is where it actually hurt. */
+    public function test_a_panel_screen_renders_without_a_notifications_table(): void
+    {
+        $user = $this->person('mine@example.test');
+
+        Schema::drop('notifications');
+
+        $this->actingAs($user)->get('/clients')->assertOk();
     }
 
     /**
