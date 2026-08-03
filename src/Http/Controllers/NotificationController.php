@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -56,10 +57,27 @@ final class NotificationController extends Controller
             return response()->json(['alerts' => [], 'notifications' => [], 'unread' => 0]);
         }
 
-        $notifications = $user->notifications()
-            ->latest()
-            ->limit(self::MAX_NOTIFICATIONS)
-            ->get()
+        /*
+         * THE TABLE MAY NOT EXIST, and that is not an error worth a 500.
+         *
+         * Laravel puts `Notifiable` on the default User model and leaves the
+         * `notifications` migration opt-in, so a fresh installation has the
+         * relation and not the table. The bell then answers "nothing yet",
+         * which is true, instead of taking the page down.
+         */
+        try {
+            $rows = $user->notifications()
+                ->latest()
+                ->limit(self::MAX_NOTIFICATIONS)
+                ->get();
+
+            $unread = $user->unreadNotifications()->count();
+        } catch (QueryException) {
+            $rows = collect();
+            $unread = 0;
+        }
+
+        $notifications = $rows
             ->map(fn ($n): array => [
                 'id' => (string) $n->id,
                 'title' => $n->data['title'] ?? 'Notification',
@@ -79,7 +97,7 @@ final class NotificationController extends Controller
             ],
             'notifications' => $notifications,
             // The badge counts UNREAD NOTIFICATIONS only - see the class note.
-            'unread' => $user->unreadNotifications()->count(),
+            'unread' => $unread,
             /*
              * WHERE AN ANNOUNCEMENT IS WRITTEN, offered beside the thing it
              * produces rather than as a permanent sidebar entry.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Http\Middleware;
 
 use Closure;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -138,7 +139,25 @@ final class SharePanelProps
                     return 0;
                 }
 
-                return $user->unreadNotifications()->count();
+                /*
+                 * A MISSING TABLE IS "NOTHING UNREAD", NOT A 500.
+                 *
+                 * `method_exists` was not enough, and a fresh install proved it
+                 * in the worst way: Laravel puts `Notifiable` on the default
+                 * User model but does NOT create the `notifications` table -
+                 * that migration is opt-in. So the method existed, the query ran
+                 * and every panel page died with "no such table: notifications"
+                 * on a brand new application.
+                 *
+                 * CAUGHT RATHER THAN CHECKED, because `Schema::hasTable()` would
+                 * be an extra query on every panel response forever to answer a
+                 * question that changes once in an application's life.
+                 */
+                try {
+                    return $user->unreadNotifications()->count();
+                } catch (QueryException) {
+                    return 0;
+                }
             },
 
             /*

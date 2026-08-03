@@ -94,10 +94,24 @@ final class InstallCommand extends Command
     {
         $stubs = dirname(__DIR__, 2).'/resources/stubs';
 
+        /*
+         * `app.css` IS NOT IN THIS LIST, AND THAT IS THE WHOLE POINT.
+         *
+         * Never-overwrite is right for a bootstrap somebody may have written.
+         * Applied to the stylesheet it produced a guaranteed failure instead: a
+         * stock Laravel application ALWAYS ships `resources/css/app.css`, so the
+         * stub was skipped on EVERY first install - and skipping it means
+         * Tailwind never scans `node_modules`, generates none of the packaged
+         * components' utilities, and defines none of their tokens.
+         *
+         * The result is a panel that routes, renders, returns 200 and is
+         * completely unstyled - dark text on a dark background, no card, no
+         * spacing. It was reported as "the design does not come with it", which
+         * is exactly what it looks like. See `mergeStylesheet()`.
+         */
         $files = [
             "{$stubs}/app.blade.php.stub" => resource_path('views/app.blade.php'),
             "{$stubs}/app.ts.stub" => resource_path('js/app.ts'),
-            "{$stubs}/app.css.stub" => resource_path('css/app.css'),
             "{$stubs}/PanelLayout.vue.stub" => resource_path('js/layouts/PanelLayout.vue'),
         ];
 
@@ -126,6 +140,80 @@ final class InstallCommand extends Command
         foreach ($skipped as $file) {
             $this->components->twoColumnDetail('Kept yours', $file);
         }
+
+        $this->mergeStylesheet("{$stubs}/app.css.stub");
+    }
+
+    /**
+     * Make sure the stylesheet reaches the packaged components.
+     *
+     * THREE CASES, AND ONLY ONE OF THEM IS "WRITE THE STUB".
+     *
+     *   NO FILE      - write the stub whole. A fresh application with no
+     *                  stylesheet gets sources and tokens together.
+     *
+     *   FILE, NO `@source` FOR THE PACKAGES - merge. This is the ordinary case,
+     *                  because stock Laravel always ships an `app.css`, and it
+     *                  is the one the old never-overwrite rule got wrong.
+     *
+     *   ALREADY POINTS AT THE PACKAGES - leave it entirely alone. Re-running
+     *                  `panel:install` must not append a second copy of
+     *                  anything; the command is expected to be idempotent and
+     *                  people do run it twice.
+     *
+     * WHAT GETS MERGED DEPENDS ON WHAT IS ALREADY THERE. The two `@source`
+     * lines are always added - without them Tailwind purges every utility used
+     * only inside `node_modules`, which is the whole failure. The TOKENS are
+     * added only when the file does not already define `--background`: an
+     * application on a starter kit has its own palette, and appending ours
+     * would win by being later and silently retheme their app.
+     */
+    private function mergeStylesheet(string $stub): void
+    {
+        $target = resource_path('css/app.css');
+        $relative = str_replace(base_path().'/', '', $target);
+
+        if (! file_exists($target)) {
+            if (! is_dir(dirname($target))) {
+                mkdir(dirname($target), 0755, true);
+            }
+
+            copy($stub, $target);
+            $this->components->twoColumnDetail('Wrote', $relative);
+
+            return;
+        }
+
+        $current = (string) file_get_contents($target);
+
+        if (str_contains($current, '@panelkit/ui')) {
+            $this->components->twoColumnDetail('Already wired', $relative);
+
+            return;
+        }
+
+        $contents = (string) file_get_contents($stub);
+
+        // Everything from `@theme` down: the tokens and both palettes.
+        $tokensAt = strpos($contents, '@theme');
+        $tokens = $tokensAt === false ? '' : substr($contents, $tokensAt);
+
+        $addition = "\n/* Added by panel:install - Tailwind does not scan node_modules. */\n"
+            ."@source '../../node_modules/@panelkit/ui/src/**/*.{vue,ts}';\n"
+            ."@source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';\n";
+
+        $hasTokens = str_contains($current, '--background');
+
+        if (! $hasTokens && $tokens !== '') {
+            $addition .= "\n".$tokens;
+        }
+
+        file_put_contents($target, rtrim($current)."\n".$addition);
+
+        $this->components->twoColumnDetail(
+            'Merged into',
+            $relative.($hasTokens ? ' (sources only - kept your tokens)' : ' (sources and tokens)'),
+        );
     }
 
     /**
@@ -164,7 +252,7 @@ final class InstallCommand extends Command
             return;
         }
 
-        if (! str_contains($config, "resources/js/app.js")) {
+        if (! str_contains($config, 'resources/js/app.js')) {
             $this->components->warn("{$name} is not the stock shape, so it was left alone. Add:");
             $this->line("  import vue from '@vitejs/plugin-vue';   // and put vue() in plugins");
             $this->line("  input: ['resources/css/app.css', 'resources/js/app.ts']");
@@ -172,7 +260,7 @@ final class InstallCommand extends Command
             return;
         }
 
-        $config = str_replace("resources/js/app.js", "resources/js/app.ts", $config);
+        $config = str_replace('resources/js/app.js', 'resources/js/app.ts', $config);
 
         $config = preg_replace(
             "/^import laravel from 'laravel-vite-plugin';$/m",
