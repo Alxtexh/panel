@@ -321,6 +321,14 @@ final class PanelRoutes
                  * readers never delete anything does not need a recovery screen
                  * for records they cannot see.
                  */
+                /*
+                 * WHAT THE COMMAND PALETTE ASKS. A lean JSON endpoint rather
+                 * than an Inertia render, because it fires on keystrokes - see
+                 * the controller. Mounted per panel, so a portal searches its
+                 * own resources and no others.
+                 */
+                Route::get('panel-search', Controllers\SearchController::class)->name('search');
+
                 if ($panel->offers('trash')) {
                     Route::get('trash', [Controllers\TrashController::class, 'index'])->name('trash');
 
