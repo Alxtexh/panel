@@ -112,6 +112,33 @@ final class SharePanelProps
                     ],
                 ];
             },
+
+            /*
+             * WHAT THE BELL'S BADGE SHOWS BEFORE IT IS OPENED.
+             *
+             * Sent with the page so the count is right on load with no request
+             * at all - the bell itself fetches only when somebody opens it,
+             * which is what keeps it off the ambient-polling budget.
+             *
+             * A CLOSURE, so the query runs only for a response that renders. It
+             * is one indexed count on a table the notification system already
+             * maintains; guarding it behind `Notifiable` keeps it from throwing
+             * on an application whose user model does not use notifications at
+             * all.
+             */
+            'notificationCount' => static function () use ($panels, $request): int {
+                $guard = $panels->currentPanel()?->getGuard();
+
+                $user = $guard === null
+                    ? $request->user()
+                    : $request->user($guard);
+
+                if ($user === null || ! method_exists($user, 'unreadNotifications')) {
+                    return 0;
+                }
+
+                return $user->unreadNotifications()->count();
+            },
         ]);
 
         return $next($request);

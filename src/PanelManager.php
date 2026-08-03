@@ -158,6 +158,17 @@ final class PanelManager
      */
     private array $pluginContexts = [];
 
+    /**
+     * Declared alert conditions, keyed to make re-registration harmless.
+     *
+     * INSTANCE STATE, unlike `$plugins`. A rule closes over the query it counts,
+     * and a static array of closures outlives the test that declared them - so
+     * one test's fixture becomes the next test's mysterious extra alert.
+     *
+     * @var array<string, Alerts\AlertRule>
+     */
+    private array $alertRules = [];
+
     public function registerPanel(Panel $panel): void
     {
         self::$panels[$panel->id] = $panel;
@@ -195,6 +206,30 @@ final class PanelManager
     public function plugins(): array
     {
         return self::$plugins;
+    }
+
+    /**
+     * Conditions the bell should watch, declared by the application.
+     *
+     * THE MECHANISM SHIPPED AND THE REGISTRY DID NOT, which is why the reference
+     * app declared its rules inside its own notification controller: `AlertRule`
+     * and `Alert` were both in the package, and there was nowhere to put one. So
+     * every installation that wanted a bell wrote the endpoint too, and the
+     * third one has a cross-user leak nobody reviews.
+     *
+     * KEYED, SO REGISTERING TWICE IS A NO-OP. A rule declared by a plugin AND by
+     * the application - the ordinary way a package gets adopted - would
+     * otherwise show the same warning twice in the same dropdown.
+     */
+    public function alertRule(Alerts\AlertRule $rule): void
+    {
+        $this->alertRules[$rule->key] = $rule;
+    }
+
+    /** @return list<Alerts\AlertRule> */
+    public function alertRules(): array
+    {
+        return array_values($this->alertRules);
     }
 
     /**

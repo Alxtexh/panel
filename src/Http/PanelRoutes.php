@@ -329,24 +329,43 @@ final class PanelRoutes
                  */
                 Route::get('panel-search', Controllers\SearchController::class)->name('search');
 
+                /*
+                 * THE BELL. Also lean JSON and for the same reason - it may be
+                 * polled, and re-rendering a page to answer "anything new?" is
+                 * the cost this package exists to avoid.
+                 *
+                 * `read-all` IS DECLARED BEFORE `{id}/read` on purpose. It is
+                 * not ambiguous with it - the segments differ - but the two
+                 * sitting apart is how the pair ends up wrong when somebody
+                 * later adds `notifications/{id}` as a POST.
+                 */
+                Route::get('notifications', [Controllers\NotificationController::class, 'index'])
+                    ->name('notifications');
+                Route::post('notifications/read-all', [Controllers\NotificationController::class, 'markAllRead'])
+                    ->name('notifications.readAll');
+                Route::post('notifications/{id}/read', [Controllers\NotificationController::class, 'markRead'])
+                    ->name('notifications.read');
+                Route::delete('notifications/{id}', [Controllers\NotificationController::class, 'destroy'])
+                    ->name('notifications.destroy');
+
                 if ($panel->offers('trash')) {
                     Route::get('trash', [Controllers\TrashController::class, 'index'])->name('trash');
 
-                /*
-                 * BULK RESTORE AND BULK DESTROY. Emptying a bin one row at a
-                 * time is forty requests and forty confirmations, so people
-                 * either do not do it or write a script - and the second is
-                 * worse. Both check the policy PER RECORD; the endpoint is a
-                 * convenience, not a shortcut past the gate.
-                 */
+                    /*
+                     * BULK RESTORE AND BULK DESTROY. Emptying a bin one row at a
+                     * time is forty requests and forty confirmations, so people
+                     * either do not do it or write a script - and the second is
+                     * worse. Both check the policy PER RECORD; the endpoint is a
+                     * convenience, not a shortcut past the gate.
+                     */
                     Route::post('trash/restore', [Controllers\TrashController::class, 'restore'])
                         ->name('trash.restore');
 
                     Route::delete('trash', [Controllers\TrashController::class, 'destroy'])
                         ->name('trash.destroy');
 
-                // How long the bin keeps things - an operational decision, so a
-                // setting rather than a deploy. Clamped server-side.
+                    // How long the bin keeps things - an operational decision, so a
+                    // setting rather than a deploy. Clamped server-side.
                     Route::patch('trash/settings', [Controllers\TrashController::class, 'updateSettings'])
                         ->name('trash.settings');
                 }
@@ -380,32 +399,32 @@ final class PanelRoutes
                  */
                 if ($panel->offers('documents')) {
                     Route::prefix('documents')->name('documents.')->group(function (): void {
-                    Route::get('/', [Controllers\DocumentTemplateController::class, 'index'])
-                        ->name('index');
+                        Route::get('/', [Controllers\DocumentTemplateController::class, 'index'])
+                            ->name('index');
 
-                    Route::get('{kind}', [Controllers\DocumentTemplateController::class, 'edit'])
-                        ->where('kind', '[a-z0-9_-]+')
-                        ->name('edit');
+                        Route::get('{kind}', [Controllers\DocumentTemplateController::class, 'edit'])
+                            ->where('kind', '[a-z0-9_-]+')
+                            ->name('edit');
 
-                    Route::put('{kind}', [Controllers\DocumentTemplateController::class, 'update'])
-                        ->where('kind', '[a-z0-9_-]+')
-                        ->name('update');
+                        Route::put('{kind}', [Controllers\DocumentTemplateController::class, 'update'])
+                            ->where('kind', '[a-z0-9_-]+')
+                            ->name('update');
 
-                    /*
-                     * THE PREVIEW IS A POST, and not because it changes
-                     * anything - it changes nothing. It carries the whole
-                     * unsaved template, which is far past what belongs in a
-                     * query string, and a GET would put a tenant's letterhead,
-                     * support number and body copy into every access log and
-                     * browser history entry on the way past.
-                     */
-                    Route::post('{kind}/preview', [Controllers\DocumentTemplateController::class, 'preview'])
-                        ->where('kind', '[a-z0-9_-]+')
-                        ->name('preview');
+                        /*
+                         * THE PREVIEW IS A POST, and not because it changes
+                         * anything - it changes nothing. It carries the whole
+                         * unsaved template, which is far past what belongs in a
+                         * query string, and a GET would put a tenant's letterhead,
+                         * support number and body copy into every access log and
+                         * browser history entry on the way past.
+                         */
+                        Route::post('{kind}/preview', [Controllers\DocumentTemplateController::class, 'preview'])
+                            ->where('kind', '[a-z0-9_-]+')
+                            ->name('preview');
 
-                    Route::get('{kind}/print', [Controllers\DocumentTemplateController::class, 'print'])
-                        ->where('kind', '[a-z0-9_-]+')
-                        ->name('print');
+                        Route::get('{kind}/print', [Controllers\DocumentTemplateController::class, 'print'])
+                            ->where('kind', '[a-z0-9_-]+')
+                            ->name('print');
                     });
                 }
 

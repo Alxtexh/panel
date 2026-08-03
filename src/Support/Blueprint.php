@@ -788,6 +788,45 @@ final class Blueprint
         'plugins' => [PanelKit\Panel\Alerts\AnnouncementsPlugin::class],
         ```
 
+        ### Watch a condition - do NOT write a notifications endpoint
+
+        THE BELL IS ALREADY IN THE TOPBAR, and it already serves both streams
+        from `{panel}/notifications`. What is NOT in the package is what YOUR
+        business considers wrong, because that names your models. Declare it:
+
+        ```php
+        // In a service provider's boot(PanelManager $panels).
+        $panels->alertRule(AlertRule::make('unpaid_invoices', function (): ?Alert {
+            $count = AlertRule::countUpTo(Invoice::query()->where('status', 'overdue')->toBase());
+
+            return $count === 0 ? null : Alert::make(
+                'unpaid_invoices',
+                Alert::WARNING,
+                AlertRule::describeCount($count).' invoices are overdue',
+                'Chase these before the month closes.',
+                '/invoices?status=overdue',
+                $count,
+            );
+        }));
+        ```
+
+        RETURN `null` WHEN THE CONDITION DOES NOT HOLD. "No alert" is the
+        normal, healthy answer, and modelling it as null rather than a
+        zero-severity alert saves every caller from filtering non-alerts.
+
+        USE `countUpTo` FOR ANYTHING THAT MIGHT MATCH A LOT. It stops at 500 and
+        `describeCount` renders "500+". "84,846 subscribers have lapsed" and
+        "500+ subscribers have lapsed" prompt the same action, and only one of
+        them costs a fifth of a second every time somebody opens the bell.
+
+        AN ALERT IS NOT A NOTIFICATION. An alert is what is TRUE NOW: recomputed
+        on every open, no read state, gone when the condition clears. A
+        notification is what HAPPENED to one person: stored, read-marked,
+        deleted when they say so. Write the second with Laravel's own
+        `$user->notify()` and a `data` array carrying `title`, `body`, `href`
+        and `severity` - that is the shape the bell renders. The badge counts
+        unread NOTIFICATIONS only, so a persistent condition never leaves it lit.
+
         ### Turn on ticketing - do NOT write one
 
         A support desk ships in the package: two resources over one table, the
