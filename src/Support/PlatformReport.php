@@ -94,7 +94,16 @@ final class PlatformReport
             'session' => (string) config('session.driver'),
             'mail' => (string) config('mail.default'),
             'filesystem' => (string) config('filesystems.default'),
-            'live' => (string) config('panel.live.driver', 'poll'),
+            /*
+             * RESOLVED AS A STRING, so the screen reports what is RUNNING
+             * rather than the question `auto` asks - and without constructing a
+             * config, which throws for `broadcast` with no channel. A
+             * monitoring page that 500s on a misconfiguration is reporting
+             * nothing at the moment it is most needed.
+             */
+            'live' => \PanelKit\Panel\Live\LiveConfig::resolveDriver(
+                (string) config('panel.live.driver', 'auto'),
+            ),
             'broadcast' => (string) config('broadcasting.default', 'null'),
         ];
     }

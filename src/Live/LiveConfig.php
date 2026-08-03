@@ -43,6 +43,16 @@ final class LiveConfig
     public const DRIVER_BROADCAST = 'broadcast';
 
     /**
+     * Use the broadcaster if there is one, and poll if there is not.
+     *
+     * NEVER SURVIVES `fromConfig()`. It is a question, not a driver: it is
+     * answered here and what leaves is `poll` or `broadcast`, so nothing
+     * downstream - the client, the platform report, doctor - has to know the
+     * word or repeat the reasoning.
+     */
+    public const DRIVER_AUTO = 'auto';
+
+    /**
      * @param  string  $driver  none|poll|broadcast
      * @param  int  $intervalMs  Poll interval. Ignored by other drivers.
      * @param  int  $batchMs  Coalescing window, shared by every driver (§8 rule 4).
@@ -107,7 +117,7 @@ final class LiveConfig
      */
     public static function fromConfig(): self
     {
-        $driver = (string) config('panel.live.driver', self::DRIVER_POLL);
+        $driver = self::resolveDriver((string) config('panel.live.driver', self::DRIVER_AUTO));
 
         return new self(
             driver: $driver,
@@ -117,6 +127,74 @@ final class LiveConfig
             events: (array) config('panel.live.events', []),
             pauseWhenHidden: (bool) config('panel.live.pause_when_hidden', true),
         );
+    }
+
+    /**
+     * `auto` decided: broadcast when this application really has a broadcaster.
+     *
+     * CONFIGURED IS NOT RUNNING, and that is the whole risk in choosing for
+     * somebody. `BROADCAST_CONNECTION=reverb` says a connection is DEFINED; it
+     * does not say a Reverb process is up. Polling degrades - a slow tick is a
+     * slow tick - and broadcast does not: with nothing listening, a list is
+     * silently static and looks identical to one where nothing changed.
+     *
+     * So the test is deliberately strict. Laravel's own defaults (`null`,
+     * `log`) mean no, an unknown connection name means no, and a connection
+     * whose credentials are blank means no - a `.env` that names `pusher` and
+     * carries no key is one somebody has not finished, and answering `yes` to
+     * it turns their panel static.
+     *
+     * ANYTHING EXPLICIT WINS. `PANEL_LIVE_DRIVER=poll` on a machine with Reverb
+     * running is a legitimate choice, and this must not overrule it.
+     */
+    public static function resolveDriver(string $configured): string
+    {
+        if ($configured !== self::DRIVER_AUTO) {
+            return $configured;
+        }
+
+        $connection = (string) config('broadcasting.default', 'null');
+
+        if (in_array($connection, ['null', 'log', ''], true)) {
+            return self::DRIVER_POLL;
+        }
+
+        $settings = (array) config("broadcasting.connections.{$connection}", []);
+
+        if ($settings === []) {
+            return self::DRIVER_POLL;
+        }
+
+        /*
+         * THE CREDENTIAL THAT PROVES IT IS SET UP, per driver. Reverb and
+         * Pusher both need a key; Ably needs a key; a redis connection needs
+         * nothing beyond the redis config Laravel already validates.
+         */
+        $needsKey = in_array($settings['driver'] ?? $connection, ['reverb', 'pusher', 'ably'], true);
+
+        if ($needsKey && blank($settings['key'] ?? null)) {
+            return self::DRIVER_POLL;
+        }
+
+        /*
+         * AND A CHANNEL, WHICH ONLY THE APPLICATION CAN NAME.
+         *
+         * This condition is not a nicety; without it `auto` is a crash. The
+         * constructor REFUSES the broadcast driver with no channel - by design,
+         * because a public or tenant-agnostic channel is a cross-tenant leak
+         * that server-side scoping cannot catch - so an application with Reverb
+         * configured and no `panel.live.channel` would have every screen that
+         * builds a `LiveConfig` throw a 500. It did, the moment this was
+         * written, across ten tests.
+         *
+         * A broadcaster is evidence the application broadcasts SOMETHING. The
+         * channel is the only evidence that it broadcasts THIS.
+         */
+        if (blank(config('panel.live.channel'))) {
+            return self::DRIVER_POLL;
+        }
+
+        return self::DRIVER_BROADCAST;
     }
 
     /** @return array<string, mixed> */

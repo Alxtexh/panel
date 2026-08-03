@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Schema;
 use PanelKit\Panel\Alerts;
 use PanelKit\Panel\Documents;
 use PanelKit\Panel\Knowledge;
+use PanelKit\Panel\Live\LiveConfig;
 use PanelKit\Panel\Pages\Page;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
@@ -147,7 +148,19 @@ final class DoctorCommand extends Command
          * survives: the log and null broadcasters never consult the channel
          * callbacks, so every channel authorises, including for a guest.
          */
-        if (config('panel.live.driver') !== 'broadcast') {
+        /*
+         * THE RESOLVED DRIVER, not the configured one. `auto` never reaches
+         * here as a word - it is answered in `LiveConfig` - and reading the raw
+         * config would skip this check for an installation that IS broadcasting
+         * because it chose `auto` and has a broadcaster.
+         */
+        /*
+         * RESOLVED AS A STRING, NOT BUILT. `fromConfig()` CONSTRUCTS, and the
+         * constructor refuses `broadcast` with no channel by throwing - so
+         * building one here made doctor crash on exactly the misconfiguration
+         * it exists to report. A diagnostic must survive what it diagnoses.
+         */
+        if (LiveConfig::resolveDriver((string) config('panel.live.driver', 'auto')) !== 'broadcast') {
             return;
         }
 
