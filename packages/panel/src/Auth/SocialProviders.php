@@ -2,10 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Support;
+namespace PanelKit\Panel\Auth;
 
 /**
  * Which sign-in providers this installation actually has, and what to call them.
+ *
+ * MOVED FROM THE REFERENCE APP unchanged. It was `App\Support\SocialProviders`
+ * and there is nothing about it that belongs to an ISP - which is why the demo's
+ * login had working provider buttons and a generated portal had none.
+ *
+ * THE SUPPORTED LIST IS EXTENDED FROM CONFIG, so an application that wires a
+ * fourth provider through Socialite gets a button without editing the package.
+ * It still has to say whether that provider verifies addresses - see below.
  *
  * CONFIGURED CREDENTIALS ARE THE SWITCH, not a separate list of enabled names.
  * A button for a provider with no client id is a control that cannot work -
@@ -19,7 +27,22 @@ final class SocialProviders
     private const SUPPORTED = [
         'google' => 'Google',
         'github' => 'GitHub',
+        'gitlab' => 'GitLab',
+        'bitbucket' => 'Bitbucket',
+        'facebook' => 'Facebook',
+        'linkedin' => 'LinkedIn',
+        'twitter' => 'X',
     ];
+
+    /**
+     * Every provider this installation might offer, package list plus config.
+     *
+     * @return array<string, string>
+     */
+    private static function supported(): array
+    {
+        return array_merge(self::SUPPORTED, (array) config('panel.auth.social.providers', []));
+    }
 
     /**
      * Providers with credentials configured.
@@ -30,7 +53,7 @@ final class SocialProviders
     {
         $out = [];
 
-        foreach (self::SUPPORTED as $key => $label) {
+        foreach (self::supported() as $key => $label) {
             if (filled(config("services.{$key}.client_id"))
                 && filled(config("services.{$key}.client_secret"))) {
                 $out[$key] = $label;
@@ -47,7 +70,7 @@ final class SocialProviders
 
     public static function label(string $provider): string
     {
-        return self::SUPPORTED[$provider] ?? ucfirst($provider);
+        return self::supported()[$provider] ?? ucfirst($provider);
     }
 
     /**
@@ -69,8 +92,18 @@ final class SocialProviders
      */
     private const VERIFIES_EMAIL = ['google', 'github'];
 
+    /**
+     * AN APPLICATION MAY ADD TO THIS AND MAY NOT REMOVE FROM IT SILENTLY. The
+     * config list is a claim somebody made deliberately about a provider they
+     * added; the constant is what this package has checked itself.
+     */
     public static function verifiesEmail(string $provider): bool
     {
-        return in_array($provider, self::VERIFIES_EMAIL, true);
+        $trusted = array_merge(
+            self::VERIFIES_EMAIL,
+            (array) config('panel.auth.social.verifies_email', []),
+        );
+
+        return in_array($provider, $trusted, true);
     }
 }

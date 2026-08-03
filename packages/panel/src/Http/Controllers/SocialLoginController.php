@@ -2,16 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Auth;
+namespace PanelKit\Panel\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\ConnectedAccount;
-use App\Models\User;
-use App\Support\SocialProviders;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use PanelKit\Panel\Auth\SocialProviders;
+use PanelKit\Panel\Models\ConnectedAccount;
+use PanelKit\Panel\PanelManager;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirect;
 
 /**
@@ -41,6 +43,55 @@ use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirect;
  */
 final class SocialLoginController extends Controller
 {
+    /*
+     * MOVED FROM THE REFERENCE APP, with three things generalised and nothing
+     * else touched: the user model comes from `auth.providers.users.model`, the
+     * guard and the landing page come from the PANEL, and the settings screen it
+     * returns to is config rather than a literal. Every judgement above - no
+     * account creation, the takeover the email match avoids, tokens never
+     * stored - is the demo's and is why this was worth moving rather than
+     * rewriting.
+     *
+     * SOCIALITE IS A SOFT DEPENDENCY. The routes are registered only where a
+     * provider has credentials, and `Socialite` is referenced only inside those
+     * actions - so an installation without the package pays nothing and sees
+     * no buttons.
+     */
+    private function users(): Builder
+    {
+        $model = (string) config('auth.providers.users.model', 'App\\Models\\User');
+
+        return $model::query();
+    }
+
+    /** Where a signed-in person lands, which is the panel's home. */
+    private function home(): string
+    {
+        $panel = app(PanelManager::class)->currentPanel();
+
+        return $panel === null ? '/' : '/'.trim($panel->getPath(), '/');
+    }
+
+    /** Where a link attempt returns to - the security screen, named in config. */
+    private function securityUrl(): string
+    {
+        return (string) config('panel.auth.social.settings_url', '/settings/security');
+    }
+
+    /** Where a refused sign-in returns to. */
+    private function loginUrl(): string
+    {
+        $panel = app(PanelManager::class)->currentPanel();
+
+        foreach ([$panel?->id.'.login', 'login'] as $name) {
+            if ($name !== '.login' && app('router')->has($name)) {
+                return route($name);
+            }
+        }
+
+        return '/login';
+    }
+
     /** Off to the provider. */
     public function redirect(Request $request, string $provider): SymfonyRedirect|RedirectResponse
     {
@@ -53,7 +104,7 @@ final class SocialLoginController extends Controller
          * against another user MEANS - refuse, or hand them somebody else's
          * account.
          */
-        $request->session()->put('social.intent', Auth::check() ? 'link' : 'login');
+        $request->session()->put('social.intent', Auth::guard($this->guard())->check() ? 'link' : 'login');
 
         return Socialite::driver($provider)->redirect();
     }
@@ -95,7 +146,7 @@ final class SocialLoginController extends Controller
          * behind `auth`, which proves somebody is signed in and says nothing
          * about whose row this is.
          */
-        abort_unless($connectedAccount->user_id === $request->user()?->getKey(), 403);
+        abort_unless($connectedAccount->user_id === $request->user($this->guard())?->getAuthIdentifier(), 403);
 
         $label = SocialProviders::label($connectedAccount->provider);
 
@@ -111,9 +162,9 @@ final class SocialLoginController extends Controller
         if ($existing !== null) {
             $existing->forceFill(['last_used_at' => now()])->save();
 
-            Auth::login($existing->user);
+            Auth::guard($this->guard())->login($existing->user);
 
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended($this->home());
         }
 
         $user = $this->matchByVerifiedEmail($provider, $account);
@@ -128,14 +179,14 @@ final class SocialLoginController extends Controller
 
         $this->attach($user, $provider, $account);
 
-        Auth::login($user);
+        Auth::guard($this->guard())->login($user);
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended($this->home());
     }
 
     private function link(Request $request, string $provider, mixed $account, ?ConnectedAccount $existing): RedirectResponse
     {
-        $user = $request->user();
+        $user = $request->user($this->guard());
 
         if ($user === null) {
             return $this->back('login', 'Sign in first, then connect an account.');
@@ -163,7 +214,12 @@ final class SocialLoginController extends Controller
      * The one place a provider identity is allowed to find an account it has
      * never been linked to.
      */
-    private function matchByVerifiedEmail(string $provider, mixed $account): ?User
+    private function guard(): ?string
+    {
+        return app(PanelManager::class)->currentPanel()?->getGuard();
+    }
+
+    private function matchByVerifiedEmail(string $provider, mixed $account): ?Authenticatable
     {
         if (! SocialProviders::verifiesEmail($provider)) {
             return null;
@@ -192,13 +248,13 @@ final class SocialLoginController extends Controller
          * matching against it would let the provider decide who that invitation
          * belonged to.
          */
-        return User::query()
+        return $this->users()
             ->whereRaw('lower(email) = ?', [mb_strtolower($email)])
             ->whereNotNull('email_verified_at')
             ->first();
     }
 
-    private function attach(User $user, string $provider, mixed $account): void
+    private function attach(Authenticatable $user, string $provider, mixed $account): void
     {
         ConnectedAccount::query()->updateOrCreate(
             ['provider' => $provider, 'provider_id' => (string) $account->getId()],
@@ -214,7 +270,7 @@ final class SocialLoginController extends Controller
 
     private function back(string $intent, string $message): RedirectResponse
     {
-        $to = $intent === 'link' ? '/settings/security' : route('login');
+        $to = $intent === 'link' ? $this->securityUrl() : $this->loginUrl();
 
         return redirect($to)->with('status', $message);
     }

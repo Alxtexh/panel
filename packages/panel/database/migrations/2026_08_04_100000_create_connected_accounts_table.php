@@ -29,7 +29,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('connected_accounts', function (Blueprint $table): void {
+        Schema::create((string) config('panel.auth.social.table', 'connected_accounts'), function (Blueprint $table): void {
             $table->id();
 
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
@@ -57,6 +57,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('connected_accounts');
+        Schema::dropIfExists((string) config('panel.auth.social.table', 'connected_accounts'));
     }
 };

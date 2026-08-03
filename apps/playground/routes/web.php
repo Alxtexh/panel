@@ -6,7 +6,6 @@ use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\OtpPasswordResetController;
-use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeedbackController;
@@ -27,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use PanelKit\Panel\Http\Controllers\RoleController;
+use PanelKit\Panel\Http\Controllers\SocialLoginController;
 use PanelKit\Panel\Http\Middleware\SharePanelProps;
 use PanelKit\Panel\Http\Middleware\UsePanel;
 use PanelKit\Panel\Http\PanelRoutes;
@@ -99,13 +99,11 @@ Route::get('preview/{design}', LandingController::class)
 | meets it.
 */
 Route::middleware('throttle:10,1')->group(function (): void {
-    Route::get('auth/{provider}/redirect', [SocialLoginController::class, 'redirect'])
-        ->whereIn('provider', ['google', 'github'])
-        ->name('social.redirect');
-
-    Route::get('auth/{provider}/callback', [SocialLoginController::class, 'callback'])
-        ->whereIn('provider', ['google', 'github'])
-        ->name('social.callback');
+    /*
+     | SOCIAL SIGN-IN IS THE PACKAGE'S NOW. `PanelRoutes` registers the redirect
+     | and callback inside every panel group, on the condition that a provider
+     | actually has credentials - see `SocialProviders::enabled()`.
+     */
 });
 
 Route::middleware('guest')->group(function (): void {
@@ -552,6 +550,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
      | report about subscribers - the panel briefly had a "Sessions" screen that
      | meant client connections, which is a different thing wearing the same
      | word.
+     */
+    /*
+     | DETACHING A PROVIDER is the package's too - `PanelRoutes` mounts it at
+     | `connected-accounts/{connectedAccount}` inside the panel group. This name
+     | is kept so the security screen's existing link still resolves.
      */
     Route::delete('settings/connected-accounts/{connectedAccount}', [SocialLoginController::class, 'destroy'])
         ->name('social.destroy');

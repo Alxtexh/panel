@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Http;
 
 use Illuminate\Support\Facades\Route;
+use PanelKit\Panel\Auth;
 use PanelKit\Panel\Auth\Passkeys;
 use PanelKit\Panel\Http\Controllers\BulkController;
 use PanelKit\Panel\Http\Controllers\RecordController;
@@ -148,6 +149,35 @@ final class PanelRoutes
          * Even the guard used to authenticate is a property of the panel, which
          * is why this runs before `auth` rather than after it.
          */
+        /*
+         * SOCIAL SIGN-IN, OUTSIDE THE AUTHENTICATED GROUP.
+         *
+         * The callback is where somebody BECOMES signed in, so registering it
+         * behind `auth` sends every attempt back to the login screen - a loop
+         * that reads as the provider refusing. It keeps the panel's own prefix,
+         * `UsePanel` and the shared props, because the callback must sign into
+         * THIS portal's guard and land on THIS portal's home.
+         *
+         * REGISTERED ONLY WHERE A PROVIDER HAS CREDENTIALS, which is the same
+         * condition the sign-in screen renders a button on - so a button and
+         * the route behind it cannot disagree.
+         */
+        if (Auth\SocialProviders::enabled() !== []) {
+            Route::middleware([
+                Middleware\UsePanel::class.':'.$panel->id,
+                ...$panel->getGuestMiddleware(),
+                Middleware\SharePanelProps::class,
+            ])
+                ->prefix($panel->getPath())
+                ->name($panel->getRouteName())
+                ->group(function (): void {
+                    Route::get('auth/{provider}/redirect', [Controllers\SocialLoginController::class, 'redirect'])
+                        ->name('social.redirect');
+                    Route::get('auth/{provider}/callback', [Controllers\SocialLoginController::class, 'callback'])
+                        ->name('social.callback');
+                });
+        }
+
         Route::middleware([
             Middleware\UsePanel::class.':'.$panel->id,
             ...$panel->getMiddleware(),
@@ -328,6 +358,18 @@ final class PanelRoutes
                  * own resources and no others.
                  */
                 Route::get('panel-search', Controllers\SearchController::class)->name('search');
+
+                /*
+                 * DETACHING A PROVIDER IS THE ONE SOCIAL ROUTE THAT NEEDS A
+                 * SESSION - the other two are how a session begins, and live
+                 * outside this group. Ownership is still checked in the
+                 * controller: `auth` proves somebody is signed in and says
+                 * nothing about whose row this is.
+                 */
+                if (Auth\SocialProviders::enabled() !== []) {
+                    Route::delete('connected-accounts/{connectedAccount}', [Controllers\SocialLoginController::class, 'destroy'])
+                        ->name('social.destroy');
+                }
 
                 /*
                  * THE BELL. Also lean JSON and for the same reason - it may be

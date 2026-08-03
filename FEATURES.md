@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 265 files, 45,394 lines | 108 files, 16,102 lines |
+| PHP | 268 files, 46,222 lines | 105 files, 15,775 lines |
 | Vue | 134 components | **199 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
@@ -268,6 +268,21 @@ because a package cannot know a consuming application's route names.
 Passkey sign-in ships with them, driving the browser's own WebAuthn API against
 whatever routes `laravel/passkeys` registered — no npm dependency, and no button
 at all where those routes or that API are absent.
+
+**Social sign-in ships too** — the redirect, the callback, the `ConnectedAccount`
+model and its migration, all moved from the reference app. A provider is offered
+when its credentials exist in `config/services.php`, and `PanelRoutes` registers
+the routes on that same condition, so a button and the route behind it cannot
+disagree. There is no separate "enabled" flag to forget.
+
+It never creates an account from a callback: operators are invited, an account
+carries a tenant and a role, and neither is knowable from "somebody signed in
+with Google". An unlinked provider identity may be matched to an account by email
+**only** where the provider proves the address belongs to whoever holds it *and*
+the panel's own address is verified — `verifies_email` is a short, deliberate
+list, because adding to it carelessly is an account-takeover route. No tokens are
+stored: the panel does not act on anybody's behalf at those providers, and a
+credential you do not keep cannot be stolen from you.
 
 **The shell ships too, as of v0.6.0.** `PanelShell` is the frame those screens
 sit in — a sidebar built from the navigation the server already shares, a topbar

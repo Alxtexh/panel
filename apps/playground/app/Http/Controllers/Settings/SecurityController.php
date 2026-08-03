@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
-use App\Models\ConnectedAccount;
-use App\Support\SocialProviders;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
@@ -15,6 +13,8 @@ use Inertia\Response;
 use Laravel\Fortify\Features;
 use PanelKit\Panel\Auth\Passkeys;
 use PanelKit\Panel\Auth\PasswordPolicy;
+use PanelKit\Panel\Auth\SocialProviders;
+use PanelKit\Panel\Models\ConnectedAccount;
 
 class SecurityController extends Controller
 {

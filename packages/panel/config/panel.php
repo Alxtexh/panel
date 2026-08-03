@@ -1,6 +1,15 @@
 <?php
 
 declare(strict_types=1);
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Session\TokenMismatchException;
+use Illuminate\Validation\ValidationException;
+use PanelKit\Panel\Alerts\AnnouncementsPlugin;
+use PanelKit\Panel\Knowledge\HashEmbedder;
+use PanelKit\Panel\Ticketing\TicketingPlugin;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return [
 
@@ -181,12 +190,12 @@ return [
              | and alerting on them makes the channel mostly noise within a day.
              */
             'ignore' => [
-                \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface::class,
-                \Illuminate\Validation\ValidationException::class,
-                \Illuminate\Auth\AuthenticationException::class,
-                \Illuminate\Auth\Access\AuthorizationException::class,
-                \Illuminate\Database\Eloquent\ModelNotFoundException::class,
-                \Illuminate\Session\TokenMismatchException::class,
+                HttpExceptionInterface::class,
+                ValidationException::class,
+                AuthenticationException::class,
+                AuthorizationException::class,
+                ModelNotFoundException::class,
+                TokenMismatchException::class,
             ],
         ],
     ],
@@ -261,6 +270,29 @@ return [
         */
         'max_attempts' => 5,
         'decay_seconds' => 60,
+
+        /*
+        | SOCIAL SIGN-IN.
+        |
+        | THERE IS NO "ENABLED" FLAG, deliberately. A provider is offered when
+        | its credentials exist in `config/services.php` - which is where they
+        | already live - so the button, the route and the ability to complete
+        | the exchange cannot disagree. A separate switch would be a second
+        | thing to set and the one people forget.
+        |
+        | `providers` extends the packaged list for anything Socialite can drive
+        | that this package does not name. `verifies_email` is a claim that a
+        | provider PROVES an address belongs to whoever holds it, and it decides
+        | whether an account that has never been linked may be matched by email
+        | at all - adding a provider there without checking is an
+        | account-takeover route, so the packaged list is short and deliberate.
+        */
+        'social' => [
+            'table' => 'connected_accounts',
+            'settings_url' => '/settings/security',
+            'providers' => [],
+            'verifies_email' => [],
+        ],
 
         /*
         | The password broker, or null for the default. A portal whose users
@@ -438,7 +470,7 @@ return [
         | loudly rather than half-installed, because a queue nobody can write to
         | and a form nobody reads both return 200.
         */
-        PanelKit\Panel\Ticketing\TicketingPlugin::class,
+        TicketingPlugin::class,
 
         /*
         | ANNOUNCEMENTS NEED NO CONFIGURATION, so unlike ticketing this one is
@@ -450,7 +482,7 @@ return [
         | Remove this line to turn it off. The banner, the model and the
         | delivery are unaffected: they are the package's, not the plugin's.
         */
-        PanelKit\Panel\Alerts\AnnouncementsPlugin::class,
+        AnnouncementsPlugin::class,
     ],
 
     /*
@@ -473,7 +505,7 @@ return [
     | `panel:knowledge index --fresh`.
     */
     'knowledge' => [
-        'embedder' => env('PANEL_EMBEDDER', PanelKit\Panel\Knowledge\HashEmbedder::class),
+        'embedder' => env('PANEL_EMBEDDER', HashEmbedder::class),
 
         /*
         | How long the vectors are. THE MIGRATION SIZES THE `vector` COLUMN AND
