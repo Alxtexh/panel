@@ -26,21 +26,7 @@
  * markup here. Every screen goes through this file, so nothing else changes -
  * `usePage().props.panelNav` is the same array the shell reads.
  */
-/*
- * IMPORTED BY SUBPATH, NOT FROM THE PACKAGE ROOT, and that is not style.
- *
- * `@panelkit/inertia` ships SOURCE, and its root entry re-exports every screen.
- * Pulling the root in makes the SFC compiler resolve the imported types those
- * screens declare in `defineProps`, which it can only do by loading TypeScript
- * from YOUR project - and a fresh Laravel application has none, so
- * `npm run build` dies with "Failed to load TypeScript, which is required for
- * resolving imported types".
- *
- * The subpath pulls in this component and what it actually uses. Everything
- * else the package exports is still importable the usual way from anywhere
- * your project already compiles TypeScript.
- */
-import PanelShell from '@panelkit/inertia/components/shell/PanelShell.vue'
+import { PanelShell } from '@panelkit/inertia'
 </script>
 
 <template>

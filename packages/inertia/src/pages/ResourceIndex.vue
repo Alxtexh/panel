@@ -121,7 +121,26 @@ interface ResourceSchema {
 }
 
 const props = defineProps<
-    ListPageProps & {
+    {
+        /*
+         * `ListPageProps` SPELLED OUT, deliberately. Importing it into
+         * `defineProps` makes the SFC compiler resolve a type across files,
+         * which it can only do by loading TypeScript from the CONSUMING
+         * project - and a fresh Laravel app has none, so `npm run build` dies
+         * with "Failed to load TypeScript". The guard below fails `vue-tsc`
+         * here if this copy and the canonical one ever diverge.
+         */
+        records: Record<string, any>[]
+        filters: Record<string, unknown>
+        search: string
+        sort: string
+        direction: 'asc' | 'desc'
+        nextCursor: string | null
+        perPage: number
+        perPageOptions: number[]
+        tab: string | null
+        tabs: string[]
+    } & {
         schema: ResourceSchema
         /** Tenant data, delivered beside the records rather than in the schema. */
         filterOptions: Record<string, string[]>
@@ -163,6 +182,16 @@ const props = defineProps<
         renderHooks?: { position: string; component: string; props: Record<string, unknown> }[]
     }
 >()
+
+/*
+ * THE DRIFT GUARD for the props spelled out above.
+ *
+ * `ListPageProps` is the canonical shape and `useListTable` takes it; this
+ * asserts the copy in `defineProps` still satisfies it, so a field added there
+ * and not here fails `vue-tsc` rather than reaching a consumer as a prop this
+ * screen silently ignores. It is a TYPE, so it compiles to nothing.
+ */
+type _ListPropsMatch = typeof props extends ListPageProps ? true : never
 
 defineOptions({
     layout: {

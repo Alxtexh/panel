@@ -26,7 +26,15 @@ const props = defineProps<{
         label: string
         labelPlural: string
         routes: { index: string }
-        form: { columns: number; nodes?: any[]; fields?: FormField[] }
+        /*
+         * `fields` IS LOOSE HERE ON PURPOSE. `FormField` is recursive
+         * (`children?: FormField[]`), so it cannot be written inline - and
+         * importing it into `defineProps` makes the SFC compiler load
+         * TypeScript from the consuming project. It arrives as server JSON and
+         * is typed where it is USED: `RecordForm` declares `FormField[]`, and
+         * the template casts to it below.
+         */
+        form: { columns: number; nodes?: any[]; fields?: Record<string, any>[] }
     }
     record: { id: number | string; label: string } | null
     values: Record<string, any>
@@ -371,7 +379,7 @@ onBeforeUnmount(() => {
             <RecordForm
                 :model-value="formValues"
                 :nodes="schema.form.nodes"
-                :fields="schema.form.fields"
+                :fields="schema.form.fields as FormField[] | undefined"
                 :columns="schema.form.columns"
                 :errors="form.errors as any"
                 :options="formOptions"

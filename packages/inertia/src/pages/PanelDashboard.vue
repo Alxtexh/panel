@@ -67,12 +67,35 @@ const props = withDefaults(
          * reference app - so every other installation could write a notice that
          * appeared to nobody.
          */
-        announcements?: Announcement[]
+        /*
+         * INLINE, NOT `Announcement[]`. A type imported into `defineProps`
+         * makes the SFC compiler resolve it ACROSS FILES, which it can only do
+         * by loading TypeScript from the CONSUMING project - see the drift
+         * guard below. Same-file types need no such thing.
+         */
+        announcements?: {
+            id: number
+            title: string
+            body: string | null
+            severity: 'info' | 'success' | 'warning' | 'danger'
+            display: 'banner' | 'toast'
+            actionLabel: string | null
+            actionUrl: string | null
+        }[]
         /** Panel path prefix; the dismiss route is inside the panel group. */
         prefix?: string
     }>(),
     { widgets: () => [], charts: () => [], pageHeading: 'Dashboard', pageDescription: null },
 )
+
+/*
+ * THE DRIFT GUARD for the announcement shape spelled out above - a field added
+ * to `Announcement` and not here fails `vue-tsc`, rather than arriving as a
+ * banner prop this screen quietly drops. A type, so it compiles to nothing.
+ */
+type _AnnouncementMatch = NonNullable<typeof props.announcements>[number] extends Announcement
+    ? true
+    : never
 
 /*
  * THE CHART COMPONENT IS CHOSEN FROM A NAME THE SERVER SENDS, and the map is
