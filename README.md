@@ -192,7 +192,7 @@ Then `http://localhost:8000`. `make help` lists everything.
 
 ## Status
 
-**v0.6.0.** [FEATURES.md](FEATURES.md) is the inventory — what the *package*
+**v0.6.1.** [FEATURES.md](FEATURES.md) is the inventory — what the *package*
 gives you, kept separate from what the demo shows.
 [CHANGELOG.md](CHANGELOG.md) is what each release changed, and
 [UPGRADING.md](UPGRADING.md) is how to move between them.

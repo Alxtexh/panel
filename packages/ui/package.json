@@ -1,6 +1,6 @@
 {
   "name": "@panelkit/ui",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Vue 3 rendering layer for PanelKit. Framework-agnostic: no Inertia import anywhere in this package.",
   "type": "module",
   "license": "MIT",

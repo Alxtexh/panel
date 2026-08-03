@@ -4,7 +4,12 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
-## Unreleased
+## 0.6.1
+
+**Additive, so a patch.** Nothing here changes what an existing installation
+does: `panel:install` never overwrites a published `PanelLayout.vue`, so an app
+that already has one keeps it and is untouched. The new shell is what a *fresh*
+install and a *newly generated* portal get.
 
 ### Added
 

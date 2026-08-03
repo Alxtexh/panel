@@ -342,4 +342,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.6.0**, 1,668 tests passing, 13 skipped.
+Current state: **v0.6.1**, 1,668 tests passing, 13 skipped.

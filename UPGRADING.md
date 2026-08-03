@@ -108,6 +108,42 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.6.0 → 0.6.1
+
+**Nothing breaks, and there is nothing you must do.** `composer update`,
+`npm update`, `php artisan panel:update`.
+
+**The shell now ships** — `PanelShell`, `PanelSidebar` and `PanelAccountMenu` in
+`@panelkit/inertia` — and the `PanelLayout.vue` that `panel:install` publishes
+is a thin wrapper over it. **Your published layout is not touched**: the
+installer has never overwritten it, so an application that already has one keeps
+exactly the frame it has. This is what a *fresh* install and a *newly generated*
+portal now get.
+
+**To adopt it in an existing app**, replace the body of your
+`resources/js/pages/../PanelLayout.vue` with:
+
+```vue
+<script setup lang="ts">
+import { PanelShell } from '@panelkit/inertia'
+</script>
+
+<template>
+    <PanelShell><slot /></PanelShell>
+</template>
+```
+
+The sidebar reads the `panelNav` the server already shares, so there is nothing
+to wire. `#topbar` and `#actions` are slots for your own controls.
+
+**`panel.logout` is new** in the shared props, resolved server-side: the panel's
+own `{id}.logout` when `--auth` scaffolded one, a plain `logout` when Fortify
+did, and `null` when neither exists — in which case the account menu renders no
+sign-out item rather than posting to a route that would 404.
+
+Also: `PkCard` for ordinary content blocks, and `useUnsavedChanges` /
+`useUnsavedGuard` for a page that is not a record form.
+
 ### 0.5.0 → 0.6.0
 
 **One behaviour change, and it is the reason to read this section.**
