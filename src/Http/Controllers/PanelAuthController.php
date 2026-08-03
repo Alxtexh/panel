@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use PanelKit\Panel\Auth\Passkeys;
 use PanelKit\Panel\Auth\Turnstile;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
@@ -77,6 +78,13 @@ final class PanelAuthController extends Controller
              */
             'turnstileSiteKey' => Turnstile::enabled() ? Turnstile::siteKey() : null,
             'socialProviders' => $this->socialProviders($panel),
+
+            /*
+             * PASSKEY SIGN-IN, when `laravel/passkeys` routed it. Null
+             * otherwise, and the screen then renders no button - see
+             * `Passkeys::signInRoutes()`.
+             */
+            'passkeys' => Passkeys::signInRoutes(),
             'registerUrl' => $this->registerUrl($panel),
         ]);
     }

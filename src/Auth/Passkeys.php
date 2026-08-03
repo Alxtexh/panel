@@ -53,6 +53,34 @@ final class Passkeys
     }
 
     /**
+     * Where a sign-in screen asks for a challenge and where it posts the answer.
+     *
+     * NULL WHEN THE ROUTES ARE NOT THERE, which is the whole point. `laravel/
+     * passkeys` registers `passkey.login-options` and `passkey.login`; an
+     * installation without it has neither, and a button pointed at a route that
+     * does not exist is the seam-with-nothing-behind-it this package keeps
+     * naming. The screen renders the button only when this returns an array.
+     *
+     * ASKED OF THE ROUTER, not of `class_exists`. A package can be installed
+     * with its routes disabled, and it is the ROUTES the browser needs.
+     *
+     * @return array{options: string, verify: string}|null
+     */
+    public static function signInRoutes(): ?array
+    {
+        $router = app('router');
+
+        if (! $router->has('passkey.login-options') || ! $router->has('passkey.login')) {
+            return null;
+        }
+
+        return [
+            'options' => route('passkey.login-options'),
+            'verify' => route('passkey.login'),
+        ];
+    }
+
+    /**
      * This person's passkeys, in the shape a screen renders.
      *
      * SERIALISED HERE RATHER THAN IN A CONTROLLER, so every panel that shows
