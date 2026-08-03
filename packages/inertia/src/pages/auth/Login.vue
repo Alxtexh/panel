@@ -24,6 +24,7 @@ import { Form, Head, Link } from '@inertiajs/vue3'
 import { PkButton as Button } from '@panelkit/ui'
 import { computed } from 'vue'
 import AuthField from '../../components/AuthField.vue'
+import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'
 
@@ -61,18 +62,25 @@ const props = defineProps<{
     registerUrl?: string | null
     /** Turnstile's public key, or null when it is off. See `AuthTurnstile`. */
     turnstileSiteKey?: string | null
+    /**
+     * Where passkey sign-in asks and posts, or null when it is not routed.
+     *
+     * FROM `Passkeys::signInRoutes()`. This was a SLOT and nothing filled it, so
+     * a fresh install had no passkey button at all - which is not "optional", it
+     * is absent. The button ships now and hides itself when the routes are not
+     * there or the browser cannot do WebAuthn.
+     */
+    passkeys?: { options: string; verify: string } | null
 }>()
 
 /*
- * THE PASSKEY BUTTON IS A SLOT, NOT A COMPONENT THIS SHIPS, and the reason is
- * the one failure this package keeps naming: a seam with nothing behind it.
- *
- * Verifying a passkey needs a WebAuthn client AND challenge endpoints, and both
- * belong to whichever package the application chose - `laravel/passkeys` in the
- * reference app. The package can see whether passkeys are AVAILABLE, so it draws
- * the placement and the divider; what goes in the slot is the application's,
- * because a button here that posted to endpoints nobody serves would look like
- * support and behave like a bug.
+ * THE PASSKEY BUTTON SHIPS. It was a slot, on the reasoning that a WebAuthn
+ * client belongs to whichever package the application chose - and the result
+ * was a fresh install with no passkey at all, which is not "optional", it is
+ * absent. `AuthPasskeyButton` uses the BROWSER's WebAuthn API against the
+ * routes the server reports, so it needs no npm dependency and disappears where
+ * those routes do not exist. The slot remains for an application that already
+ * has its own.
  */
 const providers = computed(() => props.socialProviders ?? [])
 </script>
@@ -94,10 +102,16 @@ const providers = computed(() => props.socialProviders ?? [])
         <!--
             ABOVE THE FORM, because a passkey is the faster path for somebody
             who has one, and burying it under the password field means they type
-            the password anyway. Nothing renders when the slot is empty.
+            the password anyway.
+
+            THE SLOT IS AN OVERRIDE, NOT THE MECHANISM. An application already
+            using `@laravel/passkeys/vue` passes its own button; everybody else
+            gets the packaged one, which needs no npm dependency at all.
         -->
-        <div v-if="$slots.passkey">
-            <slot name="passkey" />
+        <div v-if="$slots.passkey || props.passkeys">
+            <slot name="passkey">
+                <AuthPasskeyButton :routes="props.passkeys" :fallback="props.action" />
+            </slot>
 
             <div class="relative my-6">
                 <div class="absolute inset-0 flex items-center">

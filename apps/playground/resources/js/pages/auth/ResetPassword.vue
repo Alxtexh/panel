@@ -1,97 +1,21 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
-import { PkButton as Button } from '@panelkit/ui';
-import { ref } from 'vue';
-import InputError from '@/components/InputError.vue';
-import PasswordInput from '@/components/PasswordInput.vue';
-import TurnstileField from '@/components/TurnstileField.vue';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
+/**
+ * The packaged screen, with this application's routes mapped onto it.
+ *
+ * ONE IMPLEMENTATION - see `auth/ForgotPassword.vue`. The token and the address
+ * arrive from the reset link and are passed straight through; the package's
+ * screen posts them back with the new password.
+ */
+import { ResetPassword } from '@panelkit/inertia';
 import { update } from '@/routes/password';
 
-defineOptions({
-    layout: {
-        title: 'Reset password',
-        description: 'Please enter your new password below',
-    },
-});
-
-const props = defineProps<{
-    token: string;
-    email: string;
-    passwordRules: string;
-}>();
-
-const inputEmail = ref(props.email);
+defineProps<{ token: string; email: string }>();
 </script>
 
 <template>
-    <Head title="Reset password" />
-
-    <Form
-        v-bind="update.form()"
-        :transform="(data) => ({ ...data, token, email })"
-        :reset-on-success="['password', 'password_confirmation']"
-        v-slot="{ errors, processing }"
-    >
-        <div class="grid gap-6">
-            <div class="grid gap-2">
-                <Label for="email">Email</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    name="email"
-                    autocomplete="email"
-                    v-model="inputEmail"
-                    class="mt-1 block w-full"
-                    readonly
-                />
-                <InputError :message="errors.email" class="mt-2" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="password">Password</Label>
-                <PasswordInput
-                    id="password"
-                    name="password"
-                    autocomplete="new-password"
-                    class="mt-1 block w-full"
-                    autofocus
-                    placeholder="Password"
-                    :passwordrules="passwordRules"
-                />
-                <InputError :message="errors.password" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="password_confirmation"> Confirm password </Label>
-                <PasswordInput
-                    id="password_confirmation"
-                    name="password_confirmation"
-                    autocomplete="new-password"
-                    class="mt-1 block w-full"
-                    placeholder="Confirm password"
-                    :passwordrules="passwordRules"
-                />
-                <InputError :message="errors.password_confirmation" />
-            </div>
-
-            <!-- Renders nothing when Turnstile is off; the server refuses
-
-                 without a token either way. -->
-
-            <TurnstileField name="cf-turnstile-response" />
-
-            <Button
-                type="submit"
-                class="mt-4 w-full"
-                :disabled="processing"
-                data-test="reset-password-button"
-            >
-                <Spinner v-if="processing" />
-                Reset password
-            </Button>
-        </div>
-    </Form>
+    <ResetPassword
+        :action="update.form().action"
+        :token="token"
+        :email="email"
+    />
 </template>

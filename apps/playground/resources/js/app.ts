@@ -19,6 +19,13 @@ import {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+/** Auth screens that now come from `@panelkit/inertia` - see the resolver. */
+const PACKAGED_AUTH = [
+    'auth/Login',
+    'auth/ForgotPassword',
+    'auth/ResetPassword',
+];
+
 /*
  * COMPONENTS A PLUGIN MAY PLACE, registered by the APPLICATION.
  *
@@ -130,6 +137,18 @@ createInertiaApp({
              * in the first place. The page carries its own way back.
              */
             case name.startsWith('errors/'):
+                return null;
+            /*
+             * THE PACKAGED AUTH SCREENS BRING THEIR OWN LAYOUT.
+             *
+             * `@panelkit/inertia` renders `AuthLayout` inside each screen,
+             * because a fresh installation has no layout of its own to apply -
+             * so wrapping them again here gives two headings and two theme
+             * toggles. The pages named below are thin wrappers over the
+             * packaged screen; the rest are still this application's, and this
+             * list shrinks to nothing as they move.
+             */
+            case PACKAGED_AUTH.includes(name):
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
