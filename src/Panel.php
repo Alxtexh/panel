@@ -195,7 +195,7 @@ final class Panel
      * a panel's palette and watch nothing happen, which is worse than the
      * method being absent. It is read by `SharePanelProps` now.
      *
-     * @param Closure(): array<string, string> $colors
+     * @param  Closure(): array<string, string>  $colors
      */
     public function colors(Closure $colors): self
     {
@@ -250,6 +250,22 @@ final class Panel
     public function getMiddleware(): array
     {
         return [...$this->middleware, ...$this->authMiddleware];
+    }
+
+    /**
+     * The panel's middleware WITHOUT the part that demands a session.
+     *
+     * FOR THE ROUTES A GUEST HAS TO REACH. Social sign-in is the case that
+     * needed it: the callback is where somebody BECOMES signed in, so
+     * registering it inside the authenticated group redirects every attempt
+     * back to the login screen it came from - a loop that looks like the
+     * provider refusing.
+     *
+     * @return list<string>
+     */
+    public function getGuestMiddleware(): array
+    {
+        return $this->middleware;
     }
 
     /**

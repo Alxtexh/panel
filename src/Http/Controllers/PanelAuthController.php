@@ -15,6 +15,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Auth\Passkeys;
+use PanelKit\Panel\Auth\SocialProviders;
 use PanelKit\Panel\Auth\Turnstile;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
@@ -104,23 +105,24 @@ final class PanelAuthController extends Controller
      */
     private function socialProviders(Panel $panel): array
     {
-        $declared = config("panel.auth.{$panel->id}.social", []);
-
         $out = [];
 
-        foreach ((array) $declared as $key => $provider) {
-            $url = is_array($provider) ? ($provider['url'] ?? null) : null;
-
-            // A provider with no destination is half-configured, and a button
-            // that goes nowhere is worse than no button.
-            if (! is_string($url) || $url === '') {
-                continue;
-            }
-
+        /*
+         * THE CREDENTIALS DECIDE, and the URL is this panel's own route.
+         *
+         * The first version of this asked the application to declare a label
+         * AND a url per provider, which meant a fresh install had no buttons
+         * until somebody hand-wrote config that nothing validated - "optional"
+         * in a way indistinguishable from missing. `SocialProviders::enabled()`
+         * reads `services.{provider}.client_id`, which is where the credentials
+         * already are, and `PanelRoutes` registers the routes on exactly the
+         * same condition.
+         */
+        foreach (SocialProviders::enabled() as $key => $label) {
             $out[] = [
-                'key' => (string) $key,
-                'label' => (string) ($provider['label'] ?? Str::headline((string) $key)),
-                'url' => $url,
+                'key' => $key,
+                'label' => $label,
+                'url' => $this->url($panel, "auth/{$key}/redirect"),
             ];
         }
 
