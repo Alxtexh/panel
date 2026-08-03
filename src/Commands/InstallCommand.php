@@ -37,6 +37,7 @@ final class InstallCommand extends Command
         $this->createTree();
         $this->publishBootstrap();
         $this->wireVite();
+        $this->repointViews();
         $this->createDefaultPanel();
         $this->writePageFiles();
 
@@ -279,6 +280,72 @@ final class InstallCommand extends Command
         file_put_contents($path, $config);
 
         $this->components->twoColumnDetail('Wired', $name);
+    }
+
+    /**
+     * Follow the entry rename into the views that reference it.
+     *
+     * REWIRING VITE BROKE THE APPLICATION'S OWN PAGES, which is the opposite of
+     * this installer's whole promise. The step above renames the entry from
+     * `app.js` to `app.ts` - correct, because the panel's bootstrap is
+     * TypeScript - and every Blade view a stock Laravel app ships still says
+     * `@vite([..., 'resources/js/app.js'])`. That entry no longer exists in the
+     * manifest, so `welcome.blade.php` answers 500.
+     *
+     * IT IS FOUND BY SIGNING IN. The panel redirects to its home, which for a
+     * root-mounted panel is `/`, which is the welcome page - so the first thing
+     * after a successful sign-in was a Vite exception. Nothing in the install
+     * output suggested it; the panel's own screens were fine.
+     *
+     * ONLY THE EXACT STRING INSIDE A VIEW, and only when the rename happened.
+     * A view referencing an `app.js` that is still an entry is somebody else's
+     * arrangement.
+     */
+    private function repointViews(): void
+    {
+        $root = resource_path('views');
+
+        /*
+         * CALLED FROM `handle()`, NOT FROM `wireVite()`, and that placement is
+         * the fix rather than a tidy-up. `wireVite()` returns early when the
+         * config is already wired - which is every re-run and every application
+         * that wired Vue itself - so hanging this off the end of it meant the
+         * views stayed broken in exactly the installs that had got everything
+         * else right.
+         *
+         * THE CONDITION IS THE ENTRY EXISTING. If `app.ts` is there, that is
+         * what views should point at.
+         */
+        if (! is_dir($root) || ! file_exists(resource_path('js/app.ts'))) {
+            return;
+        }
+
+        $changed = [];
+
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root));
+
+        foreach ($files as $file) {
+            if (! $file->isFile() || ! str_ends_with($file->getFilename(), '.blade.php')) {
+                continue;
+            }
+
+            $contents = (string) file_get_contents($file->getPathname());
+
+            if (! str_contains($contents, 'resources/js/app.js')) {
+                continue;
+            }
+
+            file_put_contents(
+                $file->getPathname(),
+                str_replace('resources/js/app.js', 'resources/js/app.ts', $contents),
+            );
+
+            $changed[] = str_replace(base_path().'/', '', $file->getPathname());
+        }
+
+        foreach ($changed as $file) {
+            $this->components->twoColumnDetail('Repointed @vite in', $file);
+        }
     }
 
     /**
