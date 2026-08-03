@@ -24,10 +24,25 @@ import { Link } from '@inertiajs/vue3'
 import { iconPath } from '@panelkit/ui'
 import { computed } from 'vue'
 
+import type { NavItem } from './types'
+
+/*
+ * THE SHAPE IS INLINE, NOT IMPORTED. `defineProps` with a type from another
+ * file makes the SFC compiler load TypeScript from the CONSUMING project to
+ * resolve it - which a fresh Laravel app does not have, and the build dies with
+ * "Failed to load TypeScript". See `types.ts`, which names the same shape for
+ * anyone who wants it in their own code.
+ */
 const props = withDefaults(
     defineProps<{
         /** From the server. Already filtered to this panel and this person. */
-        items?: NavItem[]
+        items?: {
+            key: string
+            title: string
+            href: string
+            icon?: string | null
+            group?: string | null
+        }[]
         /** Where the brand links to, and what it says. */
         brand?: string
         home?: string
@@ -37,14 +52,6 @@ const props = withDefaults(
     }>(),
     { items: () => [], brand: 'Panel', home: '/', current: '/', collapsed: false },
 )
-
-export interface NavItem {
-    key: string
-    title: string
-    href: string
-    icon?: string | null
-    group?: string | null
-}
 
 /**
  * Grouped, preserving the ORDER THE SERVER SENT.

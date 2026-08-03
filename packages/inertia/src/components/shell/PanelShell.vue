@@ -24,11 +24,23 @@ import { ThemeToggle } from '@panelkit/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import PanelAccountMenu from './PanelAccountMenu.vue'
-import PanelSidebar, { type NavItem } from './PanelSidebar.vue'
+import PanelSidebar from './PanelSidebar.vue'
+import type { NavItem } from './types'
 
+/*
+ * THE SHAPE IS INLINE HERE TOO - see `types.ts`. Importing `NavItem` into
+ * `defineProps` sent the SFC compiler looking for TypeScript in the consuming
+ * project, and a fresh Laravel app has none.
+ */
 const props = defineProps<{
     /** Overrides for an application not using the packaged middleware. */
-    nav?: NavItem[]
+    nav?: {
+        key: string
+        title: string
+        href: string
+        icon?: string | null
+        group?: string | null
+    }[]
     brand?: string
 }>()
 
