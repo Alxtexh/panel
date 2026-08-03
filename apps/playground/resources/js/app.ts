@@ -24,6 +24,11 @@ const PACKAGED_AUTH = [
     'auth/Login',
     'auth/ForgotPassword',
     'auth/ResetPassword',
+    'auth/Register',
+    'auth/VerifyEmail',
+    'auth/TwoFactorChallenge',
+    'auth/RenewPassword',
+    'auth/LockScreen',
 ];
 
 /*

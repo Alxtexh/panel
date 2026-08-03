@@ -132,9 +132,28 @@ export { default as AuthLayout } from './pages/auth/AuthLayout.vue'
 export { default as Login } from './pages/auth/Login.vue'
 export { default as ForgotPassword } from './pages/auth/ForgotPassword.vue'
 export { default as ResetPassword } from './pages/auth/ResetPassword.vue'
+
+/*
+ * THE REST OF THE DEMO'S AUTH, MOVED RATHER THAN REDRAWN.
+ *
+ * The reference app had ten of these and the package shipped three, which is
+ * most of what "the design does not come with it" meant. Each file below is the
+ * demo's markup with its `@/components/ui/*` imports swapped for this package's
+ * primitives and its Wayfinder route helpers swapped for props - because a
+ * package cannot know a consuming application's route names.
+ */
+export { default as Register } from './pages/auth/Register.vue'
+export { default as VerifyEmail } from './pages/auth/VerifyEmail.vue'
+export { default as TwoFactorChallenge } from './pages/auth/TwoFactorChallenge.vue'
+export { default as ConfirmPassword } from './pages/auth/ConfirmPassword.vue'
+export { default as RenewPassword } from './pages/auth/RenewPassword.vue'
+export { default as LockScreen } from './pages/auth/LockScreen.vue'
+export { default as VerifyOtp } from './pages/auth/VerifyOtp.vue'
 export { default as AuthField } from './components/AuthField.vue'
 export { default as AuthTurnstile } from './components/AuthTurnstile.vue'
 export { default as AuthPasskeyButton } from './components/AuthPasskeyButton.vue'
+export { default as AuthInputError } from './components/AuthInputError.vue'
+export { default as AuthTextLink } from './components/AuthTextLink.vue'
 export {
     registerRenderHookComponent,
     resolveRenderHookComponent,

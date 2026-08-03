@@ -10,7 +10,7 @@ Those are not the same thing, by a wide margin:
 | | package (installed) | reference app only |
 |---|---|---|
 | PHP | 265 files, 45,394 lines | 108 files, 16,102 lines |
-| Vue | 121 components | **199 components** |
+| Vue | 134 components | **199 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -257,6 +257,17 @@ data, where every page returns 200 and every test passes.
 `PanelDashboard` `Changelog` `Environment` `TicketAnalysis` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
 `documents/DocumentPrint`, plus the `TicketThread` and `AnnouncementBanners`
 components the packaged screens render into.
+
+**All ten auth screens ship**, not three: Login, ForgotPassword, ResetPassword,
+Register, VerifyEmail, TwoFactorChallenge, ConfirmPassword, RenewPassword,
+LockScreen and VerifyOtp. They are the reference app's screens *moved*, not
+redrawn — same markup, same copy — with two substitutions: its `@/components/ui/*`
+imports became packaged primitives, and its Wayfinder route helpers became props,
+because a package cannot know a consuming application's route names.
+
+Passkey sign-in ships with them, driving the browser's own WebAuthn API against
+whatever routes `laravel/passkeys` registered — no npm dependency, and no button
+at all where those routes or that API are absent.
 
 **The shell ships too, as of v0.6.0.** `PanelShell` is the frame those screens
 sit in — a sidebar built from the navigation the server already shares, a topbar

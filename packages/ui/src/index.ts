@@ -31,6 +31,16 @@ export { default as EditableCell } from './components/DataTable/EditableCell.vue
 export { default as RecordActions } from './components/DataTable/RecordActions.vue'
 export { default as AppearanceDrawer } from './components/Layout/AppearanceDrawer.vue'
 export { default as PkBottomNav } from './components/Layout/PkBottomNav.vue'
+
+/*
+ | THE REFERENCE APP'S FORM PRIMITIVES, moved rather than redrawn - see each
+ | file. They are what the packaged auth screens are built from, so a generated
+ | portal's inputs are the SAME inputs the demo shows.
+ */
+export { default as PkTextInput } from './components/Primitives/PkTextInput.vue'
+export { default as PkFieldLabel } from './components/Primitives/PkFieldLabel.vue'
+export { default as PkSpinner } from './components/Primitives/PkSpinner.vue'
+export { default as PkOtpInput } from './components/Primitives/PkOtpInput.vue'
 export { default as PkBoundary } from './components/Layout/PkBoundary.vue'
 
 /*

@@ -37,6 +37,14 @@ const props = withDefaults(
          * puts the seeded text back on every keystroke.
          */
         defaultValue?: string
+        /**
+         * Safari's password-generation hint, passed straight through.
+         *
+         * THE SERVER COMPOSES IT from the panel's own policy. A browser that
+         * generates a password the server then rejects is the most annoying
+         * possible first impression, and this is the only way to prevent it.
+         */
+        passwordRules?: string
     }>(),
     { type: 'text', required: false, autofocus: false },
 )
@@ -112,6 +120,7 @@ const value = ref(props.defaultValue ?? '')
                 :autofocus="autofocus"
                 :autocomplete="autocomplete"
                 :placeholder="placeholder"
+                :passwordrules="passwordRules"
                 :value="value"
                 :aria-invalid="error ? 'true' : undefined"
                 @input="value = ($event.target as HTMLInputElement).value"
