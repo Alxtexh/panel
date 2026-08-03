@@ -24,6 +24,7 @@ import { ThemeToggle } from '@panelkit/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import PanelAccountMenu from './PanelAccountMenu.vue'
+import PanelCommandPalette from './PanelCommandPalette.vue'
 import PanelSidebar from './PanelSidebar.vue'
 import type { NavItem } from './types'
 
@@ -169,6 +170,14 @@ watch(
                 <div class="min-w-0 flex-1">
                     <slot name="topbar" />
                 </div>
+
+                <!--
+                    THE PALETTE SITS BEFORE THE PAGE'S OWN CONTROLS, because it
+                    is the panel's and they are the screen's - and because it is
+                    the one control that is in the same place on every screen,
+                    which is what makes a keyboard habit possible.
+                -->
+                <PanelCommandPalette />
 
                 <slot name="actions" />
 

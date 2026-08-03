@@ -103,4 +103,54 @@ final class PanelShellRenderTest extends DuskTestCase
                 ->assertPresent('[aria-label="Expand navigation"]');
         });
     }
+
+    /**
+     * THE COMMAND PALETTE OPENS, SEARCHES AND NAVIGATES.
+     *
+     * Every part of this is invisible to a component test: the shortcut is a
+     * window listener, the results come from a real endpoint over a real
+     * request, and "enter visits the record" is Inertia actually navigating.
+     */
+    public function test_the_command_palette_finds_a_record_and_visits_it(): void
+    {
+        $this->seedOperator();
+
+        $this->browse(function (Browser $browser): void {
+            $browser->loginAs($this->operatorId)
+                ->visit('/shell-preview')
+                ->waitForText('Subscribers', 15)
+
+                // The trigger is in the topbar on every screen.
+                ->click('[aria-label="Search"]')
+                ->waitFor('[role="dialog"][aria-label="Search"]', 5)
+
+                /*
+                 * PAGES FILTER LOCALLY, with no request at all - which is why
+                 * this asserts on a nav entry rather than a record: it proves
+                 * the palette is reading the registry the sidebar reads.
+                 */
+                ->type('[data-palette-input]', 'Client')
+
+                /*
+                 * ASSERTED INSIDE THE DIALOG, because the sidebar also says
+                 * "Clients" - a page-wide `waitForText` passes while the
+                 * palette shows nothing at all, which is how the first version
+                 * of this test passed for the wrong reason.
+                 *
+                 * AND THE HEADING IS NOT ASSERTED. It reads `Pages` in the DOM
+                 * and `PAGES` through the driver, because Selenium returns
+                 * RENDERED text and the class is `uppercase`.
+                 */
+                ->waitForTextIn('[role="dialog"][aria-label="Search"]', 'Clients', 5)
+
+                // Enter visits the highlighted item: the palette navigates.
+                ->keys('[data-palette-input]', '{enter}')
+                ->waitForLocation('/clients', 10)
+                ->assertPathIs('/clients');
+
+            $browser->screenshot('command-palette');
+
+            $browser->screenshot('command-palette');
+        });
+    }
 }

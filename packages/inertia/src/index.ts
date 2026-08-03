@@ -62,6 +62,7 @@ export { useUnsavedGuard } from './composables/useUnsavedGuard'
 export { default as PanelShell } from './components/shell/PanelShell.vue'
 export { default as PanelSidebar } from './components/shell/PanelSidebar.vue'
 export { default as PanelAccountMenu } from './components/shell/PanelAccountMenu.vue'
+export { default as PanelCommandPalette } from './components/shell/PanelCommandPalette.vue'
 export type { NavItem } from './components/shell/types'
 export { useTranslations } from './composables/useTranslations'
 
