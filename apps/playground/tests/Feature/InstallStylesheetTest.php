@@ -74,10 +74,8 @@ final class InstallStylesheetTest extends TestCase
      * reference application to assert one file would be a test that edits the
      * repository it is testing.
      */
-    private function merge(): void
+    private function command(): InstallCommand
     {
-        $method = new ReflectionMethod(InstallCommand::class, 'mergeStylesheet');
-
         $output = new OutputStyle(
             new ArrayInput([]),
             new NullOutput,
@@ -96,8 +94,15 @@ final class InstallStylesheetTest extends TestCase
         $components = new ReflectionProperty(Command::class, 'components');
         $components->setValue($command, new Factory($output));
 
+        return $command;
+    }
+
+    private function merge(): void
+    {
+        $method = new ReflectionMethod(InstallCommand::class, 'mergeStylesheet');
+
         $method->invoke(
-            $command,
+            $this->command(),
             dirname(__DIR__, 4).'/packages/panel/resources/stubs/app.css.stub',
         );
     }
@@ -250,6 +255,36 @@ final class InstallStylesheetTest extends TestCase
 
         $this->artisan('panel:doctor')
             ->doesntExpectOutputToContain('does not point Tailwind at the packaged components');
+    }
+
+    /**
+     * THE ENTRY RENAME IS FOLLOWED INTO THE VIEWS THAT REFERENCE IT.
+     *
+     * `panel:install` repoints Vite from `app.js` to `app.ts`, and stock
+     * Laravel's `welcome.blade.php` still says `@vite([..., 'app.js'])` - an
+     * entry that no longer exists in the manifest. So the application's OWN home
+     * page answered 500 after installing a panel, which is the opposite of what
+     * a non-destructive installer promises.
+     *
+     * IT IS FOUND BY SIGNING IN, not by visiting the panel: the panel redirects
+     * to its home, which for a root-mounted panel is `/`, which is the welcome
+     * page. The panel's own screens were all fine.
+     */
+    public function test_it_repoints_views_at_the_renamed_vite_entry(): void
+    {
+        $view = resource_path('views/panelkit-install-fixture.blade.php');
+
+        File::put($view, "<head>@vite(['resources/css/app.css', 'resources/js/app.js'])</head>");
+
+        try {
+            $method = new ReflectionMethod(InstallCommand::class, 'repointViews');
+            $method->invoke($this->command());
+
+            $this->assertStringContainsString('resources/js/app.ts', File::get($view));
+            $this->assertStringNotContainsString('resources/js/app.js', File::get($view));
+        } finally {
+            File::delete($view);
+        }
     }
 
     /**

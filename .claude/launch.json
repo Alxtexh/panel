@@ -4,9 +4,22 @@
     {
       "name": "playground",
       "runtimeExecutable": "php",
-      "runtimeArgs": ["artisan", "dev"],
+      "runtimeArgs": [
+        "artisan",
+        "dev"
+      ],
       "cwd": "apps/playground",
       "port": 8000,
+      "autoPort": false
+    },
+    {
+      "name": "fresh-install",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "cd /tmp/tmp.EWt7PB1rVm/fresh-app && exec php artisan serve --host=127.0.0.1 --port=8124"
+      ],
+      "port": 8124,
       "autoPort": false
     }
   ]
