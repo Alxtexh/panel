@@ -64,6 +64,8 @@ export { default as PanelSidebar } from './components/shell/PanelSidebar.vue'
 export { default as PanelAccountMenu } from './components/shell/PanelAccountMenu.vue'
 export { default as PanelCommandPalette } from './components/shell/PanelCommandPalette.vue'
 export { default as PanelNotificationBell } from './components/shell/PanelNotificationBell.vue'
+export { default as PanelBreadcrumbs } from './components/shell/PanelBreadcrumbs.vue'
+export { default as PanelImpersonationBanner } from './components/shell/PanelImpersonationBanner.vue'
 export type { NavItem } from './components/shell/types'
 export { useTranslations } from './composables/useTranslations'
 

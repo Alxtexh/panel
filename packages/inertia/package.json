@@ -1,38 +1,43 @@
 {
-  "name": "@panelkit/inertia",
-  "version": "0.6.2",
-  "description": "The screens PanelKit's PHP half renders: the resource list, the form, the record page, the trash and a portal's home. Inertia-bound, layout-free.",
-  "type": "module",
-  "license": "MIT",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts",
-    "./pages/*": "./src/pages/*",
-    "./components/*": "./src/components/*"
-  },
-  "files": [
-    "src"
-  ],
-  "peerDependencies": {
-    "@inertiajs/vue3": "^2.0.0 || ^3.0.0",
-    "@lucide/vue": "^0.5.0 || ^1.0.0",
-    "@panelkit/ui": "^0.6.2",
-    "vue": "^3.5.0",
-    "vue-sonner": "^2.0.0"
-  },
-  "devDependencies": {
-    "@inertiajs/vue3": "^3.0.0",
-    "@lucide/vue": "^1.17.0",
-    "@panelkit/ui": "file:../ui",
-    "prettier": "^3.9.6",
-    "typescript": "^5.7.0",
-    "vue": "^3.5.13",
-    "vue-sonner": "^2.0.0"
-  },
-  "scripts": {
-    "format": "prettier --write src/",
-    "format:check": "prettier --check src/"
-  }
+    "name": "@panelkit/inertia",
+    "version": "0.6.2",
+    "description": "The screens PanelKit's PHP half renders: the resource list, the form, the record page, the trash and a portal's home. Inertia-bound, layout-free.",
+    "type": "module",
+    "license": "MIT",
+    "main": "./src/index.ts",
+    "module": "./src/index.ts",
+    "types": "./src/index.ts",
+    "exports": {
+        ".": "./src/index.ts",
+        "./pages/*": "./src/pages/*",
+        "./components/*": "./src/components/*"
+    },
+    "files": [
+        "src"
+    ],
+    "peerDependencies": {
+        "@inertiajs/vue3": "^2.0.0 || ^3.0.0",
+        "@lucide/vue": "^0.5.0 || ^1.0.0",
+        "@panelkit/ui": "^0.6.2",
+        "vue": "^3.5.0",
+        "vue-sonner": "^2.0.0"
+    },
+    "devDependencies": {
+        "@inertiajs/vue3": "^3.0.0",
+        "@lucide/vue": "^1.17.0",
+        "@panelkit/ui": "file:../ui",
+        "@vitejs/plugin-vue": "^5.2.4",
+        "@vue/test-utils": "^2.4.11",
+        "jsdom": "^25.0.1",
+        "prettier": "^3.9.6",
+        "typescript": "^5.7.0",
+        "vitest": "^3.2.7",
+        "vue": "^3.5.13",
+        "vue-sonner": "^2.0.0"
+    },
+    "scripts": {
+        "test": "vitest run",
+        "format": "prettier --write src/",
+        "format:check": "prettier --check src/"
+    }
 }

@@ -130,7 +130,7 @@ const activeKey = computed<string | null>(() => {
                     :href="item.href"
                     :title="item.title"
                     :aria-current="item.key === activeKey ? 'page' : undefined"
-                    class="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors"
+                    class="group/nav relative flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors"
                     :class="
                         item.key === activeKey
                             ? 'bg-muted text-foreground font-medium'
@@ -151,6 +151,29 @@ const activeKey = computed<string | null>(() => {
                     </svg>
 
                     <span v-if="!collapsed" class="truncate">{{ item.title }}</span>
+
+                    <!--
+                        THE FLYOUT, WHICH IS WHAT MAKES THE RAIL USABLE.
+
+                        Collapsed, the only thing distinguishing two entries is a
+                        16px glyph, and the native `title` tooltip takes about a
+                        second to appear - long enough that people expand the
+                        sidebar again rather than wait, which is the whole
+                        feature undone.
+
+                        CSS-ONLY, on hover AND focus, so it works for a keyboard
+                        as well as a mouse and costs no listener per entry.
+                        `pointer-events-none` because it is a label rather than a
+                        menu: a floating box that swallowed the click next to it
+                        would be worse than no label.
+                    -->
+                    <span
+                        v-if="collapsed"
+                        data-nav-flyout
+                        class="bg-popover text-popover-foreground pointer-events-none invisible absolute left-full z-50 ml-2 rounded-md border px-2 py-1 text-xs whitespace-nowrap opacity-0 shadow-md transition-opacity group-focus-visible/nav:visible group-focus-visible/nav:opacity-100 group-hover/nav:visible group-hover/nav:opacity-100"
+                    >
+                        {{ item.title }}
+                    </span>
                 </Link>
             </div>
 

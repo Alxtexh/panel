@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 | | package (installed) | reference app only |
 |---|---|---|
-| PHP | 265 files, 45,239 lines | 108 files, 16,102 lines |
-| Vue | 118 components | **199 components** |
+| PHP | 265 files, 45,394 lines | 108 files, 16,102 lines |
+| Vue | 120 components | **199 components** |
 
 The demo carries nearly twice the Vue the framework does. Most of what makes it look
 like a finished product — the dashboard, the assistant, tickets, mail, invoices,
@@ -304,6 +304,18 @@ $panels->alertRule(AlertRule::make('routers_offline', function (): ?Alert {
 Use `AlertRule::countUpTo()` for anything that might match a lot of rows: it
 stops at 500 and `describeCount()` renders "500+". An exact count of 84,846 rows
 costs 84,846 steps whatever the index says, and it is the same action either way.
+
+**The rest of the chrome ships too.** A **breadcrumb trail** derived from the
+same `panelNav` the sidebar draws — nothing new is sent, so it cannot disagree
+with the menu; a screen that knows better (a record page that can name the
+record) passes `items` instead. An **impersonation banner** at the top of the
+main column, driven by the `Impersonation` service that had been in the package
+since v0.2 with nothing packaged ever displaying it — no close button, because
+forgetting you are wearing another account is the danger. A **bottom navigation
+bar** on phones, since `PkBottomNav` shipped in `@panelkit/ui` and nothing
+mounted it, leaving every consumer's handset with a hamburger at the top of the
+screen. And **flyout labels** on the collapsed rail, because the native tooltip
+takes about a second — long enough that people expand the sidebar again.
 
 ---
 

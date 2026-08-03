@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Inertia;
+use PanelKit\Panel\Auth\Impersonation;
 use PanelKit\Panel\Http\Middleware\SharePanelProps;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
@@ -100,6 +101,61 @@ final class SharedPanelPropsTest extends TestCase
 
         $this->assertNotContains('clients', $keys);
         $this->assertNotContains('routers', $keys);
+    }
+
+    /**
+     * THE IMPERSONATION BANNER'S DATA, which is null on every ordinary request.
+     *
+     * That is the assertion worth having: the key is shared unconditionally, so
+     * if it ever became truthy by default every panel in every installation
+     * would wear an amber warning claiming somebody else is signed in.
+     */
+    public function test_nothing_is_shared_about_impersonation_when_nobody_is(): void
+    {
+        $this->assertNull($this->sharedFor('admin')['impersonating']);
+    }
+
+    /**
+     * AND WHEN SOMEBODY IS, IT NAMES THEM AND WHERE TO STOP.
+     *
+     * `Impersonation` has been in the package since v0.2 and nothing packaged
+     * ever displayed it - so an installation could switch into an account with
+     * no indication anywhere that it had.
+     */
+    public function test_an_active_impersonation_is_shared_with_a_stop_url(): void
+    {
+        $tenant = Tenant::create(['name' => 'Acme', 'slug' => 'acme-imp']);
+
+        config(['panel.tenancy.resolver' => fn () => $tenant->getKey()]);
+
+        $actor = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'name' => 'Grace Wanjiru',
+            'email_verified_at' => now(),
+        ]);
+
+        $target = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'name' => 'Amina Achieng',
+            'email_verified_at' => now(),
+        ]);
+
+        // The middleware reads a SESSION fact, so the request under test needs
+        // one - the same `web` session a real panel request always has.
+        $this->startSession();
+        request()->setLaravelSession(app('session.store'));
+
+        $this->actingAs($actor);
+
+        app(Impersonation::class)->start($actor, $target);
+
+        $shared = $this->sharedFor('admin')['impersonating'];
+
+        $this->assertSame('Grace Wanjiru', $shared['name']);
+
+        // The reference app routes `impersonate.stop`; the shell posts wherever
+        // the server says, exactly as sign-out does.
+        $this->assertSame(url('/impersonate-stop'), $shared['stopUrl']);
     }
 
     /** @return array<string, mixed> */

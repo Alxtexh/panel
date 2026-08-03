@@ -20,11 +20,13 @@
  * server too, where `localStorage` does not exist and touching it is a 500.
  */
 import { usePage } from '@inertiajs/vue3'
-import { ThemeToggle } from '@panelkit/ui'
+import { PkBottomNav, ThemeToggle } from '@panelkit/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import PanelAccountMenu from './PanelAccountMenu.vue'
+import PanelBreadcrumbs from './PanelBreadcrumbs.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
+import PanelImpersonationBanner from './PanelImpersonationBanner.vue'
 import PanelNotificationBell from './PanelNotificationBell.vue'
 import PanelSidebar from './PanelSidebar.vue'
 import type { NavItem } from './types'
@@ -74,6 +76,28 @@ const palette = computed<Record<string, string>>(() =>
             v,
         ]),
     ),
+)
+
+/**
+ * The same navigation, shaped for a thumb.
+ *
+ * THE ORDER IS THE SERVER'S, and the bar takes the first few - which is right,
+ * because `PanelNavigation` already sorts by an explicit `sort` then by title,
+ * so the entries somebody declared as important are the ones a phone gets.
+ * `PkBottomNav` caps at five itself and turns the fifth into "More".
+ *
+ * `icon` IS NARROWED FROM `string | null` to `string | undefined` because that
+ * is what `BottomNavItem` declares. Passing the null through type-checks in a
+ * loose consumer and fails `vue-tsc` in a strict one, which is the sort of thing
+ * that only shows up in somebody else's build.
+ */
+const bottomNav = computed(() =>
+    nav.value.map((item) => ({
+        key: item.key,
+        title: item.title,
+        href: item.href,
+        icon: item.icon ?? undefined,
+    })),
 )
 
 const STORAGE_KEY = 'panelkit.sidebar.collapsed'
@@ -129,6 +153,12 @@ watch(
         </div>
 
         <div class="flex min-w-0 flex-1 flex-col">
+            <!--
+                ABOVE THE TOPBAR AND INSIDE THIS COLUMN - see the component for
+                why neither higher nor lower works.
+            -->
+            <PanelImpersonationBanner />
+
             <header class="border-border flex items-center gap-3 border-b px-3 py-2.5 sm:px-4">
                 <button
                     type="button"
@@ -168,8 +198,17 @@ watch(
                     </svg>
                 </button>
 
+                <!--
+                    THE TOPBAR SLOT FALLS BACK TO THE TRAIL rather than to
+                    nothing. A screen that wants a heading passes one; one that
+                    passes nothing gets where-you-are instead of a gap, which is
+                    what every screen in the reference app ended up writing by
+                    hand.
+                -->
                 <div class="min-w-0 flex-1">
-                    <slot name="topbar" />
+                    <slot name="topbar">
+                        <PanelBreadcrumbs />
+                    </slot>
                 </div>
 
                 <!--
@@ -194,9 +233,23 @@ watch(
                 <PanelAccountMenu :user="user" :logout="panel?.logout ?? null" />
             </header>
 
-            <main class="min-w-0 flex-1 p-4 sm:p-6">
+            <!--
+                THE BOTTOM PADDING IS THE BAR'S HEIGHT, on phones only. Without
+                it the last row of every table sits underneath the navigation,
+                which is exactly the content somebody scrolled to reach.
+            -->
+            <main class="min-w-0 flex-1 p-4 pb-20 sm:p-6 sm:pb-6">
                 <slot />
             </main>
+
+            <!--
+                THE PHONE'S NAVIGATION. `PkBottomNav` shipped in `@panelkit/ui`
+                and nothing in the package mounted it, so every consumer's
+                handset got a hamburger at the top of the screen - the part of a
+                phone a thumb reaches least. "More" opens the same drawer the
+                menu button does, rather than pretending the list fits.
+            -->
+            <PkBottomNav :items="bottomNav" :current="page.url" @more="drawerOpen = true" />
         </div>
     </div>
 </template>

@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use PanelKit\Panel\Auth\Impersonation;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\PanelNavigation;
 use Symfony\Component\HttpFoundation\Response;
@@ -138,6 +139,66 @@ final class SharePanelProps
                 }
 
                 return $user->unreadNotifications()->count();
+            },
+
+            /*
+             * WHO IS REALLY DRIVING, when it is not the account on screen.
+             *
+             * NULL IN THE ORDINARY CASE, so the banner costs one key and no
+             * query on every request that is not an impersonation.
+             *
+             * `Impersonation` HAS BEEN IN THE PACKAGE SINCE v0.2 and nothing
+             * packaged ever displayed it - so an installation could switch into
+             * somebody's account with no indication anywhere that it had. The
+             * reference app wrote its own banner, which is the pattern this
+             * release keeps undoing.
+             *
+             * THE STOP URL IS RESOLVED THE WAY SIGN-OUT IS, and is null when no
+             * route answers. The banner still shows in that case: forgetting you
+             * are wearing another account is the danger, and a warning with no
+             * button is better than no warning.
+             */
+            'impersonating' => static function () use ($panels, $request): ?array {
+                /*
+                 * NO SESSION MEANS NO IMPERSONATION, checked before asking.
+                 *
+                 * Impersonation is a session fact, and `isActive()` reaches
+                 * straight for the store - so on any route that shares these
+                 * props without `web` middleware this closure threw "Session
+                 * store not set on request" rather than answering "nobody". The
+                 * test harness found it first, which is the cheap place to.
+                 */
+                if (! $request->hasSession()) {
+                    return null;
+                }
+
+                /*
+                 * BUILT FROM *THIS* REQUEST, not resolved from the container.
+                 *
+                 * `Impersonation` takes a `Request` in its constructor, and the
+                 * container hands it whatever instance is bound as `request` at
+                 * the moment of resolution - which is not necessarily the one
+                 * this middleware is guarding. The guard above then passed while
+                 * the object read a DIFFERENT request that had no session, and
+                 * every panel whose group omits `StartSession` answered 500.
+                 * Three isolation tests caught it; the guard alone did not.
+                 */
+                $impersonation = new Impersonation($request);
+
+                if (! $impersonation->isActive()) {
+                    return null;
+                }
+
+                $panel = $panels->currentPanel();
+
+                return [
+                    'name' => $impersonation->impersonator()?->name ?? 'Somebody',
+                    'stopUrl' => match (true) {
+                        $panel !== null && Route::has($panel->id.'.impersonate.stop') => route($panel->id.'.impersonate.stop'),
+                        Route::has('impersonate.stop') => route('impersonate.stop'),
+                        default => null,
+                    },
+                ];
             },
         ]);
 
