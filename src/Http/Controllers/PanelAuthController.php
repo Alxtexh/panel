@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use PanelKit\Panel\Auth\Turnstile;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
 
@@ -64,7 +65,72 @@ final class PanelAuthController extends Controller
             'prefill' => app()->environment('local')
                 ? config("panel.auth.{$panel->id}.prefill")
                 : null,
+
+            /*
+             * THE OPTIONAL HALVES OF A SIGN-IN SCREEN, each absent unless the
+             * installation actually has it. The reference app's login carried
+             * all three and the packaged one carried none, so a generated portal
+             * looked plainer than the demo it was copied from - but shipping
+             * them ON would be worse: a Turnstile widget with no site key, or a
+             * "Sign up" link to a route nobody registered, is a screen that
+             * advertises something and then fails.
+             */
+            'turnstileSiteKey' => Turnstile::enabled() ? Turnstile::siteKey() : null,
+            'socialProviders' => $this->socialProviders($panel),
+            'registerUrl' => $this->registerUrl($panel),
         ]);
+    }
+
+    /**
+     * Sign-in providers, declared by the application.
+     *
+     * THE URL IS DECLARED RATHER THAN DERIVED. Where a provider redirect lives
+     * depends entirely on how that application wired Socialite, and a package
+     * that assumed `/auth/{key}/redirect` would send half its consumers to a
+     * 404 - a broken button on the one screen nobody can get past.
+     *
+     * SHAPED AS A LIST, NOT A MAP, because a map's iteration order in JSON is
+     * not something to rely on for buttons a person reads left to right.
+     *
+     * @return list<array{key: string, label: string, url: string}>
+     */
+    private function socialProviders(Panel $panel): array
+    {
+        $declared = config("panel.auth.{$panel->id}.social", []);
+
+        $out = [];
+
+        foreach ((array) $declared as $key => $provider) {
+            $url = is_array($provider) ? ($provider['url'] ?? null) : null;
+
+            // A provider with no destination is half-configured, and a button
+            // that goes nowhere is worse than no button.
+            if (! is_string($url) || $url === '') {
+                continue;
+            }
+
+            $out[] = [
+                'key' => (string) $key,
+                'label' => (string) ($provider['label'] ?? Str::headline((string) $key)),
+                'url' => $url,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Where "Sign up" goes, if anywhere.
+     *
+     * NULL IS THE DEFAULT AND THE RIGHT ONE. A panel is a staff tool far more
+     * often than a product people join, and a sign-up link on an operator's
+     * console is an invitation to create an account nobody approved.
+     */
+    private function registerUrl(Panel $panel): ?string
+    {
+        $url = config("panel.auth.{$panel->id}.register");
+
+        return is_string($url) && $url !== '' ? $url : null;
     }
 
     /**
