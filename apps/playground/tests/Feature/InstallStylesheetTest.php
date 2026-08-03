@@ -166,6 +166,68 @@ final class InstallStylesheetTest extends TestCase
     }
 
     /**
+     * EVERY TOKEN THE COMPONENTS ASK FOR IS DEFINED.
+     *
+     * THE STUB WAS SHORT OF SIX OF THEM - popover, accent and secondary, each
+     * with a foreground - so the command palette, the account menu, every hover
+     * state and every secondary button rendered with NO SURFACE on an
+     * installation whose stylesheet was otherwise wired correctly. The login
+     * screen looked perfect, because it happens to use only the tokens that
+     * were there.
+     *
+     * DERIVED FROM THE COMPONENTS, NOT LISTED HERE. A hand-written list is a
+     * second thing to keep in step; this reads what the packages actually
+     * reference, so a component that starts using `bg-warning` tomorrow fails
+     * this test rather than rendering invisibly.
+     */
+    public function test_the_stub_defines_every_token_the_components_use(): void
+    {
+        $stub = file_get_contents(dirname(__DIR__, 4).'/packages/panel/resources/stubs/app.css.stub');
+
+        $used = [];
+
+        foreach (['ui', 'inertia'] as $package) {
+            $root = dirname(__DIR__, 4)."/packages/{$package}/src";
+
+            $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root));
+
+            foreach ($files as $file) {
+                if (! $file->isFile() || ! in_array($file->getExtension(), ['vue', 'ts'], true)) {
+                    continue;
+                }
+
+                preg_match_all(
+                    '/\b(?:bg|text|border|ring|fill|stroke|divide|placeholder|outline|caret|accent|decoration|from|to|via)-'
+                    .'(background|foreground|card|card-foreground|popover|popover-foreground|primary|primary-foreground'
+                    .'|secondary|secondary-foreground|muted|muted-foreground|accent|accent-foreground'
+                    .'|destructive|destructive-foreground|border|input|ring)\b/',
+                    (string) file_get_contents($file->getPathname()),
+                    $matches,
+                );
+
+                foreach ($matches[1] as $token) {
+                    $used[$token] = true;
+                }
+            }
+        }
+
+        $missing = [];
+
+        foreach (array_keys($used) as $token) {
+            if (! str_contains($stub, "--color-{$token}:") || ! str_contains($stub, "--{$token}:")) {
+                $missing[] = $token;
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $missing,
+            'The packaged components use tokens the published stylesheet never defines, so those '
+            .'surfaces render with no colour at all: '.implode(', ', $missing),
+        );
+    }
+
+    /**
      * AND DOCTOR SAYS SO WHEN IT IS WRONG.
      *
      * The merge fixes new installs; this is what tells the thousands of words

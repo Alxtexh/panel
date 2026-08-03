@@ -18,6 +18,13 @@
 /**
  * The design tokens every packaged component reads.
  *
+ * THE SET IS NOT DECORATIVE - IT IS THE ONE THE COMPONENTS ACTUALLY ASK FOR.
+ * An earlier version of this file was short of `popover`, `accent` and
+ * `secondary`, so the command palette, the account menu, every hover state and
+ * every secondary button rendered with no surface at all - on an installation
+ * whose stylesheet was otherwise wired correctly. `verify-install.sh` greps the
+ * BUILT css for `.bg-popover` for exactly that reason.
+ *
  * SEMANTIC NAMES, NOT COLOURS. A component asks for `bg-card` and
  * `text-muted-foreground`; what those mean is decided here, once, and a panel
  * is rebranded by editing this block rather than by finding every component
@@ -32,6 +39,12 @@
     --color-foreground: var(--foreground);
     --color-card: var(--card);
     --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
     --color-muted: var(--muted);
     --color-muted-foreground: var(--muted-foreground);
     --color-border: var(--border);
@@ -48,6 +61,12 @@
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --secondary: oklch(0.94 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
     --muted-foreground: oklch(0.556 0 0);
     --border: oklch(0.922 0 0);
@@ -70,6 +89,12 @@
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);
     --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
     --muted-foreground: oklch(0.708 0 0);
     --border: oklch(1 0 0 / 10%);
