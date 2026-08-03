@@ -122,7 +122,17 @@ return [
     |---------------------------------------------------------------------------
     |
     | driver
-    |   'poll'       Default. Zero infrastructure, works on plain PHP-FPM. NOT
+    |   'auto'       DEFAULT. Broadcast if this application really has a
+    |                broadcaster - a connection that is not `null` or `log`,
+    |                and whose key is set - and poll if it does not. One less
+    |                thing to remember on the day Reverb goes in, and nothing
+    |                to undo on the day it comes out.
+    |
+    |                CONFIGURED IS NOT RUNNING, which is why the test is
+    |                strict: `BROADCAST_CONNECTION=reverb` says a connection is
+    |                DEFINED, not that a Reverb process is up. Set the driver
+    |                explicitly on any environment where those differ.
+    |   'poll'       Zero infrastructure, works on plain PHP-FPM. NOT
     |                the polling the spec warns about: that warning is about
     |                re-rendering a component server-side per viewer per tick.
     |                This asks one bounded indexed question - "which of these
@@ -182,7 +192,7 @@ return [
     ],
 
     'live' => [
-        'driver' => env('PANEL_LIVE_DRIVER', 'poll'),
+        'driver' => env('PANEL_LIVE_DRIVER', 'auto'),
         'interval_ms' => (int) env('PANEL_LIVE_INTERVAL', 10_000),
         'batch_ms' => 250,
         'channel' => null,

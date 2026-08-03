@@ -4,6 +4,42 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## Unreleased
+
+### Added
+
+- **`panel.live.driver` defaults to `auto`: broadcast if you have a
+  broadcaster, poll if you do not.** Installing Reverb used to change nothing
+  until somebody remembered a second env var, and removing it left a panel
+  pointed at a websocket nobody was serving. The application already states
+  which broadcaster it has.
+
+  **The test is deliberately strict, because configured is not running.**
+  `BROADCAST_CONNECTION=reverb` says a connection is *defined*, not that a
+  Reverb process is up — and the asymmetry matters: a slow poll is a slow poll,
+  while a broadcast with nothing listening is a list that is silently static
+  and looks exactly like a list where nothing changed. So `null` and `log` mean
+  poll, an undefined connection means poll, a connection whose key is blank
+  means poll, and — the one that turned out to be load-bearing — **a panel with
+  no `live.channel` means poll**, because `LiveConfig` refuses the broadcast
+  driver without a private tenant-scoped channel and would otherwise 500 every
+  screen. Anything set explicitly is never overruled.
+
+  `auto` never leaves `LiveConfig`, so the client, `panel:doctor` and the
+  platform report all see `poll` or `broadcast` and none of them repeat the
+  reasoning.
+
+### Fixed
+
+- **The package root import works without TypeScript in the consuming
+  project.** `import { PanelShell } from '@panelkit/inertia'` is the documented
+  API and could not be used by an app that has no compiler: the root entry
+  re-exports every screen, and three of them named an *imported* type in
+  `defineProps`, which the SFC compiler can only resolve by loading TypeScript
+  out of your project. Those shapes are spelled out where they are used, with
+  type-level guards so a divergence fails `vue-tsc` here rather than reaching a
+  consumer as a prop the screen silently ignores.
+
 ## 0.6.1
 
 **Additive, so a patch.** Nothing here changes what an existing installation
