@@ -108,6 +108,42 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.6.1 → 0.6.2
+
+**One behaviour change, and it is the reason to read this.** `composer update`,
+`npm update`, `php artisan panel:update`.
+
+**`panel.live.driver` now defaults to `auto`** — broadcast if this application
+really has a broadcaster, poll if it does not. Installing Reverb used to change
+nothing until somebody also remembered `PANEL_LIVE_DRIVER=broadcast`, and
+removing Reverb left a panel pointed at a websocket nobody was serving.
+
+**Who this changes.** Only an installation that has *all three* of: a broadcast
+connection that is not `null` or `log`, its key set, and `panel.live.channel`
+configured — and that never set `PANEL_LIVE_DRIVER`. That installation moves
+from polling to broadcasting. Everyone else is exactly where they were, and
+anything you set explicitly is never overruled.
+
+**Why you might not want it**, and the opt-out is one line:
+
+```dotenv
+PANEL_LIVE_DRIVER=poll
+```
+
+**Configured is not running.** `BROADCAST_CONNECTION=reverb` says a connection
+is *defined*, not that a Reverb process is up — and the failure modes are not
+symmetrical. A slow poll is a slow poll; a broadcast with nothing listening is a
+list that is silently static and looks exactly like a list where nothing
+changed. If any environment of yours has the configuration without the process —
+a staging box sharing production's `.env` shape is the usual one — set the
+driver explicitly there.
+
+**Fixed:** `import { PanelShell } from '@panelkit/inertia'` now works in a
+project with no TypeScript installed. The root entry re-exports every screen and
+three of them named an imported type in `defineProps`, which the SFC compiler
+could only resolve by loading TypeScript out of *your* project. Nothing to do —
+it either affected you or it did not.
+
 ### 0.6.0 → 0.6.1
 
 **Nothing breaks, and there is nothing you must do.** `composer update`,

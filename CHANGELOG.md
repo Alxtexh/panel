@@ -4,7 +4,12 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
-## Unreleased
+## 0.6.2
+
+**One behaviour change worth reading before you upgrade** — see
+[UPGRADING.md](UPGRADING.md#061--062). An application that has a broadcaster
+*and* a panel channel configured, and never set `PANEL_LIVE_DRIVER`, moves from
+polling to broadcasting on this release.
 
 ### Added
 
