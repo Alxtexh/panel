@@ -139,4 +139,41 @@ final class LandingCmsTest extends TestCase
 
         $this->assertCount(1, $stored);
     }
+
+    /**
+     * THE EDITOR OPENS ON THE PAGE THAT IS LIVE.
+     *
+     * It did not. `values()` returned whatever had been SAVED, and an
+     * unedited installation has saved nothing - while `/` renders eleven
+     * sections from the configured preset. So the screen showed a row of "add"
+     * buttons and nothing else, for a front page that visibly has a hero, a
+     * pricing table and an FAQ on it. Every test above passed: each one asserts
+     * what is SERVED, and the page was served correctly the whole time. What
+     * was wrong was the editor's account of it.
+     *
+     * ASSERTED AGAINST THE RENDERER'S OWN FALLBACK rather than a fixed count,
+     * so the two cannot drift apart again.
+     */
+    public function test_the_editor_opens_on_the_sections_a_visitor_sees(): void
+    {
+        $live = $this->get('/')->assertOk()->viewData('page')['props']['sections'];
+
+        $this->assertNotEmpty($live, 'Fixture assumption: an unedited install serves a design.');
+
+        $this->assertSame(
+            $live,
+            LandingPageResource::values()['sections'],
+            'The editor must open on the page that is live, not on an empty builder.',
+        );
+    }
+
+    /** And once something IS saved, that is what it opens on. */
+    public function test_a_saved_page_is_what_the_editor_opens_on(): void
+    {
+        $mine = [['type' => 'hero', 'title' => 'Mine']];
+
+        LandingPageResource::save(['sections' => $mine]);
+
+        $this->assertSame($mine, LandingPageResource::values()['sections']);
+    }
 }

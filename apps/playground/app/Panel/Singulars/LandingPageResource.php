@@ -76,17 +76,48 @@ final class LandingPageResource extends SingularResource
         return ['sections' => []];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     *
+     * THE EDITOR OPENS ON THE PAGE THAT IS LIVE, which it did not.
+     *
+     * `LandingController` falls back to `LandingPresets::get()` when nothing has
+     * been saved - so a fresh installation serves eleven sections of real
+     * content while this returned an empty list. Opening the editor showed a row
+     * of "+" buttons and nothing else, for a front page that visibly has a hero,
+     * a pricing table and an FAQ on it. Nothing was broken and nothing said so;
+     * the screen simply described a different page than the one at `/`.
+     *
+     * SO THE FALLBACK IS THE SAME ONE THE CONTROLLER USES. Editing starts from
+     * what a visitor sees, which is what "edit this page" means. `save()` writes
+     * whatever is in the builder, so the first save materialises the shipped
+     * design into storage - and removing every block still hands the page back
+     * to the preset, so the escape hatch is unchanged.
+     */
     public static function values(): array
     {
         $stored = app(InstallationState::class)->get(self::KEY);
 
+        $sections = is_array($stored) && $stored !== []
+            ? $stored
+            : LandingPresets::get(self::configuredDesign());
+
         return [
-            'sections' => is_array($stored) ? $stored : [],
+            'sections' => $sections,
             // Never sticky: it is an action spelled as a field, and a preset
             // that stayed selected would re-apply itself on the next save.
             'preset' => null,
         ];
+    }
+
+    /** The design this installation configured, or the first that exists. */
+    private static function configuredDesign(): string
+    {
+        $configured = (string) config('panel.landing', 'aurora');
+
+        return in_array($configured, LandingPresets::names(), true)
+            ? $configured
+            : (LandingPresets::names()[0] ?? 'aurora');
     }
 
     /** @param array<string, mixed> $validated */
