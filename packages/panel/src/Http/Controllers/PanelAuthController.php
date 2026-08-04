@@ -19,6 +19,7 @@ use PanelKit\Panel\Auth\SocialProviders;
 use PanelKit\Panel\Auth\Turnstile;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\PanelHome;
 
 /**
  * Signing in to ONE panel, using that panel's own guard.
@@ -317,15 +318,14 @@ final class PanelAuthController extends Controller
     }
 
     /**
-     * Where a signed-in person lands.
+     * Where a signed-in person lands - the dashboard, or the panel's root.
      *
-     * The panel's root, which `PanelRoutes` answers with the home screen or the
-     * dashboard depending on what the installation registered. Deliberately not
-     * a named route: a generated portal's route names belong to the application.
+     * Deliberately not a named route: a generated portal's route names belong
+     * to the application. See `PanelHome` for why the root alone was wrong.
      */
     private function panelHome(Panel $panel): string
     {
-        return '/'.trim($panel->getPath(), '/');
+        return PanelHome::urlFor($panel);
     }
 
     /**

@@ -141,10 +141,18 @@ final class DashboardFilterTest extends TestCase
         $filters = DashboardFilters::fromRequest(
             Request::create('/', 'GET', ['routers' => '3,abc,-1,3,7']),
             new DateTimeImmutable('2026-07-27'),
+            ['routers'],
         );
 
         // Numeric only, de-duplicated, negatives dropped.
-        $this->assertSame([3, 7], $filters->routers);
+        $this->assertSame([3, 7], $filters->selected('routers'));
+
+        /*
+         * AND A DIMENSION THE DASHBOARD DID NOT DECLARE IS NOT READ. The query
+         * string can name anything; taking whatever it names would let a URL
+         * invent a filter the page never offered.
+         */
+        $this->assertSame([], $filters->selected('plans'));
     }
 
     public function test_an_open_ended_range_means_since_then(): void
@@ -190,7 +198,8 @@ final class DashboardFilterTest extends TestCase
                 ->where('filters.from', '2026-07-01')
                 ->where('filters.to', '2026-07-10')
                 ->where('filters.active', true)
-                ->has('filterOptions.routers', 2));
+                ->where('filterDimensions.0.key', 'routers')
+                ->has('filterDimensions.0.options', 2));
     }
 
     /**
@@ -221,7 +230,7 @@ final class DashboardFilterTest extends TestCase
             ->withHeaders([
                 'X-Inertia' => 'true',
                 'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()),
-                'X-Inertia-Partial-Component' => 'Dashboard',
+                'X-Inertia-Partial-Component' => 'PanelDashboard',
                 'X-Inertia-Partial-Data' => "stat_{$key}",
             ])
             ->getJson($url)

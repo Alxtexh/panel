@@ -350,7 +350,7 @@ final class ChartWidgetTest extends TestCase
                  * handled it is still empty.
                  */
                 'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()),
-                'X-Inertia-Partial-Component' => 'Dashboard',
+                'X-Inertia-Partial-Component' => 'PanelDashboard',
                 'X-Inertia-Partial-Data' => 'chart_signups,periods',
             ])
             ->getJson('/dashboard?period_signups=7d');

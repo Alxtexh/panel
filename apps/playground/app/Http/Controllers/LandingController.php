@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use PanelKit\Panel\Support\PanelHome;
 use App\Panel\Singulars\LandingPageResource;
 use App\Support\LandingPresets;
 use Illuminate\Http\RedirectResponse;
@@ -59,7 +60,7 @@ final class LandingController extends Controller
          * the bare address is not.
          */
         if ($request->user() !== null && $request->route('design') === null) {
-            return redirect()->route('dashboard');
+            return redirect(PanelHome::urlFor(null));
         }
 
         $configured = (string) config('panel.landing', 'aurora');

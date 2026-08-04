@@ -9,6 +9,7 @@ use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\PanelHome;
 
 /**
  * What a portal shows at its own root.
@@ -59,6 +60,15 @@ final class PanelHomeController extends Controller
                 'icon' => $class::icon(),
                 'group' => $class::group(),
             ];
+        }
+
+        /*
+         * A DASHBOARD OUTRANKS THIS SCREEN. A portal that has one has already
+         * said what its landing page is, and a directory of links in front of it
+         * is a click on the way to somewhere everybody was going anyway.
+         */
+        if ($panel !== null && ($dashboard = PanelHome::dashboardUri($panel)) !== '') {
+            return redirect($this->hrefFor($panel->getPath(), $dashboard));
         }
 
         // One destination is not a choice. Sending somebody straight there beats

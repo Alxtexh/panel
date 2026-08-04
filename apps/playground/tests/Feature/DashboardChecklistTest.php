@@ -80,7 +80,7 @@ final class DashboardChecklistTest extends TestCase
         return [
             'X-Inertia' => 'true',
             'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(request()),
-            'X-Inertia-Partial-Component' => 'Dashboard',
+            'X-Inertia-Partial-Component' => 'PanelDashboard',
             'X-Inertia-Partial-Data' => $prop,
         ];
     }

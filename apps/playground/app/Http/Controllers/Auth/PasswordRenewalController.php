@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use PanelKit\Panel\Support\PanelHome;
 use App\Concerns\PasswordValidationRules;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -94,7 +95,7 @@ final class PasswordRenewalController extends Controller
          */
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'))->with('toast', [
+        return redirect()->intended(PanelHome::urlFor(null))->with('toast', [
             'type' => 'success',
             'message' => 'Password changed.',
         ]);

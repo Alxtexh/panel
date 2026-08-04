@@ -12,7 +12,7 @@
  */
 import { Link, usePage } from '@inertiajs/vue3';
 import { buttonClasses } from '@panelkit/ui';
-import { dashboard, login, register } from '@/routes';
+import { login, register } from '@/routes';
 
 defineProps<{
     /** Design name, shown in the switcher so the demo is self-explaining. */
@@ -55,7 +55,7 @@ const page = usePage();
             <div class="flex items-center gap-2">
                 <Link
                     v-if="page.props.auth?.user"
-                    :href="dashboard()"
+                    href="/dashboard"
                     :class="buttonClasses({ size: 'sm' })"
                 >
                     Dashboard

@@ -7,7 +7,6 @@ use App\Http\Controllers\AuditController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\OtpPasswordResetController;
 use App\Http\Controllers\ChatController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImportController;
@@ -125,7 +124,14 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    /*
+     | THE DASHBOARD IS NO LONGER DECLARED HERE. It is `App\Panel\Pages\
+     | DashboardPage`, discovered and routed by the package like any other page,
+     | which is what let its screen move into `@panelkit/inertia`. The route
+     | name it registers is `panel.pages.dashboard`; the handful of redirects
+     | that used to say `route('dashboard')` now go through
+     | `PanelHome::urlFor()`, which is where "the panel's home" is decided.
+     */
 
     /*
      | In-panel content pages. Static, so Route::inertia is enough - they carry

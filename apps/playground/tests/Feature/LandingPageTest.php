@@ -124,7 +124,7 @@ final class LandingPageTest extends TestCase
     {
         $this->actingAs($this->operator())
             ->get('/')
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect('/dashboard');
     }
 
     /**

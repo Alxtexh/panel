@@ -25,7 +25,6 @@ import {
     Wrench,
 } from '@lucide/vue';
 import { computed } from 'vue';
-import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
 /**
@@ -135,7 +134,9 @@ export function usePanelNav() {
 
         return {
             primary: [
-                { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+                // The dashboard is a packaged page now, routed as `panel.pages.dashboard`;
+            // Wayfinder no longer generates a `dashboard()` helper for it.
+            { title: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
                 ...ungrouped,
             ] as NavItem[],
             groups: [...grouped.entries()].map(([name, items]): NavGroup => ({

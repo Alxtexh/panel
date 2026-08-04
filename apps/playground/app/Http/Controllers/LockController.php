@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use PanelKit\Panel\Support\PanelHome;
 use App\Http\Middleware\EnsurePanelIsUnlocked;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,6 +75,6 @@ final class LockController extends Controller
          */
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(PanelHome::urlFor(null));
     }
 }

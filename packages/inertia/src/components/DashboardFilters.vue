@@ -2,6 +2,17 @@
 /**
  * The dashboard filter panel.
  *
+ * MOVED FROM THE REFERENCE APPLICATION, not rewritten. It shipped there as
+ * `resources/js/components/DashboardFilters.vue` and every installation of this
+ * package had a dashboard with no filters at all - so the screen people
+ * evaluated the panel by was not the screen the package could give them.
+ *
+ * THE ONE THING THAT CHANGED IS THE DIMENSIONS. It had a section headed
+ * "Routers" backed by a `routers` prop, because the application it came from is
+ * an ISP. Here the sections are DECLARED by the page - key, label, options - so
+ * a panel about invoices filters by customer and one about a fleet filters by
+ * depot, using the same panel and the same URL contract.
+ *
  * IT DOES NOT FETCH and it does not own the applied state - it emits `apply`
  * with a filter object and the page turns that into a visit. The applied
  * filters live in the URL, which is what makes a filtered dashboard
@@ -17,71 +28,93 @@
  * different tomorrow, and a shared link would show the recipient a different
  * window than the sender saw.
  */
-import { PkMultiSelect, PkSlideover } from '@panelkit/ui';
-import { computed, ref, watch } from 'vue';
-
-interface Option {
-    value: number;
-    label: string;
-}
+import { PkMultiSelect, PkSlideover } from '@panelkit/ui'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{
-    open: boolean;
+    open: boolean
     /** Currently applied, from the URL. */
-    from: string | null;
-    to: string | null;
-    routers: number[];
-    routerOptions: Option[];
-}>();
+    from: string | null
+    to: string | null
+    /** Applied ids per dimension key. */
+    selections: Record<string, number[]>
+    /*
+     * INLINE RATHER THAN AN IMPORTED TYPE. A type imported into `defineProps`
+     * makes the SFC compiler resolve it across files, which it can only do by
+     * loading TypeScript out of the consuming project - the exact failure that
+     * made this package have to ship compiled.
+     */
+    dimensions: {
+        key: string
+        label: string
+        singular?: string | null
+        placeholder?: string | null
+        options: { value: number; label: string }[]
+    }[]
+}>()
 
 const emit = defineEmits<{
-    (e: 'close'): void;
+    (e: 'close'): void
     (
         e: 'apply',
-        filters: { from: string | null; to: string | null; routers: number[] },
-    ): void;
-    (e: 'reset'): void;
-}>();
+        filters: {
+            from: string | null
+            to: string | null
+            selections: Record<string, number[]>
+        },
+    ): void
+    (e: 'reset'): void
+}>()
 
-const draft = ref({ from: '', to: '', routers: [] as number[] });
+const draft = ref({
+    from: '',
+    to: '',
+    selections: {} as Record<string, number[]>,
+})
 
 // Re-seed whenever the panel opens, so a cancelled edit does not linger.
 watch(
     () => props.open,
     (isOpen) => {
         if (!isOpen) {
-            return;
+            return
+        }
+
+        const selections: Record<string, number[]> = {}
+
+        for (const dimension of props.dimensions) {
+            selections[dimension.key] = [...(props.selections[dimension.key] ?? [])]
         }
 
         draft.value = {
             from: props.from ?? '',
             to: props.to ?? '',
-            routers: [...props.routers],
-        };
+            selections,
+        }
     },
     { immediate: true },
-);
+)
 
 function iso(date: Date): string {
     // Local date parts, not toISOString(): that converts to UTC first, so
     // anywhere east of Greenwich "today" becomes yesterday after midnight UTC.
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
 function preset(days: number) {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - (days - 1));
+    const end = new Date()
+    const start = new Date()
+    start.setDate(start.getDate() - (days - 1))
 
-    draft.value.from = iso(start);
-    draft.value.to = iso(end);
+    draft.value.from = iso(start)
+    draft.value.to = iso(end)
 }
 
 function thisMonth() {
-    const now = new Date();
+    const now = new Date()
 
-    draft.value.from = iso(new Date(now.getFullYear(), now.getMonth(), 1));
-    draft.value.to = iso(now);
+    draft.value.from = iso(new Date(now.getFullYear(), now.getMonth(), 1))
+    draft.value.to = iso(now)
 }
 
 const presets = [
@@ -89,27 +122,41 @@ const presets = [
     { label: 'Last 30 days', apply: () => preset(30) },
     { label: 'Last 90 days', apply: () => preset(90) },
     { label: 'This month', apply: thisMonth },
-];
+]
 
 /** A range with only an end is meaningless - "until then, from when?" */
-const invalid = computed(
-    () => draft.value.to !== '' && draft.value.from === '',
-);
+const invalid = computed(() => draft.value.to !== '' && draft.value.from === '')
 
-const changeCount = computed(
-    () => (draft.value.from ? 1 : 0) + (draft.value.routers.length > 0 ? 1 : 0),
-);
+const changeCount = computed(() => {
+    let count = draft.value.from ? 1 : 0
+
+    for (const key of Object.keys(draft.value.selections)) {
+        if ((draft.value.selections[key] ?? []).length > 0) {
+            count += 1
+        }
+    }
+
+    return count
+})
+
+function chosen(key: string): number[] {
+    return draft.value.selections[key] ?? []
+}
+
+function clear(key: string) {
+    draft.value.selections = { ...draft.value.selections, [key]: [] }
+}
 
 function apply() {
     if (invalid.value) {
-        return;
+        return
     }
 
     emit('apply', {
         from: draft.value.from || null,
         to: draft.value.to || null,
-        routers: draft.value.routers,
-    });
+        selections: draft.value.selections,
+    })
 }
 </script>
 
@@ -159,38 +206,46 @@ function apply() {
                 <p v-if="invalid" class="text-xs text-destructive">
                     Choose a start date as well.
                 </p>
-                <p
-                    v-else-if="draft.from && !draft.to"
-                    class="text-xs text-muted-foreground"
-                >
+                <p v-else-if="draft.from && !draft.to" class="text-xs text-muted-foreground">
                     Leaving “To” empty means everything since that date.
                 </p>
                 <p v-else-if="draft.from" class="text-xs text-muted-foreground">
-                    While a range is set, the per-chart period buttons are
-                    hidden - every widget covers the same window.
+                    While a range is set, the per-chart period buttons are hidden - every
+                    widget covers the same window.
                 </p>
             </section>
 
-            <section v-if="routerOptions.length" class="flex flex-col gap-2">
+            <section
+                v-for="dimension in dimensions"
+                :key="dimension.key"
+                class="flex flex-col gap-2"
+            >
                 <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-semibold">Routers</h3>
+                    <h3 class="text-sm font-semibold">{{ dimension.label }}</h3>
                     <button
-                        v-if="draft.routers.length"
+                        v-if="chosen(dimension.key).length"
                         type="button"
                         class="text-xs text-muted-foreground hover:underline"
-                        @click="draft.routers = []"
+                        @click="clear(dimension.key)"
                     >
-                        Clear {{ draft.routers.length }}
+                        Clear {{ chosen(dimension.key).length }}
                     </button>
                 </div>
 
                 <!-- The same token field the table filters use, so "choose
                      several of these" looks identical everywhere in the panel. -->
                 <PkMultiSelect
-                    v-model="draft.routers"
-                    :options="routerOptions"
-                    placeholder="All routers"
+                    :model-value="chosen(dimension.key)"
+                    :options="dimension.options"
+                    :placeholder="dimension.placeholder ?? `All ${dimension.label.toLowerCase()}`"
                     search-placeholder="Start typing to search..."
+                    @update:model-value="
+                        (value: (string | number)[]) =>
+                            (draft.selections = {
+                                ...draft.selections,
+                                [dimension.key]: value.map(Number),
+                            })
+                    "
                 />
             </section>
         </div>

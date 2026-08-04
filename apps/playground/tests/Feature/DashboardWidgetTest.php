@@ -97,7 +97,7 @@ final class DashboardWidgetTest extends TestCase
         $response = $this->actingAs($this->user)->get('/dashboard', [
             'X-Inertia' => 'true',
             'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(request()),
-            'X-Inertia-Partial-Component' => 'Dashboard',
+            'X-Inertia-Partial-Component' => 'PanelDashboard',
             'X-Inertia-Partial-Data' => 'stat_clients_total',
         ])->assertOk();
 
@@ -150,7 +150,7 @@ final class DashboardWidgetTest extends TestCase
         $response = $this->actingAs($this->user)->get('/dashboard', [
             'X-Inertia' => 'true',
             'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(request()),
-            'X-Inertia-Partial-Component' => 'Dashboard',
+            'X-Inertia-Partial-Component' => 'PanelDashboard',
             'X-Inertia-Partial-Data' => 'stat_deliberately_broken',
         ])->assertOk();
 

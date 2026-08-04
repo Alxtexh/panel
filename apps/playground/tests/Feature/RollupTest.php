@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\DashboardController;
+use App\Panel\Pages\DashboardPage;
 use App\Models\ClientSession;
 use App\Models\Tenant;
 use App\Models\User;
@@ -393,18 +393,21 @@ final class RollupTest extends TestCase
      */
     private function strip(array $query = []): array
     {
-        $controller = new DashboardController;
-        $method = new ReflectionMethod($controller, 'sessionStrip');
-        $method->setAccessible(true);
-
+        /*
+         * THROUGH THE DECLARED HOOK, not a private method by reflection. The
+         * strip moved out of a controller and onto the page class when the
+         * dashboard moved into the package, and `strip()` is now how a page
+         * offers one - so this calls what the panel calls.
+         */
         $now = new DateTimeImmutable;
         $request = Request::create('/', 'GET', $query);
 
-        return $method->invoke(
-            $controller,
-            (string) $this->tenantA->id,
+        $strip = DashboardPage::strip();
+
+        return $strip(
+            DashboardFilters::fromRequest($request, $now, ['routers']),
             $now,
-            DashboardFilters::fromRequest($request, $now),
+            (string) $this->tenantA->id,
         );
     }
 

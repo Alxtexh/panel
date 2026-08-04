@@ -9,7 +9,14 @@ use Illuminate\Http\Request;
 use Throwable;
 
 /**
- * The dashboard-wide filter: a date range, and a set of entity ids.
+ * The dashboard-wide filter: a date range, and sets of ids per dimension.
+ *
+ * THE DIMENSIONS ARE DECLARED, NOT BUILT IN. This class used to have a public
+ * `routers` array on it, because the reference application filters its dashboard
+ * by router - so every installation of this package carried an ISP's vocabulary
+ * in a base class, and a panel about invoices had a filter dimension it could
+ * neither use nor remove. A dashboard declares its dimensions in
+ * `filterDimensions()` and they arrive here as keys.
  *
  * WHAT IT DOES TO PER-CHART PERIODS. When a range is set it OVERRIDES every
  * chart's own period selector, and the selectors are hidden while it is active.
@@ -29,16 +36,19 @@ use Throwable;
 final class DashboardFilters
 {
     /**
-     * @param  list<int>  $routers
+     * @param  array<string, list<int>>  $selections  dimension key => chosen ids
      */
     private function __construct(
         public readonly ?Window $window,
-        public readonly array $routers,
+        public readonly array $selections,
         public readonly ?string $from,
         public readonly ?string $to,
     ) {}
 
-    public static function fromRequest(Request $request, DateTimeImmutable $now): self
+    /**
+     * @param  list<string>  $dimensions  the keys this dashboard declared
+     */
+    public static function fromRequest(Request $request, DateTimeImmutable $now, array $dimensions = []): self
     {
         $from = self::parseDate($request->query('from'));
         $to = self::parseDate($request->query('to'));
@@ -53,17 +63,45 @@ final class DashboardFilters
             $window = Window::between($from, $now);
         }
 
+        $selections = [];
+
+        /*
+         * ONLY DECLARED KEYS ARE READ. A query string can name anything; taking
+         * whatever it names would let a URL invent a dimension the dashboard
+         * never offered, and the value would then travel into whatever the page
+         * does with `selected()`.
+         */
+        foreach ($dimensions as $key) {
+            $selections[$key] = self::parseIds($request->query($key));
+        }
+
         return new self(
             $window,
-            self::parseIds($request->query('routers')),
+            $selections,
             $from?->format('Y-m-d'),
             $to?->format('Y-m-d'),
         );
     }
 
+    /**
+     * The ids chosen for one dimension - empty meaning "no filter", not "none".
+     *
+     * @return list<int>
+     */
+    public function selected(string $dimension): array
+    {
+        return $this->selections[$dimension] ?? [];
+    }
+
     public function isActive(): bool
     {
-        return $this->window !== null || $this->routers !== [];
+        foreach ($this->selections as $ids) {
+            if ($ids !== []) {
+                return true;
+            }
+        }
+
+        return $this->window !== null;
     }
 
     /** The window to plot, given a chart's own period as the fallback. */
@@ -78,7 +116,7 @@ final class DashboardFilters
         return [
             'from' => $this->from,
             'to' => $this->to,
-            'routers' => $this->routers,
+            'selections' => (object) $this->selections,
             'active' => $this->isActive(),
             'label' => $this->window?->label(),
         ];
