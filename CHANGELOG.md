@@ -4,11 +4,39 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.6.3
+
+**`@panelkit/ui` ships compiled.** It used to ship raw source, and a fresh
+`npm run build` in a consuming application failed — roughly fifty of its shadcn
+components declare `defineProps<SomeTypeFromRekaUi>()`, and a consumer's Vite
+cannot resolve a type across a package boundary. Nothing here caught it for two
+versions, because the playground reaches the package through a path symlink;
+`scripts/verify-install.sh` found it by installing the tarball into a fresh
+Laravel app. **If you have your own `@source` line for this package, point it at
+`dist/**/*.js`** — that is where the class names now live. `panel:install`
+rewrites it for you.
+
+**The passkey button is back on the sign-in screen, and on by default.** It went
+missing when that screen moved into the package: the button is driven by a
+`passkeys` prop and the reference app's Fortify view never sent one. The prop
+now falls back to the routes `laravel/passkeys` registers, so it is there
+without wiring; pass `null` to turn it off.
+
+**The demo's screens keep moving into the packages.** The horizontal header,
+breadcrumbs, the assistant drawer, passkey and two-factor management, session
+expiry, account deletion, the error screens, backups, logs, monitoring and the
+assistant's API key are all packaged now. `@panelkit/ui` and `@panelkit/inertia`
+carry 262 components between them; the reference app is down to 84.
+
+**A dead export is gone.** `@panelkit/ui/theme/tokens.css` pointed at a file
+that has never existed. The tokens come from `panel:install`, which merges a
+complete `@theme` block into your stylesheet.
+
 ## 0.6.2
 
 **One behaviour change worth reading before you upgrade** — see
 [UPGRADING.md](UPGRADING.md#061--062). An application that has a broadcaster
-*and* a panel channel configured, and never set `PANEL_LIVE_DRIVER`, moves from
+_and_ a panel channel configured, and never set `PANEL_LIVE_DRIVER`, moves from
 polling to broadcasting on this release.
 
 ### Added
@@ -20,7 +48,7 @@ polling to broadcasting on this release.
   which broadcaster it has.
 
   **The test is deliberately strict, because configured is not running.**
-  `BROADCAST_CONNECTION=reverb` says a connection is *defined*, not that a
+  `BROADCAST_CONNECTION=reverb` says a connection is _defined_, not that a
   Reverb process is up — and the asymmetry matters: a slow poll is a slow poll,
   while a broadcast with nothing listening is a list that is silently static
   and looks exactly like a list where nothing changed. So `null` and `log` mean
@@ -39,7 +67,7 @@ polling to broadcasting on this release.
 - **The package root import works without TypeScript in the consuming
   project.** `import { PanelShell } from '@panelkit/inertia'` is the documented
   API and could not be used by an app that has no compiler: the root entry
-  re-exports every screen, and three of them named an *imported* type in
+  re-exports every screen, and three of them named an _imported_ type in
   `defineProps`, which the SFC compiler can only resolve by loading TypeScript
   out of your project. Those shapes are spelled out where they are used, with
   type-level guards so a divergence fails `vue-tsc` here rather than reaching a
@@ -49,8 +77,8 @@ polling to broadcasting on this release.
 
 **Additive, so a patch.** Nothing here changes what an existing installation
 does: `panel:install` never overwrites a published `PanelLayout.vue`, so an app
-that already has one keeps it and is untouched. The new shell is what a *fresh*
-install and a *newly generated* portal get.
+that already has one keeps it and is untouched. The new shell is what a _fresh_
+install and a _newly generated_ portal get.
 
 ### Added
 
@@ -98,7 +126,7 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
   request**, because the schema travels with the action in the list payload.
 
   **The fields are declared server-side and that is the security property.**
-  The endpoint validates against *that* declaration's rules and `sanitize()`
+  The endpoint validates against _that_ declaration's rules and `sanitize()`
   drops every key it does not name, so an endpoint whose whole design was "the
   client sends a key and never an attribute set" did not quietly become a
   mass-assignment endpoint. `form()` pairs with `handle()` and never `mutate()`
@@ -126,7 +154,7 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
   `TicketingPlugin` reached nobody for a release.
 
 - **A generated resource shows how to add an action.** `make:panel-resource
-  --generate` wrote a table with no actions and no hint that actions exist, so
+--generate` wrote a table with no actions and no hint that actions exist, so
   the API was discoverable only by reading somebody else's resource. It now
   carries a commented `->recordActions([...])` / `->bulkActions([...])` block
   positioned **inside the chain**, covering the plain case, the `->form()` case
@@ -138,7 +166,7 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
 - **`panel:doctor` notices a vendored copy composer did not symlink.** A `path`
   repository is how you develop against a package you also maintain, and
   composer either symlinks it or takes a **snapshot** at install time - falling
-  back to copying *without failing* where symlinks do not work (Windows without
+  back to copying _without failing_ where symlinks do not work (Windows without
   developer mode, some bind mounts, a CI runner). The two are indistinguishable
   from the application: classes autoload, pages return 200, tests pass. What
   differs is everything afterwards, because a fix made in the source does not
@@ -155,7 +183,7 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
   twice, per the report.
 
   It compares **disk against the registry**, not config against convention. A
-  resource installed by a plugin or an explicit `registerResources()` call *is*
+  resource installed by a plugin or an explicit `registerResources()` call _is_
   registered, so it is never reported - and a class sitting somewhere no config
   names still is.
 
@@ -192,12 +220,12 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
   separate reviews reported the same features absent, each after reading the
   package's directory tree - where almost nothing this package ships actually
   stays. `panel:blueprint` now writes a table of where each thing really lands
-  (stubs are *published*, screens are *mirrored*, auth routes are written into
+  (stubs are _published_, screens are _mirrored_, auth routes are written into
   your app), the three commands that answer the question, and the reminder that
   "not there" and "not there **yet**" are different reports.
 
 - **`panel:install --auth`.** `make:panel --auth` covered a portal you
-  *generate*; the path everybody actually walks - `composer require`,
+  _generate_; the path everybody actually walks - `composer require`,
   `panel:install`, open the panel - still ended at "install a starter kit",
   which is half of the blocker the port report filed.
 
@@ -210,7 +238,7 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
   The scaffolding moved into a shared trait rather than being written twice.
   Two commands producing sign-in flows separately is how they end up differing
   in throttling, session regeneration and post-authentication checks - the
-  failure the report describes happening *across* applications, and there is no
+  failure the report describes happening _across_ applications, and there is no
   reason to reproduce it inside one package.
 
 ### Changed
@@ -230,7 +258,7 @@ deep. See [UPGRADING.md](UPGRADING.md#050--060).
 ### Fixed
 
 - **A searchable select inside an action form now searches.** `field-options`
-  walked the *record* form's fields only, so the first form action shipped
+  walked the _record_ form's fields only, so the first form action shipped
   working purely because its select happened to share a key with a field on the
   record form. An action asking for something the form did not have rendered a
   select that found nothing, with no error anywhere.
@@ -248,7 +276,7 @@ with 30KB of HTML, **no npm at all**. Ours needed a root view, an `app.ts`, a
 layout and a login route — four files nobody names, written differently in every
 install. The build step is not the gap and never was: Filament renders Blade on
 the server and publishes precompiled assets, we send a schema once and render on
-the client. But *"needs a bundler"* is not *"the user writes the bootstrap"*.
+the client. But _"needs a bundler"_ is not _"the user writes the bootstrap"_.
 
 ### Added
 
@@ -262,7 +290,7 @@ the client. But *"needs a bundler"* is not *"the user writes the bootstrap"*.
   application's own sign-in. Fortify serves one guard and a second portal has its
   own, which is why this could not simply be "use Fortify".
 - **`panel:make-user`.** `panel:permissions sync` creates an Administrator
-  *role* and nobody to hold it, so a fresh install had a sign-in screen and no
+  _role_ and nobody to hold it, so a fresh install had a sign-in screen and no
   account. It refuses to take a password as an argument.
 - **`SharePanelProps` and `PanelNavigation`** — the sidebar, the panel and the
   signed-in person handed to Inertia. Promoted from the reference app's
@@ -281,7 +309,7 @@ the client. But *"needs a bundler"* is not *"the user writes the bootstrap"*.
   shipped and nothing called either, so an installation could configure a palette
   and watch nothing happen.
 - **The passkey component broke `npm run build` outright.** It imported an
-  *optional* peer statically, so any application without `@laravel/passkeys`
+  _optional_ peer statically, so any application without `@laravel/passkeys`
   could not build at all — not the passkey screen, the whole bundle. This file
   has described it as "a soft dependency" for two releases; that was true of
   `composer.json` and false of the bundle.
@@ -309,7 +337,7 @@ itself now comes with the package.**
 
 - **The announcement composer, and the banner that reads it.** The model, the
   Telegram delivery, the per-person dismissal and the notification all shipped
-  since 0.2.0 — the *screen that writes one* and the *banner that shows it* did
+  since 0.2.0 — the _screen that writes one_ and the _banner that shows it_ did
   not. So the package could address an entire organisation and reach nobody,
   and every test passed, because what was tested was the writing.
   `AnnouncementResource`, `AnnouncementPolicy` and `AnnouncementsPlugin` are now
@@ -329,7 +357,7 @@ itself now comes with the package.**
 
 - **`make:panel-resource --generate` writes a policy that denies.** It used to
   write five methods returning `true` plus a console warning telling you to
-  review it — and the test guarding it asserted the *warning* was present rather
+  review it — and the test guarding it asserted the _warning_ was present rather
   than that the behaviour was safe. A generated resource really was readable by
   every authenticated user until somebody acted on a line of output. The stub is
   now one line extending `TenantResourcePolicy`, and nothing is permitted until
@@ -372,14 +400,14 @@ web request dies blank.
 
   **`panel:update`'s drift report cannot see this.** It skips list values by
   design — an application shortening a list has configured it, not lost keys —
-  so a missing entry *inside* `plugins` is invisible there. This check is the
+  so a missing entry _inside_ `plugins` is invisible there. This check is the
   compensating one. It asks every place a plugin can legitimately come from
   (config, self-registration from a provider, a panel's own list), so a
   correctly installed panel is not reported as broken.
 
 - **And a ticket table that does not exist.** The other half of the same
   upgrade is pointing `panel.ticketing.tables` at tables you already have. A
-  typo there produces a schema that *looks* complete — the packaged migration
+  typo there produces a schema that _looks_ complete — the packaged migration
   skips the table it believes exists under the configured name — and fails as
   SQL on the first person to open the queue.
 
@@ -428,7 +456,7 @@ right on the first try. It is now `panelkit/panel`.
   already does — `hasPermission()` when the application has one, `can()` when it
   does not.
 - **And the fallback needed the other half.** `can()` reaches Spatie through
-  `Gate::before`, which filters roles by a team id that a *request* sets and a
+  `Gate::before`, which filters roles by a team id that a _request_ sets and a
   command, a queued job or a test does not — so the same person with the same
   role was permitted inside a request and denied everywhere else, silently. The
   policy now sets it from `TenantContext` and restores it in a `finally`.
@@ -479,11 +507,11 @@ document that described a version that had already shipped past it.
   card would hand-roll a worse one. They are listed by hand, with the fact that
   `DashboardPage` renders `StatCard` and `ChartCard` only.
 - **The blueprint left the assistant's knowledge corpus.** Growing the guide
-  broke an unrelated test: *"how do I export a filtered list"* stopped returning
+  broke an unrelated test: _"how do I export a filtered list"_ stopped returning
   the exporting help passage and started returning blueprint chunks about
   clusters. Nobody touched retrieval — the corpus grew and the answer got worse,
   which happened every time the developer guide improved. `AGENTS.md` is for an
-  agent *writing* the panel; the assistant answers somebody *using* it.
+  agent _writing_ the panel; the assistant answers somebody _using_ it.
   **If you index the blueprint in your own installation, remove
   `BlueprintSource` from `panel.knowledge.sources` and reindex.**
 
@@ -524,7 +552,7 @@ document that described a version that had already shipped past it.
   dashboard**, and a catalogue entry for the `Pages` namespace.
 - `verify-install.sh` now runs `panel:update` in the fresh application it built.
   It verified `composer require` and stopped there — leaving the command
-  somebody runs on *every release after the first* checked only from inside the
+  somebody runs on _every release after the first_ checked only from inside the
   monorepo, where the package is a symlink and `config/panel.php` has been
   edited by hand for months. A fresh install is the only place the config-drift
   report has a known correct answer.
@@ -612,7 +640,7 @@ single-tenant installation reconciles once with a null team id.
 
 **The matrix mounts itself at `/roles`.** If you already mount your own, set
 `panel.routes.roles` to `false`; two URLs rendering one screen is how a bookmark
-comes to disagree with a menu. If you have a *resource* keyed `roles`, it wins
+comes to disagree with a menu. If you have a _resource_ keyed `roles`, it wins
 the URL and the matrix becomes unreachable — `panel:doctor` now reports that too,
 because the failure is otherwise silent.
 
@@ -621,7 +649,7 @@ because the failure is otherwise silent.
 - `panel:permissions list|sync`, with `--prune` and `--dry-run`. Ability names are
   derived from the resource registry, so the interesting work is pruning names
   that no longer correspond to anything.
-- `grants_all`: a role that holds every ability *including ones invented later*.
+- `grants_all`: a role that holds every ability _including ones invented later_.
   Inferring it from "currently holds all of them" would make a role become a
   superuser the moment somebody ticked the last box.
 - `panel:doctor` checks `permission.teams` under tenancy, and the `roles` route
@@ -630,7 +658,7 @@ because the failure is otherwise silent.
 
 ### Changed
 
-- `panel:journey` moved to the reference app. It walks *that* app's routes.
+- `panel:journey` moved to the reference app. It walks _that_ app's routes.
 - `panel:benchmark` stays: it is the only reader of `Budgets::register()` and
   `Resource::budgetMs()`, both public API.
 - The seeders (`panel:seed-reference`, `panel:seed-demo`) are no longer shipped.

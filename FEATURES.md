@@ -2,15 +2,15 @@
 
 **Two columns, and the second one is the point.** PLAN.md is how it got built,
 ROADMAP.md is what is left, GAP_ANALYSIS.md is how it compares to Filament. None
-of them answers the question this file does: *if I install PanelKit, what do I
-get* — as distinct from *what am I looking at in the demo*.
+of them answers the question this file does: _if I install PanelKit, what do I
+get_ — as distinct from _what am I looking at in the demo_.
 
 Those are not the same thing, by a wide margin:
 
-| | package (installed) | reference app only |
-|---|---|---|
+|     | package (installed)     | reference app only      |
+| --- | ----------------------- | ----------------------- |
 | PHP | 272 files, 47,631 lines | 101 files, 14,577 lines |
-| Vue | 262 components | **84 components** |
+| Vue | 262 components          | **84 components**       |
 
 The Vue column inverted in v0.6.3, and that is the headline. The demo used to
 carry nearly twice what the framework did; the shell, the auth screens and the
@@ -77,12 +77,12 @@ dedicated screen — 67 of 229 actions in one real port.
 **So can a bulk action**, through the same `->form()`, asked **once** for the
 whole selection — the reason "move these forty to a plan" is one action rather
 than forty clicks. The handler runs once per keyset chunk and gets the same
-values each time, and a select-all-matching run is validated *before* it is
+values each time, and a select-all-matching run is validated _before_ it is
 queued, so a mistake comes back in the response rather than in a worker's log.
 
 **A generated resource carries the example.** `make:panel-resource --generate`
-writes a commented `->recordActions([...])` / `->bulkActions([...])` block *in
-the chain*, so uncommenting it is the whole edit — including the form variant
+writes a commented `->recordActions([...])` / `->bulkActions([...])` block _in
+the chain_, so uncommenting it is the whole edit — including the form variant
 and the two rules that are easy to get wrong (`form()` pairs with `handle()`,
 never `mutate()`; an action without `authorize()` is refused). A test
 uncomments the block mechanically and compiles the result, because a stub whose
@@ -112,8 +112,8 @@ console warning; a generated resource was readable by every authenticated user
 until somebody acted on a line of output.
 
 Ability names are **derived** from the registry (`view_any_clients`), never
-stored. `Role` with `grants_all` — a role that holds every ability *including
-ones invented later*. `panel:permissions list|sync --prune`. Team-scoped through
+stored. `Role` with `grants_all` — a role that holds every ability _including
+ones invented later_. `panel:permissions list|sync --prune`. Team-scoped through
 Spatie. **A resource with no policy is denied entirely**, and doctor tells you
 which are missing.
 
@@ -178,7 +178,7 @@ rather than leaving a queue nobody can write to or a customer side that was
 never mounted.
 
 **The policy is where the two sides are actually separated.** The opener reads
-and replies to their own holding *no ticket ability at all* — being the person
+and replies to their own holding _no ticket ability at all_ — being the person
 who asked is the entitlement — and may never resolve. The operator reads the
 organisation's on an ordinary ability. Neither reads another organisation's, and
 that check runs first: reversed, "the opener always reads their own" becomes a
@@ -214,7 +214,7 @@ optional button — and the packaged dashboard renders the banners at the top,
 above the heading. Both halves ship; until v0.4.0 only the writing did, so an
 installation could address the whole organisation and reach nobody.
 
-**Dismissing is not deleting.** Closing a banner records that *this* person read
+**Dismissing is not deleting.** Closing a banner records that _this_ person read
 it and writes them a notification, so the thing they cleared on Tuesday is still
 in the bell on Saturday. A × that destroyed the only copy would let the first
 person to click hide it from everyone.
@@ -264,7 +264,7 @@ components the packaged screens render into.
 
 **All ten auth screens ship**, not three: Login, ForgotPassword, ResetPassword,
 Register, VerifyEmail, TwoFactorChallenge, ConfirmPassword, RenewPassword,
-LockScreen and VerifyOtp. They are the reference app's screens *moved*, not
+LockScreen and VerifyOtp. They are the reference app's screens _moved_, not
 redrawn — same markup, same copy — with two substitutions: its `@/components/ui/*`
 imports became packaged primitives, and its Wayfinder route helpers became props,
 because a package cannot know a consuming application's route names.
@@ -282,7 +282,7 @@ disagree. There is no separate "enabled" flag to forget.
 It never creates an account from a callback: operators are invited, an account
 carries a tenant and a role, and neither is knowable from "somebody signed in
 with Google". An unlinked provider identity may be matched to an account by email
-**only** where the provider proves the address belongs to whoever holds it *and*
+**only** where the provider proves the address belongs to whoever holds it _and_
 the panel's own address is verified — `verifies_email` is a short, deliberate
 list, because adding to it carelessly is an account-takeover route. No tokens are
 stored: the panel does not act on anybody's behalf at those providers, and a
@@ -308,9 +308,9 @@ query, so a column marked searchable is searchable in the palette with nothing
 else edited, and a resource somebody may not view is not searched at all.
 
 The **bell** serves two streams from `{panel}/notifications` that are
-deliberately not one list. *Alerts* are recomputed on every open from
+deliberately not one list. _Alerts_ are recomputed on every open from
 `AlertRule`s your application registers with `PanelManager::alertRule()` — no
-stored row, no read state, gone when the condition clears. *Notifications* are
+stored row, no read state, gone when the condition clears. _Notifications_ are
 Laravel database notifications addressed to one person, with read state and
 deletion; the package already writes them for finished exports, queued actions
 and dismissed announcements. The badge counts unread notifications only, because
@@ -368,7 +368,7 @@ announcements, one line in `panel.plugins`.
 
 **Three landing designs** — Aurora, Editorial, Console, composed from a section
 library in `@panelkit/ui`, editable from the admin as stored blocks. The
-*sections* ship; the three compositions and their copy do not.
+_sections_ ship; the three compositions and their copy do not.
 
 **Commands** — `panel:seed-reference`, `panel:seed-demo`, `panel:journey`. These
 were moved out of the package deliberately: the seeders invent fibre subscribers,
@@ -406,7 +406,7 @@ your published `config/panel.php` does not install, refreshes `AGENTS.md`, and
 ends with `panel:doctor` — whose exit code becomes its own.
 
 **Settings added inside an array arrive on their own.** The package's config is
-merged into a published one *key by key*, so a version that adds
+merged into a published one _key by key_, so a version that adds
 `auth.password.max_age_days` does not need you to notice — the shallow
 `mergeConfigFrom` handed the published `auth` block over whole and the new key
 read as unset, which looks like a feature that was never shipped. Lists are the
@@ -418,4 +418,4 @@ a breaking change.
 
 ---
 
-Current state: **v0.6.2**, 1,681 tests passing, 13 skipped.
+Current state: **v0.6.3**, 1,714 tests passing, 13 skipped.

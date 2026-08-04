@@ -50,7 +50,7 @@ npm run build
 ```
 
 **`panel:update` is the step that reconciles what `composer update` cannot.**
-The PHP half upgrades itself; the *screens* do not. A release that adds a routed
+The PHP half upgrades itself; the _screens_ do not. A release that adds a routed
 screen ships the route inside the package and the page file into your
 `resources/js/pages` — and Inertia resolves page names by globbing that
 directory, so until the file exists the route answers and the browser renders a
@@ -63,14 +63,14 @@ them.
 
 It does four things and refuses a fifth:
 
-| | |
-|---|---|
-| **invalidates** the schema cache | the fingerprint is computed from your resource class, which did not change — so without this, a release that adds a key to the payload serves last version's shape to a bundle rebuilt for the new one, as a successful 200 |
-| **writes** page files for screens this version routes and the last one did not | adding a missing file cannot lose data |
-| **reports** pending migrations, **by name** | "3 pending" does not distinguish a column default from a table rewrite at 2am — that decision is the deploy owner's |
-| **reports** plugins this version ships that your published `config/panel.php` does not install | the package's config is merged into yours *key by key*, so a setting added inside an array you publish arrives on its own. A **list** does not merge — shortening `abilities` is a decision, and unioning `plugins` back would reinstall what you removed — so a plugin added to the packaged list after you published reaches nobody, silently. That is how `TicketingPlugin` shipped to a release of installations that could configure it and never see it |
-| **refreshes** `AGENTS.md` | so an agent working in your repository is told what this version added, rather than the last one |
-| **never** runs migrations, never rewrites your config, and never restarts anything | those are decisions with a maintenance window attached, and a command that took them is one nobody dares run in production |
+|                                                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **invalidates** the schema cache                                                               | the fingerprint is computed from your resource class, which did not change — so without this, a release that adds a key to the payload serves last version's shape to a bundle rebuilt for the new one, as a successful 200                                                                                                                                                                                                                                   |
+| **writes** page files for screens this version routes and the last one did not                 | adding a missing file cannot lose data                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **reports** pending migrations, **by name**                                                    | "3 pending" does not distinguish a column default from a table rewrite at 2am — that decision is the deploy owner's                                                                                                                                                                                                                                                                                                                                           |
+| **reports** plugins this version ships that your published `config/panel.php` does not install | the package's config is merged into yours _key by key_, so a setting added inside an array you publish arrives on its own. A **list** does not merge — shortening `abilities` is a decision, and unioning `plugins` back would reinstall what you removed — so a plugin added to the packaged list after you published reaches nobody, silently. That is how `TicketingPlugin` shipped to a release of installations that could configure it and never see it |
+| **refreshes** `AGENTS.md`                                                                      | so an agent working in your repository is told what this version added, rather than the last one                                                                                                                                                                                                                                                                                                                                                              |
+| **never** runs migrations, never rewrites your config, and never restarts anything             | those are decisions with a maintenance window attached, and a command that took them is one nobody dares run in production                                                                                                                                                                                                                                                                                                                                    |
 
 Then run migrations yourself, when you have decided to:
 
@@ -81,7 +81,7 @@ php artisan migrate
 **It ends with `panel:doctor`, whose exit code becomes its own.** That is not a
 formality — an upgrade is exactly when a check starts failing that passed under
 the old version. Doctor walks the registered resources, the policies, the
-indexes, the queue and the schema cache, and reports what is *silently* wrong: a
+indexes, the queue and the schema cache, and reports what is _silently_ wrong: a
 resource with no policy, a filter with no index, a permission config that fails
 open. Those produce a working panel that is slow or over-permissive, which is the
 class of failure that does not announce itself. A deploy step that exits non-zero
@@ -108,6 +108,46 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.6.2 → 0.6.3
+
+**One edit, and only if you hand-wrote your stylesheet.** `composer update`,
+`npm update`, `php artisan panel:update`.
+
+`@panelkit/ui` now ships compiled rather than as source, so Tailwind has to scan
+its build output instead of its `src`:
+
+```css
+/* resources/css/app.css */
+- @source '../../node_modules/@panelkit/ui/src/**/*.{vue,ts}';
++ @source '../../node_modules/@panelkit/ui/dist/**/*.js';
+```
+
+`panel:install` rewrites this for you; the line above is for anyone who wrote
+their own. **`@panelkit/inertia` is unchanged and still points at `src`** — it
+still ships source, because its `./pages/*.vue` subpaths are what your page
+files import.
+
+If you left it pointing at `src`, the symptom is a correctly structured panel
+with no styling: Tailwind finds no class names in a directory the package no
+longer ships, so every utility used only inside those components is purged.
+`php artisan panel:doctor` reports it.
+
+**Why it changed.** Roughly fifty of the shadcn components declare
+`defineProps<SomeTypeFromRekaUi>()`. Resolving an imported type is something the
+Vue SFC compiler will not do across a package boundary, so `npm run build` in a
+consuming application failed outright. Compiling here resolves those types once,
+where `reka-ui` and TypeScript both are.
+
+**`@panelkit/ui/theme/tokens.css` is gone from the exports map.** It pointed at
+a file that has never existed, so nothing can have been importing it
+successfully. The tokens come from `panel:install`.
+
+**Nothing else needs an edit.** The passkey button returning to the sign-in
+screen, and the operations and assistant-key screens moving into the package,
+are additive — an application that already declares those routes itself keeps
+them, and can drop the packaged ones per panel with
+`->without(['operations', 'assistant-settings'])`.
+
 ### 0.6.1 → 0.6.2
 
 **One behaviour change, and it is the reason to read this.** `composer update`,
@@ -118,7 +158,7 @@ really has a broadcaster, poll if it does not. Installing Reverb used to change
 nothing until somebody also remembered `PANEL_LIVE_DRIVER=broadcast`, and
 removing Reverb left a panel pointed at a websocket nobody was serving.
 
-**Who this changes.** Only an installation that has *all three* of: a broadcast
+**Who this changes.** Only an installation that has _all three_ of: a broadcast
 connection that is not `null` or `log`, its key set, and `panel.live.channel`
 configured — and that never set `PANEL_LIVE_DRIVER`. That installation moves
 from polling to broadcasting. Everyone else is exactly where they were, and
@@ -131,7 +171,7 @@ PANEL_LIVE_DRIVER=poll
 ```
 
 **Configured is not running.** `BROADCAST_CONNECTION=reverb` says a connection
-is *defined*, not that a Reverb process is up — and the failure modes are not
+is _defined_, not that a Reverb process is up — and the failure modes are not
 symmetrical. A slow poll is a slow poll; a broadcast with nothing listening is a
 list that is silently static and looks exactly like a list where nothing
 changed. If any environment of yours has the configuration without the process —
@@ -141,7 +181,7 @@ driver explicitly there.
 **Fixed:** `import { PanelShell } from '@panelkit/inertia'` now works in a
 project with no TypeScript installed. The root entry re-exports every screen and
 three of them named an imported type in `defineProps`, which the SFC compiler
-could only resolve by loading TypeScript out of *your* project. Nothing to do —
+could only resolve by loading TypeScript out of _your_ project. Nothing to do —
 it either affected you or it did not.
 
 ### 0.6.0 → 0.6.1
@@ -153,7 +193,7 @@ it either affected you or it did not.
 `@panelkit/inertia` — and the `PanelLayout.vue` that `panel:install` publishes
 is a thin wrapper over it. **Your published layout is not touched**: the
 installer has never overwritten it, so an application that already has one keeps
-exactly the frame it has. This is what a *fresh* install and a *newly generated*
+exactly the frame it has. This is what a _fresh_ install and a _newly generated_
 portal now get.
 
 **To adopt it in an existing app**, replace the body of your
@@ -161,11 +201,11 @@ portal now get.
 
 ```vue
 <script setup lang="ts">
-import { PanelShell } from '@panelkit/inertia'
+import { PanelShell } from "@panelkit/inertia";
 </script>
 
 <template>
-    <PanelShell><slot /></PanelShell>
+  <PanelShell><slot /></PanelShell>
 </template>
 ```
 
@@ -186,7 +226,7 @@ Also: `PkCard` for ordinary content blocks, and `useUnsavedChanges` /
 
 **The package's config is now merged into yours KEY BY KEY.** Before,
 `mergeConfigFrom` merged one level: a published `config/panel.php` supplied
-`auth` *whole*, so `auth.password.max_age_days` was read as unset however the
+`auth` _whole_, so `auth.password.max_age_days` was read as unset however the
 package file read. That is why a setting a release added could be invisible on
 an existing install - and where the call site had no default of its own, the
 feature it enabled simply never appeared.
@@ -467,7 +507,7 @@ component the client cannot resolve, and a white page naming a file the develope
 has never seen. If you upgraded before `panel:update` existed, run it now.
 
 **Check `teams` in `config/permission.php`.** Under tenancy, `teams => false`
-fails *open* — abilities stop being scoped. `panel:doctor` reports it as a
+fails _open_ — abilities stop being scoped. `panel:doctor` reports it as a
 problem rather than a note.
 
 ## If an upgrade goes wrong
