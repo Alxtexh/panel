@@ -129,6 +129,16 @@ final class SharePanelProps
                     'security' => Route::has($panel->id.'.settings.security')
                         ? route($panel->id.'.settings.security')
                         : null,
+
+                    /*
+                     * AND HELP, for the same reason and in the same place. A
+                     * help centre reached only by typing `/help` is one nobody
+                     * finds; under the avatar is where every application anybody
+                     * has used puts it.
+                     */
+                    'help' => Route::has($panel->id.'.support.help')
+                        ? route($panel->id.'.support.help')
+                        : null,
                 ];
             },
 

@@ -496,6 +496,39 @@ final class PanelRoutes
                 }
 
                 /*
+                 * THE HELP CENTRE, on panels that want it.
+                 *
+                 * `->without(['help'])` DROPS THE ROUTES, not just the menu
+                 * entries. A customer portal has no use for an operator's help
+                 * centre, and hiding a link while leaving the URL open is how a
+                 * screen ends up read by somebody it was never written for.
+                 *
+                 * THE ARTICLES ARE THE APPLICATION'S. `HelpCentre` ships only
+                 * what is true of every panel - search, tables, the trash,
+                 * roles, the account screens - so a fresh install opens on
+                 * something useful rather than on an empty shelf, and an
+                 * application adds its own or replaces the lot. Shipping the
+                 * reference app's articles about fibre plans would be shipping
+                 * somebody else's business as a feature.
+                 */
+                if ($panel->offers('help')) {
+                    if (self::unclaimed('GET', $panel->getPath().'/help')) {
+                        Route::get('help', [Controllers\HelpController::class, 'help'])
+                            ->name('support.help');
+                    }
+
+                    if (self::unclaimed('GET', $panel->getPath().'/faq')) {
+                        Route::get('faq', [Controllers\HelpController::class, 'faq'])
+                            ->name('support.faq');
+                    }
+
+                    if (self::unclaimed('GET', $panel->getPath().'/about')) {
+                        Route::get('about', [Controllers\HelpController::class, 'about'])
+                            ->name('support.about');
+                    }
+                }
+
+                /*
                  * THE BELL. Also lean JSON and for the same reason - it may be
                  * polled, and re-rendering a page to answer "anything new?" is
                  * the cost this package exists to avoid.
