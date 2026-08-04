@@ -116,8 +116,8 @@ final class InstallStylesheetTest extends TestCase
 
         $css = File::get($this->path);
 
-        $this->assertStringContainsString('@panelkit/panel', $css);
-        $this->assertStringContainsString('@panelkit/panel/inertia', $css);
+        $this->assertStringContainsString('@alxtexh-enterprise/panel', $css);
+        $this->assertStringContainsString('@alxtexh-enterprise/panel/inertia', $css);
         $this->assertStringContainsString('--background', $css);
     }
 
@@ -149,8 +149,8 @@ final class InstallStylesheetTest extends TestCase
          * already, and a stylesheet that scans a directory the package no
          * longer ships purges every utility in it.
          */
-        $this->assertStringContainsString('@panelkit/panel/dist', $css);
-        $this->assertStringContainsString('@panelkit/panel/inertia', $css);
+        $this->assertStringContainsString('@alxtexh-enterprise/panel/dist', $css);
+        $this->assertStringContainsString('@alxtexh-enterprise/panel/inertia', $css);
 
         // Stock Laravel defines no tokens, so these arrive too - without them
         // `bg-background` resolves to nothing and the panel is unreadable.
@@ -173,7 +173,7 @@ final class InstallStylesheetTest extends TestCase
 
         $css = File::get($this->path);
 
-        $this->assertStringContainsString('@panelkit/panel/dist', $css);
+        $this->assertStringContainsString('@alxtexh-enterprise/panel/dist', $css);
         $this->assertStringContainsString('hsl(210 40% 98%)', $css);
 
         // Ours is not appended over theirs.

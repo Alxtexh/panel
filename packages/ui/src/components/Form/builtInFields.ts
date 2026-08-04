@@ -28,7 +28,7 @@ import PkVisualSelect from './PkVisualSelect.vue'
  * first person to write a custom field would discover it does not work. These
  * five are the proof that it does.
  *
- * CALLED AUTOMATICALLY when `@panelkit/panel` is imported; exported so a test can
+ * CALLED AUTOMATICALLY when `@alxtexh-enterprise/panel` is imported; exported so a test can
  * re-register after clearing the map.
  */
 export function registerBuiltInFieldControls(): void {

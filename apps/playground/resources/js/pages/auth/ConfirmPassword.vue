@@ -7,7 +7,7 @@
  * has no Wayfinder output to import from. This application knows its own URLs,
  * so it fills them in here.
  */
-import { ConfirmPassword } from '@panelkit/panel/inertia';
+import { ConfirmPassword } from '@alxtexh-enterprise/panel/inertia';
 import {
     index as confirmOptions,
     store as confirmStore,

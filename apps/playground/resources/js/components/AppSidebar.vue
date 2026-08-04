@@ -8,14 +8,14 @@
  * this application's: the account menu's ITEMS, which link to its settings
  * centre, its operations screen and its lock screen.
  */
-import { AppSidebar } from '@panelkit/panel/inertia';
+import { AppSidebar } from '@alxtexh-enterprise/panel/inertia';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 </script>
 
 <template>
     <AppSidebar>
         <template #userMenu="{ user }">
-            <UserMenuContent :user="user" />
+            <UserMenuContent v-if="user" :user="user" />
         </template>
     </AppSidebar>
 </template>

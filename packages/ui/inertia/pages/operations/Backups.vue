@@ -44,8 +44,8 @@ import { Head, router } from '@inertiajs/vue3'
  * breaks the build instead.
  */
 import { Download, RotateCcw, Settings2, Trash2, TriangleAlert } from '@lucide/vue'
-import { PkModal, PkStepIndicator } from '@panelkit/panel'
-import { PkButton as Button } from '@panelkit/panel'
+import { PkModal, PkStepIndicator } from '@alxtexh-enterprise/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { computed, ref } from 'vue'
 
 interface Snapshot {

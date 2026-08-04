@@ -3,7 +3,7 @@
  * The packaged screen, with this application's routes mapped onto it.
  * See `auth/Login.vue` - one implementation, the mapping stays here.
  */
-import { Register } from '@panelkit/panel/inertia';
+import { Register } from '@alxtexh-enterprise/panel/inertia';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 

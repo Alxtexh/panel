@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { buttonClasses } from '@alxtexh-enterprise/panel';
 import { Link, usePage } from '@inertiajs/vue3';
-import { buttonClasses } from '@panelkit/panel';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Separator } from '@/components/ui/separator';
@@ -8,8 +8,16 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { toUrl } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
-import { index as settingsIndex } from '@/routes/settings';
 import type { NavItem } from '@/types';
+
+/*
+ * `/settings` LITERALLY, not through a generated helper.
+ *
+ * The settings index moved into the package in 0.8.3, so its route is named
+ * per panel (`panel.settings.index`) and Wayfinder no longer emits a bare
+ * `settings.index` for this application to import. Both links here belong to
+ * this app's own root panel, which is mounted at `/`.
+ */
 
 const page = usePage();
 
@@ -72,7 +80,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
             can reach is not a door.
         -->
         <Link
-            :href="settingsIndex()"
+            :href="'/settings'"
             class="mb-2 inline-block text-xs text-muted-foreground hover:text-foreground"
         >
             ← All settings

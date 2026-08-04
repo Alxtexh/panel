@@ -6,7 +6,7 @@
  * arrive from the reset link and are passed straight through; the package's
  * screen posts them back with the new password.
  */
-import { ResetPassword } from '@panelkit/panel/inertia';
+import { ResetPassword } from '@alxtexh-enterprise/panel/inertia';
 import { update } from '@/routes/password';
 
 defineProps<{ token: string; email: string }>();

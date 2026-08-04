@@ -17,7 +17,7 @@
  * Nothing is imported until the operator has seen the exact rows that would
  * fail and chosen to go back rather than proceed.
  */
-import { PkButton as Button, PkModal, PkStepIndicator } from '@panelkit/panel'
+import { PkButton as Button, PkModal, PkStepIndicator } from '@alxtexh-enterprise/panel'
 import { computed, ref, watch } from 'vue'
 import { useImport, type ImportField, type ImportRunResult } from '../composables/useImport'
 

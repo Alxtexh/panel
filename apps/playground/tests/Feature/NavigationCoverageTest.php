@@ -587,19 +587,26 @@ final class NavigationCoverageTest extends TestCase
 
         foreach ($items[0] as $item) {
             /*
-             * THE ACCOUNT AND THE WAY OUT OF IT are the two things that mean
-             * the same in every portal; everything else is the application's.
+             * THE WAY OUT IS THE ONE THING THAT MEANS THE SAME IN EVERY
+             * PORTAL. Sign-out posts wherever the server says, so it is
+             * correct from anywhere; everything else here is the
+             * application's.
              *
-             * `settingsIndex()`, NOT `edit()` - roadmap 3.7 replaced the
-             * account menu's direct link to Profile with the searchable
-             * settings index. It stays ungated for the same reason Profile
-             * already was: `/settings` is registered outside every panel's
-             * route group, exactly like `/settings/profile` and
-             * `/settings/organisation` always were, so it resolves to the
-             * default panel regardless of which portal linked here - there
-             * is no boundary at the route level for a menu gate to enforce.
+             * SETTINGS USED TO BE UNGATED TOO, AND THE REASON EXPIRED. It was
+             * exempt because `/settings`, `/settings/profile` and
+             * `/settings/organisation` were all registered OUTSIDE every
+             * panel's route group, so they resolved to the default panel
+             * whoever linked to them - there was no boundary for a gate to
+             * enforce. PanelKit 0.8.1 to 0.8.3 moved all three INSIDE each
+             * panel's group. `/platform/settings` now exists and is a
+             * different screen, so an ungated `/settings` in a generated
+             * portal is once again a link that leaves the portal silently.
+             *
+             * The gate went back on. This comment stays because the exemption
+             * was right when it was written, and the thing that changed was
+             * the routing rather than the reasoning.
              */
-            if (str_contains($item, 'settingsIndex()') || str_contains($item, 'logout()')) {
+            if (str_contains($item, 'logout()')) {
                 $ungated++;
 
                 continue;
@@ -637,8 +644,8 @@ final class NavigationCoverageTest extends TestCase
             );
         }
 
-        // Both of them, still there: a portal whose account menu offers nothing
+        // Still there: a portal whose account menu offers nothing
         // is as wrong as one that offers everything.
-        $this->assertSame(2, $ungated, 'The profile or the way out of it has gone missing.');
+        $this->assertSame(1, $ungated, 'Sign-out has gone missing - a portal you cannot leave.');
     }
 }

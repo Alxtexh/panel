@@ -27,7 +27,7 @@ every difference in Part 2.
 | | What | May you edit it? |
 | --- | --- | --- |
 | **Your application** | the billing system you are building | **Yes.** This is your code |
-| **The package** | `vendor/panelkit/panel` + `node_modules/@panelkit/panel` | **Never.** Wiped by every update |
+| **The package** | `vendor/panelkit/panel` + `node_modules/@alxtexh-enterprise/panel` | **Never.** Wiped by every update |
 | **The demo** | `apps/playground` in the PanelKit monorepo | **Read and copy from.** Never depend on it |
 
 > **The one rule: never edit anything under `vendor/` or `node_modules/`.**
@@ -103,7 +103,7 @@ application:
 
 ```bash
 # .npmrc in your application root - commit this, it holds no secret
-@panelkit:registry=https://npm.pkg.github.com
+@alxtexh-enterprise:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
@@ -113,7 +113,7 @@ every install.
 
 ```bash
 export GITHUB_TOKEN=ghp_...          # in your shell profile, or CI secrets
-npm install @panelkit/panel @vitejs/plugin-vue
+npm install @alxtexh-enterprise/panel @vitejs/plugin-vue
 ```
 
 `npm install` and `npm ci` now resolve it like any other dependency, and
@@ -159,7 +159,7 @@ npm pack --pack-destination /path/to/isp-billing/vendor-js
 
 ```json
 // package.json
-"dependencies": { "@panelkit/panel": "file:vendor-js/panelkit-panel-0.8.3.tgz" }
+"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/panelkit-panel-0.8.3.tgz" }
 ```
 
 `npm ci` now works anywhere with nothing to fetch.
@@ -459,7 +459,7 @@ into `node_modules`:
 
 ```vue
 <script setup lang="ts">
-import Trash from '@panelkit/panel/pages/Trash.vue';
+import Trash from '@alxtexh-enterprise/panel/pages/Trash.vue';
 defineOptions({ inheritAttrs: false });
 </script>
 
@@ -480,7 +480,7 @@ Same route, same props, same page name. The server neither knows nor cares.
 at all*, silently, and only in a production build.
 
 **Start from the packaged component.** Copy
-`node_modules/@panelkit/panel/inertia/pages/<Screen>.vue`, edit the copy, point
+`node_modules/@alxtexh-enterprise/panel/inertia/pages/<Screen>.vue`, edit the copy, point
 the shim at it. Do not rewrite from scratch — the props are a contract with the
 PHP half, and re-deriving them by guesswork is where "the table renders but the
 filters do nothing" comes from.
@@ -586,7 +586,7 @@ php artisan config:cache && php artisan route:cache
 - **The Composer package ships no `.vue` files.** If the panel installs and
   renders nothing, the npm half is missing. Nothing about this failure says so:
   the routes answer, the build succeeds, the screen is blank.
-- **A 404 on `npm install @panelkit/panel` means you hit npmjs.com.** The scope
+- **A 404 on `npm install @alxtexh-enterprise/panel` means you hit npmjs.com.** The scope
   is not ours there. Check `.npmrc` is in scope and `GITHUB_TOKEN` is exported —
   the error says "not found", never "wrong registry".
 - **Your app must be Inertia + Vue.** `laravel new myapp --vue`.

@@ -3,7 +3,7 @@
  * One registered passkey, with a confirm-before-removing dialog.
  *
  * MOVED FROM THE REFERENCE APP, verbatim - the shadcn dialog it uses moved into
- * `@panelkit/panel` with it.
+ * `@alxtexh-enterprise/panel` with it.
  *
  * REMOVAL IS CONFIRMED because it is not undoable and the thing being destroyed
  * is a way in. Somebody with one passkey and no password who taps the bin by
@@ -23,7 +23,7 @@ import {
     DialogTitle,
     DialogTrigger,
     PkButton as Button,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import { ref } from 'vue'
 import type { Passkey } from '../../types'
 

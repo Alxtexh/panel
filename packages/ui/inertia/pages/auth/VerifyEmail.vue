@@ -10,7 +10,7 @@
  * address, and without a way out the only remedy is clearing cookies.
  */
 import { Form, Head } from '@inertiajs/vue3'
-import { PkButton as Button, PkSpinner as Spinner } from '@panelkit/panel'
+import { PkButton as Button, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{

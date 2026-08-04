@@ -112,6 +112,50 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.8.3 → 0.9.0
+
+**The npm package is renamed to `@alxtexh-enterprise/panel`.** The Composer
+package keeps its name; only the client half moves.
+
+The reason is registry mechanics rather than design: GitHub Packages scopes an
+npm package to a GitHub organisation, and `panelkit` there belongs to somebody
+else. A scope you do not own is a package you cannot publish privately.
+
+```bash
+composer update panelkit/panel
+npm uninstall @panelkit/panel
+npm install @alxtexh-enterprise/panel
+php artisan panel:update
+npm run build
+```
+
+Then find-and-replace `@panelkit/panel` with `@alxtexh-enterprise/panel` across
+`resources/js`. **Your build finds every import you miss.** It does NOT find the
+two `@source` lines in `resources/css/app.css`, which is why `panel:update`
+rewrites them: they are strings in a CSS file that nothing resolves, and a stale
+one is not an error - Tailwind scans a directory that is not there, finds no
+class names, and purges every utility used only inside the packaged screens. The
+panel renders with no layout, no colour and a clean build log.
+
+`panel:update` handles both hops, so an installation still on 0.7.x with
+`@panelkit/ui` and `@panelkit/inertia` in its stylesheet reaches the current
+name in one run.
+
+**`.npmrc`, next to `package.json`:**
+
+```
+@alxtexh-enterprise:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+`GITHUB_TOKEN` needs `read:packages` and nothing else. Do not commit the token;
+`.npmrc` reads it from the environment.
+
+**`User` is now exported** from `@alxtexh-enterprise/panel/inertia`. If you
+declared your own type for the value `AppHeader`'s `userMenu` slot passes you,
+import that one instead - a hand-written copy compiles and then reads fields
+the shell does not send.
+
 ### 0.8.2 → 0.8.3
 
 The usual: `composer update`, a fresh `npm pack`, `php artisan panel:update`,

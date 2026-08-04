@@ -12,9 +12,9 @@
  * the payload, and the same file serves create and edit - the only difference is
  * whether `record` is null.
  */
-import { PkButton as Button } from '@panelkit/panel'
-import { RecordForm, UnsavedBar, buttonClasses } from '@panelkit/panel'
-import type { FormField, UploadedFileValue } from '@panelkit/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import { RecordForm, UnsavedBar, buttonClasses } from '@alxtexh-enterprise/panel'
+import type { FormField, UploadedFileValue } from '@alxtexh-enterprise/panel'
 import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
@@ -204,7 +204,7 @@ function submit() {
  * Uploads a file and returns the handle the form will carry.
  *
  * Lives here rather than in the control for the same reason `searchOptions`
- * does: @panelkit/panel ships no HTTP client. XHR rather than fetch, because
+ * does: @alxtexh-enterprise/panel ships no HTTP client. XHR rather than fetch, because
  * fetch still cannot report UPLOAD progress - and on a 4 MB scan over a phone
  * connection, an indeterminate spinner is the difference between waiting and
  * pressing the button again.
@@ -282,7 +282,7 @@ function csrf(): string {
 /**
  * Fetches options for a searchable select.
  *
- * Lives here because @panelkit/panel may not import an HTTP client - the same rule
+ * Lives here because @alxtexh-enterprise/panel may not import an HTTP client - the same rule
  * that keeps the live-update composable transport-agnostic.
  */
 async function searchOptions(

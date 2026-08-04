@@ -21,7 +21,7 @@
  * been a write, and replaying a write against a fresh session is how you charge
  * somebody twice. The reader is told what happened and the page starts clean.
  */
-import { PkButton as Button } from '@panelkit/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { sessionExpired } from '../lib/sessionExpired'
 
 /*

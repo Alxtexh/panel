@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Publish @panelkit/panel to GitHub Packages.
+# Publish @alxtexh-enterprise/panel to GitHub Packages.
 #
 # WHY THIS IS A SCRIPT AND NOT A README LINE. `npm publish` on a scoped package
 # with no `.npmrc` in scope silently targets npmjs.com, where the scope is not
@@ -32,7 +32,7 @@ if [[ -n "$(git -C "$ROOT" status --porcelain)" ]]; then
     fail "Working tree is not clean - a published version must match a commit."
 fi
 
-# THE TAG MUST EXIST FIRST, so `npm install @panelkit/panel@0.8.3` and
+# THE TAG MUST EXIST FIRST, so `npm install @alxtexh-enterprise/panel@0.8.3` and
 # `git checkout v0.8.3` name the same code.
 git -C "$ROOT" rev-parse "v${version}" >/dev/null 2>&1 \
     || fail "No tag v${version} - tag the release before publishing it."
@@ -45,7 +45,7 @@ npmrc="$(mktemp)"
 trap 'rm -f "$npmrc"' EXIT
 
 cat > "$npmrc" <<NPMRC
-@panelkit:registry=https://npm.pkg.github.com
+@alxtexh-enterprise:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 NPMRC
 

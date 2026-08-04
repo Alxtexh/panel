@@ -4,7 +4,7 @@ import Pusher from 'pusher-js';
 /**
  * The WebSocket connection, created once and hung on `window`.
  *
- * ON `window` BECAUSE THAT IS THE CONTRACT `@panelkit/panel` READS. The package
+ * ON `window` BECAUSE THAT IS THE CONTRACT `@alxtexh-enterprise/panel` READS. The package
  * ships no HTTP client and no Echo import - that is what lets the same
  * components run under Inertia, a plain fetch page, or a test harness - so it
  * looks for `window.Echo` and degrades to polling when there is none. A module

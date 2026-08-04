@@ -1,4 +1,4 @@
-# Publish @panelkit/panel to GitHub Packages when a version tag is pushed.
+# Publish @alxtexh-enterprise/panel to GitHub Packages when a version tag is pushed.
 #
 # WHY ON A TAG RATHER THAN ON MAIN. A published version is immutable - the
 # registry refuses to overwrite one - so publishing from every push would burn
@@ -31,7 +31,7 @@ jobs:
           # Writes the registry line into ~/.npmrc for this scope, which is the
           # half `publishConfig` cannot do - the auth line.
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@panelkit'
+          scope: '@alxtexh-enterprise'
 
       - name: Install
         working-directory: packages/ui

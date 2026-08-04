@@ -17,7 +17,7 @@
  * is given and has no idea which fields were sensitive, which is the correct
  * arrangement: a client that could un-redact would mean the value had travelled.
  */
-import { PkButton as Button } from '@panelkit/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { History } from '@lucide/vue'
 import { useTranslations } from '../composables/useTranslations'
 import { ref } from 'vue'

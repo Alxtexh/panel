@@ -4,7 +4,7 @@ import { router } from '@inertiajs/vue3'
 /**
  * Runs a bulk action or an export, and follows it if it was queued.
  *
- * THE HTTP LIVES HERE, NOT IN @panelkit/panel. Package rule 2 (§4) is that
+ * THE HTTP LIVES HERE, NOT IN @alxtexh-enterprise/panel. Package rule 2 (§4) is that
  * components take props and emit events; only the app fetches. So BulkActions
  * emits `run` and this turns it into a request.
  *

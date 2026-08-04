@@ -11,7 +11,7 @@
  * on every single page load.
  */
 import { usePage } from '@inertiajs/vue3'
-import { SidebarProvider } from '@panelkit/panel'
+import { SidebarProvider } from '@alxtexh-enterprise/panel'
 
 type Props = {
     variant?: 'sidebar' | 'header'

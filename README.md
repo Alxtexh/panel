@@ -93,7 +93,7 @@ php artisan make:panel-resource Customer --generate
 ```
 
 Two packages, and both are required. `panelkit/panel` answers the requests;
-`@panelkit/panel` holds the screens it renders and draws the table and the form
+`@alxtexh-enterprise/panel` holds the screens it renders and draws the table and the form
 underneath them. `panel:install` writes one page file per screen into
 `resources/js/pages`, because Inertia resolves page names by globbing that directory
 and cannot see into `node_modules`.
@@ -166,7 +166,7 @@ some widths with no error anywhere.
 
 ```
 packages/panel/    Composer package: panelkit/panel
-packages/ui/       npm package: @panelkit/panel   (src/ imports no Inertia; inertia/ is the screens)
+packages/ui/       npm package: @alxtexh-enterprise/panel   (src/ imports no Inertia; inertia/ is the screens)
 apps/playground/   A real Laravel app consuming both
 ```
 

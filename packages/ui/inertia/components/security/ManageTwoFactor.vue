@@ -16,7 +16,7 @@
  */
 import { Form } from '@inertiajs/vue3'
 import { ShieldCheck } from '@lucide/vue'
-import { PkButton as Button, PkHeading as Heading } from '@panelkit/panel'
+import { PkButton as Button, PkHeading as Heading } from '@alxtexh-enterprise/panel'
 import { onUnmounted, ref } from 'vue'
 import type { TwoFactorRoutes } from '../../composables/useTwoFactorAuth'
 import { useTwoFactorAuth } from '../../composables/useTwoFactorAuth'

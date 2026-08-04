@@ -20,7 +20,7 @@ import {
     PkButton as Button,
     PkHeading as Heading,
     ShadcnInput as Input,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
 import { toast } from 'vue-sonner'
 

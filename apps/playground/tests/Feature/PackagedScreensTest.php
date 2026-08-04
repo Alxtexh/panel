@@ -26,7 +26,7 @@ use Tests\TestCase;
  *
  * SO THE TEST READS THE PACKAGE, NOT THE APPLICATION. It walks the render calls
  * in `packages/panel/src`, and for each one demands a component in
- * `@panelkit/panel/inertia`. An application may still override any screen - that is
+ * `@alxtexh-enterprise/panel/inertia`. An application may still override any screen - that is
  * what the one-line page file is for - but it can no longer be the only place
  * the screen exists.
  *
@@ -89,7 +89,7 @@ final class PackagedScreensTest extends TestCase
         foreach ($names as $name) {
             $this->assertFileExists(
                 self::SCREENS.'/'.$name.'.vue',
-                "The panel renders [{$name}], which @panelkit/panel/inertia does not ship. A fresh install "
+                "The panel renders [{$name}], which @alxtexh-enterprise/panel/inertia does not ship. A fresh install "
                 .'of the package gets a route that resolves to nothing: a white page, in the browser, '
                 .'with a console error naming a file the developer has never seen.',
             );
@@ -158,7 +158,7 @@ final class PackagedScreensTest extends TestCase
      *
      * THIS IS NOT A STYLE RULE. The obvious way to write a one-line page file is
      *
-     *     export { default } from '@panelkit/panel/pages/ResourceIndex.vue'
+     *     export { default } from '@alxtexh-enterprise/panel/pages/ResourceIndex.vue'
      *
      * which type-checks, builds, and emits a chunk containing the entire real
      * component - and renders NOTHING. An SFC with no `<template>` block

@@ -48,7 +48,7 @@ export default defineConfig({
         // local checkout will do.
         dedupe: ['vue', '@inertiajs/vue3'],
         /*
-         * `@panelkit/panel` IS COMPILED FROM SOURCE HERE, not from its `dist`.
+         * `@alxtexh-enterprise/panel` IS COMPILED FROM SOURCE HERE, not from its `dist`.
          *
          * The package builds now - it has to, because roughly fifty of its
          * shadcn components declare `defineProps<SomeImportedType>()` and a
@@ -65,21 +65,21 @@ export default defineConfig({
          *
          * AN ARRAY, AND THE ORDER IS LOAD-BEARING. Vite matches a string alias
          * against the specifier AND everything under it, so the bare entry
-         * swallowed `@panelkit/panel/pages/…` and asked for a directory named
+         * swallowed `@alxtexh-enterprise/panel/pages/…` and asked for a directory named
          * `index.ts`. The subpaths have to be found first, and they resolve to
          * `inertia/` rather than `src/` because that is where the screens are:
          * one package, two halves, and only the first is compiled.
          */
         alias: [
             {
-                find: /^@panelkit\/panel\/(pages|components|composables)\//,
+                find: /^@alxtexh-enterprise\/panel\/(pages|components|composables)\//,
                 replacement:
                     fileURLToPath(
                         new URL('../../packages/ui/inertia/', import.meta.url),
                     ) + '$1/',
             },
             {
-                find: '@panelkit/panel/inertia',
+                find: '@alxtexh-enterprise/panel/inertia',
                 replacement: fileURLToPath(
                     new URL(
                         '../../packages/ui/inertia/index.ts',
@@ -88,7 +88,7 @@ export default defineConfig({
                 ),
             },
             {
-                find: '@panelkit/panel',
+                find: '@alxtexh-enterprise/panel',
                 replacement: fileURLToPath(
                     new URL('../../packages/ui/src/index.ts', import.meta.url),
                 ),

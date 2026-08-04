@@ -108,7 +108,7 @@ final class PasskeySupportTest extends TestCase
     /**
      * THE SIGN-IN SCREEN OFFERS A PASSKEY, and this is the test that was missing.
      *
-     * The screen moved into `@panelkit/panel/inertia`, where the button is driven by a
+     * The screen moved into `@alxtexh-enterprise/panel/inertia`, where the button is driven by a
      * `passkeys` prop - and this application's Fortify login view never sent
      * one. The button disappeared from a page that had it, and nothing failed:
      * `/login` still returns 200, still renders, still signs people in. A screen

@@ -7,7 +7,7 @@
  * form from silently emptying the file input, which is the behaviour that makes
  * people re-pick a 4 MB scan because a phone number was too short.
  *
- * IT DOES NOT FETCH ON ITS OWN. @panelkit/panel ships no HTTP client (spec §4
+ * IT DOES NOT FETCH ON ITS OWN. @alxtexh-enterprise/panel ships no HTTP client (spec §4
  * rule 2), so the actual transfer is a function the page passes in. That is
  * also what keeps progress reportable: the page owns the request, so it owns
  * the progress events.

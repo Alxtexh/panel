@@ -19,8 +19,8 @@
  */
 import '@scalar/api-reference/style.css';
 
+import { useAppearance } from '@alxtexh-enterprise/panel';
 import { Head } from '@inertiajs/vue3';
-import { useAppearance } from '@panelkit/panel';
 import { ApiReference } from '@scalar/api-reference';
 import { computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';

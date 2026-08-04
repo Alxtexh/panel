@@ -17,7 +17,7 @@
  * the SCREEN - the reveal toggle, the provider buttons, the passkey slot - and
  * `PanelAuthTest` already covers which of them the controller decides to send.
  */
-import { Login } from '@panelkit/panel/inertia';
+import { Login } from '@alxtexh-enterprise/panel/inertia';
 </script>
 
 <template>

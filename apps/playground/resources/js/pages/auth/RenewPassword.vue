@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** The packaged screen - see `auth/Login.vue`. */
-import { RenewPassword } from '@panelkit/panel/inertia';
+import { RenewPassword } from '@alxtexh-enterprise/panel/inertia';
 import { logout } from '@/routes';
 
 defineProps<{ reason: 'expired' | 'requested'; maxAgeDays: number }>();

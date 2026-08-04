@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** The section heading is the package's now. */
-import { PkHeading } from '@panelkit/panel';
+import { PkHeading } from '@alxtexh-enterprise/panel';
 
 defineProps<{
     title: string;

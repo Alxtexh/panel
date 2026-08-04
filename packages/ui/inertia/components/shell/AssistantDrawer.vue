@@ -40,8 +40,8 @@ import {
     Wrench,
     X,
 } from '@lucide/vue'
-import { PkSkeleton } from '@panelkit/panel'
-import { PkButton as Button } from '@panelkit/panel'
+import { PkSkeleton } from '@alxtexh-enterprise/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 
 interface Turn {

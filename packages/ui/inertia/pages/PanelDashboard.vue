@@ -41,8 +41,8 @@ import {
     StatCard,
     StatStrip,
     TrendBadge,
-} from '@panelkit/panel'
-import type { SetupChecklistItem, StatSegment } from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
+import type { SetupChecklistItem, StatSegment } from '@alxtexh-enterprise/panel'
 import { computed, ref } from 'vue'
 
 interface Widget {

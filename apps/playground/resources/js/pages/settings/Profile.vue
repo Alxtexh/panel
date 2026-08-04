@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The panel's Profile screen, from @panelkit/panel/inertia.
+ * The panel's Profile screen, from @alxtexh-enterprise/panel/inertia.
  *
  * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
  * directory, so a screen living in node_modules is one it cannot find.
@@ -14,7 +14,7 @@
  * against real props here while `verify-install.sh` exercises the packaged
  * routes in an application that has no such controller.
  */
-import Profile from '@panelkit/panel/pages/settings/Profile.vue';
+import Profile from '@alxtexh-enterprise/panel/pages/settings/Profile.vue';
 
 defineOptions({ inheritAttrs: false });
 </script>

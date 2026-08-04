@@ -14,8 +14,14 @@
  * space against nothing - it is what you open when you came to ask.
  */
 import { Head, Link } from '@inertiajs/vue3'
-import { ChartCard, LineChart, SegmentedBar, StatCard, buttonClasses } from '@panelkit/panel'
-import type { ChartSeries } from '@panelkit/panel'
+import {
+    ChartCard,
+    LineChart,
+    SegmentedBar,
+    StatCard,
+    buttonClasses,
+} from '@alxtexh-enterprise/panel'
+import type { ChartSeries } from '@alxtexh-enterprise/panel'
 import { computed, onMounted, ref } from 'vue'
 
 const props = withDefaults(

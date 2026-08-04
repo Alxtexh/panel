@@ -20,8 +20,8 @@
  * An iframe has its own window, so `@media (max-width: 640px)` means what it
  * says - and the sidebar inside it collapses because it genuinely is narrow.
  */
+import { PkDeviceFrame } from '@alxtexh-enterprise/panel';
 import { Head } from '@inertiajs/vue3';
-import { PkDeviceFrame } from '@panelkit/panel';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 

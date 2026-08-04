@@ -16,7 +16,7 @@
  * owns the one-line page file that imports from here, so replacing a screen
  * means editing that file rather than forking a tree.
  *
- * WHY IT IS SEPARATE FROM `@panelkit/panel`. That package is deliberately
+ * WHY IT IS SEPARATE FROM `@alxtexh-enterprise/panel`. That package is deliberately
  * transport-agnostic: nothing in it imports Inertia, which is what lets its
  * table and form components run under Livewire, a plain SPA, or in a test with
  * no router at all. These pages are Inertia to their bones - `useForm`, `Link`,
@@ -221,7 +221,15 @@ export const PANEL_PAGES = {
 export { default as RenderHook } from './components/RenderHook.vue'
 export { default as TicketThread } from './components/TicketThread.vue'
 export { default as AnnouncementBanners } from './components/AnnouncementBanners.vue'
-export type { Announcement, Passkey, TwoFactorConfigContent } from './types'
+/*
+ * `User` IS EXPORTED because the shell hands one out.
+ *
+ * `AppHeader`'s `userMenu` slot passes this value to the consuming
+ * application, and a slot whose payload type is not importable forces every
+ * consumer to re-declare the shape by hand - which compiles, then reads a
+ * field the shell never sends.
+ */
+export type { Announcement, Passkey, TwoFactorConfigContent, User } from './types'
 
 /*
  * THE SIGN-IN SCREENS - v0.5.0.

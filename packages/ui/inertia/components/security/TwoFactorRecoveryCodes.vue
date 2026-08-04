@@ -20,7 +20,7 @@ import {
     CardTitle,
     PkAlertError as AlertError,
     PkButton as Button,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import type { TwoFactorRoutes } from '../../composables/useTwoFactorAuth'
 import { useTwoFactorAuth } from '../../composables/useTwoFactorAuth'

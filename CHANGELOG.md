@@ -2,8 +2,51 @@
 
 Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The two packages — `panelkit/panel` on Composer
-and `@panelkit/panel` on npm — are versioned together. Entries before 0.8.0 name
-three, which is what there were.
+and `@alxtexh-enterprise/panel` on npm — are versioned together. The npm half
+has been renamed twice, and OLD ENTRIES ARE LEFT NAMING THE SCOPE THEY SHIPPED
+UNDER: entries before 0.9.0 say `@panelkit/panel`, entries before 0.8.0 name
+`@panelkit/ui` and `@panelkit/inertia`, which is what there were. Rewriting them
+would make this a record of a history that did not happen.
+
+## 0.9.0
+
+**The npm package is now `@alxtexh-enterprise/panel`.** This is the whole
+release, and it is breaking for every installation.
+
+**Why.** The package needed a registry that does not make it public, and
+GitHub Packages ties an npm scope to a GitHub organisation you own. `panelkit`
+on GitHub is taken by somebody else, so `@panelkit/panel` was a name that could
+never be published there. The Composer half is unaffected - `panelkit/panel` on
+a private VCS repository was always fine.
+
+**What breaks.** Every `import ... from '@panelkit/panel'`, the two `@source`
+lines in `resources/css/app.css`, and any Vite alias pointing at the old name.
+
+**The edit.** In your application:
+
+```bash
+npm uninstall @panelkit/panel
+npm install @alxtexh-enterprise/panel
+php artisan panel:update   # rewrites the @source lines for you
+npm run build
+```
+
+and a find-and-replace of `@panelkit/panel` with `@alxtexh-enterprise/panel`
+across `resources/js`. Every import is caught by the build; the stylesheet is
+the one place a stale name fails silently, which is why `panel:update` handles
+it - see UPGRADING.md.
+
+`.npmrc` needs the scope pointed at GitHub Packages and a `read:packages` token:
+
+```
+@alxtexh-enterprise:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+**Also in this release.** `User` is exported from `@alxtexh-enterprise/panel/inertia`.
+The shell's `userMenu` slot hands one out, and a slot whose payload type is not
+importable forces every consumer to re-declare the shape by hand - which
+compiles, and then reads a field the shell never sends.
 
 ## 0.8.3
 

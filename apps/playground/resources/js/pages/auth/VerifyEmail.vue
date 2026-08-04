@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** The packaged screen - see `auth/Login.vue`. */
-import { VerifyEmail } from '@panelkit/panel/inertia';
+import { VerifyEmail } from '@alxtexh-enterprise/panel/inertia';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
 

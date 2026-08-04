@@ -27,7 +27,7 @@ import {
     PkFieldLabel as Label,
     PkHeading as Heading,
     PkPasswordInput as PasswordInput,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
 import ManagePasskeys from '../../components/security/ManagePasskeys.vue'
 import ManageTwoFactor from '../../components/security/ManageTwoFactor.vue'

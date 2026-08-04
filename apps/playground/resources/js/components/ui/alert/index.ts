@@ -1,2 +1,2 @@
-/** This family lives in `@panelkit/panel` now - see `components/ui/sidebar`. */
-export * from '@panelkit/panel';
+/** This family lives in `@alxtexh-enterprise/panel` now - see `components/ui/sidebar`. */
+export * from '@alxtexh-enterprise/panel';

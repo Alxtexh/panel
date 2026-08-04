@@ -6,7 +6,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import { useCurrentUrl } from '../../composables/useCurrentUrl'
 import type { NavItem } from '../../types'
 

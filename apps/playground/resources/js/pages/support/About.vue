@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The panel's About screen, from @panelkit/panel/inertia.
+ * The panel's About screen, from @alxtexh-enterprise/panel/inertia.
  *
  * THIS APPLICATION'S COPY IS GONE. The packaged one was moved out of here and
  * made generic - the articles, the questions and the About copy now arrive as
@@ -11,7 +11,7 @@
  * registers this app's ISP articles alongside the packaged ones about the
  * panel itself.
  */
-import About from '@panelkit/panel/pages/support/About.vue';
+import About from '@alxtexh-enterprise/panel/pages/support/About.vue';
 
 defineOptions({ inheritAttrs: false });
 </script>

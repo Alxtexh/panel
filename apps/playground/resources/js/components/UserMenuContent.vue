@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { User } from '@alxtexh-enterprise/panel/inertia';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     Activity,
@@ -27,9 +28,24 @@ import { logout } from '@/routes';
 import operations from '@/routes/operations';
 import { lock, resource } from '@/routes/panel';
 import { userManagement } from '@/routes/panel/pages';
-import { index as settingsIndex } from '@/routes/settings';
 
-import type { User } from '@/types';
+/*
+ * THE PACKAGE'S `User`, not this application's.
+ *
+ * The value arrives through the packaged shell's `userMenu` slot, so it is
+ * whatever that shell has. This app's own `User` carries `email_verified_at`
+ * and timestamps the shell never sends - declaring that here compiles and then
+ * reads fields that are not there.
+ */
+
+/*
+ * `/settings` LITERALLY, not through a generated helper.
+ *
+ * The settings index moved into the package in 0.8.3, so its route is named
+ * per panel (`panel.settings.index`) and Wayfinder no longer emits a bare
+ * `settings.index` for this application to import. Both links here belong to
+ * this app's own root panel, which is mounted at `/`.
+ */
 
 type Props = {
     user: User;
@@ -42,6 +58,27 @@ const handleLogout = () => {
 defineProps<Props>();
 
 const page = usePage();
+
+/**
+ * TYPED HERE RATHER THAN TRUSTED FROM THE AUGMENTATION.
+ *
+ * `declare module '@inertiajs/core'` attaches `auth` to ONE resolved copy of
+ * that module. The packaged components carry their own, so a file that mixes
+ * the two reads `page.props.auth` as `{}` and every ability check becomes a
+ * property access on an empty object. Reading it through a named type is
+ * correct whichever copy wins.
+ */
+type Abilities = {
+    can?: {
+        manageRoles?: boolean;
+        viewOperations?: boolean;
+        manageAssistant?: boolean;
+    };
+};
+
+const can = computed(
+    () => (page.props.auth as Abilities | undefined)?.can ?? {},
+);
 
 /**
  * Whether this is the application's OWN portal.
@@ -90,10 +127,17 @@ const trash = computed(
     </DropdownMenuLabel>
     <DropdownMenuSeparator />
     <DropdownMenuGroup>
-        <DropdownMenuItem :as-child="true">
+        <!--
+            GUARDED LIKE ITS NEIGHBOURS. `/settings` is this application's root
+            panel; a generated portal is mounted elsewhere and its own settings
+            index lives under its prefix. An unguarded link here offered every
+            portal a URL that leaves it - silently, since the destination
+            renders fine and belongs to somebody else.
+        -->
+        <DropdownMenuItem v-if="isApplicationPortal" :as-child="true">
             <Link
                 class="block w-full cursor-pointer"
-                :href="settingsIndex()"
+                :href="'/settings'"
                 prefetch
             >
                 <Settings class="mr-2 h-4 w-4" />
@@ -107,7 +151,7 @@ const trash = computed(
             A link that always 403s advertises a page and then refuses it.
         -->
         <DropdownMenuItem
-            v-if="isApplicationPortal && page.props.auth?.can?.manageRoles"
+            v-if="isApplicationPortal && can.manageRoles"
             :as-child="true"
         >
             <Link
@@ -131,7 +175,7 @@ const trash = computed(
             403s advertises a page and then refuses it.
         -->
         <DropdownMenuItem
-            v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
+            v-if="isApplicationPortal && can.viewOperations"
             :as-child="true"
         >
             <Link
@@ -145,7 +189,7 @@ const trash = computed(
         </DropdownMenuItem>
 
         <DropdownMenuItem
-            v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
+            v-if="isApplicationPortal && can.viewOperations"
             :as-child="true"
         >
             <Link
@@ -166,7 +210,7 @@ const trash = computed(
             underneath.
         -->
         <DropdownMenuItem
-            v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
+            v-if="isApplicationPortal && can.viewOperations"
             :as-child="true"
         >
             <Link
@@ -186,7 +230,7 @@ const trash = computed(
             people, where it read as a third way to administer them.
         -->
         <DropdownMenuItem
-            v-if="isApplicationPortal && page.props.auth?.can?.viewOperations"
+            v-if="isApplicationPortal && can.viewOperations"
             :as-child="true"
         >
             <Link

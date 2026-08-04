@@ -1,5 +1,5 @@
 /**
- * @panelkit/panel - public surface.
+ * @alxtexh-enterprise/panel - public surface.
  *
  * Two rules govern everything in this package (spec §4). They are cheap to hold
  * and expensive to recover once broken:
@@ -147,7 +147,7 @@ export { default as UnsavedBar } from './components/Form/UnsavedBar.vue'
 /*
  * THE HALF `UnsavedBar` DOES NOT DO. The bar draws a decision it does not make,
  * so a page holding its own state had to write the snapshot, the comparison and
- * the `beforeunload` handler itself. `useUnsavedGuard` in `@panelkit/panel/inertia`
+ * the `beforeunload` handler itself. `useUnsavedGuard` in `@alxtexh-enterprise/panel/inertia`
  * adds the navigation half, which needs the router and so cannot live here.
  */
 export { useUnsavedChanges } from './composables/useUnsavedChanges'

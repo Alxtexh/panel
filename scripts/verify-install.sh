@@ -18,7 +18,7 @@
 # WHAT IT DOES, in the order the README claims:
 #
 #   composer require panelkit/panel
-#   npm install @panelkit/panel
+#   npm install @alxtexh-enterprise/panel
 #   php artisan panel:install
 #   php artisan make:panel-resource ... --generate
 #
@@ -94,7 +94,7 @@ php artisan list --no-ansi 2>/dev/null | grep -q 'panel:install' \
 
 # ------------------------------------------------------------- the client half
 
-say "Packing and installing @panelkit/panel"
+say "Packing and installing @alxtexh-enterprise/panel"
 # THE LAST LINE, NOT THE WHOLE OUTPUT. The package has a `prepack` that builds
 # it - which it must, so a tarball can never contain a stale `dist` - and Vite
 # writes its progress to stdout. `--silent` quiets npm, not the build, so
@@ -113,7 +113,7 @@ npm install --silent --no-audit --no-fund "$WORK/$tarball" 2>&1 | tail -2
 # RESOLVED THROUGH THE EXPORTS MAP AND THEN CHECKED ON DISK, because the map
 # alone will happily name a file that was never packed.
 say "Checking the tarball shipped both halves"
-for subpath in "@panelkit/panel" "@panelkit/panel/pages/PanelDashboard.vue"; do
+for subpath in "@alxtexh-enterprise/panel" "@alxtexh-enterprise/panel/pages/PanelDashboard.vue"; do
     resolved="$(node --input-type=module \
         -e "process.stdout.write(new URL(import.meta.resolve('$subpath')).pathname)" 2>/dev/null)" \
         || fail "$subpath is not exported - the published package.json does not name it."
@@ -123,7 +123,7 @@ done
 # ------------------------------------------------------------------ the install
 
 # THE VUE PLUGIN, which npm's peer resolution does not supply: `vue` and
-# `@inertiajs/vue3` arrive as peers of @panelkit/panel, and the Vite plugin
+# `@inertiajs/vue3` arrive as peers of @alxtexh-enterprise/panel, and the Vite plugin
 # that compiles a `.vue` file is a BUILD dependency of the application rather
 # than of the package.
 say "npm install @vitejs/plugin-vue"

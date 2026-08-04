@@ -1,4 +1,4 @@
-# Built tarballs of `@panelkit/panel`
+# Built tarballs of `@alxtexh-enterprise/panel`
 
 **Why binaries are committed here.** The npm half is private — it is not on
 npmjs.com, and `packages/ui/package.json` carries `"private": true` so
@@ -18,13 +18,13 @@ outside one laptop.
 ## Using one
 
 ```bash
-npm install /path/to/panelkit-panel-0.8.3.tgz @vitejs/plugin-vue
+npm install /path/to/alxtexh-enterprise-panel-0.9.0.tgz @vitejs/plugin-vue
 ```
 
 Or commit it into your own application for a reproducible `npm ci`:
 
 ```json
-"dependencies": { "@panelkit/panel": "file:vendor-js/panelkit-panel-0.8.3.tgz" }
+"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/alxtexh-enterprise-panel-0.9.0.tgz" }
 ```
 
 ## Rebuilding one

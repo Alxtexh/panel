@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { ThemeToggle } from '@alxtexh-enterprise/panel';
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
-import { ThemeToggle } from '@panelkit/panel';
 
 import { computed } from 'vue';
 

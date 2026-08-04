@@ -17,9 +17,9 @@
  * this component: a feature request carrying a severity sorts above real bugs in
  * any triage list ordered by it.
  */
+import { PkButton as Button } from '@alxtexh-enterprise/panel';
 import { useForm } from '@inertiajs/vue3';
 import { Bug, Lightbulb } from '@lucide/vue';
-import { PkButton as Button } from '@panelkit/panel';
 import { computed, ref, watch } from 'vue';
 import {
     Dialog,

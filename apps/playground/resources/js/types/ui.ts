@@ -1,4 +1,4 @@
-/** Light or dark. `system` was removed - see @panelkit/panel's Theme. */
+/** Light or dark. `system` was removed - see @alxtexh-enterprise/panel's Theme. */
 export type Appearance = 'light' | 'dark';
 export type ResolvedAppearance = 'light' | 'dark';
 

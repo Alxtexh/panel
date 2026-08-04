@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** The horizontal top navigation is the package's now. */
-import { AppTopNav } from '@panelkit/panel/inertia';
+import { AppTopNav } from '@alxtexh-enterprise/panel/inertia';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import type { BreadcrumbItem } from '@/types';
 

@@ -21,7 +21,7 @@
  * is worse than one that is briefly stale - it is wrong in a way that looks
  * settled.
  */
-import { PkButton as Button, PkDocument, RecordForm } from '@panelkit/panel'
+import { PkButton as Button, PkDocument, RecordForm } from '@alxtexh-enterprise/panel'
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'

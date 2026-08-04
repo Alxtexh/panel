@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** The reveal-toggle password field is the package's now. */
-import { PkPasswordInput } from '@panelkit/panel';
+import { PkPasswordInput } from '@alxtexh-enterprise/panel';
 import type { HTMLAttributes } from 'vue';
 import { ref, useTemplateRef } from 'vue';
 

@@ -28,7 +28,7 @@ import {
     Spinner,
     isDark,
     useAppearance,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import { useClipboard } from '@vueuse/core'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import type { TwoFactorRoutes } from '../../composables/useTwoFactorAuth'

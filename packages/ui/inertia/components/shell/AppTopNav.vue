@@ -15,7 +15,7 @@
  * keeps the bar exactly one row tall at every width.
  */
 import { Link } from '@inertiajs/vue3'
-import { AppearanceDrawer, PkDropdown } from '@panelkit/panel'
+import { AppearanceDrawer, PkDropdown } from '@alxtexh-enterprise/panel'
 import AppLogo from './AppLogo.vue'
 import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'

@@ -16,9 +16,9 @@
  * feel broken, and the failure mode - a message that never arrives - is visible
  * because the input keeps its text until the request succeeds.
  */
+import { useLiveUpdates } from '@alxtexh-enterprise/panel';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { Search, Send } from '@lucide/vue';
-import { useLiveUpdates } from '@panelkit/panel';
 import { computed, nextTick, ref, watch } from 'vue';
 
 interface Conversation {

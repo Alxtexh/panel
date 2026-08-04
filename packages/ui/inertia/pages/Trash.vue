@@ -43,8 +43,8 @@
  * tab change, because those cursors point into another resource's ordering.
  */
 import { Head, router } from '@inertiajs/vue3'
-import { PkButton as Button } from '@panelkit/panel'
-import { PkModal, TablePagination, TableShell } from '@panelkit/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import { PkModal, TablePagination, TableShell } from '@alxtexh-enterprise/panel'
 import { Check, RotateCcw, Settings2, Trash2, TriangleAlert } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'

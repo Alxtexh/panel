@@ -951,13 +951,13 @@ final class DoctorCommand extends Command
          * pnpm store, or use a path outside `node_modules` in a monorepo - all
          * of which are correct and none of which match a literal.
          */
-        if (! str_contains($css, '@panelkit/panel') && ! str_contains($css, 'packages/ui')) {
+        if (! str_contains($css, '@alxtexh-enterprise/panel') && ! str_contains($css, 'packages/ui')) {
             $this->problem(
                 'resources/css/app.css does not point Tailwind at the packaged components',
                 'Tailwind does not scan node_modules, so every utility used only inside '
-                .'@panelkit/panel and @panelkit/panel/inertia is purged and the panel renders unstyled. '
-                .'Add: @source \'../../node_modules/@panelkit/panel/dist/**/*.js\'; and '
-                .'same for @panelkit/panel/inertia - or re-run `php artisan panel:install`, which '
+                .'@alxtexh-enterprise/panel and @alxtexh-enterprise/panel/inertia is purged and the panel renders unstyled. '
+                .'Add: @source \'../../node_modules/@alxtexh-enterprise/panel/dist/**/*.js\'; and '
+                .'same for @alxtexh-enterprise/panel/inertia - or re-run `php artisan panel:install`, which '
                 .'merges them in.',
             );
 

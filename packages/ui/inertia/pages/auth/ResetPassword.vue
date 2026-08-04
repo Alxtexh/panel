@@ -13,7 +13,7 @@
  * another account, which the broker would refuse but only after the attempt.
  */
 import { Form, Head } from '@inertiajs/vue3'
-import { PkButton as Button } from '@panelkit/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthLayout from './AuthLayout.vue'
 

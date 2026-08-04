@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** The main column is the package's now - see `AppSidebar.vue`. */
-import { AppContent } from '@panelkit/panel/inertia';
+import { AppContent } from '@alxtexh-enterprise/panel/inertia';
 import type { AppVariant } from '@/types';
 
 defineProps<{ variant?: AppVariant; class?: string }>();

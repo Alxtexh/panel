@@ -1,10 +1,10 @@
 {
-    "name": "@panelkit/panel",
-    "version": "0.8.3",
+    "name": "@alxtexh-enterprise/panel",
+    "version": "0.9.0",
     "description": "PanelKit's client half: the Vue rendering layer and the Inertia screens. Import from \".\" for components that name no transport, \"./inertia\" for the screens.",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/panelkit/panelkit.git",
+        "url": "git+https://github.com/enterprisealxtexh/panelkit.git",
         "directory": "packages/ui"
     },
     "publishConfig": {

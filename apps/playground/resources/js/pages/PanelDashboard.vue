@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The panel's PanelDashboard screen, from @panelkit/panel/inertia.
+ * The panel's PanelDashboard screen, from @alxtexh-enterprise/panel/inertia.
  *
  * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
  * directory, so a screen living in node_modules is one it cannot find.
@@ -11,7 +11,7 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import PanelDashboard from '@panelkit/panel/pages/PanelDashboard.vue';
+import PanelDashboard from '@alxtexh-enterprise/panel/pages/PanelDashboard.vue';
 
 defineOptions({ inheritAttrs: false });
 </script>

@@ -20,8 +20,8 @@ import {
     PkConsoleBackdrop,
     PkEditorialBackdrop,
     PkLandingSections,
-} from '@panelkit/panel'
-import type { LandingSection } from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
+import type { LandingSection } from '@alxtexh-enterprise/panel'
 import LandingFooter from './LandingFooter.vue'
 import LandingNav from './LandingNav.vue'
 

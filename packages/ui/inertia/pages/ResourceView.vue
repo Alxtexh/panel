@@ -10,11 +10,16 @@
  * colours from the schema's intent map, dates by column type - so a value never
  * looks one way in the list and another here.
  */
-import { PkBadge as Badge } from '@panelkit/panel'
+import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
 import AuditTimeline from '../components/AuditTimeline.vue'
 import RenderHook from '../components/RenderHook.vue'
-import { PkButton as Button, buttonClasses } from '@panelkit/panel'
-import { InfoNode, RelationPanel, useSchemaColumns, type SchemaColumn } from '@panelkit/panel'
+import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
+import {
+    InfoNode,
+    RelationPanel,
+    useSchemaColumns,
+    type SchemaColumn,
+} from '@alxtexh-enterprise/panel'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, ref, toRef } from 'vue'
 import { toast } from 'vue-sonner'

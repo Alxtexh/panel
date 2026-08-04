@@ -24,7 +24,7 @@
  * portal mounted at `/reseller` asked the wrong panel and got the wrong bell.
  */
 import { usePage } from '@inertiajs/vue3'
-import { PkSlideover } from '@panelkit/panel'
+import { PkSlideover } from '@alxtexh-enterprise/panel'
 import { computed, ref } from 'vue'
 
 /*

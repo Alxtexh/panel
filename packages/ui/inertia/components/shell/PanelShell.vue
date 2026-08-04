@@ -20,7 +20,7 @@
  * server too, where `localStorage` does not exist and touching it is a 500.
  */
 import { usePage } from '@inertiajs/vue3'
-import { PkBottomNav, ThemeToggle } from '@panelkit/panel'
+import { PkBottomNav, ThemeToggle } from '@alxtexh-enterprise/panel'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import PanelAccountMenu from './PanelAccountMenu.vue'
@@ -249,7 +249,7 @@ watch(
             </main>
 
             <!--
-                THE PHONE'S NAVIGATION. `PkBottomNav` shipped in `@panelkit/panel`
+                THE PHONE'S NAVIGATION. `PkBottomNav` shipped in `@alxtexh-enterprise/panel`
                 and nothing in the package mounted it, so every consumer's
                 handset got a hamburger at the top of the screen - the part of a
                 phone a thumb reaches least. "More" opens the same drawer the

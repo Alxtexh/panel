@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The panel's document template designer screen, from @panelkit/panel/inertia.
+ * The panel's document template designer screen, from @alxtexh-enterprise/panel/inertia.
  *
  * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
  * directory, so a screen living in node_modules is one it cannot find.
@@ -11,7 +11,7 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import TemplateDesigner from '@panelkit/panel/pages/documents/TemplateDesigner.vue';
+import TemplateDesigner from '@alxtexh-enterprise/panel/pages/documents/TemplateDesigner.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 defineOptions({ layout: AppLayout, inheritAttrs: false });

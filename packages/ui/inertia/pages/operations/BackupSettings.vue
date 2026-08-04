@@ -31,8 +31,8 @@
  */
 import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { ArrowLeft, CalendarClock, HardDrive, History, Megaphone, Timer } from '@lucide/vue'
-import { PkCard, PkModal } from '@panelkit/panel'
-import { PkButton as Button } from '@panelkit/panel'
+import { PkCard, PkModal } from '@alxtexh-enterprise/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { computed, ref } from 'vue'
 
 interface Settings {

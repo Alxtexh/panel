@@ -5,7 +5,7 @@ import { computed, ref, watch } from 'vue'
  * The Inertia adapter.
  *
  * This is the ONLY place that knows list screens are driven by Inertia. It lives
- * in the app, not in @panelkit/panel, because spec §4 rule 1 says nothing in the UI
+ * in the app, not in @alxtexh-enterprise/panel, because spec §4 rule 1 says nothing in the UI
  * package may import Inertia - the components emit events, and this turns those
  * events into requests. Swapping Inertia for anything else means rewriting this
  * file and nothing else.

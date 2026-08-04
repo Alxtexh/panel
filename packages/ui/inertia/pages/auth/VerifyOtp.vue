@@ -8,7 +8,7 @@
  * asking for another one.
  */
 import { Form, Head, Link } from '@inertiajs/vue3'
-import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@panelkit/panel'
+import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import { ref } from 'vue'
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'

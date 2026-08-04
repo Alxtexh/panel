@@ -11,9 +11,9 @@
  * with CSS trickery: the vertical and horizontal shells have different DOM, not
  * different styling.
  */
+import { PkBottomNav, PkModal, useAppearance } from '@alxtexh-enterprise/panel';
+import type { BottomNavItem } from '@alxtexh-enterprise/panel';
 import { router, usePage } from '@inertiajs/vue3';
-import { PkBottomNav, PkModal, useAppearance } from '@panelkit/panel';
-import type { BottomNavItem } from '@panelkit/panel';
 import { computed, ref } from 'vue';
 import SessionExpired from '@/components/SessionExpired.vue';
 import AppHorizontalLayout from '@/layouts/app/AppHorizontalLayout.vue';

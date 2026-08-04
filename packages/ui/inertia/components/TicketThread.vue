@@ -3,7 +3,7 @@
  * A ticket's conversation, on the record page.
  *
  * PACKAGED, AND IT MOVED WITHOUT AN EDIT. Every import here was already
- * `@inertiajs/vue3`, `@panelkit/panel`, `vue` or `vue-sonner` - not one `@/` alias
+ * `@inertiajs/vue3`, `@alxtexh-enterprise/panel`, `vue` or `vue-sonner` - not one `@/` alias
  * into an application. That is what made ticketing the cheapest thing on the
  * promotable list: it was written against the package from the start.
  *
@@ -29,7 +29,7 @@
  * it is a UI hint, and the write re-checks server-side.
  */
 import { router } from '@inertiajs/vue3'
-import { PkButton as Button } from '@panelkit/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 

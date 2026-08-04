@@ -62,7 +62,7 @@ export function installSessionExpiryPreview(): void {
      * `app.ts` calls them at module scope - which the SSR pass evaluates too.
      * Guarding inside the function rather than at the call site keeps the
      * module safe no matter who imports it, which is the same shape
-     * `readAppearance()` in @panelkit/panel already uses.
+     * `readAppearance()` in @alxtexh-enterprise/panel already uses.
      */
     if (typeof window === 'undefined') {
         return

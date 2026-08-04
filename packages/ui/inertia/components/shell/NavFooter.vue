@@ -5,8 +5,8 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-} from '@panelkit/panel'
-import { toUrl } from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
+import { toUrl } from '@alxtexh-enterprise/panel'
 import type { NavItem } from '../../types'
 
 type Props = {

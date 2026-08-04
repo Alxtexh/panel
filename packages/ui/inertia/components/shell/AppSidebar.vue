@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
 import { HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Sparkles } from '@lucide/vue'
-import { PkBoundary, PkDropdown, useAppearance } from '@panelkit/panel'
+import { PkBoundary, PkDropdown, useAppearance } from '@alxtexh-enterprise/panel'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import AppLogo from './AppLogo.vue'
 import NavFooter from './NavFooter.vue'
@@ -17,7 +17,7 @@ import {
     SidebarMenuItem,
     SidebarGroup,
     useSidebar,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import { useCurrentUrl } from '../../composables/useCurrentUrl'
 import { usePanelNav } from '../../composables/usePanelNav'
 import { useSidebarOpener } from '../../lib/mobileNav'

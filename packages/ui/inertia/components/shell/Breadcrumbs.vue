@@ -7,7 +7,7 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import type { BreadcrumbItem as BreadcrumbItemType } from '../../types'
 
 type Props = {

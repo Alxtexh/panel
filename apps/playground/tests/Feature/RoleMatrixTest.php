@@ -103,7 +103,7 @@ final class RoleMatrixTest extends TestCase
     /**
      * THE SCREEN IS TOLD WHERE IT LIVES, because it is the package's now.
      *
-     * The component moved into `@panelkit/panel/inertia`, so it can no longer import
+     * The component moved into `@alxtexh-enterprise/panel/inertia`, so it can no longer import
      * the application's Wayfinder route table to find out where to POST - and
      * would name the wrong URL anyway for anybody who mounted it elsewhere. The
      * route passes its own URL down; every create, update and delete on that

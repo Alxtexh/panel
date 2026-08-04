@@ -20,7 +20,7 @@
  * tells an attacker what they are missing.
  */
 import { Head, Link, router } from '@inertiajs/vue3'
-import { PkButton as Button, buttonClasses } from '@panelkit/panel'
+import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import ErrorArt from './ErrorArt.vue'
 

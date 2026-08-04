@@ -17,7 +17,7 @@
  * in that minute looks like a failure rather than a next step.
  */
 import { Head, Link } from '@inertiajs/vue3'
-import { PkSkeleton } from '@panelkit/panel'
+import { PkSkeleton } from '@alxtexh-enterprise/panel'
 import { Globe, Terminal } from '@lucide/vue'
 import { computed } from 'vue'
 

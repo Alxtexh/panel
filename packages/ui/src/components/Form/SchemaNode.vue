@@ -41,7 +41,7 @@ const props = withDefaults(
         errors?: Record<string, string>
         options?: Record<string, { value: any; label: string }[]>
         processing?: boolean
-        /** Supplied by the page; @panelkit/panel ships no HTTP client. */
+        /** Supplied by the page; @alxtexh-enterprise/panel ships no HTTP client. */
         searchOptions?: (field: string, term: string) => Promise<{ value: any; label: string }[]>
         /** Performs an upload for a file field. See PkFileUpload. */
         upload?: (

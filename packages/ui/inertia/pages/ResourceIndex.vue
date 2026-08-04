@@ -5,7 +5,7 @@
  * Clients, Routers and Plans all render through this. Adding a screen is a PHP
  * class and nothing else; there is no per-resource Vue file left.
  *
- * WHY THIS LIVES IN THE APP rather than in @panelkit/panel:
+ * WHY THIS LIVES IN THE APP rather than in @alxtexh-enterprise/panel:
  *
  * It is the Inertia adapter. Spec §4 rule 1 forbids anything in the UI package
  * from importing Inertia, and a page must know how data arrives. So the
@@ -25,8 +25,8 @@
  *   tenant's routers are tenant data (addendum Part A). That is what lets the
  *   schema cache key drop the tenant id entirely.
  */
-import { PkBadge as Badge } from '@panelkit/panel'
-import { PkButton as Button, buttonClasses } from '@panelkit/panel'
+import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
+import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
 import { useListTable, type ListPageProps } from '../composables/useListTable'
 import { useBulkJob } from '../composables/useBulkJob'
 import ImportDialog from '../components/ImportDialog.vue'
@@ -55,7 +55,7 @@ import {
     type RecordActionGroup,
     type RecordActionItem,
     type SchemaColumn,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, ref, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
@@ -751,7 +751,7 @@ async function runRecordAction(row: Record<string, any>, action: any) {
  *
  * THE SAME ENDPOINT THE RECORD FORM USES, and it needs no new one: the field
  * key identifies which declaration to search, and a form action's fields are
- * declared on the same resource. `@panelkit/panel` may not import an HTTP client,
+ * declared on the same resource. `@alxtexh-enterprise/panel` may not import an HTTP client,
  * which is why this lives here rather than in the control.
  */
 async function searchActionOptions(
@@ -949,7 +949,7 @@ function destroy() {
  * infrastructure and works on plain PHP-FPM; `broadcast` needs Reverb and gives
  * constant server cost regardless of viewer count. Switching is a config change.
  *
- * The fetch lives HERE rather than in the composable because @panelkit/panel may
+ * The fetch lives HERE rather than in the composable because @alxtexh-enterprise/panel may
  * not import Inertia or ship an HTTP client (spec §4).
  * ------------------------------------------------------------------------- */
 

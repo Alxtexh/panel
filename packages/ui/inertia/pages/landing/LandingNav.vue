@@ -16,7 +16,8 @@
  * exactly where a single link would have.
  */
 import { Link, usePage } from '@inertiajs/vue3'
-import { buttonClasses } from '@panelkit/panel'
+import { computed } from 'vue'
+import { buttonClasses } from '@alxtexh-enterprise/panel'
 
 withDefaults(
     defineProps<{
@@ -46,6 +47,14 @@ withDefaults(
 )
 
 const page = usePage()
+
+/**
+ * TYPED, NOT READ OFF `{}`. `usePage()` gives untyped props, so
+ * `page.props.auth?.user` is a property access on an empty object - which the
+ * package's own checker tolerated and a consuming application's did not. The
+ * failure lands in THEIR build, on a file they did not write.
+ */
+const signedIn = computed(() => (page.props.auth as { user?: unknown } | undefined)?.user != null)
 </script>
 
 <template>
@@ -77,11 +86,7 @@ const page = usePage()
             </nav>
 
             <div class="flex items-center gap-2">
-                <Link
-                    v-if="page.props.auth?.user"
-                    :href="dashboardHref"
-                    :class="buttonClasses({ size: 'sm' })"
-                >
+                <Link v-if="signedIn" :href="dashboardHref" :class="buttonClasses({ size: 'sm' })">
                     Dashboard
                 </Link>
                 <template v-else>

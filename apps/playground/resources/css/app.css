@@ -397,5 +397,5 @@ html {
 }
 
 /* Added by panel:install - Tailwind does not scan node_modules. */
-@source '../../node_modules/@panelkit/panel/dist/**/*.js';
-@source '../../node_modules/@panelkit/panel/inertia/**/*.{vue,ts}';
+@source '../../node_modules/@alxtexh-enterprise/panel/dist/**/*.js';
+@source '../../node_modules/@alxtexh-enterprise/panel/inertia/**/*.{vue,ts}';

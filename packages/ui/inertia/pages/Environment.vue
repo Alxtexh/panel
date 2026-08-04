@@ -20,7 +20,7 @@
  * is inert until the next deploy rather than pretending otherwise.
  */
 import { Head, useForm } from '@inertiajs/vue3'
-import { PkButton as Button } from '@panelkit/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 
 type Entry = {

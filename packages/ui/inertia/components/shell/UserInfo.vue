@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Avatar, AvatarFallback, AvatarImage } from '@panelkit/panel'
+import { Avatar, AvatarFallback, AvatarImage } from '@alxtexh-enterprise/panel'
 import { useInitials } from '../../composables/useInitials'
 import type { User } from '../../types'
 

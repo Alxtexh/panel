@@ -14,7 +14,7 @@
  * it on the same condition.
  */
 import { Form, Head, Link } from '@inertiajs/vue3'
-import { PkButton as Button, PkSpinner as Spinner } from '@panelkit/panel'
+import { PkButton as Button, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'

@@ -27,7 +27,7 @@ import {
     PkButton as Button,
     PkHeading as Heading,
     PkPasswordInput as PasswordInput,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import { useTemplateRef } from 'vue'
 import AuthInputError from './AuthInputError.vue'
 

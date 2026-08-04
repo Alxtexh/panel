@@ -16,7 +16,7 @@
  * a rendering of one input and the form posts `code` either way.
  */
 import { Form, Head } from '@inertiajs/vue3'
-import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@panelkit/panel'
+import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import { computed, ref } from 'vue'
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthField from '../../components/AuthField.vue'

@@ -11,7 +11,7 @@
  * wall that only accepts one is a wall they cannot pass.
  */
 import { Form, Head } from '@inertiajs/vue3'
-import { PkButton as Button, PkSpinner as Spinner } from '@panelkit/panel'
+import { PkButton as Button, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
 import AuthLayout from './AuthLayout.vue'

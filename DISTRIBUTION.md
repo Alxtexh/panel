@@ -6,7 +6,7 @@ application has to get two things:
 | Half | What it is | Lives in |
 | --- | --- | --- |
 | `panelkit/panel` | the PHP package — routes, resources, commands | `packages/panel` |
-| `@panelkit/panel` | the Vue package — the screens and the components | `packages/ui` |
+| `@alxtexh-enterprise/panel` | the Vue package — the screens and the components | `packages/ui` |
 
 Both are required. The PHP half answers requests with page names; the npm half
 is what resolves those names into screens. One without the other gives you
@@ -104,7 +104,7 @@ cd packages/ui && npm pack --pack-destination /path/to/your-app/vendor-js
 Then in the application's `package.json`:
 
 ```json
-"dependencies": { "@panelkit/panel": "file:vendor-js/panelkit-panel-0.8.0.tgz" }
+"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/panelkit-panel-0.8.0.tgz" }
 ```
 
 `npm ci` now works on any machine, including a server, with nothing to fetch.
@@ -137,7 +137,7 @@ Then anyone can run:
 
 ```bash
 composer require panelkit/panel
-npm install @panelkit/panel
+npm install @alxtexh-enterprise/panel
 php artisan panel:install --auth
 npm run build
 ```
@@ -145,7 +145,7 @@ npm run build
 ### Making it private again
 
 - **npm** — if `npm publish` never succeeded, nothing is there and there is
-  nothing to undo. If it did, `npm unpublish @panelkit/panel --force` works
+  nothing to undo. If it did, `npm unpublish @alxtexh-enterprise/panel --force` works
   within 72 hours of the first publish, and not after.
 - **Packagist** — the package page has a **Delete** button while nobody depends
   on it.

@@ -16,7 +16,7 @@
  */
 import { router } from '@inertiajs/vue3'
 import { KeyRound } from '@lucide/vue'
-import { PkHeading as Heading, PkPasskeyRegister } from '@panelkit/panel'
+import { PkHeading as Heading, PkPasskeyRegister } from '@alxtexh-enterprise/panel'
 import type { Passkey } from '../../types'
 import PasskeyItem from './PasskeyItem.vue'
 

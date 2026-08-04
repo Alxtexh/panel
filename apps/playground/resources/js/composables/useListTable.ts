@@ -1,5 +1,5 @@
 /*
- * The list-table composable now lives in `@panelkit/panel/inertia`, beside the screen
+ * The list-table composable now lives in `@alxtexh-enterprise/panel/inertia`, beside the screen
  * that is its main caller.
  *
  * RE-EXPORTED RATHER THAN MOVED-AND-REWRITTEN, because this application has its
@@ -8,4 +8,7 @@
  * own screens reads as a layering mistake; this keeps `@/composables` meaning
  * "this application's composables" whoever wrote them.
  */
-export { useListTable, type ListPageProps } from '@panelkit/panel/inertia';
+export {
+    useListTable,
+    type ListPageProps,
+} from '@alxtexh-enterprise/panel/inertia';

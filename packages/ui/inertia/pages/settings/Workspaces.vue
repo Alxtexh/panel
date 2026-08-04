@@ -8,9 +8,13 @@
  * reality when a crawler or a prefetch touches it.
  */
 import { Head, router, useForm } from '@inertiajs/vue3'
-import { PkButton as Button } from '@panelkit/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { toast } from 'vue-sonner'
-import { PkFieldLabel as Label, PkHeading as Heading, PkTextInput as Input } from '@panelkit/panel'
+import {
+    PkFieldLabel as Label,
+    PkHeading as Heading,
+    PkTextInput as Input,
+} from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import AuthInputError from '../../components/AuthInputError.vue'

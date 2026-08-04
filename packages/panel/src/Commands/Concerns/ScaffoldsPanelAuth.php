@@ -242,7 +242,7 @@ PHP;
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import {$screen} from '@panelkit/panel/pages/auth/{$screen}.vue'
+import {$screen} from '@alxtexh-enterprise/panel/pages/auth/{$screen}.vue'
 
 defineOptions({ inheritAttrs: false })
 </script>

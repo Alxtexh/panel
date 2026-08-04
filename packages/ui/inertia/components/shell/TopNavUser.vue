@@ -13,12 +13,30 @@
  */
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { Avatar, AvatarFallback, AvatarImage } from '@panelkit/panel'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@panelkit/panel'
+import type { User } from '../../types'
+import { Avatar, AvatarFallback, AvatarImage } from '@alxtexh-enterprise/panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
 import { getInitials } from '../../composables/useInitials'
 
 const page = usePage()
-const user = computed(() => page.props.auth.user)
+/**
+ * TYPED, NOT READ OFF AN UNTYPED BAG. `usePage()` returns props the checker
+ * knows nothing about, so `page.props.auth.user` is a property access on
+ * `unknown` - which this package's own tsconfig tolerated and a consuming
+ * application's did not. The failure then lands in THEIR build, on a file they
+ * did not write and cannot edit.
+ */
+/**
+ * THE PACKAGE'S OWN `User`, not a narrower shape invented here.
+ *
+ * A local guess at the fields compiles until somebody passes the value to
+ * `UserInfo`, which wants the whole thing - and the error then lands in a
+ * CONSUMER'S build, naming a packaged file they cannot edit. One type, one
+ * source.
+ */
+type SharedAuth = { user?: User | null }
+
+const user = computed(() => (page.props.auth as SharedAuth | undefined)?.user ?? null)
 </script>
 
 <template>
@@ -27,11 +45,13 @@ const user = computed(() => page.props.auth.user)
             <button
                 type="button"
                 class="rounded-full transition-colors hover:bg-accent"
-                :aria-label="`Account menu for ${user.name}`"
+                :aria-label="`Account menu for ${user?.name}`"
             >
                 <Avatar class="size-8">
-                    <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                    <AvatarFallback class="text-xs">{{ getInitials(user.name) }}</AvatarFallback>
+                    <AvatarImage v-if="user?.avatar" :src="user?.avatar" :alt="user?.name" />
+                    <AvatarFallback class="text-xs">{{
+                        getInitials(user?.name ?? undefined)
+                    }}</AvatarFallback>
                 </Avatar>
             </button>
         </DropdownMenuTrigger>

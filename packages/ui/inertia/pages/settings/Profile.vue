@@ -22,7 +22,7 @@ import {
     PkHeading as Heading,
     PkTextInput as Input,
     buttonClasses,
-} from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
 import DeleteUser from '../../components/DeleteUser.vue'
 

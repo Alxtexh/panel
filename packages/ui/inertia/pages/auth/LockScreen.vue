@@ -25,7 +25,7 @@
  * signed in. The account is the heading here.
  */
 import { Form, Head, Link, usePage } from '@inertiajs/vue3'
-import { PkButton as Button, ThemeToggle } from '@panelkit/panel'
+import { PkButton as Button, ThemeToggle } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthField from '../../components/AuthField.vue'

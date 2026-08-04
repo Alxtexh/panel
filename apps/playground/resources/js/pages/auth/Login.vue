@@ -14,7 +14,7 @@
  * in place would wrap the packaged layout in a second one - two headings, two
  * theme toggles. The same mistake the shell preview made once already.
  */
-import { Login } from '@panelkit/panel/inertia';
+import { Login } from '@alxtexh-enterprise/panel/inertia';
 import { computed } from 'vue';
 import { register } from '@/routes';
 import { store } from '@/routes/login';

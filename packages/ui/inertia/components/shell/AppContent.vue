@@ -5,7 +5,7 @@
  * MOVED FROM THE REFERENCE APP, including the accessibility note that is the
  * only interesting thing about it.
  */
-import { SidebarInset } from '@panelkit/panel'
+import { SidebarInset } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 
 type Props = {

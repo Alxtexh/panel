@@ -4,11 +4,11 @@ import { onBeforeUnmount, type Ref } from 'vue'
 /**
  * Stop an Inertia visit while there are unsaved changes, and ask first.
  *
- * WHY IT IS HERE AND `useUnsavedChanges` IS IN `@panelkit/panel`. The dirty
+ * WHY IT IS HERE AND `useUnsavedChanges` IS IN `@alxtexh-enterprise/panel`. The dirty
  * comparison and the `beforeunload` handler need nothing but a browser;
  * cancelling a visit needs the router. Putting this half in the presentation
  * package would give it an Inertia dependency for one listener, and every
- * consumer of `@panelkit/panel` that is not an Inertia application would carry it.
+ * consumer of `@alxtexh-enterprise/panel` that is not an Inertia application would carry it.
  *
  * `beforeunload` DOES NOT COVER THIS, which is the whole reason both exist. An
  * Inertia visit never unloads the document, so the browser has nothing to warn

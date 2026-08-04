@@ -1,23 +1,30 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from '@lucide/vue'
-import { PkButton as Button, buttonClasses } from '@panelkit/panel'
+import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
+import type { User } from '../../types'
 import { computed } from 'vue'
 import AppLogo from './AppLogo.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
-import { Avatar, AvatarFallback, AvatarImage } from '@panelkit/panel'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@panelkit/panel'
+import { Avatar, AvatarFallback, AvatarImage } from '@alxtexh-enterprise/panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
 import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuList,
     navigationMenuTriggerStyle,
-} from '@panelkit/panel'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@panelkit/panel'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@panelkit/panel'
+} from '@alxtexh-enterprise/panel'
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@alxtexh-enterprise/panel'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@alxtexh-enterprise/panel'
 import { useCurrentUrl } from '../../composables/useCurrentUrl'
 import { getInitials } from '../../composables/useInitials'
-import { toUrl } from '@panelkit/panel'
+import { toUrl } from '@alxtexh-enterprise/panel'
 import type { BreadcrumbItem, NavItem } from '../../types'
 
 type Props = {
@@ -40,7 +47,13 @@ const page = usePage()
 const panelHome = computed<string>(
     () => (page.props.panelHome as { href?: string } | undefined)?.href ?? '/',
 )
-const auth = computed(() => page.props.auth)
+/**
+ * TYPED THROUGH THE PACKAGE'S OWN `User`. `usePage()` props are untyped, so
+ * this read is `unknown` under a consuming application's checker even where
+ * ours tolerates it - and the error lands in their build, on a file they did
+ * not write.
+ */
+const auth = computed(() => (page.props.auth as { user?: User | null } | undefined) ?? {})
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl()
 
 const activeItemStyles = 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
@@ -217,9 +230,9 @@ const rightNavItems: NavItem[] = [
                             >
                                 <Avatar class="size-8 overflow-hidden rounded-full">
                                     <AvatarImage
-                                        v-if="auth.user.avatar"
-                                        :src="auth.user.avatar"
-                                        :alt="auth.user.name"
+                                        v-if="auth.user?.avatar"
+                                        :src="auth.user?.avatar"
+                                        :alt="auth.user?.name"
                                     />
                                     <AvatarFallback
                                         class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"

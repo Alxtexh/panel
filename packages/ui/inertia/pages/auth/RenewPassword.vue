@@ -18,7 +18,7 @@
  * looking for different things, and the wrong one wastes a support call.
  */
 import { Head, Link, useForm } from '@inertiajs/vue3'
-import { PkButton as Button, PkSpinner as Spinner } from '@panelkit/panel'
+import { PkButton as Button, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import AuthField from '../../components/AuthField.vue'
 import AuthInputError from '../../components/AuthInputError.vue'
