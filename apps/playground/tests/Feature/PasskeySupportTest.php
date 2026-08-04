@@ -105,6 +105,28 @@ final class PasskeySupportTest extends TestCase
         $this->assertArrayHasKey('manage', $body);
     }
 
+    /**
+     * THE SIGN-IN SCREEN OFFERS A PASSKEY, and this is the test that was missing.
+     *
+     * The screen moved into `@panelkit/inertia`, where the button is driven by a
+     * `passkeys` prop - and this application's Fortify login view never sent
+     * one. The button disappeared from a page that had it, and nothing failed:
+     * `/login` still returns 200, still renders, still signs people in. A screen
+     * that is missing a way in is exactly the kind of regression no status code
+     * can catch.
+     *
+     * ASSERTED ON THE PROP RATHER THAN THE MARKUP, because the markup is the
+     * package's and this is the seam between the two.
+     */
+    public function test_the_sign_in_screen_is_given_the_passkey_routes(): void
+    {
+        $this->get('/login')->assertInertia(
+            fn ($page) => $page->component('auth/Login')
+                ->where('passkeys.options', route('passkey.login-options'))
+                ->where('passkeys.verify', route('passkey.login')),
+        );
+    }
+
     /** And it answers empty rather than 404 when there is nothing to enrol. */
     public function test_the_well_known_document_is_empty_without_the_feature(): void
     {

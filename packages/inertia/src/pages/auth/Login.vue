@@ -63,15 +63,35 @@ const props = defineProps<{
     /** Turnstile's public key, or null when it is off. See `AuthTurnstile`. */
     turnstileSiteKey?: string | null
     /**
-     * Where passkey sign-in asks and posts, or null when it is not routed.
+     * Where passkey sign-in asks and posts.
      *
-     * FROM `Passkeys::signInRoutes()`. This was a SLOT and nothing filled it, so
-     * a fresh install had no passkey button at all - which is not "optional", it
-     * is absent. The button ships now and hides itself when the routes are not
-     * there or the browser cannot do WebAuthn.
+     * IT DEFAULTS TO WHAT `laravel/passkeys` REGISTERS, so the button is there
+     * without anybody wiring a prop. That is the whole point: it was optional
+     * twice over - a slot nothing filled, then a prop every consumer had to
+     * remember - and both times the result was a sign-in screen with no passkey
+     * on it. This application's own Fortify view is what proved it: the screen
+     * moved into the package, the prop was never sent, and the button silently
+     * stopped existing.
+     *
+     * PASS `null` TO TURN IT OFF. An installation without `laravel/passkeys`
+     * says so explicitly; the button also hides itself where the browser has no
+     * WebAuthn, so the default is safe rather than merely convenient.
      */
     passkeys?: { options: string; verify: string } | null
 }>()
+
+/**
+ * The routes `laravel/passkeys` registers, used when the server names none.
+ *
+ * `undefined` MEANS "NOBODY SAID", `null` MEANS "OFF" - which is the whole
+ * distinction that makes a default safe. Vue collapses both to `undefined`
+ * through `withDefaults`, so this is done by hand.
+ */
+const PASSKEY_ROUTES = { options: '/passkeys/login/options', verify: '/passkeys/login' }
+
+const passkeyRoutes = computed(() =>
+    props.passkeys === undefined ? PASSKEY_ROUTES : props.passkeys,
+)
 
 /*
  * THE PASSKEY BUTTON SHIPS. It was a slot, on the reasoning that a WebAuthn
@@ -108,9 +128,9 @@ const providers = computed(() => props.socialProviders ?? [])
             using `@laravel/passkeys/vue` passes its own button; everybody else
             gets the packaged one, which needs no npm dependency at all.
         -->
-        <div v-if="$slots.passkey || props.passkeys">
+        <div v-if="$slots.passkey || passkeyRoutes">
             <slot name="passkey">
-                <AuthPasskeyButton :routes="props.passkeys" :fallback="props.action" />
+                <AuthPasskeyButton :routes="passkeyRoutes" :fallback="props.action" />
             </slot>
 
             <div class="relative my-6">

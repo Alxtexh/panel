@@ -14,6 +14,7 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use PanelKit\Panel\Auth\Passkeys;
 use PanelKit\Panel\Auth\SocialProviders;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -70,6 +71,21 @@ class FortifyServiceProvider extends ServiceProvider
              * from a real sign-in page.
              */
             'prefill' => DemoLogin::credentials(),
+
+            /*
+             * THE PASSKEY ROUTES, WHICH THIS VIEW STOPPED SENDING.
+             *
+             * The sign-in screen moved into `@panelkit/inertia` and its passkey
+             * button is gated on this prop; nothing here ever sent it, so the
+             * button silently disappeared from a screen that had it before.
+             * Nothing failed and no test noticed - the page renders, signs
+             * people in, and is simply missing a way in.
+             *
+             * The packaged screen now defaults these routes rather than
+             * requiring them, so this line is belt and braces: it is also what
+             * a consumer with passkeys mounted somewhere else would write.
+             */
+            'passkeys' => Passkeys::signInRoutes(),
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/ResetPassword', [
