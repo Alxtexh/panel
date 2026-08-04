@@ -390,6 +390,51 @@ final class PanelRoutes
                 Route::delete('notifications/{id}', [Controllers\NotificationController::class, 'destroy'])
                     ->name('notifications.destroy');
 
+                /*
+                 | THE INSTALLATION'S OWN HEALTH: backups, logs and monitoring.
+                 |
+                 | NOT RESOURCE ROUTES, and not policy-checked as such. Nothing
+                 | here belongs to an organisation - one backup covers every
+                 | tenant and one stack trace names several - so the controller
+                 | checks two PANEL abilities instead: `view_operations` opens
+                 | the screens, `manage_backups` is what deletes a snapshot or
+                 | restores over the live database.
+                 |
+                 | OFFERED LIKE ANY OTHER PACKAGED SCREEN, so a customer-facing
+                 | portal drops them with `->without(['operations'])` and the
+                 | ROUTE goes with the menu entry rather than only the link.
+                 */
+                if ($panel->offers('operations')) {
+                    Route::get('operations/backups', [Controllers\OperationsController::class, 'backups'])
+                        ->name('operations.backups');
+                    Route::get('operations/logs', [Controllers\OperationsController::class, 'logs'])
+                        ->name('operations.logs');
+                    Route::get('operations/monitoring', [Controllers\OperationsController::class, 'monitoring'])
+                        ->name('operations.monitoring');
+                    Route::get('operations/monitoring/metrics', [Controllers\OperationsController::class, 'metrics'])
+                        ->name('operations.metrics');
+
+                    Route::post('operations/backups/run', [Controllers\OperationsController::class, 'runBackup'])
+                        ->name('operations.backups.run');
+                    Route::get('operations/backups/download', [Controllers\OperationsController::class, 'downloadBackup'])
+                        ->name('operations.backups.download');
+                    Route::delete('operations/backups', [Controllers\OperationsController::class, 'deleteBackups'])
+                        ->name('operations.backups.delete');
+                    Route::post('operations/backups/restore', [Controllers\OperationsController::class, 'restoreBackup'])
+                        ->name('operations.backups.restore');
+
+                    Route::get('operations/backups/settings', [Controllers\OperationsController::class, 'backupSettings'])
+                        ->name('operations.backups.configure');
+                    Route::put('operations/backups/settings', [Controllers\OperationsController::class, 'saveBackupSettings'])
+                        ->name('operations.backups.settings');
+                    Route::post('operations/backups/settings/history/{history}/restore', [Controllers\OperationsController::class, 'restoreBackupSettingsHistory'])
+                        ->name('operations.backups.settings.history.restore');
+                    Route::post('operations/backups/destinations/test', [Controllers\OperationsController::class, 'testBackupDestination'])
+                        ->name('operations.backups.destinations.test');
+                    Route::post('operations/alerts/telegram/test', [Controllers\OperationsController::class, 'testTelegram'])
+                        ->name('operations.alerts.telegram.test');
+                }
+
                 if ($panel->offers('trash')) {
                     Route::get('trash', [Controllers\TrashController::class, 'index'])->name('trash');
 
