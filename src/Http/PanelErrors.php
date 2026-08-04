@@ -8,6 +8,7 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use PanelKit\Panel\PanelManager;
+use ReflectionClass;
 use ReflectionProperty;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -80,9 +81,9 @@ final class PanelErrors
             return;
         }
 
-        $handler = app(ExceptionHandler::class);
+        $handler = self::responder(app(ExceptionHandler::class));
 
-        if (! method_exists($handler, 'respondUsing')) {
+        if ($handler === null) {
             return;
         }
 
@@ -102,6 +103,47 @@ final class PanelErrors
         $handler->respondUsing(
             static fn (Response $response, Throwable $e, Request $request): Response => self::render($response, $request)
         );
+    }
+
+    /**
+     * The handler that actually holds the response callback, unwrapping any
+     * decorator in front of it.
+     *
+     * FOUND BY THIS FAILING SILENTLY IN A FRESH APPLICATION. Collision wraps the
+     * framework's handler in its own `ExceptionHandler`, which implements the
+     * contract and forwards `report`/`render` - and does NOT forward
+     * `respondUsing`. So `method_exists()` said no, this returned, and a fresh
+     * install went on showing Laravel's 404 with nothing anywhere reporting a
+     * problem. The `verify-install` check added alongside is what caught it;
+     * every test in the monorepo passed throughout.
+     *
+     * THE SEARCH IS BOUNDED AND SHAPE-BASED rather than naming Collision: any
+     * decorator holds the handler it wraps in a property, and looking for "a
+     * property that is itself an exception handler" survives the next one.
+     */
+    public static function responder(object $handler, int $depth = 0): ?object
+    {
+        if (method_exists($handler, 'respondUsing')) {
+            return $handler;
+        }
+
+        if ($depth > 3) {
+            return null;
+        }
+
+        foreach ((new ReflectionClass($handler))->getProperties() as $property) {
+            $value = $property->getValue($handler);
+
+            if ($value instanceof ExceptionHandler && $value !== $handler) {
+                $found = self::responder($value, $depth + 1);
+
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+        }
+
+        return null;
     }
 
     /** Has something already claimed the handler's one response callback? */
