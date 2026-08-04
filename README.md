@@ -48,9 +48,21 @@ more rows, because it was never about the data.
 
 ## Install
 
+PanelKit is **private** — it is not on Packagist and not on npm. The PHP half
+comes from a private repository, the client half from a tarball this repository
+builds. [DISTRIBUTION.md](DISTRIBUTION.md) has both in full; this is the short
+version.
+
 ```bash
+# Once per application: where composer should look.
+composer config repositories.panelkit \
+  '{"type":"vcs","url":"git@github.com:enterprisealxtexh/panelkit-panel.git"}' --json
+
 composer require panelkit/panel
-npm install @panelkit/panel
+
+# The client half. Build the tarball from this repository, install it there.
+#   cd packages/ui && npm pack --pack-destination /tmp
+npm install /tmp/panelkit-panel-0.8.0.tgz
 
 # --auth scaffolds sign-in, sign-out and password reset for this panel, on this
 # panel's guard, under this panel's prefix - never at /login, so a starter kit's
