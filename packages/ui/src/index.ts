@@ -43,6 +43,7 @@ export { default as PkSpinner } from './components/Primitives/PkSpinner.vue'
 export { default as PkOtpInput } from './components/Primitives/PkOtpInput.vue'
 export { default as PkHeading } from './components/Primitives/PkHeading.vue'
 export { default as PkAlertError } from './components/Primitives/PkAlertError.vue'
+export { default as PkPasswordInput } from './components/Primitives/PkPasswordInput.vue'
 
 /* The class merger every moved shadcn component composes with. */
 export { cn, toUrl } from './lib/cn'

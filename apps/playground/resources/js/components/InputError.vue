@@ -1,13 +1,10 @@
 <script setup lang="ts">
-defineProps<{
-    message?: string;
-}>();
+/** The field error line is the package's now. */
+import { AuthInputError } from '@panelkit/inertia';
+
+defineProps<{ message?: string }>();
 </script>
 
 <template>
-    <div v-show="message">
-        <p class="text-sm text-red-600 dark:text-red-500">
-            {{ message }}
-        </p>
-    </div>
+    <AuthInputError :message="message" />
 </template>

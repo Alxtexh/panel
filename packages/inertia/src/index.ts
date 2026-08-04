@@ -85,6 +85,16 @@ export type { NavItem } from './components/shell/types'
 export { default as AppSidebar } from './components/shell/AppSidebar.vue'
 export { default as AppLogo } from './components/shell/AppLogo.vue'
 export { default as AppLogoIcon } from './components/shell/AppLogoIcon.vue'
+export { default as AppShell } from './components/shell/AppShell.vue'
+export { default as AppContent } from './components/shell/AppContent.vue'
+export { default as SessionExpired } from './components/SessionExpired.vue'
+export { default as DeleteUser } from './components/DeleteUser.vue'
+export {
+    installSessionExpiryPreview,
+    notifySessionExpired,
+    sessionExpired,
+    watchForSessionExpiry,
+} from './lib/sessionExpired'
 export { default as NavMain } from './components/shell/NavMain.vue'
 export { default as NavFooter } from './components/shell/NavFooter.vue'
 export { default as NavUser } from './components/shell/NavUser.vue'

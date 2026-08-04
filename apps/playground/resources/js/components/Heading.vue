@@ -1,28 +1,18 @@
 <script setup lang="ts">
-type Props = {
+/** The section heading is the package's now. */
+import { PkHeading } from '@panelkit/ui';
+
+defineProps<{
     title: string;
     description?: string;
     variant?: 'default' | 'small';
-};
-
-withDefaults(defineProps<Props>(), {
-    variant: 'default',
-});
+}>();
 </script>
 
 <template>
-    <header :class="variant === 'small' ? '' : 'mb-8 space-y-0.5'">
-        <h2
-            :class="
-                variant === 'small'
-                    ? 'mb-0.5 text-base font-medium'
-                    : 'text-xl font-semibold tracking-tight'
-            "
-        >
-            {{ title }}
-        </h2>
-        <p v-if="description" class="text-sm text-muted-foreground">
-            {{ description }}
-        </p>
-    </header>
+    <PkHeading
+        :title="title"
+        :description="description"
+        :variant="variant ?? 'default'"
+    />
 </template>

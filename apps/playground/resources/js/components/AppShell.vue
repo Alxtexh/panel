@@ -1,24 +1,13 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
-import { SidebarProvider } from '@/components/ui/sidebar';
+/** The outer frame is the package's now - see `AppSidebar.vue`. */
+import { AppShell } from '@panelkit/inertia';
 import type { AppVariant } from '@/types';
 
-type Props = {
-    variant?: AppVariant;
-};
-
-withDefaults(defineProps<Props>(), {
-    variant: 'sidebar',
-});
-
-const isOpen = usePage().props.sidebarOpen;
+defineProps<{ variant?: AppVariant }>();
 </script>
 
 <template>
-    <div v-if="variant === 'header'" class="flex min-h-screen w-full flex-col">
+    <AppShell :variant="variant ?? 'sidebar'">
         <slot />
-    </div>
-    <SidebarProvider v-else :default-open="isOpen">
-        <slot />
-    </SidebarProvider>
+    </AppShell>
 </template>

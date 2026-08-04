@@ -180,10 +180,7 @@ watch(
                                     <div
                                         class="flex aspect-square size-full items-center justify-center"
                                         :style="{
-                                            filter:
-                                                dark
-                                                    ? 'invert(1) brightness(1.5)'
-                                                    : undefined,
+                                            filter: dark ? 'invert(1) brightness(1.5)' : undefined,
                                         }"
                                         v-html="qrCodeSvg"
                                     />
