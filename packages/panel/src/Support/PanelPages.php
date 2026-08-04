@@ -140,6 +140,7 @@ final class PanelPages
         'settings/UserManagement',
         'settings/Workspaces',
         'settings/Organisation',
+        'settings/Index',
 
         'support/Help',
         'support/Faq',

@@ -72,7 +72,7 @@ final class AccountScreensTest extends TestCase
     public function test_a_panel_with_no_conflict_gets_the_packaged_screens(): void
     {
         $free = collect(app(PanelManager::class)->panels())
-            ->first(static fn ($panel): bool => Route::has($panel->id.'.settings.profile'));
+            ->first(static fn ($panel): bool => Route::has($panel->getRouteName().'settings.profile'));
 
         $this->assertNotNull(
             $free,
@@ -81,7 +81,7 @@ final class AccountScreensTest extends TestCase
 
         foreach (['settings.profile', 'settings.security', 'settings.password', 'settings.devices.destroyOthers'] as $name) {
             $this->assertTrue(
-                Route::has($free->id.'.'.$name),
+                Route::has($free->getRouteName().$name),
                 "The packaged account routes are incomplete: {$free->id}.{$name} is missing.",
             );
         }
@@ -98,7 +98,7 @@ final class AccountScreensTest extends TestCase
     public function test_the_account_menu_is_given_the_urls(): void
     {
         $panel = collect(app(PanelManager::class)->panels())
-            ->first(static fn ($p): bool => Route::has($p->id.'.settings.profile'));
+            ->first(static fn ($p): bool => Route::has($p->getRouteName().'settings.profile'));
 
         $this->assertNotNull($panel);
 

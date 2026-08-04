@@ -3,7 +3,6 @@
 use App\Http\Controllers\Auth\PasswordRenewalController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
-use App\Http\Controllers\Settings\SettingsIndexController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Http\Controllers\AssistantSettingsController;
@@ -37,7 +36,13 @@ Route::middleware(['auth'])->group(function () {
      | nowhere to discover Security or Organisation exist except a sidebar
      | with no descriptions. Now it renders a searchable index instead.
      */
-    Route::get('settings', [SettingsIndexController::class, 'index'])->name('settings.index');
+    /*
+     | THE SETTINGS INDEX IS THE PACKAGE'S NOW. `PanelRoutes` registers the same
+     | URL for any panel that has not claimed it, and derives every row from
+     | what that panel actually routes - so a portal that dropped a screen with
+     | `->without()` stops listing it without this file being edited. This
+     | application's assistant entry arrives through `SettingsIndex::add()`.
+     */
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');

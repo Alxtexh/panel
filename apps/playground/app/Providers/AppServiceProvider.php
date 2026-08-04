@@ -36,6 +36,7 @@ use PanelKit\Panel\Models\Ticket;
 use PanelKit\Panel\Policies\TicketPolicy;
 use PanelKit\Panel\Support\Budgets;
 use PanelKit\Panel\Support\HelpCentre;
+use PanelKit\Panel\Support\SettingsIndex;
 use PanelKit\Panel\Support\TicketStats;
 use PanelKit\Panel\Trash\TrashBin;
 
@@ -76,6 +77,41 @@ class AppServiceProvider extends ServiceProvider
          * copies of an answer start disagreeing.
          */
         HelpCentre::add(HelpArticles::all());
+
+        /*
+         * THIS APPLICATION'S OWN SETTINGS ENTRY. Everything else on that index
+         * is derived from what the panel routes; the assistant is ours, so the
+         * package has no business knowing about it - and the ability is checked
+         * the same way the packaged entries are, so an operator without it sees
+         * no row rather than a disabled one.
+         */
+        /*
+         * PROFILE AND SECURITY ARE THIS APPLICATION'S OWN ROUTES, so the
+         * packaged entries for them never appear - `SettingsIndex` lists a row
+         * only when the panel registered that route, and ours claimed the URL
+         * first. `order` puts them where they belong rather than after the
+         * organisation's logo.
+         */
+        SettingsIndex::add([[
+            'key' => 'profile',
+            'title' => 'Profile',
+            'description' => 'Your name and your email address.',
+            'href' => static fn (): string => route('profile.edit'),
+            'order' => 0,
+        ], [
+            'key' => 'security',
+            'title' => 'Security',
+            'description' => 'Password, two-factor authentication, passkeys and signed-in devices.',
+            'href' => static fn (): string => route('security.edit'),
+            'order' => 1,
+        ], [
+            'key' => 'assistant',
+            'title' => 'Assistant',
+            'description' => 'The AI provider the assistant runs on, and its key.',
+            // A CLOSURE: this runs in boot, before routes exist.
+            'href' => static fn (): string => route('assistant-settings.edit'),
+            'ability' => 'manage_assistant',
+        ]]);
 
         /*
          * THE DEV SERVER BINDS 127.0.0.1, NOT `localhost`.

@@ -130,22 +130,22 @@ final class NavigationCoverageTest extends TestCase
              */
             ...collect(app(PanelManager::class)->panels())
                 ->flatMap(static fn ($panel): array => array_values(array_filter([
-                    Route::has($panel->id.'.settings.profile')
-                        ? parse_url(route($panel->id.'.settings.profile'), PHP_URL_PATH)
+                    Route::has($panel->getRouteName().'settings.profile')
+                        ? parse_url(route($panel->getRouteName().'settings.profile'), PHP_URL_PATH)
                         : null,
-                    Route::has($panel->id.'.settings.security')
-                        ? parse_url(route($panel->id.'.settings.security'), PHP_URL_PATH)
+                    Route::has($panel->getRouteName().'settings.security')
+                        ? parse_url(route($panel->getRouteName().'settings.security'), PHP_URL_PATH)
                         : null,
-                    Route::has($panel->id.'.support.help')
-                        ? parse_url(route($panel->id.'.support.help'), PHP_URL_PATH)
+                    Route::has($panel->getRouteName().'support.help')
+                        ? parse_url(route($panel->getRouteName().'support.help'), PHP_URL_PATH)
                         : null,
                     // FAQ and About are linked FROM the help centre, which is
                     // where somebody looking for either would go first.
-                    Route::has($panel->id.'.support.faq')
-                        ? parse_url(route($panel->id.'.support.faq'), PHP_URL_PATH)
+                    Route::has($panel->getRouteName().'support.faq')
+                        ? parse_url(route($panel->getRouteName().'support.faq'), PHP_URL_PATH)
                         : null,
-                    Route::has($panel->id.'.support.about')
-                        ? parse_url(route($panel->id.'.support.about'), PHP_URL_PATH)
+                    Route::has($panel->getRouteName().'support.about')
+                        ? parse_url(route($panel->getRouteName().'support.about'), PHP_URL_PATH)
                         : null,
                     /*
                      * Workspaces is reached from the settings sub-navigation in
@@ -153,8 +153,13 @@ final class NavigationCoverageTest extends TestCase
                      * switcher in a generated portal. Both are menus; neither is
                      * `panelPages`, which is why it is named here.
                      */
-                    Route::has($panel->id.'.settings.workspaces')
-                        ? parse_url(route($panel->id.'.settings.workspaces'), PHP_URL_PATH)
+                    Route::has($panel->getRouteName().'settings.workspaces')
+                        ? parse_url(route($panel->getRouteName().'settings.workspaces'), PHP_URL_PATH)
+                        : null,
+                    // The settings index is itself reached from the account
+                    // menu and from the settings sub-navigation.
+                    Route::has($panel->getRouteName().'settings.index')
+                        ? parse_url(route($panel->getRouteName().'settings.index'), PHP_URL_PATH)
                         : null,
                 ])))
                 ->all(),

@@ -287,7 +287,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ...Guide::neighbours($page),
         ]);
     })->name('support.building');
-    Route::inertia('whats-new', 'support/WhatsNew')->name('support.whatsNew');
+    /*
+     | WHAT'S NEW WAS A SECOND CHANGELOG. The package ships `Changelog`, which
+     | is the same screen carried further - newest release open, the rest
+     | collapsed, grouped by kind - and this application had an older copy of it
+     | under a different name at a different URL. Two changelogs disagree the
+     | first time somebody updates one.
+     */
+    Route::redirect('whats-new', '/changelog')->name('support.whatsNew');
 
     /*
      | Feature requests and bug reports, filed from the dialog in the app shell.
