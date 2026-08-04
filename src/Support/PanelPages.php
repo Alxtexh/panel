@@ -159,8 +159,30 @@ final class PanelPages
     {
         $directory = resource_path('js/pages');
 
+        /*
+         * CREATE IT WHEN THIS IS ALREADY A VUE INERTIA APPLICATION.
+         *
+         * This used to return early whenever the directory was missing, and in a
+         * FRESH LARAVEL APP it always is - `resources/js/pages` comes from a
+         * starter kit, not from `laravel/laravel`. So `panel:install` wrote NOT
+         * ONE packaged screen: no ResourceIndex, no dashboard, no error page.
+         * It printed a warning, the install reported success, every server-side
+         * check passed - `/customers` really did answer 302, `/dashboard` really
+         * did name its component - and the panel was blank in a browser, because
+         * Inertia resolves a page by globbing this directory and there was
+         * nothing in it to find.
+         *
+         * The guard was right about its own question: writing Vue into a React
+         * or Blade application would be guessing. But `panel:install` PUBLISHES
+         * the Vue bootstrap two steps earlier, so by the time this runs the
+         * answer is known - `js/app.ts` is the file it just wrote.
+         */
         if (! is_dir($directory)) {
-            return ['written' => [], 'skipped' => [], 'directory' => null];
+            if (! file_exists(resource_path('js/app.ts'))) {
+                return ['written' => [], 'skipped' => [], 'directory' => null];
+            }
+
+            mkdir($directory, 0755, true);
         }
 
         $written = [];
