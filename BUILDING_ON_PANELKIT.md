@@ -129,58 +129,56 @@ Covered in section 5, because it needs care to stay upgrade-safe.
 
 ---
 
-## 5. The screens PanelKit does not ship yet
+## 5. What the package ships, and what stays in the demo
 
-As of `v0.8.0` the package ships 35 screens. The demo has 49. Some of the
-difference is demo-only by design; some is a real gap being closed.
+As of `v0.8.3` the package ships **44 screens**. The demo has 48. The four-screen
+difference is entirely demo-only by design — there is no longer a gap to work
+around.
 
-### Demo-only — do not expect these to arrive
+### Packaged, so do not copy them
 
-`Docs`, `support/BuildGuide` (documentation about PanelKit itself),
+The account screens (`settings/Profile`, `settings/Security`), the help centre
+(`support/Help`, `support/Faq`, `support/About`), user management, workspaces,
+the organisation screen and the settings index all ship. Earlier versions of this
+document told you to copy them from the demo and keep the page names identical
+so the swap would be free. **That advice is spent** — they arrived in 0.8.1
+through 0.8.3. If you followed it, section 6 is how you adopt the packaged
+version: delete your route and controller, and replace your page file with the
+shim.
+
+Their content is yours to supply, and that is the part worth knowing:
+
+| Screen | How you fill it |
+| --- | --- |
+| Help, FAQ | `HelpCentre::add([...])` in a provider — the package ships articles about the panel itself, you add yours |
+| About | `panel.about` in config — name, tagline, description, links, contact |
+| Settings index | derived from what is routed; add your own rows with `SettingsIndex::add([...])`, `href` as a **closure** |
+| Workspaces, Organisation | need `panel.tenancy.model` set to your organisation class |
+| User management | finds your users resource by matching `auth.providers.users.model` — nothing to configure |
+
+### Demo-only, and staying that way
+
+`Docs` and `support/BuildGuide` (documentation about PanelKit itself),
 `DevicePreview`, `errors/LoginPreview`, `errors/ShellPreview` (showcase tools),
 `Invoice`, `apps/Chat`, `apps/Mail`, `apps/MailThread` (sample apps).
 
-Copy them if you want them. They are yours from then on.
+Copy them if you want them. They become yours, and nothing will overwrite them.
 
-### Real gaps — being packaged, so copy them **carefully**
-
-| Screen | Status |
-| --- | --- |
-| `settings/Security` `settings/Profile` | components already packaged, pages are not |
-| `support/Help` `support/Faq` `support/WhatsNew` `support/About` | help centre, nothing packaged |
-| `settings/UserManagement` `settings/Organisation` `settings/Workspaces` | not packaged |
-
-**Copy these from the demo now, and follow the rule below so that swapping to
-the packaged version later costs you nothing.**
-
-### The rule that makes the swap free
-
-> **Keep the page name and the route name identical to the demo's.**
-
-Copy `apps/playground/resources/js/pages/settings/Security.vue` to
-`resources/js/pages/settings/Security.vue` — the *same path*. Register it at the
-same route name (`settings.security`). Copy the controller it needs into
-`app/Http/Controllers/Settings/`.
-
-When the package ships that screen, `panel:update` will try to write a page file
-at exactly that path, find yours already there, and **leave it alone** — it
-never overwrites (section 6). You then have a free choice:
-
-- keep yours, and nothing changes; or
-- adopt the packaged one by replacing your file with the shim in section 6, and
-  deleting the controller and routes you copied.
-
-If instead you rename it — `resources/js/pages/MySecurity.vue`, route
-`account.security` — you get both screens, in different places, and reconciling
-them later is manual work on every route, link and menu entry.
-
-**Copying a screen brings its dependencies.** These screens import from
-`@/components/*` and `@/routes/*` (Wayfinder). Copy the components they need
-out of the demo too, and keep the Wayfinder route helpers generated:
+**Copying a screen brings its dependencies.** These import from
+`@/components/*` and `@/routes/*` (Wayfinder). Copy the components they need out
+of the demo too, and keep the route helpers generated:
 
 ```bash
 php artisan wayfinder:generate --with-form
 ```
+
+### If you copy a screen anyway
+
+The rule that made the earlier advice safe still applies to anything you copy:
+**keep the page path identical to the demo's.** `panel:update` never overwrites a
+page file that already exists, so yours wins silently and a later packaged
+version costs you a delete rather than a reconciliation across every route, link
+and menu entry.
 
 ---
 
@@ -315,6 +313,17 @@ there exist because `panel:benchmark` failed without them.
   in, *except inside arrays you have published* — a plugin added to the packaged
   `plugins` list will never reach you silently. `panel:update` reports these by
   name; act on it.
+- **A packaged route yields to one you already own.** If your application
+  declares `/settings/profile`, the packaged screen does not register — by
+  design, because registering it would DELETE your route's name. Laravel indexes
+  routes by method+URI, so a duplicate replaces rather than coexists, and the
+  name lookup is rebuilt from what survives. The visible symptom is
+  `Route [profile.edit] not defined` thrown from code you did not change. The
+  cost is that the settings index will not list a screen it cannot see — add the
+  row yourself with `SettingsIndex::add()`.
+- **`href` must be a closure when you register from a provider.** `boot` runs
+  before routes exist, so an eager `route()` throws. This applies to
+  `SettingsIndex::add()` and anything else registered at boot.
 - **Never commit to the split repository** (`panelkit-panel`). It is generated
   output; the next `scripts/split.sh` overwrites it. All PanelKit work happens
   in the monorepo.
@@ -333,7 +342,7 @@ composer config repositories.panelkit \
 composer require panelkit/panel
 
 # the client half - build the tarball from the monorepo checkout
-npm install /path/to/panelkit-panel-0.8.0.tgz @vitejs/plugin-vue
+npm install /path/to/panelkit-panel-0.8.3.tgz @vitejs/plugin-vue
 
 php artisan panel:install --auth
 php artisan panel:make-user
