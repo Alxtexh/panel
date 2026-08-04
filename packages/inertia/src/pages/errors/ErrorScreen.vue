@@ -26,17 +26,17 @@ import ErrorArt from './ErrorArt.vue'
 
 const props = withDefaults(
     defineProps<{
-        status: number;
-        title: string;
-        message: string;
+        status: number
+        title: string
+        message: string
         /** Hide the "go back" affordance where history is not a way out. */
-        canGoBack?: boolean;
+        canGoBack?: boolean
         /** Where the primary action leads. The panel's home by default. */
-        homeHref?: string;
-        homeLabel?: string;
+        homeHref?: string
+        homeLabel?: string
     }>(),
     { canGoBack: true, homeHref: '/dashboard', homeLabel: 'Back to dashboard' },
-);
+)
 
 /**
  * The tone carries the same information as the words, for the glance before
@@ -45,23 +45,23 @@ const props = withDefaults(
  */
 const tone = computed(() => {
     if (props.status >= 500) {
-        return 'text-rose-600 dark:text-rose-400';
+        return 'text-rose-600 dark:text-rose-400'
     }
 
     if (props.status === 403 || props.status === 419) {
-        return 'text-amber-600 dark:text-amber-400';
+        return 'text-amber-600 dark:text-amber-400'
     }
 
-    return 'text-muted-foreground';
-});
+    return 'text-muted-foreground'
+})
 
 function goBack() {
     // The panel's own history, not the browser's - `window.history.back()` from
     // a freshly-loaded error page leaves the app entirely.
     if (window.history.length > 1) {
-        router.visit(document.referrer || props.homeHref);
+        router.visit(document.referrer || props.homeHref)
     } else {
-        router.visit(props.homeHref);
+        router.visit(props.homeHref)
     }
 }
 </script>
@@ -79,10 +79,7 @@ function goBack() {
             reader needs the sentence, and a page whose largest element is a
             three-digit code has told them nothing they can act on.
         -->
-        <p
-            class="mt-2 text-xs font-semibold tracking-[0.25em] tabular-nums"
-            :class="tone"
-        >
+        <p class="mt-2 text-xs font-semibold tracking-[0.25em] tabular-nums" :class="tone">
             ERROR {{ status }}
         </p>
 
@@ -103,13 +100,9 @@ function goBack() {
                 interactive elements where a keyboard user expects one - is
                 now the classes handed to the link's own element.
             -->
-            <Link :href="homeHref" :class="buttonClasses()">{{
-                homeLabel
-            }}</Link>
+            <Link :href="homeHref" :class="buttonClasses()">{{ homeLabel }}</Link>
 
-            <Button v-if="canGoBack" variant="outline" @click="goBack"
-                >Go back</Button
-            >
+            <Button v-if="canGoBack" variant="outline" @click="goBack">Go back</Button>
         </div>
 
         <slot />

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Jobs\RestoreBackup;
-use App\Jobs\RunBackupNow;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PanelKit\Panel\Jobs\DeliverScheduledReport;
 use PanelKit\Panel\Jobs\ExportRecords;
+use PanelKit\Panel\Jobs\RestoreBackup;
+use PanelKit\Panel\Jobs\RunBackupNow;
 use PanelKit\Panel\Jobs\RunBulkAction;
 use PanelKit\Panel\Knowledge\KnowledgeBase;
 use PanelKit\Panel\Models\Ticket;

@@ -46,7 +46,19 @@ final class PlatformPanelProvider extends ServiceProvider
                 ->context(Panel::CONTEXT_CENTRAL)
                 ->middleware(['web'])
                 ->authMiddleware(['auth:web'])
-                ->brandName(fn (): string => config('app.name').' — Platform'),
+                ->brandName(fn (): string => config('app.name').' — Platform')
+                /*
+                 * NO OPERATIONS SCREENS IN THIS PORTAL.
+                 *
+                 * They ship with the package now and are offered by default,
+                 * which is right for a panel that IS the installation's admin.
+                 * This one is not: backups, logs and host metrics belong to
+                 * whoever runs the installation, and routing them here would
+                 * put a restore button behind a guard that should never reach
+                 * one - protected by an ability nobody in this portal holds,
+                 * but a route that exists is a route somebody can probe.
+                 */
+                ->without(['operations']),
         );
 
         /*

@@ -102,6 +102,21 @@ export { default as DeleteUser } from './components/DeleteUser.vue'
 export { default as ErrorPage } from './pages/errors/Error.vue'
 export { default as ErrorScreen } from './pages/errors/ErrorScreen.vue'
 export { default as ErrorArt } from './pages/errors/ErrorArt.vue'
+
+/*
+ * THE INSTALLATION'S OWN HEALTH, moved from the reference app.
+ *
+ * The services behind these - `BackupStatus`, `BackupArchive`, `LogReader`,
+ * `MonitorSampler` - were packaged long before the screens were, so an
+ * installation had every piece of the machinery and nothing to reach it from.
+ *
+ * Their Wayfinder route helpers became a `routes` prop, which the packaged
+ * `OperationsController` fills from the CURRENT PANEL'S path.
+ */
+export { default as Backups } from './pages/operations/Backups.vue'
+export { default as BackupSettings } from './pages/operations/BackupSettings.vue'
+export { default as Logs } from './pages/operations/Logs.vue'
+export { default as Monitoring } from './pages/operations/Monitoring.vue'
 export {
     installSessionExpiryPreview,
     notifySessionExpired,
@@ -163,6 +178,12 @@ export const PANEL_PAGES = {
 
     // The permission matrix - the package owns the roles system now.
     'settings/Roles': () => import('./pages/settings/Roles.vue'),
+
+    // Backups, logs and monitoring - the installation's own health.
+    'operations/Backups': () => import('./pages/operations/Backups.vue'),
+    'operations/BackupSettings': () => import('./pages/operations/BackupSettings.vue'),
+    'operations/Logs': () => import('./pages/operations/Logs.vue'),
+    'operations/Monitoring': () => import('./pages/operations/Monitoring.vue'),
 } as const
 
 /*

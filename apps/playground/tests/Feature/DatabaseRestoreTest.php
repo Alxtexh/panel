@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Jobs\RestoreBackup;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\Jobs\RestoreBackup;
 use PanelKit\Panel\Support\DatabaseRestorer;
 use Tests\TestCase;
 

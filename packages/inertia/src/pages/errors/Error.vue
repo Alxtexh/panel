@@ -35,10 +35,7 @@ const props = withDefaults(
 )
 
 /** Status → what to say. Anything unlisted falls back to the generic pair. */
-const COPY: Record<
-    number,
-    { title: string; message: string; canGoBack?: boolean }
-> = {
+const COPY: Record<number, { title: string; message: string; canGoBack?: boolean }> = {
     403: {
         title: 'You do not have access to this',
         message:
@@ -46,8 +43,7 @@ const COPY: Record<
     },
     404: {
         title: 'That page does not exist',
-        message:
-            'The link may be out of date, or the record it pointed at may have been removed.',
+        message: 'The link may be out of date, or the record it pointed at may have been removed.',
     },
     429: {
         title: 'Too many requests',
@@ -63,16 +59,15 @@ const COPY: Record<
         message: 'It will be back shortly. Nothing you have saved is affected.',
         canGoBack: false,
     },
-};
+}
 
 const copy = computed(
     () =>
         COPY[props.status] ?? {
             title: 'Something went wrong',
-            message:
-                'The page could not be shown. Trying again is usually enough.',
+            message: 'The page could not be shown. Trying again is usually enough.',
         },
-);
+)
 </script>
 
 <template>

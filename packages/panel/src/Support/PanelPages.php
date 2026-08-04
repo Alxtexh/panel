@@ -66,6 +66,18 @@ final class PanelPages
          * identifier is the basename, since `documents/Templates` is not a
          * legal JavaScript name.
          */
+        /*
+         * THE INSTALLATION'S OWN HEALTH. Routed by `PanelRoutes` for any panel
+         * that still offers `operations`; the page files are written
+         * unconditionally, for the same reason the auth screens are - a panel
+         * that turns them on later would otherwise get a white page naming a
+         * file nobody has heard of.
+         */
+        'operations/Backups',
+        'operations/BackupSettings',
+        'operations/Logs',
+        'operations/Monitoring',
+
         'documents/Templates',
         'documents/TemplateDesigner',
         'documents/DocumentPrint',

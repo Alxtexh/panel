@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Jobs\RestoreBackup;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use PanelKit\Panel\Jobs\RestoreBackup;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\BackupArchive;
 use PanelKit\Panel\Support\BackupDestinationProbe;

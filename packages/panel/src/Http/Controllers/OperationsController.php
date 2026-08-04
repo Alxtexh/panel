@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace PanelKit\Panel\Http\Controllers;
 
-use App\Jobs\RestoreBackup;
-use App\Jobs\RunBackupNow;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +13,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Alerts\Telegram;
 use PanelKit\Panel\Audit\AuditRecorder;
+use PanelKit\Panel\Jobs\RestoreBackup;
+use PanelKit\Panel\Jobs\RunBackupNow;
 use PanelKit\Panel\Support\BackupArchive;
 use PanelKit\Panel\Support\BackupDestinationProbe;
 use PanelKit\Panel\Support\BackupSettings;
@@ -24,11 +24,22 @@ use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\LogReader;
 use PanelKit\Panel\Support\MonitorSampler;
 use PanelKit\Panel\Support\PanelSettings;
+use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\PlatformReport;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * The installation's own health: backups and logs.
+ *
+ * MOVED FROM THE REFERENCE APP. Every service it leans on was already in this
+ * package - `BackupStatus`, `BackupArchive`, `BackupSettings`, `LogReader`,
+ * `MonitorSampler` - and only the two jobs were not, so an installation had all
+ * the machinery and no screens to reach it from.
+ *
+ * IT NAMES NO ROUTES. Every redirect is `back()`, and every URL the screens post
+ * to arrives as a prop, built from the CURRENT PANEL'S PATH - which is what lets
+ * a second portal mount these under its own prefix and get screens that post
+ * back to themselves rather than into the first portal.
  *
  * THE ABILITIES ARE NOT RESOURCE POLICIES. Nothing here belongs to an
  * organisation - the backup covers every tenant at once and a stack trace
@@ -45,8 +56,64 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * than after the fact. A snapshot that vanished with nothing recording who
  * removed it is indistinguishable from a snapshot that was never taken.
  */
-final class OperationsController extends Controller
+final class OperationsController
 {
+
+    /**
+     * The URLs the screens post to, resolved from this controller's own routes.
+     *
+     * WHY THE CLIENT IS TOLD RATHER THAN ASKED TO KNOW. A packaged screen has
+     * no Wayfinder output to import - a consuming application's route names are
+     * its own - so every URL it needs travels with the page. That also means an
+     * installation may mount these anywhere: change the route and the screen
+     * follows, with nothing else edited.
+     *
+     * `back()` IS THE ONLY REDIRECT anywhere in this class, for the same reason.
+     *
+     * @return array<string, string>
+     */
+    private function backupRoutes(): array
+    {
+        return [
+            'run' => $this->at('operations/backups/run'),
+            'delete' => $this->at('operations/backups'),
+            'restore' => $this->at('operations/backups/restore'),
+            'download' => $this->at('operations/backups/download'),
+            'configure' => $this->at('operations/backups/settings'),
+        ];
+    }
+
+    /**
+     * A URL under the panel these screens are mounted in.
+     *
+     * THE PREFIX COMES FROM THE PANEL RATHER THAN THE REQUEST, because the two
+     * disagree exactly where it matters: an application that mounts this
+     * controller itself, outside any panel, has no prefix at all - and reading
+     * one off the request would then borrow whatever segment happened to be
+     * first.
+     */
+    private function at(string $path): string
+    {
+        $prefix = app(PanelManager::class)->currentPanel()?->getPath() ?? '';
+
+        return url(trim($prefix.'/'.$path, '/'));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function backupSettingsRoutes(): array
+    {
+        return [
+            'save' => $this->at('operations/backups/settings'),
+            'testDestination' => $this->at('operations/backups/destinations/test'),
+            'testTelegram' => $this->at('operations/alerts/telegram/test'),
+            // `__id__` is substituted client-side; see the screen's prop doc.
+            'restoreHistory' => $this->at('operations/backups/settings/history/__id__/restore'),
+            'backups' => $this->at('operations/backups'),
+        ];
+    }
+
     public function backups(Request $request): Response
     {
         abort_unless($request->user()?->hasPermission('view_operations'), 403);
@@ -54,6 +121,7 @@ final class OperationsController extends Controller
         $settings = BackupSettings::load();
 
         return Inertia::render('operations/Backups', [
+            'routes' => $this->backupRoutes(),
             'status' => (new BackupStatus)->summary(),
             /*
              * THE LAST MANUAL RUN, so the button is not a black hole. A job
@@ -154,6 +222,7 @@ final class OperationsController extends Controller
         $settings = BackupSettings::load();
 
         return Inertia::render('operations/BackupSettings', [
+            'routes' => $this->backupSettingsRoutes(),
             // Redacted: the bot token is stored, applied, and never sent back.
             'settings' => $settings->redacted(),
             'schedule' => $settings->describe(),
@@ -605,6 +674,7 @@ final class OperationsController extends Controller
          * the naive version of this endpoint reads any file on the server.
          */
         return Inertia::render('operations/Logs', [
+            'routes' => ['logs' => $this->at('operations/logs')],
             'files' => $reader->files(),
             'tail' => $reader->tail(
                 $request->query('file') === null ? null : (string) $request->query('file'),

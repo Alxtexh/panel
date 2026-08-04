@@ -115,16 +115,20 @@ final class AccessibilityTest extends DuskTestCase
 
         $this->browse(function (Browser $browser): void {
             /*
-             * A LONGER WAIT THAN THE OTHERS, and for a measurable reason: this
-             * is the only screen here that queries the seeded client table, and
-             * the first paint waits on a count over it. Fifteen seconds passed
-             * alone and failed roughly one run in three inside the full suite,
-             * where the server is also answering the other tests.
+             * WAIT FOR A ROW, NOT FOR A PARTICULAR PERSON.
              *
-             * The wait is not the assertion - the accessibility scan below is.
-             * Timing this one tightly buys nothing and costs a red suite.
+             * This used to wait on the seeded name "Amina Otieno", which made
+             * the test depend on that row surviving at the top of a 250,000-row
+             * list AND on the whole list painting. It failed about one run in
+             * three inside the full suite and passed in five seconds alone -
+             * raising the timeout to 45 seconds did not fix it, because under
+             * load the contention scales with the wait.
+             *
+             * `tbody tr` is what the accessibility scan actually needs: a table
+             * with rows in it. It is true the moment the first row lands, it
+             * does not care which row, and it says what the test requires.
              */
-            $browser->loginAs($this->operatorId)->visit('/clients')->waitForText('Amina Otieno', 45);
+            $browser->loginAs($this->operatorId)->visit('/clients')->waitFor('tbody tr', 30);
 
             $this->assertNoSeriousAccessibilityViolations($browser, 'Resource list');
         });

@@ -58,6 +58,19 @@ final class AdminPanelProvider extends ServiceProvider
                  * refused it.
                  */
                 ->authMiddleware(['auth', 'verified'])
+                /*
+                 * THIS APPLICATION MOUNTS THE OPERATIONS SCREENS ITSELF.
+                 *
+                 * They are the package's now - controller, jobs and Vue - but
+                 * this panel sits at the ROOT path, so the packaged routes and
+                 * the ones declared in `web.php` would be the same URLs
+                 * registered twice. Opting out here leaves one registration,
+                 * and keeps the named routes Wayfinder generates from.
+                 *
+                 * A fresh installation changes nothing and gets them mounted
+                 * under its panel automatically.
+                 */
+                ->without(['operations'])
                 ->brandName(fn (): ?string => app(TenantContext::class)->tenant()?->name),
         );
     }

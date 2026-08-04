@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Jobs\RestoreBackup;
 use Illuminate\Support\Facades\Storage;
+use PanelKit\Panel\Jobs\RestoreBackup;
 use Tests\TestCase;
 
 /**

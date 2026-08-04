@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Jobs\RunBackupNow;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use PanelKit\Panel\Jobs\RunBackupNow;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\LogReader;
