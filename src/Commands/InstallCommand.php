@@ -39,6 +39,7 @@ final class InstallCommand extends Command
         $this->wireVite();
         $this->repointViews();
         $this->createDefaultPanel();
+        $this->writeDashboard();
         $this->writePageFiles();
 
         if ($this->option('auth')) {
@@ -535,7 +536,7 @@ final class InstallCommand extends Command
 
     private function createTree(): void
     {
-        foreach (['Panel/Resources', 'Policies'] as $directory) {
+        foreach (['Panel/Resources', 'Panel/Pages', 'Policies'] as $directory) {
             $path = app_path($directory);
 
             if (is_dir($path)) {
@@ -545,6 +546,99 @@ final class InstallCommand extends Command
             mkdir($path, 0755, true);
             $this->components->info("Created app/{$directory}");
         }
+    }
+
+    /**
+     * The screen an installation opens on.
+     *
+     * A FRESH INSTALL HAD NO DASHBOARD AT ALL, and the symptom was not an
+     * error - it was signing in and landing on a resource list, or on the
+     * application's welcome page, with no way to tell which was intended.
+     * `DashboardPage` shipped as an ABSTRACT class: nine widget classes, a
+     * packaged screen to draw them, deferred resolution, per-widget
+     * permissions - and nothing that extended it, so none of it rendered
+     * anywhere until somebody wrote a subclass they had no reason to know
+     * about.
+     *
+     * SO THE INSTALLER WRITES ONE. It declares no widgets, because at install
+     * time there are no models to count; what it gives is a real screen, in the
+     * navigation, at a stable URL, that sign-in lands on - and a file with two
+     * commented examples in it, which is a far better prompt than a paragraph
+     * in a README.
+     *
+     * IN THE APPLICATION, NOT THE PACKAGE. A dashboard is the screen people
+     * change first, and one that lived in `vendor/` would have to be
+     * republished, subclassed or configured before it could be touched.
+     */
+    private function writeDashboard(): void
+    {
+        $path = app_path('Panel/Pages/DashboardPage.php');
+
+        if (file_exists($path)) {
+            $this->components->twoColumnDetail('Kept yours', 'app/Panel/Pages/DashboardPage.php');
+
+            return;
+        }
+
+        if (! is_dir(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
+
+        $panel = (string) config('panel.default', 'admin');
+
+        file_put_contents($path, <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use PanelKit\\Panel\\Pages\\DashboardPage as PanelKitDashboard;
+        use PanelKit\\Panel\\Widgets\\ChartWidget;
+        use PanelKit\\Panel\\Widgets\\StatWidget;
+
+        /**
+         * The panel's home screen - where signing in lands.
+         *
+         * Declare widgets and they appear. Each one resolves in its own
+         * deferred prop, so the layout arrives before any query has run and a
+         * slow aggregate delays only itself.
+         *
+         * To use your own layout instead, override `component()` and point it
+         * at a page of your own; the declarations, the permission filtering and
+         * the deferred props still apply.
+         */
+        final class DashboardPage extends PanelKitDashboard
+        {
+            protected static string \$panel = '{$panel}';
+
+            protected static ?int \$sort = -100;
+
+            /** The counters across the top. */
+            public static function stats(): array
+            {
+                return [
+                    // StatWidget::make('customers', 'Customers')
+                    //     ->value(fn (): int => Customer::query()->count())
+                    //     ->description('All time'),
+                ];
+            }
+
+            /** The charts below them. */
+            public static function charts(): array
+            {
+                return [
+                    // ChartWidget::make('signups', 'Sign-ups')
+                    //     ->type('line')
+                    //     ->withPeriods()
+                    //     ->data(fn (\$period, \$now): array => []),
+                ];
+            }
+        }
+
+        PHP);
+
+        $this->components->twoColumnDetail('Wrote', 'app/Panel/Pages/DashboardPage.php');
     }
 
     /**

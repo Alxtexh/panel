@@ -14,6 +14,7 @@ use Laravel\Socialite\Facades\Socialite;
 use PanelKit\Panel\Auth\SocialProviders;
 use PanelKit\Panel\Models\ConnectedAccount;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\PanelHome;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirect;
 
 /**
@@ -67,9 +68,7 @@ final class SocialLoginController extends Controller
     /** Where a signed-in person lands, which is the panel's home. */
     private function home(): string
     {
-        $panel = app(PanelManager::class)->currentPanel();
-
-        return $panel === null ? '/' : '/'.trim($panel->getPath(), '/');
+        return PanelHome::urlFor(app(PanelManager::class)->currentPanel());
     }
 
     /** Where a link attempt returns to - the security screen, named in config. */
