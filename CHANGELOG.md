@@ -4,6 +4,20 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.7.1
+
+**Every portal's Home link stays inside that portal.** Signed in and inside
+`/platform`, the sidebar offered "Home" pointing at `/dashboard` — the *admin*
+panel's dashboard. Clicking it left the portal silently, and for somebody who
+may not open that screen it refused with a bare "Forbidden". The published
+layout had that path written into it, and every generated portal renders the
+same file, so all three had it.
+
+The panel's home is now shared as `panel.home`, resolved by the same
+`PanelHome::urlFor()` that decides where sign-in lands — so the link and the
+redirect cannot disagree. Nothing to do on upgrade unless you wrote your own
+layout; see UPGRADING.md.
+
 ## 0.7.0
 
 A minor, not a patch: this removes public API. Every change below is listed in
