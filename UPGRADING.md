@@ -10,10 +10,10 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.8.1"
+"panelkit/panel": "^0.8.2"
 ```
 
-Composer reads `^0.8.1` on a `0.x` package as `>=0.8.1 <0.9.0`, which is what you
+Composer reads `^0.8.2` on a `0.x` package as `>=0.8.2 <0.9.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
 The two packages are **versioned together**. `panelkit/panel@0.8.0` expects
@@ -111,6 +111,25 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.8.1 → 0.8.2
+
+`composer update panelkit/panel`, a fresh `npm pack`, then `php artisan
+panel:update` and `npm run build`. Three more page files are written:
+`settings/Workspaces`, `settings/Organisation` and `settings/UserManagement`.
+
+**To get the workspace and organisation screens working**, `config/panel.php`
+needs `tenancy.model` set to your organisation class. It has been in the config
+since 0.5 and only `panel:permissions` read it, so an installation that left it
+null gets screens that say organisation management is unavailable - which is the
+true answer until the key is set.
+
+**Workspace switching also needs a membership relation** on your user model,
+named `memberships`, `tenants` or `organisations` - any of the three. Without
+one, an account has exactly one organisation and the screen says so rather than
+offering to create a second it could never reach.
+
+**Nothing breaks.** The routes yield to any you already own.
 
 ### 0.8.0 → 0.8.1
 

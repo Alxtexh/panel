@@ -5,6 +5,46 @@ Versioning policy, and what counts as a breaking change, are in
 and `@panelkit/panel` on npm — are versioned together. Entries before 0.8.0 name
 three, which is what there were.
 
+## 0.8.2
+
+**Organisation management ships**, and with it the seam every screen that
+touches an organisation needed.
+
+**`Support\Tenants` is the one place that answers three questions**: which class
+is an organisation (`panel.tenancy.model`, a key that existed since 0.5 and
+exactly one command read), which column names it on a user, and which relation
+lists the ones an account belongs to. That last is **asked, not configured** -
+`memberships`, `tenants` and `organisations` are all accepted, because the word
+for it is a house style and requiring one would mean renaming a relation to
+satisfy a package. It is deliberately not read from stancl's
+`tenancy.tenant_model`: the package supports three modes and a hand-written
+resolver, and only one of those involves that library.
+
+**Workspaces** - the organisations an account belongs to, creating one, and
+moving between them. The session's tenant stamp moves with the user, which is
+the part that cannot be left out: `ScopeSessionToTenant` flushes a session whose
+stamp disagrees, because a cross-tenant session is what a stolen cookie looks
+like. Switching is written to the audit trail.
+
+**Organisation** - the name and logo, resolved through `TenantContext`, so it
+works identically under a tenant column, database-per-tenant, or your own
+resolver.
+
+**User management** - the roles half shipped in 0.4 and the people half did not,
+which made the permission matrix a screen you could reach and not act on.
+`UserDirectory` finds the resource that lists users by matching
+`auth.providers.users.model`, so your own users resource supplies the table
+without either side naming the other.
+
+**Every one degrades rather than failing.** A single-tenant installation, or one
+whose user model has no membership relation, gets a screen that says switching is
+unavailable here - not a create button that would make an organisation nobody can
+reach.
+
+### Breaking
+
+Nothing. As in 0.8.1, every route yields to one your application already owns.
+
 ## 0.8.1
 
 **Four screens that were the demo's are now the package's**, and the reason
