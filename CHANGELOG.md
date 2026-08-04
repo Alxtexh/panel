@@ -4,6 +4,45 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.7.3
+
+**A new install is no longer locked out of itself.** It was locked twice over,
+and the second cause was the bigger one.
+
+**Tenancy.** `panel.tenancy.mode` defaults to `column`, which resolves a tenant
+from a column on the users table and fails *closed* when it cannot — every list
+empty, every write refused. That posture is right; shipping it as the default
+into an application with no such column is not, and a fresh `laravel/laravel`
+has none. The install printed a warning, reported success, and left a panel
+refusing everybody — with a role correctly granted, the ability correctly held,
+and the refusal coming from tenancy with nothing on screen saying so.
+`panel:install` now writes a mode the application can satisfy and says what it
+did.
+
+**Nobody in charge.** `panel:permissions sync` creates an Administrator role
+holding every ability and assigns it to nobody — correct, because the package
+has no business choosing who runs your installation — and `panel:make-user`
+grants only to an account it creates. So anybody who registered through the
+sign-in screen first was locked out, *including from the roles screen that would
+have fixed it*. There is now a key:
+
+```bash
+php artisan panel:permissions grant --email=you@example.com
+```
+
+A deliberate act at a shell rather than a first-user-wins rule, and it names who
+rather than granting to "the only account" — fine until an installation has two.
+
+**`panel:doctor` reports accounts that hold no role**, because a panel where
+every screen answers 403 gives its owner nothing to read. **This can turn a
+previously-green `panel:doctor` red** — the finding is true, and the fix is one
+command. It stays quiet when there are no accounts at all: that is a fresh
+install waiting for `panel:make-user`, which grants as it creates.
+
+`verify-install.sh` now asserts the lock and the key — 403 before the grant, 200
+after — and that a fresh installation passes its own doctor. Two of its
+assertions inverted: they asserted the install was misconfigured, which it was.
+
 ## 0.7.2
 
 **A packaged screen no longer 500s on a user model that is not the reference

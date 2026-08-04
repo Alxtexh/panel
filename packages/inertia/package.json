@@ -1,6 +1,6 @@
 {
     "name": "@panelkit/inertia",
-    "version": "0.7.2",
+    "version": "0.7.3",
     "description": "The screens PanelKit's PHP half renders: the resource list, the form, the record page, the trash and a portal's home. Inertia-bound, layout-free.",
     "type": "module",
     "license": "MIT",

@@ -108,6 +108,28 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.7.2 → 0.7.3
+
+`composer update`, then `php artisan panel:doctor`.
+
+**`panel:doctor` may now report a problem it did not before:** accounts that hold
+no role. It is a true finding — a panel where every screen answers 403,
+including the roles screen that would fix it — and if it fires, one command
+clears it:
+
+```bash
+php artisan panel:permissions grant --email=you@example.com
+```
+
+If you script `panel:doctor` in CI, expect that exit code until somebody holds a
+role.
+
+**If your users table has no tenant column**, check `panel.tenancy.mode`. Left at
+`column` it resolves no tenant and denies every query and every write; `none` is
+right for a single-tenant application. `panel:install` sets this on a fresh
+application now, but it does not touch an existing published config — that is
+yours.
+
 ### 0.7.1 → 0.7.2
 
 `composer update`. Nothing to edit.
