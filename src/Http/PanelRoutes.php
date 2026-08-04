@@ -496,6 +496,24 @@ final class PanelRoutes
                 }
 
                 /*
+                 * WORKSPACES, on panels that offer them.
+                 *
+                 * `Tenants::switchable()` decides at REQUEST time whether the
+                 * screen can do anything; these routes exist either way so the
+                 * page can say "not available here" rather than 404, which is
+                 * the difference between an unconfigured feature and a broken
+                 * link. The write endpoints refuse.
+                 */
+                if ($panel->offers('workspaces') && self::unclaimed('GET', $panel->getPath().'/settings/workspaces')) {
+                    Route::get('settings/workspaces', [Controllers\WorkspacesController::class, 'edit'])
+                        ->name('settings.workspaces');
+                    Route::post('settings/workspaces', [Controllers\WorkspacesController::class, 'store'])
+                        ->name('settings.workspaces.store');
+                    Route::put('settings/workspaces/current', [Controllers\WorkspacesController::class, 'switch'])
+                        ->name('settings.workspaces.switch');
+                }
+
+                /*
                  * THE HELP CENTRE, on panels that want it.
                  *
                  * `->without(['help'])` DROPS THE ROUTES, not just the menu
