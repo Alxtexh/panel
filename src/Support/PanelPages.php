@@ -115,6 +115,21 @@ final class PanelPages
          * nobody can open is a permission system nobody can operate.
          */
         'settings/Roles',
+
+        /*
+         * THE ACCOUNT'S OWN SCREENS, and the reason they arrived late is worth
+         * keeping. `ManagePasskeys`, `ManageTwoFactor`, `TwoFactorSetupModal`,
+         * `TwoFactorRecoveryCodes` and `DeleteUser` all shipped in the npm
+         * package from 0.6 - correct, tested, exported, and mounted by NOTHING
+         * outside the reference application. Every installation downloaded a
+         * working passkey manager and had no page on which to see it.
+         *
+         * That is the same failure as `errors/Error` above and as
+         * `PkLandingSections` before it: a component in `node_modules` that no
+         * route renders is, from the outside, a feature that was never built.
+         */
+        'settings/Profile',
+        'settings/Security',
     ];
 
     /**

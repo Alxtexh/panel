@@ -142,6 +142,33 @@ final class PanelRoutes
         }
     }
 
+    /**
+     * Has the application already registered this method and URI?
+     *
+     * WHY THIS EXISTS AT ALL: Laravel's `RouteCollection` indexes by
+     * `method.domain.uri`, so a second registration of the same pair does not
+     * sit alongside the first - it REPLACES it, and `refreshNameLookups()` then
+     * rebuilds the name table from the routes that remain. The displaced route's
+     * NAME disappears with it. Nothing warns. The failure surfaces later and
+     * elsewhere, as `Route [profile.edit] not defined` thrown from application
+     * code that has not changed.
+     *
+     * COMPARED ON THE NORMALISED URI, because the collection stores paths
+     * without a leading slash and a panel path arrives with one.
+     */
+    private static function unclaimed(string $method, string $uri): bool
+    {
+        $uri = trim($uri, '/');
+
+        foreach (Route::getRoutes() as $route) {
+            if ($route->uri() === $uri && in_array($method, $route->methods(), true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static function extend(callable $routes): void
     {
         $extensions = app()->bound(self::EXTENSIONS) ? app(self::EXTENSIONS) : [];
@@ -402,6 +429,70 @@ final class PanelRoutes
                 if (Auth\SocialProviders::enabled() !== []) {
                     Route::delete('connected-accounts/{connectedAccount}', [Controllers\SocialLoginController::class, 'destroy'])
                         ->name('social.destroy');
+                }
+
+                /*
+                 * THE ACCOUNT'S OWN TWO SCREENS.
+                 *
+                 * NO ABILITY GATES THESE, and that is deliberate rather than an
+                 * omission. Every other route in this group asks what the person
+                 * may do to the application's data; these two are about their
+                 * own account, and an operator who has been granted nothing
+                 * still has to be able to change their own password. Gating them
+                 * on a permission produces the install where the first thing a
+                 * new user is told to do is the one thing they cannot reach.
+                 *
+                 * THE PIECES WERE ALL PACKAGED AND THE SCREEN WAS NOT until
+                 * 0.8.1 - `ManagePasskeys` and `ManageTwoFactor` shipped in the
+                 * npm package with nothing in any installation mounting them.
+                 *
+                 * THEY YIELD TO AN APPLICATION THAT ALREADY OWNS THE URL, and
+                 * this is not politeness. Laravel's route collection is indexed
+                 * by method+URI: registering a second `GET settings/profile`
+                 * REPLACES the first and then rebuilds the name lookup from what
+                 * survives, so the application's own `profile.edit` stops
+                 * existing. Every `route('profile.edit')` in their codebase
+                 * throws, from a package they installed for its screens.
+                 *
+                 * That is not hypothetical - it is what happened to the
+                 * reference application the moment these routes were added, and
+                 * a Laravel starter kit ships exactly this URL. Skipping is the
+                 * safe direction: a consumer who wants the packaged screen can
+                 * delete their own route, and one who does not keeps working.
+                 */
+                if (self::unclaimed('GET', $panel->getPath().'/settings/profile')) {
+                    Route::get('settings/profile', [Controllers\ProfileController::class, 'edit'])
+                        ->name('settings.profile');
+                    Route::patch('settings/profile', [Controllers\ProfileController::class, 'update'])
+                        ->name('settings.profile.update');
+                    Route::delete('settings/profile', [Controllers\ProfileController::class, 'destroy'])
+                        ->name('settings.profile.destroy');
+                }
+
+                if (self::unclaimed('GET', $panel->getPath().'/settings/security')) {
+                    Route::get('settings/security', [Controllers\SecurityController::class, 'edit'])
+                        ->name('settings.security');
+                    /*
+                     * `settings/password`, NOT `settings/security/password`,
+                     * because that is the URL the reference application has
+                     * always used, so an installation that copied its screen
+                     * while waiting for this one finds the form still posts
+                     * where it did.
+                     */
+                    Route::put('settings/password', [Controllers\SecurityController::class, 'update'])
+                        ->name('settings.password');
+
+                    /*
+                     * THE DEVICE ROUTES BELONG TO THE SECURITY SCREEN, so they
+                     * are registered with it or not at all. An application that
+                     * kept its own security page has its own sign-out endpoints;
+                     * adding ours would leave two ways to delete a session row
+                     * and one screen calling whichever it was written against.
+                     */
+                    Route::delete('settings/devices/{id}', [Controllers\SecurityController::class, 'destroyDevice'])
+                        ->name('settings.devices.destroy');
+                    Route::delete('settings/devices', [Controllers\SecurityController::class, 'destroyOtherDevices'])
+                        ->name('settings.devices.destroyOthers');
                 }
 
                 /*
