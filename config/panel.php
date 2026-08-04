@@ -730,4 +730,53 @@ return [
         'render' => env('PANEL_RENDER_ERRORS', true),
     ],
 
+    /*
+    |---------------------------------------------------------------------------
+    | The public landing page
+    |---------------------------------------------------------------------------
+    |
+    | route
+    |   OFF BY DEFAULT, and that is the important line here. `/` is the URL an
+    |   application is most likely to have its own plans for, and a package that
+    |   claimed it on install would replace somebody's marketing site with a
+    |   template. Turn it on and `LandingController` serves the composed page
+    |   there; leave it off and the editor still works for a page you route
+    |   yourself.
+    |
+    | design
+    |   Which shipped composition seeds the page: aurora, editorial or console.
+    |   They differ in composition and copy, not only in colour. Once an editor
+    |   has saved an arrangement in the panel, that is what renders and this is
+    |   only the fallback - see `Landing\LandingPageResource`.
+    |
+    | brand, tagline, footer_links
+    |   THE CHROME, which is the application's rather than the package's. The
+    |   nav and footer used to carry the reference app's name and its `/help`,
+    |   `/about` and `/faq` links - screens it happens to route - so a packaged
+    |   footer with them baked in would put three 404s at the bottom of
+    |   everybody's front page.
+    |
+    | previews
+    |   A switcher offering the other designs. It is a DEMONSTRATION: useful on
+    |   a site showing the designs off, a mistake a visitor can make on a real
+    |   front door.
+    |
+    */
+
+    'landing' => [
+        'route' => env('PANEL_LANDING_ROUTE', false),
+        'design' => env('PANEL_LANDING', 'aurora'),
+        'brand' => env('PANEL_LANDING_BRAND'),
+        'tagline' => '',
+        'footer_links' => [],
+        'previews' => env('PANEL_LANDING_PREVIEWS', false),
+
+        /*
+         * The editor itself, in the panel. ON even when `route` is off: an
+         * application that serves the composed page from its own route still
+         * wants the screen that composes it.
+         */
+        'editor' => true,
+    ],
+
 ];

@@ -42,6 +42,14 @@ final class PanelPages
         'Environment',
 
         /*
+         * THE PUBLIC FRONT PAGE. `LandingController` renders this; the editor
+         * that composes it is `Landing\LandingPageResource`. All of it lived in
+         * the reference application until now, so every other installation had
+         * the section library and nothing that drew a page with it.
+         */
+        'landing/Composed',
+
+        /*
          * THE SIGN-IN SCREENS, mirrored even in an application that has not run
          * `make:panel --auth` yet.
          *

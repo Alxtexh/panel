@@ -7,6 +7,7 @@ namespace PanelKit\Panel\Http;
 use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Auth;
 use PanelKit\Panel\Auth\Passkeys;
+use PanelKit\Panel\Landing;
 use PanelKit\Panel\Http\Controllers\BulkController;
 use PanelKit\Panel\Http\Controllers\RecordController;
 use PanelKit\Panel\Http\Controllers\ResourceController;
@@ -58,6 +59,7 @@ final class PanelRoutes
         // Once for the installation, not once per portal - the path is fixed by
         // the spec and a second registration would collide.
         self::wellKnown();
+        self::landing();
 
         foreach (app(PanelManager::class)->panels() as $panel) {
             self::register($panel);
@@ -107,6 +109,37 @@ final class PanelRoutes
         Route::get('.well-known/passkey-endpoints', static fn () => response()->json(
             Passkeys::available() ? Passkeys::endpoints() : []
         ))->name('panel.well-known.passkeys');
+    }
+
+    /**
+     * The public front page, and its previews.
+     *
+     * OUTSIDE EVERY PANEL, because it is what an unauthenticated visitor sees
+     * before any panel is involved - and OFF unless asked for, because `/` is
+     * the URL an application is most likely to have its own plans for.
+     *
+     * DECLARED LAST-ISH ON PURPOSE. This runs from the provider's `boot`, which
+     * is after `routes/web.php`, so an application that declares its own `/`
+     * keeps it: the first matching route wins and theirs is registered first.
+     * Turning the flag on in an application that already answers `/` is
+     * therefore a no-op rather than a hijack, which is the safe direction for
+     * this to fail in.
+     */
+    public static function landing(): void
+    {
+        if (! Landing\LandingController::registers()) {
+            return;
+        }
+
+        Route::get('/', Landing\LandingController::class)
+            ->middleware('web')
+            ->name('panel.landing');
+
+        if (config('panel.landing.previews', false) === true) {
+            Route::get('preview/{design}', Landing\LandingController::class)
+                ->middleware('web')
+                ->name('panel.landing.preview');
+        }
     }
 
     public static function extend(callable $routes): void
