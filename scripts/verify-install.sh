@@ -424,6 +424,74 @@ rm -f verify-roles.php
 
 say "the user model holds roles, so a granted ability is actually held"
 
+# ---------------------------------------------------------------------------
+# A NEW INSTALL MUST NOT BE LOCKED.
+#
+# `panel:permissions sync` above created an Administrator role holding every
+# ability and assigned it to NOBODY - correct, because the package has no
+# business choosing who runs your installation. But `panel:make-user` grants
+# only to an account it creates, so anybody who registered through the sign-in
+# screen first had a panel where every screen answered 403, INCLUDING the roles
+# screen that would have fixed it.
+#
+# This asserts the lock, then the key. Both halves matter: a `grant` that
+# reports success while the screen still refuses is the same seam-with-nothing-
+# behind-it this harness keeps finding.
+say "Checking a new install is not locked out of itself"
+
+cat > verify-lock.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+$model = config('auth.providers.users.model');
+$user = $model::query()->firstOrFail();
+
+$open = function () use ($app, $user): int {
+    $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+    $request = Illuminate\Http\Request::create('/customers', 'GET');
+    $request->setLaravelSession(app('session.store'));
+    Illuminate\Support\Facades\Auth::login($user->fresh());
+
+    return $kernel->handle($request)->getStatusCode();
+};
+
+echo 'before=', $open(), PHP_EOL;
+echo 'email=', $user->email, PHP_EOL;
+HIT
+before="$(php verify-lock.php 2>&1 | grep '^before=' | cut -d= -f2)"
+email="$(php verify-lock.php 2>&1 | grep '^email=' | cut -d= -f2)"
+rm -f verify-lock.php
+
+[ "$before" = "403" ] \
+    || say "note: /customers answered $before before granting, not 403"
+
+php artisan panel:permissions grant --email="$email" --no-interaction 2>&1 | tail -2
+
+cat > verify-unlock.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+$user = (config('auth.providers.users.model'))::query()->firstOrFail();
+
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$request = Illuminate\Http\Request::create('/customers', 'GET');
+$request->setLaravelSession(app('session.store'));
+Illuminate\Support\Facades\Auth::login($user);
+
+echo $kernel->handle($request)->getStatusCode(), PHP_EOL;
+HIT
+after="$(php verify-unlock.php 2>&1 | tail -1)"
+rm -f verify-unlock.php
+
+[ "$after" = "200" ] \
+    || fail "After panel:permissions grant, /customers still answered $after. The panel is still locked."
+
+say "granted, and the resource opened (was $before, now $after)"
+
 say "Checking the packaged screens were written as files"
 
 for screen in ResourceIndex ResourceForm ResourceView Trash PanelDashboard errors/Error landing/Composed; do

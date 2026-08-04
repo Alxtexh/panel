@@ -66,6 +66,22 @@ final class DocumentTemplateTest extends TestCase
         ]);
 
         $this->actingAs($this->user);
+
+        /*
+         * A ROLE FOR THE FIXTURE, so this is a VALID installation.
+         *
+         * `panel:doctor` now reports accounts that hold no role at all - a panel
+         * where every screen answers 403, including the roles screen that would
+         * fix it. That is a true finding, and it would otherwise turn every
+         * "doctor is quiet" assertion in this file red for a reason that has
+         * nothing to do with the subject under test - the same trap the backup
+         * destination above is isolating against.
+         */
+        $this->artisan('panel:permissions', [
+            'action' => 'grant',
+            '--email' => $this->user->email,
+        ]);
+
     }
 
     /* ------------------------------------------------------------ the screens */
