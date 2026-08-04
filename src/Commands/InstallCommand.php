@@ -200,7 +200,7 @@ final class InstallCommand extends Command
         $tokens = $tokensAt === false ? '' : substr($contents, $tokensAt);
 
         $addition = "\n/* Added by panel:install - Tailwind does not scan node_modules. */\n"
-            ."@source '../../node_modules/@panelkit/ui/src/**/*.{vue,ts}';\n"
+            ."@source '../../node_modules/@panelkit/ui/dist/**/*.js';\n"
             ."@source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';\n";
 
         $hasTokens = str_contains($current, '--background');

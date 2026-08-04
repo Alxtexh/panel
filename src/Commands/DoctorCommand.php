@@ -857,7 +857,7 @@ final class DoctorCommand extends Command
                 'resources/css/app.css does not point Tailwind at the packaged components',
                 'Tailwind does not scan node_modules, so every utility used only inside '
                 .'@panelkit/ui and @panelkit/inertia is purged and the panel renders unstyled. '
-                .'Add: @source \'../../node_modules/@panelkit/ui/src/**/*.{vue,ts}\'; and the '
+                .'Add: @source \'../../node_modules/@panelkit/ui/dist/**/*.js\'; and '
                 .'same for @panelkit/inertia - or re-run `php artisan panel:install`, which '
                 .'merges them in.',
             );
