@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from "vue"
 import { PanelLeftClose, PanelLeftOpen } from "@lucide/vue"
 import { cn } from '../../../lib/cn'
-import { PkButton as Button } from '@panelkit/ui'
+import Button from '../../primitives/PkButton.vue'
 import { useSidebar } from "./utils"
 
 const props = defineProps<{

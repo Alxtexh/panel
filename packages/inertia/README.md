@@ -45,17 +45,20 @@ purged — and the failure is partial and silent, because classes your own code
 also uses survive. You get a panel with a styled table inside an unstyled page.
 
 ```css
-@source '../../node_modules/@panelkit/ui/src/**/*.{vue,ts}';
+@source '../../node_modules/@panelkit/ui/dist/**/*.js';
 @source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';
 ```
 
 **The theme tokens.** The components style with tokens (`bg-primary`,
 `text-muted-foreground`) rather than values, so they take your theme. If you have
-no theme, import the one the UI package ships:
+no theme, `php artisan panel:install` merges a complete `@theme` block into your
+`resources/css/app.css` — every token the components actually ask for, light and
+dark. Without them the utilities are all generated and resolve to nothing, which
+renders a correctly structured panel you cannot read.
 
-```css
-@import '@panelkit/ui/theme/tokens.css';
-```
+This used to say `@import '@panelkit/ui/theme/tokens.css'`. That file has never
+existed: the export was dead, the import would have failed, and the tokens have
+always come from the installer.
 
 **Toasts.** Successful actions report through `vue-sonner`. Mount `<Toaster />`
 once in your layout, or nothing confirms a save.

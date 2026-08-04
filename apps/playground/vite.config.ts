@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -46,6 +47,27 @@ export default defineConfig({
         // is what this repository does and what anybody developing against a
         // local checkout will do.
         dedupe: ['vue', '@inertiajs/vue3'],
+        /*
+         * `@panelkit/ui` IS COMPILED FROM SOURCE HERE, not from its `dist`.
+         *
+         * The package builds now - it has to, because roughly fifty of its
+         * shadcn components declare `defineProps<SomeImportedType>()` and a
+         * consumer's Vite cannot resolve a type across a package boundary. That
+         * is the right shape for what gets PUBLISHED and the wrong one for
+         * developing against a checkout: without this alias every edit to a
+         * component in `packages/ui` would need `npm run build` before this
+         * application could see it, and the one that got forgotten would look
+         * like a change that did nothing.
+         *
+         * So the monorepo compiles the source and `scripts/verify-install.sh`
+         * exercises the built tarball. Each half is checked by the thing that
+         * can actually see it.
+         */
+        alias: {
+            '@panelkit/ui': fileURLToPath(
+                new URL('../../packages/ui/src/index.ts', import.meta.url),
+            ),
+        },
     },
     plugins: [
         laravel({

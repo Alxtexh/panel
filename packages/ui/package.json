@@ -4,15 +4,17 @@
     "description": "Vue 3 rendering layer for PanelKit. Framework-agnostic: no Inertia import anywhere in this package.",
     "type": "module",
     "license": "MIT",
-    "main": "./src/index.ts",
-    "module": "./src/index.ts",
-    "types": "./src/index.ts",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
     "exports": {
-        ".": "./src/index.ts",
-        "./theme/tokens.css": "./src/theme/tokens.css"
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
     },
     "files": [
-        "src"
+        "dist"
     ],
     "peerDependencies": {
         "vue": "^3.5.0",
@@ -27,19 +29,23 @@
         "tailwind-merge": "^3.2.0"
     },
     "devDependencies": {
+        "@laravel/passkeys": "^0.2.0",
         "@vitejs/plugin-vue": "^5.2.4",
         "@vue/test-utils": "^2.4.11",
         "jsdom": "^25.0.1",
         "prettier": "^3.9.6",
         "typescript": "^5.7.0",
+        "vite": "^7.0.0",
         "vitest": "^3.2.7",
         "vue": "^3.5.13",
-        "@laravel/passkeys": "^0.2.0"
+        "vue-tsc": "^2.2.0"
     },
     "scripts": {
         "test": "vitest run",
         "format": "prettier --write src/",
-        "format:check": "prettier --check src/"
+        "format:check": "prettier --check src/",
+        "build": "vite build && vue-tsc -p tsconfig.build.json",
+        "prepack": "npm run build"
     },
     "peerDependenciesMeta": {
         "@laravel/passkeys": {

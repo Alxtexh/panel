@@ -138,8 +138,17 @@ final class InstallStylesheetTest extends TestCase
         // What was already there survives.
         $this->assertStringContainsString('storage/framework/views', $css);
 
-        // And Tailwind now reaches the packaged components.
-        $this->assertStringContainsString('@panelkit/ui/src', $css);
+        /*
+         * And Tailwind now reaches the packaged components.
+         *
+         * `ui` IS SCANNED AT `dist` AND `inertia` AT `src`, because they ship
+         * differently: `@panelkit/ui` is compiled, so its class names are
+         * string literals in the built render functions. Asserting the exact
+         * path rather than just the package name is the point - the two got out
+         * of step once already, and a stylesheet that scans a directory the
+         * package no longer ships purges every utility in it.
+         */
+        $this->assertStringContainsString('@panelkit/ui/dist', $css);
         $this->assertStringContainsString('@panelkit/inertia/src', $css);
 
         // Stock Laravel defines no tokens, so these arrive too - without them
@@ -163,7 +172,7 @@ final class InstallStylesheetTest extends TestCase
 
         $css = File::get($this->path);
 
-        $this->assertStringContainsString('@panelkit/ui/src', $css);
+        $this->assertStringContainsString('@panelkit/ui/dist', $css);
         $this->assertStringContainsString('hsl(210 40% 98%)', $css);
 
         // Ours is not appended over theirs.
