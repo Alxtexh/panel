@@ -24,8 +24,10 @@ const props = withDefaults(
         logout?: string | null
         /** An optional account or profile screen, when the panel has one. */
         accountUrl?: string | null
+        /** The security screen, when the panel routes one. */
+        securityUrl?: string | null
     }>(),
-    { user: null, logout: null, accountUrl: null },
+    { user: null, logout: null, accountUrl: null, securityUrl: null },
 )
 
 /**
@@ -99,7 +101,24 @@ function signOut(close: () => void): void {
                     class="hover:bg-muted block rounded px-2 py-1.5 text-sm"
                     @click="close"
                 >
-                    Account
+                    Profile
+                </Link>
+
+                <!--
+                    SECURITY IS ITS OWN ENTRY rather than something to find
+                    inside Profile. Somebody opening this menu because they are
+                    worried about their account should reach the passkeys, the
+                    second factor and the signed-in devices in one click, not
+                    two - and the two screens are separate precisely because
+                    only one of them asks for the password.
+                -->
+                <Link
+                    v-if="securityUrl"
+                    :href="securityUrl"
+                    class="hover:bg-muted block rounded px-2 py-1.5 text-sm"
+                    @click="close"
+                >
+                    Security
                 </Link>
 
                 <button

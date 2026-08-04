@@ -230,7 +230,12 @@ watch(
 
                 <ThemeToggle />
 
-                <PanelAccountMenu :user="user" :logout="panel?.logout ?? null" />
+                <PanelAccountMenu
+                    :user="user"
+                    :logout="panel?.logout ?? null"
+                    :account-url="panel?.account ?? null"
+                    :security-url="panel?.security ?? null"
+                />
             </header>
 
             <!--

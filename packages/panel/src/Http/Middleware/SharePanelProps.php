@@ -108,6 +108,27 @@ final class SharePanelProps
                         Route::has('logout') => route('logout'),
                         default => null,
                     },
+
+                    /*
+                     * THE ACCOUNT'S OWN SCREENS, decided the same way and for
+                     * the same reason.
+                     *
+                     * `PanelAccountMenu` HAS TAKEN AN `accountUrl` PROP SINCE
+                     * IT WAS WRITTEN and nothing ever passed one, so no
+                     * installation's account menu offered a profile link - a
+                     * seam with nothing behind it, of exactly the kind these
+                     * two screens were missing until 0.8.1.
+                     *
+                     * NULL WHEN THE ROUTE IS ABSENT, because a panel may opt out
+                     * of the packaged screens, and a menu item pointing at a
+                     * route that is not registered is a 404 wearing a label.
+                     */
+                    'account' => Route::has($panel->id.'.settings.profile')
+                        ? route($panel->id.'.settings.profile')
+                        : null,
+                    'security' => Route::has($panel->id.'.settings.security')
+                        ? route($panel->id.'.settings.security')
+                        : null,
                 ];
             },
 

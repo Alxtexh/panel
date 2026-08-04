@@ -40,6 +40,8 @@ export { default as PanelDashboard } from './pages/PanelDashboard.vue'
 export { default as Changelog } from './pages/Changelog.vue'
 export { default as Environment } from './pages/Environment.vue'
 export { default as Roles } from './pages/settings/Roles.vue'
+export { default as Profile } from './pages/settings/Profile.vue'
+export { default as Security } from './pages/settings/Security.vue'
 export { default as DocumentTemplates } from './pages/documents/Templates.vue'
 export { default as DocumentTemplateDesigner } from './pages/documents/TemplateDesigner.vue'
 export { default as DocumentPrint } from './pages/documents/DocumentPrint.vue'
@@ -182,6 +184,8 @@ export const PANEL_PAGES = {
 
     // The permission matrix - the package owns the roles system now.
     'settings/Roles': () => import('./pages/settings/Roles.vue'),
+    'settings/Profile': () => import('./pages/settings/Profile.vue'),
+    'settings/Security': () => import('./pages/settings/Security.vue'),
 
     // Backups, logs and monitoring - the installation's own health.
     'operations/Backups': () => import('./pages/operations/Backups.vue'),

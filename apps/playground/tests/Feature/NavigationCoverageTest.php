@@ -102,6 +102,43 @@ final class NavigationCoverageTest extends TestCase
              */
             ...collect($props['panelNav'])->flatMap(fn (array $item): array => $item['members'] ?? [])->all(),
             ...array_column($props['panelPages'], 'href'),
+
+            /*
+             * THE ACCOUNT MENU IS A MENU, for the two screens that belong in it
+             * and nowhere else.
+             *
+             * This test's own history is why that sentence needs care: backups,
+             * logs and the activity trail were once reachable ONLY from the
+             * account popup, and that was the bug - operational screens hidden
+             * behind an avatar. Profile and Security are the opposite case.
+             * "Where do I change my password" is answered by the avatar menu in
+             * every application anybody has used, and putting them in the
+             * sidebar is what roadmap #116 deliberately undid.
+             *
+             * RESOLVED FROM THE ROUTES, exactly as SharePanelProps resolves the
+             * prop the menu renders from. `PanelAccountMenu` took an
+             * `accountUrl` prop for two releases with nothing passing one, so
+             * the entry did not exist and no test noticed. Asking the router the
+             * same question the middleware asks means a regression to that state
+             * fails here rather than passing.
+             *
+             * PER PANEL, not from the one set of props above. The demo's own
+             * `/settings/profile` shadows the packaged route in the admin panel
+             * while the generated portals get the packaged one, so reading a
+             * single panel's props would leave the portals' copies looking like
+             * orphans.
+             */
+            ...collect(app(PanelManager::class)->panels())
+                ->flatMap(static fn ($panel): array => array_values(array_filter([
+                    Route::has($panel->id.'.settings.profile')
+                        ? parse_url(route($panel->id.'.settings.profile'), PHP_URL_PATH)
+                        : null,
+                    Route::has($panel->id.'.settings.security')
+                        ? parse_url(route($panel->id.'.settings.security'), PHP_URL_PATH)
+                        : null,
+                ])))
+                ->all(),
+
             ...array_keys(Pages::intentionallyUnlinked()),
         ];
     }
