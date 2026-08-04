@@ -268,4 +268,51 @@ final class ErrorScreenTest extends TestCase
         // Not a view at all, which is the point: an Inertia page would be one.
         $this->assertStringNotContainsString('errors/Error', $response->getContent());
     }
+
+    /**
+     * A DECORATED HANDLER IS STILL REACHED, and this is the test that was
+     * missing when the fix that mattered most went out.
+     *
+     * Collision wraps the framework's handler in one of its own that implements
+     * the contract and forwards `report` and `render` - and does NOT forward
+     * `respondUsing`. So the packaged registration found no such method,
+     * returned, and a FRESH INSTALL kept showing Laravel's 404 with nothing
+     * anywhere reporting a problem. Every test in this monorepo passed
+     * throughout; the `verify-install` check is what caught it.
+     */
+    public function test_it_finds_the_handler_behind_a_decorator(): void
+    {
+        $real = app(ExceptionHandler::class);
+
+        $decorator = new class($real) implements ExceptionHandler
+        {
+            public function __construct(protected ExceptionHandler $inner) {}
+
+            public function report(\Throwable $e): void
+            {
+                $this->inner->report($e);
+            }
+
+            public function shouldReport(\Throwable $e): bool
+            {
+                return $this->inner->shouldReport($e);
+            }
+
+            public function render($request, \Throwable $e)
+            {
+                return $this->inner->render($request, $e);
+            }
+
+            public function renderForConsole($output, \Throwable $e): void
+            {
+                $this->inner->renderForConsole($output, $e);
+            }
+        };
+
+        $this->assertSame(
+            $real,
+            PanelErrors::responder($decorator),
+            'A wrapper that does not forward respondUsing must be looked through, not given up on.',
+        );
+    }
 }
