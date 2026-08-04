@@ -4,6 +4,75 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.7.0
+
+A minor, not a patch: this removes public API. Every change below is listed in
+UPGRADING.md with what to write instead.
+
+**A fresh install had no screens at all.** `resources/js/pages` comes from a
+starter kit, not from `laravel/laravel`, so in a fresh application the directory
+did not exist when `panel:install` reached the step that writes the packaged
+screens — and the writer returned early with a warning. Not one was written: no
+ResourceIndex, no dashboard, no error page. Nothing failed, because every check
+anywhere asks the SERVER, and the server was right the whole time; Inertia
+resolves a page by globbing that directory in the BROWSER, so the panel was
+blank for anybody who opened it. `verify-install.sh` now checks the files.
+
+**The dashboard moved into the packages.** The package had a second, thinner
+dashboard of its own — no per-widget boundary, no setup checklist, no summary
+strip, no filters, eight chart types against fifteen — and it fed the resolved
+series to the chart components as `points`, a prop none of them accept, so every
+chart on every packaged dashboard drew an empty plot. The reference
+application's dashboard is now the package's, and the demo declares only its own
+widgets.
+
+**The landing CMS moved into the packages, all of it** — the three designs, the
+page that renders them, the route and the block editor. `@panelkit/ui` shipped
+`PkLandingSections` and nothing that used it. The route is OFF by default
+(`panel.landing.route`): `/` is the URL an application is most likely to have
+its own plans for, and it registers after `routes/web.php`, so an app that
+already answers `/` keeps it.
+
+**The panel's error screens are rendered, not merely shipped.** `errors/Error`
+was exported and had nothing routing to it, so every installation but the
+reference app showed Laravel's default 404 beside a designed one it had already
+downloaded. The rules — which statuses get a page, why 419 does not, why 500
+keeps its trace with debug on — are the reference app's, moved rather than
+rewritten. It looks through a decorating handler (Collision wraps Laravel's and
+does not forward `respondUsing`), and it never replaces an application that
+already responds.
+
+**A settings screen can link to the thing it configures.**
+`SingularResource::links()`; `external` opens a new tab. The landing editor uses
+it, and opens on the page a visitor sees rather than an empty builder.
+
+**Duplications removed.** Two command palettes shipped, and the one the demo
+actually rendered hardcoded an ISP's four pages and called an unprefixed
+`/search`. `TenantScope` and `SearchController` existed in both halves. The
+shipped copy no longer speaks ISP: the showcase caption, the custom-field
+placeholder, the invoice sample line, the assistant's description, and the
+examples in the generated build guide.
+
+### Breaking
+
+- `Widgets\DashboardFilters` — `$routers` is gone. Dimensions are declared:
+  `$filters->selected('routers')`, and `fromRequest()` takes the declared keys.
+  The client prop is `filters.selections`, not `filters.routers`.
+- `CustomFields\CustomFieldStorage::RESOURCES` — gone. Declare
+  `panel.custom_fields.resources`; it is empty by default, so custom fields
+  decline until you name the resources whose tables have the `custom` column.
+- `panel.landing` — was a design name, is now an array. `panel.landing.design`
+  holds what the string held.
+- `Pages\DashboardPage::ability()` returns null rather than `view_dashboard`.
+  A dashboard behind an all-or-nothing gate makes its per-widget abilities
+  unreachable, and 403s the screen sign-in lands on in an installation that has
+  not defined permissions yet. Override it to narrow.
+- `@panelkit/inertia` no longer exports `CommandPalette`. Use
+  `PanelCommandPalette`, which draws from the shared navigation.
+- `PanelKit\Panel\Support\DemoData` is gone from the package. It invented
+  fibre subscribers for the reference app's seeders, which were already kept out
+  for that reason.
+
 ## 0.6.3
 
 **`@panelkit/ui` ships compiled.** It used to ship raw source, and a fresh

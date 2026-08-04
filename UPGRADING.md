@@ -108,6 +108,95 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.6.3 → 0.7.0
+
+`composer update`, `npm update`, `php artisan panel:update`, then the edits
+below. Every one of them is a thing that was hardcoded to the reference
+application and is now declared.
+
+**If you filter a dashboard.** `DashboardFilters` had a public `routers` array
+on it, which meant every panel installed from this package carried an ISP's
+vocabulary in a base class. Declare your dimensions on the page and read them
+by key:
+
+```php
+// On your DashboardPage
+public static function filterDimensions(): array
+{
+    return [[
+        'key' => 'depots',
+        'label' => 'Depots',
+        'singular' => 'depot',
+        'options' => Depot::query()->orderBy('name')->get()
+            ->map(fn (Depot $d) => ['value' => $d->id, 'label' => $d->name])->all(),
+    ]];
+}
+
+// In a widget closure
+$filters->selected('depots')          // was: $filters->routers
+```
+
+The client prop changed with it: `filters.selections` keyed by dimension,
+where `filters.routers` used to be. If you render the packaged dashboard you
+need no edit; if you wrote your own screen against the props, this is the one.
+
+**If you use custom fields.** `CustomFieldStorage::RESOURCES` is gone. It listed
+`['clients', 'routers', 'plans']` — the reference app's tables — so for anybody
+else custom fields were silently unavailable on every resource they did have.
+Name the resources whose tables actually have the `custom` JSON column:
+
+```php
+// config/panel.php
+'custom_fields' => ['resources' => ['orders', 'customers']],
+```
+
+It is EMPTY by default, which means the feature declines rather than writing
+into a column it hopes is there. Adding the column is still your migration.
+
+**If you set a landing design.** `panel.landing` was the design name and is now
+an array:
+
+```php
+'landing' => [
+    'route' => false,               // serve the composed page at `/`
+    'design' => env('PANEL_LANDING', 'aurora'),   // was `'landing' => ...`
+    'brand' => null,
+    'tagline' => '',
+    'footer_links' => [],
+    'previews' => false,
+    'editor' => true,
+    'url' => null,                  // where you serve it, if not `/`
+],
+```
+
+`route` is off deliberately: `/` is the URL an application is most likely to
+have its own plans for. The editor works either way, and registers itself — it
+is not listed in `panel.singulars`.
+
+**If you have a dashboard behind a permission.** `DashboardPage::ability()` now
+returns null rather than deriving `view_dashboard` from the slug. An
+all-or-nothing gate in front of a dashboard makes its per-widget abilities
+unreachable, and 403s the screen sign-in lands on in an installation that has
+not defined permissions yet. Override it if a dashboard should be narrower than
+the panel itself.
+
+**If you imported the command palette.** `CommandPalette` is gone from
+`@panelkit/inertia`; it hardcoded four of the reference app's pages and called
+an unprefixed `/search`. `PanelCommandPalette` takes its pages from the shared
+navigation and respects the panel prefix — no props needed.
+
+**If you used `PanelKit\Panel\Support\DemoData`.** It is no longer in the
+package. It generated fibre subscribers for the reference app's two seeders,
+which were already kept out of the package for that reason. Copy it into your
+own application if you were using it.
+
+**Nothing to do, but worth knowing:** `panel:install` now writes the packaged
+screens into `resources/js/pages` even when that directory does not exist yet.
+It did not before, and a fresh Laravel application never has one — so every
+install since the screens shipped had none of them, and the panel was blank in
+a browser while every server-side check passed. Re-run `php artisan
+panel:install` if your `resources/js/pages` is missing the packaged screens.
+
 ### 0.6.2 → 0.6.3
 
 **One edit, and only if you hand-wrote your stylesheet.** `composer update`,
