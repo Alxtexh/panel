@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Support;
+namespace PanelKit\Panel\Landing;
 
 /**
  * The shipped landing pages, as BLOCKS rather than as files.
+ *
+ * THEY ARE THE PACKAGE'S NOW. All three lived in the reference application, so
+ * `composer require panelkit/panel` gave you a component that draws landing
+ * sections and nothing that used it - no designs, no route, no editor. The
+ * README said the front page was editable from the panel; only one
+ * installation in the world could do it.
  *
  * THIS IS WHAT CHANGED. Aurora, Editorial and Console used to be three
  * hand-written Vue pages, which made a fourth design a fourth file and made
@@ -53,7 +59,14 @@ final class LandingPresets
             ]],
             ['type' => 'logos', 'data' => [
                 'title' => 'Running operator screens at',
-                'items' => [['name' => 'Nairobi Fibre'], ['name' => 'Coastal ISP'], ['name' => 'Rift Networks'], ['name' => 'Lakeside Telecom']],
+                /*
+                 * PLACEHOLDER NAMES, and deliberately obvious ones. These were
+                 * the reference application's customers - an ISP's - so every
+                 * installation of this package would have shipped with a logo
+                 * cloud naming four fibre operators it has never heard of.
+                 * A name somebody must replace should look like one.
+                 */
+                'items' => [['name' => 'Your customer'], ['name' => 'Another customer'], ['name' => 'A third'], ['name' => 'And a fourth']],
             ]],
             /*
              * A BENTO RATHER THAN NINE EQUAL CARDS. Weighting the tiles is the
@@ -82,7 +95,7 @@ final class LandingPresets
             ['type' => 'showcase', 'data' => [
                 'title' => 'This is the screen you get',
                 'body' => 'Declared in PHP, rendered by the packages, routed by discovery. No Vue was written to make it.',
-                'caption' => 'yourpanel.example / subscribers',
+                'caption' => 'yourpanel.example / records',
                 'rows' => 6,
             ]],
 
@@ -98,9 +111,12 @@ final class LandingPresets
             ['type' => 'testimonials', 'data' => [
                 'title' => 'What operators say',
                 'items' => [
-                    ['quote' => 'We replaced three internal dashboards with one panel and stopped writing Vue for admin screens entirely.', 'name' => 'Amina Achieng', 'role' => 'Head of Operations'],
-                    ['quote' => 'The tenancy model refuses rather than guesses. That distinction has saved us twice.', 'name' => 'Daniel Otieno', 'role' => 'Platform Engineer'],
-                    ['quote' => 'A subscriber list that stays instant at 250,000 rows was the whole reason we moved.', 'name' => 'Grace Wanjiru', 'role' => 'CTO'],
+                    // Attributed to nobody real. A shipped testimonial with a
+                    // plausible name is a fabricated endorsement the moment an
+                    // installation forgets to change it.
+                    ['quote' => 'We replaced three internal dashboards with one panel and stopped writing Vue for admin screens entirely.', 'name' => 'A customer', 'role' => 'Head of Operations'],
+                    ['quote' => 'The tenancy model refuses rather than guesses. That distinction has saved us twice.', 'name' => 'Another customer', 'role' => 'Platform Engineer'],
+                    ['quote' => 'A record list that stays instant at 250,000 rows was the whole reason we moved.', 'name' => 'A third', 'role' => 'CTO'],
                 ],
             ]],
             ['type' => 'pricing', 'data' => [

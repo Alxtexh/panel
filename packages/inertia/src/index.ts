@@ -33,6 +33,9 @@ export { default as ResourceForm } from './pages/ResourceForm.vue'
 export { default as ResourceView } from './pages/ResourceView.vue'
 export { default as Trash } from './pages/Trash.vue'
 export { default as PanelHome } from './pages/PanelHome.vue'
+export { default as LandingPage } from './pages/landing/Composed.vue'
+export { default as LandingNav } from './pages/landing/LandingNav.vue'
+export { default as LandingFooter } from './pages/landing/LandingFooter.vue'
 export { default as PanelDashboard } from './pages/PanelDashboard.vue'
 export { default as Changelog } from './pages/Changelog.vue'
 export { default as Environment } from './pages/Environment.vue'
@@ -164,6 +167,7 @@ export const PANEL_PAGES = {
     ResourceView: () => import('./pages/ResourceView.vue'),
     Trash: () => import('./pages/Trash.vue'),
     PanelHome: () => import('./pages/PanelHome.vue'),
+    'landing/Composed': () => import('./pages/landing/Composed.vue'),
     PanelDashboard: () => import('./pages/PanelDashboard.vue'),
     Changelog: () => import('./pages/Changelog.vue'),
     Environment: () => import('./pages/Environment.vue'),

@@ -4,7 +4,6 @@ import { usePage } from '@inertiajs/vue3';
 import { ThemeToggle } from '@panelkit/ui';
 
 import { computed } from 'vue';
-import { home } from '@/routes';
 
 defineProps<{
     title?: string;
@@ -42,7 +41,7 @@ const appName = computed(() => String(usePage().props.name ?? 'Panel'));
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col items-center gap-4">
                     <Link
-                        :href="home()"
+                        href="/"
                         class="flex flex-col items-center gap-2 font-medium"
                     >
                         <!--

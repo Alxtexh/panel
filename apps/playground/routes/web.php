@@ -11,7 +11,6 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\SavedViewController;
@@ -19,7 +18,6 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Settings\DeviceController;
 use App\Support\Guide;
 use App\Support\HelpArticles;
-use App\Support\LandingPresets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -50,27 +48,17 @@ use PanelKit\Panel\Support\Blueprint;
 $panelResources = array_keys(app(PanelManager::class)->resourcesFor('admin'));
 
 /*
- | THE PUBLIC FACE - Part G.9. PanelKit ships SEVERAL landing designs; which
- | one an installation shows is config, and `?design=` lets this reference
- | app demonstrate all three. See LandingController.
+ | THE PUBLIC FACE IS THE PACKAGE'S NOW.
+ |
+ | `/` and `/preview/{design}` were declared here, pointing at a controller in
+ | this application, backed by three designs in `App\Support` and edited by a
+ | resource in `App\Panel\Singulars` - so `composer require panelkit/panel`
+ | gave you the section library and nothing that composed a page with it.
+ |
+ | All of it moved. `PanelRoutes::landing()` registers both routes when
+ | `panel.landing.route` is on, which this application's published config turns
+ | on precisely because it exists to show the panel off.
  */
-Route::get('/', LandingController::class)->name('home');
-
-/*
-| PREVIEWING THE OTHER SHIPPED DESIGNS.
-|
-| A PATH RATHER THAN `?design=`. The front door is a URL people share, and a
-| marketing address carrying a query parameter is both ugly and misleading -
-| somebody passes on `/?design=console` and the recipient sees a design the
-| installation does not use. `/` is now only ever the configured design, and
-| trying the others is a route of its own that says what it is.
-|
-| The reference app needs this to demonstrate all three; an installation that
-| ships one design simply never links to it.
-*/
-Route::get('preview/{design}', LandingController::class)
-    ->whereIn('design', LandingPresets::names())
-    ->name('landing.preview');
 
 /*
 | PASSWORDLESS AND OTP AUTH.

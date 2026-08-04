@@ -1,69 +1,20 @@
 <script setup lang="ts">
 /**
- * Every landing page, drawn from its sections.
+ * The landing page, which now lives in `@panelkit/inertia`.
  *
- * THERE IS ONE OF THESE NOW, WHERE THERE WERE THREE PAGES. Aurora, Editorial
- * and Console differ by which sections they contain and what those sections
- * say - which is what the difference between two landing pages actually is, and
- * it means a fourth design needs no file and editing a word needs no deploy.
+ * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
+ * directory, so a screen living in node_modules is one it cannot find.
+ *
+ * IT IS ALSO WHERE YOU OVERRIDE IT. Point the import at your own component and
+ * nothing else has to change - the controller, the presets and the editor stay
+ * the package's.
  */
-import { Head } from '@inertiajs/vue3';
-import {
-    PkAuroraBackdrop,
-    PkConsoleBackdrop,
-    PkEditorialBackdrop,
-    PkLandingSections,
-} from '@panelkit/ui';
-import type { LandingSection } from '@panelkit/ui';
-import LandingFooter from './LandingFooter.vue';
-import LandingNav from './LandingNav.vue';
+import LandingPage from '@panelkit/inertia/pages/landing/Composed.vue';
 
-/*
- * NO `layout` HERE. `app.ts` already resolves every `landing/*` page to no
- * layout - saying it twice is two places to keep in step, and the one that
- * loses puts the panel's sidebar around the marketing page.
- */
-defineProps<{ sections: LandingSection[]; design: string; title?: string }>();
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>
-    <Head :title="title ?? 'PanelKit'" />
-
-    <!--
-        THE BACKDROP SITS BETWEEN THE PAGE COLOUR AND THE CONTENT, which is why
-        the wrapper is `relative` and the content is raised. A backdrop at a
-        negative z-index behind an element that paints its own background is
-        painted over by it - invisible, with nothing in the DOM to suggest why.
-    -->
-    <!--
-        THE TYPE IS HALF THE DESIGN. A backdrop alone leaves three pages that
-        differ only in what is behind them; the family, measure and tracking are
-        what make Editorial read as a magazine and Console as a terminal.
-
-        The class goes on the WRAPPER, never inside the section components - a
-        section must render identically whichever design composes it, which is
-        the whole point of a library. What changes is the typographic
-        environment it inherits.
-    -->
-    <div
-        class="relative flex min-h-screen flex-col bg-background text-foreground"
-        :class="{
-            'pk-editorial': design === 'editorial',
-            'pk-console': design === 'console',
-        }"
-    >
-        <PkAuroraBackdrop v-if="design === 'aurora'" />
-        <PkEditorialBackdrop v-else-if="design === 'editorial'" />
-        <PkConsoleBackdrop v-else-if="design === 'console'" />
-
-        <div class="relative z-10 flex flex-1 flex-col">
-            <LandingNav :design="design" />
-
-            <main class="flex-1">
-                <PkLandingSections :sections="sections" />
-            </main>
-
-            <LandingFooter />
-        </div>
-    </div>
+    <!-- The cast is deliberate; see PanelDashboard.vue for why. -->
+    <LandingPage v-bind="$attrs as any" />
 </template>

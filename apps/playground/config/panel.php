@@ -6,7 +6,6 @@ use App\Knowledge\HelpSource;
 use App\Models\SavedView;
 use App\Models\Tenant;
 use App\Panel\Singulars\BillingSettingsResource;
-use App\Panel\Singulars\LandingPageResource;
 use PanelKit\Panel\Alerts\AnnouncementsPlugin;
 use PanelKit\Panel\Ticketing\TicketingPlugin;
 
@@ -70,7 +69,24 @@ return [
     | - `aurora` (modern SaaS), `editorial` (quiet and typographic) or
     | `console` (developer tool, shows real code). Part G.9.
     */
-    'landing' => env('PANEL_LANDING', 'aurora'),
+    'landing' => [
+        /*
+         | THE REFERENCE APP SERVES THE PACKAGED PAGE AT `/`, and is one of the
+         | few installations that should: it exists to show the panel off, so
+         | the previews switcher is on too. A product with its own marketing
+         | site leaves `route` false and keeps the editor.
+         */
+        'route' => true,
+        'design' => env('PANEL_LANDING', 'aurora'),
+        'brand' => 'PanelKit',
+        'tagline' => 'Built with Laravel, Inertia and Vue.',
+        'footer_links' => [
+            ['label' => 'Help', 'href' => '/help'],
+            ['label' => 'About', 'href' => '/about'],
+            ['label' => 'FAQ', 'href' => '/faq'],
+        ],
+        'previews' => true,
+    ],
 
     /*
     |---------------------------------------------------------------------------
@@ -81,9 +97,14 @@ return [
     | inside its panel with PUT /{key}/current as its save, and renders through
     | the same form page every resource edit screen uses.
     */
+    /*
+     | THE LANDING EDITOR IS NOT LISTED HERE ANY MORE. It moved into the package
+     | and registers itself the way the packaged pages do - a screen a consumer
+     | would have to know existed before they could add it to this list is a
+     | screen that does not ship. See `panel.landing.editor`.
+     */
     'singulars' => [
         BillingSettingsResource::class,
-        LandingPageResource::class,
     ],
 
     /*

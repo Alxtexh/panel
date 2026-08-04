@@ -9,17 +9,18 @@ Those are not the same thing, by a wide margin:
 
 |     | package (installed)     | reference app only      |
 | --- | ----------------------- | ----------------------- |
-| PHP | 274 files, 48,251 lines | 101 files, 14,501 lines |
-| Vue | 263 components          | **82 components**       |
+| PHP | 277 files, 49,000 lines | 98 files, 13,928 lines |
+| Vue | 266 components          | **80 components**       |
 
 The Vue column inverted in v0.6.3, and that is the headline. The demo used to
 carry nearly twice what the framework did; the shell, the auth screens and the
 shadcn families it was built from have all moved, so the package now carries
-more. What is left in the demo is its own screens - the dashboard, the
-assistant, mail, invoices, the landing pages. Most of what makes it look
-like a finished product — the dashboard, the assistant, tickets, mail, invoices,
-the landing pages — is application code written to exercise the framework, not
-part of it. That is deliberate: a framework that shipped an ISP's dashboard would
+more. What is left in the demo is its own screens — the assistant, mail,
+invoices, and the ISP resources. The dashboard and the landing pages moved in
+v0.6.4: the demo now declares its widgets and configures its front page, and
+the screens that draw both are the package's. What still makes the demo look
+like a finished product — the assistant, tickets, mail, invoices — is
+application code written to exercise the framework, not part of it. That is deliberate: a framework that shipped an ISP's dashboard would
 be shipping somebody else's business. But it means a screenshot of the demo is
 not a promise about what `composer require` delivers.
 
@@ -367,8 +368,13 @@ operator's, which is the customer's, the two ticket table names — and, for
 announcements, one line in `panel.plugins`.
 
 **Three landing designs** — Aurora, Editorial, Console, composed from a section
-library in `@panelkit/ui`, editable from the admin as stored blocks. The
-_sections_ ship; the three compositions and their copy do not.
+library in `@panelkit/ui`, editable from the admin as stored blocks. All of it
+ships: the sections, the three compositions, the page that renders them, the
+route (off by default — `panel.landing.route` — because `/` is the URL an
+application is most likely to have its own plans for), and the block editor.
+What is left in the demo is its published config: which design, the brand, the
+footer links, and the previews switcher turned on because it exists to show
+them off.
 
 **Commands** — `panel:seed-reference`, `panel:seed-demo`, `panel:journey`. These
 were moved out of the package deliberately: the seeders invent fibre subscribers,

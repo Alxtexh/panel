@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Panel\Singulars;
+namespace PanelKit\Panel\Landing;
 
-use App\Support\LandingPresets;
 use PanelKit\Panel\Forms\Fields\BuilderField;
 use PanelKit\Panel\Forms\Fields\NumberField;
 use PanelKit\Panel\Forms\Fields\SelectField;
@@ -113,7 +112,7 @@ final class LandingPageResource extends SingularResource
     /** The design this installation configured, or the first that exists. */
     private static function configuredDesign(): string
     {
-        $configured = (string) config('panel.landing', 'aurora');
+        $configured = (string) config('panel.landing.design', 'aurora');
 
         return in_array($configured, LandingPresets::names(), true)
             ? $configured
@@ -156,7 +155,7 @@ final class LandingPageResource extends SingularResource
             Section::make('The page')
                 ->description(
                     'Sections render in this order. Remove them all to go back to the '
-                    .'design configured in panel.landing.'
+                    .'design configured in panel.landing.design.'
                 )
                 ->schema([
                     BuilderField::make('sections')->label('')

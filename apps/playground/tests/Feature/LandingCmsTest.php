@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Panel\Singulars\LandingPageResource;
-use App\Support\LandingPresets;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PanelKit\Panel\Landing\LandingPageResource;
+use PanelKit\Panel\Landing\LandingPresets;
 use PanelKit\Panel\Support\InstallationState;
 use Tests\TestCase;
 

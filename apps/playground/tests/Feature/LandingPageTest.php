@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Support\LandingPresets;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PanelKit\Panel\Landing\LandingPresets;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 

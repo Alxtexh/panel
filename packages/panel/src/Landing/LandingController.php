@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace PanelKit\Panel\Landing;
 
-use App\Panel\Singulars\LandingPageResource;
-use App\Support\LandingPresets;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -41,6 +40,19 @@ final class LandingController extends Controller
      */
     private const PAGE = 'landing/Composed';
 
+    /**
+     * Is a landing page wanted at all?
+     *
+     * OFF UNLESS ASKED FOR, because `/` is the one URL an application is most
+     * likely to have its own plans for - and a package that claimed it on
+     * install would replace somebody's marketing site with a template. See
+     * `panel.landing.route`.
+     */
+    public static function registers(): bool
+    {
+        return config('panel.landing.route', false) === true;
+    }
+
     public function __invoke(Request $request): Response|RedirectResponse
     {
         /*
@@ -63,7 +75,7 @@ final class LandingController extends Controller
             return redirect(PanelHome::urlFor(null));
         }
 
-        $configured = (string) config('panel.landing', 'aurora');
+        $configured = (string) config('panel.landing.design', 'aurora');
 
         /*
          * THE ROUTE SEGMENT, NOT A QUERY PARAMETER - see the preview route.
@@ -100,6 +112,27 @@ final class LandingController extends Controller
             // The switcher names the design it is showing, so the demo explains
             // itself rather than needing the query string read back.
             'design' => $design,
+
+            /*
+             * THE CHROME IS THE APPLICATION'S, and it is sent rather than baked
+             * in. The nav and footer used to hardcode this reference app's name
+             * and its `/help`, `/about`, `/faq` links - screens it happens to
+             * route, so a packaged footer carrying them would put three 404s at
+             * the bottom of everybody's front page.
+             */
+            'brand' => (string) config('panel.landing.brand', config('app.name')),
+            'tagline' => (string) config('panel.landing.tagline', ''),
+            'footerLinks' => array_values((array) config('panel.landing.footer_links', [])),
+            'dashboardHref' => PanelHome::urlFor(null),
+
+            /*
+             * THE SWITCHER ONLY WHERE PREVIEWS ARE ROUTED. Three links to
+             * alternative versions of the page is a demonstration, and on a real
+             * front door it is a mistake a visitor can make.
+             */
+            'previews' => config('panel.landing.previews', false) === true
+                ? LandingPresets::names()
+                : [],
         ]);
     }
 }

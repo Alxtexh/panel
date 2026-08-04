@@ -428,6 +428,61 @@ esac
 # by `panel:install`, and had NOTHING RENDERING IT - so every installation but
 # the reference app showed Laravel's default 404 next to a designed one it had
 # already downloaded.
+# ---------------------------------------------------------------------------
+# THE LANDING CMS, which shipped as a component and nothing that used it.
+#
+# `PkLandingSections` was in `@panelkit/ui` the whole time; the three designs,
+# the page that draws them, the route and the block editor were all in the
+# reference application. So a fresh install had a section library it had no way
+# to compose a page with, and a README saying the front page was editable from
+# the panel.
+#
+# THE ROUTE IS OFF BY DEFAULT, deliberately - `/` is the URL an application is
+# most likely to have its own plans for - so this turns it on the way a consumer
+# would and then asks for the page.
+say "Checking the landing page ships and can be turned on"
+
+[ -f resources/js/pages/landing/Composed.vue ] \
+    || fail "panel:install wrote no landing page file - Inertia cannot resolve the screen."
+
+cat > verify-landing.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+config(['panel.landing.route' => true]);
+PanelKit\Panel\Http\PanelRoutes::landing();
+
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$response = $kernel->handle(Illuminate\Http\Request::create('/', 'GET'));
+
+$view = $response->getOriginalContent();
+$page = is_object($view) && method_exists($view, 'getData') ? ($view->getData()['page'] ?? null) : null;
+
+echo $response->getStatusCode(), ' ';
+echo $page['component'] ?? 'not-a-view', ' ';
+echo count($page['props']['sections'] ?? []), '-sections';
+echo PHP_EOL;
+HIT
+landing_result="$(php verify-landing.php 2>&1 | tail -1)"
+rm -f verify-landing.php
+
+case "$landing_result" in
+    "200 landing/Composed 0-sections")
+        fail "The landing page renders with no sections - the shipped designs did not travel." ;;
+    "200 landing/Composed "*)
+        say "/ renders the packaged landing page (${landing_result##* })" ;;
+    *)
+        fail "The packaged landing page did not render - got: $landing_result" ;;
+esac
+
+# AND THE EDITOR THAT COMPOSES IT, registered without being named in config.
+php artisan route:list --no-ansi 2>/dev/null | grep -q 'landing-page' \
+    || fail "The landing editor is not routed - the screen that composes the page does not ship."
+
+say "the landing editor is routed"
+
 say "Checking a 404 inside the panel gets the panel's error screen"
 
 cat > verify-error.php <<'HIT'
