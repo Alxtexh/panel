@@ -188,6 +188,24 @@ final class ImpersonationTest extends TestCase
         $this->get('/settings/profile')->assertOk();
     }
 
+    /**
+     * The banner's prop carries a WAY OUT, not just a warning.
+     *
+     * The packaged banner renders the warning whether or not `stopUrl` is
+     * present and hides only the button - which is the right way round, but it
+     * means a missing key is a banner nobody can act on: it looks correct in
+     * every screenshot and strands whoever is wearing the account.
+     */
+    public function test_the_banner_prop_carries_somewhere_to_stop(): void
+    {
+        $this->actingAs($this->support)->post("/impersonate/{$this->subscriberClerk->id}");
+
+        $this->get('/settings/profile')->assertInertia(
+            fn ($page) => $page->where('impersonating.stopUrl', route('impersonate.stop'))
+                ->where('impersonating.name', $this->support->name),
+        );
+    }
+
     /* ------------------------------------------------------------------ audit */
 
     /**

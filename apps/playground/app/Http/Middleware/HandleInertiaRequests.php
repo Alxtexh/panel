@@ -48,7 +48,12 @@ class HandleInertiaRequests extends Middleware
      * Null in the ordinary case, so the banner costs one key and no query for
      * every request that is not an impersonation.
      *
-     * @return array{name: string, since: string|null}|null
+     * `stopUrl` IS PART OF THE SHAPE the packaged banner reads. It renders the
+     * warning either way and hides only the button when the key is null - so a
+     * missing URL would have been a banner nobody could act on, which is the
+     * kind of half-working that looks fine in a screenshot.
+     *
+     * @return array{name: string, since: string|null, stopUrl: string}|null
      */
     private function impersonationBanner(): ?array
     {
@@ -61,6 +66,7 @@ class HandleInertiaRequests extends Middleware
         return [
             'name' => $impersonation->impersonator()?->name ?? 'Somebody',
             'since' => session(Impersonation::STARTED_KEY),
+            'stopUrl' => route('impersonate.stop'),
         ];
     }
 
