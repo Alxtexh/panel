@@ -1,0 +1,65 @@
+# Publish @panelkit/panel to GitHub Packages when a version tag is pushed.
+#
+# WHY ON A TAG RATHER THAN ON MAIN. A published version is immutable - the
+# registry refuses to overwrite one - so publishing from every push would burn
+# a version number on work that was not a release. A tag is the statement that
+# this commit is one.
+#
+# THE TOKEN IS THE ONE GITHUB PROVIDES. `GITHUB_TOKEN` is minted per run,
+# scoped to this repository, and expires when the job ends - so there is no
+# long-lived credential to rotate, and nothing to leak into a log.
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          # Writes the registry line into ~/.npmrc for this scope, which is the
+          # half `publishConfig` cannot do - the auth line.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@panelkit'
+
+      - name: Install
+        working-directory: packages/ui
+        run: npm ci
+
+      # THE VERSION IN THE TAG AND IN package.json MUST AGREE. They are edited
+      # in different commits by different hands, and a mismatch publishes a
+      # version nobody can `git checkout` - which is discovered months later by
+      # somebody trying to reproduce a bug.
+      - name: Check the tag matches package.json
+        working-directory: packages/ui
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          [ "$tag" = "$pkg" ] || {
+            echo "Tag $GITHUB_REF_NAME says $tag; package.json says $pkg." >&2
+            exit 1
+          }
+
+      # `prepack` builds, so this cannot publish a stale dist. Running it
+      # explicitly first means a build failure fails the job here rather than
+      # halfway through a publish.
+      - name: Build
+        working-directory: packages/ui
+        run: npm run build
+
+      - name: Publish
+        working-directory: packages/ui
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

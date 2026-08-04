@@ -1,0 +1,11 @@
+# @panelkit/panel comes from GitHub Packages, not npmjs.com.
+#
+# COPY THIS TO `.npmrc` IN YOUR APPLICATION and commit it. It contains no
+# secret: the token is read from the environment, so the file is safe in git
+# and CI supplies its own value.
+#
+# The token needs `read:packages` only. `repo` is NOT required - a token with
+# `repo` on a private registry is a token that can also push code, and the
+# npm client will send it to that host on every install.
+@panelkit:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}

@@ -1,8 +1,15 @@
 {
     "name": "@panelkit/panel",
     "version": "0.8.3",
-    "private": true,
     "description": "PanelKit's client half: the Vue rendering layer and the Inertia screens. Import from \".\" for components that name no transport, \"./inertia\" for the screens.",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/panelkit/panelkit.git",
+        "directory": "packages/ui"
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
     "type": "module",
     "license": "MIT",
     "main": "./dist/index.js",
