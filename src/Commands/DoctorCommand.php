@@ -49,6 +49,8 @@ use Spatie\Permission\PermissionRegistrar;
  * IT DISTINGUISHES A PROBLEM FROM A NOTE. Everything is not equally wrong, and a
  * report where every line is a warning trains people to read none of them.
  */
+use Throwable;
+
 final class DoctorCommand extends Command
 {
     protected $signature = 'panel:doctor {--json : Emit a machine-readable report}';
@@ -97,6 +99,7 @@ final class DoctorCommand extends Command
         $this->checkPageFiles();
         $this->checkStylesheet();
         $this->checkUserHoldsRoles();
+        $this->checkSomebodyCanOpenThePanel();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -875,6 +878,55 @@ final class DoctorCommand extends Command
             .'inside the class. Until then `panel:permissions sync` creates abilities nobody can '
             .'be granted, and every resource, page and action refuses every operator - including '
             .'whoever owns the installation. `panel:install` does this for you on a fresh app.',
+        );
+    }
+
+    /**
+     * Accounts exist and not one of them holds a role.
+     *
+     * A PANEL WHERE EVERY SCREEN ANSWERS 403, including the roles screen that
+     * would fix it. `panel:permissions sync` creates an Administrator holding
+     * every ability and assigns it to NOBODY - correct, because the package has
+     * no business choosing who runs your installation - and `panel:make-user`
+     * grants it only to an account it creates itself. Register through the
+     * sign-in screen first, or install before creating an account, and the
+     * result is a locked panel with nothing anywhere saying why.
+     *
+     * NOT A PROBLEM WHEN THERE ARE NO ACCOUNTS AT ALL. That is a fresh
+     * installation waiting for `panel:make-user`, which grants as it creates.
+     * Reporting it then would be noise on every first run.
+     */
+    private function checkSomebodyCanOpenThePanel(): void
+    {
+        $model = (string) config('auth.providers.users.model', 'App\\Models\\User');
+
+        if (! class_exists($model) || ! method_exists($model, 'roles')) {
+            return;
+        }
+
+        try {
+            $accounts = $model::query()->count();
+
+            if ($accounts === 0) {
+                return;
+            }
+
+            $withRole = $model::query()->whereHas('roles')->count();
+        } catch (Throwable) {
+            // No users table yet, or a model that cannot be queried here. The
+            // migration checks report that; this one has nothing to add.
+            return;
+        }
+
+        if ($withRole > 0) {
+            return;
+        }
+
+        $this->problem(
+            "{$accounts} account(s) exist and none holds a role, so nobody can open the panel",
+            'Every screen answers 403 for every one of them - including the roles screen, which '
+            .'is the one that would grant it. Promote somebody: `php artisan panel:permissions '
+            .'grant --email=you@example.com`.',
         );
     }
 

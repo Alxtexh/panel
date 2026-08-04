@@ -34,7 +34,8 @@ use Spatie\Permission\PermissionRegistrar;
 final class PermissionsCommand extends Command
 {
     protected $signature = 'panel:permissions
-                            {action=sync : sync|list}
+                            {action=sync : sync|list|grant}
+                            {--email= : With `grant`, the account to make an Administrator}
                             {--prune : Also remove granted abilities that no longer exist}
                             {--dry-run : Report what would change without changing it}';
 
@@ -43,6 +44,10 @@ final class PermissionsCommand extends Command
     public function handle(): int
     {
         $known = Abilities::all();
+
+        if ($this->argument('action') === 'grant') {
+            return $this->grant();
+        }
 
         if ($this->argument('action') === 'list') {
             foreach (Abilities::grouped() as $label => $abilities) {
@@ -274,6 +279,100 @@ final class PermissionsCommand extends Command
     }
 
     /** @param list<string> $known */
+    /**
+     * Give an existing account the Administrator role.
+     *
+     * THE FRESH INSTALL WAS LOCKED, and this is the missing key. `sync` creates
+     * an Administrator role holding every ability and assigns it to NOBODY -
+     * correct, because the package has no business deciding who runs your
+     * installation. `panel:make-user` grants it, but only to an account it
+     * creates. So anybody who registered through the sign-in screen first, or
+     * who ran the installer before creating an account, had a panel where every
+     * screen answered 403 - including the roles screen, which is the one that
+     * would have fixed it. The screen that grants permissions required the
+     * permission it grants.
+     *
+     * A DELIBERATE ACT AT A SHELL, not a first-user-wins rule. "Whoever
+     * registers first becomes an administrator" is a race on a public
+     * registration form; somebody with the server is somebody entitled to
+     * decide.
+     *
+     * IT NAMES WHO, rather than guessing. Granting to "the only account" is
+     * fine until an installation has two, and then it is a coin toss with
+     * administrator rights on it.
+     */
+    private function grant(): int
+    {
+        $email = (string) ($this->option('email') ?? '');
+
+        if ($email === '') {
+            $this->components->error(
+                'Which account? panel:permissions grant --email=you@example.com'
+            );
+
+            return self::FAILURE;
+        }
+
+        $model = (string) config('auth.providers.users.model', 'App\\Models\\User');
+
+        if (! class_exists($model)) {
+            $this->components->error("The configured user model [{$model}] does not exist.");
+
+            return self::FAILURE;
+        }
+
+        $user = $model::query()->where('email', $email)->first();
+
+        if ($user === null) {
+            $this->components->error(
+                "No account with the email {$email}. Create one with panel:make-user."
+            );
+
+            return self::FAILURE;
+        }
+
+        if (! method_exists($user, 'assignRole')) {
+            $this->components->error(
+                "{$model} has no assignRole(), so it cannot hold a role. Add `use "
+                .'Spatie\\Permission\\Traits\\HasRoles;` to the model - `panel:install` does '
+                .'this on a fresh application, and `panel:doctor` reports it.'
+            );
+
+            return self::FAILURE;
+        }
+
+        /*
+         * THE TEAM IS THE ACCOUNT'S OWN, because a role is scoped to one
+         * organisation under team mode - granting under the wrong team creates a
+         * role nobody holds and reports success.
+         */
+        $team = config('permission.column_names.team_foreign_key', 'tenant_id');
+        $tenant = $user->{$team} ?? null;
+
+        app(PermissionRegistrar::class)->setPermissionsTeamId($tenant);
+
+        $role = Role::query()->firstOrCreate(
+            [
+                'name' => 'Administrator',
+                'guard_name' => config('auth.defaults.guard', 'web'),
+                ...(config('permission.teams') ? [$team => $tenant] : []),
+            ],
+            ['grants_all' => true],
+        );
+
+        $user->assignRole($role);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->components->info("{$email} is now an Administrator.");
+        $this->components->twoColumnDetail(
+            'Role',
+            "Administrator ({$role->getKey()}) - holds every ability, including ones added later",
+        );
+
+        return self::SUCCESS;
+    }
+
     private function createAdministrator(?Model $tenant, array $known, string $guard, bool $dry): void
     {
         $label = $this->labelFor($tenant);
