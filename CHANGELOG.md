@@ -8,6 +8,43 @@ UNDER: entries before 0.9.0 say `@panelkit/panel`, entries before 0.8.0 name
 `@panelkit/ui` and `@panelkit/inertia`, which is what there were. Rewriting them
 would make this a record of a history that did not happen.
 
+## 0.9.1
+
+**The package is linted for the first time, and it found real bugs.** No API
+changes; every fix below is behaviour that was already wrong.
+
+**How it went unnoticed.** `packages/ui/eslint.config.js` existed and explained
+the problem it solved; nothing ran it. The playground's config carried a
+`basePath` block naming `packages/inertia`, a directory 0.8.0 deleted - and
+ESLint 9 will not lint above its config's base path regardless - so `eslint .`
+covered **0 files** under the package and exited 0. A lint pass over a
+directory that is not there looks exactly like a clean one.
+
+**What it found:**
+
+- **`PkFileUpload` had `async function accept()` beside its `accept` prop.**
+  `<script setup>` puts props and setup bindings in one template scope, so
+  `@change="accept(...)"` was a name the compiler could resolve to a
+  `string[]`. Drag-and-drop, which calls it from script, always worked.
+- **`TemplateDesigner`'s `values` computed shadowed the `values` prop** it
+  derives from, so the preview could bind the initial data instead of what was
+  being typed.
+- **`ComboChart`'s `bars` and `lines` computeds shadowed the props** of the
+  same names.
+- **`PkStats` never counted.** It imported `PkCountUp`, defined a `parts()`
+  parser, documented both, and used neither. Now wired - values that do not
+  begin with a number ("Talk to us") still render as plain text.
+- **`ResourceForm.discard()` was unreachable.** `UnsavedBar` offered Cancel
+  (leave the page) and Save, with no way to revert in place. `UnsavedBar` now
+  takes an optional **`discardLabel`** and emits **`discard`**; omit the prop
+  and nothing changes for you.
+- `ResourceIndex` stopped destructuring `recentlyChanged`, a row highlight
+  removed along with the live badge in an earlier release.
+
+**Also:** CI had been failing since 0.8.0 on a `cd` into the deleted
+`packages/inertia`, and DEPLOYMENT.md printed the pre-0.8.0 `@source` lines in
+the very section warning that a stale one silently purges your styles.
+
 ## 0.9.0
 
 **The npm package is now `@alxtexh-enterprise/panel`.** This is the whole

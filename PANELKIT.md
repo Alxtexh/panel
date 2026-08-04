@@ -6,7 +6,7 @@ FilamentPHP onto PanelKit.**
 Everything is here: install, build, translate from Filament, deploy, upgrade,
 and the traps. Nothing else needs to be carried.
 
-Current version: **v0.9.0**. 44 packaged screens, 1,744 tests passing, verified
+Current version: **v0.9.1**. 44 packaged screens, 1,744 tests passing, verified
 installing into a fresh Laravel application.
 
 > **0.9.0 renamed the npm package** to `@alxtexh-enterprise/panel`. If you are
@@ -126,12 +126,12 @@ npm install @alxtexh-enterprise/panel @vitejs/plugin-vue
 you want the comments.
 
 **If the registry is not set up yet**, the tarball is committed to the monorepo,
-one per release — `panelkit-reference/dist/alxtexh-enterprise-panel-0.9.0.tgz`, with
+one per release — `panelkit-reference/dist/alxtexh-enterprise-panel-0.9.1.tgz`, with
 `CHECKSUMS.txt` beside it:
 
 ```bash
 sha256sum -c panelkit-reference/dist/CHECKSUMS.txt
-npm install /path/to/alxtexh-enterprise-panel-0.9.0.tgz @vitejs/plugin-vue
+npm install /path/to/alxtexh-enterprise-panel-0.9.1.tgz @vitejs/plugin-vue
 ```
 
 Then, either way:
@@ -164,7 +164,7 @@ npm pack --pack-destination /path/to/isp-billing/vendor-js
 
 ```json
 // package.json
-"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/alxtexh-enterprise-panel-0.9.0.tgz" }
+"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/alxtexh-enterprise-panel-0.9.1.tgz" }
 ```
 
 `npm ci` now works anywhere with nothing to fetch.
@@ -558,7 +558,7 @@ npm run build
 
 Then migrate when you have decided to: `php artisan migrate`.
 
-PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.0` and read
+PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.1` and read
 the changelog before each bump.
 
 ---

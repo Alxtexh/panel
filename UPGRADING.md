@@ -10,13 +10,13 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.9.0"
+"panelkit/panel": "^0.9.1"
 ```
 
-Composer reads `^0.9.0` on a `0.x` package as `>=0.9.0 <0.10.0`, which is what you
+Composer reads `^0.9.1` on a `0.x` package as `>=0.9.1 <0.10.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
-The two packages are **versioned together**. `panelkit/panel@0.9.0` expects
+The two packages are **versioned together**. `panelkit/panel@0.9.1` expects
 `@alxtexh-enterprise/panel@0.9.x` on npm, and the PHP half's schema payload is
 the contract between them. Mixing minors is not tested and the failure is a
 rendered screen with a missing control, not an error.
@@ -113,6 +113,23 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.9.0 → 0.9.1
+
+`composer update panelkit/panel`, `npm update @alxtexh-enterprise/panel`,
+`php artisan panel:update`, `npm run build`. No new page files, no config keys,
+no migrations.
+
+**Nothing to change on your side**, but two fixes are worth knowing about
+because you may have worked around them:
+
+- **A file picker that did nothing** on a `PkFileUpload` is fixed. A function
+  shared a name with a prop, so the template's `@change` handler could resolve
+  to an array. Drag-and-drop was never affected.
+- **`UnsavedBar` gained an optional `discardLabel` prop and a `discard` emit.**
+  Omit the prop and the bar renders exactly as before. Pass it to offer
+  "revert in place" next to Cancel, which leaves the page - the packaged
+  record form now does.
 
 ### 0.8.3 → 0.9.0
 

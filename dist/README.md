@@ -18,13 +18,13 @@ outside one laptop.
 ## Using one
 
 ```bash
-npm install /path/to/alxtexh-enterprise-panel-0.9.0.tgz @vitejs/plugin-vue
+npm install /path/to/alxtexh-enterprise-panel-0.9.1.tgz @vitejs/plugin-vue
 ```
 
 Or commit it into your own application for a reproducible `npm ci`:
 
 ```json
-"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/alxtexh-enterprise-panel-0.9.0.tgz" }
+"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/alxtexh-enterprise-panel-0.9.1.tgz" }
 ```
 
 ## Rebuilding one
