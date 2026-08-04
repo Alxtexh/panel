@@ -10,6 +10,11 @@ easy to lose by accident.
 
 ---
 
+**Coming from Filament?** Read
+[MIGRATING_FROM_FILAMENT.md](MIGRATING_FROM_FILAMENT.md) alongside this — it maps
+every Filament concept to its PanelKit equivalent, names the three things that
+genuinely do not translate, and lists what Filament has that this does not.
+
 ## 1. What you are working with
 
 Three things. Keep them straight, because the rules differ for each.

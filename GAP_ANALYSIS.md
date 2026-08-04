@@ -1,5 +1,14 @@
 # PanelKit vs Filament 5.7 — what we are missing
 
+> **STALE. Do not plan from this file.** It was measured before most of the
+> component work landed - it says 6 form field types where the package now ships
+> 24, and 7 column types where it ships 12. It is kept because the *reasoning*
+> about what not to copy is still right.
+>
+> For a current comparison, and for porting an existing Filament panel, read
+> [MIGRATING_FROM_FILAMENT.md](MIGRATING_FROM_FILAMENT.md). For what ships today,
+> read [FEATURES.md](FEATURES.md), whose counts are checked by a test.
+
 Measured by installing `filament/filament ^5.7` and enumerating its source, not
 from memory. Counts are class counts in the vendor tree.
 
