@@ -53,6 +53,15 @@ shipped copy no longer speaks ISP: the showcase caption, the custom-field
 placeholder, the invoice sample line, the assistant's description, and the
 examples in the generated build guide.
 
+**The trait without which the panel denies everything.**
+`spatie/laravel-permission` is a hard dependency here — the tables migrate,
+`panel:permissions sync` creates every ability and an Administrator role that
+holds them all, and each of those steps reports success. But a stock
+`laravel/laravel` `User` does not use `HasRoles`, so it has no `assignRole()`:
+the role exists and nobody can hold it, and every screen refuses the person who
+owns the installation. Nothing throws and nothing logs. `panel:install` adds it
+now, `panel:doctor` reports it on every run, and `verify-install.sh` checks it.
+
 ### Breaking
 
 - `Widgets\DashboardFilters` — `$routers` is gone. Dimensions are declared:
