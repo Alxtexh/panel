@@ -710,4 +710,24 @@ return [
         'features' => null,
     ],
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Error screens
+    |--------------------------------------------------------------------------
+    |
+    | The panel renders its own 403, 404, 419, 429, 500 and 503 rather than
+    | Laravel's defaults - but ONLY for URLs inside a panel. Your application's
+    | own error pages are untouched.
+    |
+    | Set `render` to false to keep Laravel's everywhere. There is no middle
+    | setting: a panel that styles some of its errors and not others is more
+    | confusing than one that styles none.
+    |
+    */
+
+    'errors' => [
+        'render' => env('PANEL_RENDER_ERRORS', true),
+    ],
+
 ];

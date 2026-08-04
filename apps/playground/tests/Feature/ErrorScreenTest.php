@@ -7,7 +7,13 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Http\Request;
+use ReflectionProperty;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Route;
+use PanelKit\Panel\Http\PanelErrors;
+use PanelKit\Panel\PanelManager;
 use Tests\TestCase;
 
 /**
@@ -169,5 +175,97 @@ final class ErrorScreenTest extends TestCase
 
         $response->assertStatus(500);
         $this->assertSame('errors/Error', $response->viewData('page')['component']);
+    }
+
+    /* --------------------------------------------------- the package's rules */
+
+    /**
+     * THE RULES MOVED INTO THE PACKAGE, so these assert the package's copy.
+     *
+     * They lived in this application's `bootstrap/app.php`, which meant every
+     * OTHER installation of `panelkit/panel` shipped designed error screens and
+     * showed Laravel's - the screens were exported, and nothing rendered them.
+     * These four cases are the ones a rewrite gets wrong, and did: a first pass
+     * at the packaged renderer put 419 back in the list and rendered 500 with
+     * debug on.
+     */
+    public function test_the_renderer_can_be_switched_off(): void
+    {
+        $handler = app(ExceptionHandler::class);
+
+        // Boot already claimed it; this test is about what `register()` does.
+        $this->assertTrue(PanelErrors::alreadyHandled($handler));
+
+        (new ReflectionProperty($handler, 'finalizeResponseCallback'))->setValue($handler, null);
+
+        config(['panel.errors.render' => false]);
+        PanelErrors::register();
+        $this->assertFalse(PanelErrors::alreadyHandled($handler), 'The switch was not read.');
+
+        /*
+         * AND WITH IT ON, THE SAME CALL DOES REGISTER - which is what makes the
+         * assertion above about the config rather than about `register()`
+         * happening to do nothing.
+         */
+        config(['panel.errors.render' => true]);
+        PanelErrors::register();
+        $this->assertTrue(PanelErrors::alreadyHandled($handler));
+    }
+
+    /**
+     * AN APPLICATION'S OWN HANDLER SURVIVES.
+     *
+     * `respondUsing()` holds one callback and `bootstrap/app.php` runs before
+     * providers boot, so registering unconditionally would replace a consumer's
+     * error handling with the panel's - silently, the symptom being that their
+     * own page never appears.
+     */
+    public function test_it_does_not_replace_an_application_that_already_responds(): void
+    {
+        $handler = app(ExceptionHandler::class);
+        $property = new ReflectionProperty($handler, 'finalizeResponseCallback');
+
+        $mine = static fn (Response $response): Response => $response;
+        $property->setValue($handler, $mine);
+
+        PanelErrors::register();
+
+        $this->assertSame($mine, $property->getValue($handler));
+    }
+
+    /** A panel under a prefix does not claim the application's own 404s. */
+    public function test_a_prefixed_panel_answers_only_inside_its_prefix(): void
+    {
+        $panels = app(PanelManager::class);
+        $panels->panel('admin')?->path('admin');
+
+        try {
+            $this->assertTrue(PanelErrors::handles(Request::create('/admin/clients')));
+            $this->assertTrue(PanelErrors::handles(Request::create('/admin')));
+            $this->assertFalse(
+                PanelErrors::handles(Request::create('/pricing')),
+                'A marketing page outside the panel is the application\'s to answer for.',
+            );
+        } finally {
+            $panels->panel('admin')?->path('');
+        }
+    }
+
+    /**
+     * A ROOT-MOUNTED PANEL ANSWERS FOR EVERYTHING, including a URL that matched
+     * no route - which is the only kind of URL a 404 ever has.
+     */
+    public function test_a_root_mounted_panel_answers_for_a_path_nothing_routes(): void
+    {
+        $this->assertTrue(PanelErrors::handles(Request::create('/no-such-page')));
+    }
+
+    /** An API path keeps its JSON shape even inside the panel. */
+    public function test_the_api_prefix_is_left_alone(): void
+    {
+        $response = $this->actingAs($this->user)->get('/api/v1/no-such-resource');
+
+        // Not a view at all, which is the point: an Inertia page would be one.
+        $this->assertStringNotContainsString('errors/Error', $response->getContent());
     }
 }

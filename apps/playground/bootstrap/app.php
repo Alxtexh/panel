@@ -208,58 +208,12 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         /*
-         * Panel errors render as PANEL PAGES, not as framework stack pages.
+         * THE PANEL'S ERROR SCREENS ARE THE PACKAGE'S NOW.
          *
-         * Without this, a 403 in the middle of an Inertia app drops the person
-         * out of the application entirely: no sidebar, no way back, and - in
-         * production - Laravel's unstyled error page.
-         *
-         * THE ENVIRONMENT DOES NOT DECIDE THIS. An earlier version skipped the
-         * whole thing in `local`, reasoning that a developer wants the stack
-         * trace - and the consequence was that these pages were never seen in
-         * the environment they were being built in. They were, in effect,
-         * decoration: a real 404 in development still showed Laravel's page.
-         *
-         * The right split is not local-versus-production, it is DIAGNOSABLE
-         * versus ANSWERED:
-         *
-         *   404, 403, 419, 429, 503 are ANSWERS. Nothing went wrong that a
-         *   stack trace explains - the route does not exist, the policy said
-         *   no, the session aged out. There is nothing to debug, so the panel
-         *   page is the better response in every environment.
-         *
-         *   500 is DIAGNOSABLE. Something threw, and with debug on the
-         *   framework's trace is genuinely more useful than a polite sentence.
-         *   That one, and only that one, is left alone.
+         * The closure that used to be here - which statuses get a designed
+         * page, why 419 does not, why 500 keeps its trace with debug on -
+         * moved to `PanelKit\Panel\Http\PanelErrors`, registered from the
+         * package's provider. Every installation gets those pages; this
+         * application had them and no other did.
          */
-        $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return $response;
-            }
-
-            $status = $response->getStatusCode();
-
-            // The one case where a stack trace beats a designed page.
-            if ($status >= 500 && config('app.debug')) {
-                return $response;
-            }
-
-            /*
-             * 419 IS NOT IN THIS LIST, on purpose.
-             *
-             * A session expiry is not a place you went - it is something that
-             * happened to the click you just made. Rendering a page for it
-             * throws away the page you were actually on, which is the one thing
-             * worth keeping: a half-filled form, a scroll position, an open
-             * filter. The client intercepts it instead and shows a dialog over
-             * the page, then reloads in place. See `lib/sessionExpired.ts`.
-             */
-            if (! in_array($status, [403, 404, 429, 500, 503], true)) {
-                return $response;
-            }
-
-            return Inertia::render('errors/Error', ['status' => $status])
-                ->toResponse($request)
-                ->setStatusCode($status);
-        });
     })->create();
