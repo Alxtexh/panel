@@ -121,6 +121,53 @@ describe('AuthPasskeyButton', () => {
         expect(posted!.body.credential.response).toHaveProperty('clientDataJSON')
     })
 
+    /**
+     * THE THREE WAYS THERE IS NO PASSKEY, and none of them may spin for ever.
+     *
+     * Clicking with no authenticator left the button reading "Authenticating…"
+     * indefinitely: `navigator.credentials.get()` resolves when somebody picks a
+     * passkey and rejects when they dismiss the dialog, and on a device with
+     * nothing to dismiss it simply never settles. No passkey, no error, and no
+     * way back to the password field short of a reload.
+     */
+    it('says no passkey is on this device rather than spinning for ever', async () => {
+        // No platform authenticator, and the server named no credential ids.
+        ;(globalThis as any).PublicKeyCredential = {
+            isUserVerifyingPlatformAuthenticatorAvailable: async () => false,
+        }
+        ;(window as any).PublicKeyCredential = (globalThis as any).PublicKeyCredential
+
+        const wrapper = mount(AuthPasskeyButton, { props: { routes } })
+
+        await wrapper.find('button').trigger('click')
+        await vi.waitFor(() => expect(wrapper.text()).toContain('No passkey found'))
+
+        // And it is not still claiming to be working.
+        expect(wrapper.text()).not.toContain('Authenticating')
+    })
+
+    it('gives up rather than hanging when nothing ever answers', async () => {
+        ;(globalThis as any).navigator = {
+            // The shape of a device with no authenticator: it never settles.
+            credentials: { get: vi.fn(() => new Promise(() => {})) },
+        }
+
+        const wrapper = mount(AuthPasskeyButton, {
+            props: { routes },
+        })
+
+        await wrapper.find('button').trigger('click')
+
+        /*
+         * The abort is armed from the server's own timeout, so this asserts the
+         * clock exists rather than waiting a real minute for it.
+         */
+        await vi.waitFor(() => expect(posted).toBeNull())
+        expect((globalThis as any).navigator.credentials.get).toHaveBeenCalledWith(
+            expect.objectContaining({ signal: expect.any(AbortSignal) }),
+        )
+    })
+
     it('renders nothing when the routes are explicitly off', () => {
         const wrapper = mount(AuthPasskeyButton, { props: { routes: null } })
 

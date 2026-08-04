@@ -44,6 +44,17 @@ const loading = ref(false)
 const error = ref('')
 
 /**
+ * What to say when there is no passkey to sign in with.
+ *
+ * NAMED ONCE because three paths reach it: the browser cannot do WebAuthn at
+ * all, nothing was returned, or the request timed out with no authenticator to
+ * answer it. To the reader they are one situation, and the sentence tells them
+ * what to do about it rather than what went wrong.
+ */
+const NO_PASSKEY =
+    'No passkey found on this device. Sign in with your password, then add one from Security settings.'
+
+/**
  * WebAuthn is only offered over a secure context, which `localhost` counts as.
  * Checking the API rather than the protocol keeps this honest in both.
  */
@@ -131,12 +142,72 @@ async function verify(): Promise<void> {
             })),
         }
 
-        const credential = (await navigator.credentials.get({
-            publicKey,
-        })) as PublicKeyCredential | null
+        /*
+         * ASKED BEFORE IT IS ATTEMPTED, where the browser will say.
+         *
+         * `isUserVerifyingPlatformAuthenticatorAvailable()` answers whether this
+         * device has anything that could hold a passkey. With no platform
+         * authenticator AND no credential ids from the server, there is nothing
+         * to sign in with, and the abort below would take a full minute to reach
+         * the same conclusion. Answering now costs one call.
+         *
+         * A SECURITY KEY IS STILL POSSIBLE, which is why this only fires when
+         * the server named no credentials either - somebody with a USB key has
+         * no platform authenticator and a perfectly good passkey.
+         */
+        const platform =
+            typeof (window as any).PublicKeyCredential
+                ?.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
+                ? await (
+                      window as any
+                  ).PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+                : true
+
+        if (!platform && (publicKey.allowCredentials ?? []).length === 0) {
+            throw new Error(NO_PASSKEY)
+        }
+
+        /*
+         * IT NEVER HANGS. `navigator.credentials.get()` resolves when somebody
+         * picks a passkey and rejects when they dismiss the dialog - but on a
+         * device with no authenticator at all there is nothing to dismiss, so
+         * the promise simply never settles and the button says "Authenticating…"
+         * for ever. That is the worst of the three outcomes: no passkey, no
+         * error, and no way back to the password field except a reload.
+         *
+         * The abort is armed from the server's OWN timeout where it sent one,
+         * so the browser's dialog and this clock agree, and it produces the
+         * sentence somebody can act on rather than a spinner.
+         */
+        const controller = new AbortController()
+        const timeout = setTimeout(
+            () => controller.abort(),
+            typeof options.timeout === 'number' ? options.timeout : 60000,
+        )
+
+        let credential: PublicKeyCredential | null
+
+        try {
+            credential = (await navigator.credentials.get({
+                publicKey,
+                signal: controller.signal,
+            })) as PublicKeyCredential | null
+        } catch (e) {
+            /*
+             * AN ABORT HERE IS OURS, not somebody changing their mind - the
+             * cancel case arrives as `NotAllowedError` and is handled below.
+             */
+            if ((e as Error)?.name === 'AbortError') {
+                throw new Error(NO_PASSKEY)
+            }
+
+            throw e
+        } finally {
+            clearTimeout(timeout)
+        }
 
         if (credential === null) {
-            throw new Error('No passkey was selected.')
+            throw new Error(NO_PASSKEY)
         }
 
         const assertion = credential.response as AuthenticatorAssertionResponse
