@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Widgets;
 
+use PanelKit\Panel\Support\Ability;
 use Closure;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -158,9 +159,15 @@ final class StatWidget
             return true;
         }
 
-        return is_object($user)
-            && method_exists($user, 'hasPermission')
-            && $user->hasPermission($this->ability);
+        /*
+         * THROUGH `Ability`, because the guard this used to have was the wrong
+         * one: `method_exists(...) && hasPermission(...)` returns FALSE on a
+         * user model that does not define that method - which is every model
+         * outside the reference application - so an ability-gated widget was
+         * invisible to everybody rather than falling through to `can()`.
+         * Silent, unlike the 500 the same assumption caused in the controllers.
+         */
+        return Ability::allows($user, $this->ability);
     }
 
     public function toArray(): array

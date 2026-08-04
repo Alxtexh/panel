@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Auth;
 
+use PanelKit\Panel\Support\Ability;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -262,8 +263,7 @@ final class Impersonation
     {
         $key = $user->getAuthIdentifier().'|'.$ability;
 
-        return $this->abilityCache[$key] ??= method_exists($user, 'hasPermission')
-            && $user->hasPermission($ability);
+        return $this->abilityCache[$key] ??= Ability::allows($user, $ability);
     }
 
     /**

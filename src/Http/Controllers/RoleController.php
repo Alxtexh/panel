@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
+use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -328,7 +329,7 @@ final class RoleController extends Controller
 
     private function authoriseManagement(Request $request): void
     {
-        abort_unless($request->user()?->hasPermission('manage_roles'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_roles'), 403);
     }
 
     /* --------------------------------------------------- what is not ours */

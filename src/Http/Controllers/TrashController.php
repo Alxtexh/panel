@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
+use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -113,7 +114,7 @@ final class TrashController extends Controller
      */
     public function updateSettings(Request $request, PanelSettings $settings): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermission('manage_backups'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_backups'), 403);
 
         $validated = $request->validate([
             'days' => [
@@ -196,7 +197,7 @@ final class TrashController extends Controller
                 'max' => TrashBin::MAXIMUM_DAYS,
             ],
 
-            'canConfigure' => (bool) request()->user()?->hasPermission('manage_backups'),
+            'canConfigure' => (bool) Ability::allows(request()->user(), 'manage_backups'),
         ]);
     }
 
