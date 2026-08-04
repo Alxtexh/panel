@@ -10,10 +10,10 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.8.0"
+"panelkit/panel": "^0.8.1"
 ```
 
-Composer reads `^0.8.0` on a `0.x` package as `>=0.8.0 <0.9.0`, which is what you
+Composer reads `^0.8.1` on a `0.x` package as `>=0.8.1 <0.9.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
 The two packages are **versioned together**. `panelkit/panel@0.8.0` expects
@@ -111,6 +111,42 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.8.0 → 0.8.1
+
+`composer update panelkit/panel`, a fresh `npm pack`, then:
+
+```bash
+php artisan panel:update
+npm run build
+```
+
+**`panel:update` writes four new page files** - `settings/Profile`,
+`settings/Security`, `settings/UserManagement` and the three under `support/`.
+Without it those routes answer and the browser renders a white page naming a
+file you have never seen.
+
+**Nothing breaks.** The new routes yield to any your application already owns:
+if you have your own `/settings/profile`, yours keeps working and the packaged
+one does not register. That check exists because registering it unconditionally
+DELETED the reference application's own `profile.edit` route name - Laravel
+indexes routes by method+URI, and the displaced route's name goes with it.
+
+**To adopt a packaged screen you had copied**, delete your own route and
+controller and re-run `panel:update`; your page file at the same path is left
+alone, so replace it with the one-line shim.
+
+**To supply your own help articles:**
+
+```php
+// AppServiceProvider::boot()
+HelpCentre::add([[ 'id' => 'billing', 'category' => 'billing',
+    'title' => 'Raising an invoice', 'keywords' => 'invoice bill charge',
+    'body' => ['…'] ]]);
+```
+
+`replace()` drops the packaged ones entirely. `panel.about` fills the About
+screen; `->without(['help'])` drops the help centre from a panel, route and all.
 
 ### 0.7.3 → 0.8.0
 

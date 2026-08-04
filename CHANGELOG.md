@@ -5,6 +5,53 @@ Versioning policy, and what counts as a breaking change, are in
 and `@panelkit/panel` on npm — are versioned together. Entries before 0.8.0 name
 three, which is what there were.
 
+## 0.8.1
+
+**Four screens that were the demo's are now the package's**, and the reason
+matters more than the count: the components three of them mount had already
+shipped and were reachable from nothing.
+
+**Profile and Security.** `ManagePasskeys`, `ManageTwoFactor`,
+`TwoFactorSetupModal`, `TwoFactorRecoveryCodes` and `DeleteUser` have shipped in
+the npm package since 0.6, mounted by nothing outside the reference
+application - so every installation downloaded a working passkey manager and had
+no page on which to see it. Security carries the password change, the second
+factor, passkeys, connected accounts and the signed-in device list;
+`Auth\Devices` reads Laravel's own session table and stores nothing.
+
+**The help centre** - Help, FAQ and About. The screens are the package's and the
+words are yours: `HelpCentre` ships articles about the panel itself so a fresh
+install opens on something useful, and takes your own through `add()` or
+`replace()`. Category tabs are derived from the articles that exist, so a tab
+never appears with nothing behind it. About is driven by `panel.about`.
+
+**User management.** The roles half was packaged from 0.4 and the people half
+was not, which made the permission matrix a screen you could reach and not act
+on. `UserDirectory` finds the resource that lists users by matching
+`auth.providers.users.model` - no config key to keep in step - so your own users
+resource supplies the table without either side naming the other.
+
+**Profile, Security and Help are in the account menu.** `PanelAccountMenu` has
+accepted an `accountUrl` prop since it was written and nothing ever passed one.
+
+### Fixed
+
+- **Packaged routes no longer steal a URL your application owns.** Laravel's
+  route collection is indexed by method+URI, so a second `GET settings/profile`
+  REPLACES the first and rebuilds the name lookup from what survives - deleting
+  your `profile.edit` name, and making every `route('profile.edit')` in your
+  codebase throw from a package you installed for its screens. A Laravel starter
+  kit ships exactly that URL. The account and help routes now yield to a claimed
+  path.
+- **The assistant indexes what the help screen shows.** `HelpSource` read one
+  set of articles while the page had begun showing another, so it would have
+  answered from nothing what the screen answered in full.
+
+### Breaking
+
+Nothing. Every route added yields to one you already have, and every screen is
+droppable per panel with `->without(['help'])`.
+
 ## 0.8.0
 
 **One npm package.** `@panelkit/ui` and `@panelkit/inertia` are now
