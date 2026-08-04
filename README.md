@@ -54,9 +54,11 @@ builds. [DISTRIBUTION.md](DISTRIBUTION.md) has both in full; this is the short
 version.
 
 ```bash
-# Once per application: where composer should look.
+# Once per application: where composer should look. `no-api` is required on a
+# private repository - without it composer asks GitHub's API, is handed the SSH
+# URL, and fails on any machine with no SSH key.
 composer config repositories.panelkit \
-  '{"type":"vcs","url":"git@github.com:enterprisealxtexh/panelkit-panel.git"}' --json
+  '{"type":"vcs","url":"https://github.com/enterprisealxtexh/panelkit-panel.git","no-api":true}' --json
 
 composer require panelkit/panel
 

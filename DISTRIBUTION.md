@@ -81,16 +81,33 @@ That copies `packages/panel` out as its own standalone repository history and
 pushes it. The repository can be private. Then in the application:
 
 ```bash
-composer config repositories.panelkit '{"type":"vcs","url":"git@github.com:you/panelkit-panel.git"}' --json
+composer config repositories.panelkit \
+  '{"type":"vcs","url":"https://github.com/enterprisealxtexh/panelkit-panel.git","no-api":true}' --json
+
 composer require panelkit/panel
 ```
 
-Composer authenticates with your SSH key or a token, the same as `git clone`
-would.
+**`no-api: true` is not optional on a private repository.** Without it composer
+asks GitHub's API where the repository is, is handed the `git@github.com:` SSH
+form, and fails with *"Could not read from remote repository"* on any machine
+with no SSH key registered — which reads like the repository is missing rather
+than like an authentication choice. With it, composer clones over HTTPS and uses
+the same credential `git clone` would.
 
-The npm half does not need a repository. Either commit the tarball from
-`npm pack` somewhere the application can reach, or install it straight from a
-git URL if you push `packages/ui` to its own repository too.
+The npm half does not need a repository. Build the tarball here and commit it
+into the application, which is the only form that survives a deploy:
+
+```bash
+cd packages/ui && npm pack --pack-destination /path/to/your-app/vendor-js
+```
+
+Then in the application's `package.json`:
+
+```json
+"dependencies": { "@panelkit/panel": "file:vendor-js/panelkit-panel-0.8.0.tgz" }
+```
+
+`npm ci` now works on any machine, including a server, with nothing to fetch.
 
 ---
 
@@ -137,6 +154,34 @@ npm run build
   being able to read it, which is the point.
 
 ---
+
+---
+
+## Deploying to a server
+
+The server needs two things, and neither of them is npm.
+
+**1. Composer has to be able to clone the private repository.** Give the server
+its own read-only access rather than reusing your personal token — a GitHub
+**deploy key** (Settings → Deploy keys on `panelkit-panel`, read access, one key
+per server) is the narrow option. Then `composer install` works as it does here.
+
+**2. The built assets.** Do not build on the server. `npm run build` needs the
+whole toolchain and enough memory, and a failed build there means a half-styled
+panel in production. Build in your own environment or in CI and deploy
+`public/build` alongside the code — the standard Laravel deployment shape.
+
+The deploy itself is then ordinary:
+
+```bash
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan panel:update      # reconciles page files, reports migrations, runs doctor
+php artisan config:cache && php artisan route:cache
+```
+
+`panel:update` is the one PanelKit-specific step, and it is the one that stops a
+release adding a routed screen your bundle has no component for.
 
 ## Why it is shaped like this
 
