@@ -108,6 +108,16 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 
 Newest first. Each names the change, what breaks, and the edit.
 
+### 0.7.1 → 0.7.2
+
+`composer update`. Nothing to edit.
+
+**If you called `Ability::held()` yourself**, it is unchanged. There is a new
+`Ability::allows($user, $ability)` beside it, which is null-safe and works on a
+user model that does not define this reference application's `hasPermission()`
+wrapper — that wrapper is not part of Spatie's `HasRoles`, and the package no
+longer assumes it. Prefer `allows()` in your own code for the same reason.
+
 ### 0.7.0 → 0.7.1
 
 `composer update` and `npm update`. Nothing to edit unless you wrote your own

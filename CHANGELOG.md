@@ -4,6 +4,31 @@ Versioning policy, and what counts as a breaking change, are in
 [UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
 `@panelkit/ui`, `@panelkit/inertia` — are versioned together.
 
+## 0.7.2
+
+**A packaged screen no longer 500s on a user model that is not the reference
+app's.** Twenty-four places in the package called `$user->hasPermission($ability)`
+directly. That method is not part of Spatie's `HasRoles` — it is a convenience
+wrapper the reference application happens to define — so on every other
+installation `/trash` and `/roles` answered
+`BadMethodCallException: Call to undefined method User::hasPermission()`.
+
+Every test here passed throughout, because they all run against the one model
+that defines it. It was found by installing into a fresh Laravel app and opening
+the screens.
+
+`Ability::held()` had the guard all along and three call sites used it. There is
+now `Ability::allows()` — null-safe, so the `$request->user()?->` sites read the
+same — and every call goes through it.
+
+**Two of the "guarded" sites were guarded wrongly.** `StatWidget` and
+`ChartWidget` read `method_exists(...) && hasPermission(...)`, which returns
+*false* when the method is absent rather than falling through to `can()` — so an
+ability-gated widget was invisible to every consumer. Silent, unlike the
+controllers.
+
+Nothing to do on upgrade.
+
 ## 0.7.1
 
 **Every portal's Home link stays inside that portal.** Signed in and inside
