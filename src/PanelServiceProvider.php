@@ -129,6 +129,15 @@ final class PanelServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         /*
+         * THE PANEL'S OWN ERROR SCREENS. Registered here because the alternative
+         * is a closure every consumer pastes into `bootstrap/app.php`, and the
+         * failure when they forget is a default error page - which looks like a
+         * decision rather than an omission. See `PanelErrors` for why it only
+         * takes over inside a panel.
+         */
+        Http\PanelErrors::register();
+
+        /*
          * COMMANDS ARE REGISTERED ALWAYS, publishing only in console.
          *
          * They were both inside a `runningInConsole()` guard, which reads as

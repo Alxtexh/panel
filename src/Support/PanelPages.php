@@ -73,6 +73,14 @@ final class PanelPages
          * that turns them on later would otherwise get a white page naming a
          * file nobody has heard of.
          */
+        /*
+         * THE ERROR SCREENS. They were moved into `@panelkit/inertia` and
+         * exported, and then reachable by nobody: no page file and nothing
+         * rendering them, so a fresh installation still got Laravel's defaults.
+         * A moved screen with nothing routing to it is not a shipped screen.
+         */
+        'errors/Error',
+
         'settings/Assistant',
         'operations/Backups',
         'operations/BackupSettings',
