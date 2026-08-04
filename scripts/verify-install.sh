@@ -873,20 +873,30 @@ case "$update_output" in
 $update_output" ;;
 esac
 
-# AND THE EXIT CODE IS DOCTOR'S. Non-zero is expected here, for the fail-open
-# permission config a bare Laravel ships; what would be wrong is doctor passing
-# a fixture nobody configured, which would mean it had stopped looking.
-if [ "$update_status" -eq 0 ]; then
-    fail "panel:update exited zero on an unconfigured install - doctor should have refused a fail-open permission config."
+# AND THE EXIT CODE IS DOCTOR'S, WHICH IS NOW EXPECTED TO BE ZERO.
+#
+# THIS ASSERTION USED TO BE THE OTHER WAY ROUND, and inverting it is the point of
+# the change that came with it. A fresh install used to leave `tenancy.mode` at
+# `column` against a users table with no tenant column - so the panel refused
+# every query and every write, doctor said so, and this harness asserted the
+# refusal as expected. It was expected, and it was also a panel nobody could
+# use.
+#
+# `panel:install` now sets a mode the application can satisfy, and
+# `panel:permissions grant` above put somebody in charge. What is left is two
+# warnings a real installation is meant to act on - APP_NAME, and the demo
+# account this script created - and doctor reports those as NOTES rather than
+# problems.
+#
+# So the claim is now the strong one: a fresh installation, installed and
+# granted, is a HEALTHY installation.
+if [ "$update_status" -ne 0 ]; then
+    fail "panel:update exited $update_status on a fresh install. Doctor found a real problem in
+an installation that has just been set up, which is the state this harness exists to keep clean:
+$update_output"
 fi
 
-case "$update_output" in
-    *"Permissions are not tenant-scoped"*) ;;
-    *) fail "panel:update exited $update_status for a reason other than the expected permission-scoping error:
-$update_output" ;;
-esac
-
-say "panel:update reconciles what it should, and carries doctor's non-zero verdict on an unconfigured install"
+say "panel:update reconciles what it should, and doctor passes a fresh install"
 
 echo
 echo "PASS - panelkit/panel installs into a fresh Laravel app, is discovered,"
