@@ -6,8 +6,13 @@ FilamentPHP onto PanelKit.**
 Everything is here: install, build, translate from Filament, deploy, upgrade,
 and the traps. Nothing else needs to be carried.
 
-Current version: **v0.8.3**. 44 packaged screens, 1,744 tests passing, verified
+Current version: **v0.9.0**. 44 packaged screens, 1,744 tests passing, verified
 installing into a fresh Laravel application.
+
+> **0.9.0 renamed the npm package** to `@alxtexh-enterprise/panel`. If you are
+> arriving from 0.8.x, the four commands are in UPGRADING.md - and the one that
+> matters is `php artisan panel:update`, because the stylesheet is the only
+> place a stale name fails without an error.
 
 ---
 
@@ -121,12 +126,12 @@ npm install @alxtexh-enterprise/panel @vitejs/plugin-vue
 you want the comments.
 
 **If the registry is not set up yet**, the tarball is committed to the monorepo,
-one per release — `panelkit-reference/dist/panelkit-panel-0.8.3.tgz`, with
+one per release — `panelkit-reference/dist/alxtexh-enterprise-panel-0.9.0.tgz`, with
 `CHECKSUMS.txt` beside it:
 
 ```bash
 sha256sum -c panelkit-reference/dist/CHECKSUMS.txt
-npm install /path/to/panelkit-panel-0.8.3.tgz @vitejs/plugin-vue
+npm install /path/to/alxtexh-enterprise-panel-0.9.0.tgz @vitejs/plugin-vue
 ```
 
 Then, either way:
@@ -159,7 +164,7 @@ npm pack --pack-destination /path/to/isp-billing/vendor-js
 
 ```json
 // package.json
-"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/panelkit-panel-0.8.3.tgz" }
+"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/alxtexh-enterprise-panel-0.9.0.tgz" }
 ```
 
 `npm ci` now works anywhere with nothing to fetch.
@@ -529,7 +534,7 @@ This is why you are moving. Do not undo it:
 ```bash
 composer update panelkit/panel
 # rebuild the tarball from the monorepo, then:
-npm install /tmp/panelkit-panel-<version>.tgz
+npm install /tmp/alxtexh-enterprise-panel-<version>.tgz
 php artisan panel:update
 php artisan wayfinder:generate --with-form
 npm run build
@@ -553,7 +558,7 @@ npm run build
 
 Then migrate when you have decided to: `php artisan migrate`.
 
-PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.8.3` and read
+PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.0` and read
 the changelog before each bump.
 
 ---
