@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/* MOVED FROM THE REFERENCE APP, verbatim - it imports nothing but Vue. */
 /**
  * The illustration on an error page.
  *
@@ -23,7 +24,7 @@
  * the sentence is read; a magnifier reads as "not here". That is the whole job
  * of the picture - the words underneath do the rest.
  */
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 const props = defineProps<{ status: number }>();
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/* MOVED FROM THE REFERENCE APP, verbatim. */
 /**
  * The shell every error page shares.
  *
@@ -18,10 +19,10 @@
  * information - and a 403 that explains WHY access was denied is a 403 that
  * tells an attacker what they are missing.
  */
-import { Head, Link, router } from '@inertiajs/vue3';
-import { PkButton as Button, buttonClasses } from '@panelkit/ui';
-import { computed } from 'vue';
-import ErrorArt from './ErrorArt.vue';
+import { Head, Link, router } from '@inertiajs/vue3'
+import { PkButton as Button, buttonClasses } from '@panelkit/ui'
+import { computed } from 'vue'
+import ErrorArt from './ErrorArt.vue'
 
 const props = withDefaults(
     defineProps<{

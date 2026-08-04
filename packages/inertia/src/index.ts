@@ -89,6 +89,19 @@ export { default as AppShell } from './components/shell/AppShell.vue'
 export { default as AppContent } from './components/shell/AppContent.vue'
 export { default as SessionExpired } from './components/SessionExpired.vue'
 export { default as DeleteUser } from './components/DeleteUser.vue'
+
+/*
+ * THE ERROR SCREENS, moved from the reference app.
+ *
+ * `Error` is the one page every status renders through - five near-identical
+ * page components drift, and the 500 is the one nobody revisits because it is
+ * the hardest to trigger on purpose. The copy is deliberately unhelpful about
+ * CAUSES: a 403 that names the missing permission tells whoever probed for it
+ * what to ask for next.
+ */
+export { default as ErrorPage } from './pages/errors/Error.vue'
+export { default as ErrorScreen } from './pages/errors/ErrorScreen.vue'
+export { default as ErrorArt } from './pages/errors/ErrorArt.vue'
 export {
     installSessionExpiryPreview,
     notifySessionExpired,
