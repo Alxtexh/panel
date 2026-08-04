@@ -66,3 +66,24 @@ export interface BreadcrumbItem {
     title: string
     href?: NonNullable<InertiaLinkProps['href']>
 }
+
+/**
+ * A registered passkey, as the account's security screen lists it.
+ *
+ * THE "diff" FIELDS ARE FORMATTED SERVER-SIDE and deliberately so: "3 days ago"
+ * depends on a timezone the browser guesses and the account already declared.
+ */
+export type Passkey = {
+    id: number
+    name: string
+    authenticator: string | null
+    created_at_diff: string
+    last_used_at_diff: string | null
+}
+
+/** The wording on the two-factor card, which an installation may rewrite. */
+export type TwoFactorConfigContent = {
+    title: string
+    description: string
+    buttonText: string
+}

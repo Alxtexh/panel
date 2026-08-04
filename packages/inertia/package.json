@@ -39,5 +39,8 @@
         "test": "vitest run",
         "format": "prettier --write src/",
         "format:check": "prettier --check src/"
+    },
+    "dependencies": {
+        "@vueuse/core": "^12.8.2"
     }
 }

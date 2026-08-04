@@ -152,7 +152,7 @@ export const PANEL_PAGES = {
 export { default as RenderHook } from './components/RenderHook.vue'
 export { default as TicketThread } from './components/TicketThread.vue'
 export { default as AnnouncementBanners } from './components/AnnouncementBanners.vue'
-export type { Announcement } from './types'
+export type { Announcement, Passkey, TwoFactorConfigContent } from './types'
 
 /*
  * THE SIGN-IN SCREENS - v0.5.0.
@@ -191,3 +191,21 @@ export {
     registerRenderHookComponent,
     resolveRenderHookComponent,
 } from './components/renderHookRegistry'
+
+/*
+ * THE ACCOUNT'S SECURITY CONTROLS, moved from the reference app.
+ *
+ * Passkeys and two-factor were a solved problem there and absent from a fresh
+ * installation - so every consumer either rebuilt them or shipped a panel where
+ * "manage your sign-in" meant a password field and nothing else.
+ *
+ * Every route defaults to what `laravel/fortify` and `laravel/passkeys`
+ * register, so an installation that took those as they came passes nothing.
+ */
+export { default as ManagePasskeys } from './components/security/ManagePasskeys.vue'
+export { default as PasskeyItem } from './components/security/PasskeyItem.vue'
+export { default as ManageTwoFactor } from './components/security/ManageTwoFactor.vue'
+export { default as TwoFactorRecoveryCodes } from './components/security/TwoFactorRecoveryCodes.vue'
+export { default as TwoFactorSetupModal } from './components/security/TwoFactorSetupModal.vue'
+export { useTwoFactorAuth } from './composables/useTwoFactorAuth'
+export type { TwoFactorRoutes, UseTwoFactorAuthReturn } from './composables/useTwoFactorAuth'

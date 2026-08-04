@@ -1,1 +1,2 @@
-export { default as Spinner } from "./Spinner.vue"
+/** This family lives in `@panelkit/ui` now - see `components/ui/sidebar`. */
+export * from '@panelkit/ui';

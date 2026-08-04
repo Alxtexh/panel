@@ -7,10 +7,8 @@ import { computed } from 'vue';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
-import type { Props as ManagePasskeysProps } from '@/components/ManagePasskeys.vue';
-import ManagePasskeys from '@/components/ManagePasskeys.vue';
-import type { Props as ManageTwoFactorProps } from '@/components/ManageTwoFactor.vue';
-import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
+import type { Passkey } from '@panelkit/inertia';
+import { ManagePasskeys, ManageTwoFactor } from '@panelkit/inertia';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
@@ -40,8 +38,19 @@ type Props = {
     connectedAccounts?: ConnectedAccountRow[];
     passwordRules: string;
     devices: Device[];
-} & ManagePasskeysProps &
-    ManageTwoFactorProps;
+    /*
+     * WHAT THE PACKAGED SECURITY CARDS NEED, spelled out here.
+     *
+     * They are `.vue` files in a package, and a `Props` type exported from one
+     * is not reachable through the package entry - so these are written out
+     * rather than imported. The server sends exactly these keys.
+     */
+    canManagePasskeys?: boolean;
+    passkeys?: Passkey[];
+    canManageTwoFactor?: boolean;
+    requiresConfirmation?: boolean;
+    twoFactorEnabled?: boolean;
+};
 
 const props = defineProps<Props>();
 

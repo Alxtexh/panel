@@ -1,1 +1,2 @@
-export { default as Label } from "./Label.vue"
+/** This family lives in `@panelkit/ui` now - see `components/ui/sidebar`. */
+export * from '@panelkit/ui';
