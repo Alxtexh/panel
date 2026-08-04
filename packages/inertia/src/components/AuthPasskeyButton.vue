@@ -101,7 +101,20 @@ async function verify(): Promise<void> {
             throw new Error('Could not start passkey sign-in.')
         }
 
-        const options = await optionsResponse.json()
+        const payload = await optionsResponse.json()
+
+        /*
+         * `laravel/passkeys` NESTS THE OPTIONS UNDER `options`, and the WebAuthn
+         * spec's own shape does not. Reading the top level got `undefined` for
+         * the challenge and threw "Cannot read properties of undefined (reading
+         * 'replace')" out of `toBuffer` - a message that names neither the field
+         * nor the endpoint. Accepting both shapes costs one line.
+         */
+        const options = payload.options ?? payload
+
+        if (typeof options?.challenge !== 'string') {
+            throw new Error('The server did not return a passkey challenge.')
+        }
 
         /*
          * THE CHALLENGE AND EVERY CREDENTIAL ID ARRIVE AS STRINGS and the API
@@ -137,15 +150,24 @@ async function verify(): Promise<void> {
                 'X-XSRF-TOKEN': csrf(),
             },
             credentials: 'same-origin',
+            /*
+             * WRAPPED IN `credential`, which is what `PasskeyVerificationRequest`
+             * validates - `credential.id`, `credential.rawId`, `credential.type`,
+             * `credential.response`. Posting those at the top level fails
+             * validation rather than the signature check, so the reader is told
+             * the passkey was rejected when it was never read.
+             */
             body: JSON.stringify({
-                id: credential.id,
-                rawId: toBase64Url(credential.rawId),
-                type: credential.type,
-                response: {
-                    clientDataJSON: toBase64Url(assertion.clientDataJSON),
-                    authenticatorData: toBase64Url(assertion.authenticatorData),
-                    signature: toBase64Url(assertion.signature),
-                    userHandle: assertion.userHandle ? toBase64Url(assertion.userHandle) : null,
+                credential: {
+                    id: credential.id,
+                    rawId: toBase64Url(credential.rawId),
+                    type: credential.type,
+                    response: {
+                        clientDataJSON: toBase64Url(assertion.clientDataJSON),
+                        authenticatorData: toBase64Url(assertion.authenticatorData),
+                        signature: toBase64Url(assertion.signature),
+                        userHandle: assertion.userHandle ? toBase64Url(assertion.userHandle) : null,
+                    },
                 },
             }),
         })
