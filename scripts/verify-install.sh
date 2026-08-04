@@ -376,6 +376,28 @@ say "Signed in through the generated login"
 #
 # `panel:install` writes one now, so this asserts the whole chain: the file, the
 # route, a 200, and the packaged component actually named in the payload.
+# ---------------------------------------------------------------------------
+# THE SCREEN FILES THEMSELVES, before anything that renders them.
+#
+# THIS IS THE CHECK THAT WAS MISSING, and it is the one that mattered most.
+# `resources/js/pages` comes from a starter kit, not from `laravel/laravel`, so
+# in a fresh application the directory did not exist when `panel:install`
+# reached the step that writes the packaged screens - and the writer returned
+# early with a warning. NOT ONE screen was written.
+#
+# Everything else here passed anyway, because everything else asks the SERVER.
+# `/customers` really does answer 302; `/dashboard` really does name its
+# component in the Inertia payload. Inertia resolves a page by globbing that
+# directory in the BROWSER, so the panel was blank for anybody who opened it.
+say "Checking the packaged screens were written as files"
+
+for screen in ResourceIndex ResourceForm ResourceView Trash PanelDashboard errors/Error landing/Composed; do
+    [ -f "resources/js/pages/$screen.vue" ] \
+        || fail "panel:install wrote no resources/js/pages/$screen.vue - Inertia cannot resolve the screen, so the panel is blank in a browser."
+done
+
+say "every packaged screen has a file Inertia can glob"
+
 say "Checking the installed dashboard renders"
 
 [ -f app/Panel/Pages/DashboardPage.php ] \
@@ -441,9 +463,6 @@ esac
 # most likely to have its own plans for - so this turns it on the way a consumer
 # would and then asks for the page.
 say "Checking the landing page ships and can be turned on"
-
-[ -f resources/js/pages/landing/Composed.vue ] \
-    || fail "panel:install wrote no landing page file - Inertia cannot resolve the screen."
 
 cat > verify-landing.php <<'HIT'
 <?php

@@ -187,4 +187,78 @@ final class PackagedScreensTest extends TestCase
             );
         }
     }
+
+    /**
+     * THE INSTALLER WRITES THE SCREENS INTO A FRESH LARAVEL APP.
+     *
+     * It did not, and this is the largest thing that has been wrong here.
+     * `resources/js/pages` comes from a STARTER KIT, not from `laravel/laravel`
+     * - so in a fresh application the directory does not exist when
+     * `panel:install` reaches this step, and the writer returned early with a
+     * warning. Not one packaged screen was written: no ResourceIndex, no
+     * dashboard, no error page.
+     *
+     * NOTHING FAILED. The install reported success. Every server-side check
+     * passed, because they all ask the SERVER: `/customers` really does answer
+     * 302, `/dashboard` really does name its component in the Inertia payload.
+     * Inertia resolves a page by globbing that directory in the BROWSER, so the
+     * panel was blank for anybody who opened it, and the only evidence was one
+     * warning in the middle of the install output.
+     *
+     * ASSERTED AGAINST A TEMPORARY RESOURCE ROOT, so it exercises the real
+     * `write()` on a directory that genuinely does not exist rather than on this
+     * application, which has had one since the beginning - which is exactly why
+     * the gap survived.
+     */
+    public function test_it_creates_the_pages_directory_in_an_application_that_has_none(): void
+    {
+        $base = sys_get_temp_dir().'/panelkit-pages-'.bin2hex(random_bytes(4));
+        $resources = $base.'/resources';
+
+        mkdir($resources.'/js', 0755, true);
+        file_put_contents($resources.'/js/app.ts', '// the bootstrap panel:install publishes');
+
+        $original = base_path();
+        app()->setBasePath($base);
+
+        try {
+            $this->assertDirectoryDoesNotExist($resources.'/js/pages', 'Fixture assumption.');
+
+            $result = PanelPages::write();
+
+            $this->assertNotNull($result['directory'], 'The writer gave up on a Vue Inertia app.');
+            $this->assertContains('ResourceIndex', $result['written']);
+            $this->assertFileExists($resources.'/js/pages/ResourceIndex.vue');
+            $this->assertFileExists($resources.'/js/pages/errors/Error.vue');
+            $this->assertFileExists($resources.'/js/pages/landing/Composed.vue');
+        } finally {
+            app()->setBasePath($original);
+            exec('rm -rf '.escapeshellarg($base));
+        }
+    }
+
+    /**
+     * AND IT STILL DECLINES WHEN THE APPLICATION IS NOT VUE.
+     *
+     * The early return was right about its own question - writing Vue files into
+     * a React or Blade application would be guessing. What was wrong was asking
+     * it AFTER `panel:install` had already published the Vue bootstrap.
+     */
+    public function test_it_still_declines_when_there_is_no_vue_bootstrap(): void
+    {
+        $base = sys_get_temp_dir().'/panelkit-nopages-'.bin2hex(random_bytes(4));
+
+        mkdir($base.'/resources/js', 0755, true);
+
+        $original = base_path();
+        app()->setBasePath($base);
+
+        try {
+            $this->assertNull(PanelPages::write()['directory']);
+            $this->assertDirectoryDoesNotExist($base.'/resources/js/pages');
+        } finally {
+            app()->setBasePath($original);
+            exec('rm -rf '.escapeshellarg($base));
+        }
+    }
 }
