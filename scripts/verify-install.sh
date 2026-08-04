@@ -96,7 +96,12 @@ php artisan list --no-ansi 2>/dev/null | grep -q 'panel:install' \
 
 say "Packing and installing the npm packages"
 for pkg in ui inertia; do
-    tarball="$(cd "$ROOT/packages/$pkg" && npm pack --silent --pack-destination "$WORK")"
+    # THE LAST LINE, NOT THE WHOLE OUTPUT. `@panelkit/ui` has a `prepack` that
+    # builds it - which it must, so a tarball can never contain a stale `dist` -
+    # and Vite writes its progress to stdout. `--silent` quiets npm, not the
+    # build, so capturing everything gave a "filename" several lines long and
+    # the check below failed on a pack that had actually worked.
+    tarball="$(cd "$ROOT/packages/$pkg" && npm pack --silent --pack-destination "$WORK" | tail -1)"
     [[ -f "$WORK/$tarball" ]] || fail "npm pack produced nothing for packages/$pkg"
     npm install --silent --no-audit --no-fund "$WORK/$tarball" 2>&1 | tail -2
 done
