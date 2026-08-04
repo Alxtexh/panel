@@ -51,6 +51,19 @@ final class PanelManager
     private const PACKAGE_PAGES = [
         Pages\ChangelogPage::class,
         Pages\EnvironmentPage::class,
+
+        /*
+         * WHO IS HERE AND WHAT THEY MAY DO. The roles half was packaged from
+         * 0.4 and the people half was not, which made the permission matrix a
+         * screen you could reach and not act on: it showed which abilities a
+         * role holds and offered nowhere to see who holds it.
+         *
+         * IT SHOWS THE ROLES EVEN WITH NO USERS RESOURCE REGISTERED, because
+         * `UserDirectory` finds that resource by matching the configured auth
+         * model rather than requiring a config key - and an application that
+         * has not written one should get the half that works, not a 500.
+         */
+        Pages\UserManagementPage::class,
     ];
 
     /** @var array<string, class-string<Pages\Page>> slug => class */
