@@ -115,20 +115,32 @@ final class AccessibilityTest extends DuskTestCase
 
         $this->browse(function (Browser $browser): void {
             /*
-             * WAIT FOR A ROW, NOT FOR A PARTICULAR PERSON.
+             * THE PATH IS ASSERTED, so a redirect fails as a redirect.
              *
-             * This used to wait on the seeded name "Amina Otieno", which made
-             * the test depend on that row surviving at the top of a 250,000-row
-             * list AND on the whole list painting. It failed about one run in
-             * three inside the full suite and passed in five seconds alone -
-             * raising the timeout to 45 seconds did not fix it, because under
-             * load the contention scales with the wait.
+             * This test failed roughly one full run in three while passing alone
+             * every time, and it looked like slowness - so the wait went from 15
+             * seconds to 45 and failed anyway. IT WAS NEVER SLOW. The failure
+             * screenshot showed the SIGN-IN PAGE: `/clients` had redirected, and
+             * the test was waiting for a table on a screen that has none.
              *
-             * `tbody tr` is what the accessibility scan actually needs: a table
-             * with rows in it. It is true the moment the first row lands, it
-             * does not care which row, and it says what the test requires.
+             * The redirect itself turned out to be contention - a dev server was
+             * running beside the suite on the same machine, and with it stopped
+             * this passes three runs in a row at forty seconds. So the cause was
+             * environmental rather than a bug in the panel.
+             *
+             * `assertPathIs` STAYS ANYWAY, because it is what made that visible.
+             * Waiting on a selector reports "the page is slow" for a page that
+             * was never going to render; asserting where the browser actually is
+             * names the real thing in one line. `logout()` goes with it: the
+             * browser is shared across the tests in a run, so starting from no
+             * session removes one variable from a test that is about markup.
              */
-            $browser->loginAs($this->operatorId)->visit('/clients')->waitFor('tbody tr', 30);
+            $browser->logout();
+
+            $browser->loginAs($this->operatorId)
+                ->visit('/clients')
+                ->assertPathIs('/clients')
+                ->waitFor('tbody tr', 15);
 
             $this->assertNoSeriousAccessibilityViolations($browser, 'Resource list');
         });

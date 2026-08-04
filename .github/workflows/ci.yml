@@ -179,6 +179,18 @@ jobs:
         working-directory: apps/playground
         run: npm install --no-audit --no-fund
 
+      # THE PACKAGE IS BUILT BEFORE ANYTHING TYPE-CHECKS AGAINST IT.
+      #
+      # `@panelkit/ui` ships compiled - it has to, because its shadcn components
+      # declare props with types imported from `reka-ui` and a consumer's Vite
+      # cannot resolve those across a package boundary. `dist` is generated and
+      # therefore gitignored, so `types: ./dist/index.d.ts` points at nothing on
+      # a fresh checkout: `vue-tsc` below resolves the package to a missing file
+      # and reports errors that name the application's own screens.
+      - name: Build @panelkit/ui
+        working-directory: packages/ui
+        run: npm run build
+
       - name: Unit tests
         working-directory: packages/ui
         run: npm test
@@ -278,9 +290,12 @@ jobs:
         working-directory: apps/playground
         run: php artisan wayfinder:generate --with-form
 
+      # `@panelkit/ui` IS BUILT HERE TOO. Its `dist` is generated, so a fresh
+      # checkout has none - and the asset build below resolves the package
+      # through `node_modules`, where `main` points at exactly that.
       - name: Install the client half
         run: |
-          cd packages/ui && npm install --no-audit --no-fund
+          cd packages/ui && npm install --no-audit --no-fund && npm run build
           cd ../inertia && npm install --no-audit --no-fund
           cd ../../apps/playground && npm install --no-audit --no-fund
 

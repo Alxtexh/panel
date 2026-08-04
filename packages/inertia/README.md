@@ -40,7 +40,7 @@ createInertiaApp({
 ```
 
 **Tailwind, pointed at these packages.** Tailwind does not scan `node_modules`,
-so without these two lines every utility used *only* inside the packages is
+so without these two lines every utility used _only_ inside the packages is
 purged — and the failure is partial and silent, because classes your own code
 also uses survive. You get a panel with a styled table inside an unstyled page.
 
@@ -99,11 +99,11 @@ property.
 
 ## Exports
 
-| Export | What it is |
-| --- | --- |
-| `ResourceIndex`, `ResourceForm`, `ResourceView`, `Trash`, `PanelHome` | The five screens |
-| `AuditTimeline` | A record's history, loaded on demand |
-| `useListTable` | Sorting, filtering, paging and selection against the panel's list endpoint |
-| `useBulkJob` | A queued bulk action, with progress |
-| `useTranslations` | `t('actions.save')` against the messages the server shares |
-| `PANEL_PAGES` | Name → component, for an application that writes its own `resolve` |
+| Export                                                                | What it is                                                                 |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `ResourceIndex`, `ResourceForm`, `ResourceView`, `Trash`, `PanelHome` | The five screens                                                           |
+| `AuditTimeline`                                                       | A record's history, loaded on demand                                       |
+| `useListTable`                                                        | Sorting, filtering, paging and selection against the panel's list endpoint |
+| `useBulkJob`                                                          | A queued bulk action, with progress                                        |
+| `useTranslations`                                                     | `t('actions.save')` against the messages the server shares                 |
+| `PANEL_PAGES`                                                         | Name → component, for an application that writes its own `resolve`         |
