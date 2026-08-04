@@ -13,7 +13,7 @@ use PanelKit\Panel\PanelManager;
  *
  * BOTH HALVES OR NEITHER. A page class with no component is a route that
  * resolves to nothing - a white page with a console error naming a file the
- * developer has never seen, which is the exact failure `@panelkit/inertia`
+ * developer has never seen, which is the exact failure `@panelkit/panel/inertia`
  * exists to prevent. Writing the class alone would reintroduce it one screen at
  * a time.
  *

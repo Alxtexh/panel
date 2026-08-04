@@ -9,12 +9,12 @@ component tree per click.
 
 ```bash
 composer require panelkit/panel
-npm install @panelkit/ui @panelkit/inertia
+npm install @panelkit/panel
 php artisan panel:install
 ```
 
-This package answers the requests; `@panelkit/inertia` holds the five screens it
-renders. Installing one without the other gives you routes that resolve to nothing.
+This package answers the requests; `@panelkit/panel` holds the screens it renders.
+Installing one without the other gives you routes that resolve to nothing.
 
 ---
 
@@ -223,19 +223,22 @@ is a finding.
 
 ## What ships to the browser
 
-Two packages, split along one line: whether they know how the data arrived.
+One package, two entry points, split along one line: whether the code knows how
+the data arrived.
 
-`@panelkit/ui` is the rendering layer, and it imports no HTTP client and no Inertia.
-Data fetching belongs to the caller; the package renders what it is handed. That is
-what lets the same table and form work under Inertia, a fetch-based page, or a test
-harness with no router at all.
+`@panelkit/panel` is the rendering layer, and it imports no HTTP client and no
+Inertia. Data fetching belongs to the caller; the package renders what it is handed.
+That is what lets the same table and form work under Inertia, a fetch-based page, or
+a test harness with no router at all. It ships compiled, because a Vue SFC cannot
+resolve a type imported into `defineProps` across a package boundary.
 
-`@panelkit/inertia` is the five screens this package renders, and they are Inertia
+`@panelkit/panel/inertia` is the screens this package renders, and they are Inertia
 to their bones — `useForm`, `Link`, partial reloads by prop name. They name no
-layout: the shell stays the application's.
+layout: the shell stays the application's. They ship as source, so you can read the
+screen you are about to override.
 
 ```bash
-npm install @panelkit/ui @panelkit/inertia
+npm install @panelkit/panel
 ```
 
 `panel:install` then writes one page file per screen into `resources/js/pages`,

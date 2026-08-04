@@ -50,6 +50,7 @@ final class UpdateCommand extends Command
         $needsAttention = array_filter([
             $this->invalidateSchemaCache(),
             $this->reconcilePages(),
+            $this->repointStylesheet(),
             $this->reportPendingMigrations(),
             $this->reportUninstalledPlugins(),
             $this->refreshBlueprint(),
@@ -143,6 +144,55 @@ final class UpdateCommand extends Command
 
         return 'Run your build (npm run build) - '.count($result['written'])
             .' new screen(s) were added and are not in the current bundle.';
+    }
+
+    /**
+     * Point the stylesheet's `@source` lines at the package's current name.
+     *
+     * THE ONE UPGRADE STEP NOBODY WOULD FIND. 0.8.0 merged `@panelkit/ui` and
+     * `@panelkit/inertia` into `@panelkit/panel`, and a rename of an npm package
+     * is normally a find-and-replace over imports that the build tells you about
+     * immediately. These two lines are different: they are strings inside a CSS
+     * file, nothing resolves them, and a stale one is not an error. Tailwind
+     * scans a directory that no longer exists, finds no class names, and PURGES
+     * every utility used only inside the packaged screens. The panel renders -
+     * with no layout, no colour and no spacing, and a clean build log.
+     *
+     * IT REWRITES RATHER THAN APPENDS, so a file that has already been repointed
+     * is left alone and running this twice changes nothing. The old paths are
+     * matched exactly, including their differing tails - `ui` was scanned at
+     * `dist` and `inertia` at `src` - because a looser match would also rewrite
+     * a line somebody added themselves.
+     */
+    private function repointStylesheet(): ?string
+    {
+        $target = resource_path('css/app.css');
+
+        if (! file_exists($target)) {
+            return null;
+        }
+
+        $current = (string) file_get_contents($target);
+
+        $moved = [
+            '@panelkit/ui/dist' => '@panelkit/panel/dist',
+            '@panelkit/inertia/src' => '@panelkit/panel/inertia',
+        ];
+
+        $updated = str_replace(array_keys($moved), array_values($moved), $current);
+
+        if ($updated === $current) {
+            return null;
+        }
+
+        file_put_contents($target, $updated);
+
+        $this->components->task(
+            '  repointed the @source lines at @panelkit/panel',
+            fn () => true,
+        );
+
+        return 'Run your build (npm run build) - the stylesheet now scans the merged package.';
     }
 
     /**

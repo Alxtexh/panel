@@ -11,17 +11,17 @@
  * unreadable.
  *
  * THE TWO LINES POINT AT DIFFERENT THINGS, and that is deliberate rather than
- * an oversight. `@panelkit/ui` ships COMPILED - it has to, because its shadcn
+ * an oversight. `@panelkit/panel` ships COMPILED - it has to, because its shadcn
  * components declare props with types imported from `reka-ui` and a consumer's
  * Vite cannot resolve those across a package boundary - so its class names live
  * in `dist` as string literals in the render functions, which Tailwind reads
- * exactly as well as it reads a template. `@panelkit/inertia` still ships
+ * exactly as well as it reads a template. `@panelkit/panel/inertia` still ships
  * source, so its line still points at `src`.
  */
 @import 'tailwindcss';
 
-@source '../../node_modules/@panelkit/ui/dist/**/*.js';
-@source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';
+@source '../../node_modules/@panelkit/panel/dist/**/*.js';
+@source '../../node_modules/@panelkit/panel/inertia/**/*.{vue,ts}';
 
 /**
  * The design tokens every packaged component reads.

@@ -20,7 +20,7 @@
  *              looks frozen on any request slower than instant.
  */
 import { createInertiaApp } from '@inertiajs/vue3'
-import { initializeAppearance } from '@panelkit/ui'
+import { initializeAppearance } from '@panelkit/panel'
 import { createApp, h } from 'vue'
 import type { DefineComponent } from 'vue'
 import PanelLayout from './layouts/PanelLayout.vue'
