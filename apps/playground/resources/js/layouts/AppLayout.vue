@@ -61,7 +61,23 @@ const bottomNavItems = computed<BottomNavItem[]>(() => {
             }));
 
     return [
-        { key: 'dashboard', title: 'Home', href: '/dashboard', icon: 'home' },
+        /*
+         | THE CURRENT PANEL'S HOME, shared by the server.
+         |
+         | This said `/dashboard` - a FIXED path in an application that mounts
+         | three portals. So inside `/platform` the sidebar's Home pointed at
+         | the ADMIN dashboard: clicking it left the portal silently, and for
+         | an operator who may not open that screen it refused. Every generated
+         | portal had it, because they all render this layout.
+         */
+        {
+            key: 'dashboard',
+            title: 'Home',
+            href:
+                (page.props.panel as { home?: string } | undefined)?.home ??
+                '/dashboard',
+            icon: 'home',
+        },
         ...fromProps('panelNav'),
         ...fromProps('panelPages'),
     ];

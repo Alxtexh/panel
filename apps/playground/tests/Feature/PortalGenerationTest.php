@@ -530,6 +530,36 @@ final class PortalGenerationTest extends TestCase
 
         app(PanelManager::class)->usePanel('no-such-panel');
     }
+
+    /**
+     * EVERY PORTAL'S HOME LINK STAYS INSIDE THAT PORTAL.
+     *
+     * The published layout had `href: '/dashboard'` written into it - a FIXED
+     * path in an application that mounts three portals. So inside `/platform`
+     * the sidebar's Home pointed at the ADMIN panel's dashboard: clicking it
+     * left the portal silently, and for an operator who may not open that
+     * screen it refused with a bare "Forbidden". Every generated portal had it,
+     * because they all render the same layout.
+     *
+     * ASSERTED ON THE SHARED PROP, which is what the layout reads, so this
+     * fails if the server stops sending it rather than only if the markup
+     * changes.
+     */
+    public function test_each_portal_shares_its_own_home_link(): void
+    {
+        $this->actingAs($this->operator)
+            ->get('/platform/tenants')
+            ->assertInertia(fn ($page) => $page->where('panel.home', '/platform'));
+
+        /*
+         * AND THE ROOT PANEL'S HOME IS ITS DASHBOARD, not `/` - a root-mounted
+         * panel does not claim the application's front page, so its home is the
+         * screen sign-in lands on.
+         */
+        $this->actingAs($this->operator)
+            ->get('/clients')
+            ->assertInertia(fn ($page) => $page->where('panel.home', '/dashboard'));
+    }
 }
 
 /**

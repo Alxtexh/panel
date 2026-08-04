@@ -130,7 +130,18 @@ export function usePanelNav() {
 
         return {
             primary: [
-                { title: 'Dashboard', href: '/', icon: LayoutGrid },
+                /*
+                 * THE PANEL'S OWN HOME, not a fixed path. `/` is the admin
+                 * panel's root and `/platform` is the platform portal's - a
+                 * hardcoded href sends every portal's Home link to whichever
+                 * panel happens to be mounted at the root, which is somebody
+                 * else's screen and may refuse.
+                 */
+                {
+                    title: 'Dashboard',
+                    href: (page.props.panel as { home?: string } | undefined)?.home ?? '/',
+                    icon: LayoutGrid,
+                },
                 ...ungrouped,
             ] as NavItem[],
             groups: [...grouped.entries()].map(([name, items]): NavGroup => ({
