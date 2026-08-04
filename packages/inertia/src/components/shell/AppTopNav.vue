@@ -19,7 +19,7 @@ import { AppearanceDrawer, PkDropdown } from '@panelkit/ui'
 import AppLogo from './AppLogo.vue'
 import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
-import CommandPalette from './CommandPalette.vue'
+import PanelCommandPalette from './PanelCommandPalette.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import TopNavUser from './TopNavUser.vue'
 import { useCurrentUrl } from '../../composables/useCurrentUrl'
@@ -154,7 +154,7 @@ function groupIsActive(items: NavItem[]): boolean {
                 the thing people actually use.
             -->
             <div class="flex min-w-0 shrink items-center gap-1.5">
-                <CommandPalette />
+                <PanelCommandPalette />
                 <AssistantDrawer />
                 <NotificationBell />
                 <AppearanceDrawer />

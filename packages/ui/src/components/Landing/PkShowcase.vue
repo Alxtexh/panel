@@ -46,7 +46,7 @@ const { el } = useScrollProgress()
                             <span class="size-2.5 rounded-full bg-amber-400/70" />
                             <span class="size-2.5 rounded-full bg-emerald-400/70" />
                             <span class="ml-3 truncate text-xs text-muted-foreground">
-                                {{ caption ?? 'yourpanel.example / subscribers' }}
+                                {{ caption ?? 'yourpanel.example / records' }}
                             </span>
                         </div>
 

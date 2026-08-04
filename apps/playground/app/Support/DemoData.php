@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace App\Support;
 
 /**
  * The shape of the demo data, in one place.
+ *
+ * IT LIVED IN THE PACKAGE AND HAD NO BUSINESS THERE. It invents fibre
+ * subscribers - Kenyan names, `pppoe`/`hotspot`/`static` plan types, a router
+ * per row - and its only callers are this application's two seeders. FEATURES.md
+ * already said the seeders were kept out of the package for exactly that reason;
+ * the class they share had been left behind.
  *
  * EXTRACTED BECAUSE TWO SEEDERS NEEDED IT AND THE LESSONS ARE NOT OBVIOUS. Every
  * comment below records a distribution that was wrong first, in a way no test

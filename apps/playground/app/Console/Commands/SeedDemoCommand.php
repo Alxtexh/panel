@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Support\DemoData;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\Support\DemoData;
 
 /**
  * php artisan panel:seed-demo --scale=large|medium|small

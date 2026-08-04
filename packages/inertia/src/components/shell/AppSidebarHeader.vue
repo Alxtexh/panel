@@ -4,7 +4,7 @@ import { AppearanceDrawer, useAppearance } from '@panelkit/ui'
 import { computed } from 'vue'
 import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
-import CommandPalette from './CommandPalette.vue'
+import PanelCommandPalette from './PanelCommandPalette.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import { SidebarTrigger } from '@panelkit/ui'
 import type { BreadcrumbItem } from '../../types'
@@ -75,7 +75,7 @@ const trail = computed<BreadcrumbItem[]>(() =>
         </div>
 
         <div class="flex items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
-            <CommandPalette />
+            <PanelCommandPalette />
             <!-- Beside search, because a question about a record is the same
                  kind of interruption as looking one up - and it opens over the
                  screen you are on rather than navigating away from it. -->

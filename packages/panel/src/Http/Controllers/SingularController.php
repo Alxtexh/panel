@@ -42,6 +42,7 @@ final class SingularController extends Controller
                 'icon' => $class::icon(),
                 'group' => $class::group(),
                 'routes' => ['index' => '/'.$class::key()],
+                'links' => $class::links(),
                 'form' => $form->toSchema(),
             ],
             'record' => ['id' => 'current', 'label' => $class::label()],

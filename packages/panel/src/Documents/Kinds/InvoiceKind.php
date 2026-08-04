@@ -87,7 +87,7 @@ class InvoiceKind extends StandardDocumentKind
             'due' => now()->addDays(14)->toDateString(),
             'currency' => 'KES',
             'lines' => [
-                ['description' => 'Monthly subscription', 'detail' => '20 Mbps', 'quantity' => 1, 'unit' => '2,500.00', 'amount' => '2,500.00'],
+                ['description' => 'Monthly subscription', 'detail' => 'Standard plan', 'quantity' => 1, 'unit' => '2,500.00', 'amount' => '2,500.00'],
             ],
             'subtotal' => '2,500.00',
             'tax' => '400.00',

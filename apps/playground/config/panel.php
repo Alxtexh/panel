@@ -69,6 +69,15 @@ return [
     | - `aurora` (modern SaaS), `editorial` (quiet and typographic) or
     | `console` (developer tool, shows real code). Part G.9.
     */
+    /*
+     | THE THREE TABLES THIS APPLICATION'S OWN MIGRATION gave a `custom` column
+     | to - see `reserve_custom_field_storage`. The package no longer assumes
+     | them; an installation declares what its schema actually has.
+     */
+    'custom_fields' => [
+        'resources' => ['clients', 'routers', 'plans'],
+    ],
+
     'landing' => [
         /*
          | THE REFERENCE APP SERVES THE PACKAGED PAGE AT `/`, and is one of the

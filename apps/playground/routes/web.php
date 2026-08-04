@@ -14,7 +14,6 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\SavedViewController;
-use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Settings\DeviceController;
 use App\Support\Guide;
 use App\Support\HelpArticles;
@@ -528,8 +527,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
      | routes inside another's middleware.
      */
 
-    // Lean JSON, not an Inertia render - the palette fires per keystroke.
-    Route::get('search', SearchController::class)->name('search');
+    /*
+     | THE SEARCH ENDPOINT IS THE PACKAGE'S. `panel.search` is mounted inside
+     | each panel's group as `panel-search`, so it is prefixed and scoped per
+     | portal - which this one, at a fixed `/search`, never was. The palette
+     | that called it was itself a duplicate and has been deleted.
+     */
 
     /*
      | The bell. Lean JSON too: it may be polled, and re-rendering a page to

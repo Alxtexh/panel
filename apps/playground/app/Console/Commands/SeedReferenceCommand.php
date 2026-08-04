@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Support\DemoData;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Support\DemoData;
 
 /**
  * The reference estate: five tenants of deliberately different sizes.

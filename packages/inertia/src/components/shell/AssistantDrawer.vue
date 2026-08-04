@@ -330,7 +330,7 @@ const toolLabel = (name: string) => name.replace(/[-_]/g, ' ')
  * they return nothing, which is the truth rather than a miss.
  */
 const suggestions = [
-    { text: 'Which subscribers are suspended?', hint: 'Searches your own records' },
+    { text: 'Which records are suspended?', hint: 'Searches your own records' },
     { text: 'Who expires this week?', hint: 'Searches your own records' },
     { text: 'How do exports work?', hint: 'Answers from the help centre' },
 ]
@@ -405,8 +405,8 @@ function ask(question: string) {
                         <div class="min-w-0">
                             <h2 class="text-sm font-semibold">Assistant</h2>
                             <p class="mt-0.5 text-xs leading-snug text-muted-foreground">
-                                Subscribers, and how the panel works. Suspending pauses for your
-                                approval.
+                                Your records, and how the panel works. Anything that changes data
+                                pauses for your approval.
                             </p>
                         </div>
                     </div>
@@ -609,7 +609,7 @@ function ask(question: string) {
                                 ref="input"
                                 v-model="draft"
                                 rows="1"
-                                placeholder="Ask about a subscriber…"
+                                placeholder="Ask about a record…"
                                 class="max-h-32 min-h-6 flex-1 resize-none bg-transparent text-sm outline-none"
                                 :disabled="streaming"
                                 @keydown.enter.exact.prevent="send"

@@ -13,9 +13,9 @@
  * whether `record` is null.
  */
 import { PkButton as Button } from '@panelkit/ui'
-import { RecordForm, UnsavedBar } from '@panelkit/ui'
+import { RecordForm, UnsavedBar, buttonClasses } from '@panelkit/ui'
 import type { FormField, UploadedFileValue } from '@panelkit/ui'
-import { Head, router, useForm } from '@inertiajs/vue3'
+import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import DefineFieldDialog from '../components/DefineFieldDialog.vue'
@@ -26,6 +26,15 @@ const props = defineProps<{
         label: string
         labelPlural: string
         routes: { index: string }
+        /**
+         * Places to go from this screen - normally the thing it configures.
+         *
+         * A SETTINGS SCREEN THAT CANNOT SHOW YOU WHAT IT CHANGES is guesswork
+         * with a Save button. `external` opens in a new tab and renders as a
+         * plain anchor rather than an Inertia `Link`, because a `Link` to a
+         * page Inertia does not serve shows the reader raw JSON.
+         */
+        links?: { label: string; href: string; external?: boolean }[]
         /*
          * `fields` IS LOOSE HERE ON PURPOSE. `FormField` is recursive
          * (`children?: FormField[]`), so it cannot be written inline - and
@@ -363,11 +372,44 @@ onBeforeUnmount(() => {
         padding means fully scrolled content ends above the bar, always.
     -->
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-3 pb-24 sm:p-4 sm:pb-24">
-        <div>
-            <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
-                {{ isEdit ? `Edit ${schema.label}` : `New ${schema.label}` }}
-            </h1>
-            <p v-if="record" class="text-muted-foreground text-sm">{{ record.label }}</p>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
+                    {{ isEdit ? `Edit ${schema.label}` : `New ${schema.label}` }}
+                </h1>
+                <p v-if="record" class="text-muted-foreground text-sm">{{ record.label }}</p>
+            </div>
+
+            <div v-if="schema.links?.length" class="flex items-center gap-2">
+                <template v-for="link in schema.links" :key="link.href">
+                    <a
+                        v-if="link.external"
+                        :href="link.href"
+                        target="_blank"
+                        rel="noopener"
+                        :class="buttonClasses({ variant: 'outline', size: 'sm' })"
+                    >
+                        {{ link.label }}
+                        <svg
+                            viewBox="0 0 24 24"
+                            class="ml-1 size-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                            <path d="M15 3h6v6M10 14 21 3" />
+                        </svg>
+                    </a>
+                    <Link
+                        v-else
+                        :href="link.href"
+                        :class="buttonClasses({ variant: 'outline', size: 'sm' })"
+                    >
+                        {{ link.label }}
+                    </Link>
+                </template>
+            </div>
         </div>
 
         <!--

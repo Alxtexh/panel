@@ -69,6 +69,35 @@ final class LandingPageResource extends SingularResource
         return 'manage_landing_page';
     }
 
+    /**
+     * OPEN THE PAGE THIS SCREEN COMPOSES.
+     *
+     * Composing eleven sections with no way to look at the result is guesswork
+     * with a Save button, and the only alternative was remembering the URL and
+     * typing it. In a NEW TAB deliberately: the same tab would take whatever is
+     * half-edited in the builder with it.
+     *
+     * ONLY WHERE THE PAGE IS ACTUALLY SERVED. `panel.landing.route` is off by
+     * default, and an installation that composes the page but routes it itself
+     * has a URL this package cannot know - so it points at its own route or at
+     * `panel.landing.url` if one is named, and offers nothing rather than a
+     * link to a 404.
+     *
+     * @return list<array{label: string, href: string, external?: bool}>
+     */
+    public static function links(): array
+    {
+        $url = config('panel.landing.url');
+
+        if (! is_string($url) || $url === '') {
+            $url = LandingController::registers() ? '/' : null;
+        }
+
+        return $url === null ? [] : [
+            ['label' => 'View the page', 'href' => $url, 'external' => true],
+        ];
+    }
+
     /** @return array<string, mixed> */
     public static function defaults(): array
     {

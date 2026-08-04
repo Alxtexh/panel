@@ -70,7 +70,7 @@ watch(
 
 /**
  * The key is derived from the label until somebody edits it deliberately -
- * "Fibre node ID" becomes `fibre_node_id` without asking the operator to
+ * "Account manager" becomes `account_manager` without asking the operator to
  * invent an identifier, while still leaving it correctable.
  */
 const keyTouched = ref(false)
@@ -153,7 +153,7 @@ function submit() {
                         v-model="draft.label"
                         type="text"
                         maxlength="80"
-                        placeholder="Fibre node ID"
+                        placeholder="Account manager"
                         class="border-input bg-background rounded-md border px-3 py-1.5 text-sm"
                         :disabled="busy"
                         @input="syncKey"

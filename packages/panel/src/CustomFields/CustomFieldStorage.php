@@ -7,12 +7,20 @@ namespace PanelKit\Panel\CustomFields;
 /**
  * Which resources have somewhere for a custom field to live - roadmap 5.1.
  *
- * THE SAME LIST THE `reserve_custom_field_storage` MIGRATION USED to add the
- * `custom` JSON column, copied rather than read back from the schema. A
- * migration's own body is not a runtime API - reading it here would mean
- * parsing PHP to recover a fact this class exists to say once and share.
- * The two lists must be kept in step by hand; there being only one column
- * to add, ever, makes that an acceptable cost.
+ * DECLARED BY THE APPLICATION, because only it knows. A custom field is stored
+ * in a `custom` JSON column, and adding that column to a large table is a
+ * migration somebody has to write and time - so the list of resources that have
+ * one is a fact about their schema, not about this package.
+ *
+ * IT USED TO BE `['clients', 'routers', 'plans']`, HARDCODED - the reference
+ * application's three tables, in a class every installation gets. For anybody
+ * else that is two failures at once: custom fields silently unavailable on
+ * every resource they do have, and, if they happened to name one `clients`, an
+ * offer to store a field in a column that does not exist.
+ *
+ * EMPTY BY DEFAULT, which reads as "no resource has the column yet" - the true
+ * answer for a fresh installation, and the safe one: the feature declines
+ * rather than writing into a column it hopes is there.
  *
  * WHAT THIS GATES: a `CustomField` definition's `resource` may only name one
  * of these - checked when a definition is saved, not by a database
@@ -20,12 +28,12 @@ namespace PanelKit\Panel\CustomFields;
  */
 final class CustomFieldStorage
 {
-    /** @var list<string> */
-    public const RESOURCES = ['clients', 'routers', 'plans'];
-
     /** @return list<string> */
     public static function resources(): array
     {
-        return self::RESOURCES;
+        return array_values(array_filter(
+            (array) config('panel.custom_fields.resources', []),
+            static fn (mixed $key): bool => is_string($key) && $key !== '',
+        ));
     }
 }

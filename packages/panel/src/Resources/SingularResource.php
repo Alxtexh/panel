@@ -102,6 +102,26 @@ abstract class SingularResource
         return static::$panel;
     }
 
+    /**
+     * Places to go from this screen - normally the thing it configures.
+     *
+     * A SETTINGS SCREEN THAT CANNOT SHOW YOU WHAT IT CHANGES is guesswork with
+     * a Save button. The landing editor is the case that asked for it: somebody
+     * composes eleven sections and the only way to see the result is to
+     * remember the URL and open it by hand.
+     *
+     * `external` OPENS IN A NEW TAB, which is the point for a preview - the
+     * alternative loses whatever is half-typed in the form. It also means
+     * the link leaves the panel, so it is a plain anchor rather than an Inertia
+     * visit; a `Link` to a non-Inertia page renders the JSON.
+     *
+     * @return list<array{label: string, href: string, external?: bool}>
+     */
+    public static function links(): array
+    {
+        return [];
+    }
+
     public static function formDefinition(): Form
     {
         return static::form(new Form);
