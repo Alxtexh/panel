@@ -4,26 +4,20 @@ import { BookOpen, Folder, LayoutGrid, Menu, Search } from '@lucide/vue'
 import { PkButton as Button, buttonClasses } from '@panelkit/ui'
 import { computed } from 'vue'
 import AppLogo from './AppLogo.vue'
-import Breadcrumbs from '@/components/Breadcrumbs.vue'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import Breadcrumbs from './Breadcrumbs.vue'
+import { Avatar, AvatarFallback, AvatarImage } from '@panelkit/ui'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@panelkit/ui'
 import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuList,
     navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu'
+} from '@panelkit/ui'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@panelkit/ui'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@panelkit/ui'
-import UserMenuContent from '@/components/UserMenuContent.vue'
 import { useCurrentUrl } from '../../composables/useCurrentUrl'
-import { getInitials } from '@/composables/useInitials'
+import { getInitials } from '../../composables/useInitials'
 import { toUrl } from '@panelkit/ui'
-import { dashboard } from '@/routes'
 import type { BreadcrumbItem, NavItem } from '../../types'
 
 type Props = {
@@ -35,18 +29,34 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const page = usePage()
+
+/**
+ * Home, for the portal actually being served.
+ *
+ * THE SERVER KNOWS WHICH PANEL IS SERVING and the client should not guess - the
+ * same reasoning `AppSidebar` carries. A hardcoded `/dashboard` took a generated
+ * portal's brand link out of that portal.
+ */
+const panelHome = computed<string>(
+    () => (page.props.panelHome as { href?: string } | undefined)?.href ?? '/',
+)
 const auth = computed(() => page.props.auth)
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl()
 
 const activeItemStyles = 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
 
-const mainNavItems: NavItem[] = [
+/*
+ * COMPUTED, because the destination is. `panelHome` is resolved from the shared
+ * props rather than hardcoded, so a plain array would capture whatever it was
+ * at setup and never follow a panel change.
+ */
+const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: panelHome.value,
         icon: LayoutGrid,
     },
-]
+])
 
 const rightNavItems: NavItem[] = [
     {
@@ -120,7 +130,7 @@ const rightNavItems: NavItem[] = [
                     </Sheet>
                 </div>
 
-                <Link :href="dashboard()" class="flex items-center gap-x-2">
+                <Link :href="panelHome" class="flex items-center gap-x-2">
                     <AppLogo />
                 </Link>
 
@@ -220,7 +230,7 @@ const rightNavItems: NavItem[] = [
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" class="w-56">
-                            <UserMenuContent :user="auth.user" />
+                            <slot name="userMenu" :user="auth.user" />
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

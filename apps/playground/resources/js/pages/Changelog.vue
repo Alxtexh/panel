@@ -11,9 +11,9 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import Changelog from '@panelkit/inertia/pages/Changelog.vue'
+import Changelog from '@panelkit/inertia/pages/Changelog.vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>
@@ -24,5 +24,5 @@ defineOptions({ inheritAttrs: false })
         either way: these values arrive from the server as JSON and are
         typed where they are USED, inside the packaged component.
     -->
-    <Changelog v-bind="($attrs as any)" />
+    <Changelog v-bind="$attrs as any" />
 </template>

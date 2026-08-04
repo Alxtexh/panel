@@ -60,9 +60,14 @@ final class AssistantStreamTest extends TestCase
     {
         $this->actingAs($this->user)->get('/dashboard')->assertOk();
 
+        /*
+         * READ FROM THE PACKAGE, because the topbar lives there now. This
+         * application's `AppSidebarHeader.vue` is a wrapper that supplies its
+         * own account-menu items; the drawer is mounted a level below it.
+         */
         $this->assertStringContainsString(
             'AssistantDrawer',
-            file_get_contents(resource_path('js/components/AppSidebarHeader.vue')),
+            file_get_contents(base_path('../../packages/inertia/src/components/shell/AppSidebarHeader.vue')),
             'The topbar no longer mounts the assistant, so nothing can open it.',
         );
     }

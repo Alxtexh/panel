@@ -60,3 +60,9 @@ export interface User {
     email?: string
     avatar?: string | null
 }
+
+/** A crumb in the trail the shell's headers draw. */
+export interface BreadcrumbItem {
+    title: string
+    href?: NonNullable<InertiaLinkProps['href']>
+}

@@ -66,6 +66,8 @@ export * from './components/shadcn/separator'
 export * from './components/shadcn/tooltip'
 export * from './components/shadcn/dropdown-menu'
 export * from './components/shadcn/avatar'
+export * from './components/shadcn/breadcrumb'
+export * from './components/shadcn/navigation-menu'
 export { Input as ShadcnInput } from './components/shadcn/input'
 export { default as PkBoundary } from './components/Layout/PkBoundary.vue'
 

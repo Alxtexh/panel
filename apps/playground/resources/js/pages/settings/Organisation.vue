@@ -35,7 +35,10 @@ import { Label } from '@/components/ui/label';
  * relocate a screen people have bookmarked.
  */
 import { organisation as organisationPage } from '@/routes/panel/pages';
-import { update as updateOrganisation, uploadLogo } from '@/routes/panel/pages/organisation';
+import {
+    update as updateOrganisation,
+    uploadLogo,
+} from '@/routes/panel/pages/organisation';
 
 const props = defineProps<{
     organisation: {
@@ -46,9 +49,7 @@ const props = defineProps<{
 
 defineOptions({
     layout: {
-        breadcrumbs: [
-            { title: 'Organisation', href: organisationPage.url() },
-        ],
+        breadcrumbs: [{ title: 'Organisation', href: organisationPage.url() }],
     },
 });
 

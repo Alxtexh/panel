@@ -2,10 +2,10 @@
 import { usePage } from '@inertiajs/vue3'
 import { AppearanceDrawer, useAppearance } from '@panelkit/ui'
 import { computed } from 'vue'
-import AssistantDrawer from '@/components/AssistantDrawer.vue'
-import Breadcrumbs from '@/components/Breadcrumbs.vue'
+import AssistantDrawer from './AssistantDrawer.vue'
+import Breadcrumbs from './Breadcrumbs.vue'
 import CommandPalette from './CommandPalette.vue'
-import NotificationBell from './NotificationBell.vue'
+import NotificationBell from './PanelNotificationBell.vue'
 import { SidebarTrigger } from '@panelkit/ui'
 import type { BreadcrumbItem } from '../../types'
 

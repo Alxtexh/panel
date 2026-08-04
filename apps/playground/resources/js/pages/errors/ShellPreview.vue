@@ -12,8 +12,7 @@
  * reference app has its own chrome, so it is the one place that cannot
  * otherwise demonstrate the chrome the PACKAGE ships.
  */
-import { PanelShell } from '@panelkit/inertia'
-
+import { PanelShell } from '@panelkit/inertia';
 </script>
 
 <template>

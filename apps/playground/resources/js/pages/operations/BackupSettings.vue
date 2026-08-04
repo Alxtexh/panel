@@ -295,7 +295,6 @@ const telegramHalfDone = computed(
                         >
                     </template>
 
-
                     <div class="flex flex-col gap-3 p-4">
                         <div class="grid gap-3 sm:grid-cols-3">
                             <label class="flex flex-col gap-1">
@@ -399,7 +398,6 @@ const telegramHalfDone = computed(
                             >how long copies live</span
                         >
                     </template>
-
 
                     <div class="flex flex-col gap-3 p-4">
                         <div class="grid gap-3 sm:grid-cols-2">
@@ -506,7 +504,6 @@ const telegramHalfDone = computed(
                         >
                     </template>
 
-
                     <div class="flex flex-col gap-3 p-4">
                         <p class="text-xs text-muted-foreground">
                             A copy that only exists on this machine is not a
@@ -591,7 +588,6 @@ const telegramHalfDone = computed(
                             >who is told, and how</span
                         >
                     </template>
-
 
                     <div class="flex flex-col gap-4 p-4">
                         <label class="flex flex-col gap-1">
