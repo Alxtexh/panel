@@ -404,9 +404,12 @@ Illuminate\Support\Facades\Auth::login(
 
 $response = $kernel->handle($request);
 
-echo $response->getStatusCode(), ' ';
-echo str_contains((string) $response->getContent(), 'PanelDashboard') ? 'PanelDashboard' : 'no-component';
-echo PHP_EOL;
+$view = $response->getOriginalContent();
+$component = is_object($view) && method_exists($view, 'getData')
+    ? ($view->getData()['page']['component'] ?? 'no-page')
+    : 'not-a-view';
+
+echo $response->getStatusCode(), ' ', $component, PHP_EOL;
 HIT
 dashboard_result="$(php verify-dashboard.php 2>&1 | tail -1)"
 rm -f verify-dashboard.php
@@ -437,9 +440,18 @@ $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
 $response = $kernel->handle(Illuminate\Http\Request::create('/no-such-page', 'GET'));
 
-echo $response->getStatusCode(), ' ';
-echo str_contains((string) $response->getContent(), 'errors/Error') ? 'errors/Error' : 'framework-page';
-echo PHP_EOL;
+/*
+ * READ THE PAGE OBJECT, not the HTML. Inertia serialises it into a `data-page`
+ * attribute as JSON, where the component name appears as `errors\/Error` -
+ * escaped - so a substring search for the plain name says "framework page" for
+ * a response that is in fact the panel's.
+ */
+$view = $response->getOriginalContent();
+$component = is_object($view) && method_exists($view, 'getData')
+    ? ($view->getData()['page']['component'] ?? 'no-page')
+    : 'not-a-view';
+
+echo $response->getStatusCode(), ' ', $component, PHP_EOL;
 HIT
 error_result="$(php verify-error.php 2>&1 | tail -1)"
 rm -f verify-error.php
