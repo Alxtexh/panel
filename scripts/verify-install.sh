@@ -385,18 +385,30 @@ cat > verify-dashboard.php <<'HIT'
 <?php
 require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
-$user = (config('auth.providers.users.model'))::query()->first();
-Illuminate\Support\Facades\Auth::login($user);
+/*
+ * SIGNED IN THE WAY THE PREVIOUS STEP DID - through the session, not
+ * `Auth::login()`. The dashboard is behind the panel's auth middleware, and a
+ * login that is not on the request's session is a 302 to /login that reads as
+ * "the dashboard is missing".
+ */
+$request = Illuminate\Http\Request::create('/dashboard', 'GET');
+$request->setLaravelSession(app('session.store'));
 
-$response = $kernel->handle(Illuminate\Http\Request::create('/dashboard', 'GET'));
+Illuminate\Support\Facades\Auth::login(
+    (config('auth.providers.users.model'))::query()->firstOrFail()
+);
+
+$response = $kernel->handle($request);
 
 echo $response->getStatusCode(), ' ';
 echo str_contains((string) $response->getContent(), 'PanelDashboard') ? 'PanelDashboard' : 'no-component';
 echo PHP_EOL;
 HIT
-dashboard_result="$(php verify-dashboard.php 2>/dev/null | tail -1)"
+dashboard_result="$(php verify-dashboard.php 2>&1 | tail -1)"
 rm -f verify-dashboard.php
 
 case "$dashboard_result" in
@@ -419,6 +431,8 @@ cat > verify-error.php <<'HIT'
 <?php
 require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
 $response = $kernel->handle(Illuminate\Http\Request::create('/no-such-page', 'GET'));
@@ -427,7 +441,7 @@ echo $response->getStatusCode(), ' ';
 echo str_contains((string) $response->getContent(), 'errors/Error') ? 'errors/Error' : 'framework-page';
 echo PHP_EOL;
 HIT
-error_result="$(php verify-error.php 2>/dev/null | tail -1)"
+error_result="$(php verify-error.php 2>&1 | tail -1)"
 rm -f verify-error.php
 
 case "$error_result" in
