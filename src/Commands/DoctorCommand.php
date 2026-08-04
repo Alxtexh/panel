@@ -96,6 +96,7 @@ final class DoctorCommand extends Command
         $this->checkDiscovery($panels);
         $this->checkPageFiles();
         $this->checkStylesheet();
+        $this->checkUserHoldsRoles();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -832,6 +833,41 @@ final class DoctorCommand extends Command
      * A PROBLEM RATHER THAN A NOTE, because an unstyled panel is not usable and
      * the person looking at it has no way to tell this from a broken build.
      */
+    /**
+     * The user model can hold a role, or the panel denies everything.
+     *
+     * THE QUIETEST FAILURE THIS PACKAGE HAS. The permission tables migrate,
+     * `panel:permissions sync` creates every ability and an Administrator role
+     * that holds them all, and each of those steps reports success. But a stock
+     * `laravel/laravel` `User` has no `HasRoles`, so it has no `assignRole()`
+     * and no `hasPermission()`: the role exists and nobody can hold it, and
+     * every screen refuses the person who owns the installation. Nothing throws.
+     * Nothing logs. There is a panel that says no.
+     *
+     * `panel:install` ADDS THE TRAIT NOW, so this is for an installation that
+     * predates that, or one whose model was replaced since.
+     */
+    private function checkUserHoldsRoles(): void
+    {
+        $model = (string) config('auth.providers.users.model', 'App\\Models\\User');
+
+        if (! class_exists($model)) {
+            return;
+        }
+
+        if (method_exists($model, 'assignRole') && method_exists($model, 'hasPermission')) {
+            return;
+        }
+
+        $this->problem(
+            "{$model} cannot hold a role, so the panel denies everything",
+            'Add `use Spatie\\Permission\\Traits\\HasRoles;` to the model and `use HasRoles;` '
+            .'inside the class. Until then `panel:permissions sync` creates abilities nobody can '
+            .'be granted, and every resource, page and action refuses every operator - including '
+            .'whoever owns the installation. `panel:install` does this for you on a fresh app.',
+        );
+    }
+
     private function checkStylesheet(): void
     {
         $path = resource_path('css/app.css');

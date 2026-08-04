@@ -7,6 +7,7 @@ namespace PanelKit\Panel\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 use PanelKit\Panel\Support\PanelPages;
+use PanelKit\Panel\Support\UserRoles;
 
 /**
  * php artisan panel:install
@@ -39,6 +40,7 @@ final class InstallCommand extends Command
         $this->wireVite();
         $this->repointViews();
         $this->createDefaultPanel();
+        $this->wireRolesOntoUser();
         $this->writeDashboard();
         $this->writePageFiles();
 
@@ -302,6 +304,55 @@ final class InstallCommand extends Command
      * A view referencing an `app.js` that is still an entry is somebody else's
      * arrangement.
      */
+    /**
+     * The trait without which the panel denies everything.
+     *
+     * The reasoning, and why the editing lives in a class of its own rather
+     * than here, is in `Support\\UserRoles`. This is the wiring: find the
+     * configured model, add it, and say what happened either way.
+     *
+     * `panel:doctor` repeats the same finding on every run, so an installation
+     * whose model was replaced afterwards is never left wondering.
+     */
+    private function wireRolesOntoUser(): void
+    {
+        $model = (string) config('auth.providers.users.model', 'App\\Models\\User');
+        $path = UserRoles::pathFor($model, app_path());
+
+        if ($path === null) {
+            $this->components->warn(
+                "Could not find {$model} to add Spatie's HasRoles trait. Add it by hand, or the "
+                .'panel denies every ability to everybody, silently.'
+            );
+
+            return;
+        }
+
+        $source = file_get_contents($path);
+
+        if (UserRoles::present($source)) {
+            $this->components->twoColumnDetail('Already holds roles', class_basename($model));
+
+            return;
+        }
+
+        $updated = UserRoles::add($source);
+
+        if ($updated === null) {
+            $this->components->warn(
+                "Could not add HasRoles to {$model} automatically. Add `".UserRoles::IMPORT
+                .'` and `'.UserRoles::TRAIT.'` inside the class by hand, or the panel denies '
+                .'every ability to everybody, silently.'
+            );
+
+            return;
+        }
+
+        file_put_contents($path, $updated);
+
+        $this->components->twoColumnDetail('Added HasRoles to', class_basename($model));
+    }
+
     private function repointViews(): void
     {
         $root = resource_path('views');
