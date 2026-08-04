@@ -91,15 +91,37 @@ form, and fails with *"Could not read from remote repository"* on any machine
 with no SSH key — which reads like the repository is missing rather than like an
 authentication choice.
 
-The client half comes from a tarball built out of the monorepo:
+## The client half — read this, it is the step that strands people
+
+**The Composer package contains zero `.vue` files.** `panelkit/panel` answers
+requests with page names; the screens that resolve those names are the npm half,
+which is private and on no registry. A machine without that tarball installs the
+PHP package perfectly and renders **nothing**, with no error explaining why.
+
+The tarball is committed to the monorepo, one per release:
+
+```
+panelkit-reference/dist/panelkit-panel-0.8.3.tgz
+```
+
+Take it from there, or build your own — they are identical, `prepack` rebuilds
+before packing so a tarball can never carry a stale `dist/`:
 
 ```bash
 cd /path/to/panelkit-reference/packages/ui && npm pack --pack-destination /tmp
 ```
 
+Verify what you were given, because a tarball is the one artifact here that
+nothing else vouches for:
+
 ```bash
-# back in your application
-npm install /tmp/panelkit-panel-0.8.3.tgz @vitejs/plugin-vue
+sha256sum -c panelkit-reference/dist/CHECKSUMS.txt
+```
+
+Then, in your application:
+
+```bash
+npm install /path/to/panelkit-panel-0.8.3.tgz @vitejs/plugin-vue
 php artisan panel:install --auth
 php artisan panel:make-user
 npm run build && php artisan serve
@@ -551,6 +573,10 @@ php artisan config:cache && php artisan route:cache
 
 # Part 8 — Traps that cost hours
 
+- **The Composer package ships no `.vue` files.** If the panel installs and
+  renders nothing, the npm tarball is missing — it is private, on no registry,
+  and lives in the monorepo's `dist/`. Nothing about this failure says so: the
+  routes answer, the build succeeds, the screen is blank.
 - **Your app must be Inertia + Vue.** `laravel new myapp --vue`.
 - **The two `@source` lines** in `resources/css/app.css` are load-bearing.
   Tailwind does not scan `node_modules`; without them every utility used only
