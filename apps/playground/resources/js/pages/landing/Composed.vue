@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * The landing page, which now lives in `@panelkit/inertia`.
+ * The landing page, which now lives in `@panelkit/panel/inertia`.
  *
  * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
  * directory, so a screen living in node_modules is one it cannot find.
@@ -9,7 +9,7 @@
  * nothing else has to change - the controller, the presets and the editor stay
  * the package's.
  */
-import LandingPage from '@panelkit/inertia/pages/landing/Composed.vue';
+import LandingPage from '@panelkit/panel/pages/landing/Composed.vue';
 
 defineOptions({ inheritAttrs: false });
 </script>

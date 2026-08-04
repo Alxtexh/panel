@@ -11,7 +11,7 @@
  *
  * `execCommand` IS DEPRECATED AND USED ANYWAY. It is the only API that gives
  * correct selection-aware formatting across browsers without a 40kB editor
- * library, and @panelkit/ui takes no runtime dependencies (spec §4). The
+ * library, and @panelkit/panel takes no runtime dependencies (spec §4). The
  * deprecation is documented rather than dangerous - no browser has removed it,
  * and the day one does, this file changes and nothing else does, because the
  * value crossing the boundary is plain HTML.

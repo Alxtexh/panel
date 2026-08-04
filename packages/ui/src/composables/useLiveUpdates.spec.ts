@@ -25,7 +25,7 @@ import { useLiveUpdates, type LiveConfig } from './useLiveUpdates'
  * patch below is awaited, and the render count is Vue's own per-tick coalescing:
  * as close to "times the table re-rendered" as a unit test gets.
  *
- * THIS IS THE FIRST TEST IN `@panelkit/ui`. The package had none - every test in
+ * THIS IS THE FIRST TEST IN `@panelkit/panel`. The package had none - every test in
  * the project was PHPUnit, so nothing client-side had ever been asserted.
  */
 describe('useLiveUpdates batching', () => {

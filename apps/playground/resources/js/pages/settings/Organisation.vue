@@ -17,9 +17,9 @@
 // Generated from the routes: a renamed endpoint breaks the build rather
 // than leaving this form posting at a 404.
 import { Head, router, useForm } from '@inertiajs/vue3';
-import type { UploadedFileValue } from '@panelkit/ui';
-import { PkFileUpload } from '@panelkit/ui';
-import { PkButton as Button } from '@panelkit/ui';
+import type { UploadedFileValue } from '@panelkit/panel';
+import { PkFileUpload } from '@panelkit/panel';
+import { PkButton as Button } from '@panelkit/panel';
 import { ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import Heading from '@/components/Heading.vue';

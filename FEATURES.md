@@ -30,7 +30,7 @@ Counts here are class and file counts taken from the tree, not from memory.
 
 ## Part 1 — the package
 
-`composer require panelkit/panel` + `npm i @panelkit/ui @panelkit/inertia`.
+`composer require panelkit/panel` + `npm i @panelkit/panel`.
 
 ### The core idea
 
@@ -256,7 +256,7 @@ renders blank. Every check in it exists because the
 failure it finds is **silent** — a working panel serving wrong or unprotected
 data, where every page returns 200 and every test passes.
 
-### Screens (`@panelkit/inertia`)
+### Screens (`@panelkit/panel/inertia`)
 
 `ResourceIndex` `ResourceForm` `ResourceView` `Trash` `PanelHome`
 `PanelDashboard` `Changelog` `Environment` `TicketAnalysis` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
@@ -343,7 +343,7 @@ record) passes `items` instead. An **impersonation banner** at the top of the
 main column, driven by the `Impersonation` service that had been in the package
 since v0.2 with nothing packaged ever displaying it — no close button, because
 forgetting you are wearing another account is the danger. A **bottom navigation
-bar** on phones, since `PkBottomNav` shipped in `@panelkit/ui` and nothing
+bar** on phones, since `PkBottomNav` shipped in `@panelkit/panel` and nothing
 mounted it, leaving every consumer's handset with a hamburger at the top of the
 screen. And **flyout labels** on the collapsed rail, because the native tooltip
 takes about a second — long enough that people expand the sidebar again.
@@ -368,7 +368,7 @@ operator's, which is the customer's, the two ticket table names — and, for
 announcements, one line in `panel.plugins`.
 
 **Three landing designs** — Aurora, Editorial, Console, composed from a section
-library in `@panelkit/ui`, editable from the admin as stored blocks. All of it
+library in `@panelkit/panel`, editable from the admin as stored blocks. All of it
 ships: the sections, the three compositions, the page that renders them, the
 route (off by default — `panel.landing.route` — because `/` is the URL an
 application is most likely to have its own plans for), and the block editor.

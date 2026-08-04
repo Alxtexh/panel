@@ -21,7 +21,7 @@
  *
  * THE COLOURS ARE TOKENS, not values - `bg-primary`, `text-destructive` - so
  * the button takes the consuming application's theme rather than imposing this
- * one. `@panelkit/ui/theme/tokens.css` defines them for an application that has
+ * one. `@panelkit/panel/theme/tokens.css` defines them for an application that has
  * none.
  *
  * `as` RATHER THAN `asChild`. Inertia's `Link` renders its own element, so the
@@ -31,7 +31,7 @@
  *
  * `as-child` IS NOT A PROP HERE, ON PURPOSE - and that omission is worth
  * stating because it was passed anyway at three call sites in
- * `@panelkit/inertia`, expecting reka-ui's slot-merging behaviour this
+ * `@panelkit/panel/inertia`, expecting reka-ui's slot-merging behaviour this
  * component does not have. Vue's attribute fallthrough rendered it as an
  * inert `as-child=""` attribute on a real `<button>`, with the `<Link>` in
  * the default slot rendering as an `<a>` INSIDE it - two interactive elements

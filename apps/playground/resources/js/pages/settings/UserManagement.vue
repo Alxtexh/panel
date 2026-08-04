@@ -36,7 +36,7 @@ import {
     usePage,
 } from '@inertiajs/vue3';
 import { Plus, ShieldAlert, Trash2, TriangleAlert } from '@lucide/vue';
-import type { RecordActionGroup, RecordActionItem } from '@panelkit/ui';
+import type { RecordActionGroup, RecordActionItem } from '@panelkit/panel';
 import {
     BulkActions,
     DataTable,
@@ -44,8 +44,8 @@ import {
     RecordActions,
     SelectionBar,
     PkModal,
-} from '@panelkit/ui';
-import { PkButton as Button } from '@panelkit/ui';
+} from '@panelkit/panel';
+import { PkButton as Button } from '@panelkit/panel';
 import { computed, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 // Generated from the routes, so a rename breaks the build rather than leaving

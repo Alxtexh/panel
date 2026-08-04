@@ -8,7 +8,7 @@
  * reality when a crawler or a prefetch touches it.
  */
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { PkButton as Button } from '@panelkit/ui';
+import { PkButton as Button } from '@panelkit/panel';
 import { toast } from 'vue-sonner';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';

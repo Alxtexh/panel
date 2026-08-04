@@ -6,7 +6,7 @@ spirit of FilamentPHP, but SPA-fast and with a fraction of the runtime overhead.
 **Hand this document to a coding agent as-is.** It assumes no other context.
 
 > **Rename before you start.** This spec uses the placeholder name `PanelKit`, the Composer
-> package `panelkit/panel`, and the npm package `@panelkit/ui`. Replace all three with your own
+> package `panelkit/panel`, and the npm package `@panelkit/panel`. Replace all three with your own
 > naming everywhere before generating code.
 
 ---
@@ -189,7 +189,7 @@ panelkit/
 │  │  ├─ config/panel.php
 │  │  └─ composer.json
 │  │
-│  └─ ui/                           # npm package: @panelkit/ui
+│  └─ ui/                           # npm package: @panelkit/panel
 │     ├─ src/
 │     │  ├─ components/
 │     │  │  ├─ DataTable/           # the single most important component
@@ -227,7 +227,7 @@ Both packages are consumed by the playground through local path references:
 ```
 ```json
 // apps/playground/package.json
-"dependencies": { "@panelkit/ui": "file:../../packages/ui" }
+"dependencies": { "@panelkit/panel": "file:../../packages/ui" }
 ```
 
 ### Two portability rules that must never be broken

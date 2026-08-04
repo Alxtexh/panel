@@ -1,5 +1,5 @@
 /**
- * This family lives in `@panelkit/ui` now.
+ * This family lives in `@panelkit/panel` now.
  *
  * RE-EXPORTED RATHER THAN DELETED because the import path appears in dozens of
  * this application's own screens, and because ONE COPY IS THE WHOLE POINT: the
@@ -8,4 +8,4 @@
  * what happened when the shell moved and this file still held the old ones -
  * `AppSidebar` threw in setup and the whole page rendered blank.
  */
-export * from '@panelkit/ui';
+export * from '@panelkit/panel';

@@ -35,7 +35,7 @@ export default defineConfig({
         // forces a single instance.
         //
         // `@inertiajs/vue3` IS HERE FOR THE SAME REASON AND WAS MISSING IT.
-        // The panel screens moved into packages/inertia, which is symlinked and
+        // The panel screens moved into packages/ui/inertia, which is symlinked and
         // carries its own copy - so the packaged pages called `usePage` and
         // `useForm` against a DIFFERENT Inertia instance from the one
         // `createInertiaApp` installed. Server-side rendering died on it with
@@ -48,7 +48,7 @@ export default defineConfig({
         // local checkout will do.
         dedupe: ['vue', '@inertiajs/vue3'],
         /*
-         * `@panelkit/ui` IS COMPILED FROM SOURCE HERE, not from its `dist`.
+         * `@panelkit/panel` IS COMPILED FROM SOURCE HERE, not from its `dist`.
          *
          * The package builds now - it has to, because roughly fifty of its
          * shadcn components declare `defineProps<SomeImportedType>()` and a
@@ -62,12 +62,38 @@ export default defineConfig({
          * So the monorepo compiles the source and `scripts/verify-install.sh`
          * exercises the built tarball. Each half is checked by the thing that
          * can actually see it.
+         *
+         * AN ARRAY, AND THE ORDER IS LOAD-BEARING. Vite matches a string alias
+         * against the specifier AND everything under it, so the bare entry
+         * swallowed `@panelkit/panel/pages/…` and asked for a directory named
+         * `index.ts`. The subpaths have to be found first, and they resolve to
+         * `inertia/` rather than `src/` because that is where the screens are:
+         * one package, two halves, and only the first is compiled.
          */
-        alias: {
-            '@panelkit/ui': fileURLToPath(
-                new URL('../../packages/ui/src/index.ts', import.meta.url),
-            ),
-        },
+        alias: [
+            {
+                find: /^@panelkit\/panel\/(pages|components|composables)\//,
+                replacement:
+                    fileURLToPath(
+                        new URL('../../packages/ui/inertia/', import.meta.url),
+                    ) + '$1/',
+            },
+            {
+                find: '@panelkit/panel/inertia',
+                replacement: fileURLToPath(
+                    new URL(
+                        '../../packages/ui/inertia/index.ts',
+                        import.meta.url,
+                    ),
+                ),
+            },
+            {
+                find: '@panelkit/panel',
+                replacement: fileURLToPath(
+                    new URL('../../packages/ui/src/index.ts', import.meta.url),
+                ),
+            },
+        ],
     },
     plugins: [
         laravel({

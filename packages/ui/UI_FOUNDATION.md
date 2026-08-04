@@ -27,7 +27,7 @@ That single fact rules on half the list before any comparison of components:
 ## The decision
 
 **Reka UI primitives + shadcn-style components we own + Tailwind tokens,
-all living in `@panelkit/ui`.**
+all living in `@panelkit/panel`.**
 
 It is the **Enterprise Workhorse** because:
 
@@ -47,7 +47,7 @@ theme engine loaded on first paint.
 
 ## The rule this creates
 
-**One copy of every shared component, in `@panelkit/ui`.** Not a copy in the
+**One copy of every shared component, in `@panelkit/panel`.** Not a copy in the
 playground, not a near-copy in a generated portal. Where a component exists in
 both places today, the package version is the survivor and the application
 imports it. The same rule holds for shared functions: a helper that two screens
@@ -77,5 +77,5 @@ behaviour.
 So the right finish is **per-pair migration with the call sites read**, not a
 sed. The rule stands — one copy of every shared component, in the package —
 but reaching it means moving the *application's* implementation into
-`@panelkit/ui` where the package's version is the thinner one, rather than
+`@panelkit/panel` where the package's version is the thinner one, rather than
 forcing every screen onto a primitive that was scoped for packaged use.

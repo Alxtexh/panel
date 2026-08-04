@@ -8,7 +8,7 @@
  * this application's: the account menu's ITEMS, which link to its settings
  * centre, its operations screen and its lock screen.
  */
-import { AppSidebar } from '@panelkit/inertia';
+import { AppSidebar } from '@panelkit/panel/inertia';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 </script>
 

@@ -1,8 +1,51 @@
 # Changelog
 
 Versioning policy, and what counts as a breaking change, are in
-[UPGRADING.md](UPGRADING.md). The three packages — `panelkit/panel`,
-`@panelkit/ui`, `@panelkit/inertia` — are versioned together.
+[UPGRADING.md](UPGRADING.md). The two packages — `panelkit/panel` on Composer
+and `@panelkit/panel` on npm — are versioned together. Entries before 0.8.0 name
+three, which is what there were.
+
+## 0.8.0
+
+**One npm package.** `@panelkit/ui` and `@panelkit/inertia` are now
+`@panelkit/panel`. The install is four commands:
+
+```bash
+composer require panelkit/panel
+npm install @panelkit/panel
+php artisan panel:install --auth
+npm run build
+```
+
+Two packages that must be installed together, at matching versions, are two
+chances to install one — and the failure mode of getting it half right was a
+route that answers and a component the client cannot resolve. Filament needs no
+npm step at all because it renders Blade on the server; we send a schema once and
+render on the client, so a bundle is unavoidable. What was avoidable was making
+it two.
+
+**The split is kept, as subpath exports rather than as separate packages.**
+`@panelkit/panel` is the rendering layer and still imports no HTTP client and no
+Inertia; `@panelkit/panel/inertia` is still the screens. Nothing was renamed
+inside either. The two halves ship differently for a reason that has not
+changed: the components are compiled, because a Vue SFC cannot resolve a type
+imported into `defineProps` across a package boundary, and the screens ship as
+source so you can read the one you are about to override.
+
+**`panel:update` repoints your stylesheet.** The `@source` lines naming the old
+packages are rewritten to the new one. This is the single upgrade step that
+could not fail loudly: they are strings in a CSS file, nothing resolves them, and
+a stale one makes Tailwind purge every utility used only inside the packaged
+screens — a panel with no layout and a clean build log.
+
+### Breaking
+
+- `@panelkit/ui` → `@panelkit/panel`
+- `@panelkit/inertia` → `@panelkit/panel/inertia`
+- `@panelkit/inertia/pages/…`, `/components/…`, `/composables/…` →
+  `@panelkit/panel/pages/…`, `/components/…`, `/composables/…`
+
+[UPGRADING.md](UPGRADING.md#073--080) has the sequence.
 
 ## 0.7.3
 

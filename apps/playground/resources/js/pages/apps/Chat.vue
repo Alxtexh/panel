@@ -18,7 +18,7 @@
  */
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { Search, Send } from '@lucide/vue';
-import { useLiveUpdates } from '@panelkit/ui';
+import { useLiveUpdates } from '@panelkit/panel';
 import { computed, nextTick, ref, watch } from 'vue';
 
 interface Conversation {

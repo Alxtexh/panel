@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 
 /**
- * Guards the CSS build against silently purging @panelkit/ui.
+ * Guards the CSS build against silently purging @panelkit/panel.
  *
  * antipatterns.md §6.1 is this exact incident: the CSS build did not scan a
  * source directory, its utilities were purged, and the failure was invisible

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The panel's TicketAnalysis screen, from @panelkit/inertia.
+ * The panel's TicketAnalysis screen, from @panelkit/panel/inertia.
  *
  * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
  * directory, so a screen living in node_modules is one it cannot find.
@@ -11,7 +11,7 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import TicketAnalysis from '@panelkit/inertia/pages/TicketAnalysis.vue';
+import TicketAnalysis from '@panelkit/panel/pages/TicketAnalysis.vue';
 
 defineOptions({ inheritAttrs: false });
 </script>

@@ -10,16 +10,19 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.7.0"
+"panelkit/panel": "^0.8.0"
 ```
 
-Composer reads `^0.7.0` on a `0.x` package as `>=0.7.0 <0.8.0`, which is what you
+Composer reads `^0.8.0` on a `0.x` package as `>=0.8.0 <0.9.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
-The three packages are **versioned together**. `panelkit/panel@0.2.0` expects
-`@panelkit/ui@0.2.x` and `@panelkit/inertia@0.2.x`, and the PHP half's schema
-payload is the contract between them. Mixing majors is not tested and the
-failure is a rendered screen with a missing control, not an error.
+The two packages are **versioned together**. `panelkit/panel@0.8.0` expects
+`@panelkit/panel@0.8.x` on npm, and the PHP half's schema payload is the
+contract between them. Mixing majors is not tested and the failure is a rendered
+screen with a missing control, not an error.
+
+(There were three until 0.8.0, when the two npm packages became one. Notes for
+releases before that name them as they were.)
 
 ## What counts as breaking
 
@@ -29,7 +32,7 @@ failure is a rendered screen with a missing control, not an error.
 - a schema key changing shape (the JSON the PHP half sends the Vue half)
 - a config key moving or changing default
 - a published migration changing (you will need a new one; we do not edit shipped migrations)
-- a Vue component's props changing, if it is exported from `@panelkit/ui`
+- a Vue component's props changing, if it is exported from `@panelkit/panel`
 
 **Not breaking** — expect these in a patch:
 
@@ -43,7 +46,7 @@ failure is a rendered screen with a missing control, not an error.
 
 ```bash
 composer update panelkit/panel
-npm update @panelkit/ui @panelkit/inertia
+npm update @panelkit/panel
 php artisan panel:update
 php artisan wayfinder:generate --with-form
 npm run build
@@ -61,12 +64,13 @@ That happened for real: 0.2.0 added `settings/Roles`, the page file came from
 exists because a package that ships screens has to ship the step that reconciles
 them.
 
-It does four things and refuses a fifth:
+It does a short list of things, and refuses one:
 
 |                                                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **invalidates** the schema cache                                                               | the fingerprint is computed from your resource class, which did not change — so without this, a release that adds a key to the payload serves last version's shape to a bundle rebuilt for the new one, as a successful 200                                                                                                                                                                                                                                   |
 | **writes** page files for screens this version routes and the last one did not                 | adding a missing file cannot lose data                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **repoints** the `@source` lines in `resources/css/app.css` when a release renames the npm package | 0.8.0 merged two packages into one, and these are strings in a CSS file that nothing resolves. A stale one makes Tailwind scan a directory that is gone, find no class names, and purge every utility used only inside the packaged screens — a panel with no layout and a clean build log |
 | **reports** pending migrations, **by name**                                                    | "3 pending" does not distinguish a column default from a table rewrite at 2am — that decision is the deploy owner's                                                                                                                                                                                                                                                                                                                                           |
 | **reports** plugins this version ships that your published `config/panel.php` does not install | the package's config is merged into yours _key by key_, so a setting added inside an array you publish arrives on its own. A **list** does not merge — shortening `abilities` is a decision, and unioning `plugins` back would reinstall what you removed — so a plugin added to the packaged list after you published reaches nobody, silently. That is how `TicketingPlugin` shipped to a release of installations that could configure it and never see it |
 | **refreshes** `AGENTS.md`                                                                      | so an agent working in your repository is told what this version added, rather than the last one                                                                                                                                                                                                                                                                                                                                                              |
@@ -107,6 +111,51 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.7.3 → 0.8.0
+
+**The two npm packages became one.** `@panelkit/ui` and `@panelkit/inertia` are
+now `@panelkit/panel`, with the same split kept as subpath exports. This is the
+only breaking change in the release, and it is entirely mechanical.
+
+```bash
+npm uninstall @panelkit/ui @panelkit/inertia
+npm install @panelkit/panel
+composer update panelkit/panel
+php artisan panel:update
+npm run build
+```
+
+Then rewrite your imports:
+
+| Was | Now |
+| --- | --- |
+| `@panelkit/ui` | `@panelkit/panel` |
+| `@panelkit/inertia` | `@panelkit/panel/inertia` |
+| `@panelkit/inertia/pages/…` | `@panelkit/panel/pages/…` |
+| `@panelkit/inertia/components/…` | `@panelkit/panel/components/…` |
+| `@panelkit/inertia/composables/…` | `@panelkit/panel/composables/…` |
+
+Nothing renamed inside those entry points: the same components are exported
+under the same names, and the split is unchanged — `@panelkit/panel` still
+imports no HTTP client and no Inertia, and `@panelkit/panel/inertia` is still
+the screens. What changed is that one `npm install` gets you both.
+
+**Your stylesheet's `@source` lines move with it.** `panel:update` rewrites them
+if you have not edited that block; if you have, the two lines are now:
+
+```css
+@source '../../node_modules/@panelkit/panel/dist/**/*.js';
+@source '../../node_modules/@panelkit/panel/inertia/**/*.{vue,ts}';
+```
+
+Miss these and Tailwind purges every utility the packaged screens use — the
+panel renders unstyled, with no error anywhere.
+
+**Why.** Two packages that must be installed together, at matching versions, are
+two chances to install one. The install is now `composer require panelkit/panel`,
+`npm install @panelkit/panel`, `php artisan panel:install --auth`, `npm run
+build`.
 
 ### 0.7.2 → 0.7.3
 

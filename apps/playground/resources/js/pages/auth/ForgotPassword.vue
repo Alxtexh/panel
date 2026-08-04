@@ -6,7 +6,7 @@
  * the same form twice, differing only in which `Input` component it imported.
  * See `auth/Login.vue` for why `layout: null`.
  */
-import { ForgotPassword } from '@panelkit/inertia';
+import { ForgotPassword } from '@panelkit/panel/inertia';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 

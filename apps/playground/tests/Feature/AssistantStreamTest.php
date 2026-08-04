@@ -67,7 +67,7 @@ final class AssistantStreamTest extends TestCase
          */
         $this->assertStringContainsString(
             'AssistantDrawer',
-            file_get_contents(base_path('../../packages/inertia/src/components/shell/AppSidebarHeader.vue')),
+            file_get_contents(base_path('../../packages/ui/inertia/components/shell/AppSidebarHeader.vue')),
             'The topbar no longer mounts the assistant, so nothing can open it.',
         );
     }

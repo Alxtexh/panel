@@ -4,7 +4,7 @@
  *
  * WHY IT STILL EXISTS. Two files owned "the theme" and wrote to different
  * localStorage keys - this one to `appearance` (light/dark only) and
- * @panelkit/ui to `panelkit.appearance` (scheme, accent, surface, density, text
+ * @panelkit/panel to `panelkit.appearance` (scheme, accent, surface, density, text
  * size, navigation side). Both ran, so the last writer won and the panel's
  * settings appeared to reset themselves. The visible symptom was that a theme
  * survived a page change but not a sign-out and back in.
@@ -12,8 +12,8 @@
  * Rather than delete it and chase every import, it now delegates: there is one
  * source of truth, and the settings page's light/dark tabs keep working.
  */
-import { useAppearance as usePanelAppearance } from '@panelkit/ui';
-import type { Theme } from '@panelkit/ui';
+import { useAppearance as usePanelAppearance } from '@panelkit/panel';
+import type { Theme } from '@panelkit/panel';
 import type { ComputedRef, Ref } from 'vue';
 import { computed } from 'vue';
 

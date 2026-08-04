@@ -254,7 +254,7 @@ final class PanelShellRenderTest extends DuskTestCase
     /**
      * THE PHONE GETS A BOTTOM BAR, and the desktop does not get two navigations.
      *
-     * `PkBottomNav` shipped in `@panelkit/ui` and nothing in the package ever
+     * `PkBottomNav` shipped in `@panelkit/panel` and nothing in the package ever
      * mounted it, so every consumer's handset got a hamburger at the top of the
      * screen - the part of a phone a thumb reaches least.
      */

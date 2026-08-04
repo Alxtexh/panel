@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** The packaged screen - see `auth/Login.vue`. */
-import { LockScreen } from '@panelkit/inertia';
+import { LockScreen } from '@panelkit/panel/inertia';
 
 defineProps<{ status?: string }>();
 </script>

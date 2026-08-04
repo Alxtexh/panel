@@ -245,7 +245,7 @@ final class Guide
                 'title' => 'Installation',
                 'summary' => 'What has to exist before the first panel does.',
                 'body' => [
-                    'PanelKit needs PHP 8.4, Laravel 12 or 13, and Inertia with Vue 3. Three packages: `panelkit/panel` on the server, `@panelkit/inertia` for the screens it renders, and `@panelkit/ui` for the table and the form underneath them. All three are required - the server package alone answers requests with page names nothing can resolve.',
+                    'PanelKit needs PHP 8.4, Laravel 12 or 13, and Inertia with Vue 3. Two packages: `panelkit/panel` on the server, and `@panelkit/panel` on npm for the screens it renders and the table and form underneath them. Both are required - the server package alone answers requests with page names nothing can resolve.',
                     'The install command publishes the config, registers the service provider if package discovery has not, writes one page file per screen into `resources/js/pages`, and prints what it did not do. Those page files exist because Inertia resolves a page name by globbing that directory, so a screen living in `node_modules` is one it cannot find. Each is a single line, and each is where you replace that screen with your own.',
                     'Read the install output: it names the decisions the package refuses to make for you, chiefly the tenancy mode.',
                     'Tenancy is the one thing to settle before writing a resource. `column` shares one database and scopes by a tenant column; `database` gives each tenant their own and the panel adds no column at all; `hybrid` allows both at once. Changing modes later means changing every query the panel builds, so this is a decision worth ten minutes now.',
@@ -253,7 +253,7 @@ final class Guide
                 'blocks' => [
                     [
                         'kind' => 'shell',
-                        'code' => "composer require panelkit/panel\nnpm install @panelkit/ui @panelkit/inertia\n\n# Publishes config, and writes the five page files\nphp artisan panel:install\n\n# What it publishes, and what it deliberately leaves to you\nphp artisan panel:doctor",
+                        'code' => "composer require panelkit/panel\nnpm install @panelkit/panel\n\n# Publishes config, and writes the five page files\nphp artisan panel:install\n\n# What it publishes, and what it deliberately leaves to you\nphp artisan panel:doctor",
                     ],
                     [
                         'kind' => 'php',
@@ -644,7 +644,7 @@ final class Guide
                     ],
                     [
                         'kind' => 'text',
-                        'code' => "// resources/js/app.ts\nimport { registerFieldControl } from '@panelkit/ui'\nimport SignaturePad from './fields/SignaturePad.vue'\n\nregisterFieldControl('signature-pad', SignaturePad)",
+                        'code' => "// resources/js/app.ts\nimport { registerFieldControl } from '@panelkit/panel'\nimport SignaturePad from './fields/SignaturePad.vue'\n\nregisterFieldControl('signature-pad', SignaturePad)",
                     ],
                 ],
                 'warning' => 'An option-bearing field must override `resolveOptions()`. `Field` returns null - "no options" - and the control then renders with nothing to choose, on a form that otherwise looks complete.',

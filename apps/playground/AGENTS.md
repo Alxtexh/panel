@@ -79,7 +79,7 @@ written, so the tree is the wrong place to look:
 | You are looking for | It is NOT in | It is in |
 |---|---|---|
 | the root view, `app.ts`, the layout | `vendor/panelkit/panel/resources/views` | `resources/stubs/*.stub`, **published into your app** by `panel:install` |
-| the screens (`ResourceIndex`, `auth/Login`, …) | the PHP package at all | `@panelkit/inertia` in `node_modules`, **mirrored** into `resources/js/pages` |
+| the screens (`ResourceIndex`, `auth/Login`, …) | the PHP package at all | `@panelkit/panel/inertia` in `node_modules`, **mirrored** into `resources/js/pages` |
 | sign-in routes | the package's routes | `routes/panel-*-auth.php` in YOUR app, written by `--auth` |
 
 **`resources/views` holds one file** - the tenant-suspension wall - and
@@ -636,7 +636,7 @@ _How to use them: **declare them on a `DashboardPage`, which is what draws them.
 _How to use them: extend `Page` (or `DashboardPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._
 **Ticketing** (3): `MyTicketResource` `TicketResource` `TicketingPlugin`
 _How to use them: do not name these directly - `TicketingPlugin` mounts them from `panel.ticketing.operator` / `.opener`. See the recipe._
-**Client-side components** (`@panelkit/ui`, no PHP equivalent): `StatStrip`
+**Client-side components** (`@panelkit/panel`, no PHP equivalent): `StatStrip`
 `MiniStatCard` `SegmentedBar` `HeatmapChart` `ComboChart` `PolarAreaChart`
 `RadarChart` `SetupChecklist`
 _How to reach them: import them into YOUR OWN Vue page. `DashboardPage`

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { buttonClasses } from '@panelkit/ui';
+import { buttonClasses } from '@panelkit/panel';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Separator } from '@/components/ui/separator';

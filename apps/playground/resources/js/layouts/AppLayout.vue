@@ -12,8 +12,8 @@
  * different styling.
  */
 import { router, usePage } from '@inertiajs/vue3';
-import { PkBottomNav, PkModal, useAppearance } from '@panelkit/ui';
-import type { BottomNavItem } from '@panelkit/ui';
+import { PkBottomNav, PkModal, useAppearance } from '@panelkit/panel';
+import type { BottomNavItem } from '@panelkit/panel';
 import { computed, ref } from 'vue';
 import SessionExpired from '@/components/SessionExpired.vue';
 import AppHorizontalLayout from '@/layouts/app/AppHorizontalLayout.vue';

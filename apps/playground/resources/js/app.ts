@@ -1,13 +1,16 @@
 /*
  * IMPORTED FOR ITS SIDE EFFECT, and first, so `window.Echo` exists before any
- * page mounts. `@panelkit/ui` reads that global - it ships no Echo import of its
+ * page mounts. `@panelkit/panel` reads that global - it ships no Echo import of its
  * own, which is what lets the same components run without a socket at all.
  */
 import './echo';
 
 import { createInertiaApp, router } from '@inertiajs/vue3';
-import { registerRenderHookComponent, TicketThread } from '@panelkit/inertia';
-import { initializeAppearance, setAppearancePersister } from '@panelkit/ui';
+import { initializeAppearance, setAppearancePersister } from '@panelkit/panel';
+import {
+    registerRenderHookComponent,
+    TicketThread,
+} from '@panelkit/panel/inertia';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
@@ -19,7 +22,7 @@ import {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-/** Auth screens that now come from `@panelkit/inertia` - see the resolver. */
+/** Auth screens that now come from `@panelkit/panel/inertia` - see the resolver. */
 const PACKAGED_AUTH = [
     'auth/Login',
     'auth/ForgotPassword',
@@ -44,7 +47,7 @@ const PACKAGED_AUTH = [
  * else's package.
  *
  * THE COMPONENT ITSELF NOW COMES FROM THE PACKAGE, and the indirection is
- * unchanged by that: `@panelkit/inertia` exports it, this file decides the
+ * unchanged by that: `@panelkit/panel/inertia` exports it, this file decides the
  * name resolves to it, and swapping in a local one is still a one-line edit.
  */
 registerRenderHookComponent('TicketThread', TicketThread);
@@ -148,7 +151,7 @@ createInertiaApp({
             /*
              * THE PACKAGED AUTH SCREENS BRING THEIR OWN LAYOUT.
              *
-             * `@panelkit/inertia` renders `AuthLayout` inside each screen,
+             * `@panelkit/panel/inertia` renders `AuthLayout` inside each screen,
              * because a fresh installation has no layout of its own to apply -
              * so wrapping them again here gives two headings and two theme
              * toggles. The pages named below are thin wrappers over the

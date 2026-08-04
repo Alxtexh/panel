@@ -80,7 +80,7 @@ final class FeaturesDocumentTest extends TestCase
     public function test_the_component_counts_are_accurate(): void
     {
         $package = $this->measure('packages/ui/src', 'vue')['files']
-            + $this->measure('packages/inertia/src', 'vue')['files'];
+            + $this->measure('packages/ui/inertia', 'vue')['files'];
 
         $demo = $this->measure('apps/playground/resources/js', 'vue')['files'];
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The panel's Roles screen, from @panelkit/inertia.
+ * The panel's Roles screen, from @panelkit/panel/inertia.
  *
  * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
  * directory, so a screen living in node_modules is one it cannot find.
@@ -19,7 +19,7 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import Roles from '@panelkit/inertia/pages/settings/Roles.vue';
+import Roles from '@panelkit/panel/pages/settings/Roles.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 defineOptions({ inheritAttrs: false, layout: AppLayout });

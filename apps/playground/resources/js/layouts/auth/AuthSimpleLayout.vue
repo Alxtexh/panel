@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
-import { ThemeToggle } from '@panelkit/ui';
+import { ThemeToggle } from '@panelkit/panel';
 
 import { computed } from 'vue';
 

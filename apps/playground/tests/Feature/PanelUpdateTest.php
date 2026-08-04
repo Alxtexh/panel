@@ -54,7 +54,7 @@ final class PanelUpdateTest extends TestCase
             );
 
             $this->assertStringContainsString(
-                '@panelkit/inertia/pages/'.$this->screen.'.vue',
+                '@panelkit/panel/pages/'.$this->screen.'.vue',
                 (string) file_get_contents($path),
                 'The written file does not import the packaged component.',
             );
@@ -65,6 +65,59 @@ final class PanelUpdateTest extends TestCase
             if ($original !== null) {
                 file_put_contents($path, $original);
             }
+        }
+    }
+
+    /**
+     * THE RENAME REACHES THE STYLESHEET, which is the only place it cannot fail
+     * loudly.
+     *
+     * 0.8.0 merged the two npm packages into `@panelkit/panel`. Every import is
+     * caught by the build; these two lines are strings in a CSS file that
+     * nothing resolves. Left stale, Tailwind scans a directory that is no longer
+     * there, finds no class names, and purges every utility used only inside the
+     * packaged screens - a panel with no layout, no colour and a clean build log.
+     *
+     * THE FILE IS RESTORED WHATEVER HAPPENS. This writes to the reference app's
+     * own stylesheet, and leaving a mangled one behind would retheme every
+     * subsequent test in the process.
+     */
+    public function test_it_repoints_a_stylesheet_left_on_the_old_package_names(): void
+    {
+        $path = resource_path('css/app.css');
+        $original = (string) file_get_contents($path);
+
+        try {
+            file_put_contents($path, implode("\n", [
+                "@import 'tailwindcss';",
+                "@source '../../node_modules/@panelkit/ui/dist/**/*.js';",
+                "@source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';",
+                '',
+            ]));
+
+            Artisan::call('panel:update');
+
+            $updated = (string) file_get_contents($path);
+
+            $this->assertStringContainsString(
+                "@source '../../node_modules/@panelkit/panel/dist/**/*.js';",
+                $updated,
+            );
+            $this->assertStringContainsString(
+                "@source '../../node_modules/@panelkit/panel/inertia/**/*.{vue,ts}';",
+                $updated,
+            );
+
+            // Not appended alongside the old ones - a stylesheet scanning a
+            // directory that does not exist is the failure being fixed.
+            $this->assertStringNotContainsString('@panelkit/ui', $updated);
+            $this->assertStringNotContainsString('@panelkit/inertia', $updated);
+
+            // And it is idempotent: a second run has nothing to change.
+            Artisan::call('panel:update');
+            $this->assertSame($updated, (string) file_get_contents($path));
+        } finally {
+            file_put_contents($path, $original);
         }
     }
 

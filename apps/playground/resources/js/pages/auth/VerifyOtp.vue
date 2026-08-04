@@ -7,7 +7,7 @@
  * the mobile keyboard hints and the Turnstile field all live in the package,
  * because none of that is specific to who is asking for a code.
  */
-import { VerifyOtp } from '@panelkit/inertia';
+import { VerifyOtp } from '@panelkit/panel/inertia';
 
 defineProps<{
     sentTo?: string | null;

@@ -116,8 +116,8 @@ final class InstallStylesheetTest extends TestCase
 
         $css = File::get($this->path);
 
-        $this->assertStringContainsString('@panelkit/ui', $css);
-        $this->assertStringContainsString('@panelkit/inertia', $css);
+        $this->assertStringContainsString('@panelkit/panel', $css);
+        $this->assertStringContainsString('@panelkit/panel/inertia', $css);
         $this->assertStringContainsString('--background', $css);
     }
 
@@ -141,15 +141,16 @@ final class InstallStylesheetTest extends TestCase
         /*
          * And Tailwind now reaches the packaged components.
          *
-         * `ui` IS SCANNED AT `dist` AND `inertia` AT `src`, because they ship
-         * differently: `@panelkit/ui` is compiled, so its class names are
-         * string literals in the built render functions. Asserting the exact
-         * path rather than just the package name is the point - the two got out
-         * of step once already, and a stylesheet that scans a directory the
-         * package no longer ships purges every utility in it.
+         * ONE PACKAGE, SCANNED IN TWO PLACES, because its two halves ship
+         * differently: `dist` is compiled, so its class names are string
+         * literals in the built render functions, while `inertia` ships raw so
+         * consumers can override a screen. Asserting the exact path rather than
+         * just the package name is the point - the two got out of step once
+         * already, and a stylesheet that scans a directory the package no
+         * longer ships purges every utility in it.
          */
-        $this->assertStringContainsString('@panelkit/ui/dist', $css);
-        $this->assertStringContainsString('@panelkit/inertia/src', $css);
+        $this->assertStringContainsString('@panelkit/panel/dist', $css);
+        $this->assertStringContainsString('@panelkit/panel/inertia', $css);
 
         // Stock Laravel defines no tokens, so these arrive too - without them
         // `bg-background` resolves to nothing and the panel is unreadable.
@@ -172,7 +173,7 @@ final class InstallStylesheetTest extends TestCase
 
         $css = File::get($this->path);
 
-        $this->assertStringContainsString('@panelkit/ui/dist', $css);
+        $this->assertStringContainsString('@panelkit/panel/dist', $css);
         $this->assertStringContainsString('hsl(210 40% 98%)', $css);
 
         // Ours is not appended over theirs.
@@ -200,8 +201,8 @@ final class InstallStylesheetTest extends TestCase
 
         $used = [];
 
-        foreach (['ui', 'inertia'] as $package) {
-            $root = dirname(__DIR__, 4)."/packages/{$package}/src";
+        foreach (['src', 'inertia'] as $half) {
+            $root = dirname(__DIR__, 4)."/packages/ui/{$half}";
 
             $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root));
 

@@ -18,7 +18,7 @@
 # WHAT IT DOES, in the order the README claims:
 #
 #   composer require panelkit/panel
-#   npm install @panelkit/ui @panelkit/inertia
+#   npm install @panelkit/panel
 #   php artisan panel:install
 #   php artisan make:panel-resource ... --generate
 #
@@ -94,24 +94,38 @@ php artisan list --no-ansi 2>/dev/null | grep -q 'panel:install' \
 
 # ------------------------------------------------------------- the client half
 
-say "Packing and installing the npm packages"
-for pkg in ui inertia; do
-    # THE LAST LINE, NOT THE WHOLE OUTPUT. `@panelkit/ui` has a `prepack` that
-    # builds it - which it must, so a tarball can never contain a stale `dist` -
-    # and Vite writes its progress to stdout. `--silent` quiets npm, not the
-    # build, so capturing everything gave a "filename" several lines long and
-    # the check below failed on a pack that had actually worked.
-    tarball="$(cd "$ROOT/packages/$pkg" && npm pack --silent --pack-destination "$WORK" | tail -1)"
-    [[ -f "$WORK/$tarball" ]] || fail "npm pack produced nothing for packages/$pkg"
-    npm install --silent --no-audit --no-fund "$WORK/$tarball" 2>&1 | tail -2
+say "Packing and installing @panelkit/panel"
+# THE LAST LINE, NOT THE WHOLE OUTPUT. The package has a `prepack` that builds
+# it - which it must, so a tarball can never contain a stale `dist` - and Vite
+# writes its progress to stdout. `--silent` quiets npm, not the build, so
+# capturing everything gave a "filename" several lines long and the check below
+# failed on a pack that had actually worked.
+tarball="$(cd "$ROOT/packages/ui" && npm pack --silent --pack-destination "$WORK" | tail -1)"
+[[ -f "$WORK/$tarball" ]] || fail "npm pack produced nothing for packages/ui"
+npm install --silent --no-audit --no-fund "$WORK/$tarball" 2>&1 | tail -2
+
+# ONE TARBALL, TWO HALVES. `files` ships `dist` AND `inertia`, and the second is
+# the one a `files` list forgets: the compiled half is what `npm run build`
+# writes, so it is never missing, while the screens are plain source that only
+# arrives because the manifest says so. Resolving a subpath export here catches
+# an omission at the tarball rather than at a consumer's first render.
+#
+# RESOLVED THROUGH THE EXPORTS MAP AND THEN CHECKED ON DISK, because the map
+# alone will happily name a file that was never packed.
+say "Checking the tarball shipped both halves"
+for subpath in "@panelkit/panel" "@panelkit/panel/pages/PanelDashboard.vue"; do
+    resolved="$(node --input-type=module \
+        -e "process.stdout.write(new URL(import.meta.resolve('$subpath')).pathname)" 2>/dev/null)" \
+        || fail "$subpath is not exported - the published package.json does not name it."
+    [[ -f "$resolved" ]] || fail "$subpath resolves to $resolved, which the tarball did not ship."
 done
 
 # ------------------------------------------------------------------ the install
 
 # THE VUE PLUGIN, which npm's peer resolution does not supply: `vue` and
-# `@inertiajs/vue3` arrive as peers of @panelkit/inertia, and the Vite plugin
+# `@inertiajs/vue3` arrive as peers of @panelkit/panel, and the Vite plugin
 # that compiles a `.vue` file is a BUILD dependency of the application rather
-# than of either package.
+# than of the package.
 say "npm install @vitejs/plugin-vue"
 npm install --silent --no-audit --no-fund --save-dev @vitejs/plugin-vue 2>&1 | tail -2
 
@@ -549,14 +563,14 @@ esac
 # ---------------------------------------------------------------------------
 # AND THE ERROR SCREEN, for the same reason.
 #
-# `errors/Error` was exported from `@panelkit/inertia`, had a page file written
+# `errors/Error` was exported from the package, had a page file written
 # by `panel:install`, and had NOTHING RENDERING IT - so every installation but
 # the reference app showed Laravel's default 404 next to a designed one it had
 # already downloaded.
 # ---------------------------------------------------------------------------
 # THE LANDING CMS, which shipped as a component and nothing that used it.
 #
-# `PkLandingSections` was in `@panelkit/ui` the whole time; the three designs,
+# `PkLandingSections` was in the package the whole time; the three designs,
 # the page that draws them, the route and the block editor were all in the
 # reference application. So a fresh install had a section library it had no way
 # to compose a page with, and a README saying the front page was editable from

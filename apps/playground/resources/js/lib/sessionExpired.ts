@@ -1,5 +1,5 @@
 /**
- * Session expiry lives in `@panelkit/inertia` now.
+ * Session expiry lives in `@panelkit/panel/inertia` now.
  *
  * KEPT AS A RE-EXPORT rather than deleted, because `app.ts` installs the
  * transport hook by importing from here and a consumer's own code may too. The
@@ -11,4 +11,4 @@ export {
     notifySessionExpired,
     sessionExpired,
     watchForSessionExpiry,
-} from '@panelkit/inertia';
+} from '@panelkit/panel/inertia';

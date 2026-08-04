@@ -75,7 +75,7 @@ class FortifyServiceProvider extends ServiceProvider
             /*
              * THE PASSKEY ROUTES, WHICH THIS VIEW STOPPED SENDING.
              *
-             * The sign-in screen moved into `@panelkit/inertia` and its passkey
+             * The sign-in screen moved into `@panelkit/panel` and its passkey
              * button is gated on this prop; nothing here ever sent it, so the
              * button silently disappeared from a screen that had it before.
              * Nothing failed and no test noticed - the page renders, signs

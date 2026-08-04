@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** The avatar-and-name pair is the package's now - see `AppSidebar.vue`. */
-import { UserInfo } from '@panelkit/inertia';
+import { UserInfo } from '@panelkit/panel/inertia';
 import type { User } from '@/types';
 
 defineProps<{ user: User; showEmail?: boolean }>();

@@ -23,14 +23,12 @@
 # split pushed to the wrong place rewrites somebody else's main branch.
 #
 #   PANELKIT_PANEL_REMOTE   git remote for packages/panel
-#   PANELKIT_UI_REMOTE      git remote for packages/ui
-#   PANELKIT_INERTIA_REMOTE git remote for packages/inertia
+#   PANELKIT_UI_REMOTE      git remote for packages/ui (the npm package)
 
 set -euo pipefail
 
 PANEL_REMOTE="${PANELKIT_PANEL_REMOTE:-}"
 UI_REMOTE="${PANELKIT_UI_REMOTE:-}"
-INERTIA_REMOTE="${PANELKIT_INERTIA_REMOTE:-}"
 
 PUSH=false
 TAG=""
@@ -100,9 +98,8 @@ split_one() {
     fi
 }
 
-split_one packages/panel   split-panel   "$PANEL_REMOTE"
-split_one packages/ui      split-ui      "$UI_REMOTE"
-split_one packages/inertia split-inertia "$INERTIA_REMOTE"
+split_one packages/panel split-panel "$PANEL_REMOTE"
+split_one packages/ui    split-ui    "$UI_REMOTE"
 
 echo
 if [[ "$PUSH" != true ]]; then

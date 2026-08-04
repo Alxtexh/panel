@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
-import { useTenantTheme } from '@panelkit/ui';
+import { useTenantTheme } from '@panelkit/panel';
 import { computed } from 'vue';
 import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';

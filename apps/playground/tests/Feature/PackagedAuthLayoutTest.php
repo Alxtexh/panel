@@ -37,7 +37,7 @@ final class PackagedAuthLayoutTest extends TestCase
         foreach ($pages as $path) {
             $contents = (string) file_get_contents($path);
 
-            if (str_contains($contents, '@panelkit/inertia')) {
+            if (str_contains($contents, '@panelkit/panel/inertia')) {
                 $importing[] = 'auth/'.basename($path, '.vue');
             }
         }

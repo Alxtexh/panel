@@ -54,7 +54,7 @@ final class InstallCommand extends Command
 
         $this->newLine();
         $this->components->info('Done. Next:');
-        $this->line('  1. npm install @panelkit/ui @panelkit/inertia @vitejs/plugin-vue && npm run build');
+        $this->line('  1. npm install @panelkit/panel @vitejs/plugin-vue && npm run build');
         $this->line('     The screens are Vue, so they are built rather than published. The');
         $this->line('     published resources/css/app.css already points Tailwind at both');
         $this->line('     packages - without that every utility used only inside them is');
@@ -190,7 +190,7 @@ final class InstallCommand extends Command
 
         $current = (string) file_get_contents($target);
 
-        if (str_contains($current, '@panelkit/ui')) {
+        if (str_contains($current, '@panelkit/panel')) {
             $this->components->twoColumnDetail('Already wired', $relative);
 
             return;
@@ -203,8 +203,8 @@ final class InstallCommand extends Command
         $tokens = $tokensAt === false ? '' : substr($contents, $tokensAt);
 
         $addition = "\n/* Added by panel:install - Tailwind does not scan node_modules. */\n"
-            ."@source '../../node_modules/@panelkit/ui/dist/**/*.js';\n"
-            ."@source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';\n";
+            ."@source '../../node_modules/@panelkit/panel/dist/**/*.js';\n"
+            ."@source '../../node_modules/@panelkit/panel/inertia/**/*.{vue,ts}';\n";
 
         $hasTokens = str_contains($current, '--background');
 

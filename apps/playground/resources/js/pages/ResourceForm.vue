@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The panel's ResourceForm screen, from @panelkit/inertia.
+ * The panel's ResourceForm screen, from @panelkit/panel/inertia.
  *
  * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
  * directory, so a screen living in node_modules is one it cannot find.
@@ -11,7 +11,7 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import ResourceForm from '@panelkit/inertia/pages/ResourceForm.vue';
+import ResourceForm from '@panelkit/panel/pages/ResourceForm.vue';
 
 defineOptions({ inheritAttrs: false });
 </script>

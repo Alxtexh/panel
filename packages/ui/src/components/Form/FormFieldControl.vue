@@ -58,7 +58,7 @@ const props = withDefaults(
         processing?: boolean
         /**
          * Supplied only for a SEARCHABLE select. The component never fetches
-         * itself - @panelkit/ui ships no HTTP client (spec §4 rule 2).
+         * itself - @panelkit/panel ships no HTTP client (spec §4 rule 2).
          */
         searchOptions?: (term: string) => Promise<{ value: any; label: string }[]>
         /**

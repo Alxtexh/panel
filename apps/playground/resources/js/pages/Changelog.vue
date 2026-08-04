@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The panel's Changelog screen, from @panelkit/inertia.
+ * The panel's Changelog screen, from @panelkit/panel/inertia.
  *
  * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
  * directory, so a screen living in node_modules is one it cannot find.
@@ -11,7 +11,7 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import Changelog from '@panelkit/inertia/pages/Changelog.vue';
+import Changelog from '@panelkit/panel/pages/Changelog.vue';
 
 defineOptions({ inheritAttrs: false });
 </script>

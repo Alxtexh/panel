@@ -114,7 +114,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     /*
      | THE DASHBOARD IS NO LONGER DECLARED HERE. It is `App\Panel\Pages\
      | DashboardPage`, discovered and routed by the package like any other page,
-     | which is what let its screen move into `@panelkit/inertia`. The route
+     | which is what let its screen move into `@panelkit/panel`. The route
      | name it registers is `panel.pages.dashboard`; the handful of redirects
      | that used to say `route('dashboard')` now go through
      | `PanelHome::urlFor()`, which is where "the panel's home" is decided.

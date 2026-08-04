@@ -5,9 +5,9 @@
  * The account menu's items stay here: they link to this application's settings
  * centre, operations screen and lock screen.
  */
-import { AppSidebarHeader } from '@panelkit/inertia';
-import type { BreadcrumbItem } from '@/types';
+import { AppSidebarHeader } from '@panelkit/panel/inertia';
 import UserMenuContent from '@/components/UserMenuContent.vue';
+import type { BreadcrumbItem } from '@/types';
 
 defineProps<{ breadcrumbs?: BreadcrumbItem[] }>();
 </script>

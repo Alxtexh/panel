@@ -391,7 +391,7 @@ export function initializeAppearance(fromServer?: Partial<Appearance> | null): v
 /**
  * Persist a change to the account.
  *
- * Supplied by the app, because @panelkit/ui ships no HTTP client (§4). Set to
+ * Supplied by the app, because @panelkit/panel ships no HTTP client (§4). Set to
  * null for an unauthenticated page, where there is nobody to save against.
  */
 let persist: ((patch: Partial<Appearance>) => void) | null = null

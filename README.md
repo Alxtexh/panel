@@ -50,7 +50,7 @@ more rows, because it was never about the data.
 
 ```bash
 composer require panelkit/panel
-npm install @panelkit/ui @panelkit/inertia
+npm install @panelkit/panel
 
 # --auth scaffolds sign-in, sign-out and password reset for this panel, on this
 # panel's guard, under this panel's prefix - never at /login, so a starter kit's
@@ -73,9 +73,9 @@ php artisan migrate
 php artisan make:panel-resource Customer --generate
 ```
 
-Three packages, and all three are required. `panelkit/panel` answers the requests,
-`@panelkit/inertia` holds the screens it renders, and `@panelkit/ui` draws the table
-and the form. `panel:install` writes one page file per screen into
+Two packages, and both are required. `panelkit/panel` answers the requests;
+`@panelkit/panel` holds the screens it renders and draws the table and the form
+underneath them. `panel:install` writes one page file per screen into
 `resources/js/pages`, because Inertia resolves page names by globbing that directory
 and cannot see into `node_modules`.
 
@@ -147,7 +147,7 @@ some widths with no error anywhere.
 
 ```
 packages/panel/    Composer package: panelkit/panel
-packages/ui/       npm package: @panelkit/ui   (imports no Inertia, never fetches)
+packages/ui/       npm package: @panelkit/panel   (src/ imports no Inertia; inertia/ is the screens)
 apps/playground/   A real Laravel app consuming both
 ```
 
