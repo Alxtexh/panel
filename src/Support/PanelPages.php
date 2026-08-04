@@ -73,6 +73,7 @@ final class PanelPages
          * that turns them on later would otherwise get a white page naming a
          * file nobody has heard of.
          */
+        'settings/Assistant',
         'operations/Backups',
         'operations/BackupSettings',
         'operations/Logs',
