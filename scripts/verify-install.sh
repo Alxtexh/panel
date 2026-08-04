@@ -684,6 +684,58 @@ esac
 say "/roles resolved with HTTP $roles_status"
 
 # ---------------------------------------------------------------------------
+# THE SCREENS ADDED IN 0.8.1 - 0.8.3, WHICH THIS HARNESS DID NOT KNOW ABOUT.
+#
+# WHY THEY NEED THEIR OWN CHECK. Every one of them was added because the
+# component it mounts already shipped and nothing rendered it - a passkey
+# manager in `node_modules` with no page, a permission matrix with nowhere to
+# see who holds a role. A test that asserts the FILE exists would have passed
+# throughout that period; only requesting the URL proves the seam is closed.
+#
+# AND BECAUSE THE ROUTES YIELD. These register only when the application has
+# not claimed the URL, which is the right behaviour and also the kind that can
+# silently register nothing at all. A fresh Laravel app claims none of them, so
+# here they must ALL answer.
+#
+# WORKSPACES IS EXPECTED TO SAY "NOT AVAILABLE", not to 404: a fresh install is
+# single-tenant, and the screen reporting that honestly is the behaviour being
+# checked. A 404 would mean the route never registered.
+say "Checking the account, help and settings screens the last three releases added"
+
+cat > verify-screens.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+foreach ([
+    '/settings', '/settings/profile', '/settings/security', '/settings/workspaces',
+    '/settings/organisation', '/user-management', '/help', '/faq', '/about',
+] as $uri) {
+    $response = $kernel->handle(Illuminate\Http\Request::create($uri, 'GET'));
+
+    echo $uri, ' ', $response->getStatusCode(), PHP_EOL;
+}
+HIT
+
+screens="$(php verify-screens.php 2>/dev/null)"
+rm -f verify-screens.php
+
+while read -r uri status; do
+    [[ -z "$uri" ]] && continue
+
+    case "$status" in
+        # 302 is a signed-out redirect to the sign-in screen, which is the
+        # correct answer for every one of these: they are all behind `auth`.
+        200|302) : ;;
+        404) fail "$uri is not routed - a packaged screen nothing can reach." ;;
+        *)   fail "$uri answered $status." ;;
+    esac
+done <<< "$screens"
+
+say "all nine answered: $(echo "$screens" | wc -l) screens routed, none 404"
+
+# ---------------------------------------------------------------------------
 # ANNOUNCEMENTS, WHICH ARRIVE SWITCHED ON.
 #
 # UNLIKE TICKETING, THIS NEEDS NO CONFIGURATION - so the package registers the
