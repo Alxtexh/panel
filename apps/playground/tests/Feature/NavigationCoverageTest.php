@@ -147,6 +147,15 @@ final class NavigationCoverageTest extends TestCase
                     Route::has($panel->id.'.support.about')
                         ? parse_url(route($panel->id.'.support.about'), PHP_URL_PATH)
                         : null,
+                    /*
+                     * Workspaces is reached from the settings sub-navigation in
+                     * this application, and from the account menu's workspace
+                     * switcher in a generated portal. Both are menus; neither is
+                     * `panelPages`, which is why it is named here.
+                     */
+                    Route::has($panel->id.'.settings.workspaces')
+                        ? parse_url(route($panel->id.'.settings.workspaces'), PHP_URL_PATH)
+                        : null,
                 ])))
                 ->all(),
 

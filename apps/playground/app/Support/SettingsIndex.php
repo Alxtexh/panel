@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
+use PanelKit\Panel\PanelManager;
 
 /**
  * What the settings area contains, declared once with a description.
@@ -64,7 +66,13 @@ final class SettingsIndex
             'key' => 'workspaces',
             'title' => 'Workspaces',
             'description' => 'The organisations you belong to; switch between them or start a new one.',
-            'href' => route('workspaces.edit'),
+            /*
+             * THE PACKAGE'S ROUTE NOW, and named per panel. Workspaces moved
+             * into PanelKit in 0.8.2 along with their controller; this entry
+             * points at whichever panel is serving the request rather than at a
+             * name this application no longer declares.
+             */
+            'href' => self::workspacesUrl(),
         ];
 
         /*
@@ -92,5 +100,29 @@ final class SettingsIndex
         }
 
         return $entries;
+    }
+
+    /**
+     * Where the workspaces screen lives, whichever panel is serving.
+     *
+     * ASKED RATHER THAN ASSUMED. Workspaces moved into the package in 0.8.2 and
+     * their route is named per panel, so this application can no longer write
+     * one name down - and the panel serving a settings request is not always
+     * the one whose id the route carries. `Route::has` for the current panel
+     * first, then the default, and an empty string rather than a throw: a
+     * settings index that 500s because one entry cannot resolve is worse than
+     * one that omits the entry.
+     */
+    private static function workspacesUrl(): string
+    {
+        $current = app(PanelManager::class)->currentPanel()?->id;
+
+        foreach (array_filter([$current, 'panel', 'admin']) as $id) {
+            if (Route::has($id.'.settings.workspaces')) {
+                return route($id.'.settings.workspaces');
+            }
+        }
+
+        return '';
     }
 }

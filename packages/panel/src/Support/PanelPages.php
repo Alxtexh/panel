@@ -138,6 +138,7 @@ final class PanelPages
          * an ISP's articles about fibre plans.
          */
         'settings/UserManagement',
+        'settings/Workspaces',
 
         'support/Help',
         'support/Faq',

@@ -4,7 +4,6 @@ use App\Http\Controllers\Auth\PasswordRenewalController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\SettingsIndexController;
-use App\Http\Controllers\Settings\WorkspacesController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Http\Controllers\AssistantSettingsController;
@@ -68,9 +67,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
      | MEMBERSHIP PIVOT, which is the entire authorisation - see the
      | controller.
      */
-    Route::get('settings/workspaces', [WorkspacesController::class, 'edit'])->name('workspaces.edit');
-    Route::post('settings/workspaces', [WorkspacesController::class, 'store'])->name('workspaces.store');
-    Route::put('settings/workspaces/current', [WorkspacesController::class, 'switch'])->name('workspaces.switch');
+    /*
+     | WORKSPACES ARE THE PACKAGE'S NOW. `PanelRoutes` registers the same three
+     | URLs for any panel that has not claimed them, against a controller that
+     | names no model - `Tenants` resolves the organisation class from
+     | `panel.tenancy.model` and the membership relation by asking this app's
+     | User which of three conventional names it answers to.
+     */
 
     /*
      | The assistant's provider and key - E.1. Gated inside the controller on
