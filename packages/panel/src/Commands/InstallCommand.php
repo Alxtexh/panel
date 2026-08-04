@@ -719,13 +719,89 @@ final class InstallCommand extends Command
             return;
         }
 
-        if (! $hasColumn) {
-            $this->components->warn(
-                "Your users table has no [{$column}] column. In shared-database mode the panel "
-                .'cannot resolve a tenant, so it will deny every query and every write. Add the '
-                .'column, or set panel.tenancy.mode to "none" for a single-tenant app.'
+        if ($hasColumn) {
+            return;
+        }
+
+        /*
+         * SET THE MODE TO MATCH THE APPLICATION, rather than warning about a
+         * default that cannot work here.
+         *
+         * `column` mode resolves a tenant from a column on the users table, and
+         * fails CLOSED when it cannot - every list empty, every write refused.
+         * That posture is right. What was wrong is shipping it as the default
+         * into an application with no such column: the install printed this
+         * warning, reported success, and left a panel where every screen
+         * answered 403 with a role correctly granted and the ability correctly
+         * held. The refusal came from tenancy, and nothing on the screen said so.
+         *
+         * A FRESH `laravel/laravel` HAS NO TENANT COLUMN, so this is the common
+         * case rather than an edge one. Single-tenant is the honest default for
+         * an application that has not asked to be anything else, and `none` is
+         * one config line to reverse once the column exists.
+         */
+        $written = $this->writeTenancyMode('none');
+
+        $this->components->warn(
+            "Your users table has no [{$column}] column, so the panel cannot resolve a tenant "
+            .'in shared-database mode - it would deny every query and every write.'
+        );
+
+        $this->components->twoColumnDetail(
+            $written ? 'Set panel.tenancy.mode' : 'Set panel.tenancy.mode by hand',
+            $written
+                ? 'none - single-tenant. Change it to "column" once your users table has one.'
+                : 'none - could not edit config/panel.php; set it yourself.',
+        );
+    }
+
+    /**
+     * Rewrite the published config's tenancy mode.
+     *
+     * ON THE PUBLISHED FILE, not through `config()`: a runtime set lasts for
+     * this command and the next request is back to denying everything.
+     *
+     * TEXTUAL, and it declines rather than guesses. The published file is the
+     * one this installer wrote minutes ago, so the shape is known - but an
+     * application that has already edited it gets a message instead of a
+     * rewrite.
+     */
+    private function writeTenancyMode(string $mode): bool
+    {
+        $path = config_path('panel.php');
+
+        if (! is_file($path)) {
+            return false;
+        }
+
+        $source = file_get_contents($path);
+        $count = 0;
+
+        $updated = preg_replace(
+            "/('mode'\s*=>\s*)env\('PANEL_TENANCY[^)]*\)/",
+            "$1'{$mode}'",
+            $source,
+            1,
+            $count
+        );
+
+        if ($count !== 1) {
+            $updated = preg_replace(
+                "/('mode'\s*=>\s*)'column'/",
+                "$1'{$mode}'",
+                $source,
+                1,
+                $count
             );
         }
+
+        if ($count !== 1 || $updated === null) {
+            return false;
+        }
+
+        file_put_contents($path, $updated);
+
+        return true;
     }
 
     /**
