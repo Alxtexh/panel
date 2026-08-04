@@ -135,8 +135,8 @@ export function usePanelNav() {
         return {
             primary: [
                 // The dashboard is a packaged page now, routed as `panel.pages.dashboard`;
-            // Wayfinder no longer generates a `dashboard()` helper for it.
-            { title: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
+                // Wayfinder no longer generates a `dashboard()` helper for it.
+                { title: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
                 ...ungrouped,
             ] as NavItem[],
             groups: [...grouped.entries()].map(([name, items]): NavGroup => ({

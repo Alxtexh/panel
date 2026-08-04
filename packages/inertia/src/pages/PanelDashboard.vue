@@ -201,7 +201,9 @@ const STRIP_PLACEHOLDER: StatSegment[] = [
 ]
 
 const strip = computed(
-    () => ((page.props as Record<string, any>).strip as StatSegment[] | undefined) ?? STRIP_PLACEHOLDER,
+    () =>
+        ((page.props as Record<string, any>).strip as StatSegment[] | undefined) ??
+        STRIP_PLACEHOLDER,
 )
 
 /**
@@ -536,11 +538,7 @@ const hasAnything = computed(() => props.widgets.length > 0 || props.charts.leng
             <PkBoundary v-for="widget in widgets" :key="widget.key" :label="widget.label" fill>
                 <Deferred :data="`stat_${widget.key}`">
                     <template #fallback>
-                        <StatCard
-                            :label="widget.label"
-                            :description="widget.description"
-                            loading
-                        />
+                        <StatCard :label="widget.label" :description="widget.description" loading />
                     </template>
 
                     <template #default>
@@ -641,7 +639,9 @@ const hasAnything = computed(() => props.widgets.length > 0 || props.charts.leng
                                     chart.type === 'stackedBar' ||
                                     chart.type === 'rankedBar'
                                 "
-                                :data="series(chart.key).series ? undefined : series(chart.key).points"
+                                :data="
+                                    series(chart.key).series ? undefined : series(chart.key).points
+                                "
                                 :series="series(chart.key).series ?? undefined"
                                 :orientation="
                                     chart.type === 'horizontalBar' || chart.type === 'rankedBar'

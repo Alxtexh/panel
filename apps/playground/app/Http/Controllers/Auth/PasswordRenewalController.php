@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
-use PanelKit\Panel\Support\PanelHome;
 use App\Concerns\PasswordValidationRules;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Auth\PasswordPolicy;
+use PanelKit\Panel\Support\PanelHome;
 
 /**
  * The one screen somebody with an expired password can still open.

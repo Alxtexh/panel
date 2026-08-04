@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Panel\Pages\DashboardPage;
 use App\Models\ClientSession;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Panel\Pages\DashboardPage;
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -17,7 +17,6 @@ use PanelKit\Panel\Widgets\DashboardFilters;
 use PanelKit\Panel\Widgets\Period;
 use PanelKit\Panel\Widgets\Rollup;
 use PanelKit\Panel\Widgets\TimeSeries;
-use ReflectionMethod;
 use Tests\TestCase;
 
 /**

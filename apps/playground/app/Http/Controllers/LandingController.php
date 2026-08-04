@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use PanelKit\Panel\Support\PanelHome;
 use App\Panel\Singulars\LandingPageResource;
 use App\Support\LandingPresets;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +11,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Support\InstallationState;
+use PanelKit\Panel\Support\PanelHome;
 
 /**
  * The public face - Part G.9.

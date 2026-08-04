@@ -6,14 +6,14 @@ namespace Tests\Feature;
 
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use ReflectionProperty;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Http\PanelErrors;
 use PanelKit\Panel\PanelManager;
+use ReflectionProperty;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 /**

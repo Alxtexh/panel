@@ -75,7 +75,7 @@ final class DashboardPage extends PanelKitDashboard
     /** @return list<ChartWidget> */
     public static function charts(): array
     {
-        $filters = static::filters();
+        $filters = self::filters();
 
         return [
             ChartWidget::make('sessions', 'Sessions over time')
@@ -656,7 +656,7 @@ final class DashboardPage extends PanelKitDashboard
      */
     public static function stats(): array
     {
-        $filters = static::filters();
+        $filters = self::filters();
         $now = new DateTimeImmutable;
 
         $period = Period::Days30;
@@ -758,8 +758,7 @@ final class DashboardPage extends PanelKitDashboard
     /** The four windows above the widgets. */
     public static function strip(): ?callable
     {
-        return static fn (DashboardFilters $filters, DateTimeImmutable $now, string $tenantKey): array
-            => self::sessionStrip($tenantKey, $now, $filters);
+        return static fn (DashboardFilters $filters, DateTimeImmutable $now, string $tenantKey): array => self::sessionStrip($tenantKey, $now, $filters);
     }
 
     /**

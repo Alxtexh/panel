@@ -203,15 +203,13 @@ function apply() {
                     </label>
                 </div>
 
-                <p v-if="invalid" class="text-xs text-destructive">
-                    Choose a start date as well.
-                </p>
+                <p v-if="invalid" class="text-xs text-destructive">Choose a start date as well.</p>
                 <p v-else-if="draft.from && !draft.to" class="text-xs text-muted-foreground">
                     Leaving “To” empty means everything since that date.
                 </p>
                 <p v-else-if="draft.from" class="text-xs text-muted-foreground">
-                    While a range is set, the per-chart period buttons are hidden - every
-                    widget covers the same window.
+                    While a range is set, the per-chart period buttons are hidden - every widget
+                    covers the same window.
                 </p>
             </section>
 
