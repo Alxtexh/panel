@@ -123,11 +123,11 @@ final class SharePanelProps
                      * of the packaged screens, and a menu item pointing at a
                      * route that is not registered is a 404 wearing a label.
                      */
-                    'account' => Route::has($panel->id.'.settings.profile')
-                        ? route($panel->id.'.settings.profile')
+                    'account' => Route::has($panel->getRouteName().'settings.profile')
+                        ? route($panel->getRouteName().'settings.profile')
                         : null,
-                    'security' => Route::has($panel->id.'.settings.security')
-                        ? route($panel->id.'.settings.security')
+                    'security' => Route::has($panel->getRouteName().'settings.security')
+                        ? route($panel->getRouteName().'settings.security')
                         : null,
 
                     /*
@@ -136,8 +136,8 @@ final class SharePanelProps
                      * finds; under the avatar is where every application anybody
                      * has used puts it.
                      */
-                    'help' => Route::has($panel->id.'.support.help')
-                        ? route($panel->id.'.support.help')
+                    'help' => Route::has($panel->getRouteName().'support.help')
+                        ? route($panel->getRouteName().'support.help')
                         : null,
                 ];
             },

@@ -496,6 +496,18 @@ final class PanelRoutes
                 }
 
                 /*
+                 * THE SETTINGS INDEX. Declared BEFORE the screens it lists, so
+                 * `settings` cannot be captured by anything with a wildcard
+                 * segment - and yielding like the rest, because an application
+                 * that already answers `/settings` has its own opinion about
+                 * what belongs there.
+                 */
+                if (self::unclaimed('GET', $panel->getPath().'/settings')) {
+                    Route::get('settings', Controllers\SettingsIndexController::class)
+                        ->name('settings.index');
+                }
+
+                /*
                  * WORKSPACES, on panels that offer them.
                  *
                  * `Tenants::switchable()` decides at REQUEST time whether the
