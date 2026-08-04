@@ -2,13 +2,13 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Controllers\OrganisationController;
 use App\Panel\Pages;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
 use PanelKit\Panel\Auth\Impersonation;
 use PanelKit\Panel\Auth\Turnstile;
+use PanelKit\Panel\Http\Controllers\OrganisationController;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\Locale;
 use PanelKit\Panel\Support\TenantContext;

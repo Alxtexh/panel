@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace PanelKit\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
 use InvalidArgumentException;
@@ -35,7 +35,20 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * is not usually a secret, but "not usually" is not a reason to put an
  * organisation's file on a public URL that outlives their account.
  */
-final class OrganisationController extends Controller
+/**
+ * The organisation's own name and logo.
+ *
+ * MOVED FROM THE REFERENCE APPLICATION UNCHANGED, and it needed no de-ISP-ing
+ * at all: it already named no model. `TenantContext` resolves whichever
+ * organisation the request is in - the same resolution every tenant-scoped
+ * query uses - so this works identically under a tenant column, a
+ * database-per-tenant arrangement or a hand-written resolver.
+ *
+ * IT LIVED IN THE APPLICATION ONLY BECAUSE NOTHING HAD MOVED IT. That is worth
+ * saying plainly: every installation had `FileStore`, `TenantContext` and the
+ * upload endpoints and no screen to change a company's name on.
+ */
+final class OrganisationController
 {
     /** Where tenant branding is stored, under the tenant's own prefix. */
     private const DIRECTORY = 'branding';

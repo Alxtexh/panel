@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Documents;
 
-use App\Http\Controllers\OrganisationController;
 use PanelKit\Panel\Documents\DocumentBranding;
+use PanelKit\Panel\Http\Controllers\OrganisationController;
 use PanelKit\Panel\Support\TenantContext;
 
 /**

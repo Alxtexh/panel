@@ -64,6 +64,16 @@ final class PanelManager
          * has not written one should get the half that works, not a 500.
          */
         Pages\UserManagementPage::class,
+
+        /*
+         * THE ORGANISATION'S OWN NAME AND LOGO. It needed no de-ISP-ing to
+         * move: the controller already named no model, resolving through
+         * `TenantContext` like every other tenant-scoped query. It lived in the
+         * reference application only because nothing had moved it - so every
+         * installation shipped `FileStore`, the upload endpoints and no screen
+         * on which to change a company's name.
+         */
+        Pages\OrganisationPage::class,
     ];
 
     /** @var array<string, class-string<Pages\Page>> slug => class */

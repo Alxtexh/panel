@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Panel\Pages;
+namespace PanelKit\Panel\Pages;
 
-use App\Http\Controllers\OrganisationController;
+use PanelKit\Panel\Http\Controllers\OrganisationController;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Pages\Page;
+
 
 /**
  * The organisation's name and logo - the SECOND shape, and the one that matters.
@@ -29,7 +29,7 @@ use PanelKit\Panel\Pages\Page;
  * navigation entry, the ability, and the fact that saving needs a different
  * grant from looking.
  */
-final class OrganisationPage extends Page
+class OrganisationPage extends Page
 {
     protected static string $icon = 'building';
 

@@ -632,7 +632,7 @@ _How to use them: name them in `table()` or the resource's actions._
 _How to use them: wrap fields with them inside `form()`._
 **Dashboard widgets** (9): `Bucket` `ChartWidget` `DashboardFilters` `Period` `Rollup` `StatWidget` `TimeSeries` `Trend` `Window`
 _How to use them: **declare them on a `DashboardPage`, which is what draws them.** `php artisan make:panel-page Overview --dashboard` writes one; its `stats()` and `charts()` return these classes and the packaged `PanelDashboard` screen renders them, each as its own deferred prop. A widget built anywhere else is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 that was true of every widget, which is why this line exists._
-**Pages (screens that are not resources)** (6): `ChangelogPage` `DashboardPage` `EnvironmentPage` `Page` `UserManagementPage` `Workspace`
+**Pages (screens that are not resources)** (7): `ChangelogPage` `DashboardPage` `EnvironmentPage` `OrganisationPage` `Page` `UserManagementPage` `Workspace`
 _How to use them: extend `Page` (or `DashboardPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._
 **Ticketing** (3): `MyTicketResource` `TicketResource` `TicketingPlugin`
 _How to use them: do not name these directly - `TicketingPlugin` mounts them from `panel.ticketing.operator` / `.opener`. See the recipe._

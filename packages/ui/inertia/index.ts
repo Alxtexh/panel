@@ -47,6 +47,7 @@ export { default as Faq } from './pages/support/Faq.vue'
 export { default as About } from './pages/support/About.vue'
 export { default as UserManagement } from './pages/settings/UserManagement.vue'
 export { default as Workspaces } from './pages/settings/Workspaces.vue'
+export { default as Organisation } from './pages/settings/Organisation.vue'
 export { default as DocumentTemplates } from './pages/documents/Templates.vue'
 export { default as DocumentTemplateDesigner } from './pages/documents/TemplateDesigner.vue'
 export { default as DocumentPrint } from './pages/documents/DocumentPrint.vue'
@@ -196,6 +197,7 @@ export const PANEL_PAGES = {
     'support/About': () => import('./pages/support/About.vue'),
     'settings/UserManagement': () => import('./pages/settings/UserManagement.vue'),
     'settings/Workspaces': () => import('./pages/settings/Workspaces.vue'),
+    'settings/Organisation': () => import('./pages/settings/Organisation.vue'),
 
     // Backups, logs and monitoring - the installation's own health.
     'operations/Backups': () => import('./pages/operations/Backups.vue'),

@@ -6,9 +6,9 @@ namespace Tests\Feature;
 
 use App\Models\Tenant;
 use App\Models\User;
-use App\Panel\Pages\OrganisationPage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use PanelKit\Panel\Pages\OrganisationPage;
 use PanelKit\Panel\Pages\Page;
 use PanelKit\Panel\Pages\UserManagementPage;
 use PanelKit\Panel\PanelManager;
