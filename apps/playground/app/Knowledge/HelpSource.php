@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Knowledge;
 
-use App\Support\HelpArticles;
 use PanelKit\Panel\Knowledge\Document;
 use PanelKit\Panel\Knowledge\KnowledgeSource;
+use PanelKit\Panel\Support\HelpCentre;
 
 /**
  * The help centre, made retrievable.
@@ -41,7 +41,7 @@ final class HelpSource implements KnowledgeSource
 
     public function documents(): iterable
     {
-        foreach (HelpArticles::all() as $article) {
+        foreach (HelpCentre::articles() as $article) {
             yield new Document(
                 source: $this->key(),
                 id: $article['id'],

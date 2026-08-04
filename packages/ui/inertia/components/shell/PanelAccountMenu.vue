@@ -26,8 +26,10 @@ const props = withDefaults(
         accountUrl?: string | null
         /** The security screen, when the panel routes one. */
         securityUrl?: string | null
+        /** The help centre, when the panel offers one. */
+        helpUrl?: string | null
     }>(),
-    { user: null, logout: null, accountUrl: null, securityUrl: null },
+    { user: null, logout: null, accountUrl: null, securityUrl: null, helpUrl: null },
 )
 
 /**
@@ -119,6 +121,15 @@ function signOut(close: () => void): void {
                     @click="close"
                 >
                     Security
+                </Link>
+
+                <Link
+                    v-if="helpUrl"
+                    :href="helpUrl"
+                    class="hover:bg-muted block rounded px-2 py-1.5 text-sm"
+                    @click="close"
+                >
+                    Help
                 </Link>
 
                 <button

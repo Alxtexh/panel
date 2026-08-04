@@ -235,6 +235,7 @@ watch(
                     :logout="panel?.logout ?? null"
                     :account-url="panel?.account ?? null"
                     :security-url="panel?.security ?? null"
+                    :help-url="panel?.help ?? null"
                 />
             </header>
 

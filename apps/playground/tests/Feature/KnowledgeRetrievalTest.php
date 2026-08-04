@@ -8,13 +8,13 @@ use App\Ai\Tools\SearchKnowledge;
 use App\Knowledge\HelpSource;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Support\HelpArticles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Ai\Tools\Request;
 use PanelKit\Panel\Knowledge\Chunker;
 use PanelKit\Panel\Knowledge\Embedder;
 use PanelKit\Panel\Knowledge\HashEmbedder;
 use PanelKit\Panel\Knowledge\KnowledgeBase;
+use PanelKit\Panel\Support\HelpCentre;
 use Tests\TestCase;
 
 /**
@@ -423,7 +423,15 @@ final class KnowledgeRetrievalTest extends TestCase
 
         $this->assertNotNull($served, 'The help page no longer receives its articles from the server.');
         $this->assertSame(
-            array_column(HelpArticles::all(), 'id'),
+            /*
+             * `HelpCentre`, NOT `HelpArticles`. The help screen shows the
+             * packaged articles about the panel AND this application's ISP
+             * ones; indexing only the second would let the assistant answer
+             * "how do I search" from nothing while the screen answers it in
+             * full - which is precisely the divergence this test exists to
+             * catch, arriving from the other direction.
+             */
+            array_column(HelpCentre::articles(), 'id'),
             array_column($served, 'id'),
         );
     }
@@ -438,7 +446,7 @@ final class KnowledgeRetrievalTest extends TestCase
      */
     public function test_every_indexed_link_points_at_a_real_article(): void
     {
-        $ids = array_column(HelpArticles::all(), 'id');
+        $ids = array_column(HelpCentre::articles(), 'id');
 
         foreach ((new HelpSource)->documents() as $document) {
             $this->assertContains(

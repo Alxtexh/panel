@@ -136,6 +136,17 @@ final class NavigationCoverageTest extends TestCase
                     Route::has($panel->id.'.settings.security')
                         ? parse_url(route($panel->id.'.settings.security'), PHP_URL_PATH)
                         : null,
+                    Route::has($panel->id.'.support.help')
+                        ? parse_url(route($panel->id.'.support.help'), PHP_URL_PATH)
+                        : null,
+                    // FAQ and About are linked FROM the help centre, which is
+                    // where somebody looking for either would go first.
+                    Route::has($panel->id.'.support.faq')
+                        ? parse_url(route($panel->id.'.support.faq'), PHP_URL_PATH)
+                        : null,
+                    Route::has($panel->id.'.support.about')
+                        ? parse_url(route($panel->id.'.support.about'), PHP_URL_PATH)
+                        : null,
                 ])))
                 ->all(),
 

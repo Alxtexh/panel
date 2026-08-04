@@ -130,6 +130,16 @@ final class PanelPages
          */
         'settings/Profile',
         'settings/Security',
+
+        /*
+         * THE HELP CENTRE. Generic by construction - `HelpCentre` ships articles
+         * about the panel itself and the application adds its own, so a fresh
+         * install opens on something useful rather than on an empty shelf or on
+         * an ISP's articles about fibre plans.
+         */
+        'support/Help',
+        'support/Faq',
+        'support/About',
     ];
 
     /**

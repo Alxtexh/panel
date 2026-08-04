@@ -224,11 +224,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
      | same array - see `App\Knowledge\HelpSource` - and a second copy in PHP is
      | how a panel ends up answering one thing on screen and another in chat.
      */
-    Route::get('help', fn () => Inertia::render('support/Help', [
-        'articles' => HelpArticles::all(),
-    ]))->name('support.help');
-    Route::inertia('faq', 'support/Faq')->name('support.faq');
-    Route::inertia('about', 'support/About')->name('support.about');
+    /*
+     | HELP, FAQ AND ABOUT ARE THE PACKAGE'S NOW, and these three routes are
+     | gone rather than kept beside them. `PanelRoutes` registers them for any
+     | panel that has not claimed the URL, and this application's articles reach
+     | that screen through `HelpCentre::add()` in AppServiceProvider - so there
+     | is one screen, one set of articles, and no second copy to drift.
+     */
 
     /*
      | How to build a panel with this framework.

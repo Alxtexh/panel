@@ -18,6 +18,7 @@ use App\Policies\CustomFieldPolicy;
 use App\Policies\PlanPolicy;
 use App\Policies\RouterPolicy;
 use App\Policies\UserPolicy;
+use App\Support\HelpArticles;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Model;
@@ -34,6 +35,7 @@ use PanelKit\Panel\Documents\DocumentKinds;
 use PanelKit\Panel\Models\Ticket;
 use PanelKit\Panel\Policies\TicketPolicy;
 use PanelKit\Panel\Support\Budgets;
+use PanelKit\Panel\Support\HelpCentre;
 use PanelKit\Panel\Support\TicketStats;
 use PanelKit\Panel\Trash\TrashBin;
 
@@ -58,6 +60,22 @@ class AppServiceProvider extends ServiceProvider
          * visible from the listener itself. See `RecordLastLogin`.
          */
         Event::listen(Login::class, RecordLastLogin::class);
+
+        /*
+         * THIS APPLICATION'S HELP ARTICLES, added to the packaged ones.
+         *
+         * `HelpCentre` ships articles about the PANEL - search, tables, the
+         * trash, roles, the account screens - because those are true of every
+         * installation. What is true only here is the ISP part: subscribers,
+         * plans, routers, exports of those. Those stay in this application,
+         * where the assistant can also cite them.
+         *
+         * `add()` RATHER THAN `replace()`, because the packaged answers are
+         * still the right ones for the questions they cover, and rewriting
+         * "how do I search" in our own words to say the same thing is how two
+         * copies of an answer start disagreeing.
+         */
+        HelpCentre::add(HelpArticles::all());
 
         /*
          * THE DEV SERVER BINDS 127.0.0.1, NOT `localhost`.
