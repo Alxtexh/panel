@@ -79,6 +79,29 @@ split_one() {
         return
     fi
 
+    # NEVER THE MONOREPO ITSELF. The push below writes the split branch over the
+    # DESTINATION'S `main`, which is right for a mirror repository whose whole
+    # content is that one package - and catastrophic for the repository being
+    # split, where `main` is the monorepo. Pointing this at `origin` replaced
+    # the monorepo's main branch with the contents of `packages/ui`, and moved
+    # the release tag with it. It took one mistyped variable and no confirmation.
+    #
+    # COMPARED BY RESOLVED URL, not by name, because `origin`, the same URL
+    # spelt out in full, and any other remote pointing at it are all the same
+    # repository and all equally wrong.
+    local here destination
+    here="$(git remote get-url origin 2>/dev/null || echo '')"
+    destination="$(git remote get-url "${remote}" 2>/dev/null || echo "${remote}")"
+
+    if [[ -n "$here" && "$destination" == "$here" ]]; then
+        echo >&2
+        echo "    REFUSING: ${remote} resolves to this repository." >&2
+        echo "    A split is pushed over the destination's main branch, so this" >&2
+        echo "    would replace the monorepo with the contents of ${prefix}." >&2
+        echo "    Each package needs its OWN repository." >&2
+        exit 1
+    fi
+
     # Force, because a split branch is REGENERATED from scratch every time: its
     # commit ids differ from the previous split's even when the content is
     # identical, so it is never a fast-forward. This is safe only because the
