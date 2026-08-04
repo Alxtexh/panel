@@ -114,7 +114,17 @@ final class AccessibilityTest extends DuskTestCase
         $this->seedOperator();
 
         $this->browse(function (Browser $browser): void {
-            $browser->loginAs($this->operatorId)->visit('/clients')->waitForText('Amina Otieno', 15);
+            /*
+             * A LONGER WAIT THAN THE OTHERS, and for a measurable reason: this
+             * is the only screen here that queries the seeded client table, and
+             * the first paint waits on a count over it. Fifteen seconds passed
+             * alone and failed roughly one run in three inside the full suite,
+             * where the server is also answering the other tests.
+             *
+             * The wait is not the assertion - the accessibility scan below is.
+             * Timing this one tightly buys nothing and costs a red suite.
+             */
+            $browser->loginAs($this->operatorId)->visit('/clients')->waitForText('Amina Otieno', 45);
 
             $this->assertNoSeriousAccessibilityViolations($browser, 'Resource list');
         });

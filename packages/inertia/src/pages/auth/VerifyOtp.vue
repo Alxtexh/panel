@@ -11,6 +11,7 @@ import { Form, Head, Link } from '@inertiajs/vue3'
 import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@panelkit/ui'
 import { ref } from 'vue'
 import AuthInputError from '../../components/AuthInputError.vue'
+import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{
@@ -22,6 +23,8 @@ const props = defineProps<{
     sentTo?: string | null
     status?: string | null
     length?: number
+    /** Turnstile's public key, or null when it is off. See `AuthTurnstile`. */
+    turnstileSiteKey?: string | null
 }>()
 
 const code = ref('')
@@ -65,6 +68,13 @@ const code = ref('')
 
                 <AuthInputError :message="errors.code" />
             </div>
+
+            <!--
+                Renders nothing when Turnstile is off; the server refuses
+                without a token either way. A code screen is worth protecting -
+                it is the one auth form somebody can brute-force six digits at.
+            -->
+            <AuthTurnstile :site-key="props.turnstileSiteKey" />
 
             <Button type="submit" class="w-full" :disabled="processing">
                 <Spinner v-if="processing" />

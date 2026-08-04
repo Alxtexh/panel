@@ -16,7 +16,7 @@
  * transparent, so a blinking bar in the active box is the only feedback that
  * typing will land there.
  */
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const props = withDefaults(
     defineProps<{
@@ -33,6 +33,22 @@ const props = withDefaults(
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 const focused = ref(false)
+const field = ref<HTMLInputElement | null>(null)
+
+/*
+ * AUTOFOCUS IS DONE BY HAND, because the attribute does nothing here.
+ *
+ * A browser honours `autofocus` while it PARSES the document. This input is
+ * created by Vue afterwards, so binding the attribute sets a property nothing
+ * ever reads - the screen looked correct and the caret was simply never there,
+ * which on a code screen means every arriving code is typed into nothing until
+ * somebody notices and clicks.
+ */
+onMounted(() => {
+    if (props.autofocus) {
+        field.value?.focus()
+    }
+})
 
 const characters = computed(() =>
     Array.from({ length: props.length }, (_, i) => props.modelValue[i] ?? ''),
@@ -53,11 +69,11 @@ function onInput(event: Event): void {
 <template>
     <div class="relative flex items-center gap-2 has-disabled:opacity-50">
         <input
+            ref="field"
             :id="props.id"
             :name="props.name"
             :value="props.modelValue"
             :disabled="props.disabled"
-            :autofocus="props.autofocus"
             inputmode="numeric"
             autocomplete="one-time-code"
             :maxlength="props.length"
