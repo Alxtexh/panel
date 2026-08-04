@@ -411,9 +411,9 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 $model = config('auth.providers.users.model');
 
-echo method_exists($model, 'assignRole') && method_exists($model, 'hasPermission')
-    ? 'holds-roles'
-    : 'cannot-hold-roles';
+// `assignRole()` is the requirement. `hasPermission()` is the reference app's
+// own wrapper - `Ability::held()` falls back to `can()` without it.
+echo method_exists($model, 'assignRole') ? 'holds-roles' : 'cannot-hold-roles';
 echo PHP_EOL;
 HIT
 roles_result="$(php verify-roles.php 2>&1 | tail -1)"

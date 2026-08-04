@@ -477,7 +477,15 @@ final class DoctorTest extends TestCase
             ->assertExitCode(1);
     }
 
-    /** And says nothing when the model can. */
+    /**
+     * And says nothing when the model can.
+     *
+     * ASSERTED ON `assignRole()` ALONE. The first version of the check also
+     * demanded `hasPermission()`, which is THIS application's own convenience
+     * wrapper rather than part of Spatie's trait - so it failed a fresh install
+     * whose model had been wired correctly. `Ability::held()` treats that method
+     * as optional and falls back to `can()`.
+     */
     public function test_it_is_quiet_when_the_user_model_holds_roles(): void
     {
         $this->assertTrue(method_exists(config('auth.providers.users.model'), 'assignRole'));
