@@ -363,6 +363,78 @@ $signin"
 
 say "Signed in through the generated login"
 
+# ---------------------------------------------------------------------------
+# AND THE SCREEN IT LANDS ON.
+#
+# `location=/dashboard` above proves where the redirect POINTS. It does not
+# prove anything is there - and for most of this package's life nothing was:
+# `DashboardPage` shipped ABSTRACT, with nine widget classes and a screen to
+# draw them and nothing that extended it, so a fresh installation signed in and
+# arrived at the application's welcome page or a resource list. The complaint
+# was "why does it not open on a dashboard?", and the answer was that the
+# dashboard was a class nobody had been told to subclass.
+#
+# `panel:install` writes one now, so this asserts the whole chain: the file, the
+# route, a 200, and the packaged component actually named in the payload.
+say "Checking the installed dashboard renders"
+
+[ -f app/Panel/Pages/DashboardPage.php ] \
+    || fail "panel:install wrote no app/Panel/Pages/DashboardPage.php - a fresh install has no dashboard."
+
+cat > verify-dashboard.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+$user = (config('auth.providers.users.model'))::query()->first();
+Illuminate\Support\Facades\Auth::login($user);
+
+$response = $kernel->handle(Illuminate\Http\Request::create('/dashboard', 'GET'));
+
+echo $response->getStatusCode(), ' ';
+echo str_contains((string) $response->getContent(), 'PanelDashboard') ? 'PanelDashboard' : 'no-component';
+echo PHP_EOL;
+HIT
+dashboard_result="$(php verify-dashboard.php 2>/dev/null | tail -1)"
+rm -f verify-dashboard.php
+
+case "$dashboard_result" in
+    "200 PanelDashboard") say "/dashboard renders the packaged dashboard" ;;
+    200*) fail "/dashboard answers 200 but does not render PanelDashboard - got: $dashboard_result" ;;
+    "")   fail "/dashboard could not be requested at all." ;;
+    *)    fail "/dashboard answered: $dashboard_result" ;;
+esac
+
+# ---------------------------------------------------------------------------
+# AND THE ERROR SCREEN, for the same reason.
+#
+# `errors/Error` was exported from `@panelkit/inertia`, had a page file written
+# by `panel:install`, and had NOTHING RENDERING IT - so every installation but
+# the reference app showed Laravel's default 404 next to a designed one it had
+# already downloaded.
+say "Checking a 404 inside the panel gets the panel's error screen"
+
+cat > verify-error.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+$response = $kernel->handle(Illuminate\Http\Request::create('/no-such-page', 'GET'));
+
+echo $response->getStatusCode(), ' ';
+echo str_contains((string) $response->getContent(), 'errors/Error') ? 'errors/Error' : 'framework-page';
+echo PHP_EOL;
+HIT
+error_result="$(php verify-error.php 2>/dev/null | tail -1)"
+rm -f verify-error.php
+
+case "$error_result" in
+    "404 errors/Error") say "a 404 renders the panel error screen, with its status intact" ;;
+    *) fail "a 404 did not reach the packaged error screen - got: $error_result" ;;
+esac
+
 # AND THE SCREEN THAT OPERATES IT - CHECKED AFTER THE LOGIN ROUTE EXISTS.
 #
 # This block sat above that step at first and reported a 500 that had nothing to
