@@ -10,10 +10,10 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.8.2"
+"panelkit/panel": "^0.8.3"
 ```
 
-Composer reads `^0.8.2` on a `0.x` package as `>=0.8.2 <0.9.0`, which is what you
+Composer reads `^0.8.3` on a `0.x` package as `>=0.8.3 <0.9.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
 The two packages are **versioned together**. `panelkit/panel@0.8.0` expects
@@ -111,6 +111,29 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.8.2 → 0.8.3
+
+The usual: `composer update`, a fresh `npm pack`, `php artisan panel:update`,
+`npm run build`. One new page file, `settings/Index`.
+
+**If your account menu was missing Profile, Security or Help, this fixes it.**
+0.8.1 and 0.8.2 read `$panel->id` where they should have read
+`$panel->getRouteName()`, so a panel with a custom route-name prefix got nulls.
+Nothing to change on your side.
+
+**To add your own settings entries:**
+
+```php
+// AppServiceProvider::boot()
+SettingsIndex::add([[
+    'key' => 'billing', 'title' => 'Billing',
+    'description' => 'Plans, invoices and payment methods.',
+    'href' => static fn (): string => route('billing.edit'),  // a CLOSURE - boot runs before routes
+    'ability' => 'manage_billing',                            // optional; omitted, not disabled
+    'order' => 2,                                             // optional; omit to append
+]]);
+```
 
 ### 0.8.1 → 0.8.2
 

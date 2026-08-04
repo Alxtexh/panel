@@ -5,6 +5,34 @@ Versioning policy, and what counts as a breaking change, are in
 and `@panelkit/panel` on npm — are versioned together. Entries before 0.8.0 name
 three, which is what there were.
 
+## 0.8.3
+
+**The settings index ships, and it derives every row.** A candidate appears only
+when the current panel actually registered that route and the reader may open
+it - so a portal that dropped a screen with `->without()` stops listing it, an
+application whose own `/settings/profile` meant the packaged route never
+registered does not get a link into a 404, and a single-tenant installation
+shows no organisation rows. Add your own with `SettingsIndex::add()`, optionally
+with `order` to place it among the packaged entries.
+
+`href` may be a closure, and from a service provider it must be: `boot` runs
+before routes are registered, so an eager `route()` throws.
+
+### Fixed
+
+- **The account menu was empty on any panel with a custom route name.**
+  `Panel::getRouteName()` lets a panel override its route-name prefix, and 0.8.1
+  and 0.8.2 both assumed `$panel->id.'.'` - so `panel.account`, `panel.security`
+  and `panel.help` resolved to null and the menu offered no Profile, no Security
+  and no Help. It looked exactly like the props being unwired, which is the seam
+  those two releases set out to close. If your panels use the default naming you
+  were unaffected.
+
+### Removed
+
+- The reference application's `support/WhatsNew` screen, which was an older copy
+  of the packaged `Changelog` at a different URL. `/whats-new` redirects.
+
 ## 0.8.2
 
 **Organisation management ships**, and with it the seam every screen that
