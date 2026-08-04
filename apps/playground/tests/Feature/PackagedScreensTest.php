@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use PanelKit\Panel\Support\PanelPages;
+use PanelKit\Panel\Support\UserRoles;
 use Tests\TestCase;
 
 /**
@@ -260,5 +261,89 @@ final class PackagedScreensTest extends TestCase
             app()->setBasePath($original);
             exec('rm -rf '.escapeshellarg($base));
         }
+    }
+
+    /**
+     * THE TRAIT WITHOUT WHICH THE PANEL DENIES EVERYTHING.
+     *
+     * `spatie/laravel-permission` is a hard dependency: the tables migrate,
+     * `panel:permissions sync` creates every ability and an Administrator role
+     * that holds them all, and each of those reports success. But a stock
+     * `laravel/laravel` `User` does not use `HasRoles`, so it has no
+     * `assignRole()` and no `hasPermission()` - the role exists and nobody can
+     * hold it, and every screen refuses the person who owns the installation.
+     * Nothing throws and nothing logs.
+     *
+     * AGAINST THE HELPER, NOT AGAINST `panel:install`. The first version of
+     * this test ran the installer with a temporary base path, and
+     * `Application::setBasePath()` does not move `configPath` - so
+     * `publishConfig()` wrote the package's default config OVER this
+     * application's, and sixty-five tests failed for reasons that had nothing
+     * to do with roles. A test that damages the repository it is testing is
+     * worse than no test.
+     */
+    public function test_the_trait_is_added_to_a_stock_user_model(): void
+    {
+        $stock = <<<'PHP'
+        <?php
+
+        namespace App\Models;
+
+        use Illuminate\Foundation\Auth\User as Authenticatable;
+        use Illuminate\Notifications\Notifiable;
+
+        class User extends Authenticatable
+        {
+            use Notifiable;
+
+            protected $fillable = ['name', 'email', 'password'];
+        }
+
+        PHP;
+
+        $this->assertFalse(UserRoles::present($stock), 'Fixture assumption: a stock model has none.');
+
+        $updated = UserRoles::add($stock);
+
+        $this->assertNotNull($updated, 'A stock Laravel user model must be a shape this can edit.');
+        $this->assertStringContainsString(UserRoles::IMPORT, $updated);
+        $this->assertStringContainsString('    '.UserRoles::TRAIT, $updated);
+
+        // The trait goes INSIDE the class, not beside the imports.
+        $this->assertGreaterThan(
+            strpos($updated, 'class User extends'),
+            strpos($updated, '    '.UserRoles::TRAIT),
+        );
+    }
+
+    /** And a model that already has it is returned untouched. */
+    public function test_a_model_that_already_holds_roles_is_left_alone(): void
+    {
+        $already = file_get_contents(app_path('Models/User.php'));
+
+        $this->assertTrue(UserRoles::present($already), 'Fixture assumption: this app has the trait.');
+        $this->assertSame($already, UserRoles::add($already));
+    }
+
+    /**
+     * AN UNFAMILIAR SHAPE IS REPORTED, NOT GUESSED AT. Rewriting somebody's user
+     * model on a pattern that did not match is worse than telling them what to
+     * write - `panel:install` prints the two lines and moves on.
+     */
+    public function test_an_unfamiliar_model_is_declined_rather_than_mangled(): void
+    {
+        $this->assertNull(UserRoles::add("<?php\n\nreturn 'not a class at all';\n"));
+    }
+
+    /** And the path resolver only claims what it can actually resolve. */
+    public function test_it_resolves_only_models_under_the_app_namespace(): void
+    {
+        $this->assertSame(
+            app_path('Models/User.php'),
+            UserRoles::pathFor('App\\Models\\User', app_path()),
+        );
+
+        $this->assertNull(UserRoles::pathFor('Vendor\\Package\\User', app_path()));
+        $this->assertNull(UserRoles::pathFor('App\\Models\\NoSuchModel', app_path()));
     }
 }

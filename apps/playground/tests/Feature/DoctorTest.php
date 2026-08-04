@@ -459,4 +459,42 @@ final class DoctorTest extends TestCase
 
         $this->artisan('panel:doctor --json')->assertFailed();
     }
+
+    /**
+     * DOCTOR NAMES THE TRAIT WITHOUT WHICH THE PANEL DENIES EVERYTHING.
+     *
+     * `panel:install` adds it now, so this is for an installation that predates
+     * that or whose user model was replaced since. The check is on the MODEL's
+     * methods rather than on the file, because what matters is whether a granted
+     * ability can be held - not how the class came to be able to hold it.
+     */
+    public function test_it_reports_a_user_model_that_cannot_hold_a_role(): void
+    {
+        config(['auth.providers.users.model' => RolelessUser::class]);
+
+        $this->artisan('panel:doctor')
+            ->expectsOutputToContain('cannot hold a role')
+            ->assertExitCode(1);
+    }
+
+    /** And says nothing when the model can. */
+    public function test_it_is_quiet_when_the_user_model_holds_roles(): void
+    {
+        $this->assertTrue(method_exists(config('auth.providers.users.model'), 'assignRole'));
+
+        $output = Artisan::output();
+
+        $this->artisan('panel:doctor');
+
+        $this->assertStringNotContainsString('cannot hold a role', Artisan::output().$output);
+    }
 }
+
+/**
+ * A user model with no roles, for the check above.
+ *
+ * A REAL CLASS rather than an anonymous one, because the check asks
+ * `method_exists()` of a class NAME out of config, and an anonymous class's name
+ * is not something config can hold.
+ */
+final class RolelessUser extends \Illuminate\Foundation\Auth\User {}

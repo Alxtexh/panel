@@ -10,10 +10,10 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.6.0"
+"panelkit/panel": "^0.7.0"
 ```
 
-Composer reads `^0.6.0` on a `0.x` package as `>=0.6.0 <0.7.0`, which is what you
+Composer reads `^0.7.0` on a `0.x` package as `>=0.7.0 <0.8.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
 The three packages are **versioned together**. `panelkit/panel@0.2.0` expects

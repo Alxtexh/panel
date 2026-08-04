@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 |     | package (installed)     | reference app only      |
 | --- | ----------------------- | ----------------------- |
-| PHP | 276 files, 48,871 lines | 97 files, 13,887 lines |
+| PHP | 277 files, 49,060 lines | 97 files, 13,887 lines |
 | Vue | 265 components          | **80 components**       |
 
 The Vue column inverted in v0.6.3, and that is the headline. The demo used to

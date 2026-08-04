@@ -389,6 +389,41 @@ say "Signed in through the generated login"
 # `/customers` really does answer 302; `/dashboard` really does name its
 # component in the Inertia payload. Inertia resolves a page by globbing that
 # directory in the BROWSER, so the panel was blank for anybody who opened it.
+# ---------------------------------------------------------------------------
+# THE TRAIT WITHOUT WHICH THE PANEL DENIES EVERYTHING.
+#
+# `spatie/laravel-permission` is a hard dependency: the tables migrate, the sync
+# above created every ability and an Administrator role holding them all, and
+# each of those steps reported success. But a stock `laravel/laravel` `User` has
+# no `HasRoles`, so it has no `assignRole()` and no `hasPermission()` - the role
+# exists and nobody can hold it, and every screen refuses the person who owns
+# the installation. Nothing throws. Nothing logs.
+say "Checking the user model can hold a role"
+
+grep -q 'use HasRoles;' app/Models/User.php \
+    || fail "panel:install did not add HasRoles to app/Models/User.php - the panel will deny every ability to everybody, silently."
+
+cat > verify-roles.php <<'HIT'
+<?php
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+$model = config('auth.providers.users.model');
+
+echo method_exists($model, 'assignRole') && method_exists($model, 'hasPermission')
+    ? 'holds-roles'
+    : 'cannot-hold-roles';
+echo PHP_EOL;
+HIT
+roles_result="$(php verify-roles.php 2>&1 | tail -1)"
+rm -f verify-roles.php
+
+[ "$roles_result" = "holds-roles" ] \
+    || fail "The user model still cannot hold a role - got: $roles_result"
+
+say "the user model holds roles, so a granted ability is actually held"
+
 say "Checking the packaged screens were written as files"
 
 for screen in ResourceIndex ResourceForm ResourceView Trash PanelDashboard errors/Error landing/Composed; do
