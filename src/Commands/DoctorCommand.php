@@ -855,7 +855,17 @@ final class DoctorCommand extends Command
             return;
         }
 
-        if (method_exists($model, 'assignRole') && method_exists($model, 'hasPermission')) {
+        /*
+         * `assignRole()` IS THE REQUIREMENT, and `hasPermission()` is not.
+         *
+         * The first version of this asked for both and failed a model that was
+         * correctly wired: `hasPermission()` is the reference application's own
+         * convenience wrapper, not part of Spatie's trait. `Ability::held()`
+         * treats it as optional and falls back to `can()`, which reaches Spatie
+         * through its `Gate::before` hook. What actually cannot be worked around
+         * is a model that cannot be GRANTED a role in the first place.
+         */
+        if (method_exists($model, 'assignRole')) {
             return;
         }
 
