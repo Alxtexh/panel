@@ -24,11 +24,11 @@ import { Plus, ShieldAlert, Trash2, TriangleAlert } from '@lucide/vue'
 // rendered, and the build stayed clean because an unresolved component is a
 // runtime console warning rather than a compile error. That is the third time
 // this screen's delete has failed silently.
+import { computed, ref, watch } from 'vue'
 import { PkModal } from '@alxtexh-enterprise/panel'
 // Generated from the routes, so renaming one breaks the build rather than
 // leaving this screen posting at a 404 nothing reports.
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
-import { computed, ref, watch } from 'vue'
 
 interface RoleRow {
     id: number

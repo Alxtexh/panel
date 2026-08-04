@@ -14,5 +14,21 @@
         "forceConsistentCasingInFileNames": true,
         "skipLibCheck": true
     },
-    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"]
+    "//": [
+        "BOTH HALVES. `inertia` was missing, and the cost was not type checking -",
+        "the demo covers that transitively by importing it. The cost was LINTING:",
+        "ESLint's typed rules ask the project service for each file, a file no",
+        "tsconfig claims comes back as a parsing error rather than a rule failure,",
+        "and ~100 packaged screens reported `was not found by the project service`",
+        "instead of being checked. tsconfig.build.json deliberately still lists",
+        "only src - it is rooted there and controls what declarations get emitted."
+    ],
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.d.ts",
+        "src/**/*.vue",
+        "inertia/**/*.ts",
+        "inertia/**/*.d.ts",
+        "inertia/**/*.vue"
+    ]
 }

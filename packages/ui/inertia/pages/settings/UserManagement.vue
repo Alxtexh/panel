@@ -29,6 +29,7 @@
  */
 import { Deferred, Head, Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { Plus, ShieldAlert, Trash2, TriangleAlert } from '@lucide/vue'
+import { computed, ref, watch } from 'vue'
 import type { RecordActionGroup, RecordActionItem } from '@alxtexh-enterprise/panel'
 import {
     BulkActions,
@@ -39,7 +40,6 @@ import {
     PkModal,
 } from '@alxtexh-enterprise/panel'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
-import { computed, ref, watch } from 'vue'
 /*
  * NO `layout` HERE. A packaged screen names no layout - the page file in the
  * consuming application decides, which is what lets one app wrap this in its

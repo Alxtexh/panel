@@ -25,12 +25,11 @@
  *   tenant's routers are tenant data (addendum Part A). That is what lets the
  *   schema cache key drop the tenant id entirely.
  */
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
+import { computed, ref, toRef, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
 import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
-import { useListTable, type ListPageProps } from '../composables/useListTable'
-import { useBulkJob } from '../composables/useBulkJob'
-import ImportDialog from '../components/ImportDialog.vue'
-import RenderHook from '../components/RenderHook.vue'
 import {
     BulkActions,
     DataTable,
@@ -52,13 +51,13 @@ import {
     useLiveUpdates,
     hasBadgeValue,
     useSchemaColumns,
-    type RecordActionGroup,
-    type RecordActionItem,
-    type SchemaColumn,
 } from '@alxtexh-enterprise/panel'
-import { Head, Link, router, usePage } from '@inertiajs/vue3'
-import { computed, ref, toRef, watch } from 'vue'
-import { toast } from 'vue-sonner'
+import type { RecordActionGroup, RecordActionItem, SchemaColumn } from '@alxtexh-enterprise/panel'
+import ImportDialog from '../components/ImportDialog.vue'
+import RenderHook from '../components/RenderHook.vue'
+import { useBulkJob } from '../composables/useBulkJob'
+import { useListTable } from '../composables/useListTable'
+import type { ListPageProps } from '../composables/useListTable'
 
 interface ResourceSchema {
     v: number
@@ -236,7 +235,9 @@ const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
 function render(key: string, value: unknown, row?: Record<string, unknown>): string {
     const column = byKey.value[key]
 
-    if (value === null || value === undefined || value === '') return '-'
+    if (value === null || value === undefined || value === '') {
+        return '-'
+    }
 
     if (column?.type === 'date' || column?.type === 'datetime') {
         return new Date(String(value)).toLocaleDateString(undefined, dateFormats[column.type])
@@ -275,7 +276,9 @@ function money(
 ): string {
     const raw = Number(value)
 
-    if (Number.isNaN(raw)) return String(value)
+    if (Number.isNaN(raw)) {
+        return String(value)
+    }
 
     const amount = column.major ? raw : raw / 100
 
@@ -314,7 +317,9 @@ const columnSummaries = computed(() => {
     const out: Record<string, any> = {}
 
     for (const column of schemaColumns.value) {
-        if ((column as any).summary) out[column.key] = (column as any).summary
+        if ((column as any).summary) {
+            out[column.key] = (column as any).summary
+        }
     }
 
     return Object.keys(out).length ? out : null
@@ -539,7 +544,9 @@ function registerRowMenu(id: string | number, instance: unknown) {
 function onRowContextMenu(row: Record<string, any>, event: MouseEvent) {
     // Reordering is a mode where the only verb is "move"; opening an action
     // menu mid-drag offers things that contradict what the mode is for.
-    if (reordering.value) return
+    if (reordering.value) {
+        return
+    }
 
     rowMenus.get(row.id)?.openContextMenu(event)
 }
@@ -621,7 +628,9 @@ const actionForm = ref<{
 async function submitActionForm() {
     const open = actionForm.value
 
-    if (!open) return
+    if (!open) {
+        return
+    }
 
     open.processing = true
     open.errors = {}
@@ -680,7 +689,9 @@ async function submitActionForm() {
         // The list, not the row - see `runRecordAction` for why.
         router.reload({ only: ['records', 'total', 'tabCounts'] })
     } finally {
-        if (actionForm.value) actionForm.value.processing = false
+        if (actionForm.value) {
+            actionForm.value.processing = false
+        }
     }
 }
 
@@ -697,13 +708,17 @@ const runningAction = ref<string | null>(null)
 function busyActionFor(row: Record<string, any>): string | null {
     const running = runningAction.value
 
-    if (!running || !running.startsWith(`${row.id}:`)) return null
+    if (!running || !running.startsWith(`${row.id}:`)) {
+        return null
+    }
 
     return running.slice(String(row.id).length + 1)
 }
 
 async function runRecordAction(row: Record<string, any>, action: any) {
-    if (action.confirmation && !window.confirm(action.confirmation)) return
+    if (action.confirmation && !window.confirm(action.confirmation)) {
+        return
+    }
 
     runningAction.value = `${row.id}:${action.key}`
 
@@ -764,7 +779,9 @@ async function searchActionOptions(
         headers: { Accept: 'application/json' },
     })
 
-    if (!res.ok) throw new Error(String(res.status))
+    if (!res.ok) {
+        throw new Error(String(res.status))
+    }
 
     return (await res.json()).options
 }
@@ -851,6 +868,7 @@ async function runBulk(action: string, data?: Record<string, unknown>) {
 
     if (job.error.value) {
         toast.error(job.error.value)
+
         return
     }
 
@@ -887,7 +905,9 @@ function onBulkAction(key: string) {
 async function exportSelection() {
     await job.exportView(bulkTarget())
 
-    if (job.error.value) toast.error(job.error.value)
+    if (job.error.value) {
+        toast.error(job.error.value)
+    }
 }
 
 const importing = ref(false)
@@ -912,7 +932,9 @@ function onImported(written: number) {
 watch(
     () => job.downloadUrl.value,
     (url) => {
-        if (!url) return
+        if (!url) {
+            return
+        }
 
         toast.success('Your export is ready', {
             duration: Number.POSITIVE_INFINITY,
@@ -924,13 +946,18 @@ watch(
 watch(
     () => job.error.value,
     (message) => {
-        if (message) toast.error(message)
+        if (message) {
+            toast.error(message)
+        }
     },
 )
 
 function destroy() {
     const row = confirmingDelete.value
-    if (!row) return
+
+    if (!row) {
+        return
+    }
 
     router.delete(`${props.schema.routes.index}/${row.id}`, {
         preserveScroll: true,
@@ -953,9 +980,14 @@ function destroy() {
  * not import Inertia or ship an HTTP client (spec §4).
  * ------------------------------------------------------------------------- */
 
-// `status` deliberately unused since the live badge was removed (Part G.2):
-// the transport still runs and rows still move; nothing advertises it.
-const { recentlyChanged } = useLiveUpdates({
+// NOTHING IS DESTRUCTURED, and that is the whole point of calling it.
+//
+// `status` went unused when the live badge was removed (Part G.2) and
+// `recentlyChanged` - the set of rows a patch just touched - was destructured
+// for a row highlight that went with it. The transport still runs and rows
+// still move; nothing advertises it. Naming a binding no template reads is how
+// a removed feature keeps looking present.
+useLiveUpdates({
     config: props.live,
     rows: t.rows,
     fetchChanges: async (ids, since) => {
@@ -964,7 +996,9 @@ const { recentlyChanged } = useLiveUpdates({
             headers: { Accept: 'application/json' },
         })
 
-        if (!res.ok) throw new Error(String(res.status))
+        if (!res.ok) {
+            throw new Error(String(res.status))
+        }
 
         return res.json()
     },
@@ -993,7 +1027,9 @@ function badgeLabel(key: string, value: unknown): string {
         // normalised before the lookup.
         const lookup = typeof value === 'boolean' ? (value ? '1' : '0') : String(value)
 
-        if (labels[lookup] !== undefined) return labels[lookup]
+        if (labels[lookup] !== undefined) {
+            return labels[lookup]
+        }
     }
 
     if (typeof value === 'boolean') {

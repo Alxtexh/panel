@@ -1,4 +1,5 @@
-import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import type { Ref } from 'vue'
 
 /**
  * Where the pointer is over an element, as 0..1 on each axis.

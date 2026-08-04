@@ -40,7 +40,13 @@ export function useColumnVisibility(storageKey: string) {
 
     function toggle(key: string) {
         const next = new Set(hidden.value)
-        next.has(key) ? next.delete(key) : next.add(key)
+
+        if (next.has(key)) {
+            next.delete(key)
+        } else {
+            next.add(key)
+        }
+
         hidden.value = next
     }
 

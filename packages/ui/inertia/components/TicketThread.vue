@@ -29,9 +29,9 @@
  * it is a UI hint, and the write re-checks server-side.
  */
 import { router } from '@inertiajs/vue3'
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 
 const props = defineProps<{
     /** Forwarded by the record page. */

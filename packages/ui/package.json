@@ -61,7 +61,9 @@
     },
     "scripts": {
         "test": "vitest run",
-        "format": "prettier --write src/ inertia/",
+        "lint": "../../apps/playground/node_modules/.bin/eslint . --fix",
+    "lint:check": "../../apps/playground/node_modules/.bin/eslint .",
+    "format": "prettier --write src/ inertia/",
         "format:check": "prettier --check src/ inertia/",
         "build": "vite build && vue-tsc -p tsconfig.build.json",
         "prepack": "npm run build"

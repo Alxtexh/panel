@@ -13,10 +13,10 @@
  */
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import type { User } from '../../types'
 import { Avatar, AvatarFallback, AvatarImage } from '@alxtexh-enterprise/panel'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
 import { getInitials } from '../../composables/useInitials'
+import type { User } from '../../types'
 
 const page = usePage()
 /**

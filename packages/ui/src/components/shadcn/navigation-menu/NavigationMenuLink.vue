@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { NavigationMenuLinkEmits, NavigationMenuLinkProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { reactiveOmit } from '@vueuse/core'
+import type { NavigationMenuLinkEmits, NavigationMenuLinkProps } from 'reka-ui'
 import { NavigationMenuLink, useForwardPropsEmits } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 import { cn } from '../../../lib/cn'
 
 const props = defineProps<NavigationMenuLinkProps & { class?: HTMLAttributes['class'] }>()

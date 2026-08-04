@@ -12,8 +12,8 @@
  * the guarantee the whole feature rests on: what was previewed and what prints
  * are one file, so they cannot drift.
  */
-import { PkButton as Button, PkDocument } from '@alxtexh-enterprise/panel'
 import { Head } from '@inertiajs/vue3'
+import { PkButton as Button, PkDocument } from '@alxtexh-enterprise/panel'
 
 defineProps<{
     document: {

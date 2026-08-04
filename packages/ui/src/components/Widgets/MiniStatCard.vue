@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import PkSkeleton from '../primitives/PkSkeleton.vue'
 /**
  * A compact metric card: value, delta badge, and a filled sparkline beneath.
@@ -16,7 +17,6 @@ import PkSkeleton from '../primitives/PkSkeleton.vue'
  * colouring for metrics where down is the win - churn, failures, latency -
  * because a rising failure count rendered green is worse than no colour at all.
  */
-import { computed } from 'vue'
 import Sparkline from './Sparkline.vue'
 
 const props = withDefaults(

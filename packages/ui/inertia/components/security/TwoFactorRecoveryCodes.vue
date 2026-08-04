@@ -12,6 +12,7 @@
  */
 import { Form } from '@inertiajs/vue3'
 import { Eye, EyeOff, LockKeyhole, RefreshCw } from '@lucide/vue'
+import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import {
     Card,
     CardContent,
@@ -21,7 +22,6 @@ import {
     PkAlertError as AlertError,
     PkButton as Button,
 } from '@alxtexh-enterprise/panel'
-import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import type { TwoFactorRoutes } from '../../composables/useTwoFactorAuth'
 import { useTwoFactorAuth } from '../../composables/useTwoFactorAuth'
 

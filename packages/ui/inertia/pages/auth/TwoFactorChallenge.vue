@@ -16,10 +16,10 @@
  * a rendering of one input and the form posts `code` either way.
  */
 import { Form, Head } from '@inertiajs/vue3'
-import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import { computed, ref } from 'vue'
-import AuthInputError from '../../components/AuthInputError.vue'
+import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
+import AuthInputError from '../../components/AuthInputError.vue'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{

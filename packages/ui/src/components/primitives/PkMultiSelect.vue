@@ -138,7 +138,11 @@ function hide() {
 }
 
 function toggle() {
-    open.value ? hide() : show()
+    if (open.value) {
+        hide()
+    } else {
+        show()
+    }
 }
 
 function pick(option: MultiSelectOption) {

@@ -20,8 +20,8 @@
  * server too, where `localStorage` does not exist and touching it is a 500.
  */
 import { usePage } from '@inertiajs/vue3'
-import { PkBottomNav, ThemeToggle } from '@alxtexh-enterprise/panel'
 import { computed, onMounted, ref, watch } from 'vue'
+import { PkBottomNav, ThemeToggle } from '@alxtexh-enterprise/panel'
 
 import PanelAccountMenu from './PanelAccountMenu.vue'
 import PanelBreadcrumbs from './PanelBreadcrumbs.vue'

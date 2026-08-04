@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import PkSkeleton from '../primitives/PkSkeleton.vue'
 /**
  * One card, split into metric segments.
@@ -33,7 +34,6 @@ import PkSkeleton from '../primitives/PkSkeleton.vue'
  * either way; this is shoulder-surfing courtesy. Anything that must not reach
  * the browser must not be sent to it.
  */
-import { computed, ref } from 'vue'
 
 export interface StatSegment {
     key: string

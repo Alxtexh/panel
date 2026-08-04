@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from '@lucide/vue'
-import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
-import type { User } from '../../types'
 import { computed } from 'vue'
-import AppLogo from './AppLogo.vue'
-import Breadcrumbs from './Breadcrumbs.vue'
+import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
 import { Avatar, AvatarFallback, AvatarImage } from '@alxtexh-enterprise/panel'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
 import {
@@ -22,10 +19,13 @@ import {
     SheetTrigger,
 } from '@alxtexh-enterprise/panel'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@alxtexh-enterprise/panel'
+import { toUrl } from '@alxtexh-enterprise/panel'
 import { useCurrentUrl } from '../../composables/useCurrentUrl'
 import { getInitials } from '../../composables/useInitials'
-import { toUrl } from '@alxtexh-enterprise/panel'
+import type { User } from '../../types'
 import type { BreadcrumbItem, NavItem } from '../../types'
+import AppLogo from './AppLogo.vue'
+import Breadcrumbs from './Breadcrumbs.vue'
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[]

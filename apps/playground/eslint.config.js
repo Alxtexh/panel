@@ -96,19 +96,21 @@ export default defineConfigWithVueTs(
      | `basePath` (ESLint 9.30+) lifts the root for this block only, so the same
      | rules apply without moving the config or adding a root package.
      */
-    {
-        basePath: '../../packages/ui',
-        files: ['src/**/*.{ts,vue}'],
-    },
     /*
-     | AND THE SCREENS PACKAGE, for the same reason and with more at stake: the
-     | resource list, the form and the record page moved out of this application
-     | into `packages/inertia`, so without this block the code most consumers
-     | actually see would be the least checked code in the repository.
+     | BOTH HALVES, AND THE SECOND ONE IS THE POINT. `src` is the component
+     | library; `inertia` is the resource list, the form, the record page and
+     | every packaged screen - the code most consumers actually see.
+     |
+     | THIS BLOCK NAMED A DIRECTORY THAT NO LONGER EXISTED. 0.8.0 merged
+     | `packages/inertia` into `packages/ui/inertia`, and the config kept
+     | pointing at the old path: ESLint resolved it to nothing, reported no
+     | error, and left the packaged screens the LEAST checked code in the
+     | repository for three releases. A lint pass that exits zero over a
+     | directory that is not there is indistinguishable from a clean one.
      */
     {
-        basePath: '../../packages/inertia',
-        files: ['src/**/*.{ts,vue}'],
+        basePath: '../../packages/ui',
+        files: ['{src,inertia}/**/*.{ts,vue}'],
     },
     {
         ignores: [

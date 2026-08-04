@@ -1,5 +1,5 @@
-import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { ref } from 'vue'
 
 /**
  * Runs a bulk action or an export, and follows it if it was queued.
@@ -84,7 +84,10 @@ export function useBulkJob(resourceKey: string) {
     let timer: ReturnType<typeof setTimeout> | null = null
 
     function stop() {
-        if (timer) clearTimeout(timer)
+        if (timer) {
+            clearTimeout(timer)
+        }
+
         timer = null
     }
 
@@ -103,6 +106,7 @@ export function useBulkJob(resourceKey: string) {
         if (attempt >= MAX_POLLS) {
             error.value = 'This job is taking longer than expected. It may still be running.'
             busy.value = false
+
             return
         }
 
@@ -113,7 +117,9 @@ export function useBulkJob(resourceKey: string) {
                     credentials: 'same-origin',
                 })
 
-                if (!response.ok) throw new Error('Lost track of that job.')
+                if (!response.ok) {
+                    throw new Error('Lost track of that job.')
+                }
 
                 const state: JobProgress = await response.json()
                 progress.value = state
@@ -136,6 +142,7 @@ export function useBulkJob(resourceKey: string) {
                 if (state.status === 'failed') {
                     busy.value = false
                     error.value = state.error ?? 'That job failed.'
+
                     return
                 }
 
@@ -177,6 +184,7 @@ export function useBulkJob(resourceKey: string) {
                     download: null,
                 }
                 router.reload({ only: ['records', 'total', 'tabCounts'] })
+
                 return
             }
 

@@ -15,6 +15,7 @@
  * blank on an unrelated visit changes nothing because blank never submits.
  */
 import { Head, useForm } from '@inertiajs/vue3'
+import { toast } from 'vue-sonner'
 import {
     Label,
     PkButton as Button,
@@ -22,7 +23,6 @@ import {
     ShadcnInput as Input,
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
-import { toast } from 'vue-sonner'
 
 const props = defineProps<{
     /** Where the form posts. See `AssistantSettingsController`. */

@@ -132,7 +132,6 @@ function conditionMet(node: Record<string, any>): boolean {
         return true
     }
 
-    // eslint-disable-next-line eqeqeq
     return props.values[condition.field] == condition.value
 }
 

@@ -104,7 +104,13 @@ function reject(file: File): string | null {
     return null
 }
 
-async function accept(files: FileList | null) {
+/*
+ * NOT `accept`, WHICH IS A PROP. `<script setup>` puts props and setup
+ * bindings in one template scope, so `@change="accept(...)"` was a name the
+ * compiler could resolve to a `string[]` - a picker that throws "accept is
+ * not a function" while drag-and-drop, which calls this from script, works.
+ */
+async function acceptFiles(files: FileList | null) {
     const file = files?.[0]
 
     if (!file || props.disabled) {
@@ -173,7 +179,7 @@ async function remove() {
 
 function onDrop(event: DragEvent) {
     dragging.value = false
-    accept(event.dataTransfer?.files ?? null)
+    acceptFiles(event.dataTransfer?.files ?? null)
 }
 </script>
 
@@ -201,7 +207,7 @@ function onDrop(event: DragEvent) {
                 class="sr-only"
                 :accept="acceptAttribute"
                 :disabled="disabled"
-                @change="accept(($event.target as HTMLInputElement).files)"
+                @change="acceptFiles(($event.target as HTMLInputElement).files)"
             />
 
             <svg

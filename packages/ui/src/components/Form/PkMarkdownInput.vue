@@ -65,7 +65,9 @@ const preview = computed(() =>
 function wrap(before: string, after = before) {
     const el = document.getElementById(props.id ?? '') as HTMLTextAreaElement | null
 
-    if (el === null) return
+    if (el === null) {
+        return
+    }
 
     const start = el.selectionStart
     const end = el.selectionEnd

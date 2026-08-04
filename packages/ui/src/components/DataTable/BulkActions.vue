@@ -41,8 +41,8 @@
  */
 import { computed, ref } from 'vue'
 import PkModal from '../Overlay/PkModal.vue'
-import PkDropdown from '../primitives/PkDropdown.vue'
 import { iconPath } from '../primitives/icons'
+import PkDropdown from '../primitives/PkDropdown.vue'
 
 export interface BulkActionSchema {
     key: string

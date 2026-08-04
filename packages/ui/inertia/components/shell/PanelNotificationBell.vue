@@ -24,8 +24,8 @@
  * portal mounted at `/reseller` asked the wrong panel and got the wrong bell.
  */
 import { usePage } from '@inertiajs/vue3'
-import { PkSlideover } from '@alxtexh-enterprise/panel'
 import { computed, ref } from 'vue'
+import { PkSlideover } from '@alxtexh-enterprise/panel'
 
 /*
  * INLINE, NOT IMPORTED. A type imported into `defineProps` makes the SFC

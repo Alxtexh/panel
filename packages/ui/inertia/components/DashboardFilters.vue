@@ -28,8 +28,8 @@
  * different tomorrow, and a shared link would show the recipient a different
  * window than the sender saw.
  */
-import { PkMultiSelect, PkSlideover } from '@alxtexh-enterprise/panel'
 import { computed, ref, watch } from 'vue'
+import { PkMultiSelect, PkSlideover } from '@alxtexh-enterprise/panel'
 
 const props = defineProps<{
     open: boolean

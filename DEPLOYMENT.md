@@ -122,12 +122,20 @@ only inside the packages is purged and you get a styled shell around an
 unstyled table:
 
 ```css
-@source '../../node_modules/@panelkit/ui/src/**/*.{vue,ts}';
-@source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';
+@source '../../node_modules/@alxtexh-enterprise/panel/dist/**/*.js';
+@source '../../node_modules/@alxtexh-enterprise/panel/inertia/**/*.{vue,ts}';
 ```
 
 This is the single most common broken-looking install, and it produces no error
 of any kind — the build succeeds and the page renders.
+
+**ONE PACKAGE, TWO PATHS, AND BOTH ARE NEEDED.** Its halves ship differently:
+`dist` is compiled, so its class names are string literals in built render
+functions, while `inertia` ships raw source so you can override a screen. Scan
+one and the other's utilities are purged.
+
+`php artisan panel:update` writes these for you, including from the older
+`@panelkit/ui` and `@panelkit/panel` names.
 
 ## Wayfinder
 

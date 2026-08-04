@@ -51,8 +51,26 @@ function parts(
                     class="flex flex-col items-center gap-1 text-center"
                 >
                     <dt class="order-2 text-sm text-muted-foreground">{{ item.label }}</dt>
+                    <!--
+                        THE PARSE DECIDES, not the caller. `parts()` returns null
+                        for anything that is not a leading number - "Talk to us"
+                        is a legitimate stat value, and animating it would be
+                        nonsense - so that case renders as plain text.
+
+                        This component and its parser both shipped unused for
+                        several releases: imported, documented, and never
+                        reached by the template. Nothing failed, the numbers
+                        just never counted.
+                    -->
                     <dd class="order-1 text-3xl font-semibold tracking-tight sm:text-4xl">
-                        {{ item.value }}
+                        <PkCountUp
+                            v-if="parts(item.value)"
+                            :to="parts(item.value)!.number"
+                            :prefix="parts(item.value)!.prefix"
+                            :suffix="parts(item.value)!.suffix"
+                            :decimals="parts(item.value)!.decimals"
+                        />
+                        <template v-else>{{ item.value }}</template>
                     </dd>
                 </div>
             </dl>

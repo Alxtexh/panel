@@ -1,6 +1,8 @@
-import { mount, type VueWrapper } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
+import type { VueWrapper } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
-import { defineComponent, ref, type Ref } from 'vue'
+import { defineComponent, ref } from 'vue'
+import type { Ref } from 'vue'
 
 import { useUnsavedChanges } from './useUnsavedChanges'
 

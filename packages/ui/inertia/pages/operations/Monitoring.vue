@@ -53,8 +53,8 @@ import {
     Server,
     TriangleAlert,
 } from '@lucide/vue'
-import { Sparkline } from '@alxtexh-enterprise/panel'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { Sparkline } from '@alxtexh-enterprise/panel'
 
 interface Health {
     cpu: {

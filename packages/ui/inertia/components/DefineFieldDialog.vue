@@ -22,10 +22,10 @@
  * changed, and a partial reload would keep serving the cached shape without
  * the new field.
  */
-import { PkButton as Button, PkModal } from '@alxtexh-enterprise/panel'
 import { router } from '@inertiajs/vue3'
 import { reactive, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
+import { PkButton as Button, PkModal } from '@alxtexh-enterprise/panel'
 
 const props = defineProps<{
     open: boolean

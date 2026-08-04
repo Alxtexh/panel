@@ -21,8 +21,8 @@
  * the package's. The server sends `action`; nothing here guesses it.
  */
 import { Form, Head, Link } from '@inertiajs/vue3'
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'

@@ -67,7 +67,9 @@ const needsMore = computed(() => props.items.length > MAX)
  * two levels deep has no idea which section they are in.
  */
 function isActive(href: string): boolean {
-    if (href === '/') return props.current === '/'
+    if (href === '/') {
+        return props.current === '/'
+    }
 
     return props.current === href || props.current.startsWith(`${href}/`)
 }

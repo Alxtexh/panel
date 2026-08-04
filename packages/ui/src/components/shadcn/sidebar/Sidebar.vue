@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { SidebarProps } from '.'
 import { cn } from '../../../lib/cn'
 import { Sheet, SheetContent } from '../sheet'
 import SheetDescription from '../sheet/SheetDescription.vue'
 import SheetHeader from '../sheet/SheetHeader.vue'
 import SheetTitle from '../sheet/SheetTitle.vue'
 import { SIDEBAR_WIDTH_MOBILE, useSidebar } from './utils'
+import type { SidebarProps } from '.'
 
 defineOptions({
     inheritAttrs: false,

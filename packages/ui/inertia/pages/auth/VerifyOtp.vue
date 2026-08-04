@@ -7,9 +7,9 @@
  * resent, and saying when it expires is the difference between waiting and
  * asking for another one.
  */
-import { Form, Head, Link } from '@inertiajs/vue3'
-import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
+import { Form, Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'

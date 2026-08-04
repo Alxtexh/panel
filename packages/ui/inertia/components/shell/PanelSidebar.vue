@@ -21,8 +21,8 @@
  * rather than vanishing, because a menu with holes in it looks broken.
  */
 import { Link } from '@inertiajs/vue3'
-import { iconPath } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
+import { iconPath } from '@alxtexh-enterprise/panel'
 
 import type { NavItem } from './types'
 

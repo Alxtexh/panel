@@ -16,7 +16,7 @@ import PkSkeleton from '../primitives/PkSkeleton.vue'
  * shorter than the chart makes the whole dashboard jump when six cards resolve
  * at slightly different times.
  */
-const props = withDefaults(
+withDefaults(
     defineProps<{
         label: string
         description?: string | null

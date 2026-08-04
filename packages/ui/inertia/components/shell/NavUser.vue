@@ -2,7 +2,6 @@
 import { usePage } from '@inertiajs/vue3'
 import { ChevronsUpDown } from '@lucide/vue'
 import { computed } from 'vue'
-import type { User } from '../../types'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
 import {
     SidebarMenu,
@@ -10,6 +9,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@alxtexh-enterprise/panel'
+import type { User } from '../../types'
 import UserInfo from './UserInfo.vue'
 
 const page = usePage()

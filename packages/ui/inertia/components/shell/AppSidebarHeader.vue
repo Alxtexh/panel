@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3'
-import { AppearanceDrawer, useAppearance } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
+import { AppearanceDrawer, useAppearance } from '@alxtexh-enterprise/panel'
+import { SidebarTrigger } from '@alxtexh-enterprise/panel'
+import type { BreadcrumbItem } from '../../types'
 import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
 import NotificationBell from './PanelNotificationBell.vue'
-import { SidebarTrigger } from '@alxtexh-enterprise/panel'
-import type { BreadcrumbItem } from '../../types'
 
 const props = withDefaults(
     defineProps<{

@@ -32,7 +32,9 @@ const props = withDefaults(
 const checked = computed(() => {
     const v = props.value
 
-    if (typeof v === 'string') return v !== '' && v !== '0' && v.toLowerCase() !== 'false'
+    if (typeof v === 'string') {
+        return v !== '' && v !== '0' && v.toLowerCase() !== 'false'
+    }
 
     return Boolean(v)
 })

@@ -10,19 +10,21 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.8.3"
+"panelkit/panel": "^0.9.0"
 ```
 
-Composer reads `^0.8.3` on a `0.x` package as `>=0.8.3 <0.9.0`, which is what you
+Composer reads `^0.9.0` on a `0.x` package as `>=0.9.0 <0.10.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
-The two packages are **versioned together**. `panelkit/panel@0.8.0` expects
-`@panelkit/panel@0.8.x` on npm, and the PHP half's schema payload is the
-contract between them. Mixing majors is not tested and the failure is a rendered
-screen with a missing control, not an error.
+The two packages are **versioned together**. `panelkit/panel@0.9.0` expects
+`@alxtexh-enterprise/panel@0.9.x` on npm, and the PHP half's schema payload is
+the contract between them. Mixing minors is not tested and the failure is a
+rendered screen with a missing control, not an error.
 
-(There were three until 0.8.0, when the two npm packages became one. Notes for
-releases before that name them as they were.)
+(The npm half has been renamed twice: three packages until 0.8.0, when two of
+them became `@panelkit/panel`, and that became `@alxtexh-enterprise/panel` in
+0.9.0. Notes for earlier releases name the packages as they were, because they
+were.)
 
 ## What counts as breaking
 

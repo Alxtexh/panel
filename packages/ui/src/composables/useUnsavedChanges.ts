@@ -1,4 +1,5 @@
-import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import type { Ref } from 'vue'
 
 /**
  * Is this state different from the last saved version of it?

@@ -14,6 +14,7 @@
  * dialog somebody has to scroll.
  */
 import { Form } from '@inertiajs/vue3'
+import { useTemplateRef } from 'vue'
 import {
     Dialog,
     DialogClose,
@@ -28,7 +29,6 @@ import {
     PkHeading as Heading,
     PkPasswordInput as PasswordInput,
 } from '@alxtexh-enterprise/panel'
-import { useTemplateRef } from 'vue'
 import AuthInputError from './AuthInputError.vue'
 
 const props = withDefaults(

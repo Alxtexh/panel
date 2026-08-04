@@ -58,7 +58,9 @@ const valid = computed(() => HEX.test(value.value))
 function normalise(raw: string): string {
     const trimmed = raw.trim()
 
-    if (trimmed === '') return ''
+    if (trimmed === '') {
+        return ''
+    }
 
     const withHash = trimmed.startsWith('#') ? trimmed : `#${trimmed}`
 
@@ -88,7 +90,9 @@ const minRatio = computed(() => props.field.contrastMinRatio ?? AA_NORMAL)
 const failsContrast = computed(() => ratio.value !== null && ratio.value < minRatio.value)
 
 function useReadableShade() {
-    if (!props.field.contrastBackground) return
+    if (!props.field.contrastBackground) {
+        return
+    }
 
     emit(
         'update:modelValue',

@@ -72,7 +72,13 @@ export function useListTable(url: string, props: ListPageProps) {
 
     function toggleRow(id: string | number) {
         const next = new Set(selected.value)
-        next.has(id) ? next.delete(id) : next.add(id)
+
+        if (next.has(id)) {
+            next.delete(id)
+        } else {
+            next.add(id)
+        }
+
         selected.value = next
         // Removing a row means the selection is no longer "everything".
         allMatching.value = false
@@ -80,9 +86,15 @@ export function useListTable(url: string, props: ListPageProps) {
 
     function togglePage(select: boolean) {
         const next = new Set(selected.value)
+
         for (const row of props.records) {
-            select ? next.add(row.id) : next.delete(row.id)
+            if (select) {
+                next.add(row.id)
+            } else {
+                next.delete(row.id)
+            }
         }
+
         selected.value = next
         allMatching.value = false
     }
@@ -126,17 +138,26 @@ export function useListTable(url: string, props: ListPageProps) {
         const out: Record<string, string> = {}
 
         for (const [key, value] of Object.entries(merged)) {
-            if (value === null || value === undefined || value === '') continue
+            if (value === null || value === undefined || value === '') {
+                continue
+            }
+
             if (typeof value === 'boolean') {
                 out[key] = value ? '1' : '0'
                 continue
             }
+
             out[key] = String(value)
         }
 
         // Defaults are omitted so a pristine URL stays clean and shareable.
-        if (out.sort === 'created_at') delete out.sort
-        if (out.direction === 'desc') delete out.direction
+        if (out.sort === 'created_at') {
+            delete out.sort
+        }
+
+        if (out.direction === 'desc') {
+            delete out.direction
+        }
 
         return out
     }
@@ -183,7 +204,9 @@ export function useListTable(url: string, props: ListPageProps) {
     }
 
     function nextPage() {
-        if (!props.nextCursor || loading.value) return
+        if (!props.nextCursor || loading.value) {
+            return
+        }
 
         const cursor = props.nextCursor
         cursorStack.value = [...cursorStack.value, cursor]
@@ -191,7 +214,9 @@ export function useListTable(url: string, props: ListPageProps) {
     }
 
     function previousPage() {
-        if (cursorStack.value.length === 0 || loading.value) return
+        if (cursorStack.value.length === 0 || loading.value) {
+            return
+        }
 
         // Drop the cursor that got us here; the one beneath it produced the
         // previous page. An empty stack means page 1, which takes no cursor.
@@ -211,7 +236,9 @@ export function useListTable(url: string, props: ListPageProps) {
      * and nothing is discarded.
      */
     function firstPage() {
-        if (cursorStack.value.length === 0 || loading.value) return
+        if (cursorStack.value.length === 0 || loading.value) {
+            return
+        }
 
         cursorStack.value = []
         request(query())

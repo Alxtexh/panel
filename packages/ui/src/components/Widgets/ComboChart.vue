@@ -121,7 +121,7 @@ function centreOf(i: number): number {
     return pad.value.left + i * band.value + band.value / 2
 }
 
-const bars = computed(() =>
+const barShapes = computed(() =>
     barSeries.value.flatMap((s, si) =>
         s.points.map((p, i) => {
             const h = (Math.max(0, p.value) / barCeiling.value) * plot.value.h
@@ -141,7 +141,7 @@ const bars = computed(() =>
     ),
 )
 
-const lines = computed(() =>
+const lineShapes = computed(() =>
     lineSeries.value.map((s) => {
         const pts = s.points.map((p, i) => ({
             x: centreOf(i),
@@ -279,7 +279,7 @@ const active = computed(() => {
 
                 <!-- Bars first: the line is read AGAINST them and must sit on top. -->
                 <rect
-                    v-for="(b, i) in bars"
+                    v-for="(b, i) in barShapes"
                     :key="`b-${i}`"
                     :x="b.x"
                     :y="b.y"
@@ -291,7 +291,7 @@ const active = computed(() => {
                     pointer-events="none"
                 />
 
-                <g v-for="(l, i) in lines" :key="`l-${i}`">
+                <g v-for="(l, i) in lineShapes" :key="`l-${i}`">
                     <path
                         :d="l.d"
                         fill="none"

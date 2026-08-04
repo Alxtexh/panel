@@ -140,22 +140,6 @@ function multiOptionsFor(filter: FilterSchema): { value: string | number; label:
     )
 }
 
-function isChosen(filter: FilterSchema, value: unknown): boolean {
-    if (isMulti(filter)) {
-        return draftValues(filter).includes(value)
-    }
-
-    return draft.value[filter.key] === value
-}
-
-function toggleChip(filter: FilterSchema, value: unknown) {
-    const current = draftValues(filter)
-    const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value]
-
-    // Empty means "no filter", never "match nothing".
-    draft.value = { ...draft.value, [filter.key]: next.length ? next : null }
-}
-
 function setValue(filter: FilterSchema, value: unknown) {
     draft.value = { ...draft.value, [filter.key]: value === '' ? null : value }
 }
@@ -226,7 +210,13 @@ watch(
 
 function toggleColumnDraft(key: string) {
     const next = new Set(columnDraft.value)
-    next.has(key) ? next.delete(key) : next.add(key)
+
+    if (next.has(key)) {
+        next.delete(key)
+    } else {
+        next.add(key)
+    }
+
     columnDraft.value = next
 }
 

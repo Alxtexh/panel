@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { ref, watch, nextTick } from 'vue'
-import { useLiveUpdates, type LiveConfig } from './useLiveUpdates'
+import { useLiveUpdates } from './useLiveUpdates'
+import type { LiveConfig } from './useLiveUpdates'
 
 /**
  * Event batching: a hundred events must become one render, not a hundred.

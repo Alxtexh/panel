@@ -48,7 +48,6 @@ const emit = defineEmits<{ (e: 'update:modelValue', value: unknown): void }>()
  * is the bug.
  */
 function isChosen(option: Option): boolean {
-    // eslint-disable-next-line eqeqeq
     return props.modelValue != null && option.value == (props.modelValue as never)
 }
 </script>

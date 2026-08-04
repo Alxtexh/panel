@@ -17,9 +17,9 @@
  * in that minute looks like a failure rather than a next step.
  */
 import { Head, Link } from '@inertiajs/vue3'
-import { PkSkeleton } from '@alxtexh-enterprise/panel'
 import { Globe, Terminal } from '@lucide/vue'
 import { computed } from 'vue'
+import { PkSkeleton } from '@alxtexh-enterprise/panel'
 
 /*
  * NO LAYOUT IS NAMED HERE, and that is the difference between a page in an

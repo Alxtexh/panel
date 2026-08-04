@@ -14,6 +14,7 @@
  * space against nothing - it is what you open when you came to ask.
  */
 import { Head, Link } from '@inertiajs/vue3'
+import { computed, onMounted, ref } from 'vue'
 import {
     ChartCard,
     LineChart,
@@ -22,7 +23,6 @@ import {
     buttonClasses,
 } from '@alxtexh-enterprise/panel'
 import type { ChartSeries } from '@alxtexh-enterprise/panel'
-import { computed, onMounted, ref } from 'vue'
 
 const props = withDefaults(
     defineProps<{

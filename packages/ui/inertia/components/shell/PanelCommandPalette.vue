@@ -175,7 +175,12 @@ function scrollActiveIntoView(): void {
 function onKeydown(e: KeyboardEvent): void {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
-        open.value ? hide() : show()
+
+        if (open.value) {
+            hide()
+        } else {
+            show()
+        }
 
         return
     }

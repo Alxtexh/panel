@@ -16,6 +16,8 @@
  */
 import { Form } from '@inertiajs/vue3'
 import { Check, Copy, ScanLine } from '@lucide/vue'
+import { useClipboard } from '@vueuse/core'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import {
     Dialog,
     DialogContent,
@@ -29,8 +31,6 @@ import {
     isDark,
     useAppearance,
 } from '@alxtexh-enterprise/panel'
-import { useClipboard } from '@vueuse/core'
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import type { TwoFactorRoutes } from '../../composables/useTwoFactorAuth'
 import { useTwoFactorAuth } from '../../composables/useTwoFactorAuth'
 import type { TwoFactorConfigContent } from '../../types'

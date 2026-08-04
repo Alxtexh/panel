@@ -20,8 +20,8 @@
  * tells an attacker what they are missing.
  */
 import { Head, Link, router } from '@inertiajs/vue3'
-import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
+import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
 import ErrorArt from './ErrorArt.vue'
 
 const props = withDefaults(

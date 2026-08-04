@@ -14,6 +14,7 @@
  * how a refused delete looks like a slow one.
  */
 import { KeyRound, Trash2 } from '@lucide/vue'
+import { ref } from 'vue'
 import {
     Dialog,
     DialogClose,
@@ -24,7 +25,6 @@ import {
     DialogTrigger,
     PkButton as Button,
 } from '@alxtexh-enterprise/panel'
-import { ref } from 'vue'
 import type { Passkey } from '../../types'
 
 const props = defineProps<{

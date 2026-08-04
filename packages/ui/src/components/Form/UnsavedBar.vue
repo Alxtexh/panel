@@ -36,6 +36,13 @@ withDefaults(
         message?: string
         saveLabel?: string
         cancelLabel?: string
+        /*
+         * OPT-IN, AND ABSENT MEANS ABSENT. Discard reverts in place; Cancel
+         * leaves the page. They are different acts and a bar that offers both
+         * unasked would put three buttons on every dirty form in every
+         * consuming application. Set this to get the control.
+         */
+        discardLabel?: string
     }>(),
     {
         processing: false,
@@ -45,7 +52,7 @@ withDefaults(
     },
 )
 
-defineEmits<{ (e: 'save'): void; (e: 'cancel'): void }>()
+defineEmits<{ (e: 'save'): void; (e: 'cancel'): void; (e: 'discard'): void }>()
 </script>
 
 <template>
@@ -79,6 +86,16 @@ defineEmits<{ (e: 'save'): void; (e: 'cancel'): void }>()
                     </span>
 
                     <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ message }}</span>
+
+                    <button
+                        v-if="discardLabel"
+                        type="button"
+                        class="hover:bg-muted rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                        :disabled="processing"
+                        @click="$emit('discard')"
+                    >
+                        {{ discardLabel }}
+                    </button>
 
                     <button
                         type="button"

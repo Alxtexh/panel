@@ -61,11 +61,18 @@ function circleClass(i: number): string {
 
 function labelClass(i: number): string {
     if (props.failedStep !== null) {
-        if (i === props.failedStep) return 'text-destructive font-medium'
-        if (i > props.failedStep) return 'text-muted-foreground/60'
+        if (i === props.failedStep) {
+            return 'text-destructive font-medium'
+        }
+
+        if (i > props.failedStep) {
+            return 'text-muted-foreground/60'
+        }
     }
 
-    if (i === props.activeStep) return 'text-foreground font-medium'
+    if (i === props.activeStep) {
+        return 'text-foreground font-medium'
+    }
 
     return i < props.activeStep
         ? 'text-muted-foreground hover:text-foreground'
@@ -73,7 +80,9 @@ function labelClass(i: number): string {
 }
 
 function isDone(i: number): boolean {
-    if (props.failedStep !== null) return i < props.failedStep
+    if (props.failedStep !== null) {
+        return i < props.failedStep
+    }
 
     return i < props.activeStep
 }

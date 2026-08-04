@@ -59,7 +59,9 @@ function commit(next: Entry[]) {
 }
 
 function add(type: string) {
-    if (full.value) return
+    if (full.value) {
+        return
+    }
 
     commit([...entries.value, { type, data: {} }])
 }
@@ -72,7 +74,9 @@ function remove(index: number) {
 function move(index: number, offset: number) {
     const target = index + offset
 
-    if (target < 0 || target >= entries.value.length) return
+    if (target < 0 || target >= entries.value.length) {
+        return
+    }
 
     const next = [...entries.value]
     const [moved] = next.splice(index, 1)

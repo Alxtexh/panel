@@ -17,9 +17,10 @@
  * Nothing is imported until the operator has seen the exact rows that would
  * fail and chosen to go back rather than proceed.
  */
-import { PkButton as Button, PkModal, PkStepIndicator } from '@alxtexh-enterprise/panel'
 import { computed, ref, watch } from 'vue'
-import { useImport, type ImportField, type ImportRunResult } from '../composables/useImport'
+import { PkButton as Button, PkModal, PkStepIndicator } from '@alxtexh-enterprise/panel'
+import { useImport } from '../composables/useImport'
+import type { ImportField, ImportRunResult } from '../composables/useImport'
 
 const props = defineProps<{
     open: boolean
@@ -62,7 +63,9 @@ function reset(): void {
 watch(
     () => props.open,
     (open) => {
-        if (open) reset()
+        if (open) {
+            reset()
+        }
     },
 )
 
@@ -78,13 +81,17 @@ async function chooseFile(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement
     const chosen = input.files?.[0] ?? null
 
-    if (!chosen) return
+    if (!chosen) {
+        return
+    }
 
     file.value = chosen
 
     const result = await inspect(chosen)
 
-    if (error.value) return
+    if (error.value) {
+        return
+    }
 
     headers.value = result.headers
     fields.value = result.fields
@@ -93,28 +100,37 @@ async function chooseFile(event: Event): Promise<void> {
 }
 
 async function runDryRun(): Promise<void> {
-    if (!file.value) return
+    if (!file.value) {
+        return
+    }
 
     const result = await run(file.value, chosenMapping.value, true)
 
-    if (error.value) return
+    if (error.value) {
+        return
+    }
 
     dryRunResult.value = result
     activeStep.value = 2
 }
 
 async function confirmImport(): Promise<void> {
-    if (!file.value) return
+    if (!file.value) {
+        return
+    }
 
     const result = await run(file.value, chosenMapping.value, false)
 
-    if (error.value) return
+    if (error.value) {
+        return
+    }
 
     if ((result.failed ?? 0) > 0) {
         // The file changed underneath the preview - re-uploaded elsewhere,
         // or simply reads differently a second time. Show what changed
         // rather than claiming a partial success that did not happen.
         dryRunResult.value = result
+
         return
     }
 

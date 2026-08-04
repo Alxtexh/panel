@@ -21,10 +21,10 @@
  * is worse than one that is briefly stale - it is wrong in a way that looks
  * settled.
  */
-import { PkButton as Button, PkDocument, RecordForm } from '@alxtexh-enterprise/panel'
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
+import { PkButton as Button, PkDocument, RecordForm } from '@alxtexh-enterprise/panel'
 
 interface DocumentPayload {
     blocks: { type: string; [key: string]: unknown }[]
@@ -54,7 +54,13 @@ const form = useForm<Record<string, any>>({ ...props.values })
  * every render produce a fresh identity - which re-triggers the deep watcher
  * below and turns one keystroke into an endless preview loop.
  */
-const values = computed<Record<string, any>>(() => ({ ...form.data() }))
+/*
+ * `liveValues`, NOT `values` - that is the prop this derives from. Sharing the
+ * name meant the template's `:model-value="values"` could resolve to the prop's
+ * INITIAL data rather than the live form, so the preview would stop following
+ * what was being typed.
+ */
+const liveValues = computed<Record<string, any>>(() => ({ ...form.data() }))
 
 /** The record the preview is drawn against; empty means sample data. */
 const record = ref<string>('')
@@ -116,11 +122,12 @@ async function refresh(): Promise<void> {
 }
 
 watch(
-    () => [values.value, record.value],
+    () => [liveValues.value, record.value],
     () => {
         if (timer) {
             clearTimeout(timer)
         }
+
         timer = setTimeout(refresh, 250)
     },
     { deep: true },
@@ -244,7 +251,7 @@ function insert(token: string): void {
                 <RecordForm
                     :nodes="schema.nodes"
                     :columns="schema.columns ?? 1"
-                    :model-value="values"
+                    :model-value="liveValues"
                     :errors="form.errors as Record<string, string>"
                     :options="options"
                     :processing="form.processing"

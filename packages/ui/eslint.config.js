@@ -23,6 +23,11 @@ export default [
     {
         // The playground's ignore list names ITS paths; none of them exist here,
         // and re-listing them would suggest they might.
-        ignores: ['node_modules', 'dist'],
+        //
+        // `vitest.config.ts` IS BUILD CONFIGURATION, not shipped code. No
+        // tsconfig claims it - `tsconfig.json` covers what the package emits -
+        // so the typed rules can only report it as a parsing error, which is
+        // noise rather than a finding.
+        ignores: ['node_modules', 'dist', 'vitest.config.ts'],
     },
 ]

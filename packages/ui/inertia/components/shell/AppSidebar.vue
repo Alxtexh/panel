@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
 import { HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Sparkles } from '@lucide/vue'
-import { PkBoundary, PkDropdown, useAppearance } from '@alxtexh-enterprise/panel'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import AppLogo from './AppLogo.vue'
-import NavFooter from './NavFooter.vue'
-import NavMain from './NavMain.vue'
-import NavUser from './NavUser.vue'
+import { PkBoundary, PkDropdown, useAppearance } from '@alxtexh-enterprise/panel'
 import {
     Sidebar,
     SidebarContent,
@@ -22,6 +18,10 @@ import { useCurrentUrl } from '../../composables/useCurrentUrl'
 import { usePanelNav } from '../../composables/usePanelNav'
 import { useSidebarOpener } from '../../lib/mobileNav'
 import type { NavItem } from '../../types'
+import AppLogo from './AppLogo.vue'
+import NavFooter from './NavFooter.vue'
+import NavMain from './NavMain.vue'
+import NavUser from './NavUser.vue'
 
 /**
  * Built from the resource registry, delivered with the initial payload.

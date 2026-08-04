@@ -15,7 +15,6 @@
  * dropping a section somebody just authored is its own kind of lie.
  */
 import { computed } from 'vue'
-import type { LandingSection } from './types'
 import PkBento from './PkBento.vue'
 import PkCta from './PkCta.vue'
 import PkFaq from './PkFaq.vue'
@@ -23,10 +22,11 @@ import PkFeatureGrid from './PkFeatureGrid.vue'
 import PkHero from './PkHero.vue'
 import PkLogoCloud from './PkLogoCloud.vue'
 import PkPricing from './PkPricing.vue'
-import PkStats from './PkStats.vue'
 import PkShowcase from './PkShowcase.vue'
+import PkStats from './PkStats.vue'
 import PkSteps from './PkSteps.vue'
 import PkTestimonials from './PkTestimonials.vue'
+import type { LandingSection } from './types'
 
 const props = withDefaults(
     defineProps<{ sections?: LandingSection[]; warnOnUnknown?: boolean }>(),
@@ -60,7 +60,6 @@ const resolved = computed(() =>
         }))
         .filter((entry) => {
             if (!entry.component && props.warnOnUnknown) {
-                // eslint-disable-next-line no-console
                 console.warn(`[panelkit] Unknown landing section "${entry.type}" - skipped.`)
             }
 

@@ -23,9 +23,7 @@
  * grouped query, not the six counters and two breakdowns that did not change.
  */
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
-import AnnouncementBanners from '../components/AnnouncementBanners.vue'
-import DashboardFilterPanel from '../components/DashboardFilters.vue'
-import type { Announcement } from '../types'
+import { computed, ref } from 'vue'
 import {
     BarChart,
     ChartCard,
@@ -43,7 +41,9 @@ import {
     TrendBadge,
 } from '@alxtexh-enterprise/panel'
 import type { SetupChecklistItem, StatSegment } from '@alxtexh-enterprise/panel'
-import { computed, ref } from 'vue'
+import AnnouncementBanners from '../components/AnnouncementBanners.vue'
+import DashboardFilterPanel from '../components/DashboardFilters.vue'
+import type { Announcement } from '../types'
 
 interface Widget {
     key: string

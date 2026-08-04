@@ -43,11 +43,11 @@
  * tab change, because those cursors point into another resource's ordering.
  */
 import { Head, router } from '@inertiajs/vue3'
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
-import { PkModal, TablePagination, TableShell } from '@alxtexh-enterprise/panel'
 import { Check, RotateCcw, Settings2, Trash2, TriangleAlert } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
+import { PkModal, TablePagination, TableShell } from '@alxtexh-enterprise/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 
 interface TrashedRecord {
     id: number | string
@@ -154,21 +154,27 @@ function fetchPage(resource: string, cursor: string | null) {
  * seek into another's.
  */
 function openTab(key: string) {
-    if (key === active.value) return
+    if (key === active.value) {
+        return
+    }
 
     stack.value = []
     fetchPage(key, null)
 }
 
 function nextPage() {
-    if (props.nextCursor === null) return
+    if (props.nextCursor === null) {
+        return
+    }
 
     stack.value = [...stack.value, props.nextCursor]
     fetchPage(active.value, props.nextCursor)
 }
 
 function previousPage() {
-    if (stack.value.length === 0) return
+    if (stack.value.length === 0) {
+        return
+    }
 
     const trail = stack.value.slice(0, -1)
     stack.value = trail
@@ -177,7 +183,9 @@ function previousPage() {
 }
 
 function firstPage() {
-    if (stack.value.length === 0) return
+    if (stack.value.length === 0) {
+        return
+    }
 
     stack.value = []
     fetchPage(active.value, null)
@@ -212,7 +220,11 @@ function reloadFirstPage() {
 function toggle(record: TrashedRecord) {
     const next = new Set(selected.value)
 
-    next.has(record.id) ? next.delete(record.id) : next.add(record.id)
+    if (next.has(record.id)) {
+        next.delete(record.id)
+    } else {
+        next.add(record.id)
+    }
 
     selected.value = next
 }
@@ -325,11 +337,15 @@ function saveRetention() {
 function remaining(purgesAt: string): string {
     const ms = new Date(purgesAt).getTime() - Date.now()
 
-    if (ms <= 0) return 'due to be removed'
+    if (ms <= 0) {
+        return 'due to be removed'
+    }
 
     const d = Math.floor(ms / 86_400_000)
 
-    if (d >= 1) return `${d} day${d === 1 ? '' : 's'} left`
+    if (d >= 1) {
+        return `${d} day${d === 1 ? '' : 's'} left`
+    }
 
     const h = Math.max(1, Math.floor(ms / 3_600_000))
 

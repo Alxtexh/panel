@@ -1,4 +1,5 @@
-import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import type { Ref } from 'vue'
 
 /**
  * How far an element has travelled through the viewport, as 0..1.

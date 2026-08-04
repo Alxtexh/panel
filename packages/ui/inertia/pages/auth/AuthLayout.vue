@@ -22,8 +22,8 @@
  * blinded by a sign-in form first.
  */
 import { usePage } from '@inertiajs/vue3'
-import { ThemeToggle } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
+import { ThemeToggle } from '@alxtexh-enterprise/panel'
 
 defineProps<{
     title?: string

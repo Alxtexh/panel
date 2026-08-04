@@ -14,8 +14,8 @@
  * one action somebody takes when they want to be safe.
  */
 import { Link, router } from '@inertiajs/vue3'
-import { PkDropdown } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
+import { PkDropdown } from '@alxtexh-enterprise/panel'
 
 const props = withDefaults(
     defineProps<{

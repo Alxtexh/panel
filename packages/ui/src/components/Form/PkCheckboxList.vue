@@ -49,7 +49,6 @@ const chosen = computed<(string | number)[]>(() =>
 
 /** Loose comparison, for the same JSON round-trip reason as the radio group. */
 function isChosen(option: Option): boolean {
-    // eslint-disable-next-line eqeqeq
     return chosen.value.some((value) => value == option.value)
 }
 
@@ -57,8 +56,7 @@ function toggle(option: Option) {
     emit(
         'update:modelValue',
         isChosen(option)
-            ? // eslint-disable-next-line eqeqeq
-              chosen.value.filter((value) => value != option.value)
+            ? chosen.value.filter((value) => value != option.value)
             : [...chosen.value, option.value],
     )
 }

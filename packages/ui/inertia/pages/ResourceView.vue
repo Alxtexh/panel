@@ -10,19 +10,15 @@
  * colours from the schema's intent map, dates by column type - so a value never
  * looks one way in the list and another here.
  */
-import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
-import AuditTimeline from '../components/AuditTimeline.vue'
-import RenderHook from '../components/RenderHook.vue'
-import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
-import {
-    InfoNode,
-    RelationPanel,
-    useSchemaColumns,
-    type SchemaColumn,
-} from '@alxtexh-enterprise/panel'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, ref, toRef } from 'vue'
 import { toast } from 'vue-sonner'
+import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
+import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
+import { InfoNode, RelationPanel, useSchemaColumns } from '@alxtexh-enterprise/panel'
+import type { SchemaColumn } from '@alxtexh-enterprise/panel'
+import AuditTimeline from '../components/AuditTimeline.vue'
+import RenderHook from '../components/RenderHook.vue'
 
 const props = defineProps<{
     schema: {
@@ -112,7 +108,9 @@ async function loadRelation(key: string, cursor: string | null = null) {
     const current = relationState(key)
 
     // Already have the first page and nothing more was asked for.
-    if (current.loaded && cursor === null) return
+    if (current.loaded && cursor === null) {
+        return
+    }
 
     current.loading = true
 
@@ -127,7 +125,9 @@ async function loadRelation(key: string, cursor: string | null = null) {
             },
         )
 
-        if (!response.ok) throw new Error(String(response.status))
+        if (!response.ok) {
+            throw new Error(String(response.status))
+        }
 
         const data = await response.json()
 
@@ -162,7 +162,9 @@ function openRelation(key: string) {
 
 // The first tab loads once the page is up, because it is the one being looked
 // at; the rest wait to be asked for.
-if (activeRelation.value) loadRelation(activeRelation.value)
+if (activeRelation.value) {
+    loadRelation(activeRelation.value)
+}
 
 const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
     date: { year: 'numeric', month: 'long', day: 'numeric' },
@@ -179,7 +181,9 @@ function render(key: string): string {
     const column = byKey.value[key]
     const value = props.record[key]
 
-    if (value === null || value === undefined || value === '') return '-'
+    if (value === null || value === undefined || value === '') {
+        return '-'
+    }
 
     if (column?.type === 'date' || column?.type === 'datetime') {
         return new Date(String(value)).toLocaleDateString(undefined, dateFormats[column.type])
@@ -188,14 +192,22 @@ function render(key: string): string {
     // Same transform the table applies, so a value never reads one way in the
     // list and another here.
     let text = String(value)
-    if (column?.transform === 'upper') text = text.toUpperCase()
-    if (column?.transform === 'lower') text = text.toLowerCase()
+
+    if (column?.transform === 'upper') {
+        text = text.toUpperCase()
+    }
+
+    if (column?.transform === 'lower') {
+        text = text.toLowerCase()
+    }
 
     return [column?.prefix, text, column?.suffix].filter(Boolean).join(' ')
 }
 
 function destroy() {
-    if (!window.confirm(`Delete ${title.value}? This cannot be undone.`)) return
+    if (!window.confirm(`Delete ${title.value}? This cannot be undone.`)) {
+        return
+    }
 
     router.delete(`${props.schema.routes.index}/${props.record.id}`, {
         onSuccess: () => {

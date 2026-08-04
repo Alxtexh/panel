@@ -43,7 +43,13 @@ const open = ref<Set<string>>(new Set(props.releases.length ? [props.releases[0]
 
 const toggle = (version: string) => {
     const next = new Set(open.value)
-    next.has(version) ? next.delete(version) : next.add(version)
+
+    if (next.has(version)) {
+        next.delete(version)
+    } else {
+        next.add(version)
+    }
+
     open.value = next
 }
 

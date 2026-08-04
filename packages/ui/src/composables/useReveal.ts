@@ -1,4 +1,5 @@
-import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import type { Ref } from 'vue'
 
 /**
  * Reveal an element the first time it is scrolled into view.

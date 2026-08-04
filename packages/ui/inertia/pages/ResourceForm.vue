@@ -12,12 +12,12 @@
  * the payload, and the same file serves create and edit - the only difference is
  * whether `record` is null.
  */
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
-import { RecordForm, UnsavedBar, buttonClasses } from '@alxtexh-enterprise/panel'
-import type { FormField, UploadedFileValue } from '@alxtexh-enterprise/panel'
 import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import { RecordForm, UnsavedBar, buttonClasses } from '@alxtexh-enterprise/panel'
+import type { FormField, UploadedFileValue } from '@alxtexh-enterprise/panel'
 import DefineFieldDialog from '../components/DefineFieldDialog.vue'
 
 const props = defineProps<{
@@ -81,7 +81,9 @@ const form = useForm<Record<string, any>>({ ...withDownloadUrls(props.values) })
  * @param values The server's values, untouched on a create page.
  */
 function withDownloadUrls(values: Record<string, any>): Record<string, any> {
-    if (!props.record) return values
+    if (!props.record) {
+        return values
+    }
 
     const out = { ...values }
 
@@ -134,9 +136,13 @@ function fileFieldKeys(): string[] {
     const keys: string[] = []
 
     const walk = (node: any) => {
-        if (!node) return
+        if (!node) {
+            return
+        }
 
-        if (node.type === 'file' && node.key) keys.push(node.key)
+        if (node.type === 'file' && node.key) {
+            keys.push(node.key)
+        }
 
         node.children?.forEach(walk)
     }
@@ -229,7 +235,9 @@ function upload(
         request.withCredentials = true
 
         request.upload.onprogress = (event) => {
-            if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100))
+            if (event.lengthComputable) {
+                onProgress(Math.round((event.loaded / event.total) * 100))
+            }
         }
 
         request.onload = () => {
@@ -294,7 +302,9 @@ async function searchOptions(
         headers: { Accept: 'application/json' },
     })
 
-    if (!res.ok) throw new Error(String(res.status))
+    if (!res.ok) {
+        throw new Error(String(res.status))
+    }
 
     return (await res.json()).options
 }
@@ -320,6 +330,16 @@ function cancel() {
  * about a field that has just been reverted is describing a value that no
  * longer exists.
  */
+/*
+ * THE CAST LIVES IN SCRIPT, not in the template.
+ *
+ * `:fields="schema.form.fields as FormField[] | undefined"` is valid and the
+ * linter reads the `|` as a Vue 2 filter pipe - a rule that cannot be argued
+ * with from inside an expression. Hoisting it is clearer anyway: template
+ * expressions are not where type surgery belongs.
+ */
+const formFields = computed(() => props.schema.form.fields as FormField[] | undefined)
+
 function discard() {
     form.reset()
     form.clearErrors()
@@ -347,7 +367,9 @@ onMounted(() => {
     removeNavigationGuard = router.on('before', (event) => {
         // A submit and an explicit Cancel both navigate; only an UNRELATED
         // navigation should prompt.
-        if (saving || cancelling || !form.isDirty || form.processing) return
+        if (saving || cancelling || !form.isDirty || form.processing) {
+            return
+        }
 
         if (!window.confirm('You have unsaved changes. Leave without saving?')) {
             event.preventDefault()
@@ -421,7 +443,7 @@ onBeforeUnmount(() => {
             <RecordForm
                 :model-value="formValues"
                 :nodes="schema.form.nodes"
-                :fields="schema.form.fields as FormField[] | undefined"
+                :fields="formFields"
                 :columns="schema.form.columns"
                 :errors="form.errors as any"
                 :options="formOptions"
@@ -470,8 +492,10 @@ onBeforeUnmount(() => {
             :processing="form.processing"
             :message="isEdit ? 'Unsaved changes' : `New ${schema.label.toLowerCase()}`"
             :save-label="isEdit ? 'Save changes' : `Create ${schema.label}`"
+            :discard-label="form.isDirty ? 'Discard' : undefined"
             @save="submit"
             @cancel="cancel"
+            @discard="discard"
         />
 
         <DefineFieldDialog

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { NavigationMenuTriggerProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { ChevronDown } from '@lucide/vue'
 import { reactiveOmit } from '@vueuse/core'
+import type { NavigationMenuTriggerProps } from 'reka-ui'
 import { NavigationMenuTrigger, useForwardProps } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 import { cn } from '../../../lib/cn'
 import { navigationMenuTriggerStyle } from '.'
 

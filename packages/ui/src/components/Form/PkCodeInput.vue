@@ -41,7 +41,9 @@ const lines = computed(() => Math.max(text.value.split('\n').length, 1))
 
 /** Only for languages where "malformed" is a thing this control can see. */
 const problem = computed(() => {
-    if (props.language !== 'json' || text.value.trim() === '') return null
+    if (props.language !== 'json' || text.value.trim() === '') {
+        return null
+    }
 
     try {
         JSON.parse(text.value)
@@ -64,9 +66,13 @@ function onKeydown(event: KeyboardEvent) {
     }
 
     // Any other key means they are typing code again.
-    if (event.key !== 'Tab') tabIndents.value = true
+    if (event.key !== 'Tab') {
+        tabIndents.value = true
+    }
 
-    if (event.key !== 'Tab' || !tabIndents.value) return
+    if (event.key !== 'Tab' || !tabIndents.value) {
+        return
+    }
 
     event.preventDefault()
 

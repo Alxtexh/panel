@@ -167,12 +167,8 @@ jobs:
       # type checker resolves `vue` from the package's real path, so a package
       # with no `node_modules` fails to type-check every file in it while the
       # application itself looks fine.
-      - name: Install @panelkit/ui
+      - name: Install @alxtexh-enterprise/panel
         working-directory: packages/ui
-        run: npm install --no-audit --no-fund
-
-      - name: Install @panelkit/inertia
-        working-directory: packages/inertia
         run: npm install --no-audit --no-fund
 
       - name: Install the application
@@ -181,13 +177,13 @@ jobs:
 
       # THE PACKAGE IS BUILT BEFORE ANYTHING TYPE-CHECKS AGAINST IT.
       #
-      # `@panelkit/ui` ships compiled - it has to, because its shadcn components
+      # The package's `dist` half ships compiled - it has to, because its shadcn components
       # declare props with types imported from `reka-ui` and a consumer's Vite
       # cannot resolve those across a package boundary. `dist` is generated and
       # therefore gitignored, so `types: ./dist/index.d.ts` points at nothing on
       # a fresh checkout: `vue-tsc` below resolves the package to a missing file
       # and reports errors that name the application's own screens.
-      - name: Build @panelkit/ui
+      - name: Build @alxtexh-enterprise/panel
         working-directory: packages/ui
         run: npm run build
 
@@ -215,19 +211,32 @@ jobs:
         working-directory: apps/playground
         run: npm run format:check
 
-      # THE PACKAGES ARE FORMAT-CHECKED SEPARATELY, because each carries its
-      # own `.prettierrc` (no semicolons, 100 columns - see the comment on that
+      # THE PACKAGE IS FORMAT-CHECKED SEPARATELY, because it carries its own
+      # `.prettierrc` (no semicolons, 100 columns - see the comment on that
       # file) that only applies from within its own directory. The lint pass
-      # above already covers packages/ui and packages/inertia through the
-      # basePath blocks in the playground's eslint config; format is a
-      # per-directory tool with no such mechanism.
+      # above already covers packages/ui through the basePath blocks in the
+      # playground's eslint config; format is a per-directory tool with no
+      # such mechanism.
       - name: Format (packages/ui)
         working-directory: packages/ui
         run: npm run format:check
 
-      - name: Format (packages/inertia)
-        working-directory: packages/inertia
-        run: npm run format:check
+      # AND LINTED, which it silently was not for three releases.
+      #
+      # `eslint.config.js` beside the package was written to solve exactly this
+      # - ESLint 9 refuses to lint above its config's base path - and then
+      # nothing ever ran it: no script, no CI step. The playground's config
+      # still carried a `basePath` block naming `packages/inertia`, a directory
+      # 0.8.0 deleted, so `eslint .` there resolved it to nothing and exited
+      # zero. A lint pass over a directory that is not there looks exactly like
+      # a clean one.
+      #
+      # THE BINARY COMES FROM THE PLAYGROUND on purpose: the config already
+      # imports the playground's rules, so one rule set governs both and there
+      # is no second dependency tree to keep in step.
+      - name: Lint (packages/ui)
+        working-directory: packages/ui
+        run: npm run lint:check
 
       # THE BUILD IS NOT REDUNDANT WITH THE TYPE CHECK. A production build
       # resolves every import for real and runs the SFC compiler over every
@@ -290,13 +299,12 @@ jobs:
         working-directory: apps/playground
         run: php artisan wayfinder:generate --with-form
 
-      # `@panelkit/ui` IS BUILT HERE TOO. Its `dist` is generated, so a fresh
+      # THE PACKAGE IS BUILT HERE TOO. Its `dist` is generated, so a fresh
       # checkout has none - and the asset build below resolves the package
       # through `node_modules`, where `main` points at exactly that.
       - name: Install the client half
         run: |
           cd packages/ui && npm install --no-audit --no-fund && npm run build
-          cd ../inertia && npm install --no-audit --no-fund
           cd ../../apps/playground && npm install --no-audit --no-fund
 
       # CHROME FOR TESTING, at the major version Dusk's ChromeDriver matches.

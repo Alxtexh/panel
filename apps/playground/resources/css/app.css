@@ -30,7 +30,7 @@
  * leaving the table inside it styled, which reads as a broken page rather than
  * as a missing configuration line.
  */
-@source '../../../../packages/inertia/src/**/*.{vue,ts}';
+@source '../../../../packages/ui/inertia/**/*.{vue,ts}';
 
 @custom-variant dark (&:is(.dark *));
 

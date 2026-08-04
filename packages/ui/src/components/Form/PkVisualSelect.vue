@@ -111,7 +111,6 @@ const gridClass = computed(() => {
  * has a perfectly good value.
  */
 function isChosen(option: Option): boolean {
-    // eslint-disable-next-line eqeqeq
     return props.modelValue != null && option.value == (props.modelValue as never)
 }
 </script>

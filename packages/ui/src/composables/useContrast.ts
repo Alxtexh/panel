@@ -49,7 +49,9 @@ export function contrastRatio(hexA: string, hexB: string): number {
  * lightening the SAME colour keeps it recognisably theirs, just readable.
  */
 export function readableShade(hex: string, background: string, minRatio: number): string {
-    if (!HEX.test(hex) || !HEX.test(background)) return hex
+    if (!HEX.test(hex) || !HEX.test(background)) {
+        return hex
+    }
 
     const towardBlack = relativeLuminance(background) > 0.5
     const target = towardBlack ? 0 : 255

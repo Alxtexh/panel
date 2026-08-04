@@ -17,18 +17,18 @@
 // Generated from the routes: a renamed endpoint breaks the build rather
 // than leaving this form posting at a 404.
 import { Head, router, useForm } from '@inertiajs/vue3'
+import { usePage } from '@inertiajs/vue3'
+import { ref, watch } from 'vue'
+import { computed } from 'vue'
+import { toast } from 'vue-sonner'
 import type { UploadedFileValue } from '@alxtexh-enterprise/panel'
 import { PkFileUpload } from '@alxtexh-enterprise/panel'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
-import { ref, watch } from 'vue'
-import { toast } from 'vue-sonner'
 import {
     PkFieldLabel as Label,
     PkHeading as Heading,
     PkTextInput as Input,
 } from '@alxtexh-enterprise/panel'
-import { computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
 import AuthInputError from '../../components/AuthInputError.vue'
 /*
  * GENERATED, NOT TYPED OUT - the same rule the account menu follows.

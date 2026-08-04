@@ -16,15 +16,15 @@
  */
 import { Link } from '@inertiajs/vue3'
 import { AppearanceDrawer, PkDropdown } from '@alxtexh-enterprise/panel'
+import { useCurrentUrl } from '../../composables/useCurrentUrl'
+import { usePanelNav } from '../../composables/usePanelNav'
+import type { BreadcrumbItem, NavItem } from '../../types'
 import AppLogo from './AppLogo.vue'
 import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import TopNavUser from './TopNavUser.vue'
-import { useCurrentUrl } from '../../composables/useCurrentUrl'
-import { usePanelNav } from '../../composables/usePanelNav'
-import type { BreadcrumbItem, NavItem } from '../../types'
 
 withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
     breadcrumbs: () => [],

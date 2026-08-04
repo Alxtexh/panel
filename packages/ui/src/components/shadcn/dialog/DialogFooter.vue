@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
 import { DialogClose } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 import { cn } from '../../../lib/cn'
 import Button from '../../primitives/PkButton.vue'
 
