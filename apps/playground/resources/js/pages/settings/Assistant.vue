@@ -1,144 +1,28 @@
 <script setup lang="ts">
-/**
- * The assistant's provider and key - a form over `AiCredentials`.
+/*
+ * The panel's Assistant screen, from @panelkit/inertia.
  *
- * THE KEY FIELD IS ALWAYS EMPTY. The server never sends the stored secret -
- * only the masked tail as a caption - so this form cannot leak what it
- * cannot see. Entering a new key replaces the old one; the field being
- * blank on an unrelated visit changes nothing because blank never submits.
+ * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
+ * directory, so a screen living in node_modules is one it cannot find.
+ *
+ * IT IS ALSO WHERE YOU OVERRIDE IT. Point the import at your own
+ * component and nothing else has to change.
+ *
+ * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
+ * all, silently, in a production build.
  */
-import { Head, useForm } from '@inertiajs/vue3';
-import { PkButton as Button } from '@panelkit/ui';
-import { toast } from 'vue-sonner';
-import Heading from '@/components/Heading.vue';
-import InputError from '@/components/InputError.vue';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import assistantRoutes from '@/routes/assistant-settings';
+import Assistant from '@panelkit/inertia/pages/settings/Assistant.vue';
 
-const props = defineProps<{
-    providers: string[];
-    provider: string | null;
-    maskedKey: string | null;
-    available: boolean;
-    byok: boolean;
-}>();
-
-defineOptions({
-    layout: {
-        breadcrumbs: [{ title: 'Assistant', href: assistantRoutes.edit.url() }],
-    },
-});
-
-const form = useForm({
-    provider: props.provider ?? 'anthropic',
-    key: '',
-});
-
-function submit() {
-    form.put(assistantRoutes.update.url(), {
-        preserveScroll: true,
-        onSuccess: () => {
-            form.reset('key');
-            toast.success('Assistant credentials saved');
-        },
-    });
-}
-
-const removing = useForm({});
-
-function remove() {
-    removing.delete(assistantRoutes.destroy.url(), {
-        preserveScroll: true,
-        onSuccess: () => toast.success('Assistant credentials removed'),
-    });
-}
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>
-    <Head title="Assistant" />
-
-    <h1 class="sr-only">Assistant settings</h1>
-
-    <div class="flex flex-col space-y-6">
-        <Heading
-            variant="small"
-            title="Assistant"
-            description="The AI provider the assistant runs on, and its key"
-        />
-
-        <!-- Which source powers the assistant right now, in one sentence. -->
-        <p
-            class="rounded-md border px-3 py-2 text-sm"
-            :class="
-                available
-                    ? 'border-primary/30 bg-primary/5'
-                    : 'border-dashed text-muted-foreground'
-            "
-        >
-            <template v-if="byok">
-                Running on the key saved here ({{ maskedKey }}, {{ provider }}).
-            </template>
-            <template v-else-if="available">
-                Running on the key from the deployment's environment. Saving one
-                here overrides it, and an administrator can rotate it without a
-                deploy.
-            </template>
-            <template v-else>
-                The assistant is off — nobody has provided an AI key yet. Save
-                one below to turn it on.
-            </template>
-        </p>
-
-        <form class="space-y-6" @submit.prevent="submit">
-            <div class="grid gap-2">
-                <Label for="ai-provider">Provider</Label>
-                <select
-                    id="ai-provider"
-                    v-model="form.provider"
-                    class="h-9 rounded-md border border-input bg-background px-3 text-sm capitalize"
-                >
-                    <option v-for="p in providers" :key="p" :value="p">
-                        {{ p }}
-                    </option>
-                </select>
-                <InputError :message="form.errors.provider" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="ai-key">API key</Label>
-                <Input
-                    id="ai-key"
-                    v-model="form.key"
-                    type="password"
-                    autocomplete="off"
-                    :placeholder="
-                        maskedKey
-                            ? `Currently ${maskedKey} — enter a new key to replace it`
-                            : ''
-                    "
-                />
-                <InputError :message="form.errors.key" />
-                <p class="text-xs text-muted-foreground">
-                    Stored encrypted, and never shown again in full. Rotating it
-                    is pasting a new one here.
-                </p>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <Button
-                    v-if="byok"
-                    type="button"
-                    variant="outline"
-                    :disabled="removing.processing"
-                    @click="remove"
-                >
-                    Remove key
-                </Button>
-                <Button type="submit" :disabled="form.processing || !form.key">
-                    {{ form.processing ? 'Saving…' : 'Save' }}
-                </Button>
-            </div>
-        </form>
-    </div>
+    <!--
+        The cast is deliberate. `$attrs` is `Record<string, unknown>`, so
+        the checker cannot see that it holds this screen's props and
+        reports every one of them as missing. There is nothing to verify
+        either way: these values arrive from the server as JSON and are
+        typed where they are USED, inside the packaged component.
+    -->
+    <Assistant v-bind="$attrs as any" />
 </template>

@@ -58,7 +58,7 @@ final class PlatformPanelProvider extends ServiceProvider
                  * one - protected by an ability nobody in this portal holds,
                  * but a route that exists is a route somebody can probe.
                  */
-                ->without(['operations']),
+                ->without(['operations', 'assistant-settings']),
         );
 
         /*

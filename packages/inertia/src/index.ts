@@ -117,6 +117,7 @@ export { default as Backups } from './pages/operations/Backups.vue'
 export { default as BackupSettings } from './pages/operations/BackupSettings.vue'
 export { default as Logs } from './pages/operations/Logs.vue'
 export { default as Monitoring } from './pages/operations/Monitoring.vue'
+export { default as AssistantSettings } from './pages/settings/Assistant.vue'
 export {
     installSessionExpiryPreview,
     notifySessionExpired,
@@ -184,6 +185,9 @@ export const PANEL_PAGES = {
     'operations/BackupSettings': () => import('./pages/operations/BackupSettings.vue'),
     'operations/Logs': () => import('./pages/operations/Logs.vue'),
     'operations/Monitoring': () => import('./pages/operations/Monitoring.vue'),
+
+    // The assistant's provider and key.
+    'settings/Assistant': () => import('./pages/settings/Assistant.vue'),
 } as const
 
 /*

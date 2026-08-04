@@ -2,18 +2,23 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Settings;
+namespace PanelKit\Panel\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Ai\AiCredentials;
+use PanelKit\Panel\PanelManager;
 
 /**
  * The assistant's provider and key, as a settings page - E.1's UI half.
+ *
+ * MOVED FROM THE REFERENCE APP. `AiCredentials` was packaged from the start and
+ * nothing packaged ever offered a way to set one - the assistant shipped with a
+ * key that could only come from the deploy's environment, and an installation
+ * wanting its own had to build this form.
  *
  * `AiCredentials` already holds every guarantee (encrypted at rest, masked
  * out, layered over the environment); this controller is a form over that
@@ -28,13 +33,31 @@ use PanelKit\Panel\Ai\AiCredentials;
  * the old one, and leaving the field blank on an unrelated visit changes
  * nothing because blank never submits.
  */
-final class AssistantSettingsController extends Controller
+final class AssistantSettingsController
 {
+    /** A URL under the panel this screen is mounted in. */
+    private function at(string $path): string
+    {
+        $prefix = app(PanelManager::class)->currentPanel()?->getPath() ?? '';
+
+        return url(trim($prefix.'/'.$path, '/'));
+    }
+
     public function edit(Request $request, AiCredentials $credentials): Response
     {
         abort_unless($request->user()->hasPermission('manage_assistant'), 403);
 
         return Inertia::render('settings/Assistant', [
+            /*
+             * WHERE THE FORM POSTS, resolved from the current panel's path -
+             * the same reason `OperationsController` does it: a packaged screen
+             * has no Wayfinder output to import, and a second portal must post
+             * to itself rather than into the first.
+             */
+            'routes' => [
+                'update' => $this->at('settings/assistant'),
+                'destroy' => $this->at('settings/assistant'),
+            ],
             'providers' => AiCredentials::PROVIDERS,
             'provider' => $credentials->provider(),
             'maskedKey' => $credentials->maskedKey(),

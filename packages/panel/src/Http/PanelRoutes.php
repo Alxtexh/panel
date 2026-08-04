@@ -435,6 +435,24 @@ final class PanelRoutes
                         ->name('operations.alerts.telegram.test');
                 }
 
+                /*
+                 | THE ASSISTANT'S OWN KEY - E.1's UI half, packaged.
+                 |
+                 | `AiCredentials` shipped from the start and nothing packaged
+                 | ever offered a way to set one, so the assistant could only
+                 | run on the deploy's environment variable. `manage_assistant`
+                 | gates it: whoever holds it decides which provider reads the
+                 | organisation's questions and pays that provider's bill.
+                 */
+                if ($panel->offers('assistant-settings')) {
+                    Route::get('settings/assistant', [Controllers\AssistantSettingsController::class, 'edit'])
+                        ->name('settings.assistant');
+                    Route::put('settings/assistant', [Controllers\AssistantSettingsController::class, 'update'])
+                        ->name('settings.assistant.update');
+                    Route::delete('settings/assistant', [Controllers\AssistantSettingsController::class, 'destroy'])
+                        ->name('settings.assistant.destroy');
+                }
+
                 if ($panel->offers('trash')) {
                     Route::get('trash', [Controllers\TrashController::class, 'index'])->name('trash');
 

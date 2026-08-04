@@ -70,7 +70,7 @@ final class AdminPanelProvider extends ServiceProvider
                  * A fresh installation changes nothing and gets them mounted
                  * under its panel automatically.
                  */
-                ->without(['operations'])
+                ->without(['operations', 'assistant-settings'])
                 ->brandName(fn (): ?string => app(TenantContext::class)->tenant()?->name),
         );
     }

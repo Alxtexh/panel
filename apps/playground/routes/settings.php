@@ -1,13 +1,13 @@
 <?php
 
 use App\Http\Controllers\Auth\PasswordRenewalController;
-use App\Http\Controllers\Settings\AssistantSettingsController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\SettingsIndexController;
 use App\Http\Controllers\Settings\WorkspacesController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
+use PanelKit\Panel\Http\Controllers\AssistantSettingsController;
 
 /*
 | PASSWORD RENEWAL.
