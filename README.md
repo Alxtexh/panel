@@ -46,6 +46,11 @@ more rows, because it was never about the data.
 
 ---
 
+**Building on PanelKit, or porting a Filament panel onto it?**
+[PANELKIT.md](PANELKIT.md) is the whole thing in one file — install, the Filament
+translation, authorization, deploying, upgrading and the traps. It is written to
+be handed to an agent on its own.
+
 ## Install
 
 PanelKit is **private** — it is not on Packagist and not on npm. The PHP half
