@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use PanelKit\Panel\Auth\Impersonation;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\PanelHome;
 use PanelKit\Panel\Support\PanelNavigation;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -58,6 +59,23 @@ final class SharePanelProps
                 return [
                     'id' => $panel->id,
                     'path' => '/'.trim($panel->getPath(), '/'),
+
+                    /*
+                     * WHERE THIS PANEL'S HOME LINK GOES, and it is shared
+                     * because the shell cannot work it out.
+                     *
+                     * The published layout had `href: '/dashboard'` written
+                     * into it - a FIXED path in an application that can mount
+                     * several portals. So inside `/platform` the sidebar's Home
+                     * pointed at the ADMIN panel's dashboard: clicking it left
+                     * the portal, silently, and for somebody who may not open
+                     * that dashboard it refused. Every generated portal had it,
+                     * because the layout is the same file.
+                     *
+                     * `PanelHome::urlFor` is the same resolution sign-in uses,
+                     * so the link and the redirect cannot disagree.
+                     */
+                    'home' => PanelHome::urlFor($panel),
                     'brand' => $panel->resolveBrandName(),
 
                     /*
