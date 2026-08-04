@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
+use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
@@ -129,9 +130,7 @@ final class PageController extends Controller
 
         abort_if($user === null, 403);
         abort_unless(
-            method_exists($user, 'hasPermission')
-                ? $user->hasPermission($ability)
-                : $user->can($ability),
+            Ability::allows($user, $ability),
             403,
         );
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
+use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -116,7 +117,7 @@ final class OperationsController
 
     public function backups(Request $request): Response
     {
-        abort_unless($request->user()?->hasPermission('view_operations'), 403);
+        abort_unless(Ability::allows($request->user(), 'view_operations'), 403);
 
         $settings = BackupSettings::load();
 
@@ -191,7 +192,7 @@ final class OperationsController
                 ->all(),
 
             'can' => [
-                'manage' => (bool) $request->user()?->hasPermission('manage_backups'),
+                'manage' => (bool) Ability::allows($request->user(), 'manage_backups'),
             ],
         ]);
     }
@@ -217,7 +218,7 @@ final class OperationsController
      */
     public function backupSettings(Request $request): Response
     {
-        abort_unless($request->user()?->hasPermission('view_operations'), 403);
+        abort_unless(Ability::allows($request->user(), 'view_operations'), 403);
 
         $settings = BackupSettings::load();
 
@@ -230,7 +231,7 @@ final class OperationsController
             'history' => $this->settingsHistory(),
             'disks' => array_keys((array) config('filesystems.disks', [])),
             'can' => [
-                'manage' => (bool) $request->user()?->hasPermission('manage_backups'),
+                'manage' => (bool) Ability::allows($request->user(), 'manage_backups'),
             ],
         ]);
     }
@@ -266,7 +267,7 @@ final class OperationsController
      */
     public function runBackup(Request $request): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermission('view_operations'), 403);
+        abort_unless(Ability::allows($request->user(), 'view_operations'), 403);
 
         RunBackupNow::dispatch($request->user()?->name);
 
@@ -289,7 +290,7 @@ final class OperationsController
      */
     public function downloadBackup(Request $request): StreamedResponse
     {
-        abort_unless($request->user()?->hasPermission('view_operations'), 403);
+        abort_unless(Ability::allows($request->user(), 'view_operations'), 403);
 
         $archive = new BackupArchive;
         $path = $archive->resolve((string) $request->query('path', ''));
@@ -310,7 +311,7 @@ final class OperationsController
      */
     public function deleteBackups(Request $request): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermission('manage_backups'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_backups'), 403);
 
         $validated = $request->validate([
             'paths' => ['required', 'array', 'min:1', 'max:100'],
@@ -348,7 +349,7 @@ final class OperationsController
      */
     public function restoreBackup(Request $request): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermission('manage_backups'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_backups'), 403);
 
         $validated = $request->validate([
             'path' => ['required', 'string'],
@@ -403,7 +404,7 @@ final class OperationsController
      */
     public function saveBackupSettings(Request $request): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermission('manage_backups'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_backups'), 403);
 
         $validated = $request->validate([
             'frequency' => ['required', 'string', 'in:'.implode(',', BackupSettings::FREQUENCIES)],
@@ -501,7 +502,7 @@ final class OperationsController
      */
     public function restoreBackupSettingsHistory(Request $request, int $history): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermission('manage_backups'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_backups'), 403);
 
         $entry = app(PanelSettings::class)->historyEntry(BackupSettings::KEY, $history);
 
@@ -552,7 +553,7 @@ final class OperationsController
      */
     public function testBackupDestination(Request $request): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermission('manage_backups'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_backups'), 403);
 
         $validated = $request->validate([
             'disk' => ['required', 'string', 'in:'.implode(',', array_keys((array) config('filesystems.disks', [])))],
@@ -581,7 +582,7 @@ final class OperationsController
      */
     public function testTelegram(Request $request): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermission('manage_backups'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_backups'), 403);
 
         $validated = $request->validate([
             'token' => ['nullable', 'string', 'max:200'],
@@ -633,7 +634,7 @@ final class OperationsController
      */
     public function monitoring(Request $request): Response
     {
-        abort_unless($request->user()?->hasPermission('view_operations'), 403);
+        abort_unless(Ability::allows($request->user(), 'view_operations'), 403);
 
         return Inertia::render('operations/Monitoring', [
             ...(new PlatformReport)->all(),
@@ -657,14 +658,14 @@ final class OperationsController
      */
     public function metrics(Request $request): JsonResponse
     {
-        abort_unless($request->user()?->hasPermission('view_operations'), 403);
+        abort_unless(Ability::allows($request->user(), 'view_operations'), 403);
 
         return response()->json((new HealthReport)->all());
     }
 
     public function logs(Request $request): Response
     {
-        abort_unless($request->user()?->hasPermission('view_operations'), 403);
+        abort_unless(Ability::allows($request->user(), 'view_operations'), 403);
 
         $reader = new LogReader;
 

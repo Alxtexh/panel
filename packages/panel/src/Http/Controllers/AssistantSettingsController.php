@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
+use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -45,7 +46,7 @@ final class AssistantSettingsController
 
     public function edit(Request $request, AiCredentials $credentials): Response
     {
-        abort_unless($request->user()->hasPermission('manage_assistant'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_assistant'), 403);
 
         return Inertia::render('settings/Assistant', [
             /*
@@ -73,7 +74,7 @@ final class AssistantSettingsController
 
     public function update(Request $request, AiCredentials $credentials): RedirectResponse
     {
-        abort_unless($request->user()->hasPermission('manage_assistant'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_assistant'), 403);
 
         $validated = $request->validate([
             'provider' => ['required', 'string', Rule::in(AiCredentials::PROVIDERS)],
@@ -90,7 +91,7 @@ final class AssistantSettingsController
 
     public function destroy(Request $request, AiCredentials $credentials): RedirectResponse
     {
-        abort_unless($request->user()->hasPermission('manage_assistant'), 403);
+        abort_unless(Ability::allows($request->user(), 'manage_assistant'), 403);
 
         $credentials->clear($request->user()->name);
 

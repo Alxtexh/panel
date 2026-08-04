@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
+use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -86,9 +87,7 @@ final class SingularController extends Controller
              * falling back to the gate. Panel-level abilities are Spatie
              * permissions, so both paths answer the same question.
              */
-            $allowed = $user !== null && (method_exists($user, 'hasPermission')
-                ? $user->hasPermission($ability)
-                : $user->can($ability));
+            $allowed = Ability::allows($user, $ability);
 
             abort_unless($allowed, 403);
         }

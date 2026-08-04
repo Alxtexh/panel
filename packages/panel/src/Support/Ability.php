@@ -43,6 +43,36 @@ use Spatie\Permission\PermissionRegistrar;
  */
 final class Ability
 {
+    /**
+     * Does this person hold this ability? Null-safe, and safe on any model.
+     *
+     * THE ENTRY POINT EVERY CALL SITE SHOULD USE, and the reason is a fresh
+     * install returning 500.
+     *
+     * Twenty-four places in this package called `$user->hasPermission($ability)`
+     * DIRECTLY. That method is not part of Spatie's `HasRoles`; it is a wrapper
+     * the reference application happens to define. So on any other installation
+     * - every installation - `/trash` and `/roles` answered
+     * `BadMethodCallException: Call to undefined method User::hasPermission()`.
+     * A 500, on a packaged screen, in a fresh install, while every test here
+     * passed: this application defines the method, so the monorepo could never
+     * see it.
+     *
+     * `held()` had the guard all along and only three call sites used it.
+     *
+     * A NULL USER IS FALSE, not a fatal. Most of those call sites read
+     * `$request->user()?->hasPermission(...)`, which is null on a guest and
+     * would otherwise need the check written twice.
+     */
+    public static function allows(mixed $user, string $ability): bool
+    {
+        if (! $user instanceof Authenticatable || ! $user instanceof Authorizable) {
+            return false;
+        }
+
+        return self::held($user, $ability);
+    }
+
     /** @param  Authenticatable&Authorizable  $user */
     public static function held(Authenticatable&Authorizable $user, string $ability): bool
     {
