@@ -17,7 +17,7 @@ use Throwable;
  * The panel's own error screens, rendered rather than merely shipped.
  *
  * THEY WERE PACKAGED AND UNREACHABLE. `errors/Error` moved into
- * `@panelkit/panel/inertia`, was exported from its entry point, and then nothing
+ * `@alxtexh-enterprise/panel/inertia`, was exported from its entry point, and then nothing
  * routed to it and no page file existed - so a fresh installation went on
  * showing Laravel's default 404 and 403 while the designed ones sat in
  * `node_modules`. Shipping a screen and rendering a screen are different

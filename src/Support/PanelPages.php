@@ -82,7 +82,7 @@ final class PanelPages
          * file nobody has heard of.
          */
         /*
-         * THE ERROR SCREENS. They were moved into `@panelkit/panel/inertia` and
+         * THE ERROR SCREENS. They were moved into `@alxtexh-enterprise/panel/inertia` and
          * exported, and then reachable by nobody: no page file and nothing
          * rendering them, so a fresh installation still got Laravel's defaults.
          * A moved screen with nothing routing to it is not a shipped screen.
@@ -248,7 +248,7 @@ final class PanelPages
     /**
      * A WRAPPER, NOT A RE-EXPORT, and the difference is not stylistic.
      *
-     * `export { default } from '@panelkit/panel/pages/X.vue'` is the obvious
+     * `export { default } from '@alxtexh-enterprise/panel/pages/X.vue'` is the obvious
      * way to write this. It type-checks, it builds, the chunk it emits contains
      * the whole real component - and the page renders NOTHING. An SFC with no
      * `<template>` block compiles to a component with no render function, so
@@ -272,7 +272,7 @@ final class PanelPages
         return <<<VUE
         <script setup lang="ts">
         /*
-         * The panel's {$component} screen, from @panelkit/panel/inertia.
+         * The panel's {$component} screen, from @alxtexh-enterprise/panel/inertia.
          *
          * WHY THIS FILE EXISTS: Inertia resolves a page name by globbing this
          * directory, so a screen living in node_modules is one it cannot find.
@@ -283,7 +283,7 @@ final class PanelPages
          * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
          * all, silently, in a production build.
          */
-        import {$component} from '@panelkit/panel/pages/{$screen}.vue'
+        import {$component} from '@alxtexh-enterprise/panel/pages/{$screen}.vue'
 
         defineOptions({ inheritAttrs: false })
         </script>

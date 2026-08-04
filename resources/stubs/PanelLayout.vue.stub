@@ -14,7 +14,7 @@
  * finished product, because every consumer was rebuilding a sidebar worse than
  * the one they were comparing themselves to.
  *
- * So the frame lives in `@panelkit/panel/inertia` and improves with the package, and
+ * So the frame lives in `@alxtexh-enterprise/panel/inertia` and improves with the package, and
  * this file exists so you can put your own things around it - a workspace
  * switcher, a search box, an environment banner - without forking it.
  *
@@ -26,7 +26,7 @@
  * markup here. Every screen goes through this file, so nothing else changes -
  * `usePage().props.panelNav` is the same array the shell reads.
  */
-import { PanelShell } from '@panelkit/panel/inertia'
+import { PanelShell } from '@alxtexh-enterprise/panel/inertia'
 </script>
 
 <template>

@@ -19,7 +19,7 @@ use PanelKit\Panel\Support\InstallationState;
  * The public landing page, edited from the panel.
  *
  * A BUILDER, NOT A PAGE BUILDER. Every block here is one of the sections
- * `@panelkit/panel` already draws, so the editor cannot invent a layout the front
+ * `@alxtexh-enterprise/panel` already draws, so the editor cannot invent a layout the front
  * end has no component for - which is the failure mode of every "drag anything
  * anywhere" CMS: an author composes something the renderer skips, and the only
  * symptom is a gap on the live site.
