@@ -735,8 +735,8 @@ final class Blueprint
         ```php
         RecordAction::make('suspend')
             ->label('Suspend')->icon('ban')->ability('update')
-            ->confirm('Suspend this subscriber? Their connection drops immediately.')
-            ->run(fn (Client $client) => $client->update(['status' => 'suspended']));
+            ->confirm('Suspend this account? They lose access immediately.')
+            ->run(fn (Customer $customer) => $customer->update(['status' => 'suspended']));
         ```
 
         The ability is checked against THAT record before the button renders and
@@ -815,8 +815,8 @@ final class Blueprint
         zero-severity alert saves every caller from filtering non-alerts.
 
         USE `countUpTo` FOR ANYTHING THAT MIGHT MATCH A LOT. It stops at 500 and
-        `describeCount` renders "500+". "84,846 subscribers have lapsed" and
-        "500+ subscribers have lapsed" prompt the same action, and only one of
+        `describeCount` renders "500+". "84,846 accounts have lapsed" and
+        "500+ accounts have lapsed" prompt the same action, and only one of
         them costs a fifth of a second every time somebody opens the bell.
 
         AN ALERT IS NOT A NOTIFICATION. An alert is what is TRUE NOW: recomputed
@@ -1046,7 +1046,7 @@ final class Blueprint
         through the designer. Register a NEW kind by extending `DocumentKind` and
         adding it to `DocumentKinds` from a service provider - registering under an
         existing id REPLACES it, which is how an application teaches the package's
-        invoice about its own subscribers.
+        invoice about its own records.
 
         `panel:doctor` reports a template using a variable its kind does not declare,
         and one whose accent colour fails contrast against white.

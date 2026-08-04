@@ -763,6 +763,27 @@ return [
     |
     */
 
+    /*
+    |---------------------------------------------------------------------------
+    | Custom fields
+    |---------------------------------------------------------------------------
+    |
+    | resources
+    |   WHICH RESOURCES HAVE A `custom` JSON COLUMN to store one in. Empty means
+    |   none, which is the true answer for a fresh installation and the safe
+    |   one - the feature declines rather than writing into a column it hopes is
+    |   there. Add the column with a migration of your own, then name the
+    |   resource key here.
+    |
+    |   This was hardcoded to the reference application's three tables, in a
+    |   class every installation gets.
+    |
+    */
+
+    'custom_fields' => [
+        'resources' => [],
+    ],
+
     'landing' => [
         'route' => env('PANEL_LANDING_ROUTE', false),
         'design' => env('PANEL_LANDING', 'aurora'),
@@ -777,6 +798,14 @@ return [
          * wants the screen that composes it.
          */
         'editor' => true,
+
+        /*
+         * WHERE THE COMPOSED PAGE IS SERVED, for the editor's "View the page"
+         * link. Only needed when `route` is off and the application serves the
+         * page from a route of its own - otherwise the link points at `/`, and
+         * with neither there is no link rather than a link to a 404.
+         */
+        'url' => null,
     ],
 
 ];
