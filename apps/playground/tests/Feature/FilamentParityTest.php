@@ -88,31 +88,41 @@ final class FilamentParityTest extends TestCase
     }
 
     /**
-     * THE LARGEST GAP IS STILL THE LARGEST GAP.
+     * THE RECORD PAGE RENDERS WHAT THE LIST RENDERS.
      *
-     * `ResourceView` renders one type specially and everything else as text,
-     * against Filament's seven infolist entry types. It is the one place a
-     * ported panel visibly loses fidelity, so the document says so in bold -
-     * and this fails when somebody fixes it and leaves the claim standing,
-     * which is the more likely direction of drift.
+     * This page special-cased `badge` and turned everything else into a string,
+     * against Filament's seven infolist entry types - the largest gap the
+     * 2026-08-05 audit found. It now reuses the table's own cell components,
+     * which is the point: a column type that rendered one way in a list and
+     * another on the record is the bug this shape grows, and it HAD it. `money`
+     * was not formatted here at all, so a row showing a currency in the list
+     * showed raw minor units on its own page.
+     *
+     * ASSERTED AS A SET, NOT A COUNT. A count passes when somebody swaps one
+     * type for another; the set says which types are covered, and fails by
+     * naming exactly what changed.
      */
-    public function test_the_view_page_entry_gap_is_described_accurately(): void
+    public function test_the_record_page_renders_every_type_the_list_does(): void
     {
         $view = (string) file_get_contents(
             dirname(__DIR__, 4).'/packages/ui/inertia/pages/ResourceView.vue',
         );
 
-        preg_match_all("/column\.type === '([a-z]+)'/", $view, $matches);
+        preg_match_all("/column\??\.type === '([a-z]+)'/", $view, $matches);
 
-        $types = array_unique($matches[1]);
+        $rendered = array_values(array_unique($matches[1]));
+        sort($rendered);
 
-        $this->assertCount(
-            1,
-            $types,
-            'ResourceView now renders '.count($types).' typed entries ('
-            .implode(', ', $types).'), not 1. GAP_ANALYSIS.md §5 calls this the largest gap and '
-            .'says only `badge` is special-cased - update it, because a document that '
-            .'understates the package is how the last one became useless.',
+        $expected = ['badge', 'checkbox', 'colour', 'date', 'datetime', 'icon', 'image', 'money', 'toggle'];
+
+        $this->assertSame(
+            $expected,
+            $rendered,
+            'ResourceView renders a different set of types than GAP_ANALYSIS.md §5 describes. '
+            .'Added: '.implode(', ', array_diff($rendered, $expected) ?: ['none']).'. '
+            .'Removed: '.implode(', ', array_diff($expected, $rendered) ?: ['none']).'. '
+            .'Update §5 and the scoreboard - a document that misstates the package is how the '
+            .'last one became useless.',
         );
     }
 

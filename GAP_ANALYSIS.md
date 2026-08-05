@@ -36,7 +36,7 @@ PanelKit's `Field`, `Column` and `Filter` base classes and its `HasChoices` /
 | Table filters | **5** | 5 | 1 — visual query builder |
 | Layout components | **6** | 7 | 3 — `Flex`, `Fieldset`, `Callout` |
 | Chart types | **9** | 8 | 2 — bubble, scatter |
-| View-page entry types | **1** | 7 | **6 — the largest gap** |
+| View-page entry types | **9** | 7 | 2 — `CodeEntry`, `KeyValueEntry` |
 | Prebuilt action classes | 4 + subsystems | 9 | none functionally |
 
 ---
@@ -145,23 +145,32 @@ None structural. `Fieldset` is a `Section` without a card, `Flex` is a row,
 
 ---
 
-## 5. View-page entries — 1 vs 7. **The largest real gap.**
+## 5. View-page entries — 9 vs 7, two gaps
 
-Filament ships seven infolist entry types: `TextEntry`, `IconEntry`,
-`ImageEntry`, `ColorEntry`, `CodeEntry`, `KeyValueEntry`, `RepeatableEntry`.
+**This was the largest gap in the 2026-08-05 audit and has since been closed.**
+`ResourceView` special-cased `badge` in its template and formatted `date` /
+`datetime` in script — three types — and rendered everything else as a raw
+string. It now reuses the same cell components the table does.
 
-**PanelKit's `ResourceView` renders `badge` specially and everything else as
-text.** Measured, not guessed: the only type branch in that template is
-`column.type === 'badge'`.
+| Filament | PanelKit |
+|---|---|
+| `TextEntry` | the default, with prefix/suffix and transforms ✅ |
+| `IconEntry` | `IconCell` ✅ |
+| `ImageEntry` | `ImageCell` ✅ |
+| `ColorEntry` | `ColourCell` ✅ |
+| `RepeatableEntry` | `RelationPanel` ⚠️ related **records** yes; a repeated JSON array on the record itself, no |
+| `CodeEntry` | — ❌ |
+| `KeyValueEntry` | — ❌ |
 
-So a record page that in Filament shows a colour swatch, a thumbnail, a
-key-value block or a repeated child list will, in PanelKit, show a string.
+**PanelKit renders five more** that Filament reaches through `TextEntry`
+formatting: `badge`, `date`, `datetime`, `money`, and `checkbox`/`toggle`.
 
-**This is the one area where a ported panel visibly loses fidelity**, and it is
-the honest headline of this audit. It is also self-contained: the type
-implementations already exist for tables, and the record page simply does not
-reuse them. Closing it means giving `ResourceView` the type switch
-`ResourceIndex` already has.
+**The cells are reused, not reimplemented.** A column type cannot render one
+way in a list and another on the record — which is the bug this shape is most
+likely to grow, and which it had: **`money` was not formatted on the record page
+at all**, so a row showing a currency in the list showed raw minor units on its
+own page. Two orders of magnitude out, on the screen somebody opens to check
+what a customer owes. The formatter is now shared.
 
 ---
 

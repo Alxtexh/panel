@@ -15,10 +15,31 @@ import { computed, ref, toRef } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
 import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
-import { InfoNode, RelationPanel, useSchemaColumns } from '@alxtexh-enterprise/panel'
+/*
+ * THE SAME CELLS THE TABLE USES, not new ones.
+ *
+ * This page rendered `badge` and turned everything else into a string, so a
+ * record whose list row showed a colour swatch, an icon or a thumbnail showed
+ * `#1e90ff`, `active` and a URL on its own page. The renderers existed and
+ * were exported the whole time; nothing imported them here.
+ *
+ * Reusing them rather than writing entry components means a column type can
+ * never render one way in a list and another way on the record - which is the
+ * bug this shape is most likely to grow.
+ */
+import {
+    CheckboxCell,
+    ColourCell,
+    IconCell,
+    ImageCell,
+    InfoNode,
+    RelationPanel,
+    useSchemaColumns,
+} from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
 import AuditTimeline from '../components/AuditTimeline.vue'
 import RenderHook from '../components/RenderHook.vue'
+import { formatMoney } from '../lib/money'
 
 const props = defineProps<{
     schema: {
@@ -189,6 +210,19 @@ function render(key: string): string {
         return new Date(String(value)).toLocaleDateString(undefined, dateFormats[column.type])
     }
 
+    /*
+     * MONEY WAS MISSING HERE, and it was the worst omission on this page. The
+     * list showed a formatted currency; this showed the raw minor units - so a
+     * record whose amount is 129900 read as "129900" on the one screen somebody
+     * opens to check what a customer owes. A wrong number, not a plain one.
+     *
+     * The formatter is shared with the list rather than copied, so the two can
+     * never disagree again.
+     */
+    if (column?.type === 'money') {
+        return formatMoney(column as never, value, props.record)
+    }
+
     // Same transform the table applies, so a value never reads one way in the
     // list and another here.
     let text = String(value)
@@ -268,6 +302,39 @@ function destroy() {
                     >
                         {{ record[column.key] }}
                     </Badge>
+                    <IconCell
+                        v-else-if="column.type === 'icon'"
+                        :value="record[column.key]"
+                        :icons="(column as any).icons ?? {}"
+                        :colors="(column as any).colors ?? {}"
+                        :labels="(column as any).labels ?? {}"
+                        :default-icon="(column as any).defaultIcon ?? 'dot'"
+                    />
+                    <ColourCell
+                        v-else-if="column.type === 'colour'"
+                        :value="record[column.key]"
+                        :show-value="(column as any).showValue !== false"
+                    />
+                    <!--
+                        A CHECKBOX AND A TOGGLE READ THE SAME HERE. On a record
+                        page nothing is being switched - both are reporting a
+                        yes or a no, and a toggle control would invite a click
+                        that does nothing.
+                    -->
+                    <CheckboxCell
+                        v-else-if="column.type === 'checkbox' || column.type === 'toggle'"
+                        :value="record[column.key]"
+                        :true-label="(column as any).trueLabel"
+                        :false-label="(column as any).falseLabel"
+                    />
+                    <ImageCell
+                        v-else-if="column.type === 'image'"
+                        :src="record[column.key]"
+                        :fallback-text="record[(column as any).fallbackFrom ?? 'name']"
+                        :rounded="(column as any).rounded !== false"
+                        :size="(column as any).size ?? 'md'"
+                        :fallback="(column as any).fallback ?? 'initials'"
+                    />
                     <span v-else :class="column.mono ? 'font-mono text-xs' : ''">{{
                         render(column.key)
                     }}</span>
