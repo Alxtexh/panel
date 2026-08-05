@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 |     | package (installed)     | reference app only      |
 | --- | ----------------------- | ----------------------- |
-| PHP | 298 files, 51,660 lines | 90 files, 13,027 lines |
-| Vue | 278 components          | **80 components**       |
+| PHP | 299 files, 51,660 lines | 90 files, 13,027 lines |
+| Vue | 279 components          | **80 components**       |
 
 The Vue column inverted in v0.6.3, and that is the headline. The demo used to
 carry nearly twice what the framework did; the shell, the auth screens and the
@@ -79,7 +79,14 @@ map that nothing could then display.
 units — an integer count of the smallest unit cannot drift the way a float does
 — and formats in the **viewer's** locale rather than the server's.
 
-Filters: `Select` `MultiSelect` `Boolean` `DateRange` `Trashed`
+Filters: `Select` `MultiSelect` `Boolean` `DateRange` `Trashed` `QueryBuilder`
+
+**`QueryBuilderFilter` is a nested and/or rule tree** the operator composes in
+the UI. It targets **only columns the resource already filters on** — the
+allow-list is derived from the sibling filters, not declared separately, so it
+adds no new way to reach anything and cannot drift out of step. A rule naming
+anything else is **refused, not ignored**: dropping it would return more rows
+than the operator asked for, silently.
 
 Plus grouping, row reordering, footer summaries, saved views, a column engine,
 density, and keyset pagination that holds up at 250,000 rows.

@@ -624,7 +624,7 @@ is used. Read that line before planning around anything below.
 _How to use them: name them in `form()`._
 **Table columns** (14): `BadgeColumn` `CheckboxColumn` `CodeColumn` `ColourColumn` `Column` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `KeyValueColumn` `MoneyColumn` `SelectColumn` `TextColumn` `ToggleColumn`
 _How to use them: name them in `table()`._
-**Table filters** (7): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `MultiSelectFilter` `SelectFilter` `TrashedFilter`
+**Table filters** (8): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `MultiSelectFilter` `QueryBuilderFilter` `SelectFilter` `TrashedFilter`
 _How to use them: name them in `table()`._
 **Actions** (7): `ActionGroup` `BulkAction` `BulkRunner` `ExportedFile` `JobStatus` `RecordAction` `ReplicateAction`
 _How to use them: name them in `table()` or the resource's actions._

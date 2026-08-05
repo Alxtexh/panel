@@ -33,7 +33,7 @@ PanelKit's `Field`, `Column` and `Filter` base classes and its `HasChoices` /
 |---|---|---|---|
 | Form fields | **24** | 20 | none |
 | Table columns | **13** | 8 | none |
-| Table filters | **5** | 5 | 1 — visual query builder |
+| Table filters | **6** | 5 | none |
 | Layout components | **9** | 7 | none |
 | Chart types | **11** | 8 | none |
 | View-page entry types | **11** | 7 | none |
@@ -120,7 +120,7 @@ renders.
 
 ---
 
-## 3. Filters — 5 vs 5, one real gap
+## 3. Filters — 6 vs 5, no gaps
 
 | Filament | PanelKit |
 |---|---|
@@ -128,17 +128,31 @@ renders.
 | `SelectFilter` | `SelectFilter` ✅ |
 | `TernaryFilter` | `BooleanFilter` ✅ true / false / all |
 | `TrashedFilter` | `TrashedFilter` ✅ |
-| `QueryBuilder` | — ❌ |
+| `QueryBuilder` | `QueryBuilderFilter` ✅ |
 
 **PanelKit adds** `DateRangeFilter` and `MultiSelectFilter`.
 
-**The visual query builder is genuinely absent** — verified by searching the
-package rather than assumed. Filament's is a nested and/or rule tree the
-operator composes in the UI.
+**`QueryBuilderFilter` closed the last gap in 0.9.5.** A nested and/or rule
+tree — "status is active AND (plan is gold OR created after March)" — composed
+in the UI and translated to a scoped query.
 
-If your Filament panel exposes one to end users, this is work rather than a
-rename. If it is used only by staff, PanelKit's saved views plus its filter set
-usually cover the intent.
+**It targets only columns the resource already filters on.** The allow-list is
+derived from the sibling filters by `ListQuery::filters()`, not declared
+separately, so the builder adds **no new way to reach anything** and the list
+cannot drift out of step with the filters it came from. `TrashedFilter` is
+deliberately excluded: it rewrites the soft-delete scope rather than adding a
+predicate, so "deleted is true OR status is active" would silently widen the
+set to every deleted row.
+
+**A rule naming an unknown field is refused, not dropped.** Ignoring it turns
+"status is active AND secret is x" into "status is active" — a *wider* result
+set than the operator wrote, returned without comment. Depth and rule count are
+capped, and both caps refuse rather than truncate.
+
+**The whole tree goes inside one nested `where`.** Without that, a top-level
+`or` ORs itself against the tenant scope already on the query — a cross-tenant
+read that looks like a working feature. That is the assertion the test suite
+leads with.
 
 ---
 

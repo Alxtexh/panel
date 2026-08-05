@@ -28,6 +28,7 @@ export { default as ImageCell } from './components/DataTable/ImageCell.vue'
 export { default as ColourCell } from './components/DataTable/ColourCell.vue'
 export { default as CheckboxCell } from './components/DataTable/CheckboxCell.vue'
 export { default as CodeCell } from './components/DataTable/CodeCell.vue'
+export { default as PkQueryBuilder } from './components/DataTable/PkQueryBuilder.vue'
 export { default as KeyValueCell } from './components/DataTable/KeyValueCell.vue'
 export { default as EditableCell } from './components/DataTable/EditableCell.vue'
 export { default as RecordActions } from './components/DataTable/RecordActions.vue'
@@ -206,6 +207,7 @@ export { useTenantTheme } from './composables/useTenantTheme'
 export { useSchemaColumns, BADGE_VARIANTS, hasBadgeValue } from './composables/useSchemaColumns'
 
 export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
+export type { QueryField, QueryGroup, QueryRule } from './components/DataTable/PkQueryBuilder.vue'
 export type { BulkActionSchema } from './components/DataTable/BulkActions.vue'
 export type {
     ChartSeries,
