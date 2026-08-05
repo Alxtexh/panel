@@ -15,6 +15,7 @@ use Inertia\Response;
 use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\CustomFields\CustomFieldFactory;
 use PanelKit\Panel\CustomFields\CustomFieldStorage;
+use PanelKit\Panel\Forms\Fields\Field;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Http\NestedContext;
 use PanelKit\Panel\Live\LiveConfig;
@@ -323,7 +324,7 @@ final class ResourceController extends Controller
      * answer identical to what it was before actions could ask.
      *
      * @param  class-string  $class
-     * @return list<\PanelKit\Panel\Forms\Fields\Field>
+     * @return list<Field>
      */
     private function searchableFields(string $class): array
     {

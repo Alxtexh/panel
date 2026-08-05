@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Widgets;
 
-use PanelKit\Panel\Support\Ability;
 use Closure;
 use DateTimeImmutable;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
+use PanelKit\Panel\Support\Ability;
 use Throwable;
 
 /**

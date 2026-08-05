@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Ticketing;
 
-use PanelKit\Panel\Models\Ticket;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use PanelKit\Panel\Actions\ActionGroup;
 use PanelKit\Panel\Actions\RecordAction;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Forms\Rules\ExistsInScope;
+use PanelKit\Panel\Models\Ticket;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
@@ -48,7 +49,7 @@ final class TicketResource extends Resource
      * scope; both need the class, and a package importing `App\Models\User`
      * would fatal in every application that calls it something else.
      *
-     * @return class-string<\Illuminate\Database\Eloquent\Model>
+     * @return class-string<Model>
      */
     private static function userModel(): string
     {

@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use PanelKit\Panel\Live\LiveConfig;
 use PanelKit\Panel\PanelManager;
 
 /**
@@ -101,7 +102,7 @@ final class PlatformReport
              * monitoring page that 500s on a misconfiguration is reporting
              * nothing at the moment it is most needed.
              */
-            'live' => \PanelKit\Panel\Live\LiveConfig::resolveDriver(
+            'live' => LiveConfig::resolveDriver(
                 (string) config('panel.live.driver', 'auto'),
             ),
             'broadcast' => (string) config('broadcasting.default', 'null'),

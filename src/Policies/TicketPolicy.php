@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Policies;
 
+use DateTimeInterface;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use PanelKit\Panel\Models\Ticket;
-use DateTimeInterface;
 use PanelKit\Panel\Support\Abilities;
 use PanelKit\Panel\Support\Ability;
 use PanelKit\Panel\Support\TenantContext;

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Widgets;
 
-use PanelKit\Panel\Support\Ability;
 use Closure;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use PanelKit\Panel\Support\Ability;
 use RuntimeException;
 use Throwable;
 

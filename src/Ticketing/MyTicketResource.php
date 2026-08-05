@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Ticketing;
 
-use PanelKit\Panel\Models\Ticket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use PanelKit\Panel\Actions\RecordAction;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Forms\Fields\TextField;
 use PanelKit\Panel\Forms\Form;
+use PanelKit\Panel\Models\Ticket;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;

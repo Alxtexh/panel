@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
-use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -13,6 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Support\Ability;
 use PanelKit\Panel\Support\PanelSettings;
 use PanelKit\Panel\Trash\TrashBin;
 

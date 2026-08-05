@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
-use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +15,8 @@ use PanelKit\Panel\Alerts\Telegram;
 use PanelKit\Panel\Audit\AuditRecorder;
 use PanelKit\Panel\Jobs\RestoreBackup;
 use PanelKit\Panel\Jobs\RunBackupNow;
+use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\Ability;
 use PanelKit\Panel\Support\BackupArchive;
 use PanelKit\Panel\Support\BackupDestinationProbe;
 use PanelKit\Panel\Support\BackupSettings;
@@ -25,7 +26,6 @@ use PanelKit\Panel\Support\InstallationState;
 use PanelKit\Panel\Support\LogReader;
 use PanelKit\Panel\Support\MonitorSampler;
 use PanelKit\Panel\Support\PanelSettings;
-use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\PlatformReport;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -59,7 +59,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final class OperationsController
 {
-
     /**
      * The URLs the screens post to, resolved from this controller's own routes.
      *

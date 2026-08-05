@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers\Ticketing;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use PanelKit\Panel\Models\Ticket;
 use PanelKit\Panel\Support\TicketStats;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * The queue's numbers.

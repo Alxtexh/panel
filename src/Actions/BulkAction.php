@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Actions;
 
 use Closure;
-use PanelKit\Panel\Forms\Form;
 use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
+use PanelKit\Panel\Forms\Form;
 
 /**
  * A mutation applied to a selection.

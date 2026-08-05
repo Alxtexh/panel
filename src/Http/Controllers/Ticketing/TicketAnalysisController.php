@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Http\Controllers\Ticketing;
 
 use Illuminate\Routing\Controller;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Ticketing\TicketResource;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
+use PanelKit\Panel\Models\Ticket;
+use PanelKit\Panel\Ticketing\TicketResource;
 
 /**
  * The analysis screen.

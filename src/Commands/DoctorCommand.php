@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Commands;
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use PanelKit\Panel\Alerts;
 use PanelKit\Panel\Documents;
@@ -26,7 +26,6 @@ use PanelKit\Panel\Support\TicketTables;
 use PanelKit\Panel\Support\VendoredCopy;
 use PanelKit\Panel\Ticketing\TicketingPlugin;
 use Spatie\Permission\PermissionRegistrar;
-
 /**
  * Check for the configurations that are wrong in ways nothing else reports.
  *
@@ -477,7 +476,7 @@ final class DoctorCommand extends Command
 
         try {
             $embedder = app(Knowledge\Embedder::class);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->problem(
                 'The configured embedder cannot be constructed',
                 'panel.knowledge.embedder is set to something the container cannot build ('
@@ -533,7 +532,7 @@ final class DoctorCommand extends Command
     {
         try {
             $embedding = DB::table('panel_knowledge_chunks')->value('embedding');
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // The migration has not run. Not a fault - retrieval is simply not
             // in use yet, and the indexer would create nothing to compare.
             return null;
@@ -555,7 +554,7 @@ final class DoctorCommand extends Command
                 "SELECT 1 AS ok FROM information_schema.columns
                  WHERE table_name = 'panel_knowledge_chunks' AND column_name = 'embedding_vector'",
             ) !== null;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return false;
         }
     }
@@ -1232,7 +1231,7 @@ final class DoctorCommand extends Command
                 (clone $query)->orderBy('email')->limit(5)->pluck('email')->all(),
                 (clone $query)->count(),
             ];
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // No users table yet, or a provider that is not Eloquent. Either way
             // there is nothing to report rather than something to crash over.
             return [[], 0];
