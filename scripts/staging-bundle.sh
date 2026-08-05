@@ -53,7 +53,16 @@ git -C "$ROOT" archive --format=tar.gz \
     -o "$STAGE/panelkit-panel-$VERSION.tar.gz" \
     HEAD:packages/panel
 
-tar tzf "$STAGE/panelkit-panel-$VERSION.tar.gz" | grep -q 'client/panelkit-client.tgz' \
+# LISTED TO A FILE, NOT PIPED INTO grep. Under `set -o pipefail`, `grep -q`
+# exits on the first match, `tar` then writes into a closed pipe and dies of
+# SIGPIPE, and the pipeline reports failure - for an archive that was correct.
+# This guard failed that way on its first run, which is the right kind of bug
+# to have in a check: it refused a good bundle rather than passing a bad one.
+LISTING="$(mktemp)"
+trap 'rm -f "$LISTING"' EXIT
+tar tzf "$STAGE/panelkit-panel-$VERSION.tar.gz" > "$LISTING"
+
+grep -q 'client/panelkit-client.tgz' "$LISTING" \
     || fail "The Composer archive does not contain the client half. An install from it would render blank."
 
 for doc in PANELKIT.md UPGRADING.md CHANGELOG.md; do
