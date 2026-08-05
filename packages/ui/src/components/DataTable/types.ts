@@ -25,7 +25,14 @@ export interface TableColumn {
 export interface FilterSchema {
     key: string
     label: string
-    type: 'select' | 'boolean' | 'multiselect' | 'daterange'
+    /**
+     * `querybuilder` IS A NESTED RULE TREE, not a value.
+     *
+     * It was missing from this union, so the toolbar had no branch for it and
+     * a resource declaring one rendered a label with nothing under it - a
+     * working server half nobody could reach.
+     */
+    type: 'select' | 'boolean' | 'multiselect' | 'daterange' | 'querybuilder'
     options?: string[]
     trueLabel?: string
     falseLabel?: string

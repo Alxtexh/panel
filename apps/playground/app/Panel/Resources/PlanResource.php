@@ -13,6 +13,7 @@ use PanelKit\Panel\Tables\Columns\DateColumn;
 use PanelKit\Panel\Tables\Columns\MoneyColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Filters\BooleanFilter;
+use PanelKit\Panel\Tables\Filters\QueryBuilderFilter;
 use PanelKit\Panel\Tables\Table;
 
 final class PlanResource extends Resource
@@ -98,6 +99,20 @@ final class PlanResource extends Resource
                 // Three states: unset, true, false. `false` is an applied value.
                 BooleanFilter::make('active')->label('Availability')->column('plans.is_active')
                     ->labels('Active', 'Inactive'),
+                /*
+                 * A CONSUMER FOR THE QUERY BUILDER, which shipped without one.
+                 *
+                 * It takes no configuration: the fields it offers are derived
+                 * from the filters above, so this line adds a nested and/or
+                 * tree over `active` and nothing else. Adding a filter widens
+                 * it; removing one narrows it; there is no second list.
+                 *
+                 * It is here rather than nowhere because a filter with a
+                 * server half, twelve tests and no screen declaring it is a
+                 * feature that exists in the package and not for an operator -
+                 * which is exactly what it was until this line.
+                 */
+                QueryBuilderFilter::make('advanced')->label('Advanced query'),
             ])
             ->keyColumn('plans.id')
             // `price` is computed, so the underlying columns must be selected

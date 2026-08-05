@@ -21,6 +21,7 @@
  * Emits only. Never fetches (spec §4 rule 2).
  */
 import { computed, ref, watch } from 'vue'
+import PkQueryBuilder from './PkQueryBuilder.vue'
 import PkDropdown from '../primitives/PkDropdown.vue'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import type { FilterSchema } from './types'
@@ -174,6 +175,20 @@ function applyFilters(close: () => void) {
     close()
 }
 
+/**
+ * The tree applies itself, without the panel's Apply button.
+ *
+ * A QUERY BUILDER OWNS ITS OWN COMMIT. It has an Apply of its own, because a
+ * half-written rule - "status is" with no value - is a query for everything,
+ * and on a large resource an expensive one nobody asked for. Routing it through
+ * the panel's shared button would mean two Applies on screen doing different
+ * things.
+ */
+function applyTree(key: string, tree: unknown): void {
+    draft.value[key] = tree
+    emit('apply-filters', { ...draft.value })
+}
+
 function resetFilters() {
     draft.value = Object.fromEntries(props.filterSchema.map((f) => [f.key, null]))
 }
@@ -296,6 +311,7 @@ function clearEverything() {
             <template #trigger>
                 <button
                     type="button"
+                    dusk="filters-trigger"
                     class="border-input bg-background hover:bg-accent hover:text-accent-foreground relative inline-flex size-9 shrink-0 items-center justify-center rounded-md border transition-colors"
                     :class="activeCount ? 'border-primary text-primary' : ''"
                     :aria-label="activeCount ? `Filters (${activeCount} active)` : 'Filters'"
@@ -359,6 +375,30 @@ function clearEverything() {
                                 (value) => (draft[filter.key] = value.length ? value : null)
                             "
                         />
+
+                        <!--
+                            THE QUERY BUILDER, WHICH HAD NO BRANCH HERE AT ALL.
+
+                            `QueryBuilderFilter` shipped with a working server
+                            half - twelve tests, an allow-list derived from the
+                            sibling filters, a tenant-scope guard - and a Vue
+                            component that NOTHING MOUNTED. A resource declaring
+                            one rendered a label and nothing under it: the
+                            feature existed in the package and did not exist for
+                            an operator.
+
+                            The exact failure this codebase keeps naming, made
+                            once more in the commit that closed the last gap.
+                        -->
+                        <template v-else-if="filter.type === 'querybuilder'">
+                            <PkQueryBuilder
+                                :model-value="(draft[filter.key] as any) ?? null"
+                                :fields="(filter as any).fields ?? {}"
+                                :operators="(filter as any).operators ?? {}"
+                                :max-depth="(filter as any).maxDepth ?? 5"
+                                @apply="(tree: unknown) => applyTree(filter.key, tree)"
+                            />
+                        </template>
 
                         <!-- Date range: presets plus an explicit pair. -->
                         <template v-else-if="filter.type === 'daterange'">

@@ -205,4 +205,33 @@ final class MoneyAndPermissionsRenderTest extends DuskTestCase
                 ->assertDontSee('2,500.00');
         });
     }
+
+    /**
+     * THE QUERY BUILDER IS REACHABLE, which it was not.
+     *
+     * `QueryBuilderFilter` shipped with a working server half - twelve tests,
+     * an allow-list derived from the sibling filters, a guard stopping a
+     * top-level `or` escaping the tenant scope - and a Vue component NOTHING
+     * MOUNTED. `TableToolbar` had no branch for the type, so a resource
+     * declaring one rendered a label with nothing under it.
+     *
+     * A feature that exists in the package and not for an operator is the
+     * failure this codebase names most often, and it was made in the commit
+     * that closed the last Filament gap. This is the assertion that would have
+     * caught it: open the filters, and the control is there.
+     */
+    public function test_the_query_builder_control_actually_renders(): void
+    {
+        $this->seedOperators();
+
+        $this->browse(function (Browser $browser): void {
+            $browser->loginAs($this->grantedId)
+                ->visit('/plans')
+                ->waitForText('Money Path Plan', 15)
+                ->press('@filters-trigger')
+                ->waitForText('Advanced query', 5)
+                ->assertSee('Match all')
+                ->assertSee('Add rule');
+        });
+    }
 }
