@@ -13,6 +13,7 @@ use InvalidArgumentException;
 use PanelKit\Panel\Actions\ActionGroup;
 use PanelKit\Panel\Actions\RecordAction;
 use PanelKit\Panel\Tables\Filters\Filter;
+use PanelKit\Panel\Tables\Filters\QueryBuilderFilter;
 use PanelKit\Panel\Tables\Filters\TrashedFilter;
 
 /**
@@ -219,6 +220,21 @@ final class ListQuery
     public function filters(array $filters): self
     {
         $this->filters = $filters;
+
+        /*
+         * A QUERY BUILDER IS TOLD WHAT IT MAY TARGET, HERE AND NOWHERE ELSE.
+         *
+         * It offers only columns the resource already filters on, so it adds
+         * no new way to reach anything. Wiring that by hand in the resource
+         * would be a SECOND place the allow-list is decided - and the one
+         * nobody updates when a filter is added or removed, which is how a
+         * builder ends up offering a column the resource stopped exposing.
+         */
+        foreach ($this->filters as $filter) {
+            if ($filter instanceof QueryBuilderFilter) {
+                $filter->over($this->filters);
+            }
+        }
 
         return $this;
     }
