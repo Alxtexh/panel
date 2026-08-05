@@ -115,6 +115,13 @@ export { default as ThemeToggle } from './components/Layout/ThemeToggle.vue'
 export { default as BarChart } from './components/Widgets/BarChart.vue'
 export { default as LineChart } from './components/Widgets/LineChart.vue'
 export { default as PieChart } from './components/Widgets/PieChart.vue'
+/*
+ * ONE COMPONENT FOR BOTH FILAMENT CHART TYPES. A bubble chart is a scatter
+ * with a size channel - same axes, same marks, same hit testing - so any point
+ * carrying `r` makes it one, exactly as `PieChart` becomes a doughnut. Two
+ * files would be two names for one drawing.
+ */
+export { default as ScatterChart } from './components/Widgets/ScatterChart.vue'
 export { default as RadarChart } from './components/Widgets/RadarChart.vue'
 export { default as PolarAreaChart } from './components/Widgets/PolarAreaChart.vue'
 export { default as ComboChart } from './components/Widgets/ComboChart.vue'
@@ -198,7 +205,12 @@ export { useSchemaColumns, BADGE_VARIANTS, hasBadgeValue } from './composables/u
 
 export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
 export type { BulkActionSchema } from './components/DataTable/BulkActions.vue'
-export type { ChartSeries, ChartPoint } from './components/Widgets/types'
+export type {
+    ChartSeries,
+    ChartPoint,
+    ChartXYPoint,
+    ChartXYSeries,
+} from './components/Widgets/types'
 export type { StatSegment } from './components/Widgets/StatStrip.vue'
 export type { SetupChecklistItem } from './components/Widgets/SetupChecklist.vue'
 export type { MultiSelectOption } from './components/primitives/PkMultiSelect.vue'

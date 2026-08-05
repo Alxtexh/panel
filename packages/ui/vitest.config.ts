@@ -22,5 +22,11 @@ export default defineConfig({
     plugins: [vue()],
     test: {
         environment: 'jsdom',
+        /*
+         * jsdom implements no `ResizeObserver`, and every chart in this package
+         * constructs one on mount - so charts could not be mounted in a test at
+         * all until this existed. See the note in the setup file.
+         */
+        setupFiles: ['./vitest.setup.ts'],
     },
 })

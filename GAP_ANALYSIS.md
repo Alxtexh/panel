@@ -35,7 +35,7 @@ PanelKit's `Field`, `Column` and `Filter` base classes and its `HasChoices` /
 | Table columns | **11** | 8 | none |
 | Table filters | **5** | 5 | 1 — visual query builder |
 | Layout components | **9** | 7 | none |
-| Chart types | **9** | 8 | 2 — bubble, scatter |
+| Chart types | **11** | 8 | none |
 | View-page entry types | **9** | 7 | 2 — `CodeEntry`, `KeyValueEntry` |
 | Prebuilt action classes | 4 + subsystems | 9 | none functionally |
 
@@ -202,7 +202,7 @@ what a customer owes. The formatter is now shared.
 
 ---
 
-## 6. Charts — 9 vs 8, two gaps
+## 6. Charts — 11 vs 8, no gaps
 
 | Filament | PanelKit |
 |---|---|
@@ -212,11 +212,20 @@ what a customer owes. The formatter is now shared.
 | Doughnut | `PieChart` `type="doughnut"` ✅ |
 | Polar area | `PolarAreaChart` ✅ |
 | Radar | `RadarChart` ✅ |
-| Bubble | — ❌ |
-| Scatter | — ❌ |
+| Scatter | `ScatterChart` ✅ |
+| Bubble | `ScatterChart`, points carrying `r` ✅ |
 
 **PanelKit adds four:** `ComboChart` (bars with a trend line through them),
 `HeatmapChart`, `Sparkline`, `SegmentedBar`.
+
+**Scatter and bubble are one component**, the way `PieChart` is also the
+doughnut: a bubble chart is a scatter with a size channel — same axes, same
+marks, same hit testing. Two files would be two names for one drawing.
+
+**Bubbles scale by AREA, not radius.** Mapping the value onto the radius
+quadruples the ink for twice the quantity, so a reader comparing marks by eye
+reads a doubling as a quadrupling. A test asserts the ratio, because that is
+the kind of wrong a chart can be while still looking like a chart.
 
 The old scoreboard claimed "12 — the full reference set". That counted cards and
 chrome — `StatCard`, `ChartTooltip`, `TrendBadge` — as chart types. Nine is the
