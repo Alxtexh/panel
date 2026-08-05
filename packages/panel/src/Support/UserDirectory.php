@@ -42,7 +42,7 @@ final class UserDirectory
     /**
      * The resource that lists users, if the application registered one.
      *
-     * @return class-string<Resource>|null
+     * @return class-string<resource>|null
      */
     public static function resource(): ?string
     {

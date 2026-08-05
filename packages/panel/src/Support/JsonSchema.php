@@ -50,6 +50,10 @@ final class JsonSchema
         'password' => ['type' => 'string', 'format' => 'password'],
         'number' => ['type' => 'number'],
         'toggle' => ['type' => 'boolean'],
+        'checkbox' => ['type' => 'boolean'],
+        // A hidden field is still submitted, so the API still documents it -
+        // the control is absent, the value is not.
+        'hidden' => ['type' => 'string'],
         'date' => ['type' => 'string', 'format' => 'date'],
         'datetime' => ['type' => 'string', 'format' => 'date-time'],
         'select' => ['type' => 'string'],

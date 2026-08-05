@@ -74,7 +74,7 @@ final class SearchController extends Controller
                 break;
             }
 
-            /** @var class-string<Resource> $class */
+            /** @var class-string<resource> $class */
             /*
              * THE SAME ABILITY THE LIST PAGE ASKS FOR.
              *

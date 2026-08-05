@@ -7,11 +7,11 @@ namespace PanelKit\Panel\Http;
 use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Auth;
 use PanelKit\Panel\Auth\Passkeys;
-use PanelKit\Panel\Landing;
 use PanelKit\Panel\Http\Controllers\BulkController;
 use PanelKit\Panel\Http\Controllers\RecordController;
 use PanelKit\Panel\Http\Controllers\ResourceController;
 use PanelKit\Panel\Http\Controllers\UploadController;
+use PanelKit\Panel\Landing;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
 

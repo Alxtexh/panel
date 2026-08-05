@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 |     | package (installed)     | reference app only      |
 | --- | ----------------------- | ----------------------- |
-| PHP | 291 files, 51,660 lines | 90 files, 13,027 lines |
-| Vue | 274 components          | **80 components**       |
+| PHP | 293 files, 51,660 lines | 90 files, 13,027 lines |
+| Vue | 275 components          | **80 components**       |
 
 The Vue column inverted in v0.6.3, and that is the headline. The demo used to
 carry nearly twice what the framework did; the shell, the auth screens and the

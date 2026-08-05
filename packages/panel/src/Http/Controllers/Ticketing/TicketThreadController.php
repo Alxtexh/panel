@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers\Ticketing;
 
-use Illuminate\Routing\Controller;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Models\TicketReply;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use PanelKit\Panel\Models\Ticket;
+use PanelKit\Panel\Models\TicketReply;
 
 /**
  * Reading and writing a ticket's thread.

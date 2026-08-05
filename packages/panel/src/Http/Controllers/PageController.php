@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
-use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Pages\Page;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\Ability;
 
 /**
  * Serves every declared page, and the endpoints those pages own.

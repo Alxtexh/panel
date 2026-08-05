@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace PanelKit\Panel;
 
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Notifications\ChannelManager;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -313,8 +316,8 @@ final class PanelServiceProvider extends ServiceProvider
      */
     private function redirectGuestsToTheirPanel(): void
     {
-        \Illuminate\Auth\Middleware\Authenticate::redirectUsing(static function ($request): ?string {
-            $routes = \Illuminate\Support\Facades\Route::getRoutes();
+        Authenticate::redirectUsing(static function ($request): ?string {
+            $routes = Route::getRoutes();
 
             $panel = app(PanelManager::class)->currentPanel();
 
@@ -358,7 +361,7 @@ final class PanelServiceProvider extends ServiceProvider
         }
 
         foreach (glob($this->app->basePath('routes/panel-*-auth.php')) ?: [] as $file) {
-            \Illuminate\Support\Facades\Route::middleware('web')->group($file);
+            Route::middleware('web')->group($file);
         }
     }
 
@@ -382,7 +385,7 @@ final class PanelServiceProvider extends ServiceProvider
      */
     private function registerPackagedPolicies(): void
     {
-        \Illuminate\Support\Facades\Gate::policy(
+        Gate::policy(
             Alerts\Announcement::class,
             Alerts\AnnouncementPolicy::class,
         );

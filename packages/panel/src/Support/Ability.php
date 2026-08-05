@@ -73,7 +73,6 @@ final class Ability
         return self::held($user, $ability);
     }
 
-    /** @param  Authenticatable&Authorizable  $user */
     public static function held(Authenticatable&Authorizable $user, string $ability): bool
     {
         return self::withTeam(static fn (): bool => method_exists($user, 'hasPermission')

@@ -620,7 +620,7 @@ not hand-roll one in Vue. Ask for it, or compose what is here.
 EXISTING AND BEING MOUNTABLE ARE DIFFERENT CLAIMS, so each group says how it
 is used. Read that line before planning around anything below.
 
-**Form fields** (24): `BuilderField` `CheckboxListField` `CodeField` `ColourField` `CountryField` `DateField` `Field` `FileUploadField` `HasChoices` `KeyValueField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `RadioField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleField` `VisualSelectField`
+**Form fields** (26): `BuilderField` `CheckboxField` `CheckboxListField` `CodeField` `ColourField` `CountryField` `DateField` `Field` `FileUploadField` `HasChoices` `HiddenField` `KeyValueField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `RadioField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleField` `VisualSelectField`
 _How to use them: name them in `form()`._
 **Table columns** (12): `BadgeColumn` `CheckboxColumn` `ColourColumn` `Column` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `MoneyColumn` `SelectColumn` `TextColumn` `ToggleColumn`
 _How to use them: name them in `table()`._

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Ticketing;
 
+use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Http\Controllers\Ticketing\TicketAnalysisController;
 use PanelKit\Panel\Http\Controllers\Ticketing\TicketStatsController;
 use PanelKit\Panel\Http\Controllers\Ticketing\TicketThreadController;
-use Illuminate\Support\Facades\Route;
 use PanelKit\Panel\Panel;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Plugins\Plugin;

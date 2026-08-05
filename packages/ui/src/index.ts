@@ -77,6 +77,7 @@ export * from './components/shadcn/spinner'
 export * from './components/shadcn/alert'
 export * from './components/shadcn/card'
 export * from './components/shadcn/checkbox'
+export * from './components/shadcn/switch'
 export { Input as ShadcnInput } from './components/shadcn/input'
 export { default as PkBoundary } from './components/Layout/PkBoundary.vue'
 

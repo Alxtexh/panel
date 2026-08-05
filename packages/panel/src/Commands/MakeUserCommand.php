@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use PanelKit\Panel\Models\Role;
 use PanelKit\Panel\Support\Abilities;
+use Spatie\Permission\PermissionRegistrar;
 
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\text;
@@ -139,7 +140,7 @@ final class MakeUserCommand extends Command
      */
     private function grantAdministrator(object $user): void
     {
-        if (! class_exists(\Spatie\Permission\PermissionRegistrar::class)) {
+        if (! class_exists(PermissionRegistrar::class)) {
             return;
         }
 
@@ -155,7 +156,7 @@ final class MakeUserCommand extends Command
         $team = config('permission.column_names.team_foreign_key', 'tenant_id');
         $tenant = $user->{$team} ?? null;
 
-        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($tenant);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($tenant);
 
         $role = Role::query()->firstOrCreate(
             [

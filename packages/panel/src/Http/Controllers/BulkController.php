@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use PanelKit\Panel\Actions\BulkAction;
 use PanelKit\Panel\Actions\BulkRunner;
 use PanelKit\Panel\Actions\ExportedFile;
 use PanelKit\Panel\Actions\JobStatus;
@@ -124,7 +125,7 @@ final class BulkController extends Controller
      *
      * @return array<string, mixed>
      */
-    private function actionInput(Request $request, \PanelKit\Panel\Actions\BulkAction $action): array
+    private function actionInput(Request $request, BulkAction $action): array
     {
         $form = $action->formDefinition();
 

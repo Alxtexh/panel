@@ -24,6 +24,8 @@
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from 'vue'
 import { fieldControl } from '../../composables/useFieldControls'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
+import { Checkbox } from '../shadcn/checkbox'
+import { Switch } from '../shadcn/switch'
 import PkFileUpload from './PkFileUpload.vue'
 import type { UploadedFileValue } from './PkFileUpload.vue'
 import PkKeyValue from './PkKeyValue.vue'
@@ -201,7 +203,17 @@ function insertChip(token: string) {
 </script>
 
 <template>
-    <div class="flex flex-col gap-1.5">
+    <!--
+        A HIDDEN FIELD RENDERS NOTHING AT ALL - not an empty wrapper, not an
+        `sr-only` label. It leaves the parent's `gap` to collapse over it, and a
+        screen reader announces no control, because there is none to reach.
+
+        Its value still travels: the form's model already holds it, so the
+        submit carries it whether or not anything drew it.
+    -->
+    <template v-if="field.type === 'hidden'" />
+
+    <div v-else class="flex flex-col gap-1.5">
         <!-- `sr-only`, never removed: the input keeps its accessible name
              when a container hides a visually redundant label (see
              FormField.labelHidden). -->
@@ -388,16 +400,34 @@ function insertChip(token: string) {
             </option>
         </select>
 
+        <!--
+            A SWITCH FOR `toggle`, A BOX FOR `checkbox`, and they are not the
+            same control. This drew a bare `<input type="checkbox">` for
+            `toggle`, so the field was called one thing and rendered another -
+            and there was no way to ask for an actual checkbox at all.
+
+            A switch reads as state ("Notifications: on"); a checkbox reads as
+            an assertion you tick while filling a form in ("I confirm this").
+            Same column, same boolean, different sentence beside it.
+        -->
         <label v-else-if="field.type === 'toggle'" class="flex items-center gap-2 text-sm">
-            <input
+            <Switch
                 :id="`f-${field.key}`"
-                type="checkbox"
-                class="accent-primary size-4"
-                :checked="!!value"
+                :model-value="!!value"
                 :disabled="field.disabled || processing"
-                @change="emit('change', ($event.target as HTMLInputElement).checked)"
+                @update:model-value="(checked: boolean) => emit('change', checked)"
             />
             <span class="text-muted-foreground">{{ field.help ?? 'Enabled' }}</span>
+        </label>
+
+        <label v-else-if="field.type === 'checkbox'" class="flex items-center gap-2 text-sm">
+            <Checkbox
+                :id="`f-${field.key}`"
+                :model-value="!!value"
+                :disabled="field.disabled || processing"
+                @update:model-value="(checked) => emit('change', checked === true)"
+            />
+            <span class="text-muted-foreground">{{ field.help ?? field.label }}</span>
         </label>
 
         <textarea

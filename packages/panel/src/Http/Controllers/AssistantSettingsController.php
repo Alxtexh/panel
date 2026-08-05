@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Http\Controllers;
 
-use PanelKit\Panel\Support\Ability;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,6 +11,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PanelKit\Panel\Ai\AiCredentials;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\Ability;
 
 /**
  * The assistant's provider and key, as a settings page - E.1's UI half.

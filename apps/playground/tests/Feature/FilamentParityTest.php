@@ -59,7 +59,7 @@ final class FilamentParityTest extends TestCase
     public static function counts(): array
     {
         return [
-            'form fields' => ['Forms/Fields', ['Field', 'HasChoices'], 22],
+            'form fields' => ['Forms/Fields', ['Field', 'HasChoices'], 24],
             'table columns' => ['Tables/Columns', ['Column'], 11],
         ];
     }

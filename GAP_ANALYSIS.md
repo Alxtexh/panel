@@ -31,7 +31,7 @@ PanelKit's `Field`, `Column` and `Filter` base classes and its `HasChoices` /
 
 | Area | PanelKit | Filament 5.x | Real gaps |
 |---|---|---|---|
-| Form fields | **22** | 20 | 2 — `Checkbox`, `Hidden` |
+| Form fields | **24** | 20 | none |
 | Table columns | **11** | 8 | none |
 | Table filters | **5** | 5 | 1 — visual query builder |
 | Layout components | **6** | 7 | 3 — `Flex`, `Fieldset`, `Callout` |
@@ -41,7 +41,7 @@ PanelKit's `Field`, `Column` and `Filter` base classes and its `HasChoices` /
 
 ---
 
-## 1. Form fields — 22 vs 20, two real gaps
+## 1. Form fields — 24 vs 20, no gaps
 
 **Filament's 20:** TextInput, Select, Checkbox, Toggle, CheckboxList, Radio,
 DateTimePicker, FileUpload, RichEditor, MarkdownEditor, Repeater, Builder,
@@ -68,8 +68,8 @@ Hidden.
 | `Slider` | `SliderField` | ✅ |
 | `CodeEditor` | `CodeField` | ✅ |
 | `ToggleButtons` | `VisualSelectField` | ⚠️ same job — a segmented choice — but PanelKit's renders each option as *what it does* rather than as a label |
-| `Checkbox` | — | ❌ only `ToggleField`. Same data, different control |
-| `Hidden` | — | ❌ no equivalent |
+| `Checkbox` | `CheckboxField` | ✅ |
+| `Hidden` | `HiddenField` | ✅ |
 
 **Five PanelKit has that Filament reaches differently:** `MultiSelectField`,
 `NumberField`, `PasswordField`, `CountryField` (173 countries, ISO or dialling
@@ -78,8 +78,22 @@ code), `VisualSelectField`. Filament gets three of those from modifiers —
 mostly a shape difference. `CountryField` and `VisualSelectField` have no
 counterpart.
 
-**Both gaps are small.** `Hidden` is a one-file field; `Checkbox` is a rendering
-variant of a toggle. Neither blocks a migration.
+**The last two closed in 0.9.5, and closing `Checkbox` fixed something else.**
+`ToggleField` drew a bare `<input type="checkbox">` — one control wearing two
+names, and no way to ask for an actual checkbox. Adding `CheckboxField` beside
+it would have shipped a second name for the same markup, so `toggle` moved onto
+a real switch built on `reka-ui`'s `SwitchRoot` and `checkbox` took the shadcn
+checkbox already in the tree. Both names now describe what they draw:
+
+- a **switch** is a setting, and reads as state — "Notifications: on"
+- a **checkbox** is an assertion you tick while filling a form in — "I confirm"
+
+Same column, same `boolean`, same submitted value. **This changes how existing
+toggles look** — see UPGRADING.
+
+`HiddenField` carries a value the form submits and the operator never edits. It
+is **not a security boundary**: the client can see and change it, so anything
+that must be true when the record is written belongs in the endpoint.
 
 ---
 

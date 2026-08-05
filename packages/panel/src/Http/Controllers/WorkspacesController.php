@@ -14,9 +14,11 @@ use Inertia\Response;
 use PanelKit\Panel\Audit\AuditRecorder;
 use PanelKit\Panel\Http\Middleware\ScopeSessionToTenant;
 use PanelKit\Panel\Models\Role;
+use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\Ability;
 use PanelKit\Panel\Support\PanelHome;
 use PanelKit\Panel\Support\Tenants;
+use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -115,7 +117,7 @@ final class WorkspacesController
             'workspace' => $tenant->name ?? $tenant->getKey(),
         ]);
 
-        return redirect(PanelHome::urlFor(app(\PanelKit\Panel\PanelManager::class)->currentPanel()));
+        return redirect(PanelHome::urlFor(app(PanelManager::class)->currentPanel()));
     }
 
     public function switch(Request $request): RedirectResponse
@@ -150,7 +152,7 @@ final class WorkspacesController
             ]);
         }
 
-        $home = PanelHome::urlFor(app(\PanelKit\Panel\PanelManager::class)->currentPanel());
+        $home = PanelHome::urlFor(app(PanelManager::class)->currentPanel());
 
         if ($tenant->getKey() === ($user->{Tenants::column()} ?? null)) {
             return redirect($home);
@@ -213,7 +215,7 @@ final class WorkspacesController
             ['grants_all' => true],
         );
 
-        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($tenant->getKey());
+        app(PermissionRegistrar::class)->setPermissionsTeamId($tenant->getKey());
 
         $user->assignRole($role);
     }

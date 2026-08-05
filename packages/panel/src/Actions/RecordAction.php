@@ -6,8 +6,8 @@ namespace PanelKit\Panel\Actions;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
-use PanelKit\Panel\Forms\Form;
 use InvalidArgumentException;
+use PanelKit\Panel\Forms\Form;
 
 /**
  * A mutation applied to ONE record, from its row menu.
