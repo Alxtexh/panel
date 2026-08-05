@@ -157,12 +157,20 @@ function switchTo(workspace: Workspace) {
 
             <div class="grid gap-2">
                 <Label for="workspace-name">Name</Label>
+                <!--
+                    THE PLACEHOLDER IS DELIBERATELY NEUTRAL. It read "Nairobi
+                    Fibre West" - the reference application's domain leaking
+                    into a packaged screen, so a clinic or a law firm creating
+                    their first workspace was shown an ISP's name as the
+                    pattern to follow. This file ships to every installation;
+                    nothing in it may assume an industry.
+                -->
                 <Input
                     id="workspace-name"
                     v-model="creating.name"
                     type="text"
                     maxlength="60"
-                    placeholder="Nairobi Fibre West"
+                    placeholder="Northern Region"
                 />
                 <AuthInputError :message="creating.errors.name" />
             </div>

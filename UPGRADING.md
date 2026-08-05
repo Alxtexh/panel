@@ -10,13 +10,13 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.9.3"
+"panelkit/panel": "^0.9.4"
 ```
 
-Composer reads `^0.9.3` on a `0.x` package as `>=0.9.3 <0.10.0`, which is what you
+Composer reads `^0.9.4` on a `0.x` package as `>=0.9.4 <0.10.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
-The two packages are **versioned together**. `panelkit/panel@0.9.3` expects
+The two packages are **versioned together**. `panelkit/panel@0.9.4` expects
 `@alxtexh-enterprise/panel@0.9.x` on npm, and the PHP half's schema payload is
 the contract between them. Mixing minors is not tested and the failure is a
 rendered screen with a missing control, not an error.
@@ -113,6 +113,15 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.9.3 → 0.9.4
+
+`composer update panelkit/panel`, `npm install ./vendor/panelkit/panel/client/panelkit-client.tgz`,
+`php artisan panel:update`, `npm run build`. Nothing to change.
+
+One user-visible string changed: the workspace name field's placeholder, which
+had been an ISP's name from the reference application. If you had worked around
+it by overriding `settings/Workspaces.vue`, you no longer need to.
 
 ### 0.9.2 → 0.9.3
 

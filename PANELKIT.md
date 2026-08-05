@@ -6,7 +6,7 @@ FilamentPHP onto PanelKit.**
 Everything is here: install, build, translate from Filament, deploy, upgrade,
 and the traps. Nothing else needs to be carried.
 
-Current version: **v0.9.3**. 44 packaged screens, 1,744 tests passing, verified
+Current version: **v0.9.4**. 44 packaged screens, 1,744 tests passing, verified
 installing into a fresh Laravel application.
 
 > **0.9.0 renamed the npm package** to `@alxtexh-enterprise/panel`. If you are
@@ -595,7 +595,7 @@ npm run build
 
 Then migrate when you have decided to: `php artisan migrate`.
 
-PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.3` and read
+PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.4` and read
 the changelog before each bump.
 
 ---

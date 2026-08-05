@@ -1,6 +1,6 @@
 {
     "name": "@alxtexh-enterprise/panel",
-    "version": "0.9.3",
+    "version": "0.9.4",
     "description": "PanelKit's client half: the Vue rendering layer and the Inertia screens. Import from \".\" for components that name no transport, \"./inertia\" for the screens.",
     "repository": {
         "type": "git",

@@ -8,6 +8,36 @@ UNDER: entries before 0.9.0 say `@panelkit/panel`, entries before 0.8.0 name
 `@panelkit/ui` and `@panelkit/inertia`, which is what there were. Rewriting them
 would make this a record of a history that did not happen.
 
+## 0.9.4
+
+**A packaged screen shipped an ISP's name as its example.** The workspace
+creation form's placeholder read `Nairobi Fibre West` - the reference
+application's domain leaking into a file every installation renders. A clinic
+or a law firm creating their first workspace was shown an internet provider as
+the pattern to follow. Nothing failed; every test passed; it simply read as
+software written for somebody else.
+
+It is now `Northern Region`, and **`industry-neutral.spec.ts` checks all 274
+packaged screens** so it cannot come back. The test was verified by putting the
+old placeholder back and watching it fail on that exact line.
+
+**What the check deliberately ignores is comments.** Explaining a decision with
+a concrete example - "a subscriber edited daily makes this timeline long" - is
+good commentary, and flattening it to "a record" would cost meaning to buy
+nothing. A developer reading the source knows where PanelKit came from; a user
+filling in a form should not have to.
+
+**On the wider question of industry lock-in**, audited at this release:
+
+- No shipped PHP references any application model or ISP table. The only
+  `App\Models\User` mentions are compile-time string fallbacks behind
+  `config('auth.providers.users.model')`, which never autoload.
+- No ISP vocabulary in any rendered markup - this was the one instance.
+- `Router::query()` and similar appear in `Blueprint`'s generated
+  documentation as *examples*, not as executable code.
+- Proven rather than asserted: a stock `laravel/laravel` with a generated
+  `User` resource and no ISP anything installs, routes, builds and renders.
+
 ## 0.9.3
 
 **A fresh install into a stock Laravel application returned 500 on every panel
