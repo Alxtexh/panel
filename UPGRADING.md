@@ -10,13 +10,13 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.9.4"
+"panelkit/panel": "^0.9.5"
 ```
 
-Composer reads `^0.9.4` on a `0.x` package as `>=0.9.4 <0.10.0`, which is what you
+Composer reads `^0.9.5` on a `0.x` package as `>=0.9.5 <0.10.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
-The two packages are **versioned together**. `panelkit/panel@0.9.4` expects
+The two packages are **versioned together**. `panelkit/panel@0.9.5` expects
 `@alxtexh-enterprise/panel@0.9.x` on npm, and the PHP half's schema payload is
 the contract between them. Mixing minors is not tested and the failure is a
 rendered screen with a missing control, not an error.
@@ -113,6 +113,24 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.9.4 → 0.9.5
+
+`composer update panelkit/panel`, `npm install ./vendor/panelkit/panel/client/panelkit-client.tgz`,
+`php artisan panel:update`, `npm run build`. No config keys, no migrations.
+
+**One visible change: every `ToggleField` now renders a switch rather than a
+checkbox.** Same column, same boolean, same submitted value — but it looks
+different. If a form wanted the checkbox, that is now `CheckboxField`, which is
+a new field rather than a rename.
+
+**Nothing else is breaking.** The rest of 0.9.5 is additive: `HiddenField`,
+`Flex`, `Fieldset`, `Callout`, `ScatterChart`, `CodeColumn`, `KeyValueColumn`
+and `QueryBuilderFilter`, plus typed entries on the record page.
+
+**If you use `MoneyColumn`, look at a record page.** It was not formatted there
+before 0.9.5 — the list showed a currency and the record page showed raw minor
+units. Nothing to change; the fix is automatic.
 
 ### 0.9.3 → 0.9.4
 

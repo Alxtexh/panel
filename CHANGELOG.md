@@ -8,6 +8,56 @@ UNDER: entries before 0.9.0 say `@panelkit/panel`, entries before 0.8.0 name
 `@panelkit/ui` and `@panelkit/inertia`, which is what there were. Rewriting them
 would make this a record of a history that did not happen.
 
+## 0.9.5
+
+**Every row of the Filament comparison is now closed.** Six pieces of work,
+each measured against `filamentphp.com/docs/5.x` rather than remembered.
+
+| Area | PanelKit | Filament 5.x |
+|---|---|---|
+| Form fields | **24** | 20 |
+| Table columns | **13** | 8 |
+| Table filters | **6** | 5 |
+| Layout components | **9** | 7 |
+| Chart types | **11** | 8 |
+| View-page entries | **11** | 7 |
+
+**F.1 — the record page renders what the list renders.** It special-cased
+`badge` and turned everything else into a string. It now reuses the table's own
+cells, and **`money` was not formatted here at all** — a row showing a currency
+in the list showed raw minor units on its own page. Two orders of magnitude
+out, on the screen somebody opens to check what a customer owes.
+
+**F.2 — `HiddenField`, `CheckboxField`, and a toggle that is finally a toggle.**
+`ToggleField` drew a bare `<input type="checkbox">`: one control wearing two
+names, with no way to ask for an actual checkbox. `toggle` now renders a real
+switch and `checkbox` renders a checkbox. **This changes how every existing
+toggle looks** — see UPGRADING.
+
+**F.3 — `Flex`, `Fieldset`, `Callout`.** `Fieldset` renders a real
+`<fieldset>`/`<legend>`, so a screen reader announces "Billing address, Line 1"
+rather than "Line 1". `Callout` is `role="note"`, never `alert`, and `danger`
+never borrows the validation-error look.
+
+**F.4 — scatter and bubble**, as one component the way `PieChart` is also the
+doughnut. **Bubbles scale by area, not radius** — mapping value onto radius
+quadruples the ink for twice the quantity. It also turned out **every chart in
+this package was untestable**: they all construct a `ResizeObserver`, jsdom has
+none, so mounting any of them threw. Three lines of missing global.
+
+**F.6 — `CodeColumn` and `KeyValueColumn`**, closing an asymmetry: `CodeField`
+and `KeyValueField` could accept a config blob or a map that nothing could then
+display. One type, two densities — a truncated line and "3 entries" in a list,
+the full block and labelled pairs on the record.
+
+**F.5 — `QueryBuilderFilter`, the last gap.** A nested and/or rule tree,
+composed in the UI. It targets **only columns the resource already filters on**,
+derived from the sibling filters rather than declared separately, so it adds no
+new way to reach anything and cannot drift. A rule naming anything else is
+**refused, not dropped** — ignoring it returns more rows than the operator
+asked for, silently. The whole tree goes inside one nested `where`, because a
+top-level `or` would otherwise OR itself against the tenant scope.
+
 ## 0.9.4
 
 **A packaged screen shipped an ISP's name as its example.** The workspace

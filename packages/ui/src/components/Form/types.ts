@@ -26,6 +26,21 @@ export interface FormField {
         | 'builder'
         /** Rendered as an <input type="password">, and never carries a value back. */
         | 'password'
+        /**
+         * A checkbox, which is NOT a toggle.
+         *
+         * A switch is a setting and reads as state; a checkbox is an assertion
+         * you tick while filling a form in. Same boolean, different sentence
+         * beside it - see CheckboxField.
+         */
+        | 'checkbox'
+        /**
+         * Carried and submitted, never rendered.
+         *
+         * NOT A SECURITY BOUNDARY: the client can read and change it, so
+         * anything that must be true at write time belongs in the endpoint.
+         */
+        | 'hidden'
     required?: boolean
     help?: string
     placeholder?: string
