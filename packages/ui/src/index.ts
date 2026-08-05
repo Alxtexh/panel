@@ -27,6 +27,8 @@ export { default as ImageCell } from './components/DataTable/ImageCell.vue'
  */
 export { default as ColourCell } from './components/DataTable/ColourCell.vue'
 export { default as CheckboxCell } from './components/DataTable/CheckboxCell.vue'
+export { default as CodeCell } from './components/DataTable/CodeCell.vue'
+export { default as KeyValueCell } from './components/DataTable/KeyValueCell.vue'
 export { default as EditableCell } from './components/DataTable/EditableCell.vue'
 export { default as RecordActions } from './components/DataTable/RecordActions.vue'
 export { default as AppearanceDrawer } from './components/Layout/AppearanceDrawer.vue'

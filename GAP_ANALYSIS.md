@@ -32,11 +32,11 @@ PanelKit's `Field`, `Column` and `Filter` base classes and its `HasChoices` /
 | Area | PanelKit | Filament 5.x | Real gaps |
 |---|---|---|---|
 | Form fields | **24** | 20 | none |
-| Table columns | **11** | 8 | none |
+| Table columns | **13** | 8 | none |
 | Table filters | **5** | 5 | 1 — visual query builder |
 | Layout components | **9** | 7 | none |
 | Chart types | **11** | 8 | none |
-| View-page entry types | **9** | 7 | 2 — `CodeEntry`, `KeyValueEntry` |
+| View-page entry types | **11** | 7 | none |
 | Prebuilt action classes | 4 + subsystems | 9 | none functionally |
 
 ---
@@ -97,7 +97,7 @@ that must be true when the record is written belongs in the endpoint.
 
 ---
 
-## 2. Table columns — 11 vs 8, no gaps
+## 2. Table columns — 13 vs 8, no gaps
 
 | Filament | PanelKit |
 |---|---|
@@ -110,7 +110,7 @@ that must be true when the record is written belongs in the endpoint.
 | `CheckboxColumn` | `CheckboxColumn` ✅ |
 | `TextInputColumn` | `EditableColumn` ✅ edit in place |
 
-**PanelKit adds three:** `BadgeColumn`, `DateColumn`, `MoneyColumn`. The money
+**PanelKit adds five:** `BadgeColumn`, `DateColumn`, `MoneyColumn`, `CodeColumn`, `KeyValueColumn`. The money
 column takes a fixed currency or reads each row's own, defaults to minor units —
 an integer count of the smallest unit cannot drift the way a float does — and
 formats in the **viewer's** locale rather than the server's.
@@ -173,7 +173,7 @@ usually cover the intent.
 
 ---
 
-## 5. View-page entries — 9 vs 7, two gaps
+## 5. View-page entries — 11 vs 7, no gaps
 
 **This was the largest gap in the 2026-08-05 audit and has since been closed.**
 `ResourceView` special-cased `badge` in its template and formatted `date` /
@@ -186,12 +186,20 @@ string. It now reuses the same cell components the table does.
 | `IconEntry` | `IconCell` ✅ |
 | `ImageEntry` | `ImageCell` ✅ |
 | `ColorEntry` | `ColourCell` ✅ |
+| `CodeEntry` | `code` column ✅ |
+| `KeyValueEntry` | `keyvalue` column ✅ |
 | `RepeatableEntry` | `RelationPanel` ⚠️ related **records** yes; a repeated JSON array on the record itself, no |
-| `CodeEntry` | — ❌ |
-| `KeyValueEntry` | — ❌ |
 
 **PanelKit renders five more** that Filament reaches through `TextEntry`
 formatting: `badge`, `date`, `datetime`, `money`, and `checkbox`/`toggle`.
+
+**`CodeColumn` and `KeyValueColumn` closed an asymmetry, not just a gap.**
+`CodeField` and `KeyValueField` had shipped for releases with nothing able to
+display what they store — so an operator could paste a router config through a
+code editor, or build a map in a two-column editor, and the record page printed
+raw JSON back at them. **One type, two densities**: a truncated line and
+"3 entries" in a list, which is a scanning surface; the full block and labelled
+pairs on the record, where there is room.
 
 **The cells are reused, not reimplemented.** A column type cannot render one
 way in a list and another on the record — which is the bug this shape is most

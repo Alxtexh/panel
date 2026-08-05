@@ -60,7 +60,7 @@ final class FilamentParityTest extends TestCase
     {
         return [
             'form fields' => ['Forms/Fields', ['Field', 'HasChoices'], 24],
-            'table columns' => ['Tables/Columns', ['Column'], 11],
+            'table columns' => ['Tables/Columns', ['Column'], 13],
         ];
     }
 
@@ -113,7 +113,10 @@ final class FilamentParityTest extends TestCase
         $rendered = array_values(array_unique($matches[1]));
         sort($rendered);
 
-        $expected = ['badge', 'checkbox', 'colour', 'date', 'datetime', 'icon', 'image', 'money', 'toggle'];
+        $expected = [
+            'badge', 'checkbox', 'code', 'colour', 'date', 'datetime',
+            'icon', 'image', 'keyvalue', 'money', 'toggle',
+        ];
 
         $this->assertSame(
             $expected,

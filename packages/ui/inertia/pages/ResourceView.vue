@@ -327,6 +327,50 @@ function destroy() {
                         :true-label="(column as any).trueLabel"
                         :false-label="(column as any).falseLabel"
                     />
+                    <!--
+                        THE RECORD PAGE IS WHERE THESE TWO ACTUALLY LIVE. The
+                        list shows a truncated line and "3 entries" because a
+                        row is a scanning surface; here there is room, and
+                        somebody has already chosen this record.
+
+                        This is the half `CodeField` and `KeyValueField` never
+                        had: the package could accept a config blob or a map
+                        and then print the raw JSON back at the person who
+                        typed it into a two-column editor.
+                    -->
+                    <div v-else-if="column.type === 'code'" class="max-w-full">
+                        <p
+                            v-if="(column as any).language"
+                            class="text-muted-foreground mb-1 font-mono text-[10px] uppercase"
+                        >
+                            {{ (column as any).language }}
+                        </p>
+                        <pre
+                            class="bg-muted/50 overflow-x-auto rounded-md border p-3 font-mono text-xs"
+                        ><code>{{ record[column.key] }}</code></pre>
+                    </div>
+
+                    <div v-else-if="column.type === 'keyvalue'">
+                        <dl
+                            v-if="
+                                record[column.key] &&
+                                typeof record[column.key] === 'object' &&
+                                Object.keys(record[column.key]).length
+                            "
+                            class="divide-y rounded-md border"
+                        >
+                            <div
+                                v-for="(v, k) in record[column.key]"
+                                :key="k"
+                                class="grid grid-cols-3 gap-2 px-3 py-2 text-sm"
+                            >
+                                <dt class="text-muted-foreground truncate font-medium">{{ k }}</dt>
+                                <dd class="col-span-2 break-words">{{ v }}</dd>
+                            </div>
+                        </dl>
+                        <span v-else class="text-muted-foreground">—</span>
+                    </div>
+
                     <ImageCell
                         v-else-if="column.type === 'image'"
                         :src="record[column.key]"

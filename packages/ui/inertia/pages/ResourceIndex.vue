@@ -34,8 +34,10 @@ import {
     BulkActions,
     DataTable,
     EditableCell,
+    CodeCell,
     IconCell,
     ImageCell,
+    KeyValueCell,
     ColourCell,
     CheckboxCell,
     PkBoundary,
@@ -1248,6 +1250,14 @@ function badgeLabel(key: string, value: unknown): string {
                             :value="row[col.key]"
                             :true-label="byKey[col.key].trueLabel"
                             :false-label="byKey[col.key].falseLabel"
+                        />
+                        <CodeCell
+                            v-else-if="byKey[col.key]?.type === 'code'"
+                            :value="row[col.key]"
+                        />
+                        <KeyValueCell
+                            v-else-if="byKey[col.key]?.type === 'keyvalue'"
+                            :value="row[col.key]"
                         />
                         <ImageCell
                             v-else-if="byKey[col.key]?.type === 'image'"

@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 |     | package (installed)     | reference app only      |
 | --- | ----------------------- | ----------------------- |
-| PHP | 296 files, 51,660 lines | 90 files, 13,027 lines |
-| Vue | 276 components          | **80 components**       |
+| PHP | 298 files, 51,660 lines | 90 files, 13,027 lines |
+| Vue | 278 components          | **80 components**       |
 
 The Vue column inverted in v0.6.3, and that is the headline. The demo used to
 carry nearly twice what the framework did; the shell, the auth screens and the
@@ -64,10 +64,16 @@ and leave it in whitespace. `Callout` states a consequence beside the control
 that causes it — `role="note"`, never `alert`, and `danger` never borrows the
 validation-error look.
 
-### Tables — 12 column types, 6 filters
+### Tables — 13 column types, 5 filters
 
 Columns: `Text` `Badge` `Date` `Icon` `Image` `Colour` `Checkbox` `Toggle`
-`Select` `Editable` (edit in place) `Money`
+`Select` `Editable` (edit in place) `Money` `Code` `KeyValue`
+
+`Code` and `KeyValue` render at **two densities**: a truncated line and
+"3 entries" in a list, which is a scanning surface, and the full block and
+labelled pairs on the record page, where there is room. They close an
+asymmetry — `CodeField` and `KeyValueField` could accept a config blob or a
+map that nothing could then display.
 
 `MoneyColumn` takes a fixed currency or reads each row's own, defaults to minor
 units — an integer count of the smallest unit cannot drift the way a float does

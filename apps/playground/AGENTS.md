@@ -622,7 +622,7 @@ is used. Read that line before planning around anything below.
 
 **Form fields** (26): `BuilderField` `CheckboxField` `CheckboxListField` `CodeField` `ColourField` `CountryField` `DateField` `Field` `FileUploadField` `HasChoices` `HiddenField` `KeyValueField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `RadioField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleField` `VisualSelectField`
 _How to use them: name them in `form()`._
-**Table columns** (12): `BadgeColumn` `CheckboxColumn` `ColourColumn` `Column` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `MoneyColumn` `SelectColumn` `TextColumn` `ToggleColumn`
+**Table columns** (14): `BadgeColumn` `CheckboxColumn` `CodeColumn` `ColourColumn` `Column` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `KeyValueColumn` `MoneyColumn` `SelectColumn` `TextColumn` `ToggleColumn`
 _How to use them: name them in `table()`._
 **Table filters** (7): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `MultiSelectFilter` `SelectFilter` `TrashedFilter`
 _How to use them: name them in `table()`._

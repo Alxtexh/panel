@@ -31,6 +31,8 @@ export interface SchemaColumn {
         | 'colour'
         | 'checkbox'
         | 'money'
+        | 'code'
+        | 'keyvalue'
     sortable?: boolean
     sortKey?: string
     copyable?: boolean
