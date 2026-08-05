@@ -1,299 +1,273 @@
-# PanelKit vs Filament 5.7 — what we are missing
+# PanelKit vs Filament 5.x
 
-> **STALE. Do not plan from this file.** It was measured before most of the
-> component work landed - it says 6 form field types where the package now ships
-> 24, and 7 column types where it ships 12. It is kept because the *reasoning*
-> about what not to copy is still right.
+**Audited 2026-08-05.** Filament's side comes from its live documentation at
+`filamentphp.com/docs/5.x`. PanelKit's side comes from counting the source tree
+the same day. Every number here was measured.
+
+> **This replaces a version that was wrong in three ways**, and the ways matter
+> more than the numbers:
 >
-> For a current comparison, and for porting an existing Filament panel, read
-> [MIGRATING_FROM_FILAMENT.md](MIGRATING_FROM_FILAMENT.md). For what ships today,
-> read [FEATURES.md](FEATURES.md), whose counts are checked by a test.
+> 1. **Its counts were stale.** It said 6 form fields; there are 22.
+> 2. **It compared unlike things.** Its Filament numbers came from enumerating
+>    the vendor tree — which counts abstract bases, traits and internals — and
+>    its PanelKit numbers came from counting user-facing classes. Source-tree
+>    against public-surface inflates one side by construction. Filament is no
+>    longer installed here, so those numbers cannot even be reproduced.
+> 3. **It pointed at a file that does not exist.** Its banner sent readers to
+>    `MIGRATING_FROM_FILAMENT.md` for a current comparison. That file was never
+>    written. The migration guidance is now in §10 below.
+>
+> `FilamentParityTest` pins every PanelKit count in this document against the
+> tree, so the next time somebody adds a field type and forgets this file, the
+> suite says so rather than a reader finding out months later.
 
-Measured by installing `filament/filament ^5.7` and enumerating its source, not
-from memory. Counts are class counts in the vendor tree.
-
-**The honest headline:** the *architecture* is ahead of Filament — schema-once,
-data-only transport, keyset pagination, no blocking `COUNT(*)`, one grouped query
-for N tabs, deny-by-default authorization, modals that open with no request. The
-*component library* is roughly 20% of Filament's. What is missing is breadth,
-not foundations, and breadth is what makes a panel usable on day one.
+**Counting rule, applied to both sides:** concrete, user-facing types only.
+PanelKit's `Field`, `Column` and `Filter` base classes and its `HasChoices` /
+`HasOptions` traits are excluded. Filament's side is its documented list.
 
 ---
 
 ## Scoreboard
 
-| Area | PanelKit | Filament 5.7 |
+| Area | PanelKit | Filament 5.x | Real gaps |
+|---|---|---|---|
+| Form fields | **22** | 20 | 2 — `Checkbox`, `Hidden` |
+| Table columns | **11** | 8 | none |
+| Table filters | **5** | 5 | 1 — visual query builder |
+| Layout components | **6** | 7 | 3 — `Flex`, `Fieldset`, `Callout` |
+| Chart types | **9** | 8 | 2 — bubble, scatter |
+| View-page entry types | **1** | 7 | **6 — the largest gap** |
+| Prebuilt action classes | 4 + subsystems | 9 | none functionally |
+
+---
+
+## 1. Form fields — 22 vs 20, two real gaps
+
+**Filament's 20:** TextInput, Select, Checkbox, Toggle, CheckboxList, Radio,
+DateTimePicker, FileUpload, RichEditor, MarkdownEditor, Repeater, Builder,
+TagsInput, Textarea, KeyValue, ColorPicker, ToggleButtons, Slider, CodeEditor,
+Hidden.
+
+| Filament | PanelKit | |
 |---|---|---|
-| Form field types | **6** | **33** |
-| Table column types | **7** | **14** |
-| Table filter types | **4** | **5** + visual query builder |
-| Chart widget types | **12** — the full reference set | **8** |
-| Action classes | **3** records + **bulk** + **export** | **27** |
-| Layout components | **5** (Section, Tabs, Tab, Grid, + field leaves) | **23** |
-| View-page entry types | **0** (flat list) | **9** |
-| Panel config options | **7** | **34** |
-| Table behaviours | 8 | 17 |
+| `TextInput` | `TextField` | ✅ |
+| `Select` | `SelectField` | ✅ |
+| `Toggle` | `ToggleField` | ✅ |
+| `CheckboxList` | `CheckboxListField` | ✅ |
+| `Radio` | `RadioField` | ✅ |
+| `DateTimePicker` | `DateField` | ✅ `->withTime()` switches it to `datetime` |
+| `FileUpload` | `FileUploadField` | ✅ |
+| `RichEditor` | `RichEditorField` | ✅ |
+| `MarkdownEditor` | `MarkdownField` | ✅ |
+| `Repeater` | `RepeaterField` | ✅ |
+| `Builder` | `BuilderField` | ✅ |
+| `TagsInput` | `TagsField` | ✅ |
+| `Textarea` | `TextareaField` | ✅ |
+| `KeyValue` | `KeyValueField` | ✅ |
+| `ColorPicker` | `ColourField` | ✅ |
+| `Slider` | `SliderField` | ✅ |
+| `CodeEditor` | `CodeField` | ✅ |
+| `ToggleButtons` | `VisualSelectField` | ⚠️ same job — a segmented choice — but PanelKit's renders each option as *what it does* rather than as a label |
+| `Checkbox` | — | ❌ only `ToggleField`. Same data, different control |
+| `Hidden` | — | ❌ no equivalent |
+
+**Five PanelKit has that Filament reaches differently:** `MultiSelectField`,
+`NumberField`, `PasswordField`, `CountryField` (173 countries, ISO or dialling
+code), `VisualSelectField`. Filament gets three of those from modifiers —
+`Select::multiple()`, `TextInput::numeric()`, `TextInput::password()` — so it is
+mostly a shape difference. `CountryField` and `VisualSelectField` have no
+counterpart.
+
+**Both gaps are small.** `Hidden` is a one-file field; `Checkbox` is a rendering
+variant of a toggle. Neither blocks a migration.
 
 ---
 
-## 1. Form fields — 6 of 33
+## 2. Table columns — 11 vs 8, no gaps
 
-**Have:** Text, Textarea, Number, Select, Toggle, Date.
-
-**Missing, roughly in order of how often an ISP panel needs them:**
-
-| Field | Why it matters here |
+| Filament | PanelKit |
 |---|---|
-| `FileUpload` | Logos, contracts, ID scans. Nothing can be attached today. |
-| `Repeater` | One client, many devices. No nested editing at all. |
-| `KeyValue` | Arbitrary metadata without a migration. |
-| `CheckboxList` / `MultiSelect` | Any many-to-many. Cannot express "these three plans". |
-| `Radio` / `ToggleButtons` | A 3-option choice as a select is a worse control. |
-| `TagsInput` | Free-form labels. |
-| `RichEditor` / `MarkdownEditor` | Notes, templated messages. |
-| `ColorPicker` | Per-tenant branding is a text field today. |
-| `TimePicker` / `DateTimePicker` | We have date and datetime; no time-only. |
-| `Slider`, `CodeEditor`, `OneTimeCodeInput` | Niche but cheap. |
-| `MorphToSelect`, `TableSelect`, `ModalTableSelect` | Picking a record from 100k rows. Our select renders every option into the DOM — fine at 40 plans, unusable at 100k clients. |
-| `Hidden`, `Placeholder`, `ViewField` | Escape hatches. |
+| `TextColumn` | `TextColumn` ✅ |
+| `IconColumn` | `IconColumn` ✅ |
+| `ImageColumn` | `ImageColumn` ✅ |
+| `ColorColumn` | `ColourColumn` ✅ |
+| `SelectColumn` | `SelectColumn` ✅ |
+| `ToggleColumn` | `ToggleColumn` ✅ |
+| `CheckboxColumn` | `CheckboxColumn` ✅ |
+| `TextInputColumn` | `EditableColumn` ✅ edit in place |
 
-**The one that is a correctness problem, not just a gap:** `SelectField` renders
-all options inline. At 40 plans that is right; pointed at clients it would ship
-100,000 `<option>` elements. A searchable/async select is needed before anyone
-builds a form with a large relation.
+**PanelKit adds three:** `BadgeColumn`, `DateColumn`, `MoneyColumn`. The money
+column takes a fixed currency or reads each row's own, defaults to minor units —
+an integer count of the smallest unit cannot drift the way a float does — and
+formats in the **viewer's** locale rather than the server's.
 
----
-
-## 2. Table columns — 7 of 14
-
-**Have:** Text, Badge, Date, **Icon**, **Image**, **Toggle**, **Select**.
-
-**DONE:** `IconColumn` (semantic icon + colour maps, always with an aria-label),
-`ImageColumn` (fixed-size, scheme-checked URL, initials fallback), and the
-editable-in-place pair `ToggleColumn` / `SelectColumn`. Flipping twenty clients
-from active to suspended is now twenty clicks in the list rather than twenty
-page visits.
-
-The write goes through `PATCH {resource}/{id}/cell`, which accepts only a column
-the resource DECLARED editable and validates the value against that
-declaration — a select's option list is its validation rule, which matters
-because these are plain string columns with no CHECK constraint behind them.
-
-**Still missing:** `ColorColumn`, `TagsColumn`, `ColumnGroup` (grouped headers),
-`TextInputColumn`, `CheckboxColumn`.
+**This area is complete.** Anything a Filament table renders, a PanelKit table
+renders.
 
 ---
 
-## 3. Filters — 2 of 5, and no query builder
+## 3. Filters — 5 vs 5, one real gap
 
-**Have:** Select (single), Boolean (tri-state).
-
-**Missing:** `MultiSelectFilter` (status in [expired, suspended] is not
-expressible), `TernaryFilter`, `TrashedFilter`, **date-range filters**, and
-Filament's visual `QueryBuilder` — nested AND/OR conditions an operator composes
-in the UI.
-
-No date-range filter is the sharpest omission for a billing panel: "clients
-expiring this week" cannot be asked.
-
----
-
-## 4. Widgets and charts — 1 of 8 chart types
-
-**Have:** StatWidget, BarChart, **LineChart/area**, **PieChart/doughnut**,
-**Sparkline**, **TrendBadge**.
-
-**DONE — change over time, which was the real gap:**
-
-- **Line/area chart over a period**, one `GROUP BY` per chart whatever the point
-  count, bounded by the window so an index is usable
-- **Period selector** — today / 7d / 30d / 90d / 12m, PER CHART, reloading
-  exactly one prop via `only:`
-- **Trend indicator** — "▲ 4% vs previous 30 days", with the zero cases handled
-  (growth from nothing is "new", not `INF%`)
-- **Sparkline in a stat card**
-- **Gap filling** — a day with no rows is an explicit zero, so an outage renders
-  as a hole rather than a gentle slope
-- **Driver-aware bucketing** — SQLite/MySQL/Postgres/SQL Server each declare
-  their own truncation expression; an unknown driver throws rather than guessing
-
-A number, its trend and its sparkline are required to measure the SAME thing:
-the first cut hung a signups trend off a cumulative total, which read as
-"we lost 4.3% of our subscribers".
-
-**DONE — the full reference chart set.** Every demo on primevue.dev/chart is
-implemented and shown on the dashboard against real data: line, area, stepped
-line, multi-axis, vertical bar, horizontal bar, stacked bar, grouped bar, combo,
-pie, doughnut, polar area and radar, plus a segmented proportion bar.
-
-All drawn directly in SVG — no charting dependency anywhere in the bundle.
-
-**Missing:** Scatter, Bubble, `TableWidget`, and live push — `useLiveUpdates`
-still is not wired to a running Reverb.
-
----
-
-## 5. Layout components — 5 of 23 (was 0)
-
-**DONE:** `Section` (collapsible, described, column grid), `Tabs`, `Tab`, `Grid`,
-composing to any depth. Forms render from a tree; validation walks it, so a
-field behind an inactive tab is validated exactly like a visible one and its tab
-shows an error marker.
-
-**Still missing:** `Wizard`, `Fieldset`, `Flex`, `Callout`, `EmptyState`,
-`Text`, `Icon`, `Image`, `UnorderedList`, `FusedGroup`, and the 9 infolist entry
-types — so the VIEW page is still a flat definition list rather than tabbed.
-
----
-
-### Original assessment
-
-This is the largest structural gap. Filament forms and view pages are built from
-`Tabs`, `Wizard`, `Section` (collapsible), `Fieldset`, `Grid`, `Flex`, `Group`,
-`Callout`, `EmptyState`, `Text`, `Icon`, `Image`, `UnorderedList`.
-
-Ours is a flat list of fields in an N-column grid. Consequences:
-
-- **No tabs on view or edit pages** — you asked for these specifically
-- **No sections**, so a 20-field form is an undifferentiated wall
-- **No wizard**, so multi-step creation is impossible
-- **No infolist entries**, so the view page is a definition list and cannot show
-  an image, a colour, a code block, or a repeatable sub-list
-
----
-
-## 6. Actions — 3 of 27
-
-**Have:** create, edit, delete (as pages), plus a delete confirmation.
-
-**DONE:** `BulkAction` mutations and `ExportAction`.
-
-- The client sends an action KEY; the mutation is declared server-side, so this
-  can never become an arbitrary-write endpoint.
-- Bounded selections run inline; **select-all-matching is queued**, because it
-  can be the whole table. The decision is made on whether the set is bounded,
-  not on a `COUNT(*)` we refuse to run anywhere else.
-- Chunking is **keyset, not offset** — a mutation usually invalidates the
-  predicate that selected its own rows, and offset paging silently skips half of
-  a shrinking set.
-- Export writes the **current filtered view**, queued, chunked to a stream, with
-  a BOM for Excel and formula-injection neutralised. Progress is owner-checked,
-  so a leaked token is inert.
-
-**Missing:** `BulkActionGroup`, `ActionGroup` (nested menus), `ReplicateAction`,
-`ImportAction`, `RestoreAction` / `ForceDeleteAction` (no soft deletes), and the
-relation family `AttachAction` / `AssociateAction` / `DetachAction` /
-`DissociateAction`.
-
----
-
-## 7. Panel configuration — 7 of 34
-
-**Have:** id, path, guard, middleware, authMiddleware, context, brandName, colors.
-
-**Missing, including everything you asked for:**
-
-| Option | Your ask |
+| Filament | PanelKit |
 |---|---|
-| `themeSwitcher` | Appearance **in the navbar**, not buried in settings |
-| `sidebarWidth`, `sidebarCollapsibleOnDesktop`, `sidebarFullyCollapsibleOnDesktop` | Sidebar location/behaviour |
-| `font` | Font family — and *font size* is not even a Filament feature |
-| `navigationGroups` (collapsible) | **Sidebar dropdowns** |
-| `maxContentWidth` | — |
-| `topbar`, `renderHook` | Injecting custom UI without forking |
-| `databaseNotifications` + polling | A notification bell; we have none |
-| `globalSearch*` (debounce, keybindings, per-resource opt-in) | Ours is hardcoded |
-| `unsavedChangesAlerts` | We have this, but not configurable |
-| `profile`, `breadcrumbs`, `brandLogo`, `darkModeBrandLogo` | — |
+| `Filter` (custom) | `Filter` base ✅ |
+| `SelectFilter` | `SelectFilter` ✅ |
+| `TernaryFilter` | `BooleanFilter` ✅ true / false / all |
+| `TrashedFilter` | `TrashedFilter` ✅ |
+| `QueryBuilder` | — ❌ |
 
-Note two of your asks go **beyond** Filament: user-selectable **font size** and
-user-selectable **sidebar position** are panel-level developer config there, not
-per-user preferences. Making them per-user is a genuine differentiator, and
-cheap — both are CSS custom properties on `:root`, same mechanism as the tenant
-theme already uses.
+**PanelKit adds** `DateRangeFilter` and `MultiSelectFilter`.
 
----
+**The visual query builder is genuinely absent** — verified by searching the
+package rather than assumed. Filament's is a nested and/or rule tree the
+operator composes in the UI.
 
-## 8. Table behaviours — 8 of 17
-
-**Have:** search, sort, filters, paginate, column manager, selection, tabs, empty
-states.
-
-**Missing:** `GroupRecords` (group rows by a column with subtotals),
-`SummarizeRecords` (a footer row of sums/averages), `ReorderRecords` (drag to
-set display order), `PollRecords`, `BeStriped`, and **record URLs** — clicking
-anywhere on a row to open it, rather than only the name.
-
-`SummarizeRecords` matters for billing: a filtered list of invoices with no total
-is half an answer.
+If your Filament panel exposes one to end users, this is work rather than a
+rename. If it is used only by staff, PanelKit's saved views plus its filter set
+usually cover the intent.
 
 ---
 
-## 9. Whole subsystems absent
+## 4. Layout components — 6 vs 7, three gaps
 
-| Subsystem | Notes |
+| Filament | PanelKit |
 |---|---|
-| **Notifications** (`filament/notifications`) | Database notifications, a bell in the topbar, broadcast toasts. We have toasts only. |
-| **Relation managers** | A client's sessions/devices/payments as tabs on the client page. Base spec §12 defers these; for an ISP panel they are close to essential. |
-| **Soft deletes / trash** | No `deleted_at` support, no restore, no trashed filter. |
-| **Global search opt-in per resource** | Ours searches a hardcoded set of columns. |
-| **Multi-panel switching UI** | `Panel` supports several; nothing switches between them. |
+| `Grid` | `Grid` ✅ |
+| `Section` | `Section` ✅ with `visibleWhen` |
+| `Tabs` | `Tabs` + `Tab` ✅ |
+| `Wizard` | `Wizard` + `Step` ✅ |
+| `Fieldset` | — ❌ `Section` covers most uses |
+| `Flex` | — ❌ |
+| `Callout` | — ❌ an inline notice inside a form |
+
+None structural. `Fieldset` is a `Section` without a card, `Flex` is a row,
+`Callout` is a styled paragraph.
 
 ---
 
-## 10. Things you asked for that Filament does not have
+## 5. View-page entries — 1 vs 7. **The largest real gap.**
 
-Worth building *because* they are differentiators, not gaps:
+Filament ships seven infolist entry types: `TextEntry`, `IconEntry`,
+`ImageEntry`, `ColorEntry`, `CodeEntry`, `KeyValueEntry`, `RepeatableEntry`.
 
-- **What's-new page** — an in-panel changelog. Filament has nothing.
-- **Documentation page** — Laravel-docs-style, in-panel.
-- **Per-user font size and sidebar position.**
-- **Live-updating charts.** Filament polls; a broadcast-driven chart is the thing
-  this architecture is *for*, and the composable already exists unwired.
+**PanelKit's `ResourceView` renders `badge` specially and everything else as
+text.** Measured, not guessed: the only type branch in that template is
+`column.type === 'badge'`.
 
----
+So a record page that in Filament shows a colour swatch, a thumbnail, a
+key-value block or a repeated child list will, in PanelKit, show a string.
 
-## Recommended order
-
-Grouped by ratio of operator value to effort.
-
-**Tier 1 — COMPLETE**
-
-1. ~~Layout components: `Section`, `Tabs`, `Grid`.~~ Done.
-2. ~~`IconColumn`, `ImageColumn`, `ToggleColumn`, `SelectColumn`.~~ Done.
-3. ~~Date-range and multi-select filters.~~ Done.
-4. ~~Bulk action mutations + export of the filtered view.~~ Done.
-5. ~~Line and Pie charts, period selector, trend indicators.~~ Done.
-6. ~~Appearance in the navbar.~~ Done — theme, primary colour, surface tint,
-   card style, density, sidebar side, and font size in px.
-7. ~~Collapsible sidebar navigation groups.~~ Done.
-
-**Tier 2 — needed before production for this domain**
-
-8. `FileUpload`.
-9. Searchable/async `Select` for large relations *(also fixes the 100k-option
-   correctness problem)*.
-10. Wire live updates to Reverb, and one live chart.
-11. Notifications with a topbar bell.
-12. Relation managers.
-13. `SummarizeRecords`.
-14. Soft deletes and a trashed filter.
-
-**Tier 3 — differentiators and polish**
-
-15. What's-new page, documentation page.
-16. `Repeater`, `KeyValue`, `RichEditor`.
-17. Visual query builder.
-18. Wizard, table grouping, record reordering.
-19. Import.
+**This is the one area where a ported panel visibly loses fidelity**, and it is
+the honest headline of this audit. It is also self-contained: the type
+implementations already exist for tables, and the record page simply does not
+reuse them. Closing it means giving `ResourceView` the type switch
+`ResourceIndex` already has.
 
 ---
 
-## What we should not copy
+## 6. Charts — 9 vs 8, two gaps
 
-- **Livewire's cost model.** Filament's action modals fetch their form on open;
-  ours must not.
-- **Blocking `COUNT(*)`** for pagination.
-- **`OFFSET` pagination.**
-- **CSS classes authored in PHP.** Filament passes class strings from PHP; we
-  cannot, and the schema stays semantic.
+| Filament | PanelKit |
+|---|---|
+| Bar | `BarChart` ✅ |
+| Line | `LineChart` ✅ |
+| Pie | `PieChart` ✅ |
+| Doughnut | `PieChart` `type="doughnut"` ✅ |
+| Polar area | `PolarAreaChart` ✅ |
+| Radar | `RadarChart` ✅ |
+| Bubble | — ❌ |
+| Scatter | — ❌ |
+
+**PanelKit adds four:** `ComboChart` (bars with a trend line through them),
+`HeatmapChart`, `Sparkline`, `SegmentedBar`.
+
+The old scoreboard claimed "12 — the full reference set". That counted cards and
+chrome — `StatCard`, `ChartTooltip`, `TrendBadge` — as chart types. Nine is the
+real number, and two of Filament's eight are missing.
+
+---
+
+## 7. Actions — a different shape, not a smaller one
+
+Filament ships nine prebuilt action classes. PanelKit has four, because the
+first four verbs are not actions here:
+
+| Filament | PanelKit |
+|---|---|
+| `CreateAction` | the resource's create page, routed automatically |
+| `EditAction` | the resource's edit page |
+| `ViewAction` | the resource's record page |
+| `DeleteAction` | built into the row and the bulk toolbar |
+| `ReplicateAction` | `ReplicateAction` ✅ |
+| `RestoreAction` | the Trash screen, across resources |
+| `ForceDeleteAction` | the Trash screen |
+| `ImportAction` | the import wizard — `Importer`, `ImportResult`, `ImportFailure` |
+| `ExportAction` | filtered export — `ExportRecords`, `ExportedFile` |
+
+**Nothing is missing functionally.** Scoring 4 against 9, as the old file did,
+counted an architectural difference as a deficit.
+
+Two things PanelKit's actions do that Filament's do not: `->form()` opens a
+modal with **no network request**, because the schema travels with the action;
+and every bulk mutation counts before it commits.
+
+---
+
+## 8. What PanelKit ships with no Filament equivalent
+
+Not scored, because there is nothing to score against — but relevant to a
+migration, since these may replace plugins you currently pay for or maintain:
+
+- **Ticketing** — two resources over one table, operator and customer sides,
+  internal notes, departments, first-response stats
+- **Announcements** — composer plus dashboard banners, per-person dismissal
+- **A REST API** with tokens and generated OpenAPI
+- **Knowledge indexing and retrieval**, and an assistant that respects role
+  permissions and tenant scope
+- **Backups** with destination testing, restore, and write-blocking during one
+- **`panel:doctor`** — every check exists because the failure it finds is
+  *silent*: a resource nothing registered, a packaged screen with no page file,
+  a stylesheet that purges every packaged utility, a client half absent or a
+  different version from the PHP
+- **`panel:blueprint`** — regenerates `AGENTS.md` from the tree, so an agent
+  reads what is installed rather than what somebody wrote down
+- Document templates and a designer, scheduled reports, audit trail, custom
+  fields, impersonation, workspaces, saved views, i18n
+
+---
+
+## 9. Limits of this audit — read before quoting it
+
+- **It compares surface, not behaviour.** Each ✅ means a class exists with the
+  same job. It does not mean every Filament modifier on that class has an
+  equivalent.
+- **Filament's documentation is the source for its side.** A class that exists
+  but is undocumented on the pages read is not counted.
+- **Relation-manager actions** — `AttachAction`, `AssociateAction` and their
+  inverses — were not on the actions overview and are not scored. PanelKit has
+  `RelationManager`; the specific attach/detach affordances were verified
+  neither way.
+- **Panel configuration is deliberately not scored.** The old file claimed
+  "7 vs 34", comparing a fluent builder against a config file plus a builder —
+  two different things, producing a number with no meaning. `Panel` exposes 22
+  public methods; lining those up needs a method-by-method reading nobody has
+  done.
+
+---
+
+## 10. Migrating a Filament panel
+
+1. **Tables port almost mechanically** — columns are complete.
+2. **Forms port with two small additions** — `Hidden` and `Checkbox`.
+3. **Record pages need work.** That is §5, and it is the real one.
+4. **A visual query builder must be replaced or built** — saved views plus
+   filters cover most staff-facing uses.
+5. **Actions are re-shaped, not rewritten.** Create, edit, view and delete stop
+   being things you declare.
+6. **Check your plugin list first.** Several common ones — ticketing,
+   announcements, backups, audit trail, impersonation — are in the box here, so
+   part of a migration is deleting dependencies rather than porting them.
+
+Run `php artisan panel:blueprint` in the target application before starting: it
+writes `AGENTS.md` from the installed tree, so an AI agent helping with the port
+reads what is actually there rather than this document's summary of it.
