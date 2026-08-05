@@ -49,4 +49,26 @@ final class CheckboxField extends Field
     {
         return (bool) $value;
     }
+
+    /**
+     * AN ABSENT KEY MEANS FALSE, because that is what unticking sends.
+     *
+     * The rules() note above says an unticked box submits nothing. That was
+     * written as an argument for never marking one `required`, and it has a
+     * second consequence nobody drew: `Form::sanitize()` skips keys the request
+     * does not carry, so "submits nothing" was being read as "change nothing".
+     *
+     * The operator unticks "Available to sell", saves, sees a success message,
+     * and the plan is still on sale. Nothing errors and nothing looks wrong -
+     * the screen reloads showing the stored value, which is the one they just
+     * tried to change.
+     *
+     * PanelKit's own client always submits the key, so this never fired inside
+     * the panel. It fires for anyone posting to the endpoint from a form they
+     * built themselves, which this framework tells them to do.
+     */
+    public function absentMeans(): mixed
+    {
+        return false;
+    }
 }
