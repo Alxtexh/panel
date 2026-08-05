@@ -6,6 +6,7 @@ namespace App\Panel\Pages;
 
 use App\Models\Client;
 use App\Models\ClientSession;
+use App\Models\Plan;
 use App\Models\Router;
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -89,6 +90,34 @@ final class DashboardPage extends PanelKitDashboard
                     self::sessionSeries($filters),
                     $filters->windowFor($p, $now ?? new DateTimeImmutable),
                 ))
+                ->ability(self::NETWORK),
+
+            /*
+             * A CONSUMER FOR THE SCATTER CHART, which shipped without one.
+             *
+             * `ScatterChart.vue` was tested and exported, `scatter` was not in
+             * `ChartWidget::TYPES` so declaring one THREW, and the dashboard
+             * had no branch to draw it. Three halves of a feature and no way
+             * to reach it - so this line is what makes the type real.
+             *
+             * BOTH AXES ARE MEASURED here, which is the point of the type:
+             * speed against price, so the gaps between plans carry meaning.
+             * A line chart would space them evenly and say nothing.
+             */
+            ChartWidget::make('plan_value', 'Speed against price')
+                ->type('scatter')
+                ->description('Where each plan sits on value')
+                ->data(fn (): array => ['xy' => Plan::query()
+                    ->select(['name', 'speed_mbps', 'price_cents'])
+                    ->orderBy('speed_mbps')
+                    ->limit(50)
+                    ->get()
+                    ->map(fn (Plan $plan): array => [
+                        'x' => (int) $plan->speed_mbps,
+                        'y' => (int) $plan->price_cents / 100,
+                        'label' => (string) $plan->name,
+                    ])
+                    ->all()])
                 ->ability(self::NETWORK),
 
             ChartWidget::make('signups', 'New subscribers')

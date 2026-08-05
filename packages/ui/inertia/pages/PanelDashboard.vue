@@ -34,6 +34,7 @@ import {
     PkBoundary,
     PolarAreaChart,
     RadarChart,
+    ScatterChart,
     SegmentedBar,
     SetupChecklist,
     StatCard,
@@ -69,6 +70,14 @@ interface Chart {
         | 'doughnut'
         | 'polarArea'
         | 'radar'
+        /*
+         * `scatter` AND `bubble` PLOT MEASURED x/y PAIRS, not a series against
+         * a category axis. They were missing from this union, from
+         * `ChartWidget::TYPES` and from the template - three declarations, and
+         * a chart that existed in the package and could not be reached.
+         */
+        | 'scatter'
+        | 'bubble'
         | 'rankedBar'
         | 'heatmap'
         | 'segments'
@@ -613,6 +622,26 @@ const hasAnything = computed(() => props.widgets.length > 0 || props.charts.leng
                                 v-else-if="chart.type === 'pie' || chart.type === 'doughnut'"
                                 :data="series(chart.key).points"
                                 :type="chart.type === 'pie' ? 'pie' : 'doughnut'"
+                            />
+                            <!--
+                                SCATTER AND BUBBLE, which had no branch here.
+
+                                `ScatterChart.vue` shipped tested and exported,
+                                `scatter` was not in `ChartWidget::TYPES` so PHP
+                                THREW on declaring one, and this template had
+                                nothing to draw it with. The chart existed in
+                                the package and could not be reached from an
+                                application at all.
+
+                                `points` carries x/y pairs rather than the
+                                label/value shape every other chart here takes -
+                                which is the whole reason this type exists.
+                            -->
+                            <ScatterChart
+                                v-else-if="chart.type === 'scatter' || chart.type === 'bubble'"
+                                :data="(series(chart.key) as any).xy ?? []"
+                                :x-label="(chart as any).xLabel"
+                                :y-label="(chart as any).yLabel"
                             />
                             <PolarAreaChart
                                 v-else-if="chart.type === 'polarArea'"

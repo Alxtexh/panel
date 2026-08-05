@@ -27,6 +27,8 @@ use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Forms\Rules\ExistsInScope;
 use PanelKit\Panel\Resources\RelationManager;
 use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Schema\Callout;
+use PanelKit\Panel\Schema\Fieldset;
 use PanelKit\Panel\Schema\Section;
 use PanelKit\Panel\Schema\Tab;
 use PanelKit\Panel\Schema\Tabs;
@@ -77,6 +79,41 @@ final class ClientResource extends Resource
                     ]),
                     Section::make('Access')->description('How this subscriber authenticates.')
                         ->columns(2)->schema([
+                            /*
+                             * A CONSUMER FOR THE LAYOUT COMPONENTS SHIPPED IN
+                             * 0.9.5, which had none.
+                             *
+                             * `Fieldset` and `Callout` were exported,
+                             * unit-tested and declared by no screen anywhere -
+                             * the state `MoneyColumn` was in when its
+                             * record-page bug survived 1,700 green tests. A
+                             * type nobody declares is a type nobody has seen
+                             * render.
+                             *
+                             * A FIELDSET RATHER THAN A NESTED SECTION: a
+                             * section inside a section is a card inside a card,
+                             * which reads as two things when it is one thing
+                             * with a part named. The <legend> also means a
+                             * screen reader announces "Access notes, Reason"
+                             * rather than "Reason".
+                             *
+                             * `CheckboxField` AND `HiddenField` ARE NOT HERE,
+                             * deliberately. Both submit a value, and every
+                             * column on this table is NOT NULL with no default
+                             * - so either would need a column invented for it,
+                             * and inventing one in the reference app purely to
+                             * prove a type renders is worse than saying it has
+                             * no consumer yet. A non-column field needs a
+                             * subclass overriding `omitsFromStorage()`; that is
+                             * the honest way to add one, and it is work rather
+                             * than a line.
+                             */
+                            Fieldset::make('Access notes')->columns(1)->schema([
+                                Callout::warning(
+                                    'Changing the access code disconnects the subscriber '
+                                    .'until their device is reconfigured.'
+                                )->title('This takes effect at once'),
+                            ]),
                             TextField::make('access_code')->required()->max(32)
                                 ->help('Unique within your organisation.'),
                             SelectField::make('status')->required()->options([

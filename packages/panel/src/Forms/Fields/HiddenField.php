@@ -28,15 +28,20 @@ final class HiddenField extends Field
         return 'hidden';
     }
 
-    /**
-     * NO LABEL, because nothing renders to attach one to.
+    /*
+     * IT DOES NOT OVERRIDE `label()`, AND THE ATTEMPT WAS A FATAL.
      *
-     * `Field` derives a label from the key so that every field has one without
-     * being told. Here that label would be read by a screen reader as a
-     * control the user cannot reach, which is worse than silence.
+     * `Field::label(string $label): static` is a SETTER. Overriding it as a
+     * no-argument getter is an incompatible declaration - PHP refuses to load
+     * the class, so every screen declaring one dies at construction.
+     *
+     * NOTHING CAUGHT IT FOR A RELEASE, because no screen declared one: the
+     * field had a unit-tested schema and no consumer anywhere, so the class was
+     * never actually instantiated by anything that ran. It fataled within
+     * seconds of the first resource using it.
+     *
+     * There is nothing to override anyway. `FormFieldControl` renders NOTHING
+     * for `hidden` - no wrapper, no `sr-only` label, no control - so the
+     * derived label reaches no markup and no screen reader.
      */
-    public function label(): string
-    {
-        return '';
-    }
 }

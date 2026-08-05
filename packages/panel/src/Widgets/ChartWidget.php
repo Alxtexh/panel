@@ -44,6 +44,9 @@ final class ChartWidget
         'bar', 'horizontalBar', 'stackedBar', 'combo',
         'pie', 'doughnut', 'polarArea', 'radar',
         'rankedBar', 'heatmap', 'segments',
+        // Both axes measured rather than one being a category. `bubble` is
+        // `scatter` with a size channel, the same way `doughnut` is `pie`.
+        'scatter', 'bubble',
     ];
 
     private string $type = 'line';
