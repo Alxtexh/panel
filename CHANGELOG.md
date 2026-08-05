@@ -8,6 +8,52 @@ UNDER: entries before 0.9.0 say `@panelkit/panel`, entries before 0.8.0 name
 `@panelkit/ui` and `@panelkit/inertia`, which is what there were. Rewriting them
 would make this a record of a history that did not happen.
 
+## 0.9.2
+
+**The client half now ships inside the Composer package, and the npm registry
+is out of the picture.** This is the fix for the failure that has cost this
+project more than any other: the PHP installs, every route answers 200, and
+every screen is blank, because the JavaScript never arrived.
+
+**Install is now two commands and one credential:**
+
+```bash
+composer require panelkit/panel
+npm install ./vendor/panelkit/panel/client/panelkit-client.tgz @vitejs/plugin-vue
+```
+
+**Why not a registry.** npmjs.com would make it public. GitHub Packages
+**requires a token even for public packages** - there is no anonymous read - so
+it could never be frictionless, only differently authenticated. And the publish
+workflow had failed on every run since the scope rename. Shipping the tarball
+inside the package removes the entire second channel rather than repairing it.
+
+**What this buys:**
+
+- **One credential.** Whatever authenticates Composer is the only credential.
+- **The halves cannot drift.** `panelkit/panel` at 0.9.2 physically carries the
+  0.9.2 client. Mismatches used to render a screen with a missing control,
+  under a 200, with nothing in any log.
+- **A stable filename.** Always `panelkit-client.tgz`, so the install line is
+  identical in every runbook, every release. The version lives inside.
+- **It works offline**, behind a proxy, and on a build server with no registry
+  access.
+
+**New guards, because a vendored artifact rots silently:**
+
+- `ClientTarballTest` fails if the committed tarball is a different version from
+  `packages/ui`, or is missing its `.vue` screens or its compiled `dist`.
+- `panel:doctor` fails when the client half is **not installed** or is a
+  **different version from the PHP** - the two states that used to produce a
+  blank or subtly wrong panel with no error.
+- `panel:install` prints the install command with the path already resolved.
+- `verify-install.sh` now installs the **committed** tarball rather than packing
+  a fresh one, so it proves the artifact consumers receive.
+
+**The Publish workflow is now Release**: it attaches the committed tarball to a
+GitHub Release for anyone wanting it standalone, and refuses to publish if the
+tag and the shipped client disagree.
+
 ## 0.9.1
 
 **The package is linted for the first time, and it found real bugs.** No API

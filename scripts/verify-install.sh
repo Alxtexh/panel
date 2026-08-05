@@ -94,15 +94,19 @@ php artisan list --no-ansi 2>/dev/null | grep -q 'panel:install' \
 
 # ------------------------------------------------------------- the client half
 
-say "Packing and installing @alxtexh-enterprise/panel"
-# THE LAST LINE, NOT THE WHOLE OUTPUT. The package has a `prepack` that builds
-# it - which it must, so a tarball can never contain a stale `dist` - and Vite
-# writes its progress to stdout. `--silent` quiets npm, not the build, so
-# capturing everything gave a "filename" several lines long and the check below
-# failed on a pack that had actually worked.
-tarball="$(cd "$ROOT/packages/ui" && npm pack --silent --pack-destination "$WORK" | tail -1)"
-[[ -f "$WORK/$tarball" ]] || fail "npm pack produced nothing for packages/ui"
-npm install --silent --no-audit --no-fund "$WORK/$tarball" 2>&1 | tail -2
+say "Installing the client half from the tarball shipped inside the PHP package"
+# THE VENDORED ARTIFACT, NOT A FRESH PACK. This used to run `npm pack` against
+# packages/ui, which verified the SOURCE and not the thing a consumer receives.
+# The client half now travels inside the Composer package - one credential for
+# both halves, and no registry to be unreachable - so what must be proven is
+# that THAT file installs and renders. A fresh pack passing while the committed
+# tarball is stale is exactly the shape of failure this script exists to catch.
+#
+# ClientTarballTest keeps the committed file in step with the source; this
+# proves the committed file works.
+tarball="$ROOT/packages/panel/client/panelkit-client.tgz"
+[[ -f "$tarball" ]] || fail "packages/panel/client/panelkit-client.tgz is missing - the PHP package ships no client half, so every screen would be blank."
+npm install --silent --no-audit --no-fund "$tarball" 2>&1 | tail -2
 
 # ONE TARBALL, TWO HALVES. `files` ships `dist` AND `inertia`, and the second is
 # the one a `files` list forgets: the compiled half is what `npm run build`

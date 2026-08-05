@@ -10,13 +10,13 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.9.1"
+"panelkit/panel": "^0.9.2"
 ```
 
-Composer reads `^0.9.1` on a `0.x` package as `>=0.9.1 <0.10.0`, which is what you
+Composer reads `^0.9.2` on a `0.x` package as `>=0.9.2 <0.10.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
-The two packages are **versioned together**. `panelkit/panel@0.9.1` expects
+The two packages are **versioned together**. `panelkit/panel@0.9.2` expects
 `@alxtexh-enterprise/panel@0.9.x` on npm, and the PHP half's schema payload is
 the contract between them. Mixing minors is not tested and the failure is a
 rendered screen with a missing control, not an error.
@@ -113,6 +113,36 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.9.1 → 0.9.2
+
+**The client half moved. It now ships inside the Composer package.**
+
+```bash
+composer update panelkit/panel
+npm uninstall @alxtexh-enterprise/panel
+npm install ./vendor/panelkit/panel/client/panelkit-client.tgz @vitejs/plugin-vue
+php artisan panel:update
+npm run build
+```
+
+**Nothing in your code changes.** The package name in `node_modules` is still
+`@alxtexh-enterprise/panel`, so every import, the `@source` lines and any Vite
+alias stay exactly as they are. Only where npm fetches it from has changed.
+
+**You can delete `.npmrc`** if it existed only for this, and the
+`read:packages` token with it. There is no registry in the path any more.
+
+**Why.** GitHub Packages' npm registry requires a token even for public
+packages - there is no anonymous read - so it was never going to be the
+frictionless install it looked like, and the publish workflow had failed on
+every run since 0.9.0. Vendoring the tarball removes the second channel
+instead of repairing it: one credential, and two halves that cannot be
+different versions.
+
+**`panel:doctor` now fails** if the client half is missing or its version does
+not match the PHP. Both used to be silent - a blank panel, or a screen with a
+missing control under a 200.
 
 ### 0.9.0 → 0.9.1
 

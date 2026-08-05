@@ -1,65 +1,70 @@
-# Publish @alxtexh-enterprise/panel to GitHub Packages when a version tag is pushed.
+# Cut a GitHub Release when a version tag is pushed, and attach the client half.
 #
-# WHY ON A TAG RATHER THAN ON MAIN. A published version is immutable - the
-# registry refuses to overwrite one - so publishing from every push would burn
-# a version number on work that was not a release. A tag is the statement that
-# this commit is one.
+# WHY THIS REPLACED `npm publish`. The previous version pushed to GitHub
+# Packages and failed on every run - v0.9.0 and v0.9.1 both died in four
+# seconds. But the failure was not the real problem; the design was. GitHub
+# Packages' npm registry REQUIRES A TOKEN EVEN FOR PUBLIC PACKAGES. There is no
+# anonymous read. So the registry route could never deliver a frictionless
+# install - it could only move the credential problem around.
 #
-# THE TOKEN IS THE ONE GITHUB PROVIDES. `GITHUB_TOKEN` is minted per run,
-# scoped to this repository, and expires when the job ends - so there is no
-# long-lived credential to rotate, and nothing to leak into a log.
-name: Publish
+# The client half now ships INSIDE the Composer package
+# (`packages/panel/client/panelkit-client.tgz`), so one credential installs both
+# halves and the two can never be different versions. That is the supported
+# path, and it needs no workflow at all.
+#
+# THIS EXISTS FOR THE OTHER CASE: somebody who wants the client tarball on its
+# own - a separate front-end build, a cache warm, an air-gapped transfer. A
+# Release asset is a stable URL on a repository they already have access to,
+# with no second registry to authenticate against.
+#
+# IT DOES NOT BUILD THE TARBALL. It publishes the committed one, because that is
+# the artifact consumers actually receive. Building a fresh one here would
+# attach a file nobody installs, and would keep passing while the committed one
+# rotted - precisely what `ClientTarballTest` exists to prevent.
+name: Release
 
 on:
   push:
     tags: ['v*']
 
 jobs:
-  npm:
+  release:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
-      packages: write
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          # Writes the registry line into ~/.npmrc for this scope, which is the
-          # half `publishConfig` cannot do - the auth line.
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@alxtexh-enterprise'
-
-      - name: Install
-        working-directory: packages/ui
-        run: npm ci
-
-      # THE VERSION IN THE TAG AND IN package.json MUST AGREE. They are edited
-      # in different commits by different hands, and a mismatch publishes a
-      # version nobody can `git checkout` - which is discovered months later by
-      # somebody trying to reproduce a bug.
-      - name: Check the tag matches package.json
-        working-directory: packages/ui
+      # THE TAG AND THE SHIPPED CLIENT MUST AGREE. They are set in different
+      # commits by different hands, and a mismatch publishes a release whose
+      # asset is a version nobody can `git checkout` - discovered months later
+      # by somebody trying to reproduce a bug.
+      - name: Check the tag matches the shipped client
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          pkg="$(node -p "require('./package.json').version")"
-          [ "$tag" = "$pkg" ] || {
-            echo "Tag $GITHUB_REF_NAME says $tag; package.json says $pkg." >&2
+          asset="packages/panel/client/panelkit-client.tgz"
+
+          [ -f "$asset" ] || { echo "::error::$asset is missing - this tag ships no client half."; exit 1; }
+
+          shipped="$(tar xzOf "$asset" package/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")"
+
+          [ "$tag" = "$shipped" ] || {
+            echo "::error::Tag $GITHUB_REF_NAME says $tag; the shipped client is $shipped."
             exit 1
           }
 
-      # `prepack` builds, so this cannot publish a stale dist. Running it
-      # explicitly first means a build failure fails the job here rather than
-      # halfway through a publish.
-      - name: Build
-        working-directory: packages/ui
-        run: npm run build
+          echo "Tag and client agree on $tag."
 
-      - name: Publish
-        working-directory: packages/ui
-        run: npm publish
+      - name: Create the release
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp packages/panel/client/panelkit-client.tgz \
+             "alxtexh-enterprise-panel-${GITHUB_REF_NAME#v}.tgz"
+
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes "The client half is attached here, and also ships inside \`panelkit/panel\` at \`client/panelkit-client.tgz\` - installing the Composer package is enough. See CHANGELOG.md and UPGRADING.md." \
+            "alxtexh-enterprise-panel-${GITHUB_REF_NAME#v}.tgz"

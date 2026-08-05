@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 |     | package (installed)     | reference app only      |
 | --- | ----------------------- | ----------------------- |
-| PHP | 290 files, 51,660 lines | 90 files, 13,027 lines |
+| PHP | 291 files, 51,660 lines | 90 files, 13,027 lines |
 | Vue | 274 components          | **80 components**       |
 
 The Vue column inverted in v0.6.3, and that is the headline. The demo used to
@@ -385,10 +385,18 @@ written in the file.
 
 ## What is not true yet
 
-**Nothing is published.** Packagist and npm both 404 for these names. Today,
-`composer require panelkit/panel` resolves for nobody; the repository installs
-through a path repository, and `verify-install.sh` proves a real install by
-pointing composer at a `git subtree split` branch.
+**Nothing is on a public registry**, and that is now a decision rather than a
+gap. Packagist and npmjs.com both 404 for these names on purpose: this is a
+private framework. It installs from a private GitHub repository, and the
+JavaScript half **ships inside the Composer package** at
+`client/panelkit-client.tgz` - one credential for both halves, and two halves
+that cannot be different versions.
+
+GitHub Packages was tried and abandoned: its npm registry requires a token even
+for *public* packages, so it could never be the frictionless install it looks
+like. `verify-install.sh` proves a real install against a `git subtree split`
+branch, and installs the committed tarball rather than a freshly packed one -
+what a consumer receives is what gets tested.
 
 **No production history.** Not one real user, one real tenant, one real outage.
 

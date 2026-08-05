@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
+use PanelKit\Panel\Support\ClientTarball;
 use PanelKit\Panel\Support\PanelPages;
 use PanelKit\Panel\Support\UserRoles;
 
@@ -54,11 +55,20 @@ final class InstallCommand extends Command
 
         $this->newLine();
         $this->components->info('Done. Next:');
-        $this->line('  1. npm install @alxtexh-enterprise/panel @vitejs/plugin-vue && npm run build');
-        $this->line('     The screens are Vue, so they are built rather than published. The');
-        $this->line('     published resources/css/app.css already points Tailwind at both');
-        $this->line('     packages - without that every utility used only inside them is');
-        $this->line('     purged, and you get a correct table with no styling at all.');
+        /*
+         * THE PATH IS RESOLVED, NOT DESCRIBED. This is the step that strands
+         * people - skip it and every route answers 200 with a blank screen -
+         * so it prints as something to paste rather than something to work
+         * out. The tarball ships inside this package, so there is no registry
+         * to reach and no token that can be missing.
+         */
+        $this->line('  1. '.ClientTarball::installCommand().' && npm run build');
+        $this->line('     The screens are Vue, so they ship as a tarball INSIDE this package');
+        $this->line('     rather than on a registry - one credential for both halves, and a');
+        $this->line('     client that cannot be a different version from the PHP.');
+        $this->line('     The published resources/css/app.css already points Tailwind at it -');
+        $this->line('     without that every utility used only inside the package is purged,');
+        $this->line('     and you get a correct table with no styling at all.');
         $this->line('  2. Add a `tenant_id` column to your admin users table, or configure');
         $this->line('     panel.tenancy.resolver for stancl/tenancy. For a single-tenant app,');
         $this->line('     set panel.tenancy.mode to "none" instead.');

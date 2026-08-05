@@ -6,7 +6,7 @@ FilamentPHP onto PanelKit.**
 Everything is here: install, build, translate from Filament, deploy, upgrade,
 and the traps. Nothing else needs to be carried.
 
-Current version: **v0.9.1**. 44 packaged screens, 1,744 tests passing, verified
+Current version: **v0.9.2**. 44 packaged screens, 1,744 tests passing, verified
 installing into a fresh Laravel application.
 
 > **0.9.0 renamed the npm package** to `@alxtexh-enterprise/panel`. If you are
@@ -98,41 +98,48 @@ authentication choice.
 
 ## The client half — read this, it is the step that strands people
 
-**The Composer package contains zero `.vue` files.** `panelkit/panel` answers
-requests with page names; the screens that resolve those names are the npm half.
-A machine without it installs the PHP package perfectly and renders **nothing**,
-with no error explaining why.
+**The Composer package's PHP contains zero `.vue` files.** `panelkit/panel`
+answers requests with page names; the screens that resolve those names are the
+JavaScript half. A machine without it installs the PHP perfectly and renders
+**nothing**, with no error explaining why. That failure has shipped twice.
 
-It comes from **GitHub Packages**, not npmjs.com. Two lines of setup, once per
-application:
-
-```bash
-# .npmrc in your application root - commit this, it holds no secret
-@alxtexh-enterprise:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
-
-Then export a token with **`read:packages`** — that scope and no other. A token
-carrying `repo` is one that can also push code, and npm sends it to that host on
-every install.
+**So the client half now travels inside the Composer package.** There is no
+registry, no `.npmrc`, and no second token:
 
 ```bash
-export GITHUB_TOKEN=ghp_...          # in your shell profile, or CI secrets
-npm install @alxtexh-enterprise/panel @vitejs/plugin-vue
+composer require panelkit/panel
+npm install ./vendor/panelkit/panel/client/panelkit-client.tgz @vitejs/plugin-vue
+php artisan panel:install
+npm run build
 ```
 
-`npm install` and `npm ci` now resolve it like any other dependency, and
-`npm update` picks up new releases. Copy `.npmrc.example` from the monorepo if
-you want the comments.
+Three properties are worth understanding, because they each remove a failure
+this project actually hit:
 
-**If the registry is not set up yet**, the tarball is committed to the monorepo,
-one per release — `panelkit-reference/dist/alxtexh-enterprise-panel-0.9.1.tgz`, with
-`CHECKSUMS.txt` beside it:
+- **One credential.** Whatever authenticates Composer against the private
+  repository is the only credential involved. There is no npm registry to be
+  unreachable, rate-limited, or missing a token.
+- **The halves cannot drift.** `panelkit/panel` at 0.9.2 physically carries the
+  0.9.2 client. A mismatch used to be possible and did not error — it rendered
+  a screen with a missing control, under a 200.
+- **The filename never changes.** It is always `panelkit-client.tgz`, never
+  `...-0.9.2.tgz`, so the command above is the same in every runbook forever.
+  The version lives inside, where tooling reads it. Upgrading is the same line
+  again.
 
-```bash
-sha256sum -c panelkit-reference/dist/CHECKSUMS.txt
-npm install /path/to/alxtexh-enterprise-panel-0.9.1.tgz @vitejs/plugin-vue
-```
+`php artisan panel:install` prints this command with the path already resolved,
+and `php artisan panel:doctor` fails if the client half is missing **or is a
+different version from the PHP** — the two states that previously produced a
+blank or subtly wrong panel in silence.
+
+**If you want the tarball on its own** — a separate front-end build, an
+air-gapped transfer — every release attaches it:
+`https://github.com/enterprisealxtexh/panelkit/releases`. That needs a token
+with `repo` scope, since the repository is private; see `.npmrc.example`.
+
+> **Not GitHub Packages.** Its npm registry requires a token even for *public*
+> packages — there is no anonymous read — so it can never be the frictionless
+> option it appears to be. That is why this does not use it.
 
 Then, either way:
 
@@ -558,7 +565,7 @@ npm run build
 
 Then migrate when you have decided to: `php artisan migrate`.
 
-PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.1` and read
+PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.2` and read
 the changelog before each bump.
 
 ---
