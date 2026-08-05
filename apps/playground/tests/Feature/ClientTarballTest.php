@@ -70,6 +70,82 @@ final class ClientTarballTest extends TestCase
     }
 
     /**
+     * AND ITS CONTENTS MATCH THE SOURCE, not merely its version number.
+     *
+     * THE VERSION CHECK ABOVE IS NOT ENOUGH, AND THIS IS HOW THAT WAS FOUND.
+     * A day's work went into `packages/ui` - a screen rewritten, a component
+     * finally mounted, an import order fixed - none of it bumped the version,
+     * because a version is bumped at RELEASE and the edits came before one. So
+     * `ClientTarball::version()` still said 0.9.5, the assertion above still
+     * passed, and the archive committed into the package still held the
+     * PREVIOUS day's Vue.
+     *
+     * That is worse than an obviously stale artifact. The PHP half was current,
+     * the client half was not, and the whole reason the tarball is vendored
+     * inside the Composer package is so those two CANNOT drift. The guard
+     * meant to enforce that could not see same-version drift, which is the only
+     * kind that happens during development.
+     *
+     * COMPARED BYTE FOR BYTE against the working tree, over the source the
+     * archive ships - `inertia/` and `src/`. Not `dist/`: that is compiled
+     * output, and a rebuild legitimately differs (hashes, ordering) without any
+     * source having changed. If the source files match, the pack is current.
+     */
+    public function test_the_tarball_contents_match_the_source(): void
+    {
+        $root = dirname(__DIR__, 4).'/packages/ui';
+
+        $archive = new \PharData(dirname(__DIR__, 4).'/packages/panel/client/'.ClientTarball::NAME);
+
+        $stale = [];
+        $compared = 0;
+
+        /** @var \SplFileInfo $file */
+        foreach (new \RecursiveIteratorIterator($archive) as $file) {
+            // `phar://.../package/inertia/pages/Foo.vue` -> `inertia/pages/Foo.vue`
+            $relative = preg_replace('#^.*/package/#', '', $file->getPathname());
+
+            if (! preg_match('#^(inertia|src)/#', $relative)) {
+                continue;
+            }
+
+            $onDisk = $root.'/'.$relative;
+
+            if (! is_file($onDisk)) {
+                $stale[] = "{$relative} (in the archive, gone from the source)";
+
+                continue;
+            }
+
+            $compared++;
+
+            if (file_get_contents($file->getPathname()) !== file_get_contents($onDisk)) {
+                $stale[] = $relative;
+            }
+        }
+
+        $this->assertGreaterThan(
+            100,
+            $compared,
+            'Almost nothing was compared, so this test was about to pass without checking the pack.',
+        );
+
+        $this->assertSame(
+            [],
+            $stale,
+            'The vendored client tarball does not match packages/ui - it was not repacked after '
+            ."the source changed.\n\n"
+            .'The version inside it is CORRECT, which is why the staleness check above passed. A '
+            .'`composer require` would deliver current PHP with an older client: screens render '
+            .'with missing controls rather than erroring, because the schema the PHP sends names '
+            ."things the Vue does not know about.\n\nRepack:\n"
+            ."  cd packages/ui && npm run build && npm pack --pack-destination ../panel/client \\\n"
+            .'    && mv ../panel/client/alxtexh-enterprise-panel-*.tgz ../panel/client/'
+            .ClientTarball::NAME."\n\nStale:\n  ".implode("\n  ", array_slice($stale, 0, 20))."\n",
+        );
+    }
+
+    /**
      * IT CONTAINS BOTH HALVES OF THE CLIENT, which is not a given.
      *
      * `dist` is compiled and `inertia` ships raw, and a packing mistake that
