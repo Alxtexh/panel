@@ -6,6 +6,10 @@ FilamentPHP onto PanelKit.**
 Everything is here: install, build, translate from Filament, deploy, upgrade,
 and the traps. Nothing else needs to be carried.
 
+Migrating from Filament? **[FILAMENT_TO_PANELKIT.md](FILAMENT_TO_PANELKIT.md)**
+is the row-by-row translation — every Filament class beside the PanelKit one to
+write instead.
+
 Current version: **v0.9.5**. 44 packaged screens, 1,744 tests passing, verified
 installing into a fresh Laravel application.
 

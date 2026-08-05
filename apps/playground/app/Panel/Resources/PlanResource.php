@@ -10,6 +10,7 @@ use PanelKit\Panel\Actions\BulkAction;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
+use PanelKit\Panel\Tables\Columns\MoneyColumn;
 use PanelKit\Panel\Tables\Columns\TextColumn;
 use PanelKit\Panel\Tables\Filters\BooleanFilter;
 use PanelKit\Panel\Tables\Table;
@@ -57,9 +58,21 @@ final class PlanResource extends Resource
                  * payments, usage. Putting one here just because the column
                  * held a number was the mistake.
                  */
-                // Displays the computed `price`, orders by `price_cents` -
-                // sorting the formatted string puts 12,000.00 before 900.00.
-                TextColumn::make('price')->sortable()->sortAs('price_cents')->prefix('KES'),
+                /*
+                 * A `MoneyColumn` OVER THE RAW MINOR UNITS, which is what the
+                 * type is for - and what nothing in this application used
+                 * until now.
+                 *
+                 * That gap is why a real bug survived: `MoneyColumn` had unit
+                 * tests asserting its schema and NO SCREEN ANYWHERE RENDERED
+                 * ONE, so nobody noticed that the record page did not format
+                 * it at all. The list showed a currency; the record page for
+                 * the same row showed `250000`.
+                 *
+                 * A column type with tests and no consumer is a type nobody
+                 * has actually looked at.
+                 */
+                MoneyColumn::make('price_cents')->label('Price')->currency('KES')->sortable(),
                 // A switch, so retiring a plan is one click from the list.
                 /*
                  * A BADGE, NOT A SWITCH.

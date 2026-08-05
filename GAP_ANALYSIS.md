@@ -325,6 +325,10 @@ migration, since these may replace plugins you currently pay for or maintain:
 
 ## 10. Migrating a Filament panel
 
+> **The row-by-row translation table is [FILAMENT_TO_PANELKIT.md](FILAMENT_TO_PANELKIT.md)**
+> — every Filament class beside the PanelKit one to write instead. This section
+> is the shape of the work; that file is the lookup.
+
 1. **Tables port almost mechanically** — columns are complete.
 2. **Forms port with two small additions** — `Hidden` and `Checkbox`.
 3. **Record pages need work.** That is §5, and it is the real one.
