@@ -192,6 +192,23 @@ final class Form
 
         foreach (Component::visibleFields($this->nodes, $input) as $field) {
             if (! array_key_exists($field->key, $input)) {
+                /*
+                 * AN ABSENT KEY USUALLY MEANS "LEAVE IT ALONE" - a blank
+                 * password keeps the current one, an untouched upload keeps the
+                 * current file - and a field may say otherwise.
+                 *
+                 * A TICK BOX SAYS OTHERWISE. Unticking a checkbox submits
+                 * nothing at all, so under the default rule the value silently
+                 * stays as it was: the operator unticks "Available to sell",
+                 * saves, is told it saved, and the plan is still on sale. See
+                 * `Field::absentMeans()`.
+                 */
+                $absent = $field->absentMeans();
+
+                if ($absent !== Field::ABSENT_MEANS_NOTHING) {
+                    $out[$field->key] = $field->transformForStorage($absent);
+                }
+
                 continue;
             }
 

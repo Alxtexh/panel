@@ -288,13 +288,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('support.building');
     /*
-     | WHAT'S NEW WAS A SECOND CHANGELOG. The package ships `Changelog`, which
-     | is the same screen carried further - newest release open, the rest
+     | WHAT'S NEW WAS A SECOND CHANGELOG. The package ships `ChangelogPage`,
+     | which is the same screen carried further - newest release open, the rest
      | collapsed, grouped by kind - and this application had an older copy of it
      | under a different name at a different URL. Two changelogs disagree the
      | first time somebody updates one.
+     |
+     | SO THE REDIRECT THAT USED TO SIT HERE IS GONE, AND IT WAS BROKEN.
+     |
+     | It pointed `/whats-new` at `/changelog`, which no route in this
+     | application or the package has ever served - so the link went to a 404.
+     | It also OCCUPIED the very URI the packaged page wants: `ChangelogPage`
+     | declares `slug() === 'whats-new'`, and a redirect registered on that path
+     | means the real screen could never take it.
+     |
+     | The packaged page now owns the URI, which is the whole point of moving
+     | the screen into the package. It appears once `panel.changelog` has
+     | releases in it - see `config/panel.php` - and hides itself when there is
+     | nothing to say.
+     |
+     | Nothing linked to `support.whatsNew`, which is why a dead route survived
+     | in a repository with 1,700 tests: no page rendered it, so nothing opened
+     | it, so nothing failed. A browser sweeping every route found it in one run.
      */
-    Route::redirect('whats-new', '/changelog')->name('support.whatsNew');
 
     /*
      | Feature requests and bug reports, filed from the dialog in the app shell.

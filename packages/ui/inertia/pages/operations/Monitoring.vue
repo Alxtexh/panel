@@ -54,7 +54,7 @@ import {
     TriangleAlert,
 } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { Sparkline } from '@alxtexh-enterprise/panel'
+import { MiniStatCard } from '@alxtexh-enterprise/panel'
 
 interface Health {
     cpu: {
@@ -160,10 +160,11 @@ const props = defineProps<{
     thresholds: Record<string, number>
 }>()
 
+/** The four metrics sampled into history, named once. */
+type TrendKey = 'cpu_pct' | 'memory_pct' | 'disk_pct' | 'failed_jobs'
+
 /** One sparkline series per metric, skipping unavailable points. */
-function series(
-    metric: 'cpu_pct' | 'memory_pct' | 'disk_pct' | 'failed_jobs',
-): { label: string; value: number }[] {
+function series(metric: TrendKey): { label: string; value: number }[] {
     return props.history
         .filter((row) => row[metric] !== null)
         .map((row) => ({
@@ -173,6 +174,51 @@ function series(
             }),
             value: Number(row[metric]),
         }))
+}
+
+/**
+ * The most recent sample, formatted with its unit.
+ *
+ * The block below used to show only a sparkline, so a page headed "Last 24
+ * hours" drew the shape of a day and never said what the number is NOW - the
+ * first thing anybody opens a monitoring screen to find out.
+ */
+function latest(metric: TrendKey, unit: string): string {
+    const points = series(metric)
+
+    return points.length ? `${points[points.length - 1].value}${unit}` : '—'
+}
+
+/**
+ * Change from the OLDEST sample in the window to the newest, as a percentage.
+ *
+ * AGAINST THE START OF THE WINDOW, not against the previous point. A
+ * five-minute tick is noise - CPU moving 4% to 6% is a 50% rise that means
+ * nothing - and a badge that swings wildly every refresh is one operators stop
+ * reading. Across the whole window it answers the question the heading asks:
+ * is this worse than it was yesterday.
+ *
+ * NULL RATHER THAN ZERO when there is nothing to compare, so the card draws no
+ * badge at all. A "0%" badge on a metric with one sample is a measurement that
+ * was never taken, rendered as a measurement of no change.
+ */
+function delta(metric: TrendKey): number | null {
+    const points = series(metric)
+
+    if (points.length < 2) {
+        return null
+    }
+
+    const first = points[0].value
+    const last = points[points.length - 1].value
+
+    // Dividing by a zero first sample is Infinity, which renders as a badge
+    // reading "Infinity%" - true, useless, and alarming.
+    if (first === 0) {
+        return last === 0 ? 0 : null
+    }
+
+    return Math.round(((last - first) / first) * 100)
 }
 
 const trendMetrics = [
@@ -648,22 +694,42 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                 when cron is ticking.
             </p>
 
-            <div v-else class="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div v-for="metric in trendMetrics" :key="metric.key" class="flex flex-col gap-1">
-                    <div class="flex items-baseline justify-between">
-                        <span class="text-xs font-medium">{{ metric.label }}</span>
-                        <span v-if="metric.threshold" class="text-xs text-muted-foreground">
-                            alerts at {{ thresholds[metric.threshold] }}{{ metric.unit }}
-                        </span>
-                    </div>
-                    <Sparkline
-                        v-if="series(metric.key).length > 1"
-                        :data="series(metric.key)"
-                        :height="36"
-                        filled
-                    />
-                    <p v-else class="text-xs text-muted-foreground">Not enough samples yet.</p>
-                </div>
+            <!--
+                `MiniStatCard`, WHICH IS WHAT THIS BLOCK WAS BEFORE IT WAS ONE.
+
+                The markup here used to be a hand-rolled label, a threshold
+                caption and a bare `Sparkline` - a four-across metric card
+                assembled by hand, inside the package that EXPORTS a four-across
+                metric card. The changelog even predicted this exact mistake:
+                the component was listed in the agent catalogue precisely so
+                that "an agent asked for a four-window metric card would not
+                hand-roll a worse one", and the package went on to hand-roll a
+                worse one.
+
+                It WAS worse, in a way nobody noticed while it was only a
+                sparkline: the old block never showed the CURRENT VALUE. A
+                screen headed "Last 24 hours" drew the shape of CPU over a day
+                and never said what CPU is now, which is the first thing anybody
+                opens a monitoring page to find out.
+
+                `MiniStatCard` had no consumer anywhere - exported, documented,
+                recommended to agents, and never once rendered.
+            -->
+            <div class="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4" v-else>
+                <MiniStatCard
+                    v-for="metric in trendMetrics"
+                    :key="metric.key"
+                    :label="metric.label"
+                    :value="latest(metric.key, metric.unit)"
+                    :caption="
+                        metric.threshold
+                            ? `alerts at ${thresholds[metric.threshold]}${metric.unit}`
+                            : null
+                    "
+                    :delta="delta(metric.key)"
+                    :series="series(metric.key).length > 1 ? series(metric.key) : null"
+                    inverted
+                />
             </div>
         </div>
 

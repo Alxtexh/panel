@@ -1,7 +1,7 @@
 # What PanelKit is, feature by feature
 
-**Two columns, and the second one is the point.** PLAN.md is how it got built,
-ROADMAP.md is what is left, GAP_ANALYSIS.md is how it compares to Filament. None
+**Two columns, and the second one is the point.** GAP_ANALYSIS.md is how it
+compares to Filament; the build history is in docs/notes/. None
 of them answers the question this file does: _if I install PanelKit, what do I
 get_ — as distinct from _what am I looking at in the demo_.
 

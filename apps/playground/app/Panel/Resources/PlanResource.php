@@ -7,7 +7,13 @@ namespace App\Panel\Resources;
 use App\Models\Plan;
 use App\Panel\Clusters\NetworkCluster;
 use PanelKit\Panel\Actions\BulkAction;
+use PanelKit\Panel\Forms\Fields\CheckboxField;
+use PanelKit\Panel\Forms\Fields\HiddenField;
+use PanelKit\Panel\Forms\Fields\NumberField;
+use PanelKit\Panel\Forms\Fields\TextField;
+use PanelKit\Panel\Forms\Form;
 use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Schema\Section;
 use PanelKit\Panel\Tables\Columns\BadgeColumn;
 use PanelKit\Panel\Tables\Columns\DateColumn;
 use PanelKit\Panel\Tables\Columns\MoneyColumn;
@@ -29,6 +35,100 @@ final class PlanResource extends Resource
     protected static ?string $cluster = NetworkCluster::class;
 
     protected static ?int $sort = 30;
+
+    /**
+     * The catalogue is editable, and this form is where two field types finally
+     * got a consumer.
+     *
+     * WHY IT DID NOT EXIST BEFORE. Plans were a read-only list - which is an odd
+     * thing for a catalogue, since somebody has to add the next package - and
+     * the absence went unnoticed because a resource with no `form()` simply
+     * inherits the base's empty one. Nothing fails. The create button just leads
+     * to a screen with no controls on it.
+     *
+     * `CheckboxField` AND `HiddenField` HAD NO CONSUMER ANYWHERE, and both were
+     * broken because of it:
+     *
+     *   - `HiddenField` overrode `label()` as a getter when the parent declares
+     *     it as a setter, which PHP refuses to load. Every screen declaring one
+     *     would have died at construction. No screen declared one.
+     *   - Both were "tested" by unit tests asserting the schema they return,
+     *     which is the author checking their own arithmetic.
+     *
+     * The pattern has now cost this project four defects, and the lesson each
+     * time is the same: A TYPE WITH A UNIT TEST AND NO CONSUMER HAS BEEN LOOKED
+     * AT ONCE, BY THE PERSON WHO WROTE IT.
+     */
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            Section::make('Package')
+                ->description('What this plan offers, and what it costs.')
+                ->schema([
+                    TextField::make('name')->required()->placeholder('Home 20'),
+
+                    /*
+                     * THE UNIT IS IN THE LABEL, because a field has no
+                     * `suffix()`. `TextColumn::suffix()` exists and reads a
+                     * column's value; writing the same call here was a guess
+                     * from the table side of the API, and it fatals on the first
+                     * construction rather than rendering oddly.
+                     */
+                    NumberField::make('speed_mbps')->label('Speed (Mbps)')->required()->min(1),
+
+                    /*
+                     * MINOR UNITS, and the field says so rather than dividing.
+                     *
+                     * `MoneyColumn` reads this column as an integer count of the
+                     * smallest unit, which is the whole reason it cannot drift
+                     * the way a float does. A form that accepted major units
+                     * here would have to multiply on the way in and divide on
+                     * the way out, and the two roundings are where the missing
+                     * cent comes from.
+                     */
+                    NumberField::make('price_cents')
+                        ->label('Price')
+                        ->required()
+                        ->help('In cents. 250000 is KES 2,500.00.'),
+
+                    /*
+                     * A CHECKBOX, NOT A TOGGLE, and the difference is what the
+                     * control promises.
+                     *
+                     * A switch reads as something that takes effect when you
+                     * flick it - that is what a switch does everywhere else in
+                     * an interface. This one does nothing until Save, so a
+                     * checkbox is the honest control: it states a value the form
+                     * will submit rather than an action already taken.
+                     */
+                    CheckboxField::make('is_active')
+                        ->label('Available to sell')
+                        ->help('An inactive plan stays on existing accounts and cannot be chosen for new ones.'),
+                ]),
+
+            /*
+             * THE ORDER IS CARRIED, NEVER TYPED.
+             *
+             * `->reorderable('position')` below means this column is set by
+             * DRAGGING A ROW - it is the catalogue's chosen sequence, which
+             * follows no property of the plan. Showing it as a number would
+             * offer two ways to set one thing that disagree the moment somebody
+             * uses the second.
+             *
+             * It cannot simply be left out either: a form that omits it submits
+             * nothing for `position`, and an edit would either reset the
+             * ordering or fail on the NOT NULL. So the value travels with the
+             * form and stays invisible.
+             *
+             * THIS IS NOT A SECURITY BOUNDARY. The field is in the page source
+             * and anybody can change it before submitting. That is acceptable
+             * for a display order and would not be for anything else - the
+             * field's own docblock is emphatic about this, because it is the
+             * mistake the type invites.
+             */
+            HiddenField::make('position'),
+        ]);
+    }
 
     public static function table(Table $table): Table
     {

@@ -342,6 +342,45 @@ abstract class Field implements Renderable
     }
 
     /**
+     * What an ABSENT key means for this field, if anything.
+     *
+     * THE DEFAULT IS "NOTHING", which is what every field but a boolean wants.
+     * `Form::sanitize()` skips a key the request does not carry, and that is
+     * deliberate: a blank password means "keep the current one", an untouched
+     * upload means "keep the current file". Writing null for either would
+     * destroy data the operator never asked to change.
+     *
+     * A TICK BOX IS THE EXCEPTION, AND IT IS NOT A CORNER CASE. An unticked
+     * checkbox submits NOTHING - the browser omits the key entirely, which is
+     * how HTML has always worked. Under the default rule that reads as "leave
+     * it alone", so unticking a box, saving, and being told it saved leaves the
+     * value exactly as it was. On a field called "Available to sell" that is a
+     * plan still on sale after somebody withdrew it.
+     *
+     * PanelKit's own client never triggers this - `ResourceForm` submits every
+     * declared key, `false` included. It bites the consumer building their own
+     * form out of the exported components, which this framework actively
+     * encourages, and it bites them silently.
+     *
+     * Returning `self::ABSENT_MEANS_NOTHING` keeps the existing behaviour, so
+     * a field that does not override this writes exactly as it did before.
+     */
+    public function absentMeans(): mixed
+    {
+        return self::ABSENT_MEANS_NOTHING;
+    }
+
+    /**
+     * The sentinel for "an absent key is not my business".
+     *
+     * AN OBJECT RATHER THAN NULL, because null is a legitimate thing for a
+     * field to want written - a nullable column cleared on purpose - and a
+     * sentinel that collides with a real value is a bug waiting for the first
+     * person who needs it.
+     */
+    public const ABSENT_MEANS_NOTHING = '__panelkit_absent_means_nothing__';
+
+    /**
      * Tenant-varying options, resolved when the DATA payload is assembled.
      *
      * @return list<array{value: mixed, label: string}>|null

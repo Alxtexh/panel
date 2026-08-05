@@ -39,4 +39,19 @@ final class ToggleField extends Field
     {
         return (bool) $value;
     }
+
+    /**
+     * AN ABSENT KEY MEANS FALSE, for the same reason as `CheckboxField`.
+     *
+     * A switch is still an `<input type="checkbox">` underneath whatever it is
+     * painted to look like, so an off switch submits nothing, and
+     * `Form::sanitize()` reads a missing key as "leave the stored value alone".
+     * Switching something off and being told it saved, while it stays on, is
+     * the failure - and it is worse here than on a checkbox, because a switch
+     * READS as a setting that has already taken effect.
+     */
+    public function absentMeans(): mixed
+    {
+        return false;
+    }
 }

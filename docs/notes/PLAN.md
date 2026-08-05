@@ -11,7 +11,7 @@ The spec is the contract; this file is the route through it.
   returned HTTP 200 and looked correct*, so silent fallbacks (`?? ''`,
   `?? 'tenant'`, `return false` on a missing precondition, empty catch) are the
   enemy. Make failures loud, and test that they are loud.
-- [panelkit addendum 01.md](panelkit%20addendum%2001.md) — additive only, explicitly
+- [panelkit-addendum-01.md](panelkit-addendum-01.md) — additive only, explicitly
   "do not re-plan the work in progress". Part A (stancl) from Phase 7, Part B
   (auth/security) after Phase 7, Part C (internal components) from Phase 3.
 
@@ -682,7 +682,7 @@ prevents**: Part 2's *"enterprise applications should never fail completely
 because one widget crashed."* A null `auth.user` in the sidebar took down an
 entire error page and rendered white. Error boundaries are now Stage 1.
 
-### `panelkit referenceapp.md` — the reference application
+### `panelkit-reference-app.md` — the reference application
 
 This one changes the shape of the project, and it is the more important of the
 two. It specifies a throwaway ISP-billing replica used as the **benchmark

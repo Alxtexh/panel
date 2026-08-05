@@ -285,20 +285,40 @@ Nothing is private.
 
 ## 10. A porting order that works
 
+**Both panels run in one application.** Mount PanelKit on a different path —
+`->path('panel')` while Filament keeps `/admin`. They share the database and
+nothing else, so a record edited in one is edited in the other, and you can move
+users across one screen at a time by changing a link.
+
+Do **not** port resource-by-resource in whatever order they appear.
+
 1. **`panel:install --auth`, then `panel:doctor`.** Get a working sign-in before
-   anything else.
-2. **One resource, generated**: `php artisan make:panel-resource Client
-   --generate`. It reads the table and writes the class *and* a deny-by-default
-   policy.
+   anything else. Run `php artisan panel:blueprint` here too: it writes
+   `AGENTS.md` from the installed tree, so an AI agent helping with the port
+   reads what is actually there rather than a summary of it.
+2. **One read-only resource, generated**, and the simplest lookup table rather
+   than your largest: `php artisan make:panel-resource Plan --generate`. It reads
+   the table and writes the class *and* a deny-by-default policy. This proves the
+   install, the policy shape and your build pipeline in an afternoon.
 3. **Port its columns and fields** from the tables above. Mechanical.
 4. **Grant yourself a role** — `php artisan panel:permissions grant
    --email=you@example.com` — or every screen is a correct-looking 403.
-5. **Then the rest of the resources.** They are all the same shape.
-6. **Pages last**, once the resources prove the install.
+5. **The authorisation model next, before more resources.** It is the thing most
+   likely to differ silently from Filament, and every later resource inherits
+   whatever you settle on. §8.1 is the shape of the difference.
+6. **Then the big tables, largest first.** Your busiest resource at real row
+   counts is where the pagination pays for itself and where a missing index
+   shows up — both of which you want to learn early, not on the last screen.
+7. **Then writes** — forms, actions, bulk operations.
+8. **Pages last**, once the resources prove the install.
+9. **Cut over one screen at a time** by changing a link. Keep Filament mounted
+   until nothing points at it.
 
-Run `php artisan panel:blueprint` first: it writes `AGENTS.md` from the
-installed tree, so an AI agent helping with the port reads what is actually
-there rather than a summary of it.
+**Audit your community plugins before committing to any of this.** Filament has
+hundreds and PanelKit has none; whatever you depend on is either replaced by
+something packaged here (§7 lists what ships), rewritten, or consciously
+dropped. That is the single largest hidden cost in a port, and it is much
+cheaper to discover now than at step 9.
 
 ---
 

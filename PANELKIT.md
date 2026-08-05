@@ -1,17 +1,18 @@
 # PanelKit — the only document you need
 
-**Audience: an AI agent, or a developer, moving a live ISP billing system off
-FilamentPHP onto PanelKit.**
+**Audience: an AI agent, or a developer, building an admin panel on Laravel —
+for any domain.**
 
-Everything is here: install, build, translate from Filament, deploy, upgrade,
-and the traps. Nothing else needs to be carried.
+Everything is here: install, build, deploy, upgrade, and the traps. Nothing else
+needs to be carried.
 
-Migrating from Filament? **[FILAMENT_TO_PANELKIT.md](FILAMENT_TO_PANELKIT.md)**
-is the row-by-row translation — every Filament class beside the PanelKit one to
-write instead.
-
-Current version: **v0.9.5**. 44 packaged screens, 1,744 tests passing, verified
+Current version: **v0.9.5**. 44 packaged screens, 2,072 tests passing, verified
 installing into a fresh Laravel application.
+
+Coming from FilamentPHP? **[FILAMENT_TO_PANELKIT.md](FILAMENT_TO_PANELKIT.md)**
+is the whole translation — every Filament class beside the PanelKit one to write
+instead, and the porting order that works. It is a separate document on purpose:
+this one is about building a panel, not about leaving another one.
 
 > **0.9.0 renamed the npm package** to `@alxtexh-enterprise/panel`. If you are
 > arriving from 0.8.x, the four commands are in UPGRADING.md - and the one that
@@ -28,14 +29,79 @@ A Laravel admin panel framework. You describe a resource in one PHP class; the
 panel sends that description to the browser **once**, and every interaction
 afterwards moves only data — no server-rendered component tree per click.
 
-That single fact is why it is faster than Filament, and it is the source of
-every difference in Part 2.
+That single fact is where the speed comes from, and it is the source of every
+structural difference from a server-rendered panel.
+
+## It does not know what your business is
+
+Everything below is one resource class. The framework has no opinion about what
+a row means:
+
+```php
+// A veterinary practice
+final class PatientResource extends Resource
+{
+    protected static string $model = Patient::class;
+
+    public static function table(Table $table): Table
+    {
+        return $table->columns([
+            TextColumn::make('name')->searchable()->sortable(),
+            TextColumn::make('species'),
+            BadgeColumn::make('status')->colors(['healthy' => 'success', 'critical' => 'danger']),
+            DateColumn::make('last_seen_at')->label('Last visit'),
+        ])->filters([
+            SelectFilter::make('species')->options(['dog', 'cat', 'rabbit']),
+            DateRangeFilter::make('last_seen_at'),
+        ]);
+    }
+}
+```
+
+```php
+// A law firm - same three declarations, different nouns
+final class MatterResource extends Resource
+{
+    protected static string $model = Matter::class;
+
+    public static function table(Table $table): Table
+    {
+        return $table->columns([
+            TextColumn::make('reference')->searchable()->locked(),
+            TextColumn::make('client_name')->searchable(),
+            BadgeColumn::make('stage'),
+            MoneyColumn::make('fees_billed')->currency('GBP'),
+        ])->filters([
+            SelectFilter::make('stage')->options(['intake', 'discovery', 'closed']),
+            QueryBuilderFilter::make('advanced'),
+        ]);
+    }
+}
+```
+
+Nothing in the package names an industry, and that is enforced rather than
+intended: `IndustryNeutralityTest` scans all 299 shipped PHP files, and
+`industry-neutral.spec.ts` scans the rendered markup of every packaged screen.
+Both fail the build if a domain's vocabulary reaches a string a user can read.
+
+**What is domain-specific is your `columns()` and `fields()`.** Everything else
+— pagination, filtering, search, sorting, saved views, exports, imports, trash,
+audit, permissions, tenancy, the command palette, the API — is the same code for
+a veterinary practice and a shipping line.
+
+## What ships with it, and what you write
+
+You write resources, pages and policies. You do **not** write: sign-in, password
+reset, two-factor, passkeys, user management, roles, the dashboard shell, the
+help centre, the changelog screen, trash, exports, imports, ticketing,
+announcements, backups, monitoring, or the settings screens. Those are 44
+packaged screens. Part 3 covers replacing any of them.
 
 ## The three things, and the rules for each
 
 | | What | May you edit it? |
 | --- | --- | --- |
-| **Your application** | the billing system you are building | **Yes.** This is your code |
+| **Your application** | whatever you are building | **Yes.** This is your code |
 | **The package** | `vendor/panelkit/panel` + `node_modules/@alxtexh-enterprise/panel` | **Never.** Wiped by every update |
 | **The demo** | `apps/playground` in the PanelKit monorepo | **Read and copy from.** Never depend on it |
 
@@ -44,7 +110,7 @@ every difference in Part 2.
 > Both are generated. `composer update` and `npm install` replace them wholesale.
 > An edit there works perfectly until the next update, then vanishes with no
 > error and no diff — the panel behaves differently and nothing in git explains
-> why. Everything is designed to be extended from *outside*; see Part 4.
+> why. Everything is designed to be extended from *outside*; see Part 3.
 
 ## The demo
 
@@ -56,8 +122,11 @@ is yours.
 git clone https://github.com/enterprisealxtexh/panelkit.git panelkit-reference
 ```
 
-It is itself an ISP panel — subscribers, plans, routers, invoices, ~250,000
-seeded rows — so for a billing system it is unusually close to what you want.
+**It happens to be an ISP panel** — customers, plans, routers, invoices, ~250,000
+seeded rows. That is a deliberate choice and not a constraint on you: a framework
+developed against a demo under real load finds what a toy cannot. Read it for the
+*shapes* — how a 250,000-row table paginates, how a policy denies, how a wizard
+is laid out — and rename the nouns.
 
 **Read `apps/playground/AGENTS.md` first.** It is generated by
 `php artisan panel:blueprint`, so it is always true for the version in front of
@@ -66,8 +135,7 @@ app gets its own `AGENTS.md` from `panel:install` — keep it regenerated and po
 your AI at it.
 
 **Do not**: add the demo as a composer path repository or npm dependency; copy
-its `.env`, seeders or `database/`; copy its ISP vocabulary into anything you
-will later want generic.
+its `.env`, seeders or `database/`; copy its vocabulary into your own screens.
 
 ---
 
@@ -79,8 +147,8 @@ carries `"private": true` so `npm publish` refuses.
 ## Into a new application
 
 ```bash
-laravel new isp-billing --vue
-cd isp-billing
+laravel new my-panel --vue
+cd my-panel
 ```
 
 `--vue` matters. `panel:install` writes page files into `resources/js/pages`,
@@ -200,7 +268,7 @@ application:
 
 ```bash
 cd /path/to/panelkit-reference/packages/ui
-npm pack --pack-destination /path/to/isp-billing/vendor-js
+npm pack --pack-destination /path/to/my-panel/vendor-js
 ```
 
 ```json
@@ -212,224 +280,22 @@ npm pack --pack-destination /path/to/isp-billing/vendor-js
 
 ---
 
-# Part 2 — Porting from Filament
-
-## The structural difference
-
-Filament renders on the server. Every interaction is a Livewire round-trip
-returning a component tree; a modal fetches its form when it opens.
-
-PanelKit sends the **schema once** and moves only data. Anything in your Filament
-code that assumes "the server will re-render this" needs re-expressing as "the
-client already has the schema".
-
-## The order that works
-
-Do **not** port resource-by-resource in whatever order they appear.
-
-1. **Stand PanelKit up beside Filament**, on a different path — `->path('panel')`
-   while Filament keeps `/admin`. Both run in one application; they share nothing
-   but the database.
-2. **Port one read-only resource end to end.** Your simplest lookup table, not
-   `Subscriber`. Proves the install, the policy shape and your build pipeline in
-   an afternoon.
-3. **Port the authorization model next**, before more resources. It is the thing
-   most likely to differ silently, and every later resource inherits it.
-4. **Then the big tables, largest first.** `Subscriber` at real row counts is
-   where the pagination pays for itself and where a wrong index shows up.
-5. **Then writes** — forms, actions, bulk operations.
-6. **Cut over one screen at a time** by changing a link. Keep Filament mounted
-   until nothing points at it.
-
-The database is shared, so a subscriber edited in one is edited in the other.
-
-## Structure mapping
-
-| Filament | PanelKit | Notes |
-| --- | --- | --- |
-| `Filament\Resources\Resource` | `PanelKit\Panel\Resources\Resource` | One class, same idea |
-| `getPages()` / a page class per resource | *(nothing)* | List, create, edit, view and trash are served from the schema |
-| `Filament\Pages\Page` | `PanelKit\Panel\Pages\Page` | `php artisan make:panel-page` |
-| `PanelProvider` / `->panel()` | `PanelKit\Panel\Panel` + `make:panel` | Registration, guard, path, middleware |
-| Cluster | Cluster | `->cluster()` on the resource |
-| `RelationManager` | `RelationManager` | `->relations()` on the resource |
-| Plugin | Plugin | `panel.plugins` config array |
-| Widget | `StatWidget` / `ChartWidget` on a `DashboardPage` | Declared by `stats()` and `charts()` |
-
-## Form fields — 24 shipped
-
-| Filament | PanelKit |
-| --- | --- |
-| `TextInput` | `TextField` |
-| `Textarea` | `TextareaField` |
-| `Select` | `SelectField` |
-| `Select::multiple()` | `MultiSelectField` |
-| `Checkbox` / `Toggle` | `ToggleField` |
-| `CheckboxList` | `CheckboxListField` |
-| `Radio` | `RadioField` |
-| `DatePicker` / `DateTimePicker` | `DateField` |
-| `FileUpload` | `FileUploadField` |
-| `RichEditor` | `RichEditorField` |
-| `MarkdownEditor` | `MarkdownField` |
-| `KeyValue` | `KeyValueField` |
-| `Repeater` | `RepeaterField` |
-| `Builder` | `BuilderField` |
-| `ColorPicker` | `ColourField` |
-| `TagsInput` | `TagsField` |
-| `Hidden` | **omit it** — see below |
-| — | `NumberField`, `PasswordField`, `SliderField`, `CodeField`, `CountryField`, `VisualSelectField` |
-
-**`Hidden` has no equivalent on purpose.** A hidden field is a value the client
-posts and the server trusts. Set it server-side in the resource's mutation — a
-field the browser never sees cannot be tampered with.
-
-`CountryField` ships 173 countries with ISO or dialling codes, which every
-billing system otherwise hand-rolls. `VisualSelectField` renders options as what
-they *do* rather than as words.
-
-## Table columns — 12 shipped
-
-| Filament | PanelKit |
-| --- | --- |
-| `TextColumn` | `TextColumn` |
-| `TextColumn::badge()` | `BadgeColumn` |
-| `IconColumn` | `IconColumn` |
-| `ImageColumn` | `ImageColumn` |
-| `ColorColumn` | `ColourColumn` |
-| `CheckboxColumn` | `CheckboxColumn` |
-| `ToggleColumn` | `ToggleColumn` |
-| `SelectColumn` | `SelectColumn` |
-| `TextInputColumn` | `EditableColumn` |
-| `TextColumn::money()` | `MoneyColumn` |
-
-**Read `MoneyColumn` before porting an invoice table.** It defaults to **minor
-units** — an integer count of the smallest unit, because a float drifts — takes a
-fixed currency or reads each row's own, and formats in the **viewer's** locale
-rather than the server's.
-
-## Filters
-
-| Filament | PanelKit |
-| --- | --- |
-| `SelectFilter` | `SelectFilter` |
-| `SelectFilter::multiple()` | `MultiSelectFilter` |
-| `TernaryFilter` | `BooleanFilter` |
-| `Filter` + date range | `DateRangeFilter` |
-| `TrashedFilter` | `TrashedFilter` |
-| `QueryBuilder` (visual) | **no equivalent** |
-
-## Actions
-
-| Filament | PanelKit |
-| --- | --- |
-| `Action` (row) | `RecordAction` |
-| `BulkAction` | `BulkAction` |
-| `ActionGroup` | `ActionGroup` |
-| `ReplicateAction` | `ReplicateAction` |
-| `DeleteAction` / `EditAction` / `ViewAction` | built in — the resource routes them |
-| `ExportAction` | filtered export, built in |
-| The other ~20 Filament action classes | write a `RecordAction`; they are presets over one mechanism |
-
-## Layout
-
-`Section`, `Grid`, `Tabs`, `Tab`, `Step`, `Wizard` — same names, same meaning.
-Filament's other layout classes are mostly styling wrappers; PanelKit's schema
-stays semantic and styling lives in the components.
-
-## What you write instead of what
-
-**Filament:**
-
-```php
-public static function form(Form $form): Form {
-    return $form->schema([ TextInput::make('name')->required() ]);
-}
-public static function table(Table $table): Table {
-    return $table->columns([ TextColumn::make('name')->searchable() ]);
-}
-```
-
-**PanelKit:**
-
-```php
-public static function form(): Schema {
-    return Schema::make([ TextField::make('name')->required() ]);
-}
-public static function table(): Table {
-    return Table::make()->columns([ TextColumn::make('name')->searchable() ]);
-}
-```
-
-**Generate the skeleton rather than hand-translating:**
-
-```bash
-php artisan make:panel-resource Subscriber --generate
-```
-
-That reads the table and writes columns, filters and fields from the real
-schema, plus a commented `->recordActions([..])` block *in the chain*. Paste your
-Filament customisations over it. Faster than translating a 400-line resource by
-hand, and it cannot get a column type wrong.
-
-## The three things that do not translate
-
-### A modal that builds its form at request time
-
-Filament fetches an action's form when the modal opens. PanelKit ships the schema
-with the action, so the modal opens with **no network request**.
-
-```php
-RecordAction::make('suspend')
-    ->form([ TextareaField::make('reason')->required() ])
-    ->authorize('suspend_subscribers')
-    ->handle(fn (Subscriber $s, array $data) => $s->suspend($data['reason']));
-```
-
-`form()` pairs with `handle()`, never with `mutate()`. An action without
-`authorize()` is **refused**, not permitted. If your Filament action computed its
-form from the record, declare the union and use `visibleWhen`.
-
-### Anything that re-renders on the server mid-interaction
-
-`->reactive()` and `->afterStateUpdated()` assume a round-trip. PanelKit has
-`visibleWhen` at field *and* section level, evaluated client-side from the schema.
-Conditional **display** ports; conditional **computation** needs an endpoint.
-
-### Blade views inside the panel
-
-`->view('filament.custom')` has no equivalent. Custom markup is a Vue component —
-a registered field control (`registerFieldControl`) or a render hook.
-
-## What Filament has that this does not
-
-Say these out loud before committing:
-
-- **Visual query builder.** No equivalent. Filters compose and saved views cover
-  most of its use, but ad-hoc field/operator/value building is not there.
-- **~20 preset action classes.** Presets over one mechanism; write a
-  `RecordAction` per case.
-- **Nine view-page entry types.** PanelKit's record page is flatter.
-- **The plugin ecosystem.** Filament has hundreds. **Audit which community
-  plugins you actually depend on before committing to the port — that is the
-  single largest hidden cost in this migration.**
-
-What PanelKit has that Filament does not: 12 chart types to Filament's 8, an
-in-panel changelog and environment editor, packaged ticketing, announcements,
-backups, monitoring, a document template designer, an AI assistant with retrieval
-over your own screens, and a REST API with OpenAPI.
-
 ---
 
-# Part 3 — Authorization
+# Part 2 — Authorization
 
-**Read this before porting resources. It will bite before anything else.**
+**Read this before writing resources. It will bite before anything else.**
 
-PanelKit denies by default, harder than Filament. A resource with no policy is
-readable by **nobody**. Filament's default is more permissive, so a resource that
-"worked" there can 403 everywhere here — that is correct behaviour surfacing, not
-a regression.
+PanelKit denies by default, and harder than most panels. A resource whose model
+has no policy is readable by **nobody** — not even an administrator. That is the
+intended behaviour, not a misconfiguration: a resource you forgot to authorise
+should be invisible rather than public.
 
-- Ability names are **derived** from the registry (`view_any_subscribers`), never
+If you are arriving from a panel with a more permissive default, expect screens
+that "worked" there to 403 here. That is the missing grant surfacing, not a
+regression.
+
+- Ability names are **derived** from the registry (`view_any_invoices`), never
   stored. Do not invent your own strings.
 - `make:panel-resource --generate` writes a policy extending
   `TenantResourcePolicy` that grants nothing on its own.
@@ -446,7 +312,7 @@ is a migration.
 
 ---
 
-# Part 4 — Extending
+# Part 3 — Extending
 
 ## Where your code goes
 
@@ -551,7 +417,7 @@ every route, link and menu entry.
 
 ---
 
-# Part 5 — Performance
+# Part 4 — Performance
 
 This is why you are moving. Do not undo it:
 
@@ -570,7 +436,7 @@ This is why you are moving. Do not undo it:
 
 ---
 
-# Part 6 — Upgrading
+# Part 5 — Upgrading
 
 ```bash
 composer update panelkit/panel
@@ -604,7 +470,7 @@ the changelog before each bump.
 
 ---
 
-# Part 7 — Deploying
+# Part 6 — Deploying
 
 The server needs two things, and **npm is not one of them**.
 
@@ -627,7 +493,7 @@ php artisan config:cache && php artisan route:cache
 
 ---
 
-# Part 8 — Traps that cost hours
+# Part 7 — Traps that cost hours
 
 - **The Composer package ships no `.vue` files.** If the panel installs and
   renders nothing, the npm half is missing. Nothing about this failure says so:
@@ -663,29 +529,36 @@ php artisan config:cache && php artisan route:cache
 
 ---
 
-# Part 9 — Cutover checklist
+# Part 8 — Before it carries real work
 
-- [ ] `panel:doctor` green
-- [ ] `panel:benchmark` inside budget on **production-sized** data
-- [ ] Every resource has a policy that denies by default
+Whatever the domain, before the first person who is not you depends on it:
+
+- [ ] `panel:doctor` green, and in the deploy pipeline with its exit code
+- [ ] `panel:benchmark` inside budget on **production-sized** data, not seeds
+- [ ] Every resource has a policy, and the policy denies by default
 - [ ] Tenancy mode decided and migrated; cross-tenant isolation tested
-- [ ] Every filter has an index
-- [ ] Community Filament plugins either replaced or consciously dropped
-- [ ] Assets built **before** deploy
-- [ ] A deploy key so composer can reach the private repo
-- [ ] Both panels live; links moved one screen at a time
-- [ ] Invoices from both panels reconciled against each other
-- [ ] Filament removed only once nothing points at it
+- [ ] Every filterable column has an index
+- [ ] Assets built **before** the deploy, never on the server
+- [ ] A deploy key so composer can reach the private repository
+- [ ] Every screen opened once in a browser by a person
+
+**If you are replacing an existing system**, add these:
+
+- [ ] Both run side by side, sharing the database, on different paths
+- [ ] Links moved one screen at a time, not in one release
+- [ ] The numbers each produces reconciled against the other
+- [ ] The old panel removed only once nothing points at it
+- [ ] Anything the old panel had that this does not — plugins, integrations,
+      reports — either replaced or consciously dropped, in writing
 
 ---
 
-# Part 10 — The honest risk list
+# Part 9 — The honest risk list
 
-You are moving a **live billing system**, so these matter more than they would
-elsewhere:
+Read this before deciding what to trust it with.
 
 - **PanelKit has no production history.** Not one real user, tenant or outage
-  before yours. The 1,744 tests check my assumptions; they cannot check the ones
+  before yours. The 2,072 tests check my assumptions; they cannot check the ones
   I did not think of.
 - **No external security review.** The cross-tenant isolation matrix and the
   authorisation tests are mine.
@@ -693,12 +566,20 @@ elsewhere:
 - **It is `0.x`.** The minor is the breaking position.
 - **Nothing is published**, so there is no external validation and no other
   consumer hitting bugs before you do.
-- **Billing is the worst domain in which to discover a framework bug.**
-  Reconcile invoices produced by both panels against each other throughout the
-  overlap, and keep that comparison running until you trust it.
 
-None of this is a reason not to do it. They are reasons to keep Filament mounted
-longer than feels necessary, and to cut the money screens over last.
+**What this means in practice depends on what the panel holds.** A read-only
+internal dashboard and a system that moves money are not the same bet:
+
+- **If it holds money, stock, health records, or anything legally binding** —
+  run it beside whatever you have now, in read-only, until the numbers agree.
+  Start with a low-stakes resource. Verify amounts by eye on **both** the list
+  and the record page; that exact pair disagreed once, with the list showing
+  `2,500.00` and the record page showing `250000`, and it passed 1,700 tests.
+- **If it is an internal tool over data you can restore** — the risk is an
+  afternoon, and the checklist above is enough.
+
+None of this is a reason not to use it. They are reasons to keep the old thing
+running longer than feels necessary, and to move the screens that matter last.
 
 ---
 

@@ -664,4 +664,68 @@ return [
     'saved_views' => [
         'model' => SavedView::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Release notes, shown in the panel at /whats-new
+    |--------------------------------------------------------------------------
+    |
+    | THE PACKAGE SHIPS THE SCREEN; THE CONTENT IS THIS APPLICATION'S. A
+    | framework that shipped its own release notes would put PanelKit's version
+    | history on somebody else's operations screen - true of the framework and
+    | meaningless to the person reading it.
+    |
+    | WHY THIS BLOCK EXISTS AT ALL. `ChangelogPage::isEnabled()` returns false
+    | when there are no releases, which is right - a menu entry to an empty page
+    | reads as a broken screen. But this application declared none, so the
+    | packaged page was never routed, and the only thing at `/whats-new` was a
+    | redirect to a `/changelog` that no route served. A packaged screen with
+    | no consumer, and a link to a 404, in the same URL. Neither failed a test
+    | until a browser opened every route in the application.
+    |
+    | Written as an operator would read it: what changed, grouped by kind, most
+    | recent first. Not a commit log.
+    */
+    'changelog' => [
+        [
+            'version' => '2.4',
+            'date' => 'August 2026',
+            'highlight' => 'Advanced filtering, and money that reads the same everywhere.',
+            'added' => [
+                'Build a nested condition with Advanced query in the filter panel - group rules with match all or match any, up to five levels deep.',
+                'Scatter and bubble charts on the dashboard, for comparing two measures against each other rather than one over time.',
+            ],
+            'changed' => [
+                'A record page now shows every column at the same formatting as the list it came from.',
+            ],
+            'fixed' => [
+                'Amounts on a record page showed unformatted values - 250000 where the list correctly showed 2,500.00.',
+            ],
+        ],
+        [
+            'version' => '2.3',
+            'date' => 'July 2026',
+            'highlight' => 'Tickets, end to end.',
+            'added' => [
+                'Raise a ticket, reply to it, and keep internal notes that the person who opened it never sees.',
+                'Departments, so a ticket reaches the team that handles it rather than everybody.',
+                'A first-response clock and an SLA due time on every open ticket.',
+            ],
+            'fixed' => [
+                'Deleting many records at once now tells you how many will go before it commits anything.',
+            ],
+        ],
+        [
+            'version' => '2.2',
+            'date' => 'June 2026',
+            'highlight' => 'Everything you deleted is in one place.',
+            'added' => [
+                'Trash collects removed records from every screen, with restore and permanent delete.',
+                'Saved views: keep a set of filters, columns and sorting under a name you choose.',
+            ],
+            'changed' => [
+                'The sidebar moved rarely-used entries into the account menu.',
+            ],
+        ],
+    ],
 ];

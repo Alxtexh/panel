@@ -211,16 +211,16 @@ Then `http://localhost:8000`. `make help` lists everything.
 
 ## Status
 
-**v0.6.2.** [FEATURES.md](FEATURES.md) is the inventory — what the *package*
-gives you, kept separate from what the demo shows.
+**v0.9.5.** [PANELKIT.md](PANELKIT.md) is the guide — install, build, deploy,
+upgrade, and the traps. [FEATURES.md](FEATURES.md) is the inventory of what the
+*package* gives you, kept separate from what the demo shows.
 [CHANGELOG.md](CHANGELOG.md) is what each release changed, and
-[UPGRADING.md](UPGRADING.md) is how to move between them.
+[UPGRADING.md](UPGRADING.md) is how to move between them. Porting a Filament
+panel: [FILAMENT_TO_PANELKIT.md](FILAMENT_TO_PANELKIT.md).
 
-Phases 0–9 of [panelbuilder.md](panelbuilder.md) are built, with
-[panel_antipatterns.md](panel_antipatterns.md) and
-[panelkit addendum 01.md](panelkit%20addendum%2001.md) applied. See
-[PLAN.md](PLAN.md) for the route through them and what each new document
-changed.
+The planning documents this was built from are in
+[docs/notes/](docs/notes/README.md). They are history rather than guidance —
+kept for the reasoning behind decisions, not to be followed.
 
 **Known gaps**, stated rather than implied:
 

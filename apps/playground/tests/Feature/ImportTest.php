@@ -12,7 +12,6 @@ use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 use PanelKit\Panel\Imports\CsvReader;
 use PanelKit\Panel\Imports\Importer;
@@ -321,19 +320,54 @@ final class ImportTest extends TestCase
         $this->assertSame(0, Client::query()->count(), 'Not even the good row.');
     }
 
+    /**
+     * AN OPERATOR WITHOUT THE GRANT IS REFUSED.
+     *
+     * THIS TEST USED TO PASS FOR THE WRONG REASON, and it is worth writing down
+     * because the shape recurs. It posted to `/plans/import` with a comment
+     * explaining that "Plans declares no form, so it has nothing to import
+     * into - a different refusal". Which was true, and meant the assertion
+     * never reached a permission check at all: the controller 404s any resource
+     * with no form, long before it asks who is calling. A test named "without
+     * create permission cannot import" was asserting that an unrelated screen
+     * was unimportable.
+     *
+     * It stopped passing the moment `PlanResource` gained a form - not because
+     * authorisation broke, but because the 404 it depended on went away and the
+     * real path finally ran.
+     *
+     * THE SECOND HALF OF THE TRAP: the "stranger" was an administrator.
+     * `User::factory()` deliberately grants an Administrator role - it says so
+     * at length - so a test about a REFUSAL must opt out with `roleless()`. It
+     * did not. Both faults pointed the same way, and each hid the other.
+     */
     public function test_a_user_without_create_permission_cannot_import(): void
     {
-        $this->travel(0); // no-op; keeps the intent explicit below
-
-        Gate::define('create', fn (): bool => false);
-
-        $stranger = User::factory()->create(['tenant_id' => $this->tenant->id]);
+        $stranger = User::factory()->roleless()->create(['tenant_id' => $this->tenant->id]);
 
         $this->actingAs($stranger);
 
-        // Plans declares no form, so it has nothing to import into - a
-        // different refusal, and the one that applies without a policy stub.
-        $this->post('/plans/import', [
+        $this->post('/clients/import', [
+            'file' => $this->validCsv(),
+            'mapping' => $this->validMapping(),
+        ])->assertForbidden();
+
+        $this->assertSame(0, Client::query()->count(), 'A refused import still wrote rows.');
+    }
+
+    /**
+     * A RESOURCE WITH NO FORM IS NOT IMPORTABLE, which is the other refusal the
+     * test above used to be accidentally covering.
+     *
+     * Worth keeping as its own test now that it is deliberate: there is nothing
+     * to map columns ONTO, so the endpoint has no meaning for that resource
+     * whoever is asking.
+     */
+    public function test_a_resource_with_no_form_has_nothing_to_import_into(): void
+    {
+        // `ActivityResource` is a read-only audit list - it declares columns and
+        // no form, which is exactly the case this refusal is for.
+        $this->post('/activities/import', [
             'file' => $this->validCsv(),
             'mapping' => ['Name' => 'name'],
         ])->assertNotFound();

@@ -21,9 +21,9 @@
  * Emits only. Never fetches (spec §4 rule 2).
  */
 import { computed, ref, watch } from 'vue'
-import PkQueryBuilder from './PkQueryBuilder.vue'
 import PkDropdown from '../primitives/PkDropdown.vue'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
+import PkQueryBuilder from './PkQueryBuilder.vue'
 import type { FilterSchema } from './types'
 
 const props = withDefaults(
