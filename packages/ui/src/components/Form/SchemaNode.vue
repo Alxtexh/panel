@@ -23,7 +23,17 @@ import type { UploadedFileValue } from './PkFileUpload.vue'
 import type { FormField } from './types'
 
 export interface SchemaNode {
-    component: 'field' | 'section' | 'grid' | 'tabs' | 'tab' | 'wizard' | 'step'
+    component:
+        | 'field'
+        | 'section'
+        | 'grid'
+        | 'flex'
+        | 'fieldset'
+        | 'callout'
+        | 'tabs'
+        | 'tab'
+        | 'wizard'
+        | 'step'
     children?: SchemaNode[]
     label?: string
     description?: string
@@ -31,6 +41,14 @@ export interface SchemaNode {
     collapsible?: boolean
     collapsed?: boolean
     icon?: string | null
+    /** `flex` */
+    align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline'
+    gap?: 'sm' | 'md' | 'lg'
+    wrap?: boolean
+    /** `callout` */
+    tone?: 'info' | 'success' | 'warning' | 'danger'
+    body?: string
+    title?: string
     [key: string]: any
 }
 
@@ -80,6 +98,51 @@ const wizardSteps = computed(() =>
 )
 
 const isRoot = computed(() => props.depth === 0)
+
+/**
+ * The row's cross-axis alignment and gap, mapped from the schema.
+ *
+ * A MAP RATHER THAN INTERPOLATION. `items-${node.align}` would produce a class
+ * Tailwind never generated, because Tailwind scans for literal strings and
+ * cannot see one built at runtime - so the row would silently lose its
+ * alignment and nothing would report it.
+ */
+const flexClass = computed(() => {
+    const align: Record<string, string> = {
+        start: 'items-start',
+        center: 'items-center',
+        end: 'items-end',
+        stretch: 'items-stretch',
+        baseline: 'items-baseline',
+    }
+
+    const gap: Record<string, string> = { sm: 'gap-2', md: 'gap-4', lg: 'gap-6' }
+
+    return [
+        align[props.node.align ?? 'start'] ?? 'items-start',
+        gap[props.node.gap ?? 'md'] ?? 'gap-4',
+        props.node.wrap === false ? 'flex-nowrap' : 'flex-wrap',
+    ]
+})
+
+/**
+ * A callout's tone.
+ *
+ * DANGER AND VALIDATION ERRORS DO NOT SHARE STYLING. An authored warning that
+ * borrowed the error colours would teach people to read red as "I typed
+ * something wrong" and dismiss it - so danger is a filled, bordered surface
+ * rather than the bare red text an invalid field gets.
+ */
+const calloutClass = computed(() => {
+    const tones: Record<string, string> = {
+        info: 'border-border bg-muted/50 text-foreground',
+        success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200',
+        warning: 'border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200',
+        danger: 'border-destructive/30 bg-destructive/10 text-destructive',
+    }
+
+    return tones[props.node.tone ?? 'info'] ?? tones.info
+})
 
 const gridClass = computed(() => {
     const columns = props.node.columns ?? 1
@@ -257,6 +320,77 @@ function uploadFor(key: string) {
             :depth="depth + 1"
             @change="(key: string, value: unknown) => emit('change', key, value)"
         />
+    </div>
+
+    <!--
+        Flex: a row of things that are NOT the same size. A grid would give the
+        short one an equal column and leave it floating in whitespace.
+    -->
+    <div v-else-if="node.component === 'flex'" class="flex" :class="flexClass">
+        <SchemaNode
+            v-for="(child, i) in node.children ?? []"
+            :key="i"
+            :node="child"
+            :values="values"
+            :errors="errors"
+            :options="options"
+            :processing="processing"
+            :search-options="searchOptions"
+            :upload="upload"
+            :discard="discard"
+            :depth="depth + 1"
+            @change="(key: string, value: unknown) => emit('change', key, value)"
+        />
+    </div>
+
+    <!--
+        Fieldset: a named part of the surface it is already on, not a new one.
+
+        A REAL `<fieldset>` AND `<legend>`, not a styled div. A screen reader
+        announces the legend before every control inside, so "Line 1" is heard
+        as "Billing address, Line 1" - which is the whole reason this element
+        exists. The visual grouping is the smaller half of what it does.
+    -->
+    <fieldset v-else-if="node.component === 'fieldset'" class="flex flex-col gap-3">
+        <legend class="text-sm font-medium">{{ node.label }}</legend>
+
+        <p v-if="node.description" class="text-muted-foreground -mt-2 text-sm">
+            {{ node.description }}
+        </p>
+
+        <div class="grid grid-cols-1 gap-4" :class="gridClass">
+            <SchemaNode
+                v-for="(child, i) in node.children ?? []"
+                :key="i"
+                :node="child"
+                :values="values"
+                :errors="errors"
+                :options="options"
+                :processing="processing"
+                :search-options="searchOptions"
+                :upload="upload"
+                :discard="discard"
+                :depth="depth + 1"
+                @change="(key: string, value: unknown) => emit('change', key, value)"
+            />
+        </div>
+    </fieldset>
+
+    <!--
+        Callout: a consequence, stated where the control that causes it is.
+
+        `role="note"` RATHER THAN `alert`. An alert interrupts a screen reader
+        mid-sentence, which is right for something that just went wrong and
+        wrong for text that has been on the page since it loaded.
+    -->
+    <div
+        v-else-if="node.component === 'callout'"
+        role="note"
+        class="rounded-lg border px-4 py-3 text-sm"
+        :class="calloutClass"
+    >
+        <p v-if="node.title" class="mb-1 font-medium">{{ node.title }}</p>
+        <p>{{ node.body }}</p>
     </div>
 
     <!-- Tabs. -->

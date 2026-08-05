@@ -125,3 +125,121 @@ describe('SchemaNode - wizard', () => {
         expect(wrapper.find('[aria-label="has errors"]').exists()).toBe(true)
     })
 })
+
+/**
+ * The layout components that closed the Filament gap: flex, fieldset, callout.
+ *
+ * THESE ASSERT MARKUP, NOT THAT IT MOUNTS. A `component` string no branch in
+ * SchemaNode claims falls through every `v-else-if` and renders NOTHING - with
+ * the children it was handed, silently. "It mounted" passes that; "it produced
+ * a `<fieldset>`" does not.
+ */
+function layout(node: Record<string, unknown>) {
+    return mount(SchemaNode, {
+        props: { node: node as never, values: {} },
+    }).html()
+}
+
+describe('SchemaNode - flex', () => {
+    it('is a wrapping row by default', () => {
+        const html = layout({ component: 'flex', children: [] })
+
+        expect(html).toContain('flex')
+        expect(html).toContain('flex-wrap')
+    })
+
+    it('maps align and gap onto real classes', () => {
+        const html = layout({ component: 'flex', align: 'end', gap: 'lg', children: [] })
+
+        expect(html).toContain('items-end')
+        expect(html).toContain('gap-6')
+    })
+
+    /**
+     * THE LOOKUP MAP IS THE POINT. `items-${align}` compiles and then emits a
+     * class Tailwind never generated - it scans for literal strings and cannot
+     * see one built at runtime - so the row loses its alignment with nothing
+     * reporting it. An unknown value must fall back to a class that exists.
+     */
+    it('falls back to a real class for an alignment it does not know', () => {
+        const html = layout({ component: 'flex', align: 'nonsense', children: [] })
+
+        expect(html).toContain('items-start')
+        expect(html).not.toContain('items-nonsense')
+    })
+
+    it('stops wrapping when asked', () => {
+        expect(layout({ component: 'flex', wrap: false, children: [] })).toContain('flex-nowrap')
+    })
+})
+
+describe('SchemaNode - fieldset', () => {
+    /**
+     * A REAL `<fieldset>` AND `<legend>`, which is most of why it exists. A
+     * screen reader announces the legend before every control inside, so
+     * "Line 1" is heard as "Billing address, Line 1". A styled div groups it
+     * visually and tells a blind user nothing.
+     */
+    it('renders a fieldset with a legend, not a styled div', () => {
+        const html = layout({ component: 'fieldset', label: 'Billing address', children: [] })
+
+        expect(html).toContain('<fieldset')
+        expect(html).toContain('<legend')
+        expect(html).toContain('Billing address')
+    })
+
+    it('shows a description when given one', () => {
+        const html = layout({
+            component: 'fieldset',
+            label: 'Billing address',
+            description: 'Where invoices are sent.',
+            children: [],
+        })
+
+        expect(html).toContain('Where invoices are sent.')
+    })
+})
+
+describe('SchemaNode - callout', () => {
+    it('renders its body and title', () => {
+        const html = layout({
+            component: 'callout',
+            title: 'Heads up',
+            body: 'Saving this emails every customer on the plan.',
+        })
+
+        expect(html).toContain('Heads up')
+        expect(html).toContain('Saving this emails every customer on the plan.')
+    })
+
+    /**
+     * `role="note"`, NOT `alert`. An alert interrupts a screen reader
+     * mid-sentence - right for something that just went wrong, wrong for text
+     * that has been on the page since it loaded.
+     */
+    it('is a note rather than an alert', () => {
+        const html = layout({ component: 'callout', body: 'Heads up.' })
+
+        expect(html).toContain('role="note"')
+        expect(html).not.toContain('role="alert"')
+    })
+
+    /**
+     * DANGER DOES NOT BORROW THE VALIDATION-ERROR LOOK. An authored warning
+     * wearing the same bare red as an invalid field teaches people to read red
+     * as "I typed something wrong" and dismiss it - and the one time it means
+     * "this cannot be undone" it reads like the other twelve.
+     */
+    it('gives danger its own surface', () => {
+        const html = layout({ component: 'callout', body: 'Deletes everything.', tone: 'danger' })
+
+        expect(html).toContain('bg-destructive/10')
+        expect(html).toContain('border-destructive/30')
+    })
+
+    it('falls back to info for a tone it does not know', () => {
+        expect(layout({ component: 'callout', body: 'Hm.', tone: 'chartreuse' })).toContain(
+            'bg-muted/50',
+        )
+    })
+})

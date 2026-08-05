@@ -628,7 +628,7 @@ _How to use them: name them in `table()`._
 _How to use them: name them in `table()`._
 **Actions** (7): `ActionGroup` `BulkAction` `BulkRunner` `ExportedFile` `JobStatus` `RecordAction` `ReplicateAction`
 _How to use them: name them in `table()` or the resource's actions._
-**Schema (form layout)** (8): `Component` `Grid` `Renderable` `Section` `Step` `Tab` `Tabs` `Wizard`
+**Schema (form layout)** (11): `Callout` `Component` `Fieldset` `Flex` `Grid` `Renderable` `Section` `Step` `Tab` `Tabs` `Wizard`
 _How to use them: wrap fields with them inside `form()`._
 **Dashboard widgets** (9): `Bucket` `ChartWidget` `DashboardFilters` `Period` `Rollup` `StatWidget` `TimeSeries` `Trend` `Window`
 _How to use them: **declare them on a `DashboardPage`, which is what draws them.** `php artisan make:panel-page Overview --dashboard` writes one; its `stats()` and `charts()` return these classes and the packaged `PanelDashboard` screen renders them, each as its own deferred prop. A widget built anywhere else is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 that was true of every widget, which is why this line exists._

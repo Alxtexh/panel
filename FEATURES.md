@@ -9,7 +9,7 @@ Those are not the same thing, by a wide margin:
 
 |     | package (installed)     | reference app only      |
 | --- | ----------------------- | ----------------------- |
-| PHP | 293 files, 51,660 lines | 90 files, 13,027 lines |
+| PHP | 296 files, 51,660 lines | 90 files, 13,027 lines |
 | Vue | 275 components          | **80 components**       |
 
 The Vue column inverted in v0.6.3, and that is the headline. The demo used to
@@ -42,12 +42,27 @@ trash are all served from the schema that class declares.
 ### Forms — 24 field types
 
 `Text` `Textarea` `Number` `Password` `Select` `MultiSelect` `Radio`
-`CheckboxList` `Toggle` `Date` `Slider` `Tags` `Colour` `Code` `Markdown`
-`RichEditor` `FileUpload` `KeyValue` `Repeater` `Builder` `VisualSelect`
-`Field` `HasChoices` `Country` (ISO or dialling code, 173 countries)
+`Checkbox` `CheckboxList` `Toggle` `Hidden` `Date` `Slider` `Tags` `Colour`
+`Code` `Markdown` `RichEditor` `FileUpload` `KeyValue` `Repeater` `Builder`
+`VisualSelect` `Country` (ISO or dialling code, 173 countries)
 
-Layout comes from `Schema`: `Section` `Grid` `Tabs` `Tab` `Step` `Wizard`,
-with `visibleWhen` at section level.
+**`Toggle` and `Checkbox` are different controls**, and both names describe
+what they draw. A switch is a setting and reads as state — "Notifications: on".
+A checkbox is an assertion you tick while filling a form in — "I confirm this".
+Same column, same `boolean`; the choice is about the sentence beside it.
+
+**`Hidden` is not a security boundary.** The client can see and change it, so
+anything that must be true when the record is written belongs in the endpoint.
+
+Layout comes from `Schema`: `Section` `Grid` `Flex` `Fieldset` `Callout`
+`Tabs` `Tab` `Step` `Wizard`, with `visibleWhen` at section level.
+
+`Fieldset` renders a real `<fieldset>`/`<legend>`, so a screen reader announces
+"Billing address, Line 1" rather than "Line 1". `Flex` is a row of things that
+are *not* the same size, where a `Grid` would give the short one an equal column
+and leave it in whitespace. `Callout` states a consequence beside the control
+that causes it — `role="note"`, never `alert`, and `danger` never borrows the
+validation-error look.
 
 ### Tables — 12 column types, 6 filters
 

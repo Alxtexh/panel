@@ -34,7 +34,7 @@ PanelKit's `Field`, `Column` and `Filter` base classes and its `HasChoices` /
 | Form fields | **24** | 20 | none |
 | Table columns | **11** | 8 | none |
 | Table filters | **5** | 5 | 1 — visual query builder |
-| Layout components | **6** | 7 | 3 — `Flex`, `Fieldset`, `Callout` |
+| Layout components | **9** | 7 | none |
 | Chart types | **9** | 8 | 2 — bubble, scatter |
 | View-page entry types | **9** | 7 | 2 — `CodeEntry`, `KeyValueEntry` |
 | Prebuilt action classes | 4 + subsystems | 9 | none functionally |
@@ -142,7 +142,7 @@ usually cover the intent.
 
 ---
 
-## 4. Layout components — 6 vs 7, three gaps
+## 4. Layout components — 9 vs 7, no gaps
 
 | Filament | PanelKit |
 |---|---|
@@ -150,12 +150,26 @@ usually cover the intent.
 | `Section` | `Section` ✅ with `visibleWhen` |
 | `Tabs` | `Tabs` + `Tab` ✅ |
 | `Wizard` | `Wizard` + `Step` ✅ |
-| `Fieldset` | — ❌ `Section` covers most uses |
-| `Flex` | — ❌ |
-| `Callout` | — ❌ an inline notice inside a form |
+| `Fieldset` | `Fieldset` ✅ |
+| `Flex` | `Flex` ✅ |
+| `Callout` | `Callout` ✅ |
 
-None structural. `Fieldset` is a `Section` without a card, `Flex` is a row,
-`Callout` is a styled paragraph.
+**All three closed in 0.9.5**, and two are more than styling:
+
+- **`Fieldset` renders a real `<fieldset>` and `<legend>`**, not a styled div.
+  A screen reader announces the legend before every control inside, so "Line 1"
+  is heard as "Billing address, Line 1" — which is why the element exists. The
+  visual grouping is the smaller half of what it does. Use it *inside* a
+  `Section`: nesting sections gives a card inside a card, which reads as two
+  things when it is one thing with a part named.
+- **`Flex` is a row of things that are not the same size.** A `Grid` gives every
+  child an equal column, which is right for form fields and leaves a short code
+  beside a long description floating in whitespace.
+- **`Callout` is a consequence stated where the control that causes it is** —
+  "saving this emails every customer" belongs beside the plan selector, not in a
+  toast afterwards. It is `role="note"`, never `alert`, and `danger` gets its
+  own surface rather than borrowing the validation-error look, so people do not
+  learn to read red as "I typed something wrong" and dismiss it.
 
 ---
 
