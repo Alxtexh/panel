@@ -211,7 +211,7 @@ Then `http://localhost:8000`. `make help` lists everything.
 
 ## Status
 
-**v0.9.5.** [PANELKIT.md](PANELKIT.md) is the guide — install, build, deploy,
+**v0.9.6.** [PANELKIT.md](PANELKIT.md) is the guide — install, build, deploy,
 upgrade, and the traps. [FEATURES.md](FEATURES.md) is the inventory of what the
 *package* gives you, kept separate from what the demo shows.
 [CHANGELOG.md](CHANGELOG.md) is what each release changed, and

@@ -10,13 +10,13 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.9.5"
+"panelkit/panel": "^0.9.6"
 ```
 
-Composer reads `^0.9.5` on a `0.x` package as `>=0.9.5 <0.10.0`, which is what you
+Composer reads `^0.9.6` on a `0.x` package as `>=0.9.6 <0.10.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
-The two packages are **versioned together**. `panelkit/panel@0.9.5` expects
+The two packages are **versioned together**. `panelkit/panel@0.9.6` expects
 `@alxtexh-enterprise/panel@0.9.x` on npm, and the PHP half's schema payload is
 the contract between them. Mixing minors is not tested and the failure is a
 rendered screen with a missing control, not an error.
@@ -113,6 +113,39 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.9.5 → 0.9.6
+
+```bash
+composer update panelkit/panel
+npm install ./vendor/panelkit/panel/client/panelkit-client.tgz
+php artisan panel:update
+npm run build
+php artisan panel:doctor
+```
+
+**No config keys, no migrations, nothing breaking.** Every change is a fix, a
+guard, or documentation.
+
+**RE-RUN THE `npm install` LINE, and this release is the reason it matters.**
+The client tarball shipped inside 0.9.5 had been packed before a day of client
+work and never repacked — so a 0.9.5 installation is running current PHP against
+an older client. It does not error: the PHP sends a schema naming controls the
+Vue does not know about, and those controls are quietly absent. If a filter,
+chart or column has looked missing on 0.9.5 rather than broken, that is why, and
+this upgrade fixes it.
+
+**One behaviour changed, and it is a fix you may notice.** An unticked checkbox
+or an off toggle now writes `false` when the key is absent from the request,
+instead of leaving the stored value alone. PanelKit's own screens always submit
+the key, so nothing changes for them. **If you post to a resource endpoint from
+a form you built yourself, or from a script, an omitted boolean now clears the
+column rather than preserving it** — which is what an unticked box has always
+meant in HTML, and was the bug. Send the key explicitly if you relied on the old
+behaviour.
+
+**`/whats-new` now serves the packaged changelog screen** rather than 404ing,
+once `panel.changelog` has releases in it. It hides itself when empty.
 
 ### 0.9.4 → 0.9.5
 

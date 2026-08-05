@@ -8,6 +8,81 @@ UNDER: entries before 0.9.0 say `@panelkit/panel`, entries before 0.8.0 name
 `@panelkit/ui` and `@panelkit/inertia`, which is what there were. Rewriting them
 would make this a record of a history that did not happen.
 
+## 0.9.6
+
+**Nothing here is breaking.** Every change is a fix, a guard, or documentation.
+
+### Fixed
+
+- **The vendored client tarball was a day behind the source it shipped beside.**
+  `packages/panel/client/panelkit-client.tgz` is the client half, committed
+  inside the Composer package so the two halves cannot arrive at different
+  versions. It had been packed before a day of client work and never repacked,
+  so an installation would have received current PHP and the previous state of
+  the Vue. The existing guard compared only the VERSION inside the archive, and
+  the version had not changed - development drift is same-version by definition.
+  `ClientTarballTest` now compares the archive against the working tree byte for
+  byte over `inertia/` and `src/`.
+- **`/whats-new` was a link to a 404, and it blocked the real screen.** The demo
+  redirected it to `/changelog`, which no route has ever served, while the
+  packaged `ChangelogPage` declares `whats-new` as its own slug - so the entry
+  went nowhere and the working screen could never take the URI. Nothing linked
+  to the route, so nothing ever opened it.
+- **An unticked checkbox left the stored value alone instead of setting false.**
+  `Form::sanitize()` skips keys the request does not carry, which is right for a
+  blank password and wrong for a tick box, because an unticked box submits
+  nothing at all. Unticking a setting, saving, and being told it saved left the
+  setting on. PanelKit's own client always submits the key so this never fired
+  inside the panel; it fired for anyone posting from a form they built
+  themselves. `Field::absentMeans()` fixes it for `CheckboxField` and
+  `ToggleField` and changes nothing else.
+- **`HiddenField` could not be declared** - it overrode `label()` as a getter
+  against a parent that declares it as a setter, which PHP refuses to load, so
+  any screen declaring one died at construction.
+- **`ChartWidget` refused `scatter` and `bubble`**, so a shipped, tested and
+  exported chart component could not be reached by any application.
+- **The monitoring page's 24-hour block never showed the current value** - four
+  sparklines under a heading reading "Last 24 hours", and no number for now.
+
+### Added
+
+- **`Field::absentMeans()`** - a field may declare what a missing key means.
+  Defaults to "nothing", so every existing field writes exactly as before.
+- **A plan form in the reference app**, giving `CheckboxField` and `HiddenField`
+  their first consumer, and **a scatter chart on its dashboard**.
+
+### Guards
+
+These exist because each caught something real, or because the thing it watches
+has already failed once:
+
+- **`IndustryNeutralityTest`** - the PHP half is now checked for the reference
+  application's vocabulary the way the Vue half already was. It reads string
+  literals out of all 299 shipped files and ignores comments.
+- **`EveryScreenRendersTest` and `EveryScreenRespondsTest`** - 63 screens, up
+  from 15, derived from the router and the resource registry rather than typed
+  out. One asks whether a screen ANSWERS, the other whether it DREW; a blank
+  page answers 200 and a 404 page is full of text, so neither sees what the
+  other does. The dead `/whats-new` link was found on the first run.
+- **`GuideExamplesTest`** - every class and method in every PHP example in
+  `PANELKIT.md` has to exist. Written because an example called
+  `BadgeColumn::colours()`, which does not.
+
+### Documentation
+
+- **`PANELKIT.md` is no longer addressed to somebody leaving Filament.** It
+  opens with the same resource written twice, for a veterinary practice and a
+  law firm, and the porting material moved to `FILAMENT_TO_PANELKIT.md` where it
+  belongs - with the side-by-side ordering and plugin audit that were only in
+  the guide.
+- **The upgrade instructions were wrong**, and had been for several releases:
+  they told you to build the client tarball from the monorepo and install it out
+  of `/tmp`, on a server that has no monorepo. It installs from
+  `./vendor/panelkit/panel/client/panelkit-client.tgz`.
+- **Eight planning documents moved to `docs/notes/`** - 6,650 lines at the
+  repository root, five times the length of the guide, with nothing marking them
+  as history.
+
 ## 0.9.5
 
 **Every row of the Filament comparison is now closed.** Six pieces of work,

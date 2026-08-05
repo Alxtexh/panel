@@ -6,7 +6,7 @@ for any domain.**
 Everything is here: install, build, deploy, upgrade, and the traps. Nothing else
 needs to be carried.
 
-Current version: **v0.9.5**. 44 packaged screens, 2,072 tests passing, verified
+Current version: **v0.9.6**. 44 packaged screens, 2,076 tests passing, verified
 installing into a fresh Laravel application.
 
 Coming from FilamentPHP? **[FILAMENT_TO_PANELKIT.md](FILAMENT_TO_PANELKIT.md)**
@@ -480,7 +480,7 @@ npm run build
 
 Then migrate when you have decided to: `php artisan migrate`.
 
-PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.5` and read
+PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.6` and read
 the changelog before each bump.
 
 ---
