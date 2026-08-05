@@ -440,12 +440,27 @@ This is why you are moving. Do not undo it:
 
 ```bash
 composer update panelkit/panel
-# rebuild the tarball from the monorepo, then:
-npm install /tmp/alxtexh-enterprise-panel-<version>.tgz
+
+# The client half is INSIDE the package you just updated. Re-run this every
+# time - the path never changes, so the same line always installs the client
+# that matches the PHP now on disk.
+npm install ./vendor/panelkit/panel/client/panelkit-client.tgz
+
 php artisan panel:update
 php artisan wayfinder:generate --with-form
 npm run build
 ```
+
+> **The `npm install` line is not optional and is the step people skip**, because
+> `composer update` alone leaves a panel that boots, answers every route, and
+> serves the *previous* version's screens. It does not error. The PHP sends a
+> schema naming controls the old Vue does not know about, and those controls are
+> silently absent — a working-looking panel missing a filter or a chart.
+>
+> Earlier instructions here said to build the tarball from the monorepo and
+> install it from `/tmp`. That has not been true since the client began shipping
+> inside the Composer package, and the two halves of this document disagreed for
+> several releases.
 
 **`panel:update` is not optional.** It:
 
