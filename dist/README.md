@@ -1,45 +1,39 @@
-# Built tarballs of `@alxtexh-enterprise/panel`
+# Build artifacts
 
-**Why binaries are committed here.** The npm half is private — it is not on
-npmjs.com, and `packages/ui/package.json` carries `"private": true` so
-`npm publish` refuses. That leaves it with no distribution channel at all, and
-the failure is total rather than partial: the Composer package contains zero
-`.vue` files, so a machine without this tarball can install `panelkit/panel`
-perfectly and render nothing.
+**There is no tarball here any more, and that is the fix.**
 
-That happened. A consuming project reported "not on npm (404), no `.tgz` on
-disk, npm cache empty" — correct in every particular, and unfixable from their
-side.
+This directory used to hold a copy of the client half, one file per release,
+because the npm half had no distribution channel anybody could reach. From
+0.9.2 the client ships **inside the Composer package**:
 
-So the tarball ships here, one per release, ~600 KB each. Committing a build
-artifact is normally wrong; it is right when it is the only copy that exists
-outside one laptop.
+```
+packages/panel/client/panelkit-client.tgz
+```
 
-## Using one
+`composer require panelkit/panel` therefore delivers both halves, and the
+install is:
 
 ```bash
-npm install /path/to/alxtexh-enterprise-panel-0.9.1.tgz @vitejs/plugin-vue
+composer require panelkit/panel
+npm install ./vendor/panelkit/panel/client/panelkit-client.tgz @vitejs/plugin-vue
 ```
 
-Or commit it into your own application for a reproducible `npm ci`:
+**Why the copies had to go.** Two committed copies of one artifact is two
+things that can disagree, and one of them will - this directory was already a
+release behind when it was deleted. `ClientTarballTest` keeps the remaining
+copy in step with `packages/ui`; there is nothing to keep a second copy in step
+with anything.
 
-```json
-"dependencies": { "@alxtexh-enterprise/panel": "file:vendor-js/alxtexh-enterprise-panel-0.9.1.tgz" }
-```
+**If you want the tarball on its own** - a separate front-end build, an
+air-gapped transfer - every tagged release attaches it:
 
-## Rebuilding one
+    https://github.com/enterprisealxtexh/panelkit/releases
+
+**To build a staging bundle** (the archive, the docs and an install guide, for
+a machine with no Composer access at all):
 
 ```bash
-cd packages/ui && npm pack --pack-destination ../../dist
+./scripts/staging-bundle.sh
 ```
 
-`prepack` runs the build first, so a tarball can never carry a stale `dist/`.
-
-## Verify what you have
-
-Each release's checksum is in `CHECKSUMS.txt`. A tarball is the one artifact
-here that nothing else can vouch for, so check it rather than assuming.
-
-```bash
-sha256sum -c CHECKSUMS.txt
-```
+It writes into this directory, which is gitignored apart from this file.
