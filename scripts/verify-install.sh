@@ -851,8 +851,15 @@ grep -q 'VERDICT pass' <<<"$tickets" \
 # the other and is right to - a queue nobody can write to and a form nobody
 # reads both return 200. So this is also the only end-to-end proof that
 # `make:panel` produces a portal a package can install into.
+# `--auth` BECAUSE A PANEL WITHOUT IT IS BROKEN FOR EVERY GUEST, and this script
+# generated one for four releases without noticing. A panel is behind `auth`;
+# Laravel redirects an unauthenticated request to a login route; a generated
+# portal has none of its own and does not inherit the admin panel's, which
+# `panel:install --auth` names `admin.login`. So every portal URL returned 500
+# to anybody not already signed in - and this script only ever visited them
+# with a session, so it never saw it.
 say "Generating a customer portal for the other end of ticketing"
-php artisan make:panel portal --path=portal --no-interaction 2>&1 | tail -3
+php artisan make:panel portal --path=portal --auth --no-interaction 2>&1 | tail -3
 
 operator_panel="$(php -r '
 require __DIR__."/vendor/autoload.php";
