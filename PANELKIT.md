@@ -6,7 +6,7 @@ FilamentPHP onto PanelKit.**
 Everything is here: install, build, translate from Filament, deploy, upgrade,
 and the traps. Nothing else needs to be carried.
 
-Current version: **v0.9.2**. 44 packaged screens, 1,744 tests passing, verified
+Current version: **v0.9.3**. 44 packaged screens, 1,744 tests passing, verified
 installing into a fresh Laravel application.
 
 > **0.9.0 renamed the npm package** to `@alxtexh-enterprise/panel`. If you are
@@ -87,14 +87,33 @@ it wrote no screens.
 composer config repositories.panelkit \
   '{"type":"vcs","url":"https://github.com/enterprisealxtexh/panelkit-panel.git","no-api":true}' --json
 
+composer config preferred-install.panelkit/panel source
+
 composer require panelkit/panel
 ```
 
-**`no-api: true` is not optional on a private repository.** Without it composer
-asks GitHub's API where the repository is, is handed the `git@github.com:` SSH
-form, and fails with *"Could not read from remote repository"* on any machine
-with no SSH key — which reads like the repository is missing rather than like an
-authentication choice.
+**Both lines, and the second one was found by trying it rather than reasoning
+about it.** `no-api: true` stops Composer asking GitHub's API where the
+repository is and being handed the `git@github.com:` SSH form, which fails with
+*"Could not read from remote repository"* on a machine with no SSH key. But it
+does **not** stop Composer reaching for the API zipball to download the release,
+and on a private repository that 404s:
+
+```
+Failed to download panelkit/panel from dist: ... api.github.com ... 404
+Source fallback is disabled. Not trying alternative sources.
+```
+
+`preferred-install: source` makes Composer clone over git instead, using
+whatever git credentials the machine already has — so no `auth.json` and no
+second token. If you would rather Composer hold its own credential:
+
+```bash
+composer config --global --auth github-oauth.github.com YOUR_TOKEN
+```
+
+A classic PAT with `repo`, or a fine-grained one with **Contents: Read** on that
+repository.
 
 ## The client half — read this, it is the step that strands people
 
@@ -109,8 +128,9 @@ registry, no `.npmrc`, and no second token:
 ```bash
 composer require panelkit/panel
 npm install ./vendor/panelkit/panel/client/panelkit-client.tgz @vitejs/plugin-vue
-php artisan panel:install
+php artisan panel:install --auth
 npm run build
+php artisan panel:doctor
 ```
 
 Three properties are worth understanding, because they each remove a failure
@@ -126,6 +146,16 @@ this project actually hit:
   `...-0.9.2.tgz`, so the command above is the same in every runbook forever.
   The version lives inside, where tooling reads it. Upgrading is the same line
   again.
+
+**`--auth` unless you already have a sign-in screen.** The panel guards its
+routes, and Laravel redirects an unauthenticated request to `route('login')`.
+On a stock `laravel/laravel` that route does not exist, so **every panel URL
+returns 500** with `Route [login] not defined` - a message naming neither
+PanelKit nor the fix. `--auth` writes the sign-in screen and its routes. If
+your application already has one (a starter kit, Fortify, anything naming a
+route `login`), leave the flag off. `panel:doctor` fails if no panel can
+resolve a sign-in route, so you find out from the check rather than from a
+white page.
 
 `php artisan panel:install` prints this command with the path already resolved,
 and `php artisan panel:doctor` fails if the client half is missing **or is a
@@ -565,7 +595,7 @@ npm run build
 
 Then migrate when you have decided to: `php artisan migrate`.
 
-PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.2` and read
+PanelKit is `0.x`: **the minor is the breaking position.** Pin `^0.9.3` and read
 the changelog before each bump.
 
 ---

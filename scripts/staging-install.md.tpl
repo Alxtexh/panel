@@ -106,8 +106,13 @@ Screens should be listed.
 
 ## 4. Install, migrate, build
 
+**`--auth` writes the sign-in screen and its routes.** Leave it off only if the
+application already has a `login` route of its own. Without either, the panel
+redirects guests to a route that does not exist and **every URL returns 500** -
+`panel:doctor` in step 4 fails loudly if that happens.
+
 ```bash
-php artisan panel:install
+php artisan panel:install --auth
 
 php artisan migrate --pretend    # READ THIS FIRST
 php artisan migrate
@@ -186,22 +191,34 @@ without running them.
 
 Replace the path repository with the private VCS one and drop `vendor-src/`:
 
-```json
-{
-    "repositories": [
-        { "type": "vcs", "url": "https://github.com/enterprisealxtexh/panelkit-panel.git", "no-api": true }
-    ]
-}
-```
-
 ```bash
+composer config repositories.panelkit '{"type":"vcs","url":"https://github.com/enterprisealxtexh/panelkit-panel.git","no-api":true}'
+composer config preferred-install.panelkit/panel source
 composer require panelkit/panel:^__VERSION__
 npm install ./vendor/panelkit/panel/client/panelkit-client.tgz
 ```
 
-`"no-api": true` matters: without it Composer is handed the SSH URL and fails on
-a machine with no key, which reads like the repository is missing rather than
-like an authentication choice.
+**`preferred-install: source` is the line that makes this work, and it was
+found by trying it rather than by reasoning about it.** `"no-api": true` alone
+is not enough: Composer still resolves the version over git and then reaches
+for the API zipball, which 404s on a private repository without a Composer
+token —
+
+```
+Failed to download panelkit/panel from dist: ... api.github.com ... 404
+Source fallback is disabled. Not trying alternative sources.
+```
+
+With `source`, Composer clones over git instead and uses whatever git
+credentials the machine already has, so no `auth.json` and no second token are
+needed. The alternative, if you would rather Composer authenticate itself:
+
+```bash
+composer config --global --auth github-oauth.github.com YOUR_TOKEN
+```
+
+A classic PAT with `repo`, or a fine-grained one with **Contents: Read** on
+that repository.
 
 **The npm line is identical.** The client comes out of the Composer package
 either way, so nothing about the client half changes when you move from offline

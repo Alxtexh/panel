@@ -8,6 +8,39 @@ UNDER: entries before 0.9.0 say `@panelkit/panel`, entries before 0.8.0 name
 `@panelkit/ui` and `@panelkit/inertia`, which is what there were. Rewriting them
 would make this a record of a history that did not happen.
 
+## 0.9.3
+
+**A fresh install into a stock Laravel application returned 500 on every panel
+URL, and `panel:doctor` said there were no problems.** Found by doing it -
+creating `laravel/laravel`, pulling the package from GitHub, and opening the
+panel - which nothing in 1,750 tests had ever done.
+
+`laravel/laravel` ships no auth scaffolding, so it has no route named `login`.
+The panel guards its routes, Laravel redirects an unauthenticated request to
+`route('login')`, and Laravel throws `Route [login] not defined` before any
+panel code runs. Every screen, 500. The message names neither PanelKit nor the
+fix.
+
+**`panel:doctor` now fails when a panel cannot resolve a sign-in route**, and
+names the two ways out: `php artisan panel:install --auth`, or a route of your
+own called `login` (or `<panel>.login`). It looks for a **route**, not for the
+flag having been used, so a starter kit or Fortify satisfies it.
+
+`panel:install --auth` is now what the documentation tells you to run.
+
+**Also corrected, and also found by testing rather than reasoning:**
+`"no-api": true` is *not* sufficient to install from a private GitHub
+repository. Composer resolves the version over git, then still reaches for the
+API zipball and 404s - "Source fallback is disabled. Not trying alternative
+sources." The working configuration adds:
+
+```bash
+composer config preferred-install.panelkit/panel source
+```
+
+which clones over git using the machine's existing git credentials. Both
+PANELKIT.md and the staging guide said otherwise and now say this.
+
 ## 0.9.2
 
 **The client half now ships inside the Composer package, and the npm registry

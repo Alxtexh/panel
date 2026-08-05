@@ -10,13 +10,13 @@ of minors without a breaking change, not because a milestone said so.
 Constrain accordingly:
 
 ```json
-"panelkit/panel": "^0.9.2"
+"panelkit/panel": "^0.9.3"
 ```
 
-Composer reads `^0.9.2` on a `0.x` package as `>=0.9.2 <0.10.0`, which is what you
+Composer reads `^0.9.3` on a `0.x` package as `>=0.9.3 <0.10.0`, which is what you
 want: patches arrive, a breaking minor does not.
 
-The two packages are **versioned together**. `panelkit/panel@0.9.2` expects
+The two packages are **versioned together**. `panelkit/panel@0.9.3` expects
 `@alxtexh-enterprise/panel@0.9.x` on npm, and the PHP half's schema payload is
 the contract between them. Mixing minors is not tested and the failure is a
 rendered screen with a missing control, not an error.
@@ -113,6 +113,30 @@ php artisan vendor:publish --tag=panel-config --force   # writes over your confi
 ## Version-specific notes
 
 Newest first. Each names the change, what breaks, and the edit.
+
+### 0.9.2 → 0.9.3
+
+`composer update panelkit/panel`, `npm install ./vendor/panelkit/panel/client/panelkit-client.tgz`,
+`php artisan panel:update`, `npm run build`. No new page files, no config keys,
+no migrations.
+
+**Run `php artisan panel:doctor` afterwards.** It gained a check that may fail
+on an installation that has been working: it now refuses a panel that cannot
+resolve a sign-in route. If it fires, your panel is redirecting guests to a
+route that does not exist and every one of its URLs returns 500 for anybody not
+already signed in - you may simply never have opened it in a logged-out
+browser. `php artisan panel:install --auth` writes the sign-in screen and its
+routes.
+
+**If you install from the private GitHub repository**, add:
+
+```bash
+composer config preferred-install.panelkit/panel source
+```
+
+`"no-api": true` alone is not enough - Composer resolves over git and then still
+reaches for the API zipball, which 404s on a private repository. This was wrong
+in PANELKIT.md until now.
 
 ### 0.9.1 → 0.9.2
 

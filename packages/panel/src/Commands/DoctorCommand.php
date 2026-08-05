@@ -100,6 +100,7 @@ final class DoctorCommand extends Command
         $this->checkPageFiles();
         $this->checkStylesheet();
         $this->checkClientHalf();
+        $this->checkSignInRoute();
         $this->checkUserHoldsRoles();
         $this->checkSomebodyCanOpenThePanel();
 
@@ -1029,6 +1030,60 @@ final class DoctorCommand extends Command
                 'The halves are versioned together and the schema payload is the contract '
                 .'between them. A mismatch renders screens with missing controls rather than '
                 .'erroring. Run: '.ClientTarball::installCommand().' && npm run build',
+            );
+        }
+    }
+
+    /**
+     * A PANEL BEHIND `auth` WITH NOWHERE TO SEND A GUEST.
+     *
+     * FOUND BY INSTALLING INTO A STOCK LARAVEL APPLICATION AND OPENING IT.
+     * `laravel/laravel` ships no auth scaffolding, so it has no `login` route;
+     * Laravel's `Authenticate` middleware redirects an unauthenticated request
+     * to `route('login')`; and the result is that EVERY PANEL URL RETURNS 500
+     * with `Route [login] not defined` - a message that names neither PanelKit
+     * nor the thing to do about it.
+     *
+     * Doctor passed that installation. It reported no problems on a panel where
+     * nothing at all could be opened, which is the exact failure this command
+     * exists to catch: correct-looking configuration, total breakage, no error
+     * that points anywhere useful.
+     *
+     * `panel:install --auth` writes those routes. So does an application's own
+     * starter kit, or Fortify, or anything that names a route `login` - which
+     * is why this looks for a ROUTE rather than for the flag having been used.
+     * A panel whose guest redirect resolves is fine however it got that way.
+     */
+    private function checkSignInRoute(): void
+    {
+        $router = app('router');
+
+        foreach (app(PanelManager::class)->panels() as $panel) {
+            /*
+             * THE PANEL'S OWN FIRST, then the application's. This is the order
+             * SocialLoginController resolves in, and two places disagreeing
+             * about where sign-in lives is its own bug.
+             */
+            $candidates = array_filter([
+                $panel->getRouteName().'login',
+                $panel->id.'.login',
+                'login',
+            ]);
+
+            foreach ($candidates as $name) {
+                if ($router->has($name)) {
+                    continue 2;
+                }
+            }
+
+            $this->problem(
+                "the {$panel->id} panel has no sign-in route, so every one of its URLs returns 500",
+                'It is behind the `auth` middleware, and an unauthenticated request is '
+                .'redirected to a route that does not exist - Laravel throws '
+                .'`Route [login] not defined` before any panel code runs, so nothing in the '
+                .'panel can be opened at all. Run `php artisan panel:install --auth` to have '
+                .'PanelKit write the sign-in screen and its routes, or point the panel at your '
+                .'own by naming a route `login` (or `'.$panel->getRouteName().'login`).',
             );
         }
     }
