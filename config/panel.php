@@ -634,6 +634,29 @@ return [
     ],
 
     /*
+    |--------------------------------------------------------------------------
+    | Sitemap
+    |--------------------------------------------------------------------------
+    |
+    | THE SCREEN APPEARS ONLY WHEN THERE IS SOMETHING TO GENERATE - the same
+    | rule `changelog` follows above. If `panel.landing.route` names a public
+    | landing page, that URL is already in the sitemap with no configuration
+    | here at all; add more with `Sitemap::add()` or `Sitemap::source()` from a
+    | service provider's `boot()`.
+    |
+    | `disk` IS NULL BY DEFAULT, meaning the project's `public/` directory
+    | directly - a sitemap is expected at the domain root
+    | (`https://example.com/sitemap.xml`), which a Laravel disk almost never
+    | resolves to. Name a disk only if this installation already serves static
+    | files from somewhere else (S3 fronted by the same domain, for instance)
+    | and has arranged for that origin to answer at its root.
+    */
+    'sitemap' => [
+        'disk' => null,
+        'filename' => 'sitemap.xml',
+    ],
+
+    /*
     |---------------------------------------------------------------------------
     | Ticketing
     |---------------------------------------------------------------------------

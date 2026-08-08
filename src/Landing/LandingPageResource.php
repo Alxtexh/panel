@@ -87,11 +87,7 @@ final class LandingPageResource extends SingularResource
      */
     public static function links(): array
     {
-        $url = config('panel.landing.url');
-
-        if (! is_string($url) || $url === '') {
-            $url = LandingController::registers() ? '/' : null;
-        }
+        $url = LandingController::publicUrl();
 
         return $url === null ? [] : [
             ['label' => 'View the page', 'href' => $url, 'external' => true],

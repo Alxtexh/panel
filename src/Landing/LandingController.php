@@ -53,6 +53,28 @@ final class LandingController extends Controller
         return config('panel.landing.route', false) === true;
     }
 
+    /**
+     * WHERE THE PAGE IS ACTUALLY REACHABLE, if anywhere - the single source of
+     * truth `LandingPageResource::links()` and `Sitemap` both call.
+     *
+     * `panel.landing.url` wins when it is set: an installation that composes
+     * the page here but serves it from its own route, or a different
+     * application entirely, has a URL this package cannot derive from
+     * `registers()` alone. Falling back to `/` only when this package is the
+     * one routing it keeps the two facts - "is it composed" and "is it
+     * routed" - from producing a link to a page nothing answers.
+     */
+    public static function publicUrl(): ?string
+    {
+        $url = config('panel.landing.url');
+
+        if (is_string($url) && $url !== '') {
+            return $url;
+        }
+
+        return self::registers() ? '/' : null;
+    }
+
     public function __invoke(Request $request): Response|RedirectResponse
     {
         /*

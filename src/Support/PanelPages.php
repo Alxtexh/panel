@@ -40,6 +40,7 @@ final class PanelPages
         'PanelDashboard',
         'Changelog',
         'Environment',
+        'Sitemap',
 
         /*
          * THE PUBLIC FRONT PAGE. `LandingController` renders this; the editor

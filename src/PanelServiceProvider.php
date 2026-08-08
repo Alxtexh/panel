@@ -163,6 +163,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\MakePageCommand::class,
             Commands\MakePanelCommand::class,
             Commands\MakeUserCommand::class,
+            Commands\SitemapGenerateCommand::class,
             Commands\MakeResourceCommand::class,
             Commands\ReindexTenantCommand::class,
             Commands\DoctorCommand::class,
