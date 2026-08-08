@@ -228,6 +228,10 @@ final class QueryCountTest extends TestCase
         'tenants',
         'reseller-plans',
         'my-tickets',
+        // The customer portal's read-only catalogue, on the `customers` guard.
+        // Unreachable from here for two reasons at once - it is another
+        // panel's URL, and this test signs in as an operator.
+        'client-plans',
 
         // No fixture in this file yet. `users` left this list when the ticket
         // fixture began creating people - which is the list working as intended.

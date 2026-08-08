@@ -52,6 +52,7 @@ Panels registered in this application:
 - `admin` — mounted at `/`, guard `web`, tenant context
 - `platform` — mounted at `/platform`, guard `web`, central context
 - `reseller` — mounted at `/reseller`, guard `web`, tenant context
+- `client` — mounted at `/client`, guard `customers`, tenant context
 - `authfixture` — mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
@@ -59,6 +60,7 @@ Resources are discovered from:
 - `app/Panel/Resources` → `App\Panel\Resources`
 - `app/Panel/Platform/Resources` → `App\Panel\Platform\Resources`
 - `app/Panel/Reseller/Resources` → `App\Panel\Reseller\Resources`
+- `app/Panel/Client/Resources` → `App\Panel\Client\Resources`
 
 A resource belongs to exactly one panel — its key is a URL segment and an
 ability name, both globally unique. A second portal needing the same screen
@@ -691,6 +693,7 @@ about itself.
 | `users` | `UserResource` | `admin` |
 | `tenants` | `TenantResource` | `platform` |
 | `reseller-plans` | `PlanResource` | `reseller` |
+| `client-plans` | `PlanResource` | `client` |
 | `my-tickets` | `MyTicketResource` | `reseller` |
 
 Ability names are derived from the key: `view_any_clients`, `update_clients`,

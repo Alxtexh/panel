@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Customer;
 use App\Models\User;
 
 return [
@@ -42,6 +43,24 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        /*
+         * THE CUSTOMER PORTAL'S OWN GUARD.
+         *
+         * A second guard is what makes a client panel a different thing rather
+         * than the same panel with fewer menu entries. Sessions are keyed per
+         * guard, so an operator signed in on `web` is not signed in here and a
+         * customer signed in here is not signed in there - which is the
+         * property `SecondGuardIsolationTest` asserts in both directions.
+         *
+         * `Panel::guard('customers')` is what points the client panel at this.
+         * Everything else - the login attempt, the logout, social login, the
+         * props shared with Inertia - already reads the panel's guard.
+         */
+        'customers' => [
+            'driver' => 'session',
+            'provider' => 'customers',
+        ],
     ],
 
     /*
@@ -78,6 +97,21 @@ return [
              */
             'driver' => 'panel-tenant',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        /*
+         * PLAIN `eloquent`, NOT `panel-tenant`.
+         *
+         * The operator provider above is tenant-aware because `users.email` is
+         * unique per tenant, so an address alone does not identify anybody. The
+         * same is true of customers - and it is handled by the UNIQUE INDEX on
+         * (tenant_id, email) plus the tenant the panel resolves, rather than by
+         * a second custom driver. Saying so here because the asymmetry looks
+         * like an oversight otherwise.
+         */
+        'customers' => [
+            'driver' => 'eloquent',
+            'model' => Customer::class,
         ],
 
         // 'users' => [

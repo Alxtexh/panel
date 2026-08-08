@@ -348,11 +348,37 @@ class HandleInertiaRequests extends Middleware
                  * endpoint - hiding a link is a courtesy, never a guard, and a
                  * client that ignores it gets a 403 rather than a mutation.
                  */
-                'can' => [
-                    'manageRoles' => (bool) $request->user()?->hasPermission('manage_roles'),
-                    'viewOperations' => (bool) $request->user()?->hasPermission('view_operations'),
-                    'manageAssistant' => (bool) $request->user()?->hasPermission('manage_assistant'),
-                ],
+                /*
+                 * `$request->user()` IS NOT NECESSARILY AN OPERATOR, and this
+                 * line assumed it was for as long as every panel ran on `web`.
+                 *
+                 * `UsePanel` makes the current panel's guard the default one,
+                 * so on a panel declared with `->guard('customers')` this
+                 * returns a `Customer` - a model with no roles, no abilities
+                 * and no `hasPermission()`. The call then throws
+                 * BadMethodCallException from inside Inertia's `share()`, which
+                 * runs on EVERY request: the entire portal answered 500, on
+                 * every URL, including its own sign-in redirect.
+                 *
+                 * Found the first time a panel in this application was mounted
+                 * on a second guard. Nothing was wrong with the guard; the
+                 * assumption was here, in the consuming application, where a
+                 * consumer's own middleware would make exactly the same one.
+                 *
+                 * `$operator` is null for anybody who cannot answer the
+                 * question, and null answers it as "no".
+                 */
+                'can' => (function () use ($request): array {
+                    $user = $request->user();
+
+                    $operator = $user !== null && method_exists($user, 'hasPermission') ? $user : null;
+
+                    return [
+                        'manageRoles' => (bool) $operator?->hasPermission('manage_roles'),
+                        'viewOperations' => (bool) $operator?->hasPermission('view_operations'),
+                        'manageAssistant' => (bool) $operator?->hasPermission('manage_assistant'),
+                    ];
+                })(),
             ],
             /*
              * LANGUAGE AND DIRECTION TRAVEL TOGETHER, because they are one fact.

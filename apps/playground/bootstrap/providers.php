@@ -4,6 +4,7 @@ use App\Providers\AlertServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Providers\Panels\AdminPanelProvider;
+use App\Providers\Panels\ClientPanelProvider;
 use App\Providers\Panels\PlatformPanelProvider;
 use App\Providers\Panels\ResellerPanelProvider;
 use App\Providers\TenancyServiceProvider;
@@ -28,4 +29,5 @@ return [
     // failure is silent and looks exactly like working single-database tenancy.
     TenancyServiceProvider::class,
     FortifyServiceProvider::class,
+    ClientPanelProvider::class,
 ];
