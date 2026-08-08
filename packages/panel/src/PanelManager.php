@@ -51,6 +51,7 @@ final class PanelManager
     private const PACKAGE_PAGES = [
         Pages\ChangelogPage::class,
         Pages\EnvironmentPage::class,
+        Pages\SitemapPage::class,
 
         /*
          * WHO IS HERE AND WHAT THEY MAY DO. The roles half was packaged from

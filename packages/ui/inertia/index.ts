@@ -39,6 +39,7 @@ export { default as LandingFooter } from './pages/landing/LandingFooter.vue'
 export { default as PanelDashboard } from './pages/PanelDashboard.vue'
 export { default as Changelog } from './pages/Changelog.vue'
 export { default as Environment } from './pages/Environment.vue'
+export { default as Sitemap } from './pages/Sitemap.vue'
 export { default as Roles } from './pages/settings/Roles.vue'
 export { default as Profile } from './pages/settings/Profile.vue'
 export { default as Security } from './pages/settings/Security.vue'
@@ -179,6 +180,7 @@ export const PANEL_PAGES = {
     PanelDashboard: () => import('./pages/PanelDashboard.vue'),
     Changelog: () => import('./pages/Changelog.vue'),
     Environment: () => import('./pages/Environment.vue'),
+    Sitemap: () => import('./pages/Sitemap.vue'),
 
     /*
      * The document designer. Nested names, because the server sends

@@ -9,8 +9,8 @@ Those are not the same thing, by a wide margin:
 
 |     | package (installed)     | reference app only      |
 | --- | ----------------------- | ----------------------- |
-| PHP | 299 files, 52,800 lines | 93 files, 13,578 lines |
-| Vue | 279 components          | **80 components**       |
+| PHP | 302 files, 53,366 lines | 93 files, 13,579 lines |
+| Vue | 280 components          | **81 components**       |
 
 The Vue column inverted in v0.6.3, and that is the headline. The demo used to
 carry nearly twice what the framework did; the shell, the auth screens and the
@@ -267,14 +267,14 @@ secrets never shown, atomic writes, boot-critical keys refused) · **passkeys** 
 dependency — present when Fortify is, absent without it) · `InteractsWithPanels`
 test helpers.
 
-### 22 commands
+### 23 commands
 
 `install` `update` `doctor` `doctor-alert` `permissions` `benchmark`
 `blueprint` `make:panel` `make:panel-page` `make:panel-resource`
 `make:api-token` `make-user` `cache-clear`
 `prune-exports` `prune-trash` `prune-uploads` `refresh-rollups`
 `reindex-tenant` `suspend-tenant` `index-knowledge` `monitor-sample`
-`dispatch-scheduled-reports`
+`dispatch-scheduled-reports` `sitemap-generate`
 
 `panel:doctor` is the one to run first. It also catches the two shapes of silent
 404 a real port lost hours to: a resource or page on disk that **nothing
@@ -287,7 +287,7 @@ data, where every page returns 200 and every test passes.
 ### Screens (`@alxtexh-enterprise/panel/inertia`)
 
 `ResourceIndex` `ResourceForm` `ResourceView` `Trash` `PanelHome`
-`PanelDashboard` `Changelog` `Environment` `TicketAnalysis` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
+`PanelDashboard` `Changelog` `Environment` `Sitemap` `TicketAnalysis` `settings/Roles` `documents/Templates` `documents/TemplateDesigner`
 `documents/DocumentPrint`, plus the `TicketThread` and `AnnouncementBanners`
 components the packaged screens render into.
 
