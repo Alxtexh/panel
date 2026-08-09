@@ -101,14 +101,66 @@ watch(flat, () => {
 let debounce: ReturnType<typeof setTimeout> | undefined
 let controller: AbortController | undefined
 
+/**
+ * WHICH REQUEST IS ALLOWED TO ANSWER. Aborting is not enough on its own,
+ * because an abort settles the OLD promise asynchronously - so its `finally`
+ * ran after the next keystroke had already set `searching` to true and turned
+ * the spinner off underneath a search that was still pending. The list then sat
+ * looking finished and wrong until the real answer landed.
+ *
+ * Only the newest request may touch shared state. Everything older resolves
+ * into nothing, whether it was aborted, errored, or merely slow.
+ */
+let latest = 0
+
+/**
+ * ANSWERS ALREADY PAID FOR.
+ *
+ * Backspacing is the most common thing anybody does in a search box, and every
+ * deletion used to be a fresh round trip for a term that had just been on
+ * screen. A term maps to the same results for as long as the palette is open,
+ * so the second visit costs nothing and renders in the same frame as the
+ * keystroke - which is the difference people describe as "instant".
+ *
+ * BOUNDED AND OPEN-SCOPED. It is cleared when the palette closes, so it can
+ * neither grow without limit nor show a record that was edited or deleted in
+ * between; within one session of typing, staleness is not reachable.
+ */
+const CACHE_LIMIT = 50
+const cache = new Map<string, Group[]>()
+
+function remember(q: string, value: Group[]): void {
+    cache.delete(q)
+    cache.set(q, value)
+
+    if (cache.size > CACHE_LIMIT) {
+        // Oldest insertion first, so the least recently stored falls out.
+        cache.delete(cache.keys().next().value as string)
+    }
+}
+
 watch(term, (value) => {
     clearTimeout(debounce)
     controller?.abort()
 
     const q = value.trim()
+    const id = ++latest
 
     if (q.length < 2) {
         remoteGroups.value = []
+        searching.value = false
+
+        return
+    }
+
+    /*
+     * A HIT SKIPS THE DEBOUNCE ENTIRELY. Waiting 180ms to display something
+     * already in memory is a pause with nothing at the end of it.
+     */
+    const hit = cache.get(q)
+
+    if (hit !== undefined) {
+        remoteGroups.value = hit
         searching.value = false
 
         return
@@ -133,18 +185,28 @@ watch(term, (value) => {
                 groups: { label: string; items: Omit<Item, 'kind'>[] }[]
             }
 
-            remoteGroups.value = data.groups.map((g) => ({
+            const mapped = data.groups.map((g) => ({
                 label: g.label,
                 items: g.items.map((i) => ({ ...i, id: String(i.href), kind: 'record' as const })),
             }))
+
+            // Worth keeping even if it arrived too late to display: the term is
+            // one backspace away from being asked for again.
+            remember(q, mapped)
+
+            if (id === latest) {
+                remoteGroups.value = mapped
+            }
         } catch (e) {
             // An abort is the EXPECTED path when typing continues, so it must
             // not clear the list somebody is still reading.
-            if ((e as Error).name !== 'AbortError') {
+            if ((e as Error).name !== 'AbortError' && id === latest) {
                 remoteGroups.value = []
             }
         } finally {
-            searching.value = false
+            if (id === latest) {
+                searching.value = false
+            }
         }
     }, 180)
 })
@@ -159,6 +221,18 @@ function hide(): void {
     open.value = false
     term.value = ''
     remoteGroups.value = []
+
+    /*
+     * CLOSING ENDS THE CACHE'S LIFE. Reopening the palette is the moment
+     * somebody expects to see the world as it is now - they may have just
+     * renamed or deleted the very record they are looking for - so results
+     * never outlive the session of typing that produced them.
+     *
+     * `latest` moves too, so a reply still in flight cannot arrive after the
+     * close and repopulate a list nobody is looking at.
+     */
+    latest++
+    cache.clear()
 }
 
 function choose(item: Item): void {

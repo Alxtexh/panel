@@ -1243,22 +1243,83 @@ final class ListQuery
              * people. Substring-anywhere is still refused - it is unbounded and
              * belongs to a trigram index or FTS once the engine is chosen.
              */
-            $escaped = str_replace(['%', '_'], ['\%', '\_'], $state['search']);
-            $startsWith = $escaped.'%';
-            $wordStart = '% '.$escaped.'%';
+            /*
+             * EVERY WORD MUST MATCH SOMETHING; a word may match ANY column.
+             *
+             * The whole phrase used to be one pattern, so "Amina Achieng" only
+             * ever matched a single column containing those two words in that
+             * order, adjacent. A person whose first name is in `first_name` and
+             * surname is in `last_name` was unfindable by their own full name -
+             * the most obvious thing anybody types - and the table answered 200
+             * with nothing in it.
+             *
+             * Splitting on whitespace and ANDing the words fixes that and
+             * narrows as you type rather than widening: each extra word can only
+             * remove rows. Within a word the columns are ORed, so it does not
+             * matter which field the word lives in.
+             */
             $columns = $this->searchable;
 
-            $query->where(function (Builder $q) use ($columns, $startsWith, $wordStart): void {
-                foreach ($columns as $i => $searchColumn) {
-                    if ($i === 0) {
-                        $q->where($searchColumn, 'like', $startsWith);
-                    } else {
-                        $q->orWhere($searchColumn, 'like', $startsWith);
-                    }
+            /*
+             * POSTGRES `LIKE` IS CASE-SENSITIVE and the others are not, so the
+             * same search that worked all through development returned nothing
+             * on the one engine this is deployed to. `ILIKE` is Postgres's own
+             * spelling of the case-insensitive match and needs no expression
+             * wrapping - which matters, because wrapping the column in `lower()`
+             * would also put it beyond any index that names the column plainly.
+             *
+             * Neither form is served by a btree index for the `% word%` half;
+             * that half is the deliberate scan documented above, and a trigram
+             * index is what removes it when the row counts demand it.
+             */
+            $like = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
 
-                    $q->orWhere($searchColumn, 'like', $wordStart);
-                }
-            });
+            /*
+             * A QUOTED PHRASE IS ONE TERM, and invisible characters are not
+             * terms at all.
+             *
+             * Splitting on whitespace alone makes an exact phrase unsearchable:
+             * `"Amina Achieng"` became two independent words that could match
+             * two different columns of two different meanings. Reading the term
+             * as CSV with a space separator costs nothing and gives quoting for
+             * free, which is the syntax everybody already expects from a search
+             * box.
+             *
+             * The normalise step ahead of it collapses runs of whitespace AND
+             * two characters that are invisible but are not spaces - the Hangul
+             * fillers U+3164 and U+1160. Pasted text carries them, they survive
+             * `trim()`, and a term holding one matches nothing while looking
+             * exactly like a term that should. That is a silent empty table,
+             * which is the failure this whole search path keeps being fixed for.
+             */
+            $normalised = preg_replace(
+                '/(\s|\x{3164}|\x{1160})+/u',
+                ' ',
+                trim((string) $state['search']),
+            ) ?? '';
+
+            $words = array_values(array_filter(
+                str_getcsv($normalised, separator: ' ', enclosure: '"', escape: '\\'),
+                static fn (?string $word): bool => $word !== null && trim($word) !== '',
+            ));
+
+            foreach ($words as $word) {
+                $escaped = str_replace(['%', '_'], ['\%', '\_'], $word);
+                $startsWith = $escaped.'%';
+                $wordStart = '% '.$escaped.'%';
+
+                $query->where(function (Builder $q) use ($columns, $startsWith, $wordStart, $like): void {
+                    foreach ($columns as $i => $searchColumn) {
+                        if ($i === 0) {
+                            $q->where($searchColumn, $like, $startsWith);
+                        } else {
+                            $q->orWhere($searchColumn, $like, $startsWith);
+                        }
+
+                        $q->orWhere($searchColumn, $like, $wordStart);
+                    }
+                });
+            }
         }
 
         return $query;

@@ -19,16 +19,26 @@ import PkSkeleton from '../primitives/PkSkeleton.vue'
  *
  * ONE SWITCH FOR THE WHOLE STRIP, and it starts CLOSED.
  *
- * A per-segment eye was the wrong model twice over. These segments are one
- * metric over four windows, so revealing "this month" while "last 7 days" stays
- * dotted hides nothing - the sensitive thing is the magnitude, and any one
- * window gives it away. And four toggles means four clicks to put the strip
- * back the way it was, which is the state anyone who wanted it hidden wants
- * again a minute later.
+ * The eye covers every sensitive segment at once, because putting a strip back
+ * the way it was should be one click rather than four - and hidden is the state
+ * anyone who wanted it hidden wants again a minute later. Starting hidden is the
+ * same argument from the other end: a strip that opens revealed has already
+ * shown the number by the time you decide you did not want it shown.
  *
- * Starting hidden is the same argument from the other end: a strip that opens
- * revealed has already shown the number by the time you decide you did not want
- * it shown.
+ * WHICH SEGMENTS ARE SENSITIVE IS DECLARED, NOT ASSUMED.
+ *
+ * This used to mask all four or none, on the reasoning that a strip is one
+ * metric over four windows, so covering "this month" while "last 7 days" shows
+ * hides nothing. That is true of THAT strip and is not a property of the
+ * component: a strip pairing revenue with a device count has one cell worth
+ * covering and three that are noise to cover. `sensitive` on a segment says
+ * which is which, and the default is every segment - so a strip that declares
+ * nothing behaves exactly as it always did.
+ *
+ * THE VALUE ITSELF IS THE CONTROL, not only the eye. Reaching for a 16px icon
+ * in the corner to read the cell you are already looking at is a detour; the
+ * dots are a button, and clicking them reveals that one cell. Clicking it again
+ * puts it back. The eye remains the way to do all of them at once.
  *
  * THE MASK IS PRESENTATIONAL, NOT A SECURITY BOUNDARY. The value is in the DOM
  * either way; this is shoulder-surfing courtesy. Anything that must not reach
@@ -41,6 +51,15 @@ export interface StatSegment {
     value: string | number
     /** Small muted line under the value. */
     caption?: string | null
+    /**
+     * Whether this cell is one of the ones worth covering.
+     *
+     * OMITTED MEANS SENSITIVE. The alternative default - "cover nothing unless
+     * asked" - turns every existing strip into one that shows its numbers
+     * immediately, which is the exact failure the closed-by-default rule exists
+     * to prevent, and it would happen silently on upgrade.
+     */
+    sensitive?: boolean
 }
 
 const props = withDefaults(
@@ -74,7 +93,28 @@ const emit = defineEmits<{ (e: 'toggle', hidden: boolean): void }>()
  * that re-hid itself every time fresh numbers arrived would fight whoever just
  * chose to look at them.
  */
-const masked = ref(props.maskable ? props.hidden : false)
+const revealAll = ref(props.maskable ? !props.hidden : true)
+
+/** Cells opened one at a time, by clicking the cell rather than the eye. */
+const revealed = ref(new Set<string>())
+
+/** A segment nobody asked to cover is still covered - see `sensitive`. */
+function isSensitive(segment: StatSegment): boolean {
+    return props.maskable && (segment.sensitive ?? true)
+}
+
+function isMasked(segment: StatSegment): boolean {
+    return isSensitive(segment) && !revealAll.value && !revealed.value.has(segment.key)
+}
+
+/** Whether the eye currently offers "show" rather than "hide". */
+const anyMasked = computed(() => props.segments.some(isMasked))
+
+/*
+ * NO EYE WHEN THERE IS NOTHING TO COVER. A strip whose every segment declares
+ * `sensitive: false` would otherwise carry a control that toggles nothing.
+ */
+const hasSensitive = computed(() => props.segments.some(isSensitive))
 
 /*
  * Tailwind resolves class names at build time from source text, so the column
@@ -92,9 +132,57 @@ const COLUMNS: Record<number, string> = {
 
 const grid = computed(() => COLUMNS[props.columns] ?? COLUMNS[4])
 
+/**
+ * The eye: all of them, in one click, in whichever direction is not already
+ * true. Individually-opened cells are forgotten either way, so "hide" really
+ * does hide everything rather than leaving the one cell somebody opened.
+ */
 function toggle() {
-    masked.value = !masked.value
-    emit('toggle', masked.value)
+    const hide = anyMasked.value === false
+
+    revealAll.value = ! hide
+    revealed.value = new Set()
+
+    emit('toggle', hide)
+}
+
+/**
+ * One cell, by clicking the cell.
+ *
+ * A NEW SET RATHER THAN A MUTATION, because Vue's reactivity does not track
+ * `Set.add` on a plain ref - mutating in place changes the data and never
+ * re-renders, which looks like a dead click.
+ */
+function toggleSegment(segment: StatSegment) {
+    if (! isSensitive(segment)) {
+        return
+    }
+
+    const next = new Set(revealed.value)
+
+    if (isMasked(segment)) {
+        next.add(segment.key)
+    } else {
+        next.delete(segment.key)
+
+        /*
+         * Re-hiding one cell while the master switch says "all revealed" has to
+         * drop the master switch, or this cell is instantly revealed again by
+         * the rule above it. The other cells keep their state explicitly.
+         */
+        if (revealAll.value) {
+            revealAll.value = false
+
+            for (const other of props.segments) {
+                if (other.key !== segment.key && isSensitive(other)) {
+                    next.add(other.key)
+                }
+            }
+        }
+    }
+
+    revealed.value = next
+    emit('toggle', anyMasked.value)
 }
 
 function display(value: string | number): string {
@@ -124,12 +212,12 @@ function display(value: string | number): string {
             for.
         -->
         <button
-            v-if="maskable"
+            v-if="maskable && hasSensitive"
             type="button"
             class="text-muted-foreground hover:text-foreground absolute top-3 right-3 z-10 rounded p-1 transition-colors"
-            :aria-pressed="masked"
-            :aria-label="masked ? 'Show values' : 'Hide values'"
-            :title="masked ? 'Show values' : 'Hide values'"
+            :aria-pressed="anyMasked"
+            :aria-label="anyMasked ? 'Show all values' : 'Hide all values'"
+            :title="anyMasked ? 'Show all values' : 'Hide all values'"
             @click="toggle"
         >
             <!--
@@ -148,7 +236,7 @@ function display(value: string | number): string {
                 stroke-linejoin="round"
                 aria-hidden="true"
             >
-                <template v-if="masked">
+                <template v-if="anyMasked">
                     <path d="M10.7 6.2A9 9 0 0 1 12 6c5 0 9 4.5 9 6a12 12 0 0 1-2.2 3" />
                     <path d="M6.6 6.9A13 13 0 0 0 3 12c0 1.5 4 6 9 6a9 9 0 0 0 3.7-.8" />
                     <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
@@ -189,18 +277,44 @@ function display(value: string | number): string {
                         thing with a text alternative, the same contract an
                         `<img alt="...">` has.
                     -->
-                    <span
-                        v-else-if="masked"
-                        class="flex items-center gap-1.5"
-                        role="img"
-                        :aria-label="`${segment.label} hidden`"
+                    <!--
+                        THE DOTS ARE THE BUTTON. Clicking the cell you are
+                        already looking at is shorter than travelling to an icon
+                        in the corner, and it is the gesture people try first.
+                        `aria-label` still carries the whole meaning, because
+                        five dots announce as nothing on their own.
+                    -->
+                    <button
+                        v-else-if="isMasked(segment)"
+                        type="button"
+                        class="hover:bg-muted/60 -mx-1 flex items-center gap-1.5 rounded px-1 py-1 transition-colors"
+                        :aria-label="`${segment.label} hidden. Show it.`"
+                        :title="`Show ${segment.label}`"
+                        @click="toggleSegment(segment)"
                     >
                         <span
                             v-for="dot in 5"
                             :key="dot"
                             class="bg-muted-foreground/70 size-1.5 rounded-full"
                         ></span>
-                    </span>
+                    </button>
+
+                    <!--
+                        A REVEALED SENSITIVE CELL STAYS CLICKABLE, so the way
+                        back is the way in. A cell that was never sensitive is
+                        plain text - making it look pressable would promise a
+                        behaviour it does not have.
+                    -->
+                    <button
+                        v-else-if="isSensitive(segment)"
+                        type="button"
+                        class="hover:bg-muted/60 -mx-1 truncate rounded px-1 text-2xl font-semibold tabular-nums transition-colors"
+                        :aria-label="`${segment.label}, ${display(segment.value)}. Hide it.`"
+                        :title="`Hide ${segment.label}`"
+                        @click="toggleSegment(segment)"
+                    >
+                        {{ display(segment.value) }}
+                    </button>
 
                     <span v-else class="truncate text-2xl font-semibold tabular-nums">
                         {{ display(segment.value) }}

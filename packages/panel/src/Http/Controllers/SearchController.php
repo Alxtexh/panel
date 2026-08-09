@@ -141,18 +141,53 @@ final class SearchController extends Controller
      */
     private function titleColumn(array $records): string
     {
-        foreach (['name', 'title', 'label', 'reference', 'email'] as $candidate) {
+        foreach (['name', 'title', 'label', 'reference', 'subject', 'description', 'email'] as $candidate) {
             if (isset($records[0][$candidate])) {
                 return $candidate;
             }
         }
 
+        /*
+         * A DATE IS A STRING AND IS NEVER A NAME.
+         *
+         * "The first string-ish column" picked `created_at` on any resource
+         * whose first text column is a timestamp - the activity trail being the
+         * one everybody sees - so the palette offered five results all reading
+         * `2026-08-08 16:47:41`. They are distinguishable from each other and
+         * from nothing else, which is worse than showing the key: at least an
+         * id looks like an id and nobody mistakes it for the answer.
+         */
         foreach (array_keys($records[0] ?? []) as $column) {
-            if ($column !== 'id' && is_string($records[0][$column] ?? null)) {
-                return (string) $column;
+            $value = $records[0][$column] ?? null;
+
+            if ($column === 'id' || ! is_string($value)) {
+                continue;
             }
+
+            if (self::looksTemporal((string) $column, $value)) {
+                continue;
+            }
+
+            return (string) $column;
         }
 
         return 'id';
+    }
+
+    /**
+     * A column that holds a moment rather than a name.
+     *
+     * BOTH THE NAME AND THE VALUE ARE CHECKED, because either alone is wrong
+     * often enough to matter: a column called `logged` holds a date under a name
+     * that does not say so, and a `description` reading "2026 review" is prose
+     * that merely opens with a year.
+     */
+    private static function looksTemporal(string $column, string $value): bool
+    {
+        if (preg_match('/(^|_)(at|date|time|on)$/i', $column) === 1) {
+            return true;
+        }
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2})?/', $value) === 1;
     }
 }

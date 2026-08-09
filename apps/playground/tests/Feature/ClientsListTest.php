@@ -341,6 +341,95 @@ final class ClientsListTest extends TestCase
         $this->assertCount(1, $bySurname, 'Searching a surname must find the record.');
     }
 
+    /**
+     * EVERY WORD MUST MATCH, AND THEY MAY MATCH DIFFERENT COLUMNS.
+     *
+     * The phrase used to be one pattern, so a search only ever succeeded when
+     * the words appeared together, in that order, inside a SINGLE column.
+     * Anybody typing a name and a code - the two things printed on the thing in
+     * front of them - got nothing back.
+     *
+     * ANDing the words also means typing more can only narrow. The previous
+     * shape ORed nothing and matched nothing; a shape that ORed the words would
+     * be worse still, because every extra word would WIDEN the result and the
+     * search would get less useful the harder somebody tried.
+     */
+    public function test_search_matches_words_spread_across_different_columns(): void
+    {
+        DB::table('clients')->insert([
+            'tenant_id' => $this->tenantA->id,
+            'name' => 'Amina Achieng',
+            'phone' => '+254700000001',
+            'access_code' => 'ZZ9001',
+            'status' => 'active',
+            'plan_type' => 'pppoe',
+            'expiry_date' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $records = $this->actingAs($this->userA)->get('/clients?search=Amina+ZZ9001')->assertOk()
+            ->viewData('page')['props']['records'];
+
+        $this->assertCount(
+            1,
+            $records,
+            'A name in one column and a code in another must be findable together.',
+        );
+
+        // And an extra word that matches nothing removes the row rather than
+        // leaving it in - otherwise more typing would mean more results.
+        $narrowed = $this->actingAs($this->userA)->get('/clients?search=Amina+NOSUCHTHING')->assertOk()
+            ->viewData('page')['props']['records'];
+
+        $this->assertSame([], $narrowed);
+    }
+
+    /**
+     * A QUOTED PHRASE IS ONE TERM. Without this, an exact name is unsearchable:
+     * the words go their separate ways and match two unrelated columns.
+     */
+    public function test_a_quoted_phrase_is_searched_as_one_term(): void
+    {
+        foreach ([['Amina Achieng', 'QP0001'], ['Achieng Amina', 'QP0002']] as [$name, $code]) {
+            DB::table('clients')->insert([
+                'tenant_id' => $this->tenantA->id,
+                'name' => $name,
+                'phone' => '+254700000000',
+                'access_code' => $code,
+                'status' => 'active',
+                'plan_type' => 'pppoe',
+                'expiry_date' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $records = $this->actingAs($this->userA)->get('/clients?search='.urlencode('"Amina Achieng"'))
+            ->assertOk()->viewData('page')['props']['records'];
+
+        $this->assertCount(
+            1,
+            $records,
+            'Quoting must match the phrase in order, not the two words separately.',
+        );
+    }
+
+    /**
+     * INVISIBLE CHARACTERS ARE NOT SEARCH TERMS. U+3164 survives `trim()` and
+     * looks like a space, so a pasted term carrying one matched nothing while
+     * appearing perfectly ordinary.
+     */
+    public function test_invisible_filler_characters_do_not_break_a_search(): void
+    {
+        $this->makeClients($this->tenantA, 1, 'Amina');
+
+        $records = $this->actingAs($this->userA)->get('/clients?search='.urlencode("Amina\u{3164}"))
+            ->assertOk()->viewData('page')['props']['records'];
+
+        $this->assertCount(1, $records);
+    }
+
     public function test_search_still_does_not_match_mid_word(): void
     {
         $this->makeClients($this->tenantA, 1, 'Alpha');
