@@ -42,7 +42,25 @@ declare global {
  * carried on, so pages still rendered - client-side, having silently lost
  * server rendering for every route.
  */
-if (typeof window !== 'undefined') {
+/*
+ * THE SOCKET IS OPT-IN, AND THE .env IS THE SWITCH.
+ *
+ * This used to construct Echo unconditionally, so an installation with no
+ * Reverb - or with keys left over from another machine and nothing listening -
+ * got a client that retried ws://host:8080 forever: a console full of failed
+ * connections, a reconnect loop burning battery, and the LOOK of a page that
+ * never settles. Nothing was actually broken, which is why it survived; the
+ * poll fallback hid it.
+ *
+ * With no key configured there is nothing to connect to, so nothing is
+ * constructed: `window.Echo` stays undefined, `useLiveUpdates` sees that and
+ * uses the internal poll driver, and the panel needs neither Reverb nor Redis
+ * to function. Set VITE_REVERB_APP_KEY (and run Reverb) and the socket comes
+ * back exactly as before.
+ */
+const reverbKey = (import.meta.env.VITE_REVERB_APP_KEY ?? '') as string;
+
+if (typeof window !== 'undefined' && reverbKey !== '') {
     /*
      * Echo reaches for a global `Pusher`, so it is assigned rather than merely
      * imported. Reverb speaks the Pusher protocol, which is why this client

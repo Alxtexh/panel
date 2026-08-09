@@ -124,6 +124,19 @@ interface Dimension {
     options: { value: number; label: string }[]
 }
 
+/*
+ * EVERY PAGE PROP ARRIVES AS AN ATTRIBUTE, and this page's root is a fragment.
+ *
+ * Inertia binds the WHOLE page payload onto the page component - the declared
+ * props bind as props, and the twenty-odd others (shared props, plus every
+ * deferred stat_* and chart_* as it lands) arrive as plain attributes. A
+ * fragment root has nowhere to auto-inherit them, so Vue warned - once per
+ * deferred prop, on every visit, growing the list each time - which read
+ * exactly like the page reloading over and over. It was neither reloading nor
+ * broken: the attributes are unused here by design, and this says so.
+ */
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(
     defineProps<{
         /**

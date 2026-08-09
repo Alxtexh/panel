@@ -132,12 +132,40 @@ Two halves:
 **Gate:** raise a ticket in a tenant portal, answer it from superadmin, and see
 both sides - which is the two-portal test that is impossible today.
 
-### 2.4 `panel:doctor` still cries wolf
+### 2.4 The socket is opt-in, and the session must be allowed to die
 
-`DoctorCommand::checkSomebodyCanOpenThePanel()` reports "nobody can open the
-panel" on a healthy install. Spatie teams are on, so a CLI run resolves no team
-and `whereHas('roles')` counts zero. The check that exists to catch silent
-failure is the one lying. Count on the pivot, or set the team first.
+**The first half is FIXED.** `echo.ts` constructed Echo unconditionally, so an
+installation without Reverb - or, as here, with keys left over from another
+machine and nothing listening - retried `ws://localhost:8080` forever: a
+console full of failed sockets and a page that never looked settled. Echo now
+constructs only when `VITE_REVERB_APP_KEY` is set; without it `window.Echo`
+stays undefined and `useLiveUpdates` uses the internal poll driver, so
+**neither Reverb nor Redis is required for the panel to function**. The
+playground `.env` now ships with the block commented out.
+
+Related and fixed with it: the dashboard's ~20 deferred props each tripped a
+Vue extraneous-attrs warning as they landed, once per prop per visit - which
+read exactly like the page reloading on a timer. It was neither: an idle
+dashboard makes zero requests (measured over 26s). The packaged page now
+declares `inheritAttrs: false`.
+
+**The second half is REAL and still open.** Pages that opt into live updates
+poll every `PANEL_LIVE_INTERVAL` (10s), and every poll is an authenticated
+request that resets Laravel's session idle timer - so a tab left open on a
+wall never expires, which defeats `SESSION_LIFETIME` entirely. The fix is an
+ABSOLUTE session ceiling alongside the idle one: a login-timestamp check in
+middleware that ends the session after N hours regardless of activity.
+Background polls keep working until the ceiling; a person is re-authenticated
+daily. This is standard enterprise session policy and needs no external
+service.
+
+### 2.5 `panel:doctor` still cries wolf - FIXED
+
+`checkSomebodyCanOpenThePanel()` counted `whereHas('roles')` under Spatie's
+team scoping, which a console run pins to a null team - zero on any healthy
+installation. It counts the pivot directly now, and the test that used to pass
+*because* of the bug (the factory grants every user a role, so the false alarm
+was what it matched) builds a genuinely roleless account.
 
 ---
 
