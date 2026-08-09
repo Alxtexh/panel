@@ -1,0 +1,213 @@
+# Plan: what Filament taught us, and what is still half-done
+
+Written 2026-08-09. Everything below was verified against the running
+application or against Filament v3.3.54 and v5.7.6 source read in
+`%TEMP%/filament-study*`, not inferred from documentation.
+
+---
+
+## 0. Already done, no work needed
+
+Four real search defects, all fixed and covered by tests. Recorded here so
+nobody re-does them.
+
+| Was wrong | Now |
+|---|---|
+| Aborted request's `finally` cleared `searching` after the next request set it - spinner died under a pending search | Sequence guard; only the newest request may touch shared state |
+| Every backspace refetched a term just seen | Bounded query cache, cleared on close. Measured: cached term renders ~120ms, no network |
+| `titleColumn()` picked the first string-ish column, so Activity results all read `2026-08-08 16:47:41` | Date-like columns skipped by name and by value |
+| Whole phrase was one `LIKE`; **and** `LIKE` is case-sensitive on Postgres | Per-word AND / per-column OR, quoted phrases via `str_getcsv`, invisible Hangul fillers normalised, `ILIKE` on pgsql |
+
+The Postgres one had never been caught because development is SQLite, where
+`LIKE` is case-insensitive. CI has a pgsql job and nothing covered search there.
+
+**Also fixed in passing:** `packages/ui/node_modules` held Linux rollup
+binaries, so the UI unit suite could not run on Windows at all.
+
+---
+
+## 1. What is still borrowed-but-unbuilt
+
+Ordered by value per hour. Filament does all of these; we do none of them.
+
+### 1.1 Relationship search — the biggest capability gap
+
+Filament's `getGloballySearchableAttributes()` accepts `customer.name` and turns
+it into a `whereHas`. Ours searches columns on the model only, so **an invoice
+cannot be found by its customer's name** - which is how people actually look
+for invoices.
+
+Work: `ListQuery::$searchable` accepts dotted paths; split on the last dot,
+`whereHas(relation, fn => where(column, $like, ...))`. The per-word AND wrapper
+already built stays as-is.
+
+**Gate:** searching a customer name returns their invoices, and the query count
+does not grow with row count.
+
+### 1.2 Result details in the palette
+
+`SearchController` hardcodes `'subtitle' => null`. Two rows both reading
+"100Mbps Business" are indistinguishable, which makes the palette a list you
+cannot choose from.
+
+Work: a `searchSubtitle()` on the resource, defaulting to the second sensible
+column. Reuse the `titleColumn()` heuristic, minus the chosen title.
+
+### 1.3 A separate query root for search
+
+Filament has `getGlobalSearchEloquentQuery()` so a resource can eager-load what
+its titles and subtitles need. We reuse the list query. The moment 1.1 and 1.2
+land, titles start touching relations and this becomes an N+1 per keystroke.
+
+**Do this before 1.1 and 1.2, not after.**
+
+### 1.4 Escape hatches
+
+Three small ones, each earning its keep the first time a resource is unusual:
+
+- `searchResultLimit()` per resource - today `LIMIT` is a constant for all.
+- `modifySearchQuery()` - the only way to express "search only active rows".
+- `shouldSplitSearchTerms()` - splitting breaks exact-reference lookup, where
+  the reference legitimately contains a space. Filament added this in v5 for
+  exactly that reason.
+
+### 1.5 Result group ordering
+
+Filament v5 has `globalSearchSort()`. Ours returns groups in resource
+registration order, which is arbitrary - so the least useful group can sit
+first. A declared sort, defaulting to today's order.
+
+### 1.6 Database transactions around actions
+
+`Filament\Panel\Concerns\HasDatabaseTransactions` - opt-in per panel, wraps
+actions so a failure leaves no partial write. Given bulk actions here have no
+queue threshold (below), correctness before throughput is the right order.
+
+**Gate:** a create that throws halfway leaves zero rows, proven by a test that
+throws deliberately.
+
+### 1.7 Rate limiting on auth actions
+
+v5 rate-limits second-factor setup/disable. We have passkeys and OTP; the gap is
+the throttle, not the factors.
+
+---
+
+## 2. What is half-done and needs finishing
+
+### 2.1 The tree is uncommitted
+
+**Do this first.** Three unrelated strands are piled together: the Phase 1-3
+shell work, the SEO subsystem, and everything from this session (cleanup,
+Windows test fixes, search, user management, StatStrip). Split into commits
+before adding more. Nothing else in this document is safe until this is done.
+
+### 2.2 Sidebar: a group that is a section, not a dropdown
+
+Requested and not built. Every group renders as a collapsible; there is no way
+to say "this one is a plain section", which is how tenants would learn both
+presentations exist.
+
+Work: a `collapsible` flag travelling server -> `panelPages` -> `usePanelNav`
+-> `AppSidebar`. Default true, so nothing changes unless asked.
+
+### 2.3 Superadmin portal, and editable content
+
+The larger of the two, and the one that unblocks the most.
+
+**Confirmed today:** Help and FAQ come from `config('panel.help.categories')`
+plus hardcoded `defaultQuestions()` arrays; What's new comes from
+`config('panel.changelog')`. **None of it is editable at runtime** - fixing a
+typo in an FAQ is a deploy.
+
+Two halves:
+
+1. **Content becomes DB-backed** - Help, FAQ, What's new, About, API reference.
+   Per-tenant where it makes sense. This is also the worked example of a
+   non-resource CRUD screen the starter is missing.
+2. **A central `superadmin` panel** that can impersonate, see every tenant's
+   tickets, and edit the above. The parts exist: `make:panel`, the impersonation
+   banner, tenant-scoped tickets. Assemble rather than invent.
+
+**Gate:** raise a ticket in a tenant portal, answer it from superadmin, and see
+both sides - which is the two-portal test that is impossible today.
+
+### 2.4 `panel:doctor` still cries wolf
+
+`DoctorCommand::checkSomebodyCanOpenThePanel()` reports "nobody can open the
+panel" on a healthy install. Spatie teams are on, so a CLI run resolves no team
+and `whereHas('roles')` counts zero. The check that exists to catch silent
+failure is the one lying. Count on the pivot, or set the team first.
+
+---
+
+## 3. Enterprise scale — the things that will actually break
+
+Not borrowed from anywhere; observed here.
+
+1. **Search does one `LIKE` per resource per keystroke, capped at 8.** The
+   `% word%` half cannot use a btree index. On Postgres with millions of rows
+   that is eight sequential scans per keystroke per admin. The fix needs no
+   external service: `pg_trgm` GIN indexes, or `tsvector`, or MySQL `FULLTEXT`,
+   behind a small driver interface. **This is the first thing to fall over.**
+2. **Bulk actions have no queue threshold.** A bulk mutation over 500k rows runs
+   inside a web request unless somebody declared it a job.
+3. **Live updates default to polling**, and the broadcast transport is
+   authorised but untested - `BroadcastChannelTest` proves who may subscribe and
+   then nothing connects. Reverb is already `require-dev`; make it first-class.
+4. **The dashboard is ~20 independent deferred queries.** The per-widget
+   boundary is right for resilience and wrong for round trips.
+
+---
+
+## 4. Where we are ahead of Filament — do not "fix" these
+
+Recorded so nobody borrows backwards.
+
+- **Transport.** Filament's global search is a Livewire component in v3 *and*
+  v5: every keystroke is a full server round trip re-rendering the component -
+  the exact latency floor this project was built against. Ours is a lean JSON
+  endpoint with client debounce, abort and cache.
+- **LIKE escaping.** Filament interpolates `"%{$search}%"` unescaped in both
+  versions, so a user typing `%` matches every row. We escape `%` and `_`.
+- **Deny-by-default policies, deferred counts, keyset pagination, one query for
+  N tabs.** All still ours.
+
+---
+
+## 5. Order, and why
+
+```
+2.1 commit the tree          <- nothing is safe until this is done
+ |
+1.3 search query root        <- before 1.1/1.2, or they create an N+1
+ |
+1.1 relationship search  +  1.2 result details
+ |
+2.2 sidebar group            <- small, visible, unblocks the tenant story
+ |
+2.3 superadmin + editable content   <- the big one
+ |
+1.4 1.5 1.6 1.7              <- escape hatches, sort, transactions, throttle
+ |
+3.1 search indexing          <- when row counts, not opinions, demand it
+```
+
+2.4 (doctor) can be done at any point by anybody; it is twenty minutes and
+independent of everything else.
+
+---
+
+## 6. How each step is proved
+
+The same four layers `STARTER_PLAN.md` established, unchanged:
+
+1. **Tests.** 2,116 feature tests are green right now. Any step that cannot be
+   asserted is a step that is not finished.
+2. **Screenshot comparison.** `scripts/shots.sh` + `scripts/shots-diff.mjs`.
+   Both work again - the diff script had never once run (`pixelmatch` v6 is
+   ESM-only and `require` returned the namespace), and `shots.sh` now falls back
+   to system Chrome.
+3. **`panel:doctor` clean** - which requires 2.4 first, or its output is noise.
+4. **Build gate.** `npm run build`, `vue-tsc --noEmit`, `eslint`, `pint`,
+   `phpstan`.

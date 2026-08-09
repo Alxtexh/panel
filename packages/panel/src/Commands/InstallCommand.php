@@ -6,7 +6,6 @@ namespace PanelKit\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\Support\ClientTarball;
 use PanelKit\Panel\Support\PanelPages;
 use PanelKit\Panel\Support\UserRoles;
 
@@ -56,16 +55,14 @@ final class InstallCommand extends Command
         $this->newLine();
         $this->components->info('Done. Next:');
         /*
-         * THE PATH IS RESOLVED, NOT DESCRIBED. This is the step that strands
-         * people - skip it and every route answers 200 with a blank screen -
-         * so it prints as something to paste rather than something to work
-         * out. The tarball ships inside this package, so there is no registry
-         * to reach and no token that can be missing.
+         * THIS IS THE STEP THAT STRANDS PEOPLE - skip it and every route
+         * answers 200 with a blank screen - so it prints as something to
+         * paste rather than something to work out.
          */
-        $this->line('  1. '.ClientTarball::installCommand().' && npm run build');
-        $this->line('     The screens are Vue, so they ship as a tarball INSIDE this package');
-        $this->line('     rather than on a registry - one credential for both halves, and a');
-        $this->line('     client that cannot be a different version from the PHP.');
+        $this->line('  1. npm install && npm run build');
+        $this->line('     The screens are Vue and come from `packages/ui`, which this');
+        $this->line('     workspace installs directly - there is no registry to reach and no');
+        $this->line('     token that can be missing.');
         $this->line('     The published resources/css/app.css already points Tailwind at it -');
         $this->line('     without that every utility used only inside the package is purged,');
         $this->line('     and you get a correct table with no styling at all.');
