@@ -94,10 +94,25 @@ final class FirstAdministratorTest extends TestCase
     /**
      * DOCTOR NAMES THE LOCKED PANEL, because a panel where every screen answers
      * 403 gives its owner nothing to read.
+     *
+     * `roleless()` IS THE POINT OF THIS TEST, and its absence was hiding the
+     * check's own bug. The factory provisions every user WITH a role, so the
+     * account created here always held one - and the old check still said
+     * "none holds a role", because `whereHas('roles')` under Spatie teams
+     * resolves no team in a console run and counts zero on any installation.
+     * The test asserted the false alarm and passed BECAUSE of the defect.
+     * Now the check counts the pivot directly, so proving "doctor reports a
+     * lockout" requires actually building one.
      */
     public function test_doctor_reports_accounts_that_hold_no_role(): void
     {
-        $this->account('locked@example.test');
+        $tenant = Tenant::create(['name' => 'Acme', 'slug' => 'acme-'.uniqid()]);
+
+        User::factory()->roleless()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'locked@example.test',
+            'email_verified_at' => now(),
+        ]);
 
         $this->artisan('panel:doctor')
             ->expectsOutputToContain('none holds a role')
