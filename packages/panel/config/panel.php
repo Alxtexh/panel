@@ -291,6 +291,27 @@ return [
         'max_attempts' => 5,
         'decay_seconds' => 60,
 
+        'session' => [
+            /*
+            | AN ABSOLUTE CEILING, IN HOURS, MEASURED FROM SIGN-IN.
+            |
+            | `SESSION_LIFETIME` is an IDLE timer, and this panel defeats it:
+            | live updates poll every ten seconds, the bell polls, a dashboard
+            | left on a wall reloads its widgets - so a session in constant
+            | machine use never idles and never expires. A tab open on an
+            | unattended screen stays signed in until somebody closes the
+            | browser, which is the whole of the risk the idle timer was set to
+            | bound, and nothing warns because the session genuinely is busy.
+            |
+            | This is the ceiling a poll cannot push back. `0` disables it,
+            | which is the default because signing everybody out on a schedule
+            | is a policy an installation chooses rather than one a package
+            | imposes. Set it to the length of a working day and somebody is
+            | re-authenticated daily; set it lower for shared machines.
+            */
+            'max_hours' => (float) env('PANEL_SESSION_MAX_HOURS', 0),
+        ],
+
         /*
         | SOCIAL SIGN-IN.
         |

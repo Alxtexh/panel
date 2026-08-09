@@ -255,6 +255,14 @@ final class PanelRoutes
              * two parts whose failure is silent.
              */
             Middleware\SharePanelProps::class,
+
+            /*
+             * THE ABSOLUTE SESSION CEILING, after the panel is known so it can
+             * ask the panel's own guard rather than the default one. Off unless
+             * `panel.auth.session.max_hours` says otherwise - see the
+             * middleware for why an idle timer is not enough here.
+             */
+            Middleware\EnforceSessionLifetime::class,
         ])
             ->prefix($panel->getPath())
             ->name($panel->getRouteName())
