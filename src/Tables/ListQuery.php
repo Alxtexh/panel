@@ -70,6 +70,9 @@ final class ListQuery
      */
     private ?Closure $constrain = null;
 
+    /** The caller's eloquent-stage hook - see modifyEloquent(). */
+    private ?Closure $modifyEloquent = null;
+
     private ?Closure $transform = null;
 
     /** @var Closure(list<array<string, mixed>>): void|null */
@@ -176,6 +179,23 @@ final class ListQuery
     public function constrain(Closure $constrain): self
     {
         $this->constrain = $constrain;
+
+        return $this;
+    }
+
+    /**
+     * A caller's one chance at the ELOQUENT builder, before scopes resolve.
+     *
+     * `constrain` belongs to the TABLE - it is part of the resource's own
+     * definition and travels with `toListQuery()`. This one belongs to the
+     * CALLER: the search endpoint threads `Resource::modifySearchQuery()`
+     * through it, so a palette can be narrowed without the list screen
+     * changing underneath it. Applied after the table's own constraint, so a
+     * caller can only tighten what the definition already decided.
+     */
+    public function modifyEloquent(Closure $modify): self
+    {
+        $this->modifyEloquent = $modify;
 
         return $this;
     }
@@ -1183,6 +1203,12 @@ final class ListQuery
          */
         if ($this->constrain !== null) {
             ($this->constrain)($eloquent);
+        }
+
+        // The caller's hook, after the table's own constraint - see
+        // modifyEloquent() for whose it is and why they are separate.
+        if ($this->modifyEloquent !== null) {
+            ($this->modifyEloquent)($eloquent);
         }
 
         // toBase() applies global scopes (including tenant scoping) before

@@ -36,8 +36,6 @@ use PanelKit\Panel\Resources\Resource;
  */
 final class SearchController extends Controller
 {
-    /** Per resource. Small enough to stay fast, large enough to be useful. */
-    private const LIMIT = 5;
 
     /** Below this a prefix search matches too much to be worth the round trip. */
     private const MIN_LENGTH = 2;
@@ -105,29 +103,87 @@ final class SearchController extends Controller
     {
         $definition = $class::definition();
 
+        $limit = max(1, min(25, $class::searchResultLimit()));
+
         /*
          * A SUB-REQUEST, so the resource's own state reader applies. `search`
          * is the parameter its list screen uses, and `run()` is the method that
          * turns it into the word-prefix match, the tenant scope and the joins -
          * all of which this endpoint would otherwise reimplement slightly
          * differently, which is how two searches disagree about what exists.
+         *
+         * `modifyEloquent` is the one seam that is the PALETTE'S rather than
+         * the list's: `modifySearchQuery` runs before scopes resolve, so a
+         * resource can narrow or eager-load for this endpoint without its list
+         * screen changing underneath it.
          */
         $result = $definition
             ->toListQuery($class::model())
-            ->run(Request::create('/', 'GET', ['search' => $term, 'per_page' => self::LIMIT]));
+            ->modifyEloquent(static function ($query) use ($class, $term): void {
+                $class::modifySearchQuery($query, $term);
+            })
+            ->run(Request::create('/', 'GET', ['search' => $term, 'per_page' => $limit]));
 
         $key = 'id';
         $title = $this->titleColumn($result->records);
+        $subtitle = $this->subtitleColumn($class, $result->records, $title);
 
         return array_map(
             static fn (array $row): array => [
                 'id' => $row[$key] ?? null,
                 'title' => (string) ($row[$title] ?? $row[$key] ?? ''),
-                'subtitle' => null,
+                'subtitle' => $subtitle !== null && ($row[$subtitle] ?? '') !== ''
+                    ? (string) $row[$subtitle]
+                    : null,
                 'href' => $prefix.'/'.$class::key().'/'.($row[$key] ?? ''),
             ],
-            array_slice($result->records, 0, self::LIMIT),
+            array_slice($result->records, 0, $limit),
         );
+    }
+
+    /**
+     * The column that tells two same-titled rows apart.
+     *
+     * FIVE RESULTS ALL READING "100Mbps Business" ARE A LIST NOBODY CAN CHOOSE
+     * FROM - the title says which KIND of thing was found and the subtitle says
+     * WHICH ONE. The resource may name the column; otherwise the guess is the
+     * next sensible text column after the title, under the same no-timestamps
+     * rule the title itself follows.
+     *
+     * @param  list<array<string, mixed>>  $records
+     */
+    private function subtitleColumn(string $class, array $records, string $title): ?string
+    {
+        $declared = $class::searchSubtitleColumn();
+
+        if ($declared !== null) {
+            // Declared but absent from the select is a misdeclaration, and a
+            // silently empty subtitle is how it would stay one. Null keeps the
+            // row rendering; the fix belongs in the resource.
+            return isset($records[0][$declared]) ? $declared : null;
+        }
+
+        foreach (['email', 'reference', 'phone', 'status', 'description'] as $candidate) {
+            if ($candidate !== $title && isset($records[0][$candidate])) {
+                return $candidate;
+            }
+        }
+
+        foreach (array_keys($records[0] ?? []) as $column) {
+            $value = $records[0][$column] ?? null;
+
+            if ($column === 'id' || $column === $title || ! is_string($value)) {
+                continue;
+            }
+
+            if (self::looksTemporal((string) $column, $value)) {
+                continue;
+            }
+
+            return (string) $column;
+        }
+
+        return null;
     }
 
     /**
