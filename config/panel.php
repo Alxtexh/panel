@@ -87,6 +87,26 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Navigation
+    |---------------------------------------------------------------------------
+    |
+    | `static_groups` names sidebar groups that render as plain, always-open
+    | SECTIONS rather than collapsible dropdowns - heading, items, no chevron,
+    | no open/closed state to remember. Both presentations exist for a reason:
+    | a group of twenty resources earns a toggle, a group of three screens
+    | somebody uses all day earns permanence. Empty by default, so every group
+    | keeps the collapsible behaviour it has always had.
+    |
+    | Comma-separated in the env form: PANEL_NAV_STATIC_GROUPS="Screens,Apps".
+    | Names must match the group strings resources and pages declare.
+    |
+    */
+    'navigation' => [
+        'static_groups' => array_filter(explode(',', (string) env('PANEL_NAV_STATIC_GROUPS', ''))),
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
     | Table rendering
     |---------------------------------------------------------------------------
     */
