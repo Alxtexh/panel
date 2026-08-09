@@ -138,7 +138,7 @@ final class PanelPages
          * install opens on something useful rather than on an empty shelf or on
          * an ISP's articles about fibre plans.
          */
-        'settings/UserManagement',
+        'UserManagement',
         'settings/Workspaces',
         'settings/Organisation',
         'settings/Index',

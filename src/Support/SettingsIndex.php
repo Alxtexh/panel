@@ -100,13 +100,20 @@ final class SettingsIndex
                 'title' => 'Workspaces',
                 'description' => 'The organisations you belong to; switch between them or start a new one.',
             ],
-            [
-                'key' => 'user-management',
-                'route' => 'pages.user-management',
-                'title' => 'User management',
-                'description' => 'Who is here, and what they may do.',
-                'ability' => 'manage_roles',
-            ],
+            /*
+             * USER MANAGEMENT IS NOT LISTED HERE, and that is the point.
+             *
+             * It is a screen of its own - who is in the organisation and what
+             * each role may do - reached from the account menu, from a role, or
+             * by searching. Listing it among Profile, Security, Organisation
+             * and Workspaces filed a first-class destination under a heading it
+             * does not belong to, and the settings shell it inherited from that
+             * gave it a second title and a back-link to somewhere it had never
+             * been.
+             *
+             * `Roles` stays: the bare permission matrix genuinely is a
+             * configuration screen, and user management embeds it as a tab.
+             */
             [
                 'key' => 'roles',
                 'route' => 'roles',

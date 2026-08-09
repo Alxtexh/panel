@@ -52,9 +52,25 @@ class UserManagementPage extends Page
         return 'manage_roles';
     }
 
+    /**
+     * A TOP-LEVEL SCREEN, NOT A SETTINGS ONE - and the component name is what
+     * decides that.
+     *
+     * IT USED TO BE `settings/UserManagement`, and the prefix alone put it
+     * inside the settings shell: the layout resolver wraps every `settings/*`
+     * page in `SettingsLayout`, so this screen rendered under a "Settings"
+     * heading, behind an "All settings" back-link, beside a sidebar of Profile,
+     * Security, Organisation and Workspaces. None of those are where somebody
+     * managing people is going, and the screen has its own heading already - so
+     * the page arrived twice-titled and filed under something it is not.
+     *
+     * The url was never `/settings/...`; only the component name said settings,
+     * which is exactly the kind of disagreement that survives because nothing
+     * errors.
+     */
     public static function component(): string
     {
-        return 'settings/UserManagement';
+        return 'UserManagement';
     }
 
     /**
