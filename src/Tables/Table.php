@@ -62,6 +62,9 @@ final class Table
     /** @var list<Filter> */
     private array $filters = [];
 
+    /** @var array<string, list<string>> relation name => its searched columns */
+    private array $searchableRelations = [];
+
     /** @var list<BulkAction> */
     private array $bulkActions = [];
 
@@ -136,6 +139,24 @@ final class Table
     public function filters(array $filters): self
     {
         $this->filters = $filters;
+
+        return $this;
+    }
+
+    /**
+     * Search THROUGH a relation - an invoice found by its customer's name.
+     *
+     * The columns marked `->searchable()` can only be the model's own (or a
+     * declared join's), and the thing printed on the paper in front of
+     * somebody is usually the OTHER side of a relation. Declared per relation,
+     * repeatable, and applied as an EXISTS subquery rather than a join so a
+     * has-many cannot duplicate rows - see ListQuery::searchableRelations().
+     *
+     * @param  list<string>  $columns  columns on the related model
+     */
+    public function searchesRelation(string $relation, array $columns): self
+    {
+        $this->searchableRelations[$relation] = $columns;
 
         return $this;
     }
@@ -643,6 +664,7 @@ final class Table
             ->select($this->resolveSelect())
             ->sortable($this->resolveSortable())
             ->searchable($this->resolveSearchable())
+            ->searchableRelations($this->searchableRelations)
             ->summaries($this->resolveSummaries())
             ->filters($this->filters)
             ->defaultSort($this->defaultSort, $this->defaultDirection)
