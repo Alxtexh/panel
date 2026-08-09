@@ -85,6 +85,16 @@ interface NavPayload {
 export interface NavGroup {
     name: string
     items: NavItem[]
+    /**
+     * Whether the group renders as a dropdown at all.
+     *
+     * `false` makes it a plain, always-open SECTION - heading, items, no
+     * chevron, no open/closed state. Declared server-side in
+     * `panel.navigation.static_groups`, because which groups earn permanence
+     * is the installation's call, not the component's. Absent means `true`,
+     * which is the behaviour every group has always had.
+     */
+    collapsible: boolean
 }
 
 export function usePanelNav() {
@@ -144,10 +154,24 @@ export function usePanelNav() {
                 },
                 ...ungrouped,
             ] as NavItem[],
-            groups: [...grouped.entries()].map(([name, items]): NavGroup => ({
-                name,
-                items,
-            })),
+            groups: (() => {
+                /*
+                 * The server names which groups are permanent sections; a name
+                 * it does not mention keeps the collapsible behaviour. Matched
+                 * by the same group string the items declare, so a typo in the
+                 * config produces a group that still collapses rather than one
+                 * that errors - visible on the first look, harmless until then.
+                 */
+                const statics = new Set(
+                    (page.props.panelStaticGroups as string[] | undefined) ?? [],
+                )
+
+                return [...grouped.entries()].map(([name, items]): NavGroup => ({
+                    name,
+                    items,
+                    collapsible: !statics.has(name),
+                }))
+            })(),
         }
     })
 

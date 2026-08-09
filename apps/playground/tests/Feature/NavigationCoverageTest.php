@@ -553,6 +553,35 @@ final class NavigationCoverageTest extends TestCase
         $this->assertFalse($props['panelHome']['isDefault']);
     }
 
+    /**
+     * A GROUP CAN BE A SECTION, AND THE SERVER SAYS WHICH.
+     *
+     * Every group used to be a collapsible dropdown - the only presentation
+     * there was. `panel.navigation.static_groups` names the ones that render
+     * as plain always-open sections instead, shared as `panelStaticGroups` so
+     * the sidebar needs no second request to know. Empty by default, because
+     * a default that changed every existing installation's sidebar would be a
+     * redesign nobody asked for.
+     */
+    public function test_static_groups_are_shared_and_default_to_none(): void
+    {
+        config()->set('panel.navigation.static_groups', []);
+
+        $props = $this->actingAs($this->admin)->get('/dashboard')->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertSame([], $props['panelStaticGroups']);
+
+        config()->set('panel.navigation.static_groups', ['Screens', '  ', 'Apps']);
+
+        $props = $this->actingAs($this->admin)->get('/dashboard')->assertOk()
+            ->viewData('page')['props'];
+
+        // Trimmed and re-indexed: a stray comma in the env line must not ship
+        // an empty group name to the client.
+        $this->assertSame(['Screens', 'Apps'], $props['panelStaticGroups']);
+    }
+
     /** The operator portal keeps everything it had. */
     public function test_the_application_portal_still_lists_its_own_pages(): void
     {

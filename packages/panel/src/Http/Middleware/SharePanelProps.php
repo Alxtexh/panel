@@ -71,6 +71,23 @@ final class SharePanelProps
             'panelNav' => static fn (): array => PanelNavigation::build(),
 
             /*
+             * GROUPS THAT ARE SECTIONS, NOT DROPDOWNS.
+             *
+             * Every sidebar group used to be a collapsible - the only
+             * presentation there was. A name listed here renders as a plain,
+             * always-open section instead: heading, items, no chevron, no
+             * state. Declared in config because it is an INSTALLATION'S
+             * decision about its own information architecture - a group of
+             * three ever-used screens earns permanence; a group of twenty
+             * resources earns a toggle - and the demo declares one so anybody
+             * building on it can see both presentations exist.
+             */
+            'panelStaticGroups' => static fn (): array => array_values(array_filter(array_map(
+                'trim',
+                (array) config('panel.navigation.static_groups', []),
+            ), static fn (string $name): bool => $name !== '')),
+
+            /*
              * THE BIN, for the packaged account menu. The reference app shares
              * this itself; an application that has is left alone (same rule as
              * `auth` below), and one that has not gets the package's own

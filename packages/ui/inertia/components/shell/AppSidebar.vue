@@ -248,6 +248,19 @@ const navGroups = computed(() => {
 })
 
 /*
+ * GROUPS THAT ARE SECTIONS, NOT DROPDOWNS - see `panel.navigation.static_groups`.
+ *
+ * A section has no open/closed state at all: it takes no part in the collapsed
+ * set, its heading is a heading rather than a button, and its items are always
+ * rendered. Everything below that touches `collapsed` asks this set first, so
+ * a stale localStorage entry naming a group that later became a section cannot
+ * hide it - the set wins, not the leftover preference.
+ */
+const staticGroups = computed(
+    () => new Set(nav.value.groups.filter((group) => !group.collapsible).map((group) => group.name)),
+)
+
+/*
  * The key is versioned because the DEFAULT changed.
  *
  * Groups used to open by default and the stored value records which ones are
@@ -272,7 +285,9 @@ const NAV_STORAGE_KEY = 'panelkit.nav.collapsed.v2'
  */
 function defaultCollapsed(): Set<string> {
     return new Set(
-        navGroups.value.grouped.filter(([, items]) => !groupIsActive(items)).map(([name]) => name),
+        navGroups.value.grouped
+            .filter(([name, items]) => !staticGroups.value.has(name) && !groupIsActive(items))
+            .map(([name]) => name),
     )
 }
 
@@ -300,6 +315,12 @@ function readCollapsed(): Set<string> {
 const collapsed = ref<Set<string>>(readCollapsed())
 
 function toggleGroup(name: string) {
+    // A section has nothing to toggle; its heading is not even a button, so
+    // this is belt-and-braces for a programmatic caller.
+    if (staticGroups.value.has(name)) {
+        return
+    }
+
     const next = new Set(collapsed.value)
 
     if (next.has(name)) {
@@ -459,7 +480,23 @@ watch(
                     A group-level icon is worth adding when a group exists that
                     the first item does not represent.
                 -->
+                <!--
+                    A SECTION'S HEADING IS A HEADING, NOT A BUTTON. Rendering
+                    it as a disabled button would promise a toggle it refuses;
+                    a <p> promises nothing. No chevron either - the chevron is
+                    the affordance that says "this closes", and a section never
+                    does.
+                -->
+                <p
+                    v-if="staticGroups.has(name)"
+                    class="flex w-full items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground"
+                >
+                    <component :is="items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
+                    <span class="flex-1 text-left">{{ name }}</span>
+                </p>
+
                 <button
+                    v-else
                     type="button"
                     class="flex w-full items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
                     :aria-expanded="!collapsed.has(name)"
@@ -480,7 +517,7 @@ watch(
                 </button>
 
                 <NavMain
-                    v-if="!collapsed.has(name)"
+                    v-if="staticGroups.has(name) || !collapsed.has(name)"
                     :items="items"
                     nested
                     @navigate="closeOnMobile"
