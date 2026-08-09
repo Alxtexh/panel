@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PanelKit\Panel\Resources;
 
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Http\Request;
@@ -509,6 +510,50 @@ abstract class Resource
     public static function model(): string
     {
         return static::$model;
+    }
+
+    /* ------------------------------------------------- the command palette */
+
+    /**
+     * Shape what the palette searches, without touching what the list shows.
+     *
+     * THE SEARCH ENDPOINT USED TO REUSE THE LIST QUERY WHOLESALE, which was the
+     * right instinct - one search implementation, one tenant scope, one set of
+     * searchable columns - and left no seam at all: a resource that wanted the
+     * palette to skip archived rows, or to prefer recent ones, had no place to
+     * say so short of changing its list screen too. This hook runs at the
+     * ELOQUENT stage, before scopes resolve, so a constraint here composes with
+     * tenancy rather than fighting it.
+     *
+     * The default does nothing, which is the previous behaviour exactly.
+     */
+    public static function modifySearchQuery(EloquentBuilder $query, string $term): void {}
+
+    /**
+     * How many rows this resource may put in the palette.
+     *
+     * A CONSTANT FOR EVERYBODY WAS WRONG IN BOTH DIRECTIONS - five activity
+     * rows crowd out the client somebody typed a name for, while a panel with
+     * two resources could comfortably show more of each. Per-resource, so the
+     * one pathological resource is solved where it lives.
+     */
+    public static function searchResultLimit(): int
+    {
+        return 5;
+    }
+
+    /**
+     * The column that tells two same-titled results apart, or null to let the
+     * endpoint guess.
+     *
+     * Five rows all reading "100Mbps Business" are indistinguishable, which
+     * makes the palette a list you cannot choose from. The endpoint's guess is
+     * the second sensible text column; a resource that knows better names it
+     * here.
+     */
+    public static function searchSubtitleColumn(): ?string
+    {
+        return null;
     }
 
     public static function definition(): Table

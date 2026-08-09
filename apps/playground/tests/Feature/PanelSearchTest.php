@@ -153,4 +153,63 @@ final class PanelSearchTest extends TestCase
 
         $this->assertStringStartsWith('/clients/', (string) $href);
     }
+
+    /**
+     * TWO SAME-TITLED RESULTS ARE TOLD APART BY THE SUBTITLE.
+     *
+     * The endpoint used to send `subtitle: null` for every row, so two clients
+     * both named "Amina Achieng" rendered as identical lines - a list you can
+     * only choose from by clicking one and hoping. The subtitle is the next
+     * sensible text column after the title, and must never be a timestamp,
+     * which is the same rule that keeps the title itself readable.
+     */
+    public function test_same_titled_results_carry_distinguishing_subtitles(): void
+    {
+        $this->client($this->tenant, 'Amina Achieng', 'TWIN1');
+        $this->client($this->tenant, 'Amina Achieng', 'TWIN2');
+
+        $this->actingAs($this->operator(['view_any_clients', 'view_clients']));
+
+        $items = $this->getJson('/panel-search?q=Amina')->assertOk()->json('groups.0.items');
+
+        $this->assertCount(2, $items);
+        $this->assertNotNull($items[0]['subtitle']);
+        $this->assertNotNull($items[1]['subtitle']);
+        $this->assertNotSame(
+            $items[0]['subtitle'],
+            $items[1]['subtitle'],
+            'Two same-titled rows must be distinguishable by their subtitles.',
+        );
+
+        foreach ($items as $item) {
+            $this->assertDoesNotMatchRegularExpression(
+                '/^\d{4}-\d{2}-\d{2}/',
+                (string) $item['subtitle'],
+                'A timestamp distinguishes nothing a person recognises.',
+            );
+        }
+    }
+
+    /**
+     * THE CALLER'S ELOQUENT HOOK NARROWS WITHOUT TOUCHING THE DEFINITION.
+     *
+     * This is the seam `Resource::modifySearchQuery()` travels through: applied
+     * before scopes resolve, after the table's own constraint, so a palette can
+     * be tightened while the list screen underneath stays exactly as declared.
+     */
+    public function test_modify_eloquent_narrows_the_query(): void
+    {
+        $this->client($this->tenant, 'Amina Achieng', 'HOOK1');
+        $expired = $this->client($this->tenant, 'Amina Otieno', 'HOOK2');
+        $expired->forceFill(['status' => 'expired'])->save();
+
+        $result = \App\Panel\Resources\ClientResource::definition()
+            ->toListQuery(Client::class)
+            ->modifyEloquent(static fn ($query) => $query->where('status', 'expired'))
+            ->run(\Illuminate\Http\Request::create('/', 'GET', ['search' => 'Amina']));
+
+        $names = array_column($result->records, 'name');
+
+        $this->assertSame(['Amina Otieno'], $names);
+    }
 }
