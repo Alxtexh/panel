@@ -39,6 +39,9 @@ final class Panel
 
     private string $context = self::CONTEXT_TENANT;
 
+    /** See `databaseTransactions()` for why this is off by default. */
+    private bool $databaseTransactions = false;
+
     private ?string $routeName = null;
 
     /** @var list<string> */
@@ -244,6 +247,35 @@ final class Panel
     public function isCentral(): bool
     {
         return $this->context === self::CONTEXT_CENTRAL;
+    }
+
+    /**
+     * Wrap every write this panel performs in a database transaction.
+     *
+     * WHAT THIS BUYS IS THE ABSENCE OF HALF A RECORD. A create is rarely one
+     * INSERT: custom fields fold into a JSON column, observers write an audit
+     * entry, a relation is attached, a counter is bumped. Something failing
+     * partway through leaves the row saved and the audit trail missing, or the
+     * parent written and the children not - and the operator sees an error
+     * page and retries, producing the duplicate the first attempt half-made.
+     *
+     * OFF BY DEFAULT, AND THAT IS NOT TIMIDITY. A transaction changes what
+     * happens on failure everywhere at once, including in application code
+     * this package has never seen: an action that dispatches a job or calls an
+     * external service mid-save now does so inside a transaction that may roll
+     * back, so the job runs for a record that no longer exists. Turning this on
+     * is a decision about YOUR actions, which is why it is a panel's to make.
+     */
+    public function databaseTransactions(bool $enabled = true): self
+    {
+        $this->databaseTransactions = $enabled;
+
+        return $this;
+    }
+
+    public function hasDatabaseTransactions(): bool
+    {
+        return $this->databaseTransactions;
     }
 
     /** @return list<string> */

@@ -20,6 +20,7 @@ use PanelKit\Panel\CustomFields\CustomFieldFactory;
 use PanelKit\Panel\Http\NestedContext;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
+use PanelKit\Panel\Support\Transaction;
 use PanelKit\Panel\Support\TenantContext;
 use PanelKit\Panel\Tables\Columns\EditableColumn;
 use PanelKit\Panel\Tables\Reorderer;
@@ -312,7 +313,7 @@ final class RecordController extends Controller
 
         abort_unless($class::can('delete', $record), 403);
 
-        $record->delete();
+        Transaction::run(static fn () => $record->delete());
 
         return back()->with('success', $class::label().' deleted.');
     }
@@ -335,7 +336,7 @@ final class RecordController extends Controller
         // without letting them resurrect one.
         abort_unless($class::can('restore', $record), 403);
 
-        $record->restore();
+        Transaction::run(static fn () => $record->restore());
 
         return back()->with('success', $class::label().' restored.');
     }
@@ -455,7 +456,14 @@ final class RecordController extends Controller
     private function save(Model $record): void
     {
         try {
-            $record->save();
+            /*
+             * A CREATE IS RARELY ONE INSERT - custom fields fold into a JSON
+             * column, observers write an audit entry, a counter is bumped -
+             * so a failure partway through leaves a row saved with its trail
+             * missing. `Transaction::run` opens one only where the panel asked
+             * for it; everywhere else this is the bare save it always was.
+             */
+            Transaction::run(static fn () => $record->save());
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages([
                 '_conflict' => 'This would duplicate a record that already exists.',

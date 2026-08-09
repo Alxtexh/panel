@@ -50,6 +50,16 @@ final class AdminPanelProvider extends ServiceProvider
                  * than "all tenants".
                  */
                 ->context(Panel::CONTEXT_TENANT)
+                /*
+                 * WRITES ARE ALL-OR-NOTHING HERE. A create in this portal is
+                 * not one INSERT - custom fields fold into a JSON column and
+                 * an observer writes the audit entry - so a failure partway
+                 * through would leave the record saved and its trail missing,
+                 * and the operator retrying would produce the duplicate the
+                 * first attempt half-made. Declared per panel because it
+                 * changes failure behaviour for THIS portal's actions.
+                 */
+                ->databaseTransactions()
                 ->middleware(['web'])
                 /*
                  * `verified` TOO, matching the group these routes used to live
