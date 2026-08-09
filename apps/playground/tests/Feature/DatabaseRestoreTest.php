@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use PanelKit\Panel\Jobs\RestoreBackup;
 use PanelKit\Panel\Support\DatabaseRestorer;
+use Symfony\Component\Process\ExecutableFinder;
 use Tests\TestCase;
 
 /**
@@ -81,6 +82,34 @@ final class DatabaseRestoreTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * ONLY THE TEST THAT NEEDS A RESTORE TO *SUCCEED* NEEDS THE BINARY.
+     *
+     * The restore shells out, and `sqlite3` ships with most Linux
+     * distributions and with none of the Windows PHP builds. There it failed
+     * with "The system cannot find the path specified" - a message naming no
+     * binary at all, which reads like a defect in the restorer rather than a
+     * tool that was never installed.
+     *
+     * DELIBERATELY NOT IN `setUp()`. Most of this class asserts what a restore
+     * REFUSES - a missing dump, a remote host, an in-memory database, an
+     * unsupported driver - or only builds the command line and never runs it.
+     * None of that needs sqlite3, and skipping the whole class to excuse one
+     * test would silently drop thirty-three real assertions.
+     */
+    private function requireSqlite3(): void
+    {
+        $configured = (string) (config('database.connections.sqlite.dump')['dump_binary_path'] ?? '');
+
+        if ((new ExecutableFinder)->find('sqlite3', null, array_filter([$configured])) === null) {
+            $this->markTestSkipped(
+                'No `sqlite3` binary on PATH, so a restore cannot be made to succeed. Install '
+                .'it, or set `dump_binary_path` on the sqlite connection to the directory '
+                .'holding it.',
+            );
+        }
+    }
+
     private function dump(string $sql): string
     {
         $path = tempnam(sys_get_temp_dir(), 'panelkit-dump-');
@@ -96,6 +125,8 @@ final class DatabaseRestoreTest extends TestCase
      */
     public function test_the_database_is_replaced_by_the_dump(): void
     {
+        $this->requireSqlite3();
+
         DB::connection('restore_target')->statement('CREATE TABLE widgets (id INTEGER PRIMARY KEY, name TEXT)');
         DB::connection('restore_target')->table('widgets')->insert(['id' => 1, 'name' => 'before']);
 

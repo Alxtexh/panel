@@ -94,7 +94,15 @@ final class ConsumerUserModelTest extends TestCase
      */
     public function test_no_packaged_file_calls_has_permission_unguarded(): void
     {
-        $root = dirname(__DIR__, 4).'/packages/panel/src';
+        /*
+         * SEPARATORS NORMALISED BEFORE ANYTHING IS COMPARED. On Windows the
+         * directory iterator hands back `src\Support\Ability.php`, so the
+         * exclusion below - written with a forward slash - never matched, and
+         * the one file holding the GUARDED implementation reported itself as
+         * the offender. The test failed on a machine where nothing was wrong,
+         * which is the failure mode that teaches people to ignore it.
+         */
+        $root = str_replace('\\', '/', dirname(__DIR__, 4).'/packages/panel/src');
         $offenders = [];
 
         $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root));
@@ -104,8 +112,10 @@ final class ConsumerUserModelTest extends TestCase
                 continue;
             }
 
+            $path = str_replace('\\', '/', $file->getPathname());
+
             // `Ability` itself holds the guarded implementation.
-            if (str_ends_with($file->getPathname(), 'Support/Ability.php')) {
+            if (str_ends_with($path, 'Support/Ability.php')) {
                 continue;
             }
 
@@ -122,7 +132,7 @@ final class ConsumerUserModelTest extends TestCase
                 }
 
                 if (! str_contains($line, 'method_exists')) {
-                    $offenders[] = str_replace($root.'/', '', $file->getPathname()).':'.($i + 1);
+                    $offenders[] = str_replace($root.'/', '', $path).':'.($i + 1);
                 }
             }
         }

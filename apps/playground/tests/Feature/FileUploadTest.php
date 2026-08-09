@@ -32,6 +32,22 @@ final class FileUploadTest extends TestCase
         "\x00\x00\x00\x0aIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\x0d\x0a\x2d\xb4".
         "\x00\x00\x00\x00IEND\xaeB\x60\x82";
 
+    /**
+     * PHP SOURCE, WHICH IS THE WHOLE POINT - and deliberately not a live
+     * backdoor.
+     *
+     * What is under test is that the server SNIFFS THE BYTES instead of
+     * trusting the filename: this reports `text/x-php`, an `.png` extension
+     * claims `image/png`, and the mismatch is the rejection. The sniffer does
+     * not grade the payload, so a working web shell proves nothing extra here.
+     *
+     * It used to be `<?php system($_GET['c']); ?>`, which Defender identifies
+     * as a backdoor and locks on sight - the fixture became unreadable, the
+     * MIME guess exploded and the test failed on a machine where the code was
+     * correct. Realism that only ever fires the antivirus is not realism.
+     */
+    private const PHP_SCRIPT = "<?php echo 'not an image'; ?>";
+
     private Tenant $tenantA;
 
     private Tenant $tenantB;
@@ -140,7 +156,7 @@ final class FileUploadTest extends TestCase
      */
     public function test_a_script_renamed_as_an_image_is_rejected(): void
     {
-        $payload = $this->realFile('avatar.png', "<?php system(\$_GET['c']); ?>");
+        $payload = $this->realFile('avatar.png', self::PHP_SCRIPT);
 
         $this->actingAs($this->alice)
             ->postJson('/clients/uploads', ['file' => $payload, 'field' => 'id_document'])
@@ -398,6 +414,24 @@ final class FileUploadTest extends TestCase
         $path = tempnam(sys_get_temp_dir(), 'pk-upload');
 
         file_put_contents($path, $contents);
+
+        /*
+         * THE FIXTURE MUST BE READABLE, AND ON WINDOWS THAT IS NOT A GIVEN.
+         *
+         * Defender's real-time protection recognises some PHP payloads as
+         * backdoor signatures and blocks READ access to the file - it is
+         * written, it exists, `filesize()` is right, and every attempt to open
+         * it fails with "Invalid argument". `finfo` then errors inside
+         * Symfony's guesser and the endpoint answers 500, so a test asserting
+         * 422 failed with a stack trace about a MIME guesser and nothing
+         * pointing at the antivirus. This turns that into one sentence.
+         */
+        $this->assertNotFalse(
+            @file_get_contents($path),
+            "The upload fixture [{$name}] was written but cannot be read back. On Windows "
+            .'this is normally Defender quarantining the payload, not a fault in the code '
+            .'under test.',
+        );
 
         return new UploadedFile($path, $name, null, null, true);
     }

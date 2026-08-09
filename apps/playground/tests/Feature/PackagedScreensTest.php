@@ -335,12 +335,25 @@ final class PackagedScreensTest extends TestCase
         $this->assertNull(UserRoles::add("<?php\n\nreturn 'not a class at all';\n"));
     }
 
-    /** And the path resolver only claims what it can actually resolve. */
+    /**
+     * And the path resolver only claims what it can actually resolve.
+     *
+     * SEPARATORS ARE NORMALISED BEFORE COMPARING, because on Windows the two
+     * sides spell the same file differently and both are right. `app_path()`
+     * joins with a backslash and then appends the forward slash it was handed
+     * - `...\app\Models/User.php` - while the resolver builds with forward
+     * slashes throughout. Windows opens either; asserting on the punctuation
+     * failed a correct resolver on one operating system.
+     */
     public function test_it_resolves_only_models_under_the_app_namespace(): void
     {
+        $normalise = static fn (?string $p): ?string => $p === null
+            ? null
+            : str_replace('\\', '/', $p);
+
         $this->assertSame(
-            app_path('Models/User.php'),
-            UserRoles::pathFor('App\\Models\\User', app_path()),
+            $normalise(app_path('Models/User.php')),
+            $normalise(UserRoles::pathFor('App\\Models\\User', app_path())),
         );
 
         $this->assertNull(UserRoles::pathFor('Vendor\\Package\\User', app_path()));

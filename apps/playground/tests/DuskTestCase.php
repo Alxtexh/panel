@@ -46,6 +46,16 @@ abstract class DuskTestCase extends BaseTestCase
     private const BROWSER_CANDIDATES = [
         // Downloaded into the app directory by scripts/dusk.sh.
         'chrome/*/chrome-linux64/chrome',
+        /*
+         * THE SAME DOWNLOAD, ON WINDOWS. `@puppeteer/browsers` lays a Windows
+         * build down as `chrome/win64-<version>/chrome-win64/chrome.exe`, which
+         * the Linux glob above cannot match - so a developer who ran the exact
+         * command the skip message tells them to run still got skipped, with
+         * the same message, and no way to tell that the browser they had just
+         * installed was sitting in the directory being searched.
+         */
+        'chrome/*/chrome-win64/chrome.exe',
+        'chrome/*/chrome-win32/chrome.exe',
         // Ordinary Debian/Ubuntu packages.
         '/usr/bin/google-chrome',
         '/usr/bin/google-chrome-stable',

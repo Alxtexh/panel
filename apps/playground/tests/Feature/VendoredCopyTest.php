@@ -127,7 +127,21 @@ final class VendoredCopyTest extends TestCase
     {
         $vendor = $this->root.'/app/vendor/panelkit/panel';
 
-        symlink($this->root.'/source', $vendor);
+        /*
+         * CREATING A SYMLINK IS A PRIVILEGE ON WINDOWS, not a file operation.
+         * Without Developer Mode or an elevated shell `symlink()` fails with
+         * "Permission denied", and the test then errored on its own fixture -
+         * reporting a defect in the code where there was only a machine that
+         * will not hand out that privilege. Skipping says which it is.
+         */
+        if (@symlink($this->root.'/source', $vendor) === false) {
+            $this->markTestSkipped(
+                'This machine does not permit creating symlinks (Windows needs Developer Mode '
+                .'or an elevated shell). The junction case is covered by '
+                .'test_the_reference_apps_own_install_is_resolved_and_symlinked.',
+            );
+        }
+
         touch($this->root.'/source/src/Thing.php', time() + 600);
 
         $this->assertFalse(VendoredCopy::isStale($this->root.'/source', $vendor));
@@ -151,8 +165,15 @@ final class VendoredCopyTest extends TestCase
         $this->assertNotNull($source, 'The path repository is no longer found, so the check cannot fire.');
         $this->assertFileExists($source.'/src/PanelServiceProvider.php');
 
+        /*
+         * ASKED AS "IS IT THE SAME DIRECTORY", NOT "IS IT A SYMLINK". Composer
+         * links with a JUNCTION on Windows and `is_link()` reports false for
+         * every junction, so this assertion failed on a checkout that was
+         * linked exactly as intended - the healthy arrangement accused of being
+         * the broken one.
+         */
         $this->assertTrue(
-            is_link(base_path('vendor/panelkit/panel')),
+            VendoredCopy::isLinked($source, base_path('vendor/panelkit/panel')),
             'This checkout vendors a COPY of the package, so edits to packages/panel are not what runs.',
         );
     }

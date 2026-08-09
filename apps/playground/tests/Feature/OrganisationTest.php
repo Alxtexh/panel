@@ -198,7 +198,7 @@ final class OrganisationTest extends TestCase
     {
         $this->actingAs($this->alice)
             ->postJson('/settings/organisation/logo/upload', [
-                'file' => $this->realFile('logo.png', "<?php system(\$_GET['c']); ?>"),
+                'file' => $this->realFile('logo.png', "<?php echo 'not an image'; ?>"),
             ])
             ->assertStatus(422);
 
@@ -320,6 +320,20 @@ final class OrganisationTest extends TestCase
         $path = tempnam(sys_get_temp_dir(), 'pk-logo');
 
         file_put_contents($path, $contents);
+
+        /*
+         * READABLE, OR SAY SO. On Windows, Defender locks files whose contents
+         * it reads as a backdoor - written, present, correct size, and every
+         * open fails with "Invalid argument". `finfo` then errors and the
+         * endpoint answers 500, so a test asserting 422 failed pointing at a
+         * MIME guesser rather than at the antivirus.
+         */
+        $this->assertNotFalse(
+            @file_get_contents($path),
+            "The upload fixture [{$name}] was written but cannot be read back. On Windows "
+            .'this is normally Defender quarantining the payload, not a fault in the code '
+            .'under test.',
+        );
 
         return new UploadedFile($path, $name, null, null, true);
     }

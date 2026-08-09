@@ -96,11 +96,36 @@ final class VendoredCopy
      */
     public static function isStale(string $source, string $vendor): bool
     {
-        if (! is_dir($source) || ! is_dir($vendor) || is_link($vendor)) {
+        if (! is_dir($source) || ! is_dir($vendor) || self::isLinked($source, $vendor)) {
             return false;
         }
 
         return self::newestChange($source) > self::newestChange($vendor);
+    }
+
+    /**
+     * THE TWO PATHS ARE ONE DIRECTORY - so there is nothing that can go stale.
+     *
+     * `is_link()` WAS NOT ENOUGH, AND FAILED ON THE ARRANGEMENT IT WAS MEANT TO
+     * BLESS. Windows has two kinds of link and PHP recognises one: composer
+     * (and npm) create JUNCTIONS, and `is_link()` answers false for every one
+     * of them. A correctly symlinked Windows checkout therefore looked exactly
+     * like a copy - the case this class exists to warn about - so the warning
+     * pointed at the healthy setup.
+     *
+     * COMPARING RESOLVED PATHS ASKS THE QUESTION DIRECTLY. Whether the link is
+     * a symlink, a junction, or a bind mount does not matter; what matters is
+     * whether editing the source edits what runs. `realpath()` follows all
+     * three, and two paths that resolve to one directory are one directory.
+     */
+    public static function isLinked(string $source, string $vendor): bool
+    {
+        $resolvedSource = realpath($source);
+        $resolvedVendor = realpath($vendor);
+
+        return $resolvedSource !== false
+            && $resolvedVendor !== false
+            && $resolvedSource === $resolvedVendor;
     }
 
     /**

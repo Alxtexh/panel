@@ -2,13 +2,22 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "playground",
-      "runtimeExecutable": "php",
+      "name": "playground-vite",
+      "runtimeExecutable": "bash",
       "runtimeArgs": [
-        "artisan",
-        "dev"
+        "-lc",
+        "export PATH=\"/c/laragon/bin/php/php-8.4.24-Win32-vs17-x64:$PATH\" && cd apps/playground && exec npm run dev"
       ],
-      "cwd": "apps/playground",
+      "port": 5173,
+      "autoPort": false
+    },
+    {
+      "name": "playground",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "export PATH=\"/c/laragon/bin/php/php-8.4.24-Win32-vs17-x64:$PATH\" && cd apps/playground && exec php artisan serve --host=127.0.0.1 --port=8000"
+      ],
       "port": 8000,
       "autoPort": false
     },
