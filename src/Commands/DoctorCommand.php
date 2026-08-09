@@ -912,7 +912,31 @@ final class DoctorCommand extends Command
                 return;
             }
 
-            $withRole = $model::query()->whereHas('roles')->count();
+            /*
+             * THE PIVOT IS COUNTED DIRECTLY, NOT THROUGH THE RELATION.
+             *
+             * `whereHas('roles')` goes through Spatie's team scoping, and a
+             * console run resolves no team - so the relation was constrained to
+             * a null team and counted zero on installations where the pivot
+             * plainly held rows. This check reported "nobody can open the
+             * panel" seconds after somebody had signed in: a false alarm from
+             * the one check that exists to catch silent lockout, which teaches
+             * people to ignore the doctor entirely.
+             *
+             * The question is "does ANY account hold ANY role, in any team or
+             * none", and the pivot table answers it without an opinion about
+             * which team the CLI happens not to be standing in. Joined back to
+             * the accounts table so a row orphaned by a deleted user cannot
+             * vouch for a panel nobody can actually open.
+             */
+            $pivot = (string) config('permission.table_names.model_has_roles', 'model_has_roles');
+            $morphKey = (string) config('permission.column_names.model_morph_key', 'model_id');
+            $instance = new $model;
+
+            $withRole = DB::table($pivot)
+                ->where('model_type', $instance->getMorphClass())
+                ->whereIn($morphKey, $model::query()->select($instance->getKeyName()))
+                ->count();
         } catch (Throwable) {
             // No users table yet, or a model that cannot be queried here. The
             // migration checks report that; this one has nothing to add.
