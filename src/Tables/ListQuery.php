@@ -58,6 +58,9 @@ final class ListQuery
     /** @var array<string, list<string>> relation name => its searched columns */
     private array $searchableRelations = [];
 
+    /** Whether a multi-word term is ANDed word by word - see `applySearch()`. */
+    private bool $splitSearchTerms = true;
+
     /** @var list<Filter> */
     private array $filters = [];
 
@@ -249,6 +252,14 @@ final class ListQuery
     public function searchableRelations(array $relations): self
     {
         $this->searchableRelations = $relations;
+
+        return $this;
+    }
+
+    /** Whether a multi-word term is ANDed word by word - see `applySearch()`. */
+    public function splitSearchTerms(bool $split): self
+    {
+        $this->splitSearchTerms = $split;
 
         return $this;
     }
@@ -1349,10 +1360,27 @@ final class ListQuery
             trim($term),
         ) ?? '';
 
-        $words = array_values(array_filter(
-            str_getcsv($normalised, separator: ' ', enclosure: '"', escape: '\\'),
-            static fn (?string $word): bool => $word !== null && trim($word) !== '',
-        ));
+        /*
+         * SPLITTING IS RIGHT FOR NAMES AND WRONG FOR REFERENCES.
+         *
+         * ANDing the words is what makes "Amina Achieng" find a person whose
+         * name is spread over two columns. It is exactly wrong for an
+         * identifier that legitimately CONTAINS a space - an invoice reference
+         * like `INV 2026 0042`, a postcode, a serial - because each fragment
+         * is then required to match something on its own, and a reference is
+         * one atom that happens to have spaces in it. Quoting works, and
+         * nobody types quotes around the number printed on the thing in their
+         * hand.
+         *
+         * A table whose search is a lookup rather than a name search declares
+         * `->splitsSearchTerms(false)` and gets the whole phrase as one term.
+         */
+        $words = $this->splitSearchTerms
+            ? array_values(array_filter(
+                str_getcsv($normalised, separator: ' ', enclosure: '"', escape: '\\'),
+                static fn (?string $word): bool => $word !== null && trim($word) !== '',
+            ))
+            : [$normalised];
 
         foreach ($words as $word) {
             $escaped = str_replace(['%', '_'], ['\%', '\_'], $word);

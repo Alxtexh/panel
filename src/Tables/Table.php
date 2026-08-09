@@ -65,6 +65,9 @@ final class Table
     /** @var array<string, list<string>> relation name => its searched columns */
     private array $searchableRelations = [];
 
+    /** Whether a multi-word term is ANDed word by word. */
+    private bool $splitSearchTerms = true;
+
     /** @var list<BulkAction> */
     private array $bulkActions = [];
 
@@ -139,6 +142,26 @@ final class Table
     public function filters(array $filters): self
     {
         $this->filters = $filters;
+
+        return $this;
+    }
+
+    /**
+     * Whether a multi-word search term is split and ANDed, or taken whole.
+     *
+     * SPLITTING IS THE DEFAULT AND IT IS RIGHT FOR NAMES: "Amina Achieng"
+     * should find a person whose first and last names live in two columns.
+     * It is wrong for a table whose search is a LOOKUP - an invoice reference
+     * `INV 2026 0042`, a postcode, a serial - where the spaces are part of one
+     * atom and splitting requires each fragment to match on its own. Quoting
+     * works and nobody quotes the number printed on the thing in their hand.
+     *
+     * Turning it off costs the cross-column match, so turn it off only where
+     * the term is an identifier rather than a name.
+     */
+    public function splitsSearchTerms(bool $split = true): self
+    {
+        $this->splitSearchTerms = $split;
 
         return $this;
     }
@@ -665,6 +688,7 @@ final class Table
             ->sortable($this->resolveSortable())
             ->searchable($this->resolveSearchable())
             ->searchableRelations($this->searchableRelations)
+            ->splitSearchTerms($this->splitSearchTerms)
             ->summaries($this->resolveSummaries())
             ->filters($this->filters)
             ->defaultSort($this->defaultSort, $this->defaultDirection)
