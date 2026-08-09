@@ -1,4 +1,14 @@
 <script setup lang="ts">
+/*
+ * EVERY PAGE PROP ARRIVES AS AN ATTRIBUTE, and this page's root is a
+ * fragment. Inertia binds the whole payload onto the page component -
+ * declared props bind as props, and the shared ones (panelNav, auth,
+ * locale, and every deferred prop as it lands) arrive as plain
+ * attributes with nowhere to go. Vue then warns once per prop, per
+ * visit, which reads exactly like the page reloading in a loop.
+ */
+defineOptions({ inheritAttrs: false })
+
 /**
  * Release notes, as the panel shows them.
  *

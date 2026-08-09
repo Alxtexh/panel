@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/*
+ * EVERY PAGE PROP ARRIVES AS AN ATTRIBUTE, and this page's root is a
+ * fragment. Inertia binds the whole payload onto the page component -
+ * declared props bind as props, the shared ones arrive as plain
+ * attributes with nowhere to go, and Vue warns once per prop per visit.
+ */
+defineOptions({ inheritAttrs: false })
+
 /**
  * Create an account.
  *

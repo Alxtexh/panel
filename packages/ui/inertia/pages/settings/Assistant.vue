@@ -3,6 +3,8 @@
  * MOVED FROM THE REFERENCE APP.
  *
  * Its Wayfinder route helpers became a `routes` prop, and `defineOptions({
+    // Page props arrive as attributes and this root is a fragment.
+    inheritAttrs: false,
  * layout })` is gone - the layout is the consumer's, applied by the one-line
  * page file `panel:install` writes.
  */

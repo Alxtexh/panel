@@ -45,6 +45,8 @@ const base = computed(() => (page.props.panel as { path?: string } | undefined)?
 const at = (path: string) => `${base.value === '/' ? '' : base.value}${path}`
 
 defineOptions({
+    // Page props arrive as attributes and this root is a fragment.
+    inheritAttrs: false,
     layout: {
         breadcrumbs: [{ title: 'Workspaces', href: '' }],
     },

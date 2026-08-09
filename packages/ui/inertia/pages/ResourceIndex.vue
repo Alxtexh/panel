@@ -196,6 +196,8 @@ const props = defineProps<
 type _ListPropsMatch = typeof props extends ListPageProps ? true : never
 
 defineOptions({
+    // Page props arrive as attributes and this root is a fragment.
+    inheritAttrs: false,
     layout: {
         breadcrumbs: [],
     },

@@ -30,6 +30,8 @@ interface Entry {
 const props = defineProps<{ entries: Entry[] }>()
 
 defineOptions({
+    // Page props arrive as attributes and this root is a fragment.
+    inheritAttrs: false,
     layout: { breadcrumbs: [{ title: 'Settings', href: '' }] },
 })
 

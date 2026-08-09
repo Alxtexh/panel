@@ -20,7 +20,9 @@
 import { Head } from '@inertiajs/vue3'
 import { ExternalLink, Info, LifeBuoy } from '@lucide/vue'
 
-defineOptions({ layout: { breadcrumbs: [{ title: 'About', href: '' }] } })
+defineOptions({
+    // Page props arrive as attributes and this root is a fragment.
+    inheritAttrs: false, layout: { breadcrumbs: [{ title: 'About', href: '' }] } })
 
 withDefaults(
     defineProps<{

@@ -41,7 +41,9 @@ import {
 } from '@lucide/vue'
 import { computed, onMounted, ref } from 'vue'
 
-defineOptions({ layout: { breadcrumbs: [{ title: 'Help', href: '' }] } })
+defineOptions({
+    // Page props arrive as attributes and this root is a fragment.
+    inheritAttrs: false, layout: { breadcrumbs: [{ title: 'Help', href: '' }] } })
 
 interface Article {
     id: string

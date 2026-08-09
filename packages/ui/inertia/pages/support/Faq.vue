@@ -14,7 +14,9 @@
 import { Head } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 
-defineOptions({ layout: { breadcrumbs: [{ title: 'FAQ', href: '' }] } })
+defineOptions({
+    // Page props arrive as attributes and this root is a fragment.
+    inheritAttrs: false, layout: { breadcrumbs: [{ title: 'FAQ', href: '' }] } })
 
 /**
  * THE QUESTIONS COME FROM THE SERVER, and they used to be an array right here -

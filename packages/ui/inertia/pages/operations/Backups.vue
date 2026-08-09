@@ -4,7 +4,9 @@
  *
  * TWO SUBSTITUTIONS, and only two. Its Wayfinder route helpers became a
  * `routes` prop, because a package cannot know a consuming application's route
- * names; and `defineOptions({ layout })` is gone, because the layout is the
+ * names; and `defineOptions({
+    // Page props arrive as attributes and this root is a fragment.
+    inheritAttrs: false, layout })` is gone, because the layout is the
  * consumer's to apply - `panel:install` writes a one-line page file, and that
  * file's resolver decides the frame.
  */

@@ -105,6 +105,8 @@ function signOutOthers() {
 }
 
 defineOptions({
+    // Page props arrive as attributes and this root is a fragment.
+    inheritAttrs: false,
     layout: {
         breadcrumbs: [{ title: 'Security settings', href: '' }],
     },
