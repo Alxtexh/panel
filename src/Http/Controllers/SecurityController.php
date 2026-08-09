@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
+use PanelKit\Panel\Auth\SensitiveAction;
 use PanelKit\Panel\Auth\Devices;
 use PanelKit\Panel\Auth\Passkeys;
 use PanelKit\Panel\Auth\SocialProviders;
@@ -94,11 +95,26 @@ final class SecurityController
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ]);
 
+        /*
+         * THE CURRENT-PASSWORD CHECK IS A PASSWORD ORACLE WITHOUT A BUDGET.
+         * Signing in is throttled; this asks the same question from inside an
+         * already-authenticated session, so leaving it unlimited hands anybody
+         * who reaches a borrowed or hijacked session an unmetered guessing
+         * machine against the password itself.
+         */
+        SensitiveAction::assertNotExhausted($request, 'password.confirm', 'current_password');
+
         $user = $request->user();
 
         if ($user === null || ! Hash::check($validated['current_password'], (string) $user->getAuthPassword())) {
+            SensitiveAction::recordFailure($request, 'password.confirm');
+
             return back()->withErrors(['current_password' => __('That is not your current password.')]);
         }
+
+        // Proven. A correct answer must not leave somebody rate-limited out of
+        // their own settings.
+        SensitiveAction::clear($request, 'password.confirm');
 
         $user->forceFill(['password' => Hash::make($validated['password'])])->save();
 
