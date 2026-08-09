@@ -212,4 +212,46 @@ final class PanelSearchTest extends TestCase
 
         $this->assertSame(['Amina Otieno'], $names);
     }
+
+    /**
+     * A RECORD IS FOUND BY THE OTHER SIDE OF ITS RELATION.
+     *
+     * The thing printed on the paper in front of somebody is usually related
+     * data - an invoice carries the customer's name, a client carries the
+     * plan's. Searchable columns could only ever be the model's own, so the
+     * most natural search anybody types found nothing. `searchesRelation`
+     * answers it through an EXISTS subquery: no join, so a has-many cannot
+     * duplicate rows and keyset pagination keeps its invariants.
+     *
+     * AND THE WORDS STILL AND TOGETHER ACROSS THE BOUNDARY. "Amina Basic" is
+     * one client on one plan - a word may match a column or a relation, but
+     * every word must match something, or typing more would widen the answer.
+     */
+    public function test_a_record_is_found_through_a_declared_relation(): void
+    {
+        // client() names plans "Basic <code>", so REL1's plan is "Basic REL1".
+        $this->client($this->tenant, 'Amina Achieng', 'REL1');
+        $this->client($this->tenant, 'Grace Wanjiru', 'REL2');
+
+        $query = fn (string $term) => \App\Panel\Resources\ClientResource::definition()
+            ->searchesRelation('plan', ['name'])
+            ->toListQuery(Client::class)
+            ->run(\Illuminate\Http\Request::create('/', 'GET', ['search' => $term]));
+
+        // By the plan's name alone - a column the clients table does not hold.
+        $this->assertSame(
+            ['Amina Achieng'],
+            array_column($query('REL1')->records, 'name'),
+            'A client must be findable by the name of the plan they are on.',
+        );
+
+        // A client word AND a relation word, one record.
+        $this->assertSame(
+            ['Amina Achieng'],
+            array_column($query('Amina Basic')->records, 'name'),
+        );
+
+        // A relation word that matches nobody's plan removes everything.
+        $this->assertSame([], $query('Amina NOSUCHPLAN')->records);
+    }
 }

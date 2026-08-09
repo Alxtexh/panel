@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PanelKit\Panel\Tables;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
@@ -53,6 +54,9 @@ final class ListQuery
 
     /** @var list<string> qualified columns searched by prefix */
     private array $searchable = [];
+
+    /** @var array<string, list<string>> relation name => its searched columns */
+    private array $searchableRelations = [];
 
     /** @var list<Filter> */
     private array $filters = [];
@@ -220,6 +224,31 @@ final class ListQuery
     public function searchable(array $columns): self
     {
         $this->searchable = $columns;
+
+        return $this;
+    }
+
+    /**
+     * Columns searched THROUGH a relation, without declaring a join.
+     *
+     * AN EXPLICIT MAP, NOT DOTTED STRINGS IN `searchable()`. The entries there
+     * are already qualified `table.column`, so `plans.name` is ambiguous
+     * between "the joined plans table" and "the plans() relation" - and an
+     * ambiguity in what gets searched is one nobody notices until the answer
+     * is wrong. Here the relation is named as a relation and nothing has to
+     * be guessed.
+     *
+     * `whereHas` rather than a join, deliberately: a join against a has-many
+     * duplicates parent rows and breaks keyset pagination, while an EXISTS
+     * subquery answers "does any related row match" without multiplying
+     * anything. The related model's own global scopes apply inside it, so
+     * tenancy holds on the far side of the relation too.
+     *
+     * @param  array<string, list<string>>  $relations  relation => columns
+     */
+    public function searchableRelations(array $relations): self
+    {
+        $this->searchableRelations = $relations;
 
         return $this;
     }
@@ -1211,6 +1240,17 @@ final class ListQuery
             ($this->modifyEloquent)($eloquent);
         }
 
+        /*
+         * SEARCH IS APPLIED AT THE ELOQUENT STAGE, and moving it here is what
+         * made relation search possible at all. It used to run on the base
+         * builder after toBase(), where `whereHas` does not exist - and a
+         * word must be allowed to match a column OR a relation inside ONE
+         * predicate group, so the whole search has to live where both are
+         * expressible. A WHERE is a WHERE wherever it is added; only the
+         * vocabulary changes.
+         */
+        $this->applySearch($eloquent, (string) $state['search']);
+
         // toBase() applies global scopes (including tenant scoping) before
         // handing back the underlying query builder. Reaching for the query
         // builder directly would bypass them.
@@ -1251,104 +1291,107 @@ final class ListQuery
             }
         }
 
-        if ($state['search'] !== '' && $this->searchable !== []) {
-            /*
-             * WORD-prefix, not string-prefix.
-             *
-             * This was string-prefix only (`term%`) because that is the shape a
-             * btree index can serve. It was also silently wrong: names are
-             * stored as "Amina Achieng", so searching the surname "Achieng"
-             * matched ZERO rows while returning HTTP 200 and an empty table.
-             * An operator reads that as "no such customer", which is the exact
-             * failure mode antipatterns.md opens with.
-             *
-             * So each column is matched two ways: at the start of the value,
-             * which stays index-served, OR at the start of any later word,
-             * which does not. The second half costs a scan of the tenant's rows
-             * and is the deliberate price of a search that actually finds
-             * people. Substring-anywhere is still refused - it is unbounded and
-             * belongs to a trigram index or FTS once the engine is chosen.
-             */
-            /*
-             * EVERY WORD MUST MATCH SOMETHING; a word may match ANY column.
-             *
-             * The whole phrase used to be one pattern, so "Amina Achieng" only
-             * ever matched a single column containing those two words in that
-             * order, adjacent. A person whose first name is in `first_name` and
-             * surname is in `last_name` was unfindable by their own full name -
-             * the most obvious thing anybody types - and the table answered 200
-             * with nothing in it.
-             *
-             * Splitting on whitespace and ANDing the words fixes that and
-             * narrows as you type rather than widening: each extra word can only
-             * remove rows. Within a word the columns are ORed, so it does not
-             * matter which field the word lives in.
-             */
-            $columns = $this->searchable;
+        return $query;
+    }
 
-            /*
-             * POSTGRES `LIKE` IS CASE-SENSITIVE and the others are not, so the
-             * same search that worked all through development returned nothing
-             * on the one engine this is deployed to. `ILIKE` is Postgres's own
-             * spelling of the case-insensitive match and needs no expression
-             * wrapping - which matters, because wrapping the column in `lower()`
-             * would also put it beyond any index that names the column plainly.
-             *
-             * Neither form is served by a btree index for the `% word%` half;
-             * that half is the deliberate scan documented above, and a trigram
-             * index is what removes it when the row counts demand it.
-             */
-            $like = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
-
-            /*
-             * A QUOTED PHRASE IS ONE TERM, and invisible characters are not
-             * terms at all.
-             *
-             * Splitting on whitespace alone makes an exact phrase unsearchable:
-             * `"Amina Achieng"` became two independent words that could match
-             * two different columns of two different meanings. Reading the term
-             * as CSV with a space separator costs nothing and gives quoting for
-             * free, which is the syntax everybody already expects from a search
-             * box.
-             *
-             * The normalise step ahead of it collapses runs of whitespace AND
-             * two characters that are invisible but are not spaces - the Hangul
-             * fillers U+3164 and U+1160. Pasted text carries them, they survive
-             * `trim()`, and a term holding one matches nothing while looking
-             * exactly like a term that should. That is a silent empty table,
-             * which is the failure this whole search path keeps being fixed for.
-             */
-            $normalised = preg_replace(
-                '/(\s|\x{3164}|\x{1160})+/u',
-                ' ',
-                trim((string) $state['search']),
-            ) ?? '';
-
-            $words = array_values(array_filter(
-                str_getcsv($normalised, separator: ' ', enclosure: '"', escape: '\\'),
-                static fn (?string $word): bool => $word !== null && trim($word) !== '',
-            ));
-
-            foreach ($words as $word) {
-                $escaped = str_replace(['%', '_'], ['\%', '\_'], $word);
-                $startsWith = $escaped.'%';
-                $wordStart = '% '.$escaped.'%';
-
-                $query->where(function (Builder $q) use ($columns, $startsWith, $wordStart, $like): void {
-                    foreach ($columns as $i => $searchColumn) {
-                        if ($i === 0) {
-                            $q->where($searchColumn, $like, $startsWith);
-                        } else {
-                            $q->orWhere($searchColumn, $like, $startsWith);
-                        }
-
-                        $q->orWhere($searchColumn, $like, $wordStart);
-                    }
-                });
-            }
+    /**
+     * The search predicate, one AND-group per word.
+     *
+     * WORD-prefix, not string-prefix. This was string-prefix only (`term%`)
+     * because that is the shape a btree index can serve. It was also silently
+     * wrong: names are stored as "Amina Achieng", so searching the surname
+     * "Achieng" matched ZERO rows while returning HTTP 200 and an empty table.
+     * An operator reads that as "no such customer", which is the exact failure
+     * mode antipatterns.md opens with. So each column is matched two ways: at
+     * the start of the value, which stays index-served, OR at the start of any
+     * later word, which does not - the deliberate price of a search that
+     * actually finds people. Substring-anywhere is still refused; it is
+     * unbounded and belongs to a trigram index or FTS once the engine is
+     * chosen.
+     *
+     * EVERY WORD MUST MATCH SOMETHING; a word may match ANY column - or any
+     * declared relation. The whole phrase used to be one pattern, so "Amina
+     * Achieng" only ever matched a single column containing those two words in
+     * that order, adjacent. ANDing the words fixes that and narrows as you
+     * type: each extra word can only remove rows. Within a word, columns and
+     * relations are ORed, so it does not matter which field - or which side of
+     * a relation - the word lives in. That is why relation search is inside
+     * this method rather than beside it: "Amina Gold" must be one client on
+     * one plan, not every Amina plus every gold plan.
+     */
+    private function applySearch(EloquentBuilder $eloquent, string $term): void
+    {
+        if ($term === '' || ($this->searchable === [] && $this->searchableRelations === [])) {
+            return;
         }
 
-        return $query;
+        /*
+         * POSTGRES `LIKE` IS CASE-SENSITIVE and the others are not, so the
+         * same search that worked all through development returned nothing
+         * on the one engine this is deployed to. `ILIKE` is Postgres's own
+         * spelling of the case-insensitive match and needs no expression
+         * wrapping - which matters, because wrapping the column in `lower()`
+         * would also put it beyond any index that names the column plainly.
+         */
+        $like = $eloquent->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+        /*
+         * A QUOTED PHRASE IS ONE TERM, and invisible characters are not terms
+         * at all. Reading the term as CSV with a space separator gives quoting
+         * for free - the syntax everybody already expects from a search box -
+         * and the normalise step collapses runs of whitespace AND the Hangul
+         * fillers U+3164 and U+1160, which ride along in pasted text, survive
+         * `trim()`, and make an ordinary-looking term match nothing.
+         */
+        $normalised = preg_replace(
+            '/(\s|\x{3164}|\x{1160})+/u',
+            ' ',
+            trim($term),
+        ) ?? '';
+
+        $words = array_values(array_filter(
+            str_getcsv($normalised, separator: ' ', enclosure: '"', escape: '\\'),
+            static fn (?string $word): bool => $word !== null && trim($word) !== '',
+        ));
+
+        foreach ($words as $word) {
+            $escaped = str_replace(['%', '_'], ['\%', '\_'], $word);
+            $startsWith = $escaped.'%';
+            $wordStart = '% '.$escaped.'%';
+
+            $eloquent->where(function (EloquentBuilder $q) use ($startsWith, $wordStart, $like): void {
+                foreach ($this->searchable as $i => $searchColumn) {
+                    if ($i === 0) {
+                        $q->where($searchColumn, $like, $startsWith);
+                    } else {
+                        $q->orWhere($searchColumn, $like, $startsWith);
+                    }
+
+                    $q->orWhere($searchColumn, $like, $wordStart);
+                }
+
+                foreach ($this->searchableRelations as $relation => $columns) {
+                    $q->orWhereHas(
+                        $relation,
+                        static function (EloquentBuilder $related) use ($columns, $startsWith, $wordStart, $like): void {
+                            $related->where(
+                                static function (EloquentBuilder $inner) use ($columns, $startsWith, $wordStart, $like): void {
+                                    foreach ($columns as $i => $column) {
+                                        if ($i === 0) {
+                                            $inner->where($column, $like, $startsWith);
+                                        } else {
+                                            $inner->orWhere($column, $like, $startsWith);
+                                        }
+
+                                        $inner->orWhere($column, $like, $wordStart);
+                                    }
+                                },
+                            );
+                        },
+                    );
+                }
+            });
+        }
     }
 
     /**
