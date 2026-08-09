@@ -155,10 +155,17 @@ final class Pages
      * asserts it found links at all - but the lesson is that a rule about two
      * lists should be expressed as two lists.
      *
-     * PAIRED WITH THE HELPER NAME the component imports, so removing an entry
-     * from the menu breaks the test rather than quietly orphaning a screen.
+     * PAIRED WITH THE NAME THE MENU READS, so removing an entry from the menu
+     * breaks the test rather than quietly orphaning a screen.
      *
-     * @return array<string, string> path => the route helper the menu uses
+     * THAT NAME IS NOW A SHARED PROP, NOT A ROUTE HELPER. The menu moved into
+     * the package and stopped importing Wayfinder helpers this application
+     * alone generates; `SharePanelProps` sends a url per panel instead, and the
+     * menu reads it. So the value here is the key on `page.props.panel` - which
+     * is why `/activities` pairs with `activity`: the resource is plural, the
+     * prop the server shares is not.
+     *
+     * @return array<string, string> path => the shared prop key the menu reads
      */
     public static function inAccountMenu(): array
     {
@@ -175,7 +182,7 @@ final class Pages
              * itself and a bin of what was deleted from it are both about the
              * INSTALLATION, which is what the rest of this list already holds.
              */
-            '/activities' => 'activities',
+            '/activities' => 'activity',
             '/trash' => 'trash',
         ];
     }

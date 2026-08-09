@@ -18,6 +18,18 @@ const props = withDefaults(
     },
 )
 
+defineSlots<{
+    /**
+     * Replaces the breadcrumb trail - a heading, a search box. The fallback is
+     * the trail, so a screen that passes nothing gets where-you-are instead of
+     * a gap. This is the same contract `PanelShell` has always published, kept
+     * here so `PanelLayout` files written against it keep working.
+     */
+    topbar?(): unknown
+    /** Trailing controls, between the bell and the appearance drawer. */
+    actions?(): unknown
+}>()
+
 const page = usePage()
 
 /**
@@ -67,11 +79,13 @@ const trail = computed<BreadcrumbItem[]>(() =>
     >
         <div class="flex min-w-0 items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
             <SidebarTrigger :class="mirrored ? '-mr-1' : '-ml-1'" />
-            <!-- Breadcrumbs are the first thing to give up on a phone; the
-                 search trigger earns that space more. -->
-            <template v-if="trail.length > 0">
-                <Breadcrumbs :breadcrumbs="trail" class="hidden sm:flex" />
-            </template>
+            <slot name="topbar">
+                <!-- Breadcrumbs are the first thing to give up on a phone; the
+                     search trigger earns that space more. -->
+                <template v-if="trail.length > 0">
+                    <Breadcrumbs :breadcrumbs="trail" class="hidden sm:flex" />
+                </template>
+            </slot>
         </div>
 
         <div class="flex items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
@@ -81,6 +95,7 @@ const trail = computed<BreadcrumbItem[]>(() =>
                  screen you are on rather than navigating away from it. -->
             <AssistantDrawer />
             <NotificationBell />
+            <slot name="actions" />
             <!-- Appearance belongs where you can see what it changes. -->
             <AppearanceDrawer />
         </div>

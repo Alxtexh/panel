@@ -57,10 +57,10 @@ Panels registered in this application:
 
 Resources are discovered from:
 
-- `app/Panel/Resources` → `App\Panel\Resources`
-- `app/Panel/Platform/Resources` → `App\Panel\Platform\Resources`
-- `app/Panel/Reseller/Resources` → `App\Panel\Reseller\Resources`
-- `app/Panel/Client/Resources` → `App\Panel\Client\Resources`
+- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Resources` → `App\Panel\Resources`
+- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Platform/Resources` → `App\Panel\Platform\Resources`
+- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Reseller/Resources` → `App\Panel\Reseller\Resources`
+- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Client/Resources` → `App\Panel\Client\Resources`
 
 A resource belongs to exactly one panel — its key is a URL segment and an
 ability name, both globally unique. A second portal needing the same screen

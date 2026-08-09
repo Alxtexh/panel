@@ -30,8 +30,19 @@ withDefaults(defineProps<{ showName?: boolean }>(), { showName: false })
 
 const page = usePage()
 
-/** The tenant's name, falling back to the product's only outside a tenant. */
-const name = computed(() => String((page.props.panelBrand as string | null) ?? page.props.name))
+/**
+ * The tenant's name, falling back to the product's only outside a tenant.
+ *
+ * `page.props.name` IS NOT GUARANTEED. It is what Laravel's own Vue starter
+ * kit shares, and `panel:install` runs on any Laravel app - one scaffolded
+ * without that starter kit's `HandleInertiaRequests` shares neither prop, and
+ * `String(undefined)` renders the literal word "undefined" as the panel's own
+ * name. `'Panel'` is the same default `PanelSidebar` shipped before this
+ * component replaced it.
+ */
+const name = computed(
+    () => (page.props.panelBrand as string | null) ?? (page.props.name as string | null) ?? 'Panel',
+)
 
 const logo = computed(() => (page.props.panelLogo as string | null) ?? null)
 

@@ -13,6 +13,7 @@ use PanelKit\Panel\Auth\Impersonation;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\PanelHome;
 use PanelKit\Panel\Support\PanelNavigation;
+use PanelKit\Panel\Trash\TrashBin;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -42,12 +43,42 @@ final class SharePanelProps
     {
         $panels = app(PanelManager::class);
 
+        /*
+         * WHAT THE APPLICATION ALREADY SHARED UNDER `auth`, captured before this
+         * middleware shares its own.
+         *
+         * INERTIA MERGES BY TOP-LEVEL KEY ONLY. Two middlewares both sharing
+         * `auth` do not combine - the later one REPLACES the earlier array
+         * whole. This middleware runs after the application's (it is route
+         * middleware; theirs is in the `web` group), so sharing a bare
+         * `['user' => ...]` silently deleted every other key an application had
+         * put there.
+         *
+         * The reference app puts `auth.can` there - the panel-level abilities
+         * its account menu reads - so five entries (user management, backups,
+         * logs, monitoring, activity) vanished from that menu for somebody who
+         * genuinely held the permissions. Nothing errored: `can` was undefined,
+         * every `v-if` read falsy, and the items were simply absent, which
+         * looks exactly like not being allowed to see them.
+         */
+        $sharedAuth = Inertia::getShared('auth');
+
         Inertia::share([
             /*
              * THE SIDEBAR. See `PanelNavigation` for why the prefix and the
              * current-panel filter are the two things worth getting right.
              */
             'panelNav' => static fn (): array => PanelNavigation::build(),
+
+            /*
+             * THE BIN, for the packaged account menu. The reference app shares
+             * this itself; an application that has is left alone (same rule as
+             * `auth` below), and one that has not gets the package's own
+             * resolution - null when nothing in this panel soft-deletes, which
+             * is what keeps a binless portal from offering an empty screen.
+             */
+            'panelTrash' => Inertia::getShared('panelTrash')
+                ?? static fn (): ?array => app(TrashBin::class)->navigationEntry(),
 
             'panel' => static function () use ($panels): ?array {
                 $panel = $panels->currentPanel();
@@ -139,6 +170,69 @@ final class SharePanelProps
                     'help' => Route::has($panel->getRouteName().'support.help')
                         ? route($panel->getRouteName().'support.help')
                         : null,
+
+                    /*
+                     * FAQ AND ABOUT TRAVEL THE SAME WAY, because the sidebar
+                     * footer renders them. They used to be hardcoded to `/faq`
+                     * and `/about` and therefore suppressed outside the default
+                     * panel - on reasoning that predated `HelpController` being
+                     * mounted under every panel's prefix. The routes exist per
+                     * panel; only the hrefs were stuck at the root, so every
+                     * generated portal lost its whole support footer to a
+                     * stale guard.
+                     */
+                    'faq' => Route::has($panel->getRouteName().'support.faq')
+                        ? route($panel->getRouteName().'support.faq')
+                        : null,
+                    'about' => Route::has($panel->getRouteName().'support.about')
+                        ? route($panel->getRouteName().'support.about')
+                        : null,
+
+                    /*
+                     * EVERYTHING THE ACCOUNT MENU OFFERS, resolved per panel
+                     * and null where this panel genuinely lacks the screen.
+                     *
+                     * The reference app's menu was 299 lines in the app because
+                     * every href came from Wayfinder - generated helpers a
+                     * consumer does not have. These urls are the same
+                     * resolution done server-side, which is the only place
+                     * that knows what is actually routed. The packaged menu
+                     * renders exactly the items that are non-null, so a portal
+                     * without operations offers no Backups rather than a 404,
+                     * and nothing is gated on "is this the default panel".
+                     */
+                    'settings' => Route::has($panel->getRouteName().'settings.index')
+                        ? route($panel->getRouteName().'settings.index')
+                        : null,
+                    'userManagement' => Route::has($panel->getRouteName().'pages.user-management')
+                        ? route($panel->getRouteName().'pages.user-management', ['tab' => 'users'])
+                        : null,
+                    'lock' => Route::has($panel->getRouteName().'lock')
+                        ? route($panel->getRouteName().'lock')
+                        : null,
+
+                    /*
+                     * THE ACTIVITY LOG IS A RESOURCE, so its presence is a
+                     * registry question rather than a route one - the resource
+                     * route is a wildcard that answers for any slug, registered
+                     * or not.
+                     */
+                    'activity' => isset($panels->resourcesFor($panel->id)['activities'])
+                        && Route::has($panel->getRouteName().'resource')
+                        ? route($panel->getRouteName().'resource', ['resource' => 'activities'])
+                        : null,
+
+                    /*
+                     * OPERATIONS FALL BACK TO THE ROOT NAMES ONLY FOR THE
+                     * DEFAULT PANEL. The reference app opts out of the packaged
+                     * mounting (`->without(['operations'])`) and mounts them at
+                     * the root itself, so the panel-prefixed names do not exist
+                     * there. A NON-default portal must not inherit that
+                     * fallback: its operator was deliberately not given a
+                     * restore button, and a menu that routes around `without()`
+                     * un-decides that.
+                     */
+                    'operations' => self::operationsUrls($panel),
                 ];
             },
 
@@ -148,20 +242,32 @@ final class SharePanelProps
              * returns null under any other, so a second portal would render its
              * account menu empty while the person was demonstrably signed in.
              */
-            'auth' => static function () use ($panels, $request): array {
+            'auth' => static function () use ($panels, $request, $sharedAuth): array {
                 $guard = $panels->currentPanel()?->getGuard();
 
                 $user = $guard === null
                     ? $request->user()
                     : $request->user($guard);
 
-                return [
+                /*
+                 * MERGED OVER WHAT WAS ALREADY THERE - see the note above. The
+                 * application's own keys survive; `user` is still this
+                 * package's, because only it knows which guard the current
+                 * panel runs on.
+                 *
+                 * The existing value may itself be a closure, since that is how
+                 * a lazily-evaluated shared prop is registered - resolve it
+                 * rather than merging a callable into an array of data.
+                 */
+                $existing = $sharedAuth instanceof Closure ? $sharedAuth() : $sharedAuth;
+
+                return array_merge(is_array($existing) ? $existing : [], [
                     'user' => $user === null ? null : [
                         'id' => $user->getAuthIdentifier(),
                         'name' => $user->name ?? null,
                         'email' => $user->email ?? null,
                     ],
-                ];
+                ]);
             },
 
             /*
@@ -271,5 +377,33 @@ final class SharePanelProps
         ]);
 
         return $next($request);
+    }
+
+    /**
+     * The operations screens this panel may link to, null per screen when it
+     * may not.
+     *
+     * See the share above: the bare root names are honoured only for the
+     * default panel, because that is the one arrangement where "mounted at the
+     * root instead" is a relocation rather than an escape.
+     *
+     * @return array{backups: ?string, logs: ?string, monitoring: ?string}
+     */
+    private static function operationsUrls(\PanelKit\Panel\Panel $panel): array
+    {
+        $prefixed = $panel->getRouteName().'operations.';
+        $isDefault = $panel->id === (string) config('panel.default', 'admin');
+
+        $resolve = static fn (string $screen): ?string => match (true) {
+            Route::has($prefixed.$screen) => route($prefixed.$screen),
+            $isDefault && Route::has('operations.'.$screen) => route('operations.'.$screen),
+            default => null,
+        };
+
+        return [
+            'backups' => $resolve('backups'),
+            'logs' => $resolve('logs'),
+            'monitoring' => $resolve('monitoring'),
+        ];
     }
 }

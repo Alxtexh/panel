@@ -648,7 +648,19 @@ final class TrashTest extends TestCase
      */
     public function test_the_account_menu_uses_that_entry(): void
     {
-        $menu = (string) file_get_contents(resource_path('js/components/UserMenuContent.vue'));
+        /*
+         * THE PACKAGE'S MENU, not the application's wrapper. The 299 lines that
+         * used to be in `resources/js/components/UserMenuContent.vue` moved into
+         * the package so a generated portal opens the same menu the demo does;
+         * what is left in the application is the override point, and asserting
+         * against a wrapper proves nothing about what renders.
+         */
+        $path = dirname(__DIR__, 4)
+            .'/packages/ui/inertia/components/shell/DefaultAccountMenuItems.vue';
+
+        $this->assertFileExists($path, 'The packaged account menu could not be found.');
+
+        $menu = (string) file_get_contents($path);
 
         $this->assertStringContainsString('panelTrash', $menu);
         $this->assertStringContainsString('trash.href', $menu);

@@ -19,6 +19,7 @@ import { usePanelNav } from '../../composables/usePanelNav'
 import { useSidebarOpener } from '../../lib/mobileNav'
 import type { NavItem } from '../../types'
 import AppLogo from './AppLogo.vue'
+import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
 import NavFooter from './NavFooter.vue'
 import NavMain from './NavMain.vue'
 import NavUser from './NavUser.vue'
@@ -138,39 +139,113 @@ const dashboardItem = computed<NavItem>(() => ({
 }))
 
 /**
- * Navigation, grouped by the `group` each resource declares.
+ * The support screens, resolved for THE PANEL BEING SERVED.
+ *
+ * THE OLD GUARD HERE WAS `panelHome.isDefault ? [...] : []`, on the reasoning
+ * that these were routed at the root, so a generated portal offering them was
+ * a portal you leave by clicking Help. That reasoning went stale the day
+ * `HelpController` was mounted under every panel's prefix - `platform/help`,
+ * `reseller/faq`, `client/about` all answer - and the guard kept suppressing
+ * the whole footer anyway. The server now shares each URL per panel
+ * (`SharePanelProps`), null when that panel genuinely lacks the route, so the
+ * footer shows exactly what this portal can serve and nothing it cannot.
+ *
+ * WHAT'S NEW STAYS DEFAULT-PANEL-ONLY, deliberately: `ChangelogPage` is a
+ * registered page of the application portal, not a per-panel route, and a
+ * footer link to a 404 is worse than a shorter footer.
+ *
+ * DECLARED ABOVE `navGroups`, WHICH READS IT, AND THAT ORDER IS LOAD-BEARING.
+ * `const collapsed = ref(readCollapsed())` forces `navGroups` DURING setup, so
+ * the computed body runs while this file is still being evaluated - and a
+ * `const` declared further down is in its temporal dead zone at that moment.
+ * Sitting below, this threw on every single panel screen: the sidebar's setup
+ * aborted, so the whole shell failed to mount and every page rendered blank,
+ * with only a console error to say why. Lazy evaluation does NOT save it: this
+ * one computed is read eagerly, and that is easy to miss from the call site.
+ */
+/**
+ * `route()` on the server yields ABSOLUTE urls, and everything downstream -
+ * the footer-wins dedup in `navGroups`, `isCurrentUrl` - compares paths. One
+ * regex rather than `new URL(...)`, because this also runs during SSR where
+ * there is no `window.location` to resolve against.
+ */
+const toPath = (url: string): string => url.replace(/^https?:\/\/[^/]+/, '') || '/'
+
+const supportNavItems = computed<NavItem[]>(() => {
+    const panel = page.props.panel as
+        | { help?: string | null; faq?: string | null; about?: string | null }
+        | null
+        | undefined
+
+    const items: NavItem[] = []
+
+    if (panel?.help) {
+        items.push({ title: 'Help', href: toPath(panel.help), icon: HelpCircle })
+    }
+
+    if (panel?.faq) {
+        items.push({ title: 'FAQ', href: toPath(panel.faq), icon: MessageCircleQuestion })
+    }
+
+    if (panelHome.value.isDefault) {
+        items.push({ title: "What's new", href: '/whats-new', icon: Sparkles })
+    }
+
+    if (panel?.about) {
+        items.push({ title: 'About', href: toPath(panel.about), icon: Info })
+    }
+
+    return items
+})
+
+/**
+ * Navigation, grouped by the `group` each resource declares, from the SHARED
+ * model.
  *
  * Resources have carried a group since Phase 4 and nothing rendered it, so every
  * screen sat in one flat list. That is fine at three resources and unusable at
  * twenty - which is the point at which a panel stops being navigable and starts
- * needing search for everything.
+ * needing search for everything. Ungrouped resources stay at the top level
+ * rather than landing in a catch-all "Other": a group of one is noise.
  *
- * Ungrouped resources stay at the top level rather than landing in a
- * catch-all "Other": a group of one is noise.
- */
-/**
- * The navigation, from the SHARED model.
- *
- * This block used to rebuild the groups itself, in parallel with
- * `usePanelNav`. That composable's own docblock warns against exactly this -
- * "duplicating the group-building into each is how a resource ends up visible
- * in two layouts and missing from the third, with nothing failing" - and it is
- * precisely what happened: two new groups were added to the composable, they
- * appeared in the horizontal bar, and the sidebar silently did not have them.
- *
- * Nothing errored, because there was no contradiction to detect - just two
- * lists that had stopped agreeing. One source now.
+ * This block used to rebuild the groups itself, in parallel with `usePanelNav`.
+ * That composable's own docblock warns against exactly this - "duplicating the
+ * group-building into each is how a resource ends up visible in two layouts and
+ * missing from the third, with nothing failing" - and it is precisely what
+ * happened: two new groups were added to the composable, they appeared in the
+ * horizontal bar, and the sidebar silently did not have them. Nothing errored,
+ * because there was no contradiction to detect - just two lists that had
+ * stopped agreeing. One source now.
  *
  * The shape is adapted rather than changed: the sidebar walks `[name, items]`
  * pairs because it iterates them alongside a collapsed-state Map keyed by name.
+ *
+ * THE FOOTER WINS, AND THE MAIN LIST GIVES THAT ENTRY UP. `What's new` is a
+ * REGISTERED PAGE - `ChangelogPage` declares the slug, so it arrives in
+ * `panelPages` and lands in the top-level list like any other - AND it is
+ * hardcoded into the footer. Both rendered, so the same destination appeared
+ * twice in one sidebar: once under Platform and once beside Help and FAQ.
+ *
+ * DEDUPED BY HREF RATHER THAN BY TITLE, and against whatever the footer
+ * actually holds rather than against a second hardcoded list - so a support
+ * link added there is automatically dropped from the main list instead of
+ * quietly becoming the next duplicate. The FOOTER is the one that survives,
+ * because that is where these belong: read once and then rarely, they should
+ * not compete with the resources.
  */
-const navGroups = computed(() => ({
-    ungrouped: [
-        dashboardItem.value,
-        ...nav.value.primary.filter((item) => item.title !== 'Dashboard'),
-    ],
-    grouped: nav.value.groups.map((group): [string, NavItem[]] => [group.name, group.items]),
-}))
+const navGroups = computed(() => {
+    const inFooter = new Set(supportNavItems.value.map((item) => String(item.href)))
+
+    return {
+        ungrouped: [
+            dashboardItem.value,
+            ...nav.value.primary.filter(
+                (item) => item.title !== 'Dashboard' && !inFooter.has(String(item.href)),
+            ),
+        ],
+        grouped: nav.value.groups.map((group): [string, NavItem[]] => [group.name, group.items]),
+    }
+})
 
 /*
  * The key is versioned because the DEFAULT changed.
@@ -261,24 +336,6 @@ watch(
             collapsed.value = next
         }
     },
-)
-
-/**
- * The application's own support screens - and only in the application's portal.
- *
- * They are routed at the root, so a generated portal offering them is a portal
- * you leave by clicking Help. A portal that needs its own support pages declares
- * them like any other page.
- */
-const supportNavItems = computed<NavItem[]>(() =>
-    panelHome.value.isDefault
-        ? [
-              { title: 'Help', href: '/help', icon: HelpCircle },
-              { title: 'FAQ', href: '/faq', icon: MessageCircleQuestion },
-              { title: "What's new", href: '/whats-new', icon: Sparkles },
-              { title: 'About', href: '/about', icon: Info },
-          ]
-        : [],
 )
 </script>
 
@@ -465,8 +522,16 @@ const supportNavItems = computed<NavItem[]>(() =>
                             FORWARDED, so an application passes its own account
                             menu items through the sidebar without knowing that
                             NavUser is what renders them.
+
+                            THE FALLBACK IS WHAT RENDERS WHEN NOBODY DID. An
+                            install that has not written its own `userMenu`
+                            content gets Profile/Security/Help/Sign out from
+                            the same shared URLs `PanelAccountMenu` reads,
+                            rather than a dropdown that opens onto nothing.
                         -->
-                        <slot name="userMenu" :user="user" />
+                        <slot name="userMenu" :user="user">
+                            <DefaultAccountMenuItems />
+                        </slot>
                     </template>
                 </NavUser>
             </PkBoundary>

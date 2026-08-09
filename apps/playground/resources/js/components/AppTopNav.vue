@@ -9,8 +9,13 @@ defineProps<{ breadcrumbs?: BreadcrumbItem[] }>();
 
 <template>
     <AppTopNav :breadcrumbs="breadcrumbs">
+        <!--
+            `v-if` RATHER THAN A CAST - `user` is null until the shared props
+            arrive, the same guard the sidebar wrapper has always had. The slot
+            only became honestly typed when `AppTopNav` started forwarding it.
+        -->
         <template #userMenu="{ user }">
-            <UserMenuContent :user="user" />
+            <UserMenuContent v-if="user" :user="user" />
         </template>
     </AppTopNav>
 </template>

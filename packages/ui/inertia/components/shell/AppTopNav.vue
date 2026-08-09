@@ -22,6 +22,7 @@ import type { BreadcrumbItem, NavItem } from '../../types'
 import AppLogo from './AppLogo.vue'
 import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
+import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import TopNavUser from './TopNavUser.vue'
@@ -158,7 +159,22 @@ function groupIsActive(items: NavItem[]): boolean {
                 <AssistantDrawer />
                 <NotificationBell />
                 <AppearanceDrawer />
-                <TopNavUser />
+                <!--
+                    THE MENU IS FORWARDED, AND HAS A DEFAULT. This rendered a
+                    bare `<TopNavUser />` - whose `#menu` slot has no fallback -
+                    so the horizontal layout's account dropdown opened onto
+                    nothing, and the `#userMenu` template the reference app was
+                    passing in was silently ignored. Same contract as
+                    `AppSidebar`: the application's items when given, the
+                    packaged menu when not.
+                -->
+                <TopNavUser>
+                    <template #menu="{ user }">
+                        <slot name="userMenu" :user="user">
+                            <DefaultAccountMenuItems />
+                        </slot>
+                    </template>
+                </TopNavUser>
             </div>
         </div>
 

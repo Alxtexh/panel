@@ -121,24 +121,29 @@ const crumbs = computed(() => props.items ?? derived.value)
 </script>
 
 <template>
-    <nav v-if="crumbs.length" aria-label="Breadcrumb" data-breadcrumbs>
-        <ol class="text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm">
+    <nav v-if="crumbs.length" aria-label="Breadcrumb" data-breadcrumbs class="min-w-0">
+        <ol class="text-muted-foreground flex min-w-0 flex-nowrap items-center gap-1.5 text-sm">
             <li
                 v-for="(crumb, index) in crumbs"
                 :key="`${crumb.title}-${index}`"
-                class="flex items-center gap-1.5"
+                class="flex min-w-0 items-center gap-1.5"
+                :class="index === crumbs.length - 1 ? 'min-w-0 shrink' : 'shrink-0'"
             >
                 <span v-if="index > 0" aria-hidden="true" class="opacity-50">/</span>
 
                 <Link
                     v-if="crumb.href"
                     :href="crumb.href"
-                    class="hover:text-foreground transition-colors"
+                    class="hover:text-foreground truncate transition-colors"
                 >
                     {{ crumb.title }}
                 </Link>
 
-                <span v-else :aria-current="index === crumbs.length - 1 ? 'page' : undefined">
+                <span
+                    v-else
+                    class="truncate"
+                    :aria-current="index === crumbs.length - 1 ? 'page' : undefined"
+                >
                     {{ crumb.title }}
                 </span>
             </li>

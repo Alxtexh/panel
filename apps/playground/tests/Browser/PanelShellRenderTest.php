@@ -66,8 +66,12 @@ final class PanelShellRenderTest extends DuskTestCase
                 ->visit('/shell-preview')
                 ->waitForText('Subscribers', 15)
 
-                // The sidebar, built from `panelNav` rather than hand-written.
-                ->assertPresent('aside')
+                /*
+                 * The sidebar, built from `panelNav` rather than hand-written.
+                 * `[data-slot="sidebar"]` because the unified shell renders the
+                 * same shadcn rail the demo does - there is no `<aside>` in it.
+                 */
+                ->assertPresent('[data-slot="sidebar"]')
                 ->assertSee('Subscribers')
 
                 /*
@@ -89,6 +93,10 @@ final class PanelShellRenderTest extends DuskTestCase
      * Re-expanding on every page load is the panel forgetting a preference
      * somebody expressed deliberately - and it is invisible in a component
      * test, because there is no second page load in one.
+     *
+     * THE STORE IS THE `sidebar_state` COOKIE NOW, written by the same
+     * `SidebarProvider` the demo uses - the shell was unified, and the old
+     * `panelkit.sidebar.collapsed` localStorage key went with the old shell.
      */
     public function test_the_sidebar_collapse_is_remembered(): void
     {
@@ -98,11 +106,11 @@ final class PanelShellRenderTest extends DuskTestCase
             $browser->loginAs($this->operatorId)
                 ->visit('/shell-preview')
                 ->waitForText('Subscribers', 15)
-                ->click('[aria-label="Collapse navigation"]')
-                ->waitFor('[aria-label="Expand navigation"]', 5)
+                ->click('[data-sidebar="trigger"]')
+                ->waitFor('[data-slot="sidebar"][data-state="collapsed"]', 5)
                 ->visit('/shell-preview')
-                ->waitFor('[aria-label="Expand navigation"]', 15)
-                ->assertPresent('[aria-label="Expand navigation"]');
+                ->waitFor('[data-slot="sidebar"][data-state="collapsed"]', 15)
+                ->assertPresent('[data-slot="sidebar"][data-state="collapsed"]');
         });
     }
 
@@ -210,9 +218,10 @@ final class PanelShellRenderTest extends DuskTestCase
      *
      * Collapsed, the only thing separating two entries is a 16px glyph, and the
      * native `title` tooltip takes about a second - long enough that people
-     * expand the sidebar again, which is the feature undone. The flyout is CSS
-     * on hover, so this asserts it EXISTS and is hidden until then rather than
-     * asserting a hover state the driver reports inconsistently.
+     * expand the sidebar again, which is the feature undone. In the unified
+     * shell a collapsed GROUP becomes a flyout - the demo's behaviour - so
+     * this proves the group survives the collapse as a labelled trigger and
+     * that opening it reaches the group's items.
      */
     public function test_the_collapsed_sidebar_labels_its_icons(): void
     {
@@ -221,31 +230,31 @@ final class PanelShellRenderTest extends DuskTestCase
         $this->browse(function (Browser $browser): void {
             /*
              * THE COLLAPSE IS PERSISTED, which is the point of it and a hazard
-             * here: the test above leaves it collapsed in `localStorage`, and
-             * Dusk reuses one browser across a class. Starting from a known
-             * state rather than from whatever ran first.
+             * here: the test above leaves the `sidebar_state` cookie saying
+             * collapsed, and Dusk reuses one browser across a class. Starting
+             * from a known state rather than from whatever ran first.
              */
             $browser->loginAs($this->operatorId)
                 ->visit('/shell-preview')
-                ->script('window.localStorage.removeItem("panelkit.sidebar.collapsed")');
+                ->script('document.cookie = "sidebar_state=true; path=/"');
 
             $browser->visit('/shell-preview')
                 ->waitForText('Subscribers', 15)
 
                 // Expanded: labels are inline, so there is nothing to fly out.
-                ->assertMissing('[data-nav-flyout]')
+                ->assertMissing('button[title="Subscribers"]')
 
-                ->click('[aria-label="Collapse navigation"]')
-                ->waitFor('[aria-label="Expand navigation"]', 5)
+                ->click('[data-sidebar="trigger"]')
+                ->waitFor('[data-slot="sidebar"][data-state="collapsed"]', 5)
 
                 /*
-                 * PRESENT BUT NOT VISIBLE. `assertPresent` rather than
-                 * `assertVisible` is the honest assertion for a hover label -
-                 * and it is still load-bearing, because the bug it guards is the
-                 * flyout not being rendered at all when collapsed.
+                 * THE GROUP IS STILL THERE, AS A LABELLED TRIGGER - previously
+                 * collapsing simply hid every grouped resource. Opening it
+                 * must reach the items, or the rail is decoration.
                  */
-                ->assertPresent('[data-nav-flyout]')
-                ->assertMissing('[data-nav-flyout]:not(.invisible)');
+                ->assertPresent('button[title="Subscribers"]')
+                ->click('button[title="Subscribers"]')
+                ->waitForText('Clients', 5);
 
             $browser->screenshot('collapsed-rail');
         });

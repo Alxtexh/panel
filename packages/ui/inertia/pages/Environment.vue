@@ -111,8 +111,13 @@ const submit = () => form.put(window.location.pathname, { preserveScroll: true }
         THE PAGE PADDING IS THE SCREEN'S OWN, matching `settings/Roles`. This
         rendered flush against the shell because it had none, which is most of
         why it looked unfinished next to every other screen.
+
+        `mx-auto w-full` IS WHAT MAKES `max-w-3xl` MEAN "a column", rather than
+        "pinned to the left". Without it the cap still applied, so the form sat
+        against the sidebar with the whole right half of a wide monitor empty -
+        which reads as a broken layout rather than as a deliberate measure.
     -->
-    <div class="flex max-w-3xl flex-col gap-4 p-4 sm:p-6">
+    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 sm:p-6">
         <header>
             <h1 class="text-xl font-semibold tracking-tight">{{ pageHeading }}</h1>
             <p v-if="pageDescription" class="text-muted-foreground mt-1 text-sm">

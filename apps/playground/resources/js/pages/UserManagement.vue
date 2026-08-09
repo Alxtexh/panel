@@ -7,7 +7,7 @@
  * configured auth model, so this app's `UserResource` is still what the Users
  * tab embeds - without either side naming the other.
  */
-import UserManagement from '@alxtexh-enterprise/panel/pages/settings/UserManagement.vue';
+import UserManagement from '@alxtexh-enterprise/panel/pages/UserManagement.vue';
 
 defineOptions({ inheritAttrs: false });
 </script>

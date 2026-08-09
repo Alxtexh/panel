@@ -1,261 +1,284 @@
 <script setup lang="ts">
 /**
- * The frame every panel screen sits in: sidebar, topbar, content.
+ * The frame every panel screen sits in - and THE SAME frame the reference app
+ * proves, not a thinner cousin of it.
  *
- * IT TAKES NO PROPS BY DEFAULT and reads what `SharePanelProps` already puts on
- * every panel response - the navigation, the panel's identity and palette, and
- * the signed-in person. An application that renders panel screens under its own
- * routing can pass them explicitly instead; nothing here fetches.
+ * THERE USED TO BE TWO SHELLS. This one composed `PanelSidebar` - a 191-line
+ * flat list with the account menu in the header - while the demo rendered
+ * `AppSidebar`: grouped navigation with flyouts, Help/FAQ/What's new/About in
+ * a footer, and the account menu at the bottom of the rail. Everything a
+ * generated portal was missing already existed in this package; this file
+ * simply did not reach for it. So `make:panel` produced the same tables as
+ * the demo wearing visibly plainer chrome, which is the exact failure
+ * UI_FOUNDATION.md predicted: two copies drift, and the drift surfaces in
+ * front of a customer.
  *
- * THE PALETTE IS APPLIED AS BARE CUSTOM PROPERTIES, without the `--color-`
- * prefix, and that distinction is not cosmetic. Tailwind's `@theme` declares
- * `--color-primary: var(--primary)` and resolves it at BUILD time, so
- * `bg-primary` compiles to `var(--primary)` - setting the prefixed name at
- * runtime writes a property nothing reads, which is exactly how per-tenant
- * branding shipped for a release doing nothing at all.
+ * NOW IT COMPOSES WHAT THE DEMO COMPOSES - `AppShell`, `AppSidebar`,
+ * `AppContent`, `AppSidebarHeader` - plus the pieces the demo's `AppLayout`
+ * carried and every consumer silently lost: the skip link, the bottom bar
+ * padding, the SPA navigation announcement, the session-expired dialog, the
+ * toast outlet and per-tenant theming.
  *
- * COLLAPSE IS PERSISTED, because it is a preference about how somebody works
- * and re-expanding it on every page load is the panel forgetting them. It is
- * read once on mount rather than during setup: this component renders on the
- * server too, where `localStorage` does not exist and touching it is a 500.
+ * IT STILL TAKES NO PROPS BY DEFAULT and reads what `SharePanelProps` already
+ * puts on every panel response. The published `PanelLayout` keeps its two
+ * slots - `#topbar` and `#actions` - and gains `#userMenu`, which is how an
+ * application replaces the account menu's items without forking the shell.
+ *
+ * THE HORIZONTAL PREFERENCE IS HONOURED HERE TOO. The appearance drawer offers
+ * top navigation on every installation, and a shell that ignores the setting
+ * turns a visible control into a lie. The layout genuinely swaps - the two
+ * modes have different DOM, not different styling.
  */
-import { usePage } from '@inertiajs/vue3'
-import { computed, onMounted, ref, watch } from 'vue'
-import { PkBottomNav, ThemeToggle } from '@alxtexh-enterprise/panel'
-
-import PanelAccountMenu from './PanelAccountMenu.vue'
-import PanelBreadcrumbs from './PanelBreadcrumbs.vue'
-import PanelCommandPalette from './PanelCommandPalette.vue'
+import { router, usePage } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
+import {
+    PkBottomNav,
+    PkModal,
+    useAppearance,
+    useTenantTheme,
+} from '@alxtexh-enterprise/panel'
+import type { BottomNavItem } from '@alxtexh-enterprise/panel'
+import { useSidebarOpener } from '../../lib/mobileNav'
+import SessionExpired from '../SessionExpired.vue'
+import Toaster from '../Toaster.vue'
+import AppContent from './AppContent.vue'
+import AppShell from './AppShell.vue'
+import AppSidebar from './AppSidebar.vue'
+import AppSidebarHeader from './AppSidebarHeader.vue'
+import AppTopNav from './AppTopNav.vue'
 import PanelImpersonationBanner from './PanelImpersonationBanner.vue'
-import PanelNotificationBell from './PanelNotificationBell.vue'
-import PanelSidebar from './PanelSidebar.vue'
-import type { NavItem } from './types'
+import type { BreadcrumbItem, User } from '../../types'
 
-/*
- * THE SHAPE IS INLINE HERE TOO - see `types.ts`. Importing `NavItem` into
- * `defineProps` sent the SFC compiler looking for TypeScript in the consuming
- * project, and a fresh Laravel app has none.
- */
-const props = defineProps<{
-    /** Overrides for an application not using the packaged middleware. */
-    nav?: {
-        key: string
-        title: string
-        href: string
-        icon?: string | null
-        group?: string | null
-    }[]
-    brand?: string
-}>()
+const props = withDefaults(
+    defineProps<{
+        breadcrumbs?: BreadcrumbItem[]
+    }>(),
+    {
+        breadcrumbs: () => [],
+    },
+)
 
 defineSlots<{
     /** The page. */
     default(): unknown
-    /** Between the menu button and the account menu - a heading, a search. */
-    topbar(): unknown
-    /** Trailing topbar controls, before the theme toggle. */
-    actions(): unknown
+    /** Between the collapse trigger and the topbar controls - a heading, a search. */
+    topbar?(): unknown
+    /** Trailing topbar controls, before the appearance drawer. */
+    actions?(): unknown
+    /** The account menu's items. The default is the packaged menu. */
+    userMenu?(props: { user: User | null }): unknown
 }>()
 
 const page = usePage()
 
-const shared = computed(() => page.props as Record<string, any>)
+const { appearance } = useAppearance()
 
-const nav = computed<NavItem[]>(() => props.nav ?? shared.value.panelNav ?? [])
-const panel = computed(() => shared.value.panel ?? null)
-const user = computed(() => shared.value.auth?.user ?? null)
-
-const brand = computed<string>(() => props.brand ?? panel.value?.brand ?? 'Panel')
-const home = computed<string>(() => panel.value?.path ?? '/')
-
-/** See the class note: bare names, because `@theme` already resolved the rest. */
-const palette = computed<Record<string, string>>(() =>
-    Object.fromEntries(
-        Object.entries((panel.value?.colors ?? {}) as Record<string, string>).map(([k, v]) => [
-            `--${k}`,
-            v,
-        ]),
-    ),
+/**
+ * Per-tenant branding, applied at runtime rather than compiled per tenant.
+ * `panelTheme` is what the reference app shares; absent, this applies nothing.
+ */
+useTenantTheme(
+    computed(() => page.props.panelTheme as Record<string, string> | undefined),
 )
 
 /**
- * The same navigation, shaped for a thumb.
- *
- * THE ORDER IS THE SERVER'S, and the bar takes the first few - which is right,
- * because `PanelNavigation` already sorts by an explicit `sort` then by title,
- * so the entries somebody declared as important are the ones a phone gets.
- * `PkBottomNav` caps at five itself and turns the fifth into "More".
- *
- * `icon` IS NARROWED FROM `string | null` to `string | undefined` because that
- * is what `BottomNavItem` declares. Passing the null through type-checks in a
- * loose consumer and fails `vue-tsc` in a strict one, which is the sort of thing
- * that only shows up in somebody else's build.
+ * The PANEL'S palette - `Panel::colors()` via `SharePanelProps` - as bare
+ * custom properties, without the `--color-` prefix. Tailwind's `@theme`
+ * declares `--color-primary: var(--primary)` at BUILD time, so `bg-primary`
+ * compiles to `var(--primary)`; setting the prefixed name at runtime writes a
+ * property nothing reads, which is exactly how per-portal branding once
+ * shipped doing nothing at all. This is the only branding channel a generated
+ * portal has, so it survives the shell unification.
  */
-const bottomNav = computed(() =>
-    nav.value.map((item) => ({
-        key: item.key,
-        title: item.title,
-        href: item.href,
-        icon: item.icon ?? undefined,
-    })),
+const palette = computed<Record<string, string>>(() =>
+    Object.fromEntries(
+        Object.entries(
+            ((page.props.panel as Record<string, any> | undefined)?.colors ?? {}) as Record<
+                string,
+                string
+            >,
+        ).map(([k, v]) => [`--${k}`, v]),
+    ),
 )
 
-const STORAGE_KEY = 'panelkit.sidebar.collapsed'
+const horizontal = computed(() => appearance.value.sidebarSide === 'horizontal')
 
-const collapsed = ref(false)
-const drawerOpen = ref(false)
+/**
+ * The handset navigation, built from the same shared props the sidebar reads -
+ * so a screen added in PHP appears in both, and the two can never disagree.
+ *
+ * `panel.home` rather than a fixed `/dashboard`: inside a generated portal a
+ * hardcoded path is a link OUT of the portal, and for an operator who may not
+ * open the admin dashboard it refuses.
+ */
+const bottomNavItems = computed<BottomNavItem[]>(() => {
+    const fromProps = (key: string) =>
+        ((page.props[key] as any[]) ?? [])
+            // `#`-prefixed entries are client-side triggers, not destinations.
+            .filter((item) => !String(item.href).startsWith('#'))
+            .map((item) => ({
+                key: item.key ?? item.href,
+                title: item.title,
+                href: item.href,
+                icon: item.icon,
+            }))
 
-onMounted(() => {
-    collapsed.value = window.localStorage.getItem(STORAGE_KEY) === '1'
+    return [
+        {
+            key: 'dashboard',
+            title: 'Home',
+            href: (page.props.panel as { home?: string } | undefined)?.home ?? '/dashboard',
+            icon: 'home',
+        },
+        ...fromProps('panelNav'),
+        ...fromProps('panelPages'),
+    ]
 })
 
-watch(collapsed, (value) => window.localStorage.setItem(STORAGE_KEY, value ? '1' : '0'))
-
-/*
- * THE MOBILE DRAWER CLOSES ON NAVIGATION. Inertia swaps the page without
- * unmounting this component, so a drawer left open covers the screen somebody
- * just asked for - and on a phone that reads as a link that did nothing.
+/**
+ * "More" opens the SIDEBAR - the same one, as a drawer - not a second
+ * navigation nobody has seen. The sheet survives only for the horizontal
+ * layout, which genuinely has no sidebar; `request()` answers whether
+ * anything took the request.
  */
-watch(
-    () => page.url,
-    () => {
-        drawerOpen.value = false
-    },
-)
+const showAllNav = ref(false)
+
+const opener = useSidebarOpener()
+
+function openFullNav() {
+    if (!opener.request()) {
+        showAllNav.value = true
+    }
+}
+
+/**
+ * What the live region says after a navigation. Taken from the document
+ * title, cleared and re-set so navigating twice to same-titled pages still
+ * announces. SPA navigation is otherwise silent to a screen reader.
+ */
+const announcement = ref('')
+
+router.on('success', () => {
+    announcement.value = ''
+
+    requestAnimationFrame(() => {
+        announcement.value = `${document.title} - page loaded`
+    })
+})
 </script>
 
 <template>
-    <div class="bg-background text-foreground flex min-h-svh" :style="palette">
-        <aside
-            class="border-border hidden shrink-0 border-r transition-[width] duration-200 md:block"
-            :class="collapsed ? 'w-14' : 'w-60'"
-        >
-            <PanelSidebar
-                :items="nav"
-                :brand="brand"
-                :home="home"
-                :current="page.url"
-                :collapsed="collapsed"
-            />
-        </aside>
+    <!--
+        FIRST IN THE DOCUMENT, because that is the only position that works. A
+        skip link placed anywhere else is reached after the thing it exists to
+        skip. It targets #pk-main, which AppContent renders focusable.
+    -->
+    <a
+        href="#pk-main"
+        class="pk-skip-link rounded-md border bg-background px-3 py-2 text-sm shadow-lg"
+    >
+        Skip to content
+    </a>
 
-        <!-- The same sidebar as an overlay, for a viewport with no room for a column. -->
-        <div v-if="drawerOpen" class="fixed inset-0 z-40 md:hidden">
-            <div
-                class="absolute inset-0 bg-black/40"
-                aria-hidden="true"
-                @click="drawerOpen = false"
-            />
-
-            <aside class="bg-background border-border absolute inset-y-0 left-0 w-64 border-r">
-                <PanelSidebar :items="nav" :brand="brand" :home="home" :current="page.url" />
-            </aside>
-        </div>
-
-        <div class="flex min-w-0 flex-1 flex-col">
-            <!--
-                ABOVE THE TOPBAR AND INSIDE THIS COLUMN - see the component for
-                why neither higher nor lower works.
-            -->
+    <!--
+        PADDING FOR THE BOTTOM BAR, so the last row of a table is not
+        permanently underneath it. `sm:pb-0` because the bar disappears there.
+    -->
+    <div class="pb-14 sm:pb-0" :style="palette">
+        <!-- Top navigation, by preference: no rail, no provider. -->
+        <div v-if="horizontal" class="flex min-h-screen w-full flex-col bg-sidebar">
             <PanelImpersonationBanner />
 
-            <header class="border-border flex items-center gap-3 border-b px-3 py-2.5 sm:px-4">
-                <button
-                    type="button"
-                    class="hover:bg-muted rounded-md p-1.5 md:hidden"
-                    aria-label="Open navigation"
-                    @click="drawerOpen = true"
-                >
-                    <svg
-                        class="size-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                    >
-                        <path d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-
-                <button
-                    type="button"
-                    class="hover:bg-muted hidden rounded-md p-1.5 md:block"
-                    :aria-label="collapsed ? 'Expand navigation' : 'Collapse navigation'"
-                    @click="collapsed = !collapsed"
-                >
-                    <svg
-                        class="size-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <rect x="3" y="4" width="18" height="16" rx="2" />
-                        <path d="M9 4v16" />
-                    </svg>
-                </button>
-
-                <!--
-                    THE TOPBAR SLOT FALLS BACK TO THE TRAIL rather than to
-                    nothing. A screen that wants a heading passes one; one that
-                    passes nothing gets where-you-are instead of a gap, which is
-                    what every screen in the reference app ended up writing by
-                    hand.
-                -->
-                <div class="min-w-0 flex-1">
-                    <slot name="topbar">
-                        <PanelBreadcrumbs />
-                    </slot>
-                </div>
-
-                <!--
-                    THE PALETTE SITS BEFORE THE PAGE'S OWN CONTROLS, because it
-                    is the panel's and they are the screen's - and because it is
-                    the one control that is in the same place on every screen,
-                    which is what makes a keyboard habit possible.
-                -->
-                <PanelCommandPalette />
-
-                <slot name="actions" />
-
-                <!--
-                    THE BELL IS THE PANEL'S TOO, and sits with the palette rather
-                    than with the account menu: what needs attention is about the
-                    system, not about who is signed in.
-                -->
-                <PanelNotificationBell />
-
-                <ThemeToggle />
-
-                <PanelAccountMenu
-                    :user="user"
-                    :logout="panel?.logout ?? null"
-                    :account-url="panel?.account ?? null"
-                    :security-url="panel?.security ?? null"
-                    :help-url="panel?.help ?? null"
-                />
-            </header>
-
             <!--
-                THE BOTTOM PADDING IS THE BAR'S HEIGHT, on phones only. Without
-                it the last row of every table sits underneath the navigation,
-                which is exactly the content somebody scrolled to reach.
+                FORWARDED ONLY WHEN GIVEN. An unconditional forward renders an
+                empty slot where the sidebar would have rendered its default
+                menu - the dropdown opens onto nothing, silently.
             -->
-            <main class="min-w-0 flex-1 p-4 pb-20 sm:p-6 sm:pb-6">
+            <AppTopNav :breadcrumbs="props.breadcrumbs">
+                <template v-if="$slots.userMenu" #userMenu="{ user }">
+                    <slot name="userMenu" :user="user" />
+                </template>
+            </AppTopNav>
+
+            <main
+                id="pk-main"
+                tabindex="-1"
+                class="flex min-h-0 flex-1 flex-col bg-background md:m-2 md:rounded-xl md:border"
+            >
                 <slot />
             </main>
 
-            <!--
-                THE PHONE'S NAVIGATION. `PkBottomNav` shipped in `@alxtexh-enterprise/panel`
-                and nothing in the package mounted it, so every consumer's
-                handset got a hamburger at the top of the screen - the part of a
-                phone a thumb reaches least. "More" opens the same drawer the
-                menu button does, rather than pretending the list fits.
-            -->
-            <PkBottomNav :items="bottomNav" :current="page.url" @more="drawerOpen = true" />
+            <Toaster />
         </div>
+
+        <AppShell v-else variant="sidebar">
+            <AppSidebar>
+                <template v-if="$slots.userMenu" #userMenu="{ user }">
+                    <slot name="userMenu" :user="user" />
+                </template>
+            </AppSidebar>
+
+            <AppContent variant="sidebar" class="overflow-x-hidden">
+                <PanelImpersonationBanner />
+
+                <AppSidebarHeader :breadcrumbs="props.breadcrumbs">
+                    <template v-if="$slots.topbar" #topbar>
+                        <slot name="topbar" />
+                    </template>
+                    <template v-if="$slots.actions" #actions>
+                        <slot name="actions" />
+                    </template>
+                </AppSidebarHeader>
+
+                <slot />
+            </AppContent>
+
+            <Toaster />
+        </AppShell>
     </div>
+
+    <PkBottomNav :items="bottomNavItems" :current="page.url" @more="openFullNav" />
+
+    <!--
+        EVERY DESTINATION, when the bar's slots are not enough and there is no
+        sidebar to open (horizontal mode). A sheet rather than a page: "more"
+        is a disclosure, and navigating away to a menu loses the page.
+    -->
+    <PkModal v-if="showAllNav" :open="showAllNav" title="Go to" @close="showAllNav = false">
+        <nav class="flex flex-col">
+            <a
+                v-for="item in bottomNavItems"
+                :key="item.key"
+                :href="item.href"
+                class="-mx-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+                :class="page.url === item.href ? 'font-medium text-primary' : ''"
+                >{{ item.title }}</a
+            >
+        </nav>
+
+        <template #footer>
+            <button
+                type="button"
+                class="text-sm text-muted-foreground hover:text-foreground"
+                @click="showAllNav = false"
+            >
+                Close
+            </button>
+        </template>
+    </PkModal>
+
+    <!--
+        SPA navigation is silent to a screen reader; a polite live region
+        carrying the page title is the standard remedy.
+    -->
+    <div class="sr-only" role="status" aria-live="polite">
+        {{ announcement }}
+    </div>
+
+    <!--
+        Mounted once, for every panel page. A stale session can be discovered
+        on any click anywhere, so the dialog that reports it has to already
+        exist wherever that click happened.
+    -->
+    <SessionExpired />
 </template>

@@ -46,7 +46,7 @@ export { default as Security } from './pages/settings/Security.vue'
 export { default as Help } from './pages/support/Help.vue'
 export { default as Faq } from './pages/support/Faq.vue'
 export { default as About } from './pages/support/About.vue'
-export { default as UserManagement } from './pages/settings/UserManagement.vue'
+export { default as UserManagement } from './pages/UserManagement.vue'
 export { default as Workspaces } from './pages/settings/Workspaces.vue'
 export { default as Organisation } from './pages/settings/Organisation.vue'
 export { default as SettingsIndex } from './pages/settings/Index.vue'
@@ -101,6 +101,7 @@ export { default as AppLogoIcon } from './components/shell/AppLogoIcon.vue'
 export { default as AppShell } from './components/shell/AppShell.vue'
 export { default as AppContent } from './components/shell/AppContent.vue'
 export { default as SessionExpired } from './components/SessionExpired.vue'
+export { default as Toaster } from './components/Toaster.vue'
 export { default as DeleteUser } from './components/DeleteUser.vue'
 
 /*
@@ -140,6 +141,7 @@ export {
 export { default as NavMain } from './components/shell/NavMain.vue'
 export { default as NavFooter } from './components/shell/NavFooter.vue'
 export { default as NavUser } from './components/shell/NavUser.vue'
+export { default as DefaultAccountMenuItems } from './components/shell/DefaultAccountMenuItems.vue'
 export { default as UserInfo } from './components/shell/UserInfo.vue'
 export { default as AppHeader } from './components/shell/AppHeader.vue'
 export { default as AppTopNav } from './components/shell/AppTopNav.vue'
@@ -198,7 +200,7 @@ export const PANEL_PAGES = {
     'support/Help': () => import('./pages/support/Help.vue'),
     'support/Faq': () => import('./pages/support/Faq.vue'),
     'support/About': () => import('./pages/support/About.vue'),
-    'settings/UserManagement': () => import('./pages/settings/UserManagement.vue'),
+    'UserManagement': () => import('./pages/UserManagement.vue'),
     'settings/Workspaces': () => import('./pages/settings/Workspaces.vue'),
     'settings/Organisation': () => import('./pages/settings/Organisation.vue'),
     'settings/Index': () => import('./pages/settings/Index.vue'),

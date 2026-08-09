@@ -49,9 +49,10 @@ final class SettingsIndexTest extends TestCase
 
     public function test_the_index_lists_the_ungated_baseline(): void
     {
-        // Neither gated entry: manage_roles adds User management and
-        // manage_assistant adds Assistant, and this test is about the
-        // ungated baseline.
+        // manage_assistant adds Assistant, and this test is about the ungated
+        // baseline. `manage_roles` is excluded too because it used to add User
+        // management here - it no longer does, and holding it must not start
+        // adding anything back without this list being changed on purpose.
         $user = $this->operator(array_values(array_diff(
             Abilities::all(),
             ['manage_roles', 'manage_assistant'],
@@ -79,25 +80,33 @@ final class SettingsIndexTest extends TestCase
         $this->assertContains('Assistant', $titles);
     }
 
-    /** THE SAME ABSENCE-NOT-DISABLED RULE THE ACCOUNT MENU FOLLOWS. */
-    public function test_user_management_is_absent_without_the_ability(): void
-    {
-        $user = $this->operator(array_values(array_diff(Abilities::all(), ['manage_roles'])));
+    /*
+     * THE ABSENCE-NOT-DISABLED RULE IS STILL COVERED, and no longer needs a
+     * test of its own here. `test_the_assistant_entry_is_gated` proves a gated
+     * entry APPEARS for a holder, and `test_the_index_lists_the_ungated_baseline`
+     * asserts an exact list that Assistant is not in - which is the same rule
+     * from the other side. The pair that used to stand here rode on user
+     * management, which this index no longer lists at all.
+     */
 
-        $entries = $this->actingAs($user)->get('/settings')->assertOk()
-            ->viewData('page')['props']['entries'];
-
-        $this->assertNotContains('User management', array_column($entries, 'title'));
-    }
-
-    public function test_user_management_appears_with_the_ability(): void
+    /**
+     * AND USER MANAGEMENT IS NOT LISTED HERE AT ALL - not even for somebody
+     * holding the ability that used to reveal it.
+     *
+     * It is its own destination, reached from the account menu. While it was a
+     * settings entry it also inherited the settings SHELL, so the screen opened
+     * under a second "Settings" heading with a back-link to a place it had
+     * never come from. This asserts the placement rather than the chrome,
+     * because the chrome followed from the placement.
+     */
+    public function test_user_management_is_not_a_settings_entry(): void
     {
         $user = $this->operator(['manage_roles']);
 
         $entries = $this->actingAs($user)->get('/settings')->assertOk()
             ->viewData('page')['props']['entries'];
 
-        $this->assertContains('User management', array_column($entries, 'title'));
+        $this->assertNotContains('User management', array_column($entries, 'title'));
     }
 
     /**

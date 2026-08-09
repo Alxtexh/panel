@@ -471,23 +471,42 @@ final class NavigationCoverageTest extends TestCase
      * a menu entry that no longer exists - a screen orphaned by two files
      * agreeing about nothing.
      *
-     * It matches the ROUTE HELPER rather than a URL, because that is what the
-     * component now uses, and a helper that stops being imported is a link that
+     * It matches the SHARED PROP KEY rather than a URL, because that is what the
+     * component now reads, and a key that stops being consulted is a link that
      * stopped being rendered.
      */
     public function test_the_account_menu_offers_what_it_claims_to(): void
     {
-        $menu = (string) file_get_contents(resource_path('js/components/UserMenuContent.vue'));
+        $menu = $this->accountMenuSource();
 
         $this->assertNotSame('', $menu, 'The account menu component could not be read.');
 
-        foreach (Pages::inAccountMenu() as $path => $helper) {
+        foreach (Pages::inAccountMenu() as $path => $key) {
             $this->assertStringContainsString(
-                $helper,
+                $key,
                 $menu,
-                "The account menu is credited with {$path} but does not use `{$helper}`.",
+                "The account menu is credited with {$path} but does not read `{$key}`.",
             );
         }
+    }
+
+    /**
+     * THE MENU LIVES IN THE PACKAGE NOW, so that is where these two tests look.
+     *
+     * It used to be 299 lines in `resources/js/components/UserMenuContent.vue`,
+     * and that file is still the override point - but it is a wrapper now, and
+     * asserting against a wrapper proves nothing about what renders. The demo
+     * and a portal `make:panel` created this morning open the same component,
+     * which is the whole reason the move happened.
+     */
+    private function accountMenuSource(): string
+    {
+        $path = dirname(__DIR__, 4)
+            .'/packages/ui/inertia/components/shell/DefaultAccountMenuItems.vue';
+
+        $this->assertFileExists($path, 'The packaged account menu could not be found.');
+
+        return (string) file_get_contents($path);
     }
 
     /* -------------------------------------------------- one portal at a time */
@@ -561,15 +580,31 @@ final class NavigationCoverageTest extends TestCase
      * nothing inside the component can see the panel - the shared prop is the
      * only place both are true, so the test checks that the component actually
      * consults it.
+     *
+     * THE GATE CHANGED, AND IT GOT STRICTER. This used to require every item to
+     * name `isApplicationPortal` - "am I the default panel?" - which is a guess
+     * about the portal rather than a fact about it. A portal can be the default
+     * one and still lack operations, and a generated one can own a screen the
+     * default does not. The server now shares a url per item, null where the
+     * panel has no such screen, so an item gates on whether its own destination
+     * exists. That is why the assertion below is inverted: naming
+     * `isApplicationPortal` again would be the regression.
      */
     public function test_the_account_menu_hides_the_applications_screens_in_other_portals(): void
     {
-        $menu = (string) file_get_contents(resource_path('js/components/UserMenuContent.vue'));
+        $menu = $this->accountMenuSource();
 
-        $this->assertStringContainsString(
+        $this->assertStringNotContainsString(
             'isApplicationPortal',
             $menu,
-            'The account menu no longer asks which portal it is in.',
+            'The account menu is guessing which portal it is in again, instead of '
+            .'asking whether this panel has the screen.',
+        );
+
+        $this->assertStringContainsString(
+            'usePage()',
+            $menu,
+            'The account menu no longer reads the props the server shares per panel.',
         );
 
         // The TEMPLATE, not the file - the imports name every route the menu can
@@ -583,7 +618,7 @@ final class NavigationCoverageTest extends TestCase
 
         $this->assertGreaterThan(4, count($items[0]), 'No menu items were found to check.');
 
-        $ungated = 0;
+        $logout = 0;
 
         foreach ($items[0] as $item) {
             /*
@@ -606,10 +641,8 @@ final class NavigationCoverageTest extends TestCase
              * was right when it was written, and the thing that changed was
              * the routing rather than the reasoning.
              */
-            if (str_contains($item, 'logout()')) {
-                $ungated++;
-
-                continue;
+            if (str_contains($item, 'logout-button')) {
+                $logout++;
             }
 
             /*
@@ -637,8 +670,16 @@ final class NavigationCoverageTest extends TestCase
                 continue;
             }
 
-            $this->assertStringContainsString(
-                'isApplicationPortal',
+            /*
+             * EVERY OTHER ITEM GATES ON ITS OWN DESTINATION EXISTING. The
+             * server shares `panel.*` and `panel.operations.*` per panel and
+             * sends null where the screen is not mounted, so an item that
+             * consults one of those cannot render pointing out of the portal.
+             * An item with no such gate is offered everywhere, including in
+             * portals that cannot serve it.
+             */
+            $this->assertMatchesRegularExpression(
+                '/v-if="[^"]*(panel\?\.|operations\.|trash)/',
                 $item,
                 "An account-menu item is offered in every portal, including ones that cannot serve it:\n".$item,
             );
@@ -646,6 +687,6 @@ final class NavigationCoverageTest extends TestCase
 
         // Still there: a portal whose account menu offers nothing
         // is as wrong as one that offers everything.
-        $this->assertSame(1, $ungated, 'Sign-out has gone missing - a portal you cannot leave.');
+        $this->assertSame(1, $logout, 'Sign-out has gone missing - a portal you cannot leave.');
     }
 }
