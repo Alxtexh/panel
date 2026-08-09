@@ -34,6 +34,9 @@ final class HelpCentre
 
     private const FAQ_KEY = 'panelkit.help.faq';
 
+    /** Named, replaceable contributions - see `source()`. */
+    private const SOURCE_KEY = 'panelkit.help.sources';
+
     /**
      * Add articles, keeping the packaged ones.
      *
@@ -42,6 +45,75 @@ final class HelpCentre
     public static function add(array $articles): void
     {
         app()->instance(self::KEY, [...self::registered(), ...$articles]);
+    }
+
+    /**
+     * Contribute under a NAME, replacing whatever that name contributed before.
+     *
+     * `add()` AND `addQuestions()` APPEND, WHICH IS RIGHT FOR A PROVIDER and
+     * wrong for anything that runs per request. A provider registers once per
+     * process, so appending is exactly once; a middleware registers on every
+     * request, and in a container that outlives one - Octane, or a test making
+     * two requests - the same questions stack up, duplicating on screen with
+     * every request served. Nothing errors; the FAQ simply grows.
+     *
+     * A named source is idempotent by construction: registering `content`
+     * twice leaves one contribution, and re-registering after an edit replaces
+     * the stale copy rather than sitting beside it. Sources are read alongside
+     * the appended registrations, so both styles coexist.
+     *
+     * LAZY BY DESIGN: the resolver runs when a screen actually reads help
+     * content, not when the source is registered. A source registered from
+     * middleware runs on EVERY panel request - including the live-updates diff
+     * endpoint, whose entire contract is one bounded query - so resolving
+     * eagerly turns "register content" into a query on the hottest path in the
+     * panel. Registration is now free; only the FAQ, help and What's-new
+     * screens pay for it.
+     *
+     * @param  \Closure(): array{articles?: list<array<string, mixed>>, questions?: list<array{title: string, items: list<array{q: string, a: string}>}>}  $resolver
+     */
+    public static function source(string $name, \Closure $resolver): void
+    {
+        app()->instance(self::SOURCE_KEY, [...self::sources(), $name => $resolver]);
+
+        // The memo belongs to the previous set of resolvers. Keeping it would
+        // serve the last request's content in any container that outlives one
+        // request, which is the exact staleness this whole path has already
+        // been bitten by once.
+        app()->forgetInstance(self::SOURCE_KEY.'.resolved');
+    }
+
+    /**
+     * Registered resolvers, run once each and memoised for this request.
+     *
+     * ONCE, NOT PER READ. `articles()` and `categories()` are both called
+     * while rendering the help centre, and `categories()` derives its tabs
+     * from `articles()` - so an un-memoised resolver would run the same query
+     * two or three times on one screen.
+     *
+     * @return array<string, array{articles?: list<mixed>, questions?: list<mixed>}>
+     */
+    private static function sources(): array
+    {
+        return app()->bound(self::SOURCE_KEY) ? (array) app(self::SOURCE_KEY) : [];
+    }
+
+    /** @return array<string, array{articles?: list<mixed>, questions?: list<mixed>}> */
+    private static function resolvedSources(): array
+    {
+        if (app()->bound(self::SOURCE_KEY.'.resolved')) {
+            return (array) app(self::SOURCE_KEY.'.resolved');
+        }
+
+        $resolved = [];
+
+        foreach (self::sources() as $name => $resolver) {
+            $resolved[$name] = $resolver instanceof \Closure ? (array) $resolver() : (array) $resolver;
+        }
+
+        app()->instance(self::SOURCE_KEY.'.resolved', $resolved);
+
+        return $resolved;
     }
 
     /**
@@ -127,16 +199,41 @@ final class HelpCentre
         return [...self::defaultQuestions(), ...self::registeredQuestions()];
     }
 
-    /** @return list<array<string, mixed>> */
+    /**
+     * Appended registrations, then every named source.
+     *
+     * SOURCES COME LAST so a per-request contribution (database content) is
+     * seen after a provider's, which matters only for ordering and is the
+     * order somebody would expect: what an operator edited most recently sits
+     * after what shipped.
+     *
+     * @return list<array<string, mixed>>
+     */
     private static function registered(): array
     {
-        return app()->bound(self::KEY) ? (array) app(self::KEY) : [];
+        $appended = app()->bound(self::KEY) ? (array) app(self::KEY) : [];
+
+        $fromSources = [];
+
+        foreach (self::resolvedSources() as $source) {
+            $fromSources = [...$fromSources, ...($source['articles'] ?? [])];
+        }
+
+        return [...$appended, ...$fromSources];
     }
 
     /** @return list<array{title: string, items: list<array{q: string, a: string}>}> */
     private static function registeredQuestions(): array
     {
-        return app()->bound(self::FAQ_KEY) ? (array) app(self::FAQ_KEY) : [];
+        $appended = app()->bound(self::FAQ_KEY) ? (array) app(self::FAQ_KEY) : [];
+
+        $fromSources = [];
+
+        foreach (self::resolvedSources() as $source) {
+            $fromSources = [...$fromSources, ...($source['questions'] ?? [])];
+        }
+
+        return [...$appended, ...$fromSources];
     }
 
     /**

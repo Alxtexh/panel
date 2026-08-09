@@ -24,16 +24,23 @@ namespace PanelKit\Panel\Support;
  */
 final class Changelog
 {
-    /** @var list<array<string, mixed>>|null */
-    private static ?array $registered = null;
+    /** @var list<array<string, mixed>>|\Closure|null */
+    private static array|\Closure|null $registered = null;
 
     /**
      * Declare the releases in code, for an application that would rather not
      * keep them in config.
      *
-     * @param  list<array<string, mixed>>  $releases
+     * A CLOSURE IS RESOLVED WHEN THE SCREEN ASKS, not when it is set. The
+     * database-backed source registers from middleware - on every panel
+     * request, including endpoints whose whole contract is one bounded query -
+     * so an eager array would turn "declare the releases" into a query on
+     * every request in the panel. An array still works and still resolves
+     * immediately; only the cost of a lazy caller changes.
+     *
+     * @param  list<array<string, mixed>>|\Closure(): list<array<string, mixed>>  $releases
      */
-    public static function set(array $releases): void
+    public static function set(array|\Closure $releases): void
     {
         self::$registered = $releases;
     }
@@ -70,7 +77,9 @@ final class Changelog
      */
     public static function releases(): array
     {
-        $source = self::$registered ?? config('panel.changelog', []);
+        $source = self::$registered instanceof \Closure
+            ? (self::$registered)()
+            : self::$registered ?? config('panel.changelog', []);
 
         if (! is_array($source)) {
             return [];
