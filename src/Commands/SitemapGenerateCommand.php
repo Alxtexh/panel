@@ -46,6 +46,17 @@ final class SitemapGenerateCommand extends Command
             implode(', ', $result['files']),
         ));
 
+        if ($result['robotsTxtUpdated']) {
+            $this->components->info('Referenced it from robots.txt.');
+        }
+
+        match ($result['indexNow']) {
+            'notified' => $this->components->info('Notified IndexNow (Bing, Yandex, Naver, Seznam).'),
+            'failed' => $this->components->warn('IndexNow notification failed - the sitemap itself is still written.'),
+            'empty' => $this->components->warn('IndexNow is configured but nothing declared belongs to this host.'),
+            default => null,
+        };
+
         return self::SUCCESS;
     }
 }

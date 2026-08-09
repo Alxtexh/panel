@@ -106,6 +106,8 @@ final class SitemapPage extends Page
             'filename' => Sitemap::filename(),
             'maxPerFile' => Sitemap::MAX_URLS_PER_FILE,
             'willSplit' => count($urls) > Sitemap::MAX_URLS_PER_FILE,
+            'robotsTxtReferencesIt' => Sitemap::robotsTxtReferencesIt(),
+            'indexNowConfigured' => Sitemap::indexNowConfigured(),
         ];
     }
 
@@ -113,11 +115,18 @@ final class SitemapPage extends Page
     {
         $result = Sitemap::write();
 
-        return back()->with(
-            'success',
-            $result['count'] === 1
-                ? "Sitemap written with 1 URL ({$result['files'][0]})."
-                : sprintf('Sitemap written with %d URLs across %d file(s).', $result['count'], count($result['files'])),
-        );
+        $message = $result['count'] === 1
+            ? "Sitemap written with 1 URL ({$result['files'][0]})."
+            : sprintf('Sitemap written with %d URLs across %d file(s).', $result['count'], count($result['files']));
+
+        if ($result['robotsTxtUpdated']) {
+            $message .= ' Referenced it from robots.txt.';
+        }
+
+        if ($result['indexNow'] === 'notified') {
+            $message .= ' Notified IndexNow.';
+        }
+
+        return back()->with('success', $message);
     }
 }
