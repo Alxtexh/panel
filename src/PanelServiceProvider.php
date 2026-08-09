@@ -162,6 +162,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\MakeApiTokenCommand::class,
             Commands\MakePageCommand::class,
             Commands\MakePanelCommand::class,
+            Commands\SearchIndexCommand::class,
             Commands\MakeUserCommand::class,
             Commands\SitemapGenerateCommand::class,
             Commands\MakeResourceCommand::class,

@@ -854,6 +854,18 @@ final class Table
      *
      * @return list<string>
      */
+    /**
+     * The qualified columns this table searches, for anything that needs to
+     * reason about them rather than query them - `panel:search-index` being
+     * the caller that exists.
+     *
+     * @return list<string>
+     */
+    public function searchableColumns(): array
+    {
+        return $this->resolveSearchable();
+    }
+
     private function resolveSearchable(): array
     {
         $columns = [];
