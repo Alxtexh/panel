@@ -650,10 +650,65 @@ return [
     | resolves to. Name a disk only if this installation already serves static
     | files from somewhere else (S3 fronted by the same domain, for instance)
     | and has arranged for that origin to answer at its root.
+    |
+    | `robots_txt` IS THE ONE MECHANISM EVERY CRAWLER SHARES. Google, Bing and
+    | Yandex each have their own webmaster console for direct submission -
+    | nothing this package can automate without that installation's own
+    | account. DuckDuckGo has no console at all: it leans on Bing's index and
+    | its own light crawler, and finds a sitemap the same way every AI
+    | crawler's own published guidance says to publish one - a `Sitemap:` line
+    | in `robots.txt`. This is the one line that reaches all of them at once,
+    | which is why it is on by default while everything else here is off by
+    | default.
+    |
+    | ADDITIVE, NEVER DESTRUCTIVE. The line is appended to an EXISTING
+    | `robots.txt` and only if one is not already there for this exact file -
+    | never created from nothing, never rewritten. Creating a `robots.txt`
+    | is a bigger policy decision (it can just as easily read `Disallow: /`)
+    | than this package should make for an application it does not run.
+    |
+    | `indexnow` IS OFF UNTIL A KEY IS SET, the same rule `env.editable`
+    | follows. Unlike the ping endpoint this package deliberately does NOT
+    | call - Google's has 404'd since June 2023 - IndexNow is alive: one
+    | notification reaches Bing, Yandex, Naver and Seznam. Get a key from
+    | https://www.bing.com/indexnow or generate any 32+ character string
+    | yourself; either works, because IndexNow verifies OWNERSHIP (the key
+    | file at your own domain root), not identity.
     */
     'sitemap' => [
         'disk' => null,
         'filename' => 'sitemap.xml',
+        'robots_txt' => true,
+        'indexnow' => [
+            'key' => env('PANEL_INDEXNOW_KEY'),
+        ],
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Per-record search metadata
+    |---------------------------------------------------------------------------
+    |
+    | WHAT A PAGE TELLS SEARCH ENGINES ABOUT ITSELF, as opposed to the sitemap
+    | above, which tells them the page EXISTS. The two are usually shipped
+    | separately - and every Filament SEO plugin surveyed for this ships the
+    | metadata half and no sitemap at all, which leaves an installation with
+    | beautifully described pages nothing has been told to go and look at.
+    |
+    | `table` IS NAMED HERE for the same reason the ticket tables are: an
+    | application may already own `seo_metadata`, and a migration that succeeds
+    | against somebody else's table is worse than one that collides.
+    |
+    | `enforce_noindex` IS THE WHOLE INTEGRATION, and it is the reason these two
+    | features belong in one package. A record marked "do not index" that still
+    | appears in sitemap.xml is an installation telling an engine two opposite
+    | things and hoping it picks the right one. With this on, `Sitemap` drops
+    | those URLs; turn it off only if something else in your stack is already
+    | reconciling the two.
+    */
+    'seo' => [
+        'table' => 'panel_seo_metadata',
+        'enforce_noindex' => true,
     ],
 
     /*

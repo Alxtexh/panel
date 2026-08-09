@@ -224,6 +224,7 @@ function uploadFor(key: string) {
         v-if="node.component === 'field' && conditionMet(node)"
         :field="node as unknown as FormField"
         :value="values[node.key]"
+        :values="values"
         :error="errors[node.key]"
         :errors="errors"
         :options="options[node.key]"

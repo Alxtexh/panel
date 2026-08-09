@@ -79,6 +79,11 @@ const props = withDefaults(
         errors?: Record<string, string>
         /** Option lists for a repeater's child selects, keyed by child key. */
         childOptions?: Record<string, { value: any; label: string }[]>
+        /**
+         * Every value in the form, for a REGISTERED control that previews other
+         * fields rather than editing its own - see where it is bound below.
+         */
+        values?: Record<string, any>
     }>(),
     {
         options: () => [],
@@ -233,11 +238,25 @@ function insertChip(token: string) {
             is plain `v-model`, so such a control is an ordinary Vue component
             rather than something shaped for this switch.
         -->
+        <!--
+            `values` CARRIES THE WHOLE FORM, and only registered controls get it.
+
+            A control that renders a PREVIEW of other fields - the SEO search
+            result is the one that ships - cannot work from its own value,
+            because it has none. The alternative was to give the preview its own
+            copy of the title and description, which is two inputs for one fact
+            and immediately disagrees with what the form will actually save.
+
+            NOT PASSED TO THE BUILT-INS BELOW, deliberately: a text input that
+            can read every other field is a text input somebody will eventually
+            make depend on one.
+        -->
         <component
             :is="registered"
             v-if="registered"
             :field="field"
             :model-value="value"
+            :values="values"
             :options="options"
             :errors="errors"
             :disabled="field.disabled || processing"

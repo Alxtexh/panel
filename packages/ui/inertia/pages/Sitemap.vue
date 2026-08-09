@@ -17,6 +17,15 @@
  * and `generatedAt` describe the file on disk from the last time somebody
  * pressed Regenerate. Adding a URL does not rewrite the file - the button
  * does.
+ *
+ * THE REACH LINE ANSWERS "who actually finds this" rather than leaving it
+ * implied by the file existing. `robotsTxtReferencesIt` is what makes the
+ * sitemap discoverable to Google, Bing, Yandex, DuckDuckGo and the AI
+ * crawlers whose own published guidance says the same thing - none of them
+ * needs a submission if they can already find the `Sitemap:` line.
+ * `indexNowConfigured` is the one instant-notify mechanism still alive
+ * (Bing, Yandex, Naver, Seznam) - Google's own ping endpoint has 404'd since
+ * June 2023, which is why nothing here offers to call it.
  */
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
@@ -37,6 +46,8 @@ const props = withDefaults(
         filename?: string
         maxPerFile?: number
         willSplit?: boolean
+        robotsTxtReferencesIt?: boolean
+        indexNowConfigured?: boolean
         pageHeading?: string
         pageDescription?: string | null
     }>(),
@@ -47,6 +58,8 @@ const props = withDefaults(
         filename: 'sitemap.xml',
         maxPerFile: 50_000,
         willSplit: false,
+        robotsTxtReferencesIt: false,
+        indexNowConfigured: false,
         pageHeading: 'Sitemap',
         pageDescription: null,
     },
@@ -85,7 +98,8 @@ const stale = computed(() => props.exists && props.urls.length === 0)
 <template>
     <Head :title="pageHeading" />
 
-    <div class="flex max-w-3xl flex-col gap-4 p-4 sm:p-6">
+    <!-- `mx-auto w-full` centres the column - see `Environment.vue`. -->
+    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 sm:p-6">
         <header>
             <h1 class="text-xl font-semibold tracking-tight">{{ pageHeading }}</h1>
             <p v-if="pageDescription" class="text-muted-foreground mt-1 text-sm">
@@ -118,6 +132,38 @@ const stale = computed(() => props.exists && props.urls.length === 0)
                 {{ generating ? 'Writing…' : exists ? 'Regenerate' : 'Generate' }}
             </Button>
         </div>
+
+        <!--
+            WHO ACTUALLY FINDS THIS, stated rather than assumed. A file that
+            exists and is never referenced from anywhere a crawler looks is
+            indistinguishable from no file at all - it just fails silently
+            instead of loudly.
+        -->
+        <ul class="text-muted-foreground flex flex-col gap-1 text-sm">
+            <li class="flex items-center gap-1.5">
+                <span
+                    :class="robotsTxtReferencesIt ? 'text-emerald-600' : 'text-muted-foreground'"
+                    >{{ robotsTxtReferencesIt ? '✓' : '—' }}</span
+                >
+                Referenced from <code class="font-mono text-xs">robots.txt</code> - how Google,
+                Bing, Yandex, DuckDuckGo and AI crawlers find it without a manual submission.
+                <template v-if="!robotsTxtReferencesIt">Regenerate to add the line.</template>
+            </li>
+            <li class="flex items-center gap-1.5">
+                <span :class="indexNowConfigured ? 'text-emerald-600' : 'text-muted-foreground'">{{
+                    indexNowConfigured ? '✓' : '—'
+                }}</span>
+                <template v-if="indexNowConfigured">
+                    IndexNow notifies Bing, Yandex, Naver and Seznam the moment this is regenerated.
+                </template>
+                <template v-else>
+                    IndexNow not configured - set
+                    <code class="font-mono text-xs">PANEL_INDEXNOW_KEY</code> for instant
+                    notification to Bing, Yandex, Naver and Seznam. Google does not support it;
+                    submit there through Search Console.
+                </template>
+            </li>
+        </ul>
 
         <p
             v-if="willSplit"

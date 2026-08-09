@@ -7,6 +7,7 @@ import PkCodeInput from './PkCodeInput.vue'
 import PkColourPicker from './PkColourPicker.vue'
 import PkMarkdownInput from './PkMarkdownInput.vue'
 import PkRadioGroup from './PkRadioGroup.vue'
+import PkSeoPreview from './PkSeoPreview.vue'
 import PkSlider from './PkSlider.vue'
 import PkSwatchPreview from './PkSwatchPreview.vue'
 import PkTagsInput from './PkTagsInput.vue'
@@ -46,6 +47,14 @@ export function registerBuiltInFieldControls(): void {
      */
     registerFieldControl('markdown', PkMarkdownInput)
     registerFieldControl('code', PkCodeInput)
+
+    /*
+     * The SEO search-result preview. It stores nothing and reads its siblings -
+     * which is why `FormFieldControl` passes `values` to registered controls and
+     * to nothing else. See `PkSeoPreview` for why the truncation thresholds
+     * arrive from the server rather than living in the component.
+     */
+    registerFieldControl('seo-preview', PkSeoPreview)
 
     /*
      * The option renderers, which are a second registry one level down: this one

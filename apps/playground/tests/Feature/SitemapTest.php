@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use PanelKit\Panel\Pages\SitemapPage;
 use PanelKit\Panel\Support\Sitemap;
 use Tests\TestCase;
@@ -35,12 +36,38 @@ final class SitemapTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const TEST_INDEXNOW_KEY = 'test1234test1234test1234test1234';
+
+    private string $originalRobotsTxt;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /*
+         * CAPTURED, NOT ASSUMED. `robots.txt` is on by default now, and every
+         * `write()` call in this file touches the REAL file at
+         * `public_path()` - the same one the repository tracks. Restoring
+         * from a captured original in `tearDown()`, rather than deleting the
+         * file or hand-writing a fixed string back, is what keeps a test run
+         * from leaving a diff in a file this class did not create.
+         */
+        $this->originalRobotsTxt = File::get(public_path('robots.txt'));
+    }
+
     protected function tearDown(): void
     {
         Sitemap::forget();
-        config(['panel.landing.route' => false, 'panel.landing.url' => null]);
+        config([
+            'panel.landing.route' => false,
+            'panel.landing.url' => null,
+            'panel.sitemap.robots_txt' => true,
+            'panel.sitemap.indexnow.key' => null,
+        ]);
 
+        File::put(public_path('robots.txt'), $this->originalRobotsTxt);
         File::delete(public_path(Sitemap::filename()));
+        File::delete(public_path(self::TEST_INDEXNOW_KEY.'.txt'));
 
         for ($i = 1; $i <= 3; $i++) {
             File::delete(public_path("sitemap-{$i}.xml"));
