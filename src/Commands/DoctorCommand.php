@@ -17,7 +17,6 @@ use PanelKit\Panel\Pages\Page;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Resources\Resource;
 use PanelKit\Panel\Support\BackupStatus;
-use PanelKit\Panel\Support\ClientTarball;
 use PanelKit\Panel\Support\Contrast;
 use PanelKit\Panel\Support\Discovery;
 use PanelKit\Panel\Support\PanelPages;
@@ -982,7 +981,7 @@ final class DoctorCommand extends Command
     }
 
     /**
-     * THE CLIENT HALF IS ACTUALLY INSTALLED, AND IS THIS VERSION.
+     * THE CLIENT HALF IS ACTUALLY INSTALLED.
      *
      * The worst failure this package has shipped, and it has shipped twice. The
      * PHP installs, the routes answer 200, the policies and migrations all
@@ -990,11 +989,11 @@ final class DoctorCommand extends Command
      * `@alxtexh-enterprise/panel` in it. There is no error to search for.
      * Nothing errored.
      *
-     * IT ALSO COMPARES VERSIONS, which used to be unknowable. The tarball now
-     * ships inside this package, so the client version IS this package's
-     * version; a mismatch means the client came from somewhere else, or
-     * `composer update` ran without the npm step. That produces a rendered
-     * screen with a missing control - a wrong answer under a 200 status.
+     * IT NO LONGER COMPARES VERSIONS. That check existed because the client
+     * shipped as a tarball vendored inside this package, so the two halves had
+     * separate versions that could drift apart. The workspace installs the
+     * client straight from `packages/ui`, so there is one copy and nothing to
+     * disagree with itself.
      */
     private function checkClientHalf(): void
     {
@@ -1003,32 +1002,9 @@ final class DoctorCommand extends Command
         if (! is_file($installed)) {
             $this->problem(
                 'the client half is not installed - every panel screen will be blank',
-                'The screens are Vue and ship as a tarball inside this package. Nothing '
-                .'renders without them and the failure is silent: routes answer 200 and the '
-                .'page is empty. Run: '.ClientTarball::installCommand().' && npm run build',
-            );
-
-            return;
-        }
-
-        $shipped = ClientTarball::version();
-
-        if ($shipped === null) {
-            // Nothing to compare against is not a problem to report: it means
-            // this installation predates the vendored tarball, and the check
-            // above already proved a client half is present.
-            return;
-        }
-
-        $manifest = json_decode((string) file_get_contents($installed), true);
-        $have = is_array($manifest) ? ($manifest['version'] ?? null) : null;
-
-        if (is_string($have) && $have !== $shipped) {
-            $this->problem(
-                "the installed client half is {$have}, but this package ships {$shipped}",
-                'The halves are versioned together and the schema payload is the contract '
-                .'between them. A mismatch renders screens with missing controls rather than '
-                .'erroring. Run: '.ClientTarball::installCommand().' && npm run build',
+                'The screens are Vue and come from `packages/ui`. Nothing renders without '
+                .'them and the failure is silent: routes answer 200 and the page is empty. '
+                .'Run: npm install && npm run build',
             );
         }
     }
