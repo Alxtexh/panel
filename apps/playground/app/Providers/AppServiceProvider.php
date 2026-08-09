@@ -33,7 +33,7 @@ use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\Documents\DocumentBranding;
 use PanelKit\Panel\Documents\DocumentKinds;
 use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Policies\TicketPolicy;
+use App\Policies\TicketPolicy;
 use PanelKit\Panel\Support\Budgets;
 use PanelKit\Panel\Support\HelpCentre;
 use PanelKit\Panel\Support\SettingsIndex;

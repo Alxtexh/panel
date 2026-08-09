@@ -315,6 +315,17 @@ final class Pages
              */
             '/platform/documents' => 'Routed in every portal; this application links the designer from the operator portal only.',
             '/reseller/documents' => 'Routed in every portal; this application links the designer from the operator portal only.',
+            /*
+             * THE SUPERADMIN PORTAL, on the same three counts as the others -
+             * its home is its own, its bin is its own, and the designer is
+             * routed there because it is routed everywhere. It exists to edit
+             * the content every portal reads and to see every tenant's tickets;
+             * an operator reaches it by URL or from their own account menu, not
+             * from this portal's sidebar.
+             */
+            '/superadmin' => 'A generated portal\'s home. Not part of this portal\'s navigation.',
+            '/superadmin/trash' => 'The superadmin portal links its own bin; this portal links its own.',
+            '/superadmin/documents' => 'Routed in every portal; this application links the designer from the operator portal only.',
         ];
     }
 }

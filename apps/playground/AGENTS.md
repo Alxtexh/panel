@@ -52,6 +52,7 @@ Panels registered in this application:
 - `admin` — mounted at `/`, guard `web`, tenant context
 - `platform` — mounted at `/platform`, guard `web`, central context
 - `reseller` — mounted at `/reseller`, guard `web`, tenant context
+- `superadmin` — mounted at `/superadmin`, guard `web`, central context
 - `client` — mounted at `/client`, guard `customers`, tenant context
 - `authfixture` — mounted at `/authfixture`, guard `web`, tenant context
 
@@ -60,6 +61,7 @@ Resources are discovered from:
 - `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Resources` → `App\Panel\Resources`
 - `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Platform/Resources` → `App\Panel\Platform\Resources`
 - `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Reseller/Resources` → `App\Panel\Reseller\Resources`
+- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Superadmin/Resources` → `App\Panel\Superadmin\Resources`
 - `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Client/Resources` → `App\Panel\Client\Resources`
 
 A resource belongs to exactly one panel — its key is a URL segment and an
@@ -693,6 +695,8 @@ about itself.
 | `users` | `UserResource` | `admin` |
 | `tenants` | `TenantResource` | `platform` |
 | `reseller-plans` | `PlanResource` | `reseller` |
+| `content-entries` | `ContentEntryResource` | `superadmin` |
+| `all-tickets` | `TicketResource` | `superadmin` |
 | `client-plans` | `PlanResource` | `client` |
 | `my-tickets` | `MyTicketResource` | `reseller` |
 

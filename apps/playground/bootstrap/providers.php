@@ -7,6 +7,7 @@ use App\Providers\Panels\AdminPanelProvider;
 use App\Providers\Panels\ClientPanelProvider;
 use App\Providers\Panels\PlatformPanelProvider;
 use App\Providers\Panels\ResellerPanelProvider;
+use App\Providers\Panels\SuperadminPanelProvider;
 use App\Providers\TenancyServiceProvider;
 
 return [
@@ -20,6 +21,7 @@ return [
     AdminPanelProvider::class,
     PlatformPanelProvider::class,
     ResellerPanelProvider::class,
+    SuperadminPanelProvider::class,
     AppServiceProvider::class,
     // What this ISP considers wrong, for the packaged bell to resolve.
     AlertServiceProvider::class,

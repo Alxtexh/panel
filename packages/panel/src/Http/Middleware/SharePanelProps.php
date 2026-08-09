@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use PanelKit\Panel\Auth\Impersonation;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\EditableContent;
 use PanelKit\Panel\Support\PanelHome;
 use PanelKit\Panel\Support\PanelNavigation;
 use PanelKit\Panel\Trash\TrashBin;
@@ -42,6 +43,18 @@ final class SharePanelProps
     public function handle(Request $request, Closure $next): Response
     {
         $panels = app(PanelManager::class);
+
+        /*
+         * DATABASE-EDITED CONTENT REGISTERS HERE, not at provider boot.
+         *
+         * Help, FAQ and What's-new only matter on requests that can render
+         * them, and every such request passes through this middleware -
+         * hanging the bridge here keeps `artisan` boots and queue workers from
+         * paying a content query they will never show. Before `$next`, so the
+         * controllers see the registered content; cached, so an unedited table
+         * costs one cache read. See `EditableContent` for the shape.
+         */
+        EditableContent::register();
 
         /*
          * WHAT THE APPLICATION ALREADY SHARED UNDER `auth`, captured before this

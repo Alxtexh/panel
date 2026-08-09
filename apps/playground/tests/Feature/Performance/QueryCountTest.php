@@ -239,6 +239,14 @@ final class QueryCountTest extends TestCase
         'plans',
         'routers',
         'editable-plans',
+
+        // The superadmin portal's own, and unreachable from here for the same
+        // reason as the platform ones above: another panel's URL, under a
+        // panel this test does not sign into. `all-tickets` is the cross-tenant
+        // view of a queue this file already measures as `tickets`, so the
+        // shape it would prove is proved; `content-entries` has no fixture.
+        'all-tickets',
+        'content-entries',
     ];
 
     /**
