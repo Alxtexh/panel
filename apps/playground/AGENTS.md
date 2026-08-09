@@ -777,6 +777,7 @@ too quiet.
 - `php artisan panel:refresh-rollups` — Pre-aggregate dashboard time series
 - `php artisan panel:reindex-tenant` — Add indexes suited to a dedicated tenant database, where the tenant column is redundant
 - `php artisan panel:reports-due` — Dispatch any scheduled reports that are due
+- `php artisan panel:search-index` — The trigram or fulltext indexes this panel's search would use, for the current engine
 - `php artisan panel:seed-demo` — Seed realistic multi-tenant demo data at scale
 - `php artisan panel:seed-reference` — Seed the five-tenant reference estate used by panel:benchmark
 - `php artisan panel:sitemap-generate` — Write sitemap.xml from every registered URL
