@@ -67,7 +67,21 @@ final class SearchController extends Controller
          * filtering on it found nothing at all and the palette returned an
          * empty list for every term.
          */
-        foreach ($panels->resourcesFor($panel?->id) as $class) {
+        /*
+         * SORTED BEFORE ANYTHING IS QUERIED, so `MAX_RESOURCES` cuts the LEAST
+         * important resources rather than whichever the filesystem listed last.
+         * Cutting after the fact would let a resource that declared itself
+         * first be dropped because eight others happened to be globbed ahead of
+         * it - the ranking and the budget have to agree on the order.
+         */
+        $searchable = $panels->resourcesFor($panel?->id);
+
+        uasort(
+            $searchable,
+            static fn (string $a, string $b): int => $a::searchSort() <=> $b::searchSort(),
+        );
+
+        foreach ($searchable as $class) {
             if (count($groups) >= self::MAX_RESOURCES) {
                 break;
             }

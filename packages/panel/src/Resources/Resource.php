@@ -556,6 +556,25 @@ abstract class Resource
         return null;
     }
 
+    /**
+     * Where this resource's results sit among the palette's groups.
+     *
+     * REGISTRATION ORDER IS ARBITRARY AND WAS BEING TREATED AS A RANKING. The
+     * groups came back in whatever order discovery happened to glob the
+     * directory, so the activity trail could sit above the customers somebody
+     * typed a name to find - and the first group is the one a person reads,
+     * the one arrow-down lands in, and the one Enter opens. An accident of
+     * filesystem ordering was deciding what a keystroke did.
+     *
+     * LOWER SORTS FIRST, ties keep their registration order, and the default
+     * of 0 for everything reproduces today's behaviour exactly - so this
+     * changes nothing until a resource says something.
+     */
+    public static function searchSort(): int
+    {
+        return 0;
+    }
+
     public static function definition(): Table
     {
         $table = static::table(Table::make());

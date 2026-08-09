@@ -68,6 +68,15 @@ final class ClientResource extends Resource
      * mass assignment is closed by construction rather than by remembering a
      * $fillable list.
      */
+    /**
+     * FIRST IN THE PALETTE. A person is what somebody types a name to find,
+     * and the first group is the one arrow-down lands in and Enter opens.
+     */
+    public static function searchSort(): int
+    {
+        return -10;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

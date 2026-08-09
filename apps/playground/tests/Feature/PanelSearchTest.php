@@ -214,6 +214,58 @@ final class PanelSearchTest extends TestCase
     }
 
     /**
+     * THE GROUP SOMEBODY WANTED IS THE ONE ARROW-DOWN LANDS IN.
+     *
+     * Groups came back in whatever order discovery globbed the directory, so
+     * the activity trail - rows that are timestamps - could sit above the
+     * customers somebody typed a name to find. `searchSort()` makes that a
+     * declaration instead of an accident: Clients say -10, Activity says 100.
+     */
+    public function test_result_groups_follow_the_declared_search_order(): void
+    {
+        $this->client($this->tenant, 'Amina Achieng', 'SORT1');
+
+        $labels = array_column(
+            $this->actingAs($this->operator([
+                'view_any_clients', 'view_clients',
+                'view_any_activities', 'view_activities',
+            ]))->getJson('/panel-search?q=Amina')->assertOk()->json('groups'),
+            'label',
+        );
+
+        $this->assertNotEmpty($labels);
+        $this->assertSame(
+            'Clients',
+            $labels[0],
+            'The group a person searched for must lead, whatever order discovery found the resources in.',
+        );
+    }
+
+    /**
+     * SPLITTING IS WRONG FOR AN IDENTIFIER THAT CONTAINS A SPACE.
+     *
+     * ANDing the words is what finds a person across two columns; for a
+     * reference like `INV 2026 0042` it requires each fragment to match on its
+     * own, which is not what the number printed on the paper means.
+     */
+    public function test_a_table_can_take_a_multi_word_term_whole(): void
+    {
+        $this->client($this->tenant, 'Amina Achieng', 'SPLIT1');
+
+        $whole = fn (bool $split) => \App\Panel\Resources\ClientResource::definition()
+            ->splitsSearchTerms($split)
+            ->toListQuery(Client::class)
+            ->run(\Illuminate\Http\Request::create('/', 'GET', ['search' => 'Amina SPLIT1']));
+
+        // Split: the words may match different columns, so this finds them.
+        $this->assertCount(1, $whole(true)->records);
+
+        // Whole: no single column holds "Amina SPLIT1", so nothing matches -
+        // which is exactly right for a term meant to be one atom.
+        $this->assertSame([], $whole(false)->records);
+    }
+
+    /**
      * A RECORD IS FOUND BY THE OTHER SIDE OF ITS RELATION.
      *
      * The thing printed on the paper in front of somebody is usually related

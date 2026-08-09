@@ -121,6 +121,16 @@ final class ActivityResource extends Resource
         return $out;
     }
 
+    /**
+     * LAST. The trail answers "what happened", never "who is this" - and its
+     * rows are timestamps, so a group of them above the customers is a wall of
+     * dates between somebody and the person they searched for.
+     */
+    public static function searchSort(): int
+    {
+        return 100;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
