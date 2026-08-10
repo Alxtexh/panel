@@ -1,0 +1,1 @@
+@media print{[data-slot=sidebar],[data-slot=sidebar-wrapper]>header,header[data-slot=header]{display:none!important}@page{margin:16mm}body{background:#fff}}
