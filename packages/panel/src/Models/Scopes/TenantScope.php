@@ -45,6 +45,14 @@ use PanelKit\Panel\Support\TenantContext;
  */
 final class TenantScope implements Scope
 {
+    /**
+     * `Builder<Model>`, THE WIDEST HONEST TYPE. A global scope is applied to
+     * whatever model declared it, so the builder's model parameter genuinely
+     * is unconstrained here - narrowing it would be a claim about a caller
+     * this class never sees.
+     *
+     * @param  Builder<Model>  $builder
+     */
     public function apply(Builder $builder, Model $model): void
     {
         $context = app(TenantContext::class);

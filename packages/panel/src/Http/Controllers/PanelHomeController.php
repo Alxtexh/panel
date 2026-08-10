@@ -77,8 +77,30 @@ final class PanelHomeController extends Controller
             return redirect($resources[0]['href']);
         }
 
+        /*
+         * MERGED INTO THE SHARED `panel` PROP, NOT WRITTEN OVER IT.
+         *
+         * THIS PAGE USED TO SEND ITS OWN FOUR-KEY `panel` OBJECT, and a page
+         * prop wins over a shared one - so on every portal whose home is this
+         * screen, `SharePanelProps`' version was replaced wholesale. That
+         * version is where `account`, `security`, `help`, `faq`, `settings`
+         * and `lock` live, which is to say THE ENTIRE ACCOUNT MENU: the user
+         * dropdown on the superadmin portal had a name, an email and no links
+         * at all, while the demo's was fine because its home is
+         * `PanelDashboard` and never collided.
+         *
+         * Nothing errored. The menu rendered, empty, and read as a portal
+         * missing features rather than a prop being overwritten.
+         *
+         * SPREADING THE SHARED VALUE FIRST keeps this page's own additions
+         * without discarding anything it does not know about - and it must not
+         * know, because what the shell needs is the shell's business.
+         */
+        $shared = Inertia::getShared('panel');
+
         return Inertia::render('PanelHome', [
             'panel' => [
+                ...(is_array($resolved = value($shared)) ? $resolved : []),
                 'id' => $id,
                 'name' => $panel?->resolveBrandName() ?? config('app.name'),
                 'path' => '/'.trim($panel?->getPath() ?? '', '/'),

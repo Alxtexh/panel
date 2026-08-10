@@ -163,6 +163,15 @@ createInertiaApp({
              */
             case PACKAGED_AUTH.includes(name):
                 return null;
+            /*
+             * A PANEL'S OWN SIGN-IN, which is a different name from this
+             * application's on purpose - see `panel/auth/*` in
+             * `PANEL_PAGES`. It renders `AuthLayout` inside itself for the
+             * same reason the packaged screens above do, so wrapping it here
+             * would give two headings and two theme toggles.
+             */
+            case name.startsWith('panel/auth/'):
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             /*

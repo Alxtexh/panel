@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Customer;
+use App\Models\SuperadminUser;
 use App\Models\User;
 
 return [
@@ -61,6 +62,22 @@ return [
             'driver' => 'session',
             'provider' => 'customers',
         ],
+
+        /*
+         * THE INSTALLATION'S OWN OPERATORS.
+         *
+         * A THIRD GUARD RATHER THAN A ROLE ON THE FIRST. The superadmin portal
+         * reads every tenant's tickets and rewrites the content every other
+         * portal renders; on `web` that capability would sit one permission
+         * grant away from an ordinary operator, and one mistaken grant is the
+         * whole failure. Sessions are keyed per guard, so an operator signed
+         * in to the demo is not signed in here and vice versa - which is what
+         * `SuperadminPanelIsolationTest` asserts in both directions.
+         */
+        'superadmins' => [
+            'driver' => 'session',
+            'provider' => 'superadmins',
+        ],
     ],
 
     /*
@@ -114,6 +131,17 @@ return [
             'model' => Customer::class,
         ],
 
+        /*
+         * PLAIN `eloquent` AND GLOBALLY UNIQUE. There is no tenant to scope
+         * by - a superadmin belongs to the installation - so an address does
+         * identify somebody here, which the unique index on the table
+         * guarantees.
+         */
+        'superadmins' => [
+            'driver' => 'eloquent',
+            'model' => SuperadminUser::class,
+        ],
+
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
@@ -142,6 +170,24 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        /*
+         * THE CUSTOMER PORTAL'S OWN BROKER, and it was missing.
+         *
+         * A BROKER NAMES A PROVIDER, WHICH NAMES A TABLE. The client portal
+         * had reset routes and no broker of its own, so it fell back to
+         * `users` - the OPERATOR provider - and a customer asking for a reset
+         * had their address looked up among operators. Nobody found, usually;
+         * and for an address held by both, a working reset link for the
+         * operator account. `Panel::passwordBroker('customers')` points it
+         * here.
+         */
+        'customers' => [
+            'provider' => 'customers',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,

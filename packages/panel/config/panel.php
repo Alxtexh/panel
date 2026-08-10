@@ -276,6 +276,33 @@ return [
     | ON WITH NO SECRET REFUSES EVERY REQUEST, deliberately: a check that passes
     | when it cannot run is an open door that reports itself as locked.
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Bulk actions
+    |--------------------------------------------------------------------------
+    |
+    | HOW MANY EXPLICITLY-SELECTED ROWS STILL RUN INSIDE THE WEB REQUEST.
+    |
+    | A bulk action over a set the operator ticked on screen is bounded, and
+    | bounded is not the same as small. Past this many rows the selection is
+    | handed to a worker with a progress token instead of holding a request
+    | open until the web server's timeout kills it halfway - which leaves a
+    | partial write and a 504 that says nothing about how far it got.
+    |
+    | DELIBERATELY BELOW the thousand-row cap on what a client may send, so
+    | the queued path is reachable from an ordinary selection rather than only
+    | from "select all matching". A threshold nobody crosses is a threshold
+    | nobody has tested.
+    |
+    | An individual action may override it - `BulkAction::queueThreshold()` -
+    | and anything doing per-row network work should.
+    |
+    */
+
+    'bulk' => [
+        'queue_threshold' => (int) env('PANEL_BULK_QUEUE_THRESHOLD', 250),
+    ],
+
     'auth' => [
         /*
         | SIGNING IN TO A GENERATED PANEL - only read by panels made with

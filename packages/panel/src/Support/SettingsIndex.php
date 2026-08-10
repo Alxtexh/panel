@@ -62,6 +62,43 @@ final class SettingsIndex
     }
 
     /**
+     * Whether a URL belongs to the panel serving this request.
+     *
+     * A PANEL AT THE ROOT OWNS EVERYTHING NOT CLAIMED BY A LONGER PATH, which
+     * is why this asks the registry rather than doing a prefix test: the demo
+     * mounts its operator panel at `/`, and a plain `str_starts_with` would
+     * have it own `/superadmin/...` too.
+     */
+    private static function insideCurrentPanel(string $href): bool
+    {
+        $panels = app(PanelManager::class);
+        $current = $panels->currentPanel();
+
+        if ($current === null || $href === '') {
+            return true;
+        }
+
+        $path = '/'.ltrim((string) parse_url($href, PHP_URL_PATH), '/');
+        $owner = null;
+        $longest = -1;
+
+        foreach ($panels->panels() as $candidate) {
+            $prefix = '/'.trim($candidate->getPath(), '/');
+
+            $matches = $prefix === '/'
+                || $path === $prefix
+                || str_starts_with($path, rtrim($prefix, '/').'/');
+
+            if ($matches && strlen($prefix) > $longest) {
+                $owner = $candidate;
+                $longest = strlen($prefix);
+            }
+        }
+
+        return $owner === null || $owner->id === $current->id;
+    }
+
+    /**
      * Everything the index should list, in reading order.
      *
      * ORDERED FROM YOURS OUTWARD - your account, then your organisation, then
@@ -147,7 +184,36 @@ final class SettingsIndex
             $entries[] = $candidate + ['href' => $href];
         }
 
+        /*
+         * A PACKAGED ROW ALREADY LISTED WINS, AND THE APPLICATION'S COPY OF IT
+         * IS DROPPED.
+         *
+         * `SettingsIndex::add()` IS GLOBAL AND THE PACKAGED ROWS ARE PER
+         * PANEL, which is the whole bug. An application whose own panel keeps
+         * `/settings/profile` - Fortify's, Breeze's - has to register that row
+         * itself, because the packaged route never registered THERE. It then
+         * appeared on EVERY portal, including the ones where the packaged
+         * route registers perfectly well: the superadmin settings screen
+         * listed Profile twice and Security twice, one pair pointing at its
+         * own `/superadmin/settings/profile` and the other at the operator
+         * panel's.
+         *
+         * Two rows with the same name and different destinations is worse than
+         * either alone - it reads as a duplicate and behaves as a portal leak.
+         *
+         * DEDUPED BY KEY, PACKAGED FIRST, because the packaged row is the one
+         * that is panel-correct: it exists only where its route registered, so
+         * it always points inside the portal being viewed. The application's
+         * entry survives wherever the packaged route is absent, which is
+         * exactly the case it was written for.
+         */
+        $listed = array_column($entries, 'key');
+
         foreach (self::registered() as $entry) {
+            if (in_array($entry['key'] ?? null, $listed, true)) {
+                continue;
+            }
+
             if (isset($entry['ability']) && ! Ability::allows($user, (string) $entry['ability'])) {
                 continue;
             }
@@ -156,6 +222,29 @@ final class SettingsIndex
 
             if (($entry['href'] ?? null) instanceof \Closure) {
                 $entry['href'] = ($entry['href'])();
+            }
+
+            /*
+             * AN ENTRY POINTING OUT OF THIS PORTAL IS NOT LISTED IN IT.
+             *
+             * `add()` IS GLOBAL, so an application entry resolves ONE url -
+             * whichever panel owned the route it names - and then offers it
+             * from every portal. The superadmin settings screen listed
+             * "Assistant" linking to `/settings/assistant`, the OPERATOR
+             * panel's screen, on a guard that holds no session there: a row
+             * that reads as this portal's own and lands you at somebody
+             * else's sign-in.
+             *
+             * It is also how a portal's `->without()` gets quietly undone.
+             * Superadmin drops `assistant-settings` deliberately, and a global
+             * entry put the link back.
+             *
+             * THE TEST IS THE PANEL'S PATH, not a list of exceptions, so this
+             * holds for any entry any application registers - including ones
+             * written after this rule.
+             */
+            if (! self::insideCurrentPanel((string) ($entry['href'] ?? ''))) {
+                continue;
             }
 
             $entries[] = $entry;

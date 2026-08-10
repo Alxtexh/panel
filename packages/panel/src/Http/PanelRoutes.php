@@ -222,6 +222,75 @@ final class PanelRoutes
          * condition the sign-in screen renders a button on - so a button and
          * the route behind it cannot disagree.
          */
+        /*
+         * THIS PORTAL'S OWN FRONT DOOR - see `Panel::login()`.
+         *
+         * REGISTERED OUTSIDE THE AUTHENTICATED GROUP for the same reason the
+         * social callback is: this is where somebody BECOMES signed in, so
+         * putting it behind `auth` would redirect every attempt back to
+         * itself.
+         *
+         * `->name($panel->getRouteName())` MAKES THESE `{id}.login` etc, which
+         * is the name `PanelServiceProvider::redirectGuestsToTheirPanel()`
+         * looks for - so switching this on is all it takes for a guest hitting
+         * `/superadmin` to land on the superadmin form rather than the
+         * application's. The application's own `login` route, if it has one,
+         * keeps its name and its URI untouched.
+         *
+         * NO `guest` MIDDLEWARE: Laravel's redirects an authenticated visitor
+         * to the application's HOME, which for a second portal is somebody
+         * else's screen. Showing the form to somebody already signed in
+         * elsewhere costs nothing and explains itself.
+         */
+        if ($panel->hasLogin()) {
+            Route::middleware([
+                Middleware\UsePanel::class.':'.$panel->id,
+                ...$panel->getGuestMiddleware(),
+                Middleware\SharePanelProps::class,
+            ])
+                ->prefix($panel->getPath())
+                ->name($panel->getRouteName())
+                ->group(function () use ($panel): void {
+                    $slug = $panel->getLoginSlug();
+
+                    Route::get($slug, [Controllers\PanelAuthController::class, 'showLogin'])
+                        ->defaults('panel', $panel->id)
+                        ->name('login');
+
+                    Route::post($slug, [Controllers\PanelAuthController::class, 'login'])
+                        ->defaults('panel', $panel->id)
+                        ->middleware('throttle:20,1');
+
+                    /*
+                     * LOGOUT IS BEHIND THE GUARD, so an unauthenticated POST is
+                     * a redirect to sign-in rather than a session teardown
+                     * anybody passing by can trigger.
+                     */
+                    Route::post('logout', [Controllers\PanelAuthController::class, 'logout'])
+                        ->defaults('panel', $panel->id)
+                        ->middleware('auth:'.$panel->getGuard())
+                        ->name('logout');
+
+                    if ($panel->hasPasswordReset()) {
+                        Route::get('forgot-password', [Controllers\PanelAuthController::class, 'showForgotPassword'])
+                            ->defaults('panel', $panel->id)
+                            ->name('password.request');
+
+                        Route::post('forgot-password', [Controllers\PanelAuthController::class, 'sendResetLink'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware('throttle:6,1');
+
+                        Route::get('reset-password/{token}', [Controllers\PanelAuthController::class, 'showResetPassword'])
+                            ->defaults('panel', $panel->id)
+                            ->name('password.reset');
+
+                        Route::post('reset-password', [Controllers\PanelAuthController::class, 'resetPassword'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware('throttle:6,1');
+                    }
+                });
+        }
+
         if (Auth\SocialProviders::enabled() !== []) {
             Route::middleware([
                 Middleware\UsePanel::class.':'.$panel->id,

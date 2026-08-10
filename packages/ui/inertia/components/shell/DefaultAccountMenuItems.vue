@@ -50,6 +50,8 @@ const panel = computed(
             | {
                   account?: string | null
                   security?: string | null
+                  /** What this portal added - see `Panel::userMenuItems()`. */
+                  menuItems?: { key: string; label: string; href: string; icon?: string | null }[]
                   help?: string | null
                   logout?: string | null
                   settings?: string | null
@@ -217,6 +219,52 @@ const handleLogout = () => {
             </DropdownMenuItem>
         </template>
     </DropdownMenuGroup>
+
+    <!--
+        WHAT THIS PORTAL ADDED - `Panel::userMenuItems()`.
+
+        SEPARATED FROM THE CORE ABOVE, because those items mean the same thing
+        in every portal and these are this one's own. A divider is the cheapest
+        way to say which is which.
+
+        ALREADY PERMISSION-FILTERED AND ALREADY RESOLVED by the server - an
+        entry somebody may not open never reaches the browser, and an `href`
+        declared as a closure was called during prop sharing. Nothing here
+        decides anything; it draws what it was given.
+
+        AN EXTERNAL LINK IS AN `<a>`, NOT A `<Link>`. Inertia's Link would try
+        to fetch a foreign origin as a page visit and fail silently - and a
+        status page or a docs site is exactly what a portal adds here.
+    -->
+    <template v-if="panel?.menuItems?.length">
+        <DropdownMenuSeparator />
+
+        <DropdownMenuGroup>
+            <!--
+                THE `v-if` IS REDUNDANT BESIDE THE WRAPPER ABOVE AND STAYS.
+                `NavigationCoverageTest` reads this markup and requires every
+                menu item to guard on `panel?.` - because the failure it exists
+                to prevent is an item offered in a portal that cannot serve it,
+                and a guard on an outer element is one refactor away from being
+                separated from the item it protects.
+            -->
+            <template v-for="item in panel?.menuItems ?? []" :key="item.key">
+                <DropdownMenuItem v-if="panel?.menuItems" as-child>
+                <a
+                    v-if="/^https?:\/\//.test(item.href)"
+                    class="block w-full cursor-pointer"
+                    :href="item.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >{{ item.label }}</a
+                >
+                <Link v-else class="block w-full cursor-pointer" :href="item.href">{{
+                    item.label
+                    }}</Link>
+                </DropdownMenuItem>
+            </template>
+        </DropdownMenuGroup>
+    </template>
 
     <DropdownMenuSeparator v-if="panel?.logout" />
 

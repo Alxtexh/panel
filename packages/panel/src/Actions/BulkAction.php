@@ -63,6 +63,9 @@ final class BulkAction
 
     private int $chunkSize = 1000;
 
+    /** Null defers to `panel.bulk.queue_threshold` - see `queueThreshold()`. */
+    private ?int $queueThreshold = null;
+
     private function __construct(public readonly string $key, private readonly string $label) {}
 
     public static function make(string $key, string $label): self
@@ -194,6 +197,37 @@ final class BulkAction
         $this->chunkSize = $size;
 
         return $this;
+    }
+
+    /**
+     * HOW MANY EXPLICITLY-SELECTED ROWS THIS ACTION WILL STILL RUN INLINE.
+     *
+     * COST IS A PROPERTY OF THE ACTION, NOT OF THE ROW COUNT. Two hundred rows
+     * through a handler that sends a message or calls an API is slower than a
+     * thousand through a column update, so a single global number is the wrong
+     * shape for the expensive cases and only the right shape for the ordinary
+     * ones. This is how an action says which it is.
+     *
+     * NULL MEANS `panel.bulk.queue_threshold`, which is where the ordinary
+     * answer lives. Set it LOW for anything that does per-row work with a
+     * network call in it: past the threshold the selection is handed to a
+     * worker with a progress token instead of holding a request open until the
+     * web server times out and leaves a partial write behind.
+     */
+    public function queueThreshold(int $rows): self
+    {
+        if ($rows < 1) {
+            throw new InvalidArgumentException('The queue threshold must be at least 1 row.');
+        }
+
+        $this->queueThreshold = $rows;
+
+        return $this;
+    }
+
+    public function getQueueThreshold(): ?int
+    {
+        return $this->queueThreshold;
     }
 
     public function getAbility(): string

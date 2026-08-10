@@ -11,12 +11,37 @@
 .env.*
 !.env.example
 
-/apps/*/vendor
 /apps/*/node_modules
-/apps/*/public/build
 /apps/*/public/hot
 /apps/*/storage/*.key
 /apps/*/storage/logs
+
+# `vendor/` AND `public/build/` ARE COMMITTED, DELIBERATELY.
+#
+# THIS REPOSITORY IS THE PRODUCT. The two packages are consumed by local PATH -
+# `composer.json` points at `../../packages/panel`, `package.json` at
+# `file:../../packages/ui` - so they resolve INSIDE this tree and were never
+# coming from a registry. Committing the dependencies and the built assets on
+# top of that makes a clone runnable with no `composer install` and no
+# `npm run build`:
+#
+#     git clone <repo> myapp && cd myapp/apps/playground
+#     cp .env.example .env && php artisan key:generate
+#     php artisan migrate --seed && php artisan panel:permissions sync
+#
+# WHAT THIS COSTS, so nobody is surprised later:
+#
+#   - `vendor/` is ~50-80 MB. Fine for a template; heavy if you branch a lot.
+#   - SECURITY UPDATES BECOME MANUAL. Nothing tells you a dependency has a CVE;
+#     you run `composer update` yourself and commit the result.
+#   - MERGE CONFLICTS INSIDE `vendor/` ARE NOT RESOLVABLE in practice. Take one
+#     side wholesale and re-run `composer install`.
+#
+# `node_modules` STAYS IGNORED and that asymmetry is deliberate: it is needed to
+# REBUILD assets, never to run them, and it is the tree that carries
+# platform-specific binaries. A `node_modules` committed from Windows breaks on
+# a Linux host - this project has already lost a day to exactly that with
+# rollup. `vendor/` is PHP source and travels.
 
 #
 # NOT `/apps/*/storage/framework`, WHICH IS HOW THIS WAS WRITTEN AND WHY A

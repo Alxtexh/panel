@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\SuperadminUser;
 use App\Support\DemoData;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -42,7 +43,21 @@ final class SeedReferenceCommand extends Command
 
     protected $description = 'Seed the five-tenant reference estate used by panel:benchmark';
 
-    private const CHUNK = 5_000;
+    /**
+     * ROWS PER INSERT, AND SQLITE DECIDES THE CEILING.
+     *
+     * A MULTI-ROW INSERT BINDS ONE PARAMETER PER COLUMN PER ROW, and SQLite
+     * caps a statement's parameters - 999 on builds before 3.32, 32,766 after.
+     * At eleven columns, 5,000 rows is 55,000 bindings, so this command died
+     * with "too many SQL variables" partway through the estate on any SQLite
+     * a developer is likely to have. MySQL and Postgres never complained,
+     * which is why it survived: the default development database is the one
+     * that cannot run it.
+     *
+     * 500 IS THE LARGEST SAFE FIGURE FOR THE WIDEST TABLE HERE and still one
+     * statement per five hundred rows, which is not the bottleneck.
+     */
+    private const CHUNK = 500;
 
     /**
      * The estate.
@@ -108,6 +123,7 @@ final class SeedReferenceCommand extends Command
         // rather than inside it.
         if ($only === null) {
             $this->adoptOrphans();
+            $this->superadmin();
         }
 
         $this->newLine();
@@ -135,6 +151,30 @@ final class SeedReferenceCommand extends Command
      * a user pointing at a tenant that exists is left alone, because reassigning
      * those would be the seeder moving people between organisations.
      */
+    /**
+     * The one account that can open the superadmin portal.
+     *
+     * A SEPARATE TABLE MEANS A SEPARATE SEED. The superadmin portal
+     * authenticates on the `superadmins` guard against `superadmin_users`, so
+     * none of the operator accounts above can open it - which is the whole
+     * point of the split and also the reason the portal was unreachable the
+     * moment the guard changed. Without this, `/superadmin/login` is a form
+     * with no valid answer.
+     *
+     * SAME LOCAL-ONLY PASSWORD AS EVERY OTHER SEEDED ACCOUNT, and guarded by
+     * the same refusal at the top of `handle()` - this command declines to run
+     * anywhere but a development database.
+     */
+    private function superadmin(): void
+    {
+        SuperadminUser::query()->firstOrCreate(
+            ['email' => 'superadmin@panel.test'],
+            ['name' => 'Superadmin', 'password' => bcrypt('password'), 'abilities' => ['*']],
+        );
+
+        $this->components->twoColumnDetail('Superadmin', 'superadmin@panel.test at /superadmin/login');
+    }
+
     private function adoptOrphans(): void
     {
         $home = DB::table('tenants')->orderBy('id')->value('id');
@@ -267,6 +307,25 @@ final class SeedReferenceCommand extends Command
      */
     private function mirrorTenantRow(object $tenant): void
     {
+        /*
+         * A STALE MIRROR UNDER A DIFFERENT ID IS DELETED FIRST.
+         *
+         * `migrate:fresh` REBUILDS THE CENTRAL DATABASE AND NOT THE TENANT
+         * FILES. `tenant_*.sqlite` sit on disk and survive it, so the next run
+         * hands out new central ids while the old file still holds the tenant
+         * under the old one - and the upsert below, keyed on id, tries to
+         * INSERT a slug the file already has. The command dies on
+         * "UNIQUE constraint failed: tenants.slug" partway through the estate,
+         * naming a table the operator did not think they were writing to.
+         *
+         * The mirror is a copy of a central fact, so the central id wins and
+         * the older copy goes.
+         */
+        DB::table('tenants')
+            ->where('slug', $tenant->slug)
+            ->where('id', '!=', $tenant->getKey())
+            ->delete();
+
         DB::table('tenants')->updateOrInsert(
             ['id' => $tenant->getKey()],
             [

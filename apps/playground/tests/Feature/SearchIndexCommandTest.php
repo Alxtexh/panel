@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PanelKit\Panel\Commands\SearchIndexCommand;
 use PanelKit\Panel\PanelManager;
 use ReflectionMethod;
 use Tests\TestCase;
@@ -30,7 +31,7 @@ final class SearchIndexCommandTest extends TestCase
     /** @return list<string> */
     private function statementsFor(string $driver): array
     {
-        $command = app(\PanelKit\Panel\Commands\SearchIndexCommand::class);
+        $command = app(SearchIndexCommand::class);
 
         $method = new ReflectionMethod($command, 'statements');
 

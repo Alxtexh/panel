@@ -25,7 +25,7 @@
  *   tenant's routers are tenant data (addendum Part A). That is what lets the
  *   schema cache key drop the tenant id entirely.
  */
-import { Head, Link, router, usePage } from '@inertiajs/vue3'
+import { Deferred, Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, ref, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
@@ -41,6 +41,7 @@ import {
     ColourCell,
     CheckboxCell,
     PkBoundary,
+    StatCard,
     RecordActions,
     SelectionBar,
     TablePagination,
@@ -992,12 +993,97 @@ function badgeLabel(key: string, value: unknown): string {
 
     return String(value)
 }
+/**
+ * WIDGETS ABOVE THIS LIST - what `Resource::headerWidgets()` declared.
+ *
+ * READ OFF PAGE PROPS RATHER THAN `defineProps`, because these keys are only
+ * present when the resource declares widgets: the server sends nothing at all
+ * otherwise, which is what keeps the overwhelmingly common case - a resource
+ * with none - byte-identical to before. Declaring them as optional props would
+ * work too and would put two more entries in a prop list that already carries
+ * the whole schema.
+ */
+const headerWidgets = computed(
+    () => ((page.props as Record<string, any>).headerWidgets ?? []) as { key: string; label: string; description?: string }[],
+)
+
+/**
+ * THE RESOLVED VALUE COMES FROM PAGE PROPS, NOT THE `<Deferred>` SLOT.
+ *
+ * `<Deferred>` gates WHEN its default slot renders; it does not hand the value
+ * in as a slot prop. Reading `slotProps[key]` looks plausible and silently
+ * renders an em dash for every card - the numbers arrive correctly and are
+ * thrown away. That exact bug is documented on the dashboard, which is why it
+ * is not repeated here.
+ */
+function headerStat(key: string) {
+    return (page.props as Record<string, any>)[`header_stat_${key}`] as
+        /*
+         * SPELLED OUT RATHER THAN `unknown`, because `StatCard` types its
+         * `trend` and `sparkline` props precisely and `unknown` is not
+         * assignable to them - `vue-tsc` rejects it, which is the check doing
+         * its job: a card fed a shape it does not understand renders an em
+         * dash and no error.
+         */
+        | {
+              value: unknown
+              error?: boolean
+              trend?: { direction: 'flat' | 'up' | 'down' | 'new'; percentage: number | null } | null
+              sparkline?: { label: string; value: number }[] | null
+          }
+        | undefined
+}
 </script>
 
 <template>
     <Head :title="schema.labelPlural" />
 
     <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-3 p-3 sm:p-4">
+        <!--
+            WIDGETS ABOVE THE LIST - what `Resource::headerWidgets()` declares.
+            The open-ticket count above the ticket table, which previously meant
+            a custom page that reimplemented the list.
+
+            `v-if` ON THE PROP, NOT ON ITS LENGTH. The server sends no key at
+            all when a resource declares none - which is nearly every resource -
+            so this renders exactly nothing rather than an empty grid with
+            spacing around it.
+
+            THE FALLBACK IS A LOADING CARD, NOT A BLANK. Each value is deferred,
+            so this row draws its labels immediately and fills in - the same
+            split the dashboard uses, from the same `WidgetSet`.
+
+            `PkBoundary` PER CARD, so one widget throwing loses one tile rather
+            than the list screen it sits above.
+        -->
+        <div
+            v-if="headerWidgets?.length"
+            class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        >
+            <PkBoundary
+                v-for="widget in headerWidgets"
+                :key="widget.key"
+                :label="widget.label"
+                fill
+            >
+                <Deferred :data="`header_stat_${widget.key}`">
+                    <template #fallback>
+                        <StatCard :label="widget.label" :description="widget.description" loading />
+                    </template>
+
+                    <template #default>
+                        <StatCard
+                            :label="widget.label"
+                            :description="widget.description"
+                            :value="headerStat(widget.key)?.value"
+                            :trend="headerStat(widget.key)?.trend"
+                            :sparkline="headerStat(widget.key)?.sparkline"
+                            :error="headerStat(widget.key)?.error"
+                        />
+                    </template>
+                </Deferred>
+            </PkBoundary>
+        </div>
         <!--
             THE CLUSTER SUB-NAVIGATION - roadmap 4.1. The sidebar shows one
             entry for the whole cluster; this strip is where its members

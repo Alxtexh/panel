@@ -112,7 +112,7 @@ final class PanelAuthTest extends TestCase
             ->assertOk()
             ->assertInertia(
                 fn ($page) => $page
-                    ->component('auth/Login')
+                    ->component('panel/auth/Login')
                     // THE ACTION IS THE SERVER'S, never guessed by the
                     // component: a generated portal's route names belong to the
                     // application and the screen belongs to the package.

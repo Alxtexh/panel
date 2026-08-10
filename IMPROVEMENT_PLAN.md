@@ -190,13 +190,280 @@ Not borrowed from anywhere; observed here.
    runs the installation; `--apply` is for a laptop. And per this document's own
    rule, run it when row counts demand it - an index nobody needed is write cost
    and disk for nothing.
-2. **Bulk actions have no queue threshold.** A bulk mutation over 500k rows runs
-   inside a web request unless somebody declared it a job.
+2. **Bulk actions have no queue threshold** — DONE, and this entry was partly
+   wrong. A 500k-row mutation was **already** queued: `BulkController` split on
+   whether the set was BOUNDED (explicit ids → inline) or unbounded (select-all
+   → queued), which is the right axis and avoids a blocking `COUNT(*)`.
+
+   THE REAL GAP WAS THE THIRD CASE. Bounded is not the same as small: the cap
+   on an explicit selection is **a thousand rows**, and a thousand rows through
+   a handler that touches a relation or sends a message is a request that runs
+   until the web server's timeout kills it partway — a partial write and a 504
+   that says nothing about how far it got.
+
+   Now: `panel.bulk.queue_threshold` (250, deliberately below the thousand-row
+   cap so the queued path is reachable from an ordinary selection rather than
+   only from select-all) plus `BulkAction::queueThreshold()`, because cost is a
+   property of what an action DOES rather than of the row count.
+
+   **The ids travel with the job, not the filters.** For select-all the filters
+   ARE the set; for an explicit selection they would match a *different* set, so
+   dispatching without ids would silently apply the action to rows nobody
+   ticked. `BulkQueueThresholdTest` asserts the rows, not just that a job was
+   pushed.
 3. **Live updates default to polling**, and the broadcast transport is
    authorised but untested - `BroadcastChannelTest` proves who may subscribe and
    then nothing connects. Reverb is already `require-dev`; make it first-class.
-4. **The dashboard is ~20 independent deferred queries.** The per-widget
-   boundary is right for resilience and wrong for round trips.
+4. **The dashboard is ~20 independent deferred queries** — DONE. **Measured on
+   the running app: 27 requests → 4.**
+
+   Inertia fetches deferred props **one request per GROUP**, and every stat and
+   chart passed its own key as its group — so each was a group of one. The
+   queries were never the cost; the round trips were, each paying for a full
+   middleware stack, session read, tenant resolution and permission load to
+   return a single number.
+
+   Now `stats` and `charts` are two groups (plus `strip` and `checklist`, which
+   are single props that already aggregate their whole surface). Kept apart
+   because charts are slower and cost differently — folding them together would
+   make the numbers wait for the heaviest chart.
+
+   **The per-chart period still works**, which is the thing that looks like it
+   should break: a period change is `router.reload({only: ['chart_status']})`,
+   and `only` names the PROP. Groups decide only how the FIRST fetch is batched.
+
+   The resilience trade is real and named: a group is all-or-nothing, so one
+   widget throwing takes its group's payload. `DashboardDeferGroupsTest` pins
+   the group count so this cannot silently regress back to one-per-widget.
+
+---
+
+## 3b. Panels were not actually separate — DONE
+
+Found by opening `/superadmin` and being sent to the demo tenant's sign-in.
+The complaint was right and the cause was worse than the symptom: **four
+separate defects, each of which hid the next.**
+
+| Defect | Effect | Fix |
+|---|---|---|
+| Laravel's `withMiddleware()` registers `redirectGuestsTo(fn () => route('login'))` from `afterResolving(HttpKernel)` — **after** every provider boots | The package's per-panel guest redirect was overwritten on every request, in every release that shipped it. `/client` and `/superadmin` both went to the app's `/login` | Register ours from `afterResolving(HttpKernel)` too, so it lands last |
+| `UsePanel` set the current panel but not the request's guard | `Auth::user()`, `$request->user()` and the **Gate's user resolver** all read the DEFAULT guard, so a panel on a second guard authenticated fine and then denied every implicit `Gate::authorize()` — a list that renders and a 403 on the button beside it | `Auth::shouldUse($panel->getGuard())`, which is what Filament does |
+| `RecordController::applyTenant()` treated "table has a `tenant_id` column" as "model is tenant-scoped" | `ContentEntry` has a nullable `tenant_id` meaning *everybody* and no `TenantScope`; the central superadmin portal got 403 on every save | Ask `hasGlobalScope(TenantScope::class)`. The loud refusal stays for genuinely scoped models |
+| `PanelAuthController` read one global `panel.auth.broker` | A broker names a provider, which names a **table**. A customer's reset request was looked up among **operators** — and for a shared address would have mailed a working reset link for the operator account | `Panel::passwordBroker()` per portal; `passwords.customers` added |
+
+**And one thing the bugs were hiding.** With the guest redirect broken, the
+screen crawler could never sign in to the client portal, so its screens were
+never crawled. The moment it could, `NavigationCoverageTest` found the
+CUSTOMER portal mounting **backups, logs, monitoring, assistant settings,
+trash and documents**. Two bugs hid each other: a portal that offered too
+much, and a test that could not reach it to say so.
+
+### What the panel gained, borrowed from Filament v5
+
+- `Panel::discoverResources(in:, for:)` / `discoverPages(in:, for:)`.
+  Ownership follows the **directory**, not a `protected static $panel` on the
+  class. Every portal provider now declares what it contains instead of
+  appending to the global `panel.discover` list — which is what "the panels
+  are all the same thing" actually meant.
+- `Panel::login()` / `loginRouteSlug` / `passwordReset()` / `passwordBroker()`
+  — a portal mounts its own sign-in under its own path, named `{id}.login`.
+  The generated `routes/panel-{id}-auth.php` remains supported as the escape
+  hatch; `panel-client-auth.php` was deleted in favour of the declaration.
+- Superadmin is a genuinely separate portal: `superadmins` guard,
+  `superadmin_users` table, `SuperadminUser` model with an `abilities` column
+  (**not** blanket-true — a policy that cannot fail is a policy nobody has
+  tested), amber palette, its own copy, no self-service reset.
+
+**Gate, and it passes:** `SuperadminPanelIsolationTest` asserts the redirect
+TARGET in both directions. The weaker "did it redirect" assertion is what let
+this sit unnoticed.
+
+**Registration order is load-bearing** and cost an hour: `Abilities::forModel()`
+resolves a model to the FIRST registered resource that owns it, so running
+panel-owned discovery before the global list moved `Plan` to another portal's
+resource and 403'd an authorised screen. Panel directories run last, exactly
+where appending to `panel.discover` used to put them. `ClusterTest` documents
+it and caught it.
+
+---
+
+## 3c. Two follow-ons from §3.2/§3.4 — DONE
+
+### `panel:doctor` now says when "queued" is not queued
+
+`QUEUE_CONNECTION=sync` makes the whole bounded/unbounded split, the new queue
+threshold and the progress tokens **inert**: `dispatch()` runs the job inline,
+so a select-all mutation still holds the web request open, and the response
+returns a PENDING token pointing at work that already finished.
+
+**Worse than no queue, because everything reports success.** The operator polls
+once and is told the job is done — which is true. Nothing says the run was cut
+off by the web server's timeout partway, leaving a partial write.
+
+It reports **only when at least one resource has bulk actions**, and **only
+outside the `testing` environment**. That second condition is not a fudge:
+`sync` is the *correct* setting under test — Laravel's own `phpunit.xml` ships
+it — and the first version of this check turned eleven passing "doctor is
+quiet" tests red. That is precisely the `checkSomebodyCanOpenThePanel` failure
+in §2.5 repeating: a check that fires on a healthy installation teaches
+everybody to ignore the command. `QueueIsRealTest` asserts all three
+directions, faking the environment to exercise the live path.
+
+**Not checked: whether a worker is running.** That is a question about the
+host, not the configuration, and `panel:doctor` has no honest way to answer it.
+
+### List screens defer into one request
+
+**Measured first, and the plan's claim was wrong.** `/clients` was already
+**one** group — `total` and `tabCounts` both landed in Inertia's `default`.
+The only real cost was `summary`, which named a group of its own and so bought
+a second round trip on every list that defines column summarizers.
+
+All three are aggregates of the same cost class over the same filtered set — a
+COUNT, one query covering every tab, one query of aggregate expressions — so
+they are now one request. This is the opposite call from the dashboard, where
+`stats` and `charts` stay apart because their costs genuinely differ; the rule
+is cost class, not tidiness. `DashboardDeferGroupsTest` pins both.
+
+---
+
+## 3d. The class of bug, not the instances — DONE
+
+Seven defects in one sitting turned out to be **one defect**: state that must be
+per-panel living in one global place.
+
+| global thing | should have been |
+|---|---|
+| `route('login')` for guests | the panel's own login |
+| `Auth::user()` / the Gate's resolver | the panel's guard |
+| `auth/Login` page name | the panel's component |
+| `url.intended` | scoped to the panel |
+| `panel.auth.broker` | the panel's broker |
+| `panel.discover` | the panel's directories |
+| default `authMiddleware = ['auth']` | `auth:{guard}` |
+
+**Every one was found by a person opening a URL.** Not one by a test — because
+each existing test asserted its own panel in isolation, and a property that
+only breaks BETWEEN panels is invisible from inside one.
+
+### Two responses, and the second matters more
+
+**Made unrepresentable.** `Panel::getMiddleware()` now DERIVES `auth:{guard}`
+instead of defaulting to bare `auth`. Bare `auth` means the *default* guard, so
+a portal declaring `guard('customers')` and forgetting the matching
+`authMiddleware` authenticated operators and then read the customer guard for
+everything after — failing open with a 200. Invisible on the default panel,
+because there the two are the same string.
+
+**Made mechanical.** `PanelSeparationConformanceTest` generates its assertions
+from the registry rather than naming panels, so **a new portal is covered the
+moment it is registered**:
+
+- gates on the guard it declares
+- that guard, and its provider, exist in `config/auth.php`
+- a portal offering a reset uses a broker whose provider is its own guard's
+- a guest lands on that portal's sign-in, not the application's
+- the sign-in renders a `panel/*` component the host cannot shadow
+- the form posts back inside the portal's own prefix
+- the login route is named `{id}.login`, which is how the guest redirect finds it
+
+**Proven to fail, not just to pass.** Re-pointing the client portal at the
+`users` broker reproduces the live security bug and the suite names it:
+*"authenticates provider [customers] and resets passwords through [users] …
+would mail a working link for somebody else's account."*
+
+---
+
+## 3e. Core vs optional, and the universal registration point
+
+The question behind every complaint in this session: **what does a portal get
+for free, and how does everything else get added when needed?** Filament's
+answer is that the PANEL is the registration point. Ours was partly the panel
+and partly inheritance, which is why packages could not contribute.
+
+### Where we now match Filament, and where we do not
+
+| Extension point | Filament v5 | Us |
+|---|---|---|
+| Resources | `discoverResources(in:, for:)` | ✅ same |
+| Pages | `discoverPages(in:, for:)` | ✅ same |
+| Plugins | `->plugins([...])` | ✅ same |
+| Render hooks | `registerRenderHook()` | ✅ `RenderHook` |
+| Auth | `->login()`, `authGuard()` | ✅ + `passwordBroker()`, `loginComponent()` |
+| **Widgets on the dashboard** | `->widgets([...])` | ✅ **`Panel::widgets()` — DONE** |
+| **Widgets on a resource** | `Resource::getWidgets()` | ✅ **`Resource::headerWidgets()` — DONE** |
+| **Widgets on a page** | `Page::getHeaderWidgets()` | ✅ **`Page::headerWidgets()` — DONE** |
+| **User menu items** | `->userMenuItems([...])` | ❌ a Vue slot the app fills |
+| **Nav items** | `->navigationItems([...])` | ❌ resource-derived only |
+| **Nested nav groups** | groups with children | ❌ one level |
+| **`discoverWidgets(in:, for:)`** | directory scan | ❌ explicit array only |
+
+**Widgets have three hosts now, and one resolver.** `WidgetSet` owns the rules
+for all of them, because the danger was never that a card fails to appear — it
+was that the two rules the dashboard already got right would be re-derived and
+subtly changed on a second surface:
+
+- a widget the viewer may not see is **never sent**, so its query never runs and
+  its number is not in the payload for whoever opens the network tab
+- the whole row is **one deferred request**, not one per card — the defect that
+  made the dashboard cost 27 round trips to open, and far more expensive
+  repeated on every list screen, of which there is one per resource
+
+An empty set contributes **no props at all** rather than empty arrays, so a
+resource declaring no widgets is byte-identical to before.
+
+**`Panel::widgets()` — DONE.** Overriding `DashboardPage::stats()` was the only
+way to add a widget, and a static method on a page class is useless to a
+PACKAGE: a plugin cannot subclass a page the application has not written yet.
+So a plugin could ship resources, routes, policies and screens, and could not
+ship one dashboard card. Registered widgets are CONCATENATED with whatever the
+page declares — replacing would make adding a widget silently blank an
+application's own dashboard — and still pass `visibleTo()` before their
+deferred prop exists, so the registry cannot bypass an ability.
+
+### Still open, in the order to take them
+
+1. **`Panel::userMenuItems()` and `navigationItems()`** — the two remaining
+   rows above. Same shape as `widgets()`; this is what makes "core things ship
+   with every portal, the rest is called when needed" true rather than aspirational.
+2. **`/profile` and `/security` as top-level, mandatory routes** — they are
+   `settings/profile` today, which makes an account screen look like a
+   configuration screen and buries the one page every portal must have. Wide
+   blast radius: route URIs, the names `settings.profile` / `settings.security`,
+   `SettingsIndex`, `SharePanelProps`, the account menu, and a number of tests.
+   Deserves its own change.
+3. **Nested sidebar groups** — a static section (e.g. "Screens") that can itself
+   contain a collapsible dropdown. Server nav shape (`PanelNavigation::build`
+   returns flat entries plus a `group` string) → `usePanelNav` → `AppSidebar`.
+4. **Editable content, extended to API documentation.** `ContentEntry` already
+   backs Help, FAQ and What's-new, edited from the superadmin portal. About and
+   the API reference are still config/hardcoded, so the loop is half built —
+   the endpoint and the model exist, the two remaining kinds do not.
+5. **A generated portal offered password reset with no broker** — DONE. The
+   generator now emits `->passwordReset(false)` with the two lines needed to
+   turn it on, because falling back to the application's broker means a reset
+   request from this portal is looked up among the DEFAULT guard's accounts —
+   and for an address held in both, mails a working link for somebody else's
+   account. `make:panel --new-guard`, which would scaffold the model, migration
+   and `config/auth.php` entries, is still worth doing; this closes the unsafe
+   default in the meantime.
+6. **A generated portal over-mounted** — DONE. It got operations, trash,
+   documents and assistant by default. That default was not reasoned about, it
+   was *found*: the reference app's CUSTOMER portal mounted backups, logs and
+   monitoring, so the people who BUY the service were one URL from the
+   installation's log output. An ability gated them, but a route that exists is
+   a route somebody can probe, and a permission is one grant from being wrong.
+   The generator now emits `->without([...])` for all four. **Opting in is a
+   decision somebody made; opting out is a decision nobody knew they had to
+   make.**
+
+   **Measured:** a freshly generated panel went from 8 screens reachable from
+   no menu to 1 — its own home, which has no menu entry only because a new
+   panel has no resources yet, which the generator says out loud.
+7. **`AuthLayout` ignores the panel brand** — the sign-in wordmark reads
+   `PanelKit` on a portal whose brand is `PanelKit Superadmin`.
+
+Items 5 and 6 are the same question as 1: what is core, and what is opt-in.
 
 ---
 

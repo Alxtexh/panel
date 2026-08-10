@@ -122,6 +122,35 @@ abstract class DashboardPage extends Page
     }
 
     /**
+     * MORE THAN ONE STRIP, when one is not enough.
+     *
+     * BOTH FORMS EXIST ON PURPOSE, and neither replaces the other. `strip()`
+     * is the single row above the widgets and is what almost every dashboard
+     * wants; this is for the dashboard that needs a SECOND set of windows over
+     * different figures - sessions across four periods AND revenue across the
+     * same four, which is two rows of four rather than one row of eight.
+     *
+     * KEYED, BECAUSE EACH GETS ITS OWN DEFERRED PROP. The key becomes
+     * `strip_{key}` and its own group, so one slow strip does not gate the
+     * other - and a partial reload can refresh one without the rest.
+     *
+     * EACH CARRIES ITS OWN ABILITY through `stripsAbility()`, because two
+     * strips on one screen are usually two different sensitivities: that is
+     * most of why somebody wants a second one rather than more segments.
+     *
+     * PER-SEGMENT `sensitive` STILL APPLIES INSIDE EACH. The two mechanisms
+     * compose - a strip is which FIGURES belong together, `sensitive` is which
+     * of them are covered - and asking somebody to choose between them would
+     * be asking the wrong question.
+     *
+     * @return array<string, array{label?: string, ability?: string, resolve: callable}>
+     */
+    public static function strips(): array
+    {
+        return [];
+    }
+
+    /**
      * The ability required to see the installation's setup checklist.
      *
      * SAME GATE AS MONITORING, deliberately. The card surfaces `panel:doctor`
@@ -223,13 +252,24 @@ abstract class DashboardPage extends Page
          * anything decided in the browser leaves the number in the page payload
          * for whoever opens the network tab, and runs the query anyway.
          */
+        /*
+         * WHAT THE PAGE DECLARES, PLUS WHAT THE PANEL REGISTERED.
+         *
+         * `Panel::widgets()` exists because overriding `stats()` was the only
+         * way to add one, and a static method on a page class is not something
+         * a PACKAGE can extend - it cannot subclass a page the application has
+         * not written. Concatenating rather than replacing is what lets an
+         * application keep its own dashboard while a plugin adds to it.
+         */
+        $registered = app(PanelManager::class)->currentPanel()?->getWidgets() ?? [];
+
         $stats = array_values(array_filter(
-            static::stats(),
+            [...static::stats(), ...array_filter($registered, static fn ($w): bool => $w instanceof StatWidget)],
             static fn (StatWidget $w): bool => $w->visibleTo($user),
         ));
 
         $charts = array_values(array_filter(
-            static::charts(),
+            [...static::charts(), ...array_filter($registered, static fn ($c): bool => $c instanceof ChartWidget)],
             static fn (ChartWidget $c): bool => $c->visibleTo($user),
         ));
 
@@ -293,6 +333,40 @@ abstract class DashboardPage extends Page
             );
         }
 
+        /*
+         * ADDITIONAL STRIPS - see `strips()`. Empty for almost every
+         * dashboard, and contributing no props at all when it is, so a page
+         * that declares none is byte-identical to before.
+         *
+         * ITS OWN GROUP EACH, so one slow strip does not gate another and a
+         * partial reload can refresh one alone. That is the opposite call from
+         * the stat widgets, which share a group because they are one row of
+         * cheap counts; these are separate rows over different figures.
+         *
+         * THE DECLARATIONS TRAVEL EAGERLY so each row can draw its labels
+         * before any number has been counted, exactly as the first strip does.
+         */
+        $extra = [];
+
+        foreach (static::strips() as $key => $definition) {
+            if (! self::allows($user, $definition['ability'] ?? null)) {
+                continue;
+            }
+
+            $resolve = $definition['resolve'];
+
+            $extra[] = ['key' => $key, 'label' => $definition['label'] ?? null];
+
+            $props['strip_'.$key] = Inertia::defer(
+                static fn (): array => $resolve($filters, $now, $tenantKey),
+                'strip-'.$key,
+            );
+        }
+
+        if ($extra !== []) {
+            $props['strips'] = $extra;
+        }
+
         if ($user !== null && static::allows($user, static::checklistAbility())) {
             $props['checklist'] = Inertia::defer(
                 static fn (): array => app(SetupChecklist::class)->items(),
@@ -300,10 +374,31 @@ abstract class DashboardPage extends Page
             );
         }
 
+        /*
+         * ONE GROUP FOR EVERY STAT, NOT ONE GROUP EACH.
+         *
+         * INERTIA FETCHES DEFERRED PROPS ONE REQUEST PER GROUP. Passing
+         * `$widget->key` made every widget its own group, so a dashboard with
+         * seven stats and a dozen charts opened with ~20 HTTP requests on
+         * first paint - each with its own middleware stack, session read,
+         * tenant resolution and permission load, to return a single number.
+         * The queries were never the cost; the round trips were.
+         *
+         * THE TRADE IS REAL AND WORTH NAMING. A group is all-or-nothing: one
+         * widget that throws takes its whole group's payload with it, where
+         * per-widget groups would have lost only that tile. Stats are cheap
+         * aggregate reads of similar cost, so batching them trades a failure
+         * mode that shows up as "the numbers are missing" - visible, and no
+         * worse than one number missing - for six fewer round trips.
+         *
+         * CHARTS STAY SEPARATE FROM STATS for the opposite reason: they are
+         * slower and their costs differ, so folding them in here would make
+         * the numbers wait for the heaviest chart.
+         */
         foreach ($stats as $widget) {
             $props["stat_{$widget->key}"] = Inertia::defer(
                 static fn (): array => $widget->resolve($tenantKey),
-                $widget->key,
+                'stats',
             );
         }
 
@@ -316,9 +411,19 @@ abstract class DashboardPage extends Page
              */
             $period = Period::fromRequest($request->query("period_{$chart->key}"));
 
+            /*
+             * CHARTS SHARE A GROUP TOO - see the stats loop above for why one
+             * group per widget was the wrong default.
+             *
+             * THE PER-CHART PERIOD STILL WORKS, which is the thing that looks
+             * like it should break. A period change is
+             * `router.reload({only: ['chart_status']})`, and `only` names the
+             * PROP, not the group; groups decide only how the FIRST fetch is
+             * batched. So one chart's window still reloads one chart.
+             */
             $props["chart_{$chart->key}"] = Inertia::defer(
                 static fn (): array => $chart->resolve($period, $tenantKey, $now),
-                $chart->key,
+                'charts',
             );
         }
 

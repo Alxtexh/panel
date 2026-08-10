@@ -48,14 +48,38 @@ trait ScaffoldsPanelAuth
      * `routes/panel-*-auth.php` instead: deleting the file removes the routes,
      * which is the behaviour somebody reading it would expect.
      */
-    private function scaffoldPanelAuth(string $id, string $path, string $guard, bool $force): void
+    /**
+     * @param  bool  $withRoutes  False when the PANEL declares `login()` itself.
+     */
+    private function scaffoldPanelAuth(string $id, string $path, string $guard, bool $force, bool $withRoutes = true): void
     {
-        $routes = base_path("routes/panel-{$id}-auth.php");
+        /*
+         * A GENERATED PANEL DECLARES `->login()` AND GETS NO ROUTES FILE, and
+         * writing both would be writing the same routes twice.
+         *
+         * TWO `{$id}.login` DEFINITIONS IS NOT A HARMLESS DUPLICATE. Laravel
+         * keeps the last registration under a name, so which one answers
+         * depends on load order between a package's `booted` callback and a
+         * globbed application file - and the file version registers no
+         * `UsePanel` and no `SharePanelProps`, so the portal's sign-in loses
+         * its panel context entirely: no brand, no colours, no per-panel copy.
+         * A generated portal's login screen came out unbranded for exactly
+         * that reason, beside a superadmin one that was branded correctly.
+         *
+         * `panel:install --auth` STILL WRITES THE FILE, because it scaffolds
+         * sign-in for a panel that may have no generated provider to hold a
+         * `->login()` call - and because a visible, editable routes file is
+         * the right escape hatch for an installation that needs a sign-in the
+         * packaged controller does not do.
+         */
+        if ($withRoutes) {
+            $routes = base_path("routes/panel-{$id}-auth.php");
 
-        if (file_exists($routes) && ! $force) {
-            $this->components->warn("routes/panel-{$id}-auth.php already exists - left alone.");
-        } else {
-            $this->writeAuthFile($routes, $this->authRoutes($id, $path, $guard));
+            if (file_exists($routes) && ! $force) {
+                $this->components->warn("routes/panel-{$id}-auth.php already exists - left alone.");
+            } else {
+                $this->writeAuthFile($routes, $this->authRoutes($id, $path, $guard));
+            }
         }
 
         /*
@@ -66,24 +90,36 @@ trait ScaffoldsPanelAuth
         $skipped = [];
 
         foreach (['Login', 'ForgotPassword', 'ResetPassword'] as $screen) {
-            $file = resource_path("js/pages/auth/{$screen}.vue");
+            /*
+             * `panel/auth/`, NOT `auth/`, AND THE OLD PATH WAS THE BUG.
+             *
+             * THIS USED TO WRITE `resources/js/pages/auth/{$screen}.vue` and
+             * skip it when the file already existed - which is the common case,
+             * because that is exactly where Breeze and Jetstream put theirs.
+             * The generator reported the skip and everybody read it as
+             * harmless. It was not: the portal then RENDERED the starter kit's
+             * screen, a component written for the APPLICATION's controller with
+             * a different prop contract. The packaged controller sends
+             * `socialProviders` as a list of objects where a starter kit's
+             * screen expects a map, so the button rendered with raw JSON in it,
+             * and the heading the panel configured was dropped. Nothing
+             * errored, because a page that renders is a page that looks like it
+             * works.
+             *
+             * Under a name no application owns there is nothing to collide
+             * with, so a generated portal gets the packaged screen that matches
+             * the packaged controller - on a host that already has its own
+             * sign-in, which is the case this feature exists for.
+             */
+            $file = resource_path("js/pages/panel/auth/{$screen}.vue");
 
             /*
-             * AN EXISTING SCREEN IS LEFT ALONE AND SAID OUT LOUD.
-             *
-             * `resources/js/pages/auth/Login.vue` is exactly where a starter
-             * kit puts its own, so this is the common case rather than an edge
-             * one - and overwriting it would replace an application's sign-in
-             * with the package's, which is the one thing this feature promises
-             * not to do.
-             *
-             * REPORTING IT IS THE OTHER HALF. Skipping quietly leaves somebody
-             * believing the generator wrote a file it did not, and the way they
-             * find out is a login screen that ignores every prop the packaged
-             * controller sends.
+             * AN EXISTING FILE IS STILL LEFT ALONE AND SAID OUT LOUD, because
+             * this is also where somebody's OWN override of the portal screen
+             * lives once they have written one - see `Panel::loginComponent()`.
              */
             if (file_exists($file)) {
-                $skipped[] = "resources/js/pages/auth/{$screen}.vue";
+                $skipped[] = "resources/js/pages/panel/auth/{$screen}.vue";
 
                 continue;
             }
@@ -242,7 +278,7 @@ PHP;
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import {$screen} from '@alxtexh-enterprise/panel/pages/auth/{$screen}.vue'
+import {$screen} from '@alxtexh-enterprise/panel/pages/panel/auth/{$screen}.vue'
 
 defineOptions({ inheritAttrs: false })
 </script>

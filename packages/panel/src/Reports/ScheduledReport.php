@@ -24,6 +24,35 @@ use Illuminate\Support\Carbon;
  * same tick, would otherwise send the same report twice - and a report arriving
  * twice teaches people to ignore it.
  */
+/**
+ * THE COLUMNS, SO STATIC ANALYSIS CAN SEE THEM - see `Alerts\Announcement` for
+ * why every model in this package is getting this block.
+ *
+ * `state` AND `recipients` ARE `array<...>`, NOT `array`, because a bare
+ * `array` trades one finding for another: `missingType.iterableValue` is the
+ * fourth-largest category in this package's baseline, and annotating a model
+ * without its value types is how that category grows while this one shrinks.
+ *
+ * NULLABILITY COPIED FROM THE MIGRATION - only `last_sent_at` and
+ * `last_result` are nullable, and a report that has never run is exactly the
+ * case those two exist for.
+ *
+ * @property int $id
+ * @property int $tenant_id
+ * @property int $user_id
+ * @property string $name
+ * @property string $resource
+ * @property array<string, mixed> $state
+ * @property string $frequency
+ * @property int $weekday
+ * @property int $day_of_month
+ * @property list<string> $recipients
+ * @property bool $is_active
+ * @property \Carbon\CarbonImmutable|null $last_sent_at
+ * @property string|null $last_result
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ */
 final class ScheduledReport extends Model
 {
     protected $table = 'panel_scheduled_reports';

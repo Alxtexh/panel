@@ -8,7 +8,9 @@ use App\Models\Client;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 /**
@@ -203,10 +205,10 @@ final class PanelSearchTest extends TestCase
         $expired = $this->client($this->tenant, 'Amina Otieno', 'HOOK2');
         $expired->forceFill(['status' => 'expired'])->save();
 
-        $result = \App\Panel\Resources\ClientResource::definition()
+        $result = ClientResource::definition()
             ->toListQuery(Client::class)
             ->modifyEloquent(static fn ($query) => $query->where('status', 'expired'))
-            ->run(\Illuminate\Http\Request::create('/', 'GET', ['search' => 'Amina']));
+            ->run(Request::create('/', 'GET', ['search' => 'Amina']));
 
         $names = array_column($result->records, 'name');
 
@@ -252,10 +254,10 @@ final class PanelSearchTest extends TestCase
     {
         $this->client($this->tenant, 'Amina Achieng', 'SPLIT1');
 
-        $whole = fn (bool $split) => \App\Panel\Resources\ClientResource::definition()
+        $whole = fn (bool $split) => ClientResource::definition()
             ->splitsSearchTerms($split)
             ->toListQuery(Client::class)
-            ->run(\Illuminate\Http\Request::create('/', 'GET', ['search' => 'Amina SPLIT1']));
+            ->run(Request::create('/', 'GET', ['search' => 'Amina SPLIT1']));
 
         // Split: the words may match different columns, so this finds them.
         $this->assertCount(1, $whole(true)->records);
@@ -285,10 +287,10 @@ final class PanelSearchTest extends TestCase
         $this->client($this->tenant, 'Amina Achieng', 'REL1');
         $this->client($this->tenant, 'Grace Wanjiru', 'REL2');
 
-        $query = fn (string $term) => \App\Panel\Resources\ClientResource::definition()
+        $query = fn (string $term) => ClientResource::definition()
             ->searchesRelation('plan', ['name'])
             ->toListQuery(Client::class)
-            ->run(\Illuminate\Http\Request::create('/', 'GET', ['search' => $term]));
+            ->run(Request::create('/', 'GET', ['search' => $term]));
 
         // By the plan's name alone - a column the clients table does not hold.
         $this->assertSame(

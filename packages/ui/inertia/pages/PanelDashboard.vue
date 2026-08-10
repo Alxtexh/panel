@@ -437,6 +437,32 @@ const comparison: Record<string, string> = {
  * a new installation opens on.
  */
 const hasAnything = computed(() => props.widgets.length > 0 || props.charts.length > 0)
+
+/**
+ * ADDITIONAL STRIPS THE PAGE DECLARED - `DashboardPage::strips()`.
+ *
+ * READ OFF PAGE PROPS rather than `defineProps`, because the key is absent
+ * entirely when a dashboard declares none - which is almost all of them, and
+ * the case that must stay byte-identical to before.
+ */
+const extraStrips = computed(
+    () =>
+        ((page.props as Record<string, any>).strips ?? []) as {
+            key: string
+            label?: string | null
+        }[],
+)
+
+/**
+ * THE RESOLVED SEGMENTS COME FROM PAGE PROPS, NOT THE `<Deferred>` SLOT.
+ *
+ * `<Deferred>` gates WHEN its slot renders; it does not hand the value in.
+ * Reading `slotProps[key]` looks right and renders an empty strip forever -
+ * the same trap already documented on the stats above.
+ */
+function stripSegments(key: string): StatSegment[] {
+    return ((page.props as Record<string, any>)[`strip_${key}`] ?? []) as StatSegment[]
+}
 </script>
 
 <template>
@@ -552,6 +578,38 @@ const hasAnything = computed(() => props.widgets.length > 0 || props.charts.leng
 
                 <template #default>
                     <StatStrip :segments="strip" />
+                </template>
+            </Deferred>
+        </PkBoundary>
+
+        <!--
+            ADDITIONAL STRIPS - `DashboardPage::strips()`.
+
+            THE SAME COMPONENT, RENDERED AGAIN. A second row of windows over
+            different figures is not a different kind of thing, so it is not a
+            different component - and per-segment `sensitive` keeps working
+            inside each because nothing here knows or cares about it.
+
+            ONE `PkBoundary` AND ONE `Deferred` EACH, so a strip that throws or
+            that is slow costs only its own row.
+
+            THE PLACEHOLDER IS GENERIC HERE. The first strip knows its four
+            window labels ahead of time; these are declared by the application,
+            so the loading state carries the row's shape without pretending to
+            know its wording.
+        -->
+        <PkBoundary
+            v-for="extra in extraStrips"
+            :key="extra.key"
+            :label="extra.label ?? 'A summary strip'"
+        >
+            <Deferred :data="`strip_${extra.key}`">
+                <template #fallback>
+                    <StatStrip :segments="STRIP_PLACEHOLDER" loading />
+                </template>
+
+                <template #default>
+                    <StatStrip :segments="stripSegments(extra.key)" />
                 </template>
             </Deferred>
         </PkBoundary>

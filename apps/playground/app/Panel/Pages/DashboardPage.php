@@ -282,6 +282,48 @@ final class DashboardPage extends PanelKitDashboard
      *
      * @return list<array{key: string, label: string, value: int, caption: string}>
      */
+    /**
+     * Sign-ups across the same four windows - the second strip's figures.
+     *
+     * COUNTED FROM `clients.created_at`, not from a rollup, because the
+     * subscriber table is the source of truth for when somebody joined and
+     * these four windows are cheap index scans on a single column.
+     *
+     * THE SAME `sensitive` SPLIT as the session strip: the two glanceable
+     * windows stay legible and the two rolling ones are covered. Consistency
+     * matters more than the individual choice here - a reader who learns that
+     * dots mean "click me" on one row should not have to relearn it on the
+     * next.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function signupStrip(string $tenantKey, DateTimeImmutable $now, DashboardFilters $filters): array
+    {
+        $startOfToday = $now->setTime(0, 0);
+
+        $windows = [
+            ['key' => 'today', 'label' => 'Today', 'from' => $startOfToday, 'caption' => 'so far', 'sensitive' => true],
+            ['key' => 'week', 'label' => 'Last 7 days', 'from' => $startOfToday->modify('-6 days'), 'caption' => 'rolling window', 'sensitive' => true],
+            ['key' => 'month', 'label' => 'This month', 'from' => $startOfToday->modify('first day of this month'), 'caption' => 'since the 1st', 'sensitive' => true],
+            ['key' => 'quarter', 'label' => 'Last 90 days', 'from' => $startOfToday->modify('-89 days'), 'caption' => 'rolling window', 'sensitive' => true],
+        ];
+
+        $out = [];
+
+        foreach ($windows as $window) {
+            $out[] = [
+                'key' => $window['key'],
+                'label' => $window['label'],
+                'value' => Client::query()->where('created_at', '>=', $window['from'])->count(),
+                'caption' => $window['caption'],
+                'sensitive' => $window['sensitive'],
+            ];
+        }
+
+        return $out;
+    }
+
+    /** @return list<array<string, mixed>> */
     private static function sessionStrip(string $tenantKey, DateTimeImmutable $now, DashboardFilters $filters): array
     {
         $series = self::sessionSeries($filters);
@@ -290,10 +332,28 @@ final class DashboardPage extends PanelKitDashboard
         $today = (int) $series->totalBetween($startOfToday, $startOfToday->modify('+1 day'));
 
         $windows = [
-            ['key' => 'today', 'label' => 'Today', 'from' => $startOfToday, 'caption' => 'so far'],
-            ['key' => 'week', 'label' => 'Last 7 days', 'from' => $startOfToday->modify('-6 days'), 'caption' => 'rolling window'],
-            ['key' => 'month', 'label' => 'This month', 'from' => $startOfToday->modify('first day of this month'), 'caption' => 'since the 1st'],
-            ['key' => 'quarter', 'label' => 'Last 90 days', 'from' => $startOfToday->modify('-89 days'), 'caption' => 'rolling window'],
+            /*
+             * `sensitive` DECIDES WHICH FIGURES THE EYE COVERS, PER SEGMENT.
+             *
+             * IT USED TO COVER ALL FOUR, because `sensitive` defaults to true
+             * and nothing here set it - so the strip was all-or-nothing and the
+             * per-segment control the component was built for had no consumer.
+             * A strip where everything is dots is one nobody reads; the point
+             * of covering a figure is that the ones beside it are still legible.
+             *
+             * THIS STRIP COVERS ALL FOUR; THE ONE BELOW IT COVERS TWO OF
+             * FOUR - deliberately, because those are the two shapes this
+             * control has and the reference app should demonstrate both rather
+             * than the same one twice. Session counts are the figures somebody
+             * screen-shares by accident, so covering the row wholesale and
+             * lifting it with a single click on the eye is the right gesture
+             * here. Sign-ups below are read one at a time, so there the two
+             * glanceable windows stay legible.
+             */
+            ['key' => 'today', 'label' => 'Today', 'from' => $startOfToday, 'caption' => 'so far', 'sensitive' => false],
+            ['key' => 'week', 'label' => 'Last 7 days', 'from' => $startOfToday->modify('-6 days'), 'caption' => 'rolling window', 'sensitive' => true],
+            ['key' => 'month', 'label' => 'This month', 'from' => $startOfToday->modify('first day of this month'), 'caption' => 'since the 1st', 'sensitive' => false],
+            ['key' => 'quarter', 'label' => 'Last 90 days', 'from' => $startOfToday->modify('-89 days'), 'caption' => 'rolling window', 'sensitive' => true],
         ];
 
         $rollup = $filters->selected('routers') !== [] ? null : new Rollup('sessions.started');
@@ -315,6 +375,7 @@ final class DashboardPage extends PanelKitDashboard
                 // buckets start yesterday.
                 'value' => $window['key'] === 'today' ? $today : $value,
                 'caption' => $window['caption'],
+                'sensitive' => $window['sensitive'],
             ];
         }
 
@@ -800,5 +861,33 @@ final class DashboardPage extends PanelKitDashboard
     public static function stripAbility(): ?string
     {
         return self::NETWORK;
+    }
+
+    /**
+     * A SECOND STRIP, over subscribers rather than sessions.
+     *
+     * BOTH FORMS ARE EXERCISED HERE ON PURPOSE. `strip()` above is the single
+     * row almost every dashboard wants; this is the other shape - a second set
+     * of windows over DIFFERENT figures, which is two rows of four rather than
+     * one row of eight. A capability with no consumer in the reference app is
+     * one nobody has looked at, and this project has paid for that repeatedly.
+     *
+     * ITS OWN ABILITY, WHICH IS MOST OF THE POINT. Sessions are network data
+     * and sign-ups are commercial: the support rota sees one and the finance
+     * desk the other, and that is exactly the cut a second strip exists to
+     * make. A wider single row could not.
+     *
+     * `sensitive` COMPOSES INSIDE IT - the two halves are which figures belong
+     * together and which of them are covered.
+     */
+    public static function strips(): array
+    {
+        return [
+            'signups' => [
+                'label' => 'New subscribers',
+                'ability' => self::COMMERCIAL,
+                'resolve' => static fn (DashboardFilters $filters, DateTimeImmutable $now, string $tenantKey): array => self::signupStrip($tenantKey, $now, $filters),
+            ],
+        ];
     }
 }

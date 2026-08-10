@@ -52,17 +52,13 @@ Panels registered in this application:
 - `admin` — mounted at `/`, guard `web`, tenant context
 - `platform` — mounted at `/platform`, guard `web`, central context
 - `reseller` — mounted at `/reseller`, guard `web`, tenant context
-- `superadmin` — mounted at `/superadmin`, guard `web`, central context
+- `superadmin` — mounted at `/superadmin`, guard `superadmins`, central context
 - `client` — mounted at `/client`, guard `customers`, tenant context
 - `authfixture` — mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
 
 - `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Resources` → `App\Panel\Resources`
-- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Platform/Resources` → `App\Panel\Platform\Resources`
-- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Reseller/Resources` → `App\Panel\Reseller\Resources`
-- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Superadmin/Resources` → `App\Panel\Superadmin\Resources`
-- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Client/Resources` → `App\Panel\Client\Resources`
 
 A resource belongs to exactly one panel — its key is a URL segment and an
 ability name, both globally unique. A second portal needing the same screen
@@ -634,7 +630,7 @@ _How to use them: name them in `table()`._
 _How to use them: name them in `table()` or the resource's actions._
 **Schema (form layout)** (11): `Callout` `Component` `Fieldset` `Flex` `Grid` `Renderable` `Section` `Step` `Tab` `Tabs` `Wizard`
 _How to use them: wrap fields with them inside `form()`._
-**Dashboard widgets** (9): `Bucket` `ChartWidget` `DashboardFilters` `Period` `Rollup` `StatWidget` `TimeSeries` `Trend` `Window`
+**Dashboard widgets** (10): `Bucket` `ChartWidget` `DashboardFilters` `Period` `Rollup` `StatWidget` `TimeSeries` `Trend` `WidgetSet` `Window`
 _How to use them: **declare them on a `DashboardPage`, which is what draws them.** `php artisan make:panel-page Overview --dashboard` writes one; its `stats()` and `charts()` return these classes and the packaged `PanelDashboard` screen renders them, each as its own deferred prop. A widget built anywhere else is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 that was true of every widget, which is why this line exists._
 **Pages (screens that are not resources)** (8): `ChangelogPage` `DashboardPage` `EnvironmentPage` `OrganisationPage` `Page` `SitemapPage` `UserManagementPage` `Workspace`
 _How to use them: extend `Page` (or `DashboardPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._

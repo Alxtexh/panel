@@ -537,7 +537,10 @@ final class PanelManager
      * working screen with no hand editing: without it, every generated class
      * would still need a manual registration line.
      */
-    public function discoverResources(string $directory, string $namespace): void
+    /**
+     * @param  string|null  $panelId  The portal that OWNS this directory, if any.
+     */
+    public function discoverResources(string $directory, string $namespace, ?string $panelId = null): void
     {
         if (! is_dir($directory)) {
             return;
@@ -563,7 +566,7 @@ final class PanelManager
             $classes[] = $class;
         }
 
-        $this->registerResources($classes);
+        $this->registerResources($classes, $panelId);
     }
 
     /**
@@ -873,6 +876,13 @@ final class PanelManager
              */
             $this->registerPages(self::PACKAGE_PAGES);
 
+            /* A portal's own screens, as `Panel::discoverPages()` declared them. */
+            foreach (self::$panels as $panel) {
+                foreach ($panel->getPageDirectories() as $directory => $namespace) {
+                    $this->discoverPages($directory, $namespace);
+                }
+            }
+
             foreach ((array) config('panel.discover_pages', []) as $directory => $namespace) {
                 $this->discoverPages($directory, $namespace);
             }
@@ -987,6 +997,31 @@ final class PanelManager
 
             foreach ((array) config('panel.discover', []) as $directory => $namespace) {
                 $this->discoverResources($directory, $namespace);
+            }
+
+            /*
+             * A PORTAL'S OWN DIRECTORIES, so ownership follows the folder
+             * rather than the class property - see
+             * `Panel::discoverResources()`. The two passes coexist because
+             * only this one records an OWNER; the global pass records none and
+             * leaves that decision alone, so a directory in both lists still
+             * belongs to the panel that claimed it.
+             *
+             * AFTER THE GLOBAL LIST, NOT BEFORE, AND REGISTRATION ORDER IS
+             * LOAD-BEARING. `Abilities::forModel()` resolves a model to the
+             * FIRST registered resource that owns it, so the order decides
+             * which ability name a shared-model policy checks. Running these
+             * first moved `Plan` from `editable-plans` to the client portal's
+             * resource and turned an authorised screen into a 403 - see
+             * `ClusterTest`, which documents the dependency and is what
+             * caught it. Panel directories used to be appended to
+             * `panel.discover` by their providers, which put them last; they
+             * stay last.
+             */
+            foreach (self::$panels as $panel) {
+                foreach ($panel->getResourceDirectories() as $directory => $namespace) {
+                    $this->discoverResources($directory, $namespace, $panel->id);
+                }
             }
         }
 

@@ -67,7 +67,19 @@ final class AdminPanelProvider extends ServiceProvider
                  * reach every resource screen while the rest of the panel still
                  * refused it.
                  */
-                ->authMiddleware(['auth', 'verified'])
+                /*
+                 * `auth:web`, NOT BARE `auth`, and the two are identical here
+                 * only by coincidence.
+                 *
+                 * Bare `auth` gates on THE DEFAULT GUARD, which happens to be
+                 * this panel's - so the difference is invisible on this portal
+                 * and fatal on any other. It is spelled out because
+                 * `PanelSeparationConformanceTest` asserts every panel gates on
+                 * the guard it declares, and an exception carved out for the
+                 * one panel where the mistake is harmless is an exception that
+                 * teaches the pattern.
+                 */
+                ->authMiddleware(['auth:web', 'verified'])
                 /*
                  * THIS APPLICATION MOUNTS THE OPERATIONS SCREENS ITSELF.
                  *

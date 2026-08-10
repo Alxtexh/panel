@@ -30,6 +30,17 @@ const props = withDefaults(
          * called something ("Back to dashboard") should say that instead.
          */
         homeLabel?: string
+        /**
+         * COPY THIS PORTAL CHOSE FOR THIS STATUS - `Panel::registerErrorNotification()`.
+         *
+         * The packaged wording below is a sensible default for every
+         * installation and the right words for none in particular. 419 is the
+         * case that needed it: "Page expired" describes a CSRF token, and this
+         * panel now ends sessions at an absolute ceiling on purpose, so an
+         * operator mid-form meets that screen deliberately.
+         */
+        title?: string | null
+        body?: string | null
     }>(),
     { homeHref: '/', loginHref: '/login', homeLabel: 'Back to the panel' },
 )
@@ -61,13 +72,27 @@ const COPY: Record<number, { title: string; message: string; canGoBack?: boolean
     },
 }
 
-const copy = computed(
-    () =>
-        COPY[props.status] ?? {
-            title: 'Something went wrong',
-            message: 'The page could not be shown. Trying again is usually enough.',
-        },
-)
+/**
+ * THE PORTAL'S OWN WORDS WIN, then the packaged pair for this status, then the
+ * generic one.
+ *
+ * A TITLE WITHOUT A BODY KEEPS THE PACKAGED MESSAGE, rather than blanking it -
+ * an installation renaming a heading has not thereby asked for the explanation
+ * underneath it to disappear, and a bare heading on an error screen is the
+ * least helpful thing on it.
+ */
+const copy = computed(() => {
+    const packaged = COPY[props.status] ?? {
+        title: 'Something went wrong',
+        message: 'The page could not be shown. Trying again is usually enough.',
+    }
+
+    return {
+        ...packaged,
+        title: props.title ?? packaged.title,
+        message: props.body ?? packaged.message,
+    }
+})
 </script>
 
 <template>

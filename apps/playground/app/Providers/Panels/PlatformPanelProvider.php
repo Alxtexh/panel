@@ -58,20 +58,21 @@ final class PlatformPanelProvider extends ServiceProvider
                  * one - protected by an ability nobody in this portal holds,
                  * but a route that exists is a route somebody can probe.
                  */
-                ->without(['operations', 'assistant-settings']),
-        );
+                ->without(['operations', 'assistant-settings'])
 
-        /*
-         * DISCOVERY IS DECLARED HERE, beside the panel it belongs to, rather
-         * than in a shared config list. A panel whose resource directory is not
-         * discovered has no resources, no routes and an empty menu - and nothing
-         * fails, which is the worst way for a configuration step to be missed.
-         */
-        config([
-            'panel.discover' => [
-                ...(array) config('panel.discover', []),
-                app_path('Panel/Platform/Resources') => 'App\\Panel\\Platform\\Resources',
-            ],
-        ]);
+                /*
+                 * DISCOVERY BELONGS TO THE PANEL, not to a shared config list.
+                 * It used to append to `panel.discover`, which every portal
+                 * reads - so adding a portal meant editing global state, and
+                 * which portal a resource landed in came from a property on
+                 * the CLASS rather than from the panel that claims it. A
+                 * portal that cannot state what it contains is not a separate
+                 * portal.
+                 */
+                ->discoverResources(
+                    in: app_path('Panel/Platform/Resources'),
+                    for: 'App\Panel\Platform\Resources',
+                ),
+        );
     }
 }

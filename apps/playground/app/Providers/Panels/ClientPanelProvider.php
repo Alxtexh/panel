@@ -45,20 +45,61 @@ final class ClientPanelProvider extends ServiceProvider
                 ->context(Panel::CONTEXT_TENANT)
                 ->middleware(['web'])
                 ->authMiddleware(['auth:customers'])
-                ->brandName(fn (): string => config('app.name').' — Client'),
-        );
 
-        /*
-         * DISCOVERY IS DECLARED HERE, beside the panel it belongs to, rather
-         * than in a shared config list. A panel whose resource directory is not
-         * discovered has no resources, no routes and an empty menu - and nothing
-         * fails, which is the worst way for a configuration step to be missed.
-         */
-        config([
-            'panel.discover' => [
-                ...(array) config('panel.discover', []),
-                app_path('Panel/Client/Resources') => 'App\\Panel\\Client\\Resources',
-            ],
-        ]);
+                /*
+                 * ITS OWN SIGN-IN, mounted at `/client/login`. The routes used
+                 * to come from a generated `routes/panel-client-auth.php`; the
+                 * panel declares them now, and the generated file remains
+                 * supported for a portal that needs a sign-in the packaged
+                 * controller does not do.
+                 */
+                ->login()
+
+                /*
+                 * ITS OWN BROKER, AND IT WAS WRONG BEFORE. `panel.auth.broker`
+                 * is `users` - the OPERATOR provider - so a customer asking
+                 * this portal for a reset had their address looked up among
+                 * operators, and an address held by both would have mailed a
+                 * working reset link for the operator account. See
+                 * `Panel::passwordBroker()`.
+                 */
+                ->passwordBroker('customers')
+
+                /*
+                 * WHAT A CUSTOMER PORTAL MUST NOT MOUNT.
+                 *
+                 * THESE WERE ALL REACHABLE AND NOBODY KNEW, which is worth
+                 * spelling out. The guest redirect was broken (see
+                 * `PanelServiceProvider::redirectGuestsToTheirPanel`), so the
+                 * screen crawler could never sign in to this portal and every
+                 * one of these went uncrawled. The moment it could, it found
+                 * BACKUPS, LOGS and MONITORING mounted on the portal for the
+                 * people who BUY the service - a customer one URL away from
+                 * the installation's log output.
+                 *
+                 * Two bugs hid each other: a portal that offered too much, and
+                 * a test that could not reach it to say so.
+                 */
+                ->without([
+                    'operations',
+                    'assistant-settings',
+                    'trash',
+                    'documents',
+                ])
+
+                ->brandName(fn (): string => config('app.name').' — Client')
+
+                /*
+                 * DISCOVERY BELONGS TO THE PANEL, not to a shared config list.
+                 * It used to append to `panel.discover`, which every portal
+                 * reads - so adding a portal meant editing global state and a
+                 * resource's home came from a property on the class rather
+                 * than from the panel claiming it.
+                 */
+                ->discoverResources(
+                    in: app_path('Panel/Client/Resources'),
+                    for: 'App\\Panel\\Client\\Resources',
+                ),
+        );
     }
 }

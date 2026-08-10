@@ -6,6 +6,7 @@ namespace PanelKit\Panel;
 
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Middleware\Authenticate;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
@@ -317,6 +318,40 @@ final class PanelServiceProvider extends ServiceProvider
      * does not match.
      */
     private function redirectGuestsToTheirPanel(): void
+    {
+        /*
+         * REGISTERED FROM `afterResolving(HttpKernel)`, NOT FROM `boot()`, AND
+         * THAT IS THE WHOLE REASON THIS EVER WORKED.
+         *
+         * IT DID NOT WORK. For every release that shipped it, this method set
+         * the callback during `boot()` and the framework then set its own on
+         * top: `ApplicationBuilder::withMiddleware()` registers
+         * `redirectGuestsTo(fn () => route('login'))` inside
+         * `afterResolving(HttpKernel::class)`, which fires when the kernel is
+         * resolved to handle a request - after every provider has booted. Last
+         * write wins, and it was never ours.
+         *
+         * SO EVERY PORTAL SHARED THE APPLICATION'S FRONT DOOR. `/client` and
+         * `/superadmin` both sent a guest to `//login` with the panel's own
+         * sign-in route registered, named and reachable - the redirect simply
+         * never consulted it. Nothing errored, the form rendered, and it
+         * authenticated against the wrong guard; the only visible symptom was
+         * two portals that looked like one.
+         *
+         * The tests in `SuperadminPanelIsolationTest` assert the redirect
+         * TARGET rather than merely that a redirect happened, because the
+         * weaker assertion is what let this sit unnoticed.
+         */
+        $this->app->afterResolving(HttpKernel::class, static function (): void {
+            self::redirectUsingThePanel();
+        });
+
+        // And once now, for the console and for tests that never resolve an
+        // HTTP kernel.
+        self::redirectUsingThePanel();
+    }
+
+    private static function redirectUsingThePanel(): void
     {
         Authenticate::redirectUsing(static function ($request): ?string {
             $routes = Route::getRoutes();

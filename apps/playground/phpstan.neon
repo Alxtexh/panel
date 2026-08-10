@@ -2,6 +2,37 @@ includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/nesbot/carbon/extension.neon
 
+    # THE ERRORS THAT WERE ALREADY HERE, RECORDED SO NEW ONES ARE VISIBLE.
+    #
+    # WHY A BASELINE RATHER THAN A CLEAN TREE. There were 249 findings across
+    # this application before it existed, almost all of them in code nobody was
+    # editing - untyped iterables in demo seeders, `Stringable` return types on
+    # AI tools. With that many, `phpstan` reported a number instead of a result,
+    # and NOBODY COULD TELL WHETHER A CHANGE HAD ADDED ONE. A gate that cannot
+    # distinguish a regression from the status quo is not a gate.
+    #
+    # THE BASELINE IS A DEBT REGISTER, NOT AN EXEMPTION. Every entry is a real
+    # finding somebody should eventually fix, and the file shrinking is the
+    # measure of that. What it buys today is that the NEXT error is the only
+    # one on screen.
+    #
+    # DELETING AN ENTRY IS HOW YOU FIX ONE - remove the block, fix the code,
+    # and the analyser tells you whether you did.
+    - phpstan-baseline.neon
+
+    # THE PACKAGE'S DEBT, KEPT IN ITS OWN FILE.
+    #
+    # SEPARATE FROM THE APPLICATION'S ON PURPOSE. These are two different debts
+    # with two different owners: the reference app's findings are in demo code
+    # that ships to nobody, and these are in the library that lands in every
+    # installation. One combined file would let the important 436 hide among
+    # the unimportant 214, and "the baseline shrank" would stop meaning
+    # anything.
+    #
+    # THIS IS THE ONE TO PAY DOWN FIRST. A type error here reaches a customer's
+    # project; a type error in a seeder does not.
+    - phpstan-baseline-package.neon
+
 parameters:
     paths:
         - app/
@@ -9,5 +40,24 @@ parameters:
         - config/
         - database/
         - routes/
+
+        # THE PACKAGE, WHICH IS THE THING THAT ACTUALLY SHIPS.
+        #
+        # IT WAS NOT ANALYSED BY ANY GATE. This file scanned the reference
+        # application and nothing under `packages/`, which is backwards from
+        # where the risk is: the playground is a demo somebody reads, and
+        # `packages/panel` is what lands in a customer's project. A type error
+        # here reached every installation with nothing checking it.
+        #
+        # ANALYSED FROM HERE RATHER THAN FROM ITS OWN CONFIG, because the
+        # package has no `vendor/` of its own - it is consumed through a path
+        # repository, so this application's autoloader and its larastan
+        # extension are what can actually resolve Laravel's types. A second
+        # phpstan installation inside the package would analyse it without
+        # Laravel and report noise.
+        #
+        # THE REAL PATH, not the `vendor/` symlink, so findings are reported
+        # against the files somebody edits.
+        - ../../packages/panel/src/
 
     level: 7

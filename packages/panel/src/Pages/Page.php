@@ -42,6 +42,27 @@ use Illuminate\Http\Request;
 abstract class Page
 {
     /**
+     * WIDGETS ACROSS THE TOP OF THIS PAGE.
+     *
+     * THE THIRD AND LAST HOST, which is what turns a dashboard feature into a
+     * widget system. `Panel::widgets()` made them registerable and
+     * `DashboardPage` was the only screen that resolved them, so putting a
+     * stat card on a custom page meant reimplementing the resolution - and
+     * reimplementing it is how the permission check or the deferred grouping
+     * ends up subtly different on one screen.
+     *
+     * `WidgetSet` owns both rules for every host: a widget the viewer may not
+     * see is never sent and never queried, and the whole row is ONE deferred
+     * request rather than one per card.
+     *
+     * @return list<\PanelKit\Panel\Widgets\StatWidget|\PanelKit\Panel\Widgets\ChartWidget>
+     */
+    public static function headerWidgets(): array
+    {
+        return [];
+    }
+
+    /**
      * Lucide icon name for the navigation entry.
      *
      * A NAME, NEVER A CLASS. The client decides what an icon looks like; a page

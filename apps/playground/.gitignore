@@ -1,7 +1,6 @@
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
-/public/build
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
@@ -10,7 +9,6 @@
 /resources/js/actions
 /resources/js/routes
 /resources/js/wayfinder
-/vendor
 .DS_Store
 .env
 .env.backup
@@ -29,3 +27,9 @@ yarn-error.log
 /.zed
 public/sitemap.xml
 public/sitemap-*.xml
+
+# `vendor/` AND `public/build/` ARE COMMITTED - see the root `.gitignore` for
+# the reasoning and the costs. They are absent from this file rather than
+# negated with `!`, because a `!` rule cannot re-include a path whose PARENT
+# directory is excluded, and reading two files to work out whether one
+# directory ships is how somebody eventually commits a `.env`.

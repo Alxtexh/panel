@@ -34,7 +34,39 @@ actions.
 
 ---
 
-## Running it
+## Starting a new dashboard from this
+
+This repository **is** the product. `vendor/` and `public/build/` are committed,
+so a clone runs without `composer install` and without building assets:
+
+```bash
+git clone <this-repo> myapp && cd myapp/apps/playground
+```
+```bash
+cp .env.example .env && php artisan key:generate
+```
+```bash
+php artisan migrate --seed && php artisan panel:permissions sync
+```
+
+Then `php artisan serve` and `http://localhost:8000`.
+
+**`panel:permissions sync` is not optional.** The panel denies by default, so an
+installation with an empty permissions table shows a working sign-in and then an
+empty sidebar, an empty account menu and no widgets - everything correct and
+everything hidden. That reads as a broken install and is not one.
+
+There is **no `composer require`** because there is nothing to require: the two
+packages are consumed by local path (`../../packages/panel` and
+`file:../../packages/ui`), so they resolve inside this tree and were never
+coming from a registry. Copying the repo copies the framework.
+
+**You only need the toolchain below to CHANGE things** - rebuild assets, add a
+dependency, run the tests. To run what is already here, you do not.
+
+---
+
+## Running it for development
 
 ```bash
 scripts/bootstrap-env.sh   # PHP 8.4, Composer, Node 22 - read it first

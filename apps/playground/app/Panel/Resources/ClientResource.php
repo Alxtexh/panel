@@ -39,6 +39,7 @@ use PanelKit\Panel\Tables\Filters\DateRangeFilter;
 use PanelKit\Panel\Tables\Filters\MultiSelectFilter;
 use PanelKit\Panel\Tables\Filters\SelectFilter;
 use PanelKit\Panel\Tables\Table;
+use PanelKit\Panel\Widgets\StatWidget;
 
 /**
  * PHASE 4 - the whole Clients screen. No Vue.
@@ -49,6 +50,40 @@ use PanelKit\Panel\Tables\Table;
  */
 final class ClientResource extends Resource
 {
+    /**
+     * TWO COUNTS ABOVE THE SUBSCRIBER LIST.
+     *
+     * THE WORKED EXAMPLE FOR `Resource::headerWidgets()`, and it exists partly
+     * to BE one: a feature with no consumer in the reference app is a feature
+     * nobody has looked at, which is the failure shape this codebase has paid
+     * for repeatedly. The row is also genuinely useful here - "how many are
+     * expired" is the first question anybody opening this screen asks, and the
+     * alternative was reading it off the dashboard and navigating back.
+     *
+     * THE COUNTS ARE SCOPED BY THE TENANT SCOPE, not by a `where` written here.
+     * `Client` carries it, so these are this organisation's subscribers exactly
+     * as the list below them is - and a count that disagreed with the list it
+     * sits above would be worse than no count.
+     *
+     * DEFERRED BY `WidgetSet`, so a COUNT over a quarter of a million rows does
+     * not sit in front of the ten on screen. Same rule as the dashboard, from
+     * the same place.
+     *
+     * @return list<StatWidget>
+     */
+    public static function headerWidgets(): array
+    {
+        return [
+            StatWidget::make('clients_active', 'Active')
+                ->description('Subscribers in good standing')
+                ->value(static fn (): int => Client::query()->where('status', 'active')->count()),
+
+            StatWidget::make('clients_expired', 'Expired')
+                ->description('Past their expiry date')
+                ->value(static fn (): int => Client::query()->where('status', 'expired')->count()),
+        ];
+    }
+
     protected static string $model = Client::class;
 
     protected static string $icon = 'users';

@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use PanelKit\Panel\PanelManager;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -35,7 +36,36 @@ final class UsePanel
         // file must not quietly serve the default panel - which, for a route
         // intended to be central, would mean tenant scoping switching itself on
         // and the super admin seeing one tenant's data with no error anywhere.
-        app(PanelManager::class)->usePanel($panel);
+        $panels = app(PanelManager::class);
+
+        $panels->usePanel($panel);
+
+        /*
+         * THE PANEL'S GUARD BECOMES THE REQUEST'S GUARD.
+         *
+         * WITHOUT THIS, A PANEL ON A SECOND GUARD IS AUTHENTICATED AND STILL A
+         * GUEST TO HALF THE FRAMEWORK. `auth:superadmins` puts somebody on the
+         * `superadmins` guard, but `Auth::user()`, `$request->user()` and -
+         * critically - the `Gate`'s user resolver all read the DEFAULT guard,
+         * which is `web`. So the request passed authentication and then every
+         * implicit `Gate::authorize()` asked about nobody and denied: a screen
+         * that lists rows perfectly and answers 403 to the button beside them,
+         * with correct permissions and no error to read.
+         *
+         * `shouldUse` sets the default guard NAME for this request only. It
+         * touches no session and resolves no user, so it is safe this early -
+         * and it must be this early, because the first thing that asks is
+         * `auth` itself.
+         *
+         * Filament does the same thing for the same reason; a portal that
+         * declares a guard and then leaves the framework pointed at another
+         * one has declared nothing.
+         */
+        $guard = $panels->panel($panel)?->getGuard();
+
+        if ($guard !== null) {
+            Auth::shouldUse($guard);
+        }
 
         return $next($request);
     }

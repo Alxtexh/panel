@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\SuperadminUser;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,12 +36,36 @@ final class SuperadminPanelTest extends TestCase
         $this->rival = Tenant::create(['name' => 'Rival', 'slug' => 'rival']);
     }
 
-    /** @param list<string> $abilities */
-    private function operator(array $abilities): User
+    /**
+     * A SUPERADMIN, NOT AN OPERATOR, AND THAT CHANGED PART-WAY THROUGH.
+     *
+     * These tests used to sign in a `User` on `web` with abilities granted
+     * through Spatie, because the portal ran on the operator guard and had no
+     * front door of its own - which was the defect
+     * `SuperadminPanelIsolationTest` now exists to prevent. The portal
+     * authenticates its own table now, so the fixture had to move with it.
+     *
+     * THE ABILITY ARGUMENT SURVIVED THE MOVE ON PURPOSE. A superadmin whose
+     * `hasPermission()` was blanket-true would make every `assertForbidden`
+     * below unwritable, and the two tests that assert refusal are the ones
+     * that prove the policies are wired at all.
+     *
+     * @param  list<string>  $abilities
+     */
+    private function superadmin(array $abilities): SuperadminUser
     {
-        return User::factory()
-            ->withAbilities($abilities)
-            ->create(['tenant_id' => $this->acme->id, 'email_verified_at' => now()]);
+        return SuperadminUser::create([
+            'name' => 'Root',
+            'email' => 'root'.SuperadminUser::query()->count().'@panel.test',
+            'password' => 'password',
+            'abilities' => $abilities,
+        ]);
+    }
+
+    /** Signed in on the portal's own guard - see `superadmin()`. */
+    private function actingAsSuperadmin(array $abilities): self
+    {
+        return $this->actingAs($this->superadmin($abilities), 'superadmins');
     }
 
     public function test_tickets_from_two_tenants_appear_in_one_list(): void
@@ -58,7 +83,7 @@ final class SuperadminPanelTest extends TestCase
             ]));
         }
 
-        $records = $this->actingAs($this->operator(['view_any_all_tickets']))
+        $records = $this->actingAsSuperadmin(['view_any_all_tickets'])
             ->get('/superadmin/all-tickets')->assertOk()
             ->viewData('page')['props']['records'];
 
@@ -74,20 +99,20 @@ final class SuperadminPanelTest extends TestCase
 
     public function test_the_list_is_refused_without_the_ability(): void
     {
-        $this->actingAs($this->operator([]))
+        $this->actingAsSuperadmin([])
             ->get('/superadmin/all-tickets')
             ->assertForbidden();
     }
 
     public function test_content_is_created_through_the_portal_and_renders_on_faq(): void
     {
-        $editor = $this->operator([
+        $editor = $this->superadmin([
             'view_any_content_entries',
             'view_content_entries',
             'create_content_entries',
         ]);
 
-        $this->actingAs($editor)->post('/superadmin/content-entries', [
+        $this->actingAs($editor, 'superadmins')->post('/superadmin/content-entries', [
             'kind' => ContentEntry::KIND_FAQ,
             'category' => 'Superadmin',
             'title' => 'Written from the portal?',
@@ -98,9 +123,26 @@ final class SuperadminPanelTest extends TestCase
 
         $this->assertDatabaseHas('panel_content_entries', ['title' => 'Written from the portal?']);
 
-        // And the row a superadmin wrote is what a TENANT portal reads - the
-        // full loop, not just the insert.
-        $groups = $this->actingAs($editor)->get('/faq')->assertOk()
+        /*
+         * And the row a superadmin wrote is what a TENANT portal reads - the
+         * full loop, not just the insert.
+         *
+         * READ BY AN OPERATOR, WHICH IS NOW THE ONLY WAY TO READ IT. The
+         * superadmin who wrote the row cannot open `/faq` at all: that screen
+         * belongs to a panel on the `web` guard, and this account holds no
+         * session there. Two accounts is what makes this the full loop rather
+         * than one session talking to itself.
+         */
+        $reader = User::factory()
+            ->create(['tenant_id' => $this->acme->id, 'email_verified_at' => now()]);
+
+        /*
+         * `'web'` NAMED EXPLICITLY. `actingAs` sets the DEFAULT guard as a
+         * side effect, so the superadmin sign-in above left it pointing at
+         * `superadmins` - and this operator, handed to that guard, is nobody.
+         * A test with two guards has to say which one it means every time.
+         */
+        $groups = $this->actingAs($reader, 'web')->get('/faq')->assertOk()
             ->viewData('page')['props']['groups'];
 
         $this->assertNotNull(collect($groups)->firstWhere('title', 'Superadmin'));
@@ -125,12 +167,12 @@ final class SuperadminPanelTest extends TestCase
             'body' => 'It must.',
         ]);
 
-        $records = $this->actingAs($this->operator([
+        $records = $this->actingAsSuperadmin([
             'view_any_content_entries',
             'view_content_entries',
             'update_content_entries',
             'delete_content_entries',
-        ]))->get('/superadmin/content-entries')->assertOk()
+        ])->get('/superadmin/content-entries')->assertOk()
             ->viewData('page')['props']['records'];
 
         $this->assertSame(['Does the list render?'], array_column($records, 'title'));
@@ -138,7 +180,7 @@ final class SuperadminPanelTest extends TestCase
 
     public function test_editing_content_is_refused_without_the_ability(): void
     {
-        $this->actingAs($this->operator([]))
+        $this->actingAsSuperadmin([])
             ->post('/superadmin/content-entries', [
                 'kind' => ContentEntry::KIND_FAQ,
                 'title' => 'Should never exist',

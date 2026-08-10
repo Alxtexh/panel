@@ -360,7 +360,71 @@ return [
     |   Minutes. Short, because these are credentials sitting in an inbox.
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Bulk actions
+    |--------------------------------------------------------------------------
+    |
+    | HOW MANY EXPLICITLY-SELECTED ROWS STILL RUN INSIDE THE WEB REQUEST.
+    |
+    | A bulk action over a set the operator ticked on screen is bounded, and
+    | bounded is not the same as small. Past this many rows the selection is
+    | handed to a worker with a progress token instead of holding a request
+    | open until the web server's timeout kills it halfway - which leaves a
+    | partial write and a 504 that says nothing about how far it got.
+    |
+    | DELIBERATELY BELOW the thousand-row cap on what a client may send, so
+    | the queued path is reachable from an ordinary selection rather than only
+    | from "select all matching". A threshold nobody crosses is a threshold
+    | nobody has tested.
+    |
+    | An individual action may override it - `BulkAction::queueThreshold()` -
+    | and anything doing per-row network work should.
+    |
+    */
+
+    'bulk' => [
+        'queue_threshold' => (int) env('PANEL_BULK_QUEUE_THRESHOLD', 250),
+    ],
+
     'auth' => [
+
+        /*
+        | Per-portal sign-in copy, read by `PanelAuthController::showLogin`.
+        |
+        | THE SUPERADMIN FORM SAYS WHICH BUILDING YOU ARE IN. Two sign-in
+        | screens that read the same are two screens somebody types the wrong
+        | password into - and the one being confused here is the door to every
+        | tenant's data.
+        */
+        'superadmin' => [
+            'heading' => 'Superadmin',
+            'description' => 'This portal administers the installation itself. Tenant operators sign in at the main panel.',
+
+            /*
+            | The seeded superadmin, filled in ready to submit.
+            |
+            | SAME SWITCH AS THE DEMO'S OWN LOGIN, deliberately - one setting
+            | for "this machine is a demo", not one per portal that somebody
+            | turns on for the operator panel and forgets here.
+            |
+            | TWO INDEPENDENT LOCKS, AND NEITHER IS THIS FILE. `DemoLogin`
+            | checks `App::environment('local')` in CODE, and
+            | `PanelAuthController` checks it again before sending the prop -
+            | so no value written here can fill in a password anywhere that
+            | matters. That belt-and-braces exists because this is a password
+            | in a config file, and the account it belongs to can rewrite the
+            | content every tenant reads.
+            |
+            | IT NEVER INVENTS AN ACCOUNT. If `panel:seed-reference` has not
+            | run, this address does not exist and the form fails the way it
+            | should.
+            */
+            'prefill' => env('DEMO_PREFILL_LOGIN', false) && env('APP_ENV') === 'local'
+                ? ['email' => 'superadmin@panel.test', 'password' => 'password']
+                : null,
+        ],
+
         'password_reset' => env('PANEL_PASSWORD_RESET', 'link'),
         'magic_link' => env('PANEL_MAGIC_LINK', false),
         'otp_lifetime' => 10,

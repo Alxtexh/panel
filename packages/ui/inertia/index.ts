@@ -213,6 +213,34 @@ export const PANEL_PAGES = {
 
     // The assistant's provider and key.
     'settings/Assistant': () => import('./pages/settings/Assistant.vue'),
+
+    /*
+     * A PANEL'S OWN SIGN-IN, UNDER A NAME NO APPLICATION OWNS.
+     *
+     * IT USED TO RENDER `auth/Login` AND THAT WAS THE BUG. Inertia resolves a
+     * page name against the APPLICATION's `resources/js/pages` first, so a
+     * portal's sign-in rendered whatever the starter kit had put at
+     * `auth/Login` - a component written for the application's OWN controller,
+     * with a different prop contract entirely. The packaged controller sends
+     * `socialProviders` as a list of `{key,label,url}`; the reference app's
+     * screen expects a `key => label` map and did `Object.entries` on it, so
+     * the superadmin login rendered a button captioned with raw JSON. The
+     * `heading` and `description` the panel configured were dropped on the
+     * floor for the same reason, and the screen said "Log in to your account"
+     * under the wrong brand.
+     *
+     * NOTHING FAILED, WHICH IS WHY IT SHIPPED. A page that renders is a page
+     * that looks like it works.
+     *
+     * `panel/auth/*` CANNOT COLLIDE. The application keeps `auth/Login` for
+     * its own front door, a portal gets the packaged screen that matches the
+     * packaged controller, and creating a panel no longer depends on the host
+     * application happening to have a compatible component - which is the
+     * whole point of a panel bringing its own sign-in.
+     */
+    'panel/auth/Login': () => import('./pages/panel/auth/Login.vue'),
+    'panel/auth/ForgotPassword': () => import('./pages/panel/auth/ForgotPassword.vue'),
+    'panel/auth/ResetPassword': () => import('./pages/panel/auth/ResetPassword.vue'),
 } as const
 
 /*

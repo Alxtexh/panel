@@ -428,6 +428,36 @@ abstract class Resource
         return static::$group;
     }
 
+    /**
+     * WIDGETS ABOVE THIS RESOURCE'S LIST SCREEN.
+     *
+     * THE MOST-WANTED PLACE FOR A STAT CARD AND, UNTIL NOW, THE ONE PLACE IT
+     * COULD NOT GO. `Panel::widgets()` made widgets registerable and
+     * `DashboardPage` was still the only screen that resolved them - so the
+     * answer to "put the open-ticket count above the ticket list" was a custom
+     * page that reimplemented the list. A widget system with exactly one host
+     * is a dashboard feature wearing a framework's name.
+     *
+     * DECLARED HERE RATHER THAN REGISTERED ON THE PANEL, because these belong
+     * to a RESOURCE: "invoices overdue" is meaningless above the routers list,
+     * and a panel-level registration would have to name its screen anyway.
+     * Filament splits it the same way - `Panel::widgets()` for the dashboard,
+     * `Resource::getWidgets()` for a resource's own screens.
+     *
+     * PERMISSION AND ROUND TRIPS ARE `WidgetSet`'s, not this method's. A widget
+     * the viewer may not see is never sent and its query never runs, and the
+     * whole row is ONE deferred request rather than one per card - both rules
+     * are the dashboard's, shared rather than re-derived, because getting them
+     * subtly different on a second surface is how a panel leaks a number here
+     * that it correctly withholds there.
+     *
+     * @return list<\PanelKit\Panel\Widgets\StatWidget|\PanelKit\Panel\Widgets\ChartWidget>
+     */
+    public static function headerWidgets(): array
+    {
+        return [];
+    }
+
     /** @return class-string<Cluster>|null */
     public static function cluster(): ?string
     {

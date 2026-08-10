@@ -1,63 +1,23 @@
-import { ref } from 'vue';
-
 /**
- * The seam between the bottom bar and the sidebar it opens.
+ * THE PACKAGE'S SIDEBAR OPENER, RE-EXPORTED - not a second copy of it.
  *
- * WHY A SEAM AND NOT A DIRECT CALL. The sidebar's open state belongs to
- * `SidebarProvider`, which is inside the shell; the bottom bar is rendered
- * beside the shell, because it is fixed to the viewport and must survive
- * whichever layout is active. `useSidebar()` is an `inject`, so calling it from
- * outside that provider gets nothing - the bar cannot reach the thing it needs
- * to open.
+ * THIS FILE USED TO DUPLICATE `@alxtexh-enterprise/panel`'s implementation, and
+ * the duplicate is exactly why "More" in the mobile bottom bar opened its own
+ * modal instead of the sidebar.
  *
- * THE ALTERNATIVE WAS A SECOND MENU, and that is what was there: "More" opened
- * a sheet listing every destination, built from the same data the sidebar is
- * built from and looking nothing like it. Two navigations for one set of
- * destinations means the phone gets a menu nobody else has seen, with none of
- * the grouping, none of the collapse state and none of the footer links - so
- * the thing a technician learns on a phone is not the thing they see on a
- * laptop.
+ * MODULE STATE IS PER MODULE INSTANCE. `AppSidebar.vue` ships in the package and
+ * calls `register()` on the PACKAGE's `available` ref; `AppLayout.vue` called
+ * `request()` on THIS file's ref, which nothing ever registered against. So
+ * `request()` returned false every time, and `openFullNav()` fell through to its
+ * fallback - a modal that exists for installations with no sidebar at all.
  *
- * A COUNTER RATHER THAN A BOOLEAN. The sidebar owns "is it open"; this only
- * says "somebody asked". A boolean would need resetting after each open, and a
- * second tap while it was already true would do nothing - which is exactly the
- * case that matters: open the drawer, dismiss it by tapping the page, tap More
- * again.
+ * NOTHING FAILED, WHICH IS WHY IT LASTED. Both files imported "the sidebar
+ * opener", both compiled, and the fallback is a working navigation menu - so
+ * the symptom was not an error but a second, unfamiliar surface appearing where
+ * the sidebar should have slid in.
+ *
+ * TWO REFS WITH THE SAME NAME ARE NOT THE SAME REF. Re-exporting is what makes
+ * "the sidebar opener" one thing; keeping the file at all is only so existing
+ * `@/lib/mobileNav` imports keep resolving.
  */
-const requests = ref(0);
-
-/**
- * Whether a sidebar is mounted and listening.
- *
- * The horizontal layout has no sidebar at all, so the bar has to know the
- * difference between "asked and it opened" and "asked into nothing" - the
- * second case still needs the sheet, which is the only navigation that layout
- * has on a phone.
- */
-const available = ref(false);
-
-export function useSidebarOpener() {
-    return {
-        requests,
-
-        /** Called by the sidebar while it is mounted. */
-        register(): void {
-            available.value = true;
-        },
-
-        unregister(): void {
-            available.value = false;
-        },
-
-        /** True when a sidebar took the request; false when nothing is listening. */
-        request(): boolean {
-            if (!available.value) {
-                return false;
-            }
-
-            requests.value++;
-
-            return true;
-        },
-    };
-}
+export { useSidebarOpener } from '@alxtexh-enterprise/panel/inertia';

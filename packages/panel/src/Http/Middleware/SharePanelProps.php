@@ -13,6 +13,7 @@ use PanelKit\Panel\Auth\Impersonation;
 use PanelKit\Panel\PanelManager;
 use PanelKit\Panel\Support\EditableContent;
 use PanelKit\Panel\Support\PanelHome;
+use PanelKit\Panel\Support\Ability;
 use PanelKit\Panel\Support\PanelNavigation;
 use PanelKit\Panel\Trash\TrashBin;
 use Symfony\Component\HttpFoundation\Response;
@@ -184,6 +185,35 @@ final class SharePanelProps
                      * of the packaged screens, and a menu item pointing at a
                      * route that is not registered is a 404 wearing a label.
                      */
+                    /*
+                     * ENTRIES THIS PORTAL ADDS TO THE ACCOUNT DROPDOWN.
+                     *
+                     * The core three - profile, security, sign out - are the
+                     * keys around this one and are unconditional, because every
+                     * portal authenticates somebody and every one of them must
+                     * let that person reach their own account. This is what a
+                     * panel adds BESIDE them, and until it existed the dropdown
+                     * was a Vue slot only the application could fill: a plugin
+                     * had no way in at all.
+                     *
+                     * `href` IS RESOLVED HERE because panels register in a
+                     * provider's `boot`, before routes exist - so a closure is
+                     * the only form that can name a route. The ability is
+                     * checked server-side, so an entry somebody may not use is
+                     * absent rather than disabled.
+                     */
+                    'menuItems' => collect($panel->getUserMenuItems())
+                        ->filter(static fn (array $i): bool => ! isset($i['ability'])
+                            || Ability::allows($panel->user(), (string) $i['ability']))
+                        ->map(static fn (array $i): array => [
+                            'key' => $i['key'] ?? '',
+                            'label' => $i['label'] ?? '',
+                            'href' => ($i['href'] ?? '') instanceof \Closure ? ($i['href'])() : (string) ($i['href'] ?? ''),
+                            'icon' => $i['icon'] ?? null,
+                        ])
+                        ->values()
+                        ->all(),
+
                     'account' => Route::has($panel->getRouteName().'settings.profile')
                         ? route($panel->getRouteName().'settings.profile')
                         : null,

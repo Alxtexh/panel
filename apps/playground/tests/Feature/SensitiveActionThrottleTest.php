@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -42,7 +43,7 @@ final class SensitiveActionThrottleTest extends TestCase
         ]);
     }
 
-    private function attempt(string $current): \Illuminate\Testing\TestResponse
+    private function attempt(string $current): TestResponse
     {
         /*
          * A GENERATED PORTAL'S ROUTE, not the root panel's. This application

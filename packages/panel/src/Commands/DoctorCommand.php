@@ -80,6 +80,7 @@ final class DoctorCommand extends Command
 
         $this->checkPolicies($panels);
         $this->checkBroadcasting();
+        $this->checkQueueIsReal($panels);
         $this->checkSessionLimit();
         $this->checkCacheTagging();
         $this->checkTenancy($context);
@@ -182,6 +183,75 @@ final class DoctorCommand extends Command
                 .'so every list is silently static.',
             );
         }
+    }
+
+    /**
+     * "QUEUED" HAS TO MEAN SOMETHING, AND ON `sync` IT DOES NOT.
+     *
+     * The panel hands its two unbounded jobs - a bulk mutation over a whole
+     * filtered set, and an export of it - to the queue precisely so they do
+     * NOT run inside a web request. On the `sync` connection `dispatch()` runs
+     * the job inline, so the mutation still holds the request open for as long
+     * as it takes, and the response then returns a PENDING token pointing at
+     * work that has already finished.
+     *
+     * THAT IS WORSE THAN NO QUEUE AT ALL, because everything reports success.
+     * The operator gets a progress token, polls it once, and is told the job
+     * is done - which is true. Nothing anywhere says that the five-hundred-
+     * thousand-row update ran in the browser's request and was cut off by the
+     * web server's timeout at row two hundred thousand, leaving a partial
+     * write. The bounded/unbounded split, the queue threshold and the progress
+     * tokens are all correct and all inert.
+     *
+     * A WORKER IS NOT CHECKED FOR, only the connection. Whether anything is
+     * consuming the queue is a question about the host, not the configuration,
+     * and `panel:doctor` does not have an honest way to answer it - a check
+     * that guessed would either cry wolf on a machine where the worker lives
+     * elsewhere or stay quiet on one where it does not exist.
+     */
+    private function checkQueueIsReal(PanelManager $panels): void
+    {
+        if (config('queue.default') !== 'sync') {
+            return;
+        }
+
+        /*
+         * `sync` IS THE CORRECT SETTING UNDER TEST, so reporting it there is a
+         * false alarm rather than a finding.
+         *
+         * Laravel's own `phpunit.xml` ships `QUEUE_CONNECTION=sync` because a
+         * test that queued its work and then asserted the result would assert
+         * nothing. The first version of this check did not know that and
+         * turned eleven passing "doctor is quiet" tests red - which is exactly
+         * the shape of the `checkSomebodyCanOpenThePanel` bug this command has
+         * already paid for once: a check that fires on a healthy installation
+         * teaches everybody to ignore the command.
+         */
+        if (app()->environment('testing')) {
+            return;
+        }
+
+        $withBulk = [];
+
+        foreach ($panels->resources() as $key => $class) {
+            if ($class::definition()->getBulkActions() !== []) {
+                $withBulk[] = $key;
+            }
+        }
+
+        if ($withBulk === []) {
+            return;
+        }
+
+        $this->problem(
+            'The queue connection is [sync], so nothing this panel queues is actually queued',
+            'Bulk actions on '.implode(', ', array_slice($withBulk, 0, 5))
+            .(count($withBulk) > 5 ? ' and '.(count($withBulk) - 5).' more' : '')
+            .' run inside the web request on `sync` - including "select all matching", which can be '
+            .'the whole table. The response still returns a progress token, so a run that the web '
+            .'server timed out halfway through reports as pending and then as done, with a partial '
+            .'write and nothing saying so. Set QUEUE_CONNECTION to database or redis and run a worker.',
+        );
     }
 
     private function checkSessionLimit(): void

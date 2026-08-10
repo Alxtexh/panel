@@ -1,0 +1,2209 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Instanceof between PanelKit\\Panel\\Actions\\RecordAction and PanelKit\\Panel\\Actions\\RecordAction will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: ../../packages/panel/src/Actions/ActionGroup.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<PanelKit\\Panel\\Actions\\RecordAction\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Actions/ActionGroup.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Actions\\BulkRunner\:\:run\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Actions/BulkRunner.php
+
+		-
+			message: '#^Parameter \#4 \$ids of method PanelKit\\Panel\\Actions\\BulkRunner\:\:apply\(\) expects list\<int\|string\>, non\-empty\-array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Actions/BulkRunner.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Actions/ReplicateAction.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Alerts\\Announcement\:\:\$tenant_id \(int\) does not accept int\|string\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Alerts/Announcement.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between int and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: ../../packages/panel/src/Alerts/Announcement.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between int and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: ../../packages/panel/src/Alerts/AnnouncementDelivery.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Alerts\\AnnouncementResource\:\:group\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Alerts/AnnouncementResource.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../../packages/panel/src/Alerts/ReportsToTelegram.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Request\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Alerts/ReportsToTelegram.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Request\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: ../../packages/panel/src/Audit/AuditRecorder.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Auth\\Devices\:\:forUser\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: mixed, current\: bool, ip\: mixed, browser\: string, platform\: string, lastActiveAt\: string\|null\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Auth/Devices.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Auth\\Impersonation\:\:impersonator\(\) should return Illuminate\\Contracts\\Auth\\Authenticatable\|null but returns Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Auth/Impersonation.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$_$#'
+			identifier: parameter.notFound
+			count: 1
+			path: ../../packages/panel/src/Auth/Impersonation.php
+
+		-
+			message: '#^Parameter \#1 \$user of method Illuminate\\Auth\\SessionGuard\:\:login\(\) expects Illuminate\\Contracts\\Auth\\Authenticatable, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Auth/Impersonation.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$authenticator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Auth/Passkeys.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Auth/Passkeys.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$last_used_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Auth/Passkeys.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Auth/Passkeys.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Auth\\TenantUserProvider\:\:retrieveByCredentials\(\) should return \(Illuminate\\Contracts\\Auth\\Authenticatable&Illuminate\\Database\\Eloquent\\Model\)\|null but returns Illuminate\\Contracts\\Auth\\Authenticatable\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Auth/TenantUserProvider.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Auth\\TenantUserProvider\:\:retrieveByToken\(\) should return \(Illuminate\\Contracts\\Auth\\Authenticatable&Illuminate\\Database\\Eloquent\\Model\)\|null but returns Illuminate\\Contracts\\Auth\\Authenticatable\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Auth/TenantUserProvider.php
+
+		-
+			message: '#^Call to function is_array\(\) with string will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: ../../packages/panel/src/Commands/BenchmarkCommand.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Commands\\BenchmarkCommand\:\:surfaces\(\) should return array\<string, Closure\> but returns non\-empty\-array\<non\-falsy\-string, \(Closure\(\)\: mixed\)\|PanelKit\\Panel\\Commands\\SurfaceWork\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Commands/BenchmarkCommand.php
+
+		-
+			message: '#^Offset ''value'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: ../../packages/panel/src/Commands/BenchmarkCommand.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: ../../packages/panel/src/Commands/BenchmarkCommand.php
+
+		-
+			message: '#^Parameter \#1 \$now of method PanelKit\\Panel\\Reports\\ScheduledReport\:\:isDue\(\) expects Illuminate\\Support\\Carbon, Carbon\\CarbonImmutable\|Illuminate\\Support\\Carbon given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Commands/DispatchScheduledReportsCommand.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/DoctorCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:count\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/DoctorCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getKeyName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/DoctorCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getMorphClass\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/DoctorCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:orderBy\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/DoctorCommand.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{non\-falsy\-string, non\-falsy\-string, ''login''\}\) to function array_filter does not contain falsy values, the array will always stay the same\.$#'
+			identifier: arrayFilter.same
+			count: 1
+			path: ../../packages/panel/src/Commands/DoctorCommand.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<PanelKit\\Panel\\Plugins\\PanelPlugin\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Commands/DoctorCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getTable\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/InstallCommand.php
+
+		-
+			message: '#^Parameter \#1 \$source of static method PanelKit\\Panel\\Support\\UserRoles\:\:add\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Commands/InstallCommand.php
+
+		-
+			message: '#^Parameter \#1 \$source of static method PanelKit\\Panel\\Support\\UserRoles\:\:present\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Commands/InstallCommand.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function preg_replace expects array\<float\|int\|string\>\|string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../../packages/panel/src/Commands/InstallCommand.php
+
+		-
+			message: '#^Parameter \$abilities of static method PanelKit\\Panel\\Api\\ApiToken\:\:issue\(\) expects list\<string\>, non\-empty\-array\<int, string\|null\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Commands/MakeApiTokenCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getTable\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: ../../packages/panel/src/Commands/MakeResourceCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getTable\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/MakeUserCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getKeyName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/PermissionsCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getTable\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/PermissionsCommand.php
+
+		-
+			message: '#^Cannot call method assignRole\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Commands/PermissionsCommand.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Commands\\PermissionsCommand\:\:createAdministrator\(\) has parameter \$known with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Commands/PermissionsCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:count\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/PruneTrashCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getDeletedAtColumn\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/PruneTrashCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:limit\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/PruneTrashCommand.php
+
+		-
+			message: '#^Parameter \#1 \$expression of method Illuminate\\Database\\Query\\Builder\:\:selectRaw\(\) expects literal\-string, non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Commands/RefreshRollupsCommand.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: ../../packages/panel/src/Commands/ReindexTenantCommand.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Commands\\ReindexTenantCommand\:\:tables\(\) should return list\<string\> but returns array\<string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Commands/ReindexTenantCommand.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Commands\\ReindexTenantCommand\:\:tenantLedIndexes\(\) should return array\<string, list\<string\>\> but returns array\<non\-empty\-array\<string\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Commands/ReindexTenantCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getTable\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Commands/SearchIndexCommand.php
+
+		-
+			message: '#^Cannot access property \$name on class\-string\|object\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: ../../packages/panel/src/Commands/SuspendTenantCommand.php
+
+		-
+			message: '#^Cannot call method suspend\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Commands/SuspendTenantCommand.php
+
+		-
+			message: '#^Cannot call method unsuspend\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Commands/SuspendTenantCommand.php
+
+		-
+			message: '#^Cannot call method users\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Commands/SuspendTenantCommand.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\CustomFields\\CustomField\:\:\$byResource with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/CustomFields/CustomField.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\CustomFields\\CustomFieldFactory\:\:selectExpression\(\) return type with generic class Illuminate\\Database\\Query\\Expression does not specify its types\: TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/CustomFields/CustomFieldFactory.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\CustomFields\\CustomFieldFactory\:\:selectExpression\(\) should return Illuminate\\Database\\Query\\Expression but returns Illuminate\\Contracts\\Database\\Query\\Expression\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/CustomFields/CustomFieldFactory.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Illuminate\\Database\\Connection\:\:raw\(\) expects float\|int\|literal\-string, non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/CustomFields/CustomFieldFactory.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Documents\\DocumentRenderer\:\:render\(\) has parameter \$settingsOverride with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Documents/DocumentRenderer.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Documents\\DocumentTemplate\:\:\$tenant_id \(int\) does not accept int\|string\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Documents/DocumentTemplate.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Documents\\DocumentTemplate\:\:\$updated_by \(int\|null\) does not accept int\|string\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Documents/DocumentTemplate.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between int and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: ../../packages/panel/src/Documents/DocumentTemplate.php
+
+		-
+			message: '#^Parameter \#1 \$body of method PanelKit\\Panel\\Documents\\Kinds\\StandardDocumentKind\:\:standardFields\(\) expects list\<PanelKit\\Panel\\Schema\\Renderable\>, array\{PanelKit\\Panel\\Schema\\Section\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Documents/Kinds/InvoiceKind.php
+
+		-
+			message: '#^Parameter \#1 \$body of method PanelKit\\Panel\\Documents\\Kinds\\StandardDocumentKind\:\:standardFields\(\) expects list\<PanelKit\\Panel\\Schema\\Renderable\>, array\{PanelKit\\Panel\\Schema\\Section\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Documents/Kinds/ReceiptKind.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Documents\\Kinds\\StandardDocumentKind\:\:standardFields\(\) should return list\<PanelKit\\Panel\\Schema\\Renderable\> but returns non\-empty\-list\<PanelKit\\Panel\\Schema\\Renderable\|PanelKit\\Panel\\Schema\\Section\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Documents/Kinds/StandardDocumentKind.php
+
+		-
+			message: '#^Parameter \#1 \$body of method PanelKit\\Panel\\Documents\\Kinds\\StandardDocumentKind\:\:standardFields\(\) expects list\<PanelKit\\Panel\\Schema\\Renderable\>, array\{PanelKit\\Panel\\Schema\\Section, PanelKit\\Panel\\Schema\\Section, PanelKit\\Panel\\Schema\\Section\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Documents/Kinds/VoucherKind.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<PanelKit\\Panel\\Forms\\Fields\\Field\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/BuilderField.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Forms\\Fields\\CheckboxListField\:\:\$resolvedOptions type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/CheckboxListField.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Forms\\Fields\\Field\:\:\$rules \(list\<object\|string\>\) does not accept array\<int\|string, object\|string\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/Field.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/KeyValueField.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{0\: ''array'', 1\?\: non\-falsy\-string\}\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/KeyValueField.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/KeyValueField.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/MarkdownField.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Forms\\Fields\\MultiSelectField\:\:resolveOptions\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/MultiSelectField.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{0\: ''array'', 1\?\: non\-falsy\-string\}\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/MultiSelectField.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Forms\\Fields\\NumberField\:\:typeRules\(\) should return list\<mixed\> but returns array\{0\: ''integer'', 1\?\: non\-falsy\-string, 2\?\: non\-falsy\-string\}\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/NumberField.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Forms\\Fields\\RadioField\:\:\$resolvedOptions type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/RadioField.php
+
+		-
+			message: '#^Instanceof between PanelKit\\Panel\\Forms\\Fields\\Field and PanelKit\\Panel\\Forms\\Fields\\Field will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/RepeaterField.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<PanelKit\\Panel\\Forms\\Fields\\Field\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/RepeaterField.php
+
+		-
+			message: '#^Instanceof between DOMAttr and DOMAttr will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/RichEditorField.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{0\: ''string'', 1\?\: non\-falsy\-string\}\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/RichEditorField.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<''bold''\|''code''\|''heading''\|''italic''\|''link''\|''list''\|''quote''\|''strike''\|''underline''\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/RichEditorField.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Forms\\Fields\\SelectField\:\:resolveOptions\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/SelectField.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Forms\\Fields\\SelectField\:\:\$resolved type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/SelectField.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/TagsField.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Forms\\Fields\\VisualSelectField\:\:\$resolvedOptions type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Forms/Fields/VisualSelectField.php
+
+		-
+			message: '#^Call to an undefined method object\:\:forceFill\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Api/ResourceApiController.php
+
+		-
+			message: '#^Call to an undefined method object\:\:fresh\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Api/ResourceApiController.php
+
+		-
+			message: '#^Call to an undefined method object\:\:save\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Api/ResourceApiController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\Api\\ResourceApiController\:\:resolve\(\) should return class\-string\<PanelKit\\Panel\\Resources\\Resource\> but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Api/ResourceApiController.php
+
+		-
+			message: '#^Parameter \#1 \$record of method PanelKit\\Panel\\Http\\Controllers\\Api\\ResourceApiController\:\:applyTenant\(\) expects Illuminate\\Database\\Eloquent\\Model, object given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Api/ResourceApiController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:\$unreadNotifications\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/NotificationController.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:notifications\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: ../../packages/panel/src/Http/Controllers/NotificationController.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:unreadNotifications\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/NotificationController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\NotificationController\:\:announcements\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{key\: non\-falsy\-string, severity\: string, title\: string, body\: string, href\: string\|null, count\: 1\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/NotificationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$logo_path\.$#'
+			identifier: property.notFound
+			count: 5
+			path: ../../packages/panel/src/Http/Controllers/OrganisationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: ../../packages/panel/src/Http/Controllers/OrganisationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/PanelHomeController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:\$email_verified_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/ProfileController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: ../../packages/panel/src/Http/Controllers/RecordController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:restore\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/RecordController.php
+
+		-
+			message: '#^Call to an undefined method object\:\:forceFill\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/RecordController.php
+
+		-
+			message: '#^Call to an undefined method object\:\:setAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/RecordController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\RecordController\:\:resolve\(\) should return class\-string\<PanelKit\\Panel\\Resources\\Resource\> but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/RecordController.php
+
+		-
+			message: '#^Parameter \#1 \$record of method PanelKit\\Panel\\Http\\Controllers\\RecordController\:\:applyTenant\(\) expects Illuminate\\Database\\Eloquent\\Model, object given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/RecordController.php
+
+		-
+			message: '#^Parameter \#1 \$record of method PanelKit\\Panel\\Http\\Controllers\\RecordController\:\:save\(\) expects Illuminate\\Database\\Eloquent\\Model, object given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/RecordController.php
+
+		-
+			message: '#^Parameter \#3 \$record of method PanelKit\\Panel\\Http\\Controllers\\RecordController\:\:foldCustomFields\(\) expects Illuminate\\Database\\Eloquent\\Model, object given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/RecordController.php
+
+		-
+			message: '#^Unable to resolve the template type TReturn in call to static method PanelKit\\Panel\\Support\\Transaction\:\:run\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/RecordController.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getTable\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/ResourceController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\ResourceController\:\:customFieldSupport\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/ResourceController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\ResourceController\:\:guard\(\) should return class\-string\<PanelKit\\Panel\\Resources\\Resource\> but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/ResourceController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\ResourceController\:\:trail\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/ResourceController.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\Role\:\:\$user_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/RoleController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\SearchController\:\:search\(\) should return list\<array\{id\: mixed, title\: string, subtitle\: string\|null, href\: string\}\> but returns array\<array\{id\: mixed, title\: string, subtitle\: string\|null, href\: non\-falsy\-string\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SearchController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\SearchController\:\:titleColumn\(\) has parameter \$records with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SearchController.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SecurityController.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$last_used_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SecurityController.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$nickname\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SecurityController.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$provider\.$#'
+			identifier: property.notFound
+			count: 2
+			path: ../../packages/panel/src/Http/Controllers/SecurityController.php
+
+		-
+			message: '#^Cannot call method hasEnabledTwoFactorAuthentication\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SecurityController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\SecurityController\:\:connectedAccounts\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: int, provider\: mixed, label\: string, email\: mixed, nickname\: mixed, lastUsedAt\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SecurityController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,PanelKit\\Panel\\Models\\ConnectedAccount\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SecurityController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,PanelKit\\Panel\\Models\\ConnectedAccount\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SecurityController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:all\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SecurityController.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$provider\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SocialLoginController.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: ../../packages/panel/src/Http/Controllers/SocialLoginController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\SocialLoginController\:\:matchByVerifiedEmail\(\) should return Illuminate\\Contracts\\Auth\\Authenticatable\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SocialLoginController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\SocialLoginController\:\:users\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SocialLoginController.php
+
+		-
+			message: '#^Parameter \#1 \$user of method Illuminate\\Contracts\\Auth\\StatefulGuard\:\:login\(\) expects Illuminate\\Contracts\\Auth\\Authenticatable, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/SocialLoginController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Ticketing/TicketThreadController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\Ticketing\\TicketThreadController\:\:thread\(\) should return array\{capped\: bool, total\: int, replies\: list\<array\<string, mixed\>\>, canReply\: bool, canNote\: bool\} but returns array\{capped\: bool, total\: int\<0, max\>, replies\: array\<int, array\{id\: int, body\: string, internal\: bool, author\: mixed, fromOpener\: bool, at\: string\|null\}\>, canReply\: bool, canNote\: bool\}\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Ticketing/TicketThreadController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,PanelKit\\Panel\\Models\\TicketReply\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Ticketing/TicketThreadController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,PanelKit\\Panel\\Models\\TicketReply\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Ticketing/TicketThreadController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:all\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Ticketing/TicketThreadController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/Ticketing/TicketThreadController.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getKeyName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/TrashController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\TrashController\:\:selection\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/TrashController.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\Controllers\\UploadController\:\:resolve\(\) should return class\-string\<PanelKit\\Panel\\Resources\\Resource\> but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/UploadController.php
+
+		-
+			message: '#^Cannot call method assignRole\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/WorkspacesController.php
+
+		-
+			message: '#^Cannot call method getKey\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/WorkspacesController.php
+
+		-
+			message: '#^Cannot call method isSuspended\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/WorkspacesController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>\(Expression\)" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Http/Controllers/WorkspacesController.php
+
+		-
+			message: '#^Cannot call method isSuspended\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Http/Middleware/DenySuspendedAccount.php
+
+		-
+			message: '#^Cannot call method isSuspended\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Http/Middleware/DenySuspendedTenant.php
+
+		-
+			message: '#^Parameter \#1 \$tenant of method Stancl\\Tenancy\\Tenancy\:\:initialize\(\) expects int\|Stancl\\Tenancy\\Contracts\\Tenant\|string, object given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Http/Middleware/InitializeTenancyForUser.php
+
+		-
+			message: '#^Cannot cast object\|string\|null to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: ../../packages/panel/src/Http/Middleware/MountNestedResource.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getKey\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Middleware/ResolveTenantByHost.php
+
+		-
+			message: '#^Parameter \#1 \$tenant of method Stancl\\Tenancy\\Tenancy\:\:initialize\(\) expects int\|Stancl\\Tenancy\\Contracts\\Tenant\|string, object given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Http/Middleware/ResolveTenantByHost.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Contracts\\Auth\\Authenticatable\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/Middleware/SharePanelProps.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Http/Middleware/SharePanelProps.php
+
+		-
+			message: '#^Call to an undefined method object\:\:respondUsing\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Http/PanelErrors.php
+
+		-
+			message: '#^Argument of an invalid type Illuminate\\Routing\\RouteCollectionInterface supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: ../../packages/panel/src/Http/PanelRoutes.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Http\\PanelRoutes\:\:extensions\(\) should return list\<callable\(list\<string\>, PanelKit\\Panel\\Panel\)\: void\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Http/PanelRoutes.php
+
+		-
+			message: '#^Parameter \$messages of class PanelKit\\Panel\\Imports\\ImportFailure constructor expects list\<string\>, array\<string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Imports/Importer.php
+
+		-
+			message: '#^Cannot call method notify\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Jobs/ExportRecords.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Jobs\\ExportRecords\:\:__construct\(\) has parameter \$ids with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Jobs/ExportRecords.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Jobs\\ExportRecords\:\:__construct\(\) has parameter \$query with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Jobs/ExportRecords.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Jobs\\ExportRecords\:\:actAs\(\) should return class\-string\<PanelKit\\Panel\\Resources\\Resource\> but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Jobs/ExportRecords.php
+
+		-
+			message: '#^Parameter \#2 \$ids of method PanelKit\\Panel\\Tables\\ListQuery\:\:eachMatching\(\) expects list\<int\|string\>\|null, array\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Jobs/ExportRecords.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Contracts\\Auth\\UserProvider\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Jobs/ExportRecords.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Jobs/RestoreBackup.php
+
+		-
+			message: '#^Parameter \#2 \$to of function stream_copy_to_stream expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Jobs/RestoreBackup.php
+
+		-
+			message: '#^Cannot call method notify\(\) on class\-string\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Jobs/RunBulkAction.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Jobs\\RunBulkAction\:\:actAs\(\) should return class\-string\<PanelKit\\Panel\\Resources\\Resource\> but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Jobs/RunBulkAction.php
+
+		-
+			message: '#^Parameter \#3 \$model of method PanelKit\\Panel\\Actions\\BulkRunner\:\:run\(\) expects class\-string\<Illuminate\\Database\\Eloquent\\Model\>, class\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Jobs/RunBulkAction.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Contracts\\Auth\\UserProvider\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Jobs/RunBulkAction.php
+
+		-
+			message: '#^Parameter \#2 \$length of function mb_str_split expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Knowledge/Chunker.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Knowledge\\HashEmbedder\:\:embed\(\) should return list\<float\> but returns non\-empty\-array\<int\<\-255, max\>, float\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Knowledge/HashEmbedder.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$content\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Knowledge/KnowledgeBase.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Knowledge/KnowledgeBase.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$source\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Knowledge/KnowledgeBase.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Knowledge/KnowledgeBase.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Knowledge/KnowledgeBase.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Knowledge\\KnowledgeBase\:\:searchNatively\(\) should return list\<array\{title\: string, content\: string, url\: string\|null, source\: string, score\: float\}\> but returns array\<array\{title\: string, content\: string, url\: string\|null, source\: string, score\: float\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Knowledge/KnowledgeBase.php
+
+		-
+			message: '#^Parameter \#2 \$b of static method PanelKit\\Panel\\Knowledge\\KnowledgeBase\:\:cosine\(\) expects list\<float\>, non\-empty\-array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Knowledge/KnowledgeBase.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Knowledge\\ProviderEmbedder\:\:embed\(\) should return list\<float\> but returns array\<float\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Knowledge/ProviderEmbedder.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Landing\\LandingPageResource\:\:ability\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Landing/LandingPageResource.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:aurora\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Landing/LandingPresets.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:console\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Landing/LandingPresets.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:editorial\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Landing/LandingPresets.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:featureGrid\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Landing/LandingPresets.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:get\(\) should return list\<array\{type\: string, data\: array\<string, mixed\>\}\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Landing/LandingPresets.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Listeners/AnnounceNewTicket.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Listeners\\AnnounceNewTicket\:\:priorities\(\) should return list\<string\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Listeners/AnnounceNewTicket.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Listeners/AnnounceNewTicket.php
+
+		-
+			message: '#^Parameter \$events of class PanelKit\\Panel\\Live\\LiveConfig constructor expects list\<string\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Live/LiveConfig.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Models\\ConnectedAccount\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Models/ConnectedAccount.php
+
+		-
+			message: '#^Parameter \#1 \$related of method Illuminate\\Database\\Eloquent\\Model\:\:belongsTo\(\) expects class\-string\<Illuminate\\Database\\Eloquent\\Model\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Models/ConnectedAccount.php
+
+		-
+			message: '#^Unable to resolve the template type TRelatedModel in call to method Illuminate\\Database\\Eloquent\\Model\:\:belongsTo\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: ../../packages/panel/src/Models/ConnectedAccount.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\Role\:\:\$tenant_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Models/Role.php
+
+		-
+			message: '#^Class PanelKit\\Panel\\Models\\Scopes\\TenantScope implements generic interface Illuminate\\Database\\Eloquent\\Scope but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Models/Scopes/TenantScope.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Models\\Scopes\\TenantScope\:\:deny\(\) has parameter \$builder with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Models/Scopes/TenantScope.php
+
+		-
+			message: '#^Parameter \#1 \$builder \(Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\) of method PanelKit\\Panel\\Models\\Scopes\\TenantScope\:\:apply\(\) should be compatible with parameter \$builder \(Illuminate\\Database\\Eloquent\\Builder\<covariant Illuminate\\Database\\Eloquent\\Model\>\) of method Illuminate\\Database\\Eloquent\\Scope\<Illuminate\\Database\\Eloquent\\Model\>\:\:apply\(\)$#'
+			identifier: method.childParameterType
+			count: 1
+			path: ../../packages/panel/src/Models/Scopes/TenantScope.php
+
+		-
+			message: '#^Cannot call method gte\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../../packages/panel/src/Models/Ticket.php
+
+		-
+			message: '#^Parameter \#1 \$related of method Illuminate\\Database\\Eloquent\\Model\:\:belongsTo\(\) expects class\-string\<Illuminate\\Database\\Eloquent\\Model\>, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../../packages/panel/src/Models/Ticket.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Models\\Ticket\:\:\$first_response_at \(string\|null\) does not accept Carbon\\CarbonImmutable\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Models/Ticket.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Models\\Ticket\:\:\$last_reply_at \(string\|null\) does not accept Carbon\\CarbonImmutable\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Models/Ticket.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Models\\Ticket\:\:\$opened_by \(int\<0, max\>\) does not accept int\|string\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Models/Ticket.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Models\\Ticket\:\:\$resolved_at \(string\|null\) does not accept Carbon\\CarbonImmutable\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Models/Ticket.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Models\\Ticket\:\:\$tenant_id \(int\<0, max\>\) does not accept int\|string\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Models/Ticket.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between int\<0, max\> and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 2
+			path: ../../packages/panel/src/Models/Ticket.php
+
+		-
+			message: '#^Unable to resolve the template type TRelatedModel in call to method Illuminate\\Database\\Eloquent\\Model\:\:belongsTo\(\)$#'
+			identifier: argument.templateType
+			count: 2
+			path: ../../packages/panel/src/Models/Ticket.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Models\\TicketReply\:\:scopeVisibleTo\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Models/TicketReply.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Models\\TicketReply\:\:scopeVisibleTo\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Models/TicketReply.php
+
+		-
+			message: '#^Parameter \#1 \$related of method Illuminate\\Database\\Eloquent\\Model\:\:belongsTo\(\) expects class\-string\<Illuminate\\Database\\Eloquent\\Model\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Models/TicketReply.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Models\\TicketReply\:\:\$author_id \(int\<0, max\>\) does not accept int\|string\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Models/TicketReply.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Models\\TicketReply\:\:\$tenant_id \(int\<0, max\>\) does not accept int\|string\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Models/TicketReply.php
+
+		-
+			message: '#^Unable to resolve the template type TRelatedModel in call to method Illuminate\\Database\\Eloquent\\Model\:\:belongsTo\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: ../../packages/panel/src/Models/TicketReply.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Pages\\ChangelogPage\:\:heading\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Pages/ChangelogPage.php
+
+		-
+			message: '#^Unsafe call to private method PanelKit\\Panel\\Pages\\DashboardPage\:\:allows\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 2
+			path: ../../packages/panel/src/Pages/DashboardPage.php
+
+		-
+			message: '#^Unsafe call to private method PanelKit\\Panel\\Pages\\DashboardPage\:\:selectedPeriods\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 1
+			path: ../../packages/panel/src/Pages/DashboardPage.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Pages\\EnvironmentPage\:\:ability\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Pages/EnvironmentPage.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Pages\\EnvironmentPage\:\:description\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Pages/EnvironmentPage.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Pages\\EnvironmentPage\:\:heading\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Pages/EnvironmentPage.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Pages\\SitemapPage\:\:ability\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Pages/SitemapPage.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Pages\\SitemapPage\:\:description\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Pages/SitemapPage.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Pages\\SitemapPage\:\:heading\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: ../../packages/panel/src/Pages/SitemapPage.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<class\-string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Pages/Workspace.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Panel\:\:getWidgets\(\) should return list\<PanelKit\\Panel\\Widgets\\ChartWidget\|PanelKit\\Panel\\Widgets\\StatWidget\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Panel.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Panel\:\:\$widgets type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Panel.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\PanelManager\:\:resources\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/PanelManager.php
+
+		-
+			message: '#^Parameter \#1 \$array of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: ../../packages/panel/src/PanelManager.php
+
+		-
+			message: '#^Parameter \#1 \$classes of method PanelKit\\Panel\\PanelManager\:\:registerPages\(\) expects list\<class\-string\<PanelKit\\Panel\\Pages\\Page\>\>, list\<class\-string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/PanelManager.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: ../../packages/panel/src/PanelManager.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\PanelManager\:\:\$pluginsApplied type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/PanelManager.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/PanelManager.php
+
+		-
+			message: '#^Cannot access offset ''events'' on Illuminate\\Contracts\\Foundation\\Application\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../packages/panel/src/PanelServiceProvider.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Illuminate\\Support\\Manager\:\:extend\(\) expects bindable closure, static closure given\.$#'
+			identifier: argument.staticClosure
+			count: 1
+			path: ../../packages/panel/src/PanelServiceProvider.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Reports\\ScheduledReport\:\:\$time\.$#'
+			identifier: property.notFound
+			count: 4
+			path: ../../packages/panel/src/Reports/ScheduledReport.php
+
+		-
+			message: '#^Class PanelKit\\Panel\\Resources\\Resource referenced with incorrect case\: PanelKit\\Panel\\Resources\\resource\.$#'
+			identifier: class.nameCase
+			count: 2
+			path: ../../packages/panel/src/Resources/Resource.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Resources\\Resource\:\:customFields\(\) should return list\<PanelKit\\Panel\\CustomFields\\CustomField\> but returns array\<int, PanelKit\\Panel\\CustomFields\\CustomField\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Resources/Resource.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Resources\\Resource\:\:modifySearchQuery\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Resources/Resource.php
+
+		-
+			message: '#^Call to an undefined method PanelKit\\Panel\\Schema\\Component\|PanelKit\\Panel\\Schema\\Renderable\:\:children\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: ../../packages/panel/src/Schema/Component.php
+
+		-
+			message: '#^Call to an undefined method PanelKit\\Panel\\Schema\\Component\|PanelKit\\Panel\\Schema\\Renderable\:\:isVisible\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Schema/Component.php
+
+		-
+			message: '#^Trait PanelKit\\Panel\\Seo\\HasSeo is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: ../../packages/panel/src/Seo/HasSeo.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\Abilities\:\:grouped\(\) should return array\<string, list\<array\{action\: string, name\: string\}\>\> but returns array\<array\<array\{action\: string, name\: string\}\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/Abilities.php
+
+		-
+			message: '#^Offset ''impersonate_users''\|''manage_backups''\|''manage_roles''\|''view_operations'' on array\{manage_roles\: ''Manage roles and…'', impersonate_users\: ''Sign in as another…'', view_operations\: ''See backups and…'', manage_backups\: ''Delete, restore and…''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: ../../packages/panel/src/Support/Abilities.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\BackupArchive\:\:all\(\) should return list\<array\{path\: string, bytes\: int, at\: string\}\> but returns array\<int, array\{path\: string, bytes\: int, at\: string\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/BackupArchive.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{ok\: bool, disk\: string, message\: string, ms\: int\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Support/BackupDestinationProbe.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: ../../packages/panel/src/Support/BackupSettings.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\BackupStatus\:\:summary\(\) should return array\{configured\: bool, disk\: string\|null, healthy\: bool\|null, newestAt\: string\|null, ageHours\: float\|null, totalBytes\: int, backups\: list\<array\{path\: string, bytes\: int, at\: string\}\>, problem\: string\|null\} but returns array\{configured\: true, disk\: non\-empty\-string, healthy\: bool, newestAt\: string, ageHours\: float, totalBytes\: int, backups\: array\<int, array\{path\: string, bytes\: int, at\: string\}\>, problem\: non\-falsy\-string\|null\}\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/BackupStatus.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\Contrast\:\:channels\(\) should return array\{int, int, int\} but returns array\{float\|int, float\|int, float\|int\}\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/Contrast.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\Discovery\:\:classesIn\(\) should return list\<class\-string\> but returns list\<non\-falsy\-string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/Discovery.php
+
+		-
+			message: '#^Parameter \#1 \$releases of static method PanelKit\\Panel\\Support\\Changelog\:\:set\(\) expects \(Closure\(\)\: list\<array\<string, mixed\>\>\)\|list\<array\<string, mixed\>\>, Closure\(\)\: array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Support/EditableContent.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../../packages/panel/src/Support/HealthReport.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>size" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: ../../packages/panel/src/Support/HealthReport.php
+
+		-
+			message: '#^Instanceof between array\<string, list\<mixed\>\> and Closure will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: ../../packages/panel/src/Support/HelpCentre.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\HelpCentre\:\:registered\(\) should return list\<array\<string, mixed\>\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/HelpCentre.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\HelpCentre\:\:registeredQuestions\(\) should return list\<array\{title\: string, items\: list\<array\{q\: string, a\: string\}\>\}\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/HelpCentre.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Support/InstallationState.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Support/InstallationState.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{action\: array\{type\: ''string'', description\: ''A key the resource…'', enum\?\: non\-empty\-list\<string\>\}, ids\: array\{type\: ''array'', items\: array\{type\: ''integer''\}, description\: ''Ignored when `all`…''\}, all\: array\{type\: ''boolean'', description\: ''Apply to every…''\}, filters\: array\{type\: ''object'', description\: ''The filter state …'', additionalProperties\: true\}\}\) to function array_filter does not contain falsy values, the array will always stay the same\.$#'
+			identifier: arrayFilter.same
+			count: 1
+			path: ../../packages/panel/src/Support/JsonSchema.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{name\: string, bytes\: int\<0, max\>, at\: non\-falsy\-string\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Support/LogReader.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\MonitorSampler\:\:history\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/MonitorSampler.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\PanelNavigation\:\:build\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\<string, mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\PanelNavigation\:\:clusters\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, array\{key\: mixed, title\: mixed, href\: string, icon\: mixed, group\: mixed, sort\: mixed, members\: array\<int, mixed\>\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\PanelNavigation\:\:declared\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, array\{key\: mixed, title\: mixed, href\: mixed, icon\: mixed, group\: mixed, sort\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\PanelNavigation\:\:resources\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, array\{key\: mixed, title\: mixed, href\: string, icon\: mixed, group\: mixed, sort\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),Illuminate\\Support\\Collection\<int, class\-string\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int\|string,class\-string\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Parameter \#1 \$visible of static method PanelKit\\Panel\\Support\\PanelNavigation\:\:clusters\(\) expects Illuminate\\Support\\Collection\<int\|string, class\-string\>, Illuminate\\Support\\Collection\<string, class\-string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Parameter \#1 \$visible of static method PanelKit\\Panel\\Support\\PanelNavigation\:\:resources\(\) expects Illuminate\\Support\\Collection\<int\|string, class\-string\>, Illuminate\\Support\\Collection\<string, class\-string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<\(int\|string\),Illuminate\\Support\\Collection\<int, class\-string\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<\(int\|string\),array\<string, mixed\>\>\:\:values\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int\|string,array\<string, mixed\>\>\:\:values\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int\|string,class\-string\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Support/PanelNavigation.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\PanelPages\:\:write\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Support/PanelPages.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\PlatformReport\:\:scheduler\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Support/PlatformReport.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(int\|string\)\: bool\)\|null, Closure\(string\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Support/SchemaCache.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\SettingsIndex\:\:registered\(\) should return list\<array\<string, mixed\>\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/SettingsIndex.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Support\\Sitemap\:\:\$sources type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Support/Sitemap.php
+
+		-
+			message: '#^Call to function method_exists\(\) with Illuminate\\Auth\\SessionGuard and ''hasUser'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: ../../packages/panel/src/Support/TenantContext.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: ../../packages/panel/src/Support/TenantContext.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between Stancl\\Tenancy\\Contracts\\Tenant and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: ../../packages/panel/src/Support/TenantContext.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>features" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Support/TenantContext.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\Tenants\:\:current\(\) should return Illuminate\\Database\\Eloquent\\Model\|null but returns Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/Tenants.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>\(Expression\)" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Support/Tenants.php
+
+		-
+			message: '#^Parameter \#1 \$sql of method Illuminate\\Database\\Eloquent\\Builder\<PanelKit\\Panel\\Models\\Ticket\>\:\:orderByRaw\(\) expects literal\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Support/TicketStats.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Illuminate\\Database\\Connection\:\:raw\(\) expects float\|int\|literal\-string, non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../../packages/panel/src/Support/TicketStats.php
+
+		-
+			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\Role\:\:\$user_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: ../../packages/panel/src/Support/UserDirectory.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\UserDirectory\:\:resource\(\) should return class\-string\<PanelKit\\Panel\\Resources\\Resource\>\|null but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/UserDirectory.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\UserDirectory\:\:roles\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: int\|string, name\: string, grantsAll\: bool, isProtected\: bool, permissions\: array\<mixed\>, userCount\: int\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/UserDirectory.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>\(Expression\)" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Support/UserDirectory.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Support\\VendoredCopy\:\:sourceFor\(\) should return string\|null but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Support/VendoredCopy.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Columns\\BadgeColumn\:\:colors\(\) has parameter \$colors with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Columns/BadgeColumn.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Columns\\Column\:\:selectExpression\(\) return type with generic class Illuminate\\Database\\Query\\Expression does not specify its types\: TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Tables/Columns/Column.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Columns\\Column\:\:selectExpression\(\) should return Illuminate\\Database\\Query\\Expression\|string but returns Illuminate\\Contracts\\Database\\Query\\Expression\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Tables/Columns/Column.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Illuminate\\Database\\Connection\:\:raw\(\) expects float\|int\|literal\-string, non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Tables/Columns/Column.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Tables\\Columns\\IconColumn\:\:\$colors \(array\<string, string\>\) does not accept array\<int\|string, string\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Tables/Columns/IconColumn.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Tables\\Columns\\IconColumn\:\:\$icons \(array\<string, string\>\) does not accept array\<int\|string, string\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Tables/Columns/IconColumn.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Tables\\Columns\\IconColumn\:\:\$labels \(array\<string, string\>\) does not accept array\<int\|string, string\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Tables/Columns/IconColumn.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Tables\\Columns\\SelectColumn\:\:\$options \(array\<string, string\>\) does not accept array\<int\<0, max\>\|string, string\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Tables/Columns/SelectColumn.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Filters\\MultiSelectFilter\:\:resolvedOptions\(\) should return list\<string\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Tables/Filters/MultiSelectFilter.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Tables\\Filters\\MultiSelectFilter\:\:\$resolved type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Filters/MultiSelectFilter.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Filters\\QueryBuilderFilter\:\:applyGroup\(\) has parameter \$group with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Filters/QueryBuilderFilter.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Filters\\QueryBuilderFilter\:\:applyRule\(\) has parameter \$field with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Filters/QueryBuilderFilter.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Filters\\QueryBuilderFilter\:\:fields\(\) should return array\<string, array\{kind\: string, label\: string, column\: string, options\: list\<string\>\}\> but returns array\<string, array\{kind\: string, label\: string, column\: string, options\: array\<string\>\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Tables/Filters/QueryBuilderFilter.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Filters\\QueryBuilderFilter\:\:normalise\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Filters/QueryBuilderFilter.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Filters\\QueryBuilderFilter\:\:pruned\(\) has parameter \$tree with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Filters/QueryBuilderFilter.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Filters\\QueryBuilderFilter\:\:pruned\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Filters/QueryBuilderFilter.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\ConnectionInterface\:\:getDriverName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getTable\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\ListQuery\:\:applyCursor\(\) has parameter \$state with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\ListQuery\:\:applySearch\(\) has parameter \$eloquent with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\ListQuery\:\:changedSince\(\) should return list\<array\<string, mixed\>\> but returns array\<int, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\ListQuery\:\:recordActions\(\) has parameter \$actions with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\ListQuery\:\:totalResolver\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Offset ''page'' on array\{search\: string, sort\: string, direction\: string, cursor\: string\|null, filters\: array\<string, mixed\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Offset ''tab'' on array\{search\: string, sort\: string, direction\: string, cursor\: string\|null, filters\: array\<string, mixed\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$actions$#'
+			identifier: parameter.notFound
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$eloquent contains generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 3
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Parameter \#1 \$expression of method Illuminate\\Database\\Query\\Builder\:\:selectRaw\(\) expects literal\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method PanelKit\\Panel\\Tables\\ListQuery\:\:decorate\(\) expects list\<array\<string, mixed\>\>, array\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Parameter \#1 \$state of method PanelKit\\Panel\\Tables\\ListQuery\:\:base\(\) expects array\{search\: string, sort\: string, direction\: string, cursor\: string\|null, filters\: array\<string, mixed\>\}, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Parameter \#1 of closure expects list\<array\<string, mixed\>\>, non\-empty\-array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Parameter \#2 \$direction of method Illuminate\\Database\\Query\\Builder\:\:orderBy\(\) expects ''asc''\|''desc''\|SortDirection, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Parameter \#3 \$length of function substr expects int\|null, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Tables\\ListQuery\:\:\$model \(class\-string\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Tables\\ListQuery\:\:\$recordActions \(list\<PanelKit\\Panel\\Actions\\ActionGroup\|PanelKit\\Panel\\Actions\\RecordAction\>\) does not accept array\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between null and null will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>values" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Tables/ListQuery.php
+
+		-
+			message: '#^Offset ''tab'' on array\{search\: string, sort\: string, direction\: string, cursor\: string\|null, filters\: array\<string, mixed\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: ../../packages/panel/src/Tables/ListResult.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Reorderer\:\:apply\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Tables/Reorderer.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Summarizer\:\:toSchema\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Summarizer.php
+
+		-
+			message: '#^Call to function in_array\(\) with arguments ''none''\|''view'', array\{''view'', ''none''\} and true will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Cannot access offset 0 on list\<string\>\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Table\:\:appendSelect\(\) has parameter \$columns with generic class Illuminate\\Database\\Query\\Expression but does not specify its types\: TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Table\:\:resolveSearchable\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Table\:\:resolveSelect\(\) should return list\<string\> but returns list\<Illuminate\\Database\\Query\\Expression\|string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Table\:\:searchableColumns\(\) should return list\<string\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tables\\Table\:\:toSchema\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<PanelKit\\Panel\\Actions\\ActionGroup\|PanelKit\\Panel\\Actions\\RecordAction\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method PanelKit\\Panel\\Tables\\ListQuery\:\:searchable\(\) expects list\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Parameter \#1 \$model of static method PanelKit\\Panel\\Tables\\ListQuery\:\:for\(\) expects class\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Tables\\Table\:\:\$additionalSelect with generic class Illuminate\\Database\\Query\\Expression does not specify its types\: TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Tables\\Table\:\:\$model \(class\-string\|null\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>values" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../packages/panel/src/Tables/Table.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../../packages/panel/src/Tables/ViewState.php
+
+		-
+			message: '#^Cannot access offset ''cache'' on Illuminate\\Contracts\\Foundation\\Application\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../packages/panel/src/Tenancy/PrefixCacheBootstrapper.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tenancy\\PrefixedStore\:\:many\(\) has parameter \$keys with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tenancy/PrefixedStore.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tenancy\\PrefixedStore\:\:many\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tenancy/PrefixedStore.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Tenancy\\PrefixedStore\:\:putMany\(\) has parameter \$values with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Tenancy/PrefixedStore.php
+
+		-
+			message: '#^Cannot access offset ''config'' on Illuminate\\Contracts\\Foundation\\Application\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../packages/panel/src/Tenancy/TenantCacheManager.php
+
+		-
+			message: '#^Part \$name \(string\|UnitEnum\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 2
+			path: ../../packages/panel/src/Tenancy/TenantCacheManager.php
+
+		-
+			message: '#^Trait PanelKit\\Panel\\Testing\\InteractsWithPanels is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: ../../packages/panel/src/Testing/InteractsWithPanels.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Ticketing\\TicketResource\:\:userModel\(\) should return class\-string\<Illuminate\\Database\\Eloquent\\Model\> but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Ticketing/TicketResource.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getDeletedAtColumn\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: ../../packages/panel/src/Trash/TrashBin.php
+
+		-
+			message: '#^Call to an undefined method object\:\:getKeyName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Trash/TrashBin.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Trash\\TrashBin\:\:describe\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Trash/TrashBin.php
+
+		-
+			message: '#^Parameter \#1 \$model of method PanelKit\\Panel\\Trash\\TrashBin\:\:deletedColumn\(\) expects class\-string\<Illuminate\\Database\\Eloquent\\Model\>, class\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Trash/TrashBin.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Widgets\\ChartWidget\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Widgets/ChartWidget.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Widgets\\ChartWidget\:\:\$format \(Closure\|null\) is never assigned Closure so it can be removed from the property type\.$#'
+			identifier: property.unusedType
+			count: 1
+			path: ../../packages/panel/src/Widgets/ChartWidget.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Widgets\\ChartWidget\:\:\$format is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: ../../packages/panel/src/Widgets/ChartWidget.php
+
+		-
+			message: '#^Property PanelKit\\Panel\\Widgets\\ChartWidget\:\:\$maxValue \(float\|int\|null\) is never assigned float so it can be removed from the property type\.$#'
+			identifier: property.unusedType
+			count: 1
+			path: ../../packages/panel/src/Widgets/ChartWidget.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Widgets\\StatWidget\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../packages/panel/src/Widgets/StatWidget.php
+
+		-
+			message: '#^Unable to resolve the template type TCacheValue in call to static method Illuminate\\Cache\\Repository\:\:remember\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: ../../packages/panel/src/Widgets/StatWidget.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\ConnectionInterface\:\:getDriverName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: ../../packages/panel/src/Widgets/TimeSeries.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: ../../packages/panel/src/Widgets/TimeSeries.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Widgets\\TimeSeries\:\:__construct\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Widgets/TimeSeries.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Widgets\\TimeSeries\:\:of\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: ../../packages/panel/src/Widgets/TimeSeries.php
+
+		-
+			message: '#^Method PanelKit\\Panel\\Widgets\\TimeSeries\:\:resolve\(\) should return array\{points\: list\<array\{label\: string, value\: float\|int, at\: string\}\>, total\: float\|int, period\: string, bucket\: string\} but returns array\{points\: list\<array\{label\: string, value\: float\|int\}\>, total\: float\|int, period\: string, bucket\: string\}\.$#'
+			identifier: return.type
+			count: 1
+			path: ../../packages/panel/src/Widgets/TimeSeries.php
+
+		-
+			message: '#^Parameter \#1 \$expression of method Illuminate\\Database\\Query\\Builder\:\:selectRaw\(\) expects literal\-string, non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../../packages/panel/src/Widgets/TimeSeries.php

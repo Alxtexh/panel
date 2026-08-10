@@ -87,11 +87,22 @@ final class TicketReply extends Model
         return $this->visibility === self::INTERNAL;
     }
 
+    /** @return BelongsTo<Ticket, $this> */
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
     }
 
+    /**
+     * `Model`, NOT A NAMED CLASS, AND THAT IS NOT LAZINESS.
+     *
+     * The related model is `config('auth.providers.users.model')` - whatever
+     * this installation authenticates with. A package cannot name it, so the
+     * honest generic is the base class. Writing the reference app's `User`
+     * here would type-check against one consumer and be wrong for every other.
+     *
+     * @return BelongsTo<Model, $this>
+     */
     public function author(): BelongsTo
     {
         return $this->belongsTo((string) config('auth.providers.users.model'), 'author_id');

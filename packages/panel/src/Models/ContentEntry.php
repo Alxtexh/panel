@@ -17,6 +17,26 @@ use Illuminate\Database\Eloquent\Model;
  * centre empty for everybody except whoever wrote it. `tenant_id` exists for
  * the per-tenant step and is unused until that step is taken on purpose.
  */
+/**
+ * THE COLUMNS, SO STATIC ANALYSIS CAN SEE THEM - see `Alerts\Announcement`.
+ *
+ * `tenant_id` IS NULLABLE AND NULL MEANS EVERYBODY, which is the one field on
+ * this model worth reading the annotation for: it is the reason this model
+ * carries no `TenantScope`, and the reason `RecordController` had to learn that
+ * a `tenant_id` COLUMN is not the same as a tenant-scoped MODEL.
+ *
+ * @property int $id
+ * @property string $kind
+ * @property int|null $tenant_id
+ * @property string $category
+ * @property string $title
+ * @property string|null $body
+ * @property array<string, mixed>|null $meta
+ * @property int $sort
+ * @property bool $published
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ */
 class ContentEntry extends Model
 {
     public const KIND_FAQ = 'faq';
