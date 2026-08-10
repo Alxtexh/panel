@@ -21,7 +21,7 @@
  * than organisational: nobody on a dark-adapted screen at night should be
  * blinded by a sign-in form first.
  */
-import { usePage } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { ThemeToggle } from '@alxtexh-enterprise/panel'
 
@@ -49,9 +49,20 @@ const appName = computed(() => String(usePage().props.name ?? 'Panel'))
         <div class="w-full max-w-sm">
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col items-center gap-4">
-                    <span class="mb-1 text-lg font-semibold tracking-tight">
-                        {{ appName }}
-                    </span>
+                    <!--
+                        A LINK HOME, AND A TITLE ONLY A SCREEN READER HEARS.
+                        Both were in the reference app's copy of this layout and
+                        not in this one, so promoting the file lost them. The
+                        heading below is a visual `<h1>`; the `sr-only` span is
+                        what gives the link an accessible name, without which it
+                        announces as the product name twice over.
+                    -->
+                    <Link href="/" class="flex flex-col items-center gap-2 font-medium">
+                        <span class="mb-1 text-lg font-semibold tracking-tight">
+                            {{ appName }}
+                        </span>
+                        <span class="sr-only">{{ title }}</span>
+                    </Link>
 
                     <div class="space-y-2 text-center">
                         <h1 class="text-xl font-medium">{{ title }}</h1>
