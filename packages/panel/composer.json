@@ -14,10 +14,12 @@
     },
     "require-dev": {
         "orchestra/testbench": "^10.0|^11.0",
-        "pestphp/pest": "^3.0|^4.0"
+        "pestphp/pest": "^3.0|^4.0",
+        "stancl/tenancy": "^3.10"
     },
     "suggest": {
-        "laravel/ai": "Needed only for ProviderEmbedder - model-backed retrieval. The default embedder is local and needs nothing."
+        "laravel/ai": "Needed only for ProviderEmbedder - model-backed retrieval. The default embedder is local and needs nothing.",
+        "stancl/tenancy": "Needed only for `database` tenancy mode - dedicated database per tenant. The default `column` mode needs nothing."
     },
     "autoload": {
         "psr-4": {
