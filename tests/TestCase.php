@@ -117,8 +117,21 @@ abstract class TestCase extends BaseTestCase
         Inertia::setRootView('app');
     }
 
+    /**
+     * THE PACKAGE'S OWN MIGRATIONS TOO, not only the fixtures'.
+     *
+     * A real installation runs both - `panel_api_tokens`, the permission
+     * tables, announcements, exports and the rest ship with the package and
+     * are published on install. Loading only the fixture migrations would mean
+     * every feature backed by a packaged table was untestable here, which is
+     * most of them.
+     *
+     * FIXTURES SECOND, because `users` is created by the fixture migration and
+     * some packaged migrations add columns to it.
+     */
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+        $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
     }
 }
