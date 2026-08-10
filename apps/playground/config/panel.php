@@ -95,13 +95,6 @@ return [
             ['label' => 'FAQ', 'href' => '/faq'],
         ],
         'previews' => true,
-
-        /*
-         | ASKED FOR EXPLICITLY. The editor is off by default in the package
-         | now - this is the reference app showing it off, and it composes
-         | the page served at `/` above.
-         */
-        'editor' => true,
     ],
 
     /*
@@ -495,16 +488,6 @@ return [
         | pretending the default reaches it.
         */
         AnnouncementsPlugin::class,
-    ],
-
-    /*
-    | ASKED FOR EXPLICITLY. The plugin is off by default in the package now -
-    | `AnnouncementsPlugin::appliesTo()` - and this key is what turns it on,
-    | deep-merged so a missing key here would silently inherit the package's
-    | `false` rather than this application's own choice.
-    */
-    'announcements' => [
-        'enabled' => true,
     ],
 
     /*

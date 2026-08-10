@@ -87,10 +87,4 @@ final class ContentEntryResource extends Resource
             ])
             ->defaultSort('sort', 'asc');
     }
-
-    /** The demo's own subject matter - the worked example the API reference is for. */
-    public static function documented(): bool
-    {
-        return true;
-    }
 }

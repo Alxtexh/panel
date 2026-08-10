@@ -1,0 +1,1 @@
+import{On as e,k as t,mt as n,v as r}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{n as i}from"./inertia-2Vfa8fWd.js";var a=t({__name:`LockScreen`,props:{status:{}},setup(t){return(a,o)=>(n(),r(e(i),{action:`/unlock`,"logout-url":`/logout`,status:t.status},null,8,[`status`]))}});export{a as default};

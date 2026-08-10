@@ -79,10 +79,4 @@ final class ClientSessionResource extends Resource
             ->defaultSort('started_at', 'desc')
             ->perPage(25);
     }
-
-    /** The demo's own subject matter - the worked example the API reference is for. */
-    public static function documented(): bool
-    {
-        return true;
-    }
 }

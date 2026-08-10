@@ -1,5 +1,29 @@
 # Plan: a starter that is not the demo
 
+> **SUPERSEDED — DO NOT BUILD FROM THIS DOCUMENT.**
+>
+> This plan argues the packages are the product and nothing is cloned (§0, §3).
+> `README.md` — the repository's front door — says the opposite, and the README
+> is the direction that holds:
+>
+> > A Laravel + Inertia + Vue dashboard, meant to be **copied as the starting
+> > point for a new dashboard** rather than installed as a dependency. The demo
+> > application in `apps/playground` is the reference: its shell, sidebar,
+> > tables, charts and forms are the design. **A new dashboard starts from that
+> > and replaces the data.**
+>
+> A session followed this file instead of the README and spent itself on
+> Composer/npm distribution, `panel:install`, and making screens opt-in by
+> default (§6.1 "Ship the migrations. Register no plugins.", §6.2 "No shipped
+> resource."). The result was a bare installed shell — one sidebar entry and an
+> empty dashboard — sitting beside a demo that already looked right. That work
+> is reverted; the gating it introduced is undone.
+>
+> **The playground is the product.** Ship its design; replace its data. Sections
+> below are kept for the reasoning they record (the `vendor/` decision in §5 and
+> the clone test in §7 are still correct and still apply), but the delivery model
+> in §0, §3, §6.1 and §6.2 is wrong for this repository.
+
 Written 2026-08-10, at the end of a long session. Everything below is either
 verified in this repository or explicitly marked as an assumption to test.
 

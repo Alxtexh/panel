@@ -29,16 +29,15 @@ final class PanelWithoutScreensTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @return list<string> Route URIs registered for a panel with these exclusions/inclusions. */
-    private function urisFor(string $id, array $without, array $with = []): array
+    /** @return list<string> Route URIs registered for a panel with these exclusions. */
+    private function urisFor(string $id, array $without): array
     {
         app(PanelManager::class)->registerPanel(
             Panel::make($id)
                 ->path($id)
                 ->guard('web')
                 ->middleware(['web'])
-                ->without($without)
-                ->with($with),
+                ->without($without),
         );
 
         PanelRoutes::register(app(PanelManager::class)->panel($id));
@@ -91,40 +90,18 @@ final class PanelWithoutScreensTest extends TestCase
     }
 
     /**
-     * A PANEL THAT EXCLUDES NOTHING KEEPS EVERY SCREEN `without()` DOES NOT
-     * GATE. Without this the previous three would pass against a `register()`
-     * that had quietly stopped mounting anything at all.
-     *
-     * `trash` AND `documents` ARE NOT IN THIS LIST ANY MORE - see
-     * `Panel::OPT_IN_SCREENS`. They are two of the four installation screens
-     * that mount only when `->with([...])` names them, so "excludes nothing"
-     * says nothing about whether they appear; the next test does.
+     * AND A PANEL THAT EXCLUDES NOTHING IS UNCHANGED. Without this the previous
+     * three would pass against a `register()` that had quietly stopped mounting
+     * anything at all.
      */
-    public function test_a_panel_that_excludes_nothing_keeps_every_opt_out_screen(): void
+    public function test_a_panel_that_excludes_nothing_keeps_every_screen(): void
     {
         config(['panel.routes.roles' => true]);
 
         $uris = $this->urisFor('fullportal', []);
 
+        $this->assertContains('fullportal/trash', $uris);
         $this->assertContains('fullportal/roles', $uris);
-    }
-
-    /**
-     * AND THE FOUR INSTALLATION SCREENS STAY OFF UNTIL ASKED FOR - the actual
-     * new default `PanelWithoutScreensTest` exists to prove is not silently
-     * wrong. A panel excluding nothing and asking for nothing gets none of
-     * them; the control half proves `with()` still reaches them when named.
-     */
-    public function test_the_four_installation_screens_are_off_until_asked_for(): void
-    {
-        $off = $this->urisFor('bareportal', []);
-
-        $this->assertNotContains('bareportal/trash', $off);
-        $this->assertNotContains('bareportal/documents', $off);
-
-        $on = $this->urisFor('askedportal', [], ['trash', 'documents']);
-
-        $this->assertContains('askedportal/trash', $on);
-        $this->assertContains('askedportal/documents', $on);
+        $this->assertContains('fullportal/documents', $uris);
     }
 }
