@@ -79,6 +79,22 @@ abstract class TestCase extends BaseTestCase
             $config->set('panel.tenancy.mode', 'column');
             $config->set('panel.default', 'admin');
 
+            /*
+             * NO PLUGINS, AND HAVING TO SAY SO IS THE FINDING.
+             *
+             * `panel.plugins` ships with `AnnouncementsPlugin` registered, and
+             * its `appliesTo` asks only whether this is the DEFAULT panel -
+             * true for every fresh install's admin panel. So a host that
+             * declares one resource gets two, and the second brings a CRUD
+             * screen, its routes and an `/api/v1` endpoint nobody chose.
+             *
+             * The cross-tenant matrix caught it by enumerating the registry
+             * and finding `announcements` in a fixture host that registered
+             * only its own. That is the same exposure a bare-install probe
+             * found by reading `route:list`, arrived at independently.
+             */
+            $config->set('panel.plugins', []);
+
             // The fixture User, not the app's - Testbench's default points at
             // a model this package does not ship.
             $config->set('auth.providers.users.model', User::class);
