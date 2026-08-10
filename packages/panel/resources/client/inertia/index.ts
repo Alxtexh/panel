@@ -56,6 +56,20 @@ export { default as DocumentPrint } from './pages/documents/DocumentPrint.vue'
 
 export { default as AuditTimeline } from './components/AuditTimeline.vue'
 
+/*
+ * WIDGETS, FOR ANY SCREEN THAT HOSTS THEM.
+ *
+ * `WidgetSet` serialises stats and charts for three hosts - `DashboardPage`,
+ * `Resource::headerWidgets()` and `Page::headerWidgets()` - and only the
+ * dashboard could draw one, so a custom page received the props and had nothing
+ * to render them with. `PanelWidgets` takes the same `$prefix` the server used
+ * and draws both rows; `ChartBody` is the per-type plot on its own, for a screen
+ * that wants its own card around it.
+ */
+export { default as PanelWidgets } from './components/widgets/PanelWidgets.vue'
+export { default as ChartBody } from './components/widgets/ChartBody.vue'
+export type { Chart, Dataset, Series, StatDefinition, StatValue } from './components/widgets/types'
+
 export { useListTable, type ListPageProps } from './composables/useListTable'
 export { useBulkJob } from './composables/useBulkJob'
 export { useUnsavedGuard } from './composables/useUnsavedGuard'

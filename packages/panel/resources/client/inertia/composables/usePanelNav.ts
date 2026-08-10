@@ -133,7 +133,16 @@ export function usePanelNav() {
          * ONE ENTRY PER TOP-LEVEL SECTION, holding both its OWN items and a
          * second map for whatever is nested under it - see `NavGroup.groups`.
          */
-        const grouped = new Map<string, { items: NavItem[]; subgroups: Map<string, NavItem[]> }>()
+        /*
+         * NAMED, because the `??` fallback below builds one of these as a bare
+         * literal and a contextual type does not reach through `??` into it:
+         * `new Map()` there infers `Map<never, never>`, and the first `.set()`
+         * is then an error against `never`. Annotating the variable is what
+         * gives the literal a type to satisfy.
+         */
+        type Section = { items: NavItem[]; subgroups: Map<string, NavItem[]> }
+
+        const grouped = new Map<string, Section>()
 
         const add = (item: NavPayload) => {
             const entry: NavItem = {
@@ -158,7 +167,10 @@ export function usePanelNav() {
              * producing one.
              */
             const [sectionName, subName] = item.group.split('/', 2)
-            const section = grouped.get(sectionName) ?? { items: [], subgroups: new Map() }
+            const section: Section = grouped.get(sectionName) ?? {
+                items: [],
+                subgroups: new Map<string, NavItem[]>(),
+            }
 
             if (subName) {
                 section.subgroups.set(subName, [...(section.subgroups.get(subName) ?? []), entry])

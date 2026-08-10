@@ -7,7 +7,6 @@ import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { toUrl } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile';
-import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 
 /*
@@ -17,6 +16,12 @@ import type { NavItem } from '@/types';
  * per panel (`panel.settings.index`) and Wayfinder no longer emits a bare
  * `settings.index` for this application to import. Both links here belong to
  * this app's own root panel, which is mounted at `/`.
+ *
+ * SECURITY WENT THE SAME WAY. Its controller and routes are the package's now,
+ * so the name is `panel.settings.security` and `@/routes/security` is no longer
+ * generated at all - importing it failed the BUILD rather than a test, because
+ * Wayfinder emits these modules from the route list and the PHP suite never
+ * looks at them.
  */
 
 const page = usePage();
@@ -28,7 +33,7 @@ const sidebarNavItems = computed<NavItem[]>(() => [
     },
     {
         title: 'Security',
-        href: editSecurity(),
+        href: '/settings/security',
     },
     /*
      * Last, and named for what it is. The two above are about the person

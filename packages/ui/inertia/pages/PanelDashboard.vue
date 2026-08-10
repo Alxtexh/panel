@@ -25,23 +25,16 @@
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import {
-    BarChart,
     ChartCard,
-    ComboChart,
-    HeatmapChart,
-    LineChart,
-    PieChart,
     PkBoundary,
-    PolarAreaChart,
-    RadarChart,
-    ScatterChart,
-    SegmentedBar,
     SetupChecklist,
     StatCard,
     StatStrip,
     TrendBadge,
 } from '@alxtexh-enterprise/panel'
 import type { SetupChecklistItem, StatSegment } from '@alxtexh-enterprise/panel'
+import ChartBody from '../components/widgets/ChartBody.vue'
+import { type Chart, type Series } from '../components/widgets/types'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
 import type { Announcement } from '../types'
@@ -53,59 +46,12 @@ interface Widget {
     span: number
 }
 
-interface Chart {
-    key: string
-    label: string
-    description: string | null
-    type:
-        | 'line'
-        | 'area'
-        | 'steppedLine'
-        | 'multiAxis'
-        | 'bar'
-        | 'horizontalBar'
-        | 'stackedBar'
-        | 'combo'
-        | 'pie'
-        | 'doughnut'
-        | 'polarArea'
-        | 'radar'
-        /*
-         * `scatter` AND `bubble` PLOT MEASURED x/y PAIRS, not a series against
-         * a category axis. They were missing from this union, from
-         * `ChartWidget::TYPES` and from the template - three declarations, and
-         * a chart that existed in the package and could not be reached.
-         */
-        | 'scatter'
-        | 'bubble'
-        | 'rankedBar'
-        | 'heatmap'
-        | 'segments'
-    span: number
-    periods: { value: string; label: string }[] | null
-    thresholds: { max: number; color: string }[] | null
-    maxValue: number | null
-}
-
-interface Dataset {
-    name: string
-    points: { label: string; value: number }[]
-    axis?: 'left' | 'right'
-    dashed?: boolean
-}
-
-interface Series {
-    points: { label: string; value: number }[]
-    series: Dataset[] | null
-    bars: Dataset[] | null
-    lines: Dataset[] | null
-    total: number | null
-    trend: {
-        direction: 'up' | 'down' | 'flat' | 'new'
-        percentage: number | null
-    } | null
-    error: boolean
-}
+/*
+ * `Chart`, `Dataset` and `Series` WERE DECLARED HERE, which made this file the
+ * only screen that could describe a chart - see `components/widgets/types.ts`.
+ * They are imported now, so a renderer added to `ChartWidget::TYPES` is a
+ * two-file change rather than a three-file one.
+ */
 
 interface AppliedFilters {
     from: string | null
@@ -296,24 +242,6 @@ function setPeriod(key: string, value: string) {
  * plot. Translating at the boundary keeps the PHP declaration a single semantic
  * word instead of a bag of style booleans.
  */
-function multiSeries(chart: Chart): Dataset[] | undefined {
-    const resolved = series(chart.key)
-    const stepped = chart.type === 'steppedLine'
-
-    // A single-dataset stepped chart arrives as `points`, so it has to be
-    // promoted to a series before the flag has anywhere to live. Without this
-    // the type was accepted, the data rendered, and the stepping silently did
-    // not happen - the worst kind of no-op.
-    const datasets =
-        resolved.series ??
-        (stepped && resolved.points.length ? [{ name: '', points: resolved.points }] : null)
-
-    if (!datasets) {
-        return undefined
-    }
-
-    return stepped ? datasets.map((d) => ({ ...d, stepped: true, filled: false })) : datasets
-}
 
 /** Cards size to their content: a ranked list is tall, a proportion bar short. */
 function bodyHeight(chart: Chart): number {
@@ -677,90 +605,7 @@ function stripSegments(key: string): StatSegment[] {
                                 />
                             </template>
 
-                            <!--
-                                One branch per renderer. Written out rather than
-                                resolved through a component map so the props
-                                each chart needs stay visible: a map would hide
-                                that a combo takes bars and lines while a radar
-                                takes series and a pie takes points.
-                            -->
-                            <SegmentedBar
-                                v-if="chart.type === 'segments'"
-                                :segments="series(chart.key).points"
-                                :height="10"
-                            />
-                            <PieChart
-                                v-else-if="chart.type === 'pie' || chart.type === 'doughnut'"
-                                :data="series(chart.key).points"
-                                :type="chart.type === 'pie' ? 'pie' : 'doughnut'"
-                            />
-                            <!--
-                                SCATTER AND BUBBLE, which had no branch here.
-
-                                `ScatterChart.vue` shipped tested and exported,
-                                `scatter` was not in `ChartWidget::TYPES` so PHP
-                                THREW on declaring one, and this template had
-                                nothing to draw it with. The chart existed in
-                                the package and could not be reached from an
-                                application at all.
-
-                                `points` carries x/y pairs rather than the
-                                label/value shape every other chart here takes -
-                                which is the whole reason this type exists.
-                            -->
-                            <ScatterChart
-                                v-else-if="chart.type === 'scatter' || chart.type === 'bubble'"
-                                :data="(series(chart.key) as any).xy ?? []"
-                                :x-label="(chart as any).xLabel"
-                                :y-label="(chart as any).yLabel"
-                            />
-                            <PolarAreaChart
-                                v-else-if="chart.type === 'polarArea'"
-                                :data="series(chart.key).points"
-                            />
-                            <RadarChart
-                                v-else-if="chart.type === 'radar'"
-                                :series="series(chart.key).series ?? []"
-                            />
-                            <ComboChart
-                                v-else-if="chart.type === 'combo'"
-                                :bars="series(chart.key).bars ?? []"
-                                :lines="series(chart.key).lines ?? []"
-                            />
-                            <HeatmapChart
-                                v-else-if="chart.type === 'heatmap'"
-                                :series="series(chart.key).series ?? []"
-                                :height="160"
-                            />
-                            <BarChart
-                                v-else-if="
-                                    chart.type === 'bar' ||
-                                    chart.type === 'horizontalBar' ||
-                                    chart.type === 'stackedBar' ||
-                                    chart.type === 'rankedBar'
-                                "
-                                :data="
-                                    series(chart.key).series ? undefined : series(chart.key).points
-                                "
-                                :series="series(chart.key).series ?? undefined"
-                                :orientation="
-                                    chart.type === 'horizontalBar' || chart.type === 'rankedBar'
-                                        ? 'horizontal'
-                                        : 'vertical'
-                                "
-                                :stacked="chart.type === 'stackedBar'"
-                                :thresholds="chart.thresholds"
-                                :max-value="chart.maxValue"
-                                :height="chart.type === 'rankedBar' ? 380 : 220"
-                                :show-legend="chart.type !== 'rankedBar'"
-                            />
-                            <LineChart
-                                v-else
-                                :data="multiSeries(chart) ? undefined : series(chart.key).points"
-                                :series="multiSeries(chart)"
-                                :type="chart.type === 'area' ? 'area' : 'line'"
-                                show-legend
-                            />
+                            <ChartBody :chart="chart" :data="series(chart.key)" />
                         </ChartCard>
                     </template>
                 </Deferred>
