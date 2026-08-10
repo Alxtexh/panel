@@ -36,11 +36,19 @@ actions.
 
 ## Starting a new dashboard from this
 
-This repository **is** the product. `vendor/` and `public/build/` are committed,
-so a clone runs without `composer install` and without building assets:
+This repository **is** the product. **`public/build/` is committed**, so a clone
+needs no Node toolchain and no `npm run build` - which is the half that actually
+costs a newcomer time. `vendor/` is not committed: cloning with it in the tree
+fails on Windows, because `aws-sdk-php` and `phpunit` carry paths that blow the
+260-character `MAX_PATH` and the clone aborts partway.
+
+So one `composer install`, and nothing else:
 
 ```bash
 git clone <this-repo> myapp && cd myapp/apps/playground
+```
+```bash
+composer install
 ```
 ```bash
 cp .env.example .env && php artisan key:generate
@@ -56,13 +64,14 @@ installation with an empty permissions table shows a working sign-in and then an
 empty sidebar, an empty account menu and no widgets - everything correct and
 everything hidden. That reads as a broken install and is not one.
 
-There is **no `composer require`** because there is nothing to require: the two
-packages are consumed by local path (`../../packages/panel` and
-`file:../../packages/ui`), so they resolve inside this tree and were never
-coming from a registry. Copying the repo copies the framework.
+There is **no `composer require`** for the panel itself: the two packages are
+consumed by local path (`../../packages/panel` and `file:../../packages/ui`), so
+they resolve inside this tree and were never coming from a registry. Copying the
+repo copies the framework.
 
-**You only need the toolchain below to CHANGE things** - rebuild assets, add a
-dependency, run the tests. To run what is already here, you do not.
+**You only need Node for the toolchain below** - rebuilding assets, adding a
+front-end dependency, running the UI tests. To run what is already here, you do
+not.
 
 ---
 
