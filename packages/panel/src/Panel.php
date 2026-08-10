@@ -88,6 +88,35 @@ final class Panel
     /** @var list<string> */
     private array $without = [];
 
+    /** @var list<string> */
+    private array $with = [];
+
+    /**
+     * Screens that mount only when ASKED FOR, not screens somebody must
+     * remember to exclude.
+     *
+     * WHY THESE FOUR AND NOT `help`/`roles`/`workspaces`. The other three
+     * screens `offers()` gates are the panel doing its own job - a portal
+     * with no help centre, no permission matrix or no workspace switcher is
+     * missing something core. These four are the installation's own systems
+     * exposed as ADMIN SCREENS: the server's environment file, its logs, its
+     * queue, its document store, its bin of deleted records, its AI
+     * assistant's settings. A reference app that runs those systems wants
+     * them; a portal customers sign into does not, and a portal generated
+     * from a starter has no reason to assume either way.
+     *
+     * THIS USED TO BE `make:panel`'s JOB, not the class's. The generator
+     * hardcoded `->without([...])` these four names into every provider it
+     * wrote, which reads as "off by default" right up until somebody hand
+     * writes a `Panel` without going through the generator, or edits the
+     * generated file and drops the line - at which point all four mount with
+     * no warning, because the CLASS's own default was never off. Bucketing
+     * these four here, ahead of `without()`, means the default is a property
+     * of `Panel::offers()` itself and cannot be un-set by skipping a
+     * generator.
+     */
+    private const OPT_IN_SCREENS = ['operations', 'assistant-settings', 'documents', 'trash'];
+
     /**
      * Directories THIS panel owns, as `directory => namespace`.
      *
@@ -595,9 +624,41 @@ final class Panel
         return $this;
     }
 
-    /** Whether a packaged screen is mounted on this panel. */
+    /**
+     * The opposite call for the OPT_IN_SCREENS - mount one of the four
+     * deliberately, rather than deleting a line a generator used to write.
+     *
+     * @param  list<string>  $screens  any of: operations, assistant-settings, documents, trash
+     */
+    public function with(array $screens): self
+    {
+        $this->with = array_values(array_unique([...$this->with, ...$screens]));
+
+        return $this;
+    }
+
+    /**
+     * Whether a packaged screen is mounted on this panel.
+     *
+     * TWO DIFFERENT DEFAULTS, on purpose - see `OPT_IN_SCREENS`. For those
+     * four, absence from `$with` means off; for everything else, absence from
+     * `$without` means on. A single list checked one way could not express
+     * both without either turning `help`/`roles`/`workspaces` off for every
+     * panel that has never heard of them, or leaving the four installation
+     * screens on for the same reason.
+     *
+     * `without()` STILL VETOES ONE OF THE FOUR, even though they are already
+     * off without it - `without()`'s own docblock has always named `trash`
+     * and `documents` as valid targets, and a panel that builds its screen
+     * list from two separate calls (`with()` broadly, `without()` to carve
+     * one back out) should not have the second call silently do nothing.
+     */
     public function offers(string $screen): bool
     {
+        if (in_array($screen, self::OPT_IN_SCREENS, true)) {
+            return in_array($screen, $this->with, true) && ! in_array($screen, $this->without, true);
+        }
+
         return ! in_array($screen, $this->without, true);
     }
 

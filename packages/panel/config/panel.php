@@ -541,16 +541,31 @@ return [
         TicketingPlugin::class,
 
         /*
-        | ANNOUNCEMENTS NEED NO CONFIGURATION, so unlike ticketing this one is
-        | simply on. It installs a screen for WRITING a notice into the default
-        | panel and stays out of the navigation - an announcement is read from
-        | the dashboard banner and the bell, and a permanent sidebar entry for
-        | the form that writes one earns nothing.
-        |
-        | Remove this line to turn it off. The banner, the model and the
-        | delivery are unaffected: they are the package's, not the plugin's.
+        | LISTED HERE, BUT OFF UNTIL `panel.announcements.enabled` SAYS SO -
+        | it used to be simply on, "remove this line to turn it off", which is
+        | the same pattern the four installation screens moved away from and
+        | for the same reason: a fresh install got a screen for WRITING an
+        | announcement with nothing configured and no line to notice was
+        | missing. The banner, the model and the delivery are unaffected
+        | either way - they are the package's, not the plugin's, and read
+        | whatever is already in the table regardless of this flag.
         */
         AnnouncementsPlugin::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Announcements
+    |--------------------------------------------------------------------------
+    |
+    | See AnnouncementsPlugin::appliesTo(). Off unless this is true, even
+    | though the plugin class is always in the list above - a plugin nobody
+    | asked for should not need an application to also edit `plugins` to say
+    | so, or every screen this package treats as opt-in would need its own
+    | separate "and don't list the class either" step.
+    */
+    'announcements' => [
+        'enabled' => env('PANEL_ANNOUNCEMENTS_ENABLED', false),
     ],
 
     /*
@@ -939,11 +954,13 @@ return [
         'previews' => env('PANEL_LANDING_PREVIEWS', false),
 
         /*
-         * The editor itself, in the panel. ON even when `route` is off: an
-         * application that serves the composed page from its own route still
-         * wants the screen that composes it.
+         * The editor itself, in the panel. OFF by default, matching the other
+         * installation screens this package treats as opt-in - a fresh
+         * install with `route` off has no composed page to edit either, and
+         * turning on the editor is a decision to make once the public route
+         * (or an application-served one) exists.
          */
-        'editor' => true,
+        'editor' => false,
 
         /*
          * WHERE THE COMPOSED PAGE IS SERVED, for the editor's "View the page"

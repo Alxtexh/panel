@@ -83,4 +83,10 @@ final class PlanResource extends Resource
             ->alsoSelect(['plans.id'])
             ->defaultSort('created_at', 'desc');
     }
+
+    /** The demo's own subject matter - the worked example the API reference is for. */
+    public static function documented(): bool
+    {
+        return true;
+    }
 }

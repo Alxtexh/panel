@@ -66,26 +66,25 @@ final class ClientPanelProvider extends ServiceProvider
                 ->passwordBroker('customers')
 
                 /*
-                 * WHAT A CUSTOMER PORTAL MUST NOT MOUNT.
+                 * WHAT A CUSTOMER PORTAL MUST NOT MOUNT - AND NOTHING BELOW
+                 * ASKS FOR ANY OF IT. `Panel::offers()` now treats operations,
+                 * assistant settings, documents and trash as off unless a
+                 * `->with([...])` names them, so this portal getting none of
+                 * them is the DEFAULT rather than something written here to
+                 * maintain - the absence of a `with()` call is the whole
+                 * statement.
                  *
-                 * THESE WERE ALL REACHABLE AND NOBODY KNEW, which is worth
-                 * spelling out. The guest redirect was broken (see
+                 * THESE WERE ALL REACHABLE ONCE AND NOBODY KNEW, which is
+                 * worth keeping on record. The guest redirect was broken (see
                  * `PanelServiceProvider::redirectGuestsToTheirPanel`), so the
                  * screen crawler could never sign in to this portal and every
                  * one of these went uncrawled. The moment it could, it found
                  * BACKUPS, LOGS and MONITORING mounted on the portal for the
                  * people who BUY the service - a customer one URL away from
-                 * the installation's log output.
-                 *
-                 * Two bugs hid each other: a portal that offered too much, and
-                 * a test that could not reach it to say so.
+                 * the installation's log output. Two bugs hid each other: a
+                 * portal that offered too much, and a test that could not
+                 * reach it to say so.
                  */
-                ->without([
-                    'operations',
-                    'assistant-settings',
-                    'trash',
-                    'documents',
-                ])
 
                 ->brandName(fn (): string => config('app.name').' — Client')
 

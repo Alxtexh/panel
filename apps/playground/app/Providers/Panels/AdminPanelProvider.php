@@ -81,18 +81,23 @@ final class AdminPanelProvider extends ServiceProvider
                  */
                 ->authMiddleware(['auth:web', 'verified'])
                 /*
-                 * THIS APPLICATION MOUNTS THE OPERATIONS SCREENS ITSELF.
+                 * OPERATIONS AND ASSISTANT SETTINGS NEED NO LINE HERE -
+                 * `Panel::offers()` treats them as off unless `->with(...)`
+                 * asks for them, and this application has its own reason to
+                 * want them off regardless: it mounts the operations screens
+                 * ITSELF, in `web.php`. They are the package's now -
+                 * controller, jobs and Vue - but this panel sits at the ROOT
+                 * path, so the packaged routes and the application's would be
+                 * the same URLs registered twice. A fresh installation
+                 * changes nothing and gets them mounted under its panel by
+                 * asking for them.
                  *
-                 * They are the package's now - controller, jobs and Vue - but
-                 * this panel sits at the ROOT path, so the packaged routes and
-                 * the ones declared in `web.php` would be the same URLs
-                 * registered twice. Opting out here leaves one registration,
-                 * and keeps the named routes Wayfinder generates from.
-                 *
-                 * A fresh installation changes nothing and gets them mounted
-                 * under its panel automatically.
+                 * DOCUMENTS AND TRASH ARE ASKED FOR, deliberately - this is
+                 * the reference app, and both are worked examples somebody
+                 * copying this starter should be able to see running rather
+                 * than discover exist only by reading the package.
                  */
-                ->without(['operations', 'assistant-settings'])
+                ->with(['documents', 'trash'])
                 ->brandName(fn (): ?string => app(TenantContext::class)->tenant()?->name),
         );
     }

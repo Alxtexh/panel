@@ -48,17 +48,20 @@ final class PlatformPanelProvider extends ServiceProvider
                 ->authMiddleware(['auth:web'])
                 ->brandName(fn (): string => config('app.name').' — Platform')
                 /*
-                 * NO OPERATIONS SCREENS IN THIS PORTAL.
+                 * NO OPERATIONS SCREENS IN THIS PORTAL, AND NOTHING TO WRITE
+                 * TO GET THAT: `Panel::offers()` treats operations and
+                 * assistant settings as off unless asked for. Backups, logs
+                 * and host metrics belong to whoever runs the installation,
+                 * not to a panel that manages tenants - routing them here
+                 * would put a restore button behind a guard nobody in this
+                 * portal holds, and a route that exists is a route somebody
+                 * can probe regardless of the ability gating it.
                  *
-                 * They ship with the package now and are offered by default,
-                 * which is right for a panel that IS the installation's admin.
-                 * This one is not: backups, logs and host metrics belong to
-                 * whoever runs the installation, and routing them here would
-                 * put a restore button behind a guard that should never reach
-                 * one - protected by an ability nobody in this portal holds,
-                 * but a route that exists is a route somebody can probe.
+                 * DOCUMENTS AND TRASH ARE ASKED FOR: this portal manages the
+                 * document templates every tenant's invoices render from, and
+                 * a bin for records it deletes.
                  */
-                ->without(['operations', 'assistant-settings'])
+                ->with(['documents', 'trash'])
 
                 /*
                  * DISCOVERY BELONGS TO THE PANEL, not to a shared config list.

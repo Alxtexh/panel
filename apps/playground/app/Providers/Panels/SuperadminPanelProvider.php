@@ -129,12 +129,16 @@ final class SuperadminPanelProvider extends ServiceProvider
                     for: 'App\\Panel\\Superadmin\\Resources',
                 )
                 /*
-                 * No operations here either - same reasoning as the platform
-                 * portal: backups and logs belong to the panel that IS the
-                 * installation's admin, and a second copy of a restore button
-                 * is a second thing to secure.
+                 * No operations here either, and nothing to write for it -
+                 * `Panel::offers()` treats them as off unless asked for.
+                 * Backups and logs belong to the panel that IS the
+                 * installation's admin; a second copy of a restore button is
+                 * a second thing to secure.
+                 *
+                 * DOCUMENTS AND TRASH ARE ASKED FOR, matching every other
+                 * central portal.
                  */
-                ->without(['operations', 'assistant-settings']),
+                ->with(['documents', 'trash']),
         );
 
         /*
