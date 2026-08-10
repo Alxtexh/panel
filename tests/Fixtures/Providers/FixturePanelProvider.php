@@ -62,5 +62,24 @@ final class FixturePanelProvider extends ServiceProvider
                     'Alxtexh\\Panel\\Tests\\Fixtures\\Resources',
                 ),
         );
+
+        /*
+         * A SECOND PORTAL, at its own prefix and with its own resource
+         * directory. One panel cannot demonstrate separation: the property
+         * under test is that a resource belongs to exactly one portal and is
+         * not addressable from another, which needs two to state at all.
+         */
+        $panels->registerPanel(
+            Panel::make('second')
+                ->path('second')
+                ->routeName('second')
+                ->guard('web')
+                ->middleware(['web'])
+                ->authMiddleware(['auth:web'])
+                ->discoverResources(
+                    __DIR__.'/../Second',
+                    'Alxtexh\\Panel\\Tests\\Fixtures\\Second',
+                ),
+        );
     }
 }
