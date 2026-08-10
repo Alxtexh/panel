@@ -7,6 +7,12 @@ The demo application in `apps/playground` is the reference: its shell, sidebar,
 tables, charts and forms are the design. A new dashboard starts from that and
 replaces the data.
 
+> **This paragraph is the direction, and it is settled.** `STARTER_PLAN.md`
+> argues the opposite — that the packages are the product and nothing is
+> cloned. It is superseded and marked as such. A session followed it instead of
+> this file and spent itself building a delivery model nobody asked for, so if
+> the two ever appear to disagree again: **this one wins.**
+
 Add a screen by writing **one PHP class**. No Vue.
 
 ```php

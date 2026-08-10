@@ -2,6 +2,11 @@
 
 > **SUPERSEDED — DO NOT BUILD FROM THIS DOCUMENT.**
 >
+> **Settled on 2026-08-11 by the repository's owner: the README is right, and
+> `apps/playground` is the product.** This is no longer two documents
+> disagreeing; it is one decision with one dissenting file, and that file is
+> this one.
+>
 > This plan argues the packages are the product and nothing is cloned (§0, §3).
 > `README.md` — the repository's front door — says the opposite, and the README
 > is the direction that holds:
