@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Fixtures\Resources;
 
+use Alxtexh\Panel\Actions\BulkAction;
+use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
@@ -25,6 +27,29 @@ final class ArticleResource extends Resource
                 TextColumn::make('status')->from('articles.status')->sortable(),
                 DateColumn::make('created_at')->from('articles.created_at')->sortable()->withTime(),
             ])
-            ->keyColumn('articles.id');
+            ->keyColumn('articles.id')
+            /*
+             * DECLARED ACTIONS, because the endpoint only runs what the
+             * resource offered - that refusal is the property under test, and
+             * it cannot be asserted against a resource that declares none.
+             */
+            ->recordActions([
+                RecordAction::make('publish', 'Publish')
+                    ->authorize('update')
+                    ->mutate(['status' => 'published']),
+
+                // Hidden for an already-published row. `visible()` is enforced
+                // on EXECUTION, not merely used to draw the menu - forcing the
+                // key on a row it is hidden for must still refuse.
+                RecordAction::make('archive', 'Archive')
+                    ->authorize('update')
+                    ->visible(static fn (array $row): bool => ($row['status'] ?? null) !== 'archived')
+                    ->mutate(['status' => 'archived']),
+            ])
+            ->bulkActions([
+                BulkAction::make('publish', 'Publish')
+                    ->authorize('update')
+                    ->mutate(['status' => 'published']),
+            ]);
     }
 }
