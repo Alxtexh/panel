@@ -52,6 +52,16 @@ counts: ## Print seeded row counts
 build: ## Production asset build
 	@cd $(PLAYGROUND) && npm run build
 
+.PHONY: sync-client
+sync-client: ## Build packages/ui and mirror it into packages/panel/resources/client for distribution
+	@cd packages/ui && npm run build
+	@rm -rf packages/panel/resources/client
+	@mkdir -p packages/panel/resources/client
+	@cp packages/ui/package.json packages/panel/resources/client/
+	@cp -r packages/ui/dist packages/panel/resources/client/dist
+	@cp -r packages/ui/inertia packages/panel/resources/client/inertia
+	@echo "Mirrored packages/ui into packages/panel/resources/client. Commit both."
+
 .PHONY: install
 install: ## Install PHP and JS dependencies
 	@cd $(PLAYGROUND) && composer install && npm install

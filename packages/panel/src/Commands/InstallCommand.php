@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 use PanelKit\Panel\Support\PanelPages;
 use PanelKit\Panel\Support\UserRoles;
+use Symfony\Component\Process\Process;
 
 /**
  * php artisan panel:install
@@ -35,9 +36,11 @@ final class InstallCommand extends Command
         $this->components->info('Installing PanelKit');
 
         $this->publishConfig();
+        $this->ensureInertiaScriptElement();
         $this->createTree();
         $this->publishBootstrap();
         $this->wireVite();
+        $this->scaffoldPackageJson();
         $this->repointViews();
         $this->createDefaultPanel();
         $this->wireRolesOntoUser();
@@ -46,11 +49,24 @@ final class InstallCommand extends Command
 
         if ($this->option('auth')) {
             $this->scaffoldAuth();
+            $this->enableDefaultPasswordReset();
+            $this->writeLocalAuthPrefill();
+            $this->scaffoldPasskeys();
         }
 
         $this->checkTenancy();
         $this->checkAuthScaffolding();
         $this->writeBlueprint();
+
+        /*
+         * AFTER every check that might load App\Models\User. Wiring the
+         * PasskeyAuthenticatable trait mid-command and then loading the model
+         * before Composer’s in-memory classmap knows about laravel/passkeys
+         * fatals the install with a trait-not-found error.
+         */
+        if ($this->option('auth')) {
+            $this->wirePasskeyUserModel();
+        }
 
         $this->newLine();
         $this->components->info('Done. Next:');
@@ -60,9 +76,10 @@ final class InstallCommand extends Command
          * paste rather than something to work out.
          */
         $this->line('  1. npm install && npm run build');
-        $this->line('     The screens are Vue and come from `packages/ui`, which this');
-        $this->line('     workspace installs directly - there is no registry to reach and no');
-        $this->line('     token that can be missing.');
+        $this->line('     The screens are Vue and come from `resources/client` inside this');
+        $this->line('     Composer package (`file:vendor/panelkit/panel/resources/client`).');
+        $this->line('     Path repositories must copy, not symlink (`"symlink": false`), or');
+        $this->line('     Vite resolves types outside the app and the build fails.');
         $this->line('     The published resources/css/app.css already points Tailwind at it -');
         $this->line('     without that every utility used only inside the package is purged,');
         $this->line('     and you get a correct table with no styling at all.');
@@ -225,6 +242,89 @@ final class InstallCommand extends Command
             'Merged into',
             $relative.($hasTokens ? ' (sources only - kept your tokens)' : ' (sources and tokens)'),
         );
+    }
+
+    /**
+     * THE HALF `wireVite()` AND `writePageFiles()` BOTH ASSUME IS ALREADY THERE.
+     *
+     * Both write code that imports `@alxtexh-enterprise/panel` and
+     * `@vitejs/plugin-vue` - and until this step existed, neither ever landed
+     * in `package.json`. `npm install && npm run build`, the very first line
+     * this command prints under "Next", failed on a stock application before a
+     * single byte of the panel's own Vue ever ran.
+     *
+     * THE PACKAGE SHIPS ITSELF via `resources/client` (built by
+     * `make sync-client`). A path symlink straight at `packages/ui` pulls that
+     * package's own `node_modules` into the consumer resolve graph and Vite 8
+     * then fails type-only `defineProps<T>()` with "No fs option provided to
+     * compileScript" - the same design-looks-broken failure mode, just earlier.
+     */
+    private function scaffoldPackageJson(): void
+    {
+        $path = base_path('package.json');
+
+        if (! file_exists($path)) {
+            $this->components->warn(
+                'No package.json found. Install a Vue + Inertia starter kit first, or add '
+                .'@alxtexh-enterprise/panel, vue, @inertiajs/vue3, vue-sonner and '
+                .'@vitejs/plugin-vue yourself.',
+            );
+
+            return;
+        }
+
+        $clientPath = dirname(__DIR__, 2).'/resources/client';
+
+        if (! is_file($clientPath.'/package.json')) {
+            $this->components->warn(
+                'packages/panel/resources/client is missing. Run `make sync-client` in the '
+                .'panel repository, then re-run panel:install.',
+            );
+
+            return;
+        }
+
+        $clientPackage = json_decode((string) file_get_contents($clientPath.'/package.json'), true);
+
+        $package = json_decode((string) file_get_contents($path), true);
+        $package['dependencies'] ??= [];
+        $package['devDependencies'] ??= [];
+
+        $added = [];
+
+        $wanted = ($clientPackage['peerDependencies'] ?? [])
+            + ['@alxtexh-enterprise/panel' => 'file:'.$clientPath];
+
+        foreach ($wanted as $name => $constraint) {
+            if (array_key_exists($name, $package['dependencies']) || array_key_exists($name, $package['devDependencies'])) {
+                continue;
+            }
+
+            $package['dependencies'][$name] = $constraint;
+            $added[] = $name;
+        }
+
+        foreach (['@vitejs/plugin-vue' => '^6.0.0', 'typescript' => '^5.7.0'] as $name => $constraint) {
+            if (array_key_exists($name, $package['dependencies']) || array_key_exists($name, $package['devDependencies'])) {
+                continue;
+            }
+
+            $package['devDependencies'][$name] = $constraint;
+            $added[] = $name;
+        }
+
+        if ($added === []) {
+            $this->components->twoColumnDetail('Kept yours', 'package.json');
+
+            return;
+        }
+
+        file_put_contents(
+            $path,
+            json_encode($package, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n",
+        );
+
+        $this->components->twoColumnDetail('Wired', 'package.json ('.implode(', ', $added).')');
     }
 
     /**
@@ -592,6 +692,72 @@ final class InstallCommand extends Command
         $this->components->info('Published config/panel.php');
     }
 
+    /**
+     * Inertia.js v3 reads the initial page from a JSON `<script data-page>`,
+     * not from `data-page` on `#app`.
+     *
+     * WITHOUT THIS FLAG, a fresh install that pulls `@inertiajs/vue3` ^3 mounts
+     * an empty `#app` and throws `Cannot read properties of null (reading
+     * 'component')` - a blank white page that looks like "the design did not
+     * install". The demo already enables the script element; the installer must
+     * too, or the CSS and widgets never get a chance to render.
+     */
+    private function ensureInertiaScriptElement(): void
+    {
+        $path = config_path('inertia.php');
+
+        if (! file_exists($path)) {
+            try {
+                $this->callSilently('vendor:publish', [
+                    '--provider' => 'Inertia\\ServiceProvider',
+                    '--force' => true,
+                ]);
+            } catch (\Throwable) {
+                // Package may expose a tag instead; fall through to env write.
+            }
+        }
+
+        if (file_exists($path)) {
+            $contents = (string) file_get_contents($path);
+
+            if (str_contains($contents, "'use_script_element_for_initial_page' => true")
+                || str_contains($contents, '"use_script_element_for_initial_page" => true')) {
+                $this->components->twoColumnDetail('Kept', 'inertia script-element bootstrap');
+
+                return;
+            }
+
+            $updated = preg_replace(
+                "/('use_script_element_for_initial_page'\\s*=>\\s*)\\(bool\\)\\s*env\\([^\\n]+\\)/",
+                '$1true',
+                $contents,
+                1,
+            );
+
+            if (! is_string($updated) || $updated === $contents) {
+                $updated = str_replace(
+                    "env('INERTIA_USE_SCRIPT_ELEMENT_FOR_INITIAL_PAGE', false)",
+                    "env('INERTIA_USE_SCRIPT_ELEMENT_FOR_INITIAL_PAGE', true)",
+                    $contents,
+                );
+            }
+
+            if ($updated !== $contents) {
+                file_put_contents($path, $updated);
+                $this->components->twoColumnDetail('Enabled', 'inertia.use_script_element_for_initial_page');
+
+                return;
+            }
+        }
+
+        $env = base_path('.env');
+
+        if (file_exists($env) && ! str_contains((string) file_get_contents($env), 'INERTIA_USE_SCRIPT_ELEMENT')) {
+            file_put_contents($env, "\nINERTIA_USE_SCRIPT_ELEMENT_FOR_INITIAL_PAGE=true\n", FILE_APPEND);
+            $this->components->twoColumnDetail('Wrote', '.env INERTIA_USE_SCRIPT_ELEMENT_FOR_INITIAL_PAGE=true');
+        }
+    }
+
     private function createTree(): void
     {
         foreach (['Panel/Resources', 'Panel/Pages', 'Policies'] as $directory) {
@@ -618,11 +784,11 @@ final class InstallCommand extends Command
      * anywhere until somebody wrote a subclass they had no reason to know
      * about.
      *
-     * SO THE INSTALLER WRITES ONE. It declares no widgets, because at install
-     * time there are no models to count; what it gives is a real screen, in the
-     * navigation, at a stable URL, that sign-in lands on - and a file with two
-     * commented examples in it, which is a far better prompt than a paragraph
-     * in a README.
+     * SO THE INSTALLER WRITES ONE WITH SAMPLE WIDGETS. At install time there
+     * are usually no domain models to count, but an empty grey "no widgets
+     * yet" page is not what the demo looks like and is not a usable first
+     * paint. The numbers below are FIXED SAMPLE DATA - replace the closures
+     * with your own queries when you have models.
      *
      * IN THE APPLICATION, NOT THE PACKAGE. A dashboard is the screen people
      * change first, and one that lived in `vendor/` would have to be
@@ -632,7 +798,7 @@ final class InstallCommand extends Command
     {
         $path = app_path('Panel/Pages/DashboardPage.php');
 
-        if (file_exists($path)) {
+        if (file_exists($path) && ! $this->option('force')) {
             $this->components->twoColumnDetail('Kept yours', 'app/Panel/Pages/DashboardPage.php');
 
             return;
@@ -651,16 +817,21 @@ final class InstallCommand extends Command
 
         namespace App\\Panel\\Pages;
 
+        use DateTimeImmutable;
         use PanelKit\\Panel\\Pages\\DashboardPage as PanelKitDashboard;
         use PanelKit\\Panel\\Widgets\\ChartWidget;
+        use PanelKit\\Panel\\Widgets\\DashboardFilters;
+        use PanelKit\\Panel\\Widgets\\Period;
         use PanelKit\\Panel\\Widgets\\StatWidget;
+        use PanelKit\\Panel\\Widgets\\Trend;
 
         /**
          * The panel's home screen - where signing in lands.
          *
-         * Declare widgets and they appear. Each one resolves in its own
-         * deferred prop, so the layout arrives before any query has run and a
-         * slow aggregate delays only itself.
+         * SAMPLE WIDGETS SHIP SO A FRESH INSTALL LOOKS LIKE THE DEMO SHELL,
+         * not an empty page. Replace the closures with your own queries when
+         * you have models; the layout, deferred props and period selectors
+         * stay the same.
          *
          * To use your own layout instead, override `component()` and point it
          * at a page of your own; the declarations, the permission filtering and
@@ -672,13 +843,68 @@ final class InstallCommand extends Command
 
             protected static ?int \$sort = -100;
 
+            /** Four glanceable windows above the widget grid. */
+            public static function strip(): ?callable
+            {
+                return static function (DashboardFilters \$filters, DateTimeImmutable \$now, string \$tenantKey): array {
+                    return [
+                        ['key' => 'today', 'label' => 'Today', 'value' => 145, 'caption' => 'so far', 'sensitive' => false],
+                        ['key' => 'week', 'label' => 'Last 7 days', 'value' => 982, 'caption' => 'rolling window', 'sensitive' => true],
+                        ['key' => 'month', 'label' => 'This month', 'value' => 3_412, 'caption' => 'since the 1st', 'sensitive' => false],
+                        ['key' => 'quarter', 'label' => 'Last 90 days', 'value' => 11_208, 'caption' => 'rolling window', 'sensitive' => true],
+                    ];
+                };
+            }
+
             /** The counters across the top. */
             public static function stats(): array
             {
                 return [
-                    // StatWidget::make('customers', 'Customers')
-                    //     ->value(fn (): int => Customer::query()->count())
-                    //     ->description('All time'),
+                    StatWidget::make('clients_total', 'Total clients')
+                        ->value(fn (): int => 2_500)
+                        ->description('All subscribers'),
+
+                    StatWidget::make('clients_new', 'New subscribers')
+                        ->value(fn (): int => 238)
+                        ->trend(fn (): Trend => Trend::between(238, 214))
+                        ->sparkline(fn (): array => [
+                            'points' => [
+                                ['label' => 'W1', 'value' => 42],
+                                ['label' => 'W2', 'value' => 51],
+                                ['label' => 'W3', 'value' => 48],
+                                ['label' => 'W4', 'value' => 63],
+                                ['label' => 'W5', 'value' => 58],
+                                ['label' => 'W6', 'value' => 71],
+                            ],
+                        ]),
+
+                    StatWidget::make('clients_active', 'Active')
+                        ->value(fn (): int => 1_583),
+
+                    StatWidget::make('clients_expired', 'Expired')
+                        ->value(fn (): int => 587),
+
+                    StatWidget::make('sessions_live', 'Live sessions')
+                        ->value(fn (): int => 412)
+                        ->description('Currently online'),
+
+                    StatWidget::make('sessions_window', 'Sessions in range')
+                        ->value(fn (): int => 18_440)
+                        ->trend(fn (): Trend => Trend::between(18_440, 16_900))
+                        ->sparkline(fn (): array => [
+                            'points' => [
+                                ['label' => 'Mon', 'value' => 2_100],
+                                ['label' => 'Tue', 'value' => 2_450],
+                                ['label' => 'Wed', 'value' => 2_280],
+                                ['label' => 'Thu', 'value' => 2_610],
+                                ['label' => 'Fri', 'value' => 2_900],
+                                ['label' => 'Sat', 'value' => 3_050],
+                                ['label' => 'Sun', 'value' => 3_050],
+                            ],
+                        ]),
+
+                    StatWidget::make('routers_online', 'Routers online')
+                        ->value(fn (): int => 24),
                 ];
             }
 
@@ -686,10 +912,48 @@ final class InstallCommand extends Command
             public static function charts(): array
             {
                 return [
-                    // ChartWidget::make('signups', 'Sign-ups')
-                    //     ->type('line')
-                    //     ->withPeriods()
-                    //     ->data(fn (\$period, \$now): array => []),
+                    ChartWidget::make('sessions', 'Sessions over time')
+                        ->type('area')
+                        ->description('When subscribers connect')
+                        ->withPeriods()
+                        ->span(2)
+                        ->data(fn (Period \$p, ?DateTimeImmutable \$now): array => [
+                            'points' => [
+                                ['label' => 'Mon', 'value' => 210],
+                                ['label' => 'Tue', 'value' => 245],
+                                ['label' => 'Wed', 'value' => 228],
+                                ['label' => 'Thu', 'value' => 261],
+                                ['label' => 'Fri', 'value' => 290],
+                                ['label' => 'Sat', 'value' => 305],
+                                ['label' => 'Sun', 'value' => 298],
+                            ],
+                        ])
+                        ->trend(fn (Period \$p, ?DateTimeImmutable \$now): Trend => Trend::between(1_837, 1_650)),
+
+                    ChartWidget::make('status', 'Clients by status')
+                        ->type('doughnut')
+                        ->data(fn (): array => [
+                            ['label' => 'Active', 'value' => 1_583],
+                            ['label' => 'Expired', 'value' => 587],
+                            ['label' => 'Suspended', 'value' => 330],
+                        ]),
+
+                    ChartWidget::make('signups', 'New subscribers')
+                        ->type('line')
+                        ->description('Sign-ups per bucket')
+                        ->withPeriods()
+                        ->span(2)
+                        ->data(fn (Period \$p, ?DateTimeImmutable \$now): array => [
+                            'points' => [
+                                ['label' => 'W1', 'value' => 28],
+                                ['label' => 'W2', 'value' => 34],
+                                ['label' => 'W3', 'value' => 31],
+                                ['label' => 'W4', 'value' => 42],
+                                ['label' => 'W5', 'value' => 39],
+                                ['label' => 'W6', 'value' => 48],
+                            ],
+                        ])
+                        ->trend(fn (Period \$p, ?DateTimeImmutable \$now): Trend => Trend::between(222, 198)),
                 ];
             }
         }
@@ -697,6 +961,287 @@ final class InstallCommand extends Command
         PHP);
 
         $this->components->twoColumnDetail('Wrote', 'app/Panel/Pages/DashboardPage.php');
+    }
+
+    /**
+     * Turn on "Forgot password?" for the default admin panel when --auth ran.
+     *
+     * `make:panel` for a custom guard still ships reset OFF; the installer
+     * default is `web` + `users` broker, which a stock Laravel app already has.
+     * An existing provider written before that change is patched in place so
+     * re-running `panel:install --auth` actually shows the link.
+     */
+    private function enableDefaultPasswordReset(): void
+    {
+        $provider = app_path('Providers/Panels/AdminPanelProvider.php');
+
+        if (! file_exists($provider)) {
+            return;
+        }
+
+        $contents = (string) file_get_contents($provider);
+
+        if (! str_contains($contents, '->passwordReset(false)')) {
+            return;
+        }
+
+        $replacement = <<<'PHP'
+                /*
+                 * SELF-SERVICE RESET against Laravel's default `users` broker.
+                 * The `web` guard's accounts live there on a stock install.
+                 */
+                ->passwordReset(true)
+                ->passwordBroker('users')
+PHP;
+
+        $updated = preg_replace(
+            '/\/\*\s*\n\s*\*\s*NO SELF-SERVICE RESET.*?\*\/\s*\n\s*->passwordReset\(false\)/s',
+            $replacement,
+            $contents,
+            1,
+        );
+
+        if (! is_string($updated) || $updated === $contents) {
+            $updated = str_replace('->passwordReset(false)', "->passwordReset(true)\n                ->passwordBroker('users')", $contents);
+        }
+
+        if ($updated === $contents) {
+            return;
+        }
+
+        file_put_contents($provider, $updated);
+        $this->components->twoColumnDetail('Enabled', 'password reset on AdminPanelProvider');
+    }
+
+    /**
+     * Local-only login prefill so a fresh install can open the form and press
+     * Log in without typing - matching the demo's local convenience.
+     *
+     * NEVER WRITES A PASSWORD INTO PRODUCTION CONFIG. The controller refuses
+     * prefill outside `local`; this only seeds the published panel config.
+     */
+    private function writeLocalAuthPrefill(): void
+    {
+        $config = config_path('panel.php');
+
+        if (! file_exists($config)) {
+            return;
+        }
+
+        $contents = (string) file_get_contents($config);
+        $panel = (string) config('panel.default', 'admin');
+
+        if (str_contains($contents, "'{$panel}' =>") && str_contains($contents, "'prefill'")) {
+            $this->components->twoColumnDetail('Kept yours', "config/panel.php auth.{$panel}.prefill");
+
+            return;
+        }
+
+        $needle = <<<'TXT'
+        |   'reseller' => [
+        |       'heading' => 'Reseller portal',
+        |       'description' => 'Sign in to manage your customers',
+        |       'passwords' => true,   // route the reset pair
+        |       'prefill' => null,     // local only, refused elsewhere
+        |   ],
+        */
+TXT;
+
+        if (! str_contains($contents, $needle)) {
+            $this->components->warn('Could not write local auth prefill - edit config/panel.php auth.'.$panel.' by hand.');
+
+            return;
+        }
+
+        $block = <<<PHP
+        |   'reseller' => [
+        |       'heading' => 'Reseller portal',
+        |       'description' => 'Sign in to manage your customers',
+        |       'passwords' => true,   // route the reset pair
+        |       'prefill' => null,     // local only, refused elsewhere
+        |   ],
+        */
+
+        '{$panel}' => [
+            // Local only: PanelAuthController refuses this outside `local`.
+            'prefill' => [
+                'email' => env('PANEL_DEMO_EMAIL', 'admin@example.com'),
+                'password' => env('PANEL_DEMO_PASSWORD', 'password'),
+            ],
+        ],
+PHP;
+
+        file_put_contents($config, str_replace($needle, $block, $contents));
+        $this->components->twoColumnDetail('Wrote', "config/panel.php auth.{$panel}.prefill (local only)");
+    }
+
+    /**
+     * Passkey sign-in button on the packaged login screen.
+     *
+     * THE DEMO SHOWS "Sign in with a passkey". Without `laravel/passkeys` the
+     * controller passes `passkeys: null` and the button is gone - so a fresh
+     * install looks thinner than the demo even when CSS matches. Soft-require:
+     * if Composer cannot install it, we say so and leave email login working.
+     */
+    private function scaffoldPasskeys(): void
+    {
+        $already = class_exists(\Laravel\Passkeys\Passkeys::class)
+            || class_exists(\Laravel\Passkeys\Passkey::class)
+            || is_dir(base_path('vendor/laravel/passkeys'));
+
+        if ($already && (class_exists(\Laravel\Passkeys\Passkeys::class) || class_exists(\Laravel\Passkeys\Passkey::class))) {
+            $this->components->twoColumnDetail('Kept', 'laravel/passkeys already installed');
+
+            return;
+        }
+
+        if (! $already) {
+            $this->components->info('Installing laravel/passkeys for passkey sign-in');
+
+            $composer = base_path('composer.phar');
+            $bin = file_exists($composer) ? escapeshellarg(PHP_BINARY).' '.escapeshellarg($composer) : 'composer';
+
+            $process = Process::fromShellCommandline(
+                "{$bin} require laravel/passkeys --no-interaction",
+                base_path(),
+            );
+            $process->setTimeout(300);
+            $exit = $process->run();
+
+            if ($exit !== 0) {
+                $this->components->warn(
+                    'Could not install laravel/passkeys. Run `composer require laravel/passkeys` '
+                    .'then `php artisan vendor:publish --tag=passkeys-migrations && php artisan migrate`.',
+                );
+
+                return;
+            }
+
+            Process::fromShellCommandline("{$bin} dump-autoload -o", base_path())
+                ->setTimeout(120)
+                ->run();
+
+            $this->refreshComposerAutoload();
+        }
+
+        if (! class_exists(\Laravel\Passkeys\Passkey::class) && ! class_exists(\Laravel\Passkeys\Passkeys::class)) {
+            $this->components->warn(
+                'laravel/passkeys is on disk but not autoloadable in this process. '
+                .'Re-run `php artisan panel:install --auth` after `composer dump-autoload`.',
+            );
+
+            return;
+        }
+
+        $this->callSilently('vendor:publish', ['--tag' => 'passkeys-migrations', '--force' => true]);
+
+        try {
+            $this->callSilently('migrate', ['--force' => true]);
+        } catch (\Throwable) {
+            $this->components->warn('Passkey migrations published - run `php artisan migrate` when ready.');
+        }
+
+        $this->components->twoColumnDetail('Installed', 'laravel/passkeys (login button + migrations)');
+    }
+
+    /**
+     * Composer’s ClassLoader keeps the pre-require classmap in memory. After
+     * `composer require` in a subprocess, refresh the registered loader so
+     * newly installed packages resolve without restarting artisan.
+     */
+    private function refreshComposerAutoload(): void
+    {
+        $psr4 = base_path('vendor/composer/autoload_psr4.php');
+        $classmap = base_path('vendor/composer/autoload_classmap.php');
+
+        if (! is_file($psr4)) {
+            return;
+        }
+
+        foreach (spl_autoload_functions() ?: [] as $autoload) {
+            if (! is_array($autoload) || ! $autoload[0] instanceof \Composer\Autoload\ClassLoader) {
+                continue;
+            }
+
+            /** @var \Composer\Autoload\ClassLoader $loader */
+            $loader = $autoload[0];
+
+            foreach (require $psr4 as $prefix => $paths) {
+                $loader->setPsr4($prefix, $paths);
+            }
+
+            if (is_file($classmap)) {
+                $loader->addClassMap(require $classmap);
+            }
+
+            return;
+        }
+    }
+
+    /** Point the User model at laravel/passkeys contracts when the class exists. */
+    private function wirePasskeyUserModel(): void
+    {
+        if (! class_exists(\Laravel\Passkeys\PasskeyAuthenticatable::class)
+            && ! trait_exists(\Laravel\Passkeys\PasskeyAuthenticatable::class)) {
+            return;
+        }
+
+        $path = app_path('Models/User.php');
+
+        if (! file_exists($path)) {
+            return;
+        }
+
+        $contents = (string) file_get_contents($path);
+
+        if (str_contains($contents, 'PasskeyAuthenticatable') || str_contains($contents, 'PasskeyUser')) {
+            return;
+        }
+
+        if (! str_contains($contents, 'class User extends Authenticatable')) {
+            $this->components->warn('Could not wire passkeys onto App\\Models\\User - add PasskeyUser by hand.');
+
+            return;
+        }
+
+        $contents = str_replace(
+            'use Illuminate\\Foundation\\Auth\\User as Authenticatable;',
+            "use Illuminate\\Foundation\\Auth\\User as Authenticatable;\n"
+            ."use Laravel\\Passkeys\\Contracts\\PasskeyUser;\n"
+            .'use Laravel\\Passkeys\\PasskeyAuthenticatable;',
+            $contents,
+        );
+
+        $contents = str_replace(
+            'class User extends Authenticatable',
+            'class User extends Authenticatable implements PasskeyUser',
+            $contents,
+        );
+
+        if (str_contains($contents, 'use HasFactory, Notifiable;')) {
+            $contents = str_replace(
+                'use HasFactory, Notifiable;',
+                'use HasFactory, Notifiable, PasskeyAuthenticatable;',
+                $contents,
+            );
+        } elseif (preg_match('/use HasFactory, Notifiable([^;]*);/', $contents) === 1) {
+            $contents = preg_replace(
+                '/use HasFactory, Notifiable([^;]*);/',
+                'use HasFactory, Notifiable, PasskeyAuthenticatable$1;',
+                $contents,
+                1,
+            ) ?? $contents;
+        } else {
+            $contents = preg_replace(
+                '/class User extends Authenticatable implements PasskeyUser\s*\{/',
+                "class User extends Authenticatable implements PasskeyUser\n{\n    use PasskeyAuthenticatable;\n",
+                $contents,
+                1,
+            ) ?? $contents;
+        }
+
+        file_put_contents($path, $contents);
+        $this->components->twoColumnDetail('Wired', 'App\\Models\\User for passkeys');
     }
 
     /**
