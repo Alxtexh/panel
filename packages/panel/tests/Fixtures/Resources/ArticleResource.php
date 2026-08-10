@@ -16,7 +16,9 @@ use Alxtexh\Panel\Tables\Filters\SelectFilter;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Table;
 use Alxtexh\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Resources\RelationManager;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
+use Alxtexh\Panel\Tests\Fixtures\Models\Comment;
 
 /** The tenant-scoped counterpart of `PostResource`. */
 final class ArticleResource extends Resource
@@ -72,6 +74,34 @@ final class ArticleResource extends Resource
                 ->value(static fn (): int => throw new \RuntimeException(
                     'A hidden widget was resolved for somebody who may not see it.',
                 )),
+        ];
+    }
+
+    /**
+     * A CHILD TABLE ON THE RECORD PAGE.
+     *
+     * `relations()` is the declared allowlist the relation endpoint checks a
+     * URL segment against - the segment is caller-supplied, so an endpoint
+     * that loaded any named relation would let a URL walk this model's
+     * relationship graph.
+     *
+     * @return list<RelationManager>
+     */
+    public static function relations(): array
+    {
+        return [
+            RelationManager::make('comments', 'Comments')
+                ->related(Comment::class, 'comments.article_id')
+                ->table(fn (Table $table): Table => $table
+                    ->columns([
+                        TextColumn::make('body')->from('comments.body')->sortable(),
+                        // Sortable, because it is the default sort - the same
+                        // refusal the parent table taught: `ListQuery` will not
+                        // accept a default that is not in the allowlist.
+                        DateColumn::make('created_at')->from('comments.created_at')->sortable()->withTime(),
+                    ])
+                    ->keyColumn('comments.id')
+                    ->alsoSelect(['comments.id'])),
         ];
     }
 
