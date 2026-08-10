@@ -23,6 +23,9 @@ return new class extends Migration
             $table->string('title');
             $table->string('status')->default('draft');
             $table->string('attachment')->nullable();
+            // Where custom-field values land - one JSON column rather than a
+            // migration per definition. See `Resource::customFields()`.
+            $table->json('custom')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

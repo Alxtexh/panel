@@ -32,4 +32,9 @@ class Article extends Model
     use SoftDeletes;
 
     protected $guarded = [];
+
+    protected function casts(): array
+    {
+        return ['custom' => 'array'];
+    }
 }

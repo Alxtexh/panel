@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests;
 
+use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\PanelServiceProvider;
 use Alxtexh\Panel\Tests\Fixtures\Providers\FixturePanelProvider;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
@@ -115,6 +116,22 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         Inertia::setRootView('app');
+
+        /*
+         * A NEW TEST IS A NEW INSTALLATION, as far as process-level memos go.
+         *
+         * `RefreshDatabase` drops and recreates the schema between tests inside
+         * ONE php process, so a memo answering "does `panel_custom_fields`
+         * exist" - or holding the whole table grouped by resource - is stale in
+         * exactly the way that produces a baffling failure: a test passes alone
+         * and fails in the suite, or reports a definition another test created.
+         *
+         * FOUND BY THAT SYMPTOM. The custom-field fingerprint test passed on
+         * its own and failed in the run, because a definition from the previous
+         * test was still memoised. This is the same call the Octane flush
+         * listener makes, for the same reason.
+         */
+        PanelManager::flushMemoization();
     }
 
     /**
