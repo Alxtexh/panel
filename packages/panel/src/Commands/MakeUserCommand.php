@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\Models\Role;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Models\Role;
+use Alxtexh\Panel\Support\Abilities;
 use Spatie\Permission\PermissionRegistrar;
 
 use function Laravel\Prompts\password;
@@ -18,7 +18,7 @@ use function Laravel\Prompts\text;
  * The first account, without which a fresh install cannot be signed into.
  *
  * FOUND BY INSTALLING FILAMENT AND COMPARING. Filament has
- * `make:filament-user`; PanelKit shipped `panel:permissions sync`, which
+ * `make:filament-user`; Alxtexhpanel shipped `panel:permissions sync`, which
  * creates an Administrator ROLE and no person to hold it. So even after the
  * sign-in screen existed, the honest state of a fresh install was: a login form
  * and nobody who can use it. Nobody's bug report caught this, because everybody
@@ -117,7 +117,19 @@ final class MakeUserCommand extends Command
             $attributes['email_verified_at'] = now();
         }
 
-        $user = $model::query()->create($attributes);
+        /*
+         * `forceFill()`, NOT `create()`. Every key in `$attributes` is decided
+         * above by this command, not by outside input - but a consuming app's
+         * User model is free to declare a narrow `#[Fillable(...)]` list that
+         * does not expect a command to be the one writing `tenant_id`. Mass
+         * assignment guarding silently drops the column in that case: the
+         * account is created, signs in, and sees nothing - the exact failure
+         * the comment above this method exists to prevent, just with the
+         * guard itself as the cause instead of a missing `--tenant`.
+         */
+        $user = new $model;
+        $user->forceFill($attributes);
+        $user->save();
 
         $this->grantAdministrator($user);
 
