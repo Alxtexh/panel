@@ -44,6 +44,25 @@ final class BulkController extends Controller
     /** An explicit selection cannot exceed this; beyond it, select-all is the tool. */
     private const MAX_EXPLICIT_IDS = 1000;
 
+    /**
+     * How many explicitly-selected rows may still run inside the web request.
+     *
+     * THE ACTION DECIDES FIRST, because cost is a property of what the action
+     * DOES rather than of how many rows were ticked: two hundred rows through
+     * a handler that sends a message is slower than a thousand through a
+     * column update. `BulkAction::queueThreshold()` is how an action says so.
+     *
+     * THE DEFAULT IS DELIBERATELY BELOW `MAX_EXPLICIT_IDS`, so the queued path
+     * is reachable from an ordinary selection rather than only from
+     * select-all. A threshold nobody crosses is a threshold nobody has tested,
+     * which is the failure shape this codebase has paid for repeatedly.
+     */
+    private function queueThreshold(BulkAction $action): int
+    {
+        return $action->getQueueThreshold()
+            ?? max(1, (int) config('panel.bulk.queue_threshold', 250));
+    }
+
     public function run(Request $request, string $resource, BulkRunner $runner): JsonResponse
     {
         $class = $this->guard($resource);
@@ -81,14 +100,36 @@ final class BulkController extends Controller
             return response()->json(['message' => 'Nothing was selected.'], 422);
         }
 
-        if ($all) {
+        /*
+         * THE THIRD CASE, WHICH USED TO FALL THROUGH TO "INLINE".
+         *
+         * The bounded/unbounded split above is right and was not the whole
+         * rule: a selection can be BOUNDED AND STILL TOO BIG. A thousand rows
+         * is the cap on what the client may send, and a thousand rows through
+         * a handler that touches a relation or sends a message is not a 40ms
+         * round trip - it is a request that runs until the web server's
+         * timeout kills it halfway, leaving a partial write and a 504 with no
+         * record of how far it got.
+         *
+         * STILL NOT A `COUNT(*)`. The count is `count($ids)` - a number
+         * already in hand, which is why this can be decided without the
+         * blocking count this codebase rejects everywhere else.
+         *
+         * PAST THE THRESHOLD THE IDS TRAVEL WITH THE JOB, unlike the
+         * select-all case where the filters do. The set is explicit, so
+         * re-deriving it from filters would apply the action to a different
+         * set than the one that was ticked.
+         */
+        $queued = $all || count($ids) > $this->queueThreshold($action);
+
+        if ($queued) {
             $token = JobStatus::token();
             JobStatus::start($token, $this->actorId(), "bulk:{$action->key}");
 
             RunBulkAction::dispatch(
                 $resource,
                 $action->key,
-                // The FILTERS travel, not the ids - see the job.
+                // The FILTERS travel for select-all - see the job.
                 $this->filterParameters($request),
                 $this->actorId(),
                 $token,
@@ -96,6 +137,9 @@ final class BulkController extends Controller
                 // an operator can fix belongs in the response they are looking
                 // at, not in a worker's log twenty seconds later.
                 $data,
+                // Empty for select-all, which is what makes the filters the
+                // set; populated for a large explicit selection.
+                $all ? [] : $ids,
             );
 
             return response()->json(['status' => JobStatus::PENDING, 'token' => $token]);

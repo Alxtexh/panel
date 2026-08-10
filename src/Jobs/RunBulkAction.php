@@ -76,6 +76,23 @@ final class RunBulkAction implements ShouldQueue
          * @var array<string, mixed>
          */
         private readonly array $data = [],
+
+        /**
+         * An EXPLICIT selection, when there is one.
+         *
+         * NORMALLY EMPTY AND THE FILTERS TRAVEL INSTEAD, which is the right
+         * shape for "apply to everything matching": the set is re-derived at
+         * execution time and a job payload does not carry half a million ids.
+         *
+         * IT IS NOT THE ONLY SHAPE. A selection that is bounded but still
+         * large - see `BulkController`'s queue threshold - has to name its
+         * rows, because the filters alone would match a different set. The
+         * ids are re-read through the SCOPED query exactly as the inline path
+         * reads them, so an id the actor cannot see still matches nothing.
+         *
+         * @var list<int|string>
+         */
+        private readonly array $ids = [],
     ) {}
 
     public function handle(BulkRunner $runner): void
@@ -100,7 +117,7 @@ final class RunBulkAction implements ShouldQueue
 
             $affected = $runner->run(
                 $action,
-                $list->matching($request),
+                $list->matching($request, $this->ids === [] ? null : $this->ids),
                 $class::model(),
                 $list->keyColumnName(),
                 fn (int $done) => JobStatus::progress($this->token, $done),

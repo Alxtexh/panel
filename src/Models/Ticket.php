@@ -42,6 +42,34 @@ use PanelKit\Panel\Support\TicketTables;
  * ticket ends in.
  */
 #[ScopedBy(TenantScope::class)]
+/**
+ * THE COLUMNS, SO STATIC ANALYSIS CAN SEE THEM - see `Alerts\Announcement`.
+ *
+ * `tenant_id` IS NULLABLE, which on this model is load-bearing rather than
+ * incidental: a ticket raised against the installation itself belongs to no
+ * organisation, and that is the row the superadmin desk exists to answer.
+ *
+ * THE FIVE TIMESTAMPS ARE ALL NULLABLE AND EACH MEANS "HAS NOT HAPPENED YET" -
+ * unresolved, never answered, never read by the desk, never read by the
+ * opener. Annotating any of them non-null would push a null into every
+ * comparison that asks whether it has.
+ *
+ * @property int $id
+ * @property int|null $tenant_id
+ * @property int $opened_by
+ * @property int|null $assigned_to
+ * @property string $subject
+ * @property string $status
+ * @property string $priority
+ * @property string|null $department
+ * @property \Carbon\CarbonImmutable|null $resolved_at
+ * @property \Carbon\CarbonImmutable|null $first_response_at
+ * @property \Carbon\CarbonImmutable|null $last_reply_at
+ * @property \Carbon\CarbonImmutable|null $desk_read_at
+ * @property \Carbon\CarbonImmutable|null $opener_read_at
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ */
 final class Ticket extends Model
 {
     use Auditable;
@@ -137,17 +165,23 @@ final class Ticket extends Model
         return (string) config('auth.providers.users.model');
     }
 
+    /** @return BelongsTo<Model, $this> - see `TicketReply::author()`. */
     public function opener(): BelongsTo
     {
         return $this->belongsTo(self::userModel(), 'opened_by');
     }
 
+    /** @return BelongsTo<Model, $this> - see `TicketReply::author()`. */
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(self::userModel(), 'assigned_to');
     }
 
-    /** The thread, oldest first - which is how a conversation reads. */
+    /**
+     * The thread, oldest first - which is how a conversation reads.
+     *
+     * @return HasMany<TicketReply, $this>
+     */
     public function replies(): HasMany
     {
         return $this->hasMany(TicketReply::class)->oldest();

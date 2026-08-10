@@ -65,9 +65,30 @@ final class PanelPages
          * beside Breeze or Jetstream: they put their own `auth/Login.vue` in the
          * same place, and the writer leaves whatever is already there alone.
          */
-        'auth/Login',
-        'auth/ForgotPassword',
-        'auth/ResetPassword',
+        /*
+         * `panel/auth/*`, NOT `auth/*`, AND THAT DISTINCTION IS THE WHOLE
+         * POINT.
+         *
+         * IT USED TO BE `auth/Login` AND IT COLLIDED. The note above says an
+         * existing file is never overwritten, which is what makes this safe
+         * beside Breeze or Jetstream - and the consequence nobody drew was
+         * that the portal then RENDERED Breeze's screen. Inertia resolves a
+         * name against the application's own pages, so a panel's sign-in got a
+         * component written for the application's controller, with a different
+         * prop contract: the packaged controller sends `socialProviders` as a
+         * list of objects, the reference app's screen expected a map and
+         * captioned its button with raw JSON, and the panel's configured
+         * heading was dropped. Nothing errored, because a page that renders is
+         * a page that looks like it works.
+         *
+         * Under a name no application owns, the packaged controller and the
+         * packaged component are guaranteed to agree - so `make:panel --auth`
+         * produces a working, panel-branded sign-in on a host that has its own
+         * `auth/Login`, which it previously could not.
+         */
+        'panel/auth/Login',
+        'panel/auth/ForgotPassword',
+        'panel/auth/ResetPassword',
 
         /*
          * NESTED NAMES, because the server renders `documents/Templates` and a

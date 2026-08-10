@@ -16,6 +16,7 @@ use PanelKit\Panel\CustomFields\CustomField;
 use PanelKit\Panel\CustomFields\CustomFieldFactory;
 use PanelKit\Panel\CustomFields\CustomFieldStorage;
 use PanelKit\Panel\Forms\Fields\Field;
+use PanelKit\Panel\Widgets;
 use PanelKit\Panel\Forms\Fields\SelectField;
 use PanelKit\Panel\Http\NestedContext;
 use PanelKit\Panel\Live\LiveConfig;
@@ -515,6 +516,21 @@ final class ResourceController extends Controller
             'can' => $class::permissions(),
 
             /*
+             * WIDGETS ABOVE THE LIST - see `Resource::headerWidgets()`.
+             *
+             * SPREAD, BECAUSE THE SET CONTRIBUTES NO KEYS WHEN IT IS EMPTY.
+             * A screen draws its widget row only if the prop is there, so an
+             * empty array would render a container with spacing around
+             * nothing - and the overwhelmingly common case is a resource with
+             * no widgets at all.
+             *
+             * The permission check and the single deferred group both live in
+             * `WidgetSet`, shared with every other host rather than re-derived
+             * here.
+             */
+            ...Widgets\WidgetSet::props($class::headerWidgets(), $request->user()),
+
+            /*
              * This person's saved views for this resource.
              *
              * NOT DEFERRED, and not cached with the schema. Not deferred because
@@ -534,9 +550,25 @@ final class ResourceController extends Controller
             // the rows (§10, addendum C1).
             'total' => Inertia::defer($result->total),
 
-            // Deferred for the same reason the total is: aggregating a tenant's
-            // 200,000 rows must not sit in front of the ten on screen.
-            ...($result->summary ? ['summary' => Inertia::defer($result->summary, 'summary')] : []),
+            /*
+             * Deferred for the same reason the total is: aggregating a tenant's
+             * 200,000 rows must not sit in front of the ten on screen.
+             *
+             * AND IN THE SAME GROUP AS THE TOTAL, which is the part that was
+             * wrong. Inertia fetches deferred props ONE REQUEST PER GROUP, so
+             * naming a group here bought a second round trip and nothing else:
+             * `total` is a COUNT over the filtered set, `tabCounts` is one
+             * query for every tab over the filtered set, and this is one query
+             * of aggregate expressions over the SAME filtered set. Three
+             * aggregates of the same cost class over the same rows belong in
+             * one request.
+             *
+             * (Contrast the dashboard, where `stats` and `charts` are kept
+             * apart on purpose - there the costs genuinely differ, and folding
+             * them together would make the numbers wait for the heaviest
+             * chart.)
+             */
+            ...($result->summary ? ['summary' => Inertia::defer($result->summary)] : []),
             ...($result->tabCounts ? ['tabCounts' => Inertia::defer($result->tabCounts)] : []),
         ]);
     }

@@ -20,6 +20,23 @@ use Spatie\Permission\Models\Role as SpatieRole;
  * disagree. The tenant column is still there and still enforced; it is enforced
  * once.
  */
+/**
+ * THE COLUMNS THIS PACKAGE ADDS TO SPATIE'S ROLE - see `Alerts\Announcement`.
+ *
+ * ONLY THE ADDITIONS ARE LISTED. `id`, `name` and `guard_name` come from the
+ * parent and are already typed there; repeating them would be a second
+ * declaration to keep in step with somebody else's package.
+ *
+ * `team_id` IS SPATIE'S TEAM KEY, which this installation maps to the tenant -
+ * nullable because a role created outside any request has no team, which is
+ * the state `panel:permissions` runs in and the one that has caused this
+ * codebase four separate bugs.
+ *
+ * @property bool $grants_all
+ * @property int|null $team_id
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ */
 class Role extends SpatieRole
 {
     protected $casts = [

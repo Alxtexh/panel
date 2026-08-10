@@ -7,6 +7,7 @@ namespace PanelKit\Panel\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
+use PanelKit\Panel\Widgets;
 use Inertia\Response;
 use PanelKit\Panel\Pages\Page;
 use PanelKit\Panel\PanelManager;
@@ -43,6 +44,17 @@ final class PageController extends Controller
                  */
                 'pageHeading' => $class::heading() ?? $class::label(),
                 'pageDescription' => $class::description(),
+
+                /*
+                 * WIDGETS ON A CUSTOM PAGE - see `Page::headerWidgets()`.
+                 *
+                 * The same set, the same permission rule and the same single
+                 * deferred group as a resource list and the dashboard, because
+                 * they are the same question asked on a third screen. Empty
+                 * contributes no keys at all, so a page that declares none is
+                 * byte-identical to before.
+                 */
+                ...Widgets\WidgetSet::props($class::headerWidgets(), $request->user()),
             ],
         ));
     }

@@ -99,7 +99,15 @@ final class MakePanelCommand extends Command
         }
 
         if ($this->option('auth')) {
-            $this->scaffoldPanelAuth($id, $path, (string) $this->option('guard'), (bool) $this->option('force'));
+            // No routes file: the generated provider declares `->login()`, and
+            // writing both would register `{$id}.login` twice - see the trait.
+            $this->scaffoldPanelAuth(
+                $id,
+                $path,
+                (string) $this->option('guard'),
+                (bool) $this->option('force'),
+                withRoutes: false,
+            );
         }
 
         $this->components->info("Panel [{$id}] created.");
@@ -437,21 +445,72 @@ final class {$studly}PanelProvider extends ServiceProvider
                 ->context({$context})
                 ->middleware(['web'])
                 ->authMiddleware(['auth:{$guard}'])
+
+                /*
+                 * THIS PORTAL'S OWN SIGN-IN, at `/{$path}/login`, named
+                 * `{$id}.login` - which is the name the guest redirect looks
+                 * for, so this one line is what stops a guest here being sent
+                 * to the APPLICATION's front door and authenticated against
+                 * the wrong guard.
+                 */
+                ->login()
+
+                /*
+                 * NO SELF-SERVICE RESET UNTIL THERE IS A BROKER FOR IT.
+                 *
+                 * A BROKER NAMES A PROVIDER, WHICH NAMES A TABLE. Offering a
+                 * reset without one falls back to the application's, so a
+                 * request from THIS portal is looked up among the DEFAULT
+                 * guard's accounts - finding nobody on a good day, and for an
+                 * address held in both, mailing a working reset link for
+                 * somebody else's account.
+                 *
+                 * TO TURN IT ON: add a `passwords.{$guard}` entry to
+                 * `config/auth.php` pointing at this guard's provider, then
+                 * `->passwordReset(true)->passwordBroker('{$guard}')`.
+                 * `PanelSeparationConformanceTest` checks the two agree.
+                 */
+                ->passwordReset(false)
+
+                /*
+                 * WHAT THIS PORTAL DOES NOT MOUNT, AND WHY THE DEFAULT IS OFF.
+                 *
+                 * BACKUPS, LOGS AND MONITORING ARE THE INSTALLATION'S, not a
+                 * portal's. They shipped ON by default, which is right for the
+                 * one panel that IS the installation's admin and wrong for
+                 * every other - and the cost of the wrong default was found
+                 * here rather than reasoned about: the reference app's CUSTOMER
+                 * portal mounted all three, so the people who BUY the service
+                 * were one URL away from the log output. An ability gated them,
+                 * but a route that exists is a route somebody can probe, and a
+                 * permission is one grant away from being wrong.
+                 *
+                 * Delete a line to mount one deliberately. Opting in is a
+                 * decision somebody made; opting out is a decision nobody
+                 * knew they had to make.
+                 */
+                ->without([
+                    'operations',
+                    'assistant-settings',
+                    'documents',
+                    'trash',
+                ])
+
+                /*
+                 * DISCOVERY BELONGS TO THE PANEL. It used to be an append to
+                 * `config('panel.discover')` - a list every portal reads - so
+                 * "add a portal" meant editing global state and which portal a
+                 * resource landed in came from a property on the CLASS rather
+                 * than from the panel that claims it. A portal that cannot
+                 * state what it contains is not a separate portal.
+                 */
+                ->discoverResources(
+                    in: app_path('Panel/{$studly}/Resources'),
+                    for: 'App\\\\Panel\\\\{$studly}\\\\Resources',
+                )
+
                 ->brandName(fn (): string => config('app.name').' — {$studly}'),
         );
-
-        /*
-         * DISCOVERY IS DECLARED HERE, beside the panel it belongs to, rather
-         * than in a shared config list. A panel whose resource directory is not
-         * discovered has no resources, no routes and an empty menu - and nothing
-         * fails, which is the worst way for a configuration step to be missed.
-         */
-        config([
-            'panel.discover' => [
-                ...(array) config('panel.discover', []),
-                app_path('Panel/{$studly}/Resources') => 'App\\\\Panel\\\\{$studly}\\\\Resources',
-            ],
-        ]);
     }
 }
 

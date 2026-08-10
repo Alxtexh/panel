@@ -6,6 +6,7 @@ namespace PanelKit\Panel\Support;
 
 use Illuminate\Support\Collection;
 use PanelKit\Panel\PanelManager;
+use PanelKit\Panel\Support\Ability;
 
 /**
  * The sidebar, built from the registry.
@@ -46,9 +47,50 @@ final class PanelNavigation
 
         return self::resources($visible, $prefix)
             ->merge(self::clusters($visible, $prefix))
+            ->merge(self::declared($panels->panel($panelId)))
             ->sortBy([['sort', 'asc'], ['title', 'asc']])
             ->values()
             ->all();
+    }
+
+    /**
+     * ENTRIES THE PANEL DECLARED THAT ARE NOT RESOURCES.
+     *
+     * THE SIDEBAR WAS ENTIRELY RESOURCE-DERIVED, so a link to a report, an
+     * external dashboard or a status page could not appear in it - and the
+     * workaround was a page that existed only to redirect somewhere else.
+     *
+     * `href` IS RESOLVED HERE, not at declaration. Panels register in a
+     * provider's `boot`, which runs before routes exist, so a `route()` call
+     * at declaration time throws about a route that is merely not registered
+     * YET - an error that reads as the route being missing.
+     *
+     * THE ABILITY IS CHECKED SERVER-SIDE, like everything else in this file:
+     * an entry somebody may not open is ABSENT, not greyed out. A menu that
+     * lists what you cannot have is a menu that leaks what exists.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    private static function declared(?\PanelKit\Panel\Panel $panel): Collection
+    {
+        $user = request()->user();
+
+        return collect($panel?->getNavigationItems() ?? [])
+            ->filter(static fn (array $item): bool => ! isset($item['ability'])
+                || Ability::allows($user, (string) $item['ability']))
+            ->map(static function (array $item): array {
+                $href = $item['href'] ?? '';
+
+                return [
+                    'key' => $item['key'] ?? str($item['title'] ?? '')->slug()->value(),
+                    'title' => $item['title'] ?? '',
+                    'href' => $href instanceof \Closure ? $href() : (string) $href,
+                    'icon' => $item['icon'] ?? 'link',
+                    'group' => $item['group'] ?? null,
+                    'sort' => $item['sort'] ?? 100,
+                ];
+            })
+            ->values();
     }
 
     /**

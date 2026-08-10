@@ -50,7 +50,7 @@ final class PanelAuthController extends Controller
     {
         $panel = $this->panel($request);
 
-        return Inertia::render('auth/Login', [
+        return Inertia::render($panel->getLoginComponent(), [
             'action' => $this->url($panel, 'login'),
             'forgotUrl' => $this->passwordsEnabled($panel)
                 ? $this->url($panel, 'forgot-password')
@@ -196,7 +196,75 @@ final class PanelAuthController extends Controller
          */
         $request->session()->regenerate();
 
-        return redirect()->intended($this->panelHome($panel));
+        return redirect($this->destination($request, $panel));
+    }
+
+    /**
+     * WHERE SIGNING IN LANDS YOU, and it must be inside the portal you signed
+     * in to.
+     *
+     * `url.intended` IS ONE SESSION KEY SHARED BY EVERY PANEL, which is the
+     * bug this method exists for. Laravel's `Authenticate` middleware writes it
+     * whenever a guest is turned away from a guarded page - so opening
+     * `/dashboard`, being bounced to the demo's sign-in, then going to
+     * `/superadmin/login` and authenticating there popped `/dashboard` and
+     * landed you in the OTHER portal. On a different guard, holding no session
+     * there, so that page bounced you straight back out to a login screen.
+     *
+     * The symptom reads as "the panels are not separated" and the separation
+     * was fine: the guards, the tables and the sessions were all correct, and
+     * one shared session key sent you to the wrong building anyway.
+     *
+     * SO AN INTENDED URL IS HONOURED ONLY WHEN IT BELONGS TO THIS PANEL.
+     * Ownership is decided by the longest matching path, because a panel at the
+     * ROOT would otherwise claim every URL including the other portals' - the
+     * demo mounts its operator panel at `/` and would swallow `/superadmin/…`
+     * on that test alone.
+     *
+     * A FOREIGN URL IS FORGOTTEN RATHER THAN LEFT, or it sits in the session
+     * waiting to misdirect the next sign-in instead of this one.
+     */
+    private function destination(Request $request, Panel $panel): string
+    {
+        $intended = $request->session()->pull('url.intended');
+
+        if (! is_string($intended) || $intended === '') {
+            return $this->panelHome($panel);
+        }
+
+        $path = '/'.ltrim((string) parse_url($intended, PHP_URL_PATH), '/');
+
+        return $this->panelOwning($path)?->id === $panel->id
+            ? $intended
+            : $this->panelHome($panel);
+    }
+
+    /**
+     * Which panel a path belongs to - the LONGEST matching prefix wins.
+     *
+     * A panel mounted at `/` matches everything, so a plain `str_starts_with`
+     * over an unordered list answers "the root panel" for `/superadmin/help`
+     * depending only on registration order.
+     */
+    private function panelOwning(string $path): ?Panel
+    {
+        $best = null;
+        $bestLength = -1;
+
+        foreach (app(PanelManager::class)->panels() as $candidate) {
+            $prefix = '/'.trim($candidate->getPath(), '/');
+
+            $matches = $prefix === '/'
+                ? true
+                : ($path === $prefix || str_starts_with($path, rtrim($prefix, '/').'/'));
+
+            if ($matches && strlen($prefix) > $bestLength) {
+                $best = $candidate;
+                $bestLength = strlen($prefix);
+            }
+        }
+
+        return $best;
     }
 
     /**
@@ -224,7 +292,7 @@ final class PanelAuthController extends Controller
     {
         $panel = $this->panel($request);
 
-        return Inertia::render('auth/ForgotPassword', [
+        return Inertia::render('panel/auth/ForgotPassword', [
             'action' => $this->url($panel, 'forgot-password'),
             'loginUrl' => $this->url($panel, 'login'),
             'status' => $request->session()->get('status'),
@@ -242,11 +310,23 @@ final class PanelAuthController extends Controller
      */
     public function sendResetLink(Request $request): RedirectResponse
     {
-        $this->panel($request);
+        $panel = $this->panel($request);
 
         $request->validate(['email' => ['required', 'string', 'email']]);
 
-        Password::broker(config('panel.auth.broker'))->sendResetLink(
+        /*
+         * THE PORTAL'S BROKER, NOT THE APPLICATION'S - see
+         * `Panel::passwordBroker()`.
+         *
+         * THIS USED TO READ ONE GLOBAL KEY and it was a real hole, not a
+         * tidiness point. A broker names a PROVIDER, which names a TABLE, so
+         * `panel.auth.broker` = `users` meant a CUSTOMER asking the client
+         * portal for a reset had their address looked up among OPERATORS -
+         * finding nobody on a good day, and on a bad one mailing a working
+         * reset link for an operator account that happened to share the
+         * address. Two guards and one broker cannot be right.
+         */
+        Password::broker($panel->getPasswordBroker())->sendResetLink(
             $request->only('email'),
         );
 
@@ -260,7 +340,7 @@ final class PanelAuthController extends Controller
     {
         $panel = $this->panel($request);
 
-        return Inertia::render('auth/ResetPassword', [
+        return Inertia::render('panel/auth/ResetPassword', [
             'action' => $this->url($panel, 'reset-password'),
             'token' => $token,
             'email' => (string) $request->query('email', ''),
@@ -277,7 +357,7 @@ final class PanelAuthController extends Controller
             'password' => ['required', 'string', 'confirmed', 'min:8'],
         ]);
 
-        $status = Password::broker(config('panel.auth.broker'))->reset(
+        $status = Password::broker($panel->getPasswordBroker())->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             static function ($user, string $password): void {
                 $user->forceFill(['password' => bcrypt($password)])->save();
@@ -335,8 +415,19 @@ final class PanelAuthController extends Controller
      * because a "Forgot password?" link that leads to a form that silently
      * queues a mail nobody delivers is worse than no link: somebody waits.
      */
+    /**
+     * THE PANEL IS ASKED FIRST, then config.
+     *
+     * A PORTAL THAT DECLARED `passwordReset(false)` STILL RENDERED THE LINK,
+     * because this read config alone - so the panel object said one thing, the
+     * routes were not registered accordingly, and the screen offered a
+     * "Forgot password?" that 404ed. Config remains the answer for a portal
+     * whose routes come from a hand-written `panel-{id}-auth.php`, which has
+     * no panel-level declaration to read.
+     */
     private function passwordsEnabled(Panel $panel): bool
     {
-        return (bool) config("panel.auth.{$panel->id}.passwords", true);
+        return $panel->hasPasswordReset()
+            && (bool) config("panel.auth.{$panel->id}.passwords", true);
     }
 }

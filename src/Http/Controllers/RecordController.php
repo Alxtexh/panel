@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Schema;
+use PanelKit\Panel\Models\Scopes\TenantScope;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use PanelKit\Panel\Actions\RecordAction;
@@ -426,6 +427,30 @@ final class RecordController extends Controller
          * throw the same way a dedicated-database write would.
          */
         if (! Schema::hasColumn($record->getTable(), $context->column())) {
+            return;
+        }
+
+        /*
+         * A COLUMN IS NOT THE SAME AS A SCOPE, and reading it as one broke the
+         * first central resource that shipped.
+         *
+         * `ContentEntry` has a nullable `tenant_id` where NULL MEANS EVERYBODY
+         * - central Help and FAQ, written once and read from every portal -
+         * and deliberately carries no `TenantScope`. This method saw the
+         * column, demanded a tenant, and the superadmin portal (which resolves
+         * none, by design) got 403 on every save: a screen whose permissions
+         * were entirely correct, refusing to write the row it exists to write.
+         *
+         * SO THE QUESTION IS WHETHER THE MODEL IS SCOPED, not whether the
+         * table has somewhere to put a key. A model without the scope owns its
+         * own meaning for that column, and stamping it would be this
+         * controller overruling the model.
+         *
+         * THE LOUD REFUSAL BELOW STAYS FOR EVERYTHING ELSE, which is the half
+         * that matters: a genuinely tenant-scoped record with no tenant
+         * resolved is still a write that must not happen.
+         */
+        if (! $record->hasGlobalScope(TenantScope::class)) {
             return;
         }
 

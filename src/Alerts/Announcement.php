@@ -28,6 +28,43 @@ use PanelKit\Panel\Support\TenantContext;
  *
  * TENANT-SCOPED LIKE EVERYTHING ELSE, with the usual rule: no tenant means no
  * rows rather than all of them.
+ *
+ * THE COLUMNS ARE LISTED BELOW SO STATIC ANALYSIS CAN SEE THEM.
+ *
+ * ELOQUENT RESOLVES ATTRIBUTES AT RUNTIME through `__get`, so every
+ * `$announcement->title` in this package was an "access to an undefined
+ * property" to phpstan - 93 of them across the package, the single largest
+ * category of finding in its baseline. The properties are real; nothing could
+ * see them.
+ *
+ * ANNOTATING THE MODEL FIXES ITS CONSUMERS TOO, which is why this is the first
+ * one done: `AnnouncementDelivery` reads six of these fields and every read was
+ * its own finding.
+ *
+ * NULLABILITY IS COPIED FROM THE MIGRATION, not guessed. A `?string` that is
+ * really `string` costs a null check nobody needs; a `string` that is really
+ * nullable is a null reaching code that cannot take one - which is the bug this
+ * annotation is supposed to help find, reintroduced by the annotation itself.
+ *
+ * `starts_at`/`ends_at` ARE `CarbonImmutable` BECAUSE `$casts` SAYS `datetime`,
+ * and the booleans likewise - the cast is the source of truth for the type, not
+ * the column.
+ *
+ * @property int $id
+ * @property int $tenant_id
+ * @property string $title
+ * @property string|null $body
+ * @property string $severity
+ * @property string $display
+ * @property string|null $action_label
+ * @property string|null $action_url
+ * @property \Carbon\CarbonImmutable|null $starts_at
+ * @property \Carbon\CarbonImmutable|null $ends_at
+ * @property bool $notify_bell
+ * @property bool $notify_telegram
+ * @property int|null $created_by
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
  */
 final class Announcement extends Model
 {
@@ -87,6 +124,7 @@ final class Announcement extends Model
         });
     }
 
+    /** @return HasMany<AnnouncementDismissal, $this> */
     public function dismissals(): HasMany
     {
         return $this->hasMany(AnnouncementDismissal::class, 'announcement_id');

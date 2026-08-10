@@ -26,6 +26,30 @@ use Illuminate\Support\Str;
  * grants is a permission model nobody can reason about, and the first question
  * anybody asks about an API key is "what can it do that a person can".
  */
+/**
+ * THE COLUMNS, SO STATIC ANALYSIS CAN SEE THEM - see `Alerts\Announcement`.
+ *
+ * `token_hash` IS ANNOTATED AND STILL MUST NOT BE READ. It is here because the
+ * property exists and the analyser should know its type; every legitimate use
+ * compares a HASH of an incoming token against it. An annotation is a
+ * statement about a shape, not permission to use it - and leaving it out would
+ * only mean the next person's mistake goes unanalysed rather than unmade.
+ *
+ * `expires_at` NULL MEANS NEVER, which is worth knowing before writing a
+ * comparison against it.
+ *
+ * @property int $id
+ * @property int $tenant_id
+ * @property int $user_id
+ * @property string $name
+ * @property string $token_hash
+ * @property string $prefix
+ * @property list<string> $abilities
+ * @property \Carbon\CarbonImmutable|null $last_used_at
+ * @property \Carbon\CarbonImmutable|null $expires_at
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ */
 final class ApiToken extends Model
 {
     protected $table = 'panel_api_tokens';

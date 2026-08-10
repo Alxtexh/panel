@@ -23,6 +23,30 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * (`settings_key`) are installation-wide by definition: a landing page is not
  * one tenant's.
  */
+/**
+ * THE COLUMNS, SO STATIC ANALYSIS CAN SEE THEM - see `Alerts\Announcement`.
+ *
+ * ALMOST EVERYTHING IS NULLABLE HERE, AND THAT IS THE MODEL'S WHOLE POINT: a
+ * row exists to override the defaults for ONE page, and every field it does not
+ * set falls back. A non-null annotation on any of these would be a lie the
+ * analyser then enforces on the callers.
+ *
+ * `seoable_type`/`seoable_id` COME FROM `nullableMorphs`, so both are nullable
+ * together - a row keyed by `settings_key` instead is the site-wide default.
+ *
+ * @property int $id
+ * @property string|null $seoable_type
+ * @property int|null $seoable_id
+ * @property string|null $settings_key
+ * @property string|null $title
+ * @property string|null $description
+ * @property list<string>|null $keywords
+ * @property string|null $og_image
+ * @property string|null $canonical
+ * @property bool $noindex
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ */
 final class SeoMetadata extends Model
 {
     protected $guarded = [];

@@ -22,6 +22,23 @@ use PanelKit\Panel\Support\TenantContext;
  * @property array<string, mixed> $settings
  * @property int $version
  */
+/**
+ * THE COLUMNS, SO STATIC ANALYSIS CAN SEE THEM - see `Alerts\Announcement`.
+ *
+ * `version` IS AN INTEGER BY CAST AND `unsignedInteger` BY COLUMN, which agree
+ * - worth checking rather than assuming, because a cast that disagrees with its
+ * column is a bug an annotation would otherwise enshrine.
+ *
+ * @property int $id
+ * @property int $tenant_id
+ * @property string $kind
+ * @property string $name
+ * @property array<string, mixed> $settings
+ * @property int $version
+ * @property int|null $updated_by
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ */
 final class DocumentTemplate extends Model
 {
     protected $table = 'panel_document_templates';

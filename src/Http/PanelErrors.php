@@ -184,7 +184,28 @@ final class PanelErrors
             return $response;
         }
 
-        return Inertia::render('errors/Error', ['status' => $status])
+        /*
+         * COPY THIS PORTAL CHOSE FOR THIS STATUS, if it chose any.
+         *
+         * 419 IS THE CASE THAT MADE THIS NECESSARY. Laravel's wording is "Page
+         * expired", which describes a CSRF token and means nothing to an
+         * operator - and this panel now MAKES it happen deliberately, because
+         * `EnforceSessionLifetime` ends a session at an absolute ceiling
+         * however active it has been. Somebody mid-form is told something
+         * expired with no hint that signing in again is the answer.
+         *
+         * NULL LEAVES THE PACKAGED COPY ALONE, so a portal that registers
+         * nothing renders exactly as before - and the packaged 403 stays
+         * deliberately vague, because an error naming the missing permission
+         * tells whoever probed for it what to ask for next.
+         */
+        $notification = app(PanelManager::class)->currentPanel()?->getErrorNotification($status);
+
+        return Inertia::render('errors/Error', [
+            'status' => $status,
+            'title' => $notification['title'] ?? null,
+            'body' => $notification['body'] ?? null,
+        ])
             ->toResponse($request)
             ->setStatusCode($status);
     }
