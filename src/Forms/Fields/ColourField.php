@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Forms\Fields;
+namespace Alxtexh\Panel\Forms\Fields;
 
-use PanelKit\Panel\Support\Contrast;
+use Alxtexh\Panel\Support\Contrast;
 
 /**
  * A colour, stored as a hex string.

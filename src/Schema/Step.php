@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Schema;
+namespace Alxtexh\Panel\Schema;
 
 /**
  * One step of a wizard. Only meaningful inside `Wizard`.

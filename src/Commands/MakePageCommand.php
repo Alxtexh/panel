@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * Generate a panel page, and the one-line Vue file that resolves it.
@@ -195,7 +195,7 @@ final class MakePageCommand extends Command
         namespace App\\Panel\\Pages;
 
         use Illuminate\\Http\\Request;
-        use PanelKit\\Panel\\Pages\\Page;
+        use Alxtexh\\Panel\\Pages\\Page;
 
         /**
          * TODO: say what this screen is for, and why it is not a resource.
@@ -248,9 +248,9 @@ final class MakePageCommand extends Command
 
         namespace App\\Panel\\Pages;
 
-        use PanelKit\\Panel\\Pages\\DashboardPage;
-        use PanelKit\\Panel\\Widgets\\ChartWidget;
-        use PanelKit\\Panel\\Widgets\\StatWidget;
+        use Alxtexh\\Panel\\Pages\\DashboardPage;
+        use Alxtexh\\Panel\\Widgets\\ChartWidget;
+        use Alxtexh\\Panel\\Widgets\\StatWidget;
 
         /**
          * TODO: say what this dashboard answers.

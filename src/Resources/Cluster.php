@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Resources;
+namespace Alxtexh\Panel\Resources;
 
 /**
  * Several resources presented as ONE navigation item - roadmap 4.1.

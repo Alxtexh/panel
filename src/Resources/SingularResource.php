@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Resources;
+namespace Alxtexh\Panel\Resources;
 
-use PanelKit\Panel\Forms\Form;
+use Alxtexh\Panel\Forms\Form;
 
 /**
  * A screen with ONE record and no list - roadmap 4.3.

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Ai;
+namespace Alxtexh\Panel\Ai;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Models\ConversationMessage;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * Make the AI SDK's conversation tables tenant-scoped without forking it.

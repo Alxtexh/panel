@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
-use PanelKit\Panel\Support\Sitemap;
+use Alxtexh\Panel\Support\Sitemap;
 
 /**
  * php artisan panel:sitemap-generate

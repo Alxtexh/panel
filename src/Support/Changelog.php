@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 /**
  * Release notes, inside the product.
@@ -14,7 +14,7 @@ namespace PanelKit\Panel\Support;
  *
  * THE MECHANISM SHIPS, THE CONTENT DOES NOT, which is the same rule the landing
  * presets and the seeders follow. A framework that shipped its own release notes
- * would put PanelKit's version history on somebody else's operations screen -
+ * would put Alxtexhpanel's version history on somebody else's operations screen -
  * true of the framework, meaningless to the person reading it, and impossible to
  * correct without a package release.
  *

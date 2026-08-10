@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Alerts;
+namespace Alxtexh\Panel\Alerts;
 
 use Illuminate\Support\Facades\Notification;
 use NotificationChannels\Telegram\Telegram as Client;
-use PanelKit\Panel\Notifications\TelegramText;
-use PanelKit\Panel\Support\BackupSettings;
-use PanelKit\Panel\Support\PanelSettings;
+use Alxtexh\Panel\Notifications\TelegramText;
+use Alxtexh\Panel\Support\BackupSettings;
+use Alxtexh\Panel\Support\PanelSettings;
 
 /**
  * Telegram, as one call from anywhere in the panel.

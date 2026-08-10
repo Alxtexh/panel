@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Knowledge;
+namespace Alxtexh\Panel\Knowledge;
 
 /**
  * A deterministic embedder with no network, no key and no cost.

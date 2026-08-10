@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tables;
+namespace Alxtexh\Panel\Tables;
 
 use Closure;
 use Illuminate\Database\Query\Expression;
 use InvalidArgumentException;
-use PanelKit\Panel\Actions\ActionGroup;
-use PanelKit\Panel\Actions\BulkAction;
-use PanelKit\Panel\Actions\RecordAction;
-use PanelKit\Panel\Tables\Columns\Column;
-use PanelKit\Panel\Tables\Filters\Filter;
-use PanelKit\Panel\Tables\Filters\HasOptions;
+use Alxtexh\Panel\Actions\ActionGroup;
+use Alxtexh\Panel\Actions\BulkAction;
+use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Tables\Columns\Column;
+use Alxtexh\Panel\Tables\Filters\Filter;
+use Alxtexh\Panel\Tables\Filters\HasOptions;
 
 /**
  * Declarative table definition. Produces the schema, and configures ListQuery.

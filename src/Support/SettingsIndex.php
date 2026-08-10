@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * One screen listing the settings screens, so somebody can find them.
@@ -32,7 +32,7 @@ use PanelKit\Panel\PanelManager;
  */
 final class SettingsIndex
 {
-    private const KEY = 'panelkit.settings-index';
+    private const KEY = 'alxtexhpanel.settings-index';
 
     /**
      * Add entries of your own.

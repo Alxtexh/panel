@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tables\Filters;
+namespace Alxtexh\Panel\Tables\Filters;
 
 /**
  * A filter whose options are TENANT DATA and ship beside the records.

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\CustomFields;
+namespace Alxtexh\Panel\CustomFields;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;

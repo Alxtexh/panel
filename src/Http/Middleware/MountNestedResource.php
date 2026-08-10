@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Middleware;
+namespace Alxtexh\Panel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
@@ -26,9 +26,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class MountNestedResource
 {
-    public const PARENT_KEY = 'panelkit.nested.parent-key';
+    public const PARENT_KEY = 'alxtexhpanel.nested.parent-key';
 
-    public const PARENT_ID = 'panelkit.nested.parent-id';
+    public const PARENT_ID = 'alxtexhpanel.nested.parent-id';
 
     public function handle(Request $request, Closure $next): Response
     {

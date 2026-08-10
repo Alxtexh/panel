@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Models\Role;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Models\Role;
+use Alxtexh\Panel\Support\Abilities;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -146,7 +146,7 @@ final class PermissionsCommand extends Command
      * The column Spatie scopes roles by - ASKED, NEVER ASSUMED.
      *
      * It is `tenant_id` here and `team_id` in Spatie's own default, and a
-     * consumer who published the config before installing PanelKit has whichever
+     * consumer who published the config before installing Alxtexhpanel has whichever
      * they chose. Hardcoding the panel's name would write assignments into a
      * column the runtime then never reads: the sync reports success, every role
      * looks correct in the database, and nobody can do anything.

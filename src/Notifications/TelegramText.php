@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Notifications;
+namespace Alxtexh\Panel\Notifications;
 
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Telegram\TelegramMessage;

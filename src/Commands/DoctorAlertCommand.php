@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use PanelKit\Panel\Alerts\Telegram;
-use PanelKit\Panel\Support\InstallationState;
+use Alxtexh\Panel\Alerts\Telegram;
+use Alxtexh\Panel\Support\InstallationState;
 
 /**
  * `panel:doctor` on a schedule, reporting through Telegram - roadmap 7.3.

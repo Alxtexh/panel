@@ -105,7 +105,7 @@ return new class extends Migration
          * row it was asked to store. Asking the thing that will actually produce
          * the vectors removes the mismatch rather than documenting it.
          */
-        $dimensions = app(PanelKit\Panel\Knowledge\Embedder::class)->dimensions();
+        $dimensions = app(Alxtexh\Panel\Knowledge\Embedder::class)->dimensions();
 
         DB::statement("ALTER TABLE panel_knowledge_chunks ADD COLUMN embedding_vector vector({$dimensions})");
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Alerts;
+namespace Alxtexh\Panel\Alerts;
 
 /**
  * A DERIVED condition that currently holds - "6 routers are offline".

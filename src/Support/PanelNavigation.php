@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Illuminate\Support\Collection;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Ability;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Ability;
 
 /**
  * The sidebar, built from the registry.
@@ -71,7 +71,7 @@ final class PanelNavigation
      *
      * @return Collection<int, array<string, mixed>>
      */
-    private static function declared(?\PanelKit\Panel\Panel $panel): Collection
+    private static function declared(?\Alxtexh\Panel\Panel $panel): Collection
     {
         $user = request()->user();
 

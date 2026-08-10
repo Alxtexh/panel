@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * Starting points for a new role.

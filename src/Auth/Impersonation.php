@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Auth;
+namespace Alxtexh\Panel\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Audit\AuditRecorder;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\Ability;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Audit\AuditRecorder;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\TenantContext;
 use RuntimeException;
 
 /**

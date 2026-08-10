@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\SingularResource;
-use PanelKit\Panel\Support\Ability;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\SingularResource;
+use Alxtexh\Panel\Support\Ability;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tables\Columns;
+namespace Alxtexh\Panel\Tables\Columns;
 
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Schema\Renderable;
-use PanelKit\Panel\Tables\Summarizer;
+use Alxtexh\Panel\Schema\Renderable;
+use Alxtexh\Panel\Tables\Summarizer;
 
 /**
  * A column in the resource schema.

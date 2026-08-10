@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers\Api;
+namespace Alxtexh\Panel\Http\Controllers\Api;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use PanelKit\Panel\Api\ApiToken;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Api\ApiToken;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\TenantContext;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -175,7 +175,7 @@ final class ResourceApiController extends Controller
 
     /* ------------------------------------------------------------ plumbing */
 
-    /** @return class-string<\PanelKit\Panel\Resources\Resource> */
+    /** @return class-string<\Alxtexh\Panel\Resources\Resource> */
     private function resolve(string $resource): string
     {
         $class = app(PanelManager::class)->resource($resource);

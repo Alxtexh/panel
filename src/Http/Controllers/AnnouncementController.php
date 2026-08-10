@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use PanelKit\Panel\Alerts\Announcement;
-use PanelKit\Panel\Alerts\AnnouncementDismissal;
-use PanelKit\Panel\Notifications\AnnouncementDismissed;
+use Alxtexh\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Alerts\AnnouncementDismissal;
+use Alxtexh\Panel\Notifications\AnnouncementDismissed;
 
 /**
  * Closing a banner, without losing it.

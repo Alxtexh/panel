@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Mail;
+namespace Alxtexh\Panel\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use PanelKit\Panel\Reports\ScheduledReport;
+use Alxtexh\Panel\Reports\ScheduledReport;
 
 /**
  * The email a scheduled report arrives as.

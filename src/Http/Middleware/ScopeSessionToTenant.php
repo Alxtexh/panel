@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Middleware;
+namespace Alxtexh\Panel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -24,7 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
  * THE HIGHEST-SEVERITY CHECK IN HOSTNAME TENANCY, and the one most likely to be
  * broken by a well-meaning fix. Once tenants live on subdomains, somebody will
  * notice they are logged out when switching hosts and set
- * `SESSION_DOMAIN=.panelkit.test` so the cookie is shared. That single line makes
+ * `SESSION_DOMAIN=.alxtexhpanel.test` so the cookie is shared. That single line makes
  * one login valid on EVERY tenant's subdomain - it looks like a convenience fix,
  * it is one character class wide, and it turns the whole isolation story off.
  *

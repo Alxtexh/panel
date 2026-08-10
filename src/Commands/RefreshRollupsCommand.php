@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use DateTimeImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Widgets\Bucket;
-use PanelKit\Panel\Widgets\Rollup;
+use Alxtexh\Panel\Widgets\Bucket;
+use Alxtexh\Panel\Widgets\Rollup;
 
 /**
  * Builds the pre-aggregated series the dashboard reads.

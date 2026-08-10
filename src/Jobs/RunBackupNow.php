@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Jobs;
+namespace Alxtexh\Panel\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,8 +10,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
-use PanelKit\Panel\Support\BackupSettings;
-use PanelKit\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\BackupSettings;
+use Alxtexh\Panel\Support\InstallationState;
 
 /**
  * Take a backup on demand, from the panel.

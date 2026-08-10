@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Pages;
+namespace Alxtexh\Panel\Pages;
 
 use Illuminate\Http\Request;
-use PanelKit\Panel\Http\Controllers\OrganisationController;
+use Alxtexh\Panel\Http\Controllers\OrganisationController;
 
 /**
  * The organisation's name and logo - the SECOND shape, and the one that matters.

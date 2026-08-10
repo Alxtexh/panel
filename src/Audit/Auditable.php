@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Audit;
+namespace Alxtexh\Panel\Audit;
 
 /**
  * Opt a model into the audit trail.

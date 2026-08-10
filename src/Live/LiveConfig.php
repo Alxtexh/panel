@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Live;
+namespace Alxtexh\Panel\Live;
 
 use RuntimeException;
 

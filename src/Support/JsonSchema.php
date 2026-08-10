@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
-use PanelKit\Panel\Forms\Fields\Field;
-use PanelKit\Panel\Tables\Columns\Column;
+use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Tables\Columns\Column;
 
 /**
  * JSON Schema for the shapes the panel's endpoints send and accept.

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Middleware;
+namespace Alxtexh\Panel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use PanelKit\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Auth\Turnstile;
 use Symfony\Component\HttpFoundation\Response;
 
 /**

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Jobs;
+namespace Alxtexh\Panel\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,8 +10,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\Request;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use PanelKit\Panel\Actions\BulkRunner;
-use PanelKit\Panel\Actions\JobStatus;
+use Alxtexh\Panel\Actions\BulkRunner;
+use Alxtexh\Panel\Actions\JobStatus;
 use RuntimeException;
 use Throwable;
 

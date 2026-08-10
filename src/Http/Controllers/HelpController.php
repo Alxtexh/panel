@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Support\HelpCentre;
+use Alxtexh\Panel\Support\HelpCentre;
 
 /**
  * The help centre: a searchable set of articles, a FAQ, and an About screen.

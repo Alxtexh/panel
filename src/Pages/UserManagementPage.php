@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Pages;
+namespace Alxtexh\Panel\Pages;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\RoleTemplates;
-use PanelKit\Panel\Support\UserDirectory;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\RoleTemplates;
+use Alxtexh\Panel\Support\UserDirectory;
 
 /**
  * Who is here, and what they may do - on one screen.

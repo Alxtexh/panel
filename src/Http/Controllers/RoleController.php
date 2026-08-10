@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Models\Role;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\Ability;
-use PanelKit\Panel\Support\RoleTemplates;
+use Alxtexh\Panel\Models\Role;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\RoleTemplates;
 use Spatie\Permission\Models\Permission;
 
 /**
@@ -339,7 +339,7 @@ final class RoleController extends Controller
      *
      * `tenant_id` is this project's name for it and `team_id` is Spatie's own
      * default, so a consumer who published that config before installing
-     * PanelKit has whichever they chose. Hardcoding one would scope a query by a
+     * Alxtexhpanel has whichever they chose. Hardcoding one would scope a query by a
      * column the permission package never reads - every role visible to every
      * organisation, with no error anywhere.
      */

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Jobs;
+namespace Alxtexh\Panel\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,9 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Actions\ExportedFile;
-use PanelKit\Panel\Actions\JobStatus;
-use PanelKit\Panel\Tables\Columns\Column;
+use Alxtexh\Panel\Actions\ExportedFile;
+use Alxtexh\Panel\Actions\JobStatus;
+use Alxtexh\Panel\Tables\Columns\Column;
 use Throwable;
 
 /**

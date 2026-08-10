@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -11,8 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
 use InvalidArgumentException;
-use PanelKit\Panel\Files\FileStore;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Files\FileStore;
+use Alxtexh\Panel\Support\TenantContext;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**

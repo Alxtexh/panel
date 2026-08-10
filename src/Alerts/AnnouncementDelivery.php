@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Alerts;
+namespace Alxtexh\Panel\Alerts;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Notification;
-use PanelKit\Panel\Notifications\BellText;
+use Alxtexh\Panel\Notifications\BellText;
 
 /**
  * Compose once, deliver everywhere chosen - roadmap 5.4.

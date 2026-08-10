@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Alerts;
+namespace Alxtexh\Panel\Alerts;
 
-use PanelKit\Panel\Policies\TenantResourcePolicy;
+use Alxtexh\Panel\Policies\TenantResourcePolicy;
 
 /**
  * Who may write a notice to the whole organisation.

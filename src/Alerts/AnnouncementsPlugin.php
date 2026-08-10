@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Alerts;
+namespace Alxtexh\Panel\Alerts;
 
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\Plugins\Plugin;
-use PanelKit\Panel\Plugins\PluginContext;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\Plugins\Plugin;
+use Alxtexh\Panel\Plugins\PluginContext;
 
 /**
  * A plugin that now ships in the package it was written to imitate.
@@ -39,7 +39,7 @@ final class AnnouncementsPlugin extends Plugin
     public function id(): string
     {
         // Vendor-prefixed, as a published plugin's would be.
-        return 'panelkit/announcements';
+        return 'alxtexhpanel/announcements';
     }
 
     public function appliesTo(Panel $panel): bool

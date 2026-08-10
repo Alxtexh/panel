@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Forms\Fields;
+namespace Alxtexh\Panel\Forms\Fields;
 
-use PanelKit\Panel\Files\FileStore;
+use Alxtexh\Panel\Files\FileStore;
 
 /**
  * A file, uploaded before the form is submitted.

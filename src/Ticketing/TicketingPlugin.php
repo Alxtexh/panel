@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Ticketing;
+namespace Alxtexh\Panel\Ticketing;
 
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Http\Controllers\Ticketing\TicketAnalysisController;
-use PanelKit\Panel\Http\Controllers\Ticketing\TicketStatsController;
-use PanelKit\Panel\Http\Controllers\Ticketing\TicketThreadController;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Plugins\Plugin;
-use PanelKit\Panel\Plugins\PluginContext;
-use PanelKit\Panel\Plugins\RenderHooks;
+use Alxtexh\Panel\Http\Controllers\Ticketing\TicketAnalysisController;
+use Alxtexh\Panel\Http\Controllers\Ticketing\TicketStatsController;
+use Alxtexh\Panel\Http\Controllers\Ticketing\TicketThreadController;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Plugins\Plugin;
+use Alxtexh\Panel\Plugins\PluginContext;
+use Alxtexh\Panel\Plugins\RenderHooks;
 use RuntimeException;
 
 /**
@@ -52,7 +52,7 @@ final class TicketingPlugin extends Plugin
 {
     public function id(): string
     {
-        return 'panelkit/ticketing';
+        return 'alxtexhpanel/ticketing';
     }
 
     public function appliesTo(Panel $panel): bool

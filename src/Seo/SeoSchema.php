@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Seo;
+namespace Alxtexh\Panel\Seo;
 
-use PanelKit\Panel\Forms\Fields\TagsField;
-use PanelKit\Panel\Forms\Fields\TextareaField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Fields\ToggleField;
-use PanelKit\Panel\Schema\Section;
+use Alxtexh\Panel\Forms\Fields\TagsField;
+use Alxtexh\Panel\Forms\Fields\TextareaField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Fields\ToggleField;
+use Alxtexh\Panel\Schema\Section;
 
 /**
  * The whole SEO form, as one line in a resource.

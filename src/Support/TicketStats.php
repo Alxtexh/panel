@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Models\Ticket;
+use Alxtexh\Panel\Models\Ticket;
 
 /**
  * What the queue looks like, in numbers - roadmap H.3.

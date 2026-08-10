@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Policies;
+namespace Alxtexh\Panel\Policies;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\Ability;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * Base policy for tenant-owned records.
  *
  * PROMOTED FROM THE REFERENCE APP, where it had been the base class of every
  * policy in the demo while the package - which DENIES a resource with no policy
- * - shipped none. So the first thing anybody installing PanelKit had to write
+ * - shipped none. So the first thing anybody installing Alxtexhpanel had to write
  * was this file, from scratch, to make their first resource visible at all;
  * and the failure mode of getting it slightly wrong is a screen that opens to
  * somebody it should not.

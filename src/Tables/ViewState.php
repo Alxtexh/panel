@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tables;
+namespace Alxtexh\Panel\Tables;
 
 /**
  * The stored half of a saved view, reduced to what a table actually declares.

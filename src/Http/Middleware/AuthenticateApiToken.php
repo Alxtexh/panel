@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Middleware;
+namespace Alxtexh\Panel\Http\Middleware;
 
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Api\ApiToken;
+use Alxtexh\Panel\Api\ApiToken;
 use Symfony\Component\HttpFoundation\Response;
 
 /**

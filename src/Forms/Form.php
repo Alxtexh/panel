@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Forms;
+namespace Alxtexh\Panel\Forms;
 
 use Illuminate\Database\Eloquent\Model;
-use PanelKit\Panel\Forms\Fields\Field;
-use PanelKit\Panel\Forms\Fields\RepeaterField;
-use PanelKit\Panel\Schema\Component;
-use PanelKit\Panel\Schema\Renderable;
-use PanelKit\Panel\Schema\Section;
+use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Forms\Fields\RepeaterField;
+use Alxtexh\Panel\Schema\Component;
+use Alxtexh\Panel\Schema\Renderable;
+use Alxtexh\Panel\Schema\Section;
 
 /**
  * Declarative form definition.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Alerts\Telegram;
+use Alxtexh\Panel\Alerts\Telegram;
 
 /**
  * Turns the monitoring page's snapshot into history and alerts - roadmap 5.3.

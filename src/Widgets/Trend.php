@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Widgets;
+namespace Alxtexh\Panel\Widgets;
 
 /**
  * "66,667 active, ▲ 4% vs last week" - the comparison behind the arrow.

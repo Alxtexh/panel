@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Forms\Fields;
+namespace Alxtexh\Panel\Forms\Fields;
 
 /**
  * A box you tick.
@@ -63,7 +63,7 @@ final class CheckboxField extends Field
      * the screen reloads showing the stored value, which is the one they just
      * tried to change.
      *
-     * PanelKit's own client always submits the key, so this never fired inside
+     * Alxtexhpanel's own client always submits the key, so this never fired inside
      * the panel. It fires for anyone posting to the endpoint from a form they
      * built themselves, which this framework tells them to do.
      */

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Ai\AiCredentials;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Ability;
+use Alxtexh\Panel\Ai\AiCredentials;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Ability;
 
 /**
  * The assistant's provider and key, as a settings page - E.1's UI half.

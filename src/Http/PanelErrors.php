@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http;
+namespace Alxtexh\Panel\Http;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 use ReflectionClass;
 use ReflectionProperty;
 use Symfony\Component\HttpFoundation\Response;

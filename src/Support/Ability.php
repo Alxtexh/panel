@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -22,7 +22,7 @@ use Spatie\Permission\PermissionRegistrar;
  * `hasPermission()` FIRST. It is the same duck-typed check `PageController`,
  * `SingularController`, `StatWidget`, `ChartWidget` and `Impersonation` make,
  * and the reason is that `can()` CANNOT EXPRESS A `grants_all` ROLE: a role
- * holding every ability including ones invented later is PanelKit's concept,
+ * holding every ability including ones invented later is Alxtexhpanel's concept,
  * stored in a column Spatie has never heard of. Spatie's `Gate::before` answers
  * from the pivot tables alone, so a superuser reads as holding nothing.
  * Promoting a policy once replaced `hasPermission()` with `can()` on the correct

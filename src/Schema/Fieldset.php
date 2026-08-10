@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Schema;
+namespace Alxtexh\Panel\Schema;
 
 /**
  * A titled group of fields, without the card.

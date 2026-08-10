@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Plugins;
+namespace Alxtexh\Panel\Plugins;
 
-use PanelKit\Panel\Panel;
+use Alxtexh\Panel\Panel;
 
 /**
  * A starting point for a plugin, with the boring half already answered.

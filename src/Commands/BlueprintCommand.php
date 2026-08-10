@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
-use PanelKit\Panel\Support\Blueprint;
+use Alxtexh\Panel\Support\Blueprint;
 
 /**
  * Writes the instructions an AI agent needs into the application.
@@ -34,9 +34,9 @@ final class BlueprintCommand extends Command
 
     protected $description = 'Write the panel conventions an AI agent should follow into the project';
 
-    private const START = '<!-- panelkit:blueprint:start -->';
+    private const START = '<!-- alxtexhpanel:blueprint:start -->';
 
-    private const END = '<!-- panelkit:blueprint:end -->';
+    private const END = '<!-- alxtexhpanel:blueprint:end -->';
 
     public function handle(): int
     {

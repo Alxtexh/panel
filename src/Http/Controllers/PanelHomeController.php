@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\PanelHome;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelHome;
 
 /**
  * What a portal shows at its own root.

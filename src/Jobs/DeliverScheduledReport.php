@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Jobs;
+namespace Alxtexh\Panel\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,9 +12,9 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use PanelKit\Panel\Actions\JobStatus;
-use PanelKit\Panel\Mail\ScheduledReportMail;
-use PanelKit\Panel\Reports\ScheduledReport;
+use Alxtexh\Panel\Actions\JobStatus;
+use Alxtexh\Panel\Mail\ScheduledReportMail;
+use Alxtexh\Panel\Reports\ScheduledReport;
 use Throwable;
 
 /**

@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * An unguarded `Schema::create('roles')` is fine for the first and DESTROYS the
  * install for the other two - the migration throws, the deploy halts, and the
- * error names a table the operator did not know PanelKit wanted. So each piece
+ * error names a table the operator did not know Alxtexhpanel wanted. So each piece
  * asks whether it is needed. Running this against a fully-populated database is
  * a no-op, which is what makes it safe to ship to people who are already using
  * Spatie for their own purposes.

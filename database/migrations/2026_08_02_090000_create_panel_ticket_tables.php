@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\Support\TicketTables;
+use Alxtexh\Panel\Support\TicketTables;
 
 /**
  * Tickets: a conversation with two ends, and the schema both ends read.

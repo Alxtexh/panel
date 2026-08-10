@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Auth\SensitiveAction;
-use PanelKit\Panel\Auth\Devices;
-use PanelKit\Panel\Auth\Passkeys;
-use PanelKit\Panel\Auth\SocialProviders;
-use PanelKit\Panel\Models\ConnectedAccount;
+use Alxtexh\Panel\Auth\SensitiveAction;
+use Alxtexh\Panel\Auth\Devices;
+use Alxtexh\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Models\ConnectedAccount;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**

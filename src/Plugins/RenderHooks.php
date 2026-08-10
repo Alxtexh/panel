@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Plugins;
+namespace Alxtexh\Panel\Plugins;
 
 /**
  * Named places a plugin may put markup - roadmap 4.4.

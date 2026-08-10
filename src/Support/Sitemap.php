@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Closure;
 use DateTimeInterface;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Landing\LandingController;
+use Alxtexh\Panel\Landing\LandingController;
 
 /**
  * A sitemap.xml for the ONE part of an admin panel that is public: whatever
  * marketing or informational pages the installation puts in front of the
  * panel itself.
  *
- * WHAT THIS DELIBERATELY DOES NOT DO, because PanelKit is not a website
+ * WHAT THIS DELIBERATELY DOES NOT DO, because Alxtexhpanel is not a website
  * builder. Every general-purpose sitemap tool - the one Google itself ships
  * for WordPress, the Laravel packages, the Filament plugins - is built to
  * crawl or enumerate a multi-page PUBLIC site: a blog, a product catalogue,
@@ -28,7 +28,7 @@ use PanelKit\Panel\Landing\LandingController;
  *
  * So there is no crawler, no model integration, and no per-resource sitemap
  * columns to declare. There is a REGISTRY an application adds its own public
- * URLs to, and the one thing PanelKit can already prove is public without
+ * URLs to, and the one thing Alxtexhpanel can already prove is public without
  * being told - the landing page, gated the same way `LandingPageResource`
  * gates its own "View the page" link - is in it automatically.
  *
@@ -59,7 +59,7 @@ use PanelKit\Panel\Landing\LandingController;
  * assumes a content site with a content TYPE to describe, which nothing here
  * has an opinion about. `source()` is the escape hatch: an installation that
  * grows a public blog or catalogue can build any URL set it likes and hand it
- * to this class as a closure. What PanelKit ships is the mechanism and the
+ * to this class as a closure. What Alxtexhpanel ships is the mechanism and the
  * one entry it can prove; what an application is FOR is not its business.
  */
 final class Sitemap

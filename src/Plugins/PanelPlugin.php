@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Plugins;
+namespace Alxtexh\Panel\Plugins;
 
-use PanelKit\Panel\Panel;
+use Alxtexh\Panel\Panel;
 
 /**
  * Something a separate package can install into a panel.

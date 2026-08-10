@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Landing;
+namespace Alxtexh\Panel\Landing;
 
-use PanelKit\Panel\Forms\Fields\BuilderField;
-use PanelKit\Panel\Forms\Fields\NumberField;
-use PanelKit\Panel\Forms\Fields\SelectField;
-use PanelKit\Panel\Forms\Fields\TextareaField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Fields\ToggleField;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Resources\SingularResource;
-use PanelKit\Panel\Schema\Section;
-use PanelKit\Panel\Support\InstallationState;
+use Alxtexh\Panel\Forms\Fields\BuilderField;
+use Alxtexh\Panel\Forms\Fields\NumberField;
+use Alxtexh\Panel\Forms\Fields\SelectField;
+use Alxtexh\Panel\Forms\Fields\TextareaField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Fields\ToggleField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Resources\SingularResource;
+use Alxtexh\Panel\Schema\Section;
+use Alxtexh\Panel\Support\InstallationState;
 
 /**
  * The public landing page, edited from the panel.

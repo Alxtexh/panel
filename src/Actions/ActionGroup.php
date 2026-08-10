@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Actions;
+namespace Alxtexh\Panel\Actions;
 
 use InvalidArgumentException;
 

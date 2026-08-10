@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Api;
+namespace Alxtexh\Panel\Api;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;

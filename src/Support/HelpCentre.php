@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 /**
  * The help centre's content, which the package cannot write for you.
@@ -30,12 +30,12 @@ namespace PanelKit\Panel\Support;
  */
 final class HelpCentre
 {
-    private const KEY = 'panelkit.help';
+    private const KEY = 'alxtexhpanel.help';
 
-    private const FAQ_KEY = 'panelkit.help.faq';
+    private const FAQ_KEY = 'alxtexhpanel.help.faq';
 
     /** Named, replaceable contributions - see `source()`. */
-    private const SOURCE_KEY = 'panelkit.help.sources';
+    private const SOURCE_KEY = 'alxtexhpanel.help.sources';
 
     /**
      * Add articles, keeping the packaged ones.

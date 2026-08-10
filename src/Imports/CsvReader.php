@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Imports;
+namespace Alxtexh\Panel\Imports;
 
 use Generator;
 use RuntimeException;

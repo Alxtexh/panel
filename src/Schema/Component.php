@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Schema;
+namespace Alxtexh\Panel\Schema;
 
-use PanelKit\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Forms\Fields\Field;
 
 /**
  * A node in a form or view schema.

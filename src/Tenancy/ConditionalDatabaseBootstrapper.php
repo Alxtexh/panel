@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tenancy;
+namespace Alxtexh\Panel\Tenancy;
 
 use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
 use Stancl\Tenancy\Contracts\Tenant;
@@ -25,7 +25,7 @@ use Stancl\Tenancy\Contracts\Tenant;
  *
  * So this subclass asks the tenant first. A tenant with `db_name` set gets the
  * full stancl behaviour, including its existence check. A tenant without one is
- * left on the central connection, where PanelKit's global scope constrains it by
+ * left on the central connection, where Alxtexhpanel's global scope constrains it by
  * column. That is what `panel.tenancy.mode = hybrid` means, and until now the
  * panel could describe that arrangement without being able to run it.
  *

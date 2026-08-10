@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Forms\Fields;
+namespace Alxtexh\Panel\Forms\Fields;
 
-use PanelKit\Panel\Support\Countries;
+use Alxtexh\Panel\Support\Countries;
 
 /**
  * A country, or a dialling code.

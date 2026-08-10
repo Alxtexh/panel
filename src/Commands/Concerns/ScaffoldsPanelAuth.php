@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands\Concerns;
+namespace Alxtexh\Panel\Commands\Concerns;
 
 /**
  * Sign-in, sign-out and password reset for ONE panel, scaffolded.
@@ -178,7 +178,7 @@ trait ScaffoldsPanelAuth
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Http\Controllers\PanelAuthController;
+use Alxtexh\Panel\Http\Controllers\PanelAuthController;
 
 /*
  * Sign-in for the {$id} panel.

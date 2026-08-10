@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Documents;
+namespace Alxtexh\Panel\Documents;
 
 /**
  * Where a document's letterhead comes from.

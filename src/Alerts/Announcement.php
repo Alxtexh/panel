@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Alerts;
+namespace Alxtexh\Panel\Alerts;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use PanelKit\Panel\Documents\DocumentBranding;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Documents\DocumentBranding;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * A notice somebody wrote, addressed to everybody in an organisation.

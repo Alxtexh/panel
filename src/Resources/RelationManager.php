@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Resources;
+namespace Alxtexh\Panel\Resources;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
-use PanelKit\Panel\Tables\ListResult;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Tables\ListResult;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * A related list shown on a record's page - a client's sessions, a router's

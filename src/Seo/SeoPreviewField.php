@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Seo;
+namespace Alxtexh\Panel\Seo;
 
-use PanelKit\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Forms\Fields\Field;
 
 /**
  * A field that stores nothing and draws what the others will look like.

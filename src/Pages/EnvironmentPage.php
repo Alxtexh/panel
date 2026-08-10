@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Pages;
+namespace Alxtexh\Panel\Pages;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Support\EnvFile;
+use Alxtexh\Panel\Support\EnvFile;
 
 /**
  * The environment screen - a handful of named settings, not a text editor.

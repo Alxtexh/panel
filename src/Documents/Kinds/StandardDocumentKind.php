@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Documents\Kinds;
+namespace Alxtexh\Panel\Documents\Kinds;
 
-use PanelKit\Panel\Documents\DocumentKind;
-use PanelKit\Panel\Forms\Fields\ColourField;
-use PanelKit\Panel\Forms\Fields\TextareaField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Fields\VisualSelectField;
-use PanelKit\Panel\Schema\Renderable;
-use PanelKit\Panel\Schema\Section;
+use Alxtexh\Panel\Documents\DocumentKind;
+use Alxtexh\Panel\Forms\Fields\ColourField;
+use Alxtexh\Panel\Forms\Fields\TextareaField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Fields\VisualSelectField;
+use Alxtexh\Panel\Schema\Renderable;
+use Alxtexh\Panel\Schema\Section;
 
 /**
  * The parts every printed document has, so three kinds do not write them thrice.

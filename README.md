@@ -1,4 +1,4 @@
-# PanelKit
+# Alxtexhpanel
 
 A schema-driven admin panel for Laravel. Filament's developer experience, an SPA's
 transport.
@@ -8,7 +8,7 @@ browser **once**, and every interaction afterwards moves data only — no server
 component tree per click.
 
 ```bash
-composer require panelkit/panel
+composer require alxtexh-enterprise/panel
 npm install @alxtexh-enterprise/panel
 php artisan panel:install
 ```
@@ -26,9 +26,9 @@ One file. No Vue.
 namespace App\Panel\Resources;
 
 use App\Models\Client;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Table;
 
 final class ClientResource extends Resource
 {
@@ -143,7 +143,7 @@ moment somebody ticked the last box; storing it means `panel:permissions sync` t
 role up, so registering a resource cannot lock its own administrators out of it.
 
 The migration **creates nothing that already exists**. An application already using
-Spatie keeps its tables and gains only the `grants_all` column, so adopting PanelKit does
+Spatie keeps its tables and gains only the `grants_all` column, so adopting Alxtexhpanel does
 not disturb a permission system that predates it.
 
 You still bring the **policies** — a resource with no policy is denied entirely (below) —
@@ -175,7 +175,7 @@ Three modes, and the third is what real installations become.
 | `database` | A database per tenant, isolated by connection |
 | `hybrid` | Per tenant — most share, the large ones do not |
 
-Hybrid needs PanelKit's `ConditionalDatabaseBootstrapper`, because stancl's own switches
+Hybrid needs Alxtexhpanel's `ConditionalDatabaseBootstrapper`, because stancl's own switches
 the connection for **every** tenant unconditionally and throws on the first shared one.
 
 > **Moving a tenant to a dedicated database makes them slower until you reindex.** Every

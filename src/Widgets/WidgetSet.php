@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Widgets;
+namespace Alxtexh\Panel\Widgets;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Inertia\Inertia;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * A set of widgets rendered somewhere that is NOT the dashboard.

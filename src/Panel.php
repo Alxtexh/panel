@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel;
+namespace Alxtexh\Panel;
 
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;

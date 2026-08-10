@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Widgets;
+namespace Alxtexh\Panel\Widgets;
 
 use Closure;
 use DateTimeImmutable;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
-use PanelKit\Panel\Support\Ability;
+use Alxtexh\Panel\Support\Ability;
 use Throwable;
 
 /**

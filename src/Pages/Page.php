@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Pages;
+namespace Alxtexh\Panel\Pages;
 
 use Illuminate\Http\Request;
 
@@ -55,7 +55,7 @@ abstract class Page
      * see is never sent and never queried, and the whole row is ONE deferred
      * request rather than one per card.
      *
-     * @return list<\PanelKit\Panel\Widgets\StatWidget|\PanelKit\Panel\Widgets\ChartWidget>
+     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget>
      */
     public static function headerWidgets(): array
     {

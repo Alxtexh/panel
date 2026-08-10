@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
-use PanelKit\Panel\Trash\TrashBin;
+use Alxtexh\Panel\Trash\TrashBin;
 
 /**
  * Empties the trash of anything past its retention window.

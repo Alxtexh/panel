@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Ai;
+namespace Alxtexh\Panel\Ai;
 
 use Illuminate\Database\Eloquent\Model;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Abilities;
 
 /**
  * The base every panel AI tool extends, and the reason is authorisation.

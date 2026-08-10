@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
-use PanelKit\Panel\Knowledge\Chunker;
-use PanelKit\Panel\Knowledge\Document;
-use PanelKit\Panel\Knowledge\HashEmbedder;
-use PanelKit\Panel\Knowledge\KnowledgeBase;
-use PanelKit\Panel\Knowledge\KnowledgeSource;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Knowledge\Chunker;
+use Alxtexh\Panel\Knowledge\Document;
+use Alxtexh\Panel\Knowledge\HashEmbedder;
+use Alxtexh\Panel\Knowledge\KnowledgeBase;
+use Alxtexh\Panel\Knowledge\KnowledgeSource;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * Fill the knowledge base, so the assistant has something to cite.
