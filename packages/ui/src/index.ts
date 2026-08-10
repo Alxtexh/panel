@@ -40,13 +40,13 @@ export { default as PkBottomNav } from './components/Layout/PkBottomNav.vue'
  | file. They are what the packaged auth screens are built from, so a generated
  | portal's inputs are the SAME inputs the demo shows.
  */
-export { default as PkTextInput } from './components/Primitives/PkTextInput.vue'
-export { default as PkFieldLabel } from './components/Primitives/PkFieldLabel.vue'
-export { default as PkSpinner } from './components/Primitives/PkSpinner.vue'
-export { default as PkOtpInput } from './components/Primitives/PkOtpInput.vue'
-export { default as PkHeading } from './components/Primitives/PkHeading.vue'
-export { default as PkAlertError } from './components/Primitives/PkAlertError.vue'
-export { default as PkPasswordInput } from './components/Primitives/PkPasswordInput.vue'
+export { default as PkTextInput } from './components/primitives/PkTextInput.vue'
+export { default as PkFieldLabel } from './components/primitives/PkFieldLabel.vue'
+export { default as PkSpinner } from './components/primitives/PkSpinner.vue'
+export { default as PkOtpInput } from './components/primitives/PkOtpInput.vue'
+export { default as PkHeading } from './components/primitives/PkHeading.vue'
+export { default as PkAlertError } from './components/primitives/PkAlertError.vue'
+export { default as PkPasswordInput } from './components/primitives/PkPasswordInput.vue'
 
 /* The class merger every moved shadcn component composes with. */
 export { cn, toUrl } from './lib/cn'
