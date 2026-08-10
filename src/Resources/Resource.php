@@ -526,14 +526,24 @@ abstract class Resource
      * belongs in the document and in no menu at all. One flag serving both would
      * force those two to agree.
      *
-     * OPT-OUT, NOT OPT-IN. A resource that says nothing appears and gets edited
-     * down; the alternative is a reference silently missing what nobody
-     * remembered to declare, which is indistinguishable from an endpoint that
-     * does not exist.
+     * OPT-IN NOW, AND IT USED TO BE THE OTHER WAY. The reasoning for opt-out
+     * was real: a reference silently missing an endpoint nobody remembered to
+     * declare is indistinguishable from an endpoint that does not exist, and
+     * that failure mode is genuinely worse for a reference somebody is reading
+     * to find a call to make. But `ApiRoutes::register()` does not just build
+     * a document from this flag - it REGISTERS THE ROUTE, unconditionally,
+     * for every resource that answers true. Opt-out meant a resource declared
+     * for a screen - a payment method, an internal note - was live on
+     * `/api/v1` by default, with no config and nothing to forget, the moment
+     * the class existed. "A route that exists is a route somebody can probe"
+     * is this package's own rule everywhere else `offers()` gates a screen;
+     * this was the one surface that did not follow it. A starter meant to
+     * expose nothing until asked - the whole point of `panel:install` doing
+     * as little as it does - cannot have its REST API be the exception.
      */
     public static function documented(): bool
     {
-        return true;
+        return false;
     }
 
     /** @return class-string */

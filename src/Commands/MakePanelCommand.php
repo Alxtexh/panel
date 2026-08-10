@@ -473,28 +473,24 @@ final class {$studly}PanelProvider extends ServiceProvider
                 ->passwordReset(false)
 
                 /*
-                 * WHAT THIS PORTAL DOES NOT MOUNT, AND WHY THE DEFAULT IS OFF.
+                 * NOTHING WRITTEN HERE FOR OPERATIONS, ASSISTANT SETTINGS,
+                 * DOCUMENTS OR TRASH - THAT IS THE POINT.
                  *
-                 * BACKUPS, LOGS AND MONITORING ARE THE INSTALLATION'S, not a
-                 * portal's. They shipped ON by default, which is right for the
-                 * one panel that IS the installation's admin and wrong for
-                 * every other - and the cost of the wrong default was found
-                 * here rather than reasoned about: the reference app's CUSTOMER
-                 * portal mounted all three, so the people who BUY the service
-                 * were one URL away from the log output. An ability gated them,
-                 * but a route that exists is a route somebody can probe, and a
-                 * permission is one grant away from being wrong.
+                 * They used to be `->without([...])`, hardcoded into every
+                 * generated provider, because BACKUPS, LOGS AND MONITORING ARE
+                 * THE INSTALLATION'S, not a portal's - they shipped ON by
+                 * default, which was right for the one panel that IS the
+                 * installation's admin and wrong for every other. That fix
+                 * lived in the generator rather than the class, which meant a
+                 * hand-written `Panel` - or this file, edited after the fact -
+                 * got all four back with no warning. `Panel::offers()` now
+                 * treats these four as off unless asked for, so there is
+                 * nothing this command needs to write to keep them off.
                  *
-                 * Delete a line to mount one deliberately. Opting in is a
-                 * decision somebody made; opting out is a decision nobody
-                 * knew they had to make.
+                 * `->with(['documents', 'trash'])` mounts one deliberately.
+                 * Opting in is a decision somebody made; opting out is a
+                 * decision nobody knew they had to make.
                  */
-                ->without([
-                    'operations',
-                    'assistant-settings',
-                    'documents',
-                    'trash',
-                ])
 
                 /*
                  * DISCOVERY BELONGS TO THE PANEL. It used to be an append to
