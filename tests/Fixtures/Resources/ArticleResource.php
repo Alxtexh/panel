@@ -10,6 +10,7 @@ use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
+use Alxtexh\Panel\Tables\Columns\SelectColumn;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Table;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
@@ -44,9 +45,20 @@ final class ArticleResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('title')->from('articles.title')->sortable()->searchable(),
-                // Searchable too, so a term can be asserted to match words spread
-                // across DIFFERENT columns rather than only within one.
-                TextColumn::make('status')->from('articles.status')->sortable()->searchable(),
+                /*
+                 * EDITABLE, so the inline-cell endpoint has something it is
+                 * ALLOWED to write - and `title` above stays non-editable so
+                 * the same endpoint has something it must REFUSE. One of each
+                 * is what makes that guard assertable.
+                 *
+                 * Searchable too, so a term can be asserted to match words
+                 * spread across DIFFERENT columns rather than only within one.
+                 */
+                SelectColumn::make('status')
+                    ->from('articles.status')
+                    ->options(['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived'])
+                    ->sortable()
+                    ->searchable(),
                 DateColumn::make('created_at')->from('articles.created_at')->sortable()->withTime(),
             ])
             ->keyColumn('articles.id')
