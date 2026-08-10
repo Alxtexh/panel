@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\Auth\Devices;
+use Alxtexh\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Auth\PasswordPolicy;
+use Alxtexh\Panel\Auth\SensitiveAction;
+use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Http\Requests\TwoFactorStateRequest;
+use Alxtexh\Panel\Models\ConnectedAccount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Alxtexh\Panel\Auth\SensitiveAction;
-use Alxtexh\Panel\Auth\Devices;
-use Alxtexh\Panel\Auth\Passkeys;
-use Alxtexh\Panel\Auth\SocialProviders;
-use Alxtexh\Panel\Models\ConnectedAccount;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -77,7 +80,7 @@ final class SecurityController
             'passkeys' => Passkeys::forUser($user),
         ];
 
-        return Inertia::render('settings/Security', $props + self::twoFactor($user));
+        return Inertia::render('settings/Security', $props + self::twoFactor($request));
     }
 
     /**
@@ -115,6 +118,25 @@ final class SecurityController
         // Proven. A correct answer must not leave somebody rate-limited out of
         // their own settings.
         SensitiveAction::clear($request, 'password.confirm');
+
+        /*
+         * THE SAME REFUSAL AS THE RENEWAL SCREEN, because this is the other way
+         * to change a password and a rule enforced at one entrance is not
+         * enforced. Somebody caught by the age policy who happens to be on the
+         * settings page would otherwise satisfy it by re-entering what they
+         * already had.
+         */
+        $policy = PasswordPolicy::fromConfig();
+
+        if ($policy->isReused($user, $validated['password'])) {
+            throw ValidationException::withMessages([
+                'password' => __('That is one of your recent passwords. Choose a different one.'),
+            ]);
+        }
+
+        // Before the save, so the history holds the password being replaced -
+        // see `PasswordPolicy::recordChange`.
+        $policy->recordChange($user);
 
         $user->forceFill(['password' => Hash::make($validated['password'])])->save();
 
@@ -181,11 +203,18 @@ final class SecurityController
      * unconditionally turns an optional feature into a fatal error on every
      * installation that declined it.
      *
+     * THE STATE IS SETTLED BEFORE IT IS REPORTED. An enrolment that was started
+     * and abandoned leaves a secret issued and `two_factor_confirmed_at` null;
+     * reading the flags without first running Fortify's transitions would show
+     * that account as having a second factor it cannot be challenged for. See
+     * `TwoFactorStateRequest` for why this is resolved rather than type-hinted.
+     *
      * @return array<string, mixed>
      */
-    private static function twoFactor(mixed $user): array
+    private static function twoFactor(Request $request): array
     {
         $features = '\Laravel\Fortify\Features';
+        $user = $request->user();
 
         if ($user === null || ! class_exists($features)) {
             return ['canManageTwoFactor' => false];
@@ -193,6 +222,19 @@ final class SecurityController
 
         if (! $features::canManageTwoFactorAuthentication()) {
             return ['canManageTwoFactor' => false];
+        }
+
+        if ($request->hasSession()) {
+            app(TwoFactorStateRequest::class)->ensureStateIsValid();
+
+            // Re-read: the call above can DISABLE a half-finished enrolment, and
+            // reporting the flags captured before it would show the secret it
+            // just cleared.
+            $user = $request->user();
+
+            if ($user === null) {
+                return ['canManageTwoFactor' => false];
+            }
         }
 
         return [
