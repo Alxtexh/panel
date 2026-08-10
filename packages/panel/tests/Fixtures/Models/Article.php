@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Tests\Fixtures\Models;
 use Alxtexh\Panel\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * A tenant-scoped record, and the reason it is not `Post`.
@@ -23,5 +24,12 @@ use Illuminate\Database\Eloquent\Model;
 #[ScopedBy(TenantScope::class)]
 class Article extends Model
 {
+    /*
+     * SOFT DELETES, because that is what a panel resource usually is - the
+     * trash screen, restore and pruning all exist for it, and a fixture that
+     * hard-deleted would leave those paths testable only through the demo.
+     */
+    use SoftDeletes;
+
     protected $guarded = [];
 }
