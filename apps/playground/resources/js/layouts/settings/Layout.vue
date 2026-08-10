@@ -4,7 +4,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Separator } from '@/components/ui/separator';
-import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { useCurrentUrl } from '@alxtexh-enterprise/panel/inertia';
 import { toUrl } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile';
 import type { NavItem } from '@/types';

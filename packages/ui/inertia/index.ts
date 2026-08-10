@@ -87,7 +87,6 @@ export { useUnsavedGuard } from './composables/useUnsavedGuard'
  * the frame arrives working and stays editable - the file is still yours.
  */
 export { default as PanelShell } from './components/shell/PanelShell.vue'
-export { default as PanelSidebar } from './components/shell/PanelSidebar.vue'
 export { default as PanelAccountMenu } from './components/shell/PanelAccountMenu.vue'
 export { default as PanelCommandPalette } from './components/shell/PanelCommandPalette.vue'
 export { default as PanelNotificationBell } from './components/shell/PanelNotificationBell.vue'

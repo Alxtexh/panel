@@ -10,6 +10,7 @@ use Alxtexh\Panel\Auth\Impersonation;
 use Alxtexh\Panel\Auth\Turnstile;
 use Alxtexh\Panel\Http\Controllers\OrganisationController;
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelNavigation;
 use Alxtexh\Panel\Support\Locale;
 use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Trash\TrashBin;
@@ -158,75 +159,24 @@ class HandleInertiaRequests extends Middleware
              | route. Nothing failed; the menu simply started advertising other
              | people's screens.
              */
-            'panelNav' => function (): array {
-                $prefix = rtrim('/'.trim(
-                    (string) app(PanelManager::class)->currentPanel()?->getPath(),
-                    '/',
-                ), '/');
-
-                $visible = collect(app(PanelManager::class)->resourcesFor(
-                    app(PanelManager::class)->currentPanel()?->id ?? (string) config('panel.default', 'admin'),
-                ))
-                    ->filter(fn (string $class): bool => $class::showsInNavigation())
-                    ->filter(fn (string $class): bool => $class::can('viewAny'));
-
-                $items = $visible
-                    ->filter(fn (string $class): bool => $class::cluster() === null)
-                    ->map(fn (string $class): array => [
-                        'key' => $class::key(),
-                        'title' => $class::pluralLabel(),
-                        /*
-                         | PREFIXED WITH THE PANEL'S PATH. The operator portal sits
-                         | at the root so its links are unchanged; a generated portal
-                         | is mounted under its own prefix, and a bare `/tenants`
-                         | there is a link to a route that does not exist.
-                         */
-                        'href' => $prefix.'/'.$class::key(),
-                        'icon' => $class::icon(),
-                        'group' => $class::group(),
-                        'sort' => $class::navigationSort(),
-                    ]);
-
-                /*
-                 | CLUSTERS COLLAPSE TO ONE ENTRY EACH - roadmap 4.1. The entry
-                 | wears the cluster's own name and icon and links to the first
-                 | member this person may open; the members themselves are
-                 | reached from the sub-navigation on every cluster screen.
-                 |
-                 | `members` carries every href the entry stands for, so the
-                 | navigation coverage test can see that a collapsed resource
-                 | is still linked - through the cluster - rather than lost.
-                 */
-                $clusters = $visible
-                    ->filter(fn (string $class): bool => $class::cluster() !== null)
-                    ->groupBy(fn (string $class): string => $class::cluster())
-                    ->map(function ($classes, string $cluster) use ($prefix): array {
-                        $sorted = $classes->sortBy([
-                            fn (string $class): int => $class::navigationSort(),
-                            fn (string $class): string => $class::pluralLabel(),
-                        ])->values();
-
-                        $hrefs = $sorted
-                            ->map(fn (string $class): string => $prefix.'/'.$class::key())
-                            ->merge(array_column($cluster::pages(), 'href'));
-
-                        return [
-                            'key' => $cluster::key(),
-                            'title' => $cluster::label(),
-                            'href' => $prefix.'/'.$sorted->first()::key(),
-                            'icon' => $cluster::icon(),
-                            'group' => $cluster::group(),
-                            'sort' => $cluster::navigationSort(),
-                            'members' => $hrefs->values()->all(),
-                        ];
-                    })
-                    ->values();
-
-                return $items->merge($clusters)
-                    ->sortBy([['sort', 'asc'], ['title', 'asc']])
-                    ->values()
-                    ->all();
-            },
+            /*
+             | THE SIDEBAR IS THE PACKAGE'S NOW.
+             |
+             | This was a ninety-five line closure that `PanelNavigation` says,
+             | in its own docblock, was PROMOTED OUT OF THIS FILE - and the
+             | closure was never deleted, so the promotion added a second
+             | implementation instead of moving one. Both ran: this one built
+             | the sidebar on `/apps/mail`, the packaged one built it on every
+             | generated portal, and the parts that are easy to get wrong - the
+             | panel prefix, the cluster collapse, the ability filter - were
+             | maintained twice.
+             |
+             | THE PACKAGED ONE IS A SUPERSET. It also merges `declared()` -
+             | entries a panel registers that are not resources, such as a link
+             | to a report or a status page - which this copy had no notion of,
+             | so those entries silently never appeared in this application.
+             */
+            'panelNav' => static fn (): array => PanelNavigation::build(),
             /*
              | The screens that are NOT resources - backups, logs, the app
              | screens, the error previews.
