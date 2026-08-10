@@ -1,11 +1,9 @@
 <?php
 
+use Alxtexh\Panel\Http\Controllers\AssistantSettingsController;
 use App\Http\Controllers\Auth\PasswordRenewalController;
 use App\Http\Controllers\Settings\ProfileController;
-use App\Http\Controllers\Settings\SecurityController;
-use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
-use Alxtexh\Panel\Http\Controllers\AssistantSettingsController;
 
 /*
 | PASSWORD RENEWAL.
@@ -51,13 +49,19 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('settings/security', [SecurityController::class, 'edit'])
-        ->middleware(RequirePassword::class)
-        ->name('security.edit');
-
-    Route::put('settings/password', [SecurityController::class, 'update'])
-        ->middleware('throttle:6,1')
-        ->name('user-password.update');
+    /*
+     | THE SECURITY SCREEN IS THE PACKAGE'S NOW, routes and all.
+     |
+     | This application kept its own controller at these URLs, which meant
+     | `PanelRoutes::unclaimed` yielded and the packaged one never ran here -
+     | so the two drifted, and the copy that shipped was the weaker one. It
+     | had no budget on the current-password prompt and did not sign other
+     | sessions out after a change; the packaged one has both, and now also
+     | carries the password-reuse refusal and the Fortify two-factor state
+     | handling that only existed here. Deleting these routes is what lets it
+     | register - see `PanelRoutes`, which mounts `settings/security`,
+     | `settings/password` and the two device endpoints together.
+     */
 
     /*
      | The organisation, not the person. No tenant id appears in any of these

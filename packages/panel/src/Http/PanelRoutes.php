@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http;
 
-use Illuminate\Support\Facades\Route;
 use Alxtexh\Panel\Auth;
 use Alxtexh\Panel\Auth\Passkeys;
 use Alxtexh\Panel\Http\Controllers\BulkController;
@@ -14,6 +13,7 @@ use Alxtexh\Panel\Http\Controllers\UploadController;
 use Alxtexh\Panel\Landing;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Every route a panel needs, mounted at that panel's path.
@@ -547,7 +547,17 @@ final class PanelRoutes
                 }
 
                 if (self::unclaimed('GET', $panel->getPath().'/settings/security')) {
+                    /*
+                     * PASSWORD CONFIRMATION TO LOOK, NOT ONLY TO CHANGE. The
+                     * screen lists signed-in devices, connected accounts and
+                     * whether a second factor exists - a map of how to reach the
+                     * account, readable by whoever finds the laptop unlocked.
+                     * The reference application gated it and the packaged copy
+                     * did not, so an installation moving to these routes lost a
+                     * protection by adopting the better controller.
+                     */
                     Route::get('settings/security', [Controllers\SecurityController::class, 'edit'])
+                        ->middleware('password.confirm')
                         ->name('settings.security');
                     /*
                      * `settings/password`, NOT `settings/security/password`,
@@ -555,8 +565,14 @@ final class PanelRoutes
                      * always used, so an installation that copied its screen
                      * while waiting for this one finds the form still posts
                      * where it did.
+                     *
+                     * THROTTLED AS WELL AS METERED. `SensitiveAction` budgets
+                     * WRONG answers to the current-password prompt; this bounds
+                     * the request rate whatever the answers are, which is what
+                     * stops the endpoint being useful for anything else.
                      */
                     Route::put('settings/password', [Controllers\SecurityController::class, 'update'])
+                        ->middleware('throttle:6,1')
                         ->name('settings.password');
 
                     /*

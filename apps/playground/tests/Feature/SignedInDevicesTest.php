@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\Settings\DeviceController;
+use Alxtexh\Panel\Auth\Devices;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -68,7 +68,7 @@ final class SignedInDevicesTest extends TestCase
     {
         $this->makeSession($this->me, 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1');
 
-        $devices = DeviceController::forUser($this->request());
+        $devices = Devices::forUser($this->request());
 
         $this->assertSame('Safari', $devices[0]['browser']);
         $this->assertSame('iPhone', $devices[0]['platform']);
@@ -84,7 +84,7 @@ final class SignedInDevicesTest extends TestCase
     {
         $this->makeSession($this->me, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        $devices = DeviceController::forUser($this->request());
+        $devices = Devices::forUser($this->request());
 
         $this->assertSame('Chrome', $devices[0]['browser']);
         $this->assertSame('Windows', $devices[0]['platform']);
@@ -95,7 +95,7 @@ final class SignedInDevicesTest extends TestCase
     {
         $this->makeSession($this->me, 'curl/8.4.0');
 
-        $devices = DeviceController::forUser($this->request());
+        $devices = Devices::forUser($this->request());
 
         $this->assertSame('Unknown browser', $devices[0]['browser']);
         $this->assertSame('Unknown device', $devices[0]['platform']);
@@ -107,7 +107,7 @@ final class SignedInDevicesTest extends TestCase
         $this->makeSession($this->me, 'Chrome/120');
         $this->makeSession($this->colleague, 'Chrome/120');
 
-        $this->assertCount(1, DeviceController::forUser($this->request()));
+        $this->assertCount(1, Devices::forUser($this->request()));
     }
 
     /* ------------------------------------------------------------ signing out */

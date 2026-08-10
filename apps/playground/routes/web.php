@@ -1,5 +1,13 @@
 <?php
 
+use Alxtexh\Panel\Http\Controllers\OperationsController;
+use Alxtexh\Panel\Http\Controllers\RoleController;
+use Alxtexh\Panel\Http\Controllers\SocialLoginController;
+use Alxtexh\Panel\Http\Middleware\SharePanelProps;
+use Alxtexh\Panel\Http\Middleware\UsePanel;
+use Alxtexh\Panel\Http\PanelRoutes;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Blueprint;
 use App\Http\Controllers\ApiReferenceController;
 use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\AssistantController;
@@ -14,20 +22,11 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\SavedViewController;
-use App\Http\Controllers\Settings\DeviceController;
 use App\Support\Guide;
 use App\Support\HelpArticles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Alxtexh\Panel\Http\Controllers\OperationsController;
-use Alxtexh\Panel\Http\Controllers\RoleController;
-use Alxtexh\Panel\Http\Controllers\SocialLoginController;
-use Alxtexh\Panel\Http\Middleware\SharePanelProps;
-use Alxtexh\Panel\Http\Middleware\UsePanel;
-use Alxtexh\Panel\Http\PanelRoutes;
-use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Support\Blueprint;
 
 /*
  | Resource segments come from the registry rather than a literal list, so a
@@ -572,6 +571,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
      | report about subscribers - the panel briefly had a "Sessions" screen that
      | meant client connections, which is a different thing wearing the same
      | word.
+     |
+     | THE PACKAGE'S NOW, registered alongside the security screen it belongs to
+     | rather than here - `PanelRoutes` mounts both device endpoints inside the
+     | same block as `settings/security`, so the screen and the buttons on it
+     | can never come from different implementations. This application's copy of
+     | `Devices::describe` had drifted a comment away from identical while the
+     | packaged one gained the null-user and no-session guards.
      */
     /*
      | DETACHING A PROVIDER is the package's too - `PanelRoutes` mounts it at
@@ -580,12 +586,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
      */
     Route::delete('settings/connected-accounts/{connectedAccount}', [SocialLoginController::class, 'destroy'])
         ->name('social.destroy');
-
-    Route::delete('settings/devices/{id}', [DeviceController::class, 'destroy'])
-        ->name('settings.devices.destroy');
-
-    Route::delete('settings/devices', [DeviceController::class, 'destroyOthers'])
-        ->name('settings.devices.destroyOthers');
 
     Route::put('settings/appearance', [AppearanceController::class, 'update'])->name('appearance.update');
 

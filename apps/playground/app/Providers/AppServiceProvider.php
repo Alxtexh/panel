@@ -2,6 +2,15 @@
 
 namespace App\Providers;
 
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\Documents\DocumentBranding;
+use Alxtexh\Panel\Documents\DocumentKinds;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\Support\Budgets;
+use Alxtexh\Panel\Support\HelpCentre;
+use Alxtexh\Panel\Support\SettingsIndex;
+use Alxtexh\Panel\Support\TicketStats;
+use Alxtexh\Panel\Trash\TrashBin;
 use App\Documents\ClientInvoiceKind;
 use App\Documents\OrganisationBranding;
 use App\Listeners\RecordLastLogin;
@@ -30,15 +39,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
-use Alxtexh\Panel\CustomFields\CustomField;
-use Alxtexh\Panel\Documents\DocumentBranding;
-use Alxtexh\Panel\Documents\DocumentKinds;
-use Alxtexh\Panel\Models\Ticket;
-use Alxtexh\Panel\Support\Budgets;
-use Alxtexh\Panel\Support\HelpCentre;
-use Alxtexh\Panel\Support\SettingsIndex;
-use Alxtexh\Panel\Support\TicketStats;
-use Alxtexh\Panel\Trash\TrashBin;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -102,7 +102,9 @@ class AppServiceProvider extends ServiceProvider
             'key' => 'security',
             'title' => 'Security',
             'description' => 'Password, two-factor authentication, passkeys and signed-in devices.',
-            'href' => static fn (): string => route('security.edit'),
+            // `panel.` because the security screen is the package's now and this
+            // panel sets `->routeName('panel')`; the app no longer declares one.
+            'href' => static fn (): string => route('panel.settings.security'),
             'order' => 1,
         ], [
             'key' => 'assistant',
