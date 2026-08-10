@@ -44,7 +44,9 @@ final class ArticleResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('title')->from('articles.title')->sortable()->searchable(),
-                TextColumn::make('status')->from('articles.status')->sortable(),
+                // Searchable too, so a term can be asserted to match words spread
+                // across DIFFERENT columns rather than only within one.
+                TextColumn::make('status')->from('articles.status')->sortable()->searchable(),
                 DateColumn::make('created_at')->from('articles.created_at')->sortable()->withTime(),
             ])
             ->keyColumn('articles.id')
