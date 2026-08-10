@@ -79,6 +79,15 @@ final class SharePanelProps
 
         Inertia::share([
             /*
+             * APP NAME FOR AUTH SCREENS. Stock Breeze shares this from
+             * HandleInertiaRequests; a `panel:install` app often has neither
+             * Breeze nor that middleware, so AuthLayout fell back to "Panel"
+             * while the demo showed APP_NAME. Share it here once so every
+             * packaged screen sees the same product name.
+             */
+            'name' => static fn (): string => (string) config('app.name', 'Panel'),
+
+            /*
              * THE SIDEBAR. See `PanelNavigation` for why the prefix and the
              * current-panel filter are the two things worth getting right.
              */
