@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\Support\PanelPages;
-use PanelKit\Panel\Support\UserRoles;
+use Alxtexh\Panel\Support\PanelPages;
+use Alxtexh\Panel\Support\UserRoles;
 
 /**
  * php artisan panel:install
@@ -32,12 +32,13 @@ final class InstallCommand extends Command
 
     public function handle(): int
     {
-        $this->components->info('Installing PanelKit');
+        $this->components->info('Installing Alxtexhpanel');
 
         $this->publishConfig();
         $this->createTree();
         $this->publishBootstrap();
         $this->wireVite();
+        $this->scaffoldPackageJson();
         $this->repointViews();
         $this->createDefaultPanel();
         $this->wireRolesOntoUser();
@@ -242,6 +243,104 @@ final class InstallCommand extends Command
      * were never loaded. A patch that cannot apply must say so and print the
      * edit, which is the difference between a minute and an afternoon.
      */
+    /**
+     * THE HALF `wireVite()` AND `writePageFiles()` BOTH ASSUME IS ALREADY THERE.
+     *
+     * Both write code that imports `@alxtexh-enterprise/panel` and
+     * `@vitejs/plugin-vue` - and until this step existed, neither ever landed
+     * in `package.json`. `npm install && npm run build`, the very first line
+     * this command prints under "Next", failed on a stock application before a
+     * single byte of the panel's own Vue ever ran: `Could not resolve
+     * '@vitejs/plugin-vue'`. Every other gap this installer repairs is
+     * something a browser reveals after a successful build. This one never
+     * reached a browser.
+     *
+     * THE PACKAGE SHIPS ITSELF, rather than a Packagist/npm registry entry.
+     * `dirname(__DIR__, 2)` is this file's own package root - the same trick
+     * `publishBootstrap()` uses for stub templates - so `resources/client`
+     * (built by `make sync-client`, see the Makefile) travels with
+     * `alxtexh-enterprise/panel` however it was installed: a local `path`
+     * repository during development, or a real git checkout once one exists.
+     * `npm` needs no registry and no token for a `file:` dependency either
+     * way, matching this project's own git-URL-not-Packagist posture on the
+     * Composer side.
+     *
+     * PEER DEPENDENCIES ARE READ FROM THE CLIENT'S OWN `package.json`,
+     * not hand-copied here - the two would drift the first time either
+     * changed, and a stale copy fails exactly the way the missing entry did:
+     * silently, until `npm run build`.
+     *
+     * NOTHING EXISTING IS OVERWRITTEN. An application that already depends on
+     * `vue` or `@inertiajs/vue3` at a version of its own choosing keeps it;
+     * this only fills gaps.
+     */
+    private function scaffoldPackageJson(): void
+    {
+        $path = base_path('package.json');
+
+        if (! file_exists($path)) {
+            $this->components->warn(
+                'No package.json found. Install a Vue + Inertia starter kit first, or add '
+                .'@alxtexh-enterprise/panel, vue, @inertiajs/vue3, vue-sonner and '
+                .'@vitejs/plugin-vue yourself.',
+            );
+
+            return;
+        }
+
+        $clientPath = dirname(__DIR__, 2).'/resources/client';
+        $clientPackage = json_decode((string) file_get_contents($clientPath.'/package.json'), true);
+
+        $package = json_decode((string) file_get_contents($path), true);
+        $package['dependencies'] ??= [];
+        $package['devDependencies'] ??= [];
+
+        $added = [];
+
+        $wanted = ($clientPackage['peerDependencies'] ?? [])
+            + ['@alxtexh-enterprise/panel' => 'file:'.$clientPath];
+
+        foreach ($wanted as $name => $constraint) {
+            if (array_key_exists($name, $package['dependencies']) || array_key_exists($name, $package['devDependencies'])) {
+                continue;
+            }
+
+            $package['dependencies'][$name] = $constraint;
+            $added[] = $name;
+        }
+
+        /*
+         * DEV, NOT RUNTIME. `@vitejs/plugin-vue` is what `wireVite()` just
+         * imported into `vite.config.js`; `typescript` is what lets Vue's SFC
+         * compiler resolve a type-only `defineProps<T>()` in the packaged
+         * screens under `./inertia/*`, which - unlike the "." entry above -
+         * still ship as source rather than a pre-built bundle. Without it the
+         * build fails several files deep with "Failed to load TypeScript",
+         * naming neither this package nor the real cause.
+         */
+        foreach (['@vitejs/plugin-vue' => '^6.0.0', 'typescript' => '^5.7.0'] as $name => $constraint) {
+            if (array_key_exists($name, $package['dependencies']) || array_key_exists($name, $package['devDependencies'])) {
+                continue;
+            }
+
+            $package['devDependencies'][$name] = $constraint;
+            $added[] = $name;
+        }
+
+        if ($added === []) {
+            $this->components->twoColumnDetail('Kept yours', 'package.json');
+
+            return;
+        }
+
+        file_put_contents(
+            $path,
+            json_encode($package, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n",
+        );
+
+        $this->components->twoColumnDetail('Wired', 'package.json ('.implode(', ', $added).')');
+    }
+
     private function wireVite(): void
     {
         $path = collect(['vite.config.ts', 'vite.config.js'])
@@ -651,9 +750,9 @@ final class InstallCommand extends Command
 
         namespace App\\Panel\\Pages;
 
-        use PanelKit\\Panel\\Pages\\DashboardPage as PanelKitDashboard;
-        use PanelKit\\Panel\\Widgets\\ChartWidget;
-        use PanelKit\\Panel\\Widgets\\StatWidget;
+        use Alxtexh\\Panel\\Pages\\DashboardPage as AlxtexhpanelDashboard;
+        use Alxtexh\\Panel\\Widgets\\ChartWidget;
+        use Alxtexh\\Panel\\Widgets\\StatWidget;
 
         /**
          * The panel's home screen - where signing in lands.
@@ -666,7 +765,7 @@ final class InstallCommand extends Command
          * at a page of your own; the declarations, the permission filtering and
          * the deferred props still apply.
          */
-        final class DashboardPage extends PanelKitDashboard
+        final class DashboardPage extends AlxtexhpanelDashboard
         {
             protected static string \$panel = '{$panel}';
 
