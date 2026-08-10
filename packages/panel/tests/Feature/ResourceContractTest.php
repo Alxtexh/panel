@@ -51,7 +51,7 @@ final class ResourceContractTest extends TestCase
         $columns = PostResource::schema()['table']['columns'] ?? [];
 
         $this->assertSame(
-            ['title', 'status'],
+            ['title', 'status', 'created_at'],
             array_values(array_map(static fn (array $c): string => $c['key'], $columns)),
         );
     }
