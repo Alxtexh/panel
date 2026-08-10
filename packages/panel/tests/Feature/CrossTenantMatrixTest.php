@@ -91,6 +91,28 @@ final class CrossTenantMatrixTest extends TestCase
     }
 
     /**
+     * A resource's URL, PREFIXED WITH ITS OWN PANEL'S PATH.
+     *
+     * Not `/{key}`, and finding that out was the point of adding a second
+     * portal. A resource belongs to exactly one panel and is routable only
+     * under that panel's prefix - so a matrix that asked for every resource at
+     * the root would report the second portal's screens as 404 and call that a
+     * pass. It would have been asserting "unreachable" while believing it was
+     * asserting "refused", which is the failure this file is supposed to
+     * catch rather than commit.
+     */
+    private function base(string $resource): string
+    {
+        $class = app(PanelManager::class)->resources()[$resource];
+
+        $panel = app(PanelManager::class)->panel($class::panel());
+
+        $prefix = rtrim('/'.trim((string) $panel?->getPath(), '/'), '/');
+
+        return "{$prefix}/{$resource}";
+    }
+
+    /**
      * A row belonging to the OTHER organisation.
      *
      * `withoutGlobalScopes()` on the write, because the entire point is a
@@ -149,7 +171,7 @@ final class CrossTenantMatrixTest extends TestCase
     public function test_a_foreign_record_cannot_be_viewed(): void
     {
         $this->everyResource(fn (string $resource, Model $foreign): ?string => $this->refusal(
-            $this->actingAs($this->me)->get("/{$resource}/{$foreign->getKey()}"),
+            $this->actingAs($this->me)->get($this->base($resource)."/{$foreign->getKey()}"),
             "GET /{$resource}/{id}",
         ));
     }
@@ -157,7 +179,7 @@ final class CrossTenantMatrixTest extends TestCase
     public function test_a_foreign_record_cannot_be_opened_for_editing(): void
     {
         $this->everyResource(fn (string $resource, Model $foreign): ?string => $this->refusal(
-            $this->actingAs($this->me)->get("/{$resource}/{$foreign->getKey()}/edit"),
+            $this->actingAs($this->me)->get($this->base($resource)."/{$foreign->getKey()}/edit"),
             "GET /{$resource}/{id}/edit",
         ));
     }
@@ -165,7 +187,7 @@ final class CrossTenantMatrixTest extends TestCase
     public function test_a_foreign_record_cannot_be_updated(): void
     {
         $this->everyResource(fn (string $resource, Model $foreign): ?string => $this->refusal(
-            $this->actingAs($this->me)->putJson("/{$resource}/{$foreign->getKey()}", ['title' => 'Taken']),
+            $this->actingAs($this->me)->putJson($this->base($resource)."/{$foreign->getKey()}", ['title' => 'Taken']),
             "PUT /{$resource}/{id}",
         ));
     }
@@ -174,7 +196,7 @@ final class CrossTenantMatrixTest extends TestCase
     {
         $this->everyResource(function (string $resource, Model $foreign): ?string {
             $failure = $this->refusal(
-                $this->actingAs($this->me)->deleteJson("/{$resource}/{$foreign->getKey()}"),
+                $this->actingAs($this->me)->deleteJson($this->base($resource)."/{$foreign->getKey()}"),
                 "DELETE /{$resource}/{id}",
             );
 
@@ -217,7 +239,7 @@ final class CrossTenantMatrixTest extends TestCase
     {
         $this->everyResource(fn (string $resource, Model $foreign): ?string => $this->refusal(
             $this->actingAs($this->me)->patchJson(
-                "/{$resource}/{$foreign->getKey()}/cell",
+                $this->base($resource)."/{$foreign->getKey()}/cell",
                 ['column' => 'title', 'value' => 'Taken'],
             ),
             "PATCH /{$resource}/{id}/cell",
@@ -227,7 +249,7 @@ final class CrossTenantMatrixTest extends TestCase
     public function test_a_bulk_action_cannot_reach_a_foreign_record(): void
     {
         $this->everyResource(function (string $resource, Model $foreign): ?string {
-            $response = $this->actingAs($this->me)->postJson("/{$resource}/bulk", [
+            $response = $this->actingAs($this->me)->postJson($this->base($resource).'/bulk', [
                 'action' => 'delete',
                 'ids' => [$foreign->getKey()],
             ]);
@@ -249,7 +271,7 @@ final class CrossTenantMatrixTest extends TestCase
     public function test_a_list_never_includes_a_foreign_record(): void
     {
         $this->everyResource(function (string $resource, Model $foreign): ?string {
-            $response = $this->actingAs($this->me)->get("/{$resource}");
+            $response = $this->actingAs($this->me)->get($this->base($resource));
 
             if ($response->status() !== 200) {
                 return "GET /{$resource} answered {$response->status()}; expected 200 for the acting tenant.";
