@@ -11,6 +11,7 @@ use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\SelectColumn;
+use Alxtexh\Panel\Tables\Filters\SelectFilter;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Table;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
@@ -60,6 +61,17 @@ final class ArticleResource extends Resource
                     ->sortable()
                     ->searchable(),
                 DateColumn::make('created_at')->from('articles.created_at')->sortable()->withTime(),
+            ])
+            /*
+             * A DECLARED FILTER, which is the allowlist the query string is
+             * checked against. Anything not declared here must be ignored
+             * rather than applied - otherwise a query parameter is a WHERE
+             * clause the resource never offered.
+             */
+            ->filters([
+                SelectFilter::make('status')
+                    ->column('articles.status')
+                    ->options(['draft', 'published', 'archived']),
             ])
             ->keyColumn('articles.id')
             /*
