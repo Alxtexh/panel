@@ -41,4 +41,23 @@ final class ArticlePolicy
     {
         return true;
     }
+
+    /**
+     * RESTORE IS ITS OWN ABILITY, not part of `delete`.
+     *
+     * This fixture went without it at first and the trash refused to restore -
+     * correctly. Plenty of roles should be able to remove a record without
+     * being able to bring one back, and `forceDelete` is separated again for
+     * the stronger version of the same reason: it is the one act in the panel
+     * with no undo.
+     */
+    public function restore(User $user, ?Article $article = null): bool
+    {
+        return true;
+    }
+
+    public function forceDelete(User $user, ?Article $article = null): bool
+    {
+        return true;
+    }
 }
