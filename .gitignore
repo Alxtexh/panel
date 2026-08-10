@@ -77,7 +77,11 @@
 
 /packages/*/node_modules
 /packages/*/vendor
-/packages/*/dist
+
+# packages/ui/dist IS committed, deliberately - it is what an external
+# consumer's package.json points a `file:` dependency at (see
+# InstallCommand::scaffoldPackageJson()). Without it, `panel:install` finishes
+# and `npm run build` has nothing to import: the exact gap the probe found.
 
 # Local scratch — seed dumps, profiling output, bundle-size reports
 /.scratch

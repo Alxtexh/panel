@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Middleware;
+namespace Alxtexh\Panel\Http\Middleware;
 
 use Closure;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use PanelKit\Panel\Auth\Impersonation;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\EditableContent;
-use PanelKit\Panel\Support\PanelHome;
-use PanelKit\Panel\Support\Ability;
-use PanelKit\Panel\Support\PanelNavigation;
-use PanelKit\Panel\Trash\TrashBin;
+use Alxtexh\Panel\Auth\Impersonation;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\EditableContent;
+use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\PanelNavigation;
+use Alxtexh\Panel\Support\Tenants;
+use Alxtexh\Panel\Trash\TrashBin;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -376,6 +377,46 @@ final class SharePanelProps
             },
 
             /*
+             * THE WORKSPACE SWITCHER, for a sidebar that needs it on every
+             * page - not only on `settings/workspaces`, which is where this
+             * data lived before. `Tenants::switchable()` is false for the
+             * ordinary single-tenant panel, and this closure then never
+             * queries anything: no membership relation, no organisation
+             * model, one key and a `null`.
+             *
+             * NULL, NOT AN EMPTY ARRAY, when the switch route is not mounted
+             * on THIS panel - `$panel->offers('workspaces')` decides that per
+             * portal, and a switcher pointing at a route this panel refused
+             * would be a control that 404s the moment somebody uses it.
+             */
+            'workspaces' => static function () use ($panels, $request): ?array {
+                if (! Tenants::switchable($request)) {
+                    return null;
+                }
+
+                $panel = $panels->currentPanel();
+
+                $switchUrl = $panel !== null && Route::has($panel->getRouteName().'settings.workspaces.switch')
+                    ? route($panel->getRouteName().'settings.workspaces.switch')
+                    : null;
+
+                if ($switchUrl === null) {
+                    return null;
+                }
+
+                $current = Tenants::current($request);
+
+                return [
+                    'current' => $current === null ? null : Tenants::toArray($current),
+                    'available' => array_map(Tenants::toArray(...), Tenants::forUser($request)),
+                    'switchUrl' => $switchUrl,
+                    'manageUrl' => Route::has($panel->getRouteName().'settings.workspaces')
+                        ? route($panel->getRouteName().'settings.workspaces')
+                        : null,
+                ];
+            },
+
+            /*
              * WHO IS REALLY DRIVING, when it is not the account on screen.
              *
              * NULL IN THE ORDINARY CASE, so the banner costs one key and no
@@ -449,7 +490,7 @@ final class SharePanelProps
      *
      * @return array{backups: ?string, logs: ?string, monitoring: ?string}
      */
-    private static function operationsUrls(\PanelKit\Panel\Panel $panel): array
+    private static function operationsUrls(\Alxtexh\Panel\Panel $panel): array
     {
         $prefixed = $panel->getRouteName().'operations.';
         $isDefault = $panel->id === (string) config('panel.default', 'admin');

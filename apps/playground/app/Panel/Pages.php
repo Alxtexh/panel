@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Panel;
 
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * Every screen that is NOT a resource, and where it belongs in the navigation.
@@ -137,11 +137,18 @@ final class Pages
              * the dialog.
              */
             ['title' => 'Session expired', 'href' => '#session-expired', 'icon' => 'timer-off', 'group' => 'Screens'],
-            ['title' => 'Access denied', 'href' => '/screens/error/403', 'icon' => 'shield-alert', 'group' => 'Screens'],
-            ['title' => 'Not found', 'href' => '/screens/error/404', 'icon' => 'file-question', 'group' => 'Screens'],
-            ['title' => 'Rate limited', 'href' => '/screens/error/429', 'icon' => 'gauge', 'group' => 'Screens'],
-            ['title' => 'Server error', 'href' => '/screens/error/500', 'icon' => 'server-crash', 'group' => 'Screens'],
-            ['title' => 'Maintenance', 'href' => '/screens/error/503', 'icon' => 'wrench', 'group' => 'Screens'],
+            /*
+             * NESTED UNDER "Screens/Errors" rather than sitting flat in
+             * "Screens" alongside Lock screen and Verification - five error
+             * states are their own cluster, and the sidebar's nested-group
+             * support (a `/` in the group string) exists so a section can
+             * hold both plain links and a dropdown, matching the pattern.
+             */
+            ['title' => 'Access denied', 'href' => '/screens/error/403', 'icon' => 'shield-alert', 'group' => 'Screens/Errors'],
+            ['title' => 'Not found', 'href' => '/screens/error/404', 'icon' => 'file-question', 'group' => 'Screens/Errors'],
+            ['title' => 'Rate limited', 'href' => '/screens/error/429', 'icon' => 'gauge', 'group' => 'Screens/Errors'],
+            ['title' => 'Server error', 'href' => '/screens/error/500', 'icon' => 'server-crash', 'group' => 'Screens/Errors'],
+            ['title' => 'Maintenance', 'href' => '/screens/error/503', 'icon' => 'wrench', 'group' => 'Screens/Errors'],
         ];
     }
 

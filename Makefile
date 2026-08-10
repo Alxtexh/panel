@@ -1,4 +1,4 @@
-# PanelKit — run everything from the monorepo root.
+# Alxtexhpanel — run everything from the monorepo root.
 #
 # artisan lives in apps/playground, npm lives in three places. Rather than
 # remember which directory each command belongs to, use these.
@@ -55,3 +55,13 @@ build: ## Production asset build
 .PHONY: install
 install: ## Install PHP and JS dependencies
 	@cd $(PLAYGROUND) && composer install && npm install
+
+.PHONY: sync-client
+sync-client: ## Build packages/ui and mirror it into packages/panel/resources/client for distribution
+	@cd packages/ui && npm run build
+	@rm -rf packages/panel/resources/client
+	@mkdir -p packages/panel/resources/client
+	@cp packages/ui/package.json packages/panel/resources/client/
+	@cp -r packages/ui/dist packages/panel/resources/client/dist
+	@cp -r packages/ui/inertia packages/panel/resources/client/inertia
+	@echo "Mirrored packages/ui into packages/panel/resources/client. Commit both."

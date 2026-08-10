@@ -55,6 +55,13 @@ final class AppearanceController extends Controller
 
     private const SURFACES = ['neutral', 'slate', 'gray', 'zinc', 'stone', 'warm', 'cool', 'sand'];
 
+    /** Mirrors RADIUS_OPTIONS in useAppearance.ts - fixed stops, not a range. */
+    private const RADII = [0, 0.25, 0.5, 0.75, 1];
+
+    private const CONTENT_LAYOUTS = ['full', 'centered'];
+
+    private const MENU_STYLES = ['collapsible', 'drilldown'];
+
     private const FONT_MIN = 12;
 
     private const FONT_MAX = 20;
@@ -79,6 +86,9 @@ final class AppearanceController extends Controller
             'primaryChosen' => ['sometimes', 'boolean'],
             'surface' => ['sometimes', 'string', 'in:'.implode(',', self::SURFACES)],
             'fontSize' => ['sometimes', 'integer', 'between:'.self::FONT_MIN.','.self::FONT_MAX],
+            'radius' => ['sometimes', 'numeric', 'in:'.implode(',', self::RADII)],
+            'contentLayout' => ['sometimes', 'string', 'in:'.implode(',', self::CONTENT_LAYOUTS)],
+            'menuStyle' => ['sometimes', 'string', 'in:'.implode(',', self::MENU_STYLES)],
         ]);
 
         $user = $request->user();

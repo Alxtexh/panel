@@ -46,6 +46,26 @@ export type Density = 'comfortable' | 'compact' | 'spacious'
  */
 export type SidebarSide = 'left' | 'right' | 'horizontal'
 export type CardStyle = 'transparent' | 'filled'
+/**
+ * Full-bleed content, or a centred column with margin either side.
+ *
+ * `centered` matters most on a wide monitor with a list of five columns - full
+ * width stretches a form to a line length nobody can read in one pass. It is
+ * per-user rather than per-page because the same person wants it everywhere or
+ * nowhere; a page-by-page override would be a setting nobody remembers exists.
+ */
+export type ContentLayout = 'full' | 'centered'
+/**
+ * How a sidebar group with children behaves when opened.
+ *
+ * `collapsible` is what the panel has always done - the group expands in
+ * place, an accordion. `drilldown` replaces the sidebar's own contents with
+ * that group's items and a back button, which is the shape a group with many
+ * children needs: an accordion nests forever and dense trees still look
+ * cramped, where a drill-down keeps every level as flat and as roomy as the
+ * top one.
+ */
+export type MenuStyle = 'collapsible' | 'drilldown'
 
 export interface Appearance {
     theme: Theme
@@ -54,6 +74,10 @@ export interface Appearance {
     fontSize: number
     sidebarSide: SidebarSide
     cardStyle: CardStyle
+    /** In REM. Drives `--radius`; Tailwind's `--radius-sm/md/lg` are already `calc()` off it. */
+    radius: number
+    contentLayout: ContentLayout
+    menuStyle: MenuStyle
     /** Key into PRIMARY_COLORS. */
     primary: string
     /**
@@ -187,7 +211,10 @@ export const SURFACE_TINTS: Record<string, { label: string; hue: number; chroma:
 export const FONT_SIZE_MIN = 12
 export const FONT_SIZE_MAX = 20
 
-const STORAGE_KEY = 'panelkit.appearance'
+/** A fixed set of stops, not a slider - a radius is a brand decision, not a dial somebody sweeps. */
+export const RADIUS_OPTIONS = [0, 0.25, 0.5, 0.75, 1] as const
+
+const STORAGE_KEY = 'alxtexhpanel.appearance'
 
 const DEFAULTS: Appearance = {
     // LIGHT, NOT THE OPERATING SYSTEM'S. See the Theme type - this is the whole
@@ -198,6 +225,11 @@ const DEFAULTS: Appearance = {
     fontSize: 16,
     sidebarSide: 'left',
     cardStyle: 'transparent',
+    // Matches the static `--radius: 0.5rem` app.css already shipped, so
+    // nobody's panel visibly changes shape the first time this loads.
+    radius: 0.5,
+    contentLayout: 'full',
+    menuStyle: 'collapsible',
     primary: 'slate',
     // Untouched. `reset()` restores these defaults, so Reset is also the way
     // back to the organisation's colour.
@@ -215,7 +247,7 @@ const state = ref<Appearance>({ ...DEFAULTS })
 let initialised = false
 
 /** Where the COMPUTED custom properties are cached for the pre-paint script. */
-const VARS_KEY = 'panelkit.appearance.vars'
+const VARS_KEY = 'alxtexhpanel.appearance.vars'
 
 export function isDark(next: Appearance): boolean {
     /*
@@ -275,6 +307,7 @@ export function appearanceVars(next: Appearance): Record<string, string> {
         '--ring': accent.value,
         ...surfaces,
         '--pk-font-size': `${next.fontSize}px`,
+        '--radius': `${next.radius}rem`,
         /*
          * A LOOKUP, not a ternary chain. The two-level version was
          * `compact ? a : b`, which silently treats every unrecognised value as
@@ -477,6 +510,7 @@ export function applyAppearance(next: Appearance): void {
     }
 
     root.dataset.sidebar = next.sidebarSide
+    root.dataset.contentLayout = next.contentLayout
 
     try {
         // Cached so the pre-paint script can replay it without knowing the
@@ -558,5 +592,6 @@ export function useAppearance() {
         SURFACE_TINTS,
         FONT_SIZE_MIN,
         FONT_SIZE_MAX,
+        RADIUS_OPTIONS,
     }
 }

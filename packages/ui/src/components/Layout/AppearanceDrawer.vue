@@ -2,7 +2,7 @@
 /**
  * The appearance drawer.
  *
- * A slide-in panel rather than a dropdown, because there are now seven controls
+ * A slide-in panel rather than a dropdown, because there are now ten controls
  * including two colour palettes. A dropdown that tall stops being a menu and
  * becomes a cramped page - and a drawer lets you keep adjusting while watching
  * the panel behind it change, which is the entire point of putting appearance
@@ -13,9 +13,16 @@
  */
 import { computed, ref } from 'vue'
 import { useAppearance, FONT_SIZE_MAX, FONT_SIZE_MIN } from '../../composables/useAppearance'
-import type { CardStyle, Density, SidebarSide, Theme } from '../../composables/useAppearance'
+import type {
+    CardStyle,
+    ContentLayout,
+    Density,
+    MenuStyle,
+    SidebarSide,
+    Theme,
+} from '../../composables/useAppearance'
 
-const { appearance, set, reset, PRIMARY_COLORS, SURFACE_TINTS } = useAppearance()
+const { appearance, set, reset, PRIMARY_COLORS, SURFACE_TINTS, RADIUS_OPTIONS } = useAppearance()
 
 const open = ref(false)
 
@@ -54,6 +61,21 @@ const sides: { value: SidebarSide; label: string }[] = [
     { value: 'left', label: 'Left' },
     { value: 'right', label: 'Right' },
     { value: 'horizontal', label: 'Top' },
+]
+
+const contentLayouts: { value: ContentLayout; label: string }[] = [
+    { value: 'full', label: 'Full' },
+    { value: 'centered', label: 'Centered' },
+]
+
+/**
+ * "Vercel style" IS THE FAMILIAR NAME for this pattern, but this panel calls
+ * out what it DOES rather than who else does it - the label should still make
+ * sense to somebody who has never seen the thing it is named after.
+ */
+const menuStyles: { value: MenuStyle; label: string }[] = [
+    { value: 'collapsible', label: 'Collapsible' },
+    { value: 'drilldown', label: 'Drill-down' },
 ]
 
 /**
@@ -224,6 +246,33 @@ function surfaceSwatch(hue: number, chroma: number): string {
                         </div>
                     </section>
 
+                    <!-- Radius: fixed stops, not a slider - see RADIUS_OPTIONS. -->
+                    <section class="flex flex-col gap-2">
+                        <h3 class="text-sm font-semibold">Radius</h3>
+                        <div class="bg-muted/50 flex gap-0.5 rounded-md p-0.5">
+                            <button
+                                v-for="value in RADIUS_OPTIONS"
+                                :key="value"
+                                type="button"
+                                class="flex flex-1 flex-col items-center gap-1 rounded px-2 py-1.5 text-xs transition-colors"
+                                :class="
+                                    appearance.radius === value
+                                        ? 'bg-background text-foreground font-medium shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                "
+                                :aria-pressed="appearance.radius === value"
+                                :aria-label="`${value}rem radius`"
+                                @click="set({ radius: value })"
+                            >
+                                <span
+                                    class="border-foreground/50 block size-4 border-2"
+                                    :style="{ borderRadius: `${Math.min(value, 0.5)}rem` }"
+                                />
+                                {{ value }}
+                            </button>
+                        </div>
+                    </section>
+
                     <!-- Segmented groups -->
                     <section
                         v-for="group in [
@@ -231,6 +280,8 @@ function surfaceSwatch(hue: number, chroma: number): string {
                             { label: 'Card style', key: 'cardStyle', options: cardStyles },
                             { label: 'Table density', key: 'density', options: densities },
                             { label: 'Sidebar', key: 'sidebarSide', options: sides },
+                            { label: 'Content layout', key: 'contentLayout', options: contentLayouts },
+                            { label: 'Menu style', key: 'menuStyle', options: menuStyles },
                         ]"
                         :key="group.key"
                         class="flex flex-col gap-2"
