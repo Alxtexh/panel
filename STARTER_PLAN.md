@@ -129,19 +129,85 @@ all**. It sits beside the playground and shares the packages.
 
 ---
 
-## 6. Open questions that need a decision, not code
+## 6. The three decisions, and what they are
 
-1. **What counts as "core app" versus "demo data"?** `User` and `Tenant` are
-   arguably core; `Client`, `Router` and `Plan` clearly are not. Tickets and
-   announcements are genuinely ambiguous — they are packaged features with
-   packaged models, so they may belong in every install.
-2. **Does the starter ship a resource at all?** One worked example teaches the
-   pattern; an empty `app/Panel/Resources` teaches nothing. A single
-   `ExampleResource` against a `posts` table may be the honest middle.
-3. **Packagist eventually, or Git URLs forever?** Git URLs work today and need
-   no release process. Packagist needs the split, tags and a pipeline — worth
-   it only when outside users want `composer require` without a `repositories`
-   block.
+Two of these are settled by reasoning and are decided below. The third waits
+for phase one, because if `panel:install` cannot boot a stock app then the
+question is moot.
+
+### 6.1 Core versus demo — DECIDED
+
+**The line is "does the panel break without it", not "does it feel generic".**
+
+| Ships | Why |
+|---|---|
+| `User`, `Tenant`, Spatie permission tables | Not preference. `TenantScope` DENIES when no tenant resolves, and the panel denies by default - so a starter without these shows a working sign-in and empty everything. That is exactly the failure a `migrate:fresh` produced in the previous session: correct code, blank panel, reads as broken. |
+
+| Does not ship |
+|---|
+| `Client`, `Router`, `Plan`, `ClientSession`, the reference seeder, the five ISP tenants |
+
+**THE AMBIGUOUS ONES ANSWER THEMSELVES.** `AnnouncementsPlugin` and
+`TicketingPlugin` are already PLUGINS in the playground's config - packaged
+features with packaged migrations and an existing opt-in mechanism. So:
+
+> **Ship the migrations. Register no plugins.**
+
+`ContentEntry`, `ApiToken`, `ScheduledReport`, `DocumentTemplate` and `Seo` go
+the same way: tables present, nothing mounted.
+
+Same rule `make:panel` now follows, for the same reason: **opting in is a
+decision somebody made; opting out is a decision nobody knew they had to make.**
+The customer portal shipping backups and logs is what that rule was written
+from.
+
+### 6.2 Does the starter ship a resource — DECIDED, pending 6.4
+
+**No shipped resource. Ship the command instead.**
+
+An `ExampleResource` against a `posts` table that does not exist is a broken
+screen on first boot; against a table the starter invents, it is demo data
+under another name - the exact thing this plan removes.
+
+The better teaching tool already exists:
+
+```bash
+php artisan make:panel-resource Post --generate
+```
+
+It INTROSPECTS THE REAL TABLE and writes a working resource plus a policy stub.
+Somebody reading a generated resource against their OWN data learns more than
+reading a stranger's against `posts`.
+
+So `panel:install` ends by printing that command, named for a model the
+application actually has. `panel:blueprint` already covers the conventions.
+**The empty directory is not the teaching surface - the installer's last line
+is.**
+
+### 6.3 Git URLs or Packagist — DECIDED
+
+**Git URLs now. Packagist when somebody who is not you asks for it.**
+
+But add the missing piece either way: **tags.**
+
+```bash
+git tag v0.9.7 && git push --tags
+```
+
+Everything is `@dev` today, which means every consumer's `composer update`
+silently moves them to the latest commit - including a broken one. A tag lets
+them pin `"panelkit/panel": "^0.9"` through a `repositories` block, which is
+versioning without a split.
+
+Packagist costs nine-ish mirrored repos, a split script and a tag per release
+per package. And unlike the Git-URL arrangement, **published versions are
+permanent**: Packagist can be added later and cannot be cleanly unpublished.
+
+### 6.4 Deferred to phase one
+
+Whether 6.2 holds at all depends on the probe. If `panel:install` cannot
+produce a bootable panel on a stock Laravel app, the starter is a different
+artefact and this question is asked again about that artefact instead.
 
 ---
 
