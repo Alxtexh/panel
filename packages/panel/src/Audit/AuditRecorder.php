@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Audit;
+namespace Alxtexh\Panel\Audit;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * Turns a model change into an audit entry.

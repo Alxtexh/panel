@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Actions;
+namespace Alxtexh\Panel\Actions;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * Duplicate a record.

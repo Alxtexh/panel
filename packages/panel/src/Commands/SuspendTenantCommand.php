@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 

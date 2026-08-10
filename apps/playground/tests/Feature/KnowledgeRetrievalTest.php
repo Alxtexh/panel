@@ -10,11 +10,11 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Ai\Tools\Request;
-use PanelKit\Panel\Knowledge\Chunker;
-use PanelKit\Panel\Knowledge\Embedder;
-use PanelKit\Panel\Knowledge\HashEmbedder;
-use PanelKit\Panel\Knowledge\KnowledgeBase;
-use PanelKit\Panel\Support\HelpCentre;
+use Alxtexh\Panel\Knowledge\Chunker;
+use Alxtexh\Panel\Knowledge\Embedder;
+use Alxtexh\Panel\Knowledge\HashEmbedder;
+use Alxtexh\Panel\Knowledge\KnowledgeBase;
+use Alxtexh\Panel\Support\HelpCentre;
 use Tests\TestCase;
 
 /**
@@ -231,7 +231,7 @@ final class KnowledgeRetrievalTest extends TestCase
         $this->artisan('panel:knowledge', ['action' => 'index', '--tenant' => (string) $this->acme->id])
             ->assertSuccessful();
 
-        $matches = $this->knowledge()->search('composer require panelkit installation tenancy mode');
+        $matches = $this->knowledge()->search('composer require alxtexhpanel installation tenancy mode');
 
         $this->assertNotEmpty($matches);
         $this->assertStringContainsString(

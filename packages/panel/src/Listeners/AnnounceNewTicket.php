@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Listeners;
+namespace Alxtexh\Panel\Listeners;
 
-use PanelKit\Panel\Alerts\Telegram;
-use PanelKit\Panel\Events\TicketOpened;
+use Alxtexh\Panel\Alerts\Telegram;
+use Alxtexh\Panel\Events\TicketOpened;
 
 /**
  * Tell the desk when somebody opens a ticket - roadmap 6.5.

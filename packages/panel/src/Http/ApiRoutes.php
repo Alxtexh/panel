@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http;
+namespace Alxtexh\Panel\Http;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Http\Controllers\Api\ResourceApiController;
-use PanelKit\Panel\Http\Middleware\AuthenticateApiToken;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Http\Controllers\Api\ResourceApiController;
+use Alxtexh\Panel\Http\Middleware\AuthenticateApiToken;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * The public API, mounted once at a versioned prefix.

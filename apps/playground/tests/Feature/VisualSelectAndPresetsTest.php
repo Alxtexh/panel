@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use InvalidArgumentException;
-use PanelKit\Panel\Forms\Fields\NumberField;
-use PanelKit\Panel\Forms\Fields\VisualSelectField;
+use Alxtexh\Panel\Forms\Fields\NumberField;
+use Alxtexh\Panel\Forms\Fields\VisualSelectField;
 use Tests\TestCase;
 
 /**

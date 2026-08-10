@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
-use PanelKit\Panel\Actions\ExportedFile;
+use Alxtexh\Panel\Actions\ExportedFile;
 
 /**
  * Removes exports past their retention window - the row and the file together.

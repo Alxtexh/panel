@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Notifications;
+namespace Alxtexh\Panel\Notifications;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Notifications\Notification;
-use PanelKit\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Alerts\Announcement;
 
 /**
  * Where a dismissed announcement goes.

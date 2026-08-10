@@ -11,12 +11,12 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
-use PanelKit\Panel\Forms\Fields\KeyValueField;
-use PanelKit\Panel\Forms\Fields\MultiSelectField;
-use PanelKit\Panel\Forms\Fields\RepeaterField;
-use PanelKit\Panel\Forms\Fields\SelectField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Form;
+use Alxtexh\Panel\Forms\Fields\KeyValueField;
+use Alxtexh\Panel\Forms\Fields\MultiSelectField;
+use Alxtexh\Panel\Forms\Fields\RepeaterField;
+use Alxtexh\Panel\Forms\Fields\SelectField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Form;
 use Tests\TestCase;
 
 /**

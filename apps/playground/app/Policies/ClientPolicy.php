@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use PanelKit\Panel\Policies\TenantResourcePolicy;
+use Alxtexh\Panel\Policies\TenantResourcePolicy;
 
 final class ClientPolicy extends TenantResourcePolicy {}

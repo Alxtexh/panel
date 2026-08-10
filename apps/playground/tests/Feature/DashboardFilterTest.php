@@ -13,10 +13,10 @@ use App\Models\User;
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Widgets\Bucket;
-use PanelKit\Panel\Widgets\DashboardFilters;
-use PanelKit\Panel\Widgets\Period;
-use PanelKit\Panel\Widgets\Window;
+use Alxtexh\Panel\Widgets\Bucket;
+use Alxtexh\Panel\Widgets\DashboardFilters;
+use Alxtexh\Panel\Widgets\Period;
+use Alxtexh\Panel\Widgets\Window;
 use Tests\TestCase;
 
 /**

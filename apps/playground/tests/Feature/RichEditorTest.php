@@ -11,7 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
-use PanelKit\Panel\Forms\Fields\RichEditorField;
+use Alxtexh\Panel\Forms\Fields\RichEditorField;
 use Tests\TestCase;
 
 /**

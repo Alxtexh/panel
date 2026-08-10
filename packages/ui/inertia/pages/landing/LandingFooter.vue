@@ -17,7 +17,7 @@ withDefaults(
         links?: { label: string; href: string }[]
     }>(),
     {
-        brand: 'PanelKit',
+        brand: 'Alxtexhpanel',
         tagline: 'Built with Laravel, Inertia and Vue.',
         links: () => [],
     },

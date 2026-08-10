@@ -7,13 +7,13 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Forms\Fields\CheckboxListField;
-use PanelKit\Panel\Forms\Fields\ColourField;
-use PanelKit\Panel\Forms\Fields\Field;
-use PanelKit\Panel\Forms\Fields\RadioField;
-use PanelKit\Panel\Forms\Fields\SliderField;
-use PanelKit\Panel\Forms\Fields\TagsField;
-use PanelKit\Panel\Forms\Form;
+use Alxtexh\Panel\Forms\Fields\CheckboxListField;
+use Alxtexh\Panel\Forms\Fields\ColourField;
+use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Forms\Fields\RadioField;
+use Alxtexh\Panel\Forms\Fields\SliderField;
+use Alxtexh\Panel\Forms\Fields\TagsField;
+use Alxtexh\Panel\Forms\Form;
 use Tests\TestCase;
 
 /**
@@ -333,7 +333,7 @@ final class CustomFieldTypeTest extends TestCase
  * A field type from OUTSIDE the package - the thing that used to be impossible.
  *
  * It declares its own type, adds its own schema key and brings its own
- * validation rule, and nothing in `PanelKit\Panel` knows it exists. In a real
+ * validation rule, and nothing in `Alxtexh\Panel` knows it exists. In a real
  * application this would live in `app/Panel/Fields`, with a Vue control
  * registered under the same type string.
  */

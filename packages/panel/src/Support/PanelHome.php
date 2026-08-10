@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
-use PanelKit\Panel\Pages\DashboardPage;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Pages\DashboardPage;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * Where a panel opens - one answer, used by everything that redirects.

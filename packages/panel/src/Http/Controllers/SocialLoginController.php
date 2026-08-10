@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,10 +11,10 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
-use PanelKit\Panel\Auth\SocialProviders;
-use PanelKit\Panel\Models\ConnectedAccount;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\PanelHome;
+use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Models\ConnectedAccount;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelHome;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirect;
 
 /**

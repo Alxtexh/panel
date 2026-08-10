@@ -60,7 +60,7 @@ const resolved = computed(() =>
         }))
         .filter((entry) => {
             if (!entry.component && props.warnOnUnknown) {
-                console.warn(`[panelkit] Unknown landing section "${entry.type}" - skipped.`)
+                console.warn(`[alxtexhpanel] Unknown landing section "${entry.type}" - skipped.`)
             }
 
             return !!entry.component

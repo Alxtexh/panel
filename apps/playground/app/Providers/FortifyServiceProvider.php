@@ -14,8 +14,8 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
-use PanelKit\Panel\Auth\Passkeys;
-use PanelKit\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Auth\SocialProviders;
 
 class FortifyServiceProvider extends ServiceProvider
 {

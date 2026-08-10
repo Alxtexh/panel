@@ -8,8 +8,8 @@ use App\Models\SuperadminUser;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Models\ContentEntry;
-use PanelKit\Panel\Models\Ticket;
+use Alxtexh\Panel\Models\ContentEntry;
+use Alxtexh\Panel\Models\Ticket;
 use Tests\TestCase;
 
 /**

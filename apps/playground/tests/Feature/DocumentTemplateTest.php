@@ -11,11 +11,11 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Documents\DocumentKinds;
-use PanelKit\Panel\Documents\DocumentRenderer;
-use PanelKit\Panel\Documents\DocumentTemplate;
-use PanelKit\Panel\Documents\Kinds\InvoiceKind;
-use PanelKit\Panel\Documents\Kinds\VoucherKind;
+use Alxtexh\Panel\Documents\DocumentKinds;
+use Alxtexh\Panel\Documents\DocumentRenderer;
+use Alxtexh\Panel\Documents\DocumentTemplate;
+use Alxtexh\Panel\Documents\Kinds\InvoiceKind;
+use Alxtexh\Panel\Documents\Kinds\VoucherKind;
 use Tests\TestCase;
 
 /**

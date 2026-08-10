@@ -1,4 +1,4 @@
-# What PanelKit's interface is built on, and why
+# What Alxtexhpanel's interface is built on, and why
 
 Part G.8. The question asked was direct: Nuxt UI, Naive UI, Reka (Radix Vue),
 Headless UI or Ark UI — which is the **Enterprise Ready Workhorse**, and which
@@ -9,7 +9,7 @@ most of the way into it.
 
 ## The constraint that decides it
 
-PanelKit is **Vue 3 + Inertia + Laravel. It is not Nuxt.** That is not a
+Alxtexhpanel is **Vue 3 + Inertia + Laravel. It is not Nuxt.** That is not a
 preference, it is the architecture: pages are served by Laravel controllers and
 mounted by Inertia, there is no Nuxt server, no Nitro, no `app.vue`, no
 auto-imports and no module system to install a Nuxt module into.

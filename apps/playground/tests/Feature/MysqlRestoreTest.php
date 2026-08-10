@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Support\DatabaseRestorer;
+use Alxtexh\Panel\Support\DatabaseRestorer;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
@@ -41,7 +41,7 @@ final class MysqlRestoreTest extends TestCase
 
     private const PORT = 3399;
 
-    private const DATABASE = 'panelkit_restore';
+    private const DATABASE = 'alxtexhpanel_restore';
 
     private string $client;
 
@@ -68,11 +68,11 @@ final class MysqlRestoreTest extends TestCase
                 'pdo_mysql is not loaded. Start the fixture and run PHPUnit directly - '
                 .'`artisan test` re-spawns PHPUnit and loses the -d flags: '
                 .'eval "$(tests/bin/mysql-fixture.sh env)" && '
-                .'php $PANELKIT_PHP_FLAGS vendor/bin/phpunit --filter=MysqlRestore'
+                .'php $ALXTEXHPANEL_PHP_FLAGS vendor/bin/phpunit --filter=MysqlRestore'
             );
         }
 
-        $this->client = (string) (getenv('PANELKIT_MYSQL_BIN') ?: 'mysql');
+        $this->client = (string) (getenv('ALXTEXHPANEL_MYSQL_BIN') ?: 'mysql');
 
         if (! $this->serverIsUp()) {
             $this->markTestSkipped(
@@ -145,7 +145,7 @@ final class MysqlRestoreTest extends TestCase
 
     private function dump(string $sql): string
     {
-        $path = tempnam(sys_get_temp_dir(), 'panelkit-mysql-dump-');
+        $path = tempnam(sys_get_temp_dir(), 'alxtexhpanel-mysql-dump-');
 
         file_put_contents($path, $sql);
 

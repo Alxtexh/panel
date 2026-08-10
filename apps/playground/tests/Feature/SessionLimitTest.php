@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Auth\EnforceSessionLimit;
+use Alxtexh\Panel\Auth\EnforceSessionLimit;
 use Tests\TestCase;
 
 /**

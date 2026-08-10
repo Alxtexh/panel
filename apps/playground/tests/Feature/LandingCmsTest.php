@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Landing\LandingPageResource;
-use PanelKit\Panel\Landing\LandingPresets;
-use PanelKit\Panel\Support\InstallationState;
+use Alxtexh\Panel\Landing\LandingPageResource;
+use Alxtexh\Panel\Landing\LandingPresets;
+use Alxtexh\Panel\Support\InstallationState;
 use Tests\TestCase;
 
 /**

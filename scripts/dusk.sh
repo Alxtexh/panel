@@ -101,9 +101,9 @@ DB_CONNECTION=sqlite DB_DATABASE="$DB_FILE" \
 # "the element never appeared" rather than "you did not rebuild". Five seconds is
 # cheaper than that confusion.
 echo "==> Building assets"
-npm run build --silent >/tmp/panelkit-dusk-build.log 2>&1 || {
+npm run build --silent >/tmp/alxtexhpanel-dusk-build.log 2>&1 || {
     echo "The asset build failed. Its log:" >&2
-    tail -20 /tmp/panelkit-dusk-build.log >&2
+    tail -20 /tmp/alxtexhpanel-dusk-build.log >&2
     exit 1
 }
 
@@ -119,7 +119,7 @@ DB_CONNECTION=sqlite DB_DATABASE="$DB_FILE" \
 APP_URL="http://127.0.0.1:${PORT}" \
 CACHE_STORE=array QUEUE_CONNECTION=sync BROADCAST_CONNECTION=log \
 PANEL_TURNSTILE=false \
-    php artisan serve --host=127.0.0.1 --port="$PORT" --no-reload >/tmp/panelkit-dusk-server.log 2>&1 &
+    php artisan serve --host=127.0.0.1 --port="$PORT" --no-reload >/tmp/alxtexhpanel-dusk-server.log 2>&1 &
 SERVER_PID=$!
 
 # Wait for it to answer rather than sleeping a guessed number of seconds - a
@@ -131,7 +131,7 @@ for _ in $(seq 1 40); do
     fi
     if ! kill -0 "$SERVER_PID" 2>/dev/null; then
         echo "The test server exited before it answered. Its log:" >&2
-        tail -20 /tmp/panelkit-dusk-server.log >&2
+        tail -20 /tmp/alxtexhpanel-dusk-server.log >&2
         exit 1
     fi
     sleep 0.5

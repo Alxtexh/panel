@@ -20,14 +20,14 @@ use App\Support\HelpArticles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use PanelKit\Panel\Http\Controllers\OperationsController;
-use PanelKit\Panel\Http\Controllers\RoleController;
-use PanelKit\Panel\Http\Controllers\SocialLoginController;
-use PanelKit\Panel\Http\Middleware\SharePanelProps;
-use PanelKit\Panel\Http\Middleware\UsePanel;
-use PanelKit\Panel\Http\PanelRoutes;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Blueprint;
+use Alxtexh\Panel\Http\Controllers\OperationsController;
+use Alxtexh\Panel\Http\Controllers\RoleController;
+use Alxtexh\Panel\Http\Controllers\SocialLoginController;
+use Alxtexh\Panel\Http\Middleware\SharePanelProps;
+use Alxtexh\Panel\Http\Middleware\UsePanel;
+use Alxtexh\Panel\Http\PanelRoutes;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Blueprint;
 
 /*
  | Resource segments come from the registry rather than a literal list, so a
@@ -51,7 +51,7 @@ $panelResources = array_keys(app(PanelManager::class)->resourcesFor('admin'));
  |
  | `/` and `/preview/{design}` were declared here, pointing at a controller in
  | this application, backed by three designs in `App\Support` and edited by a
- | resource in `App\Panel\Singulars` - so `composer require panelkit/panel`
+ | resource in `App\Panel\Singulars` - so `composer require alxtexh-enterprise/panel`
  | gave you the section library and nothing that composed a page with it.
  |
  | All of it moved. `PanelRoutes::landing()` registers both routes when
@@ -591,7 +591,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     /*
      | THE BELL IS THE PACKAGE'S NOW. These four routes moved into
-     | `PanelRoutes` - see `PanelKit\Panel\Http\Controllers\NotificationController`
+     | `PanelRoutes` - see `Alxtexh\Panel\Http\Controllers\NotificationController`
      | - and the rules this ISP watches are declared in `AlertServiceProvider`.
      | Left registered here they would shadow the packaged pair at the same
      | paths, which is a duplicate nobody would notice until the second panel.

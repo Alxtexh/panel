@@ -10,10 +10,10 @@ use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Support\SchemaCache;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\SchemaCache;
+use Alxtexh\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**
@@ -209,7 +209,7 @@ final class TenantIsolationTest extends TestCase
         ]);
 
         // Simulate a resource gated behind a flag the tenant does not have.
-        $resource = new class extends \PanelKit\Panel\Resources\Resource
+        $resource = new class extends \Alxtexh\Panel\Resources\Resource
         {
             protected static string $model = Client::class;
 
@@ -231,7 +231,7 @@ final class TenantIsolationTest extends TestCase
     {
         config(['panel.tenancy.features' => fn (): array => []]);
 
-        $resource = new class extends \PanelKit\Panel\Resources\Resource
+        $resource = new class extends \Alxtexh\Panel\Resources\Resource
         {
             protected static string $model = Client::class;
 

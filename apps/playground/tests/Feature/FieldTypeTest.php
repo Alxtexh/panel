@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use InvalidArgumentException;
-use PanelKit\Panel\Forms\Fields\BuilderField;
-use PanelKit\Panel\Forms\Fields\CodeField;
-use PanelKit\Panel\Forms\Fields\MarkdownField;
-use PanelKit\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Fields\BuilderField;
+use Alxtexh\Panel\Forms\Fields\CodeField;
+use Alxtexh\Panel\Forms\Fields\MarkdownField;
+use Alxtexh\Panel\Forms\Fields\TextField;
 use Tests\TestCase;
 
 /**

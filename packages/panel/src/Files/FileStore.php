@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Files;
+namespace Alxtexh\Panel\Files;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 use RuntimeException;
 
 /**

@@ -9,10 +9,10 @@ use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Audit\AuditRecorder;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\Models\Role;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Audit\AuditRecorder;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\Models\Role;
+use Alxtexh\Panel\Support\Abilities;
 use Tests\TestCase;
 
 /**

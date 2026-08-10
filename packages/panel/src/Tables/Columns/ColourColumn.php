@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tables\Columns;
+namespace Alxtexh\Panel\Tables\Columns;
 
 /**
  * A stored colour, shown as the colour - roadmap 4.6.

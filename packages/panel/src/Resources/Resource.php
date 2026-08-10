@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Resources;
+namespace Alxtexh\Panel\Resources;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -11,19 +11,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\CustomFields\CustomFieldFactory;
-use PanelKit\Panel\Forms\Fields\Field;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Schema\Component;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\SchemaCache;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Tables\Columns\Column;
-use PanelKit\Panel\Tables\Columns\EditableColumn;
-use PanelKit\Panel\Tables\ListResult;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\CustomFields\CustomFieldFactory;
+use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Schema\Component;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\SchemaCache;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Tables\Columns\Column;
+use Alxtexh\Panel\Tables\Columns\EditableColumn;
+use Alxtexh\Panel\Tables\ListResult;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * A panel resource. One subclass per screen, and no Vue at all.
@@ -451,7 +451,7 @@ abstract class Resource
      * subtly different on a second surface is how a panel leaks a number here
      * that it correctly withholds there.
      *
-     * @return list<\PanelKit\Panel\Widgets\StatWidget|\PanelKit\Panel\Widgets\ChartWidget>
+     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget>
      */
     public static function headerWidgets(): array
     {

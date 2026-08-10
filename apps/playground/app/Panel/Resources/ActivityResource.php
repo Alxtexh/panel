@@ -6,15 +6,15 @@ namespace App\Panel\Resources;
 
 use App\Models\AuditEntry;
 use App\Models\User;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Columns\BadgeColumn;
-use PanelKit\Panel\Tables\Columns\DateColumn;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Filters\DateRangeFilter;
-use PanelKit\Panel\Tables\Filters\SelectFilter;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Columns\BadgeColumn;
+use Alxtexh\Panel\Tables\Columns\DateColumn;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Filters\DateRangeFilter;
+use Alxtexh\Panel\Tables\Filters\SelectFilter;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * Everything that happened in this organisation.

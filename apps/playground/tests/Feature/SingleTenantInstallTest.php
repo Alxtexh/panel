@@ -8,7 +8,7 @@ use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
@@ -40,7 +40,7 @@ final class SingleTenantInstallTest extends TestCase
      * THE ROLE PIVOT STILL NEEDS A TEAM, even with the panel's tenancy off.
      *
      * That is Spatie's storage shape and the reference app's schema, not
-     * PanelKit's decision - `model_has_roles.tenant_id` is NOT NULL here. A
+     * Alxtexhpanel's decision - `model_has_roles.tenant_id` is NOT NULL here. A
      * single-tenant installation stores its roles under one team id and never
      * looks at it again, which is what this mirrors. What is under test is the
      * POLICY, not the pivot.

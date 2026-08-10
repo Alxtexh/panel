@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;

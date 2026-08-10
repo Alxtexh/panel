@@ -8,9 +8,9 @@ use App\Models\Client;
 use App\Models\Router;
 use DateTimeImmutable;
 use Illuminate\Support\ServiceProvider;
-use PanelKit\Panel\Alerts\Alert;
-use PanelKit\Panel\Alerts\AlertRule;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Alerts\Alert;
+use Alxtexh\Panel\Alerts\AlertRule;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * What this ISP watches, declared where an application declares things.

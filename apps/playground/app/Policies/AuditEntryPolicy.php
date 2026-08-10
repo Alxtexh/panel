@@ -7,7 +7,7 @@ namespace App\Policies;
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Panel\Resources\ActivityResource;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\Abilities;
 
 /**
  * An audit entry can be read and nothing else.

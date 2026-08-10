@@ -17,7 +17,7 @@ use Illuminate\Queue\QueueManager;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\Worker;
 use Illuminate\Queue\WorkerOptions;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
 use Tests\TestCase;
 

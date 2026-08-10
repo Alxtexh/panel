@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tables\Columns;
+namespace Alxtexh\Panel\Tables\Columns;
 
 use InvalidArgumentException;
 

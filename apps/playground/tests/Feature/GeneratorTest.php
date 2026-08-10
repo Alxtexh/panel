@@ -258,7 +258,7 @@ final class GeneratorTest extends TestCase
         $this->assertStringContainsString('->recordActions([', $uncommented);
         $this->assertStringContainsString('->bulkActions([', $uncommented);
 
-        $file = tempnam(sys_get_temp_dir(), 'panelkit').'.php';
+        $file = tempnam(sys_get_temp_dir(), 'alxtexhpanel').'.php';
         file_put_contents($file, $uncommented);
 
         exec('php -l '.escapeshellarg($file).' 2>&1', $output, $status);

@@ -9,8 +9,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\JobFinished;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Alerts\Alert;
-use PanelKit\Panel\Alerts\AlertRule;
+use Alxtexh\Panel\Alerts\Alert;
+use Alxtexh\Panel\Alerts\AlertRule;
 use RuntimeException;
 use Tests\TestCase;
 

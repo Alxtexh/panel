@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Imports;
+namespace Alxtexh\Panel\Imports;
 
 use Illuminate\Support\Facades\Validator;
 use InvalidArgumentException;
-use PanelKit\Panel\Forms\Fields\Field;
-use PanelKit\Panel\Forms\Form;
+use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Forms\Form;
 
 /**
  * Reads rows, validates them one at a time, and reports what failed.

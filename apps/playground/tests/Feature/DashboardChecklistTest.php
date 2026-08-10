@@ -10,9 +10,9 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\InstallationState;
-use PanelKit\Panel\Support\SetupChecklist;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\SetupChecklist;
 use Tests\TestCase;
 
 /**

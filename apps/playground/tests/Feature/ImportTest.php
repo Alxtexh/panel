@@ -13,8 +13,8 @@ use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use InvalidArgumentException;
-use PanelKit\Panel\Imports\CsvReader;
-use PanelKit\Panel\Imports\Importer;
+use Alxtexh\Panel\Imports\CsvReader;
+use Alxtexh\Panel\Imports\Importer;
 use Tests\TestCase;
 
 /**

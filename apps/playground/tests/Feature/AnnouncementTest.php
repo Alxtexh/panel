@@ -8,7 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Alerts\Announcement;
 use Tests\TestCase;
 
 /**

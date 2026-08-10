@@ -10,8 +10,8 @@ use App\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Testing\InteractsWithPanels;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Testing\InteractsWithPanels;
 use PHPUnit\Framework\AssertionFailedError;
 use Tests\TestCase;
 

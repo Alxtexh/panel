@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 /**
  * The screens this package renders, and the one-line files that resolve them.

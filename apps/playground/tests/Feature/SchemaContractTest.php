@@ -11,9 +11,9 @@ use App\Panel\Resources\PlanResource;
 use App\Panel\Resources\RouterResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Support\SchemaCache;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\SchemaCache;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -28,7 +28,7 @@ final class SchemaContractTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @var list<class-string<\PanelKit\Panel\Resources\Resource>> */
+    /** @var list<class-string<\Alxtexh\Panel\Resources\Resource>> */
     private const RESOURCES = [ClientResource::class, RouterResource::class, PlanResource::class];
 
     /**

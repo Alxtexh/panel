@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use PanelKit\Panel\Policies\TenantResourcePolicy;
+use Alxtexh\Panel\Policies\TenantResourcePolicy;
 
 /**
  * Managing colleagues.

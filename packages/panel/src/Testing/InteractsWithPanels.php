@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Testing;
+namespace Alxtexh\Panel\Testing;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Testing\TestResponse;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
 
 /**
  * Assertions for somebody building ON this package.

@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Fortify\Features;
-use PanelKit\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Auth\Passkeys;
 use Tests\TestCase;
 
 /**
@@ -16,7 +16,7 @@ use Tests\TestCase;
  * NOTHING WAS BROKEN. The reference app has had working passkeys for a long
  * time - Fortify's WebAuthn, the `passkeys` relation, an enrolment component.
  * The fault was only ever WHERE it lived: a fresh `composer require
- * panelkit/panel` produced a panel with no passkey support and nothing to
+ * alxtexh-enterprise/panel` produced a panel with no passkey support and nothing to
  * suggest that adding it was a solved problem rather than a project.
  *
  * SO THE TESTS ARE ABOUT THE SEAM, not about WebAuthn. Fortify's own suite

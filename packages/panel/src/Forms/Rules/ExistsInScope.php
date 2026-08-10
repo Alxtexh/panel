@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Forms\Rules;
+namespace Alxtexh\Panel\Forms\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;

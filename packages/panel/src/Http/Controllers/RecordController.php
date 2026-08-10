@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,19 +12,19 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\Models\Scopes\TenantScope;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
-use PanelKit\Panel\Actions\RecordAction;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\CustomFields\CustomFieldFactory;
-use PanelKit\Panel\Http\NestedContext;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Support\Transaction;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Tables\Columns\EditableColumn;
-use PanelKit\Panel\Tables\Reorderer;
+use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\CustomFields\CustomFieldFactory;
+use Alxtexh\Panel\Http\NestedContext;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\Transaction;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Tables\Columns\EditableColumn;
+use Alxtexh\Panel\Tables\Reorderer;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Documents\Kinds;
+namespace Alxtexh\Panel\Documents\Kinds;
 
-use PanelKit\Panel\Forms\Fields\TextareaField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Schema\Section;
+use Alxtexh\Panel\Forms\Fields\TextareaField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Schema\Section;
 
 /**
  * Proof that money arrived.

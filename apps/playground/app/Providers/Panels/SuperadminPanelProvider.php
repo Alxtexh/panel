@@ -7,9 +7,9 @@ namespace App\Providers\Panels;
 use App\Policies\ContentEntryPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use PanelKit\Panel\Models\ContentEntry;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Models\ContentEntry;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * The superadmin portal: the installation looking at itself.

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Documents;
 
 use App\Models\Client;
-use PanelKit\Panel\Documents\Kinds\InvoiceKind;
+use Alxtexh\Panel\Documents\Kinds\InvoiceKind;
 
 /**
  * The packaged invoice kind, taught about this application's subscribers.

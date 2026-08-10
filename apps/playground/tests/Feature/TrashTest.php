@@ -11,9 +11,9 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\PanelSettings;
-use PanelKit\Panel\Trash\TrashBin;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\PanelSettings;
+use Alxtexh\Panel\Trash\TrashBin;
 use Tests\TestCase;
 
 /**

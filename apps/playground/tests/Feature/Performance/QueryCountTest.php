@@ -12,8 +12,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\PanelManager;
 use Tests\TestCase;
 
 /**

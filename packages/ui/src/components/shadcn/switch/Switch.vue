@@ -3,7 +3,7 @@
  * A switch: on or off, applied immediately in intent.
  *
  * WHY THIS EXISTS, AND WHY IT IS NOT A SECOND CHECKBOX. `ToggleField` rendered
- * a bare `<input type="checkbox">`, so PanelKit had one control wearing two
+ * a bare `<input type="checkbox">`, so Alxtexhpanel had one control wearing two
  * names - the field was called a toggle and drew a checkbox. Adding a
  * `CheckboxField` beside it would have shipped a second name for the same
  * markup, which is a seam with nothing behind it.

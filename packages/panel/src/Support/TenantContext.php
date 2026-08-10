@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Closure;
 use Illuminate\Support\Facades\Auth;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 use RuntimeException;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 

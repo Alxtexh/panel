@@ -12,11 +12,11 @@ use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Widgets\Bucket;
-use PanelKit\Panel\Widgets\DashboardFilters;
-use PanelKit\Panel\Widgets\Period;
-use PanelKit\Panel\Widgets\Rollup;
-use PanelKit\Panel\Widgets\TimeSeries;
+use Alxtexh\Panel\Widgets\Bucket;
+use Alxtexh\Panel\Widgets\DashboardFilters;
+use Alxtexh\Panel\Widgets\Period;
+use Alxtexh\Panel\Widgets\Rollup;
+use Alxtexh\Panel\Widgets\TimeSeries;
 use Tests\TestCase;
 
 /**

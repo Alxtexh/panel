@@ -12,8 +12,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Models\Role;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Models\Role;
+use Alxtexh\Panel\Support\Abilities;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Documents;
 
-use PanelKit\Panel\Documents\DocumentBranding;
-use PanelKit\Panel\Http\Controllers\OrganisationController;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Documents\DocumentBranding;
+use Alxtexh\Panel\Http\Controllers\OrganisationController;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * A document's letterhead, from the organisation settings screen.

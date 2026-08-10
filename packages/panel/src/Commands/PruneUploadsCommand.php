@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Files\FileStore;
+use Alxtexh\Panel\Files\FileStore;
 
 /**
  * Deletes pending uploads nobody ever saved.

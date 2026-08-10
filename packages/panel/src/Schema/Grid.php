@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Schema;
+namespace Alxtexh\Panel\Schema;
 
 /** An untitled column grid, for laying out fields without a heading. */
 final class Grid extends Component

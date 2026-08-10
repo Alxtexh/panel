@@ -96,7 +96,7 @@ final class PanelShellRenderTest extends DuskTestCase
      *
      * THE STORE IS THE `sidebar_state` COOKIE NOW, written by the same
      * `SidebarProvider` the demo uses - the shell was unified, and the old
-     * `panelkit.sidebar.collapsed` localStorage key went with the old shell.
+     * `alxtexhpanel.sidebar.collapsed` localStorage key went with the old shell.
      */
     public function test_the_sidebar_collapse_is_remembered(): void
     {

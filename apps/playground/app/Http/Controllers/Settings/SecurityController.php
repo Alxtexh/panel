@@ -11,10 +11,10 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
-use PanelKit\Panel\Auth\Passkeys;
-use PanelKit\Panel\Auth\PasswordPolicy;
-use PanelKit\Panel\Auth\SocialProviders;
-use PanelKit\Panel\Models\ConnectedAccount;
+use Alxtexh\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Auth\PasswordPolicy;
+use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Models\ConnectedAccount;
 
 class SecurityController extends Controller
 {

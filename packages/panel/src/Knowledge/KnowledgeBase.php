@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Knowledge;
+namespace Alxtexh\Panel\Knowledge;
 
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * Retrieval over the panel's own content, so the assistant can cite rather than

@@ -8,18 +8,18 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use PanelKit\Panel\Actions\RecordAction;
-use PanelKit\Panel\Auth\Impersonation;
-use PanelKit\Panel\Forms\Fields\MultiSelectField;
-use PanelKit\Panel\Forms\Fields\PasswordField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Models\Role;
-use PanelKit\Panel\Models\Scopes\TenantScope;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Columns\CheckboxColumn;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Auth\Impersonation;
+use Alxtexh\Panel\Forms\Fields\MultiSelectField;
+use Alxtexh\Panel\Forms\Fields\PasswordField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Models\Role;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Columns\CheckboxColumn;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * The colleagues who can sign in, and which role each one holds.

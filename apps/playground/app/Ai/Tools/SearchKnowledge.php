@@ -7,8 +7,8 @@ namespace App\Ai\Tools;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
-use PanelKit\Panel\Ai\PanelTool;
-use PanelKit\Panel\Knowledge\KnowledgeBase;
+use Alxtexh\Panel\Ai\PanelTool;
+use Alxtexh\Panel\Knowledge\KnowledgeBase;
 use Stringable;
 
 /**

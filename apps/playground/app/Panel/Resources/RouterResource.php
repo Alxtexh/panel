@@ -6,17 +6,17 @@ namespace App\Panel\Resources;
 
 use App\Models\Router;
 use App\Panel\Clusters\NetworkCluster;
-use PanelKit\Panel\Forms\Fields\SelectField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Schema\Step;
-use PanelKit\Panel\Schema\Wizard;
-use PanelKit\Panel\Tables\Columns\DateColumn;
-use PanelKit\Panel\Tables\Columns\IconColumn;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Filters\SelectFilter;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Forms\Fields\SelectField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Schema\Step;
+use Alxtexh\Panel\Schema\Wizard;
+use Alxtexh\Panel\Tables\Columns\DateColumn;
+use Alxtexh\Panel\Tables\Columns\IconColumn;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Filters\SelectFilter;
+use Alxtexh\Panel\Tables\Table;
 
 final class RouterResource extends Resource
 {

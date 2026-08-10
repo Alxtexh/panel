@@ -16,10 +16,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Testing\TestResponse;
-use PanelKit\Panel\Alerts\Announcement;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\TenantContext;
 use Tests\TestCase;
 
 /**

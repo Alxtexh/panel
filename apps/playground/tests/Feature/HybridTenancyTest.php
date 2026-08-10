@@ -7,8 +7,8 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Tenancy\ConditionalDatabaseBootstrapper;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Tenancy\ConditionalDatabaseBootstrapper;
 use Tests\TestCase;
 
 /**
@@ -26,7 +26,7 @@ use Tests\TestCase;
  * A CORRECTION TO WHAT THIS COMMENT USED TO SAY. It claimed `tenant_id` does not
  * exist in a dedicated database, so a hardcoded `where('tenant_id')` would be a
  * SQL error. That is true of a multi-database application with its own tenant
- * migration set, and it is NOT true here: PanelKit runs ONE set of migrations, so
+ * migration set, and it is NOT true here: Alxtexhpanel runs ONE set of migrations, so
  * a dedicated database has the same columns and the same foreign keys, and the
  * `tenant_id` column is present and correctly filled. Isolation comes from the
  * connection; the column is redundant rather than absent.
@@ -251,7 +251,7 @@ final class HybridTenancyTest extends TestCase
      * The bootstrapper LEAVES SHARED TENANTS ALONE.
      *
      * stancl's own switches the connection for every tenant, so enabling it
-     * alongside column-scoped tenants throws on the first one. PanelKit's
+     * alongside column-scoped tenants throws on the first one. Alxtexhpanel's
      * subclass is the only reason hybrid can be configured at all, and the thing
      * worth asserting is the refusal - the connection must be untouched.
      */

@@ -12,7 +12,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
-use PanelKit\Panel\Jobs\RunBulkAction;
+use Alxtexh\Panel\Jobs\RunBulkAction;
 use Tests\TestCase;
 
 /**

@@ -28,9 +28,9 @@
 #
 set -euo pipefail
 
-PREFIX="${PANELKIT_PG_PREFIX:-${TMPDIR:-/tmp}/panelkit-pg}"
-PORT="${PANELKIT_PG_PORT:-5499}"
-DATABASE="panelkit_rag"
+PREFIX="${ALXTEXHPANEL_PG_PREFIX:-${TMPDIR:-/tmp}/alxtexhpanel-pg}"
+PORT="${ALXTEXHPANEL_PG_PORT:-5499}"
+DATABASE="alxtexhpanel_rag"
 
 ROOT="$PREFIX/root"
 DATA="$PREFIX/data"
@@ -122,7 +122,7 @@ start() {
     echo "PostgreSQL $VERSION is on 127.0.0.1:$PORT, database [$DATABASE], pgvector installed."
     echo
     echo "Run the retrieval tests with:"
-    echo "  eval \"\$($0 env)\" && php \$PANELKIT_PHP_FLAGS vendor/bin/phpunit --filter=PgvectorRetrieval"
+    echo "  eval \"\$($0 env)\" && php \$ALXTEXHPANEL_PHP_FLAGS vendor/bin/phpunit --filter=PgvectorRetrieval"
 }
 
 stop() {
@@ -143,9 +143,9 @@ print_env() {
     # against the same unpacked `libpq.so.5`, and without this it reports the
     # extension as unloadable rather than the library as unfindable.
     echo "export LD_LIBRARY_PATH='$ROOT/usr/lib/x86_64-linux-gnu:\${LD_LIBRARY_PATH:-}'"
-    echo "export PANELKIT_PG_PORT='$PORT'"
-    echo "export PANELKIT_PG_DATABASE='$DATABASE'"
-    echo "export PANELKIT_PHP_FLAGS='-d extension=$ext/pgsql.so -d extension=$ext/pdo_pgsql.so'"
+    echo "export ALXTEXHPANEL_PG_PORT='$PORT'"
+    echo "export ALXTEXHPANEL_PG_DATABASE='$DATABASE'"
+    echo "export ALXTEXHPANEL_PHP_FLAGS='-d extension=$ext/pgsql.so -d extension=$ext/pdo_pgsql.so'"
 }
 
 case "${1:-start}" in

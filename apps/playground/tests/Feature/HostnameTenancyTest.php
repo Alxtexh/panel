@@ -8,8 +8,8 @@ use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Http\Middleware\ScopeSessionToTenant;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Http\Middleware\ScopeSessionToTenant;
+use Alxtexh\Panel\Support\Abilities;
 use Tests\TestCase;
 
 /**
@@ -43,8 +43,8 @@ final class HostnameTenancyTest extends TestCase
     {
         parent::setUp();
 
-        $this->acme = $this->tenantOn('Acme', 'acme', 'acme.panelkit.test');
-        $this->zenith = $this->tenantOn('Zenith', 'zenith', 'zenith.panelkit.test');
+        $this->acme = $this->tenantOn('Acme', 'acme', 'acme.alxtexhpanel.test');
+        $this->zenith = $this->tenantOn('Zenith', 'zenith', 'zenith.alxtexhpanel.test');
 
         $this->acmeUser = User::factory()
             ->withAbilities(Abilities::all())
@@ -82,7 +82,7 @@ final class HostnameTenancyTest extends TestCase
     {
         // No authenticated user at all - the tenant must still be known, which
         // is the whole difference from resolving it from the session.
-        $this->get('http://acme.panelkit.test/login')->assertOk();
+        $this->get('http://acme.alxtexhpanel.test/login')->assertOk();
 
         /*
          * Asserted through the SESSION STAMP rather than by reading
@@ -102,7 +102,7 @@ final class HostnameTenancyTest extends TestCase
     /** An unknown host is not an error - the central domain has no tenant. */
     public function test_an_unknown_host_passes_through(): void
     {
-        $this->get('http://panelkit.test/login')->assertOk();
+        $this->get('http://alxtexhpanel.test/login')->assertOk();
     }
 
     /* ------------------------------------------------------- the data seen */
@@ -114,7 +114,7 @@ final class HostnameTenancyTest extends TestCase
 
         $names = array_column(
             $this->actingAs($this->acmeUser)
-                ->get('http://acme.panelkit.test/clients')
+                ->get('http://acme.alxtexhpanel.test/clients')
                 ->assertOk()
                 ->viewData('page')['props']['records'],
             'name',
@@ -133,7 +133,7 @@ final class HostnameTenancyTest extends TestCase
     public function test_a_session_from_another_tenant_is_refused(): void
     {
         $this->actingAs($this->acmeUser)
-            ->get('http://acme.panelkit.test/clients')
+            ->get('http://acme.alxtexhpanel.test/clients')
             ->assertOk();
 
         /*
@@ -142,7 +142,7 @@ final class HostnameTenancyTest extends TestCase
          * cannot normally produce - and the exact one a shared `SESSION_DOMAIN`
          * would produce on every request.
          */
-        $response = $this->get('http://zenith.panelkit.test/clients');
+        $response = $this->get('http://zenith.alxtexhpanel.test/clients');
 
         /*
          * ASSERTED AS "did not succeed", not as a particular redirect target.
@@ -169,11 +169,11 @@ final class HostnameTenancyTest extends TestCase
     /** And the session is emptied rather than merely disregarded. */
     public function test_the_refused_session_is_emptied(): void
     {
-        $this->actingAs($this->acmeUser)->get('http://acme.panelkit.test/clients')->assertOk();
+        $this->actingAs($this->acmeUser)->get('http://acme.alxtexhpanel.test/clients')->assertOk();
 
         $this->withSession(['something_of_acmes' => 'secret']);
 
-        $this->get('http://zenith.panelkit.test/clients');
+        $this->get('http://zenith.alxtexhpanel.test/clients');
 
         $this->assertNull(
             session('something_of_acmes'),
@@ -192,7 +192,7 @@ final class HostnameTenancyTest extends TestCase
         $theirs = $this->clientFor($this->zenith, 'Not Acme\'s');
 
         $this->actingAs($this->acmeUser)
-            ->get("http://acme.panelkit.test/clients/{$theirs->id}")
+            ->get("http://acme.alxtexhpanel.test/clients/{$theirs->id}")
             ->assertNotFound();
     }
 

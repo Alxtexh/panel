@@ -9,8 +9,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Transaction;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Transaction;
 use RuntimeException;
 use Tests\TestCase;
 

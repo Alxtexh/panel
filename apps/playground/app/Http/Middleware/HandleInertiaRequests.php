@@ -6,13 +6,13 @@ use App\Panel\Pages;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
-use PanelKit\Panel\Auth\Impersonation;
-use PanelKit\Panel\Auth\Turnstile;
-use PanelKit\Panel\Http\Controllers\OrganisationController;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Locale;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Trash\TrashBin;
+use Alxtexh\Panel\Auth\Impersonation;
+use Alxtexh\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Http\Controllers\OrganisationController;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Locale;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Trash\TrashBin;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -331,7 +331,7 @@ class HandleInertiaRequests extends Middleware
              | forgotten one is an unguarded door that looks like the rest.
              |
              | The SITE key is public by design; the secret never leaves the
-             | server. See `PanelKit\Panel\Auth\Turnstile`.
+             | server. See `Alxtexh\Panel\Auth\Turnstile`.
              */
             'turnstileSiteKey' => Turnstile::enabled()
                 ? Turnstile::siteKey()

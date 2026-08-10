@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Middleware;
+namespace Alxtexh\Panel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
@@ -62,7 +62,7 @@ final class ResolveTenantByHost
             /*
              * HOST-ONLY, ALWAYS. A null domain means the browser sends the
              * cookie back to this exact host and nowhere else. Anything wider -
-             * `.panelkit.test` - offers one tenant's cookie to every other
+             * `.alxtexhpanel.test` - offers one tenant's cookie to every other
              * tenant's subdomain, which is the misconfiguration this whole file
              * exists to make survivable.
              */

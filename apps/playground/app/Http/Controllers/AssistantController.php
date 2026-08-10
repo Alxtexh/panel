@@ -11,7 +11,7 @@ use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Streaming\Events\Error;
 use Laravel\Ai\Streaming\Events\TextDelta;
 use Laravel\Ai\Streaming\Events\ToolCall;
-use PanelKit\Panel\Ai\AiCredentials;
+use Alxtexh\Panel\Ai\AiCredentials;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**

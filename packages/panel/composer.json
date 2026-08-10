@@ -1,5 +1,5 @@
 {
-    "name": "panelkit/panel",
+    "name": "alxtexh-enterprise/panel",
     "description": "Schema-driven admin panel framework for Laravel. Filament's developer experience, SPA transport.",
     "type": "library",
     "license": "MIT",
@@ -21,18 +21,18 @@
     },
     "autoload": {
         "psr-4": {
-            "PanelKit\\Panel\\": "src/"
+            "Alxtexh\\Panel\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PanelKit\\Panel\\Tests\\": "tests/"
+            "Alxtexh\\Panel\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "PanelKit\\Panel\\PanelServiceProvider"
+                "Alxtexh\\Panel\\PanelServiceProvider"
             ]
         }
     },

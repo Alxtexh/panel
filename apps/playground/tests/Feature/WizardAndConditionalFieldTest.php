@@ -9,12 +9,12 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Panel\Resources\RouterResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Schema\Grid;
-use PanelKit\Panel\Schema\Section;
-use PanelKit\Panel\Schema\Step;
-use PanelKit\Panel\Schema\Wizard;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Schema\Grid;
+use Alxtexh\Panel\Schema\Section;
+use Alxtexh\Panel\Schema\Step;
+use Alxtexh\Panel\Schema\Wizard;
 use Tests\TestCase;
 
 /**

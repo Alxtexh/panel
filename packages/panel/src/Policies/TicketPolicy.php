@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Policies;
+namespace Alxtexh\Panel\Policies;
 
 use DateTimeInterface;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\Ability;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * PROMOTED FROM THE REFERENCE APP, with two substitutions and no change of

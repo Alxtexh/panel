@@ -15,11 +15,11 @@ use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
-use PanelKit\Panel\Widgets\Bucket;
-use PanelKit\Panel\Widgets\ChartWidget;
-use PanelKit\Panel\Widgets\Period;
-use PanelKit\Panel\Widgets\TimeSeries;
-use PanelKit\Panel\Widgets\Trend;
+use Alxtexh\Panel\Widgets\Bucket;
+use Alxtexh\Panel\Widgets\ChartWidget;
+use Alxtexh\Panel\Widgets\Period;
+use Alxtexh\Panel\Widgets\TimeSeries;
+use Alxtexh\Panel\Widgets\Trend;
 use RuntimeException;
 use Tests\TestCase;
 

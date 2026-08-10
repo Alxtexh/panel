@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tables;
+namespace Alxtexh\Panel\Tables;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
@@ -11,11 +11,11 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
-use PanelKit\Panel\Actions\ActionGroup;
-use PanelKit\Panel\Actions\RecordAction;
-use PanelKit\Panel\Tables\Filters\Filter;
-use PanelKit\Panel\Tables\Filters\QueryBuilderFilter;
-use PanelKit\Panel\Tables\Filters\TrashedFilter;
+use Alxtexh\Panel\Actions\ActionGroup;
+use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Tables\Filters\Filter;
+use Alxtexh\Panel\Tables\Filters\QueryBuilderFilter;
+use Alxtexh\Panel\Tables\Filters\TrashedFilter;
 
 /**
  * The shared list query, extracted in Phase 3 from three hardcoded controllers.

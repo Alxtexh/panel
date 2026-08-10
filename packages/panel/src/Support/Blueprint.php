@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Illuminate\Support\Facades\Artisan;
-use PanelKit\Panel\Alerts;
-use PanelKit\Panel\Documents;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Alerts;
+use Alxtexh\Panel\Documents;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * The instructions an AI agent needs to build in this panel without guessing.
@@ -265,7 +265,7 @@ final class Blueprint
         return <<<MD
         # Building in this panel
 
-        This application uses PanelKit: administration screens are declared as PHP
+        This application uses Alxtexhpanel: administration screens are declared as PHP
         classes and rendered by Inertia and Vue. `{$name}` is the application; the
         panel is the framework it is built with.
 
@@ -379,7 +379,7 @@ final class Blueprint
 
         | You are looking for | It is NOT in | It is in |
         |---|---|---|
-        | the root view, `app.ts`, the layout | `vendor/panelkit/panel/resources/views` | `resources/stubs/*.stub`, **published into your app** by `panel:install` |
+        | the root view, `app.ts`, the layout | `vendor/alxtexh-enterprise/panel/resources/views` | `resources/stubs/*.stub`, **published into your app** by `panel:install` |
         | the screens (`ResourceIndex`, `auth/Login`, …) | the PHP package at all | `@alxtexh-enterprise/panel/inertia` in `node_modules`, **mirrored** into `resources/js/pages` |
         | sign-in routes | the package's routes | `routes/panel-*-auth.php` in YOUR app, written by `--auth` |
 
@@ -392,7 +392,7 @@ final class Blueprint
         ```bash
         php artisan panel:doctor    # names what is genuinely missing or wrong
         php artisan panel:update    # writes page files a new version added
-        composer show panelkit/panel
+        composer show alxtexh-enterprise/panel
         ```
 
         `panel:doctor` reports a packaged screen with no page file, a resource
@@ -785,7 +785,7 @@ final class Blueprint
         added there by hand:
 
         ```php
-        'plugins' => [PanelKit\Panel\Alerts\AnnouncementsPlugin::class],
+        'plugins' => [Alxtexh\Panel\Alerts\AnnouncementsPlugin::class],
         ```
 
         ### Watch a condition - do NOT write a notifications endpoint
@@ -1167,7 +1167,7 @@ final class Blueprint
         failures that return 200:
 
         ```php
-        use PanelKit\Panel\Testing\InteractsWithPanels;
+        use Alxtexh\Panel\Testing\InteractsWithPanels;
 
         $this->assertResourceRegistered('invoices');
         $this->assertTenantIsolation($this->operator, 'invoices', $foreignRecord);

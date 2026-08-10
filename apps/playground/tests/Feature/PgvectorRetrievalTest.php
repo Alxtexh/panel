@@ -6,8 +6,8 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\Knowledge\HashEmbedder;
-use PanelKit\Panel\Knowledge\KnowledgeBase;
+use Alxtexh\Panel\Knowledge\HashEmbedder;
+use Alxtexh\Panel\Knowledge\KnowledgeBase;
 use Tests\TestCase;
 
 /**
@@ -37,7 +37,7 @@ use Tests\TestCase;
  */
 final class PgvectorRetrievalTest extends TestCase
 {
-    private const CONNECTION = 'panelkit_pgvector';
+    private const CONNECTION = 'alxtexhpanel_pgvector';
 
     private const TENANT = 4242;
 
@@ -83,7 +83,7 @@ final class PgvectorRetrievalTest extends TestCase
     private function skipUnlessPostgresIsAvailable(): void
     {
         $hint = 'Start one with tests/bin/pgvector-fixture.sh start, then re-run with '
-            .'php $PANELKIT_PHP_FLAGS vendor/bin/phpunit --filter=PgvectorRetrieval';
+            .'php $ALXTEXHPANEL_PHP_FLAGS vendor/bin/phpunit --filter=PgvectorRetrieval';
 
         if (! extension_loaded('pdo_pgsql')) {
             $this->markTestSkipped("pdo_pgsql is not loaded. {$hint}");
@@ -96,8 +96,8 @@ final class PgvectorRetrievalTest extends TestCase
                 // construction and the suite must not be able to reach anything
                 // else.
                 'host' => '127.0.0.1',
-                'port' => env('PANELKIT_PG_PORT', 5499),
-                'database' => env('PANELKIT_PG_DATABASE', 'panelkit_rag'),
+                'port' => env('ALXTEXHPANEL_PG_PORT', 5499),
+                'database' => env('ALXTEXHPANEL_PG_DATABASE', 'alxtexhpanel_rag'),
                 'username' => 'postgres',
                 'password' => '',
                 'charset' => 'utf8',

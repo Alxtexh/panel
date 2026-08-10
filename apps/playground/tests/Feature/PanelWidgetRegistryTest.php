@@ -7,8 +7,8 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Widgets\StatWidget;
 use Tests\TestCase;
 
 /**

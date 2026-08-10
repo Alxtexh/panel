@@ -7,7 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use PanelKit\Panel\Models\Scopes\TenantScope;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
 
 /**
  * One recorded change.

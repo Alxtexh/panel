@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\RateLimiter;
 // The prompt object is passed straight through, so it is typed loosely: the
 // SDK is 0.x and the concrete class has moved between releases. Nothing here
 // reads it.
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 use RuntimeException;
 
 /**

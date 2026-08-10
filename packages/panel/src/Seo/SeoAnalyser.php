@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Seo;
+namespace Alxtexh\Panel\Seo;
 
 /**
  * What is wrong with this page's metadata, and how wrong.

@@ -11,12 +11,12 @@ use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\DeferProp;
-use PanelKit\Panel\Alerts\Announcement;
-use PanelKit\Panel\Pages\DashboardPage;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Widgets\ChartWidget;
-use PanelKit\Panel\Widgets\Period;
-use PanelKit\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Pages\DashboardPage;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Widgets\ChartWidget;
+use Alxtexh\Panel\Widgets\Period;
+use Alxtexh\Panel\Widgets\StatWidget;
 use Tests\TestCase;
 
 /**

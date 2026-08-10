@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel;
+namespace Alxtexh\Panel;
 
-use PanelKit\Panel\Resources\Resource;
+use Alxtexh\Panel\Resources\Resource;
 
 /**
  * Holds the registered panels.

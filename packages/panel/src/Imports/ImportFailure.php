@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Imports;
+namespace Alxtexh\Panel\Imports;
 
 /**
  * One row that could not be imported, and why.

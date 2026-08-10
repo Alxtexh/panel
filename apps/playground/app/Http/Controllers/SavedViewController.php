@@ -8,9 +8,9 @@ use App\Models\SavedView;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Tables\Table;
-use PanelKit\Panel\Tables\ViewState;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Tables\Table;
+use Alxtexh\Panel\Tables\ViewState;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**

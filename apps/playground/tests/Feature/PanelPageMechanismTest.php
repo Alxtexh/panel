@@ -8,11 +8,11 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Pages\OrganisationPage;
-use PanelKit\Panel\Pages\Page;
-use PanelKit\Panel\Pages\UserManagementPage;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Pages\OrganisationPage;
+use Alxtexh\Panel\Pages\Page;
+use Alxtexh\Panel\Pages\UserManagementPage;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Abilities;
 use Tests\TestCase;
 
 /**
@@ -132,7 +132,7 @@ final class PanelPageMechanismTest extends TestCase
      * EVERY PAGE THE PACKAGE SHIPS IS ACTUALLY REACHABLE.
      *
      * `discover_pages` scans the APPLICATION's directory, so pages living in
-     * `PanelKit\Panel\Pages` are invisible to it. `ChangelogPage` and
+     * `Alxtexh\Panel\Pages` are invisible to it. `ChangelogPage` and
      * `EnvironmentPage` shipped that way: exported from the package, page files
      * written by `panel:install`, and never routed - screens that existed in
      * every sense except the one that matters.
@@ -157,7 +157,7 @@ final class PanelPageMechanismTest extends TestCase
         $registered = $manager->pages();
 
         foreach (glob(__DIR__.'/../../../../packages/panel/src/Pages/*Page.php') ?: [] as $file) {
-            $class = 'PanelKit\\Panel\\Pages\\'.basename($file, '.php');
+            $class = 'Alxtexh\\Panel\\Pages\\'.basename($file, '.php');
 
             if ((new \ReflectionClass($class))->isAbstract()) {
                 continue;

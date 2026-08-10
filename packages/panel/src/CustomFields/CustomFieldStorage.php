@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\CustomFields;
+namespace Alxtexh\Panel\CustomFields;
 
 /**
  * Which resources have somewhere for a custom field to live - roadmap 5.1.

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Audit\AuditRecorder;
-use PanelKit\Panel\Http\Middleware\ScopeSessionToTenant;
-use PanelKit\Panel\Models\Role;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Ability;
-use PanelKit\Panel\Support\PanelHome;
-use PanelKit\Panel\Support\Tenants;
+use Alxtexh\Panel\Audit\AuditRecorder;
+use Alxtexh\Panel\Http\Middleware\ScopeSessionToTenant;
+use Alxtexh\Panel\Models\Role;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\Tenants;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

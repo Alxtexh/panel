@@ -1,9 +1,9 @@
-<!-- panelkit:blueprint:start -->
+<!-- alxtexhpanel:blueprint:start -->
 
 # Building in this panel
 
-This application uses PanelKit: administration screens are declared as PHP
-classes and rendered by Inertia and Vue. `PanelKit` is the application; the
+This application uses Alxtexhpanel: administration screens are declared as PHP
+classes and rendered by Inertia and Vue. `Alxtexhpanel` is the application; the
 panel is the framework it is built with.
 
 Read this before adding a screen. It describes the conventions that are not
@@ -58,7 +58,7 @@ Panels registered in this application:
 
 Resources are discovered from:
 
-- `C:\Users\Alxtexh\Documents\NEWDATAS\Panel\Panel\apps\playground\app\Panel/Resources` → `App\Panel\Resources`
+- `app/Panel/Resources` → `App\Panel\Resources`
 
 A resource belongs to exactly one panel — its key is a URL segment and an
 ability name, both globally unique. A second portal needing the same screen
@@ -78,7 +78,7 @@ written, so the tree is the wrong place to look:
 
 | You are looking for | It is NOT in | It is in |
 |---|---|---|
-| the root view, `app.ts`, the layout | `vendor/panelkit/panel/resources/views` | `resources/stubs/*.stub`, **published into your app** by `panel:install` |
+| the root view, `app.ts`, the layout | `vendor/alxtexh-enterprise/panel/resources/views` | `resources/stubs/*.stub`, **published into your app** by `panel:install` |
 | the screens (`ResourceIndex`, `auth/Login`, …) | the PHP package at all | `@alxtexh-enterprise/panel/inertia` in `node_modules`, **mirrored** into `resources/js/pages` |
 | sign-in routes | the package's routes | `routes/panel-*-auth.php` in YOUR app, written by `--auth` |
 
@@ -91,7 +91,7 @@ THE THREE COMMANDS THAT ANSWER THE QUESTION, in order:
 ```bash
 php artisan panel:doctor    # names what is genuinely missing or wrong
 php artisan panel:update    # writes page files a new version added
-composer show panelkit/panel
+composer show alxtexh-enterprise/panel
 ```
 
 `panel:doctor` reports a packaged screen with no page file, a resource
@@ -472,7 +472,7 @@ its `plugins` array replaces the package's whole, so the entry has to be
 added there by hand:
 
 ```php
-'plugins' => [PanelKit\Panel\Alerts\AnnouncementsPlugin::class],
+'plugins' => [Alxtexh\Panel\Alerts\AnnouncementsPlugin::class],
 ```
 
 ### Watch a condition - do NOT write a notifications endpoint
@@ -792,7 +792,7 @@ For a new resource, write these three assertions first — they are the
 failures that return 200:
 
 ```php
-use PanelKit\Panel\Testing\InteractsWithPanels;
+use Alxtexh\Panel\Testing\InteractsWithPanels;
 
 $this->assertResourceRegistered('invoices');
 $this->assertTenantIsolation($this->operator, 'invoices', $foreignRecord);
@@ -803,4 +803,4 @@ $this->assertResourceRefuses($this->stranger, 'invoices');
 is the obvious half; the record URL is the half people forget, and the one
 an attacker uses.
 
-<!-- panelkit:blueprint:end -->
+<!-- alxtexhpanel:blueprint:end -->

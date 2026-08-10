@@ -8,9 +8,9 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
-use PanelKit\Panel\Alerts\Announcement;
-use PanelKit\Panel\Documents\DocumentKinds;
-use PanelKit\Panel\Support\Blueprint;
+use Alxtexh\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Documents\DocumentKinds;
+use Alxtexh\Panel\Support\Blueprint;
 use Tests\TestCase;
 
 /**

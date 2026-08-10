@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Actions\BulkAction;
-use PanelKit\Panel\Actions\BulkRunner;
-use PanelKit\Panel\Actions\ExportedFile;
-use PanelKit\Panel\Actions\JobStatus;
-use PanelKit\Panel\Jobs\ExportRecords;
-use PanelKit\Panel\Jobs\RunBulkAction;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
+use Alxtexh\Panel\Actions\BulkAction;
+use Alxtexh\Panel\Actions\BulkRunner;
+use Alxtexh\Panel\Actions\ExportedFile;
+use Alxtexh\Panel\Actions\JobStatus;
+use Alxtexh\Panel\Jobs\ExportRecords;
+use Alxtexh\Panel\Jobs\RunBulkAction;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
-use PanelKit\Panel\Models\ContentEntry;
+use Alxtexh\Panel\Models\ContentEntry;
 use Throwable;
 
 /**

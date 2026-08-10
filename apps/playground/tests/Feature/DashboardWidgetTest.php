@@ -9,7 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Widgets\StatWidget;
 use RuntimeException;
 use Tests\TestCase;
 

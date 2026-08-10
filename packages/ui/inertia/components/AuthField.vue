@@ -4,7 +4,7 @@
  *
  * WHY THIS EXISTS RATHER THAN `Input` AND `Label` SEPARATELY. The reference
  * app's auth screens compose four shadcn components and a `cn()` helper per
- * field. Those are the APPLICATION's - a consumer installing PanelKit has no
+ * field. Those are the APPLICATION's - a consumer installing Alxtexhpanel has no
  * `@/components/ui/input` - and vendoring shadcn into the package to serve
  * three screens would be a second component library nobody asked for.
  *

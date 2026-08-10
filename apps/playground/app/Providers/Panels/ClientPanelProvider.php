@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Providers\Panels;
 
 use Illuminate\Support\ServiceProvider;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * The client panel.

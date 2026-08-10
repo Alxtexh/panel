@@ -4,7 +4,7 @@
  *
  * WHY IT STILL EXISTS. Two files owned "the theme" and wrote to different
  * localStorage keys - this one to `appearance` (light/dark only) and
- * @alxtexh-enterprise/panel to `panelkit.appearance` (scheme, accent, surface, density, text
+ * @alxtexh-enterprise/panel to `alxtexhpanel.appearance` (scheme, accent, surface, density, text
  * size, navigation side). Both ran, so the last writer won and the panel's
  * settings appeared to reset themselves. The visible symptom was that a theme
  * survived a page change but not a sign-out and back in.

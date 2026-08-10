@@ -5,7 +5,7 @@ namespace Tests;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Laravel\Fortify\Features;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 
 abstract class TestCase extends BaseTestCase
 {

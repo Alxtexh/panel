@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Forms\Fields;
+namespace Alxtexh\Panel\Forms\Fields;
 
 use Closure;
-use PanelKit\Panel\Schema\Renderable;
+use Alxtexh\Panel\Schema\Renderable;
 
 /**
  * A form field.
@@ -357,7 +357,7 @@ abstract class Field implements Renderable
      * value exactly as it was. On a field called "Available to sell" that is a
      * plan still on sale after somebody withdrew it.
      *
-     * PanelKit's own client never triggers this - `ResourceForm` submits every
+     * Alxtexhpanel's own client never triggers this - `ResourceForm` submits every
      * declared key, `false` included. It bites the consumer building their own
      * form out of the exported components, which this framework actively
      * encourages, and it bites them silently.
@@ -378,7 +378,7 @@ abstract class Field implements Renderable
      * sentinel that collides with a real value is a bug waiting for the first
      * person who needs it.
      */
-    public const ABSENT_MEANS_NOTHING = '__panelkit_absent_means_nothing__';
+    public const ABSENT_MEANS_NOTHING = '__alxtexhpanel_absent_means_nothing__';
 
     /**
      * Tenant-varying options, resolved when the DATA payload is assembled.

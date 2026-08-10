@@ -9,9 +9,9 @@ use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Actions\RecordAction;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Form;
+use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Form;
 use Tests\TestCase;
 
 /**

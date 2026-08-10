@@ -24,15 +24,15 @@
 #
 set -euo pipefail
 
-PREFIX="${PANELKIT_MYSQL_PREFIX:-${TMPDIR:-/tmp}/panelkit-mysql}"
-PORT="${PANELKIT_MYSQL_PORT:-3399}"
-DATABASE="panelkit_restore"
+PREFIX="${ALXTEXHPANEL_MYSQL_PREFIX:-${TMPDIR:-/tmp}/alxtexhpanel-mysql}"
+PORT="${ALXTEXHPANEL_MYSQL_PORT:-3399}"
+DATABASE="alxtexhpanel_restore"
 
 # THE SOCKET LIVES AT THE SHORTEST PATH AVAILABLE. MariaDB refuses a unix socket
 # path over 107 characters, and a prefix under a long temporary directory blows
 # that limit with no obvious symptom beyond "Can't create UNIX socket (2)".
-SOCKET="/tmp/panelkit-mysql.sock"
-PIDFILE="/tmp/panelkit-mysqld.pid"
+SOCKET="/tmp/alxtexhpanel-mysql.sock"
+PIDFILE="/tmp/alxtexhpanel-mysqld.pid"
 
 ROOT="$PREFIX/root"
 DATA="$PREFIX/data"
@@ -110,7 +110,7 @@ start() {
     # subprocess, so the -d extension flags are consumed by the artisan process
     # and never reach the one running the tests - the suite skips, and the
     # instruction that was supposed to prevent that is what caused it.
-    echo "  eval \"\$($0 env)\" && php \$PANELKIT_PHP_FLAGS vendor/bin/phpunit --filter=MysqlRestore"
+    echo "  eval \"\$($0 env)\" && php \$ALXTEXHPANEL_PHP_FLAGS vendor/bin/phpunit --filter=MysqlRestore"
 }
 
 stop() {
@@ -128,8 +128,8 @@ print_env() {
     local ext
     ext="$(extension_dir)"
 
-    echo "export PANELKIT_MYSQL_BIN='$ROOT/usr/bin/mariadb'"
-    echo "export PANELKIT_PHP_FLAGS='-d extension=$ext/mysqlnd.so -d extension=$ext/pdo_mysql.so'"
+    echo "export ALXTEXHPANEL_MYSQL_BIN='$ROOT/usr/bin/mariadb'"
+    echo "export ALXTEXHPANEL_PHP_FLAGS='-d extension=$ext/mysqlnd.so -d extension=$ext/pdo_mysql.so'"
 }
 
 case "${1:-start}" in

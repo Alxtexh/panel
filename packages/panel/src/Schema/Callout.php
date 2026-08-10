@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Schema;
+namespace Alxtexh\Panel\Schema;
 
 /**
  * A notice inside a form, where the thing it warns about is.

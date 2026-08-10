@@ -11,8 +11,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Tenancy\PrefixCacheBootstrapper;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Tenancy\PrefixCacheBootstrapper;
 use Tests\TestCase;
 
 /**

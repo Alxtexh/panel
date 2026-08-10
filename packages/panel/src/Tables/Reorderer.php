@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tables;
+namespace Alxtexh\Panel\Tables;
 
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;

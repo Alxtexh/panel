@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use PanelKit\Panel\Tables\Columns\MoneyColumn;
+use Alxtexh\Panel\Tables\Columns\MoneyColumn;
 use Tests\TestCase;
 
 /**

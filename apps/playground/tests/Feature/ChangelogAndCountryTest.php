@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Forms\Fields\CountryField;
-use PanelKit\Panel\Pages\ChangelogPage;
-use PanelKit\Panel\Support\Changelog;
-use PanelKit\Panel\Support\Countries;
+use Alxtexh\Panel\Forms\Fields\CountryField;
+use Alxtexh\Panel\Pages\ChangelogPage;
+use Alxtexh\Panel\Support\Changelog;
+use Alxtexh\Panel\Support\Countries;
 use Tests\TestCase;
 
 /**
- * The last two things the Filament plugins did that PanelKit did not.
+ * The last two things the Filament plugins did that Alxtexhpanel did not.
  *
  * A CHANGELOG AND A COUNTRY FIELD are unglamorous and both were real gaps. The
  * first is why "where did the export button go?" reaches support; the second is
@@ -40,7 +40,7 @@ final class ChangelogAndCountryTest extends TestCase
     /**
      * THE MECHANISM SHIPS, THE CONTENT DOES NOT - the same rule the landing
      * presets and the seeders follow. A framework shipping its own release notes
-     * would put PanelKit's version history on somebody else's operations screen.
+     * would put Alxtexhpanel's version history on somebody else's operations screen.
      */
     public function test_releases_come_from_the_application(): void
     {

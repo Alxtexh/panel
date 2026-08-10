@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -12,16 +12,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\CustomFields\CustomFieldFactory;
-use PanelKit\Panel\CustomFields\CustomFieldStorage;
-use PanelKit\Panel\Forms\Fields\Field;
-use PanelKit\Panel\Widgets;
-use PanelKit\Panel\Forms\Fields\SelectField;
-use PanelKit\Panel\Http\NestedContext;
-use PanelKit\Panel\Live\LiveConfig;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\CustomFields\CustomFieldFactory;
+use Alxtexh\Panel\CustomFields\CustomFieldStorage;
+use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Widgets;
+use Alxtexh\Panel\Forms\Fields\SelectField;
+use Alxtexh\Panel\Http\NestedContext;
+use Alxtexh\Panel\Live\LiveConfig;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**

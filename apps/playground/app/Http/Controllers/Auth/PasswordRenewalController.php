@@ -11,8 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Auth\PasswordPolicy;
-use PanelKit\Panel\Support\PanelHome;
+use Alxtexh\Panel\Auth\PasswordPolicy;
+use Alxtexh\Panel\Support\PanelHome;
 
 /**
  * The one screen somebody with an expired password can still open.

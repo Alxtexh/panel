@@ -18,7 +18,7 @@ use Tests\TestCase;
  * mostly live: navigation labels, page titles, notification bodies, seeded
  * help articles, landing copy, validation messages, console output.
  *
- * WHY IT MATTERS ENOUGH TO TEST RATHER THAN TO INTEND. PanelKit is developed
+ * WHY IT MATTERS ENOUGH TO TEST RATHER THAN TO INTEND. Alxtexhpanel is developed
  * against an ISP billing reference application. That is the right way to build
  * a framework - a demo under real load finds what a toy cannot - and it is
  * also exactly how a framework acquires somebody else's business. The leak is
@@ -35,7 +35,7 @@ use Tests\TestCase;
  * COMMENTS ARE DELIBERATELY NOT CHECKED. Explaining a decision with a concrete
  * example - "a subscriber edited daily makes this timeline long" - is good
  * commentary, and flattening it to "a record" would cost real meaning to buy
- * nothing. A developer reading the source knows where PanelKit came from. A
+ * nothing. A developer reading the source knows where Alxtexhpanel came from. A
  * user reading a screen should not have to.
  *
  * @see \packages\ui\inertia\industry-neutral.spec.ts the same rule, other half
@@ -172,7 +172,7 @@ final class IndustryNeutralityTest extends TestCase
             [],
             $offending,
             "This file puts the reference application's industry into a string a user can read.\n\n"
-            ."PanelKit is built against an ISP. Every installation is not one, and a\n"
+            ."Alxtexhpanel is built against an ISP. Every installation is not one, and a\n"
             ."law firm reading its own admin panel should not be shown an internet\n"
             ."provider's vocabulary as the pattern to follow.\n\n"
             ."If the word belongs to the REFERENCE APPLICATION, it belongs in\n"

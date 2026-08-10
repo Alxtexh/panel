@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Policies;
 
 use App\Models\User;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * Who may add or remove a custom field DEFINITION - roadmap 5.1.

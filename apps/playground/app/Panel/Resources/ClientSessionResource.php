@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Panel\Resources;
 
 use App\Models\ClientSession;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Columns\BadgeColumn;
-use PanelKit\Panel\Tables\Columns\DateColumn;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Filters\SelectFilter;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Columns\BadgeColumn;
+use Alxtexh\Panel\Tables\Columns\DateColumn;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Filters\SelectFilter;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * ONE subscriber's connection history, as a full screen - roadmap 4.2.

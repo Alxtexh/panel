@@ -10,14 +10,14 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Files\FileStore;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Files\FileStore;
+use Alxtexh\Panel\Support\TenantContext;
 use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
 use Tests\TestCase;
 
 /**
- * PanelKit against REAL per-tenant databases.
+ * Alxtexhpanel against REAL per-tenant databases.
  *
  * The sibling suite proves the tenant is resolved and that single-database
  * scoping isolates. This one proves the harder half, and it needs actual
@@ -25,7 +25,7 @@ use Tests\TestCase;
  *
  *   A TENANT DATABASE HAS NO `tenant_id` COLUMN. That is not a detail - it is
  *   the definition of the mode. Every table is already one tenant's, so the
- *   column would be a constant. If PanelKit adds `where tenant_id = ?` here,
+ *   column would be a constant. If Alxtexhpanel adds `where tenant_id = ?` here,
  *   the result is not a subtle leak, it is `no such column: tenant_id` on every
  *   read in the panel.
  *
@@ -181,9 +181,9 @@ final class StanclMultiDatabaseTest extends TestCase
      * THE HEADLINE: a real read, against a schema with no tenant_id column.
      *
      * This is the assertion the whole mode exists for. It fails loudly - "no
-     * such column" - the moment PanelKit starts scoping by column here.
+     * such column" - the moment Alxtexhpanel starts scoping by column here.
      */
-    public function test_panelkit_reads_a_tenant_database_that_has_no_tenant_column(): void
+    public function test_alxtexhpanel_reads_a_tenant_database_that_has_no_tenant_column(): void
     {
         tenancy()->initialize($this->alpha);
         app()->forgetScopedInstances();
@@ -273,14 +273,14 @@ final class StanclMultiDatabaseTest extends TestCase
     /* ------------------------------------------------------- the filesystem */
 
     /**
-     * PanelKit's own path prefix and stancl's disk-root suffix BOTH apply, and
+     * Alxtexhpanel's own path prefix and stancl's disk-root suffix BOTH apply, and
      * that redundancy is the right answer rather than a bug to remove.
      *
      * With `FilesystemTenancyBootstrapper` active, stancl repoints the local
-     * disk at `storage/tenant{id}/app`. PanelKit additionally writes every file
+     * disk at `storage/tenant{id}/app`. Alxtexhpanel additionally writes every file
      * under `tenants/{key}/`. The path therefore carries the tenant twice.
      *
-     * The obvious "fix" is for PanelKit to detect the bootstrapper and drop its
+     * The obvious "fix" is for Alxtexhpanel to detect the bootstrapper and drop its
      * prefix. That would be wrong: the prefix is not decoration, it is what
      * `belongsToCurrentTenant()` checks before serving a file, and it is the
      * only isolation there is when the bootstrapper is NOT enabled - which is
@@ -304,7 +304,7 @@ final class StanclMultiDatabaseTest extends TestCase
         $this->assertStringContainsString("tenant{$this->alpha->id}", $alphaRoot, 'stancl did not suffix the disk root.');
         $this->assertTrue(
             FileStore::belongsToCurrentTenant($path),
-            "PanelKit's own prefix must still identify the owner.",
+            "Alxtexhpanel's own prefix must still identify the owner.",
         );
 
         Storage::disk('local')->put($path, 'x');

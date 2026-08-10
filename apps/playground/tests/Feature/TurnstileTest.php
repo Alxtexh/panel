@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-use PanelKit\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Auth\Turnstile;
 use Tests\TestCase;
 
 /**

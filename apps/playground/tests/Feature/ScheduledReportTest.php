@@ -11,9 +11,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
-use PanelKit\Panel\Jobs\DeliverScheduledReport;
-use PanelKit\Panel\Mail\ScheduledReportMail;
-use PanelKit\Panel\Reports\ScheduledReport;
+use Alxtexh\Panel\Jobs\DeliverScheduledReport;
+use Alxtexh\Panel\Mail\ScheduledReportMail;
+use Alxtexh\Panel\Reports\ScheduledReport;
 use Tests\TestCase;
 
 /**

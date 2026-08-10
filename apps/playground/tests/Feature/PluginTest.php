@@ -8,15 +8,15 @@ use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Alerts\AnnouncementsPlugin;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Plugins\Plugin;
-use PanelKit\Panel\Plugins\PluginContext;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Table;
-use PanelKit\Panel\Ticketing\TicketingPlugin;
+use Alxtexh\Panel\Alerts\AnnouncementsPlugin;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Plugins\Plugin;
+use Alxtexh\Panel\Plugins\PluginContext;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Table;
+use Alxtexh\Panel\Ticketing\TicketingPlugin;
 use Tests\TestCase;
 
 /**
@@ -395,7 +395,7 @@ final class PluginTest extends TestCase
  * A resource as a plugin would ship it: declaring the default panel, because it
  * cannot know any better, and expected to land wherever it is registered.
  */
-final class PluginOwnedResource extends \PanelKit\Panel\Resources\Resource
+final class PluginOwnedResource extends \Alxtexh\Panel\Resources\Resource
 {
     protected static string $model = Plan::class;
 

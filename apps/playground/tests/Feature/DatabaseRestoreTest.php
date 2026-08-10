@@ -6,8 +6,8 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Jobs\RestoreBackup;
-use PanelKit\Panel\Support\DatabaseRestorer;
+use Alxtexh\Panel\Jobs\RestoreBackup;
+use Alxtexh\Panel\Support\DatabaseRestorer;
 use Symfony\Component\Process\ExecutableFinder;
 use Tests\TestCase;
 
@@ -37,7 +37,7 @@ final class DatabaseRestoreTest extends TestCase
     {
         parent::setUp();
 
-        $this->file = tempnam(sys_get_temp_dir(), 'panelkit-restore-').'.sqlite';
+        $this->file = tempnam(sys_get_temp_dir(), 'alxtexhpanel-restore-').'.sqlite';
 
         touch($this->file);
 
@@ -112,7 +112,7 @@ final class DatabaseRestoreTest extends TestCase
 
     private function dump(string $sql): string
     {
-        $path = tempnam(sys_get_temp_dir(), 'panelkit-dump-');
+        $path = tempnam(sys_get_temp_dir(), 'alxtexhpanel-dump-');
 
         file_put_contents($path, $sql);
 

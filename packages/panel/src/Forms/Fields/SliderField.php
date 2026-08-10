@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Forms\Fields;
+namespace Alxtexh\Panel\Forms\Fields;
 
 /**
  * A number chosen by dragging, within a declared range.

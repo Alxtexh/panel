@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use PanelKit\Panel\Support\Contrast;
+use Alxtexh\Panel\Support\Contrast;
 use PHPUnit\Framework\TestCase;
 
 /**

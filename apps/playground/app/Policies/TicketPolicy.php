@@ -6,10 +6,10 @@ namespace App\Policies;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Policies\TicketPolicy as PackagedTicketPolicy;
-use PanelKit\Panel\Support\Ability;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Policies\TicketPolicy as PackagedTicketPolicy;
+use Alxtexh\Panel\Support\Ability;
 
 /**
  * ONE MODEL, TWO DESKS - and, as with `PlanPolicy`, that is forced rather than

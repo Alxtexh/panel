@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
-use PanelKit\Panel\Support\MonitorSampler;
+use Alxtexh\Panel\Support\MonitorSampler;
 
 /**
  * One monitoring sample, for the scheduler - roadmap 5.3.

@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\Alerts;
-use PanelKit\Panel\Documents;
-use PanelKit\Panel\Knowledge;
-use PanelKit\Panel\Live\LiveConfig;
-use PanelKit\Panel\Pages\Page;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Support\BackupStatus;
-use PanelKit\Panel\Support\Contrast;
-use PanelKit\Panel\Support\Discovery;
-use PanelKit\Panel\Support\PanelPages;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Support\TicketTables;
-use PanelKit\Panel\Support\VendoredCopy;
-use PanelKit\Panel\Ticketing\TicketingPlugin;
+use Alxtexh\Panel\Alerts;
+use Alxtexh\Panel\Documents;
+use Alxtexh\Panel\Knowledge;
+use Alxtexh\Panel\Live\LiveConfig;
+use Alxtexh\Panel\Pages\Page;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\BackupStatus;
+use Alxtexh\Panel\Support\Contrast;
+use Alxtexh\Panel\Support\Discovery;
+use Alxtexh\Panel\Support\PanelPages;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TicketTables;
+use Alxtexh\Panel\Support\VendoredCopy;
+use Alxtexh\Panel\Ticketing\TicketingPlugin;
 use Spatie\Permission\PermissionRegistrar;
 /**
  * Check for the configurations that are wrong in ways nothing else reports.
@@ -304,7 +304,7 @@ final class DoctorCommand extends Command
             "stancl's CacheTenancyBootstrapper tags cache entries per tenant, and only redis, "
             ."array and memcached support tagging - the [{$store}] store does not, so a tagged "
             .'read throws and the isolation it promises does not happen. Swap it for '
-            .'PanelKit\\Panel\\Tenancy\\PrefixCacheBootstrapper, which isolates by key prefix '
+            .'Alxtexh\\Panel\\Tenancy\\PrefixCacheBootstrapper, which isolates by key prefix '
             .'and works on every store - no Redis required.',
         );
     }
@@ -337,7 +337,7 @@ final class DoctorCommand extends Command
             $this->problem(
                 'SESSION_DOMAIN is set, which shares one cookie across subdomains',
                 'With tenants on subdomains this offers one tenant\'s session cookie to every '
-                .'other tenant\'s host. PanelKit stamps the tenant on the session and refuses a '
+                .'other tenant\'s host. Alxtexhpanel stamps the tenant on the session and refuses a '
                 .'mismatch, so this is survivable - but it should be deliberate.',
             );
         }
@@ -1110,7 +1110,7 @@ final class DoctorCommand extends Command
      * `laravel/laravel` ships no auth scaffolding, so it has no `login` route;
      * Laravel's `Authenticate` middleware redirects an unauthenticated request
      * to `route('login')`; and the result is that EVERY PANEL URL RETURNS 500
-     * with `Route [login] not defined` - a message that names neither PanelKit
+     * with `Route [login] not defined` - a message that names neither Alxtexhpanel
      * nor the thing to do about it.
      *
      * Doctor passed that installation. It reported no problems on a panel where
@@ -1151,7 +1151,7 @@ final class DoctorCommand extends Command
                 .'redirected to a route that does not exist - Laravel throws '
                 .'`Route [login] not defined` before any panel code runs, so nothing in the '
                 .'panel can be opened at all. Run `php artisan panel:install --auth` to have '
-                .'PanelKit write the sign-in screen and its routes, or point the panel at your '
+                .'Alxtexhpanel write the sign-in screen and its routes, or point the panel at your '
                 .'own by naming a route `login` (or `'.$panel->getRouteName().'login`).',
             );
         }
@@ -1185,19 +1185,19 @@ final class DoctorCommand extends Command
             return;
         }
 
-        $source = VendoredCopy::sourceFor($composer, base_path(), 'panelkit/panel');
-        $vendor = base_path('vendor/panelkit/panel');
+        $source = VendoredCopy::sourceFor($composer, base_path(), 'alxtexh-enterprise/panel');
+        $vendor = base_path('vendor/alxtexh-enterprise/panel');
 
         if ($source === null || ! VendoredCopy::isStale($source, $vendor)) {
             return;
         }
 
         $this->note(
-            'The vendored copy of panelkit/panel is older than its source',
-            "composer COPIED {$source} into vendor/panelkit/panel instead of symlinking it, and the "
+            'The vendored copy of alxtexh-enterprise/panel is older than its source',
+            "composer COPIED {$source} into vendor/alxtexh-enterprise/panel instead of symlinking it, and the "
             .'source has changed since. The application is running the snapshot: a fix made in the '
             .'package does not happen, and `panel:update` writes page files from the old copy. Run '
-            .'`composer update panelkit/panel` after each change, or set `"options": {"symlink": true}` '
+            .'`composer update alxtexh-enterprise/panel` after each change, or set `"options": {"symlink": true}` '
             .'on the path repository - composer falls back to copying without failing where symlinks '
             .'do not work.',
         );
@@ -1274,7 +1274,7 @@ final class DoctorCommand extends Command
         if ($production && $this->requiresPanelAtDev()) {
             $this->problem(
                 'The panel package is required at @dev',
-                'composer.json asks for panelkit/panel at @dev, so the installed code is whatever '
+                'composer.json asks for alxtexh-enterprise/panel at @dev, so the installed code is whatever '
                 .'the branch was when composer last ran - not a version anybody can name or roll '
                 .'back to. Require a tagged release.',
             );
@@ -1318,7 +1318,7 @@ final class DoctorCommand extends Command
 
         $composer = json_decode((string) file_get_contents($path), true);
 
-        $constraint = $composer['require']['panelkit/panel'] ?? null;
+        $constraint = $composer['require']['alxtexh-enterprise/panel'] ?? null;
 
         return is_string($constraint) && str_contains($constraint, 'dev');
     }
@@ -1327,7 +1327,7 @@ final class DoctorCommand extends Command
      * A tenant-aware panel whose permission package is not team-aware.
      *
      * THE ONE SETTING THAT FAILS OPEN. spatie/laravel-permission ships
-     * `teams => false`, and PanelKit now depends on it - so an installation
+     * `teams => false`, and Alxtexhpanel now depends on it - so an installation
      * that never published that config has a `tenant_id` column on every role,
      * `SetPermissionsTeam` dutifully setting a team id on every request, and a
      * permission package IGNORING BOTH.

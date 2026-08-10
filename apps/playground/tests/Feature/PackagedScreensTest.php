@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use PanelKit\Panel\Support\PanelPages;
-use PanelKit\Panel\Support\UserRoles;
+use Alxtexh\Panel\Support\PanelPages;
+use Alxtexh\Panel\Support\UserRoles;
 use Tests\TestCase;
 
 /**
  * The PHP half names a screen; something has to render it.
  *
  * THE FAILURE THIS EXISTS TO CATCH ALREADY HAPPENED, and it was invisible from
- * inside this repository. `panelkit/panel` answers five requests with
+ * inside this repository. `alxtexh-enterprise/panel` answers five requests with
  * `Inertia::render('ResourceIndex')` and friends - and shipped no Vue at all.
  * Every one of those screens rendered perfectly here, because THIS application
  * happened to have a file of that name in `resources/js/pages`. A fresh
- * `composer require panelkit/panel` got routes that resolved to components that
+ * `composer require alxtexh-enterprise/panel` got routes that resolved to components that
  * did not exist: a white page and a console error naming a file the developer
  * had never heard of, on the first screen they opened.
  *
@@ -213,7 +213,7 @@ final class PackagedScreensTest extends TestCase
      */
     public function test_it_creates_the_pages_directory_in_an_application_that_has_none(): void
     {
-        $base = sys_get_temp_dir().'/panelkit-pages-'.bin2hex(random_bytes(4));
+        $base = sys_get_temp_dir().'/alxtexhpanel-pages-'.bin2hex(random_bytes(4));
         $resources = $base.'/resources';
 
         mkdir($resources.'/js', 0755, true);
@@ -247,7 +247,7 @@ final class PackagedScreensTest extends TestCase
      */
     public function test_it_still_declines_when_there_is_no_vue_bootstrap(): void
     {
-        $base = sys_get_temp_dir().'/panelkit-nopages-'.bin2hex(random_bytes(4));
+        $base = sys_get_temp_dir().'/alxtexhpanel-nopages-'.bin2hex(random_bytes(4));
 
         mkdir($base.'/resources/js', 0755, true);
 

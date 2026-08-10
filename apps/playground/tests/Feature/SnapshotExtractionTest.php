@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Jobs\RestoreBackup;
+use Alxtexh\Panel\Jobs\RestoreBackup;
 use Tests\TestCase;
 
 /**
@@ -41,7 +41,7 @@ final class SnapshotExtractionTest extends TestCase
 
         Storage::fake('local');
 
-        $this->workspace = sys_get_temp_dir().'/panelkit-extract-'.bin2hex(random_bytes(4));
+        $this->workspace = sys_get_temp_dir().'/alxtexhpanel-extract-'.bin2hex(random_bytes(4));
         mkdir($this->workspace, 0700, true);
 
         config()->set('backup.backup.temporary_directory', $this->workspace);

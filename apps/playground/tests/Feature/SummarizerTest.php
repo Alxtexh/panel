@@ -11,9 +11,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Summarizer;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Summarizer;
+use Alxtexh\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**

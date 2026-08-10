@@ -10,8 +10,8 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Http\PanelErrors;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Http\PanelErrors;
+use Alxtexh\Panel\PanelManager;
 use ReflectionProperty;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
@@ -183,7 +183,7 @@ final class ErrorScreenTest extends TestCase
      * THE RULES MOVED INTO THE PACKAGE, so these assert the package's copy.
      *
      * They lived in this application's `bootstrap/app.php`, which meant every
-     * OTHER installation of `panelkit/panel` shipped designed error screens and
+     * OTHER installation of `alxtexh-enterprise/panel` shipped designed error screens and
      * showed Laravel's - the screens were exported, and nothing rendered them.
      * These four cases are the ones a rewrite gets wrong, and did: a first pass
      * at the packaged renderer put 419 back in the list and rendered 500 with

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Seo;
+namespace Alxtexh\Panel\Seo;
 
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;

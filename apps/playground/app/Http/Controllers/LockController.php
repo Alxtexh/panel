@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use PanelKit\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\PanelHome;
 
 /**
  * Locking and unlocking the panel.

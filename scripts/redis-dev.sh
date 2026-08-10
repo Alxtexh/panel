@@ -30,8 +30,8 @@
 #
 set -euo pipefail
 
-PREFIX="${PANELKIT_REDIS_PREFIX:-${TMPDIR:-/tmp}/panelkit-redis}"
-PORT="${PANELKIT_REDIS_PORT:-6381}"
+PREFIX="${ALXTEXHPANEL_REDIS_PREFIX:-${TMPDIR:-/tmp}/alxtexhpanel-redis}"
+PORT="${ALXTEXHPANEL_REDIS_PORT:-6381}"
 
 ROOT="$PREFIX/root"
 DATA="$PREFIX/data"

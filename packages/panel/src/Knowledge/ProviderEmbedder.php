@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Knowledge;
+namespace Alxtexh\Panel\Knowledge;
 
 use Laravel\Ai\Embeddings;
 

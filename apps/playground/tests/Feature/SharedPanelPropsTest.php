@@ -8,11 +8,11 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Inertia;
-use PanelKit\Panel\Auth\Impersonation;
-use PanelKit\Panel\Http\Middleware\SharePanelProps;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\PanelNavigation;
+use Alxtexh\Panel\Auth\Impersonation;
+use Alxtexh\Panel\Http\Middleware\SharePanelProps;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelNavigation;
 use Tests\TestCase;
 
 /**

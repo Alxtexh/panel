@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
-use PanelKit\Panel\Models\ConnectedAccount;
+use Alxtexh\Panel\Models\ConnectedAccount;
 use Tests\TestCase;
 
 /**

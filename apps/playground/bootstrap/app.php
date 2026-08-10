@@ -9,17 +9,17 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use PanelKit\Panel\Alerts\ReportsToTelegram;
-use PanelKit\Panel\Auth\SetPermissionsTeam;
-use PanelKit\Panel\Http\Middleware\BlockImpersonatedCredentialChanges;
-use PanelKit\Panel\Http\Middleware\DenySuspendedAccount;
-use PanelKit\Panel\Http\Middleware\DenySuspendedTenant;
-use PanelKit\Panel\Http\Middleware\InitializeTenancyForUser;
-use PanelKit\Panel\Http\Middleware\RequirePasswordRenewal;
-use PanelKit\Panel\Http\Middleware\ResolveTenantByHost;
-use PanelKit\Panel\Http\Middleware\ScopeSessionToTenant;
-use PanelKit\Panel\Http\Middleware\SetPanelLocale;
-use PanelKit\Panel\Http\Middleware\VerifyTurnstile;
+use Alxtexh\Panel\Alerts\ReportsToTelegram;
+use Alxtexh\Panel\Auth\SetPermissionsTeam;
+use Alxtexh\Panel\Http\Middleware\BlockImpersonatedCredentialChanges;
+use Alxtexh\Panel\Http\Middleware\DenySuspendedAccount;
+use Alxtexh\Panel\Http\Middleware\DenySuspendedTenant;
+use Alxtexh\Panel\Http\Middleware\InitializeTenancyForUser;
+use Alxtexh\Panel\Http\Middleware\RequirePasswordRenewal;
+use Alxtexh\Panel\Http\Middleware\ResolveTenantByHost;
+use Alxtexh\Panel\Http\Middleware\ScopeSessionToTenant;
+use Alxtexh\Panel\Http\Middleware\SetPanelLocale;
+use Alxtexh\Panel\Http\Middleware\VerifyTurnstile;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -212,7 +212,7 @@ return Application::configure(basePath: dirname(__DIR__))
          *
          * The closure that used to be here - which statuses get a designed
          * page, why 419 does not, why 500 keeps its trace with debug on -
-         * moved to `PanelKit\Panel\Http\PanelErrors`, registered from the
+         * moved to `Alxtexh\Panel\Http\PanelErrors`, registered from the
          * package's provider. Every installation gets those pages; this
          * application had them and no other did.
          */

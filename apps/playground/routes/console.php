@@ -4,8 +4,8 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-use PanelKit\Panel\Support\BackupSettings;
-use PanelKit\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\BackupSettings;
+use Alxtexh\Panel\Support\InstallationState;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

@@ -44,7 +44,7 @@ final class LoginSmokeTest extends TestCase
     public function test_a_person_can_sign_in_on_their_tenants_host(): void
     {
         $tenant = Tenant::create(['name' => 'B', 'slug' => 'b']);
-        $tenant->domains()->create(['domain' => 'b.panelkit.test']);
+        $tenant->domains()->create(['domain' => 'b.alxtexhpanel.test']);
 
         $user = User::factory()->create([
             'tenant_id' => $tenant->id,
@@ -53,7 +53,7 @@ final class LoginSmokeTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        $this->post('http://b.panelkit.test/login', [
+        $this->post('http://b.alxtexhpanel.test/login', [
             'email' => 'admin@b.test',
             'password' => 'password',
         ])->assertRedirect();

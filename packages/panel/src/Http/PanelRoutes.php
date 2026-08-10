@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http;
+namespace Alxtexh\Panel\Http;
 
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Auth;
-use PanelKit\Panel\Auth\Passkeys;
-use PanelKit\Panel\Http\Controllers\BulkController;
-use PanelKit\Panel\Http\Controllers\RecordController;
-use PanelKit\Panel\Http\Controllers\ResourceController;
-use PanelKit\Panel\Http\Controllers\UploadController;
-use PanelKit\Panel\Landing;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Auth;
+use Alxtexh\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Http\Controllers\BulkController;
+use Alxtexh\Panel\Http\Controllers\RecordController;
+use Alxtexh\Panel\Http\Controllers\ResourceController;
+use Alxtexh\Panel\Http\Controllers\UploadController;
+use Alxtexh\Panel\Landing;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * Every route a panel needs, mounted at that panel's path.
@@ -90,7 +90,7 @@ final class PanelRoutes
      * A container binding is rebuilt with the application, so a fresh boot gets
      * a fresh list. That is the same reason `PanelManager` is scoped.
      */
-    private const EXTENSIONS = 'panelkit.route-extensions';
+    private const EXTENSIONS = 'alxtexhpanel.route-extensions';
 
     /** @param callable(list<string>, Panel): void $routes */
     /**

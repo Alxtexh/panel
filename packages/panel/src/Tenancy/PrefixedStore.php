@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tenancy;
+namespace Alxtexh\Panel\Tenancy;
 
 use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockProvider;

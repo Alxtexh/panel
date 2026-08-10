@@ -10,9 +10,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use PanelKit\Panel\Alerts\Alert;
-use PanelKit\Panel\Alerts\AlertRule;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Alerts\Alert;
+use Alxtexh\Panel\Alerts\AlertRule;
+use Alxtexh\Panel\PanelManager;
 use Tests\TestCase;
 
 /**

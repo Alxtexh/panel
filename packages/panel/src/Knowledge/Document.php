@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Knowledge;
+namespace Alxtexh\Panel\Knowledge;
 
 /**
  * One thing worth indexing, before it is split into passages.

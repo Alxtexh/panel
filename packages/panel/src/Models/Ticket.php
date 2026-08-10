@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Models;
+namespace Alxtexh\Panel\Models;
 
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
-use PanelKit\Panel\Audit\Auditable;
-use PanelKit\Panel\Events\TicketOpened;
-use PanelKit\Panel\Models\Scopes\TenantScope;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Support\TicketTables;
+use Alxtexh\Panel\Audit\Auditable;
+use Alxtexh\Panel\Events\TicketOpened;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TicketTables;
 
 /**
  * A conversation with two ends.

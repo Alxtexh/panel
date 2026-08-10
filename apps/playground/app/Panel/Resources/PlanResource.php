@@ -6,21 +6,21 @@ namespace App\Panel\Resources;
 
 use App\Models\Plan;
 use App\Panel\Clusters\NetworkCluster;
-use PanelKit\Panel\Actions\BulkAction;
-use PanelKit\Panel\Forms\Fields\CheckboxField;
-use PanelKit\Panel\Forms\Fields\HiddenField;
-use PanelKit\Panel\Forms\Fields\NumberField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Schema\Section;
-use PanelKit\Panel\Tables\Columns\BadgeColumn;
-use PanelKit\Panel\Tables\Columns\DateColumn;
-use PanelKit\Panel\Tables\Columns\MoneyColumn;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Filters\BooleanFilter;
-use PanelKit\Panel\Tables\Filters\QueryBuilderFilter;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Actions\BulkAction;
+use Alxtexh\Panel\Forms\Fields\CheckboxField;
+use Alxtexh\Panel\Forms\Fields\HiddenField;
+use Alxtexh\Panel\Forms\Fields\NumberField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Schema\Section;
+use Alxtexh\Panel\Tables\Columns\BadgeColumn;
+use Alxtexh\Panel\Tables\Columns\DateColumn;
+use Alxtexh\Panel\Tables\Columns\MoneyColumn;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Filters\BooleanFilter;
+use Alxtexh\Panel\Tables\Filters\QueryBuilderFilter;
+use Alxtexh\Panel\Tables\Table;
 
 final class PlanResource extends Resource
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Models;
+namespace Alxtexh\Panel\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

@@ -10,10 +10,10 @@ use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
-use PanelKit\Panel\Actions\ActionGroup;
-use PanelKit\Panel\Actions\RecordAction;
-use PanelKit\Panel\Actions\ReplicateAction;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Actions\ActionGroup;
+use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Actions\ReplicateAction;
+use Alxtexh\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**

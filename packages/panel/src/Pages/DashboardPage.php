@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Pages;
+namespace Alxtexh\Panel\Pages;
 
 use DateTimeImmutable;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use PanelKit\Panel\Alerts\Announcement;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Ability;
-use PanelKit\Panel\Support\SetupChecklist;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Widgets\ChartWidget;
-use PanelKit\Panel\Widgets\DashboardFilters;
-use PanelKit\Panel\Widgets\Period;
-use PanelKit\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Alerts\Announcement;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\SetupChecklist;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Widgets\ChartWidget;
+use Alxtexh\Panel\Widgets\DashboardFilters;
+use Alxtexh\Panel\Widgets\Period;
+use Alxtexh\Panel\Widgets\StatWidget;
 
 /**
  * The host `StatWidget` and `ChartWidget` never had.
@@ -183,7 +183,7 @@ abstract class DashboardPage extends Page
     public static function filters(): DashboardFilters
     {
         $request = request();
-        $key = 'panelkit.dashboard_filters.'.static::class;
+        $key = 'alxtexhpanel.dashboard_filters.'.static::class;
 
         if (! $request->attributes->has($key)) {
             $request->attributes->set($key, DashboardFilters::fromRequest(

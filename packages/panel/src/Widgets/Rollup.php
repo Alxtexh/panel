@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Widgets;
+namespace Alxtexh\Panel\Widgets;
 
 use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;

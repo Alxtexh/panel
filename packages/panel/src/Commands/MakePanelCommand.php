@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -175,8 +175,8 @@ final class MakePanelCommand extends Command
         use Illuminate\Foundation\Testing\RefreshDatabase;
         use Illuminate\Support\Facades\Gate;
         use Illuminate\Support\Facades\Schema;
-        use PanelKit\Panel\PanelManager;
-        use PanelKit\Panel\Support\TenantContext;
+        use Alxtexh\Panel\PanelManager;
+        use Alxtexh\Panel\Support\TenantContext;
         use Tests\TestCase;
 
         /**
@@ -207,7 +207,7 @@ final class MakePanelCommand extends Command
             /**
              * The resources this portal serves, and only this portal's.
              *
-             * @return array<string, class-string<\PanelKit\Panel\Resources\Resource>>
+             * @return array<string, class-string<\Alxtexh\Panel\Resources\Resource>>
              */
             private function resources(): array
             {
@@ -407,8 +407,8 @@ declare(strict_types=1);
 namespace App\Providers\Panels;
 
 use Illuminate\Support\ServiceProvider;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * The {$id} panel.

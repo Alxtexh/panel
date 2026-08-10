@@ -13,10 +13,10 @@ use App\Panel\Resources\ClientResource;
 use App\Panel\Resources\EditablePlanResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
-use PanelKit\Panel\Tables\Columns\IconColumn;
-use PanelKit\Panel\Tables\Columns\ImageColumn;
-use PanelKit\Panel\Tables\Columns\SelectColumn;
-use PanelKit\Panel\Tables\Columns\ToggleColumn;
+use Alxtexh\Panel\Tables\Columns\IconColumn;
+use Alxtexh\Panel\Tables\Columns\ImageColumn;
+use Alxtexh\Panel\Tables\Columns\SelectColumn;
+use Alxtexh\Panel\Tables\Columns\ToggleColumn;
 use Tests\TestCase;
 
 /**

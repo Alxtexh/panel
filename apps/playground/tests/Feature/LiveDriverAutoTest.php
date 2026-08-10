@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use PanelKit\Panel\Live\LiveConfig;
+use Alxtexh\Panel\Live\LiveConfig;
 use Tests\TestCase;
 
 /**

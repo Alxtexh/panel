@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Tables\Filters;
+namespace Alxtexh\Panel\Tables\Filters;
 
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;

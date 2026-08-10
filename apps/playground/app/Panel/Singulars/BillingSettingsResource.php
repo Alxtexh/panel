@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Panel\Singulars;
 
-use PanelKit\Panel\Forms\Fields\NumberField;
-use PanelKit\Panel\Forms\Fields\SelectField;
-use PanelKit\Panel\Forms\Fields\ToggleField;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Resources\SingularResource;
-use PanelKit\Panel\Schema\Section;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Forms\Fields\NumberField;
+use Alxtexh\Panel\Forms\Fields\SelectField;
+use Alxtexh\Panel\Forms\Fields\ToggleField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Resources\SingularResource;
+use Alxtexh\Panel\Schema\Section;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * How this organisation bills - roadmap 4.3's demonstration.

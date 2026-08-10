@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http;
+namespace Alxtexh\Panel\Http;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -34,7 +34,7 @@ use Illuminate\Http\Request;
  */
 final class NestedContext
 {
-    private const ATTRIBUTE = 'panelkit.nested-parent';
+    private const ATTRIBUTE = 'alxtexhpanel.nested-parent';
 
     /**
      * The resolved, authorised parent record - or null on a flat request.

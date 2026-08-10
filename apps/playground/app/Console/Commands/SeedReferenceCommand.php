@@ -86,7 +86,7 @@ final class SeedReferenceCommand extends Command
          * written; this one never did, and it is the more dangerous of the two:
          * it creates operator accounts whose password is the literal string
          * "password", written in this file, which is public. Anybody who
-         * installs PanelKit gets this command in `artisan list`, and running it
+         * installs Alxtexhpanel gets this command in `artisan list`, and running it
          * on a server hands out known credentials to every tenant it invents.
          *
          * Nothing about that fails. The command succeeds, the panel works, and
@@ -288,7 +288,7 @@ final class SeedReferenceCommand extends Command
     /**
      * Copy the tenant's own row into its own database.
      *
-     * BECAUSE THE SCHEMA IS THE SAME ONE. PanelKit runs a single set of
+     * BECAUSE THE SCHEMA IS THE SAME ONE. Alxtexhpanel runs a single set of
      * migrations, so a dedicated database gets `clients.tenant_id` and its
      * foreign key to `tenants` exactly as the shared one does - and its own
      * `tenants` table arrives EMPTY, because the tenant records are central

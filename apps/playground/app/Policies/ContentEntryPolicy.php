@@ -6,8 +6,8 @@ namespace App\Policies;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
-use PanelKit\Panel\Models\ContentEntry;
-use PanelKit\Panel\Support\Ability;
+use Alxtexh\Panel\Models\ContentEntry;
+use Alxtexh\Panel\Support\Ability;
 
 /**
  * Who may edit what every portal reads.

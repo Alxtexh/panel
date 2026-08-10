@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Seo\HasSeo;
-use PanelKit\Panel\Seo\Seo;
-use PanelKit\Panel\Seo\SeoAnalyser;
-use PanelKit\Panel\Seo\SeoMetadata;
-use PanelKit\Panel\Seo\SeoSchema;
-use PanelKit\Panel\Support\Sitemap;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Seo\HasSeo;
+use Alxtexh\Panel\Seo\Seo;
+use Alxtexh\Panel\Seo\SeoAnalyser;
+use Alxtexh\Panel\Seo\SeoMetadata;
+use Alxtexh\Panel\Seo\SeoSchema;
+use Alxtexh\Panel\Support\Sitemap;
 use Tests\TestCase;
 
 /**

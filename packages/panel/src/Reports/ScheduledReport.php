@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Reports;
+namespace Alxtexh\Panel\Reports;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;

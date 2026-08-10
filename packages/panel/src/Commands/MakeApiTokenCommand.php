@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use App\Models\User;
 use Illuminate\Console\Command;
-use PanelKit\Panel\Api\ApiToken;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Api\ApiToken;
+use Alxtexh\Panel\Support\Abilities;
 
 /**
  * Mint an API token: `php artisan panel:api-token ops@example.com "Billing sync"`.

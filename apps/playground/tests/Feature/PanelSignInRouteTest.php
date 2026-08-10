@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 use Tests\TestCase;
 
 /**
@@ -17,7 +17,7 @@ use Tests\TestCase;
  * scaffolding, so it has no route named `login`; Laravel's `Authenticate`
  * middleware redirects an unauthenticated request to `route('login')`; and the
  * result was that EVERY PANEL URL RETURNED 500 with `Route [login] not
- * defined` - a message naming neither PanelKit nor the fix.
+ * defined` - a message naming neither Alxtexhpanel nor the fix.
  *
  * `panel:doctor` passed that installation. It reported no problems on a panel
  * where nothing could be opened at all, which is exactly the failure the

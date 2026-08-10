@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Closure;
 use Illuminate\Console\Command;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Budgets;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Tables\Filters\BooleanFilter;
-use PanelKit\Panel\Tables\Filters\Filter;
-use PanelKit\Panel\Tables\Filters\HasOptions;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Budgets;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Tables\Filters\BooleanFilter;
+use Alxtexh\Panel\Tables\Filters\Filter;
+use Alxtexh\Panel\Tables\Filters\HasOptions;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * Times the panel's own surfaces, warm, and reports medians.

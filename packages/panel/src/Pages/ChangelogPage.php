@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Pages;
+namespace Alxtexh\Panel\Pages;
 
 use Illuminate\Http\Request;
-use PanelKit\Panel\Support\Changelog;
+use Alxtexh\Panel\Support\Changelog;
 
 /**
  * The in-panel changelog, routed by declaring nothing.

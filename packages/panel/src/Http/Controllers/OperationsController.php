@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -11,22 +11,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Alerts\Telegram;
-use PanelKit\Panel\Audit\AuditRecorder;
-use PanelKit\Panel\Jobs\RestoreBackup;
-use PanelKit\Panel\Jobs\RunBackupNow;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Ability;
-use PanelKit\Panel\Support\BackupArchive;
-use PanelKit\Panel\Support\BackupDestinationProbe;
-use PanelKit\Panel\Support\BackupSettings;
-use PanelKit\Panel\Support\BackupStatus;
-use PanelKit\Panel\Support\HealthReport;
-use PanelKit\Panel\Support\InstallationState;
-use PanelKit\Panel\Support\LogReader;
-use PanelKit\Panel\Support\MonitorSampler;
-use PanelKit\Panel\Support\PanelSettings;
-use PanelKit\Panel\Support\PlatformReport;
+use Alxtexh\Panel\Alerts\Telegram;
+use Alxtexh\Panel\Audit\AuditRecorder;
+use Alxtexh\Panel\Jobs\RestoreBackup;
+use Alxtexh\Panel\Jobs\RunBackupNow;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\BackupArchive;
+use Alxtexh\Panel\Support\BackupDestinationProbe;
+use Alxtexh\Panel\Support\BackupSettings;
+use Alxtexh\Panel\Support\BackupStatus;
+use Alxtexh\Panel\Support\HealthReport;
+use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\LogReader;
+use Alxtexh\Panel\Support\MonitorSampler;
+use Alxtexh\Panel\Support\PanelSettings;
+use Alxtexh\Panel\Support\PlatformReport;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**

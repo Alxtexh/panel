@@ -10,8 +10,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Laravel\Dusk\Browser;
-use PanelKit\Panel\Documents\DocumentTemplate;
-use PanelKit\Panel\Documents\Kinds\VoucherKind;
+use Alxtexh\Panel\Documents\DocumentTemplate;
+use Alxtexh\Panel\Documents\Kinds\VoucherKind;
 use Tests\DuskTestCase;
 
 /**

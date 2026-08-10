@@ -6,7 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
-use PanelKit\Panel\Models\Scopes\TenantScope;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
 
 #[ScopedBy(TenantScope::class)]
 final class Router extends Model

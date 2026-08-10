@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Documents\Kinds;
+namespace Alxtexh\Panel\Documents\Kinds;
 
-use PanelKit\Panel\Forms\Fields\RepeaterField;
-use PanelKit\Panel\Forms\Fields\TextareaField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Fields\VisualSelectField;
-use PanelKit\Panel\Schema\Section;
+use Alxtexh\Panel\Forms\Fields\RepeaterField;
+use Alxtexh\Panel\Forms\Fields\TextareaField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Fields\VisualSelectField;
+use Alxtexh\Panel\Schema\Section;
 
 /**
  * A code somebody types in to get something.

@@ -1,6 +1,6 @@
-# Deploying a PanelKit panel
+# Deploying a Alxtexhpanel panel
 
-PanelKit is a Laravel package, so a panel deploys like a Laravel app. What
+Alxtexhpanel is a Laravel package, so a panel deploys like a Laravel app. What
 follows is only the part that is *specific to the panel* — the processes it
 needs running, and the failures that are quiet if they are missing.
 
@@ -135,7 +135,7 @@ functions, while `inertia` ships raw source so you can override a screen. Scan
 one and the other's utilities are purged.
 
 `php artisan panel:update` writes these for you, including from the older
-`@panelkit/ui` and `@panelkit/panel` names.
+`@alxtexhpanel/ui` and `@alxtexh-enterprise/panel` names.
 
 ## Wayfinder
 

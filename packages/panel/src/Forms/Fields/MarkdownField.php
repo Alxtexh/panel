@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Forms\Fields;
+namespace Alxtexh\Panel\Forms\Fields;
 
 /**
  * Prose stored as MARKDOWN, not as HTML - roadmap 4.5.

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Ai;
+namespace Alxtexh\Panel\Ai;
 
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
-use PanelKit\Panel\Support\PanelSettings;
+use Alxtexh\Panel\Support\PanelSettings;
 
 /**
  * Bring-your-own-key for the assistant - the installation's AI provider and

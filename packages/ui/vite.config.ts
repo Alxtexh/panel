@@ -57,7 +57,7 @@ const external = [
  */
 function importOwnStylesheet() {
     return {
-        name: 'panelkit-import-own-stylesheet',
+        name: 'alxtexhpanel-import-own-stylesheet',
         /*
          * AFTER VITE'S OWN CSS PLUGIN, which is what actually emits `ui.css`.
          * Run at the default order and the asset does not exist yet, so this

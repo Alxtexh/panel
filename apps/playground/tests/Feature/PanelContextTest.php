@@ -11,10 +11,10 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\SchemaCache;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\SchemaCache;
+use Alxtexh\Panel\Support\TenantContext;
 use RuntimeException;
 use Tests\TestCase;
 

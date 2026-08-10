@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Panel\Resources;
 
 use App\Models\Plan;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Columns\ToggleColumn;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Columns\ToggleColumn;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * A table that exists to exercise inline cell editing.

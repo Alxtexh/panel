@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Auth;
+namespace Alxtexh\Panel\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Fortify\Contracts\PasskeyUser;
@@ -19,10 +19,10 @@ use Laravel\Fortify\Features;
  *
  * What was missing was never the capability - the reference app has had working
  * passkeys for a long time. It was that the capability lived in the APPLICATION,
- * so `composer require panelkit/panel` produced a panel with no passkey support
+ * so `composer require alxtexh-enterprise/panel` produced a panel with no passkey support
  * and no indication that adding it was a solved problem.
  *
- * A SOFT DEPENDENCY, deliberately. PanelKit does not require Fortify: an
+ * A SOFT DEPENDENCY, deliberately. Alxtexhpanel does not require Fortify: an
  * installation on Breeze, on a starter kit, or on its own auth is a perfectly
  * ordinary consumer, and a hard requirement would drag a second auth stack into
  * every one of them. Every method here answers honestly when Fortify is absent

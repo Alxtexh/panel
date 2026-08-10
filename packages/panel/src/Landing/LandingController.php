@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Landing;
+namespace Alxtexh\Panel\Landing;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Support\InstallationState;
-use PanelKit\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\PanelHome;
 
 /**
  * The public face - Part G.9.
  *
- * PANELKIT SHIPS SEVERAL LANDING DESIGNS, not one, because a landing page is
+ * ALXTEXHPANEL SHIPS SEVERAL LANDING DESIGNS, not one, because a landing page is
  * the single screen whose job is to sound like the company behind it - and a
  * framework that ships one template makes every deployment sound like the
  * same company. Three voices ship: a modern gradient SaaS page, a quiet

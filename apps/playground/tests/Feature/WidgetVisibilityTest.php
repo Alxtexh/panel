@@ -8,7 +8,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\Abilities;
 use Tests\TestCase;
 
 /**

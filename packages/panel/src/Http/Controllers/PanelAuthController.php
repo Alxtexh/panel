@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,12 +14,12 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Auth\Passkeys;
-use PanelKit\Panel\Auth\SocialProviders;
-use PanelKit\Panel\Auth\Turnstile;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\PanelHome;
+use Alxtexh\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelHome;
 
 /**
  * Signing in to ONE panel, using that panel's own guard.

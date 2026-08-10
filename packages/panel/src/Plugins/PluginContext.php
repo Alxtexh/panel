@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Plugins;
+namespace Alxtexh\Panel\Plugins;
 
 use Closure;
 use InvalidArgumentException;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * What a plugin is allowed to do to a panel.

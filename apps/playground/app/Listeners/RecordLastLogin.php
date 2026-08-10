@@ -7,7 +7,7 @@ namespace App\Listeners;
 use App\Models\User;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Auth\Impersonation;
+use Alxtexh\Panel\Auth\Impersonation;
 
 /**
  * When somebody last signed in, and from where.

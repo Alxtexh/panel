@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
-use PanelKit\Panel\Files\FileStore;
-use PanelKit\Panel\Forms\Fields\FileUploadField;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
+use Alxtexh\Panel\Files\FileStore;
+use Alxtexh\Panel\Forms\Fields\FileUploadField;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -130,7 +130,7 @@ final class UploadController extends Controller
         ]);
     }
 
-    /** @return class-string<\PanelKit\Panel\Resources\Resource> */
+    /** @return class-string<\Alxtexh\Panel\Resources\Resource> */
     private function resolve(string $resource): string
     {
         $class = app(PanelManager::class)->resource($resource);
@@ -148,7 +148,7 @@ final class UploadController extends Controller
      * A request naming any other field would otherwise borrow this endpoint's
      * write access to put a file wherever that field's defaults pointed.
      *
-     * @param  class-string<\PanelKit\Panel\Resources\Resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      */
     private function field(string $class, string $key): FileUploadField
     {

@@ -6,9 +6,9 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\CustomFields\CustomFieldFactory;
-use PanelKit\Panel\Widgets\Bucket;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\CustomFields\CustomFieldFactory;
+use Alxtexh\Panel\Widgets\Bucket;
 use Tests\TestCase;
 
 /**

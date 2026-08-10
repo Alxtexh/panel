@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Auth;
+namespace Alxtexh\Panel\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;

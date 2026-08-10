@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
-use PanelKit\Panel\Widgets;
+use Alxtexh\Panel\Widgets;
 use Inertia\Response;
-use PanelKit\Panel\Pages\Page;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Ability;
+use Alxtexh\Panel\Pages\Page;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Ability;
 
 /**
  * Serves every declared page, and the endpoints those pages own.

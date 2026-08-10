@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Support\Blueprint;
+use Alxtexh\Panel\Support\Blueprint;
 use Tests\TestCase;
 
 /**
@@ -124,7 +124,7 @@ final class BlueprintCatalogueTest extends TestCase
      *
      * An agent plans from this list. For two releases it named no way to build
      * a screen that is not a list of records, and the report that came back
-     * from a real installation said PanelKit had none - correctly, from the
+     * from a real installation said Alxtexhpanel had none - correctly, from the
      * only document it was given.
      */
     public function test_it_names_the_page_mechanism(): void

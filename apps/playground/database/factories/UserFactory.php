@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use PanelKit\Panel\Models\Role;
+use Alxtexh\Panel\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 

@@ -19,7 +19,7 @@
         "laravel/socialite": "^5.29",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
-        "panelkit/panel": "@dev",
+        "alxtexh-enterprise/panel": "@dev",
         "spatie/laravel-backup": "^10.3",
         "spatie/laravel-permission": "^8.3",
         "stancl/tenancy": "^3.10"

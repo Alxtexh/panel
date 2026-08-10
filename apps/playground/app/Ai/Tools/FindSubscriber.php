@@ -8,7 +8,7 @@ use App\Models\Client;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
-use PanelKit\Panel\Ai\PanelTool;
+use Alxtexh\Panel\Ai\PanelTool;
 use Stringable;
 
 /**

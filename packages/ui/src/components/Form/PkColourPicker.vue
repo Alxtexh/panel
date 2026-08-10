@@ -21,7 +21,7 @@
  * THE CONTRAST WARNING IS A HINT, NOT A RULE - roadmap 7.1. `checkContrastAgainst`
  * on the field only declares what surface this colour will render against;
  * nothing here blocks saving a colour that fails it; the offer is a one-click
- * fix, not a wall. See `PanelKit\Panel\Support\Contrast` for why the number
+ * fix, not a wall. See `Alxtexh\Panel\Support\Contrast` for why the number
  * shown here is computed the same way the framework itself would compute it.
  */
 import { computed } from 'vue'

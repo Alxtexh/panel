@@ -13,9 +13,9 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Filters\SelectFilter;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Filters\SelectFilter;
+use Alxtexh\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**

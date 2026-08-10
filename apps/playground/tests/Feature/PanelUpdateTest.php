@@ -7,9 +7,9 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Support\ConfigDrift;
-use PanelKit\Panel\Support\PanelPages;
-use PanelKit\Panel\Support\SchemaCache;
+use Alxtexh\Panel\Support\ConfigDrift;
+use Alxtexh\Panel\Support\PanelPages;
+use Alxtexh\Panel\Support\SchemaCache;
 use Tests\TestCase;
 
 /**
@@ -72,7 +72,7 @@ final class PanelUpdateTest extends TestCase
      * THE RENAME REACHES THE STYLESHEET, which is the only place it cannot fail
      * loudly.
      *
-     * The package has been renamed twice - two npm packages into `@panelkit/panel`
+     * The package has been renamed twice - two npm packages into `@alxtexh-enterprise/panel`
      * in 0.8.0, and that into `@alxtexh-enterprise/panel` in 0.9.0. Every import
      * is caught by the build; these two lines are strings in a CSS file that
      * nothing resolves. Left stale, Tailwind scans a directory that is no longer
@@ -91,8 +91,8 @@ final class PanelUpdateTest extends TestCase
         try {
             file_put_contents($path, implode("\n", [
                 "@import 'tailwindcss';",
-                "@source '../../node_modules/@panelkit/ui/dist/**/*.js';",
-                "@source '../../node_modules/@panelkit/inertia/src/**/*.{vue,ts}';",
+                "@source '../../node_modules/@alxtexhpanel/ui/dist/**/*.js';",
+                "@source '../../node_modules/@alxtexhpanel/inertia/src/**/*.{vue,ts}';",
                 '',
             ]));
 
@@ -111,13 +111,13 @@ final class PanelUpdateTest extends TestCase
 
             // Not appended alongside the old ones - a stylesheet scanning a
             // directory that does not exist is the failure being fixed.
-            $this->assertStringNotContainsString('@panelkit/ui', $updated);
-            $this->assertStringNotContainsString('@panelkit/inertia', $updated);
+            $this->assertStringNotContainsString('@alxtexhpanel/ui', $updated);
+            $this->assertStringNotContainsString('@alxtexhpanel/inertia', $updated);
 
             // THE 0.8.x HOP AS WELL, because an installation on that version has
-            // `@panelkit/panel` in its stylesheet and nothing else will move it.
+            // `@alxtexh-enterprise/panel` in its stylesheet and nothing else will move it.
             file_put_contents($path, "@import 'tailwindcss';\n"
-                ."@source '../../node_modules/@panelkit/panel/dist/**/*.js';\n");
+                ."@source '../../node_modules/@alxtexh-enterprise/panel/dist/**/*.js';\n");
 
             Artisan::call('panel:update');
 

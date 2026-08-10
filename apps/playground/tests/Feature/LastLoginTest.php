@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Auth\Impersonation;
+use Alxtexh\Panel\Auth\Impersonation;
 use Tests\TestCase;
 
 /**

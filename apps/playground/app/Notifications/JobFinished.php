@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notification;
  * WHY THIS IS A NOTIFICATION AND NOT AN ALERT: it records something that
  * HAPPENED, to one person, at one moment. It stays true forever and stays
  * visible until they read it. An alert, by contrast, describes a condition that
- * is true right now and vanishes on its own - see PanelKit\Panel\Alerts\Alert.
+ * is true right now and vanishes on its own - see Alxtexh\Panel\Alerts\Alert.
  *
  * DATABASE ONLY. A background job finishing is worth a badge in the panel and
  * is emphatically not worth an email; a queued export that emailed on

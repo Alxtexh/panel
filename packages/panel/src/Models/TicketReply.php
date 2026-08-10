@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Models;
+namespace Alxtexh\Panel\Models;
 
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
-use PanelKit\Panel\Models\Scopes\TenantScope;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Support\TicketTables;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TicketTables;
 
 /**
  * One message on a ticket - a reply the customer sees, or a note only the

@@ -9,7 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Live\LiveConfig;
+use Alxtexh\Panel\Live\LiveConfig;
 use RuntimeException;
 use Tests\TestCase;
 

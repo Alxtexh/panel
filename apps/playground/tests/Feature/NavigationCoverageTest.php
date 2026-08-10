@@ -12,7 +12,7 @@ use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route as RouteInstance;
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 use Tests\TestCase;
 
 /**
@@ -661,7 +661,7 @@ final class NavigationCoverageTest extends TestCase
              * `/settings/organisation` were all registered OUTSIDE every
              * panel's route group, so they resolved to the default panel
              * whoever linked to them - there was no boundary for a gate to
-             * enforce. PanelKit 0.8.1 to 0.8.3 moved all three INSIDE each
+             * enforce. Alxtexhpanel 0.8.1 to 0.8.3 moved all three INSIDE each
              * panel's group. `/platform/settings` now exists and is a
              * different screen, so an ungated `/settings` in a generated
              * portal is once again a link that leaves the portal silently.

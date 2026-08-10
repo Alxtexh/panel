@@ -10,17 +10,17 @@ use App\Models\Plan;
 use App\Models\Router;
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Builder;
-use PanelKit\Panel\Pages\DashboardPage as PanelKitDashboard;
-use PanelKit\Panel\Support\TenantContext;
-use PanelKit\Panel\Widgets\Bucket;
-use PanelKit\Panel\Widgets\ChartWidget;
-use PanelKit\Panel\Widgets\DashboardFilters;
-use PanelKit\Panel\Widgets\Period;
-use PanelKit\Panel\Widgets\Rollup;
-use PanelKit\Panel\Widgets\StatWidget;
-use PanelKit\Panel\Widgets\TimeSeries;
-use PanelKit\Panel\Widgets\Trend;
-use PanelKit\Panel\Widgets\Window;
+use Alxtexh\Panel\Pages\DashboardPage as AlxtexhpanelDashboard;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Widgets\Bucket;
+use Alxtexh\Panel\Widgets\ChartWidget;
+use Alxtexh\Panel\Widgets\DashboardFilters;
+use Alxtexh\Panel\Widgets\Period;
+use Alxtexh\Panel\Widgets\Rollup;
+use Alxtexh\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Widgets\TimeSeries;
+use Alxtexh\Panel\Widgets\Trend;
+use Alxtexh\Panel\Widgets\Window;
 
 /**
  * The dashboard.
@@ -41,7 +41,7 @@ use PanelKit\Panel\Widgets\Window;
  * breakdown queries, so a click costs four scans instead of one. Per-chart
  * params let the page reload exactly one prop with `only:`.
  */
-final class DashboardPage extends PanelKitDashboard
+final class DashboardPage extends AlxtexhpanelDashboard
 {
     protected static string $panel = 'admin';
 

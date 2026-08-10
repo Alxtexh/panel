@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use PanelKit\Panel\Support\VendoredCopy;
+use Alxtexh\Panel\Support\VendoredCopy;
 use Tests\TestCase;
 
 /**
@@ -29,14 +29,14 @@ final class VendoredCopyTest extends TestCase
     {
         parent::setUp();
 
-        $this->root = sys_get_temp_dir().'/panelkit-vendored-'.bin2hex(random_bytes(6));
+        $this->root = sys_get_temp_dir().'/alxtexhpanel-vendored-'.bin2hex(random_bytes(6));
 
         mkdir($this->root.'/source/src', recursive: true);
-        mkdir($this->root.'/app/vendor/panelkit', recursive: true);
+        mkdir($this->root.'/app/vendor/alxtexhpanel', recursive: true);
 
         file_put_contents(
             $this->root.'/source/composer.json',
-            json_encode(['name' => 'panelkit/panel']),
+            json_encode(['name' => 'alxtexh-enterprise/panel']),
         );
         file_put_contents($this->root.'/source/src/Thing.php', '<?php // v1');
     }
@@ -54,7 +54,7 @@ final class VendoredCopyTest extends TestCase
         $found = VendoredCopy::sourceFor(
             ['repositories' => [['type' => 'path', 'url' => 'source']]],
             $this->root,
-            'panelkit/panel',
+            'alxtexh-enterprise/panel',
         );
 
         $this->assertSame($this->root.'/source', $found);
@@ -77,7 +77,7 @@ final class VendoredCopyTest extends TestCase
             VendoredCopy::sourceFor(
                 ['repositories' => [['type' => 'path', 'url' => 'packages/*']]],
                 $this->root,
-                'panelkit/panel',
+                'alxtexh-enterprise/panel',
             ),
         );
     }
@@ -86,7 +86,7 @@ final class VendoredCopyTest extends TestCase
     public function test_a_packagist_install_has_no_source(): void
     {
         $this->assertNull(
-            VendoredCopy::sourceFor(['require' => ['panelkit/panel' => '^0.5']], $this->root, 'panelkit/panel'),
+            VendoredCopy::sourceFor(['require' => ['alxtexh-enterprise/panel' => '^0.5']], $this->root, 'alxtexh-enterprise/panel'),
         );
     }
 
@@ -97,7 +97,7 @@ final class VendoredCopyTest extends TestCase
      */
     public function test_a_copy_older_than_its_source_is_stale(): void
     {
-        $vendor = $this->root.'/app/vendor/panelkit/panel';
+        $vendor = $this->root.'/app/vendor/alxtexh-enterprise/panel';
 
         mkdir($vendor.'/src', recursive: true);
         file_put_contents($vendor.'/src/Thing.php', '<?php // v1');
@@ -109,7 +109,7 @@ final class VendoredCopyTest extends TestCase
     /** A copy taken after the last edit is current, and says nothing. */
     public function test_a_current_copy_is_not_stale(): void
     {
-        $vendor = $this->root.'/app/vendor/panelkit/panel';
+        $vendor = $this->root.'/app/vendor/alxtexh-enterprise/panel';
 
         mkdir($vendor.'/src', recursive: true);
         touch($this->root.'/source/src/Thing.php', time() - 600);
@@ -125,7 +125,7 @@ final class VendoredCopyTest extends TestCase
      */
     public function test_a_symlinked_install_is_never_stale(): void
     {
-        $vendor = $this->root.'/app/vendor/panelkit/panel';
+        $vendor = $this->root.'/app/vendor/alxtexh-enterprise/panel';
 
         /*
          * CREATING A SYMLINK IS A PRIVILEGE ON WINDOWS, not a file operation.
@@ -160,7 +160,7 @@ final class VendoredCopyTest extends TestCase
     {
         $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
 
-        $source = VendoredCopy::sourceFor((array) $composer, base_path(), 'panelkit/panel');
+        $source = VendoredCopy::sourceFor((array) $composer, base_path(), 'alxtexh-enterprise/panel');
 
         $this->assertNotNull($source, 'The path repository is no longer found, so the check cannot fire.');
         $this->assertFileExists($source.'/src/PanelServiceProvider.php');
@@ -173,7 +173,7 @@ final class VendoredCopyTest extends TestCase
          * the broken one.
          */
         $this->assertTrue(
-            VendoredCopy::isLinked($source, base_path('vendor/panelkit/panel')),
+            VendoredCopy::isLinked($source, base_path('vendor/alxtexh-enterprise/panel')),
             'This checkout vendors a COPY of the package, so edits to packages/panel are not what runs.',
         );
     }
@@ -185,7 +185,7 @@ final class VendoredCopyTest extends TestCase
      */
     public function test_a_non_php_file_in_the_source_is_not_a_change(): void
     {
-        $vendor = $this->root.'/app/vendor/panelkit/panel';
+        $vendor = $this->root.'/app/vendor/alxtexh-enterprise/panel';
 
         mkdir($vendor.'/src', recursive: true);
         touch($this->root.'/source/src/Thing.php', time() - 600);

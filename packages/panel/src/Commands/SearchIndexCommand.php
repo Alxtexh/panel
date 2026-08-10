@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
 
 /**
  * The indexes this panel's search needs, written out for your engine.

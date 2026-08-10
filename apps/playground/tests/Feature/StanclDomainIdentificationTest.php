@@ -8,7 +8,7 @@ use App\Models\Client;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 use Stancl\Tenancy\Exceptions\NotASubdomainException;
 use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -28,13 +28,13 @@ use Tests\TestCase;
  *
  * THE ROUTES ARE DEFINED IN THE TESTS, deliberately.
  *
- * The unit under test is the middleware plus PanelKit's reaction to it, not the
+ * The unit under test is the middleware plus Alxtexhpanel's reaction to it, not the
  * playground's route file. Adding permanent domain-identified routes to an app
  * that is reached at `localhost` would mean routes nobody can exercise without
  * editing `/etc/hosts`, which is a worse reference than none. Defining them
  * here keeps each test's setup visible in the test.
  *
- * WHAT ACTUALLY MATTERS FOR PANELKIT is the last section: identification alone,
+ * WHAT ACTUALLY MATTERS FOR ALXTEXHPANEL is the last section: identification alone,
  * with nobody signed in, has to be enough for the panel to scope correctly. The
  * `$user->tenant` fallback cannot help here - there is no user.
  */
@@ -259,17 +259,17 @@ final class StanclDomainIdentificationTest extends TestCase
         $this->get('http://panel.test/tenant-only')->assertStatus(404);
     }
 
-    /* --------------------------------------------------- what PanelKit sees */
+    /* --------------------------------------------------- what Alxtexhpanel sees */
 
     /**
      * THE ASSERTION THIS SUITE EXISTS FOR.
      *
-     * Identification alone, nobody signed in, and PanelKit scopes correctly.
+     * Identification alone, nobody signed in, and Alxtexhpanel scopes correctly.
      * The `$user->tenant` fallback cannot possibly help - there is no user -
      * so this is the path that proves the stancl integration carries its own
      * weight rather than being decoration over the auth-based resolver.
      */
-    public function test_panelkit_scopes_to_the_tenant_the_hostname_identified(): void
+    public function test_alxtexhpanel_scopes_to_the_tenant_the_hostname_identified(): void
     {
         $this->clients($this->acme, 2);
         $this->clients($this->globex, 6);

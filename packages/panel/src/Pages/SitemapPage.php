@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Pages;
+namespace Alxtexh\Panel\Pages;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Support\Sitemap;
+use Alxtexh\Panel\Support\Sitemap;
 
 /**
  * The public sitemap - what it currently declares, and a button to write it.

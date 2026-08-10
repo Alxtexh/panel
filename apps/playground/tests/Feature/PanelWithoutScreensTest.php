@@ -6,9 +6,9 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Http\PanelRoutes;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Http\PanelRoutes;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 use Tests\TestCase;
 
 /**

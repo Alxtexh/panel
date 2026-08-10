@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
-use PanelKit\Panel\Models\Ticket;
+use Alxtexh\Panel\Models\Ticket;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 use Tests\TestCase;

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Landing;
+namespace Alxtexh\Panel\Landing;
 
 /**
  * The shipped landing pages, as BLOCKS rather than as files.
  *
  * THEY ARE THE PACKAGE'S NOW. All three lived in the reference application, so
- * `composer require panelkit/panel` gave you a component that draws landing
+ * `composer require alxtexh-enterprise/panel` gave you a component that draws landing
  * sections and nothing that used it - no designs, no route, no editor. The
  * README said the front page was editable from the panel; only one
  * installation in the world could do it.
@@ -178,7 +178,7 @@ final class LandingPresets
         return array_values(array_filter([
             ['type' => 'hero', 'data' => [
                 'title' => 'A panel is a decision about where complexity lives',
-                'body' => 'PanelKit puts it in PHP, next to the model, where it can be tested - and leaves the browser to draw.',
+                'body' => 'Alxtexhpanel puts it in PHP, next to the model, where it can be tested - and leaves the browser to draw.',
                 'primaryLabel' => 'Read the thinking',
                 'primaryHref' => '/about',
                 'secondaryLabel' => 'Get started',
@@ -188,7 +188,7 @@ final class LandingPresets
             ['type' => 'steps', 'data' => [
                 'title' => 'Three commands',
                 'items' => [
-                    ['title' => 'Install', 'body' => 'composer require panelkit/panel, then panel:install.'],
+                    ['title' => 'Install', 'body' => 'composer require alxtexh-enterprise/panel, then panel:install.'],
                     ['title' => 'Point it at a model', 'body' => 'make:panel-resource Customer --generate reads the table.'],
                     ['title' => 'Open the route', 'body' => 'Discovery registered it. There was nothing to wire.'],
                 ],
@@ -208,7 +208,7 @@ final class LandingPresets
 
         return array_values(array_filter([
             ['type' => 'hero', 'data' => [
-                'eyebrow' => 'panelkit/panel',
+                'eyebrow' => 'alxtexh-enterprise/panel',
                 'title' => 'One class. A working screen.',
                 'body' => 'A resource declares its table, its form and its policy. The routes, the pages and the API come with it.',
                 'primaryLabel' => 'Install',

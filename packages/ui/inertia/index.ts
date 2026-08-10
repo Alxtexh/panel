@@ -1,10 +1,10 @@
 /**
- * The screens PanelKit's PHP half renders.
+ * The screens Alxtexhpanel's PHP half renders.
  *
- * WHY THIS PACKAGE EXISTS. `panelkit/panel` answers five requests with
+ * WHY THIS PACKAGE EXISTS. `alxtexh-enterprise/panel` answers five requests with
  * `Inertia::render('ResourceIndex')`, `'ResourceForm'`, `'ResourceView'`,
  * `'Trash'` and `'PanelHome'` - and shipped no Vue at all. So a fresh
- * `composer require panelkit/panel` produced routes that resolved to components
+ * `composer require alxtexh-enterprise/panel` produced routes that resolved to components
  * that did not exist: a white page and a console error naming a file the
  * developer had never heard of, on the very first screen they visited. The PHP
  * half was installable and the panel was not.

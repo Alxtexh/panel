@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use PanelKit\Panel\Alerts\AlertRule;
-use PanelKit\Panel\Alerts\Announcement;
-use PanelKit\Panel\Alerts\AnnouncementResource;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Alerts\AlertRule;
+use Alxtexh\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Alerts\AnnouncementResource;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * The bell: two streams that are deliberately not one list.

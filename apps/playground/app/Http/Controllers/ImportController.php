@@ -7,11 +7,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Forms\Fields\Field;
-use PanelKit\Panel\Imports\CsvReader;
-use PanelKit\Panel\Imports\Importer;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Imports\CsvReader;
+use Alxtexh\Panel\Imports\Importer;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\TenantContext;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -117,7 +117,7 @@ final class ImportController extends Controller
     /**
      * Bulk-insert the prepared rows, chunked.
      *
-     * @param  class-string<\PanelKit\Panel\Resources\Resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @param  list<array<string, mixed>>  $rows
      */
     private function write(string $class, array $rows): int
@@ -159,7 +159,7 @@ final class ImportController extends Controller
         return $written;
     }
 
-    /** @return class-string<\PanelKit\Panel\Resources\Resource> */
+    /** @return class-string<\Alxtexh\Panel\Resources\Resource> */
     private function resourceFor(string $resource): string
     {
         $class = app(PanelManager::class)->resource($resource);

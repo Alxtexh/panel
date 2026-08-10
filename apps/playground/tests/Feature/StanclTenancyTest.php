@@ -8,13 +8,13 @@ use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
 use Stancl\Tenancy\Contracts\Tenant as TenantContract;
 use Tests\TestCase;
 
 /**
- * PanelKit against a REAL stancl/tenancy v3 installation.
+ * Alxtexhpanel against a REAL stancl/tenancy v3 installation.
  *
  * Everything before this was written to the v3 contract and tested against a
  * faked container binding, which is not the same thing - a fake proves the code
@@ -107,7 +107,7 @@ final class StanclTenancyTest extends TestCase
     /**
      * THE HEADLINE: initialising tenancy is enough. Nothing signs in.
      *
-     * PanelKit's fallback reads the tenant off the authenticated user, and that
+     * Alxtexhpanel's fallback reads the tenant off the authenticated user, and that
      * fallback is wrong under stancl - a queue worker, a console command or a
      * domain-identified request all have a tenant and no user at all.
      */

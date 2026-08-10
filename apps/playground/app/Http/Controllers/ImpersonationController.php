@@ -7,7 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Auth\Impersonation;
+use Alxtexh\Panel\Auth\Impersonation;
 use RuntimeException;
 
 /**

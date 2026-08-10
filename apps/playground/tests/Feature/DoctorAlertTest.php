@@ -11,7 +11,7 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Documents\DocumentTemplate;
+use Alxtexh\Panel\Documents\DocumentTemplate;
 use Psr\Http\Message\RequestInterface;
 use Tests\TestCase;
 

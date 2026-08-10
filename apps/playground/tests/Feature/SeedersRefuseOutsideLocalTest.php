@@ -13,7 +13,7 @@ use Tests\TestCase;
  * The commands that invent data must not run on a server.
  *
  * THESE SHIP INSIDE THE PACKAGE, which is what makes them worth a test rather
- * than a note in the README. Everybody who installs PanelKit gets them in
+ * than a note in the README. Everybody who installs Alxtexhpanel gets them in
  * `artisan list`, and both create operator accounts whose password is a fixed
  * string written in the source - so running one on a server hands out known
  * credentials for every tenant it invents, succeeds, and reports nothing wrong.

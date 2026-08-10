@@ -4,12 +4,12 @@
  *
  * WHY THIS IS IN THE PACKAGE NOW. It worked perfectly well in the reference app
  * and had done for a long time - which was the problem: a fresh
- * `composer require panelkit/panel` produced a panel with no passkey support and
+ * `composer require alxtexh-enterprise/panel` produced a panel with no passkey support and
  * nothing to suggest that adding it was a solved problem rather than a project.
  * The capability was never missing; it was only ever in the wrong place.
  *
  * `@laravel/passkeys/vue` IS A PEER DEPENDENCY, not a bundled one. It is the
- * browser half of Fortify's own WebAuthn support, and PanelKit does not require
+ * browser half of Fortify's own WebAuthn support, and Alxtexhpanel does not require
  * Fortify - an installation on a different auth stack should not be made to
  * carry it.
  *

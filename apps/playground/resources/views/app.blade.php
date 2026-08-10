@@ -39,7 +39,7 @@
             (function () {
                 try {
                     var server = window.__panelAppearance;
-                    var raw = localStorage.getItem('panelkit.appearance.vars');
+                    var raw = localStorage.getItem('alxtexhpanel.appearance.vars');
 
                     if (raw) {
                         var cached = JSON.parse(raw);
@@ -136,7 +136,7 @@
             means the wrong icon is what somebody sees while the page loads,
             which is the moment they are looking at the tab strip.
         --}}
-        @php($panelFavicon = app(\PanelKit\Panel\PanelManager::class)->currentPanel()?->getFavicon())
+        @php($panelFavicon = app(\Alxtexh\Panel\PanelManager::class)->currentPanel()?->getFavicon())
 
         @if ($panelFavicon)
             <link rel="icon" href="{{ $panelFavicon }}">

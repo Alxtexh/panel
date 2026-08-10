@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use PanelKit\Panel\Support\ConfigDrift;
-use PanelKit\Panel\Support\PanelPages;
+use Alxtexh\Panel\Support\ConfigDrift;
+use Alxtexh\Panel\Support\PanelPages;
 
 /**
- * What to run after `composer update panelkit/panel`.
+ * What to run after `composer update alxtexh-enterprise/panel`.
  *
  * THIS DID NOT EXIST FOR THE FIRST TWO RELEASES, and 0.2.0 is what proved it had
  * to. That release added a routed permission matrix at `settings/Roles` - and
@@ -45,7 +45,7 @@ final class UpdateCommand extends Command
 
     public function handle(): int
     {
-        $this->components->info('Updating PanelKit');
+        $this->components->info('Updating Alxtexhpanel');
 
         $needsAttention = array_filter([
             $this->invalidateSchemaCache(),
@@ -150,9 +150,9 @@ final class UpdateCommand extends Command
      * Point the stylesheet's `@source` lines at the package's current name.
      *
      * THE ONE UPGRADE STEP NOBODY WOULD FIND, and it has now been needed twice.
-     * 0.8.0 merged `@panelkit/ui` and `@panelkit/inertia` into `@panelkit/panel`;
+     * 0.8.0 merged `@alxtexhpanel/ui` and `@alxtexhpanel/inertia` into `@alxtexh-enterprise/panel`;
      * 0.9.0 renamed that to `@alxtexh-enterprise/panel`, because a package on
-     * GitHub Packages must be scoped to an organisation you own and `panelkit`
+     * GitHub Packages must be scoped to an organisation you own and `alxtexhpanel`
      * was taken.
      *
      * A RENAME IS NORMALLY A FIND-AND-REPLACE THE BUILD TELLS YOU ABOUT. These
@@ -183,9 +183,9 @@ final class UpdateCommand extends Command
         $current = (string) file_get_contents($target);
 
         $moved = [
-            '@panelkit/ui/dist' => '@alxtexh-enterprise/panel/dist',
-            '@panelkit/inertia/src' => '@alxtexh-enterprise/panel/inertia',
-            '@panelkit/panel' => '@alxtexh-enterprise/panel',
+            '@alxtexhpanel/ui/dist' => '@alxtexh-enterprise/panel/dist',
+            '@alxtexhpanel/inertia/src' => '@alxtexh-enterprise/panel/inertia',
+            '@alxtexh-enterprise/panel' => '@alxtexh-enterprise/panel',
         ];
 
         $updated = str_replace(array_keys($moved), array_values($moved), $current);

@@ -9,9 +9,9 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\TenantContext;
 use Tests\TestCase;
 
 /**
@@ -149,7 +149,7 @@ final class ClientPanelIsolationTest extends TestCase
     /**
      * The resources this portal serves, and only this portal's.
      *
-     * @return array<string, class-string<\PanelKit\Panel\Resources\Resource>>
+     * @return array<string, class-string<\Alxtexh\Panel\Resources\Resource>>
      */
     private function resources(): array
     {

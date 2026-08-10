@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
-use PanelKit\Panel\Auth\OneTimeCredential;
+use Alxtexh\Panel\Auth\OneTimeCredential;
 use Tests\TestCase;
 
 /**
@@ -43,7 +43,7 @@ final class MagicLinkAndOtpTest extends TestCase
         Mail::fake();
 
         $this->tenant = Tenant::create(['name' => 'Acme', 'slug' => 'acme']);
-        $this->tenant->domains()->create(['domain' => 'acme.panelkit.test']);
+        $this->tenant->domains()->create(['domain' => 'acme.alxtexhpanel.test']);
 
         $this->user = User::factory()->create([
             'tenant_id' => $this->tenant->id,

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# PanelKit local environment bootstrap — the irreducible minimum.
+# Alxtexhpanel local environment bootstrap — the irreducible minimum.
 #
 # Installs only what cannot be deferred: PHP 8.4, Composer 2, Node 22 LTS.
 # No database engine, no performance tuning — both are deferred decisions and

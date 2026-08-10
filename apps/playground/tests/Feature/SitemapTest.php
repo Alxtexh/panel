@@ -9,8 +9,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use PanelKit\Panel\Pages\SitemapPage;
-use PanelKit\Panel\Support\Sitemap;
+use Alxtexh\Panel\Pages\SitemapPage;
+use Alxtexh\Panel\Support\Sitemap;
 use Tests\TestCase;
 
 /**

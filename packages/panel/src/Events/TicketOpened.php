@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Events;
+namespace Alxtexh\Panel\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
-use PanelKit\Panel\Models\Ticket;
+use Alxtexh\Panel\Models\Ticket;
 
 /**
  * Somebody opened a ticket, and the row exists.

@@ -23,7 +23,7 @@ defineOptions({ inheritAttrs: false })
  * be ignored.
  *
  * THE CONTENT IS THE APPLICATION'S. This renders whatever `panel.changelog`
- * declares - a framework shipping its own version history would put PanelKit's
+ * declares - a framework shipping its own version history would put Alxtexhpanel's
  * releases on somebody else's operations screen.
  */
 import { Head } from '@inertiajs/vue3'

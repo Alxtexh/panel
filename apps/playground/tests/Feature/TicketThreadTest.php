@@ -7,8 +7,8 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Models\TicketReply;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\Models\TicketReply;
 use Tests\TestCase;
 
 /**

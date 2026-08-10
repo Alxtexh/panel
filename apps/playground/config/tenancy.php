@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Tenant;
-use PanelKit\Panel\Tenancy\ConditionalDatabaseBootstrapper;
-use PanelKit\Panel\Tenancy\PrefixCacheBootstrapper;
+use Alxtexh\Panel\Tenancy\ConditionalDatabaseBootstrapper;
+use Alxtexh\Panel\Tenancy\PrefixCacheBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
 use Stancl\Tenancy\Database\Models\Domain;
@@ -40,14 +40,14 @@ return [
          * DatabaseTenancyBootstrapper is DELIBERATELY OFF.
          *
          * This panel runs single-database tenancy: one database, isolated by a
-         * `tenant_id` column and PanelKit's global scope. That bootstrapper is
+         * `tenant_id` column and Alxtexhpanel's global scope. That bootstrapper is
          * for the other mode - it switches the connection to a per-tenant
          * database, which single-database tenancy never creates.
          *
          * stancl ships it enabled because multi-database is what most people
          * install the package for, so this is the one line to change on the way
          * in. Leaving it on produces `Database tenant42 does not exist` on the
-         * first request, which says nothing about the actual mistake; PanelKit
+         * first request, which says nothing about the actual mistake; Alxtexhpanel
          * now detects the contradiction and says so in as many words.
          *
          * Switching this panel to multi-database means re-enabling this line AND
@@ -60,7 +60,7 @@ return [
          * bootstrapper, which is why it stays commented out.
          */
         /*
-         * HYBRID: PanelKit's subclass, not stancl's own.
+         * HYBRID: Alxtexhpanel's subclass, not stancl's own.
          *
          * stancl's switches the connection for EVERY tenant, so enabling it in
          * an installation where only some tenants have a database throws
@@ -96,7 +96,7 @@ return [
          * app whose tenants upload freely to a shared disk. It is the wrong one
          * here for two reasons:
          *
-         *   PanelKit already prefixes every stored file with `tenants/{key}/`,
+         *   Alxtexhpanel already prefixes every stored file with `tenants/{key}/`,
          *   and that prefix is not decoration - `FileStore::belongsToCurrentTenant()`
          *   checks it before serving anything. Enabling this bootstrapper adds a
          *   second, redundant layer of the same isolation.

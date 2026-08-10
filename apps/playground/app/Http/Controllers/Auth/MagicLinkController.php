@@ -11,8 +11,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
-use PanelKit\Panel\Auth\OneTimeCredential;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Auth\OneTimeCredential;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * Passwordless sign-in by emailed link.

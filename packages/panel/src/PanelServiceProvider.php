@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel;
+namespace Alxtexh\Panel;
 
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Middleware\Authenticate;

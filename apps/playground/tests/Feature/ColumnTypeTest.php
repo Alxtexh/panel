@@ -7,8 +7,8 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Tables\Columns\CheckboxColumn;
-use PanelKit\Panel\Tables\Columns\ColourColumn;
+use Alxtexh\Panel\Tables\Columns\CheckboxColumn;
+use Alxtexh\Panel\Tables\Columns\ColourColumn;
 use Tests\TestCase;
 
 /**

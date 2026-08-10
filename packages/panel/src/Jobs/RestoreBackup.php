@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Jobs;
+namespace Alxtexh\Panel\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,10 +11,10 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Support\BackupArchive;
-use PanelKit\Panel\Support\BackupSettings;
-use PanelKit\Panel\Support\DatabaseRestorer;
-use PanelKit\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\BackupArchive;
+use Alxtexh\Panel\Support\BackupSettings;
+use Alxtexh\Panel\Support\DatabaseRestorer;
+use Alxtexh\Panel\Support\InstallationState;
 
 /**
  * Put a snapshot's DATABASE back.

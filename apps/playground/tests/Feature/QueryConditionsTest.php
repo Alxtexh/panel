@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
-use PanelKit\Panel\Tables\QueryConditions;
+use Alxtexh\Panel\Tables\QueryConditions;
 use Tests\TestCase;
 
 /**

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Knowledge;
 
-use PanelKit\Panel\Knowledge\Document;
-use PanelKit\Panel\Knowledge\KnowledgeSource;
-use PanelKit\Panel\Support\HelpCentre;
+use Alxtexh\Panel\Knowledge\Document;
+use Alxtexh\Panel\Knowledge\KnowledgeSource;
+use Alxtexh\Panel\Support\HelpCentre;
 
 /**
  * The help centre, made retrievable.

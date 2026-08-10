@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Support\Ability;
+use Alxtexh\Panel\Support\Ability;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;

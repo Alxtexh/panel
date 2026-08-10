@@ -4,7 +4,7 @@
  *
  * THE REFERENCE APP'S VERSION WAS A MANIFESTO, and that is why it could not be
  * packaged as it stood: two hardcoded arrays of principles and capabilities
- * describing PanelKit, naming subscribers and routers. An About screen that
+ * describing Alxtexhpanel, naming subscribers and routers. An About screen that
  * tells an operator about the framework their employer bought tells them
  * nothing; one that tells a customer about it is worse.
  *

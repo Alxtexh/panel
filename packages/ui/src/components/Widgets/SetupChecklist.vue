@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * The dashboard checklist. Purely presentational - see `SetupChecklist` in
- * `panelkit/panel` (packages/panel/src/Support/SetupChecklist.php) for where
+ * `alxtexh-enterprise/panel` (packages/panel/src/Support/SetupChecklist.php) for where
  * `items` actually comes from and why "done" can un-happen.
  *
  * ONE ITEM IS HIGHLIGHTED, THE REST ARE A LIST. A page with six equally-loud

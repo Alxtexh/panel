@@ -8,10 +8,10 @@ use App\Models\AuditEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use PanelKit\Panel\Audit\AuditRecorder;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Audit\AuditRecorder;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Abilities;
 
 /**
  * The history of one record.

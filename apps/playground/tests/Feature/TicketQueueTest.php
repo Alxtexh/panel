@@ -12,11 +12,11 @@ use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Models\TicketReply;
-use PanelKit\Panel\Support\TicketStats;
-use PanelKit\Panel\Ticketing\MyTicketResource;
-use PanelKit\Panel\Ticketing\TicketResource;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\Models\TicketReply;
+use Alxtexh\Panel\Support\TicketStats;
+use Alxtexh\Panel\Ticketing\MyTicketResource;
+use Alxtexh\Panel\Ticketing\TicketResource;
 use Psr\Http\Message\RequestInterface;
 use Tests\TestCase;
 

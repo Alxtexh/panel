@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Commands\SearchIndexCommand;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Commands\SearchIndexCommand;
+use Alxtexh\Panel\PanelManager;
 use ReflectionMethod;
 use Tests\TestCase;
 

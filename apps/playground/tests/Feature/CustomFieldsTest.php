@@ -10,8 +10,8 @@ use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\CustomFields\CustomFieldStorage;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\CustomFields\CustomFieldStorage;
 use Tests\TestCase;
 
 /**

@@ -12,8 +12,8 @@ use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**
@@ -326,7 +326,7 @@ final class RecordWriteTest extends TestCase
      */
     public function test_a_resource_without_a_policy_denies(): void
     {
-        $resource = new class extends \PanelKit\Panel\Resources\Resource
+        $resource = new class extends \Alxtexh\Panel\Resources\Resource
         {
             /*
              * A MODEL WITH NO POLICY, and finding one that stays that way is

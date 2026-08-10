@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Closure;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * Run a write inside a transaction, if the panel asked for one.

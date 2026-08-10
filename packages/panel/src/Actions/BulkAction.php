@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Actions;
+namespace Alxtexh\Panel\Actions;
 
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
-use PanelKit\Panel\Forms\Form;
+use Alxtexh\Panel\Forms\Form;
 
 /**
  * A mutation applied to a selection.

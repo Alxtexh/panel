@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use PanelKit\Panel\Live\LiveConfig;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Live\LiveConfig;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * What this installation is actually running.

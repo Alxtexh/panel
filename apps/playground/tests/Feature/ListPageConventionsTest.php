@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
 use Tests\TestCase;
 
 /**
@@ -24,7 +24,7 @@ use Tests\TestCase;
  */
 final class ListPageConventionsTest extends TestCase
 {
-    /** @return list<class-string<\PanelKit\Panel\Resources\Resource>> */
+    /** @return list<class-string<\Alxtexh\Panel\Resources\Resource>> */
     private function everyResource(): array
     {
         $manager = app(PanelManager::class);

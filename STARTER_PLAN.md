@@ -31,7 +31,7 @@ So the starter may not need a hand-authored application skeleton at all:
 
 ```bash
 laravel new myapp && cd myapp
-composer require panelkit/panel
+composer require alxtexh-enterprise/panel
 php artisan panel:install --auth
 ```
 
@@ -56,7 +56,7 @@ its output was already present.
 laravel new starter-probe
 cd starter-probe
 composer config repositories.panel path ../Panel/packages/panel
-composer require panelkit/panel:@dev
+composer require alxtexh-enterprise/panel:@dev
 php artisan panel:install --auth
 php artisan migrate
 php artisan serve
@@ -119,7 +119,7 @@ all**. It sits beside the playground and shares the packages.
 - **`public/build/` is committed, `vendor/` is not.** Measured, not argued:
   cloning with `vendor/` fails on Windows at `MAX_PATH` and aborts partway,
   leaving a tree that reads as a corrupt repository.
-- **`vendor/panelkit` is ignored.** It is a Windows junction; git follows it and
+- **`vendor/alxtexhpanel` is ignored.** It is a Windows junction; git follows it and
   commits 341 duplicate files, which shadows `packages/panel` in every clone.
 - **`primitives/` is lowercase.** `Primitives/` and `primitives/` were both
   tracked; on Linux that is two directories and half the imports resolve to a
@@ -196,7 +196,7 @@ git tag v0.9.7 && git push --tags
 
 Everything is `@dev` today, which means every consumer's `composer update`
 silently moves them to the latest commit - including a broken one. A tag lets
-them pin `"panelkit/panel": "^0.9"` through a `repositories` block, which is
+them pin `"alxtexh-enterprise/panel": "^0.9"` through a `repositories` block, which is
 versioning without a split.
 
 Packagist costs nine-ish mirrored repos, a split script and a tag per release

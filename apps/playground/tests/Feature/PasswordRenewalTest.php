@@ -8,7 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use PanelKit\Panel\Auth\PasswordPolicy;
+use Alxtexh\Panel\Auth\PasswordPolicy;
 use Tests\TestCase;
 
 /**

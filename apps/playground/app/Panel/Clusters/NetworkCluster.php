@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Panel\Clusters;
 
-use PanelKit\Panel\Resources\Cluster;
+use Alxtexh\Panel\Resources\Cluster;
 
 /**
  * The network, as ONE word in the sidebar - roadmap 4.1.

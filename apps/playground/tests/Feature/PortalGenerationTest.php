@@ -11,10 +11,10 @@ use App\Panel\Reseller\Resources\PlanResource;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Http\Middleware\UsePanel;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Http\Middleware\UsePanel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Table;
 use Tests\TestCase;
 
 /**
@@ -570,7 +570,7 @@ final class PortalGenerationTest extends TestCase
  * which PHPUnit reports as "premature end of process" rather than as a failing
  * test, and sends whoever reads it looking at the wrong thing entirely.
  */
-final class CollidingClientResource extends \PanelKit\Panel\Resources\Resource
+final class CollidingClientResource extends \Alxtexh\Panel\Resources\Resource
 {
     protected static string $model = Client::class;
 

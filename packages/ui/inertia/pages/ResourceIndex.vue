@@ -207,7 +207,7 @@ defineOptions({
 const t = useListTable(props.schema.routes.index, props)
 
 // Keyed by resource, so hiding a column on Clients does not hide it on Routers.
-const { hidden, setHidden } = useColumnVisibility(`panelkit.${props.schema.key}.columns`)
+const { hidden, setHidden } = useColumnVisibility(`alxtexhpanel.${props.schema.key}.columns`)
 
 /** The column panel stages its choices and applies them together. */
 function applyColumns(keys: string[]) {

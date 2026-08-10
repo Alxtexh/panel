@@ -234,7 +234,7 @@ final class Guide
                 'title' => 'What this is',
                 'summary' => 'An admin panel framework for Laravel, and the shape of the thing you build with it.',
                 'body' => [
-                    'PanelKit builds administration screens from PHP classes. You declare a resource - a table, a form, some actions - and the panel produces the list, the record pages, the routes, the permissions and the navigation entry. The developer experience is deliberately close to Filament; the transport is not. Every screen is an Inertia page rendered by Vue, so a filter, a sort and a page change are one JSON request rather than a full round trip.',
+                    'Alxtexhpanel builds administration screens from PHP classes. You declare a resource - a table, a form, some actions - and the panel produces the list, the record pages, the routes, the permissions and the navigation entry. The developer experience is deliberately close to Filament; the transport is not. Every screen is an Inertia page rendered by Vue, so a filter, a sort and a page change are one JSON request rather than a full round trip.',
                     'The unit of work is a RESOURCE: one class per thing you administer. Everything else in this guide hangs off that - columns and filters describe its list, fields describe its form, actions describe what can be done to it, and policies decide who may do any of it.',
                     'The unit of deployment is a PANEL: a portal with its own path, guard and tenancy context. One application can serve several - an operator panel at the root, a platform panel at /platform, a reseller panel at /reseller - and a resource belongs to exactly one of them.',
                     'What this guide is for is the order. Which command comes first, which decisions are hard to change later, and which of the defaults are load-bearing rather than arbitrary.',
@@ -245,7 +245,7 @@ final class Guide
                 'title' => 'Installation',
                 'summary' => 'What has to exist before the first panel does.',
                 'body' => [
-                    'PanelKit needs PHP 8.4, Laravel 12 or 13, and Inertia with Vue 3. Two packages: `panelkit/panel` on the server, and `@alxtexh-enterprise/panel` on npm for the screens it renders and the table and form underneath them. Both are required - the server package alone answers requests with page names nothing can resolve.',
+                    'Alxtexhpanel needs PHP 8.4, Laravel 12 or 13, and Inertia with Vue 3. Two packages: `alxtexh-enterprise/panel` on the server, and `@alxtexh-enterprise/panel` on npm for the screens it renders and the table and form underneath them. Both are required - the server package alone answers requests with page names nothing can resolve.',
                     'The install command publishes the config, registers the service provider if package discovery has not, writes one page file per screen into `resources/js/pages`, and prints what it did not do. Those page files exist because Inertia resolves a page name by globbing that directory, so a screen living in `node_modules` is one it cannot find. Each is a single line, and each is where you replace that screen with your own.',
                     'Read the install output: it names the decisions the package refuses to make for you, chiefly the tenancy mode.',
                     'Tenancy is the one thing to settle before writing a resource. `column` shares one database and scopes by a tenant column; `database` gives each tenant their own and the panel adds no column at all; `hybrid` allows both at once. Changing modes later means changing every query the panel builds, so this is a decision worth ten minutes now.',
@@ -253,7 +253,7 @@ final class Guide
                 'blocks' => [
                     [
                         'kind' => 'shell',
-                        'code' => "composer require panelkit/panel\nnpm install @alxtexh-enterprise/panel\n\n# Publishes config, and writes the five page files\nphp artisan panel:install\n\n# What it publishes, and what it deliberately leaves to you\nphp artisan panel:doctor",
+                        'code' => "composer require alxtexh-enterprise/panel\nnpm install @alxtexh-enterprise/panel\n\n# Publishes config, and writes the five page files\nphp artisan panel:install\n\n# What it publishes, and what it deliberately leaves to you\nphp artisan panel:doctor",
                     ],
                     [
                         'kind' => 'php',
@@ -866,7 +866,7 @@ php artisan panel:sitemap-generate          # write sitemap.xml from every regis
         $out = [
             '# '.config('app.name').' — panel documentation',
             '',
-            '> An administration panel built with PanelKit. Screens are declared as PHP '
+            '> An administration panel built with Alxtexhpanel. Screens are declared as PHP '
             .'classes; the framework generates routes, permissions and navigation.',
             '',
             '## Start here',

@@ -10,13 +10,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Jobs\RestoreBackup;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\BackupArchive;
-use PanelKit\Panel\Support\BackupDestinationProbe;
-use PanelKit\Panel\Support\BackupSettings;
-use PanelKit\Panel\Support\InstallationState;
-use PanelKit\Panel\Support\PanelSettings;
+use Alxtexh\Panel\Jobs\RestoreBackup;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\BackupArchive;
+use Alxtexh\Panel\Support\BackupDestinationProbe;
+use Alxtexh\Panel\Support\BackupSettings;
+use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\PanelSettings;
 use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
 use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
 use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays;
@@ -828,7 +828,7 @@ final class BackupManagementTest extends TestCase
 
         $this->assertSame(
             [],
-            Storage::disk('local')->allFiles('.panelkit-probe'),
+            Storage::disk('local')->allFiles('.alxtexhpanel-probe'),
             'The probe left its test file on the disk.',
         );
     }

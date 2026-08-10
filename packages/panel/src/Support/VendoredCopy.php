@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -13,8 +13,8 @@ use RecursiveIteratorIterator;
  * REPORTED FROM A REAL PORT. A `path` repository is how you develop against a
  * package you also maintain, and composer resolves it one of two ways:
  *
- *   symlink   vendor/panelkit/panel POINTS AT your source. Edit, reload, done.
- *   copy      vendor/panelkit/panel is a SNAPSHOT taken at install time.
+ *   symlink   vendor/alxtexh-enterprise/panel POINTS AT your source. Edit, reload, done.
+ *   copy      vendor/alxtexh-enterprise/panel is a SNAPSHOT taken at install time.
  *
  * Which one you get is not a decision most people make. `"symlink": true` is
  * the default where symlinks work, and composer falls back to copying WITHOUT
@@ -30,7 +30,7 @@ use RecursiveIteratorIterator;
  * `panel:update` writes page files FROM the vendored copy, so an upgrade
  * appears to run and installs the previous version's screens.
  *
- * `composer update panelkit/panel` refreshes the snapshot. There is nothing to
+ * `composer update alxtexh-enterprise/panel` refreshes the snapshot. There is nothing to
  * fix in the package - the point of this check is that the failure names
  * itself, once, rather than costing somebody an afternoon.
  */

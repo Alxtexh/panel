@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace App\Panel\Superadmin\Resources;
 
-use PanelKit\Panel\Forms\Fields\CheckboxField;
-use PanelKit\Panel\Forms\Fields\NumberField;
-use PanelKit\Panel\Forms\Fields\SelectField;
-use PanelKit\Panel\Forms\Fields\TextareaField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Models\ContentEntry;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Tables\Columns\BadgeColumn;
-use PanelKit\Panel\Tables\Columns\DateColumn;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Filters\SelectFilter;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Forms\Fields\CheckboxField;
+use Alxtexh\Panel\Forms\Fields\NumberField;
+use Alxtexh\Panel\Forms\Fields\SelectField;
+use Alxtexh\Panel\Forms\Fields\TextareaField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Models\ContentEntry;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Columns\BadgeColumn;
+use Alxtexh\Panel\Tables\Columns\DateColumn;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Filters\SelectFilter;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * The editor for Help, FAQ and What's-new.

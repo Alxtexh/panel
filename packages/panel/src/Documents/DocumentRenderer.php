@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Documents;
+namespace Alxtexh\Panel\Documents;
 
 /**
  * Turns a template and a record into the document the client draws.

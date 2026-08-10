@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Commands;
+namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use PanelKit\Panel\Jobs\DeliverScheduledReport;
-use PanelKit\Panel\Reports\ScheduledReport;
+use Alxtexh\Panel\Jobs\DeliverScheduledReport;
+use Alxtexh\Panel\Reports\ScheduledReport;
 
 /**
  * Dispatch whichever reports are due this minute.

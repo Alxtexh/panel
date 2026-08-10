@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use PanelKit\Panel\Alerts\Announcement;
-use PanelKit\Panel\Tables\Filters\BooleanFilter;
-use PanelKit\Panel\Tables\Filters\DateRangeFilter;
-use PanelKit\Panel\Tables\Filters\MultiSelectFilter;
-use PanelKit\Panel\Tables\Filters\QueryBuilderFilter;
-use PanelKit\Panel\Tables\Filters\SelectFilter;
-use PanelKit\Panel\Tables\Filters\TrashedFilter;
-use PanelKit\Panel\Tables\ListQuery;
+use Alxtexh\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Tables\Filters\BooleanFilter;
+use Alxtexh\Panel\Tables\Filters\DateRangeFilter;
+use Alxtexh\Panel\Tables\Filters\MultiSelectFilter;
+use Alxtexh\Panel\Tables\Filters\QueryBuilderFilter;
+use Alxtexh\Panel\Tables\Filters\SelectFilter;
+use Alxtexh\Panel\Tables\Filters\TrashedFilter;
+use Alxtexh\Panel\Tables\ListQuery;
 use Tests\TestCase;
 
 /**

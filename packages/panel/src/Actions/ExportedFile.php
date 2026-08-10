@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Actions;
+namespace Alxtexh\Panel\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * The durable half of an export: who it belongs to and which file it is.

@@ -6,8 +6,8 @@ use App\Knowledge\HelpSource;
 use App\Models\SavedView;
 use App\Models\Tenant;
 use App\Panel\Singulars\BillingSettingsResource;
-use PanelKit\Panel\Alerts\AnnouncementsPlugin;
-use PanelKit\Panel\Ticketing\TicketingPlugin;
+use Alxtexh\Panel\Alerts\AnnouncementsPlugin;
+use Alxtexh\Panel\Ticketing\TicketingPlugin;
 
 return [
 
@@ -87,7 +87,7 @@ return [
          */
         'route' => true,
         'design' => env('PANEL_LANDING', 'aurora'),
-        'brand' => 'PanelKit',
+        'brand' => 'Alxtexhpanel',
         'tagline' => 'Built with Laravel, Inertia and Vue.',
         'footer_links' => [
             ['label' => 'Help', 'href' => '/help'],
@@ -281,7 +281,7 @@ return [
     |              central database and is scoped by column. This is the shape a
     |              real SaaS ends up in - most tenants share, and the few large
     |              or contractually-isolated ones do not - and it requires
-    |              PanelKit's ConditionalDatabaseBootstrapper, because stancl's
+    |              Alxtexhpanel's ConditionalDatabaseBootstrapper, because stancl's
     |              own switches the connection for every tenant unconditionally.
     |
     |   'none'     Single-tenant application.
@@ -735,7 +735,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | THE PACKAGE SHIPS THE SCREEN; THE CONTENT IS THIS APPLICATION'S. A
-    | framework that shipped its own release notes would put PanelKit's version
+    | framework that shipped its own release notes would put Alxtexhpanel's version
     | history on somebody else's operations screen - true of the framework and
     | meaningless to the person reading it.
     |

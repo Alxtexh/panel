@@ -6,12 +6,12 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Landing\LandingPresets;
+use Alxtexh\Panel\Landing\LandingPresets;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
- * Part G.9: PanelKit ships SEVERAL landing designs, and every one of them
+ * Part G.9: Alxtexhpanel ships SEVERAL landing designs, and every one of them
  * has to actually render.
  *
  * THE FRONT DOOR IS THE ONE SCREEN NOBODY IS SIGNED IN FOR, so a landing

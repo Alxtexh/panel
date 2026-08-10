@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Knowledge;
 
 use App\Support\Guide;
-use PanelKit\Panel\Knowledge\Document;
-use PanelKit\Panel\Knowledge\KnowledgeSource;
+use Alxtexh\Panel\Knowledge\Document;
+use Alxtexh\Panel\Knowledge\KnowledgeSource;
 
 /**
  * The build guide, made retrievable - roadmap 5.5.

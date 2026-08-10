@@ -8,7 +8,7 @@ declare(strict_types=1);
 |--------------------------------------------------------------------------
 |
 | THIS FILE DOES NOT SHIP. It configures `apps/playground`, which exists to
-| exercise the framework - none of it is read by `panelkit/panel`, and an
+| exercise the framework - none of it is read by `alxtexh-enterprise/panel`, and an
 | installation of the package never receives it.
 |
 */

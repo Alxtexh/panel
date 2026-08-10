@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Alerts;
+namespace Alxtexh\Panel\Alerts;
 
 use Illuminate\Database\Eloquent\Model;
 

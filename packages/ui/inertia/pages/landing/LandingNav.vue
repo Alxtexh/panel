@@ -38,7 +38,7 @@ withDefaults(
         previews?: string[]
     }>(),
     {
-        brand: 'PanelKit',
+        brand: 'Alxtexhpanel',
         loginHref: '/login',
         registerHref: '/register',
         dashboardHref: '/dashboard',

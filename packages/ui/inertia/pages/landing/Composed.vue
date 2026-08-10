@@ -14,7 +14,7 @@ defineOptions({ inheritAttrs: false })
  *
  * MOVED FROM THE REFERENCE APPLICATION. It, the nav, the footer, the three
  * designs, the controller and the editor all lived there - so
- * `composer require panelkit/panel` gave you `PkLandingSections`, a component
+ * `composer require alxtexh-enterprise/panel` gave you `PkLandingSections`, a component
  * that draws landing sections, and nothing at all that used it. The README
  * described a front page you could edit from the panel; exactly one
  * installation in the world could.
@@ -62,7 +62,7 @@ withDefaults(
     }>(),
     {
         title: undefined,
-        brand: 'PanelKit',
+        brand: 'Alxtexhpanel',
         tagline: 'Built with Laravel, Inertia and Vue.',
         loginHref: '/login',
         registerHref: '/register',

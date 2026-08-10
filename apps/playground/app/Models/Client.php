@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use PanelKit\Panel\Audit\Auditable;
-use PanelKit\Panel\Models\Scopes\TenantScope;
+use Alxtexh\Panel\Audit\Auditable;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
 
 #[ScopedBy(TenantScope::class)]
 final class Client extends Model

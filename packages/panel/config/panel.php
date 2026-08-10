@@ -6,9 +6,9 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
-use PanelKit\Panel\Alerts\AnnouncementsPlugin;
-use PanelKit\Panel\Knowledge\HashEmbedder;
-use PanelKit\Panel\Ticketing\TicketingPlugin;
+use Alxtexh\Panel\Alerts\AnnouncementsPlugin;
+use Alxtexh\Panel\Knowledge\HashEmbedder;
+use Alxtexh\Panel\Ticketing\TicketingPlugin;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return [
@@ -190,7 +190,7 @@ return [
     | The token and chat id live in `services.telegram`, and the panel's own
     | settings are applied over them at boot. Anything can then say
     |
-    |     PanelKit\Panel\Alerts\Telegram::send('Disk at 94% on db-01.');
+    |     Alxtexh\Panel\Alerts\Telegram::send('Disk at 94% on db-01.');
     |
     | EXCEPTIONS ARE OPT-IN AND OFF BY DEFAULT. A chat that receives every
     | unhandled exception from an application nobody has tuned yet is a chat
@@ -653,7 +653,7 @@ return [
     | Screens the package mounts for you
     |--------------------------------------------------------------------------
     |
-    | PanelKit routes the permission matrix by default, so an installation has a
+    | Alxtexhpanel routes the permission matrix by default, so an installation has a
     | working roles screen without writing a controller. Set this to false if you
     | mount `RoleController` yourself - two URLs rendering the same screen is how
     | a bookmark comes to disagree with a menu.

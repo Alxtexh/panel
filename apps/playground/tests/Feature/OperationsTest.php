@@ -8,11 +8,11 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
-use PanelKit\Panel\Jobs\RunBackupNow;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Support\InstallationState;
-use PanelKit\Panel\Support\LogReader;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Jobs\RunBackupNow;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\LogReader;
+use Alxtexh\Panel\Support\TenantContext;
 use Tests\TestCase;
 
 /**

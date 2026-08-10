@@ -8,7 +8,7 @@ use App\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Api\ApiToken;
+use Alxtexh\Panel\Api\ApiToken;
 use Tests\TestCase;
 
 /**

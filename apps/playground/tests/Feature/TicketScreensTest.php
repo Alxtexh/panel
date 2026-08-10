@@ -8,10 +8,10 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Abilities;
-use PanelKit\Panel\Ticketing\TicketingPlugin;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Abilities;
+use Alxtexh\Panel\Ticketing\TicketingPlugin;
 use RuntimeException;
 use Tests\TestCase;
 

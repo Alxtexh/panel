@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Auth;
+namespace Alxtexh\Panel\Auth;
 
 use Closure;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\TenantContext;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 

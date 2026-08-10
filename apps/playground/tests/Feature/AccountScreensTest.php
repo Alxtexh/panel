@@ -8,8 +8,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\Auth\Devices;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Auth\Devices;
+use Alxtexh\Panel\PanelManager;
 use Tests\TestCase;
 
 /**

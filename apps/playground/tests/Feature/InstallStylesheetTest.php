@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Console\View\Components\Factory;
 use Illuminate\Support\Facades\File;
-use PanelKit\Panel\Commands\InstallCommand;
+use Alxtexh\Panel\Commands\InstallCommand;
 use ReflectionMethod;
 use ReflectionProperty;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -282,7 +282,7 @@ final class InstallStylesheetTest extends TestCase
      */
     public function test_it_repoints_views_at_the_renamed_vite_entry(): void
     {
-        $view = resource_path('views/panelkit-install-fixture.blade.php');
+        $view = resource_path('views/alxtexhpanel-install-fixture.blade.php');
 
         File::put($view, "<head>@vite(['resources/css/app.css', 'resources/js/app.js'])</head>");
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use Illuminate\Support\Facades\Route;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\PanelManager;
 
 /**
  * Every screen in the application, derived from the router.

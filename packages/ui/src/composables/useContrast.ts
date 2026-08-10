@@ -1,5 +1,5 @@
 /**
- * WCAG 2 contrast, mirroring `PanelKit\Panel\Support\Contrast` exactly - the
+ * WCAG 2 contrast, mirroring `Alxtexh\Panel\Support\Contrast` exactly - the
  * PHP is the rule (roadmap 7.1's field-level `checkContrastAgainst`), this is
  * what lets `PkColourPicker` show the same number as the operator types,
  * before anything is submitted. Duplicated on purpose rather than shared:

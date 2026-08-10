@@ -12,15 +12,15 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Jobs\DeliverScheduledReport;
-use PanelKit\Panel\Jobs\ExportRecords;
-use PanelKit\Panel\Jobs\RestoreBackup;
-use PanelKit\Panel\Jobs\RunBackupNow;
-use PanelKit\Panel\Jobs\RunBulkAction;
-use PanelKit\Panel\Knowledge\KnowledgeBase;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Models\TicketReply;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Jobs\DeliverScheduledReport;
+use Alxtexh\Panel\Jobs\ExportRecords;
+use Alxtexh\Panel\Jobs\RestoreBackup;
+use Alxtexh\Panel\Jobs\RunBackupNow;
+use Alxtexh\Panel\Jobs\RunBulkAction;
+use Alxtexh\Panel\Knowledge\KnowledgeBase;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\Models\TicketReply;
+use Alxtexh\Panel\PanelManager;
 use Tests\TestCase;
 
 /**
@@ -294,7 +294,7 @@ final class DoctorTest extends TestCase
     {
         config([
             'broadcasting.default' => 'pusher',
-            'session.domain' => '.panelkit.test',
+            'session.domain' => '.alxtexhpanel.test',
         ]);
 
         $this->artisan('panel:doctor')

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\JsonSchema;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\JsonSchema;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * The OpenAPI description of the panel's own endpoints, generated from routes.

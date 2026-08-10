@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 /**
  * NOTHING THE PACKAGE RENDERS MAY ASSUME AN INDUSTRY.
  *
- * PanelKit is developed against an ISP billing reference application, which is
+ * Alxtexhpanel is developed against an ISP billing reference application, which is
  * the right way to build a framework - a demo under real load finds what a toy
  * cannot - and is also exactly how a framework acquires somebody else's
  * business. The leak is never architectural. It arrives as a placeholder.
@@ -20,7 +20,7 @@ import { describe, expect, it } from 'vitest'
  * WHAT THIS DOES NOT CHECK IS COMMENTS. Explaining a design decision with a
  * concrete example - "a subscriber edited daily makes this timeline long" - is
  * GOOD commentary, and flattening those into "a record" would cost real
- * meaning to buy nothing. A developer reading the source knows where PanelKit
+ * meaning to buy nothing. A developer reading the source knows where Alxtexhpanel
  * came from. A user filling in a form should not have to.
  *
  * So: rendered markup only, and the packaged screens only. The reference

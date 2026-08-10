@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use PanelKit\Panel\Tenancy\PrefixCacheBootstrapper;
+use Alxtexh\Panel\Tenancy\PrefixCacheBootstrapper;
 use Tests\TestCase;
 
 /**

@@ -6,10 +6,10 @@ namespace Tests\Feature;
 
 use App\Panel\Resources\ClientResource;
 use Illuminate\Support\Facades\Artisan;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Support\Discovery;
-use PanelKit\Panel\Support\PanelPages;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\Discovery;
+use Alxtexh\Panel\Support\PanelPages;
 use Tests\TestCase;
 
 /**

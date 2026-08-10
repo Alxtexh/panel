@@ -461,7 +461,7 @@ deferred prop exists, so the registry cannot bypass an ability.
    no menu to 1 — its own home, which has no menu entry only because a new
    panel has no resources yet, which the generator says out loud.
 7. **`AuthLayout` ignores the panel brand** — the sign-in wordmark reads
-   `PanelKit` on a portal whose brand is `PanelKit Superadmin`.
+   `Alxtexhpanel` on a portal whose brand is `Alxtexhpanel Superadmin`.
 
 Items 5 and 6 are the same question as 1: what is core, and what is opt-in.
 

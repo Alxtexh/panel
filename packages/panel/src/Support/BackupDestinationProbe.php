@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Support;
+namespace Alxtexh\Panel\Support;
 
 use Illuminate\Support\Facades\Storage;
 
@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\Storage;
 final class BackupDestinationProbe
 {
     /** Bytes written. Small on purpose - some destinations bill per request. */
-    private const CONTENTS = 'panelkit-destination-probe';
+    private const CONTENTS = 'alxtexhpanel-destination-probe';
 
     /**
      * @return array{ok: bool, disk: string, message: string, ms: int}
@@ -52,7 +52,7 @@ final class BackupDestinationProbe
          * delete each other's file and each conclude the destination is broken -
          * and the second one to look would be wrong.
          */
-        $path = '.panelkit-probe/'.bin2hex(random_bytes(8));
+        $path = '.alxtexhpanel-probe/'.bin2hex(random_bytes(8));
 
         $started = microtime(true);
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Files;
+namespace Alxtexh\Panel\Files;
 
 /**
  * The receipt for an accepted upload, before it belongs to a record.

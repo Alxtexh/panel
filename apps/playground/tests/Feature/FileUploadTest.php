@@ -10,7 +10,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use PanelKit\Panel\Files\FileStore;
+use Alxtexh\Panel\Files\FileStore;
 use Tests\TestCase;
 
 /**

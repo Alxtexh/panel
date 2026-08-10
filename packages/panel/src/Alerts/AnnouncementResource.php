@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Alerts;
+namespace Alxtexh\Panel\Alerts;
 
-use PanelKit\Panel\Forms\Fields\DateField;
-use PanelKit\Panel\Forms\Fields\RadioField;
-use PanelKit\Panel\Forms\Fields\TextareaField;
-use PanelKit\Panel\Forms\Fields\TextField;
-use PanelKit\Panel\Forms\Fields\ToggleField;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Schema\Section;
-use PanelKit\Panel\Tables\Columns\BadgeColumn;
-use PanelKit\Panel\Tables\Columns\DateColumn;
-use PanelKit\Panel\Tables\Columns\TextColumn;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Forms\Fields\DateField;
+use Alxtexh\Panel\Forms\Fields\RadioField;
+use Alxtexh\Panel\Forms\Fields\TextareaField;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Fields\ToggleField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Schema\Section;
+use Alxtexh\Panel\Tables\Columns\BadgeColumn;
+use Alxtexh\Panel\Tables\Columns\DateColumn;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * Where announcements are WRITTEN. They are read on the dashboard.

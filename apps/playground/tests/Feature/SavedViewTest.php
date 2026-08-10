@@ -9,7 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Tables\ViewState;
+use Alxtexh\Panel\Tables\ViewState;
 use Tests\TestCase;
 
 /**

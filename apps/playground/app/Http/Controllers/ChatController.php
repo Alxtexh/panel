@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Live\LiveConfig;
+use Alxtexh\Panel\Live\LiveConfig;
 
 /**
  * The chat screen.

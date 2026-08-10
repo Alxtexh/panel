@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Documents;
+namespace Alxtexh\Panel\Documents;
 
-use PanelKit\Panel\Schema\Renderable;
+use Alxtexh\Panel\Schema\Renderable;
 
 /**
  * One sort of document that leaves the system: an invoice, a receipt, a voucher.

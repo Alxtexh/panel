@@ -14,9 +14,9 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Validation\ValidationException;
-use PanelKit\Panel\Alerts\ReportsToTelegram;
-use PanelKit\Panel\Alerts\Telegram;
-use PanelKit\Panel\Support\PanelSettings;
+use Alxtexh\Panel\Alerts\ReportsToTelegram;
+use Alxtexh\Panel\Alerts\Telegram;
+use Alxtexh\Panel\Support\PanelSettings;
 use Psr\Http\Message\RequestInterface;
 use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
 use Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification;
@@ -101,7 +101,7 @@ final class TelegramAlertsTest extends TestCase
             return Create::promiseFor(
                 $respond ? $respond($request) : new Response(200, [], (string) json_encode([
                     'ok' => true,
-                    'result' => ['message_id' => 1, 'username' => 'panelkit_bot'],
+                    'result' => ['message_id' => 1, 'username' => 'alxtexhpanel_bot'],
                 ])),
             );
         });

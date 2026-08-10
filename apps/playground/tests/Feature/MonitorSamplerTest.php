@@ -9,8 +9,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-use PanelKit\Panel\Notifications\TelegramText;
-use PanelKit\Panel\Support\MonitorSampler;
+use Alxtexh\Panel\Notifications\TelegramText;
+use Alxtexh\Panel\Support\MonitorSampler;
 use Tests\TestCase;
 
 /**

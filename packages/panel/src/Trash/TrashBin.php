@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Trash;
+namespace Alxtexh\Panel\Trash;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Resources\Resource;
-use PanelKit\Panel\Support\PanelSettings;
-use PanelKit\Panel\Tables\Cursor;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\PanelSettings;
+use Alxtexh\Panel\Tables\Cursor;
 
 /**
  * Everything this person has deleted, across every resource, in one place.

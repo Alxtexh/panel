@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Abilities;
 
 /*
 | A TENANT-SCOPED PANEL WITH AN UNSCOPED BROADCAST CHANNEL IS A CROSS-TENANT

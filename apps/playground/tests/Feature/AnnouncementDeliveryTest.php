@@ -8,9 +8,9 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-use PanelKit\Panel\Alerts\Announcement;
-use PanelKit\Panel\Notifications\BellText;
-use PanelKit\Panel\Notifications\TelegramText;
+use Alxtexh\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Notifications\BellText;
+use Alxtexh\Panel\Notifications\TelegramText;
 use Tests\TestCase;
 
 /**

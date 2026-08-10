@@ -11,7 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Ai\Tools\Request;
-use PanelKit\Panel\Support\Abilities;
+use Alxtexh\Panel\Support\Abilities;
 use Tests\TestCase;
 
 /**

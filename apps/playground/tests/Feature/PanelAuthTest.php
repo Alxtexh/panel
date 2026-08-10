@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ViewErrorBag;
-use PanelKit\Panel\Http\Controllers\PanelAuthController;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Http\Controllers\PanelAuthController;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 use Tests\TestCase;
 
 /**

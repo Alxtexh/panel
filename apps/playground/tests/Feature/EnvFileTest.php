@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use PanelKit\Panel\Pages\EnvironmentPage;
-use PanelKit\Panel\Support\EnvFile;
+use Alxtexh\Panel\Pages\EnvironmentPage;
+use Alxtexh\Panel\Support\EnvFile;
 use Tests\TestCase;
 
 /**
@@ -32,7 +32,7 @@ final class EnvFileTest extends TestCase
     {
         parent::setUp();
 
-        $this->directory = sys_get_temp_dir().'/panelkit-env-'.bin2hex(random_bytes(4));
+        $this->directory = sys_get_temp_dir().'/alxtexhpanel-env-'.bin2hex(random_bytes(4));
         mkdir($this->directory);
 
         file_put_contents($this->directory.'/.env', <<<'ENV'

@@ -12,8 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
-use PanelKit\Panel\Auth\OneTimeCredential;
-use PanelKit\Panel\Support\TenantContext;
+use Alxtexh\Panel\Auth\OneTimeCredential;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * Resetting a password with a short numeric code instead of a link.

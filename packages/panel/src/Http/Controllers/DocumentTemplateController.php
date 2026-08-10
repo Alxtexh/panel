@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Controllers;
+namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -11,12 +11,12 @@ use Illuminate\Routing\Controller;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use PanelKit\Panel\Documents\DocumentKind;
-use PanelKit\Panel\Documents\DocumentKinds;
-use PanelKit\Panel\Documents\DocumentRenderer;
-use PanelKit\Panel\Documents\DocumentTemplate;
-use PanelKit\Panel\Forms\Form;
-use PanelKit\Panel\PanelManager;
+use Alxtexh\Panel\Documents\DocumentKind;
+use Alxtexh\Panel\Documents\DocumentKinds;
+use Alxtexh\Panel\Documents\DocumentRenderer;
+use Alxtexh\Panel\Documents\DocumentTemplate;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\PanelManager;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**

@@ -10,8 +10,8 @@ use App\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Forms\Fields\MultiSelectField;
-use PanelKit\Panel\Forms\Form;
+use Alxtexh\Panel\Forms\Fields\MultiSelectField;
+use Alxtexh\Panel\Forms\Form;
 use Tests\TestCase;
 
 /**

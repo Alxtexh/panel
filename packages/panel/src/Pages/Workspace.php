@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Pages;
+namespace Alxtexh\Panel\Pages;
 
 use Illuminate\Http\Request;
 use InvalidArgumentException;
-use PanelKit\Panel\Tables\ListResult;
-use PanelKit\Panel\Tables\Table;
+use Alxtexh\Panel\Tables\ListResult;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * One page, several independent tables, and the widgets that belong with them.

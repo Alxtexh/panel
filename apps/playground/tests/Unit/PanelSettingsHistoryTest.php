@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Support\PanelSettings;
+use Alxtexh\Panel\Support\PanelSettings;
 use Tests\TestCase;
 
 /**

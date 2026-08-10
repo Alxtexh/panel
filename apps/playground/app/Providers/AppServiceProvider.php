@@ -30,15 +30,15 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
-use PanelKit\Panel\CustomFields\CustomField;
-use PanelKit\Panel\Documents\DocumentBranding;
-use PanelKit\Panel\Documents\DocumentKinds;
-use PanelKit\Panel\Models\Ticket;
-use PanelKit\Panel\Support\Budgets;
-use PanelKit\Panel\Support\HelpCentre;
-use PanelKit\Panel\Support\SettingsIndex;
-use PanelKit\Panel\Support\TicketStats;
-use PanelKit\Panel\Trash\TrashBin;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\Documents\DocumentBranding;
+use Alxtexh\Panel\Documents\DocumentKinds;
+use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\Support\Budgets;
+use Alxtexh\Panel\Support\HelpCentre;
+use Alxtexh\Panel\Support\SettingsIndex;
+use Alxtexh\Panel\Support\TicketStats;
+use Alxtexh\Panel\Trash\TrashBin;
 
 class AppServiceProvider extends ServiceProvider
 {

@@ -11,7 +11,7 @@ use Laravel\Ai\Concerns\InteractsWithApprovals;
 use Laravel\Ai\Contracts\Approvable;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
-use PanelKit\Panel\Ai\PanelTool;
+use Alxtexh\Panel\Ai\PanelTool;
 use Stringable;
 
 /**

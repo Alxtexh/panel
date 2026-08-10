@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PanelKit\Panel\Http\Middleware;
+namespace Alxtexh\Panel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use PanelKit\Panel\Auth\PasswordPolicy;
+use Alxtexh\Panel\Auth\PasswordPolicy;
 use Symfony\Component\HttpFoundation\Response;
 
 /**

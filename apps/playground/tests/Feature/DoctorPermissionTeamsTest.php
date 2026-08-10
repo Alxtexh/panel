@@ -11,7 +11,7 @@ use Tests\TestCase;
 /**
  * Doctor notices the one permission setting that fails open.
  *
- * `teams => false` IS SPATIE'S DEFAULT and PanelKit's silent disaster. Nothing
+ * `teams => false` IS SPATIE'S DEFAULT and Alxtexhpanel's silent disaster. Nothing
  * throws, nothing is logged, and every screen looks correct - the permission
  * package simply stops filtering by the tenant column it was given, so a role
  * answers for every organisation at once. There is no request to find in a log

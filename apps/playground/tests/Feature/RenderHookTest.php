@@ -8,10 +8,10 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
-use PanelKit\Panel\Panel;
-use PanelKit\Panel\PanelManager;
-use PanelKit\Panel\Plugins\PluginContext;
-use PanelKit\Panel\Plugins\RenderHooks;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Plugins\PluginContext;
+use Alxtexh\Panel\Plugins\RenderHooks;
 use Tests\TestCase;
 
 /**

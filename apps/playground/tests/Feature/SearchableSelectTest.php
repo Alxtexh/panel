@@ -8,8 +8,8 @@ use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PanelKit\Panel\Forms\Fields\SelectField;
-use PanelKit\Panel\Forms\Rules\ExistsInScope;
+use Alxtexh\Panel\Forms\Fields\SelectField;
+use Alxtexh\Panel\Forms\Rules\ExistsInScope;
 use RuntimeException;
 use Tests\TestCase;
 
