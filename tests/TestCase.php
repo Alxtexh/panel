@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tests;
 
 use Alxtexh\Panel\PanelServiceProvider;
+use Alxtexh\Panel\Tests\Fixtures\Providers\FixturePanelProvider;
+use Alxtexh\Panel\Tests\Fixtures\Models\User;
+use Inertia\Inertia;
 use Illuminate\Contracts\Config\Repository;
 use Inertia\ServiceProvider as InertiaServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
@@ -48,6 +51,7 @@ abstract class TestCase extends BaseTestCase
             InertiaServiceProvider::class,
             PermissionServiceProvider::class,
             PanelServiceProvider::class,
+            FixturePanelProvider::class,
         ];
     }
 
@@ -74,7 +78,27 @@ abstract class TestCase extends BaseTestCase
             // that expects a `tenant_id` these fixtures do not carry.
             $config->set('panel.tenancy.mode', 'column');
             $config->set('panel.default', 'admin');
+
+            // The fixture User, not the app's - Testbench's default points at
+            // a model this package does not ship.
+            $config->set('auth.providers.users.model', User::class);
+            $config->set('session.driver', 'array');
+            $config->set('view.paths', [__DIR__.'/resources/views']);
         });
+    }
+
+    /**
+     * A ROOT VIEW, because every panel screen is an Inertia response.
+     *
+     * Without one `Inertia::render` throws about a missing `app` view, which
+     * reads as the panel being broken rather than as the host never having
+     * declared where to render into.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Inertia::setRootView('app');
     }
 
     protected function defineDatabaseMigrations(): void

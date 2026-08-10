@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tests\Fixtures\Resources;
 
 use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Table;
 use Alxtexh\Panel\Tests\Fixtures\Models\Post;
@@ -31,6 +32,13 @@ final class PostResource extends Resource
             ->columns([
                 TextColumn::make('title')->from('posts.title')->sortable()->searchable(),
                 TextColumn::make('status')->from('posts.status')->sortable(),
+                /*
+                 * SORTABLE BECAUSE IT IS THE DEFAULT SORT. `ListQuery` refuses
+                 * a default that is not in the sortable allowlist - loudly,
+                 * which is right: a silently ignored default sort is a list
+                 * whose order nobody can explain.
+                 */
+                DateColumn::make('created_at')->from('posts.created_at')->sortable()->withTime(),
             ])
             ->keyColumn('posts.id');
     }
