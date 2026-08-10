@@ -14,11 +14,17 @@ use RuntimeException;
 /**
  * How the panel decides which organisation a request belongs to.
  *
- * TESTED WITH `stancl/tenancy` ABSENT, which is the configuration almost every
- * consumer runs and the one the reference application cannot demonstrate: it
- * has stancl installed, so every assertion over there exercises the branch
- * where the package IS present. The fallback path - the one a plain
- * `composer require` produces - was reachable by nobody's tests.
+ * TESTED WITH STANCL NOT INITIALISED, which is the configuration almost every
+ * consumer runs. The package is now a dev dependency so the OTHER branch can be
+ * tested too - see `StanclTenancyTest`, which registers its provider - but this
+ * file deliberately does not register it, so the fallback runs exactly as it
+ * does on an installation that never installed stancl at all.
+ *
+ * THE DISTINCTION MATTERS AND IS ASSERTED BELOW: `TenantContext` checks whether
+ * the CONTAINER BINDING exists, not whether the class does. Installing the
+ * package must not by itself change how a tenant resolves - otherwise adding
+ * stancl for domain resolution alone would silently move an application onto a
+ * different code path.
  *
  * NULL IS A DENY SIGNAL, NEVER "ALL TENANTS", and that is the property the
  * whole isolation story rests on. A resolver that returned null meaning
@@ -71,19 +77,25 @@ final class TenantContextTest extends TestCase
     }
 
     /**
-     * WITH STANCL ABSENT, RESOLUTION FALLS BACK TO THE SIGNED-IN USER.
+     * WITH TENANCY NOT INITIALISED, RESOLUTION FALLS BACK TO THE SIGNED-IN USER.
      *
-     * `currentKey()` tries stancl first and the authenticated user second. The
-     * container binding stancl would register is simply not there, so the
-     * fallback is what every plain installation runs - and it has to work
-     * without the package being installed at all, not merely without it being
-     * initialised.
+     * `currentKey()` tries stancl first and the authenticated user second, so
+     * this is the path every installation takes on an ordinary panel request -
+     * including one that has stancl installed but has not initialised it for
+     * this request.
      */
-    public function test_the_tenant_resolves_from_the_signed_in_user_when_stancl_is_absent(): void
+    public function test_the_tenant_resolves_from_the_signed_in_user_when_stancl_is_not_initialised(): void
     {
+        /*
+         * THE BINDING, NOT THE CLASS. stancl is installed in this package's
+         * dev dependencies, so `class_exists` would be true - and if resolution
+         * keyed on that, every installation that added the package for domain
+         * resolution alone would silently switch code paths. It keys on the
+         * BINDING, which only exists once tenancy is initialised.
+         */
         $this->assertFalse(
             app()->bound('Stancl\Tenancy\Contracts\Tenant'),
-            'This assertion is only meaningful while stancl is not installed.',
+            'Tenancy was initialised, so this is not testing the fallback.',
         );
 
         $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
