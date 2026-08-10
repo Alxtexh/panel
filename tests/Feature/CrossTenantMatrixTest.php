@@ -187,9 +187,21 @@ final class CrossTenantMatrixTest extends TestCase
             // somebody else's record.
             $class = app(PanelManager::class)->resources()[$resource];
 
-            return $class::model()::withoutGlobalScopes()->whereKey($foreign->getKey())->exists()
+            $row = $class::model()::withoutGlobalScopes()->whereKey($foreign->getKey())->first();
+
+            /*
+             * NOT GONE **AND** NOT TRASHED. With soft deletes a refused delete
+             * that still ran leaves the row present - so `exists()` alone would
+             * pass while the record had been removed from every screen its
+             * owner can reach, which is the leak wearing a different shape.
+             */
+            if ($row === null) {
+                return "DELETE /{$resource}/{id} refused and deleted the row anyway.";
+            }
+
+            return ($row->deleted_at ?? null) === null
                 ? null
-                : "DELETE /{$resource}/{id} refused and deleted the row anyway.";
+                : "DELETE /{$resource}/{id} refused and soft-deleted the row anyway.";
         });
     }
 

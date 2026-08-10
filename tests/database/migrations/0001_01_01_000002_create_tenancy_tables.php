@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('status')->default('draft');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['tenant_id', 'title']);
         });

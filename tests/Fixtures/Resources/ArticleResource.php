@@ -6,6 +6,8 @@ namespace Alxtexh\Panel\Tests\Fixtures\Resources;
 
 use Alxtexh\Panel\Actions\BulkAction;
 use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Forms\Fields\TextField;
+use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
@@ -18,6 +20,24 @@ final class ArticleResource extends Resource
     protected static string $model = Article::class;
 
     protected static string $panel = 'admin';
+
+    /**
+     * A FORM, because without one the write endpoints answer 404.
+     *
+     * `RecordController::store` aborts when `formDefinition()->fields()` is
+     * empty - deliberately: a resource that declared no form has no create
+     * screen, so accepting a POST would be writing through a door the panel
+     * never drew. `tenant_id` is absent on purpose; it comes from request
+     * context, and a field for it would be a way to file into another
+     * organisation.
+     */
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            TextField::make('title')->required(),
+            TextField::make('status'),
+        ]);
+    }
 
     public static function table(Table $table): Table
     {
