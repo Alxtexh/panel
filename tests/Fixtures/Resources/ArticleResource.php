@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Tests\Fixtures\Resources;
 
 use Alxtexh\Panel\Actions\BulkAction;
 use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Forms\Fields\FileUploadField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Resources\Resource;
@@ -38,6 +39,14 @@ final class ArticleResource extends Resource
         return $form->schema([
             TextField::make('title')->required(),
             TextField::make('status'),
+            /*
+             * AN UPLOAD FIELD, so the upload endpoints have a declared target.
+             * `accept()` is the allowlist those endpoints check a filename
+             * against - without a declared field there is nothing to refuse
+             * an undeclared one BY, and the refusal is the property worth
+             * testing.
+             */
+            FileUploadField::make('attachment')->accept(['pdf', 'txt'])->maxKilobytes(64),
         ]);
     }
 
