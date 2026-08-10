@@ -42,21 +42,9 @@ final class AnnouncementsPlugin extends Plugin
         return 'alxtexhpanel/announcements';
     }
 
-    /**
-     * OFF UNLESS ASKED FOR - a check `TicketingPlugin` has and this one did
-     * not, despite sitting in the same default `panel.plugins` list and
-     * looking equally gated. The plugin is registered by DEFAULT, so every
-     * fresh install boots with it present, and "was it registered" is not
-     * the same question as "is it on": this used to check only which panel
-     * is the default, which is true for every fresh install's admin panel -
-     * so the resource, its routes and its API endpoint were live with no
-     * config touched at all. Found by installing into a genuinely bare app
-     * and reading `route:list`, not by reading this file.
-     */
     public function appliesTo(Panel $panel): bool
     {
-        return config('panel.announcements.enabled', false) === true
-            && $panel->id === (string) config('panel.default', 'admin');
+        return $panel->id === (string) config('panel.default', 'admin');
     }
 
     public function register(PluginContext $context): void

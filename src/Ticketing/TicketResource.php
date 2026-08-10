@@ -288,15 +288,4 @@ final class TicketResource extends Resource
             ->defaultSort('created_at', 'asc')
             ->perPage(25);
     }
-
-    /**
-     * THE ONE OF THE TWO TICKET VIEWS MEANT FOR INTEGRATION. `MyTicketResource`
-     * stays undocumented - see its own note on the ambiguity two endpoints
-     * over one table would otherwise create; an integrator asks this one and
-     * filters.
-     */
-    public static function documented(): bool
-    {
-        return true;
-    }
 }

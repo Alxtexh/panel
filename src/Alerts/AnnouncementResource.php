@@ -175,10 +175,4 @@ final class AnnouncementResource extends Resource
                 ]),
         ]);
     }
-
-    /** A real integration surface once AnnouncementsPlugin is enabled - an installation posting its own alerts. */
-    public static function documented(): bool
-    {
-        return true;
-    }
 }

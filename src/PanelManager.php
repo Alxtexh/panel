@@ -703,15 +703,8 @@ final class PanelManager
          * `ChangelogPage` and `EnvironmentPage` do - a screen a consumer would
          * have to know existed before they could add it to a list is a screen
          * that does not ship.
-         *
-         * OFF BY DEFAULT, matching every other installation screen this
-         * package treats as opt-in - see `Panel::OPT_IN_SCREENS`. It used to
-         * default on even when `panel.landing.route` (the public page itself)
-         * was off, which meant a fresh install got a menu entry for editing a
-         * page nobody had turned on. `panel.landing.editor => true` asks for
-         * it explicitly.
          */
-        if (config('panel.landing.editor', false) === true
+        if (config('panel.landing.editor', true) !== false
             && Landing\LandingPageResource::panel() === $panelId) {
             $out[Landing\LandingPageResource::key()] = Landing\LandingPageResource::class;
         }
