@@ -15,6 +15,7 @@ use Alxtexh\Panel\Tables\Columns\SelectColumn;
 use Alxtexh\Panel\Tables\Filters\SelectFilter;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Table;
+use Alxtexh\Panel\Widgets\StatWidget;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 
 /** The tenant-scoped counterpart of `PostResource`. */
@@ -48,6 +49,30 @@ final class ArticleResource extends Resource
              */
             FileUploadField::make('attachment')->accept(['pdf', 'txt'])->maxKilobytes(64),
         ]);
+    }
+
+    /**
+     * WIDGETS ABOVE THE LIST - `Resource::headerWidgets()`.
+     *
+     * One open and one ability-gated, so both halves of `WidgetSet`'s
+     * permission rule are assertable: a widget nobody may see must be neither
+     * sent nor RESOLVED, since resolving it would run its query for somebody
+     * forbidden to read the answer.
+     *
+     * @return list<StatWidget>
+     */
+    public static function headerWidgets(): array
+    {
+        return [
+            StatWidget::make('total', 'Total')
+                ->value(static fn (): int => Article::query()->count()),
+
+            StatWidget::make('secret', 'Secret')
+                ->ability('see_secret_stat')
+                ->value(static fn (): int => throw new \RuntimeException(
+                    'A hidden widget was resolved for somebody who may not see it.',
+                )),
+        ];
     }
 
     public static function table(Table $table): Table
