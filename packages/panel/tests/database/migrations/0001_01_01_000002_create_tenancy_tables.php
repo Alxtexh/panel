@@ -22,6 +22,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->string('status')->default('draft');
+            $table->string('attachment')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
