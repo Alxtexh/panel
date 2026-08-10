@@ -47,6 +47,27 @@ So one `composer install`, and nothing else:
 ```bash
 git clone <this-repo> myapp && cd myapp/apps/playground
 ```
+
+Composer needs a GitHub token to fetch dependencies — **once per machine, not
+per project**:
+
+```bash
+composer config --global github-oauth.github.com <your-github-token>
+```
+
+> **This is about RATE LIMITS, not access.** Every dependency here is public;
+> GitHub simply throttles unauthenticated API requests per IP, and Composer
+> fetches dist archives through that API. So **a token with no scopes at all
+> works** — create one at *Settings → Developer settings → Personal access
+> tokens*, tick nothing, and paste it. Without it, `composer install` fails
+> with `Could not authenticate against github.com`, which reads as a
+> permissions problem and is not one.
+>
+> **Never commit a token.** It belongs in your global Composer config, which is
+> outside the repository. A token in a file that gets pushed is a token that is
+> public, and GitHub's secret scanning will revoke it - after everybody who
+> cloned in the meantime already has it.
+
 ```bash
 composer install
 ```
