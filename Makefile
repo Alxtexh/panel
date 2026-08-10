@@ -65,3 +65,8 @@ sync-client: ## Build packages/ui and mirror it into packages/panel/resources/cl
 	@cp -r packages/ui/dist packages/panel/resources/client/dist
 	@cp -r packages/ui/inertia packages/panel/resources/client/inertia
 	@echo "Mirrored packages/ui into packages/panel/resources/client. Commit both."
+
+.PHONY: test-package
+test-package: ## Run packages/panel's own suite - Testbench, fixture models, no playground
+	@cd packages/panel && [ -d vendor ] || composer install --no-interaction --no-progress
+	@cd packages/panel && vendor/bin/pest --no-coverage

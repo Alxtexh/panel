@@ -78,6 +78,13 @@
 /packages/*/node_modules
 /packages/*/vendor
 
+# A LIBRARY PINS NOTHING. `packages/panel` is consumed through a
+# `composer require`, where the CONSUMER's lock decides versions - a lock
+# committed here would be resolved against and then ignored, while quietly
+# going stale. Filament keeps a lock at the monorepo root only, for the same
+# reason.
+/packages/*/composer.lock
+
 # packages/ui/dist IS committed, deliberately - it is what an external
 # consumer's package.json points a `file:` dependency at (see
 # InstallCommand::scaffoldPackageJson()). Without it, `panel:install` finishes
