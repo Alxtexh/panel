@@ -106,6 +106,18 @@ final class Pages
                 'href' => '/documents',
                 'icon' => 'file-text',
                 'group' => 'Apps',
+
+                /*
+                 * THE LINK FOLLOWS THE ABILITY, now that the screen has one.
+                 *
+                 * `DocumentTemplateController` had no authorisation at all -
+                 * any authenticated operator could rewrite the templates every
+                 * invoice prints from - and gating the controller without
+                 * gating the entry would leave everybody else a menu item that
+                 * answers 403. Hiding a link is not a control, but showing one
+                 * that cannot be opened is a bug report waiting to be filed.
+                 */
+                'ability' => 'manage_documents',
             ],
             /*
              * Development surfaces, kept apart from the operator's screens. A

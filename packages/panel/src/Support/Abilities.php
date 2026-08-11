@@ -61,7 +61,23 @@ final class Abilities
      * restoring over the live database is a much smaller circle, and one
      * ability covering both would mean granting the second to get the first.
      */
-    public const PANEL = ['manage_roles', 'impersonate_users', 'view_operations', 'manage_backups'];
+    /*
+     * `manage_documents` GATES THE TEMPLATES EVERY INVOICE IS PRINTED FROM.
+     *
+     * The document screens had NO ability check of any kind - the route group
+     * asked only for `auth`, and the controller asked for nothing. So the
+     * lowest-privilege operator on a panel that offers documents could rewrite
+     * the title, footer, support phone and support email carried by every
+     * invoice and receipt the business subsequently sent out. Nothing logged a
+     * denial, because nothing was asked.
+     *
+     * IT IS IN THIS LIST, WHICH IS THE HALF THAT MAKES IT REAL. An ability the
+     * controller checks and `panel:permissions sync` never creates is one
+     * nobody can hold - the screen would simply 403 for everybody except a
+     * `grants_all` role. `manage_assistant` is currently in exactly that state,
+     * gated in `AssistantSettingsController` and absent from here.
+     */
+    public const PANEL = ['manage_roles', 'impersonate_users', 'view_operations', 'manage_backups', 'manage_documents'];
 
     /**
      * What each panel ability is called on the permission matrix.
@@ -78,6 +94,7 @@ final class Abilities
         'impersonate_users' => 'Sign in as another person (impersonate)',
         'view_operations' => 'See backups and server logs',
         'manage_backups' => 'Delete, restore and reschedule backups',
+        'manage_documents' => 'Edit the templates invoices and receipts print from',
     ];
 
     /**

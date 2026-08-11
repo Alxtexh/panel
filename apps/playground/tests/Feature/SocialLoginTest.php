@@ -92,6 +92,9 @@ final class SocialLoginTest extends TestCase
         $user = $this->verifiedUser('grace@acme.test');
 
         ConnectedAccount::query()->create([
+            // The default panel's guard. `user_id` alone names no table - see the
+            // `guard` column on this table.
+            'guard' => 'web',
             'user_id' => $user->getKey(),
             'provider' => 'google',
             'provider_id' => 'g-1',
@@ -212,6 +215,9 @@ final class SocialLoginTest extends TestCase
         $other = $this->verifiedUser('other@acme.test');
 
         ConnectedAccount::query()->create([
+            // The default panel's guard. `user_id` alone names no table - see the
+            // `guard` column on this table.
+            'guard' => 'web',
             'user_id' => $owner->getKey(),
             'provider' => 'google',
             'provider_id' => 'g-7',
@@ -236,6 +242,9 @@ final class SocialLoginTest extends TestCase
         $other = $this->verifiedUser('other@acme.test');
 
         $link = ConnectedAccount::query()->create([
+            // The default panel's guard. `user_id` alone names no table - see the
+            // `guard` column on this table.
+            'guard' => 'web',
             'user_id' => $owner->getKey(),
             'provider' => 'google',
             'provider_id' => 'g-8',
@@ -294,6 +303,9 @@ final class SocialLoginTest extends TestCase
         $user = $this->verifiedUser('grace@acme.test');
 
         ConnectedAccount::query()->create([
+            // The default panel's guard. `user_id` alone names no table - see the
+            // `guard` column on this table.
+            'guard' => 'web',
             'user_id' => $user->getKey(),
             'provider' => 'google',
             'provider_id' => 'g-9',

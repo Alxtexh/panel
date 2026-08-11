@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -359,8 +360,29 @@ final class PanelAuthController extends Controller
 
         $status = Password::broker($panel->getPasswordBroker())->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
+            /*
+             * THE REMEMBER TOKEN GOES WITH THE PASSWORD, and this is the path
+             * where forgetting it matters most.
+             *
+             * A password reset is what somebody does when they have LOST
+             * control of the account. `SessionGuard` re-authenticates from a
+             * "remember me" recaller cookie whenever the session is missing,
+             * and it validates only `remember_token` - so an attacker holding a
+             * stolen recaller kept the account straight through the reset,
+             * because the one credential they were using was the one nothing
+             * changed.
+             *
+             * `event(new PasswordReset(...))` is Laravel's own signal that this
+             * happened; nothing in the package listened, and an installation
+             * that wants to notify or audit needs it fired.
+             */
             static function ($user, string $password): void {
-                $user->forceFill(['password' => bcrypt($password)])->save();
+                $user->forceFill([
+                    'password' => bcrypt($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                event(new PasswordReset($user));
             },
         );
 

@@ -141,7 +141,20 @@ final class PortalGenerationTest extends TestCase
             @unlink($provider);
             @unlink($test);
 
+            /*
+             * THE `.gitkeep` HAD TO GO FIRST, and forgetting it left the whole
+             * tree behind: `rmdir` refuses a directory that is not empty, and
+             * `make:panel` writes a `.gitkeep` into the resource directory so
+             * an empty portal survives a checkout.
+             *
+             * Both calls were silenced with `@`, so the failure was invisible -
+             * and `app/Panel/Disposable/` accumulated from every run. A later
+             * suite then found a panel nobody had declared and reported a screen
+             * reachable from no menu, which reads as a navigation bug in the
+             * application rather than as debris from a generator test.
+             */
             if (is_dir($resources.'/Resources')) {
+                @unlink($resources.'/Resources/.gitkeep');
                 @rmdir($resources.'/Resources');
                 @rmdir($resources);
             }

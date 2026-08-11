@@ -234,8 +234,25 @@ final class RecordController extends Controller
 
         $model = $class::model();
 
+        /*
+         * SCOPED TO THE PARENT, like every other write here.
+         *
+         * A bare `$model::query()` let a caller reorder rows under a parent
+         * they had not been authorised against, by addressing them through one
+         * they had. Only display order, so the impact is small - but it is the
+         * same missing constraint as the trashed lookup above, and a reader
+         * comparing the two should find them agreeing.
+         */
+        $query = $model::query();
+
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            $query->where($class::parentColumn(), $parent->getKey());
+        }
+
         $written = (new Reorderer($column))->apply(
-            $model::query(),
+            $query,
             $validated['ids'],
         );
 
@@ -376,6 +393,25 @@ final class RecordController extends Controller
      * scope - tenancy above all - still applies, so another organisation's
      * deleted record is as unreachable as its live ones.
      */
+    /**
+     * THE SAME SCOPING AS `findScoped`, WHICH THIS USED TO SKIP.
+     *
+     * `findScoped`'s own note says the nested parent claim is applied "in here
+     * rather than per action, so update, destroy, restore, actions and cell
+     * edits all get it from the one place none of them can forget." Restore and
+     * force-delete forgot it: they came through here, and here resolved a
+     * trashed record by id alone.
+     *
+     * TWO GUARANTEES WERE LOST, not one. The URL's parent claim was not
+     * enforced, and `NestedContext::parent()` - which also runs
+     * `abort_unless($parentClass::can('view', $parent), 403)` - was never
+     * called, so the parent stopped being the authorisation context at all.
+     *
+     * Somebody holding `restore` and `forceDelete` on a child resource could
+     * therefore address a record under a parent they may not open, by naming a
+     * parent they may. The tenant scope still applied, so it is horizontal
+     * movement inside one tenant - against `forceDelete`, which is permanent.
+     */
     private function findTrashed(string $class, string $id): Model
     {
         $model = $class::model();
@@ -386,7 +422,15 @@ final class RecordController extends Controller
             "Resource [{$class::key()}] does not support soft deletes.",
         );
 
-        return $model::query()->withTrashed()->findOrFail($id);
+        $query = $model::query()->withTrashed();
+
+        $parent = NestedContext::parent(request(), $class);
+
+        if ($parent !== null) {
+            $query->where($class::parentColumn(), $parent->getKey());
+        }
+
+        return $query->findOrFail($id);
     }
 
     /**
@@ -557,11 +601,26 @@ final class RecordController extends Controller
     }
 
     /** @return class-string<resource> */
+    /**
+     * `isEnabled()` TOO, WHICH THIS ALONE USED TO OMIT.
+     *
+     * `ResourceController::guard`, `ResourceController::index`, `BulkController`
+     * and the trash bin all refuse a resource whose feature flag is off. This
+     * did not - so on a tenant without the flag, every READ screen 404ed while
+     * all eight write endpoints here kept working: create, update, delete,
+     * restore, force-delete, reorder, cell edit and record action.
+     *
+     * `Resource::isEnabled()` states the rule this was breaking: "a disabled
+     * feature hides the resource from navigation AND returns 404 from its
+     * routes. Hiding the link alone is not a control." The route constraint
+     * cannot cover it - `whereIn('resource', $keys)` is per PANEL, and a
+     * feature flag is per TENANT.
+     */
     private function resolve(string $resource): string
     {
         $class = app(PanelManager::class)->resource($resource);
 
-        if ($class === null) {
+        if ($class === null || ! $class::isEnabled()) {
             throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
         }
 

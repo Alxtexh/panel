@@ -317,9 +317,46 @@ final class FileStore
         ];
     }
 
-    /** Whether a stored path belongs to the tenant making the request. */
+    /**
+     * Whether a stored path belongs to the tenant making the request.
+     *
+     * THE PREFIX TEST ALONE WAS NOT AN OWNERSHIP CHECK, because it and the
+     * filesystem disagreed about what a path means. `str_starts_with` reads the
+     * string literally; Flysystem NORMALISES `.` and `..` before touching the
+     * disk, and only refuses when the result escapes the disk root. So
+     *
+     *     tenants/1/../../backups/2026-08-11.zip
+     *
+     * started with `tenants/1/`, passed as this tenant's, and then resolved to
+     * a file outside any tenant at all.
+     *
+     * IT WAS REACHABLE, NOT THEORETICAL. `FileUploadField::transformForStorage`
+     * stores any string this method accepts, verbatim, and validates it only as
+     * `string|max:2048` - so an operator could write such a path onto their own
+     * record and then fetch it through the ordinary download route, which
+     * treats this method as the sole authority on the path.
+     *
+     * REFUSING TRAVERSAL HERE RATHER THAN AT EACH CALLER is the point: three
+     * places consult this - the download, `describe()`, and the field's storage
+     * transform - and a check that has to be remembered separately in each is
+     * one that will be missed in the fourth.
+     *
+     * Backslashes are refused outright. They are not a path separator on the
+     * disks this writes to, so a stored path containing one is not a file this
+     * package created - and normalising it is a guess about which layer will
+     * translate it.
+     */
     public static function belongsToCurrentTenant(string $path): bool
     {
+        if (str_contains($path, '\\') || str_contains($path, "\0")) {
+            return false;
+        }
+
+        // Any `.` or `..` as a whole segment, anywhere in the path.
+        if (preg_match('#(^|/)\.\.?(/|$)#', $path) === 1) {
+            return false;
+        }
+
         return str_starts_with($path, self::tenantSegment().'/');
     }
 

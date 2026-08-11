@@ -36,10 +36,36 @@ final class ConnectedAccount extends Model
         ];
     }
 
+    /**
+     * THE MODEL COMES FROM THE ROW'S OWN GUARD, not from the default one.
+     *
+     * This used to be hardcoded to `auth.providers.users.model`, which is only
+     * correct for panels running the default guard. A row belonging to a
+     * customer portal resolved to an OPERATOR of the same id - and the caller
+     * then signed that operator in. See the `guard` migration.
+     */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(
-            (string) config('auth.providers.users.model', 'App\\Models\\User'),
+        return $this->belongsTo(self::modelForGuard((string) $this->guard));
+    }
+
+    /**
+     * The Eloquent model a guard authenticates.
+     *
+     * Falls back to the default guard's provider for a row written before the
+     * `guard` column existed, which is what those rows meant.
+     *
+     * @return class-string
+     */
+    public static function modelForGuard(?string $guard): string
+    {
+        $guard = $guard !== null && $guard !== '' ? $guard : (string) config('auth.defaults.guard', 'web');
+
+        $provider = (string) config("auth.guards.{$guard}.provider", 'users');
+
+        return (string) config(
+            "auth.providers.{$provider}.model",
+            config('auth.providers.users.model', 'App\\Models\\User'),
         );
     }
 }
