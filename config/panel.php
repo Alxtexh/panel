@@ -541,16 +541,38 @@ return [
         TicketingPlugin::class,
 
         /*
-        | ANNOUNCEMENTS NEED NO CONFIGURATION, so unlike ticketing this one is
-        | simply on. It installs a screen for WRITING a notice into the default
-        | panel and stays out of the navigation - an announcement is read from
-        | the dashboard banner and the bell, and a permanent sidebar entry for
-        | the form that writes one earns nothing.
+        | ANNOUNCEMENTS, REGISTERED HERE AND GATED IN `announcements.enabled`
+        | BELOW.
         |
-        | Remove this line to turn it off. The banner, the model and the
-        | delivery are unaffected: they are the package's, not the plugin's.
+        | Being in this list is not the same as being on. It used to be: the
+        | plugin checked only which panel was default - true of every fresh
+        | install's admin panel - so a `composer require` shipped an
+        | Announcements CRUD screen, its routes and an `/api/v1` endpoint that
+        | nobody had asked for. Ticketing beside it has always had a gate; the
+        | two were inconsistent, and the ungated one was the one publishing an
+        | API.
+        |
+        | The banner, the model and the delivery are unaffected either way:
+        | they are the package's, not the plugin's. What the flag controls is
+        | the screen for WRITING a notice.
         */
         AnnouncementsPlugin::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Announcements
+    |--------------------------------------------------------------------------
+    |
+    | OFF BY DEFAULT, because turning it on adds a resource - and a resource is
+    | a URL, an ability name and, unless it opts out, an entry in the public API
+    | document. An installation that wants somewhere to write an organisation-
+    | wide notice says so; one that never asked gets a panel with nothing extra
+    | in it.
+    |
+    */
+    'announcements' => [
+        'enabled' => env('PANEL_ANNOUNCEMENTS_ENABLED', false),
     ],
 
     /*

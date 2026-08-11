@@ -97,6 +97,52 @@ final class PluginTest extends TestCase
     }
 
     /**
+     * THE PACKAGED ANNOUNCEMENTS PLUGIN IS OFF UNLESS ASKED FOR.
+     *
+     * This is the one that was wrong. It shipped in the default `plugins` list
+     * and checked only which panel was default - true of every fresh install's
+     * admin panel - so a `composer require` produced a CRUD screen, its routes
+     * and an `/api/v1/announcements` endpoint nobody had chosen.
+     *
+     * ASSERTED AGAINST THE REAL PLUGIN, not a fixture, because the fixture
+     * cannot go wrong in the way this did: the bug was in a class that looked
+     * correctly gated beside `TicketingPlugin`, which was.
+     */
+    public function test_the_packaged_announcements_plugin_is_off_by_default(): void
+    {
+        config(['panel.announcements.enabled' => null]);
+
+        $this->assertFalse(
+            (new \Alxtexh\Panel\Alerts\AnnouncementsPlugin)->appliesTo($this->manager()->panel('admin')),
+            'Announcements installed a screen and an API endpoint with no configuration.',
+        );
+    }
+
+    public function test_the_announcements_plugin_applies_once_enabled(): void
+    {
+        config(['panel.announcements.enabled' => true]);
+
+        $this->assertTrue(
+            (new \Alxtexh\Panel\Alerts\AnnouncementsPlugin)->appliesTo($this->manager()->panel('admin')),
+        );
+    }
+
+    /**
+     * AND ONLY TO THE DEFAULT PANEL, even when enabled.
+     *
+     * A resource key is a URL segment and an ability name, both globally
+     * unique, so the same class cannot install into two portals.
+     */
+    public function test_the_announcements_plugin_stays_out_of_other_panels(): void
+    {
+        config(['panel.announcements.enabled' => true]);
+
+        $this->assertFalse(
+            (new \Alxtexh\Panel\Alerts\AnnouncementsPlugin)->appliesTo($this->manager()->panel('second')),
+        );
+    }
+
+    /**
      * A PLUGIN CARRIES AN ID, so an installation can say which one it means.
      *
      * Vendor-prefixed by convention, because two packages will eventually both

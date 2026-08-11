@@ -85,7 +85,31 @@ enum Bucket: string
         return match ($this) {
             self::Hour => $at->modify('+1 hour'),
             self::Day => $at->modify('+1 day'),
-            self::Month => $at->modify('+1 month'),
+
+            /*
+             * `first day of next month`, NOT `+1 month`.
+             *
+             * PHP's `+1 month` adds to the day-of-month and then normalises, so
+             * 31 January becomes 3 March - FEBRUARY IS SKIPPED. A gap-filled
+             * chart walking the range from that date renders a missing column,
+             * which reads as missing DATA rather than as a bug in the walk.
+             *
+             * IT WAS SAFE ONLY BY ACCIDENT. Every caller reaches this through
+             * `floor()`, which lands on day 1, where the overflow cannot
+             * happen - so the correctness lived in the callers rather than
+             * here, and the next caller to arrive would not have known that.
+             *
+             * The time is carried over deliberately: `floor()` zeroes it for
+             * the walks that matter, and silently discarding it would surprise
+             * anything that did not floor first - which is the class of caller
+             * this change exists to protect.
+             */
+            self::Month => $at->modify('first day of next month')
+                ->setTime(
+                    (int) $at->format('H'),
+                    (int) $at->format('i'),
+                    (int) $at->format('s'),
+                ),
         };
     }
 
