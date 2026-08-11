@@ -5,7 +5,7 @@
     application has none, and without one the first panel route answers with
     "View [app] not found" - an error about a file nobody told you to write.
 
-    `@vite` COMPILES THE ASSETS. This is the one thing PanelKit needs that a
+    `@vite` COMPILES THE ASSETS. This is the one thing Alxtexhpanel needs that a
     server-rendered admin panel does not: the screens are Vue, so they are built
     rather than published. `npm run build` once, or `npm run dev` while you work.
 

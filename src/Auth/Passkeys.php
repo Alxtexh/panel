@@ -5,51 +5,78 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Laravel\Fortify\Contracts\PasskeyUser;
+use Laravel\Fortify\Contracts\PasskeyUser as FortifyPasskeyUser;
 use Laravel\Fortify\Features;
+use Laravel\Passkeys\Contracts\PasskeyUser as NativePasskeyUser;
 
 /**
- * Passkeys, if the application has Fortify.
+ * Passkeys, if the application has `laravel/passkeys` and/or Fortify.
  *
- * WHY THIS IS A THIN WRAPPER AND NOT AN IMPLEMENTATION. Laravel Fortify ships
- * WebAuthn support: the `passkeys` relation, the challenge endpoints, the
- * `PasskeyUser` contract. Reimplementing any of that would be writing a second
- * authentication path with the first one still installed, which is how an app
- * ends up with two ways in and only one of them audited.
+ * WHY THIS IS A THIN WRAPPER AND NOT AN IMPLEMENTATION. Laravel ships
+ * WebAuthn via `laravel/passkeys` (routes, migrations, contracts) and Fortify
+ * can wrap the same stack behind `Features::passkeys()`. Reimplementing any of
+ * that would be writing a second authentication path with the first one still
+ * installed, which is how an app ends up with two ways in and only one of them
+ * audited.
  *
  * What was missing was never the capability - the reference app has had working
  * passkeys for a long time. It was that the capability lived in the APPLICATION,
  * so `composer require alxtexh-enterprise/panel` produced a panel with no passkey support
  * and no indication that adding it was a solved problem.
  *
- * A SOFT DEPENDENCY, deliberately. Alxtexhpanel does not require Fortify: an
- * installation on Breeze, on a starter kit, or on its own auth is a perfectly
- * ordinary consumer, and a hard requirement would drag a second auth stack into
- * every one of them. Every method here answers honestly when Fortify is absent
- * rather than throwing, so a security screen renders without the passkey section
- * instead of failing to render at all.
+ * A SOFT DEPENDENCY, deliberately. Alxtexhpanel does not require Fortify or
+ * `laravel/passkeys`: an installation on Breeze, on a starter kit, or on its
+ * own auth is a perfectly ordinary consumer, and a hard requirement would drag
+ * a second auth stack into every one of them. Every method here answers
+ * honestly when those packages are absent rather than throwing, so a security
+ * screen renders without the passkey section instead of failing to render at
+ * all.
  */
 final class Passkeys
 {
     /**
      * Whether this installation can manage passkeys at all.
      *
-     * THREE CONDITIONS, NOT ONE. Fortify may be installed with the feature
-     * turned off, and a user model may predate the contract - the panel has to
-     * know all three before offering a control, because a button that enrols
-     * nothing is worse than no button.
+     * TWO PATHS, BOTH HONEST. `laravel/passkeys` alone is enough for the
+     * button and the security screen (native `PasskeyUser`). Fortify's feature
+     * flag remains supported for apps that enable passkeys that way. A user
+     * model that predates either contract means no control is offered, because
+     * a button that enrols nothing is worse than no button.
      */
     public static function available(?Authenticatable $user = null): bool
     {
+        /*
+         * AN EXPLICIT "OFF" WINS OVER AN AVAILABLE IMPLEMENTATION, and this
+         * ordering is the whole point of the check.
+         *
+         * The native branch below was added so `laravel/passkeys` alone is
+         * enough - correct, and the reason this class no longer requires
+         * Fortify. Asked FIRST, though, it made Fortify's switch inert: an
+         * installation that had deliberately turned passkeys off still offered
+         * enrolment, because the other package happened to be installed. A flag
+         * that cannot turn its feature off is not a flag, and this codebase has
+         * spent a lot of effort on exactly that failure elsewhere.
+         *
+         * So the question is asked in the order an operator would expect. Has
+         * somebody said no? Then no. Otherwise, is there something that works?
+         *
+         * AN APPLICATION WITHOUT FORTIFY IS UNAFFECTED. `Features` does not
+         * exist there, nothing has said no, and the native path decides - which
+         * is the case the branch was written for.
+         */
+        if (class_exists(Features::class) && ! Features::canManagePasskeys()) {
+            return false;
+        }
+
+        if (interface_exists(NativePasskeyUser::class)) {
+            return $user === null || $user instanceof NativePasskeyUser;
+        }
+
         if (! class_exists(Features::class)) {
             return false;
         }
 
-        if (! Features::canManagePasskeys()) {
-            return false;
-        }
-
-        return $user === null || $user instanceof PasskeyUser;
+        return $user === null || $user instanceof FortifyPasskeyUser;
     }
 
     /**
