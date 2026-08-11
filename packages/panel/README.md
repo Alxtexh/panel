@@ -7,14 +7,43 @@ You describe a resource in one PHP class. The panel sends that description to th
 browser **once**, and every interaction afterwards moves data only — no server-rendered
 component tree per click.
 
+## Install from GitHub — no registry account needed
+
+This is the whole thing. Add the repository, require the package, install:
+
+```json
+"repositories": [
+    { "type": "vcs", "url": "https://github.com/Alxtexh/panel", "no-api": true }
+]
+```
+
+```bash
+composer require alxtexh-enterprise/panel:^0.9
+php artisan panel:install
+npm install && npm run build
+```
+
+**There is no second install.** The Vue screens ship *inside* this Composer package
+at `resources/client`, and `panel:install` points your `package.json` at them with a
+`file:` dependency — so npm needs no registry and no token either. One source, one
+version, and the two halves cannot drift apart.
+
+> `"no-api": true` makes Composer clone rather than call GitHub's API, which is what
+> lets this work with no token at all. Without it Composer authenticates against
+> github.com even for a public repository, and fails when it cannot.
+
+### Or from the registries
+
+Once published, the ordinary spellings work too:
+
 ```bash
 composer require alxtexh-enterprise/panel
-npm install @alxtexh-enterprise/panel
 php artisan panel:install
 ```
 
-This package answers the requests; `@alxtexh-enterprise/panel` holds the screens it renders.
-Installing one without the other gives you routes that resolve to nothing.
+The npm package `@alxtexh-enterprise/panel` is the same client half published
+separately. You need it only if you would rather resolve the screens from npm than
+from the Composer package — most installations should not bother.
 
 ---
 
