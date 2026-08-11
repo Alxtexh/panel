@@ -267,3 +267,55 @@ because Inertia resolves page names by globbing that directory and cannot see in
 PHP 8.4, Laravel 12 or 13, Inertia 2 or 3, Vue 3.5.
 
 Multi-database tenancy additionally needs `stancl/tenancy` ^3.10.
+
+---
+
+## Releasing
+
+**This package cannot be submitted to Packagist from the monorepo.** Packagist reads
+`composer.json` from the **repository root**, and this one lives at `packages/panel`.
+That is not a policy to argue with — it is why Laravel, Symfony and Filament all
+publish read-only *split* repositories rather than their monorepo.
+
+```bash
+make split                     # build the standalone branches locally
+make publish-preview           # print exactly what a consumer would download
+```
+
+`make split` rewrites each package's history into a branch whose root **is** that
+directory, so the split repo carries real history rather than one squashed import.
+Nothing is pushed until you name a destination:
+
+```bash
+ALXTEXHPANEL_PANEL_REMOTE=git@github.com:Alxtexh/panel.git scripts/split.sh --push --tag v0.9.6
+```
+
+The destination must be its **own** repository. The script refuses if the remote
+resolves to the repository being split — a split is force-pushed over the
+destination's `main`, so pointing it at the monorepo replaces the monorepo.
+
+Then submit that repo's URL to Packagist once; it tracks tags from there.
+
+### What a consumer actually receives
+
+`.gitattributes` decides this, and **it is invisible everywhere else** — the
+repository, the working tree, and a `--prefer-source` install all still show
+`tests/`. Only `git archive` applies `export-ignore`, which is what GitHub's
+zipball endpoint runs and where Composer gets its dist.
+
+So a local `composer require` against a file path is **not** a valid check: a
+file-path VCS repository has no dist URL, Composer clones the source instead, and
+every excluded file reappears. Use `make publish-preview`.
+
+### The npm half
+
+`packages/ui` publishes directly from its directory — no split needed, because npm
+packs a directory rather than a repository root.
+
+```bash
+cd packages/ui && npm publish
+```
+
+It is a **scoped** package, so `publishConfig.access` is set to `public`; without
+that npm defaults to restricted and the publish fails on an account with no paid
+org. `prepack` rebuilds `dist` first, so a stale build cannot ship.

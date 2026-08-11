@@ -70,3 +70,26 @@ sync-client: ## Build packages/ui and mirror it into packages/panel/resources/cl
 test-package: ## Run packages/panel's own suite - Testbench, fixture models, no playground
 	@cd packages/panel && [ -d vendor ] || composer install --no-interaction --no-progress
 	@cd packages/panel && vendor/bin/pest --no-coverage
+
+.PHONY: split
+split: ## Build the standalone package branches (see scripts/split.sh; nothing is pushed)
+	@scripts/split.sh
+
+# WHAT A CONSUMER ACTUALLY DOWNLOADS, printed rather than assumed.
+#
+# `.gitattributes` decides this, and it is invisible in every other view: the
+# repository, the working tree and a source install all still show `tests/`.
+# Only `git archive` applies `export-ignore` - which is exactly what GitHub's
+# zipball endpoint runs, and where Composer gets a dist from.
+#
+# IT IS NOT TESTABLE THROUGH A LOCAL COMPOSER INSTALL, and that is worth knowing
+# before somebody tries: a file-path VCS repository has no dist URL, so Composer
+# clones the source instead and every excluded file reappears. That looks like
+# the exclusions failing when it is the install method differing.
+.PHONY: publish-preview
+publish-preview: ## Show exactly what `composer require` and `npm install` would fetch
+	@echo "== alxtexh-enterprise/panel (composer dist) =="
+	@git archive HEAD:packages/panel | tar -t | awk -F/ 'NF>1{print "  "$$1"/"} NF==1{print "  "$$1}' | sort -u
+	@echo
+	@echo "== @alxtexh-enterprise/panel (npm tarball) =="
+	@cd packages/ui && npm pack --dry-run 2>&1 | grep -E "package size|unpacked size|total files" | sed 's/npm notice/ /'
