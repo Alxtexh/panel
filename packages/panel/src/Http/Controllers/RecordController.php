@@ -19,6 +19,7 @@ use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\CustomFields\CustomField;
 use Alxtexh\Panel\CustomFields\CustomFieldFactory;
 use Alxtexh\Panel\Http\NestedContext;
+use Alxtexh\Panel\Http\Requests\RecordFormRequest;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Support\Transaction;
@@ -49,18 +50,25 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 final class RecordController extends Controller
 {
-    public function store(Request $request, string $resource): RedirectResponse
+    /**
+     * `RecordFormRequest` RATHER THAN `Request`, and the type-hint is the fix.
+     *
+     * A precognitive request never enters this method - Laravel's dispatcher
+     * resolves the parameters and aborts 204 - so authorisation and validation
+     * have to happen where a parameter is resolved. Both live in the form
+     * request now, and both still run on an ordinary request exactly as they
+     * did when they were the first two statements here. See that class.
+     */
+    public function store(RecordFormRequest $request, string $resource): RedirectResponse
     {
         $class = $this->resolve($resource);
-
-        abort_unless($class::can('create'), 403);
 
         $form = $class::formDefinition();
         abort_if($form->fields() === [], 404, "Resource [{$resource}] has no form.");
 
         // The single source of validation truth. The client holds no copy, so
         // the two cannot drift apart.
-        $validated = $request->validate($form->rules());
+        $validated = $request->validated();
 
         $model = $class::model();
         $record = new $model;
@@ -88,16 +96,15 @@ final class RecordController extends Controller
         return back()->with('success', $class::label().' created.');
     }
 
-    public function update(Request $request, string $resource, string $id): RedirectResponse
+    /** See `store()` on why this takes a form request. */
+    public function update(RecordFormRequest $request, string $resource, string $id): RedirectResponse
     {
         $class = $this->resolve($resource);
 
         $record = $this->findScoped($class, $id);
 
-        abort_unless($class::can('update', $record), 403);
-
         $form = $class::formDefinition();
-        $validated = $request->validate($form->rules());
+        $validated = $request->validated();
 
         $this->assertNotStale($request, $record);
 

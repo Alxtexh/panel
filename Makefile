@@ -75,6 +75,32 @@ test-package: ## Run packages/panel's own suite - Testbench, fixture models, no 
 split: ## Build the standalone package branches (see scripts/split.sh; nothing is pushed)
 	@scripts/split.sh
 
+# THE ORDER IS THE WHOLE POINT OF THIS TARGET.
+#
+# `inertia:start-ssr` reads `inertia.ssr.enabled` and exits with "Inertia SSR is
+# not enabled" when it is false - so the flag has to be set BEFORE the server is
+# started, not after. `config/inertia.php` documented it the other way round and
+# the failure lands on the step that looks least likely to fail.
+#
+# Serve the app with INERTIA_SSR_ENABLED=true as well, or requests still render
+# client-only against a server that is running perfectly.
+# THE ONE THING `BroadcastChannelTest` CANNOT TELL YOU. It proves who may
+# subscribe to what; this proves a message actually travels. The two failures
+# look identical from the application - `useLiveUpdates` degrades to polling
+# when the socket is absent, so a broken transport renders as a working panel.
+.PHONY: verify-broadcast
+verify-broadcast: ## Prove a broadcast reaches a subscriber over a real socket
+	@scripts/verify-broadcast.sh
+
+.PHONY: ssr
+ssr: ## Build the SSR bundle and start the SSR server (flag first - see the note)
+	@cd $(PLAYGROUND) && npm run build:ssr
+	@echo
+	@echo "SSR bundle built. Starting the server; serve the app with INERTIA_SSR_ENABLED=true:"
+	@echo "    cd $(PLAYGROUND) && INERTIA_SSR_ENABLED=true php artisan serve"
+	@echo
+	@cd $(PLAYGROUND) && INERTIA_SSR_ENABLED=true php artisan inertia:start-ssr
+
 # WHAT A CONSUMER ACTUALLY DOWNLOADS, printed rather than assumed.
 #
 # `.gitattributes` decides this, and it is invisible in every other view: the

@@ -237,28 +237,46 @@ Stated rather than implied:
 
 - Live updates: the **poll** driver is the default and is exercised end to end —
   `LiveUpdatesTest` drives the real endpoint, including tenant isolation, the
-  bounded id list, one query per poll and a guest refusal. What no test drives
-  is a **socket**: `BroadcastChannelTest` proves who may subscribe to what, and
-  then nothing connects, because nothing here runs Reverb (it is a `require-dev`
-  dependency and `BROADCAST_CONNECTION=log`). So the broadcast driver's
-  authorisation is tested and its transport is not.
-- Precognition: rules live in exactly one place, but live per-keystroke
-  validation is not wired, and the package is not installed. Still blocked, and
-  checked rather than assumed: `laravel-precognition-vue-inertia@0.8.0` declares
-  a peer of `@inertiajs/vue3: ^1.0.0 || ^2.0.0`, and this app is on `^3.0.0`.
-- Bulk actions: the mutations ship — `BulkRunner` walks a selection in keyset
-  chunks and every bulk mutation counts before it commits. There is **no
-  automatic queue threshold**: a job that should run in the background is
-  declared so, rather than crossing a row count and becoming asynchronous on its
-  own.
+  bounded id list, one query per poll and a guest refusal. The **socket** is now
+  exercised too, by `make verify-broadcast`: it starts Reverb, subscribes over a
+  real WebSocket, publishes from the application, and fails if the message does
+  not arrive. It is a script rather than a test because it needs a server, a
+  port and two processes — a fixture no unit test should own. Run it after
+  touching broadcasting; nothing else will tell you, because `useLiveUpdates`
+  degrades to polling when the socket is absent, so a broken transport renders
+  as a working panel.
+- The development database is SQLite, so every performance number here
+  demonstrates that the query *shape* is sound rather than transferring to
+  Postgres unchanged.
 - `panel:doctor` reports "nobody can open the panel" on a healthy install.
   Spatie teams are on, so a CLI run resolves no team and `whereHas('roles')`
   counts zero. The check that exists to catch silent failure currently cries
   wolf.
-- The development database is SQLite, so every performance number here
-  demonstrates that the query *shape* is sound rather than transferring to
-  Postgres unchanged.
-- SSR is **off** — `INERTIA_SSR_ENABLED` defaults to false. The starter kit
-  ships it on with nothing serving it, so every request paid a failed connection
-  to port 13714 before falling back. Turning it on is three commands, in
-  `config/inertia.php`.
+- SSR is **off**, deliberately rather than unfinished. The starter kit ships it
+  on with nothing serving it, so every request pays a failed connection to
+  13714 before falling back — a page that works and is quietly slower. It does
+  render: `/login` with SSR on returns `data-server-rendered`, one `<form>` and
+  three `<input>`s; with it off, none of them. `make ssr` turns it on in the
+  order that works — **the flag first**, because `inertia:start-ssr` reads the
+  config and refuses to start while it is false.
+
+Three entries that used to sit here have been removed, because each was wrong:
+
+- *"Precognition is blocked by a peer dependency."* It checked
+  `laravel-precognition-vue-inertia`, which this application does not need —
+  Inertia v3's own `useForm` ships `withPrecognition()`. Nothing was blocked.
+  What was true, and worse than the gap claimed, is that `store` and `update`
+  were already inside a `precognitive` route group and **answered every payload
+  with `204 Precognition-Success: true`** — including payloads the same endpoint
+  rejected with 422 without the header. `PrecognitionControllerDispatcher` never
+  calls the controller method; it resolves the parameters and aborts. Validation
+  and authorisation lived in the method body, so neither ran. Both now live in
+  `RecordFormRequest`, and `PrecognitionTest` covers it — including that a
+  denied ability is still denied when the header is present.
+- *"Bulk actions have no automatic queue threshold."* They do:
+  `BulkController::run` computes `$queued = $all || count($ids) > threshold`,
+  the default is `panel.bulk.queue_threshold` at 250 rows, an action may
+  override it with `BulkAction::queueThreshold()`, and `BulkQueueThresholdTest`
+  covers inline, queued, and the queued job acting on exactly the selected rows.
+- *"Turning SSR on is three commands."* The three commands were listed in an
+  order that fails at step two.

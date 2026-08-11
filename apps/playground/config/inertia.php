@@ -18,19 +18,36 @@ return [
     /*
     | Off by default here, and env-driven rather than hardcoded.
     |
-    | The starter kit ships this as `true`, but nothing serves it: there is no
-    | SSR bundle in bootstrap/ssr and no process on 13714. Every request then
-    | pays a failed connection attempt to 13714 before falling back to the
-    | client-only response, so leave it off until SSR is actually running.
+    | The starter kit ships this as `true` with nothing serving it. Every
+    | request then pays a failed connection to 13714 before falling back to the
+    | client-only response - a page that works and is quietly slower, which is
+    | the reason to default it off rather than on.
     |
-    | To turn it on: `npm run build:ssr`, start `php artisan inertia:start-ssr`,
-    | then set INERTIA_SSR_ENABLED=true.
+    | IT DOES WORK, AND THAT IS NOW MEASURED RATHER THAN ASSUMED. `/login`
+    | fetched with SSR on returns `data-server-rendered`, one `<form>` and three
+    | `<input>`s in the raw HTML; the same URL with it off returns none of them
+    | and no "Log in" text at all. So this is a deliberate default, not an
+    | unfinished feature.
+    |
+    | THE FLAG GOES FIRST, and the order used to be documented backwards here:
+    |
+    |   1. INERTIA_SSR_ENABLED=true          <- before, not after
+    |   2. npm run build:ssr
+    |   3. php artisan inertia:start-ssr
+    |
+    | `inertia:start-ssr` READS THIS CONFIG and exits with "Inertia SSR is not
+    | enabled" if the flag is still false - so following the previous order
+    | ("start the server, then set the flag") failed at the step that looks
+    | least likely to fail. `make ssr` does all three in the right order.
+    |
+    | NO `bundle` KEY IS NEEDED. `@inertiajs/vite` generates the SSR entry from
+    | `resources/js/app.ts`, so the build emits `bootstrap/ssr/app.js` and
+    | Inertia finds it. The commented-out line that used to sit here pointed at
+    | `ssr.mjs`, a filename this build never produces.
     */
     'ssr' => [
         'enabled' => env('INERTIA_SSR_ENABLED', false),
         'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714'),
-        // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
-
     ],
 
     /*
