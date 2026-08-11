@@ -192,11 +192,26 @@ the connection for **every** tenant unconditionally and throws on the first shar
 | Command | What it is for |
 |---|---|
 | `panel:install` | Publish config, wire the provider |
+| `make:panel` | Generate a second portal (`--new-guard` gives it its own sign-in) |
 | `make:panel-resource` | Generate a resource (`--generate` infers from the table) |
 | `panel:permissions` | List or reconcile abilities and roles |
 | `panel:doctor` | **Find configuration that is silently wrong** |
 | `panel:benchmark` | Time every list surface, warm, as a median |
 | `panel:reindex-tenant` | Fix index shape inside a dedicated database |
+
+A portal with its own guard needs that guard to exist in `config/auth.php`, and
+`make:panel` will not invent one for you silently:
+
+```bash
+php artisan make:panel reseller --guard=resellers --new-guard
+```
+
+Without `--new-guard`, naming a guard that is not defined is a **warning, not a
+failure** — the portal generates and then answers its first request with
+`Auth guard [resellers] is not defined.` Sessions are keyed per guard, so this is
+what makes a second portal a separate place to sign in rather than the same one
+with a different menu.
+
 `panel:doctor` is the one to run first on a new installation. Every check in it exists
 because the failure is **silent** — a working panel serving wrong or unprotected data,
 where every page returns 200 and every test passes. For example: with

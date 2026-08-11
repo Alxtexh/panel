@@ -37,12 +37,15 @@ use Illuminate\Support\Str;
  */
 final class MakePanelCommand extends Command
 {
+    use Concerns\ScaffoldsAuthGuard;
     use Concerns\ScaffoldsPanelAuth;
 
     protected $signature = 'make:panel
                             {id : The panel id, e.g. platform}
                             {--path= : URL prefix. Defaults to the id}
                             {--guard=web : The auth guard this panel authenticates with}
+                            {--new-guard : Create that guard in config/auth.php - required unless it exists already}
+                            {--guard-model=App\\Models\\User : The model --new-guard authenticates against}
                             {--central : A platform panel: no tenant scoping is applied}
                             {--auth : Also generate sign-in, sign-out and password-reset for this panel}
                             {--force : Overwrite an existing provider}';
@@ -116,7 +119,13 @@ final class MakePanelCommand extends Command
         $this->components->twoColumnDetail('Isolation test', "tests/Feature/{$studly}PanelIsolationTest.php");
         $this->components->twoColumnDetail('Resources', "app/Panel/{$studly}/Resources");
         $this->components->twoColumnDetail('URL', '/'.$path);
-        $this->components->twoColumnDetail('Guard', (string) $this->option('guard'));
+
+        $this->reportGuard(
+            (string) $this->option('guard'),
+            (bool) $this->option('new-guard'),
+            (bool) $this->option('central'),
+        );
+
         $this->components->twoColumnDetail('Context', $this->option('central') ? 'central (no tenant scoping)' : 'tenant');
 
         if ($this->option('auth')) {
@@ -133,6 +142,41 @@ final class MakePanelCommand extends Command
         $this->line("  php artisan make:panel-resource Tenant --panel={$id} --generate");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Say what the guard actually IS, rather than only what it is called.
+     *
+     * THE OLD LINE WAS `Guard  resellers` AND IT WAS THE BUG. A portal
+     * authenticates through `config/auth.php`, which this command did not touch,
+     * so naming a guard that was not there produced a portal that generated
+     * cleanly, reported success, and answered its first request with
+     * `Auth guard [resellers] is not defined.` The summary said the guard's
+     * name, which reads as confirmation that it exists.
+     *
+     * THE WARNING FIRES WITHOUT `--new-guard` TOO, and that is the more
+     * important half. Somebody who did not know the flag existed is exactly the
+     * person who needs telling, and they are the one the old output misled.
+     */
+    private function reportGuard(string $guard, bool $create, bool $central): void
+    {
+        if ($create) {
+            $this->scaffoldAuthGuard($guard, trim((string) $this->option('guard-model'), '\\'), $central);
+
+            return;
+        }
+
+        if ($this->guardIsDefined($guard)) {
+            $this->components->twoColumnDetail('Guard', $guard);
+
+            return;
+        }
+
+        $this->components->twoColumnDetail('Guard', "{$guard} <fg=red>(not defined in config/auth.php)</>");
+        $this->components->warn(
+            "This portal cannot serve a request: auth.guards.{$guard} does not exist. "
+            ."Re-run with --new-guard to create it, or point --guard at one that does."
+        );
     }
 
     /**
