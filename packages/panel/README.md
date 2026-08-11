@@ -278,9 +278,23 @@ That is not a policy to argue with — it is why Laravel, Symfony and Filament a
 publish read-only *split* repositories rather than their monorepo.
 
 ```bash
+make verify-install            # install both packages as a stranger would, and build
 make split                     # build the standalone branches locally
 make publish-preview           # print exactly what a consumer would download
 ```
+
+**Run `make verify-install` before every release.** It is the only check that
+sees what is actually published. Everything else here reads `packages/ui` as
+*source* through a Vite alias and `packages/panel` as a path repository, so
+`dist/` and the pruned archive — the only things a consumer receives — are never
+loaded in this repository at all.
+
+That is not a theoretical gap. Its first run found `Toaster.vue` declaring
+`defineProps<ToasterProps>()` with the type imported from `vue-sonner`. Since
+`inertia/` ships as source, a consumer compiles that file out of `node_modules`,
+where `@vue/compiler-sfc` cannot resolve a type across a package boundary — so
+**every consumer build failed** while `npm run build` here passed, because the
+playground compiles the same file as ordinary source.
 
 `make split` rewrites each package's history into a branch whose root **is** that
 directory, so the split repo carries real history rather than one squashed import.

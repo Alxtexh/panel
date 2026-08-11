@@ -64,6 +64,11 @@ sync-client: ## Build packages/ui and mirror it into packages/panel/resources/cl
 	@cp packages/ui/package.json packages/panel/resources/client/
 	@cp -r packages/ui/dist packages/panel/resources/client/dist
 	@cp -r packages/ui/inertia packages/panel/resources/client/inertia
+# THE SAME EXCLUSION THE NPM TARBALL MAKES. `package.json` drops
+# `inertia/**/*.spec.ts` from what npm publishes, and this mirror copied the
+# directory wholesale - so the two halves of one release disagreed about
+# whether test files ship, and the composer half was the one carrying them.
+	@find packages/panel/resources/client -name '*.spec.ts' -delete
 	@echo "Mirrored packages/ui into packages/panel/resources/client. Commit both."
 
 .PHONY: test-package
@@ -84,6 +89,14 @@ split: ## Build the standalone package branches (see scripts/split.sh; nothing i
 #
 # Serve the app with INERTIA_SSR_ENABLED=true as well, or requests still render
 # client-only against a server that is running perfectly.
+# THE ONLY CHECK THAT SEES WHAT IS PUBLISHED. Everything else in this
+# repository reads `packages/ui` as SOURCE through a Vite alias and
+# `packages/panel` as a path repository, so `dist/` and the pruned archive - the
+# only things a consumer receives - are never loaded here at all.
+.PHONY: verify-install
+verify-install: ## Install both packages as a stranger would and build against them
+	@scripts/verify-install.sh
+
 # THE ONE THING `BroadcastChannelTest` CANNOT TELL YOU. It proves who may
 # subscribe to what; this proves a message actually travels. The two failures
 # look identical from the application - `useLiveUpdates` degrades to polling
