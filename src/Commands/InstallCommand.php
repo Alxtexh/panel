@@ -77,7 +77,7 @@ final class InstallCommand extends Command
          */
         $this->line('  1. npm install && npm run build');
         $this->line('     The screens are Vue and come from `resources/client` inside this');
-        $this->line('     Composer package (`file:vendor/panelkit/panel/resources/client`).');
+        $this->line('     Composer package (`file:vendor/alxtexh-enterprise/panel/resources/client`).');
         $this->line('     Path repositories must copy, not symlink (`"symlink": false`), or');
         $this->line('     Vite resolves types outside the app and the build fails.');
         $this->line('     The published resources/css/app.css already points Tailwind at it -');
