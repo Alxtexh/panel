@@ -17,6 +17,7 @@ use Alxtexh\Panel\Documents\DocumentRenderer;
 use Alxtexh\Panel\Documents\DocumentTemplate;
 use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\Ability;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -37,8 +38,19 @@ final class DocumentTemplateController extends Controller
      * somebody nothing about where they left off, and "still on the shipped
      * defaults" is the single most useful fact about a template.
      */
-    public function index(DocumentKinds $kinds, PanelManager $panels): Response
+    public function index(Request $request, DocumentKinds $kinds, PanelManager $panels): Response
     {
+        /*
+         * THESE SCREENS HAD NO ABILITY CHECK AT ALL, on a controller that
+         * rewrites the templates every invoice and receipt is printed from -
+         * the title, the footer, the support phone and the support email. The
+         * route group asked for `auth` and stopped there, so the lowest
+         * privileged operator on a panel offering documents could edit what the
+         * business sends its customers. Every sibling settings screen in the
+         * same route file is gated; this one was missed.
+         */
+        abort_unless(Ability::allows($request->user(), 'manage_documents'), 403);
+
         $saved = DocumentTemplate::query()->pluck('version', 'kind');
 
         return Inertia::render('documents/Templates', [
@@ -55,8 +67,19 @@ final class DocumentTemplateController extends Controller
     /**
      * The designer: the form on the left, the document on the right.
      */
-    public function edit(string $kind, DocumentKinds $kinds, PanelManager $panels, DocumentRenderer $renderer): Response
+    public function edit(Request $request, string $kind, DocumentKinds $kinds, PanelManager $panels, DocumentRenderer $renderer): Response
     {
+        /*
+         * THESE SCREENS HAD NO ABILITY CHECK AT ALL, on a controller that
+         * rewrites the templates every invoice and receipt is printed from -
+         * the title, the footer, the support phone and the support email. The
+         * route group asked for `auth` and stopped there, so the lowest
+         * privileged operator on a panel offering documents could edit what the
+         * business sends its customers. Every sibling settings screen in the
+         * same route file is gated; this one was missed.
+         */
+        abort_unless(Ability::allows($request->user(), 'manage_documents'), 403);
+
         $documentKind = $this->kindOr404($kind, $kinds);
         $template = DocumentTemplate::forKind($documentKind);
         $form = Form::make()->schema($documentKind->fields());
@@ -106,6 +129,17 @@ final class DocumentTemplateController extends Controller
      */
     public function update(Request $request, string $kind, DocumentKinds $kinds): RedirectResponse
     {
+        /*
+         * THESE SCREENS HAD NO ABILITY CHECK AT ALL, on a controller that
+         * rewrites the templates every invoice and receipt is printed from -
+         * the title, the footer, the support phone and the support email. The
+         * route group asked for `auth` and stopped there, so the lowest
+         * privileged operator on a panel offering documents could edit what the
+         * business sends its customers. Every sibling settings screen in the
+         * same route file is gated; this one was missed.
+         */
+        abort_unless(Ability::allows($request->user(), 'manage_documents'), 403);
+
         $documentKind = $this->kindOr404($kind, $kinds);
         $form = Form::make()->schema($documentKind->fields());
 
@@ -139,6 +173,17 @@ final class DocumentTemplateController extends Controller
      */
     public function preview(Request $request, string $kind, DocumentKinds $kinds, DocumentRenderer $renderer): JsonResponse
     {
+        /*
+         * THESE SCREENS HAD NO ABILITY CHECK AT ALL, on a controller that
+         * rewrites the templates every invoice and receipt is printed from -
+         * the title, the footer, the support phone and the support email. The
+         * route group asked for `auth` and stopped there, so the lowest
+         * privileged operator on a panel offering documents could edit what the
+         * business sends its customers. Every sibling settings screen in the
+         * same route file is gated; this one was missed.
+         */
+        abort_unless(Ability::allows($request->user(), 'manage_documents'), 403);
+
         $documentKind = $this->kindOr404($kind, $kinds);
 
         $settings = $request->input('settings');
@@ -174,6 +219,17 @@ final class DocumentTemplateController extends Controller
      */
     public function print(Request $request, string $kind, DocumentKinds $kinds, DocumentRenderer $renderer): Response
     {
+        /*
+         * THESE SCREENS HAD NO ABILITY CHECK AT ALL, on a controller that
+         * rewrites the templates every invoice and receipt is printed from -
+         * the title, the footer, the support phone and the support email. The
+         * route group asked for `auth` and stopped there, so the lowest
+         * privileged operator on a panel offering documents could edit what the
+         * business sends its customers. Every sibling settings screen in the
+         * same route file is gated; this one was missed.
+         */
+        abort_unless(Ability::allows($request->user(), 'manage_documents'), 403);
+
         $documentKind = $this->kindOr404($kind, $kinds);
 
         return Inertia::render('documents/DocumentPrint', [

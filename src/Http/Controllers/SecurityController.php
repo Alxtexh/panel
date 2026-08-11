@@ -11,9 +11,11 @@ use Alxtexh\Panel\Auth\SensitiveAction;
 use Alxtexh\Panel\Auth\SocialProviders;
 use Alxtexh\Panel\Http\Requests\TwoFactorStateRequest;
 use Alxtexh\Panel\Models\ConnectedAccount;
+use Alxtexh\Panel\PanelManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -68,7 +70,11 @@ final class SecurityController
              * and sending only the second would leave nothing to connect from.
              */
             'socialProviders' => SocialProviders::enabled(),
-            'connectedAccounts' => self::connectedAccounts($user?->getAuthIdentifier()),
+            'connectedAccounts' => self::connectedAccounts(
+                $user?->getAuthIdentifier(),
+                app(PanelManager::class)->currentPanel()?->getGuard()
+                    ?? (string) config('auth.defaults.guard', 'web'),
+            ),
 
             /*
              * SERIALISED BY THE PACKAGE, so every panel that shows passkeys
@@ -138,7 +144,26 @@ final class SecurityController
         // see `PasswordPolicy::recordChange`.
         $policy->recordChange($user);
 
-        $user->forceFill(['password' => Hash::make($validated['password'])])->save();
+        /*
+         * THE REMEMBER TOKEN IS CYCLED WITH THE PASSWORD, and leaving it alone
+         * undid the sign-out below.
+         *
+         * Sign-in issues a "remember me" recaller cookie, and `SessionGuard`
+         * re-authenticates from it whenever the session is gone - validating
+         * ONLY `remember_token`, which nothing here touched. So an attacker
+         * holding a stolen recaller lost their session row to
+         * `Devices::forgetOthers()` and was transparently signed back in on
+         * their very next request, by the framework, using a token the password
+         * change had not invalidated.
+         *
+         * That is the precise scenario this screen exists for - "somebody may
+         * have my password" - answered with a message saying every other device
+         * was signed out.
+         */
+        $user->forceFill([
+            'password' => Hash::make($validated['password']),
+            'remember_token' => Str::random(60),
+        ])->save();
 
         /*
          * EVERY OTHER SESSION GOES. A password change is most often a response
@@ -174,13 +199,22 @@ final class SecurityController
     /**
      * @return list<array<string, mixed>>
      */
-    private static function connectedAccounts(mixed $userId): array
+    /**
+     * SCOPED BY GUARD AS WELL AS BY ID, because `user_id` alone names no table.
+     *
+     * With two guards in play, an id belongs to two different populations. This
+     * screen listed the provider, EMAIL ADDRESS and nickname of whoever held
+     * the same id under the other guard - so a customer saw an operator's
+     * connected Google account, and the delete button next to it worked.
+     */
+    private static function connectedAccounts(mixed $userId, string $guard): array
     {
         if ($userId === null || SocialProviders::enabled() === []) {
             return [];
         }
 
         return ConnectedAccount::query()
+            ->where('guard', $guard)
             ->where('user_id', $userId)
             ->orderBy('provider')
             ->get()

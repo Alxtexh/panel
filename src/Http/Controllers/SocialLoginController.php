@@ -58,11 +58,43 @@ final class SocialLoginController extends Controller
      * actions - so an installation without the package pays nothing and sees
      * no buttons.
      */
+    /**
+     * The accounts THIS PANEL authenticates - not the default guard's.
+     *
+     * THIS WAS THE AUTHENTICATION BYPASS. It read
+     * `auth.providers.users.model` whatever guard the panel ran, while the
+     * sign-in below used `Auth::guard($this->guard())`. `SessionGuard::login()`
+     * stores only `$user->getAuthIdentifier()`, so the next request re-hydrated
+     * that integer through the PANEL's provider - a different table - and
+     * whoever held that id was signed in.
+     *
+     * A verified address matched in `users` therefore signed somebody in on a
+     * customer portal, with no password and no consent from the account that
+     * was actually entered. `SocialLoginGuardTest` is that request.
+     */
     private function users(): Builder
     {
-        $model = (string) config('auth.providers.users.model', 'App\\Models\\User');
+        $model = ConnectedAccount::modelForGuard($this->guard());
 
         return $model::query();
+    }
+
+    /**
+     * Connected accounts belonging to the guard this panel runs.
+     *
+     * `user_id` alone names no table. Every read of this table has to say which
+     * population the id came from, or a row written on one portal answers a
+     * lookup made on another.
+     */
+    private function accounts(): Builder
+    {
+        return ConnectedAccount::query()->where('guard', $this->guardName());
+    }
+
+    /** The panel's guard, resolved to a name rather than left null. */
+    private function guardName(): string
+    {
+        return $this->guard() ?? (string) config('auth.defaults.guard', 'web');
     }
 
     /** Where a signed-in person lands, which is the panel's home. */
@@ -127,7 +159,7 @@ final class SocialLoginController extends Controller
             return $this->back($intent, 'That sign-in was not completed.');
         }
 
-        $existing = ConnectedAccount::query()
+        $existing = $this->accounts()
             ->where('provider', $provider)
             ->where('provider_id', (string) $account->getId())
             ->first();
@@ -145,7 +177,17 @@ final class SocialLoginController extends Controller
          * behind `auth`, which proves somebody is signed in and says nothing
          * about whose row this is.
          */
-        abort_unless($connectedAccount->user_id === $request->user($this->guard())?->getAuthIdentifier(), 403);
+        /*
+         * THE GUARD IS PART OF OWNERSHIP. `user_id === id` compares two
+         * integers drawn from different populations when two guards are in
+         * play, so a customer could delete an operator's connected account by
+         * holding the same id in their own table.
+         */
+        abort_unless(
+            $connectedAccount->guard === $this->guardName()
+                && $connectedAccount->user_id === $request->user($this->guard())?->getAuthIdentifier(),
+            403,
+        );
 
         $label = SocialProviders::label($connectedAccount->provider);
 
@@ -256,7 +298,13 @@ final class SocialLoginController extends Controller
     private function attach(Authenticatable $user, string $provider, mixed $account): void
     {
         ConnectedAccount::query()->updateOrCreate(
-            ['provider' => $provider, 'provider_id' => (string) $account->getId()],
+            [
+                'provider' => $provider,
+                'provider_id' => (string) $account->getId(),
+                // Part of the identity, not part of the payload: the same
+                // provider account may be connected once per guard.
+                'guard' => $this->guardName(),
+            ],
             [
                 'user_id' => $user->getKey(),
                 'email' => $account->getEmail(),

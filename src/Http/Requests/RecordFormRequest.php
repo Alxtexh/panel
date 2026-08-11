@@ -61,6 +61,32 @@ final class RecordFormRequest extends FormRequest
     {
         $class = $this->resourceClass();
 
+        /*
+         * THE NESTED PARENT IS AUTHORISED HERE TOO, and leaving it out was a
+         * hole this class was written to close rather than to keep.
+         *
+         * `NestedContext::parent()` does three things a create depends on: it
+         * 404s a parent key that does not match the child's declared parent,
+         * 404s an id the caller's tenant cannot see, and refuses with 403 when
+         * the caller may not `view` that parent. All three lived only in
+         * `RecordController::store`'s body - so on the precognitive path, where
+         * no body runs, a caller holding `create` could validate against a
+         * parent they are not entitled to open.
+         *
+         * `update` already reaches this through `record()`, which resolves the
+         * parent to scope its own lookup. Only `create` was missing it, because
+         * a create has no record to find.
+         *
+         * THE CONTROLLER STILL RESOLVES IT AGAIN, and that is not redundancy
+         * worth removing. `NestedContext::parent()` memoises on the request's
+         * attribute bag, but `FormRequest::createFrom()` COPIES that bag - so
+         * the memo set here lives on this object while the controller reads
+         * `request()`, the original. The checks run twice and cost one extra
+         * query; the alternative is a controller that trusts a decision taken
+         * on a different object.
+         */
+        NestedContext::parent($this, $class);
+
         return $this->isMethod('POST')
             ? $class::can('create')
             : $class::can('update', $this->record());
@@ -85,7 +111,14 @@ final class RecordFormRequest extends FormRequest
 
         $class = app(PanelManager::class)->resource($key);
 
-        if ($class === null) {
+        /*
+         * `isEnabled()` HERE AS WELL AS IN THE CONTROLLER, and it has to be
+         * both. A precognitive request never enters the controller, so a check
+         * placed only in `RecordController::resolve()` would still let
+         * `POST /sessions` with `Precognition: true` answer for a resource the
+         * tenant's feature flags have turned off.
+         */
+        if ($class === null || ! $class::isEnabled()) {
             throw new NotFoundHttpException("No panel resource registered for [{$key}].");
         }
 
