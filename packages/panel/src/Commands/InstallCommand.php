@@ -290,6 +290,39 @@ final class InstallCommand extends Command
      * `vue` or `@inertiajs/vue3` at a version of its own choosing keeps it;
      * this only fills gaps.
      */
+    /**
+     * The client directory, relative to the application root.
+     *
+     * ABSOLUTE WAS A "WORKS ON MY MACHINE" BUG, and `package.json` is committed,
+     * so it was one that travels. `dirname(__DIR__, 2)` is absolute by
+     * construction, and writing that into a dependency pinned the project to the
+     * one folder it happened to be installed in:
+     *
+     *     "@alxtexh-enterprise/panel": "file:/home/sam/work/shop/vendor/..."
+     *
+     * A colleague cloning it, a CI runner checking it out, and a deploy to
+     * /var/www all then run `npm install` against a path that does not exist -
+     * and npm's error names the missing directory, not the reason it is wrong.
+     *
+     * FOUND BY REINSTALLING rather than by reading. A first install passes
+     * either way, because the machine that wrote the path is the machine
+     * resolving it.
+     *
+     * FALLS BACK TO ABSOLUTE when the package sits outside the project - a
+     * global Composer cache, a symlinked path repository during development.
+     * A relative path would have to climb out of the project to reach it, which
+     * is both fragile and a lie about where the dependency lives.
+     */
+    private function relativeClientPath(string $clientPath): string
+    {
+        $root = rtrim(str_replace('\\', '/', (string) realpath(base_path())), '/');
+        $client = str_replace('\\', '/', (string) (realpath($clientPath) ?: $clientPath));
+
+        return str_starts_with($client, $root.'/')
+            ? substr($client, strlen($root) + 1)
+            : $client;
+    }
+
     private function scaffoldPackageJson(): void
     {
         $path = base_path('package.json');
@@ -314,7 +347,7 @@ final class InstallCommand extends Command
         $added = [];
 
         $wanted = ($clientPackage['peerDependencies'] ?? [])
-            + ['@alxtexh-enterprise/panel' => 'file:'.$clientPath];
+            + ['@alxtexh-enterprise/panel' => 'file:'.$this->relativeClientPath($clientPath)];
 
         foreach ($wanted as $name => $constraint) {
             if (array_key_exists($name, $package['dependencies']) || array_key_exists($name, $package['devDependencies'])) {
