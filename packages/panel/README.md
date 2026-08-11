@@ -7,6 +7,9 @@ You describe a resource in one PHP class. The panel sends that description to th
 browser **once**, and every interaction afterwards moves data only — no server-rendered
 component tree per click.
 
+**[Full documentation →](../../docs/README.md)** — every field, column, filter,
+action, widget and command.
+
 ## Install from GitHub — no registry account needed
 
 This is the whole thing. Add the repository, require the package, install:

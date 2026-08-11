@@ -3,6 +3,9 @@
 A Laravel + Inertia + Vue dashboard, meant to be **copied as the starting point
 for a new dashboard** rather than installed as a dependency.
 
+**[Full documentation →](docs/README.md)** — every field, column, filter, action,
+widget and command, and how to switch each part on.
+
 The demo application in `apps/playground` is the reference: its shell, sidebar,
 tables, charts and forms are the design. A new dashboard starts from that and
 replaces the data.
