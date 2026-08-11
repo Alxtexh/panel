@@ -114,35 +114,77 @@ final class BucketTest extends TestCase
     }
 
     /**
-     * `next()` IS ONLY SAFE ON A FLOORED DATE, AND THIS PINS WHY.
+     * ADVANCING FROM A MONTH-END NO LONGER SKIPS A MONTH.
      *
-     * PHP's `+1 month` from the 31st overflows: 2026-01-31 becomes 2026-03-03,
-     * so FEBRUARY IS SKIPPED ENTIRELY. Gap-filling never sees this because it
-     * walks from `floor()`, which always lands on day 1 - but that safety lives
-     * in the CALLER, not in this method.
+     * PHP's `+1 month` adds to the day-of-month and normalises, so 31 January
+     * became 3 March - February gone. A gap-filled chart walking from that date
+     * renders a missing column, which reads as missing DATA rather than as a
+     * bug in the range walk.
      *
-     * Asserted as the current behaviour rather than as a bug, because changing
-     * it is a decision about `next()`'s contract rather than an obvious fix.
-     * What the assertion buys is that the hazard is written down: anybody
-     * calling `next()` on an unfloored date now has a test telling them what
-     * they get, instead of a chart quietly missing a month.
+     * IT WAS SAFE ONLY BY ACCIDENT before: every caller arrives through
+     * `floor()`, which lands on day 1 where the overflow cannot happen, so the
+     * correctness lived in the callers. This test asserted the overflow as
+     * known behaviour and said it should be deleted if the method was fixed.
+     * It was fixed; the assertion is inverted rather than removed, because the
+     * shape of this bug is worth keeping a guard against.
      */
-    public function test_advancing_from_an_unfloored_month_end_overflows(): void
+    public function test_advancing_from_an_unfloored_month_end_does_not_skip_a_month(): void
     {
         $endOfMonth = new DateTimeImmutable('2026-01-31 00:00:00');
 
         $this->assertSame(
-            '2026-03',
+            '2026-02',
             Bucket::Month->next($endOfMonth)->format('Y-m'),
-            'The overflow changed - `next()` may now be safe on unfloored dates, '
-            .'which would be an improvement worth removing this test for.',
+            'January the 31st advanced past February.',
         );
 
-        // Floored first, it behaves.
+        // And the floored path, which every caller actually uses, is unchanged.
         $this->assertSame(
             '2026-02',
             Bucket::Month->next(Bucket::Month->floor($endOfMonth))->format('Y-m'),
         );
+    }
+
+    /**
+     * EVERY MONTH-END ADVANCES BY EXACTLY ONE MONTH.
+     *
+     * The 29th, 30th and 31st are the days that overflow, and only in months
+     * shorter than the one they came from - so a single example proves less
+     * than it appears to. This walks a whole year from each.
+     */
+    public function test_no_month_end_skips_a_month(): void
+    {
+        foreach ([29, 30, 31] as $day) {
+            for ($month = 1; $month <= 12; $month++) {
+                $at = DateTimeImmutable::createFromFormat(
+                    'Y-n-j H:i:s',
+                    sprintf('2026-%d-%d 00:00:00', $month, $day),
+                );
+
+                if ($at === false || (int) $at->format('n') !== $month) {
+                    continue; // The date does not exist - February the 30th.
+                }
+
+                $expected = $month === 12 ? '2027-01' : sprintf('2026-%02d', $month + 1);
+
+                $this->assertSame(
+                    $expected,
+                    Bucket::Month->next($at)->format('Y-m'),
+                    "The {$day}th of month {$month} did not advance to the next month.",
+                );
+            }
+        }
+    }
+
+    /**
+     * THE TIME SURVIVES, because discarding it would surprise a caller that did
+     * not floor first - which is the class of caller this fix exists for.
+     */
+    public function test_advancing_a_month_keeps_the_time(): void
+    {
+        $at = new DateTimeImmutable('2026-01-31 14:37:22');
+
+        $this->assertSame('2026-02-01 14:37:22', Bucket::Month->next($at)->format('Y-m-d H:i:s'));
     }
 
     public function test_walking_a_year_of_months_visits_each_one_once(): void

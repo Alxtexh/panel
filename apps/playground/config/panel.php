@@ -492,6 +492,25 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Announcements
+    |---------------------------------------------------------------------------
+    |
+    | ON HERE, OFF IN THE PACKAGE, and this block exists precisely because of
+    | that difference. The plugin is gated behind this flag so a fresh install
+    | does not get a CRUD screen and an `/api/v1` endpoint nobody asked for;
+    | this application is the demonstration, so it says yes.
+    |
+    | IT HAS TO BE WRITTEN OUT. `ConfigMerge::deep()` fills in keys this file
+    | omits from the package's defaults - so leaving it absent would inherit
+    | `false` and quietly remove a screen the demo is meant to show.
+    |
+    */
+    'announcements' => [
+        'enabled' => true,
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
     | Ticketing
     |---------------------------------------------------------------------------
     |

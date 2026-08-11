@@ -42,9 +42,30 @@ final class AnnouncementsPlugin extends Plugin
         return 'alxtexhpanel/announcements';
     }
 
+    /**
+     * OFF UNTIL AN INSTALLATION ASKS FOR IT.
+     *
+     * THIS USED TO CHECK ONLY WHICH PANEL WAS DEFAULT, which is true of every
+     * fresh install's admin panel - and because the plugin ships in the default
+     * `panel.plugins` list, being registered was the same as being live. So a
+     * `composer require` produced an Announcements CRUD screen, its routes, and
+     * an `/api/v1/announcements` endpoint with no configuration touched at all.
+     *
+     * REGISTERED IS NOT THE SAME QUESTION AS APPLIES, and this class is what
+     * taught that. `TicketingPlugin` sits in the same list with its own config
+     * gate; the two were inconsistent, and the one without the gate was the one
+     * exposing an API surface.
+     *
+     * FOUND TWICE, INDEPENDENTLY: by installing into a genuinely bare app and
+     * reading `route:list`, and later by the package's cross-tenant matrix,
+     * which enumerates the registry and found `announcements` in a fixture host
+     * that had registered only its own resource. Neither found it by reading
+     * this file, which looked correctly gated at a glance.
+     */
     public function appliesTo(Panel $panel): bool
     {
-        return $panel->id === (string) config('panel.default', 'admin');
+        return config('panel.announcements.enabled', false) === true
+            && $panel->id === (string) config('panel.default', 'admin');
     }
 
     public function register(PluginContext $context): void
