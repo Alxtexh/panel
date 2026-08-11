@@ -187,6 +187,32 @@ final class PanelMenuItemsTest extends TestCase
     }
 
     /**
+     * A DECLARED ENTRY CAN NEST, using the same `Section/Subgroup` string a
+     * resource uses.
+     *
+     * THE INTERSECTION OF TWO FEATURES, which is where they usually fail to
+     * meet: nested groups were built for RESOURCES, and `navigationItems()`
+     * arrives at the sidebar through a different path - `PanelNavigation::
+     * declared()` rather than `resources()`. Both end in the same `group`
+     * string, so nesting should work for either, and "should" is the word that
+     * earns a test.
+     */
+    public function test_a_declared_entry_can_sit_in_a_nested_group(): void
+    {
+        $this->panel()->navigationItems([
+            ['title' => 'Runbook', 'href' => '/runbook', 'group' => 'Operations/Playbooks'],
+        ]);
+
+        $entry = collect(PanelNavigation::build('admin'))->firstWhere('title', 'Runbook');
+
+        $this->assertSame(
+            'Operations/Playbooks',
+            $entry['group'] ?? null,
+            'A declared entry lost its nested group on the way to the sidebar.',
+        );
+    }
+
+    /**
      * ONE PORTAL'S ADDITIONS ARE NOT ANOTHER'S.
      *
      * The items live on the Panel object rather than in a global registry, so a

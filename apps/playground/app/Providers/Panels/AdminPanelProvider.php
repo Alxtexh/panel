@@ -118,7 +118,15 @@ final class AdminPanelProvider extends ServiceProvider
                         'title' => 'Documentation',
                         'href' => static fn (): string => route('docs'),
                         'icon' => 'book-open',
-                        'group' => 'Building',
+                        /*
+                         | NESTED, with the same `Section/Subgroup` string a
+                         | resource uses. Declared entries reach the sidebar
+                         | through `PanelNavigation::declared()` rather than
+                         | `resources()`, so this is the one place the two
+                         | features meet - and the demo is where that meeting
+                         | is actually looked at.
+                         */
+                        'group' => 'Building/Reference',
                         'sort' => 90,
                     ],
                 ])
