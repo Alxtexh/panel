@@ -2,9 +2,29 @@
     "name": "@alxtexh-enterprise/panel",
     "version": "0.9.6",
     "description": "The client half: the Vue rendering layer and the Inertia screens. Import from \".\" for components that name no transport, \"./inertia\" for the screens.",
-    "private": true,
     "type": "module",
     "license": "MIT",
+    "author": "Alxtexh",
+    "homepage": "https://github.com/Alxtexh/panelkit#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Alxtexh/panelkit.git",
+        "directory": "packages/ui"
+    },
+    "bugs": {
+        "url": "https://github.com/Alxtexh/panelkit/issues"
+    },
+    "keywords": [
+        "laravel",
+        "inertia",
+        "vue",
+        "admin-panel",
+        "dashboard",
+        "alxtexhpanel"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
     "main": "./dist/index.js",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -21,7 +41,8 @@
     },
     "files": [
         "dist",
-        "inertia"
+        "inertia",
+        "!inertia/**/*.spec.ts"
     ],
     "peerDependencies": {
         "@inertiajs/vue3": "^2.0.0 || ^3.0.0",
@@ -55,8 +76,8 @@
     "scripts": {
         "test": "vitest run",
         "lint": "../../apps/playground/node_modules/.bin/eslint . --fix",
-    "lint:check": "../../apps/playground/node_modules/.bin/eslint .",
-    "format": "prettier --write src/ inertia/",
+        "lint:check": "../../apps/playground/node_modules/.bin/eslint .",
+        "format": "prettier --write src/ inertia/",
         "format:check": "prettier --check src/ inertia/",
         "build": "vite build && vue-tsc -p tsconfig.build.json",
         "prepack": "npm run build"
