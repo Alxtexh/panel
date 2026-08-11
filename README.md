@@ -248,10 +248,6 @@ Stated rather than implied:
 - The development database is SQLite, so every performance number here
   demonstrates that the query *shape* is sound rather than transferring to
   Postgres unchanged.
-- `panel:doctor` reports "nobody can open the panel" on a healthy install.
-  Spatie teams are on, so a CLI run resolves no team and `whereHas('roles')`
-  counts zero. The check that exists to catch silent failure currently cries
-  wolf.
 - SSR is **off**, deliberately rather than unfinished. The starter kit ships it
   on with nothing serving it, so every request pays a failed connection to
   13714 before falling back — a page that works and is quietly slower. It does
@@ -260,7 +256,17 @@ Stated rather than implied:
   order that works — **the flag first**, because `inertia:start-ssr` reads the
   config and refuses to start while it is false.
 
-Three entries that used to sit here have been removed, because each was wrong:
+Four entries that used to sit here have been removed, because each was wrong:
+
+- *"`panel:doctor` reports 'nobody can open the panel' on a healthy install."*
+  Fixed, and now held there. The check counts the `model_has_roles` pivot
+  directly instead of `whereHas('roles')`, which went through Spatie's team
+  scoping and counted zero on a console run that resolves no team. It had no
+  test, and `whereHas('roles')` is the obvious way to write it — so the fix was
+  one tidy-up away from being undone with every test still green.
+  `DoctorLockoutTest` pins both directions: quiet when a role is held in a team
+  the CLI cannot see, and still loud when nobody holds one. A check silenced
+  into never reporting is worse than one that cries wolf.
 
 - *"Precognition is blocked by a peer dependency."* It checked
   `laravel-precognition-vue-inertia`, which this application does not need —
