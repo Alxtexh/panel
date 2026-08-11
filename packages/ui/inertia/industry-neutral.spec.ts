@@ -36,7 +36,29 @@ const HERE = dirname(fileURLToPath(import.meta.url))
  * that any application uses, and a list that flagged them would be turned off
  * within a week. These are words that cannot be anything but an ISP.
  */
-const INDUSTRY = /\b(subscriber|fibre|broadband|mikrotik|hotspot|pppoe|radius|isp)\b/i
+/**
+ * `radius` USED TO BE ON THIS LIST AND FAILED ITS OWN TEST FOR MEMBERSHIP.
+ *
+ * RADIUS is an ISP authentication protocol, so it looked like it belonged. It
+ * is also the CSS word for a rounded corner, which this package says constantly
+ * - `--border-radius`, `var(--radius)`, and an entire Radius control in the
+ * appearance drawer with a heading, an options list and an `aria-label`. Two
+ * components failed on nothing but rounded corners, in every run of the UI
+ * suite, which is how a checker like this one ends up deleted rather than
+ * fixed.
+ *
+ * THE FIRST FIX WAS THE WRONG SHAPE. Hyphens are word boundaries, so a
+ * lookaround excluding `-radius` cleared `--border-radius` and left the drawer
+ * failing on a heading that reads "Radius" - which is the point at which the
+ * word plainly is not "a word that cannot be anything but an ISP". It fails the
+ * rule stated directly above, and the answer to that is to drop it rather than
+ * to keep narrowing the pattern until only the demo trips it.
+ *
+ * NOTHING IS LOST. A screen genuinely about ISP authentication does not say
+ * RADIUS alone - it says PPPoE, hotspot or Mikrotik alongside it, and those are
+ * still here.
+ */
+const INDUSTRY = /\b(subscriber|fibre|broadband|mikrotik|hotspot|pppoe|isp)\b/i
 
 function vueFiles(dir: string, found: string[] = []): string[] {
     for (const entry of readdirSync(dir)) {

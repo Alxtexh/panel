@@ -254,18 +254,38 @@ final class SocialLoginTest extends TestCase
 
     /* ------------------------------------------------------------ screens */
 
-    /** The sign-in screen offers what is configured, and nothing else. */
+    /**
+     * The sign-in screen offers what is configured, and nothing else.
+     *
+     * IT NOW STEPS DOWN THROUGH TWO PROVIDERS RATHER THAN ONE. Both are
+     * configured at boot - `phpunit.xml` has to set them there, because
+     * `PanelRoutes` decides whether the sign-in-with routes exist ONCE, during
+     * boot, and a `config()` call in `setUp` arrives after that decision.
+     *
+     * Turning them off one at a time is what distinguishes "filters by
+     * credentials" from "happens to list whatever it lists": a screen hardcoded
+     * to offer Google would pass the old single-provider version of this test
+     * unchanged.
+     */
     public function test_the_login_screen_offers_configured_providers_only(): void
     {
-        $props = $this->get(route('login'))->assertOk()->viewData('page')['props'];
+        $offered = fn (): array => $this->get(route('login'))
+            ->assertOk()
+            ->viewData('page')['props']['socialProviders'];
 
-        $this->assertSame(['google' => 'Google'], $props['socialProviders']);
+        $this->assertSame(['google' => 'Google', 'github' => 'GitHub'], $offered());
+
+        config(['services.github.client_secret' => null]);
+
+        $this->assertSame(
+            ['google' => 'Google'],
+            $offered(),
+            'A provider missing half its credentials was still offered.'
+        );
 
         config(['services.google.client_id' => null]);
 
-        $props = $this->get(route('login'))->assertOk()->viewData('page')['props'];
-
-        $this->assertSame([], $props['socialProviders'], 'A provider with no credentials was still offered.');
+        $this->assertSame([], $offered(), 'A provider with no credentials was still offered.');
     }
 
     /** And the security screen lists what is attached, so it can be removed. */

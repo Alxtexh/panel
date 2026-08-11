@@ -56,6 +56,30 @@
         <env name="REVERB_APP_ID" value="test-app"/>
         <env name="REVERB_APP_KEY" value="test-key"/>
         <env name="REVERB_APP_SECRET" value="test-secret"/>
+        <!--
+            SOCIAL PROVIDERS, SET AT BOOT FOR THE SAME REASON THE BROADCASTER IS.
+
+            `PanelRoutes` registers the sign-in-with routes only when
+            `SocialProviders::enabled()` finds a configured provider, and that
+            runs once, during boot. `SocialLoginTest::setUp()` set
+            `services.github.client_id` afterwards - too late for a decision
+            already taken - so the routes never existed and six tests failed on
+            404 against an endpoint the application had declined to mount.
+
+            IT LOOKED LIKE A BROKEN FEATURE AND WAS A BROKEN FIXTURE. The suite
+            has run six tests red on every invocation for as long as `.env` has
+            had these blank, which is the number of failures somebody learns to
+            expect and then stops reading.
+
+            Obviously fake values. They only have to be non-empty: nothing here
+            reaches GitHub or Google - `Socialite` is faked in the test - and a
+            real credential in a committed file would be a leak rather than a
+            fixture.
+        -->
+        <env name="GITHUB_CLIENT_ID" value="testing-github-client-id" force="true"/>
+        <env name="GITHUB_CLIENT_SECRET" value="testing-github-client-secret" force="true"/>
+        <env name="GOOGLE_CLIENT_ID" value="testing-google-client-id" force="true"/>
+        <env name="GOOGLE_CLIENT_SECRET" value="testing-google-client-secret" force="true"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
