@@ -184,6 +184,38 @@ const checklist = computed(
     () => ((page.props as Record<string, any>).checklist as SetupChecklistItem[] | undefined) ?? [],
 )
 
+/**
+ * THE WHOLE STAT ROW AS ONE STRIP - see the template for why this replaced a
+ * grid of separate cards, and `StatSegment` for why nothing is lost by it.
+ *
+ * `sensitive: false` throughout: a strip masks by default, which is right for
+ * figures somebody deliberately put behind an eye and wrong for the counters at
+ * the top of a dashboard - those would all arrive covered.
+ */
+const statKeys = computed(() => props.widgets.map((w) => `stat_${w.key}`))
+
+const statColumns = computed(
+    () => Math.min(Math.max(props.widgets.length, 2), 6) as 2 | 3 | 4 | 5 | 6,
+)
+
+const statSegments = computed(() =>
+    props.widgets.map((widget) => {
+        const value = stat(widget.key)
+
+        return {
+            key: widget.key,
+            label: widget.label,
+            value: value?.error ? '\u2014' : ((value?.value as string | number) ?? '\u2014'),
+            caption: widget.description,
+            comparison: 'vs previous 30 days',
+            trend: value?.trend ?? null,
+            sparkline: value?.sparkline ?? null,
+            error: value?.error,
+            sensitive: false,
+        }
+    }),
+)
+
 function stat(key: string) {
     return (page.props as Record<string, any>)[`stat_${key}`] as
         | {
@@ -542,27 +574,34 @@ function stripSegments(key: string): StatSegment[] {
             </Deferred>
         </PkBoundary>
 
-        <div v-if="widgets.length" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <PkBoundary v-for="widget in widgets" :key="widget.key" :label="widget.label" fill>
-                <Deferred :data="`stat_${widget.key}`">
-                    <template #fallback>
-                        <StatCard :label="widget.label" :description="widget.description" loading />
-                    </template>
+        <!--
+            THE JOINED STRIP IS THE DEFAULT FOR `stats()`, not a row of separate
+            cards. Four cards say "four things"; one card divided by hairlines
+            says "four measures of this panel" - see `StatStrip` on why the
+            dividers are gaps rather than borders, and `PanelWidgets`, which
+            renders the same shape so a stat row looks identical wherever a page
+            puts one.
 
-                    <template #default>
-                        <StatCard
-                            :label="widget.label"
-                            :description="widget.description"
-                            :value="stat(widget.key)?.value"
-                            :trend="stat(widget.key)?.trend"
-                            :sparkline="stat(widget.key)?.sparkline"
-                            :error="stat(widget.key)?.error"
-                            comparison="vs previous 30 days"
-                        />
-                    </template>
-                </Deferred>
-            </PkBoundary>
-        </div>
+            ONE `Deferred` FOR THE WHOLE ROW. Per-card deferral is right for
+            tiles that land independently and wrong for a joined strip: the
+            divider grid would reflow as each cell arrived.
+        -->
+        <PkBoundary v-if="widgets.length" label="Statistics" fill>
+            <Deferred :data="statKeys">
+                <template #fallback>
+                    <StatStrip
+                        :segments="widgets.map((w) => ({ key: w.key, label: w.label, value: '', sensitive: false }))"
+                        :columns="statColumns"
+                        :maskable="false"
+                        loading
+                    />
+                </template>
+
+                <template #default>
+                    <StatStrip :segments="statSegments" :columns="statColumns" :maskable="false" />
+                </template>
+            </Deferred>
+        </PkBoundary>
 
         <div v-if="charts.length" class="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <!-- `fill` because these are GRID CELLS: without it a row of cards

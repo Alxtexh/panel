@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import PkSkeleton from '../primitives/PkSkeleton.vue'
+import Sparkline from './Sparkline.vue'
+import TrendBadge from './TrendBadge.vue'
 /**
  * One card, split into metric segments.
  *
@@ -60,6 +62,30 @@ export interface StatSegment {
      * to prevent, and it would happen silently on upgrade.
      */
     sensitive?: boolean
+
+    /**
+     * THE DECORATIONS A `StatCard` CARRIES, so the joined strip can be the
+     * default presentation without costing anything to switch to it.
+     *
+     * The strip used to show a label and a number and nothing else, which was
+     * fine while it was only used for the four figures above a dashboard. Once
+     * `stats()` renders through here, that omission would silently drop the
+     * trend badge, the sparkline and the comparison line from every panel -
+     * a redesign that quietly removes information is the worst kind.
+     *
+     * ALL OPTIONAL, so every strip that existed before this renders unchanged.
+     */
+    trend?: {
+        direction: 'up' | 'down' | 'flat' | 'new'
+        percentage: number | null
+    } | null
+    sparkline?: { label: string; value: number }[] | null
+    /** What the trend is measured against, e.g. "vs previous 30 days". */
+    comparison?: string | null
+    /** True when a DECREASE is the good outcome. */
+    inverted?: boolean
+    /** The value could not be resolved; the cell says so rather than lying. */
+    error?: boolean
 }
 
 const props = withDefaults(
@@ -319,10 +345,45 @@ function display(value: string | number): string {
                     <span v-else class="truncate text-2xl font-semibold tabular-nums">
                         {{ display(segment.value) }}
                     </span>
+
+                    <!--
+                        THE TREND SITS BESIDE THE NUMBER, not under it, so the
+                        row keeps its fixed height. A badge on its own line
+                        would make cells with a trend taller than cells without
+                        and the strip would stop reading as one row.
+
+                        HIDDEN WHILE MASKED, because a direction and a
+                        percentage are most of what the mask is covering: "down
+                        40%" tells the person behind you nearly as much as the
+                        figure does.
+                    -->
+                    <TrendBadge
+                        v-if="segment.trend && !loading && !isMasked(segment)"
+                        :direction="segment.trend.direction"
+                        :percentage="segment.trend.percentage"
+                        :inverted="segment.inverted"
+                        class="ml-2 shrink-0"
+                    />
                 </div>
 
-                <p v-if="segment.caption" class="text-muted-foreground truncate text-xs">
-                    {{ segment.caption }}
+                <!--
+                    THE SPARKLINE IS THE LAST THING AND THE FIRST TO GO. It is
+                    the least precise part of the cell, so it yields its space
+                    to the value and the trend rather than competing with them -
+                    and it is covered with them, since its shape carries the
+                    same story the number does.
+                -->
+                <Sparkline
+                    v-if="segment.sparkline?.length && !loading && !isMasked(segment)"
+                    :data="segment.sparkline"
+                    :height="24"
+                />
+
+                <p
+                    v-if="segment.caption || (segment.comparison && segment.trend)"
+                    class="text-muted-foreground truncate text-xs"
+                >
+                    {{ segment.caption ?? segment.comparison }}
                 </p>
             </div>
         </div>

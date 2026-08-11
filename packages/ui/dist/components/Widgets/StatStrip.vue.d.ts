@@ -56,6 +56,32 @@ export interface StatSegment {
      * to prevent, and it would happen silently on upgrade.
      */
     sensitive?: boolean;
+    /**
+     * THE DECORATIONS A `StatCard` CARRIES, so the joined strip can be the
+     * default presentation without costing anything to switch to it.
+     *
+     * The strip used to show a label and a number and nothing else, which was
+     * fine while it was only used for the four figures above a dashboard. Once
+     * `stats()` renders through here, that omission would silently drop the
+     * trend badge, the sparkline and the comparison line from every panel -
+     * a redesign that quietly removes information is the worst kind.
+     *
+     * ALL OPTIONAL, so every strip that existed before this renders unchanged.
+     */
+    trend?: {
+        direction: 'up' | 'down' | 'flat' | 'new';
+        percentage: number | null;
+    } | null;
+    sparkline?: {
+        label: string;
+        value: number;
+    }[] | null;
+    /** What the trend is measured against, e.g. "vs previous 30 days". */
+    comparison?: string | null;
+    /** True when a DECREASE is the good outcome. */
+    inverted?: boolean;
+    /** The value could not be resolved; the cell says so rather than lying. */
+    error?: boolean;
 }
 type __VLS_Props = {
     segments: StatSegment[];

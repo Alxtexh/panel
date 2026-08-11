@@ -29,7 +29,7 @@
  * thrown away. That bug has been paid for twice in this codebase already.
  */
 import { Deferred, usePage } from '@inertiajs/vue3'
-import { ChartCard, PkBoundary, StatCard, TrendBadge } from '@alxtexh-enterprise/panel'
+import { ChartCard, PkBoundary, StatStrip, TrendBadge } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import ChartBody from './ChartBody.vue'
 import { emptySeries, type Chart, type Series, type StatDefinition, type StatValue } from './types'
@@ -53,6 +53,52 @@ const charts = computed<Chart[]>(() => bag.value[`${props.prefix}Charts`] ?? [])
 function stat(key: string): StatValue | undefined {
     return bag.value[`${props.prefix}_stat_${key}`] as StatValue | undefined
 }
+
+/**
+ * EVERY STAT KEY, so one `Deferred` can gate the whole strip.
+ *
+ * The cards were deferred one at a time, which is right for tiles that arrive
+ * independently and wrong for a strip: a joined row cannot render three cells
+ * while a fourth is still missing without the divider grid jumping as each
+ * lands. `Deferred` takes an array, so the row waits once and draws once.
+ */
+const statKeys = computed(() => stats.value.map((w) => `${props.prefix}_stat_${w.key}`))
+
+/**
+ * The declarations and their resolved values, as one strip.
+ *
+ * THE JOINED STRIP IS THE DEFAULT PRESENTATION for stats now, rather than a row
+ * of separate cards. Four cards say "four things"; one card divided by hairlines
+ * says "four measures of this panel", which is what a dashboard header is - see
+ * `StatStrip`'s own note on why the dividers are gaps rather than borders.
+ *
+ * NOTHING IS LOST IN THE SWITCH. The trend, the sparkline and the comparison
+ * line travel as part of each segment and render inside the cell, which is why
+ * `StatSegment` grew those fields rather than this mapping dropping them.
+ *
+ * `sensitive: false` ON EVERY SEGMENT, DELIBERATELY. A strip masks its values by
+ * default - correct for the four figures somebody deliberately put behind an
+ * eye, and wrong for the ordinary counters at the top of a dashboard, which
+ * would all arrive covered. Masking stays available to anything that declares a
+ * strip directly.
+ */
+const statSegments = computed(() =>
+    stats.value.map((widget) => {
+        const value = stat(widget.key)
+
+        return {
+            key: widget.key,
+            label: widget.label,
+            value: value?.error ? '—' : ((value?.value as string | number) ?? '—'),
+            caption: widget.description,
+            comparison: 'vs previous 30 days',
+            trend: value?.trend ?? null,
+            sparkline: value?.sparkline ?? null,
+            error: value?.error,
+            sensitive: false,
+        }
+    }),
+)
 
 function series(key: string): Series {
     return (bag.value[`${props.prefix}_chart_${key}`] as Series | undefined) ?? emptySeries()
@@ -90,29 +136,26 @@ function bodyHeight(chart: Chart): number {
         `PkBoundary` PER CARD, so one widget throwing loses one tile rather than
         the screen it sits on.
     -->
-    <div
-        v-if="stats?.length"
-        class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-    >
-        <PkBoundary v-for="widget in stats" :key="widget.key" :label="widget.label" fill>
-            <Deferred :data="`${prefix}_stat_${widget.key}`">
-                <template #fallback>
-                    <StatCard :label="widget.label" :description="widget.description" loading />
-                </template>
+    <PkBoundary v-if="stats?.length" label="Statistics" fill>
+        <Deferred :data="statKeys">
+            <template #fallback>
+                <StatStrip
+                    :segments="stats.map((w) => ({ key: w.key, label: w.label, value: '', sensitive: false }))"
+                    :columns="Math.min(Math.max(stats.length, 2), 6) as 2 | 3 | 4 | 5 | 6"
+                    :maskable="false"
+                    loading
+                />
+            </template>
 
-                <template #default>
-                    <StatCard
-                        :label="widget.label"
-                        :description="widget.description"
-                        :value="stat(widget.key)?.value"
-                        :trend="stat(widget.key)?.trend"
-                        :sparkline="stat(widget.key)?.sparkline"
-                        :error="stat(widget.key)?.error"
-                    />
-                </template>
-            </Deferred>
-        </PkBoundary>
-    </div>
+            <template #default>
+                <StatStrip
+                    :segments="statSegments"
+                    :columns="Math.min(Math.max(stats.length, 2), 6) as 2 | 3 | 4 | 5 | 6"
+                    :maskable="false"
+                />
+            </template>
+        </Deferred>
+    </PkBoundary>
 
     <!--
         `fill` because these are GRID CELLS: without it a row of cards is only
