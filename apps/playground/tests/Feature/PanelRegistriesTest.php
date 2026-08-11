@@ -57,10 +57,20 @@ final class PanelRegistriesTest extends TestCase
             ['key' => 'status', 'label' => 'Status page', 'href' => 'https://status.example.test'],
         ]);
 
-        $items = $this->props()['panel']['menuItems'] ?? [];
+        $items = collect($this->props()['panel']['menuItems'] ?? []);
 
-        $this->assertSame(['status'], array_column($items, 'key'));
-        $this->assertSame('https://status.example.test', $items[0]['href']);
+        /*
+         * PRESENT, NOT SOLE. This asserted `['status']` exactly, which held
+         * only while NOTHING in this application used `userMenuItems()` - and
+         * a feature no application exercises is one nobody has looked at. The
+         * admin panel now declares its own device-preview entry, so the
+         * assertion is about the entry this test added rather than about the
+         * menu being otherwise empty.
+         */
+        $entry = $items->firstWhere('key', 'status');
+
+        $this->assertNotNull($entry, 'The declared entry never reached the account menu.');
+        $this->assertSame('https://status.example.test', $entry['href']);
     }
 
     /**
@@ -75,9 +85,10 @@ final class PanelRegistriesTest extends TestCase
             ['key' => 'faq', 'label' => 'FAQ', 'href' => static fn (): string => url('/faq')],
         ]);
 
-        $items = $this->props()['panel']['menuItems'] ?? [];
+        $entry = collect($this->props()['panel']['menuItems'] ?? [])->firstWhere('key', 'faq');
 
-        $this->assertStringEndsWith('/faq', $items[0]['href']);
+        $this->assertNotNull($entry);
+        $this->assertStringEndsWith('/faq', $entry['href']);
     }
 
     public function test_an_entry_the_operator_may_not_open_is_absent_entirely(): void
