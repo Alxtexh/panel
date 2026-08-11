@@ -31,11 +31,36 @@ defineProps<{
 }>()
 
 /**
- * `name` is shared by Inertia's HandleInertiaRequests middleware in a stock
- * Laravel application. The fallback is not decoration - a panel whose header
- * says "Panel" is odd, and one that renders an empty heading looks broken.
+ * THE PORTAL'S OWN BRAND FIRST, and it took a measurement to notice this was
+ * missing. `SharePanelProps` has always shared `panel.brand` -
+ * `Panel::brandName()` resolved per request - and this layout read only `name`,
+ * so every portal's sign-in screen showed the bare application name. The
+ * reference app's client portal offered "Alxtexhpanel" where it had declared
+ * "Alxtexhpanel — Client", and its superadmin portal did the same. Five portals,
+ * five distinct brands, one heading.
+ *
+ * IT LOOKS CORRECT, WHICH IS WHY IT LASTED. A sign-in page showing the product's
+ * name is not obviously wrong - it is only wrong next to the portal it belongs
+ * to, and nobody opens two sign-in screens side by side.
+ *
+ * FALLING THROUGH IS THE INTERESTING PART, not the lookup. A tenant panel
+ * resolves its brand from the signed-in tenant - the reference app's admin panel
+ * is `tenant()?->name` - and BEFORE SIGN-IN there is no tenant, so it resolves
+ * null. That must land on the application name rather than on an empty heading,
+ * which is the state this screen is always in for a tenant portal.
+ *
+ * Empty strings fall through too. `??` alone would not: a brand resolving to ''
+ * is falsy but not nullish, and it would render a blank heading that reads as a
+ * broken page rather than as an unset option.
  */
-const appName = computed(() => String(usePage().props.name ?? 'Panel'))
+const appName = computed(() => {
+    const props = usePage().props
+    const brand = props.panel && typeof props.panel === 'object'
+        ? (props.panel as Record<string, unknown>).brand
+        : null
+
+    return String(brand || props.name || 'Panel')
+})
 </script>
 
 <template>
