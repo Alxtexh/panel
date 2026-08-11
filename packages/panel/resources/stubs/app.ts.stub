@@ -9,7 +9,7 @@
  * WHAT THE THREE PIECES DO:
  *
  *   `resolve`  turns a page NAME the server sent - "ResourceIndex",
- *              "auth/Login" - into a component, by globbing this directory.
+ *              "panel/auth/Login" - into a component, by globbing this directory.
  *              That glob is the reason a packaged screen still needs a
  *              one-line file here: Vite cannot see into node_modules.
  *
@@ -54,11 +54,25 @@ createInertiaApp({
         }
 
         /*
-         * THE LAYOUT IS APPLIED HERE unless the screen chose its own. Auth
-         * screens choose none - a sign-in form inside a sidebar you cannot use
-         * yet would be an odd first impression.
+         * THE LAYOUT IS APPLIED HERE unless the screen chose its own.
+         *
+         * AUTH LIVES AT `panel/auth/*`, NOT `auth/*`. The package deliberately
+         * moved off `auth/Login` so it would not collide with Breeze/Jetstream.
+         * Matching only `auth/` therefore wrapped every packaged sign-in in the
+         * panel shell - sidebar, search, notifications - around a form nobody
+         * can use yet. That is the "install looks broken / design changed"
+         * failure on a fresh app.
+         *
+         * Landing and error pages also draw their own chrome: a guest has no
+         * panel to be inside, and an unmatched URL never starts a session.
          */
-        page.default.layout ??= name.startsWith('auth/') ? undefined : PanelLayout
+        const standalone =
+            name.startsWith('panel/auth/') ||
+            name.startsWith('auth/') ||
+            name.startsWith('landing/') ||
+            name.startsWith('errors/')
+
+        page.default.layout ??= standalone ? undefined : PanelLayout
 
         return page
     },

@@ -443,6 +443,41 @@ TEXT
      * a DENY signal here, never "all tenants".
 TEXT;
 
+        /*
+         * THE DEFAULT `web` GUARD ALREADY HAS `passwords.users` IN A STOCK
+         * Laravel app, so the admin panel can offer "Forgot password?" out of
+         * the box - which is what the demo login shows. A custom guard still
+         * ships OFF until a matching broker exists; enabling it without one
+         * would mail reset links against the wrong user table.
+         */
+        $passwordReset = $guard === 'web'
+            ? <<<'PHP'
+                /*
+                 * SELF-SERVICE RESET against Laravel's default `users` broker.
+                 * The `web` guard's accounts live there on a stock install.
+                 */
+                ->passwordReset(true)
+                ->passwordBroker('users')
+PHP
+            : <<<PHP
+                /*
+                 * NO SELF-SERVICE RESET UNTIL THERE IS A BROKER FOR IT.
+                 *
+                 * A BROKER NAMES A PROVIDER, WHICH NAMES A TABLE. Offering a
+                 * reset without one falls back to the application's, so a
+                 * request from THIS portal is looked up among the DEFAULT
+                 * guard's accounts - finding nobody on a good day, and for an
+                 * address held in both, mailing a working reset link for
+                 * somebody else's account.
+                 *
+                 * TO TURN IT ON: add a `passwords.{$guard}` entry to
+                 * `config/auth.php` pointing at this guard's provider, then
+                 * `->passwordReset(true)->passwordBroker('{$guard}')`.
+                 * `PanelSeparationConformanceTest` checks the two agree.
+                 */
+                ->passwordReset(false)
+PHP;
+
         return <<<PHP
 <?php
 
@@ -499,22 +534,7 @@ final class {$studly}PanelProvider extends ServiceProvider
                  */
                 ->login()
 
-                /*
-                 * NO SELF-SERVICE RESET UNTIL THERE IS A BROKER FOR IT.
-                 *
-                 * A BROKER NAMES A PROVIDER, WHICH NAMES A TABLE. Offering a
-                 * reset without one falls back to the application's, so a
-                 * request from THIS portal is looked up among the DEFAULT
-                 * guard's accounts - finding nobody on a good day, and for an
-                 * address held in both, mailing a working reset link for
-                 * somebody else's account.
-                 *
-                 * TO TURN IT ON: add a `passwords.{$guard}` entry to
-                 * `config/auth.php` pointing at this guard's provider, then
-                 * `->passwordReset(true)->passwordBroker('{$guard}')`.
-                 * `PanelSeparationConformanceTest` checks the two agree.
-                 */
-                ->passwordReset(false)
+{$passwordReset}
 
                 /*
                  * WHAT THIS PORTAL DOES NOT MOUNT, AND WHY THE DEFAULT IS OFF.
@@ -553,7 +573,7 @@ final class {$studly}PanelProvider extends ServiceProvider
                     for: 'App\\\\Panel\\\\{$studly}\\\\Resources',
                 )
 
-                ->brandName(fn (): string => config('app.name').' — {$studly}'),
+                ->brandName(fn (): string => config('app.name')),
         );
     }
 }

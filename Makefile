@@ -80,15 +80,6 @@ test-package: ## Run packages/panel's own suite - Testbench, fixture models, no 
 split: ## Build the standalone package branches (see scripts/split.sh; nothing is pushed)
 	@scripts/split.sh
 
-# THE ORDER IS THE WHOLE POINT OF THIS TARGET.
-#
-# `inertia:start-ssr` reads `inertia.ssr.enabled` and exits with "Inertia SSR is
-# not enabled" when it is false - so the flag has to be set BEFORE the server is
-# started, not after. `config/inertia.php` documented it the other way round and
-# the failure lands on the step that looks least likely to fail.
-#
-# Serve the app with INERTIA_SSR_ENABLED=true as well, or requests still render
-# client-only against a server that is running perfectly.
 # THE ONLY CHECK THAT SEES WHAT IS PUBLISHED. Everything else in this
 # repository reads `packages/ui` as SOURCE through a Vite alias and
 # `packages/panel` as a path repository, so `dist/` and the pruned archive - the
@@ -105,6 +96,15 @@ verify-install: ## Install both packages as a stranger would and build against t
 verify-broadcast: ## Prove a broadcast reaches a subscriber over a real socket
 	@scripts/verify-broadcast.sh
 
+# THE ORDER IS THE WHOLE POINT OF THIS TARGET.
+#
+# `inertia:start-ssr` reads `inertia.ssr.enabled` and exits with "Inertia SSR is
+# not enabled" when it is false - so the flag has to be set BEFORE the server is
+# started, not after. `config/inertia.php` documented it the other way round and
+# the failure lands on the step that looks least likely to fail.
+#
+# Serve the app with INERTIA_SSR_ENABLED=true as well, or requests still render
+# client-only against a server that is running perfectly.
 .PHONY: ssr
 ssr: ## Build the SSR bundle and start the SSR server (flag first - see the note)
 	@cd $(PLAYGROUND) && npm run build:ssr

@@ -40,9 +40,11 @@ const page = usePage()
  * name. `'Panel'` is the same default `PanelSidebar` shipped before this
  * component replaced it.
  */
-const name = computed(
-    () => (page.props.panelBrand as string | null) ?? (page.props.name as string | null) ?? 'Panel',
-)
+const name = computed(() => {
+    const panel = page.props.panel as { brand?: string | null } | null | undefined
+
+    return panel?.brand ?? (page.props.panelBrand as string | null) ?? (page.props.name as string | null) ?? 'Panel'
+})
 
 const logo = computed(() => (page.props.panelLogo as string | null) ?? null)
 
