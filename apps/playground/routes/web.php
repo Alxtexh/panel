@@ -18,7 +18,6 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImportController;
-use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\SavedViewController;
@@ -644,10 +643,11 @@ PanelRoutes::extend(function (array $resources): void {
      | portal without `clients` must not get a route pointing at a controller
      | that assumes one.
      */
-    if (in_array('clients', $resources, true)) {
-        Route::get('clients/{client}/invoice', [InvoiceController::class, 'show'])
-            ->whereNumber('client')->name('invoice');
-    }
+    /*
+     | THE INVOICE ROUTE IS THE DEMO'S NOW. It points at a controller that
+     | assumes a subscriber, so it registers itself from `DemoServiceProvider`
+     | through the same `PanelRoutes::extend()` seam any package would use.
+     */
 });
 
 // Scratch preview of the packaged shell.

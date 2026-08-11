@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Client;
-use App\Models\ClientSession;
+use App\Demo\Models\Client;
+use App\Demo\Models\ClientSession;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

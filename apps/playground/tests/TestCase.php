@@ -30,6 +30,25 @@ abstract class TestCase extends BaseTestCase
      */
     protected function setUp(): void
     {
+        /*
+         * BEFORE THE APPLICATION BOOTS, NOT AFTER - and the order is the whole
+         * point.
+         *
+         * `DashboardExtras` and `AssistantTools` are static registries the
+         * demo's provider appends to during BOOT. Clearing them after
+         * `parent::setUp()` therefore wipes the registrations that boot just
+         * made, and every dashboard test sees an empty dashboard. Clearing them
+         * first discards the PREVIOUS test's entries and lets this test's boot
+         * fill them again.
+         *
+         * Written down because the wrong order fails in a way that looks like
+         * the feature being broken rather than the harness: fifteen tests
+         * reporting a missing widget, on a screen that works perfectly in a
+         * browser.
+         */
+        \App\Panel\DashboardExtras::flush();
+        \App\Ai\AssistantTools::flush();
+
         parent::setUp();
 
         $this->withoutVite();

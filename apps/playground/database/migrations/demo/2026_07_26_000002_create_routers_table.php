@@ -6,22 +6,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Routers - the demo's own, split out of the plans migration when the ISP
+ * domain was fenced. Deleting `database/migrations/demo` removes this table
+ * along with everything else the demo owns.
+ */
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('plans', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->string('name');
-            $table->unsignedInteger('speed_mbps');
-            $table->unsignedInteger('price_cents');
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-
-            $table->index(['tenant_id', 'is_active', 'name']);
-        });
-
         Schema::create('routers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
@@ -39,6 +32,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('routers');
-        Schema::dropIfExists('plans');
     }
 };

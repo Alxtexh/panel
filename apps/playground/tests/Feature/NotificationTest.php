@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Router;
+use App\Demo\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\JobFinished;

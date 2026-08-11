@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Ai\Tools\FindSubscriber;
-use App\Ai\Tools\SuspendSubscriber;
-use App\Models\Client;
+use App\Demo\Ai\Tools\FindSubscriber;
+use App\Demo\Ai\Tools\SuspendSubscriber;
+use App\Demo\Models\Client;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

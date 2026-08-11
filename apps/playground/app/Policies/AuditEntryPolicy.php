@@ -6,7 +6,6 @@ namespace App\Policies;
 
 use App\Models\AuditEntry;
 use App\Models\User;
-use App\Panel\Resources\ActivityResource;
 use Alxtexh\Panel\Support\Abilities;
 
 /**
@@ -31,6 +30,17 @@ use Alxtexh\Panel\Support\Abilities;
  */
 final class AuditEntryPolicy
 {
+    /**
+     * THE RESOURCE KEY AS A LITERAL, not `ActivityResource::key()`.
+     *
+     * The audit ENGINE and this model are the starter's; the screen that lists
+     * entries is the demo's `ActivityResource`, which is fenced in `app/Demo`.
+     * Referring to that class from here would mean deleting the demo takes this
+     * policy - and therefore the audit trail - with it. The key is a string on
+     * both sides, so naming it is what keeps the dependency one-way.
+     */
+    private const RESOURCE_KEY = 'activities';
+
     public function viewAny(User $user): bool
     {
         /*
@@ -41,12 +51,12 @@ final class AuditEntryPolicy
          * `hasPermission` returned false for everybody, and the screen was
          * simply invisible with no error to explain it.
          */
-        return $user->hasPermission(Abilities::name('viewAny', ActivityResource::key()));
+        return $user->hasPermission(Abilities::name('viewAny', self::RESOURCE_KEY));
     }
 
     public function view(User $user, ?AuditEntry $entry = null): bool
     {
-        return $user->hasPermission(Abilities::name('view', ActivityResource::key()));
+        return $user->hasPermission(Abilities::name('view', self::RESOURCE_KEY));
     }
 
     public function create(User $user): bool

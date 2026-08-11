@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Panel\Resources;
+namespace App\Demo\Panel\Resources;
 
-use App\Models\Router;
+use App\Demo\Models\Router;
 use App\Panel\Clusters\NetworkCluster;
 use Alxtexh\Panel\Forms\Fields\SelectField;
 use Alxtexh\Panel\Forms\Fields\TextField;

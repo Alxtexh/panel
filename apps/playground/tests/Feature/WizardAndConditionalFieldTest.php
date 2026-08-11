@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Router;
+use App\Demo\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Panel\Resources\RouterResource;
+use App\Demo\Panel\Resources\RouterResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;

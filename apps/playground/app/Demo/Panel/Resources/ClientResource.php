@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Panel\Resources;
+namespace App\Demo\Panel\Resources;
 
-use App\Models\Client;
-use App\Models\ClientSession;
+use App\Demo\Models\Client;
+use App\Demo\Models\ClientSession;
 use App\Models\Plan;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;

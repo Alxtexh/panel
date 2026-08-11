@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Console\Commands;
+namespace App\Demo\Console;
 
 use App\Support\DemoData;
 use Illuminate\Console\Command;

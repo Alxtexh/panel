@@ -4,28 +4,20 @@ namespace App\Providers;
 
 use Alxtexh\Panel\CustomFields\CustomField;
 use Alxtexh\Panel\Documents\DocumentBranding;
-use Alxtexh\Panel\Documents\DocumentKinds;
 use Alxtexh\Panel\Models\Ticket;
 use Alxtexh\Panel\Support\Budgets;
 use Alxtexh\Panel\Support\HelpCentre;
 use Alxtexh\Panel\Support\SettingsIndex;
 use Alxtexh\Panel\Support\TicketStats;
 use Alxtexh\Panel\Trash\TrashBin;
-use App\Documents\ClientInvoiceKind;
 use App\Documents\OrganisationBranding;
 use App\Listeners\RecordLastLogin;
 use App\Models\AuditEntry;
-use App\Models\Client;
-use App\Models\ClientSession;
 use App\Models\Plan;
-use App\Models\Router;
 use App\Models\User;
 use App\Policies\AuditEntryPolicy;
-use App\Policies\ClientPolicy;
-use App\Policies\ClientSessionPolicy;
 use App\Policies\CustomFieldPolicy;
 use App\Policies\PlanPolicy;
-use App\Policies\RouterPolicy;
 use App\Policies\TicketPolicy;
 use App\Policies\UserPolicy;
 use App\Support\HelpArticles;
@@ -142,12 +134,12 @@ class AppServiceProvider extends ServiceProvider
         // registry is the same either way.
         // The panel denies any ability whose model has no policy, so these are
         // required rather than optional.
-        Gate::policy(Client::class, ClientPolicy::class);
-        // The nested sessions resource (roadmap 4.2) - a policy of its own,
-        // because "may view the client" grants the LIST through the parent
-        // check, while each row still answers to its own model's gate.
-        Gate::policy(ClientSession::class, ClientSessionPolicy::class);
-        Gate::policy(Router::class, RouterPolicy::class);
+        /*
+         | THE DEMO'S POLICIES MOVED TO `DemoServiceProvider`. Client,
+         | ClientSession and Router are fenced in `app/Demo`, and a
+         | `Gate::policy` left here would point at a class that is gone the
+         | moment somebody deletes the demo.
+         */
         Gate::policy(Plan::class, PlanPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         /*
@@ -188,8 +180,9 @@ class AppServiceProvider extends ServiceProvider
          | registers its three in `register()`, so anything here is guaranteed
          | to run after them and win without depending on provider order.
          */
-        app(DocumentKinds::class)
-            ->register(new ClientInvoiceKind);
+        // The ISP invoice kind moved to `DemoServiceProvider` with the rest of
+        // the demo. The document ENGINE stays in the package; only its
+        // ISP-shaped instance was application-specific.
 
         /*
          | A DOCUMENT'S LETTERHEAD, FROM THE ORGANISATION SETTINGS SCREEN.

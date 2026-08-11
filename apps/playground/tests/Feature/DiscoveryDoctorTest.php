@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Panel\Resources\ClientResource;
+use App\Demo\Panel\Resources\ClientResource;
 use Illuminate\Support\Facades\Artisan;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;

@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Demo\Http\Controllers;
 
-use App\Models\Client;
+// The application's base controller - unqualified `Controller` would now
+// resolve inside this namespace, which is empty.
+use App\Http\Controllers\Controller;
+
+use App\Demo\Models\Client;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Documents;
+namespace App\Demo\Documents;
 
-use App\Models\Client;
+use App\Demo\Models\Client;
 use Alxtexh\Panel\Documents\Kinds\InvoiceKind;
 
 /**

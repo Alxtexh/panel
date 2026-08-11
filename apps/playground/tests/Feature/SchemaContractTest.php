@@ -6,9 +6,9 @@ namespace Tests\Feature;
 
 use App\Models\Tenant;
 use App\Models\User;
-use App\Panel\Resources\ClientResource;
+use App\Demo\Panel\Resources\ClientResource;
 use App\Panel\Resources\PlanResource;
-use App\Panel\Resources\RouterResource;
+use App\Demo\Panel\Resources\RouterResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Alxtexh\Panel\CustomFields\CustomField;

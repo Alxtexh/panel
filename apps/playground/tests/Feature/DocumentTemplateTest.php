@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Documents\ClientInvoiceKind;
-use App\Models\Client;
+use App\Demo\Documents\ClientInvoiceKind;
+use App\Demo\Models\Client;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Providers;
+namespace App\Demo;
 
-use App\Models\Client;
-use App\Models\Router;
+use App\Demo\Models\Client;
+use App\Demo\Models\Router;
 use DateTimeImmutable;
 use Illuminate\Support\ServiceProvider;
 use Alxtexh\Panel\Alerts\Alert;

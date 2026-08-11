@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Browser;
 
-use App\Models\Client;
+use App\Demo\Models\Client;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;

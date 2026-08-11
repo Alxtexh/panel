@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Panel\Resources;
+namespace App\Demo\Panel\Resources;
 
-use App\Models\ClientSession;
+use App\Demo\Models\ClientSession;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\BadgeColumn;
 use Alxtexh\Panel\Tables\Columns\DateColumn;

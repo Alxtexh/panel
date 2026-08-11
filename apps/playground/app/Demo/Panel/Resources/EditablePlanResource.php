@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Panel\Resources;
+namespace App\Demo\Panel\Resources;
 
 use App\Models\Plan;
 use Alxtexh\Panel\Resources\Resource;

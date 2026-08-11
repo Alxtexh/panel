@@ -1,6 +1,6 @@
 <?php
 
-use App\Providers\AlertServiceProvider;
+use App\Demo\DemoServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Providers\Panels\AdminPanelProvider;
@@ -23,8 +23,6 @@ return [
     ResellerPanelProvider::class,
     SuperadminPanelProvider::class,
     AppServiceProvider::class,
-    // What this ISP considers wrong, for the packaged bell to resolve.
-    AlertServiceProvider::class,
     // Wires stancl's tenancy EVENTS to its bootstrappers. Without it tenancy
     // initialises - the tenant is bound in the container - and nothing else
     // happens: no connection switch, no cache tag, no filesystem root. The
@@ -32,4 +30,13 @@ return [
     TenancyServiceProvider::class,
     FortifyServiceProvider::class,
     ClientPanelProvider::class,
+    /*
+     | THE ISP DEMONSTRATION, FENCED SO IT CAN BE REMOVED.
+     |
+     | Everything the demo owns lives under `app/Demo` and
+     | `database/migrations/demo`. Deleting those two directories and this one
+     | line leaves a working panel with Users, Plans and Tenants - which is
+     | what the README means by "replaces the data".
+     */
+    DemoServiceProvider::class,
 ];

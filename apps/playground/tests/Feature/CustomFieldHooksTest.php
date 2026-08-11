@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Client;
+use App\Demo\Models\Client;
 use App\Models\Tenant;
-use App\Panel\Resources\ClientResource;
+use App\Demo\Panel\Resources\ClientResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Alxtexh\Panel\Support\SchemaCache;

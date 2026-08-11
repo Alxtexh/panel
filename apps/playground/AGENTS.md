@@ -59,6 +59,7 @@ Panels registered in this application:
 Resources are discovered from:
 
 - `app/Panel/Resources` → `App\Panel\Resources`
+- `app/Demo/Panel/Resources` → `App\Demo\Panel\Resources`
 
 A resource belongs to exactly one panel — its key is a URL segment and an
 ability name, both globally unique. A second portal needing the same screen
@@ -682,13 +683,13 @@ about itself.
 | --- | --- | --- |
 | `tickets` | `TicketResource` | `admin` |
 | `announcements` | `AnnouncementResource` | `admin` |
+| `plans` | `PlanResource` | `admin` |
+| `users` | `UserResource` | `admin` |
 | `activities` | `ActivityResource` | `admin` |
 | `clients` | `ClientResource` | `admin` |
 | `sessions` | `ClientSessionResource` | `admin` |
 | `editable-plans` | `EditablePlanResource` | `admin` |
-| `plans` | `PlanResource` | `admin` |
 | `routers` | `RouterResource` | `admin` |
-| `users` | `UserResource` | `admin` |
 | `tenants` | `TenantResource` | `platform` |
 | `reseller-plans` | `PlanResource` | `reseller` |
 | `content-entries` | `ContentEntryResource` | `superadmin` |

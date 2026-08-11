@@ -22,17 +22,15 @@ use Illuminate\Support\Facades\Schema;
  *   routers  WHERE tenant_id = ?                      ORDER BY last_seen_at DESC, id DESC
  *   plans    WHERE tenant_id = ? [AND is_active = ?]  ORDER BY created_at DESC, id DESC
  *   plans    WHERE tenant_id = ?                      ORDER BY speed_mbps ASC, id ASC
+ *
+ * SPLIT WHEN THE ISP DOMAIN WAS FENCED. The routers half moved to
+ * `database/migrations/demo`; a migration indexing both meant deleting the
+ * demo required editing a file rather than removing one.
  */
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('routers', function (Blueprint $table) {
-            $table->index(['tenant_id', 'created_at', 'id'], 'routers_tenant_created_id_idx');
-            $table->index(['tenant_id', 'status', 'created_at', 'id'], 'routers_tenant_status_created_idx');
-            $table->index(['tenant_id', 'last_seen_at', 'id'], 'routers_tenant_seen_id_idx');
-        });
-
         Schema::table('plans', function (Blueprint $table) {
             $table->index(['tenant_id', 'created_at', 'id'], 'plans_tenant_created_id_idx');
             $table->index(['tenant_id', 'is_active', 'created_at', 'id'], 'plans_tenant_active_created_idx');
@@ -42,12 +40,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('routers', function (Blueprint $table) {
-            $table->dropIndex('routers_tenant_created_id_idx');
-            $table->dropIndex('routers_tenant_status_created_idx');
-            $table->dropIndex('routers_tenant_seen_id_idx');
-        });
-
         Schema::table('plans', function (Blueprint $table) {
             $table->dropIndex('plans_tenant_created_id_idx');
             $table->dropIndex('plans_tenant_active_created_idx');

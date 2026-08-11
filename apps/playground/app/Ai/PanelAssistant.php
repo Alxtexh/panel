@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Ai;
 
+use App\Ai\AssistantTools;
 use App\Ai\Middleware\MeterPerTenant;
-use App\Ai\Tools\FindSubscriber;
 use App\Ai\Tools\SearchKnowledge;
-use App\Ai\Tools\SuspendSubscriber;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
@@ -70,10 +69,21 @@ final class PanelAssistant implements Agent, Conversational, HasTools
     /** @return iterable<object> */
     public function tools(): iterable
     {
+        /*
+         * THE PACKAGED TOOL PLUS WHATEVER THIS INSTALLATION REGISTERED.
+         *
+         * `FindSubscriber` and `SuspendSubscriber` used to be named here, which
+         * put two ISP tools in the starter's assistant - so deleting the demo
+         * left the agent referring to classes that no longer exist. They are
+         * contributed through `AssistantTools::add()` now, the same seam
+         * `HelpCentre` and `SettingsIndex` already use.
+         *
+         * SEARCHING THE KNOWLEDGE BASE STAYS, because it is about the PANEL
+         * rather than about subscribers - every installation has one.
+         */
         return [
             new SearchKnowledge,
-            new FindSubscriber,
-            new SuspendSubscriber,
+            ...AssistantTools::all(),
         ];
     }
 

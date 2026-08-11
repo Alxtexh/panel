@@ -2,7 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Models;
+namespace App\Demo\Models;
+
+/*
+ * `Plan` IS IMPORTED NOW, and it was not before.
+ *
+ * This model used to live in `App\Models` beside `Plan`, so an unqualified
+ * `Plan::class` resolved by same-namespace lookup and needed no import. Fencing
+ * the ISP domain moved this file, and the same expression silently began
+ * meaning `App\Demo\Models\Plan` - a class that does not exist. The failure
+ * surfaced as a 500 inside `belongsTo`, several frames from the cause.
+ *
+ * Anything moved out of `App\Models` has to import what it left behind.
+ */
+use App\Models\Plan;
 
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
