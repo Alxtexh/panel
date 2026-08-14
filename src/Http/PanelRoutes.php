@@ -243,11 +243,17 @@ final class PanelRoutes
          * elsewhere costs nothing and explains itself.
          */
         if ($panel->hasLogin()) {
-            Route::middleware([
+            $loginGroup = Route::middleware([
                 Middleware\UsePanel::class.':'.$panel->id,
                 ...$panel->getGuestMiddleware(),
                 Middleware\SharePanelProps::class,
-            ])
+            ]);
+
+            if ($panel->getDomain() !== null) {
+                $loginGroup = $loginGroup->domain($panel->getDomain());
+            }
+
+            $loginGroup
                 ->prefix($panel->getPath())
                 ->name($panel->getRouteName())
                 ->group(function () use ($panel): void {
@@ -307,7 +313,7 @@ final class PanelRoutes
                 });
         }
 
-        Route::middleware([
+        $mainGroup = Route::middleware([
             Middleware\UsePanel::class.':'.$panel->id,
             ...$panel->getMiddleware(),
 
@@ -332,7 +338,13 @@ final class PanelRoutes
              * middleware for why an idle timer is not enough here.
              */
             Middleware\EnforceSessionLifetime::class,
-        ])
+        ]);
+
+        if ($panel->getDomain() !== null) {
+            $mainGroup = $mainGroup->domain($panel->getDomain());
+        }
+
+        $mainGroup
             ->prefix($panel->getPath())
             ->name($panel->getRouteName())
             ->group(function () use ($keys, $panel): void {
@@ -467,11 +479,12 @@ final class PanelRoutes
                      * `panel.routes.roles => false` is the escape: mount
                      * `RoleController` wherever you like and keep your resource.
                      */
-                    if (array_key_exists('roles', app(PanelManager::class)->resources())) {
+                    if (array_key_exists('roles', app(PanelManager::class)->resourcesFor($panel->id))) {
                         throw new \RuntimeException(
-                            'A resource keyed [roles] collides with the panel\'s permission matrix at '
-                            .'/roles, which would leave the matrix unreachable. Rename the resource, or '
-                            .'set panel.routes.roles to false and mount RoleController at a path of your own.'
+                            "A resource keyed [roles] in the [{$panel->id}] panel collides with the panel's "
+                            .'permission matrix at /roles, which would leave the matrix unreachable. '
+                            .'Rename the resource, or set panel.routes.roles to false and mount '
+                            .'RoleController at a path of your own.'
                         );
                     }
 

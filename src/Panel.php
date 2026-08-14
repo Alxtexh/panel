@@ -35,6 +35,8 @@ final class Panel
 
     private string $path = 'app';
 
+    private ?string $domain = null;
+
     private string $guard = 'web';
 
     private string $context = self::CONTEXT_TENANT;
@@ -523,6 +525,30 @@ final class Panel
         $this->path = trim($path, '/');
 
         return $this;
+    }
+
+    /**
+     * Restrict this panel to requests arriving on a specific hostname.
+     *
+     * When set, the panel's routes are wrapped in `Route::domain($pattern)`,
+     * so `isp.example.com` and `admin.example.com` can each host a separate
+     * portal at the same path (e.g. both at `/`) without one swallowing the
+     * other's URLs.
+     *
+     * The pattern follows Laravel's route-domain syntax: a plain hostname
+     * (`isp.example.com`) or a pattern with a `{wildcard}` capture
+     * (`{tenant}.example.com`).
+     */
+    public function domain(string $domain): self
+    {
+        $this->domain = $domain;
+
+        return $this;
+    }
+
+    public function getDomain(): ?string
+    {
+        return $this->domain;
     }
 
     public function guard(string $guard): self
