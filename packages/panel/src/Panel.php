@@ -120,6 +120,22 @@ final class Panel
      */
     private string $authLayout = 'centered';
 
+    /**
+     * The shared sign-in path this panel participates in, or null for none.
+     *
+     * CREDENTIAL-BASED PANEL ROUTING. When two panels declare the same path,
+     * one route is registered there and the controller tries each panel's guard
+     * in registration order. The first that accepts the credentials determines
+     * the destination: the user lands in the panel that owns their account, not
+     * on a shared dashboard that would need to know which portal they were aiming
+     * at.
+     *
+     * NULL MEANS EACH PANEL HAS ITS OWN DOOR. The per-panel `login()` and the
+     * shared `sharedLogin()` are independent; a panel may have both (its own
+     * `/admin/login` plus participates in the shared `/login`) or only one.
+     */
+    private ?string $sharedLoginPath = null;
+
     private ?string $passwordBroker = null;
 
     private function __construct(public readonly string $id) {}
@@ -497,6 +513,34 @@ final class Panel
     public function getAuthLayout(): string
     {
         return $this->authLayout;
+    }
+
+    /**
+     * Opt this panel into a shared sign-in page at `$path`.
+     *
+     * When two or more panels declare the same path, the package registers ONE
+     * route there. POST to that route tries each participating panel's guard in
+     * registration order; the first that accepts the credentials decides where
+     * the user lands.
+     *
+     * THE DEFAULT PATH IS `login`, WHICH IS WHERE FORTIFY AND BREEZE PUT THEIR
+     * OWN SIGN-IN. `PanelRoutes` skips a path that is already claimed - so if
+     * the application already owns `/login`, the shared route does not replace
+     * it. The declaration remains in code and is ready once the conflict is
+     * resolved.
+     *
+     * @param non-empty-string $path
+     */
+    public function sharedLogin(string $path = 'login'): self
+    {
+        $this->sharedLoginPath = $path;
+
+        return $this;
+    }
+
+    public function getSharedLoginPath(): ?string
+    {
+        return $this->sharedLoginPath;
     }
 
     public function getLoginSlug(): string
