@@ -149,6 +149,7 @@ final class SharePanelProps
                      */
                     'home' => PanelHome::urlFor($panel),
                     'brand' => $panel->resolveBrandName(),
+                    'authLayout' => $panel->getAuthLayout(),
 
                     /*
                      * THE PANEL'S OWN PALETTE, resolved per request because a
