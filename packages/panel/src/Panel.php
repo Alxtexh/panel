@@ -108,6 +108,18 @@ final class Panel
     /** See `loginComponent()` for why this is not `auth/Login`. */
     private string $loginComponent = 'panel/auth/Login';
 
+    /**
+     * Which auth-screen layout this panel uses: 'centered' (default) or 'split'.
+     *
+     * 'centered' — a card in the middle of a plain background, the existing style.
+     * 'split'    — branding panel on the left, form on the right. The choice
+     *              propagates to every auth screen this panel owns: login, register,
+     *              password request / reset, OTP, and lock screen all inherit it via
+     *              the shared `AuthLayout` wrapper, so selecting it once covers the
+     *              whole authentication flow.
+     */
+    private string $authLayout = 'centered';
+
     private ?string $passwordBroker = null;
 
     private function __construct(public readonly string $id) {}
@@ -471,6 +483,20 @@ final class Panel
     public function getLoginComponent(): string
     {
         return $this->loginComponent;
+    }
+
+    /** @param 'centered'|'split' $layout */
+    public function authLayout(string $layout): self
+    {
+        $this->authLayout = $layout;
+
+        return $this;
+    }
+
+    /** @return 'centered'|'split' */
+    public function getAuthLayout(): string
+    {
+        return $this->authLayout;
     }
 
     public function getLoginSlug(): string

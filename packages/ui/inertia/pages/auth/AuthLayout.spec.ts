@@ -76,4 +76,37 @@ describe('AuthLayout', () => {
     it('never renders an empty heading', () => {
         expect(heading({})).toBe('Panel')
     })
+
+    describe('split layout', () => {
+        function splitWrapper(props: Record<string, unknown>) {
+            page.props = props
+            return mount(AuthLayout, { props: { title: 'Log in', description: 'Enter your details' } })
+        }
+
+        it('renders the split layout when panel.authLayout is split', () => {
+            const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme', authLayout: 'split' } })
+            // The muted image panel renders.
+            expect(wrapper.find('.bg-muted').exists()).toBe(true)
+            // The form title renders as h1.
+            expect(wrapper.find('h1').text()).toBe('Log in')
+        })
+
+        it('shows the brand name in the split image panel', () => {
+            const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme — Admin', authLayout: 'split' } })
+            // Desktop image panel contains the brand name link.
+            expect(wrapper.find('.bg-muted a span').text()).toBe('Acme — Admin')
+        })
+
+        it('shows the form description in split layout', () => {
+            const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme', authLayout: 'split' } })
+            // Target the description p in the form panel (not inside the muted panel).
+            expect(wrapper.find('.bg-background p').text()).toBe('Enter your details')
+        })
+
+        it('falls back to centered when authLayout is absent', () => {
+            const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme' } })
+            // Centered layout has no .bg-muted image panel.
+            expect(wrapper.find('.bg-muted').exists()).toBe(false)
+        })
+    })
 })
