@@ -223,7 +223,8 @@ watch(
     { deep: true },
 )
 
-function toggleColumnDraft(key: string) {
+/** Toggle immediately — no staging, no Apply button. */
+function toggleColumn(key: string) {
     const next = new Set(columnDraft.value)
 
     if (next.has(key)) {
@@ -233,11 +234,12 @@ function toggleColumnDraft(key: string) {
     }
 
     columnDraft.value = next
+    emit('apply-columns', [...next])
 }
 
-function applyColumns(close: () => void) {
-    emit('apply-columns', [...columnDraft.value])
-    close()
+function resetColumns() {
+    columnDraft.value = new Set()
+    emit('apply-columns', [])
 }
 
 /** Clearing resets the local search box too, or it keeps a stale term. */
@@ -521,17 +523,16 @@ function clearEverything() {
         </PkDropdown>
 
         <!-- Columns -->
-        <PkDropdown>
+        <PkDropdown :dismiss-on-panel-click="false">
             <template #trigger>
                 <button
                     type="button"
-                    class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-9 shrink-0 items-center justify-center rounded-md border transition-colors"
-                    aria-label="Columns"
-                    title="Columns"
+                    class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 transition-colors"
+                    aria-label="Toggle columns"
                 >
                     <svg
                         viewBox="0 0 24 24"
-                        class="size-4"
+                        class="size-4 shrink-0"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
@@ -539,48 +540,64 @@ function clearEverything() {
                         <rect x="3" y="4" width="18" height="16" rx="2" />
                         <path d="M9 4v16M15 4v16" />
                     </svg>
+                    <span class="text-sm">Columns View</span>
                 </button>
             </template>
 
-            <template #panel="{ close }">
-                <div class="flex items-center justify-between px-1 pt-1 pb-2">
-                    <span class="text-sm font-semibold">Columns</span>
+            <template #panel>
+                <p class="text-muted-foreground px-3 pt-2.5 pb-1 text-xs font-medium">
+                    Toggle columns
+                </p>
+
+                <div class="flex max-h-80 flex-col overflow-y-auto py-1">
                     <button
-                        class="text-destructive text-xs hover:underline"
-                        @click="columnDraft = new Set()"
+                        v-for="col in columns"
+                        :key="col.key"
+                        type="button"
+                        class="hover:bg-accent flex items-center gap-2 px-3 py-1.5 text-sm"
+                        :class="col.locked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'"
+                        :disabled="col.locked"
+                        @click="toggleColumn(col.key)"
                     >
-                        Reset
+                        <!-- Checkmark when visible; blank spacer when hidden. -->
+                        <svg
+                            v-if="!columnDraft.has(col.key)"
+                            viewBox="0 0 24 24"
+                            class="size-4 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                        <span v-else class="size-4 shrink-0" aria-hidden="true" />
+                        {{ col.label }}
                     </button>
                 </div>
 
-                <div class="flex max-h-80 flex-col gap-0.5 overflow-y-auto px-1 pb-3">
-                    <label
-                        v-for="col in columns"
-                        :key="col.key"
-                        class="hover:bg-accent flex items-center gap-2.5 rounded px-2 py-1.5 text-sm"
-                        :class="col.locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'"
+                <div class="border-t">
+                    <button
+                        type="button"
+                        class="hover:bg-accent flex w-full items-center gap-2 px-3 py-1.5 text-sm"
+                        @click="resetColumns"
                     >
-                        <!-- A real checkbox, not a tick glyph: it carries its own
-                             disabled and indeterminate semantics, and screen
-                             readers already know what it is. -->
-                        <input
-                            type="checkbox"
-                            class="accent-primary size-4"
-                            :checked="!columnDraft.has(col.key)"
-                            :disabled="col.locked"
-                            @change="toggleColumnDraft(col.key)"
-                        />
-                        {{ col.label }}
-                    </label>
+                        <svg
+                            viewBox="0 0 24 24"
+                            class="size-4 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                        </svg>
+                        Reset
+                    </button>
                 </div>
-
-                <button
-                    type="button"
-                    class="bg-primary text-primary-foreground hover:bg-primary/90 h-9 w-full rounded-md text-sm font-medium transition-colors"
-                    @click="applyColumns(close)"
-                >
-                    Apply columns
-                </button>
             </template>
         </PkDropdown>
 
