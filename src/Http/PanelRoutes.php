@@ -61,9 +61,54 @@ final class PanelRoutes
         self::wellKnown();
         self::landing();
 
+        $sharedGroups = [];
+
         foreach (app(PanelManager::class)->panels() as $panel) {
             self::register($panel);
+
+            if ($path = $panel->getSharedLoginPath()) {
+                $sharedGroups[$path][] = $panel->id;
+            }
         }
+
+        foreach ($sharedGroups as $path => $panelIds) {
+            self::registerSharedLogin($path, $panelIds);
+        }
+    }
+
+    /**
+     * One sign-in route for two or more panels.
+     *
+     * REGISTERED AFTER ALL PER-PANEL ROUTES so that any panel-specific `/login`
+     * declared alongside it is already in the table - the shared route and the
+     * panel-specific one can coexist at different URIs.
+     *
+     * SKIPPED IF THE PATH IS ALREADY CLAIMED. Fortify, Breeze or the application's
+     * own `web.php` may already own `/login`. Rather than fight for it, the shared
+     * route defers to whoever declared first. The panels' `sharedLogin()` call
+     * still compiles - it is available the moment the conflict is resolved.
+     *
+     * @param list<string> $panelIds
+     */
+    private static function registerSharedLogin(string $path, array $panelIds): void
+    {
+        if (! self::unclaimed('GET', $path)) {
+            return;
+        }
+
+        $name = 'panel.shared-login.'.str_replace('/', '.', trim($path, '/'));
+
+        Route::middleware('web')
+            ->group(static function () use ($path, $panelIds, $name): void {
+                Route::get($path, [Controllers\SharedAuthController::class, 'showLogin'])
+                    ->defaults('panels', $panelIds)
+                    ->name($name);
+
+                Route::post($path, [Controllers\SharedAuthController::class, 'login'])
+                    ->defaults('panels', $panelIds)
+                    ->middleware('throttle:20,1')
+                    ->name($name.'.attempt');
+            });
     }
 
     /**
