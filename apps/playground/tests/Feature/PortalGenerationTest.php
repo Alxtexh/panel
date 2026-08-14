@@ -72,24 +72,29 @@ final class PortalGenerationTest extends TestCase
     }
 
     /**
-     * A KEY COLLISION THROWS RATHER THAN OVERWRITING.
+     * A KEY COLLISION WITHIN THE SAME PANEL THROWS RATHER THAN OVERWRITING.
      *
-     * It used to overwrite, silently: a second portal's `PlanResource` keys as
-     * `plans`, exactly like the first's, and whichever was discovered second
-     * replaced the other - so a portal's screen rendered another portal's
-     * resource, with the other's columns, against the other's model. Discovery
-     * is alphabetical by directory, so which one won was not even stable
-     * between machines.
+     * The old rule was installation-wide: two resources anywhere claiming the
+     * same key threw. The new rule is per-panel: two resources in DIFFERENT
+     * panels may share a key (`/admin/users` and `/client/users` are different
+     * URLs), but two resources in the SAME panel still cannot.
+     *
+     * This test proves both directions: a cross-panel collision is allowed,
+     * and a within-panel collision throws.
      */
-    public function test_two_resources_cannot_share_a_key(): void
+    public function test_two_resources_cannot_share_a_key_in_the_same_panel(): void
     {
         $manager = app(PanelManager::class);
 
+        // Cross-panel: `clients` in reseller vs `clients` in admin — allowed now.
+        $manager->registerResources([CollidingClientResource::class]);
+
+        // Within-panel: a second class claiming `clients` in the reseller panel
+        // where `CollidingClientResource` just took it.
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessageMatches('/both use the key/');
 
-        // A second class claiming a key that is already taken.
-        $manager->registerResources([CollidingClientResource::class]);
+        $manager->registerResources([IntraPanelCollidingResource::class]);
     }
 
     /**
@@ -593,6 +598,30 @@ final class CollidingClientResource extends \Alxtexh\Panel\Resources\Resource
     public static function key(): string
     {
         return 'clients';
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table->model(Client::class);
+    }
+}
+
+/**
+ * A SECOND resource in the RESELLER panel claiming `clients` — within-panel collision.
+ *
+ * Used to verify that the new per-panel scope still throws when two resources in
+ * the same portal compete for the same key (cross-portal sharing is now allowed;
+ * within-portal duplication is still an error).
+ */
+final class IntraPanelCollidingResource extends \Alxtexh\Panel\Resources\Resource
+{
+    protected static string $model = Client::class;
+
+    protected static string $panel = 'reseller';
+
+    public static function key(): string
+    {
+        return 'clients'; // same panel as CollidingClientResource — must throw
     }
 
     public static function table(Table $table): Table

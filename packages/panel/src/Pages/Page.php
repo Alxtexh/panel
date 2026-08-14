@@ -250,8 +250,31 @@ abstract class Page
      * application's own changelog - same URI, later registration, and 304 lines
      * of real content replaced by an empty state. A page with nothing to offer
      * should not be routed at all.
+     *
+     * BOOT-TIME ONLY. This is evaluated during route registration, before any
+     * HTTP request exists and before any tenant is initialised. It must not
+     * read tenant data, session data, or request state.
+     *
+     * For checks that require a live request (e.g. whether the tenant's database
+     * has the table the page needs), override `isAccessible()` instead - it is
+     * evaluated at request time, after the tenant context is resolved.
      */
     public static function isEnabled(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Whether this page may be served for the current request.
+     *
+     * REQUEST-TIME GATE, evaluated after tenant initialisation. Returning false
+     * results in a 403. Override this for tenant- or feature-flag-dependent
+     * visibility; `isEnabled()` is evaluated at boot time where no tenant exists.
+     *
+     * The route is registered regardless of this return value - only pages where
+     * `isEnabled()` returns false skip route registration entirely.
+     */
+    public static function isAccessible(): bool
     {
         return true;
     }

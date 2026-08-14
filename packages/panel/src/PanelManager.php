@@ -77,12 +77,18 @@ final class PanelManager
         Pages\OrganisationPage::class,
     ];
 
-    /** @var array<string, class-string<Pages\Page>> slug => class */
+    /** @var array<string, class-string<Pages\Page>> slug => class — first-registered wins; used as fallback when no panel context */
     private array $pages = [];
+
+    /** @var array<string, array<string, class-string<Pages\Page>>> panelId => [slug => class] */
+    private array $panelPageMap = [];
 
     private bool $pagesDiscovered = false;
 
     private bool $discovered = false;
+
+    /** @var array<string, array<string, class-string>> panelId => [key => class] — populated alongside $resources */
+    private array $panelResourceMap = [];
 
     /**
      * Registered panels, keyed by id.
@@ -616,69 +622,98 @@ final class PanelManager
                 self::$resourcePanels[$class] = $panelId;
             }
 
+            $effectivePanelId = $panelId ?? $class::panel();
+
             /*
-             * A KEY IS UNIQUE ACROSS THE WHOLE INSTALLATION, and a collision
-             * throws rather than overwriting.
+             * A KEY IS UNIQUE WITHIN A PANEL, and a same-panel collision throws
+             * rather than overwriting.
              *
-             * IT USED TO OVERWRITE, SILENTLY. A reseller portal with its own
-             * `PlanResource` keys as `plans`, exactly like the operator
-             * portal's, and whichever was discovered second simply replaced the
-             * first - so one portal's screen started rendering another portal's
-             * resource, with the other's columns, against the other's model.
-             * Discovery order is alphabetical by directory, so which one won was
-             * not even stable between machines.
+             * IT USED TO THROW GLOBALLY. Two portals that naturally share a name
+             * - both have a `DashboardPage`, both have a `UserResource` keyed
+             * `users` - had to rename one, often to an `admin-`-prefixed slug
+             * that served no purpose outside the collision rule. Their URLs are
+             * already namespaced by the panel's path prefix (`/admin/users` vs
+             * `/client/users`), so there is no actual collision to prevent.
              *
-             * UNIQUE GLOBALLY RATHER THAN PER PANEL, deliberately. The key is
-             * the URL segment, the ability suffix (`view_any_plans`), the
-             * schema-cache component and the audit label; making it unique only
-             * within a panel would mean every one of those needed a panel
-             * qualifier too, and the ones that did not get one would collide
-             * quietly somewhere else. One rule, enforced at the door.
+             * THE CHECK IS STILL WITHIN-PANEL: two resources in the SAME portal
+             * claiming the same key are two URL segments on the same prefix, and
+             * whichever route registers first silently wins. That failure is
+             * unchanged and still throws.
              *
-             * THE FIX IS ONE LINE IN THE RESOURCE - override `key()` - which is
-             * why the message says so.
+             * Ability names, schema-cache keys and audit labels are looked up
+             * through the per-panel resource map (see `resourcesFor`), so a key
+             * that exists in two panels resolves unambiguously within each.
              */
-            if (isset($this->resources[$key]) && $this->resources[$key] !== $class) {
-                $existing = $this->resources[$key];
+            $this->panelResourceMap[$effectivePanelId] ??= [];
+
+            if (isset($this->panelResourceMap[$effectivePanelId][$key])
+                && $this->panelResourceMap[$effectivePanelId][$key] !== $class) {
+                $existing = $this->panelResourceMap[$effectivePanelId][$key];
 
                 throw new \RuntimeException(
-                    "Two resources both use the key [{$key}]: {$existing} and {$class}. "
-                    .'Keys are globally unique because they are URL segments and ability names. '
+                    "Two resources in the [{$effectivePanelId}] panel both use the key [{$key}]: "
+                    ."{$existing} and {$class}. "
                     .'Override `public static function key(): string` on one of them.'
                 );
             }
 
+            $this->panelResourceMap[$effectivePanelId][$key] = $class;
+
             /*
-             * THE COLLISION CHECK POINTS BOTH WAYS, because discovery order is
-             * not something either side can rely on. A resource registered
-             * after a page of the same name would otherwise take the URL and
-             * leave the page routed-but-unreachable, which is the same fault
-             * read from the other end.
+             * THE CROSS-CHECK AGAINST PAGES IS PER-PANEL for the same reason:
+             * `/admin/roles` (a resource) and `/client/roles` (a page) are
+             * different URLs on different prefixes and do not collide. Only a
+             * resource and a page in the SAME panel claiming the same segment
+             * are actually unreachable from each other.
              */
-            if (isset($this->pages[$key])) {
+            if (isset($this->panelPageMap[$effectivePanelId][$key])) {
                 throw new \RuntimeException(
                     "The resource {$class} uses the key [{$key}], which is already the slug of the page "
-                    .$this->pages[$key].'. Both are URL segments in the same panel, so one of them would '
-                    .'be unreachable. Rename one.'
+                    .$this->panelPageMap[$effectivePanelId][$key].'. Both are URL segments in the same '
+                    .'panel, so one of them would be unreachable. Rename one.'
                 );
             }
 
-            $this->resources[$key] = $class;
+            // Global flat map: first registration wins (backward-compat fallback
+            // for lookup without panel context, e.g. from commands or tests).
+            $this->resources[$key] ??= $class;
         }
     }
 
-    /** @return class-string|null */
     /**
-     * A resource by key.
+     * A resource by key, panel-scoped when a panel is explicitly active.
      *
-     * UNAMBIGUOUS BY CONSTRUCTION: keys are unique across the installation and
-     * a collision throws at registration - see `registerResources`. That is what
-     * lets this stay a lookup rather than a lookup plus a panel guess, and what
-     * makes the ROUTE the thing that decides which resources are reachable.
+     * PANEL-CONTEXT FIRST: if `UsePanel` has fired and set `$this->currentPanel`,
+     * the lookup checks the current panel's resource map first. This is what lets
+     * two panels share a key (e.g. both have a resource keyed `users`) without
+     * ambiguity — when a `/admin/users` request is being handled, `users` resolves
+     * to the admin panel's class, not the client portal's.
+     *
+     * GLOBAL FALLBACK when the key is not in the current panel, and for all
+     * contexts without an explicit panel (queued jobs, artisan commands). The URL
+     * constraint on the route (`whereIn` the panel's keys) is the primary guard
+     * against cross-panel access — a request for `/admin/reseller-plans` never
+     * matches the route at all, so the controller's `resource()` call is never
+     * reached with a foreign key. The per-panel check here is defense-in-depth,
+     * not the only line of defence.
+     *
+     * Note: `currentPanel()` (the method) falls back to the configured default
+     * panel even with no active panel — so this method checks `$this->currentPanel`
+     * (the field) to distinguish "explicitly set" from "defaulted".
      */
     public function resource(string $key): ?string
     {
-        return $this->resources()[$key] ?? null;
+        $this->resources(); // ensure discovery and panelResourceMap are populated
+
+        if ($this->currentPanel !== null) {
+            $panelResult = $this->panelResourceMap[$this->currentPanel][$key] ?? null;
+
+            if ($panelResult !== null) {
+                return $panelResult;
+            }
+        }
+
+        return $this->resources[$key] ?? null;
     }
 
     /**
@@ -828,10 +863,10 @@ final class PanelManager
             $this->applyPlugins($panel);
         }
 
-        return array_filter(
-            $this->resources(),
-            static fn (string $class): bool => (self::$resourcePanels[$class] ?? $class::panel()) === $panelId,
-        );
+        // Trigger discovery so panelResourceMap is populated.
+        $this->resources();
+
+        return $this->panelResourceMap[$panelId] ?? [];
     }
 
     /**
@@ -891,10 +926,33 @@ final class PanelManager
         return $this->pages;
     }
 
-    /** @return class-string<Pages\Page>|null */
+    /**
+     * A page by slug, panel-scoped when a panel is explicitly active.
+     *
+     * Two panels may share a slug (e.g. both have a `DashboardPage` slugged
+     * `dashboard`). When `UsePanel` has fired, the current panel's map is checked
+     * first — this is what ensures `/admin/dashboard` and `/client/dashboard`
+     * resolve to their respective page classes rather than whichever registered
+     * last. The global flat map is the fallback for all other contexts.
+     *
+     * See `resource()` for the rationale on checking `$this->currentPanel` (the
+     * field) instead of `currentPanel()` (the method that defaults to a panel).
+     *
+     * @return class-string<Pages\Page>|null
+     */
     public function page(string $slug): ?string
     {
-        return $this->pages()[$slug] ?? null;
+        $this->pages(); // ensure discovery and panelPageMap are populated
+
+        if ($this->currentPanel !== null) {
+            $panelResult = $this->panelPageMap[$this->currentPanel][$slug] ?? null;
+
+            if ($panelResult !== null) {
+                return $panelResult;
+            }
+        }
+
+        return $this->pages[$slug] ?? null;
     }
 
     /**
@@ -904,10 +962,8 @@ final class PanelManager
      */
     public function pagesFor(string $panelId): array
     {
-        return array_filter(
-            $this->pages(),
-            static fn (string $class): bool => $class::panel() === $panelId,
-        );
+        $this->pages(); // ensure discovery and panelPageMap are populated
+        return $this->panelPageMap[$panelId] ?? [];
     }
 
     public function discoverPages(string $directory, string $namespace): void
@@ -955,38 +1011,35 @@ final class PanelManager
             }
 
             $slug = $class::slug();
+            $panelId = $class::panel();
+
+            $this->panelPageMap[$panelId] ??= [];
 
             /*
-             * ONE NAMESPACE FOR SLUGS AND RESOURCE KEYS, and a clash throws HERE
-             * rather than resolving itself at request time.
-             *
-             * Both are URL segments inside the same panel prefix, so a page
-             * slugged `roles` beside a resource keyed `roles` is two screens
-             * claiming one address. Whichever route registers first answers, and
-             * the loser does not 404 - it is simply absent, with a navigation
-             * entry still pointing at it. That precise collision shipped in
-             * 0.2.0 and had to be reported by `panel:doctor` after the fact.
-             *
-             * Throwing at registration turns a screen that silently disappears
-             * into a boot failure naming both classes, which is the difference
-             * between a bug found in five seconds and one found by an operator
-             * who could not change somebody's permissions.
+             * SLUG AND KEY COLLISIONS ARE NOW PER-PANEL. Two portals can both
+             * have a `DashboardPage` (slug `dashboard`) because `/admin/dashboard`
+             * and `/client/dashboard` are different URLs. Only a page and a
+             * resource in the SAME panel on the SAME slug are an actual conflict.
              */
-            if (isset($this->resources[$slug])) {
+            if (isset($this->panelResourceMap[$panelId][$slug])) {
                 throw new \RuntimeException(
                     "The page {$class} uses the slug [{$slug}], which is already the key of the resource "
-                    .$this->resources[$slug].'. Both are URL segments in the same panel, so one of them '
-                    .'would be unreachable. Rename one.'
+                    .$this->panelResourceMap[$panelId][$slug].'. Both are URL segments in the same panel, '
+                    .'so one of them would be unreachable. Rename one.'
                 );
             }
 
-            if (isset($this->pages[$slug]) && $this->pages[$slug] !== $class) {
+            if (isset($this->panelPageMap[$panelId][$slug]) && $this->panelPageMap[$panelId][$slug] !== $class) {
                 throw new \RuntimeException(
-                    "Two pages claim the slug [{$slug}]: {$this->pages[$slug]} and {$class}."
+                    "Two pages in the [{$panelId}] panel claim the slug [{$slug}]: "
+                    .$this->panelPageMap[$panelId][$slug]." and {$class}."
                 );
             }
 
-            $this->pages[$slug] = $class;
+            $this->panelPageMap[$panelId][$slug] = $class;
+
+            // Global flat map: first registration wins (backward-compat fallback).
+            $this->pages[$slug] ??= $class;
         }
     }
 

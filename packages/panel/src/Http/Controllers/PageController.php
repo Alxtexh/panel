@@ -31,6 +31,8 @@ final class PageController extends Controller
     {
         $class = $this->resolve($this->slugFor($request));
 
+        abort_unless($class::isAccessible(), 403);
+
         $this->authorise($class::ability());
 
         return Inertia::render($class::component(), array_merge(
@@ -76,6 +78,9 @@ final class PageController extends Controller
     public function action(Request $request): mixed
     {
         $class = $this->resolve($this->slugFor($request));
+
+        abort_unless($class::isAccessible(), 403);
+
         $action = (string) ($request->route()->defaults['action'] ?? '');
 
         $declared = $class::actions();
