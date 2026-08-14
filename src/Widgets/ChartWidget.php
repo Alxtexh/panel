@@ -38,12 +38,19 @@ final class ChartWidget
      * breakdown. It lives here rather than in its own widget class because the
      * declaration, the deferral and the failure isolation are identical; only
      * the renderer differs.
+     *
+     * `table` IS THE SAME REASONING APPLIED TO A ROW LIST - a "System status"
+     * or "Customers" card is not a plot at all, but it wants the exact same
+     * deferred-closure, one-failure-one-card, ability-gated shape every other
+     * chart already has. Giving it its own widget class would mean duplicating
+     * `resolve()`'s try/catch and `WidgetSet`'s aggregation for a difference
+     * that is entirely in the renderer.
      */
     private const TYPES = [
         'line', 'area', 'steppedLine', 'multiAxis',
         'bar', 'horizontalBar', 'stackedBar', 'combo',
         'pie', 'doughnut', 'polarArea', 'radar',
-        'rankedBar', 'heatmap', 'segments',
+        'rankedBar', 'heatmap', 'segments', 'table',
         // Both axes measured rather than one being a category. `bubble` is
         // `scatter` with a size channel, the same way `doughnut` is `pie`.
         'scatter', 'bubble',
@@ -91,9 +98,17 @@ final class ChartWidget
     }
 
     /**
-     * The series.
+     * The series - or, for `type('table')`, the rows.
      *
-     * @param  Closure(Period): (array{points: list<array{label: string, value: int|float}>}|list<array{label: string, value: int|float}>)  $data
+     * A `table` CHART RETURNS `['rows' => [...]]` INSTEAD OF POINTS. Each row is
+     * `['key' => string, 'label' => string, 'value' => string, 'tone' => ?string,
+     * 'bar' => ?['segments' => [['label' => string, 'value' => int|float, 'tone' =>
+     * ?string], ...], 'total' => ?int|float]]`. `tone` is semantic
+     * (`success`/`warning`/`danger`/`info`/`neutral`), never a colour - the
+     * renderer owns what each one looks like, the same rule `thresholds()`
+     * follows below.
+     *
+     * @param  Closure(Period): (array{points: list<array{label: string, value: int|float}>}|array{rows: list<array<string, mixed>>}|list<array{label: string, value: int|float}>)  $data
      */
     public function data(Closure $data): self
     {
@@ -228,6 +243,7 @@ final class ChartWidget
      * @return array{
      *     points: list<array{label: string, value: int|float}>,
      *     series: list<array{name: string, points: list<array{label: string, value: int|float}>}>|null,
+     *     rows: list<array<string, mixed>>|null,
      *     total: int|float|null,
      *     trend: array<string, mixed>|null,
      *     error: bool
@@ -235,7 +251,7 @@ final class ChartWidget
      */
     public function resolve(Period $period, string $tenantKey, ?DateTimeImmutable $now = null): array
     {
-        $empty = ['points' => [], 'series' => null, 'bars' => null, 'lines' => null, 'total' => null, 'trend' => null, 'error' => true];
+        $empty = ['points' => [], 'series' => null, 'bars' => null, 'lines' => null, 'rows' => null, 'total' => null, 'trend' => null, 'error' => true];
 
         if ($this->data === null) {
             return $empty;
@@ -243,6 +259,25 @@ final class ChartWidget
 
         try {
             $resolved = ($this->data)($period, $now);
+
+            /*
+             * A `table` CHART SHORT-CIRCUITS HERE. Rows are not points on any
+             * axis, so none of the aggregation below applies to them - they
+             * pass straight through, the same way a combo's `bars`/`lines`
+             * skip the point-array branch two lines down.
+             */
+            if (array_key_exists('rows', $resolved)) {
+                return [
+                    'points' => [],
+                    'series' => null,
+                    'bars' => null,
+                    'lines' => null,
+                    'rows' => array_values($resolved['rows']),
+                    'total' => null,
+                    'trend' => null,
+                    'error' => false,
+                ];
+            }
 
             /*
              | THREE PAYLOAD SHAPES, all accepted.
@@ -269,6 +304,7 @@ final class ChartWidget
                 'series' => $series,
                 'bars' => $bars,
                 'lines' => $lines,
+                'rows' => null,
                 'total' => $total,
                 'trend' => $this->trend !== null ? ($this->trend)($period, $now)->toArray() : null,
                 'error' => false,

@@ -109,7 +109,7 @@ final class Panel
     private string $loginComponent = 'panel/auth/Login';
 
     /**
-     * Which auth-screen layout this panel uses: 'centered' (default) or 'split'.
+     * Which auth-screen layout this panel uses: 'centered' (default), 'split', or 'showcase'.
      *
      * 'centered' — a card in the middle of a plain background, the existing style.
      * 'split'    — branding panel on the left, form on the right. The choice
@@ -117,8 +117,18 @@ final class Panel
      *              password request / reset, OTP, and lock screen all inherit it via
      *              the shared `AuthLayout` wrapper, so selecting it once covers the
      *              whole authentication flow.
+     * 'showcase' — form on the left, a preview panel on the right holding an
+     *              optional image and an optional testimonial (`authTestimonial()`).
+     *              The mirror of 'split': there the form is what a returning user
+     *              wants fastest and the image is decoration, so it gives way on a
+     *              narrow screen; here the preview is the pitch to somebody who has
+     *              not decided to sign up yet, which is a case this panel itself
+     *              never needs but a public-facing registration screen can.
      */
     private string $authLayout = 'centered';
+
+    /** @var array{quote: string, author: string, role: string|null}|null */
+    private ?array $authTestimonial = null;
 
     /**
      * The shared sign-in path this panel participates in, or null for none.
@@ -501,7 +511,7 @@ final class Panel
         return $this->loginComponent;
     }
 
-    /** @param 'centered'|'split' $layout */
+    /** @param 'centered'|'split'|'showcase' $layout */
     public function authLayout(string $layout): self
     {
         $this->authLayout = $layout;
@@ -509,10 +519,32 @@ final class Panel
         return $this;
     }
 
-    /** @return 'centered'|'split' */
+    /** @return 'centered'|'split'|'showcase' */
     public function getAuthLayout(): string
     {
         return $this->authLayout;
+    }
+
+    /**
+     * A short quote beside the `showcase` auth layout's preview panel.
+     *
+     * TEXT, NOT A COMPONENT - the same rule `brandName()` follows. An
+     * installation states what the quote says and who said it; the renderer
+     * owns how that looks. Call it or do not: a `showcase` panel with none
+     * shows a preview panel with no quote under it rather than a placeholder
+     * attributed to nobody, which would read as a bug pretending to be copy.
+     */
+    public function authTestimonial(string $quote, string $author, ?string $role = null): self
+    {
+        $this->authTestimonial = ['quote' => $quote, 'author' => $author, 'role' => $role];
+
+        return $this;
+    }
+
+    /** @return array{quote: string, author: string, role: string|null}|null */
+    public function getAuthTestimonial(): ?array
+    {
+        return $this->authTestimonial;
     }
 
     /**
