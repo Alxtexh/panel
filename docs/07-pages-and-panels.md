@@ -48,7 +48,7 @@ Panel::make('reseller')
     ->path('reseller')
     ->guard('resellers')
     ->authMiddleware(['auth:resellers'])
-    ->brandName(fn (): string => config('app.name').' — Reseller')
+    ->brandName(fn (): string => config('app.name').' - Reseller')
     ->without(['operations', 'documents'])
     ->login();
 ```

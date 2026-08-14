@@ -45,7 +45,7 @@ final class ResellerPanelProvider extends ServiceProvider
                 ->context(Panel::CONTEXT_TENANT)
                 ->middleware(['web'])
                 ->authMiddleware(['auth:web'])
-                ->brandName(fn (): string => config('app.name').' — Reseller')
+                ->brandName(fn (): string => config('app.name').' - Reseller')
                 /*
                  * NO OPERATIONS SCREENS IN THIS PORTAL.
                  *

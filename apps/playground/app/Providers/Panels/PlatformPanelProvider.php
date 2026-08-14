@@ -46,7 +46,7 @@ final class PlatformPanelProvider extends ServiceProvider
                 ->context(Panel::CONTEXT_CENTRAL)
                 ->middleware(['web'])
                 ->authMiddleware(['auth:web'])
-                ->brandName(fn (): string => config('app.name').' — Platform')
+                ->brandName(fn (): string => config('app.name').' - Platform')
                 /*
                  * NO OPERATIONS SCREENS IN THIS PORTAL.
                  *

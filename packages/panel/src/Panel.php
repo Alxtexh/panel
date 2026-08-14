@@ -853,7 +853,20 @@ final class Panel
 
     public function resolveBrandName(): ?string
     {
-        return $this->brandName === null ? null : ($this->brandName)();
+        if ($this->brandName === null) {
+            return null;
+        }
+
+        $name = ($this->brandName)();
+
+        if ($name === null) {
+            return null;
+        }
+
+        // Em dashes and en dashes render inconsistently across system fonts and
+        // look wrong inside interface strings. Strip them at the source so no
+        // brand name can carry one into the UI regardless of what the closure returns.
+        return (string) preg_replace('/\s*[—–]\s*/', ' - ', $name);
     }
 
     /** @return array<string, string> */

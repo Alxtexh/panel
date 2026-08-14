@@ -21,6 +21,69 @@ budget with an attacker behind the same NAT. The message is identical for a
 wrong password and an unknown address, or the form becomes an account-existence
 oracle.
 
+## Auth layout
+
+Two sign-in layouts are available. Set one on the panel:
+
+```php
+Panel::make('admin')
+    ->authLayout('split')   // or 'centered' (default)
+```
+
+| Layout | Description |
+|---|---|
+| `centered` | Form centred on a plain background. The default. |
+| `split` | Neutral left panel with a brand name and image slot; form on the right. |
+
+The layout applies to every auth screen on that panel — sign-in, register,
+forgot password, reset password, OTP, lock screen — so one call covers all of
+them.
+
+The `split` layout provides a named `#image` slot in its left panel for placing
+a logo, illustration, or photo. Without it a placeholder is shown.
+
+## Shared sign-in
+
+Two panels can share one login URL where the credential decides the destination:
+
+```php
+// app/Providers/Panels/AdminPanelProvider.php
+Panel::make('admin')
+    ->guard('web')
+    ->sharedLogin('login');   // participates in /login
+
+// app/Providers/Panels/ClientPanelProvider.php
+Panel::make('client')
+    ->guard('customers')
+    ->sharedLogin('login');   // same path — one route is registered
+```
+
+`POST /login` tries each panel's guard in registration order. The first that
+accepts the credentials owns the session and provides the redirect target.
+If every guard rejects, a generic `auth.failed` error is returned — the same
+message regardless of which guard failed, so it cannot name which table a user
+is or is not in.
+
+**Registration order is priority order.** If an account exists in both guards,
+the panel registered first wins. That is an explicit choice by whoever declared
+the registration order, not a silent default.
+
+**`url.intended` is cross-panel safe.** After a successful sign-in the intended
+URL is only honoured when it belongs to the matched panel's path prefix. A session
+carrying `/admin/dashboard` as the intended destination will not redirect a client
+to the admin panel after they sign in.
+
+**No password reset at the shared endpoint.** Reset is broker-specific; each
+guard has its own token table and mail template. Each panel's own
+`/prefix/forgot-password` handles resets. The shared sign-in page omits the link.
+
+**Rate limiting covers all guards in one budget**, keyed on address and IP.
+Exhausting the budget against one guard does not grant a free pass to the others.
+
+If the path is already claimed — by Fortify, Breeze, or your own `web.php` — the
+shared route stands down and the declaration is silently held until the conflict
+is resolved. The path is never replaced.
+
 ## What ships
 
 | Feature | Needs | Notes |

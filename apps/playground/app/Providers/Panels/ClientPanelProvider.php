@@ -87,7 +87,7 @@ final class ClientPanelProvider extends ServiceProvider
                     'documents',
                 ])
 
-                ->brandName(fn (): string => config('app.name').' — Client')
+                ->brandName(fn (): string => config('app.name').' - Client')
 
                 /*
                  * DISCOVERY BELONGS TO THE PANEL, not to a shared config list.
