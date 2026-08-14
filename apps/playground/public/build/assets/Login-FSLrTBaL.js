@@ -1,1 +1,0 @@
-import{$n as e,On as t,k as n,mt as r,v as i,z as a}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{u as o}from"./inertia-BlBjqiFQ.js";var s=n({inheritAttrs:!1,__name:`Login`,setup(n){return(n,s)=>(r(),i(t(o),e(a(n.$attrs)),null,16))}});export{s as default};

@@ -244,6 +244,196 @@ final class DemoDashboard
                 ->span(2)
                 ->data(fn (Period $p, ?DateTimeImmutable $now): array => self::renewalBuckets($now, $filters))
                 ->ability(self::COMMERCIAL),
+
+            /*
+             * A CONSUMER FOR THE `table` CHART TYPE - rows of label and value
+             * rather than a plot, for the two things a status card actually
+             * wants: a fact ("CPU cores: 4") and a proportion ("Memory: 62%
+             * used", with a bar under it). No period selector - the same
+             * reasoning as the doughnuts above: a live gauge has one honest
+             * reading, not a window to choose.
+             */
+            ChartWidget::make('system_status', 'System status')
+                ->type('table')
+                ->description('This host, right now')
+                ->data(fn (): array => ['rows' => self::systemStatusRows()])
+                ->ability(self::NETWORK),
+
+            ChartWidget::make('customer_summary', 'Customers')
+                ->type('table')
+                ->description('Subscriber counts, at a glance')
+                ->data(fn (): array => ['rows' => self::customerSummaryRows($filters)])
+                ->ability(self::COMMERCIAL),
+        ];
+    }
+
+    /**
+     * CPU, memory, swap and disk for the host this request is running on.
+     *
+     * READ, NEVER SAMPLED. A real CPU-percent needs two /proc/stat reads a
+     * beat apart, which has no honest place inside one request - so this
+     * reports load average against core count instead of pretending to a
+     * precision it cannot have, and every figure here degrades to "not
+     * available" rather than a guess when `/proc` does not exist.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function systemStatusRows(): array
+    {
+        $cores = self::cpuCores();
+        $load = function_exists('sys_getloadavg') ? sys_getloadavg() : null;
+        $mem = self::procMeminfo();
+
+        $rows = [
+            ['key' => 'cores', 'label' => 'CPU cores', 'value' => (string) ($cores ?? 'Unknown')],
+        ];
+
+        if ($load !== null) {
+            $rows[] = [
+                'key' => 'load',
+                'label' => 'Load average (1, 5, 15 min)',
+                'value' => implode(', ', array_map(static fn (float $v): string => number_format($v, 2), $load)),
+            ];
+
+            if ($cores !== null) {
+                $percent = min(100, round(($load[0] / $cores) * 100, 2));
+
+                $rows[] = [
+                    'key' => 'cpu',
+                    'label' => 'CPU usage',
+                    'value' => number_format($percent, 2).' %',
+                    'tone' => $percent >= 90 ? 'danger' : ($percent >= 70 ? 'warning' : 'neutral'),
+                    'bar' => ['segments' => [['label' => 'Used', 'value' => $percent]], 'total' => 100],
+                ];
+            }
+        }
+
+        if ($mem !== null) {
+            $rows[] = self::usageRow('Memory', $mem['total'], $mem['free']);
+        }
+
+        $swap = self::procMeminfo(swap: true);
+
+        if ($swap !== null && $swap['total'] > 0) {
+            $rows[] = self::usageRow('Swap', $swap['total'], $swap['free']);
+        }
+
+        $diskTotal = @disk_total_space('/');
+        $diskFree = @disk_free_space('/');
+
+        if ($diskTotal !== false && $diskFree !== false) {
+            $rows[] = self::usageRow('Disk', (int) ($diskTotal / 1024), (int) ($diskFree / 1024));
+        }
+
+        return $rows;
+    }
+
+    /** A "5.2 GB (Free 38%)" row with a used/free bar - Memory, Swap and Disk share this shape. */
+    private static function usageRow(string $label, int $totalKb, int $freeKb): array
+    {
+        $usedKb = max(0, $totalKb - $freeKb);
+        $freePercent = $totalKb > 0 ? round(($freeKb / $totalKb) * 100, 2) : 0;
+        $usedPercent = 100 - $freePercent;
+
+        return [
+            'key' => strtolower($label),
+            'label' => $label,
+            'value' => sprintf('%.2f GB (Free %s%%)', $totalKb / 1024 / 1024, number_format($freePercent, 2)),
+            'tone' => $usedPercent >= 90 ? 'danger' : ($usedPercent >= 75 ? 'warning' : 'neutral'),
+            'bar' => [
+                'segments' => [
+                    ['label' => 'Used', 'value' => $usedKb, 'tone' => 'warning'],
+                    ['label' => 'Free', 'value' => $freeKb, 'tone' => 'success'],
+                ],
+                'total' => $totalKb,
+            ],
+        ];
+    }
+
+    private static function cpuCores(): ?int
+    {
+        if (! is_readable('/proc/cpuinfo')) {
+            return null;
+        }
+
+        $count = substr_count((string) file_get_contents('/proc/cpuinfo'), 'processor');
+
+        return $count > 0 ? $count : null;
+    }
+
+    /** @return array{total: int, free: int}|null Kilobytes. */
+    private static function procMeminfo(bool $swap = false): ?array
+    {
+        if (! is_readable('/proc/meminfo')) {
+            return null;
+        }
+
+        $lines = (string) file_get_contents('/proc/meminfo');
+        $totalKey = $swap ? 'SwapTotal' : 'MemTotal';
+        $freeKey = $swap ? 'SwapFree' : 'MemAvailable';
+
+        if (! preg_match('/^'.$totalKey.':\s+(\d+)/m', $lines, $t)
+            || ! preg_match('/^'.$freeKey.':\s+(\d+)/m', $lines, $f)) {
+            return null;
+        }
+
+        return ['total' => (int) $t[1], 'free' => (int) $f[1]];
+    }
+
+    /**
+     * The "Customers" card - counts a support desk actually reaches for,
+     * from tables this demo already has, so it costs nothing beyond the
+     * declaration itself.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function customerSummaryRows(DashboardFilters $filters): array
+    {
+        $now = new DateTimeImmutable;
+        $startOfToday = $now->setTime(0, 0);
+        $base = fn (): Builder => self::scoped(Client::query(), $filters);
+
+        return [
+            ['key' => 'total', 'label' => 'Total', 'value' => number_format($base()->count())],
+            [
+                'key' => 'new',
+                'label' => 'New',
+                'value' => number_format($base()->where('created_at', '>=', $startOfToday->modify('-29 days'))->count()),
+            ],
+            [
+                'key' => 'active',
+                'label' => 'Active',
+                'value' => number_format($base()->where('status', 'active')->count()),
+                'tone' => 'success',
+            ],
+            [
+                'key' => 'online',
+                'label' => 'Online',
+                'value' => number_format(self::scoped(ClientSession::query(), $filters)->whereNull('ended_at')->count()),
+                'tone' => 'success',
+            ],
+            [
+                'key' => 'suspended',
+                'label' => 'Blocked',
+                'value' => number_format($base()->where('status', 'suspended')->count()),
+                'tone' => 'danger',
+            ],
+            [
+                'key' => 'expired',
+                'label' => 'Inactive',
+                'value' => number_format($base()->where('status', 'expired')->count()),
+            ],
+            [
+                'key' => 'added_month',
+                'label' => 'Added last month',
+                'value' => number_format($base()->where('created_at', '>=', $startOfToday->modify('first day of last month'))
+                    ->where('created_at', '<', $startOfToday->modify('first day of this month'))->count()),
+            ],
+            [
+                'key' => 'added_year',
+                'label' => 'Added last year',
+                'value' => number_format($base()->whereYear('created_at', (int) $now->modify('-1 year')->format('Y'))->count()),
+            ],
         ];
     }
 

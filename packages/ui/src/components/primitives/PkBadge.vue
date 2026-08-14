@@ -16,7 +16,7 @@ import { computed } from 'vue'
 
 const props = withDefaults(
     defineProps<{
-        variant?: 'default' | 'secondary' | 'destructive' | 'outline'
+        variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'info'
         class?: string
     }>(),
     { variant: 'default' },
@@ -26,11 +26,19 @@ const BASE =
     'inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-medium ' +
     'w-fit whitespace-nowrap shrink-0 gap-1 overflow-hidden [&>svg]:size-3 [&>svg]:pointer-events-none'
 
+/*
+ * `success`/`warning`/`info` ARE FIXED, THE SAME WAY `destructive` ALREADY IS.
+ * Their CSS vars are never touched by `appearanceVars()` or a tenant's brand
+ * colour (see app.css) - a status pill is not a place a theme gets a vote.
+ */
 const VARIANTS: Record<string, string> = {
     default: 'border-transparent bg-primary text-primary-foreground',
     secondary: 'border-transparent bg-secondary text-secondary-foreground',
     destructive: 'border-transparent bg-destructive text-white dark:bg-destructive/60',
     outline: 'text-foreground',
+    success: 'border-transparent bg-success text-success-foreground',
+    warning: 'border-transparent bg-warning text-warning-foreground',
+    info: 'border-transparent bg-info text-info-foreground',
 }
 
 const classes = computed(() =>

@@ -78,6 +78,32 @@ return [
         'resources' => ['clients', 'routers', 'plans'],
     ],
 
+    /*
+    |---------------------------------------------------------------------------
+    | Sidebar navigation
+    |---------------------------------------------------------------------------
+    |
+    | Every group in the sidebar defaults to a collapsible dropdown - the only
+    | presentation there was until `static_groups` existed. A name listed here
+    | renders instead as a plain, always-open SECTION: a small-caps heading with
+    | its items underneath, no chevron, nothing to open or close.
+    |
+    | WHICH GROUPS EARN THAT IS AN INSTALLATION'S CALL, not the component's -
+    | `SharePanelProps` reads this list rather than deciding for every panel.
+    | The two named here are the ones a support conversation is almost always
+    | about: the subscriber themselves, and the audit trail of who did what to
+    | their account. Everything else - Building, Apps, Configuration, Screens -
+    | is reached rarely enough that a collapsed-by-default dropdown is the
+    | right amount of visual weight.
+    |
+    | "Network" is deliberately NOT here - it is a CLUSTER (see
+    | `RouterResource::$cluster`), a different sidebar mechanism with its own
+    | always-expanded presentation, not a `group` string this list matches.
+    */
+    'navigation' => [
+        'static_groups' => ['Subscribers', 'Organisation'],
+    ],
+
     'landing' => [
         /*
          | THE REFERENCE APP SERVES THE PACKAGED PAGE AT `/`, and is one of the

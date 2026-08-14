@@ -34,7 +34,7 @@ import {
 } from '@alxtexh-enterprise/panel'
 import type { SetupChecklistItem, StatSegment } from '@alxtexh-enterprise/panel'
 import ChartBody from '../components/widgets/ChartBody.vue'
-import { type Chart, type Series } from '../components/widgets/types'
+import { emptySeries, type Chart, type Series } from '../components/widgets/types'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
 import type { Announcement } from '../types'
@@ -232,15 +232,7 @@ function stat(key: string) {
 
 function series(key: string): Series {
     return (
-        ((page.props as Record<string, any>)[`chart_${key}`] as Series | undefined) ?? {
-            points: [],
-            series: null,
-            bars: null,
-            lines: null,
-            total: null,
-            trend: null,
-            error: false,
-        }
+        ((page.props as Record<string, any>)[`chart_${key}`] as Series | undefined) ?? emptySeries()
     )
 }
 
@@ -575,18 +567,11 @@ function stripSegments(key: string): StatSegment[] {
         </PkBoundary>
 
         <!--
-            THE JOINED STRIP IS THE DEFAULT FOR `stats()`, not a row of separate
-            cards. Four cards say "four things"; one card divided by hairlines
-            says "four measures of this panel" - see `StatStrip` on why the
-            dividers are gaps rather than borders, and `PanelWidgets`, which
-            renders the same shape so a stat row looks identical wherever a page
-            puts one.
-
             ONE `Deferred` FOR THE WHOLE ROW. Per-card deferral is right for
             tiles that land independently and wrong for a joined strip: the
             divider grid would reflow as each cell arrived.
         -->
-        <PkBoundary v-if="widgets.length" label="Statistics" fill>
+        <PkBoundary v-if="widgets.length" label="Statistics">
             <Deferred :data="statKeys">
                 <template #fallback>
                     <StatStrip

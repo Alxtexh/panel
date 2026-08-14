@@ -86,6 +86,7 @@ export { default as ChartCard } from './components/Widgets/ChartCard.vue';
 export { default as StatCard } from './components/Widgets/StatCard.vue';
 export { default as MiniStatCard } from './components/Widgets/MiniStatCard.vue';
 export { default as SegmentedBar } from './components/Widgets/SegmentedBar.vue';
+export { default as StatListChart } from './components/Widgets/StatListChart.vue';
 export { default as StatStrip } from './components/Widgets/StatStrip.vue';
 export { default as SetupChecklist } from './components/Widgets/SetupChecklist.vue';
 export { default as SelectionBar } from './components/DataTable/SelectionBar.vue';

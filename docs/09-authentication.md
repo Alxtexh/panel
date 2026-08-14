@@ -23,24 +23,41 @@ oracle.
 
 ## Auth layout
 
-Two sign-in layouts are available. Set one on the panel:
+Three sign-in layouts are available. Set one on the panel:
 
 ```php
 Panel::make('admin')
-    ->authLayout('split')   // or 'centered' (default)
+    ->authLayout('split')   // or 'centered' (default) or 'showcase'
 ```
 
 | Layout | Description |
 |---|---|
 | `centered` | Form centred on a plain background. The default. |
 | `split` | Neutral left panel with a brand name and image slot; form on the right. |
+| `showcase` | Form on the left; a preview panel and an optional testimonial on the right. |
 
 The layout applies to every auth screen on that panel — sign-in, register,
 forgot password, reset password, OTP, lock screen — so one call covers all of
 them.
 
-The `split` layout provides a named `#image` slot in its left panel for placing
-a logo, illustration, or photo. Without it a placeholder is shown.
+Both `split` and `showcase` provide the same named `#image` slot for placing a
+logo, illustration, or screenshot. Without it a placeholder is shown.
+
+`showcase` also accepts a testimonial, declared as text rather than a
+component - the renderer owns how it looks:
+
+```php
+Panel::make('admin')
+    ->authLayout('showcase')
+    ->authTestimonial(
+        'Switching subscribers between plans used to mean a support ticket. Now it is a click.',
+        'Amara Odhiambo',
+        'Head of Operations',   // optional
+    )
+```
+
+Calling it is optional. A `showcase` panel that never does shows the preview
+panel with no quote under it, rather than a placeholder attributed to nobody.
 
 ## Shared sign-in
 

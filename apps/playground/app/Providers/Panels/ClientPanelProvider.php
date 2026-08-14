@@ -90,6 +90,24 @@ final class ClientPanelProvider extends ServiceProvider
                 ->brandName(fn (): string => config('app.name').' - Client')
 
                 /*
+                 | THE WORKED EXAMPLE FOR `authLayout('showcase')` - form on the
+                 | left, a preview panel and a testimonial on the right. A
+                 | subscriber portal is the natural home for the pitch a
+                 | showcase panel makes: unlike the operator portal, somebody
+                 | landing here has not necessarily decided to sign up yet.
+                 |
+                 | THE QUOTE IS PLACEHOLDER COPY, the same way every other
+                 | figure in this demo is - nobody named here exists, the same
+                 | as no ISP at "RTR-01-001" does.
+                 */
+                ->authLayout('showcase')
+                ->authTestimonial(
+                    'Switching subscribers between plans used to mean a support ticket and a wait. Now it is a click, and the audit trail writes itself.',
+                    'Amara Odhiambo',
+                    'Head of Operations',
+                )
+
+                /*
                  * DISCOVERY BELONGS TO THE PANEL, not to a shared config list.
                  * It used to append to `panel.discover`, which every portal
                  * reads - so adding a portal meant editing global state and a

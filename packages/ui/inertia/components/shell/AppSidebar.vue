@@ -736,77 +736,81 @@ watch(
                 class="px-2 py-0"
             >
                 <!--
-                    THE GROUP CARRIES THE ICON, its children do not.
-
-                    Previously every child had one, which meant four or five
-                    glyphs stacked vertically that all said "subscriber" -
-                    Clients, IP Bindings, Leads are the same KIND of thing, so
-                    an icon each distinguishes nothing and only adds noise to
-                    the narrowest column on screen. One icon on the heading
-                    says what the group is; the rail and dots below say what
-                    belongs to it.
-
-                    The icon is the first child's, because a group is a string
-                    on a resource rather than an object that could declare one.
-                    A group-level icon is worth adding when a group exists that
-                    the first item does not represent. A group with NO direct
-                    items of its own - everything it has lives one level down,
-                    in `groups` - borrows the first nested group's first item
-                    instead, or a heading with only dropdowns under it would
-                    carry no icon at all.
+                    A STATIC GROUP IS RENDERED EXACTLY LIKE "Platform" -
+                    THE SAME `NavMain` CALL, because it is the same thing: a
+                    heading over a flat list of items that each carry their
+                    own icon. Building a second, hand-rolled version of that
+                    presentation is how "Platform" ended up looking different
+                    from every other static section in the sidebar - one used
+                    `SidebarGroupLabel` and full-weight `SidebarMenuButton`
+                    rows with icons, the other used a bare `<p>` and indented,
+                    icon-less links. Two implementations of one idea drift the
+                    first time either is touched; calling `NavMain` with
+                    `label` instead of `nested` is what keeps them one.
                 -->
-                <!--
-                    A SECTION'S HEADING IS A HEADING, NOT A BUTTON. Rendering
-                    it as a disabled button would promise a toggle it refuses;
-                    a <p> promises nothing. No chevron either - the chevron is
-                    the affordance that says "this closes", and a section never
-                    does.
-                -->
-                <p
+                <NavMain
                     v-if="!group.collapsible"
-                    class="flex w-full items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground"
-                >
-                    <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
-                    <span class="flex-1 text-left">{{ group.name }}</span>
-                </p>
+                    :items="group.items"
+                    :label="group.name"
+                    @navigate="closeOnMobile"
+                />
 
-                <button
-                    v-else
-                    type="button"
-                    class="flex w-full items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-                    :aria-expanded="!collapsed.has(group.name)"
-                    @click="toggleGroup(group.name, group.collapsible)"
-                >
-                    <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
-                    <span class="flex-1 text-left">{{ group.name }}</span>
-                    <svg
-                        viewBox="0 0 24 24"
-                        class="size-3.5 shrink-0 transition-transform"
-                        :class="collapsed.has(group.name) ? '-rotate-90' : ''"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
+                <!--
+                    A COLLAPSIBLE GROUP IS A ROW WITH CHILDREN, NOT A SECTION -
+                    it is the same shape as a plain nav item plus a disclosure,
+                    so it carries the same weight as `SidebarMenuButton`
+                    rather than the section heading's muted small-caps style.
+                    Styling it as a faint label buried the one piece of
+                    information that matters here, which is that it is
+                    clickable and has more underneath it.
+
+                    THE ICON IS THE FIRST CHILD'S, because a group is a string
+                    on a resource rather than an object that could declare one.
+                    A group with NO direct items of its own - everything it has
+                    lives one level down, in `groups` - borrows the first
+                    nested group's first item instead.
+                -->
+                <template v-else>
+                    <button
+                        type="button"
+                        class="flex w-full items-center gap-2 rounded-md p-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        :aria-expanded="!collapsed.has(group.name)"
+                        @click="toggleGroup(group.name, group.collapsible)"
                     >
-                        <path d="m6 9 6 6 6-6" />
-                    </svg>
-                </button>
+                        <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
+                        <span class="flex-1 text-left">{{ group.name }}</span>
+                        <svg
+                            viewBox="0 0 24 24"
+                            class="size-3.5 shrink-0 transition-transform"
+                            :class="collapsed.has(group.name) ? '-rotate-90' : ''"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                        >
+                            <path d="m6 9 6 6 6-6" />
+                        </svg>
+                    </button>
 
-                <template v-if="!group.collapsible || !collapsed.has(group.name)">
                     <NavMain
-                        v-if="group.items.length"
+                        v-if="group.items.length && !collapsed.has(group.name)"
                         :items="group.items"
                         nested
                         @navigate="closeOnMobile"
                     />
-
-                    <NestedNavGroups
-                        :groups="group.groups"
-                        :parent-name="group.name"
-                        :collapsed="collapsed"
-                        @toggle="toggleGroup"
-                        @navigate="closeOnMobile"
-                    />
                 </template>
+
+                <!--
+                    SUB-GROUPS: a static group's are always open, same as it
+                    is; a collapsible group's follow its own expanded state.
+                -->
+                <NestedNavGroups
+                    v-if="!group.collapsible || !collapsed.has(group.name)"
+                    :groups="group.groups"
+                    :parent-name="group.name"
+                    :collapsed="collapsed"
+                    @toggle="toggleGroup"
+                    @navigate="closeOnMobile"
+                />
             </SidebarGroup>
         </SidebarContent>
 

@@ -30,6 +30,7 @@ import {
     RadarChart,
     ScatterChart,
     SegmentedBar,
+    StatListChart,
 } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import { multiSeries, type Chart, type Series } from './types'
@@ -44,6 +45,8 @@ const lines = computed(() => multiSeries(props.chart, props.data))
 
 <template>
     <SegmentedBar v-if="chart.type === 'segments'" :segments="data.points" :height="10" />
+
+    <StatListChart v-else-if="chart.type === 'table'" :rows="data.rows ?? []" />
 
     <PieChart
         v-else-if="chart.type === 'pie' || chart.type === 'doughnut'"

@@ -84,11 +84,22 @@ export interface SchemaColumn {
     falseLabel?: string | null
 }
 
-/** Semantic intent to badge variant. The only place the mapping exists. */
+/**
+ * Semantic intent to badge variant. The only place the mapping exists.
+ *
+ * `success`/`warning` POINT AT THEIR OWN FIXED COLOURS, not at the theme's
+ * `default`/`secondary` variants. Those two are driven by `--primary` and
+ * `--secondary`, which a tenant's brand colour rewrites - so a status column
+ * declaring `success` used to render in whatever accent the panel happened to
+ * be wearing, and "online" changed colour depending on who branded the panel.
+ * `danger` already pointed at `destructive`, which was never theme-derived;
+ * this brings the other two in line with it rather than introducing a new
+ * idea.
+ */
 export const BADGE_VARIANTS: Record<string, string> = {
-    success: 'default',
+    success: 'success',
     danger: 'destructive',
-    warning: 'secondary',
+    warning: 'warning',
     neutral: 'outline',
 }
 

@@ -21,11 +21,32 @@ export interface Dataset {
     dashed?: boolean
 }
 
+/** One row of a `table` chart - "CPU cores  4", optionally with a usage bar. */
+export interface StatListBarSegment {
+    label: string
+    value: number
+    /** Semantic, never a colour - the renderer owns what each tone looks like. */
+    tone?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | null
+}
+
+export interface StatListRow {
+    key: string
+    label: string
+    value: string
+    tone?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | null
+    bar?: {
+        segments: StatListBarSegment[]
+        /** The denominator. Defaults to the sum of the segments. */
+        total?: number | null
+    } | null
+}
+
 export interface Series {
     points: { label: string; value: number }[]
     series: Dataset[] | null
     bars: Dataset[] | null
     lines: Dataset[] | null
+    rows: StatListRow[] | null
     total: number | null
     trend: {
         direction: 'up' | 'down' | 'flat' | 'new'
@@ -56,6 +77,7 @@ export interface Chart {
         | 'rankedBar'
         | 'heatmap'
         | 'segments'
+        | 'table'
     span: number
     periods: { value: string; label: string }[] | null
     thresholds: { max: number; color: string }[] | null
@@ -97,6 +119,7 @@ export function emptySeries(): Series {
         series: null,
         bars: null,
         lines: null,
+        rows: null,
         total: null,
         trend: null,
         error: false,
