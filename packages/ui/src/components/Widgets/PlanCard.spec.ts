@@ -85,6 +85,15 @@ describe('PlanGrid', () => {
         expect(wrapper.classes().join(' ')).toContain('py-6')
         expect(wrapper.html()).toContain('gap-6')
     })
+
+    it('drops page chrome when embedded on another screen', () => {
+        const wrapper = mount(PlanGrid, {
+            props: { plans: [starter], title: 'Plans', embedded: true },
+        })
+
+        expect(wrapper.classes().join(' ')).not.toContain('max-w-5xl')
+        expect(wrapper.classes().join(' ')).not.toContain('px-4')
+    })
 })
 
 describe('PlanEditor', () => {

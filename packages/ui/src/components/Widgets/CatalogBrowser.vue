@@ -3,7 +3,7 @@
  * A merchandising page: tabs, search, a Filters sheet, Tiles/List, pagination.
  *
  * DATA IS YOURS. Pass tabs (products, units, listings). Selecting a tile
- * emits `select`; the page decides whether that is a route or a slideover.
+ * emits `select`; the page visits the dedicated item route.
  */
 import { computed, ref, watch } from 'vue'
 import PkHeading from '../primitives/PkHeading.vue'
@@ -33,11 +33,13 @@ const props = withDefaults(
         description?: string | null
         tabs: CatalogBrowserTab[]
         pageSize?: number
+        embedded?: boolean
     }>(),
     {
         title: 'Catalog',
         description: null,
         pageSize: 8,
+        embedded: false,
     },
 )
 
@@ -118,7 +120,10 @@ function applyFilters(next: CatalogFilters): void {
 </script>
 
 <template>
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-6 sm:px-6">
+    <div
+        class="flex w-full flex-col gap-8"
+        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
+    >
         <PkHeading :title="title" :description="description ?? undefined" />
 
         <div

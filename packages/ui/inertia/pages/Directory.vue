@@ -2,11 +2,14 @@
 /**
  * Inertia wrapper for DirectoryPage. Sections come from a DirectoryPage PHP class.
  */
-import { Head } from '@inertiajs/vue3'
+import { Head, Link } from '@inertiajs/vue3'
+import { markRaw } from 'vue'
 import { DirectoryPage } from '@alxtexh-enterprise/panel'
 import type { DirectorySection } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
+
+const InertiaLink = markRaw(Link)
 
 const props = defineProps<{
     pageHeading?: string
@@ -22,5 +25,6 @@ const props = defineProps<{
         :title="pageHeading ?? 'Directory'"
         :description="pageDescription"
         :sections="sections ?? []"
+        :link-component="InertiaLink"
     />
 </template>

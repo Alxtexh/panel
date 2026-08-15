@@ -1,16 +1,7 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
-
-vi.mock('@inertiajs/vue3', () => ({
-    Link: {
-        name: 'InertiaLink',
-        props: ['href'],
-        template: '<a :href="href" data-inertia-link="true"><slot /></a>',
-    },
-}))
-
-const { default: DirectoryPage } = await import('./DirectoryPage.vue')
-type DirectorySection = import('./DirectoryPage.vue').DirectorySection
+import { describe, expect, it } from 'vitest'
+import DirectoryPage from './DirectoryPage.vue'
+import type { DirectorySection } from './DirectoryPage.vue'
 
 const sections: DirectorySection[] = [
     {
@@ -41,7 +32,7 @@ describe('DirectoryPage', () => {
         expect(wrapper.text()).toContain('Administrators')
         const item = wrapper.get('a[href="/user-management"]')
         expect(item.exists()).toBe(true)
-        expect(item.attributes('data-inertia-link')).toBe('true')
+        expect(item.attributes('data-inertia-link')).toBeUndefined()
         expect(item.classes()).toContain('no-underline')
         expect(item.classes()).toContain('hover:bg-accent')
         expect(item.classes()).not.toContain('hover:underline')
@@ -52,6 +43,24 @@ describe('DirectoryPage', () => {
             false,
         )
         expect(wrapper.html()).not.toContain('background-color')
+    })
+
+    it('uses a custom link component when the host is Inertia', () => {
+        const wrapper = mount(DirectoryPage, {
+            props: {
+                title: 'Administration',
+                sections,
+                linkComponent: {
+                    name: 'InertiaLink',
+                    props: ['href'],
+                    template: '<a :href="href" data-inertia-link="true"><slot /></a>',
+                },
+            },
+        })
+
+        expect(wrapper.get('a[href="/user-management"]').attributes('data-inertia-link')).toBe(
+            'true',
+        )
     })
 
     it('filters by link title and hides empty sections', async () => {
@@ -101,10 +110,19 @@ describe('DirectoryPage', () => {
         const internal = wrapper.get('a[href="/help"]')
         const external = wrapper.get('a[href="https://example.com/docs"]')
 
-        expect(internal.attributes('data-inertia-link')).toBe('true')
+        expect(internal.attributes('data-inertia-link')).toBeUndefined()
         expect(external.attributes('data-inertia-link')).toBeUndefined()
         expect(external.attributes('target')).toBe('_blank')
         expect(external.classes()).toContain('no-underline')
         expect(external.classes()).toEqual(internal.classes())
+    })
+
+    it('drops page padding when embedded on another screen', () => {
+        const wrapper = mount(DirectoryPage, {
+            props: { title: 'Shortcuts', sections, embedded: true },
+        })
+
+        expect(wrapper.classes().join(' ')).not.toContain('max-w-5xl')
+        expect(wrapper.classes().join(' ')).not.toContain('px-4')
     })
 })

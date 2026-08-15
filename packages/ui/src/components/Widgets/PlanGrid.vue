@@ -10,6 +10,8 @@ const props = defineProps<{
     plans: PlanRecord[]
     title?: string
     description?: string | null
+    /** Drop page padding so this can sit on a settings or dashboard screen. */
+    embedded?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -21,7 +23,8 @@ const emit = defineEmits<{
 
 <template>
     <div
-        class="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6"
+        class="w-full space-y-6"
+        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
         data-slot="plan-grid"
     >
         <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

@@ -13,6 +13,7 @@ type __VLS_Props = {
     description?: string | null;
     tabs: CatalogBrowserTab[];
     pageSize?: number;
+    embedded?: boolean;
 };
 type __VLS_PublicProps = __VLS_Props & {
     'layout'?: 'grid' | 'list';
@@ -28,6 +29,7 @@ declare const _default: import("vue").DefineComponent<__VLS_PublicProps, {}, {},
 }>, {
     title: string;
     description: string | null;
+    embedded: boolean;
     pageSize: number;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

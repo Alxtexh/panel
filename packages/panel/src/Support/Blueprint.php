@@ -109,10 +109,11 @@ final class Blueprint
     private const CLIENT_ONLY = <<<'MD'
         **Client-side components** (`@alxtexh-enterprise/panel`, no PHP equivalent): `StatStrip`
         `MiniStatCard` `SegmentedBar` `HeatmapChart` `ComboChart` `PolarAreaChart`
-        `RadarChart` `SetupChecklist` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid` `LineItems` `CartPanel`
+        `RadarChart` `SetupChecklist` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid` `CatalogTill` `CatalogBrowser` `CatalogRegister` `DirectoryPage` `LineItems` `CartPanel`
         `PkQtyStepper` `PkStatusBadge` `PkSignaturePad` `PaymentGateways`
-        _How to reach them: import them into YOUR OWN Vue page. `DashboardPage`
-        renders `StatCard` and `ChartCard` only, so a `StatWidget` cannot produce
+        _How to reach them: import them into YOUR OWN Vue page. A `CatalogBrowserPage` or
+        `PlanSetupPage` is optional routing, not a requirement to draw the widget.
+        `DashboardPage` renders `StatCard` and `ChartCard` only, so a `StatWidget` cannot produce
         a `StatStrip` - if you want one card split into four windows of the same
         metric, that screen is hand-written today. `ChartWidget::type('catalog')`
         and `type('items')` do mount `CatalogGrid` / `LineItems` on a dashboard._

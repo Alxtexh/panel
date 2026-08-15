@@ -14,14 +14,22 @@ type __VLS_Props = {
     columns?: TableColumn[];
     searchPlaceholder?: string;
     emptyTitle?: string;
+    embedded?: boolean;
 };
-declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
+declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    select: (key: string) => any;
+    cart: (key: string) => any;
+}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
+    onSelect?: ((key: string) => any) | undefined;
+    onCart?: ((key: string) => any) | undefined;
+}>, {
     columns: TableColumn[];
     rows: Record<string, unknown>[];
     emptyTitle: string;
     title: string;
     description: string | null;
     searchPlaceholder: string;
+    embedded: boolean;
     facets: CatalogFacet[];
     cardsTitle: string;
     cardsDescription: string | null;

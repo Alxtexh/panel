@@ -31,6 +31,7 @@ const props = withDefaults(
         columns?: TableColumn[]
         searchPlaceholder?: string
         emptyTitle?: string
+        embedded?: boolean
     }>(),
     {
         title: 'Register',
@@ -45,8 +46,14 @@ const props = withDefaults(
         columns: () => [],
         searchPlaceholder: 'Search…',
         emptyTitle: 'Nothing here',
+        embedded: false,
     },
 )
+
+const emit = defineEmits<{
+    select: [key: string]
+    cart: [key: string]
+}>()
 
 const filters = ref<CatalogFilters>(emptyCatalogFilters())
 
@@ -56,7 +63,10 @@ const visibleCards = computed(() =>
 </script>
 
 <template>
-    <div class="mx-auto flex w-full max-w-6xl flex-col gap-10 p-4 sm:p-6">
+    <div
+        class="flex w-full flex-col gap-10"
+        :class="embedded ? '' : 'mx-auto max-w-6xl p-4 sm:p-6'"
+    >
         <PkHeading :title="title" :description="description ?? undefined" />
 
         <section class="flex flex-col gap-4">
@@ -72,6 +82,8 @@ const visibleCards = computed(() =>
                 :facets="facets"
                 :items="visibleCards"
                 @filter="filters = $event"
+                @select="emit('select', $event)"
+                @cart="emit('cart', $event)"
             />
         </section>
 

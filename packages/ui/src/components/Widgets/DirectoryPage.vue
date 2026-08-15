@@ -5,10 +5,13 @@
  * FLAT ON PURPOSE. The heading, search, and cards sit on the page background.
  * Wrapping the whole screen in one card turns a directory into a nested box.
  *
+ * NO INERTIA HERE. Default links are plain `<a>`. The Inertia Directory
+ * screen passes `Link` as `linkComponent` so same-origin visits stay in-app.
+ *
  * SEARCH IS CLIENT-SIDE on link titles. Sections with no remaining links hide.
  */
-import { Link } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { computed, markRaw, ref } from 'vue'
+import type { Component } from 'vue'
 import { buttonClasses } from '../primitives/buttonClasses'
 import PkTextInput from '../primitives/PkTextInput.vue'
 import { iconPath } from '../primitives/icons'
@@ -33,14 +36,26 @@ const props = withDefaults(
         description?: string | null
         searchPlaceholder?: string
         sections: DirectorySection[]
+        /** Inertia `<Link>`, or any router link. Defaults to a plain `<a>`. */
+        linkComponent?: string | Component
+        /** Drop page padding and max-width so this can sit inside another screen. */
+        embedded?: boolean
     }>(),
     {
         description: null,
         searchPlaceholder: 'Search',
+        linkComponent: 'a',
+        embedded: false,
     },
 )
 
 const query = ref('')
+
+const resolvedLink = computed(() => {
+    const component = props.linkComponent
+
+    return typeof component === 'string' ? component : markRaw(component)
+})
 
 /**
  * Ghost button classes plus `no-underline`. Raw `<a href>` keeps the browser
@@ -72,7 +87,10 @@ const visibleSections = computed(() => {
 </script>
 
 <template>
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-6 sm:px-6">
+    <div
+        class="flex w-full flex-col gap-8"
+        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
+    >
         <header>
             <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">{{ title }}</h1>
             <p v-if="description" class="text-muted-foreground mt-1 text-sm">
@@ -119,7 +137,7 @@ const visibleSections = computed(() => {
                         class="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-x-4 gap-y-2.5"
                     >
                         <component
-                            :is="isExternalHref(link) ? 'a' : Link"
+                            :is="isExternalHref(link) ? 'a' : resolvedLink"
                             v-for="link in section.links"
                             :key="link.href + link.label"
                             :href="link.href"
