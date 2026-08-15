@@ -5,7 +5,6 @@ import { computed } from 'vue'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
 import {
     SidebarMenu,
-    SidebarMenuButton,
     SidebarMenuItem,
     useSidebar,
 } from '@alxtexh-enterprise/panel'
@@ -39,21 +38,21 @@ const { isMobile, state } = useSidebar()
         <SidebarMenuItem>
             <DropdownMenu>
                 <DropdownMenuTrigger as-child>
-                    <SidebarMenuButton
-                        size="lg"
-                        class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                    <button
+                        type="button"
+                        class="flex w-full cursor-pointer items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"
                         data-test="sidebar-menu-button"
+                        aria-label="Account menu"
+                        title="Account menu"
                     >
-                        <!--
-                            `v-if` RATHER THAN A CAST. `user` is null until the
-                            shared props arrive, and `UserInfo` reads `.name`
-                            and `.avatar` unconditionally - so asserting
-                            non-null here would move a real runtime error into
-                            a place the checker stops looking.
-                        -->
                         <UserInfo v-if="user" :user="user" />
-                        <ChevronsUpDown class="ml-auto size-4" />
-                    </SidebarMenuButton>
+                        <span
+                            class="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent group-data-[collapsible=icon]:hidden"
+                            aria-hidden="true"
+                        >
+                            <ChevronsUpDown class="size-4" />
+                        </span>
+                    </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                     class="w-(--reka-dropdown-menu-trigger-width) min-w-56 rounded-lg"

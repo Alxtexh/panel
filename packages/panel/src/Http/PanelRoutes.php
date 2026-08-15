@@ -743,25 +743,31 @@ final class PanelRoutes
                         Route::get('about', [Controllers\HelpController::class, 'about'])
                             ->name('support.about');
                     }
+
+                    /*
+                     * WHAT'S NEW SITS WITH HELP/FAQ/ABOUT, not behind
+                     * editableSupport. ChangelogPage still hides itself when
+                     * there are no releases, which used to omit this URL
+                     * entirely on a stock install. HelpController serves the
+                     * empty page (and later the notes) so the footer link is
+                     * never a 404.
+                     */
+                    if (self::unclaimed('GET', $panel->getPath().'/whats-new')) {
+                        Route::get('whats-new', [Controllers\HelpController::class, 'whatsNew'])
+                            ->name('support.whats-new');
+                    }
                 }
 
                 /*
                  * ON-PAGE EDITING, only when this portal opted in. Tenant
                  * operator panels leave this off; a superadmin panel turns it
-                 * on with `->editableSupport()`. The GET for What's new is
-                 * here so the first release can be written on an empty page
-                 * even when ChangelogPage hid itself for lack of config.
+                 * on with `->editableSupport()`.
                  */
                 if ($panel->isSupportEditable()) {
                     Route::put('support/contents', [Controllers\SupportContentController::class, 'update'])
                         ->name('support.contents');
                     Route::post('support/contents/github', [Controllers\SupportContentController::class, 'syncGithub'])
                         ->name('support.github');
-
-                    if (self::unclaimed('GET', $panel->getPath().'/whats-new')) {
-                        Route::get('whats-new', [Controllers\HelpController::class, 'whatsNew'])
-                            ->name('support.whats-new');
-                    }
                 }
 
                 /*

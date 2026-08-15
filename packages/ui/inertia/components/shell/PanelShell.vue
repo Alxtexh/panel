@@ -170,13 +170,25 @@ router.on('success', () => {
 
 <template>
     <!--
+        ONE VIEWPORT TALL. The skip link used to sit in normal flow as a white
+        chip, which made `html`/`body` taller than the `h-svh` sidebar wrapper,
+        so the page and the inset both scrolled. `pk-shell` is what the
+        published stylesheet keys on to freeze the document and leave scrolling
+        to the inset.
+    -->
+    <div class="pk-shell relative flex h-svh flex-col overflow-hidden" :style="palette">
+    <!--
         FIRST IN THE DOCUMENT, because that is the only position that works. A
         skip link placed anywhere else is reached after the thing it exists to
         skip. It targets #pk-main, which AppContent renders focusable.
+
+        Hidden until focused: utilities live on the element so a consumer that
+        never copied `.pk-skip-link` still gets a real skip link, not a chip
+        over the logo.
     -->
     <a
         href="#pk-main"
-        class="pk-skip-link rounded-md border bg-background px-3 py-2 text-sm shadow-lg"
+        class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring"
     >
         Skip to content
     </a>
@@ -184,10 +196,12 @@ router.on('success', () => {
     <!--
         PADDING FOR THE BOTTOM BAR, so the last row of a table is not
         permanently underneath it. `sm:pb-0` because the bar disappears there.
+        `min-h-0` so this flex child can shrink; without it the inner `h-svh`
+        rail overflows and the document scrolls again.
     -->
-    <div class="pb-14 sm:pb-0" :style="palette">
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden pb-14 sm:pb-0">
         <!-- Top navigation, by preference: no rail, no provider. -->
-        <div v-if="horizontal" class="flex min-h-screen w-full flex-col bg-sidebar">
+        <div v-if="horizontal" class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-sidebar">
             <PanelImpersonationBanner />
 
             <!--
@@ -204,7 +218,7 @@ router.on('success', () => {
             <main
                 id="pk-main"
                 tabindex="-1"
-                class="flex min-h-0 flex-1 flex-col bg-background md:m-2 md:rounded-xl md:border"
+                class="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background md:m-2 md:rounded-xl md:border"
             >
                 <slot />
             </main>
@@ -219,7 +233,7 @@ router.on('success', () => {
                 </template>
             </AppSidebar>
 
-            <AppContent variant="sidebar" class="overflow-x-hidden">
+            <AppContent variant="sidebar" class="min-h-0 overflow-x-hidden overflow-y-auto">
                 <PanelImpersonationBanner />
 
                 <AppSidebarHeader :breadcrumbs="props.breadcrumbs">
@@ -283,4 +297,5 @@ router.on('success', () => {
     -->
     <SessionExpired />
     <PanelIdleLockGuard />
+    </div>
 </template>

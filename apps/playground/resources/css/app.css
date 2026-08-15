@@ -248,6 +248,12 @@ html {
     font-size: var(--pk-font-size);
 }
 
+html:has(.pk-shell),
+body:has(.pk-shell) {
+    height: 100%;
+    overflow: hidden;
+}
+
 /* Density. Table cells opt in via .pk-row so other paddings are unaffected. */
 .pk-row td {
     padding-top: var(--pk-row-padding);

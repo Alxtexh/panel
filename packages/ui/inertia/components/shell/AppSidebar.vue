@@ -173,8 +173,10 @@ const dashboardItem = computed<NavItem>(() => ({
  * (`SharePanelProps`), null when that panel genuinely lacks the route, so the
  * footer shows exactly what this portal can serve and nothing it cannot.
  *
- * WHAT'S NEW IS `panel.whatsNew`, same as Help and FAQ: present when this
- * portal actually routes it (ChangelogPage, or editable-support).
+ * WHAT'S NEW IS `panel.whatsNew` WHEN THE SERVER SHARED A URL, and the
+ * packaged `/whats-new` path otherwise. ChangelogPage used to hide the
+ * route on an empty config, so a stock install lost the fourth footer
+ * link while Help, FAQ and About still appeared.
  *
  * DECLARED ABOVE `navGroups`, WHICH READS IT, AND THAT ORDER IS LOAD-BEARING.
  * `const collapsed = ref(readCollapsed())` forces `navGroups` DURING setup, so
@@ -218,6 +220,25 @@ const supportNavItems = computed<NavItem[]>(() => {
     }
 
     if (items.length > 0) {
+        /*
+         * A STOCK INSTALL SHARES HELP/FAQ/ABOUT but not What's new until
+         * ChangelogPage has releases. The footer is still four links; the
+         * packaged default is `/whats-new`.
+         */
+        if (!items.some((item) => item.title === "What's new")) {
+            const fallback = supportItems.value.find((item) => item.title === "What's new")
+
+            if (fallback) {
+                const about = items.findIndex((item) => item.title === 'About')
+
+                if (about >= 0) {
+                    items.splice(about, 0, fallback)
+                } else {
+                    items.push(fallback)
+                }
+            }
+        }
+
         return items
     }
 

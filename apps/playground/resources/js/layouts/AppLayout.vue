@@ -143,6 +143,7 @@ router.on('success', () => {
 </script>
 
 <template>
+    <div class="pk-shell relative flex h-svh flex-col overflow-hidden">
     <!--
         FIRST IN THE DOCUMENT, because that is the only position that works. A
         skip link placed anywhere else is reached after the thing it exists to
@@ -150,7 +151,7 @@ router.on('success', () => {
     -->
     <a
         href="#pk-main"
-        class="pk-skip-link rounded-md border bg-background px-3 py-2 text-sm shadow-lg"
+        class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring"
     >
         Skip to content
     </a>
@@ -159,7 +160,7 @@ router.on('success', () => {
         PADDING FOR THE BAR, so the last row of a table is not permanently
         underneath it. `sm:pb-0` because the bar itself disappears there.
     -->
-    <div class="pb-14 sm:pb-0">
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden pb-14 sm:pb-0">
         <component :is="shell" :breadcrumbs="breadcrumbs">
             <slot />
         </component>
@@ -229,4 +230,5 @@ router.on('success', () => {
         renders nothing until the router hook in `app.ts` trips it.
     -->
     <SessionExpired />
+    </div>
 </template>
