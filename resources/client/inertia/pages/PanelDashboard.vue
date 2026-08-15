@@ -553,7 +553,7 @@ const hiddenEntries = computed(() => {
 <template>
     <Head :title="heading" />
 
-    <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-3 sm:p-4">
+    <div class="flex w-full min-w-0 flex-1 flex-col gap-4 p-3 sm:p-4">
         <!--
             ABOVE EVERYTHING, because a notice below the fold is a notice nobody
             read - which is exactly what the dedicated Announcements page turned
