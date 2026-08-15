@@ -186,6 +186,17 @@ html {
     font-size: var(--pk-font-size);
 }
 
+/*
+ * The shell is one viewport tall. Without this, `html`/`body` scroll AND the
+ * inset scrolls, because a skip link or bottom-bar padding made the document
+ * taller than the `h-svh` rail.
+ */
+html:has(.pk-shell),
+body:has(.pk-shell) {
+    height: 100%;
+    overflow: hidden;
+}
+
 .pk-row td {
     padding-top: var(--pk-row-padding);
     padding-bottom: var(--pk-row-padding);

@@ -95,8 +95,9 @@ final class HelpController
     }
 
     /**
-     * What's new on a portal that opted into editable support, even when the
-     * packaged ChangelogPage hid itself for having no config releases yet.
+     * What's new. Always routed with Help/FAQ/About so a stock install still
+     * has the footer link. Empty until releases exist (config, GitHub sync, or
+     * on-page editing).
      */
     public function whatsNew(): Response
     {
