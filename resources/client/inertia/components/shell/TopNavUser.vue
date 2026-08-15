@@ -13,10 +13,9 @@
  */
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { Avatar, AvatarFallback, AvatarImage } from '@alxtexh-enterprise/panel'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
-import { getInitials } from '../../composables/useInitials'
 import type { User } from '../../types'
+import UserInfo from './UserInfo.vue'
 
 const page = usePage()
 /**
@@ -45,14 +44,9 @@ const user = computed(() => (page.props.auth as SharedAuth | undefined)?.user ??
             <button
                 type="button"
                 class="rounded-full transition-colors hover:bg-accent"
-                :aria-label="`Account menu for ${user?.name}`"
+                :aria-label="`Account menu for ${user?.name ?? user?.email ?? 'account'}`"
             >
-                <Avatar class="size-8">
-                    <AvatarImage v-if="user?.avatar" :src="user?.avatar" :alt="user?.name" />
-                    <AvatarFallback class="text-xs">{{
-                        getInitials(user?.name ?? undefined)
-                    }}</AvatarFallback>
-                </Avatar>
+                <UserInfo v-if="user" :user="user" :show-name="false" />
             </button>
         </DropdownMenuTrigger>
 

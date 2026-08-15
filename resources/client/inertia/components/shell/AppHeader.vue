@@ -3,7 +3,6 @@ import { Link, usePage } from '@inertiajs/vue3'
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from '@lucide/vue'
 import { computed } from 'vue'
 import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
-import { Avatar, AvatarFallback, AvatarImage } from '@alxtexh-enterprise/panel'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
 import {
     NavigationMenu,
@@ -21,11 +20,11 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@alxtexh-enterprise/panel'
 import { toUrl } from '@alxtexh-enterprise/panel'
 import { useCurrentUrl } from '../../composables/useCurrentUrl'
-import { getInitials } from '../../composables/useInitials'
 import type { User } from '../../types'
 import type { BreadcrumbItem, NavItem } from '../../types'
 import AppLogo from './AppLogo.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
+import UserInfo from './UserInfo.vue'
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[]
@@ -228,18 +227,7 @@ const rightNavItems: NavItem[] = [
                                 size="icon"
                                 class="relative size-10 w-auto rounded-full p-1 focus-within:ring-2 focus-within:ring-primary"
                             >
-                                <Avatar class="size-8 overflow-hidden rounded-full">
-                                    <AvatarImage
-                                        v-if="auth.user?.avatar"
-                                        :src="auth.user?.avatar"
-                                        :alt="auth.user?.name"
-                                    />
-                                    <AvatarFallback
-                                        class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"
-                                    >
-                                        {{ getInitials(auth.user?.name) }}
-                                    </AvatarFallback>
-                                </Avatar>
+                                <UserInfo v-if="auth.user" :user="auth.user" :show-name="false" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" class="w-56">
