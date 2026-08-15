@@ -90,6 +90,35 @@ final class OptionalIntegrationTest extends TestCase
     }
 
     /**
+     * NO TABLE IS THE SAME AS NO KEYS, and must not throw.
+     *
+     * `laravel/passkeys` can sit in vendor without its migration. Idle lock
+     * still has to render; password unlock is enough.
+     */
+    public function test_a_missing_passkeys_table_is_an_empty_list(): void
+    {
+        $this->assertFalse(Passkeys::tableExists());
+        $this->assertSame([], Passkeys::forUser($this->user));
+    }
+
+    public function test_a_present_passkeys_table_is_detected_without_querying_rows(): void
+    {
+        \Illuminate\Support\Facades\Schema::create('passkeys', function (\Illuminate\Database\Schema\Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        $this->assertTrue(Passkeys::tableExists());
+        $this->assertSame([], Passkeys::forUser($this->user));
+
+        \Illuminate\Support\Facades\Schema::drop('passkeys');
+
+        $this->assertFalse(Passkeys::tableExists());
+    }
+
+    /**
      * THE DISCOVERY DOCUMENT ANSWERS EMPTY RATHER THAN 404.
      *
      * A password manager looks for `/.well-known/passkey-endpoints`. A 404

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Fortify\Contracts\PasskeyUser as FortifyPasskeyUser;
 use Laravel\Fortify\Features;
 use Laravel\Passkeys\Contracts\PasskeyUser as NativePasskeyUser;
@@ -120,12 +122,23 @@ final class Passkeys
      */
     public static function forUser(?Authenticatable $user): array
     {
-        if ($user === null || ! self::available($user)) {
+        if ($user === null || ! self::available($user) || ! self::tableExists()) {
             return [];
         }
 
-        /** @var iterable<object> $passkeys */
-        $passkeys = $user->passkeys()->latest()->get();
+        /*
+         * A MISSING TABLE IS "NO PASSKEYS", NOT A 500.
+         *
+         * Idle lock and the security screen both call this. `laravel/passkeys`
+         * can be required while its migration was never published - that used
+         * to 500 GET /screens/locked. Password unlock must still work.
+         */
+        try {
+            /** @var iterable<object> $passkeys */
+            $passkeys = $user->passkeys()->latest()->get();
+        } catch (QueryException) {
+            return [];
+        }
 
         $out = [];
 
@@ -140,6 +153,19 @@ final class Passkeys
         }
 
         return $out;
+    }
+
+    /**
+     * Whether the `passkeys` table has been migrated.
+     *
+     * `Schema::hasTable` is the check: a fresh `panel:install` historically
+     * skipped publishing when Composer already had `laravel/passkeys`, so the
+     * package was autoloadable and the table was not. Callers must treat false
+     * as an empty list, never as an error.
+     */
+    public static function tableExists(): bool
+    {
+        return Schema::hasTable('passkeys');
     }
 
     /**
