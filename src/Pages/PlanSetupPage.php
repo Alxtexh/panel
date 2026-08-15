@@ -20,7 +20,8 @@ use Alxtexh\Panel\Support\ModuleRegistry;
  * so save/destroy can sit at `/settings/plans/save` without colliding with an
  * optional path segment.
  *
- * Generate a stub with `php artisan make:panel-page BillingPlans --plan-setup`.
+ * Generate an empty stub with `php artisan make:panel-page BillingPlans --plan-setup`,
+ * then import PlanGrid / PlanEditor in the Vue file.
  */
 abstract class PlanSetupPage extends Page
 {

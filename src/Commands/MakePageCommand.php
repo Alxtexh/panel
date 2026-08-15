@@ -17,16 +17,16 @@ use Alxtexh\Panel\PanelManager;
  * exists to prevent. Writing the class alone would reintroduce it one screen at
  * a time.
  *
- * `--dashboard` GENERATES A WIDGET HOST instead, extending `DashboardPage`: it
- * needs no component of its own, because the packaged `PanelDashboard` screen
- * draws whatever `stats()` and `charts()` declare.
+ * EVERY VARIANT WRITES AN EMPTY CANVAS. Widgets are drop-ins the developer
+ * imports. `--dashboard` and `--plan-setup` still pick a PHP base class; the
+ * Vue file is Head plus a heading, with a commented import example.
  */
 final class MakePageCommand extends Command
 {
     protected $signature = 'make:panel-page
                             {name : The page class, e.g. ServerHealth}
-                            {--dashboard : A widget host, extending DashboardPage}
-                            {--plan-setup : A SaaS plan catalogue, extending PlanSetupPage}
+                            {--dashboard : Empty canvas; PHP extends DashboardPage; commented StatCard import}
+                            {--plan-setup : Empty canvas; PHP extends PlanSetupPage; commented PlanGrid import}
                             {--panel= : The panel this screen belongs to. Defaults to panel.default}
                             {--force : Overwrite an existing class or component}';
 
@@ -69,7 +69,7 @@ final class MakePageCommand extends Command
         }
 
         file_put_contents($path, match (true) {
-            $dashboard => $this->dashboardStub($class, $slug, $panel),
+            $dashboard => $this->dashboardStub($class, $slug, $name, $panel),
             $planSetup => $this->planSetupStub($class, $slug, $name, $panel),
             default => $this->pageStub($class, $slug, $name, $panel),
         });
@@ -77,9 +77,11 @@ final class MakePageCommand extends Command
         $this->components->info("Created app/Panel/Pages/{$class}.php");
         $this->components->twoColumnDetail('Panel', $panel);
 
-        if (! $dashboard) {
-            $this->writeComponent($name, $slug, $planSetup);
-        }
+        $this->writeComponent($name, match (true) {
+            $dashboard => 'dashboard',
+            $planSetup => 'plan',
+            default => 'catalog',
+        });
 
         $this->newLine();
         $this->components->info("Visit /{$slug}. Discovery registers it; there is no route to add.");
@@ -100,10 +102,9 @@ final class MakePageCommand extends Command
     /**
      * The one-line page file, in the same shape `panel:install` writes.
      *
-     * A DASHBOARD NEEDS NONE: it renders the packaged `PanelDashboard`, whose
-     * page file already exists.
+     * Always an empty Vue file. Flags only change the commented import.
      */
-    private function writeComponent(string $name, string $slug, bool $planSetup = false): void
+    private function writeComponent(string $name, string $hint = 'catalog'): void
     {
         $directory = resource_path('js/pages');
 
@@ -124,9 +125,7 @@ final class MakePageCommand extends Command
             return;
         }
 
-        file_put_contents($path, $planSetup
-            ? $this->planSetupVue($name)
-            : $this->pageVue($name));
+        file_put_contents($path, $this->pageVue($name, $hint));
 
         $this->components->info("Created resources/js/pages/{$name}.vue");
     }
@@ -220,7 +219,7 @@ final class MakePageCommand extends Command
         PHP;
     }
 
-    private function dashboardStub(string $class, string $slug, string $panel): string
+    private function dashboardStub(string $class, string $slug, string $name, string $panel): string
     {
         return <<<PHP
         <?php
@@ -235,12 +234,20 @@ final class MakePageCommand extends Command
 
         /**
          * TODO: say what this dashboard answers.
+         *
+         * The Vue file is an empty canvas. Import StatCard / ChartCard, or
+         * return 'PanelDashboard' from component() to use the packaged screen.
          */
         final class {$class} extends DashboardPage
         {
             protected static string \$panel = '{$panel}';
 
             protected static ?string \$group = null;
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
 
             /**
              * WIDGETS RESOLVE ONE AT A TIME, each in its own deferred prop, so
@@ -273,19 +280,25 @@ final class MakePageCommand extends Command
         PHP;
     }
 
-    private function pageVue(string $name): string
+    private function pageVue(string $name, string $hint = 'catalog'): string
     {
+        $example = match ($hint) {
+            'dashboard' => 'StatCard, ChartCard',
+            'plan' => 'PlanGrid, PlanEditor',
+            default => 'CatalogGrid',
+        };
+
         return <<<VUE
         <script setup lang="ts">
         /*
-         * The {$name} screen.
+         * Empty canvas. Import what you need from `@alxtexh-enterprise/panel`:
          *
-         * ITS PROPS COME FROM `{$name}Page::data()`. Declare them here as you
-         * would for any component - they arrive as ordinary Inertia page props.
+         *   import { {$example} } from '@alxtexh-enterprise/panel'
          *
-         * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
-         * all, silently, in a production build.
+         * Props come from `{$name}Page::data()`.
          */
+        import { Head } from '@inertiajs/vue3'
+
         defineProps<{
             pageHeading?: string
             pageDescription?: string | null
@@ -293,36 +306,16 @@ final class MakePageCommand extends Command
         </script>
 
         <template>
-            <div class="space-y-6">
+            <Head :title="pageHeading ?? '{$name}'" />
+
+            <div class="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
                 <header v-if="pageHeading">
                     <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading }}</h1>
                     <p v-if="pageDescription" class="mt-1 text-sm text-muted-foreground">
                         {{ pageDescription }}
                     </p>
                 </header>
-
-                <p class="text-sm text-muted-foreground">
-                    Nothing here yet. Return props from <code>data()</code> and render them.
-                </p>
             </div>
-        </template>
-        VUE;
-    }
-
-    private function planSetupVue(string $name): string
-    {
-        return <<<VUE
-        <script setup lang="ts">
-        /*
-         * The {$name} plan catalogue. PlanSetup is the kit screen.
-         */
-        import PlanSetup from '@alxtexh-enterprise/panel/pages/PlanSetup.vue'
-
-        defineOptions({ inheritAttrs: false })
-        </script>
-
-        <template>
-            <PlanSetup v-bind="(\$attrs as any)" />
         </template>
         VUE;
     }

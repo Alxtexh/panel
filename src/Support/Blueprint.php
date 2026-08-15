@@ -121,8 +121,8 @@ final class Blueprint
 
     private const PAGE_HOW = 'extend `Page` (or `DashboardPage` / `PlanSetupPage`) in `app/Panel/Pages` and '
         .'discovery routes it - `php artisan make:panel-page ServerHealth` writes the class '
-        .'and its Vue file. `make:panel-page BillingPlans --plan-setup` writes a subscription '
-        .'catalogue. `ChangelogPage` and `EnvironmentPage` are the package\'s OWN '
+        .'and its Vue file. `make:panel-page BillingPlans --plan-setup` writes an empty '
+        .'page (import PlanGrid). `ChangelogPage` and `EnvironmentPage` are the package\'s OWN '
         .'screens rather than things to extend: each appears only once configured '
         .'(`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so '
         .'check those keys before concluding the capability is missing';
@@ -564,9 +564,10 @@ final class Blueprint
         php artisan make:panel-page BillingPlans --plan-setup
         ```
 
-        `PlanSetupPage` draws plan cards and a two-column editor (details vs
-        perks). `modules()` and `limits()` default from the panel module
-        registry. Persist to your models. Numeric limits use -1 for Unlimited.
+        `PlanSetupPage` supplies plan data. The generated Vue is empty: import
+        `PlanGrid` and `PlanEditor` from `@alxtexh-enterprise/panel`. `modules()`
+        and `limits()` default from the panel module registry. Persist to your
+        models. Numeric limits use -1 for Unlimited.
         A SaaS MUST set `ModuleRegistry::grants()` from the subscriber plan;
         until that callback is set, every registered module stays enabled.
         Discovered screens set `protected static ?string $module = 'campaigns'`
@@ -600,8 +601,9 @@ final class Blueprint
         php artisan make:panel-page Overview --dashboard
         ```
 
-        A `DashboardPage` declares `stats()` and `charts()`; the packaged
-        `PanelDashboard` screen draws them. There is no dashboard Vue to write.
+        A `DashboardPage` can declare `stats()` and `charts()`. The generated Vue
+        is an empty canvas: import `StatCard` / `ChartCard`, or return
+        `PanelDashboard` from `component()` to use the packaged screen.
 
         ```php
         final class OverviewPage extends DashboardPage

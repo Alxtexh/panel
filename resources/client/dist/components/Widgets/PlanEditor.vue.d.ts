@@ -5,6 +5,7 @@ type __VLS_Props = {
     limits?: PlanLimitField[];
     mode?: 'create' | 'edit';
     processing?: boolean;
+    embedded?: boolean;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     cancel: () => any;
@@ -15,6 +16,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }>, {
     mode: "create" | "edit";
     processing: boolean;
+    embedded: boolean;
     plan: PlanRecord | null;
     modules: PlanModuleOption[];
     limits: PlanLimitField[];

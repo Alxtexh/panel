@@ -40,10 +40,12 @@ const documents = computed<StudioDocument[]>(() => {
 <template>
     <Head :title="pageHeading ?? 'Signatures'" />
 
-    <SignatureStudio
-        :title="pageHeading ?? 'Signatures'"
-        :description="pageDescription"
-        :documents="documents"
-        :storage-key="storageKey ?? 'panel.signatures'"
-    />
+    <div class="mx-auto w-full max-w-6xl p-4 sm:p-6">
+        <SignatureStudio
+            :title="pageHeading ?? 'Signatures'"
+            :description="pageDescription"
+            :documents="documents"
+            :storage-key="storageKey ?? 'panel.signatures'"
+        />
+    </div>
 </template>

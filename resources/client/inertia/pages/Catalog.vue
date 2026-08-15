@@ -60,12 +60,14 @@ function openItem(key: string): void {
 <template>
     <Head :title="pageHeading ?? 'Catalog'" />
 
-    <CatalogBrowser
-        :title="pageHeading ?? 'Catalog'"
-        :description="pageDescription"
-        :tabs="tabs"
-        :page-size="pageSize ?? 8"
-        @select="openItem"
-        @cart="openItem"
-    />
+    <div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+        <CatalogBrowser
+            :title="pageHeading ?? 'Catalog'"
+            :description="pageDescription"
+            :tabs="tabs"
+            :page-size="pageSize ?? 8"
+            @select="openItem"
+            @cart="openItem"
+        />
+    </div>
 </template>
