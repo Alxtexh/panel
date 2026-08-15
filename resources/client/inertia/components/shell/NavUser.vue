@@ -45,6 +45,13 @@ const { isMobile, state } = useSidebar()
                         aria-label="Account menu"
                         title="Account menu"
                     >
+                        <!--
+                            `v-if` RATHER THAN A CAST. `user` is null until the
+                            shared props arrive, and `UserInfo` reads `.name`
+                            and `.avatar` unconditionally - so asserting
+                            non-null here would move a real runtime error into
+                            a place the checker stops looking.
+                        -->
                         <UserInfo v-if="user" :user="user" />
                         <span
                             class="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent group-data-[collapsible=icon]:hidden"
