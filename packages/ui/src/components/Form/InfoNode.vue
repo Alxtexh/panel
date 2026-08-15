@@ -11,6 +11,8 @@
  * one way in the list and another here.
  */
 import { computed, ref } from 'vue'
+import PkBadge from '../primitives/PkBadge.vue'
+import { BADGE_VARIANTS, hasBadgeValue } from '../../composables/useSchemaColumns'
 
 export interface InfoNode {
     component: 'entry' | 'section' | 'grid' | 'tabs' | 'tab'
@@ -53,13 +55,6 @@ const gridClass = computed(() => {
     return columns >= 3 ? 'sm:grid-cols-3' : columns === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1'
 })
 
-const BADGE_VARIANTS: Record<string, string> = {
-    success: 'bg-primary text-primary-foreground',
-    danger: 'bg-destructive text-white',
-    warning: 'bg-secondary text-secondary-foreground',
-    neutral: 'border text-foreground',
-}
-
 const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
     date: { year: 'numeric', month: 'long', day: 'numeric' },
     datetime: {
@@ -97,11 +92,11 @@ const display = computed(() => {
     return [props.node.prefix, text, props.node.suffix].filter(Boolean).join(' ')
 })
 
-const badgeClass = computed(() => {
+const badgeVariant = computed(() => {
     const lookup = typeof value.value === 'boolean' ? (value.value ? '1' : '') : String(value.value)
     const intent = props.node.colors?.[lookup] ?? props.node.defaultColor ?? 'neutral'
 
-    return BADGE_VARIANTS[intent] ?? BADGE_VARIANTS.neutral
+    return BADGE_VARIANTS[intent] ?? 'outline'
 })
 </script>
 
@@ -110,13 +105,14 @@ const badgeClass = computed(() => {
     <div v-if="node.component === 'entry'" class="flex flex-col gap-0.5">
         <dt class="text-muted-foreground text-xs font-medium">{{ node.label }}</dt>
         <dd class="text-sm">
-            <span
-                v-if="node.type === 'badge'"
-                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize"
-                :class="badgeClass"
+            <PkBadge
+                v-if="node.type === 'badge' && hasBadgeValue(value)"
+                :variant="(badgeVariant as any)"
+                class="capitalize"
             >
                 {{ value }}
-            </span>
+            </PkBadge>
+            <span v-else-if="node.type === 'badge'">-</span>
             <span
                 v-else
                 :class="[

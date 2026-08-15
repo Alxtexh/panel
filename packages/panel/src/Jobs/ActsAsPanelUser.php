@@ -70,6 +70,10 @@ trait ActsAsPanelUser
             throw new RuntimeException("Resource [{$resourceKey}] is not enabled for this tenant.");
         }
 
+        if (! $class::isAccessible()) {
+            throw new RuntimeException("Resource [{$resourceKey}] is not granted on the current plan.");
+        }
+
         return $class;
     }
 

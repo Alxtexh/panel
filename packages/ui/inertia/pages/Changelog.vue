@@ -29,6 +29,9 @@ defineOptions({ inheritAttrs: false })
 import { Head } from '@inertiajs/vue3'
 import { Bug, ChevronDown, Lightbulb, Sparkles } from '@lucide/vue'
 import { ref } from 'vue'
+import SupportPageEditor, {
+    type SupportProps,
+} from '../components/support/SupportPageEditor.vue'
 
 type Release = {
     version: string
@@ -44,6 +47,7 @@ const props = withDefaults(
         releases?: Release[]
         pageHeading?: string
         pageDescription?: string | null
+        support?: SupportProps | null
     }>(),
     { releases: () => [], pageHeading: "What's new", pageDescription: null },
 )
@@ -108,6 +112,7 @@ const SECTIONS = [
         broken next to Help and About, which are the same shape of screen.
     -->
     <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-6">
+        <SupportPageEditor :support="support">
         <header>
             <h1 class="text-2xl font-semibold tracking-tight">
                 {{ pageHeading }}
@@ -204,5 +209,6 @@ const SECTIONS = [
                 </section>
             </div>
         </article>
+        </SupportPageEditor>
     </div>
 </template>

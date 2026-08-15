@@ -159,6 +159,38 @@ const COLUMNS: Record<number, string> = {
 const grid = computed(() => COLUMNS[props.columns] ?? COLUMNS[4])
 
 /**
+ * Complete rows stay a joined strip. The leftover cards on an incomplete last
+ * row are independent: same column track, no full-width empty grey band.
+ */
+const packed = computed(() => {
+    const cols = props.columns ?? 4
+    const complete = Math.floor(props.segments.length / cols) * cols
+
+    return props.segments.slice(0, complete)
+})
+
+const leftover = computed(() => {
+    const cols = props.columns ?? 4
+    const complete = Math.floor(props.segments.length / cols) * cols
+
+    return props.segments.slice(complete)
+})
+
+const stripRows = computed(() => {
+    const rows: { key: string; joined: boolean; segments: StatSegment[] }[] = []
+
+    if (packed.value.length > 0) {
+        rows.push({ key: 'packed', joined: true, segments: packed.value })
+    }
+
+    if (leftover.value.length > 0) {
+        rows.push({ key: 'leftover', joined: false, segments: leftover.value })
+    }
+
+    return rows
+})
+
+/**
  * The eye: all of them, in one click, in whichever direction is not already
  * true. Individually-opened cells are forgotten either way, so "hide" really
  * does hide everything rather than leaving the one cell somebody opened.
@@ -229,8 +261,16 @@ function display(value: string | number): string {
 
         The container also carries the divider colour; the cells sit on top of it
         in the card colour, and the 1px gaps between them are what shows through.
+        Leftover cards skip that container so empty tracks stay transparent.
     -->
-    <div class="bg-border relative shrink-0 overflow-hidden rounded-xl border">
+    <div class="flex flex-col gap-3">
+    <div
+        v-for="row in stripRows"
+        :key="row.key"
+        class="relative shrink-0"
+        :class="row.joined ? 'bg-border overflow-hidden rounded-xl border' : ''"
+        :data-slot="row.joined ? 'stat-packed' : 'stat-leftover'"
+    >
         <!--
             One control, floated over the corner rather than given a header row
             of its own - a header would push the strip taller for a single
@@ -238,7 +278,7 @@ function display(value: string | number): string {
             for.
         -->
         <button
-            v-if="maskable && hasSensitive"
+            v-if="maskable && hasSensitive && row.key === stripRows[0]?.key"
             type="button"
             class="text-muted-foreground hover:text-foreground absolute top-3 right-3 z-10 rounded p-1 transition-colors"
             :aria-pressed="anyMasked"
@@ -275,11 +315,12 @@ function display(value: string | number): string {
             </svg>
         </button>
 
-        <div class="grid gap-px" :class="grid">
+        <div class="grid" :class="[row.joined ? 'gap-px' : 'gap-3', grid]">
             <div
-                v-for="segment in segments"
+                v-for="segment in row.segments"
                 :key="segment.key"
                 class="bg-card flex flex-col gap-2 p-4"
+                :class="row.joined ? '' : 'overflow-hidden rounded-xl border'"
             >
                 <p class="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
                     {{ segment.label }}
@@ -387,5 +428,6 @@ function display(value: string | number): string {
                 </p>
             </div>
         </div>
+    </div>
     </div>
 </template>

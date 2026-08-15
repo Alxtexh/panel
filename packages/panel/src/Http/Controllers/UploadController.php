@@ -139,6 +139,8 @@ final class UploadController extends Controller
             throw new NotFoundHttpException("No resource [{$resource}].");
         }
 
+        abort_unless($class::isAccessible(), 403);
+
         return $class;
     }
 

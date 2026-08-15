@@ -134,7 +134,17 @@ final class SuperadminPanelProvider extends ServiceProvider
                  * installation's admin, and a second copy of a restore button
                  * is a second thing to secure.
                  */
-                ->without(['operations', 'assistant-settings']),
+                ->without(['operations', 'assistant-settings'])
+
+                /*
+                 * SAME-PAGE HELP / FAQ / WHAT'S NEW / ABOUT EDITING.
+                 *
+                 * Also on the tenant ISP panel (`/help`). This portal is the
+                 * installation copy. Superadmins hold `support.update` (the
+                 * seeded account uses `*`).
+                 */
+                ->editableSupport()
+                ->supportGithubRepository('Alxtexh/panelkit'),
         );
 
         /*

@@ -42,6 +42,32 @@ final class DashboardExtras
     /** @var list<Closure(): list<array<string, mixed>>> */
     private static array $strips = [];
 
+    /** @var list<Closure(): array<string, mixed>> */
+    private static array $shortcuts = [];
+
+    /** @param Closure(): array<string, mixed> $shortcuts */
+    public static function shortcutsCatalog(Closure $shortcuts): void
+    {
+        self::$shortcuts[] = $shortcuts;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function shortcuts(): array
+    {
+        $out = ['catalog' => [], 'defaults' => []];
+
+        foreach (self::$shortcuts as $resolve) {
+            $chunk = $resolve();
+            $out['catalog'] = [...$out['catalog'], ...($chunk['catalog'] ?? [])];
+            $out['defaults'] = [...$out['defaults'], ...($chunk['defaults'] ?? [])];
+            $out['storageKey'] = $chunk['storageKey'] ?? ($out['storageKey'] ?? 'panel.dashboard.shortcuts');
+        }
+
+        return $out;
+    }
+
     private static ?Closure $strip = null;
 
     private static ?string $stripAbility = null;
@@ -132,6 +158,7 @@ final class DashboardExtras
         self::$stats = [];
         self::$charts = [];
         self::$strips = [];
+        self::$shortcuts = [];
         self::$strip = null;
         self::$stripAbility = null;
     }

@@ -69,13 +69,23 @@ const appName = computed(() => {
     return String(brand || props.name || 'Panel')
 })
 
-const authLayout = computed((): 'centered' | 'split' => {
+const authLayout = computed((): 'centered' | 'split' | 'showcase' => {
     const props = usePage().props
     const layout = props.panel && typeof props.panel === 'object'
         ? (props.panel as Record<string, unknown>).authLayout
         : null
 
-    return layout === 'split' ? 'split' : 'centered'
+    return layout === 'split' || layout === 'showcase' ? layout : 'centered'
+})
+
+/** `Panel::authTestimonial()`, or null when the panel declared none. */
+const testimonial = computed((): { quote: string; author: string; role: string | null } | null => {
+    const props = usePage().props
+    const value = props.panel && typeof props.panel === 'object'
+        ? (props.panel as Record<string, unknown>).authTestimonial
+        : null
+
+    return value && typeof value === 'object' ? (value as { quote: string; author: string; role: string | null }) : null
 })
 </script>
 
@@ -120,6 +130,104 @@ const authLayout = computed((): 'centered' | 'split' => {
         </div>
     </div>
 
+    <!-- ===== SHOWCASE ===== -->
+    <!--
+        THE MIRROR OF SPLIT: form on the LEFT, a preview panel on the RIGHT.
+        Split puts branding first because its audience already has an
+        account and wants the field fastest; showcase puts the form first
+        because ITS extra panel is a pitch, not a destination - the person
+        reading it has not decided to sign in yet, and making them scroll or
+        squint past a testimonial to find the password field would be
+        answering a question nobody asked.
+
+        SAME `#image` SLOT AS SPLIT, deliberately not a second slot name -
+        an installation that wants a screenshot in one wants it in both, and
+        two names for the same idea is something to remember rather than
+        something to reuse.
+
+        THE TESTIMONIAL RENDERS ONLY WHEN `Panel::authTestimonial()` WAS
+        CALLED. No placeholder quote: fabricated praise attributed to nobody
+        reads as a bug wearing copy, which is worse than an empty panel.
+    -->
+    <div
+        v-else-if="authLayout === 'showcase'"
+        class="relative flex min-h-svh flex-col justify-center lg:grid lg:grid-cols-2"
+    >
+        <!-- Form panel — LEFT (first in DOM, so it lands in the first grid column with no order utility needed) -->
+        <div class="flex flex-col bg-background">
+            <!-- Mobile: brand strip -->
+            <div class="flex items-center justify-between border-b px-6 py-4 lg:hidden">
+                <Link href="/" class="text-base font-semibold tracking-tight">
+                    {{ appName }}
+                </Link>
+                <ThemeToggle />
+            </div>
+
+            <div class="relative flex flex-1 flex-col items-center justify-center p-6 md:p-12">
+                <!-- Desktop theme toggle -->
+                <div class="absolute top-4 right-4 hidden lg:block">
+                    <ThemeToggle />
+                </div>
+
+                <div class="w-full max-w-sm">
+                    <div class="flex flex-col gap-8">
+                        <div class="flex flex-col gap-1.5">
+                            <h1 class="text-2xl font-bold tracking-tight">{{ title }}</h1>
+                            <p v-if="description" class="text-sm text-muted-foreground">
+                                {{ description }}
+                            </p>
+                        </div>
+
+                        <slot />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview panel — RIGHT, hidden below lg -->
+        <div class="relative hidden flex-col bg-muted lg:flex">
+            <!-- Brand name — top left, same placement split uses -->
+            <div class="p-10">
+                <Link href="/" class="flex items-center gap-2 font-semibold text-foreground hover:opacity-80 transition-opacity">
+                    <span class="text-lg font-semibold tracking-tight">{{ appName }}</span>
+                </Link>
+            </div>
+
+            <div class="flex flex-1 flex-col items-center justify-center gap-10 p-10">
+                <slot name="image">
+                    <div class="flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 text-muted-foreground/40">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="size-16"
+                        >
+                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                            <circle cx="9" cy="9" r="2" />
+                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                        </svg>
+                    </div>
+                </slot>
+
+                <div v-if="testimonial" class="max-w-md">
+                    <p class="text-lg leading-relaxed font-medium text-foreground">
+                        "{{ testimonial.quote }}"
+                    </p>
+                    <p class="mt-4 text-sm text-muted-foreground">
+                        <span class="font-medium text-foreground">{{ testimonial.author }}</span>
+                        <template v-if="testimonial.role"> - {{ testimonial.role }}</template>
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-10" />
+        </div>
+    </div>
+
     <!-- ===== SPLIT ===== -->
     <!--
         LEFT: muted/neutral image panel — full height, bg-muted, decorative.
@@ -136,7 +244,7 @@ const authLayout = computed((): 'centered' | 'split' => {
     -->
     <div
         v-else
-        class="relative min-h-svh lg:grid lg:grid-cols-2"
+        class="relative flex min-h-svh flex-col justify-center lg:grid lg:grid-cols-2"
     >
         <!-- Image panel — hidden below lg -->
         <div class="relative hidden lg:flex flex-col bg-muted">

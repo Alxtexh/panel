@@ -19,6 +19,7 @@ use Alxtexh\Panel\Http\Middleware\RequirePasswordRenewal;
 use Alxtexh\Panel\Http\Middleware\ResolveTenantByHost;
 use Alxtexh\Panel\Http\Middleware\ScopeSessionToTenant;
 use Alxtexh\Panel\Http\Middleware\SetPanelLocale;
+use Alxtexh\Panel\Http\Middleware\SharePanelProps;
 use Alxtexh\Panel\Http\Middleware\VerifyTurnstile;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -34,7 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
      */
     ->withBroadcasting(__DIR__.'/../routes/channels.php')
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'panel_dashboard_hidden']);
 
         /*
          | THE CLIENT'S IP, NOT THE LOAD BALANCER'S.
@@ -174,6 +175,19 @@ return Application::configure(basePath: dirname(__DIR__))
             VerifyTurnstile::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
+            /*
+             * THE SHELL PROPS FOR APP-OWNED ROUTES.
+             *
+             * Packaged panel routes already run SharePanelProps. Operations,
+             * lock, mail and the rest of `routes/web.php` only had this
+             * application's HandleInertiaRequests, which never shares `panel`
+             * (help/profile/settings urls) or `panelIdleLock`. Opening Backups
+             * or Monitoring therefore dropped the footer, emptied the account
+             * menu to Trash, and hid the header padlock, while Dashboard (a
+             * packaged page) looked fine. Sharing here covers every web
+             * screen, including ones this application registered itself.
+             */
+            SharePanelProps::class,
             AddLinkHeadersForPreloadedAssets::class,
             /*
              * After the Inertia middleware, so the lock screen renders with the

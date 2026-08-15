@@ -104,7 +104,7 @@ function priceOf(tier: Tier): string | undefined {
                             :key="j"
                             class="flex items-start gap-2"
                         >
-                            <span class="mt-0.5 text-primary" aria-hidden="true">✓</span>
+                            <span class="mt-0.5 text-success" aria-hidden="true">✓</span>
                             <span class="text-muted-foreground">{{ f.title }}</span>
                         </li>
                     </ul>

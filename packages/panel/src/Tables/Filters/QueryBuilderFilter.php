@@ -85,11 +85,15 @@ final class QueryBuilderFilter extends Filter
             $filter instanceof BooleanFilter => 'boolean',
             $filter instanceof DateRangeFilter => 'daterange',
             /*
-             * TrashedFilter is deliberately absent. It rewrites the query's
-             * soft-delete scope rather than adding a predicate, so "deleted is
-             * true OR status is active" has no meaning the translator could
-             * honour - it would silently widen the set to include every
-             * deleted row.
+             * TrashedFilter and NumberRangeFilter are deliberately absent.
+             * TrashedFilter rewrites the query's soft-delete scope rather than
+             * adding a predicate, so "deleted is true OR status is active" has
+             * no meaning the translator could honour - it would silently widen
+             * the set to include every deleted row.
+             *
+             * NumberRangeFilter is a from–to pair of its own; wiring it here
+             * would mean a third range editor in the builder for a filter that
+             * already has min/max inputs on the toolbar.
              */
             default => null,
         };

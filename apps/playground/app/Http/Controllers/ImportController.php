@@ -168,6 +168,10 @@ final class ImportController extends Controller
             throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
         }
 
+        if (! $class::importable()) {
+            throw new NotFoundHttpException("Resource [{$resource}] does not accept imports.");
+        }
+
         if ($class::formDefinition()->fields() === []) {
             throw new NotFoundHttpException("Resource [{$resource}] has no form to import into.");
         }

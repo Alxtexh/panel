@@ -46,6 +46,7 @@ import AppShell from './AppShell.vue'
 import AppSidebar from './AppSidebar.vue'
 import AppSidebarHeader from './AppSidebarHeader.vue'
 import AppTopNav from './AppTopNav.vue'
+import PanelIdleLockGuard from './PanelIdleLockGuard.vue'
 import PanelImpersonationBanner from './PanelImpersonationBanner.vue'
 import type { BreadcrumbItem, User } from '../../types'
 
@@ -281,4 +282,5 @@ router.on('success', () => {
         exist wherever that click happened.
     -->
     <SessionExpired />
+    <PanelIdleLockGuard />
 </template>

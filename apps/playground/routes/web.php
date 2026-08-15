@@ -183,7 +183,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Blueprint::markdown(),
     )->header('Content-Type', 'text/markdown; charset=utf-8'))->name('docs.blueprint');
 
-    Route::get('screens/locked', fn () => Inertia::render('auth/LockScreen'))->name('screens.locked');
+    Route::get('screens/locked', [LockController::class, 'show'])->name('screens.locked');
 
     /*
      | Lock and unlock.
@@ -197,6 +197,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('unlock', [LockController::class, 'unlock'])
         ->middleware('throttle:6,1')
         ->name('panel.unlock');
+    Route::get('unlock/passkey/options', [LockController::class, 'passkeyOptions'])
+        ->name('panel.unlock.passkey.options');
+    Route::post('unlock/passkey', [LockController::class, 'passkeyUnlock'])
+        ->middleware('throttle:6,1')
+        ->name('panel.unlock.passkey');
     Route::get('screens/verify', fn () => Inertia::render('auth/VerifyOtp', [
         'sentTo' => '+254 7•• ••• 195',
     ]))->name('screens.verify');

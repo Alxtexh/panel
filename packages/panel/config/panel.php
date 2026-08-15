@@ -703,6 +703,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Editable support screens
+    |--------------------------------------------------------------------------
+    |
+    | Off unless a Panel calls `->editableSupport()`. Optional GitHub
+    | `owner/repo` (or URL) powers the What's new "Sync from GitHub" button
+    | on portals that opted in. A failed fetch keeps locally edited rows.
+    |
+    | Payment gateway settings are a separate opt-in: `->paymentSettings()`.
+    */
+    'support' => [
+        'github_releases' => env('PANEL_SUPPORT_GITHUB'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Environment keys an operator may change
     |--------------------------------------------------------------------------
     |

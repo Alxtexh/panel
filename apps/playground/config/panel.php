@@ -58,6 +58,7 @@ return [
         // Part G.4: with the dedicated screen removed, defining a custom
         // field is one dialog on the record forms, gated by one grant.
         'manage_custom_fields' => 'Add custom fields to records from their forms',
+        'support.update' => 'Edit Help, FAQ, What\'s new and About',
     ],
 
     /*

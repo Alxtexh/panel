@@ -1,1 +1,0 @@
-import{On as e,k as t,mt as n,v as r}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{p as i}from"./inertia-CR_xSQf4.js";var a=t({__name:`Error`,props:{status:{}},setup(t){return(a,o)=>(n(),r(e(i),{status:t.status,"home-href":`/dashboard`,"login-href":`/login`,"home-label":`Back to dashboard`},null,8,[`status`]))}});export{a as default};

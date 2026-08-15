@@ -8,6 +8,8 @@ use Illuminate\Support\ServiceProvider;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\ModuleRegistry;
+use App\Panel\KitDemo;
 
 /**
  * The operator portal: the ISP back-office itself.
@@ -94,63 +96,27 @@ final class AdminPanelProvider extends ServiceProvider
                  */
                 ->without(['operations', 'assistant-settings'])
                 ->brandName(fn (): ?string => app(TenantContext::class)->tenant()?->name)
+                ->modules(KitDemo::saasModules())
 
                 /*
-                 | A SIDEBAR ENTRY THAT IS NOT A RESOURCE - `navigationItems()`.
-                 |
-                 | The sidebar is derived from the resource registry, which is
-                 | right until a portal wants a link to something that is not a
-                 | record: a report, an external dashboard, a status page. The
-                 | old workaround was a page that existed only to redirect.
-                 |
-                 | USED HERE ON PURPOSE. The API is tested in the package, but a
-                 | feature no application exercises is one nobody has looked at -
-                 | the failure shape this codebase has paid for repeatedly. The
-                 | in-panel documentation is a real link somebody wants and a
-                 | genuine non-resource, so it earns its place twice over.
-                 |
-                 | `href` IS A CLOSURE because this runs in `boot`, before routes
-                 | exist: `route('docs')` called eagerly throws about a route
-                 | that is merely not registered YET.
+                 * SAME-PAGE HELP / FAQ / WHAT'S NEW / ABOUT EDITING.
+                 *
+                 * The footer links here (`/help`, `/faq`, `/whats-new`, `/about`).
+                 * Superadmin still edits at `/superadmin/*`. Client and reseller
+                 * portals stay read-only. The button is gated by `support.update`
+                 * (Administrator `grants_all` covers it once the name is in
+                 * `panel.abilities`).
                  */
-                ->navigationItems([
-                    [
-                        'title' => 'Documentation',
-                        'href' => static fn (): string => route('docs'),
-                        'icon' => 'book-open',
-                        /*
-                         | NESTED, with the same `Section/Subgroup` string a
-                         | resource uses. Declared entries reach the sidebar
-                         | through `PanelNavigation::declared()` rather than
-                         | `resources()`, so this is the one place the two
-                         | features meet - and the demo is where that meeting
-                         | is actually looked at.
-                         */
-                        'group' => 'Building/Reference',
-                        'sort' => 90,
-                    ],
-                ])
-
-                /*
-                 | AND AN ACCOUNT-MENU ENTRY - `userMenuItems()`.
-                 |
-                 | The packaged core of that dropdown - profile, security, sign
-                 | out - is unconditional. This is what a portal adds beside it,
-                 | and it used to be a Vue slot, which meant only the
-                 | application could reach it and a plugin had no way in at all.
-                 |
-                 | The device preview is a development surface rather than an
-                 | operator screen, which is exactly the sort of thing that
-                 | belongs behind the account menu rather than in the sidebar.
-                 */
-                ->userMenuItems([
-                    [
-                        'key' => 'device-preview',
-                        'label' => 'Device preview',
-                        'href' => static fn (): string => route('screens.devices'),
-                        'icon' => 'smartphone',
-                    ],
-                ]),
+                ->editableSupport()
+                ->paymentSettings(static fn (): array => KitDemo::gateways()),
         );
+
+        /*
+         * SaaS apps MUST set grants(). Defaulting to Pro keeps every Kit
+         * catalogue key on so Nairobi Fibre screens (no `$module`) stay
+         * reachable. Session `kit_saas_selected_plan` can follow Starter.
+         */
+        ModuleRegistry::grants(static fn (): array => KitDemo::grantedSaasModules());
+        ModuleRegistry::caps(static fn (): array => KitDemo::saasCaps());
     }
 }

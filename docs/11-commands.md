@@ -7,7 +7,9 @@
 | `panel:install` | Publish config, page files, layout, wire Vite. `--auth`, `--force` |
 | `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard`, `--guard-model`, `--central`, `--auth` |
 | `make:panel-resource` | A resource. `--generate` infers from the table, `--panel=` |
-| `make:panel-page` | A custom page |
+| `make:panel-page` | A custom page. `--dashboard`, `--plan-setup` |
+| `make:panel-module` | A plan-gated module: page (or `--resource`) plus a `Module::make` snippet |
+| `panel:backup` | Run a backup now. `--tenant=` for one organisation only |
 | `panel:make-user` | Create an account and grant it a role |
 | `panel:permissions` | `list`, `sync`, `sync --prune`, `grant --email=` |
 | `panel:api-token` | Issue a token for the public API |

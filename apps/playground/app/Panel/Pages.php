@@ -136,8 +136,8 @@ final class Pages
              * nobody sees a 500 until a customer does. Putting them in the
              * navigation makes them ordinary pages that get looked at.
              */
-            ['title' => 'Lock screen', 'href' => '/screens/locked', 'icon' => 'lock', 'group' => 'Screens'],
             ['title' => 'Verification', 'href' => '/screens/verify', 'icon' => 'key', 'group' => 'Screens'],
+            ['title' => 'Lock screen', 'href' => '/screens/locked', 'icon' => 'lock', 'group' => 'Screens'],
             /*
              * A TRIGGER, NOT A LINK - which is what the leading `#` marks.
              *
@@ -236,9 +236,12 @@ final class Pages
             '/settings/profile' => 'Reached from the account menu; settings have their own sub-navigation.',
             '/settings/security' => 'Reached from the settings sub-navigation.',
             '/settings/organisation' => 'Reached from the settings sub-navigation.',
+            '/settings/payments' => 'Reached from the settings sub-navigation. Platform-wide gateways, not a till.',
+            '/kit-payments' => 'Redirects to organisation payment gateway settings.',
             '/settings/assistant' => 'Reached from the settings sub-navigation, for holders of manage_assistant.',
             '/settings/workspaces' => 'Reached from the settings sub-navigation.',
             '/settings/roles' => 'The standalone permission matrix. User management is the linked way in.',
+            '/administration' => 'A directory of screens that already have a home. Kept off the sidebar so Kit, Help and Platform are not listed twice.',
 
             /*
              * THE ACCOUNT MENU OWNS THESE THREE, and the sidebar deliberately
@@ -345,6 +348,17 @@ final class Pages
             '/superadmin' => 'A generated portal\'s home. Not part of this portal\'s navigation.',
             '/superadmin/trash' => 'The superadmin portal links its own bin; this portal links its own.',
             '/superadmin/documents' => 'Routed in every portal; this application links the designer from the operator portal only.',
+            '/superadmin/whats-new' => 'Each portal routes its own changelog. The operator footer links /whats-new; this copy is the superadmin portal\'s.',
+            /*
+             * IDLE LOCK, per portal. The operator portal lists /screens/locked
+             * under Screens so the demo can open it. Every other portal mounts
+             * the same route because idle lock is on by default for a signed-in
+             * panel. A sidebar entry would advertise a padlock as a destination.
+             */
+            '/platform/screens/locked' => 'Reached by idle lock or the lock action, not from a menu.',
+            '/reseller/screens/locked' => 'Reached by idle lock or the lock action, not from a menu.',
+            '/superadmin/screens/locked' => 'Reached by idle lock or the lock action, not from a menu.',
+            '/client/screens/locked' => 'Reached by idle lock or the lock action, not from a menu.',
         ];
     }
 }

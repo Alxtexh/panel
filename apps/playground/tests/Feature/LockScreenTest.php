@@ -64,6 +64,27 @@ final class LockScreenTest extends TestCase
         $this->actingAs($this->user)->get('/screens/locked')->assertOk();
     }
 
+    public function test_the_lock_screen_hides_passkey_unlock_when_the_user_has_none(): void
+    {
+        $this->actingAs($this->user)->post('/lock');
+
+        $props = $this->actingAs($this->user)
+            ->get('/screens/locked')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertNull($props['passkeys'] ?? null);
+    }
+
+    public function test_passkey_unlock_stays_reachable_while_locked(): void
+    {
+        $this->actingAs($this->user)->post('/lock');
+
+        $this->actingAs($this->user)
+            ->getJson('/unlock/passkey/options')
+            ->assertOk();
+    }
+
     /** And so does the way out, for somebody who is not the account holder. */
     public function test_signing_out_stays_reachable_while_locked(): void
     {

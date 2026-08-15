@@ -80,6 +80,16 @@ abstract class Page
     protected static ?int $sort = null;
 
     /**
+     * Product module this screen belongs to, or null for always-on.
+     *
+     * When set, `isAccessible()` requires `moduleEnabled($module)`, the
+     * sidebar omits the entry, and the URL answers 403. Register the key
+     * with `Panel::modules()` / `Module::make()`. SaaS apps MUST set
+     * `ModuleRegistry::grants()`; until then every registered module is on.
+     */
+    protected static ?string $module = null;
+
+    /**
      * The URL segment and the identity.
      *
      * SHARED NAMESPACE WITH RESOURCE KEYS, deliberately, and enforced at
@@ -136,6 +146,13 @@ abstract class Page
     public static function sort(): ?int
     {
         return static::$sort;
+    }
+
+    public static function module(): ?string
+    {
+        $module = static::$module;
+
+        return $module === null || $module === '' ? null : $module;
     }
 
     /**
@@ -276,7 +293,9 @@ abstract class Page
      */
     public static function isAccessible(): bool
     {
-        return true;
+        $module = static::module();
+
+        return $module === null || moduleEnabled($module);
     }
 
     /**

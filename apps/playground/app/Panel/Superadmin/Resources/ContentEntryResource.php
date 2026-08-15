@@ -46,6 +46,7 @@ final class ContentEntryResource extends Resource
                     ContentEntry::KIND_FAQ => 'FAQ question',
                     ContentEntry::KIND_ARTICLE => 'Help article',
                     ContentEntry::KIND_RELEASE => "What's-new release",
+                    ContentEntry::KIND_ABOUT => 'About',
                 ])
                 ->required()
                 ->help('Which screen this feeds.'),
@@ -71,6 +72,7 @@ final class ContentEntryResource extends Resource
                     ContentEntry::KIND_FAQ => 'info',
                     ContentEntry::KIND_ARTICLE => 'success',
                     ContentEntry::KIND_RELEASE => 'warning',
+                    ContentEntry::KIND_ABOUT => 'info',
                 ]),
                 TextColumn::make('category')->sortable()->searchable(),
                 TextColumn::make('title')->sortable()->searchable()->locked(),
@@ -83,6 +85,7 @@ final class ContentEntryResource extends Resource
                     ContentEntry::KIND_FAQ,
                     ContentEntry::KIND_ARTICLE,
                     ContentEntry::KIND_RELEASE,
+                    ContentEntry::KIND_ABOUT,
                 ]),
             ])
             ->defaultSort('sort', 'asc');

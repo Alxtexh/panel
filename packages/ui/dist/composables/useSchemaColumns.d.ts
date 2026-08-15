@@ -45,6 +45,8 @@ export interface SchemaColumn {
     options?: Record<string, string>;
     onLabel?: string | null;
     offLabel?: string | null;
+    /** Badge-only: a popover picker. Off unless the column opted in. */
+    resolver?: boolean;
     showValue?: boolean;
     trueLabel?: string | null;
     falseLabel?: string | null;

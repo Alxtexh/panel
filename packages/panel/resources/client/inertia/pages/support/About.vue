@@ -19,6 +19,9 @@
  */
 import { Head } from '@inertiajs/vue3'
 import { ExternalLink, Info, LifeBuoy } from '@lucide/vue'
+import SupportPageEditor, {
+    type SupportProps,
+} from '../../components/support/SupportPageEditor.vue'
 
 defineOptions({
     // Page props arrive as attributes and this root is a fragment.
@@ -32,6 +35,8 @@ withDefaults(
         version?: string | null
         links?: { label: string; href: string }[]
         contact?: string | null
+        extras?: { title: string; body: string; links: { label: string; href: string }[] }[]
+        support?: SupportProps | null
     }>(),
     {
         name: null,
@@ -40,6 +45,7 @@ withDefaults(
         version: null,
         links: () => [],
         contact: null,
+        extras: () => [],
     },
 )
 </script>
@@ -48,6 +54,7 @@ withDefaults(
     <Head title="About" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 sm:p-6">
+        <SupportPageEditor :support="support">
         <header class="flex flex-col gap-2">
             <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
                 {{ name ?? 'About' }}
@@ -96,5 +103,24 @@ withDefaults(
             <LifeBuoy class="text-muted-foreground mt-0.5 size-4 shrink-0" />
             <p>{{ contact }}</p>
         </div>
+
+        <section
+            v-for="extra in extras"
+            :key="extra.title"
+            class="bg-card flex flex-col gap-3 rounded-lg border p-5 text-sm"
+        >
+            <h2 class="font-semibold">{{ extra.title }}</h2>
+            <p v-if="extra.body" class="leading-relaxed">{{ extra.body }}</p>
+            <a
+                v-for="link in extra.links"
+                :key="link.href"
+                :href="link.href"
+                class="text-primary inline-flex items-center gap-2 hover:underline"
+            >
+                {{ link.label }}
+                <ExternalLink class="size-3.5" />
+            </a>
+        </section>
+        </SupportPageEditor>
     </div>
 </template>

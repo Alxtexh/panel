@@ -236,6 +236,55 @@ final class OperationsTest extends TestCase
         Queue::assertPushed(RunBackupNow::class);
     }
 
+    public function test_the_backups_page_lists_tenants_and_database_tables(): void
+    {
+        Tenant::create(['name' => 'Nairobi Fibre', 'slug' => 'nairobi-fibre']);
+
+        $user = $this->operator(['view_operations']);
+
+        $props = $this->actingAs($user)
+            ->get('/operations/backups')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $names = array_column($props['tenants'], 'name');
+
+        $this->assertContains('Acme', $names);
+        $this->assertContains('Nairobi Fibre', $names);
+        $this->assertNotEmpty($props['databases']);
+        $this->assertTrue($props['databases'][0]['available']);
+        $this->assertGreaterThan(0, $props['databases'][0]['tableCount']);
+    }
+
+    public function test_a_tenant_backup_is_queued_for_that_organisation(): void
+    {
+        Queue::fake();
+
+        $user = $this->operator(['view_operations']);
+
+        $this->actingAs($user)
+            ->post('/operations/backups/run', ['tenant' => $this->tenant->id])
+            ->assertRedirect();
+
+        Queue::assertPushed(
+            RunBackupNow::class,
+            fn (RunBackupNow $job): bool => (string) $job->tenantId === (string) $this->tenant->id,
+        );
+    }
+
+    public function test_a_missing_tenant_does_not_start_a_backup(): void
+    {
+        Queue::fake();
+
+        $user = $this->operator(['view_operations']);
+
+        $this->actingAs($user)
+            ->post('/operations/backups/run', ['tenant' => 999_999])
+            ->assertStatus(422);
+
+        Queue::assertNothingPushed();
+    }
+
     /** And it needs the same ability as reading the page. */
     public function test_starting_a_backup_needs_the_ability(): void
     {

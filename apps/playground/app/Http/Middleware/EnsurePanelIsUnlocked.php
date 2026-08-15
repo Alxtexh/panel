@@ -41,6 +41,8 @@ final class EnsurePanelIsUnlocked
     private const ALWAYS_REACHABLE = [
         'screens.locked',
         'panel.unlock',
+        'panel.unlock.passkey',
+        'panel.unlock.passkey.options',
         'logout',
     ];
 

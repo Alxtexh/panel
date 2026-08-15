@@ -23,16 +23,21 @@
  * grouped query, not the six counters and two breakdowns that did not change.
  */
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { computed, provide, ref, watch } from 'vue'
 import {
     ChartCard,
+    DASHBOARD_HIDE_KEY,
+    DASHBOARD_HIDDEN_STORAGE_KEY,
+    DashboardShortcuts,
     PkBoundary,
+    PkSlideover,
     SetupChecklist,
-    StatCard,
     StatStrip,
     TrendBadge,
+    iconPath,
+    useColumnVisibility,
 } from '@alxtexh-enterprise/panel'
-import type { SetupChecklistItem, StatSegment } from '@alxtexh-enterprise/panel'
+import type { DashboardHide, SetupChecklistItem, StatSegment } from '@alxtexh-enterprise/panel'
 import ChartBody from '../components/widgets/ChartBody.vue'
 import { emptySeries, type Chart, type Series } from '../components/widgets/types'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
@@ -111,6 +116,11 @@ const props = withDefaults(
         heading?: string
         /** Panel path prefix; the dismiss and report routes sit inside it. */
         prefix?: string
+        shortcuts?: {
+            catalog: { id: string; label: string; href: string; icon: string }[]
+            defaults?: string[]
+            storageKey?: string | null
+        } | null
     }>(),
     {
         announcements: () => [],
@@ -127,6 +137,7 @@ const props = withDefaults(
         filterDimensions: () => [],
         heading: 'Dashboard',
         prefix: '',
+        shortcuts: null,
     },
 )
 
@@ -205,7 +216,7 @@ const statSegments = computed(() =>
         return {
             key: widget.key,
             label: widget.label,
-            value: value?.error ? '\u2014' : ((value?.value as string | number) ?? '\u2014'),
+            value: value?.error ? '-' : ((value?.value as string | number) ?? '-'),
             caption: widget.description,
             comparison: 'vs previous 30 days',
             trend: value?.trend ?? null,
@@ -279,6 +290,18 @@ function bodyHeight(chart: Chart): number {
 
     if (chart.type === 'heatmap') {
         return 200
+    }
+
+    if (chart.type === 'catalog') {
+        return 280
+    }
+
+    if (chart.type === 'items') {
+        return 160
+    }
+
+    if (chart.type === 'table') {
+        return 120
     }
 
     return 220
@@ -415,6 +438,116 @@ const extraStrips = computed(
 function stripSegments(key: string): StatSegment[] {
     return ((page.props as Record<string, any>)[`strip_${key}`] ?? []) as StatSegment[]
 }
+
+/**
+ * HIDE UNMOUNTS. Collapse is local to ChartCard (`v-show`). Hide uses `v-if`
+ * via `visibleCharts`, so ChartCard / echarts never mount for a hidden key.
+ * Inertia still fetches every deferred key in the `charts` group, so the
+ * cookie `panel_dashboard_hidden` lets PHP omit those props on the next visit.
+ */
+const hiddenWidgets = useColumnVisibility(DASHBOARD_HIDDEN_STORAGE_KEY)
+const extraLabels = ref<Record<string, string>>({})
+const HIDDEN_COOKIE = 'panel_dashboard_hidden'
+
+function writeHiddenCookie(ids: Iterable<string>) {
+    if (typeof document === 'undefined') {
+        return
+    }
+
+    document.cookie = `${HIDDEN_COOKIE}=${encodeURIComponent(JSON.stringify([...ids]))};path=/;max-age=31536000;SameSite=Lax`
+}
+
+watch(
+    hiddenWidgets.hidden,
+    (ids) => writeHiddenCookie(ids),
+    { deep: true, immediate: true },
+)
+
+function hideWidget(id: string, label?: string) {
+    if (label) {
+        extraLabels.value = { ...extraLabels.value, [id]: label }
+    }
+
+    hiddenWidgets.hide(id)
+    writeHiddenCookie(hiddenWidgets.hidden.value)
+}
+
+const dashboardHide: DashboardHide = {
+    hidden: hiddenWidgets.hidden,
+    hide: hideWidget,
+    show: hiddenWidgets.show,
+    register: (id, label) => {
+        extraLabels.value = { ...extraLabels.value, [id]: label }
+    },
+    labels: extraLabels,
+}
+
+provide(DASHBOARD_HIDE_KEY, dashboardHide)
+
+const hiddenOpen = ref(false)
+const selectedHidden = ref<Set<string>>(new Set())
+
+function toggleHiddenSelection(id: string) {
+    const next = new Set(selectedHidden.value)
+
+    if (next.has(id)) {
+        next.delete(id)
+    } else {
+        next.add(id)
+    }
+
+    selectedHidden.value = next
+}
+
+function restoreSelectedHidden() {
+    const restored: string[] = []
+
+    for (const id of selectedHidden.value) {
+        hiddenWidgets.show(id)
+        restored.push(id)
+    }
+
+    selectedHidden.value = new Set()
+    writeHiddenCookie(hiddenWidgets.hidden.value)
+
+    const missing = restored.filter(
+        (id) => (page.props as Record<string, unknown>)[`chart_${id}`] === undefined,
+    )
+
+    if (missing.length) {
+        router.reload()
+    }
+}
+
+function restoreAllHidden() {
+    hiddenWidgets.reset()
+    selectedHidden.value = new Set()
+    hiddenOpen.value = false
+    writeHiddenCookie([])
+    router.reload()
+}
+
+const visibleCharts = computed(() =>
+    props.charts.filter((chart) => !hiddenWidgets.hidden.value.has(chart.key)),
+)
+
+const hiddenEntries = computed(() => {
+    const entries: { id: string; label: string }[] = []
+
+    for (const chart of props.charts) {
+        if (hiddenWidgets.hidden.value.has(chart.key)) {
+            entries.push({ id: chart.key, label: chart.label })
+        }
+    }
+
+    for (const [id, label] of Object.entries(extraLabels.value)) {
+        if (hiddenWidgets.hidden.value.has(id) && !entries.some((entry) => entry.id === id)) {
+            entries.push({ id, label })
+        }
+    }
+
+    return entries
+})
 </script>
 
 <template>
@@ -460,7 +593,36 @@ function stripSegments(key: string): StatSegment[] {
                 </p>
             </div>
 
-            <div v-if="filterDimensions.length || charts.length" class="flex items-center gap-2">
+            <div
+                v-if="filterDimensions.length || charts.length || hiddenEntries.length"
+                class="flex items-center gap-2"
+            >
+                <button
+                    v-if="hiddenEntries.length"
+                    type="button"
+                    class="relative inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent"
+                    aria-label="Hidden widgets"
+                    @click="hiddenOpen = true"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        class="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path :d="iconPath('eye-off')" />
+                    </svg>
+                    Hidden widgets
+                    <span
+                        class="ml-0.5 rounded-full bg-muted px-1.5 text-[10px] font-semibold"
+                    >
+                        {{ hiddenEntries.length }}
+                    </span>
+                </button>
                 <button
                     v-if="filters.active"
                     type="button"
@@ -504,6 +666,47 @@ function stripSegments(key: string): StatSegment[] {
             @apply="applyFilters"
             @reset="resetFilters"
         />
+
+        <PkSlideover
+            :open="hiddenOpen"
+            title="Hidden widgets"
+            description="Restore cards you hid from this dashboard"
+            width="w-[22rem]"
+            @close="hiddenOpen = false"
+        >
+            <div class="flex flex-col gap-1 p-4">
+                <label
+                    v-for="entry in hiddenEntries"
+                    :key="entry.id"
+                    class="hover:bg-muted/60 flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-sm"
+                >
+                    <input
+                        type="checkbox"
+                        class="size-4 accent-primary"
+                        :checked="selectedHidden.has(entry.id)"
+                        @change="toggleHiddenSelection(entry.id)"
+                    />
+                    <span class="min-w-0 truncate">{{ entry.label }}</span>
+                </label>
+            </div>
+            <template #footer>
+                <button
+                    type="button"
+                    class="rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                    @click="restoreAllHidden"
+                >
+                    Restore all
+                </button>
+                <button
+                    type="button"
+                    class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                    :disabled="selectedHidden.size === 0"
+                    @click="restoreSelectedHidden"
+                >
+                    Restore selected
+                </button>
+            </template>
+        </PkSlideover>
 
         <p v-if="!hasAnything" class="text-sm text-muted-foreground">
             This dashboard has no widgets yet. Declare them in <code>stats()</code> and
@@ -588,11 +791,23 @@ function stripSegments(key: string): StatSegment[] {
             </Deferred>
         </PkBoundary>
 
-        <div v-if="charts.length" class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div
+            v-if="visibleCharts.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0"
+            class="grid grid-cols-1 gap-3 lg:grid-cols-2"
+        >
+            <slot name="before-charts">
+                <DashboardShortcuts
+                    v-if="shortcuts?.catalog?.length"
+                    :catalog="shortcuts.catalog"
+                    :defaults="shortcuts.defaults ?? []"
+                    :storage-key="shortcuts.storageKey ?? 'panel.dashboard.shortcuts'"
+                />
+            </slot>
+
             <!-- `fill` because these are GRID CELLS: without it a row of cards
                  is only as tall as its shortest, which reads as misalignment. -->
             <PkBoundary
-                v-for="chart in charts"
+                v-for="chart in visibleCharts"
                 :key="chart.key"
                 :label="chart.label"
                 :class="chart.span >= 2 ? 'lg:col-span-2' : ''"
@@ -603,10 +818,14 @@ function stripSegments(key: string): StatSegment[] {
                         <ChartCard
                             :label="chart.label"
                             :description="chart.description"
+                            :icon="chart.icon"
                             :periods="periodsFor(chart)"
                             :period="periods[chart.key]"
                             :body-height="bodyHeight(chart)"
+                            :fit-body="chart.type === 'table'"
+                            hideable
                             loading
+                            @hide="hideWidget(chart.key, chart.label)"
                         />
                     </template>
 
@@ -614,11 +833,15 @@ function stripSegments(key: string): StatSegment[] {
                         <ChartCard
                             :label="chart.label"
                             :description="chart.description"
+                            :icon="chart.icon"
                             :periods="periodsFor(chart)"
                             :period="periods[chart.key]"
                             :error="series(chart.key).error"
                             :body-height="bodyHeight(chart)"
+                            :fit-body="chart.type === 'table'"
+                            hideable
                             @update:period="(value: string) => setPeriod(chart.key, value)"
+                            @hide="hideWidget(chart.key, chart.label)"
                         >
                             <template v-if="series(chart.key).trend" #trend>
                                 <TrendBadge

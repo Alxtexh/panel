@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Middleware\EnsurePanelIsUnlocked;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
+use Alxtexh\Panel\Auth\PasskeyUnlock;
 use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\PanelIdleActivity;
 
 /**
  * Locking and unlocking the panel.
@@ -26,6 +32,23 @@ use Alxtexh\Panel\Support\PanelHome;
  */
 final class LockController extends Controller
 {
+    public function show(Request $request): Response
+    {
+        $options = Route::has('panel.unlock.passkey.options')
+            ? route('panel.unlock.passkey.options')
+            : null;
+        $verify = Route::has('panel.unlock.passkey')
+            ? route('panel.unlock.passkey')
+            : null;
+
+        return Inertia::render('auth/LockScreen', [
+            'action' => url('/unlock'),
+            'logoutUrl' => Route::has('logout') ? route('logout') : url('/logout'),
+            'status' => $request->session()->get('status'),
+            'passkeys' => PasskeyUnlock::offered($request->user(), $options, $verify),
+        ]);
+    }
+
     /** Lock the panel and send the user to the lock screen. */
     public function lock(Request $request): RedirectResponse
     {
@@ -67,6 +90,12 @@ final class LockController extends Controller
         $request->session()->forget(EnsurePanelIsUnlocked::SESSION_KEY);
 
         /*
+         * Reset the idle clock, or the next request sees the timestamp that
+         * caused the lock and locks again immediately.
+         */
+        PanelIdleActivity::touch($request);
+
+        /*
          * A new session id on unlock.
          *
          * The lock exists because the machine was left unattended, which is
@@ -76,5 +105,31 @@ final class LockController extends Controller
         $request->session()->regenerate();
 
         return redirect()->intended(PanelHome::urlFor(null));
+    }
+
+    public function passkeyOptions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        abort_if($user === null, 401);
+
+        return PasskeyUnlock::optionsResponse($request, $user);
+    }
+
+    public function passkeyUnlock(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        abort_if($user === null, 401);
+
+        PasskeyUnlock::verify($request, $user);
+
+        $request->session()->forget(EnsurePanelIsUnlocked::SESSION_KEY);
+        PanelIdleActivity::touch($request);
+        $request->session()->regenerate();
+
+        return response()->json([
+            'redirect' => redirect()->intended(PanelHome::urlFor(null))->getTargetUrl(),
+        ]);
     }
 }

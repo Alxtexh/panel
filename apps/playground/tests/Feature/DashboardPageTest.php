@@ -164,6 +164,21 @@ final class DashboardPageTest extends TestCase
         }
     }
 
+    public function test_a_hidden_chart_is_listed_but_not_deferred(): void
+    {
+        $user = $this->operator(['view_network_widgets']);
+        $this->actingAs($user);
+
+        $request = request();
+        $request->setUserResolver(fn (): User => $user);
+        $request->cookies->set('panel_dashboard_hidden', json_encode(['signups']));
+
+        $data = FixtureDashboard::data($request);
+
+        $this->assertSame(['signups'], array_column($data['charts'], 'key'));
+        $this->assertArrayNotHasKey('chart_signups', $data);
+    }
+
     /**
      * A WIDGET SOMEBODY MAY NOT SEE IS NEVER QUERIED AND NEVER SENT.
      *

@@ -155,6 +155,7 @@ final class PanelServiceProvider extends ServiceProvider
          * `vendor:publish`.
          */
         $this->commands([
+            Commands\BackupCommand::class,
             Commands\BlueprintCommand::class,
             Commands\CacheClearCommand::class,
             Commands\InstallCommand::class,
@@ -162,6 +163,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\IndexKnowledgeCommand::class,
             Commands\MakeApiTokenCommand::class,
             Commands\MakePageCommand::class,
+            Commands\MakeModuleCommand::class,
             Commands\MakePanelCommand::class,
             Commands\SearchIndexCommand::class,
             Commands\MakeUserCommand::class,
@@ -221,6 +223,11 @@ final class PanelServiceProvider extends ServiceProvider
         $this->registerPackagedPolicies();
         $this->loadGeneratedAuthRoutes();
         $this->redirectGuestsToTheirPanel();
+
+        $this->app['router']->aliasMiddleware(
+            'panel.module',
+            Http\Middleware\EnsureModule::class,
+        );
 
         /*
          * The AI SDK's conversation tables are tenant data and arrive without a

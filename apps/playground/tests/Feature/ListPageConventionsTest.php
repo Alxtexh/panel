@@ -81,9 +81,9 @@ final class ListPageConventionsTest extends TestCase
      * that was inviting somebody to upload things that did not, and the live
      * sessions list, which describes connections the panel itself observes.
      *
-     * Derived, never a list of names: `importable()` now answers from
-     * `isWritable()`, so a new read-only resource is covered the day it is
-     * written rather than the day somebody notices.
+     * Import is opt-in (`importable()` defaults to false) and `permissions()`
+     * still ands `isWritable()`, so a new read-only resource cannot grow a
+     * button even if a subclass opts in by mistake.
      */
     public function test_no_read_only_resource_offers_import(): void
     {

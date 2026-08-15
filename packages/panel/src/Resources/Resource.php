@@ -21,7 +21,7 @@ use Alxtexh\Panel\Support\Abilities;
 use Alxtexh\Panel\Support\SchemaCache;
 use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Tables\Columns\Column;
-use Alxtexh\Panel\Tables\Columns\EditableColumn;
+use Alxtexh\Panel\Tables\Columns\InlineWritableColumn;
 use Alxtexh\Panel\Tables\ListResult;
 use Alxtexh\Panel\Tables\Table;
 
@@ -106,6 +106,15 @@ abstract class Resource
      * would mean a forgotten declaration silently disables tenant scoping.
      */
     protected static string $panel = 'admin';
+
+    /**
+     * Product module this resource belongs to, or null for always-on.
+     *
+     * Same gate as `Page::$module`: `isAccessible()` requires the key, the
+     * sidebar omits it, and every resource URL answers 403. Core ISP screens
+     * should leave this null unless the plan catalogue grants them.
+     */
+    protected static ?string $module = null;
 
     /**
      * WHERE IT WAS REGISTERED BEATS WHAT IT DECLARES, and that order matters
@@ -216,6 +225,24 @@ abstract class Resource
         return static::$feature;
     }
 
+    public static function module(): ?string
+    {
+        $module = static::$module;
+
+        return $module === null || $module === '' ? null : $module;
+    }
+
+    /**
+     * Request-time gate for plan modules. Feature flags still use `isEnabled()`
+     * (404). An ungranted `$module` is 403 and is omitted from the sidebar.
+     */
+    public static function isAccessible(): bool
+    {
+        $module = static::module();
+
+        return $module === null || moduleEnabled($module);
+    }
+
     /**
      * Whether this resource is enabled for the acting tenant.
      *
@@ -240,43 +267,20 @@ abstract class Resource
     /**
      * Whether records may be brought in in BULK, from a file.
      *
-     * A SEPARATE QUESTION FROM `create`, and separating them is the point.
-     * Import used to appear wherever creating did, on the reasonable-sounding
-     * theory that importing is creating many at once. It is not: creating is
-     * something anybody who uses a screen does, and importing a spreadsheet is
-     * an administrative act with a wizard, a mapping step and a write of
-     * hundreds of rows behind it.
+     * OPT-IN. A SEPARATE QUESTION FROM `create`, and the default is no.
+     * Import used to follow `isWritable()`, so every resource with a form grew
+     * an Import button - plans, routers, people, tickets, the lot. Creating one
+     * record is what those screens are for. Importing a spreadsheet is an
+     * administrative act with a wizard, a mapping step and a write of hundreds
+     * of rows behind it.
      *
-     * THE SCREEN THAT MADE THE DIFFERENCE OBVIOUS is a subscriber's own
-     * support requests. They may open a ticket - that is the whole point of
-     * the screen - so `create` is true, so an Import button appeared beside
-     * it, offering to upload a CSV of complaints. Nothing was broken and
-     * nothing would have failed; it was simply a control that makes no sense
-     * where it was, which DESIGN_RULES rule 5 is about.
-     *
-     * DERIVED FROM THE FORM, not defaulted to true.
-     *
-     * It used to return true flatly, and the result was an Import button on
-     * screens that cannot accept a written record at all. The audit trail
-     * advertised one - a log of what happened, offering to accept a CSV of
-     * things that did not - and so did the live sessions list, the plans
-     * catalogue and the read-only plan view. Every one of those has no form,
-     * which is the same as having no answer to "which column goes where"; the
-     * wizard would have had nothing to map onto.
-     *
-     * So the question is answered from the thing that decides it. An import
-     * writes records through the fields the form declares, so a resource with
-     * no fields cannot be imported into, and no list of screen names has to be
-     * kept in step with reality. The same reasoning as the isolation matrix and
-     * the N+1 sweep: derive it, do not enumerate it.
-     *
-     * Resources that HAVE a form and still should not take a spreadsheet -
-     * people, tickets, announcements - say so themselves. See
-     * `UserResource::importable()`.
+     * Return true from a subclass that actually wants a CSV. `permissions()`
+     * still ands `isWritable()` and `can('create')`, so a read-only list cannot
+     * advertise Import even if a subclass gets this wrong.
      */
     public static function importable(): bool
     {
-        return static::isWritable();
+        return false;
     }
 
     /** Whether a create or edit PAGE can be rendered at all. */
@@ -302,7 +306,7 @@ abstract class Resource
     public static function hasWritableColumns(): bool
     {
         foreach (static::definition()->getColumns() as $column) {
-            if ($column instanceof EditableColumn) {
+            if ($column instanceof InlineWritableColumn && $column->isInlineWritable()) {
                 return true;
             }
         }

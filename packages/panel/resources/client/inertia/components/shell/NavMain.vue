@@ -48,49 +48,30 @@ const { isCurrentUrl } = useCurrentUrl()
         <SidebarGroupLabel v-if="label">{{ label }}</SidebarGroupLabel>
 
         <!--
-            NESTED: a vertical rail with a dot per item.
-
-            The rail is a `border-l` on the list and the dots sit ON it, so the
-            relationship is drawn once rather than repeated per row. `ml-4`
-            lines the rail up under the centre of the heading's icon, which is
-            what makes it read as descending from the heading rather than as a
-            decorative stripe.
+            NESTED: plain indented rows, no rail and no dot.
+            A dot-and-rail read as decoration competing with the highlight
+            for attention on the one signal that matters here - which of
+            these is the current page. Indentation alone still says "these
+            belong to the heading above them"; it does not also need a line
+            drawn to prove it, and dropping the line is what lets the active
+            row's own rounded highlight read clearly instead of sitting on
+            top of a rail that has to break around it.
         -->
-        <SidebarMenu v-if="nested" class="ml-4 gap-0 border-l border-sidebar-border pl-0">
+        <SidebarMenu v-if="nested" class="gap-0.5">
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <Link
                     :href="item.href"
                     prefetch="hover"
                     cache-for="30s"
-                    class="group/nav relative flex items-center gap-2.5 py-1.5 pl-4 text-sm transition-colors hover:text-sidebar-accent-foreground"
+                    class="flex items-center gap-2.5 rounded-md py-1.5 pr-2 pl-8 text-sm transition-colors"
                     @click="emit('navigate')"
                     :aria-current="isCurrentUrl(item.href) ? 'page' : undefined"
                     :class="
                         isCurrentUrl(item.href)
-                            ? 'font-medium text-sidebar-accent-foreground'
-                            : 'text-muted-foreground'
+                            ? 'bg-primary/10 font-medium text-primary'
+                            : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                     "
                 >
-                    <!--
-                        The dot sits ON the rail, so it is pulled left by half
-                        its own width. `bg-sidebar` behind it punches a gap in
-                        the line, which is what makes it read as a node on the
-                        line rather than a bead beside it.
-                    -->
-                    <span
-                        class="absolute -left-[3px] flex size-1.5 items-center justify-center rounded-full bg-sidebar"
-                        aria-hidden="true"
-                    >
-                        <span
-                            class="size-1.5 rounded-full transition-colors"
-                            :class="
-                                isCurrentUrl(item.href)
-                                    ? 'bg-primary'
-                                    : 'bg-muted-foreground/40 group-hover/nav:bg-muted-foreground'
-                            "
-                        />
-                    </span>
-
                     <span class="truncate">{{ item.title }}</span>
                 </Link>
             </SidebarMenuItem>

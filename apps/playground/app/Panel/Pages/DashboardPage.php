@@ -121,4 +121,12 @@ final class DashboardPage extends AlxtexhpanelDashboard
     {
         return DashboardExtras::allStrips();
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function shortcuts(): array
+    {
+        return DashboardExtras::shortcuts();
+    }
 }

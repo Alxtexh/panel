@@ -17,6 +17,7 @@ use Alxtexh\Panel\Support\BackupDestinationProbe;
 use Alxtexh\Panel\Support\BackupSettings;
 use Alxtexh\Panel\Support\InstallationState;
 use Alxtexh\Panel\Support\PanelSettings;
+use Alxtexh\Panel\Support\TenantBackup;
 use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
 use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
 use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays;
@@ -103,6 +104,16 @@ final class BackupManagementTest extends TestCase
 
         $response->assertOk();
         $this->assertSame('snapshot 1', $response->streamedContent());
+    }
+
+    public function test_a_tenant_backup_writes_a_zip_named_for_that_organisation(): void
+    {
+        $written = (new TenantBackup)->write($this->tenant);
+
+        $this->assertStringContainsString('tenant-acme-', $written['path']);
+        $this->assertTrue(Storage::disk('local')->exists($written['path']));
+        $this->assertGreaterThan(0, $written['bytes']);
+        $this->assertNotNull((new BackupArchive)->resolve($written['path']));
     }
 
     /**

@@ -420,6 +420,7 @@ final class NavigationCoverageTest extends TestCase
             '/clients/create' => 'a create form',
             '/screens/error/500' => 'an error preview',
             '/user-management/roles' => 'a tab of user management',
+            '/kit-catalog/sku-blend' => 'a catalog product page',
         ];
 
         foreach ($screens as $path => $what) {

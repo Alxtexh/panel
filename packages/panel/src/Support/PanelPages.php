@@ -163,6 +163,13 @@ final class PanelPages
         'settings/Workspaces',
         'settings/Organisation',
         'settings/Index',
+        'settings/Payments',
+        'Directory',
+        'Catalog',
+        'PlanSetup',
+        'CatalogItem',
+        'CatalogRegister',
+        'Signatures',
 
         'support/Help',
         'support/Faq',

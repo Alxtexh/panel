@@ -77,6 +77,24 @@ final class DemoDashboard
         $filters = DashboardPage::filters();
 
         return [
+            /*
+             * DETAILERS FIRST. They are glanceable facts, not plots, and they
+             * used to sit under fifteen charts so nobody ever saw them.
+             */
+            ChartWidget::make('system_status', 'System status')
+                ->type('table')
+                ->icon('gauge')
+                ->description('This host, right now')
+                ->data(fn (): array => ['rows' => self::systemStatusRows()])
+                ->ability(self::NETWORK),
+
+            ChartWidget::make('customer_summary', 'Customers')
+                ->type('table')
+                ->icon('users')
+                ->description('Subscriber counts, at a glance')
+                ->data(fn (): array => ['rows' => self::customerSummaryRows($filters)])
+                ->ability(self::COMMERCIAL),
+
             ChartWidget::make('sessions', 'Sessions over time')
                 ->type('area')
                 ->description('When subscribers connect')
@@ -244,26 +262,6 @@ final class DemoDashboard
                 ->span(2)
                 ->data(fn (Period $p, ?DateTimeImmutable $now): array => self::renewalBuckets($now, $filters))
                 ->ability(self::COMMERCIAL),
-
-            /*
-             * A CONSUMER FOR THE `table` CHART TYPE - rows of label and value
-             * rather than a plot, for the two things a status card actually
-             * wants: a fact ("CPU cores: 4") and a proportion ("Memory: 62%
-             * used", with a bar under it). No period selector - the same
-             * reasoning as the doughnuts above: a live gauge has one honest
-             * reading, not a window to choose.
-             */
-            ChartWidget::make('system_status', 'System status')
-                ->type('table')
-                ->description('This host, right now')
-                ->data(fn (): array => ['rows' => self::systemStatusRows()])
-                ->ability(self::NETWORK),
-
-            ChartWidget::make('customer_summary', 'Customers')
-                ->type('table')
-                ->description('Subscriber counts, at a glance')
-                ->data(fn (): array => ['rows' => self::customerSummaryRows($filters)])
-                ->ability(self::COMMERCIAL),
         ];
     }
 
@@ -303,7 +301,13 @@ final class DemoDashboard
                     'label' => 'CPU usage',
                     'value' => number_format($percent, 2).' %',
                     'tone' => $percent >= 90 ? 'danger' : ($percent >= 70 ? 'warning' : 'neutral'),
-                    'bar' => ['segments' => [['label' => 'Used', 'value' => $percent]], 'total' => 100],
+                    'bar' => [
+                        'segments' => [
+                            ['label' => 'Used', 'value' => $percent, 'tone' => 'warning'],
+                            ['label' => 'Free', 'value' => max(0, 100 - $percent), 'tone' => 'success'],
+                        ],
+                        'total' => 100,
+                    ],
                 ];
             }
         }
@@ -324,6 +328,13 @@ final class DemoDashboard
         if ($diskTotal !== false && $diskFree !== false) {
             $rows[] = self::usageRow('Disk', (int) ($diskTotal / 1024), (int) ($diskFree / 1024));
         }
+
+        $rows[] = [
+            'key' => 'backup',
+            'label' => 'Last backup',
+            'value' => 'Never',
+            'tone' => 'danger',
+        ];
 
         return $rows;
     }
@@ -393,7 +404,11 @@ final class DemoDashboard
         $startOfToday = $now->setTime(0, 0);
         $base = fn (): Builder => self::scoped(Client::query(), $filters);
 
+        $startOfMonth = $startOfToday->modify('first day of this month');
+        $startOfLastMonth = $startOfToday->modify('first day of last month');
+
         return [
+            ['key' => 'overview', 'label' => 'Overview', 'heading' => true],
             ['key' => 'total', 'label' => 'Total', 'value' => number_format($base()->count())],
             [
                 'key' => 'new',
@@ -423,11 +438,19 @@ final class DemoDashboard
                 'label' => 'Inactive',
                 'value' => number_format($base()->where('status', 'expired')->count()),
             ],
+            ['key' => 'finance', 'label' => 'Finance', 'heading' => true, 'tone' => 'info'],
             [
                 'key' => 'added_month',
-                'label' => 'Added last month',
-                'value' => number_format($base()->where('created_at', '>=', $startOfToday->modify('first day of last month'))
-                    ->where('created_at', '<', $startOfToday->modify('first day of this month'))->count()),
+                'label' => 'Current month',
+                'value' => number_format($base()->where('created_at', '>=', $startOfMonth)->count()),
+                'tone' => 'info',
+            ],
+            [
+                'key' => 'added_last',
+                'label' => 'Last month',
+                'value' => number_format($base()->where('created_at', '>=', $startOfLastMonth)
+                    ->where('created_at', '<', $startOfMonth)->count()),
+                'tone' => 'warning',
             ],
             [
                 'key' => 'added_year',

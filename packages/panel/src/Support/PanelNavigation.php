@@ -43,6 +43,7 @@ final class PanelNavigation
 
         $visible = collect($panels->resourcesFor($panelId))
             ->filter(static fn (string $class): bool => $class::showsInNavigation())
+            ->filter(static fn (string $class): bool => $class::isAccessible())
             ->filter(static fn (string $class): bool => $class::can('viewAny'));
 
         return self::resources($visible, $prefix)

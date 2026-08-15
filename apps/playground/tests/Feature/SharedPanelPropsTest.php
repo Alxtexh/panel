@@ -158,6 +158,46 @@ final class SharedPanelPropsTest extends TestCase
         $this->assertSame(url('/impersonate-stop'), $shared['stopUrl']);
     }
 
+    /**
+     * APP-OWNED OPERATIONS ROUTES MUST SHARE THE SAME SHELL PROPS as packaged
+     * pages. They used to skip SharePanelProps, so Backups/Logs/Monitoring
+     * arrived without `panel.help` or `panelIdleLock`: the footer vanished,
+     * the account menu shrank to Trash, and the header padlock never rendered.
+     */
+    public function test_operations_pages_share_the_shell_props(): void
+    {
+        $tenant = Tenant::query()->first() ?? Tenant::create(['name' => 'Acme', 'slug' => 'acme']);
+
+        $user = User::factory()->withAbilities(['view_operations'])->create([
+            'tenant_id' => $tenant->id,
+            'email_verified_at' => now(),
+        ]);
+
+        foreach (['/operations/backups', '/operations/logs', '/operations/monitoring'] as $url) {
+            $props = $this->actingAs($user)
+                ->get($url)
+                ->assertOk()
+                ->viewData('page')['props'];
+
+            $this->assertNotEmpty(
+                $props['panel']['help'] ?? null,
+                "{$url} did not share panel.help, so the sidebar footer would vanish.",
+            );
+            $this->assertNotEmpty(
+                $props['panel']['account'] ?? null,
+                "{$url} did not share panel.account, so Profile would vanish from the menu.",
+            );
+            $this->assertNotEmpty(
+                $props['panel']['logout'] ?? null,
+                "{$url} did not share panel.logout.",
+            );
+            $this->assertNotEmpty(
+                $props['panelIdleLock']['lockUrl'] ?? null,
+                "{$url} did not share panelIdleLock, so the header padlock would hide.",
+            );
+        }
+    }
+
     /** @return array<string, mixed> */
     private function sharedFor(string $panelId): array
     {

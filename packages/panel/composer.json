@@ -43,7 +43,10 @@
     "autoload": {
         "psr-4": {
             "Alxtexh\\Panel\\": "src/"
-        }
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

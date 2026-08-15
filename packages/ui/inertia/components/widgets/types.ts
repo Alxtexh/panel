@@ -32,12 +32,35 @@ export interface StatListBarSegment {
 export interface StatListRow {
     key: string
     label: string
-    value: string
+    value?: string
+    /** A subsection label rather than a fact. */
+    heading?: boolean
     tone?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | null
     bar?: {
         segments: StatListBarSegment[]
         /** The denominator. Defaults to the sum of the segments. */
         total?: number | null
+    } | null
+}
+
+/** One tile of a `catalog` chart, or one row of an `items` chart. */
+export interface WidgetItem {
+    key: string
+    label: string
+    caption?: string | null
+    image?: string | null
+    price?: string | null
+    qty?: string | number | null
+    amount?: string | null
+    detail?: string | null
+    status?: string | null
+    tone?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | null
+    facts?: string[] | null
+    facets?: Record<string, string> | null
+    progress?: {
+        value: number
+        total?: number | null
+        tone?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | null
     } | null
 }
 
@@ -47,6 +70,7 @@ export interface Series {
     bars: Dataset[] | null
     lines: Dataset[] | null
     rows: StatListRow[] | null
+    items: WidgetItem[] | null
     total: number | null
     trend: {
         direction: 'up' | 'down' | 'flat' | 'new'
@@ -78,10 +102,13 @@ export interface Chart {
         | 'heatmap'
         | 'segments'
         | 'table'
+        | 'catalog'
+        | 'items'
     span: number
     periods: { value: string; label: string }[] | null
     thresholds: { max: number; color: string }[] | null
     maxValue: number | null
+    icon?: string | null
 }
 
 /**
@@ -120,6 +147,7 @@ export function emptySeries(): Series {
         bars: null,
         lines: null,
         rows: null,
+        items: null,
         total: null,
         trend: null,
         error: false,

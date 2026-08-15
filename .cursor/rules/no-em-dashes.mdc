@@ -1,0 +1,23 @@
+---
+description: Never use em dashes or fancy en dashes in code, copy, comments, docs, or commit messages.
+alwaysApply: true
+---
+
+# No em dashes
+
+Do not use the em dash character (U+2014) anywhere in this repo: PHP, Vue, TypeScript, comments, UI copy, docs, tests, or commit messages this agent writes.
+
+Do not use an en dash (U+2013) as a stand-in for that same "fancy dash" in prose or UI strings.
+
+Use a comma, a period, a colon, or ASCII hyphen-minus `-` instead.
+
+```text
+BAD:  Save the record — then reload.
+BAD:  Save the record – then reload.
+GOOD: Save the record, then reload.
+GOOD: Save the record. Then reload.
+GOOD: Prefix: value
+GOOD: 2024-08-15
+```
+
+Hyphen-minus in identifiers, flags, URLs, and ISO dates is required (`view-any`, `--help`, `en-GB`).

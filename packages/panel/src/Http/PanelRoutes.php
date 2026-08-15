@@ -413,6 +413,42 @@ final class PanelRoutes
                 }
 
                 /*
+                 * IDLE LOCK, when this panel authenticates (or called `->idleLock()`).
+                 *
+                 * YIELD IF THE APPLICATION ALREADY OWNS THE URI. The reference
+                 * app registered `/lock` itself; claiming it again would
+                 * replace the named route the account menu already posts to.
+                 */
+                if ($panel->hasIdleLock()) {
+                    if (self::unclaimed('GET', $panel->getPath().'/screens/locked')) {
+                        Route::get('screens/locked', [Controllers\PanelLockController::class, 'show'])
+                            ->name('screens.locked');
+                    }
+
+                    if (self::unclaimed('POST', $panel->getPath().'/lock')) {
+                        Route::post('lock', [Controllers\PanelLockController::class, 'lock'])
+                            ->name('lock');
+                    }
+
+                    if (self::unclaimed('POST', $panel->getPath().'/unlock')) {
+                        Route::post('unlock', [Controllers\PanelLockController::class, 'unlock'])
+                            ->middleware('throttle:6,1')
+                            ->name('unlock');
+                    }
+
+                    if (self::unclaimed('GET', $panel->getPath().'/unlock/passkey/options')) {
+                        Route::get('unlock/passkey/options', [Controllers\PanelLockController::class, 'passkeyOptions'])
+                            ->name('unlock.passkey.options');
+                    }
+
+                    if (self::unclaimed('POST', $panel->getPath().'/unlock/passkey')) {
+                        Route::post('unlock/passkey', [Controllers\PanelLockController::class, 'passkeyUnlock'])
+                            ->middleware('throttle:6,1')
+                            ->name('unlock.passkey');
+                    }
+                }
+
+                /*
                  * SINGULAR RESOURCES FIRST - roadmap 4.3. Each mounts at a
                  * FIXED segment, and fixed segments must be declared before
                  * the `{resource}` patterns or `/billing-settings` is
@@ -706,6 +742,25 @@ final class PanelRoutes
                     if (self::unclaimed('GET', $panel->getPath().'/about')) {
                         Route::get('about', [Controllers\HelpController::class, 'about'])
                             ->name('support.about');
+                    }
+                }
+
+                /*
+                 * ON-PAGE EDITING, only when this portal opted in. Tenant
+                 * operator panels leave this off; a superadmin panel turns it
+                 * on with `->editableSupport()`. The GET for What's new is
+                 * here so the first release can be written on an empty page
+                 * even when ChangelogPage hid itself for lack of config.
+                 */
+                if ($panel->isSupportEditable()) {
+                    Route::put('support/contents', [Controllers\SupportContentController::class, 'update'])
+                        ->name('support.contents');
+                    Route::post('support/contents/github', [Controllers\SupportContentController::class, 'syncGithub'])
+                        ->name('support.github');
+
+                    if (self::unclaimed('GET', $panel->getPath().'/whats-new')) {
+                        Route::get('whats-new', [Controllers\HelpController::class, 'whatsNew'])
+                            ->name('support.whats-new');
                     }
                 }
 

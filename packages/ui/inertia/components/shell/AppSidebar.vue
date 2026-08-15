@@ -80,7 +80,13 @@ onUnmounted(() => opener.unregister())
 
 watch(opener.requests, () => setOpenMobile(true))
 
-const isCollapsed = computed(() => state.value === 'collapsed')
+/**
+ * Icon-only flyouts are a DESKTOP rail mode. On a phone the sidebar is a
+ * full overlay drawer: every item needs its label, and collapsible groups
+ * still show their titles. `state` can stay collapsed from the desktop
+ * cookie while the mobile sheet is open; that must not hide the text.
+ */
+const isCollapsed = computed(() => !isMobile.value && state.value === 'collapsed')
 
 /** The flyout opens away from the rail, whichever edge it is on. */
 const flyoutSide = computed<'left' | 'right'>(() =>
@@ -106,7 +112,7 @@ function groupContainsActive(group: NavGroup): boolean {
     return groupIsActive(group.items) || group.groups.some((sub) => groupIsActive(sub.items))
 }
 
-const { nav } = usePanelNav()
+const { nav, supportItems } = usePanelNav()
 
 /**
  * On a phone, choosing a destination closes the drawer.
@@ -167,9 +173,8 @@ const dashboardItem = computed<NavItem>(() => ({
  * (`SharePanelProps`), null when that panel genuinely lacks the route, so the
  * footer shows exactly what this portal can serve and nothing it cannot.
  *
- * WHAT'S NEW STAYS DEFAULT-PANEL-ONLY, deliberately: `ChangelogPage` is a
- * registered page of the application portal, not a per-panel route, and a
- * footer link to a 404 is worse than a shorter footer.
+ * WHAT'S NEW IS `panel.whatsNew`, same as Help and FAQ: present when this
+ * portal actually routes it (ChangelogPage, or editable-support).
  *
  * DECLARED ABOVE `navGroups`, WHICH READS IT, AND THAT ORDER IS LOAD-BEARING.
  * `const collapsed = ref(readCollapsed())` forces `navGroups` DURING setup, so
@@ -190,7 +195,7 @@ const toPath = (url: string): string => url.replace(/^https?:\/\/[^/]+/, '') || 
 
 const supportNavItems = computed<NavItem[]>(() => {
     const panel = page.props.panel as
-        | { help?: string | null; faq?: string | null; about?: string | null }
+        | { help?: string | null; faq?: string | null; about?: string | null; whatsNew?: string | null }
         | null
         | undefined
 
@@ -204,15 +209,28 @@ const supportNavItems = computed<NavItem[]>(() => {
         items.push({ title: 'FAQ', href: toPath(panel.faq), icon: MessageCircleQuestion })
     }
 
-    if (panelHome.value.isDefault) {
-        items.push({ title: "What's new", href: '/whats-new', icon: Sparkles })
+    if (panel?.whatsNew) {
+        items.push({ title: "What's new", href: toPath(panel.whatsNew), icon: Sparkles })
     }
 
     if (panel?.about) {
         items.push({ title: 'About', href: toPath(panel.about), icon: Info })
     }
 
-    return items
+    if (items.length > 0) {
+        return items
+    }
+
+    /*
+     * APP-OWNED ROUTES USED TO SKIP SharePanelProps, so `panel.help` was
+     * undefined and this footer vanished on Backups/Logs/Monitoring while
+     * Dashboard still had it. The default portal's support screens still
+     * live at these paths; a generated portal without shared urls stays
+     * empty rather than linking out.
+     */
+    const home = page.props.panelHome as { isDefault?: boolean } | undefined
+
+    return home?.isDefault === false ? [] : supportItems.value
 })
 
 /**
@@ -493,7 +511,7 @@ watch(
 
 <template>
     <Sidebar
-        collapsible="icon"
+        :collapsible="isMobile ? 'offcanvas' : 'icon'"
         variant="inset"
         :side="appearance.sidebarSide === 'right' ? 'right' : 'left'"
     >

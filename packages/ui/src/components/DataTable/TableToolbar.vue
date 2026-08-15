@@ -170,6 +170,17 @@ function setRangePart(filter: FilterSchema, part: 'from' | 'to', value: string) 
     }
 }
 
+/** Number ranges may be one-sided: `100..` or `..500`. */
+function setNumberRangePart(filter: FilterSchema, part: 'from' | 'to', value: string) {
+    const from = part === 'from' ? value : rangePart(filter, 'from')
+    const to = part === 'to' ? value : rangePart(filter, 'to')
+
+    draft.value = {
+        ...draft.value,
+        [filter.key]: from || to ? `${from}..${to}` : null,
+    }
+}
+
 function applyFilters(close: () => void) {
     emit('apply-filters', { ...draft.value })
     close()
@@ -447,6 +458,39 @@ function clearEverything() {
                                     class="border-input bg-background h-9 rounded-md border px-2 text-xs"
                                     @change="
                                         setRangePart(
+                                            filter,
+                                            'to',
+                                            ($event.target as HTMLInputElement).value,
+                                        )
+                                    "
+                                />
+                            </div>
+                        </template>
+
+                        <template v-else-if="filter.type === 'numberrange'">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input
+                                    type="number"
+                                    :value="rangePart(filter, 'from')"
+                                    aria-label="From"
+                                    placeholder="From"
+                                    class="border-input bg-background h-9 rounded-md border px-2 text-xs"
+                                    @change="
+                                        setNumberRangePart(
+                                            filter,
+                                            'from',
+                                            ($event.target as HTMLInputElement).value,
+                                        )
+                                    "
+                                />
+                                <input
+                                    type="number"
+                                    :value="rangePart(filter, 'to')"
+                                    aria-label="To"
+                                    placeholder="To"
+                                    class="border-input bg-background h-9 rounded-md border px-2 text-xs"
+                                    @change="
+                                        setNumberRangePart(
                                             filter,
                                             'to',
                                             ($event.target as HTMLInputElement).value,

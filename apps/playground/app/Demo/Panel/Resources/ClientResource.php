@@ -90,6 +90,18 @@ final class ClientResource extends Resource
 
     protected static ?string $purpose = 'Every subscriber on the network, and the plan and status each one has.';
 
+    /**
+     * THE ONE PLAYGROUND SCREEN THAT TAKES A SPREADSHEET.
+     *
+     * Import is opt-in on `Resource`. Subscribers are the case the wizard was
+     * built for - a migration of accounts, not a button that appears because
+     * this resource happens to have a form.
+     */
+    public static function importable(): bool
+    {
+        return true;
+    }
+
     protected static ?string $group = 'Subscribers';
 
     protected static ?int $sort = 10;

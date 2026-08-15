@@ -225,7 +225,7 @@ final class TrashBin
         return array_filter(
             $resources,
             static function (string $class): bool {
-                if (! $class::isEnabled()) {
+                if (! $class::isEnabled() || ! $class::isAccessible()) {
                     return false;
                 }
 

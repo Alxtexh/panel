@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Alxtexh\Panel\Support\Blueprint;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -111,6 +111,7 @@ final class BlueprintCatalogueTest extends TestCase
 
         $this->assertStringContainsString('DashboardPage', $markdown);
         $this->assertStringContainsString('make:panel-page Overview --dashboard', $markdown);
+        $this->assertStringContainsString('make:panel-page BillingPlans --plan-setup', $markdown);
 
         $this->assertStringNotContainsString(
             'no host in the package',
@@ -235,5 +236,12 @@ final class BlueprintCatalogueTest extends TestCase
             (string) $install,
             'panel:install does not write AGENTS.md, so a fresh install has no guide.',
         );
+
+        $this->assertStringNotContainsString('Routers online', (string) $install);
+        $this->assertStringNotContainsString('Total clients', (string) $install);
+        $this->assertStringNotContainsString('Sessions over time', (string) $install);
+        $this->assertStringContainsString('Open orders', (string) $install);
+        $this->assertStringContainsString("type('catalog')", (string) $install);
+        $this->assertStringContainsString('function shortcuts()', (string) $install);
     }
 }

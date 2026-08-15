@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, useSlots } from 'vue'
 import PkSkeleton from '../primitives/PkSkeleton.vue'
+import { iconPath } from '../primitives/icons'
 /**
  * The frame around a chart: title, period selector, trend, and the chart slot.
  *
@@ -13,13 +14,13 @@ import PkSkeleton from '../primitives/PkSkeleton.vue'
  * of its own; nesting a bordered chart inside a bordered card is the wrapper
  * stack the layout renderer already avoids.
  *
- * The body height is FIXED across loading, error and loaded states. A skeleton
- * shorter than the chart makes the whole dashboard jump when six cards resolve
- * at slightly different times.
+ * The body height is FIXED across loading, error and loaded states unless
+ * `fitBody` is set. A skeleton shorter than the chart makes the whole
+ * dashboard jump when six cards resolve at slightly different times. A
+ * detailer (label/value rows) sizes to its content instead.
  *
- * COLLAPSE IS LOCAL AND EPHEMERAL, the same choice `StatStrip` makes for its
- * reveal state - a dashboard is visited often enough that reaching for
- * persistence here is solving a problem nobody has asked for yet. `v-show`,
+ * COLLAPSE IS LOCAL AND EPHEMERAL. Hide is the page's job: this card emits
+ * `hide` and stays mounted until the parent stops rendering it. `v-show`,
  * not `v-if`: a chart's canvas is real work to lay out, and collapsing must
  * not force a resolved widget to redraw itself from nothing when reopened.
  */
@@ -33,9 +34,15 @@ const props = withDefaults(
         loading?: boolean
         error?: boolean
         bodyHeight?: number
+        /** Size the body to its content once loaded. */
+        fitBody?: boolean
         /** Offer the collapse control at all. */
         collapsible?: boolean
         defaultCollapsed?: boolean
+        /** Offer a hide control. The parent decides what hiding means. */
+        hideable?: boolean
+        /** Semantic icon name from `iconPath`. The `icon` slot wins if given. */
+        icon?: string | null
     }>(),
     {
         description: null,
@@ -43,21 +50,51 @@ const props = withDefaults(
         loading: false,
         error: false,
         bodyHeight: 220,
+        fitBody: false,
         collapsible: true,
         defaultCollapsed: false,
+        hideable: false,
+        icon: null,
     },
 )
 
-defineEmits<{ (e: 'update:period', value: string): void }>()
+defineEmits<{
+    (e: 'update:period', value: string): void
+    (e: 'hide'): void
+}>()
 
+const slots = useSlots()
 const collapsed = ref(props.defaultCollapsed)
+const showNamedIcon = computed(() => Boolean(props.icon) && !slots.icon)
+
+const bodyStyle = computed(() => {
+    if (props.fitBody && !props.loading && !props.error) {
+        return undefined
+    }
+
+    return { minHeight: `${props.bodyHeight}px` }
+})
 </script>
 
 <template>
-    <div class="bg-card flex flex-col gap-3 rounded-lg border p-4">
+    <div class="bg-card flex flex-col gap-3 rounded-lg border p-4" data-slot="chart-card">
         <div class="flex flex-wrap items-start justify-between gap-2">
             <div class="flex min-w-0 items-start gap-2">
-                <slot name="icon" />
+                <slot name="icon">
+                    <svg
+                        v-if="showNamedIcon"
+                        class="text-muted-foreground mt-0.5 size-4 shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path :d="iconPath(icon)" />
+                    </svg>
+                </slot>
 
                 <div class="min-w-0">
                     <p class="text-sm font-medium">{{ label }}</p>
@@ -72,6 +109,8 @@ const collapsed = ref(props.defaultCollapsed)
             </div>
 
             <div class="flex shrink-0 items-center gap-1.5">
+                <slot name="actions" />
+
                 <div
                     v-if="periods && periods.length"
                     class="bg-muted/60 flex items-center gap-0.5 rounded-md p-0.5"
@@ -123,13 +162,36 @@ const collapsed = ref(props.defaultCollapsed)
                         <path d="m6 9 6 6 6-6" />
                     </svg>
                 </button>
+
+                <button
+                    v-if="hideable"
+                    type="button"
+                    class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md p-1 transition-colors"
+                    :aria-label="`Hide ${label}`"
+                    title="Hide"
+                    @click="$emit('hide')"
+                >
+                    <svg
+                        class="size-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path :d="iconPath('eye-off')" />
+                    </svg>
+                </button>
             </div>
         </div>
 
         <div
             v-show="!collapsed"
-            :style="{ minHeight: `${bodyHeight}px` }"
+            :style="bodyStyle"
             class="flex flex-col justify-center"
+            data-slot="chart-card-body"
         >
             <PkSkeleton v-if="loading" variant="block" :height="bodyHeight" />
 

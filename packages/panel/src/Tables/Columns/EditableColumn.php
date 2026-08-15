@@ -36,9 +36,14 @@ use InvalidArgumentException;
  * A cell edit is a full write. It is smaller on screen, not smaller in
  * consequence.
  */
-abstract class EditableColumn extends Column
+abstract class EditableColumn extends Column implements InlineWritableColumn
 {
     protected ?string $confirmation = null;
+
+    public function isInlineWritable(): bool
+    {
+        return true;
+    }
 
     /** Require a confirmation before the write lands. */
     public function requiresConfirmation(string $message): static

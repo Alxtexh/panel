@@ -69,12 +69,14 @@ export interface SchemaColumn {
     fallback?: 'initials' | 'icon' | 'none'
     fallbackFrom?: string
 
-    /* toggle and select - writable in place */
+    /* toggle, select, and badge resolvers - writable in place */
     editable?: boolean
     confirmation?: string | null
     options?: Record<string, string>
     onLabel?: string | null
     offLabel?: string | null
+    /** Badge-only: a popover picker. Off unless the column opted in. */
+    resolver?: boolean
 
     /* colour - roadmap 4.6 */
     showValue?: boolean
@@ -100,6 +102,7 @@ export const BADGE_VARIANTS: Record<string, string> = {
     success: 'success',
     danger: 'destructive',
     warning: 'warning',
+    info: 'info',
     neutral: 'outline',
 }
 

@@ -25,6 +25,7 @@ import Breadcrumbs from './Breadcrumbs.vue'
 import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
 import NotificationBell from './PanelNotificationBell.vue'
+import PanelLockButton from './PanelLockButton.vue'
 import TopNavUser from './TopNavUser.vue'
 
 withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
@@ -155,6 +156,7 @@ function groupIsActive(items: NavItem[]): boolean {
                 the thing people actually use.
             -->
             <div class="flex min-w-0 shrink items-center gap-1.5">
+                <PanelLockButton />
                 <PanelCommandPalette />
                 <AssistantDrawer />
                 <NotificationBell />

@@ -78,6 +78,18 @@ function bodyHeight(chart: Chart): number {
         return 200
     }
 
+    if (chart.type === 'catalog') {
+        return 280
+    }
+
+    if (chart.type === 'items') {
+        return 160
+    }
+
+    if (chart.type === 'table') {
+        return 120
+    }
+
     return 220
 }
 </script>

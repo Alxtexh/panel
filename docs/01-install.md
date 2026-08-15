@@ -14,7 +14,7 @@ repository to your application's `composer.json`:
 Then:
 
 ```bash
-composer require alxtexh-enterprise/panel:^0.9
+composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
 npm install && npm run build
 ```

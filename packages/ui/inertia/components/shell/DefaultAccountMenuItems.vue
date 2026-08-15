@@ -5,11 +5,11 @@
  *
  * IT USED TO OFFER Profile, Security, Help and Sign out, while the reference
  * app's own menu offered Settings, User management, Backups, Logs, Monitoring,
- * Activity, Trash, Lock and Log out. The difference was not intent - it was
- * that every rich item's href came from Wayfinder, generated helpers only that
- * application has. The urls are shared by the server now (`SharePanelProps`),
- * resolved per panel and null where the panel lacks the screen, so the same
- * menu renders in the demo and in a portal `make:panel` created this morning.
+ * Activity, Trash and Log out. The lock padlock lives in the header immediately
+ * before search, not here. The urls are shared by the server now
+ * (`SharePanelProps`), resolved per panel and null where the panel lacks the
+ * screen, so the same menu renders in the demo and in a portal `make:panel`
+ * created this morning.
  *
  * EVERY ITEM DECLARES WHAT IT NEEDS - a url that exists, an ability where one
  * guards the screen - and hides itself when either is absent. Nothing is gated
@@ -24,12 +24,13 @@ import { Link, router, usePage } from '@inertiajs/vue3'
 import {
     Activity,
     DatabaseBackup,
-    Lock,
     LogOut,
     ScrollText,
     Server,
     Settings,
+    Shield,
     Trash2,
+    UserRound,
     UsersRound,
 } from '@lucide/vue'
 import { computed } from 'vue'
@@ -56,7 +57,6 @@ const panel = computed(
                   logout?: string | null
                   settings?: string | null
                   userManagement?: string | null
-                  lock?: string | null
                   activity?: string | null
                   operations?: {
                       backups?: string | null
@@ -97,14 +97,12 @@ const trash = computed(
 )
 
 /**
- * Profile/Security/Help remain THE FALLBACK for an installation whose panel
- * has no settings centre - without it, a minimal install's menu regresses to
- * exactly the empty box this component exists to prevent. When the settings
- * index exists it subsumes profile and security, and help lives in the
- * sidebar footer.
+ * Profile, Security and Settings stay in this menu even when a settings
+ * centre exists. Deduping them behind Settings emptied the dropdown for
+ * anybody whose operations items were ability-gated, leaving Trash and
+ * sometimes nothing else. Help stays in the sidebar footer. The lock
+ * padlock is in the header immediately before search, not here.
  */
-const minimal = computed(() => !panel.value?.settings)
-
 const handleLogout = () => {
     router.flushAll()
 }
@@ -119,6 +117,20 @@ const handleLogout = () => {
     <DropdownMenuSeparator v-if="user" />
 
     <DropdownMenuGroup>
+        <DropdownMenuItem v-if="panel?.account" as-child>
+            <Link class="block w-full cursor-pointer" :href="panel.account" prefetch>
+                <UserRound class="mr-2 h-4 w-4" />
+                Profile
+            </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem v-if="panel?.security" as-child>
+            <Link class="block w-full cursor-pointer" :href="panel.security" prefetch>
+                <Shield class="mr-2 h-4 w-4" />
+                Security
+            </Link>
+        </DropdownMenuItem>
+
         <DropdownMenuItem v-if="panel?.settings" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.settings" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
@@ -186,38 +198,6 @@ const handleLogout = () => {
                 {{ trash.title }}
             </Link>
         </DropdownMenuItem>
-
-        <!--
-            Above Log out and separated from it, because they are opposite
-            acts one slip apart: locking keeps the session and the page,
-            signing out throws both away.
-        -->
-        <DropdownMenuItem v-if="panel?.lock" as-child>
-            <Link
-                class="block w-full cursor-pointer"
-                :href="panel.lock"
-                method="post"
-                as="button"
-            >
-                <Lock class="mr-2 h-4 w-4" />
-                Lock screen
-            </Link>
-        </DropdownMenuItem>
-
-        <!-- The minimal fallback: a panel with no settings centre at all. -->
-        <template v-if="minimal">
-            <DropdownMenuItem v-if="panel?.account" as-child>
-                <Link class="block w-full cursor-pointer" :href="panel.account">Profile</Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem v-if="panel?.security" as-child>
-                <Link class="block w-full cursor-pointer" :href="panel.security">Security</Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem v-if="panel?.help" as-child>
-                <Link class="block w-full cursor-pointer" :href="panel.help">Help</Link>
-            </DropdownMenuItem>
-        </template>
     </DropdownMenuGroup>
 
     <!--

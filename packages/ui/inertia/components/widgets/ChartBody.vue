@@ -31,6 +31,8 @@ import {
     ScatterChart,
     SegmentedBar,
     StatListChart,
+    CatalogGrid,
+    LineItems,
 } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import { multiSeries, type Chart, type Series } from './types'
@@ -47,6 +49,10 @@ const lines = computed(() => multiSeries(props.chart, props.data))
     <SegmentedBar v-if="chart.type === 'segments'" :segments="data.points" :height="10" />
 
     <StatListChart v-else-if="chart.type === 'table'" :rows="data.rows ?? []" />
+
+    <CatalogGrid v-else-if="chart.type === 'catalog'" :items="data.items ?? []" />
+
+    <LineItems v-else-if="chart.type === 'items'" :items="data.items ?? []" />
 
     <PieChart
         v-else-if="chart.type === 'pie' || chart.type === 'doughnut'"

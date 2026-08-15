@@ -31,6 +31,7 @@ export { default as CodeCell } from './components/DataTable/CodeCell.vue'
 export { default as PkQueryBuilder } from './components/DataTable/PkQueryBuilder.vue'
 export { default as KeyValueCell } from './components/DataTable/KeyValueCell.vue'
 export { default as EditableCell } from './components/DataTable/EditableCell.vue'
+export { default as BadgeResolver } from './components/DataTable/BadgeResolver.vue'
 export { default as RecordActions } from './components/DataTable/RecordActions.vue'
 export { default as AppearanceDrawer } from './components/Layout/AppearanceDrawer.vue'
 export { default as PkBottomNav } from './components/Layout/PkBottomNav.vue'
@@ -50,6 +51,13 @@ export { default as PkPasswordInput } from './components/primitives/PkPasswordIn
 
 /* The class merger every moved shadcn component composes with. */
 export { cn, toUrl } from './lib/cn'
+export {
+    TRANSPARENT_IMAGE_HELP,
+    OPAQUE_IMAGE_ERROR,
+    JPEG_IMAGE_ERROR,
+    assertTransparentImage,
+    imageHasTransparency,
+} from './lib/transparentImage'
 
 /*
  | THE REFERENCE APP'S SHADCN FAMILIES, MOVED WHOLE.
@@ -132,10 +140,48 @@ export { default as HeatmapChart } from './components/Widgets/HeatmapChart.vue'
 export { default as Sparkline } from './components/Widgets/Sparkline.vue'
 export { default as TrendBadge } from './components/Widgets/TrendBadge.vue'
 export { default as ChartCard } from './components/Widgets/ChartCard.vue'
+export { default as ShortcutsWidget } from './components/Widgets/ShortcutsWidget.vue'
+export type { ShortcutItem } from './components/Widgets/ShortcutsWidget.vue'
+export { default as DirectoryPage } from './components/Widgets/DirectoryPage.vue'
+export { default as AdminDirectory } from './components/Widgets/DirectoryPage.vue'
+export type { DirectoryLink, DirectorySection } from './components/Widgets/DirectoryPage.vue'
 export { default as StatCard } from './components/Widgets/StatCard.vue'
 export { default as MiniStatCard } from './components/Widgets/MiniStatCard.vue'
 export { default as SegmentedBar } from './components/Widgets/SegmentedBar.vue'
 export { default as StatListChart } from './components/Widgets/StatListChart.vue'
+export { default as CatalogCard } from './components/Widgets/CatalogCard.vue'
+export { default as PlanCard } from './components/Widgets/PlanCard.vue'
+export { default as PlanGrid } from './components/Widgets/PlanGrid.vue'
+export { default as PlanEditor } from './components/Widgets/PlanEditor.vue'
+export {
+    cycleLabel,
+    formatPerkValue,
+    perkGranted,
+} from './components/Widgets/planTypes'
+export type {
+    ExtraPerk,
+    PlanLimitField,
+    PlanModuleOption,
+    PlanPerk,
+    PlanRecord,
+} from './components/Widgets/planTypes'
+export { default as CatalogGrid } from './components/Widgets/CatalogGrid.vue'
+export { default as CatalogInspect } from './components/Widgets/CatalogInspect.vue'
+export { default as CatalogItemDetail } from './components/Widgets/CatalogItemDetail.vue'
+export { default as CatalogItemView } from './components/Widgets/CatalogItemView.vue'
+export { default as CatalogBrowser } from './components/Widgets/CatalogBrowser.vue'
+export { default as CatalogFilterSheet } from './components/Widgets/CatalogFilterSheet.vue'
+export { default as CatalogRegister } from './components/Widgets/CatalogRegister.vue'
+export { default as SignatureStudio } from './components/Widgets/SignatureStudio.vue'
+export { default as DashboardShortcuts } from './components/Widgets/DashboardShortcuts.vue'
+export {
+    emptyCatalogFilters,
+    findExactSku,
+    matchCatalogItem,
+    catalogFiltersActive,
+} from './components/Widgets/catalogFilter'
+export { default as LineItems } from './components/Widgets/LineItems.vue'
+export { default as CartPanel } from './components/Widgets/CartPanel.vue'
 export { default as StatStrip } from './components/Widgets/StatStrip.vue'
 export { default as SetupChecklist } from './components/Widgets/SetupChecklist.vue'
 export { default as SelectionBar } from './components/DataTable/SelectionBar.vue'
@@ -183,6 +229,13 @@ export { default as PkMultiSelect } from './components/primitives/PkMultiSelect.
  */
 export { default as PkButton } from './components/primitives/PkButton.vue'
 export { default as PkBadge } from './components/primitives/PkBadge.vue'
+export { default as PkStatusBadge } from './components/primitives/PkStatusBadge.vue'
+export { default as PkQtyStepper } from './components/primitives/PkQtyStepper.vue'
+export { default as PkSignaturePad } from './components/primitives/PkSignaturePad.vue'
+export { default as PaymentGateways } from './components/Widgets/PaymentGateways.vue'
+export { default as PaymentGatewaySettings } from './components/Widgets/PaymentGatewaySettings.vue'
+export { statusTone, statusBadgeVariant, STATUS_TONES } from './components/primitives/statusTone'
+export type { SemanticTone } from './components/primitives/statusTone'
 /*
  * FOR A CALLER THAT NEEDS BUTTON STYLING ON ITS OWN ELEMENT, not PkButton's.
  * `@inertiajs/vue3`'s `<Link>` is a component, not a tag name `PkButton`'s
@@ -194,6 +247,11 @@ export { buttonClasses } from './components/primitives/buttonClasses'
 export type { ButtonClassesOptions } from './components/primitives/buttonClasses'
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
+export {
+    DASHBOARD_HIDE_KEY,
+    DASHBOARD_HIDDEN_STORAGE_KEY,
+} from './composables/dashboardHide'
+export type { DashboardHide } from './composables/dashboardHide'
 export { useLiveUpdates } from './composables/useLiveUpdates'
 export {
     useAppearance,
@@ -218,6 +276,17 @@ export type {
 } from './components/Widgets/types'
 export type { StatSegment } from './components/Widgets/StatStrip.vue'
 export type { SetupChecklistItem } from './components/Widgets/SetupChecklist.vue'
+export type { CatalogItem } from './components/Widgets/CatalogCard.vue'
+export type { CatalogBrowserTab } from './components/Widgets/CatalogBrowser.vue'
+export type { StudioDocument, SavedMark } from './components/Widgets/SignatureStudio.vue'
+export type {
+    CatalogFacet,
+    CatalogFacetOption,
+    CatalogFilters,
+    CatalogRangeValue,
+} from './components/Widgets/catalogFilter'
+export type { LineItem } from './components/Widgets/LineItems.vue'
+export type { PaymentGateway } from './components/Widgets/PaymentGateways.vue'
 export type { MultiSelectOption } from './components/primitives/PkMultiSelect.vue'
 export type { BottomNavItem } from './components/Layout/PkBottomNav.vue'
 export type { Step as StepIndicatorStep } from './components/Layout/PkStepIndicator.vue'

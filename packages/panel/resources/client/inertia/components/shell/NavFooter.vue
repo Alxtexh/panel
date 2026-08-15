@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3'
 import {
     SidebarGroup,
     SidebarGroupContent,
@@ -26,10 +27,10 @@ defineProps<Props>()
                         class="text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100"
                         as-child
                     >
-                        <a :href="toUrl(item.href)" target="_blank" rel="noopener noreferrer">
+                        <Link class="block w-full" :href="toUrl(item.href)" prefetch>
                             <component :is="item.icon" />
                             <span>{{ item.title }}</span>
-                        </a>
+                        </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>

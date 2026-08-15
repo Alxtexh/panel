@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tables\Columns;
 
+use InvalidArgumentException;
+
 /**
  * A value rendered as a badge, coloured by a SEMANTIC name.
  *
@@ -15,8 +17,13 @@ namespace Alxtexh\Panel\Tables\Columns;
  * The map is a plain array, not a closure: it must serialise into the cached
  * schema, and a closure cannot. Anything genuinely dynamic belongs in the data
  * payload rather than the schema.
+ *
+ * A RESOLVER IS OPT-IN. A badge is display by default. `->resolver()` (or
+ * `->inlineUpdate()`) turns the pill into a shortcut: click it, pick from the
+ * same colour-keyed options, PATCH the cell. Without that call the column is
+ * not writable, even though it looks like a status.
  */
-final class BadgeColumn extends Column
+final class BadgeColumn extends Column implements InlineWritableColumn
 {
     /** @var array<string, string> value => semantic intent */
     private array $colors = [];
@@ -27,6 +34,12 @@ final class BadgeColumn extends Column
     /** @var array<string|int, string> */
     private array $labels = [];
 
+    private bool $resolver = false;
+
+    /** @var array<string, string> value => label, when the picker is on */
+    private array $options = [];
+
+    /** @param array<string, string> $colors */
     public function colors(array $colors): static
     {
         $this->colors = $colors;
@@ -62,6 +75,70 @@ final class BadgeColumn extends Column
         return $this;
     }
 
+    /**
+     * Click the badge to change the value without opening the record.
+     *
+     * OFF BY DEFAULT. The option list is the validation rule, same as
+     * SelectColumn: a forged request cannot write a status the column never
+     * named. Options default to the colour map's keys (headlined), or an
+     * explicit `->options()` / `->labels()` map.
+     */
+    public function resolver(bool $on = true): static
+    {
+        $this->resolver = $on;
+
+        return $this;
+    }
+
+    /** Alias of `resolver()`. */
+    public function inlineUpdate(bool $on = true): static
+    {
+        return $this->resolver($on);
+    }
+
+    /**
+     * @param  array<string, string>|list<string>  $options
+     */
+    public function options(array $options): static
+    {
+        $this->options = array_is_list($options)
+            ? array_combine($options, array_map(
+                static fn (string $o): string => str($o)->headline()->value(),
+                $options,
+            ))
+            : $options;
+
+        return $this;
+    }
+
+    public function isResolver(): bool
+    {
+        return $this->resolver;
+    }
+
+    public function isInlineWritable(): bool
+    {
+        return $this->resolver;
+    }
+
+    public function castValue(mixed $value): string
+    {
+        $value = is_scalar($value) ? (string) $value : '';
+
+        if (! array_key_exists($value, $this->resolvedOptions())) {
+            throw new InvalidArgumentException("[{$value}] is not an allowed option for [{$this->key}].");
+        }
+
+        return $value;
+    }
+
+    public function writableColumn(): string
+    {
+        $column = $this->resolvedDatabaseColumn() ?? $this->key;
+
+        return str_contains($column, '.') ? substr($column, (int) strrpos($column, '.') + 1) : $column;
+    }
+
     public function type(): string
     {
         return 'badge';
@@ -69,11 +146,53 @@ final class BadgeColumn extends Column
 
     public function toArray(): array
     {
-        return array_filter([
+        $payload = array_filter([
             ...parent::toArray(),
             'colors' => $this->colors,
             'defaultColor' => $this->default,
             'labels' => $this->labels === [] ? null : $this->labels,
         ], static fn (mixed $v): bool => $v !== null);
+
+        if (! $this->resolver) {
+            return $payload;
+        }
+
+        $options = $this->resolvedOptions();
+
+        if ($options === []) {
+            throw new InvalidArgumentException(
+                "BadgeColumn [{$this->key}] cannot resolve without options or a colour map.",
+            );
+        }
+
+        return [
+            ...$payload,
+            'resolver' => true,
+            'editable' => true,
+            'options' => $options,
+        ];
+    }
+
+    /** @return array<string, string> */
+    private function resolvedOptions(): array
+    {
+        if ($this->options !== []) {
+            return $this->options;
+        }
+
+        $keys = array_keys($this->colors);
+
+        if ($keys === []) {
+            $keys = array_keys($this->labels);
+        }
+
+        $out = [];
+
+        foreach ($keys as $value) {
+            $key = (string) $value;
+            $out[$key] = $this->labels[$value] ?? $this->labels[$key] ?? str($key)->headline()->value();
+        }
+
+        return $out;
     }
 }

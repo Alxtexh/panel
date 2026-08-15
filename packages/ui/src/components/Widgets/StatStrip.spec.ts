@@ -131,4 +131,27 @@ describe('StatStrip', () => {
         expect(wrapper.text()).not.toContain('10')
         expect(wrapper.text()).toContain('20')
     })
+
+    it('does not stretch a leftover stat across the empty track', () => {
+        const wrapper = mount(StatStrip, {
+            props: {
+                columns: 6,
+                maskable: false,
+                segments: [
+                    { key: 'a', label: 'A', value: 1, sensitive: false },
+                    { key: 'b', label: 'B', value: 2, sensitive: false },
+                    { key: 'c', label: 'C', value: 3, sensitive: false },
+                    { key: 'd', label: 'D', value: 4, sensitive: false },
+                    { key: 'e', label: 'E', value: 5, sensitive: false },
+                    { key: 'f', label: 'F', value: 6, sensitive: false },
+                    { key: 'g', label: 'Routers online', value: 7, sensitive: false },
+                ],
+            },
+        })
+
+        expect(wrapper.find('[data-slot="stat-packed"]').exists()).toBe(true)
+        expect(wrapper.find('[data-slot="stat-leftover"]').exists()).toBe(true)
+        expect(wrapper.find('[data-slot="stat-leftover"]').text()).toContain('Routers online')
+        expect(wrapper.find('[data-slot="stat-packed"]').text()).not.toContain('Routers online')
+    })
 })

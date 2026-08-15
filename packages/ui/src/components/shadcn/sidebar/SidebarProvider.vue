@@ -29,7 +29,12 @@ const emits = defineEmits<{
     'update:open': [open: boolean]
 }>()
 
-const isMobile = useMediaQuery('(max-width: 768px)')
+/**
+ * Match Tailwind `md` (min-width 768px). `max-width: 768px` would treat 768px
+ * as both mobile (this query) and desktop (`md:`), so the sheet and the rail
+ * could show together.
+ */
+const isMobile = useMediaQuery('(max-width: 767px)')
 const openMobile = ref(false)
 
 const open = useVModel(props, 'open', emits, {
@@ -62,7 +67,13 @@ useEventListener('keydown', (event: KeyboardEvent) => {
 
 // We add a state so that we can do data-state="expanded" or "collapsed".
 // This makes it easier to style the sidebar with Tailwind classes.
-const state = computed(() => (open.value ? 'expanded' : 'collapsed'))
+//
+// PHONES ARE NEVER THE ICON RAIL. `open` is the desktop collapse cookie; the
+// mobile drawer uses `openMobile`. Leaving `state` collapsed on a phone made
+// AppSidebar render flyout icons with no labels inside the overlay sheet.
+const state = computed(() =>
+    isMobile.value || open.value ? 'expanded' : 'collapsed',
+)
 
 provideSidebarContext({
     state,

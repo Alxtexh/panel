@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Http\Middleware\HandleInertiaRequests;
+use Alxtexh\Panel\Widgets\Bucket;
+use Alxtexh\Panel\Widgets\ChartWidget;
+use Alxtexh\Panel\Widgets\Period;
+use Alxtexh\Panel\Widgets\TimeSeries;
+use Alxtexh\Panel\Widgets\Trend;
 use App\Demo\Models\Client;
 use App\Demo\Models\ClientSession;
-use App\Models\Plan;
 use App\Demo\Models\Router;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
-use Alxtexh\Panel\Widgets\Bucket;
-use Alxtexh\Panel\Widgets\ChartWidget;
-use Alxtexh\Panel\Widgets\Period;
-use Alxtexh\Panel\Widgets\TimeSeries;
-use Alxtexh\Panel\Widgets\Trend;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -306,6 +306,60 @@ final class ChartWidgetTest extends TestCase
         ChartWidget::make('x', 'X')->type('sunburst');
     }
 
+    /**
+     * Catalog tiles and line items are not points. Treating them as a series
+     * would invent a total and drop the fields a POS or rental card needs.
+     */
+    public function test_catalog_and_item_payloads_pass_through_as_items(): void
+    {
+        $catalog = ChartWidget::make('featured', 'Featured')
+            ->type('catalog')
+            ->data(fn (): array => [
+                'items' => [
+                    ['key' => 'a', 'label' => 'Day desk', 'price' => '12.00', 'status' => 'available'],
+                ],
+            ]);
+
+        $resolved = $catalog->resolve(Period::Days7, 'tenant-a', $this->now);
+
+        $this->assertFalse($resolved['error']);
+        $this->assertSame([], $resolved['points']);
+        $this->assertNull($resolved['rows']);
+        $this->assertSame('Day desk', $resolved['items'][0]['label']);
+
+        $lines = ChartWidget::make('basket', 'Basket')
+            ->type('items')
+            ->data(fn (): array => [
+                'items' => [
+                    ['key' => '1', 'label' => 'Filter pack', 'qty' => 2, 'amount' => '13.00', 'status' => 'paid'],
+                ],
+            ]);
+
+        $this->assertSame('paid', $lines->resolve(Period::Days7, 'tenant-a', $this->now)['items'][0]['status']);
+    }
+
+    /** A detailer heading is a row, not a plot point. */
+    public function test_table_rows_including_headings_pass_through(): void
+    {
+        $chart = ChartWidget::make('customers', 'Customers')
+            ->type('table')
+            ->icon('users')
+            ->data(fn (): array => [
+                'rows' => [
+                    ['key' => 'finance', 'label' => 'Finance', 'heading' => true, 'tone' => 'info'],
+                    ['key' => 'never', 'label' => 'Last backup', 'value' => 'Never', 'tone' => 'danger'],
+                ],
+            ]);
+
+        $this->assertSame('users', $chart->toArray()['icon']);
+
+        $resolved = $chart->resolve(Period::Days7, 'tenant-a', $this->now);
+
+        $this->assertFalse($resolved['error']);
+        $this->assertTrue($resolved['rows'][0]['heading']);
+        $this->assertSame('Never', $resolved['rows'][1]['value']);
+    }
+
     /* ------------------------------------------------------------- the page */
 
     public function test_the_dashboard_ships_structure_without_resolving_widgets(): void
@@ -316,7 +370,7 @@ final class ChartWidgetTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->has('widgets')
                 // The gallery: every renderer the panel ships, on real data.
-                ->has('charts', 18)
+                ->has('charts', 20)
                 ->has('periods')
                 // Deferred props are absent from the first response by design:
                 // the shell must paint before any aggregate runs (§10).

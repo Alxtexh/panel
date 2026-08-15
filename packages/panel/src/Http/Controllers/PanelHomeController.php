@@ -49,7 +49,7 @@ final class PanelHomeController extends Controller
              * here either - a home page that links to a 403 is worse than one
              * that links nowhere.
              */
-            if (! $class::showsInNavigation() || ! $class::can('viewAny')) {
+            if (! $class::showsInNavigation() || ! $class::isAccessible() || ! $class::can('viewAny')) {
                 continue;
             }
 

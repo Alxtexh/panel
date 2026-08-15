@@ -26,7 +26,7 @@
  * somebody one thing on screen and something else in chat. They now come from
  * `App\Support\HelpArticles` as a prop.
  */
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import {
     BookOpen,
     Download,
@@ -40,6 +40,9 @@ import {
     X,
 } from '@lucide/vue'
 import { computed, onMounted, ref } from 'vue'
+import SupportPageEditor, {
+    type SupportProps,
+} from '../../components/support/SupportPageEditor.vue'
 
 defineOptions({
     // Page props arrive as attributes and this root is a fragment.
@@ -50,7 +53,7 @@ interface Article {
     category: string
     title: string
     keywords: string
-    body: string[]
+    body: string | string[]
 }
 
 const props = defineProps<{
@@ -65,6 +68,7 @@ const props = defineProps<{
      * one, because somebody clicks it.
      */
     categories?: { key: string; label: string }[]
+    support?: SupportProps | null
 }>()
 
 /**
@@ -104,7 +108,7 @@ const results = computed(() => {
             return true
         }
 
-        return `${a.title} ${a.keywords} ${a.body.join(' ')}`.toLowerCase().includes(q)
+        return `${a.title} ${a.keywords} ${paragraphs(a.body).join(' ')}`.toLowerCase().includes(q)
     })
 })
 
@@ -116,6 +120,16 @@ const grouped = computed(() =>
         }))
         .filter((c) => c.items.length > 0),
 )
+
+function paragraphs(body: string | string[]): string[] {
+    return Array.isArray(body) ? body : body.split(/\n\s*\n/).filter(Boolean)
+}
+
+const panel = usePage().props.panel as
+    | { faq?: string | null; whatsNew?: string | null; path?: string }
+    | undefined
+const faqHref = panel?.faq ?? '/faq'
+const whatsNewHref = panel?.whatsNew ?? '/whats-new'
 
 function toggle(id: string) {
     open.value = open.value === id ? null : id
@@ -147,6 +161,7 @@ onMounted(() => {
     <Head title="Help" />
 
     <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-6">
+        <SupportPageEditor :support="support">
         <header class="flex flex-col items-center gap-4 py-4 text-center">
             <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">How can we help?</h1>
 
@@ -158,7 +173,7 @@ onMounted(() => {
                     v-model="query"
                     type="search"
                     class="w-full rounded-full border bg-background py-2.5 pr-10 pl-9 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
-                    placeholder="Search help - try “export”, “bulk” or “theme”"
+                    placeholder="Search help - try export, bulk or theme"
                     aria-label="Search help"
                 />
                 <button
@@ -259,7 +274,7 @@ onMounted(() => {
 
                     <div v-if="open === item.id" class="flex flex-col gap-2 px-4 pb-4">
                         <p
-                            v-for="(p, i) in item.body"
+                            v-for="(p, i) in paragraphs(item.body)"
                             :key="i"
                             class="text-sm text-muted-foreground"
                         >
@@ -289,14 +304,14 @@ onMounted(() => {
 
             <div class="flex flex-wrap items-center gap-2">
                 <Link
-                    href="/faq"
+                    :href="faqHref"
                     class="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
                 >
                     <BookOpen class="size-4" />
                     Read the FAQ
                 </Link>
                 <Link
-                    href="/whats-new"
+                    :href="whatsNewHref"
                     class="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
                 >
                     <Sparkles class="size-4" />
@@ -304,5 +319,6 @@ onMounted(() => {
                 </Link>
             </div>
         </section>
+        </SupportPageEditor>
     </div>
 </template>

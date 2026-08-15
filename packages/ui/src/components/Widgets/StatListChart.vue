@@ -13,6 +13,9 @@
  * NOT RE-NORMALISED, for the same reason `SegmentedBar` is not: a bar that
  * always fills completely cannot show 38% free space, which is the entire
  * point of a usage row.
+ *
+ * A HEADING ROW is a subsection label, not a fact. Finance "Current month"
+ * sits in colour above the figures that belong to it.
  */
 import { computed } from 'vue'
 
@@ -25,7 +28,8 @@ export interface StatListBarSegment {
 export interface StatListRow {
     key: string
     label: string
-    value: string
+    value?: string
+    heading?: boolean
     tone?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | null
     bar?: {
         segments: StatListBarSegment[]
@@ -74,9 +78,22 @@ const resolved = computed(() =>
 </script>
 
 <template>
-    <div class="divide-border flex flex-col divide-y">
-        <div v-for="row in resolved" :key="row.key" class="flex flex-col gap-1.5 py-2.5 first:pt-0 last:pb-0">
-            <div class="flex items-center justify-between gap-3 text-sm">
+    <div class="divide-border flex flex-col divide-y" data-slot="stat-list">
+        <div
+            v-for="row in resolved"
+            :key="row.key"
+            class="flex flex-col gap-1.5 py-2.5 first:pt-0 last:pb-0"
+            :data-heading="row.heading ? 'true' : undefined"
+        >
+            <div
+                v-if="row.heading"
+                class="pt-1 text-xs font-semibold tracking-wide uppercase"
+                :class="row.tone ? TONE_TEXT[row.tone] : 'text-muted-foreground'"
+            >
+                {{ row.label }}
+            </div>
+
+            <div v-else class="flex items-center justify-between gap-3 text-sm">
                 <span class="text-muted-foreground truncate">{{ row.label }}</span>
                 <span
                     class="shrink-0 font-medium tabular-nums"

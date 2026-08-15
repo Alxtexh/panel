@@ -31,7 +31,7 @@ export interface FilterSchema {
      * a resource declaring one rendered a label with nothing under it - a
      * working server half nobody could reach.
      */
-    type: 'select' | 'boolean' | 'multiselect' | 'daterange' | 'querybuilder';
+    type: 'select' | 'boolean' | 'multiselect' | 'daterange' | 'numberrange' | 'querybuilder';
     options?: string[];
     trueLabel?: string;
     falseLabel?: string;

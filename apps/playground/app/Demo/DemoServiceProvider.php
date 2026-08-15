@@ -170,6 +170,26 @@ final class DemoServiceProvider extends ServiceProvider
         DashboardExtras::charts(static fn (): array => DemoDashboard::charts());
         DashboardExtras::dimensions(static fn (): array => DemoDashboard::dimensions());
         DashboardExtras::addStrips(static fn (): array => DemoDashboard::strips());
+        DashboardExtras::shortcutsCatalog(static fn (): array => [
+            'defaults' => ['add-customer', 'add-ticket', 'configure', 'routers', 'plans'],
+            'storageKey' => 'panel.dashboard.shortcuts',
+            'catalog' => [
+                ['id' => 'add-customer', 'label' => 'Add customer', 'href' => '/clients/create', 'icon' => 'users'],
+                ['id' => 'add-ticket', 'label' => 'Add ticket', 'href' => '/tickets', 'icon' => 'chat'],
+                ['id' => 'configure', 'label' => 'Configure system', 'href' => '/settings', 'icon' => 'sliders'],
+                ['id' => 'routers', 'label' => 'Routers', 'href' => '/routers', 'icon' => 'router'],
+                ['id' => 'plans', 'label' => 'Plans', 'href' => '/plans', 'icon' => 'package'],
+                ['id' => 'clients', 'label' => 'Clients', 'href' => '/clients', 'icon' => 'users'],
+                ['id' => 'sessions', 'label' => 'Sessions', 'href' => '/sessions', 'icon' => 'activity'],
+                ['id' => 'organisation', 'label' => 'Organisation', 'href' => '/settings/organisation', 'icon' => 'home'],
+                ['id' => 'monitoring', 'label' => 'Monitoring', 'href' => '/operations/monitoring', 'icon' => 'gauge'],
+                ['id' => 'backups', 'label' => 'Backups', 'href' => '/operations/backups', 'icon' => 'archive'],
+                ['id' => 'documents', 'label' => 'Documents', 'href' => '/documents', 'icon' => 'file-text'],
+                ['id' => 'kit-catalog', 'label' => 'Catalog', 'href' => '/kit-catalog', 'icon' => 'package'],
+                ['id' => 'kit-till', 'label' => 'Till', 'href' => '/kit-till', 'icon' => 'star'],
+                ['id' => 'kit-leases', 'label' => 'Leases', 'href' => '/kit-leases', 'icon' => 'key'],
+            ],
+        ]);
 
         if (($strip = DemoDashboard::strip()) !== null) {
             DashboardExtras::useStrip($strip, DemoDashboard::stripAbility());
