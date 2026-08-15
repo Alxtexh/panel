@@ -68,6 +68,13 @@ final class Panel
     /** See `widgets()`. Concatenated with whatever the dashboard page declares. */
     private array $widgets = [];
 
+    /**
+     * Product modules this portal sells access to. See `modules()`.
+     *
+     * @var list<array{key: string, label: string, description?: string|null}>
+     */
+    private array $modules = [];
+
     /** @var array<string, string> See `discoverWidgets()`. */
     private array $widgetDirectories = [];
 
@@ -91,6 +98,31 @@ final class Panel
     private array $without = [];
 
     /**
+     * SAME-PAGE EDITING OF HELP, FAQ, WHAT'S NEW AND ABOUT.
+     *
+     * OFF BY DEFAULT. Those screens are readable everywhere they are mounted;
+     * writing them is a portal choice, not a package default. A multi-tenant
+     * ISP keeps this on the superadmin (or platform) panel and off the tenant
+     * operator panel, so a tenant admin cannot rewrite everybody's FAQ.
+     */
+    private bool $editableSupport = false;
+
+    /**
+     * Payment-gateway settings under `/settings/payments`. Off by default.
+     * Pair with `paymentSettings()` and a resolver of gateway cards.
+     */
+    private bool $paymentSettings = false;
+
+    /** @var Closure|null */
+    private mixed $paymentGatewaysResolver = null;
+
+    /**
+     * Optional GitHub `owner/repo` (or repo URL) used by What's new "sync from
+     * GitHub releases". Null means the button is not offered.
+     */
+    private ?string $supportGithubRepository = null;
+
+    /**
      * Directories THIS panel owns, as `directory => namespace`.
      *
      * @var array<string, string>
@@ -102,6 +134,22 @@ final class Panel
 
     /** See `login()`. Null means this panel has no sign-in of its own. */
     private ?string $loginSlug = null;
+
+    /**
+     * Idle lock minutes while the feature is on. See `idleLock()`.
+     */
+    private int $idleLockMinutes = 15;
+
+    private int $idleLockWarningSeconds = 60;
+
+    /**
+     * True after `idleLock(false)`. The only way to turn the lock off when
+     * this panel has authentication.
+     */
+    private bool $idleLockDisabled = false;
+
+    /** True after `idleLock()` was called with a duration, not `false`. */
+    private bool $idleLockCustom = false;
 
     private bool $passwordReset = true;
 
@@ -211,6 +259,53 @@ final class Panel
     public function getWidgets(): array
     {
         return [...$this->widgets, ...$this->discoveredWidgets()];
+    }
+
+    /**
+     * Declare product modules this portal's plans may grant.
+     *
+     * SAME SHAPE AS `widgets()`: the panel is the registration point, the app
+     * names keys that mean something in ITS product. Plans later list those
+     * keys. `moduleEnabled('devices')` reads the grant resolver, not this list.
+     *
+     *     Panel::make('admin')->modules([
+     *         Support\Module::make('campaigns')->label('Campaigns')->planLimit(kind: 'number'),
+     *         ['key' => 'storage', 'label' => 'Storage'],
+     *     ]);
+     *
+     * @param  list<Support\Module|array{key: string, label: string, description?: string|null}>  $modules
+     */
+    public function modules(array $modules): self
+    {
+        Support\ModuleRegistry::register($modules);
+
+        $keys = [];
+
+        foreach ($modules as $module) {
+            $key = $module instanceof Support\Module
+                ? $module->key()
+                : (string) ($module['key'] ?? '');
+
+            if ($key !== '') {
+                $keys[] = $key;
+            }
+        }
+
+        foreach (Support\ModuleRegistry::all() as $item) {
+            if (in_array($item['key'], $keys, true)) {
+                $this->modules[] = $item;
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return list<array{key: string, label: string, description: string|null}>
+     */
+    public function getModules(): array
+    {
+        return $this->modules !== [] ? $this->modules : Support\ModuleRegistry::all();
     }
 
     /**
@@ -477,6 +572,57 @@ final class Panel
     }
 
     /**
+     * Lock this portal after idle minutes, with a client warning first.
+     *
+     * ON BY DEFAULT WHEN THIS PANEL AUTHENTICATES. `->login()` or
+     * `->authMiddleware()` is enough: 15 minutes idle, 60-second warning, lock
+     * routes and the header padlock. Apps must not need a second call to get
+     * a lock screen that belongs with sign-in.
+     *
+     * `->idleLock()` still sets a custom duration.
+     * `->idleLock(false)` is the escape hatch that turns it off.
+     */
+    public function idleLock(bool|int $minutes = 15, int $warningSeconds = 60): self
+    {
+        if ($minutes === false) {
+            $this->idleLockDisabled = true;
+            $this->idleLockCustom = false;
+
+            return $this;
+        }
+
+        $this->idleLockDisabled = false;
+        $this->idleLockCustom = true;
+        $this->idleLockMinutes = $minutes === true ? 15 : max(1, $minutes);
+        $this->idleLockWarningSeconds = max(0, $warningSeconds);
+
+        return $this;
+    }
+
+    public function hasIdleLock(): bool
+    {
+        if ($this->idleLockDisabled) {
+            return false;
+        }
+
+        if ($this->idleLockCustom) {
+            return $this->idleLockMinutes > 0;
+        }
+
+        return $this->hasLogin() || $this->authMiddleware !== null;
+    }
+
+    public function idleLockMinutes(): ?int
+    {
+        return $this->hasIdleLock() ? $this->idleLockMinutes : null;
+    }
+
+    public function idleLockWarningSeconds(): int
+    {
+        return $this->idleLockWarningSeconds;
+    }
+
+    /**
      * THE COMPONENT THIS PORTAL'S SIGN-IN RENDERS.
      *
      * DEFAULTS TO THE PACKAGED SCREEN, and it has to. Inertia resolves a page
@@ -723,6 +869,70 @@ final class Panel
         return $this;
     }
 
+    /**
+     * Opt this portal into editing Help, FAQ, What's new and About on those
+     * pages themselves. Default off. Pair with the `support.update` ability.
+     */
+    public function editableSupport(bool $enabled = true): self
+    {
+        $this->editableSupport = $enabled;
+
+        return $this;
+    }
+
+    public function isSupportEditable(): bool
+    {
+        return $this->editableSupport;
+    }
+
+    /**
+     * Opt this portal into `/settings/payments`. Default off.
+     *
+     * `$gateways` is a closure returning the card list (`key`, `label`,
+     * `caption`, `mark`, `color`, `connected`, `mode`, `methods`). Persist
+     * elsewhere; the Vue half keeps a browser showcase unless you wire saves.
+     */
+    public function paymentSettings(?Closure $gateways = null): self
+    {
+        $this->paymentSettings = true;
+        $this->paymentGatewaysResolver = $gateways;
+
+        return $this;
+    }
+
+    public function offersPaymentSettings(): bool
+    {
+        return $this->paymentSettings;
+    }
+
+    public function paymentGatewaysResolver(): ?Closure
+    {
+        return $this->paymentGatewaysResolver;
+    }
+
+    /**
+     * Optional source for What's new: GitHub releases for this repository.
+     *
+     * Accepts `owner/repo` or a github.com URL. Sync is a button, not a
+     * background job; a failed fetch leaves locally edited rows alone.
+     */
+    public function supportGithubRepository(?string $repository): self
+    {
+        $this->supportGithubRepository = $repository === null || $repository === ''
+            ? null
+            : $repository;
+
+        return $this;
+    }
+
+    public function getSupportGithubRepository(): ?string
+    {
+        return $this->supportGithubRepository
+            ?? (is_string(config('panel.support.github_releases'))
+                ? (string) config('panel.support.github_releases')
+                : null);
+    }
+
     /** Whether a packaged screen is mounted on this panel. */
     public function offers(string $screen): bool
     {
@@ -852,7 +1062,9 @@ final class Panel
      */
     public function getMiddleware(): array
     {
-        return [...$this->middleware, ...($this->authMiddleware ?? ['auth:'.$this->guard])];
+        $stack = [...$this->middleware, ...($this->authMiddleware ?? ['auth:'.$this->guard])];
+
+        return $this->withIdleLockMiddleware($stack);
     }
 
     /**
@@ -868,7 +1080,31 @@ final class Panel
      */
     public function getGuestMiddleware(): array
     {
-        return $this->middleware;
+        /*
+         * UNLOCK-CHECK ON THE GUEST STACK TOO. Login is registered outside
+         * `auth`, and a stale lock flag with no user must still be cleared
+         * there or `/login` bounces to a lock screen nobody can unlock.
+         */
+        return $this->withIdleLockMiddleware($this->middleware);
+    }
+
+    /**
+     * Idle-check, then unlock-check. Order is load-bearing: the first decides
+     * to lock, the second holds the lock. Apps must not have to remember this.
+     *
+     * @param  list<string>  $stack
+     * @return list<string>
+     */
+    private function withIdleLockMiddleware(array $stack): array
+    {
+        if (! $this->hasIdleLock()) {
+            return $stack;
+        }
+
+        $stack[] = Http\Middleware\EnforcePanelIdleLock::class;
+        $stack[] = Http\Middleware\EnsurePanelIsUnlocked::class;
+
+        return $stack;
     }
 
     /**

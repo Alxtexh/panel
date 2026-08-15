@@ -55,8 +55,12 @@ final class RequirePasswordRenewal
 
         // Locking the screen is not using the panel, and an expired password
         // must not stop somebody protecting their desk when they walk away.
-        'panel.lock',
+        // Matched as a suffix too (`admin.lock`), not only the legacy `panel.lock`.
+        'unlock',
+        'lock',
+        'screens.locked',
         'panel.unlock',
+        'panel.lock',
 
         // Stopping an impersonation. Whoever is impersonating must always be
         // able to get back out - see `Impersonation`.
@@ -87,7 +91,7 @@ final class RequirePasswordRenewal
 
         $name = (string) $request->route()?->getName();
 
-        if (in_array($name, self::ALWAYS_ALLOWED, true)) {
+        if (self::routeIsAllowed($name)) {
             return $next($request);
         }
 
@@ -108,5 +112,16 @@ final class RequirePasswordRenewal
                 'type' => 'warning',
                 'message' => 'Your password has expired. Choose a new one to carry on.',
             ]);
+    }
+
+    private static function routeIsAllowed(string $name): bool
+    {
+        foreach (self::ALWAYS_ALLOWED as $allowed) {
+            if ($name === $allowed || str_ends_with($name, '.'.$allowed)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

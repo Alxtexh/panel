@@ -50,6 +50,7 @@ final class FixturePanelProvider extends ServiceProvider
                 ->guard('web')
                 ->middleware(['web'])
                 ->authMiddleware(['auth:web'])
+                ->idleLock(false)
                 /*
                  * DISCOVERED FROM A DIRECTORY, not handed a class list, because
                  * that is the path a real installation takes - `panel.discover`
@@ -60,6 +61,10 @@ final class FixturePanelProvider extends ServiceProvider
                 ->discoverResources(
                     __DIR__.'/../Resources',
                     'Alxtexh\\Panel\\Tests\\Fixtures\\Resources',
+                )
+                ->discoverPages(
+                    __DIR__.'/../Pages',
+                    'Alxtexh\\Panel\\Tests\\Fixtures\\Pages',
                 ),
         );
 
@@ -76,6 +81,7 @@ final class FixturePanelProvider extends ServiceProvider
                 ->guard('web')
                 ->middleware(['web'])
                 ->authMiddleware(['auth:web'])
+                ->login()
                 ->discoverResources(
                     __DIR__.'/../Second',
                     'Alxtexh\\Panel\\Tests\\Fixtures\\Second',

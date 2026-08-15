@@ -46,6 +46,16 @@ final class ResourceContractTest extends TestCase
         $this->assertTrue(PostResource::documented());
     }
 
+    /**
+     * IMPORT IS OPT-IN. A resource that says nothing must not grow an Import
+     * button merely because it has a form. The playground's subscribers list
+     * opts in; everything else stays closed until it does the same.
+     */
+    public function test_a_resource_does_not_offer_import_unless_it_opts_in(): void
+    {
+        $this->assertFalse(PostResource::importable());
+    }
+
     public function test_the_declared_table_reaches_the_schema(): void
     {
         $columns = PostResource::schema()['table']['columns'] ?? [];

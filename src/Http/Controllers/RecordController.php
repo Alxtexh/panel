@@ -24,7 +24,7 @@ use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Support\Transaction;
 use Alxtexh\Panel\Support\TenantContext;
-use Alxtexh\Panel\Tables\Columns\EditableColumn;
+use Alxtexh\Panel\Tables\Columns\InlineWritableColumn;
 use Alxtexh\Panel\Tables\Reorderer;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -266,11 +266,12 @@ final class RecordController extends Controller
      * every gate a form submission does - scoped lookup, per-record policy
      * check, staleness check - and adds one more that forms do not need:
      *
-     *   THE COLUMN MUST BE A DECLARED EditableColumn ON THIS TABLE. The request
-     *   names a column, and only a column the resource declared as editable is
-     *   accepted. Without that check this endpoint writes any attribute on any
-     *   record the operator can see, which is a mass-assignment hole wearing an
-     *   inline-edit costume.
+     *   THE COLUMN MUST BE DECLARED INLINE-WRITABLE ON THIS TABLE. The request
+     *   names a column, and only a column the resource opted into writing
+     *   (`EditableColumn`, or a badge resolver) is accepted. Without that
+     *   check this endpoint writes any attribute on any record the operator
+     *   can see, which is a mass-assignment hole wearing an inline-edit
+     *   costume.
      *
      * The VALUE is then validated by the column itself: a select accepts only
      * its own options, a toggle only a real boolean. Most enum columns have no
@@ -296,7 +297,11 @@ final class RecordController extends Controller
         $column = null;
 
         foreach ($class::definition()->getColumns() as $candidate) {
-            if ($candidate->key === $validated['column'] && $candidate instanceof EditableColumn) {
+            if (
+                $candidate->key === $validated['column']
+                && $candidate instanceof InlineWritableColumn
+                && $candidate->isInlineWritable()
+            ) {
                 $column = $candidate;
                 break;
             }
@@ -623,6 +628,8 @@ final class RecordController extends Controller
         if ($class === null || ! $class::isEnabled()) {
             throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
         }
+
+        abort_unless($class::isAccessible(), 403);
 
         return $class;
     }

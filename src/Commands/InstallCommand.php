@@ -876,10 +876,11 @@ final class InstallCommand extends Command
         /**
          * The panel's home screen - where signing in lands.
          *
-         * SAMPLE WIDGETS SHIP SO A FRESH INSTALL LOOKS LIKE THE DEMO SHELL,
-         * not an empty page. Replace the closures with your own queries when
-         * you have models; the layout, deferred props and period selectors
-         * stay the same.
+         * SAMPLE WIDGETS SHIP SO A FRESH INSTALL IS NOT AN EMPTY PAGE.
+         * They are domain-neutral on purpose: this is a kit, not a vertical
+         * product. Replace the closures with your own queries when you have
+         * models; the layout, deferred props and period selectors stay the
+         * same.
          *
          * To use your own layout instead, override `component()` and point it
          * at a page of your own; the declarations, the permission filtering and
@@ -896,7 +897,7 @@ final class InstallCommand extends Command
             {
                 return static function (DashboardFilters \$filters, DateTimeImmutable \$now, string \$tenantKey): array {
                     return [
-                        ['key' => 'today', 'label' => 'Today', 'value' => 145, 'caption' => 'so far', 'sensitive' => false],
+                        ['key' => 'today', 'label' => 'Today', 'value' => 145, 'caption' => 'orders so far', 'sensitive' => false],
                         ['key' => 'week', 'label' => 'Last 7 days', 'value' => 982, 'caption' => 'rolling window', 'sensitive' => true],
                         ['key' => 'month', 'label' => 'This month', 'value' => 3_412, 'caption' => 'since the 1st', 'sensitive' => false],
                         ['key' => 'quarter', 'label' => 'Last 90 days', 'value' => 11_208, 'caption' => 'rolling window', 'sensitive' => true],
@@ -908,35 +909,15 @@ final class InstallCommand extends Command
             public static function stats(): array
             {
                 return [
-                    StatWidget::make('clients_total', 'Total clients')
-                        ->value(fn (): int => 2_500)
-                        ->description('Every record'),
+                    StatWidget::make('orders_open', 'Open orders')
+                        ->value(fn (): int => 48)
+                        ->description('Awaiting fulfilment'),
 
-                    StatWidget::make('clients_new', 'New this month')
-                        ->value(fn (): int => 238)
-                        ->trend(fn (): Trend => Trend::between(238, 214))
-                        ->sparkline(fn (): array => [
-                            'points' => [
-                                ['label' => 'W1', 'value' => 42],
-                                ['label' => 'W2', 'value' => 51],
-                                ['label' => 'W3', 'value' => 48],
-                                ['label' => 'W4', 'value' => 63],
-                                ['label' => 'W5', 'value' => 58],
-                                ['label' => 'W6', 'value' => 71],
-                            ],
-                        ]),
+                    StatWidget::make('inventory', 'On hand')
+                        ->value(fn (): int => 1_240)
+                        ->description('Units in stock'),
 
-                    StatWidget::make('clients_active', 'Active')
-                        ->value(fn (): int => 1_583),
-
-                    StatWidget::make('clients_expired', 'Expired')
-                        ->value(fn (): int => 587),
-
-                    StatWidget::make('sessions_live', 'Live sessions')
-                        ->value(fn (): int => 412)
-                        ->description('Currently online'),
-
-                    StatWidget::make('sessions_window', 'Sessions in range')
+                    StatWidget::make('revenue', 'Revenue')
                         ->value(fn (): int => 18_440)
                         ->trend(fn (): Trend => Trend::between(18_440, 16_900))
                         ->sparkline(fn (): array => [
@@ -951,8 +932,9 @@ final class InstallCommand extends Command
                             ],
                         ]),
 
-                    StatWidget::make('routers_online', 'Routers online')
-                        ->value(fn (): int => 24),
+                    StatWidget::make('due_soon', 'Due this week')
+                        ->value(fn (): int => 12)
+                        ->description('Returns and invoices'),
                 ];
             }
 
@@ -960,9 +942,9 @@ final class InstallCommand extends Command
             public static function charts(): array
             {
                 return [
-                    ChartWidget::make('sessions', 'Sessions over time')
+                    ChartWidget::make('revenue', 'Revenue over time')
                         ->type('area')
-                        ->description('Activity over the period')
+                        ->description('Takings over the period')
                         ->withPeriods()
                         ->span(2)
                         ->data(fn (Period \$p, ?DateTimeImmutable \$now): array => [
@@ -978,30 +960,52 @@ final class InstallCommand extends Command
                         ])
                         ->trend(fn (Period \$p, ?DateTimeImmutable \$now): Trend => Trend::between(1_837, 1_650)),
 
-                    ChartWidget::make('status', 'Clients by status')
+                    ChartWidget::make('status', 'By status')
                         ->type('doughnut')
                         ->data(fn (): array => [
-                            ['label' => 'Active', 'value' => 1_583],
-                            ['label' => 'Expired', 'value' => 587],
-                            ['label' => 'Suspended', 'value' => 330],
+                            ['label' => 'Paid', 'value' => 1_583],
+                            ['label' => 'Unpaid', 'value' => 587],
+                            ['label' => 'Overdue', 'value' => 330],
                         ]),
 
-                    ChartWidget::make('signups', 'New records')
-                        ->type('line')
-                        ->description('Sign-ups per bucket')
-                        ->withPeriods()
-                        ->span(2)
-                        ->data(fn (Period \$p, ?DateTimeImmutable \$now): array => [
-                            'points' => [
-                                ['label' => 'W1', 'value' => 28],
-                                ['label' => 'W2', 'value' => 34],
-                                ['label' => 'W3', 'value' => 31],
-                                ['label' => 'W4', 'value' => 42],
-                                ['label' => 'W5', 'value' => 39],
-                                ['label' => 'W6', 'value' => 48],
+                    ChartWidget::make('featured', 'Featured')
+                        ->type('catalog')
+                        ->description('Replace with products, units or listings')
+                        ->data(fn (): array => [
+                            'items' => [
+                                ['key' => 'a', 'label' => 'Day desk', 'caption' => 'Studio 3', 'price' => '12.00', 'status' => 'available'],
+                                ['key' => 'b', 'label' => 'Oak table', 'caption' => 'Floor 2', 'price' => '48.00', 'status' => 'occupied', 'progress' => ['value' => 80, 'total' => 100, 'tone' => 'success']],
+                                ['key' => 'c', 'label' => 'Filter pack', 'caption' => 'SKU-1042', 'price' => '6.50', 'status' => 'low', 'progress' => ['value' => 8, 'total' => 40, 'tone' => 'warning']],
                             ],
-                        ])
-                        ->trend(fn (Period \$p, ?DateTimeImmutable \$now): Trend => Trend::between(222, 198)),
+                        ]),
+
+                    ChartWidget::make('lines', 'Recent lines')
+                        ->type('items')
+                        ->description('Orders, cart rows or upcoming returns')
+                        ->data(fn (): array => [
+                            'items' => [
+                                ['key' => '1', 'label' => 'Filter pack', 'detail' => 'SKU-1042', 'qty' => 2, 'amount' => '13.00', 'status' => 'paid'],
+                                ['key' => '2', 'label' => 'Oak table', 'detail' => 'Due Fri', 'qty' => 1, 'amount' => '48.00', 'status' => 'due'],
+                                ['key' => '3', 'label' => 'Day desk', 'detail' => 'Walk-in', 'qty' => 1, 'amount' => '12.00', 'status' => 'unpaid'],
+                            ],
+                        ]),
+                ];
+            }
+
+            /**
+             * Shortcut chips on the dashboard. Point these at your own screens.
+             *
+             * @return array<string, mixed>
+             */
+            public static function shortcuts(): array
+            {
+                return [
+                    'defaults' => ['settings', 'organisation'],
+                    'catalog' => [
+                        ['id' => 'settings', 'label' => 'Settings', 'href' => '/settings', 'icon' => 'sliders'],
+                        ['id' => 'organisation', 'label' => 'Organisation', 'href' => '/settings/organisation', 'icon' => 'home'],
+                        ['id' => 'people', 'label' => 'People', 'href' => '/user-management', 'icon' => 'users'],
+                    ],
                 ];
             }
         }

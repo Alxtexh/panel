@@ -79,8 +79,8 @@ final class TicketResource extends Resource
     /**
      * NO IMPORT. A queue is filled by people asking for help, not by an
      * operator uploading a spreadsheet of complaints - see
-     * `Resource::importable()`. Import belongs on the screens that hold data
-     * an ISP genuinely migrates in bulk: subscribers, plans, routers.
+     * `Resource::importable()`. Import is opt-in; this override keeps the
+     * queue closed even if a later default change tries to reopen it.
      */
     public static function importable(): bool
     {
@@ -167,7 +167,7 @@ final class TicketResource extends Resource
                     Ticket::OPEN => 'warning',
                     Ticket::PENDING => 'neutral',
                     Ticket::RESOLVED => 'success',
-                ]),
+                ])->resolver(),
 
                 // Muted, not a badge. The desk a ticket belongs to is
                 // context for whoever is scanning; the status and priority
@@ -180,7 +180,7 @@ final class TicketResource extends Resource
                     'urgent' => 'danger',
                     'normal' => 'neutral',
                     'low' => 'neutral',
-                ]),
+                ])->resolver(),
 
                 // The names, not the ids. A queue that shows `opened_by: 4142`
                 // is a queue somebody has to look things up to read.

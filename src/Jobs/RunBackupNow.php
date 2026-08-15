@@ -12,6 +12,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Alxtexh\Panel\Support\BackupSettings;
 use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\TenantBackup;
+use Alxtexh\Panel\Support\Tenants;
 
 /**
  * Take a backup on demand, from the panel.
@@ -60,7 +62,10 @@ final class RunBackupNow implements ShouldQueue
 
     public int $timeout = 3600;
 
-    public function __construct(public readonly ?string $startedBy = null) {}
+    public function __construct(
+        public readonly ?string $startedBy = null,
+        public readonly string|int|null $tenantId = null,
+    ) {}
 
     public function handle(): void
     {
@@ -93,6 +98,26 @@ final class RunBackupNow implements ShouldQueue
              * snapshot.
              */
             BackupSettings::load()->apply();
+
+            if ($this->tenantId !== null && $this->tenantId !== '') {
+                $tenant = Tenants::find($this->tenantId);
+
+                if ($tenant === null) {
+                    $this->record('failed', 'No tenant matched that backup request.');
+
+                    return;
+                }
+
+                $written = (new TenantBackup)->write($tenant);
+                $label = $tenant->name ?? (string) $tenant->getKey();
+
+                $this->record(
+                    'succeeded',
+                    "Completed tenant backup for {$label} ({$written['path']}).",
+                );
+
+                return;
+            }
 
             /*
              * `--only-db` IS NOT USED. A database-only snapshot restores a panel

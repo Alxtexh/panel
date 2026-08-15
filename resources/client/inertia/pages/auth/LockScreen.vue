@@ -36,6 +36,7 @@ import { Form, Head, Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { PkButton as Button, ThemeToggle } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
+import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
 
 const props = defineProps<{
     /** Where the password posts. */
@@ -43,6 +44,11 @@ const props = defineProps<{
     /** Where "sign in as someone else" posts, or null when not routed. */
     logoutUrl?: string | null
     status?: string | null
+    /**
+     * Passkey unlock, when this person has at least one passkey. Null hides
+     * the button. Same WebAuthn flow as login, scoped to the signed-in user.
+     */
+    passkeys?: { options: string; verify: string } | null
 }>()
 
 const page = usePage()
@@ -81,8 +87,28 @@ const initials = computed(() =>
                 <div class="text-center">
                     <h1 class="text-xl font-medium">{{ user?.name ?? 'Locked' }}</h1>
                     <p class="text-muted-foreground text-sm">
-                        Enter your password to pick up where you left off.
+                        Confirm it is you to pick up where you left off.
                     </p>
+                </div>
+            </div>
+
+            <div v-if="props.passkeys" class="mt-8">
+                <AuthPasskeyButton
+                    :routes="props.passkeys"
+                    label="Unlock with a passkey"
+                    loading-label="Unlocking…"
+                    :fallback="props.action"
+                />
+
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <span class="bg-border h-px w-full" />
+                    </div>
+                    <div class="relative flex justify-center text-xs uppercase">
+                        <span class="bg-background text-muted-foreground px-2">
+                            Or use your password
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -90,6 +116,7 @@ const initials = computed(() =>
                 method="post"
                 :action="props.action"
                 class="mt-8 space-y-4"
+                :class="props.passkeys ? 'mt-0' : ''"
                 v-slot="{ errors, processing }"
             >
                 <AuthField

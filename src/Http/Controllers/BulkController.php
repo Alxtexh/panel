@@ -350,6 +350,8 @@ final class BulkController extends Controller
             throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
         }
 
+        abort_unless($class::isAccessible(), 403);
+
         return $class;
     }
 }

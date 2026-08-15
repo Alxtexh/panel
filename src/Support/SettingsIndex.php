@@ -132,6 +132,12 @@ final class SettingsIndex
                 'description' => 'The name and logo everyone in this organisation sees.',
             ],
             [
+                'key' => 'payments',
+                'route' => 'pages.payment-settings',
+                'title' => 'Payment gateways',
+                'description' => 'How this organisation takes money.',
+            ],
+            [
                 'key' => 'workspaces',
                 'route' => 'settings.workspaces',
                 'title' => 'Workspaces',

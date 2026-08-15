@@ -13,6 +13,9 @@
  */
 import { Head } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
+import SupportPageEditor, {
+    type SupportProps,
+} from '../../components/support/SupportPageEditor.vue'
 
 defineOptions({
     // Page props arrive as attributes and this root is a fragment.
@@ -32,6 +35,7 @@ defineOptions({
 const props = withDefaults(
     defineProps<{
         groups?: { title: string; items: { q: string; a: string }[] }[]
+        support?: SupportProps | null
     }>(),
     { groups: () => [] },
 )
@@ -63,6 +67,7 @@ function toggle(id: string) {
     <Head title="FAQ" />
 
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 sm:p-6">
+        <SupportPageEditor :support="support">
         <header class="flex flex-col gap-1">
             <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
                 Frequently asked questions
@@ -104,5 +109,6 @@ function toggle(id: string) {
                 </div>
             </div>
         </section>
+        </SupportPageEditor>
     </div>
 </template>

@@ -137,6 +137,55 @@ final class Tenants
     }
 
     /**
+     * Every organisation on the installation, for screens that act across them.
+     *
+     * OPERATIONS, NOT THE SWITCHER. A backup of one tenant is chosen by somebody
+     * who runs the servers, not by the acting user's memberships.
+     *
+     * @return list<Model>
+     */
+    public static function all(): array
+    {
+        $model = self::model();
+
+        if ($model === null || ! self::available()) {
+            return [];
+        }
+
+        $query = $model::query();
+        $table = (new $model)->getTable();
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn($table, 'name')) {
+            $query->orderBy('name');
+        }
+
+        return $query->get()->all();
+    }
+
+    public static function find(string|int $id): ?Model
+    {
+        $model = self::model();
+
+        if ($model === null || ! self::available()) {
+            return null;
+        }
+
+        $found = $model::query()->find($id);
+
+        if ($found !== null) {
+            return $found;
+        }
+
+        $table = (new $model)->getTable();
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn($table, 'slug')) {
+            return $model::query()->where('slug', $id)->first();
+        }
+
+        return null;
+    }
+
+    /**
      * May this user move between organisations at all?
      *
      * A SWITCHER FOR ONE ORGANISATION IS NOISE, and a "create workspace" button

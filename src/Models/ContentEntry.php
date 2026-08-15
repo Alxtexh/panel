@@ -45,6 +45,8 @@ class ContentEntry extends Model
 
     public const KIND_RELEASE = 'release';
 
+    public const KIND_ABOUT = 'about';
+
     protected $table = 'panel_content_entries';
 
     protected $fillable = [

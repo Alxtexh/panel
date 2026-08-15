@@ -148,10 +148,24 @@ const props = defineProps<{
         ip: string | null
         at: string
     }[]
+    tenants?: { id: string | number; name: string; slug?: string | null }[]
+    databases?: {
+        name: string
+        driver: string
+        database: string | null
+        available: boolean
+        error: string | null
+        tableCount: number
+        rowCount: number
+        bytes: number | null
+        tables: { name: string; rows: number; bytes: number | null }[]
+    }[]
     can: { manage: boolean }
 }>()
 
 const starting = ref(false)
+const tab = ref<'snapshots' | 'database'>('snapshots')
+const tenantId = ref<string>('')
 
 /**
  * Ask for a backup; do not wait for one.
@@ -159,13 +173,16 @@ const starting = ref(false)
  * The job is queued and locked - a dump plus a zip takes minutes on anything
  * real, and an inline run would hold the request until the browser gave up with
  * no way to tell whether it finished.
+ *
+ * A TENANT ID, WHEN CHOSEN, LIMITS THE DUMP TO THAT ORGANISATION. Leave it
+ * empty for the installation-wide Spatie run.
  */
 function backUpNow() {
     starting.value = true
 
     router.post(
         props.routes.run,
-        {},
+        tenantId.value === '' ? {} : { tenant: tenantId.value },
         { preserveScroll: true, onFinish: () => (starting.value = false) },
     )
 }
@@ -389,10 +406,104 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                 </Button>
 
                 <Button size="sm" :disabled="starting" @click="backUpNow">
-                    {{ starting ? 'Starting…' : 'Back up now' }}
+                    {{ starting ? 'Starting…' : tenantId ? 'Back up tenant' : 'Back up now' }}
                 </Button>
             </div>
         </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button
+                type="button"
+                class="rounded-md px-3 py-1.5 text-sm"
+                :class="tab === 'snapshots' ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent'"
+                @click="tab = 'snapshots'"
+            >
+                Snapshots
+            </button>
+            <button
+                type="button"
+                class="rounded-md px-3 py-1.5 text-sm"
+                :class="tab === 'database' ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent'"
+                @click="tab = 'database'"
+            >
+                Database
+            </button>
+
+            <label
+                v-if="tab === 'snapshots' && (props.tenants?.length ?? 0) > 0"
+                class="ml-auto flex items-center gap-2 text-sm"
+            >
+                <span class="text-muted-foreground">Tenant</span>
+                <select
+                    v-model="tenantId"
+                    class="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                >
+                    <option value="">All organisations</option>
+                    <option v-for="tenant in props.tenants" :key="tenant.id" :value="String(tenant.id)">
+                        {{ tenant.name }}
+                    </option>
+                </select>
+            </label>
+        </div>
+
+        <template v-if="tab === 'database'">
+            <p class="text-sm text-muted-foreground">
+                Read-only inspect of configured SQL connections: table names, row counts and
+                storage. Nothing here can change a row.
+            </p>
+
+            <div
+                v-for="db in props.databases ?? []"
+                :key="db.name"
+                class="rounded-lg border bg-card"
+            >
+                <div class="flex flex-wrap items-baseline justify-between gap-2 border-b px-4 py-3">
+                    <div>
+                        <h2 class="text-sm font-medium">
+                            {{ db.name }}
+                            <span class="ml-1 font-normal text-muted-foreground">({{ db.driver }})</span>
+                        </h2>
+                        <p class="text-xs text-muted-foreground">
+                            {{ db.database ?? 'unnamed database' }}
+                        </p>
+                    </div>
+                    <p v-if="db.available" class="text-xs text-muted-foreground">
+                        {{ db.tableCount }} tables · {{ db.rowCount.toLocaleString() }} rows
+                        <template v-if="db.bytes !== null"> · {{ mb(db.bytes) }}</template>
+                    </p>
+                    <p v-else class="text-xs text-destructive">{{ db.error ?? 'Unavailable' }}</p>
+                </div>
+
+                <div v-if="db.available && db.tables.length" class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-muted/50">
+                            <tr>
+                                <th class="px-4 py-2 text-left font-medium">Table</th>
+                                <th class="px-4 py-2 text-right font-medium">Rows</th>
+                                <th class="px-4 py-2 text-right font-medium">Storage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="table in db.tables" :key="table.name" class="border-t">
+                                <td class="px-4 py-2 font-mono text-xs">{{ table.name }}</td>
+                                <td class="px-4 py-2 text-right tabular-nums">
+                                    {{ table.rows.toLocaleString() }}
+                                </td>
+                                <td class="px-4 py-2 text-right tabular-nums text-muted-foreground">
+                                    {{ table.bytes === null ? 'n/a' : mb(table.bytes) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <p v-if="!(props.databases?.length)" class="text-sm text-muted-foreground">
+                No SQL connections were available to inspect.
+            </p>
+        </template>
+
+        <template v-if="tab === 'snapshots'">
 
         <!--
             THE OUTCOME OF THE LAST MANUAL RUN. A button that dispatches a job
@@ -633,6 +744,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                 </li>
             </ul>
         </div>
+        </template>
     </div>
 
     <!-- Delete ------------------------------------------------------- -->

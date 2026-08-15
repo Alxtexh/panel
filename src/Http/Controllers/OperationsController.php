@@ -21,12 +21,14 @@ use Alxtexh\Panel\Support\BackupArchive;
 use Alxtexh\Panel\Support\BackupDestinationProbe;
 use Alxtexh\Panel\Support\BackupSettings;
 use Alxtexh\Panel\Support\BackupStatus;
+use Alxtexh\Panel\Support\DatabaseInspector;
 use Alxtexh\Panel\Support\HealthReport;
 use Alxtexh\Panel\Support\InstallationState;
 use Alxtexh\Panel\Support\LogReader;
 use Alxtexh\Panel\Support\MonitorSampler;
 use Alxtexh\Panel\Support\PanelSettings;
 use Alxtexh\Panel\Support\PlatformReport;
+use Alxtexh\Panel\Support\Tenants;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -190,6 +192,12 @@ final class OperationsController
                 ])
                 ->all(),
 
+            'tenants' => array_map(
+                static fn ($tenant): array => Tenants::toArray($tenant),
+                Tenants::all(),
+            ),
+            'databases' => (new DatabaseInspector)->connections(),
+
             'can' => [
                 'manage' => (bool) Ability::allows($request->user(), 'manage_backups'),
             ],
@@ -268,11 +276,22 @@ final class OperationsController
     {
         abort_unless(Ability::allows($request->user(), 'view_operations'), 403);
 
-        RunBackupNow::dispatch($request->user()?->name);
+        $tenantId = $request->input('tenant');
+
+        if ($tenantId !== null && $tenantId !== '') {
+            abort_unless(Tenants::find(is_numeric($tenantId) ? $tenantId : (string) $tenantId) !== null, 422, 'No such tenant.');
+        }
+
+        RunBackupNow::dispatch(
+            $request->user()?->name,
+            $tenantId === null || $tenantId === '' ? null : $tenantId,
+        );
 
         return back()->with('toast', [
             'type' => 'success',
-            'message' => 'Backup started. This page will show the outcome.',
+            'message' => $tenantId
+                ? 'Tenant backup started. This page will show the outcome.'
+                : 'Backup started. This page will show the outcome.',
         ]);
     }
 

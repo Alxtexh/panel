@@ -50,6 +50,14 @@ export { default as UserManagement } from './pages/UserManagement.vue'
 export { default as Workspaces } from './pages/settings/Workspaces.vue'
 export { default as Organisation } from './pages/settings/Organisation.vue'
 export { default as SettingsIndex } from './pages/settings/Index.vue'
+export { default as SettingsPayments } from './pages/settings/Payments.vue'
+export { default as SettingsLayout } from './layouts/SettingsLayout.vue'
+export { default as Directory } from './pages/Directory.vue'
+export { default as Catalog } from './pages/Catalog.vue'
+export { default as PlanSetup } from './pages/PlanSetup.vue'
+export { default as CatalogItem } from './pages/CatalogItem.vue'
+export { default as CatalogRegister } from './pages/CatalogRegister.vue'
+export { default as Signatures } from './pages/Signatures.vue'
 export { default as DocumentTemplates } from './pages/documents/Templates.vue'
 export { default as DocumentTemplateDesigner } from './pages/documents/TemplateDesigner.vue'
 export { default as DocumentPrint } from './pages/documents/DocumentPrint.vue'
@@ -73,6 +81,7 @@ export type { Chart, Dataset, Series, StatDefinition, StatValue } from './compon
 export { useListTable, type ListPageProps } from './composables/useListTable'
 export { useBulkJob } from './composables/useBulkJob'
 export { useUnsavedGuard } from './composables/useUnsavedGuard'
+export { usePanelIdleLock, type PanelIdleLockShared } from './composables/usePanelIdleLock'
 
 /*
  * THE SHELL, which the package did not ship until now.
@@ -92,6 +101,8 @@ export { default as PanelCommandPalette } from './components/shell/PanelCommandP
 export { default as PanelNotificationBell } from './components/shell/PanelNotificationBell.vue'
 export { default as PanelBreadcrumbs } from './components/shell/PanelBreadcrumbs.vue'
 export { default as PanelImpersonationBanner } from './components/shell/PanelImpersonationBanner.vue'
+export { default as PanelIdleLockGuard } from './components/shell/PanelIdleLockGuard.vue'
+export { default as PanelLockButton } from './components/shell/PanelLockButton.vue'
 export type { NavItem } from './components/shell/types'
 
 /*
@@ -217,6 +228,13 @@ export const PANEL_PAGES = {
     'settings/Workspaces': () => import('./pages/settings/Workspaces.vue'),
     'settings/Organisation': () => import('./pages/settings/Organisation.vue'),
     'settings/Index': () => import('./pages/settings/Index.vue'),
+    'settings/Payments': () => import('./pages/settings/Payments.vue'),
+    Directory: () => import('./pages/Directory.vue'),
+    Catalog: () => import('./pages/Catalog.vue'),
+    PlanSetup: () => import('./pages/PlanSetup.vue'),
+    CatalogItem: () => import('./pages/CatalogItem.vue'),
+    CatalogRegister: () => import('./pages/CatalogRegister.vue'),
+    Signatures: () => import('./pages/Signatures.vue'),
 
     // Backups, logs and monitoring - the installation's own health.
     'operations/Backups': () => import('./pages/operations/Backups.vue'),

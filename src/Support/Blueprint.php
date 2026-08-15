@@ -109,16 +109,19 @@ final class Blueprint
     private const CLIENT_ONLY = <<<'MD'
         **Client-side components** (`@alxtexh-enterprise/panel`, no PHP equivalent): `StatStrip`
         `MiniStatCard` `SegmentedBar` `HeatmapChart` `ComboChart` `PolarAreaChart`
-        `RadarChart` `SetupChecklist`
+        `RadarChart` `SetupChecklist` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid` `LineItems` `CartPanel`
+        `PkQtyStepper` `PkStatusBadge` `PkSignaturePad` `PaymentGateways`
         _How to reach them: import them into YOUR OWN Vue page. `DashboardPage`
         renders `StatCard` and `ChartCard` only, so a `StatWidget` cannot produce
         a `StatStrip` - if you want one card split into four windows of the same
-        metric, that screen is hand-written today._
+        metric, that screen is hand-written today. `ChartWidget::type('catalog')`
+        and `type('items')` do mount `CatalogGrid` / `LineItems` on a dashboard._
         MD;
 
-    private const PAGE_HOW = 'extend `Page` (or `DashboardPage`) in `app/Panel/Pages` and '
+    private const PAGE_HOW = 'extend `Page` (or `DashboardPage` / `PlanSetupPage`) in `app/Panel/Pages` and '
         .'discovery routes it - `php artisan make:panel-page ServerHealth` writes the class '
-        .'and its Vue file. `ChangelogPage` and `EnvironmentPage` are the package\'s OWN '
+        .'and its Vue file. `make:panel-page BillingPlans --plan-setup` writes a subscription '
+        .'catalogue. `ChangelogPage` and `EnvironmentPage` are the package\'s OWN '
         .'screens rather than things to extend: each appears only once configured '
         .'(`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so '
         .'check those keys before concluding the capability is missing';
@@ -553,6 +556,42 @@ final class Blueprint
         rather than merely hidden. Hidden still routes, and a routed screen the
         menu never shows is how a package quietly takes a URI the application
         was already using.
+
+        ### Add a SaaS plan catalogue
+
+        ```bash
+        php artisan make:panel-page BillingPlans --plan-setup
+        ```
+
+        `PlanSetupPage` draws plan cards and a two-column editor (details vs
+        perks). `modules()` and `limits()` default from the panel module
+        registry. Persist to your models. Numeric limits use -1 for Unlimited.
+        A SaaS MUST set `ModuleRegistry::grants()` from the subscriber plan;
+        until that callback is set, every registered module stays enabled.
+        Discovered screens set `protected static ?string $module = 'campaigns'`
+        so an ungranted key 403s and drops out of the sidebar. Hand-written
+        routes still use `panel.module:campaigns`. PanelKit itself is not
+        locked to a paid SKU.
+
+        ```bash
+        php artisan make:panel-module campaigns
+        ```
+
+        ```php
+        use Alxtexh\Panel\Support\Module;
+        use Alxtexh\Panel\Support\ModuleRegistry;
+
+        Panel::make('admin')->modules([
+            Module::make('campaigns')
+                ->label('Campaigns')
+                ->description('Outbound campaigns')
+                ->planLimit(kind: 'number')
+                ->usage(fn (): int => Campaign::query()->count()),
+        ]);
+
+        ModuleRegistry::grants(fn (): array => $org->plan->moduleKeys());
+        ModuleRegistry::caps(fn (): array => $org->plan->moduleCaps());
+        ```
 
         ### Add a dashboard
 

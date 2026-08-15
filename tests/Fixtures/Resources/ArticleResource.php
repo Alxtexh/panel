@@ -10,6 +10,7 @@ use Alxtexh\Panel\Forms\Fields\FileUploadField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Tables\Columns\BadgeColumn;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\SelectColumn;
 use Alxtexh\Panel\Tables\Filters\SelectFilter;
@@ -124,6 +125,26 @@ final class ArticleResource extends Resource
                     ->options(['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived'])
                     ->sortable()
                     ->searchable(),
+                /*
+                 * A DISPLAY BADGE next to the writable select, so the cell
+                 * endpoint can be asserted to refuse a pill that was never
+                 * opted into a resolver.
+                 */
+                BadgeColumn::make('kind')
+                    ->from('articles.status')
+                    ->colors([
+                        'draft' => 'neutral',
+                        'published' => 'success',
+                        'archived' => 'warning',
+                    ]),
+                BadgeColumn::make('workflow')
+                    ->from('articles.status')
+                    ->colors([
+                        'draft' => 'neutral',
+                        'published' => 'success',
+                        'archived' => 'warning',
+                    ])
+                    ->resolver(),
                 DateColumn::make('created_at')->from('articles.created_at')->sortable()->withTime(),
             ])
             /*

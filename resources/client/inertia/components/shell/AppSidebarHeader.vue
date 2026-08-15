@@ -8,6 +8,7 @@ import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
 import NotificationBell from './PanelNotificationBell.vue'
+import PanelLockButton from './PanelLockButton.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -89,7 +90,10 @@ const trail = computed<BreadcrumbItem[]>(() =>
         </div>
 
         <div class="flex items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
-            <PanelCommandPalette />
+            <div class="flex items-center gap-2">
+                <PanelLockButton />
+                <PanelCommandPalette />
+            </div>
             <!-- Beside search, because a question about a record is the same
                  kind of interruption as looking one up - and it opens over the
                  screen you are on rather than navigating away from it. -->

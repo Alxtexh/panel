@@ -122,6 +122,8 @@ final class RecordFormRequest extends FormRequest
             throw new NotFoundHttpException("No panel resource registered for [{$key}].");
         }
 
+        abort_unless($class::isAccessible(), 403);
+
         return $class;
     }
 

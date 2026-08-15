@@ -7,7 +7,10 @@ namespace Alxtexh\Panel\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Alxtexh\Panel\Models\ContentEntry;
+use Alxtexh\Panel\Support\Changelog;
 use Alxtexh\Panel\Support\HelpCentre;
+use Alxtexh\Panel\Support\SupportEditing;
 
 /**
  * The help centre: a searchable set of articles, a FAQ, and an About screen.
@@ -32,14 +35,25 @@ final class HelpController
 {
     public function help(): Response
     {
+        $articles = array_map(static function (array $article): array {
+            $body = $article['body'] ?? [];
+
+            $article['body'] = is_array($body)
+                ? array_values(array_map(strval(...), $body))
+                : (preg_split('/\n\s*\n/', trim((string) $body)) ?: [(string) $body]);
+
+            return $article;
+        }, HelpCentre::articles());
+
         return Inertia::render('support/Help', [
-            'articles' => HelpCentre::articles(),
+            'articles' => $articles,
             /*
              * DERIVED FROM THE ARTICLES, so a tab never appears with nothing
              * behind it - see HelpCentre::categories(). The reference app's
              * hardcoded "Subscribers" tab is exactly what this replaces.
              */
             'categories' => HelpCentre::categories(),
+            'support' => SupportEditing::props(ContentEntry::KIND_ARTICLE),
         ]);
     }
 
@@ -47,6 +61,7 @@ final class HelpController
     {
         return Inertia::render('support/Faq', [
             'groups' => HelpCentre::questions(),
+            'support' => SupportEditing::props(ContentEntry::KIND_FAQ),
         ]);
     }
 
@@ -74,6 +89,21 @@ final class HelpController
              */
             'links' => array_values((array) ($about['links'] ?? [])),
             'contact' => $about['contact'] ?? null,
+            'extras' => SupportEditing::aboutExtras(),
+            'support' => SupportEditing::props(ContentEntry::KIND_ABOUT),
+        ]);
+    }
+
+    /**
+     * What's new on a portal that opted into editable support, even when the
+     * packaged ChangelogPage hid itself for having no config releases yet.
+     */
+    public function whatsNew(): Response
+    {
+        return Inertia::render('Changelog', [
+            'releases' => Changelog::releases(),
+            'pageHeading' => "What's new",
+            'support' => SupportEditing::props(ContentEntry::KIND_RELEASE),
         ]);
     }
 }

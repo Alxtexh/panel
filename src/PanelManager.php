@@ -75,6 +75,7 @@ final class PanelManager
          * on which to change a company's name.
          */
         Pages\OrganisationPage::class,
+        Pages\PaymentSettingsPage::class,
     ];
 
     /** @var array<string, class-string<Pages\Page>> slug => class — first-registered wins; used as fallback when no panel context */
@@ -362,6 +363,10 @@ final class PanelManager
          */
         foreach ($this->pagesFor($panel->id) as $class) {
             if (! $class::shouldShowInNavigation()) {
+                continue;
+            }
+
+            if (! $class::isAccessible()) {
                 continue;
             }
 

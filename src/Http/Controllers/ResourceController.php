@@ -424,6 +424,8 @@ final class ResourceController extends Controller
             throw new NotFoundHttpException("Resource [{$resource}] is not enabled for this tenant.");
         }
 
+        abort_unless($class::isAccessible(), 403);
+
         return $class;
     }
 
@@ -440,6 +442,8 @@ final class ResourceController extends Controller
         if (! $class::isEnabled()) {
             throw new NotFoundHttpException("Resource [{$resource}] is not enabled for this tenant.");
         }
+
+        abort_unless($class::isAccessible(), 403);
 
         abort_unless($class::can('viewAny'), 403);
 

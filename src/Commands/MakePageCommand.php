@@ -26,6 +26,7 @@ final class MakePageCommand extends Command
     protected $signature = 'make:panel-page
                             {name : The page class, e.g. ServerHealth}
                             {--dashboard : A widget host, extending DashboardPage}
+                            {--plan-setup : A SaaS plan catalogue, extending PlanSetupPage}
                             {--panel= : The panel this screen belongs to. Defaults to panel.default}
                             {--force : Overwrite an existing class or component}';
 
@@ -51,6 +52,13 @@ final class MakePageCommand extends Command
         }
 
         $dashboard = (bool) $this->option('dashboard');
+        $planSetup = (bool) $this->option('plan-setup');
+
+        if ($dashboard && $planSetup) {
+            $this->components->error('Use either --dashboard or --plan-setup, not both.');
+
+            return self::FAILURE;
+        }
 
         try {
             $panel = $this->targetPanel();
@@ -60,15 +68,17 @@ final class MakePageCommand extends Command
             return self::FAILURE;
         }
 
-        file_put_contents($path, $dashboard
-            ? $this->dashboardStub($class, $slug, $panel)
-            : $this->pageStub($class, $slug, $name, $panel));
+        file_put_contents($path, match (true) {
+            $dashboard => $this->dashboardStub($class, $slug, $panel),
+            $planSetup => $this->planSetupStub($class, $slug, $name, $panel),
+            default => $this->pageStub($class, $slug, $name, $panel),
+        });
 
         $this->components->info("Created app/Panel/Pages/{$class}.php");
         $this->components->twoColumnDetail('Panel', $panel);
 
         if (! $dashboard) {
-            $this->writeComponent($name, $slug);
+            $this->writeComponent($name, $slug, $planSetup);
         }
 
         $this->newLine();
@@ -93,7 +103,7 @@ final class MakePageCommand extends Command
      * A DASHBOARD NEEDS NONE: it renders the packaged `PanelDashboard`, whose
      * page file already exists.
      */
-    private function writeComponent(string $name, string $slug): void
+    private function writeComponent(string $name, string $slug, bool $planSetup = false): void
     {
         $directory = resource_path('js/pages');
 
@@ -114,38 +124,9 @@ final class MakePageCommand extends Command
             return;
         }
 
-        file_put_contents($path, <<<VUE
-        <script setup lang="ts">
-        /*
-         * The {$name} screen.
-         *
-         * ITS PROPS COME FROM `{$name}Page::data()`. Declare them here as you
-         * would for any component - they arrive as ordinary Inertia page props.
-         *
-         * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
-         * all, silently, in a production build.
-         */
-        defineProps<{
-            pageHeading?: string
-            pageDescription?: string | null
-        }>()
-        </script>
-
-        <template>
-            <div class="space-y-6">
-                <header v-if="pageHeading">
-                    <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading }}</h1>
-                    <p v-if="pageDescription" class="mt-1 text-sm text-muted-foreground">
-                        {{ pageDescription }}
-                    </p>
-                </header>
-
-                <p class="text-sm text-muted-foreground">
-                    Nothing here yet. Return props from <code>data()</code> and render them.
-                </p>
-            </div>
-        </template>
-        VUE);
+        file_put_contents($path, $planSetup
+            ? $this->planSetupVue($name)
+            : $this->pageVue($name));
 
         $this->components->info("Created resources/js/pages/{$name}.vue");
     }
@@ -286,6 +267,113 @@ final class MakePageCommand extends Command
                     //     ->withPeriods()
                     //     ->data(fn (\$period, \$now): array => [...]),
                 ];
+            }
+        }
+
+        PHP;
+    }
+
+    private function pageVue(string $name): string
+    {
+        return <<<VUE
+        <script setup lang="ts">
+        /*
+         * The {$name} screen.
+         *
+         * ITS PROPS COME FROM `{$name}Page::data()`. Declare them here as you
+         * would for any component - they arrive as ordinary Inertia page props.
+         *
+         * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
+         * all, silently, in a production build.
+         */
+        defineProps<{
+            pageHeading?: string
+            pageDescription?: string | null
+        }>()
+        </script>
+
+        <template>
+            <div class="space-y-6">
+                <header v-if="pageHeading">
+                    <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading }}</h1>
+                    <p v-if="pageDescription" class="mt-1 text-sm text-muted-foreground">
+                        {{ pageDescription }}
+                    </p>
+                </header>
+
+                <p class="text-sm text-muted-foreground">
+                    Nothing here yet. Return props from <code>data()</code> and render them.
+                </p>
+            </div>
+        </template>
+        VUE;
+    }
+
+    private function planSetupVue(string $name): string
+    {
+        return <<<VUE
+        <script setup lang="ts">
+        /*
+         * The {$name} plan catalogue. PlanSetup is the kit screen.
+         */
+        import PlanSetup from '@alxtexh-enterprise/panel/pages/PlanSetup.vue'
+
+        defineOptions({ inheritAttrs: false })
+        </script>
+
+        <template>
+            <PlanSetup v-bind="(\$attrs as any)" />
+        </template>
+        VUE;
+    }
+
+    private function planSetupStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use Illuminate\\Http\\Request;
+        use Alxtexh\\Panel\\Pages\\PlanSetupPage;
+
+        /**
+         * Subscription plans for this product. Persist via your own Plan model.
+         *
+         * Register modules on the panel with Module::make(). modules() and
+         * limits() default from that registry. SaaS apps MUST set
+         * ModuleRegistry::grants() from the subscriber plan.
+         */
+        final class {$class} extends PlanSetupPage
+        {
+            protected static string \$panel = '{$panel}';
+
+            protected static ?string \$group = null;
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
+
+            public static function ability(): ?string
+            {
+                return null;
+            }
+
+            public static function plans(Request \$request): array
+            {
+                return [];
+            }
+
+            public static function persist(array \$plan): void
+            {
+                // Save to your Plan model. perk values of -1 mean Unlimited.
+            }
+
+            public static function forget(string \$id): void
+            {
             }
         }
 

@@ -1,0 +1,32 @@
+import type { TableColumn } from '../DataTable/types';
+import type { CatalogFacet } from './catalogFilter';
+import type { CatalogItem } from './CatalogCard.vue';
+type __VLS_Props = {
+    title?: string;
+    description?: string | null;
+    cardsTitle?: string;
+    cardsDescription?: string | null;
+    tableTitle?: string;
+    tableDescription?: string | null;
+    cards?: CatalogItem[];
+    facets?: CatalogFacet[];
+    rows?: Record<string, unknown>[];
+    columns?: TableColumn[];
+    searchPlaceholder?: string;
+    emptyTitle?: string;
+};
+declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
+    columns: TableColumn[];
+    rows: Record<string, unknown>[];
+    emptyTitle: string;
+    title: string;
+    description: string | null;
+    searchPlaceholder: string;
+    facets: CatalogFacet[];
+    cardsTitle: string;
+    cardsDescription: string | null;
+    tableTitle: string;
+    tableDescription: string | null;
+    cards: CatalogItem[];
+}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+export default _default;

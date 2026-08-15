@@ -95,6 +95,20 @@ abstract class DashboardPage extends Page
     }
 
     /**
+     * Dashboard shortcut catalog. Empty means the widget is not drawn.
+     *
+     * OPT-IN. A POS names till and catalog; a rental names units and leases.
+     * `catalog` is the picker; `defaults` are ids shown before the operator
+     * edits; `storageKey` is localStorage unless you persist another way.
+     *
+     * @return array{catalog?: list<array{id: string, label: string, href: string, icon: string}>, defaults?: list<string>, storageKey?: string|null}
+     */
+    public static function shortcuts(): array
+    {
+        return [];
+    }
+
+    /**
      * The strip of windows above the widgets - today, the week, the month.
      *
      * NULL MEANS NO STRIP, and the prop is then absent rather than empty: the
@@ -315,6 +329,16 @@ abstract class DashboardPage extends Page
             'prefix' => rtrim((string) app(PanelManager::class)->panel(static::panel())?->getPath(), '/'),
         ];
 
+        $shortcuts = static::shortcuts();
+
+        if (($shortcuts['catalog'] ?? []) !== []) {
+            $props['shortcuts'] = [
+                'catalog' => $shortcuts['catalog'],
+                'defaults' => $shortcuts['defaults'] ?? [],
+                'storageKey' => $shortcuts['storageKey'] ?? 'panel.dashboard.shortcuts',
+            ];
+        }
+
         $tenantKey = (string) (app(TenantContext::class)->currentKey() ?? '');
         $now = new DateTimeImmutable;
 
@@ -402,7 +426,20 @@ abstract class DashboardPage extends Page
             );
         }
 
+        $hiddenChartKeys = array_flip(static::hiddenWidgetKeys($request));
+
         foreach ($charts as $chart) {
+            /*
+             * HIDDEN CHARTS STAY IN `charts` (labels for restore) BUT ARE NOT
+             * DEFERRED. Inertia loads every key in the `charts` group on visit,
+             * whether Vue mounts `<Deferred>` or not. Skipping the prop is what
+             * actually skips the query. The client mirrors ids in the
+             * `panel_dashboard_hidden` cookie (unencrypted, like sidebar_state).
+             */
+            if (isset($hiddenChartKeys[$chart->key])) {
+                continue;
+            }
+
             /*
              * THE PERIOD IS PER CHART AND COMES FROM THE QUERY STRING, so
              * changing one chart's window is a partial reload of that chart
@@ -428,6 +465,43 @@ abstract class DashboardPage extends Page
         }
 
         return $props;
+    }
+
+    /**
+     * Chart keys the browser asked not to compute.
+     *
+     * @return list<string>
+     */
+    private static function hiddenWidgetKeys(Request $request): array
+    {
+        $raw = $request->cookie('panel_dashboard_hidden');
+
+        if (! is_string($raw) || $raw === '') {
+            $query = $request->query('hidden_widgets');
+            $raw = is_string($query) ? $query : '';
+        }
+
+        if ($raw === '') {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+
+        if (! is_array($decoded)) {
+            $decoded = explode(',', $raw);
+        }
+
+        $keys = [];
+
+        foreach ($decoded as $key) {
+            if (! is_string($key) || $key === '' || ! preg_match('/^[a-z0-9_-]+$/i', $key)) {
+                continue;
+            }
+
+            $keys[] = $key;
+        }
+
+        return array_values(array_unique($keys));
     }
 
     /**

@@ -21,7 +21,7 @@ This is the whole thing. Add the repository, require the package, install:
 ```
 
 ```bash
-composer require alxtexh-enterprise/panel:^0.9
+composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
 npm install && npm run build
 ```

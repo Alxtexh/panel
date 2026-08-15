@@ -12,9 +12,12 @@ use Inertia\Inertia;
 use Alxtexh\Panel\Auth\Impersonation;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\EditableContent;
-use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\SettingsIndex;
 use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\ModuleRegistry;
 use Alxtexh\Panel\Support\PanelNavigation;
+use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\PanelIdleActivity;
 use Alxtexh\Panel\Support\Tenants;
 use Alxtexh\Panel\Trash\TrashBin;
 use Symfony\Component\HttpFoundation\Response;
@@ -93,6 +96,31 @@ final class SharePanelProps
              * current-panel filter are the two things worth getting right.
              */
             'panelNav' => static fn (): array => PanelNavigation::build(),
+
+            /*
+             * IDLE LOCK, when this panel authenticates. The client timer,
+             * warning modal and header padlock read this; `->idleLock(false)`
+             * shares null and they stay unmounted.
+             */
+            'panelIdleLock' => static function () use ($panels): ?array {
+                $panel = $panels->currentPanel();
+
+                if ($panel === null || ! $panel->hasIdleLock()) {
+                    return null;
+                }
+
+                $lockUrl = PanelIdleActivity::lockUrl($panel);
+
+                if ($lockUrl === null) {
+                    return null;
+                }
+
+                return [
+                    'idleMinutes' => $panel->idleLockMinutes(),
+                    'warningSeconds' => $panel->idleLockWarningSeconds(),
+                    'lockUrl' => $lockUrl,
+                ];
+            },
 
             /*
              * GROUPS THAT ARE SECTIONS, NOT DROPDOWNS.
@@ -178,6 +206,7 @@ final class SharePanelProps
                      * somebody takes when they want to be safe.
                      */
                     'logout' => match (true) {
+                        Route::has($panel->getRouteName().'logout') => route($panel->getRouteName().'logout'),
                         Route::has($panel->id.'.logout') => route($panel->id.'.logout'),
                         Route::has('logout') => route('logout'),
                         default => null,
@@ -226,12 +255,16 @@ final class SharePanelProps
                         ->values()
                         ->all(),
 
-                    'account' => Route::has($panel->getRouteName().'settings.profile')
-                        ? route($panel->getRouteName().'settings.profile')
-                        : null,
-                    'security' => Route::has($panel->getRouteName().'settings.security')
-                        ? route($panel->getRouteName().'settings.security')
-                        : null,
+                    'account' => self::namedUrl(
+                        $panel,
+                        ['settings.profile'],
+                        ['profile.edit', 'settings.profile'],
+                    ),
+                    'security' => self::namedUrl(
+                        $panel,
+                        ['settings.security'],
+                        ['security.edit', 'settings.security'],
+                    ),
 
                     /*
                      * AND HELP, for the same reason and in the same place. A
@@ -259,6 +292,11 @@ final class SharePanelProps
                     'about' => Route::has($panel->getRouteName().'support.about')
                         ? route($panel->getRouteName().'support.about')
                         : null,
+                    'whatsNew' => match (true) {
+                        Route::has($panel->getRouteName().'support.whats-new') => route($panel->getRouteName().'support.whats-new'),
+                        Route::has($panel->getRouteName().'pages.whats-new') => route($panel->getRouteName().'pages.whats-new'),
+                        default => null,
+                    },
 
                     /*
                      * EVERYTHING THE ACCOUNT MENU OFFERS, resolved per panel
@@ -305,8 +343,17 @@ final class SharePanelProps
                      * un-decides that.
                      */
                     'operations' => self::operationsUrls($panel),
+                    'modules' => ModuleRegistry::all(),
+                    'grantedModules' => ModuleRegistry::granted(),
                 ];
             },
+
+            /*
+             * THE SETTINGS SIDEBAR, the same rows as `/settings`. Shared so
+             * SettingsLayout does not hardcode Payment gateways on a portal
+             * that never opted in.
+             */
+            'settingsNav' => static fn (): array => SettingsIndex::entries($request),
 
             /*
              * THE SIGNED-IN PERSON, resolved through the PANEL'S GUARD rather
@@ -489,6 +536,41 @@ final class SharePanelProps
         ]);
 
         return $next($request);
+    }
+
+    /**
+     * First matching named route, panel-prefixed then (for the default panel)
+     * the application's own names.
+     *
+     * THE REFERENCE APP CLAIMS `/settings/profile` as `profile.edit`, so the
+     * packaged `panel.settings.profile` is never registered. Looking only at
+     * the prefixed name left Profile out of the account menu on every screen
+     * that actually received these props.
+     *
+     * @param  list<string>  $suffixes
+     * @param  list<string>  $defaultFallbacks
+     */
+    private static function namedUrl(\Alxtexh\Panel\Panel $panel, array $suffixes, array $defaultFallbacks = []): ?string
+    {
+        foreach ($suffixes as $suffix) {
+            $name = $panel->getRouteName().$suffix;
+
+            if (Route::has($name)) {
+                return route($name);
+            }
+        }
+
+        if ($panel->id !== (string) config('panel.default', 'admin')) {
+            return null;
+        }
+
+        foreach ($defaultFallbacks as $name) {
+            if (Route::has($name)) {
+                return route($name);
+            }
+        }
+
+        return null;
     }
 
     /**

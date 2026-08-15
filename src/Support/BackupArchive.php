@@ -46,7 +46,7 @@ final class BackupArchive
     }
 
     /** The directory Spatie writes into: the backup name, not a path we choose. */
-    private function directory(): string
+    public function directory(): string
     {
         return (string) config('backup.backup.name', config('app.name', 'laravel-backup'));
     }

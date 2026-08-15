@@ -34,6 +34,7 @@ import {
     BulkActions,
     DataTable,
     EditableCell,
+    BadgeResolver,
     CodeCell,
     IconCell,
     ImageCell,
@@ -974,17 +975,15 @@ useLiveUpdates({
  */
 function badgeLabel(key: string, value: unknown): string {
     const column = byKey.value[key] as
-        { label?: string; labels?: Record<string, string> } | undefined
-    const labels = column?.labels
+        { label?: string; labels?: Record<string, string>; options?: Record<string, string> } | undefined
+    const lookup = typeof value === 'boolean' ? (value ? '1' : '0') : String(value)
 
-    if (labels) {
-        // JSON object keys are strings, so a numeric or boolean value has to be
-        // normalised before the lookup.
-        const lookup = typeof value === 'boolean' ? (value ? '1' : '0') : String(value)
+    if (column?.labels?.[lookup] !== undefined) {
+        return column.labels[lookup]
+    }
 
-        if (labels[lookup] !== undefined) {
-            return labels[lookup]
-        }
+    if (column?.options?.[lookup] !== undefined) {
+        return column.options[lookup]
     }
 
     if (typeof value === 'boolean') {
@@ -1237,7 +1236,7 @@ function badgeLabel(key: string, value: unknown): string {
             -->
                     <template v-for="col in columns" :key="col.key" #[`cell:${col.key}`]="{ row }">
                         <EditableCell
-                            v-if="byKey[col.key]?.editable"
+                            v-if="byKey[col.key]?.editable && byKey[col.key]?.type !== 'badge'"
                             :type="byKey[col.key].type === 'toggle' ? 'toggle' : 'select'"
                             :value="cellValue(row, col.key)"
                             :options="byKey[col.key].options ?? {}"
@@ -1290,8 +1289,18 @@ function badgeLabel(key: string, value: unknown): string {
                             rendered String(null) in a capitalize pill and an
                             unanswered question read as a value called "Null".
                         -->
+                            <BadgeResolver
+                                v-if="byKey[col.key]?.resolver && can.update"
+                                :value="cellValue(row, col.key)"
+                                :options="byKey[col.key].options ?? {}"
+                                :colors="byKey[col.key].colors ?? {}"
+                                :default-color="byKey[col.key].defaultColor"
+                                :label="byKey[col.key].label"
+                                :busy="savingCell === `${row.id}:${col.key}`"
+                                @change="(value: string) => editCell(row, col.key, value)"
+                            />
                             <Badge
-                                v-if="hasBadgeValue(row[col.key])"
+                                v-else-if="hasBadgeValue(row[col.key])"
                                 :variant="badgeVariant(col.key, row[col.key]) as any"
                                 class="capitalize"
                             >

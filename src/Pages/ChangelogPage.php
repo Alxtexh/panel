@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Pages;
 
 use Illuminate\Http\Request;
+use Alxtexh\Panel\Models\ContentEntry;
 use Alxtexh\Panel\Support\Changelog;
+use Alxtexh\Panel\Support\SupportEditing;
 
 /**
  * The in-panel changelog, routed by declaring nothing.
@@ -68,6 +70,9 @@ final class ChangelogPage extends Page
 
     public static function data(Request $request): array
     {
-        return ['releases' => Changelog::releases()];
+        return [
+            'releases' => Changelog::releases(),
+            'support' => SupportEditing::props(ContentEntry::KIND_RELEASE),
+        ];
     }
 }
