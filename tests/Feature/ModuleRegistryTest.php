@@ -212,4 +212,99 @@ final class ModuleRegistryTest extends TestCase
         @unlink($page);
         @unlink($vue);
     }
+
+    public function test_a_child_module_is_off_unless_its_parent_is_granted(): void
+    {
+        ModuleRegistry::register([
+            Module::make('accounting')->label('Accounting')->children(['double-entry']),
+            Module::make('double-entry')->label('Double entry')->requires(['accounting']),
+        ]);
+        ModuleRegistry::grants(fn (): array => ['double-entry']);
+
+        $this->assertFalse(ModuleRegistry::enabled('double-entry'));
+        $this->assertFalse(ModuleRegistry::enabled('accounting'));
+        $this->assertSame([], ModuleRegistry::granted());
+    }
+
+    public function test_parent_and_child_are_on_when_granted_together(): void
+    {
+        ModuleRegistry::register([
+            Module::make('accounting')->label('Accounting')->children(['double-entry']),
+            Module::make('double-entry')->label('Double entry')->requires(['accounting']),
+        ]);
+        ModuleRegistry::grants(fn (): array => ['accounting', 'double-entry']);
+
+        $this->assertTrue(ModuleRegistry::enabled('accounting'));
+        $this->assertTrue(ModuleRegistry::enabled('double-entry'));
+        $this->assertTrue(moduleEnabled('double-entry'));
+    }
+
+    public function test_apply_grants_expands_parents_and_runs_on_grant_once(): void
+    {
+        $calls = [];
+
+        ModuleRegistry::register([
+            Module::make('accounting')
+                ->label('Accounting')
+                ->children(['double-entry'])
+                ->onGrant(function (mixed $org) use (&$calls): void {
+                    $calls[] = ['accounting', $org];
+                }),
+            Module::make('double-entry')
+                ->label('Double entry')
+                ->requires(['accounting'])
+                ->onGrant(function (mixed $org) use (&$calls): void {
+                    $calls[] = ['double-entry', $org];
+                }),
+        ]);
+
+        $first = ModuleRegistry::applyGrants('acme', ['double-entry']);
+
+        $this->assertSame(['accounting', 'double-entry'], $first);
+        $this->assertSame([['accounting', 'acme'], ['double-entry', 'acme']], $calls);
+
+        ModuleRegistry::applyGrants('acme', ['accounting', 'double-entry'], $first);
+
+        $this->assertCount(2, $calls);
+    }
+
+    public function test_plan_setup_save_expands_required_parents(): void
+    {
+        ModuleRegistry::register([
+            Module::make('accounting')->label('Accounting')->children(['double-entry']),
+            Module::make('double-entry')->label('Double entry')->requires(['accounting']),
+        ]);
+
+        $page = new class extends PlanSetupPage
+        {
+            public static mixed $captured = null;
+
+            public static function plans(Request $request): array
+            {
+                return [];
+            }
+
+            public static function persist(array $plan): void
+            {
+                self::$captured = $plan;
+            }
+        };
+
+        $request = Request::create('/settings/plans/save', 'POST', [
+            'plan' => [
+                'name' => 'Pro',
+                'days' => 30,
+                'price' => 9,
+                'perks' => ['modules' => ['value' => ['double-entry']]],
+            ],
+        ]);
+        $request->setUserResolver(fn () => $this->user);
+
+        $page::save($request);
+
+        $this->assertSame(
+            ['accounting', 'double-entry'],
+            $page::$captured['perks']['modules']['value'] ?? null,
+        );
+    }
 }

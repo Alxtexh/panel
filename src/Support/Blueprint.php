@@ -570,6 +570,11 @@ final class Blueprint
         models. Numeric limits use -1 for Unlimited.
         A SaaS MUST set `ModuleRegistry::grants()` from the subscriber plan;
         until that callback is set, every registered module stays enabled.
+        A child key (`->requires()` / `->children()`) is enabled only when every
+        parent is also granted. `PlanSetupPage::save()` expands parents via
+        `ModuleRegistry::applyGrants()`, which also runs `onGrant` once per newly
+        granted key. `Panel::subscriptionGate()` is an opt-in expiry wall:
+        company (tenant) users go to plan setup; staff on a central panel get 403.
         Discovered screens set `protected static ?string $module = 'campaigns'`
         so an ungranted key 403s and drops out of the sidebar. Hand-written
         routes still use `panel.module:campaigns`. PanelKit itself is not
@@ -584,6 +589,8 @@ final class Blueprint
         use Alxtexh\Panel\Support\ModuleRegistry;
 
         Panel::make('admin')->modules([
+            Module::make('accounting')->label('Accounting')->children(['double-entry']),
+            Module::make('double-entry')->label('Double entry')->requires(['accounting']),
             Module::make('campaigns')
                 ->label('Campaigns')
                 ->description('Outbound campaigns')
@@ -593,6 +600,8 @@ final class Blueprint
 
         ModuleRegistry::grants(fn (): array => $org->plan->moduleKeys());
         ModuleRegistry::caps(fn (): array => $org->plan->moduleCaps());
+        // Opt-in. Leave unset so a playground ISP is not locked out.
+        // Panel::make('admin')->subscriptionGate(fn (): bool => $org->planIsActive());
         ```
 
         ### Add a dashboard

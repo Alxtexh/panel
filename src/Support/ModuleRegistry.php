@@ -17,6 +17,8 @@ use Closure;
  * Register from a panel provider:
  *
  *     Panel::make('admin')->modules([
+ *         Module::make('accounting')->label('Accounting')->children(['double-entry']),
+ *         Module::make('double-entry')->label('Double entry')->requires(['accounting']),
  *         Module::make('campaigns')
  *             ->label('Campaigns')
  *             ->planLimit(kind: 'number'),
@@ -65,7 +67,7 @@ final class ModuleRegistry
             $byKey[$key] = $module;
         }
 
-        app()->instance(self::KEY, array_values($byKey));
+        app()->instance(self::KEY, array_values(self::linkFamily($byKey)));
     }
 
     /**
@@ -98,7 +100,7 @@ final class ModuleRegistry
     /**
      * Catalogue for the client and the plan editor. Closures are stripped.
      *
-     * @return list<array{key: string, label: string, description: string|null}>
+     * @return list<array{key: string, label: string, description: string|null, children: list<string>, requires: list<string>}>
      */
     public static function all(): array
     {
@@ -106,6 +108,8 @@ final class ModuleRegistry
             'key' => (string) $module['key'],
             'label' => (string) $module['label'],
             'description' => $module['description'] ?? null,
+            'children' => self::stringList($module['children'] ?? []),
+            'requires' => self::stringList($module['requires'] ?? []),
         ], self::definitions()));
     }
 
@@ -157,13 +161,76 @@ final class ModuleRegistry
 
         $resolver = app()->make(self::GRANTS);
         $keys = $resolver instanceof Closure ? $resolver() : [];
+        $raw = array_values(array_map('strval', is_array($keys) ? $keys : []));
 
-        return array_values(array_map('strval', is_array($keys) ? $keys : []));
+        return array_values(array_filter(
+            $raw,
+            static fn (string $key): bool => self::parentsGranted($key, $raw),
+        ));
     }
 
     public static function enabled(string $key): bool
     {
         return in_array($key, self::granted(), true);
+    }
+
+    /**
+     * Add required parents so a plan that ticks a child also grants the parent.
+     *
+     * `enabled()` still refuses a child whose parent is missing from the grant
+     * list. Call this from the plan editor (or `applyGrants()`) so a save does
+     * not store an orphan child.
+     *
+     * @param  list<string>  $keys
+     * @return list<string>
+     */
+    public static function withRequiredParents(array $keys): array
+    {
+        $out = [];
+
+        foreach (array_map('strval', $keys) as $key) {
+            if ($key === '') {
+                continue;
+            }
+
+            foreach (self::requiredParents($key) as $parent) {
+                $out[] = $parent;
+            }
+
+            $out[] = $key;
+        }
+
+        return array_values(array_unique($out));
+    }
+
+    /**
+     * Expand parents, then run `onGrant` for keys that were not in `$previous`.
+     *
+     * PlanSetupPage::save() calls this. Apps that persist plans without that
+     * page should call it from their own save path.
+     *
+     * @param  list<string>  $keys
+     * @param  list<string>  $previous
+     * @return list<string>
+     */
+    public static function applyGrants(mixed $org, array $keys, array $previous = []): array
+    {
+        $expanded = self::withRequiredParents($keys);
+        $already = array_map('strval', $previous);
+
+        foreach ($expanded as $key) {
+            if (in_array($key, $already, true)) {
+                continue;
+            }
+
+            $callback = self::definition($key)['onGrant'] ?? null;
+
+            if ($callback instanceof Closure) {
+                $callback($org);
+            }
+        }
+
+        return $expanded;
     }
 
     public static function has(string $key): bool
@@ -283,6 +350,91 @@ final class ModuleRegistry
             'limitStep' => $module['limitStep'] ?? $module['step'] ?? null,
             'limitHint' => $module['limitHint'] ?? $module['hint'] ?? null,
             'usage' => $module['usage'] ?? null,
+            'children' => self::stringList($module['children'] ?? []),
+            'requires' => self::stringList($module['requires'] ?? []),
+            'onGrant' => $module['onGrant'] ?? null,
         ];
+    }
+
+    /**
+     * @param  array<string, array<string, mixed>>  $byKey
+     * @return array<string, array<string, mixed>>
+     */
+    private static function linkFamily(array $byKey): array
+    {
+        foreach ($byKey as $key => $module) {
+            foreach (self::stringList($module['children'] ?? []) as $childKey) {
+                if (! isset($byKey[$childKey])) {
+                    continue;
+                }
+
+                $byKey[$childKey]['requires'] = array_values(array_unique([
+                    ...self::stringList($byKey[$childKey]['requires'] ?? []),
+                    (string) $key,
+                ]));
+            }
+
+            foreach (self::stringList($module['requires'] ?? []) as $parentKey) {
+                if (! isset($byKey[$parentKey])) {
+                    continue;
+                }
+
+                $byKey[$parentKey]['children'] = array_values(array_unique([
+                    ...self::stringList($byKey[$parentKey]['children'] ?? []),
+                    (string) $key,
+                ]));
+            }
+        }
+
+        return $byKey;
+    }
+
+    /**
+     * @param  list<string>  $granted
+     */
+    private static function parentsGranted(string $key, array $granted): bool
+    {
+        foreach (self::requiredParents($key) as $parent) {
+            if (! in_array($parent, $granted, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function requiredParents(string $key, array $seen = []): array
+    {
+        if (in_array($key, $seen, true)) {
+            return [];
+        }
+
+        $seen[] = $key;
+        $out = [];
+
+        foreach (self::stringList(self::definition($key)['requires'] ?? []) as $parent) {
+            $out[] = $parent;
+            $out = [...$out, ...self::requiredParents($parent, $seen)];
+        }
+
+        return array_values(array_unique($out));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function stringList(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map('strval', $value),
+            static fn (string $item): bool => $item !== '',
+        ));
     }
 }

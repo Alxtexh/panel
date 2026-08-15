@@ -16,6 +16,9 @@ use Alxtexh\Panel\Support\ModuleRegistry;
  * second hardcoded list is not required. Persist in `save()` / `destroy()`
  * against YOUR models. The Vue screen is `PlanSetup`.
  *
+ * Saving expands `perks.modules` with required parent keys and runs
+ * `ModuleRegistry::applyGrants()` (`onGrant` once per newly added key).
+ *
  * URI DEFAULTS TO `settings/plans`. Editor mode is `?plan=new` or `?plan={id}`
  * so save/destroy can sit at `/settings/plans/save` without colliding with an
  * optional path segment.
@@ -69,7 +72,7 @@ abstract class PlanSetupPage extends Page
      * Defaults to the panel registry so the plan editor and `moduleEnabled()`
      * share one list. Override only to show a subset.
      *
-     * @return list<array{key: string, label: string, description?: string|null}>
+     * @return list<array{key: string, label: string, description?: string|null, children?: list<string>, requires?: list<string>}>
      */
     public static function modules(): array
     {
@@ -167,6 +170,30 @@ abstract class PlanSetupPage extends Page
 
         /** @var array<string, mixed> $plan */
         $plan = $request->input('plan', []);
+        $selected = $plan['perks']['modules']['value'] ?? null;
+
+        if (is_array($selected)) {
+            $previous = [];
+            $id = (string) ($plan['id'] ?? '');
+
+            if ($id !== '') {
+                foreach (static::plans($request) as $existing) {
+                    if ((string) ($existing['id'] ?? '') !== $id) {
+                        continue;
+                    }
+
+                    $prior = $existing['perks']['modules']['value'] ?? [];
+                    $previous = is_array($prior) ? array_map('strval', $prior) : [];
+                    break;
+                }
+            }
+
+            $plan['perks']['modules']['value'] = ModuleRegistry::applyGrants(
+                $request->user(),
+                array_map('strval', $selected),
+                $previous,
+            );
+        }
 
         static::persist($plan);
 
