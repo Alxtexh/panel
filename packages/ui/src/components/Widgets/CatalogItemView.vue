@@ -13,10 +13,12 @@ const props = withDefaults(
         item: CatalogItem
         catalogHref?: string
         backLabel?: string
+        embedded?: boolean
     }>(),
     {
         catalogHref: '/catalog',
         backLabel: 'Back to catalog',
+        embedded: true,
     },
 )
 
@@ -26,7 +28,10 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-6 sm:px-6">
+    <div
+        class="flex w-full flex-col gap-8"
+        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
+    >
         <a
             :href="catalogHref"
             class="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1.5 text-sm"

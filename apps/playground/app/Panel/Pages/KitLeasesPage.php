@@ -46,6 +46,11 @@ final class KitLeasesPage extends CatalogRegisterPage
         return 'Lease cards and a table. CatalogCard facts, DataTable, PkStatusBadge. Not a lease engine.';
     }
 
+    public static function itemPath(): ?string
+    {
+        return '/kit-catalog';
+    }
+
     /**
      * @return list<array<string, mixed>>
      */

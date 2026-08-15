@@ -38,6 +38,11 @@ abstract class CatalogRegisterPage extends Page
         return [];
     }
 
+    public static function itemPath(): ?string
+    {
+        return null;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -47,6 +52,7 @@ abstract class CatalogRegisterPage extends Page
             'cards' => static::cards(),
             'rows' => static::rows(),
             'facets' => static::facets(),
+            'itemPath' => static::itemPath(),
         ];
     }
 }

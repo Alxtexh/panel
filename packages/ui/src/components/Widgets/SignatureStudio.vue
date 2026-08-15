@@ -32,12 +32,14 @@ const props = withDefaults(
         description?: string | null
         documents?: StudioDocument[]
         storageKey?: string | null
+        embedded?: boolean
     }>(),
     {
         title: 'Signatures',
         description: null,
         documents: () => [],
         storageKey: null,
+        embedded: true,
     },
 )
 
@@ -168,7 +170,10 @@ const preview = computed(() => {
 </script>
 
 <template>
-    <div class="mx-auto flex w-full max-w-6xl flex-col gap-10 p-4 sm:p-6">
+    <div
+        class="flex w-full flex-col gap-10"
+        :class="embedded ? '' : 'mx-auto max-w-6xl p-4 sm:p-6'"
+    >
         <PkHeading :title="title" :description="description ?? undefined" />
 
         <section class="grid gap-8 lg:grid-cols-2">

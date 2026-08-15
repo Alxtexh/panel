@@ -37,6 +37,7 @@ const props = withDefaults(
         limits?: PlanLimitField[]
         mode?: 'create' | 'edit'
         processing?: boolean
+        embedded?: boolean
     }>(),
     {
         plan: null,
@@ -44,6 +45,7 @@ const props = withDefaults(
         limits: () => [],
         mode: 'create',
         processing: false,
+        embedded: true,
     },
 )
 
@@ -153,7 +155,8 @@ const areaClass =
 
 <template>
     <form
-        class="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6"
+        class="w-full space-y-6"
+        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
         data-slot="plan-editor"
         @submit.prevent="submit"
     >

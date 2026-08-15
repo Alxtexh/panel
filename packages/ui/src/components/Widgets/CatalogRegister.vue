@@ -46,7 +46,7 @@ const props = withDefaults(
         columns: () => [],
         searchPlaceholder: 'Search…',
         emptyTitle: 'Nothing here',
-        embedded: false,
+        embedded: true,
     },
 )
 

@@ -117,12 +117,21 @@ describe('DirectoryPage', () => {
         expect(external.classes()).toEqual(internal.classes())
     })
 
-    it('drops page padding when embedded on another screen', () => {
+    it('has no page padding by default so it can drop onto any screen', () => {
         const wrapper = mount(DirectoryPage, {
-            props: { title: 'Shortcuts', sections, embedded: true },
+            props: { title: 'Shortcuts', sections },
         })
 
         expect(wrapper.classes().join(' ')).not.toContain('max-w-5xl')
         expect(wrapper.classes().join(' ')).not.toContain('px-4')
+    })
+
+    it('opts into page chrome when embedded is false', () => {
+        const wrapper = mount(DirectoryPage, {
+            props: { title: 'Shortcuts', sections, embedded: false },
+        })
+
+        expect(wrapper.classes().join(' ')).toContain('max-w-5xl')
+        expect(wrapper.classes().join(' ')).toContain('px-4')
     })
 })

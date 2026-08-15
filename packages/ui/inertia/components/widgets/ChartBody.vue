@@ -35,12 +35,24 @@ import {
     LineItems,
 } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
+import { router } from '@inertiajs/vue3'
 import { multiSeries, type Chart, type Series } from './types'
 
 const props = defineProps<{
     chart: Chart
     data: Series
+    itemPath?: string | null
 }>()
+
+function openCatalogItem(key: string): void {
+    const base = (props.itemPath ?? '').replace(/\/$/, '')
+
+    if (!base) {
+        return
+    }
+
+    router.visit(`${base}/${key}`)
+}
 
 const lines = computed(() => multiSeries(props.chart, props.data))
 </script>
@@ -50,7 +62,11 @@ const lines = computed(() => multiSeries(props.chart, props.data))
 
     <StatListChart v-else-if="chart.type === 'table'" :rows="data.rows ?? []" />
 
-    <CatalogGrid v-else-if="chart.type === 'catalog'" :items="data.items ?? []" />
+    <CatalogGrid
+        v-else-if="chart.type === 'catalog'"
+        :items="data.items ?? []"
+        @select="openCatalogItem"
+    />
 
     <LineItems v-else-if="chart.type === 'items'" :items="data.items ?? []" />
 

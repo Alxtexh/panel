@@ -163,7 +163,11 @@ function bodyHeight(chart: Chart): number {
                             />
                         </template>
 
-                        <ChartBody :chart="chart" :data="series(chart.key)" />
+                        <ChartBody
+                            :chart="chart"
+                            :data="series(chart.key)"
+                            :item-path="typeof bag.itemPath === 'string' ? bag.itemPath : null"
+                        />
                     </ChartCard>
                 </template>
             </Deferred>

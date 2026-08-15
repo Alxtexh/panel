@@ -29,4 +29,21 @@ describe('CatalogBrowser', () => {
 
         expect(wrapper.text()).toContain('Studio')
     })
+
+    it('has no page chrome by default', () => {
+        const wrapper = mount(CatalogBrowser, {
+            props: {
+                title: 'Catalog',
+                tabs: [
+                    {
+                        key: 'products',
+                        label: 'Products',
+                        items: [{ key: 'mug', label: 'Mug' }],
+                    },
+                ],
+            },
+        })
+
+        expect(wrapper.classes().join(' ')).not.toContain('max-w-5xl')
+    })
 })

@@ -1,10 +1,3 @@
-/**
- * A till cart: editable lines, an empty state, and a totals footer.
- *
- * AMOUNTS ARRIVE FORMATTED. This panel does not compute tax, currency, or
- * rounding — the page (or a pricing service) does, and hands over strings.
- * Quantity and remove emit so the page can rewrite those strings.
- */
 import { type LineItem } from './LineItems.vue';
 type __VLS_Props = {
     items: LineItem[];

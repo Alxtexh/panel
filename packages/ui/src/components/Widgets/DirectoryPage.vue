@@ -45,7 +45,7 @@ const props = withDefaults(
         description: null,
         searchPlaceholder: 'Search',
         linkComponent: 'a',
-        embedded: false,
+        embedded: true,
     },
 )
 

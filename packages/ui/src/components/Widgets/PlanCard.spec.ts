@@ -77,22 +77,21 @@ describe('PlanGrid', () => {
         expect(wrapper.emitted('create')).toHaveLength(1)
     })
 
-    it('uses the settings directory content width', () => {
+    it('has no page chrome by default so it can drop onto any screen', () => {
         const wrapper = mount(PlanGrid, { props: { plans: [starter], title: 'Plans' } })
-
-        expect(wrapper.classes().join(' ')).toContain('max-w-5xl')
-        expect(wrapper.classes().join(' ')).toContain('px-4')
-        expect(wrapper.classes().join(' ')).toContain('py-6')
-        expect(wrapper.html()).toContain('gap-6')
-    })
-
-    it('drops page chrome when embedded on another screen', () => {
-        const wrapper = mount(PlanGrid, {
-            props: { plans: [starter], title: 'Plans', embedded: true },
-        })
 
         expect(wrapper.classes().join(' ')).not.toContain('max-w-5xl')
         expect(wrapper.classes().join(' ')).not.toContain('px-4')
+        expect(wrapper.html()).toContain('gap-6')
+    })
+
+    it('opts into page chrome when embedded is false', () => {
+        const wrapper = mount(PlanGrid, {
+            props: { plans: [starter], title: 'Plans', embedded: false },
+        })
+
+        expect(wrapper.classes().join(' ')).toContain('max-w-5xl')
+        expect(wrapper.classes().join(' ')).toContain('px-4')
     })
 })
 
@@ -114,7 +113,7 @@ describe('PlanEditor', () => {
         expect(wrapper.text()).toContain('Plan perks')
         expect(wrapper.text()).toContain('Plans are organisation-wide.')
         expect(wrapper.text()).toContain('Use -1 for Unlimited.')
-        expect(wrapper.classes().join(' ')).toContain('max-w-5xl')
+        expect(wrapper.classes().join(' ')).not.toContain('max-w-5xl')
 
         await wrapper.get('form').trigger('submit')
 

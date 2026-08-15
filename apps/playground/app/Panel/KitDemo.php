@@ -590,10 +590,16 @@ final class KitDemo
     {
         $photos = ['riverside', 'kilimani', 'lavington', 'studio', 'townhouse', 'karen'];
         $cards = [];
+        $unitKeyByLabel = [];
+
+        foreach (self::units() as $unit) {
+            $unitKeyByLabel[$unit['label']] = $unit['key'];
+        }
 
         foreach (self::leases() as $i => $lease) {
             $cards[] = [
-                'key' => $lease['id'],
+                'key' => $unitKeyByLabel[$lease['unit']] ?? $lease['id'],
+                'kind' => 'unit',
                 'label' => $lease['unit'],
                 'caption' => $lease['tenant'],
                 'price' => $lease['rent'].' / mo',

@@ -59,23 +59,25 @@ function destroy(id: string) {
 <template>
     <Head :title="pageHeading ?? 'Plans'" />
 
-    <PlanEditor
-        v-if="mode === 'create' || mode === 'edit'"
-        :plan="editing ?? undefined"
-        :modules="modules ?? []"
-        :limits="limits ?? []"
-        :mode="mode === 'edit' ? 'edit' : 'create'"
-        @save="save"
-        @cancel="visitIndex"
-    />
+    <div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+        <PlanEditor
+            v-if="mode === 'create' || mode === 'edit'"
+            :plan="editing ?? undefined"
+            :modules="modules ?? []"
+            :limits="limits ?? []"
+            :mode="mode === 'edit' ? 'edit' : 'create'"
+            @save="save"
+            @cancel="visitIndex"
+        />
 
-    <PlanGrid
-        v-else
-        :title="pageHeading ?? 'Plans'"
-        :description="pageDescription"
-        :plans="plans ?? []"
-        @create="visitCreate"
-        @edit="visitEdit"
-        @delete="destroy"
-    />
+        <PlanGrid
+            v-else
+            :title="pageHeading ?? 'Plans'"
+            :description="pageDescription"
+            :plans="plans ?? []"
+            @create="visitCreate"
+            @edit="visitEdit"
+            @delete="destroy"
+        />
+    </div>
 </template>

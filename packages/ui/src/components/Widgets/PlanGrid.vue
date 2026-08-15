@@ -6,13 +6,16 @@ import PlanCard from './PlanCard.vue'
 import PkButton from '../primitives/PkButton.vue'
 import type { PlanRecord } from './planTypes'
 
-const props = defineProps<{
-    plans: PlanRecord[]
-    title?: string
-    description?: string | null
-    /** Drop page padding so this can sit on a settings or dashboard screen. */
-    embedded?: boolean
-}>()
+withDefaults(
+    defineProps<{
+        plans: PlanRecord[]
+        title?: string
+        description?: string | null
+        /** When false, wrap with page padding. Default is drop-in (no chrome). */
+        embedded?: boolean
+    }>(),
+    { description: null, embedded: true },
+)
 
 const emit = defineEmits<{
     create: []

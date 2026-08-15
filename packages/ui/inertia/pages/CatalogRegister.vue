@@ -2,7 +2,7 @@
 /**
  * Inertia cards + table register (leases, lockers, desks).
  */
-import { Head } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import { CatalogRegister } from '@alxtexh-enterprise/panel'
 import type { CatalogFacet, CatalogItem, TableColumn } from '@alxtexh-enterprise/panel'
 
@@ -16,7 +16,18 @@ const props = defineProps<{
     rows?: Record<string, unknown>[]
     columns?: TableColumn[]
     facets?: CatalogFacet[]
+    itemPath?: string
 }>()
+
+function openItem(key: string): void {
+    const base = (props.itemPath ?? '').replace(/\/$/, '')
+
+    if (!base) {
+        return
+    }
+
+    router.visit(`${base}/${key}`)
+}
 
 const defaultColumns: TableColumn[] = [
     { key: 'tenant', label: 'Tenant', locked: true },
@@ -44,16 +55,19 @@ const defaultFacets: CatalogFacet[] = [
 <template>
     <Head :title="pageHeading ?? 'Register'" />
 
-    <CatalogRegister
-        :title="pageHeading ?? 'Register'"
-        :description="pageDescription"
-        :cards="cards ?? []"
-        :rows="rows ?? leases ?? []"
-        :columns="columns ?? defaultColumns"
-        :facets="facets ?? defaultFacets"
-        search-placeholder="Search tenant or unit…"
-        empty-title="No rows"
-        cards-description="Same CatalogCard facts as the grid."
-        table-description="The same rows as a table."
-    />
+    <div class="mx-auto w-full max-w-6xl p-4 sm:p-6">
+        <CatalogRegister
+            :title="pageHeading ?? 'Register'"
+            :description="pageDescription"
+            :cards="cards ?? []"
+            :rows="rows ?? leases ?? []"
+            :columns="columns ?? defaultColumns"
+            :facets="facets ?? defaultFacets"
+            search-placeholder="Search tenant or unit…"
+            empty-title="No rows"
+            cards-description="Same CatalogCard facts as the grid."
+            table-description="The same rows as a table."
+            @select="openItem"
+        />
+    </div>
 </template>

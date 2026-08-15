@@ -87,7 +87,8 @@ final class KitShowcasePagesTest extends TestCase
                 ->has('statuses')
                 ->has('headerCharts', 2)
                 ->where('headerCharts.0.type', 'catalog')
-                ->where('headerCharts.1.type', 'items'));
+                ->where('headerCharts.1.type', 'items')
+                ->where('itemPath', '/kit-catalog'));
     }
 
     public function test_kit_pages_appear_under_the_kit_group(): void
@@ -160,7 +161,9 @@ final class KitShowcasePagesTest extends TestCase
                 ->where('leases.0.status', 'active')
                 ->where('leases.1.status', 'ending')
                 ->where('leases.3.status', 'overdue')
-                ->where('cards.0.facts.1', 'Deposit KES 170,000'));
+                ->where('cards.0.facts.1', 'Deposit KES 170,000')
+                ->where('cards.0.key', 'unit-riverside')
+                ->where('itemPath', '/kit-catalog'));
     }
 
     public function test_subscription_plans_page_renders_fake_catalogue(): void

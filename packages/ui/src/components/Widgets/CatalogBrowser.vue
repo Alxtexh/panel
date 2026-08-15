@@ -39,7 +39,7 @@ const props = withDefaults(
         title: 'Catalog',
         description: null,
         pageSize: 8,
-        embedded: false,
+        embedded: true,
     },
 )
 

@@ -75,6 +75,7 @@ final class KitTillPage extends Page
             'products' => KitDemo::products(),
             'lines' => KitDemo::lines(),
             'statuses' => KitDemo::statuses(),
+            'itemPath' => '/kit-catalog',
         ];
     }
 }
