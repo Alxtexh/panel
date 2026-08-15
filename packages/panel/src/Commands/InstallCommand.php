@@ -52,6 +52,13 @@ final class InstallCommand extends Command
             $this->enableDefaultPasswordReset();
             $this->writeLocalAuthPrefill();
             $this->scaffoldPasskeys();
+        } else {
+            /*
+             * `--auth` installs the Composer package; without it the app may
+             * still have required `laravel/passkeys` itself. Either way the
+             * table has to exist or idle lock 500s on GET /screens/locked.
+             */
+            $this->publishAndMigratePasskeys();
         }
 
         $this->checkTenancy();
@@ -1143,6 +1150,7 @@ PHP;
 
         if ($already && (class_exists(\Laravel\Passkeys\Passkeys::class) || class_exists(\Laravel\Passkeys\Passkey::class))) {
             $this->components->twoColumnDetail('Kept', 'laravel/passkeys already installed');
+            $this->publishAndMigratePasskeys();
 
             return;
         }
@@ -1185,15 +1193,45 @@ PHP;
             return;
         }
 
-        $this->callSilently('vendor:publish', ['--tag' => 'passkeys-migrations', '--force' => true]);
+        $this->publishAndMigratePasskeys();
+
+        $this->components->twoColumnDetail('Installed', 'laravel/passkeys (login button + migrations)');
+    }
+
+    /**
+     * Publish and run the `laravel/passkeys` migration.
+     *
+     * MUST RUN EVEN WHEN THE PACKAGE WAS ALREADY REQUIRED. The early "Kept"
+     * path used to return before this, so a fresh app with `laravel/passkeys`
+     * in composer.json never got a `passkeys` table and the lock screen 500ed.
+     */
+    private function publishAndMigratePasskeys(): void
+    {
+        if (! class_exists(\Laravel\Passkeys\Passkey::class)
+            && ! class_exists(\Laravel\Passkeys\Passkeys::class)
+            && ! is_dir(base_path('vendor/laravel/passkeys'))) {
+            return;
+        }
+
+        try {
+            $this->callSilently('vendor:publish', ['--tag' => 'passkeys-migrations', '--force' => true]);
+        } catch (\Throwable) {
+            $this->components->warn(
+                'Could not publish passkey migrations. Run `php artisan vendor:publish --tag=passkeys-migrations`.',
+            );
+
+            return;
+        }
 
         try {
             $this->callSilently('migrate', ['--force' => true]);
         } catch (\Throwable) {
             $this->components->warn('Passkey migrations published - run `php artisan migrate` when ready.');
+
+            return;
         }
 
-        $this->components->twoColumnDetail('Installed', 'laravel/passkeys (login button + migrations)');
+        $this->components->twoColumnDetail('Migrated', 'passkeys table');
     }
 
     /**

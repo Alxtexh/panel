@@ -96,6 +96,17 @@ final class IdleLockTest extends TestCase
         $this->assertNull($props['passkeys'] ?? null);
     }
 
+    public function test_the_lock_screen_is_ok_when_the_passkeys_table_is_missing(): void
+    {
+        \Illuminate\Support\Facades\Schema::dropIfExists('passkeys');
+
+        $this->assertFalse(\Alxtexh\Panel\Auth\Passkeys::tableExists());
+
+        $this->actingAs($this->user)
+            ->get('/second/screens/locked')
+            ->assertOk();
+    }
+
     public function test_locking_redirects_to_the_lock_screen(): void
     {
         $this->actingAs($this->user)

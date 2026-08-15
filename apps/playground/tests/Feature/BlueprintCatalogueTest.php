@@ -243,5 +243,7 @@ final class BlueprintCatalogueTest extends TestCase
         $this->assertStringContainsString('Open orders', (string) $install);
         $this->assertStringContainsString("type('catalog')", (string) $install);
         $this->assertStringContainsString('function shortcuts()', (string) $install);
+        $this->assertStringContainsString('publishAndMigratePasskeys', (string) $install);
+        $this->assertStringContainsString("Kept', 'laravel/passkeys already installed", (string) $install);
     }
 }

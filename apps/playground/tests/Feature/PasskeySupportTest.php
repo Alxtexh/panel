@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Fortify\Features;
 use Alxtexh\Panel\Auth\Passkeys;
 use Tests\TestCase;
@@ -86,6 +87,19 @@ final class PasskeySupportTest extends TestCase
         $this->assertSame(['id', 'name', 'authenticator', 'created', 'lastUsed'], array_keys($keys[0]));
         $this->assertSame('MacBook', $keys[0]['name']);
         $this->assertNull($keys[0]['lastUsed'], 'A passkey that has never been used should say so.');
+    }
+
+    /**
+     * NO TABLE, NO 500. Idle lock must not depend on passkeys having migrated.
+     */
+    public function test_a_missing_table_is_an_empty_list_not_an_exception(): void
+    {
+        $user = User::factory()->create();
+
+        Schema::dropIfExists('passkeys');
+
+        $this->assertFalse(Passkeys::tableExists());
+        $this->assertSame([], Passkeys::forUser($user));
     }
 
     /**

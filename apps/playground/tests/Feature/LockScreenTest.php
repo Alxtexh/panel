@@ -76,6 +76,15 @@ final class LockScreenTest extends TestCase
         $this->assertNull($props['passkeys'] ?? null);
     }
 
+    public function test_the_lock_screen_is_ok_when_the_passkeys_table_is_missing(): void
+    {
+        \Illuminate\Support\Facades\Schema::dropIfExists('passkeys');
+
+        $this->actingAs($this->user)->post('/lock');
+
+        $this->actingAs($this->user)->get('/screens/locked')->assertOk();
+    }
+
     public function test_passkey_unlock_stays_reachable_while_locked(): void
     {
         $this->actingAs($this->user)->post('/lock');
