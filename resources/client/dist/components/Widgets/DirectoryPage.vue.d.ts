@@ -2,6 +2,7 @@ export interface DirectoryLink {
     label: string;
     href: string;
     icon?: string;
+    external?: boolean;
 }
 export interface DirectorySection {
     key: string;
