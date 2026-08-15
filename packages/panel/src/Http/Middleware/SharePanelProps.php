@@ -177,6 +177,29 @@ final class SharePanelProps
                      */
                     'home' => PanelHome::urlFor($panel),
                     'brand' => $panel->resolveBrandName(),
+
+                    /*
+                     * PAGE FOOTER LINKS, not the sidebar's Help/FAQ/What's new
+                     * /About. Empty unless the application named some: a
+                     * packaged default of /privacy would 404 on a stock
+                     * install. Brand for the copyright line is `brand` above,
+                     * falling back to `app.name` on the client.
+                     */
+                    'footerLinks' => array_values(array_filter(
+                        array_map(
+                            static function (mixed $link): ?array {
+                                if (! is_array($link) || ! isset($link['label'], $link['href'])) {
+                                    return null;
+                                }
+
+                                return [
+                                    'label' => (string) $link['label'],
+                                    'href' => (string) $link['href'],
+                                ];
+                            },
+                            (array) config('panel.footer.links', []),
+                        ),
+                    )),
                     'authLayout' => $panel->getAuthLayout(),
                     'authTestimonial' => $panel->getAuthTestimonial(),
 

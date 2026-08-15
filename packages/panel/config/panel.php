@@ -967,6 +967,16 @@ return [
         'resources' => [],
     ],
 
+    /*
+    | The chrome at the bottom of every signed-in page: copyright uses the
+    | panel brand (or app.name). Extra links are empty by default so a stock
+    | install does not grow 404s. This is not the landing footer and not the
+    | sidebar support list.
+    */
+    'footer' => [
+        'links' => [],
+    ],
+
     'landing' => [
         'route' => env('PANEL_LANDING_ROUTE', false),
         'design' => env('PANEL_LANDING', 'aurora'),

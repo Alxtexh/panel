@@ -42,6 +42,7 @@ import { useSidebarOpener } from '../../lib/mobileNav'
 import SessionExpired from '../SessionExpired.vue'
 import Toaster from '../Toaster.vue'
 import AppContent from './AppContent.vue'
+import AppPageFooter from './AppPageFooter.vue'
 import AppShell from './AppShell.vue'
 import AppSidebar from './AppSidebar.vue'
 import AppSidebarHeader from './AppSidebarHeader.vue'
@@ -221,6 +222,7 @@ router.on('success', () => {
                 class="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background md:m-2 md:rounded-xl md:border"
             >
                 <slot />
+                <AppPageFooter />
             </main>
 
             <Toaster />

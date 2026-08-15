@@ -63,6 +63,22 @@ final class SharedPanelPropsTest extends TestCase
         );
     }
 
+    public function test_the_page_footer_links_are_shared_from_config(): void
+    {
+        config(['panel.footer.links' => [
+            ['label' => 'Privacy', 'href' => '/privacy'],
+            ['not-a-link' => true],
+        ]]);
+
+        $shared = $this->sharedFor('admin');
+
+        $this->assertSame(
+            [['label' => 'Privacy', 'href' => '/privacy']],
+            $shared['panel']['footerLinks'],
+        );
+        $this->assertNotEmpty($shared['name']);
+    }
+
     /**
      * THE SIDEBAR CARRIES THIS PANEL'S PREFIX, which is the half that fails
      * silently.

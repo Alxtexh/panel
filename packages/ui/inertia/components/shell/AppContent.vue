@@ -7,6 +7,7 @@
  */
 import { computed } from 'vue'
 import { SidebarInset, useAppearance } from '@alxtexh-enterprise/panel'
+import AppPageFooter from './AppPageFooter.vue'
 
 type Props = {
     variant?: 'sidebar' | 'header'
@@ -44,6 +45,9 @@ const centered = computed(() => appearance.value.contentLayout === 'centered')
             <slot />
         </div>
         <slot v-else />
+        <slot name="footer">
+            <AppPageFooter />
+        </slot>
     </SidebarInset>
     <main
         v-else
@@ -53,5 +57,8 @@ const centered = computed(() => appearance.value.contentLayout === 'centered')
         :class="className"
     >
         <slot />
+        <slot name="footer">
+            <AppPageFooter />
+        </slot>
     </main>
 </template>

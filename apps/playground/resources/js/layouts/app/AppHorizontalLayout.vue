@@ -7,6 +7,7 @@
  * anyway would leave a hidden fixed-position panel and a spacer reserving space
  * for a sidebar that is not rendered.
  */
+import { AppPageFooter } from '@alxtexh-enterprise/panel/inertia';
 import AppTopNav from '@/components/AppTopNav.vue';
 import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
@@ -17,7 +18,7 @@ withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
 </script>
 
 <template>
-    <div class="flex min-h-screen w-full flex-col bg-sidebar">
+    <div class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-sidebar">
         <ImpersonationBanner />
 
         <AppTopNav :breadcrumbs="breadcrumbs" />
@@ -25,9 +26,12 @@ withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
         <!-- The same rounded content surface the inset sidebar variant uses, so
              switching layouts does not change how a page looks inside. -->
         <main
-            class="flex min-h-0 flex-1 flex-col bg-background md:m-2 md:rounded-xl md:border"
+            id="pk-main"
+            tabindex="-1"
+            class="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background md:m-2 md:rounded-xl md:border"
         >
             <slot />
+            <AppPageFooter />
         </main>
 
         <Toaster />
