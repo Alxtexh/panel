@@ -39,15 +39,29 @@ const centered = computed(() => appearance.value.contentLayout === 'centered')
         viewport without moving focus - so the next Tab returns to the navigation
         the person was trying to skip. `-1` makes it programmatically focusable
         without adding it to the tab order.
+
+        THE INNER COLUMN IS THE FOOTER FIX. The inset is the scrollport
+        (`overflow-y-auto`, a definite height). A page that declares `h-full`
+        then fills that scrollport. Putting the copyright as a flex sibling of
+        that page pinned it to the first viewport, and dashboard widgets
+        overflowed over it, which is how "© 20…" sat under the doughnut instead
+        of under the page. `min-h-full` (not `h-full`, not `flex-1`) lets this
+        column grow with the page so the footer is after the widgets; on a short
+        screen it still fills the scrollport and `mt-auto` on the footer holds
+        the bottom edge.
     -->
     <SidebarInset v-if="props.variant === 'sidebar'" id="pk-main" tabindex="-1" :class="className">
-        <div v-if="centered" class="mx-auto w-full max-w-7xl">
-            <slot />
+        <div data-slot="app-content-column" class="flex min-h-full flex-col">
+            <div v-if="centered" class="mx-auto w-full max-w-7xl flex-1">
+                <slot />
+            </div>
+            <div v-else class="flex-1">
+                <slot />
+            </div>
+            <slot name="footer">
+                <AppPageFooter />
+            </slot>
         </div>
-        <slot v-else />
-        <slot name="footer">
-            <AppPageFooter />
-        </slot>
     </SidebarInset>
     <main
         v-else
@@ -56,9 +70,13 @@ const centered = computed(() => appearance.value.contentLayout === 'centered')
         class="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col gap-4 rounded-xl"
         :class="className"
     >
-        <slot />
-        <slot name="footer">
-            <AppPageFooter />
-        </slot>
+        <div data-slot="app-content-column" class="flex min-h-full flex-1 flex-col">
+            <div class="flex-1">
+                <slot />
+            </div>
+            <slot name="footer">
+                <AppPageFooter />
+            </slot>
+        </div>
     </main>
 </template>

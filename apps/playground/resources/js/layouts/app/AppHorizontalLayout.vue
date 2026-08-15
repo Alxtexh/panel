@@ -30,8 +30,12 @@ withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
             tabindex="-1"
             class="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background md:m-2 md:rounded-xl md:border"
         >
-            <slot />
-            <AppPageFooter />
+            <div data-slot="app-content-column" class="flex min-h-full flex-col">
+                <div class="flex-1">
+                    <slot />
+                </div>
+                <AppPageFooter />
+            </div>
         </main>
 
         <Toaster />

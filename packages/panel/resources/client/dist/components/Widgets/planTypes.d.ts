@@ -34,6 +34,8 @@ export interface PlanModuleOption {
     key: string;
     label: string;
     description?: string | null;
+    children?: string[];
+    requires?: string[];
 }
 export interface PlanLimitField {
     key: string;
