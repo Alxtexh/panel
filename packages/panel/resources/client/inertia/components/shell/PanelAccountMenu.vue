@@ -16,10 +16,12 @@
 import { Link, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { PkDropdown } from '@alxtexh-enterprise/panel'
+import type { User } from '../../types'
+import UserInfo from './UserInfo.vue'
 
 const props = withDefaults(
     defineProps<{
-        user?: { name?: string | null; email?: string | null } | null
+        user?: User | null
         /** Where sign-out posts. Null when nothing routes it - see above. */
         logout?: string | null
         /** An optional account or profile screen, when the panel has one. */
@@ -32,23 +34,16 @@ const props = withDefaults(
     { user: null, logout: null, accountUrl: null, securityUrl: null, helpUrl: null },
 )
 
-/**
- * Initials, from whatever the account actually has.
- *
- * A PANEL USER MAY HAVE NO NAME - `panel:make-user` asks for one, an imported
- * account may not - so the email's first character stands in, and a question
- * mark stands in for that. An empty avatar reads as a rendering fault.
- */
-const initials = computed<string>(() => {
-    const name = props.user?.name?.trim()
-
-    if (name) {
-        const parts = name.split(/\s+/)
-
-        return (parts[0]![0]! + (parts.length > 1 ? parts.at(-1)![0]! : '')).toUpperCase()
+const accountUser = computed<User | null>(() => {
+    if (!props.user) {
+        return null
     }
 
-    return (props.user?.email?.[0] ?? '?').toUpperCase()
+    return {
+        name: props.user.name ?? undefined,
+        email: props.user.email ?? undefined,
+        avatar: props.user.avatar ?? null,
+    }
 })
 
 /**
@@ -75,25 +70,13 @@ function signOut(close: () => void): void {
                 :aria-expanded="open"
                 aria-haspopup="menu"
             >
-                <span
-                    class="bg-muted flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-medium"
-                    aria-hidden="true"
-                >
-                    {{ initials }}
-                </span>
-
-                <span class="hidden max-w-32 truncate text-sm sm:block">
-                    {{ user.name ?? user.email }}
-                </span>
+                <UserInfo v-if="accountUser" :user="accountUser" />
             </button>
         </template>
 
         <template #panel="{ close }">
-            <div class="border-b px-3 py-2">
-                <p class="truncate text-sm font-medium">{{ user.name ?? 'Signed in' }}</p>
-                <p v-if="user.email" class="text-muted-foreground truncate text-xs">
-                    {{ user.email }}
-                </p>
+            <div class="flex items-center gap-2 border-b px-3 py-2">
+                <UserInfo v-if="accountUser" :user="accountUser" :show-email="true" />
             </div>
 
             <div class="p-1">
