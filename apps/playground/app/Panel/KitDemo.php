@@ -841,6 +841,8 @@ final class KitDemo
             Module::make('workspaces')->label('Workspaces')->description('Organisation workspaces')->planLimit(kind: 'number'),
             Module::make('credits')->label('Credits')->description('Usage credits')->planLimit(kind: 'number'),
             Module::make('campaigns')->label('Campaigns')->description('Outbound campaigns')->planLimit(kind: 'number'),
+            Module::make('accounting')->label('Accounting')->description('Kit parent module')->children(['double-entry']),
+            Module::make('double-entry')->label('Double entry')->description('Kit child of accounting')->requires(['accounting']),
         ];
     }
 
@@ -957,7 +959,7 @@ final class KitDemo
                 'trialDays' => 0,
                 'active' => true,
                 'perks' => [
-                    'modules' => ['value' => ['devices', 'storage', 'workspaces', 'credits', 'campaigns'], 'overview' => 'All modules'],
+                    'modules' => ['value' => ['devices', 'storage', 'workspaces', 'credits', 'campaigns', 'accounting', 'double-entry'], 'overview' => 'All modules'],
                     'devices' => ['value' => 25, 'overview' => 'Twenty-five endpoints'],
                     'storage' => ['value' => 100, 'overview' => 'One hundred gigabytes'],
                     'workspaces' => ['value' => 10, 'overview' => 'Ten workspaces'],
@@ -980,7 +982,7 @@ final class KitDemo
                 'trial' => false,
                 'active' => true,
                 'perks' => [
-                    'modules' => ['value' => ['devices', 'storage', 'workspaces', 'credits', 'campaigns'], 'overview' => 'All modules'],
+                    'modules' => ['value' => ['devices', 'storage', 'workspaces', 'credits', 'campaigns', 'accounting', 'double-entry'], 'overview' => 'All modules'],
                     'devices' => ['value' => -1, 'overview' => 'Unlimited devices'],
                     'storage' => ['value' => -1, 'overview' => 'Unlimited storage'],
                     'workspaces' => ['value' => -1, 'overview' => 'Unlimited workspaces'],

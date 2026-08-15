@@ -151,6 +151,15 @@ final class Panel
     /** True after `idleLock()` was called with a duration, not `false`. */
     private bool $idleLockCustom = false;
 
+    /**
+     * Opt-in subscription expiry callback. Null means the wall is off.
+     * See `subscriptionGate()`.
+     */
+    private ?Closure $subscriptionGate = null;
+
+    /** Override for the company billing URL. Null uses PlanSetup's URI. */
+    private ?string $subscriptionBillingPath = null;
+
     private bool $passwordReset = true;
 
     /** See `loginComponent()` for why this is not `auth/Login`. */
@@ -623,6 +632,52 @@ final class Panel
     }
 
     /**
+     * Opt-in expiry wall. When the callback returns false, company users on a
+     * tenant panel are sent to plan setup (or `$billingPath`). Staff on a
+     * central panel get 403. Leave unset so a playground ISP is not locked.
+     *
+     *     Panel::make('admin')->subscriptionGate(fn (): bool => $org->planIsActive());
+     *
+     * Plan setup, payment settings, logout, lock, and impersonation-stop stay
+     * reachable. Same allow-list idea as `RequirePasswordRenewal`.
+     */
+    public function subscriptionGate(Closure $isActive, ?string $billingPath = null): self
+    {
+        $this->subscriptionGate = $isActive;
+        $this->subscriptionBillingPath = $billingPath;
+
+        return $this;
+    }
+
+    public function hasSubscriptionGate(): bool
+    {
+        return $this->subscriptionGate instanceof Closure;
+    }
+
+    public function subscriptionIsActive(): bool
+    {
+        if (! $this->subscriptionGate instanceof Closure) {
+            return true;
+        }
+
+        return (bool) ($this->subscriptionGate)();
+    }
+
+    public function subscriptionBillingPath(): string
+    {
+        if ($this->subscriptionBillingPath !== null && $this->subscriptionBillingPath !== '') {
+            $path = $this->subscriptionBillingPath;
+
+            return str_starts_with($path, '/') ? $path : '/'.$path;
+        }
+
+        $prefix = trim($this->getPath(), '/');
+        $uri = trim(Pages\PlanSetupPage::uri(), '/');
+
+        return ($prefix === '' ? '' : '/'.$prefix).'/'.$uri;
+    }
+
+    /**
      * THE COMPONENT THIS PORTAL'S SIGN-IN RENDERS.
      *
      * DEFAULTS TO THE PACKAGED SCREEN, and it has to. Inertia resolves a page
@@ -1063,8 +1118,10 @@ final class Panel
     public function getMiddleware(): array
     {
         $stack = [...$this->middleware, ...($this->authMiddleware ?? ['auth:'.$this->guard])];
+        $stack = $this->withIdleLockMiddleware($stack);
+        $stack[] = Http\Middleware\EnforceSubscriptionGate::class;
 
-        return $this->withIdleLockMiddleware($stack);
+        return $stack;
     }
 
     /**

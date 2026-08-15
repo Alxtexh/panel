@@ -123,13 +123,41 @@ const moduleKeys = computed({
         return Array.isArray(value) ? value.map(String) : []
     },
     set: (keys: (string | number)[]) => {
-        setPerk('modules', keys.map(String), draft.perks?.modules?.overview ?? '')
+        setPerk('modules', withRequiredParents(keys.map(String)), draft.perks?.modules?.overview ?? '')
     },
 })
 
 const moduleOptions = computed(() =>
     props.modules.map((mod) => ({ value: mod.key, label: mod.label })),
 )
+
+function withRequiredParents(keys: string[]): string[] {
+    const byKey = Object.fromEntries(props.modules.map((mod) => [mod.key, mod]))
+    const selected = new Set(keys)
+
+    for (const mod of props.modules) {
+        if (!selected.has(mod.key)) {
+            for (const child of mod.children ?? []) {
+                selected.delete(child)
+            }
+        }
+    }
+
+    let changed = true
+    while (changed) {
+        changed = false
+        for (const key of [...selected]) {
+            for (const parent of byKey[key]?.requires ?? []) {
+                if (!selected.has(parent)) {
+                    selected.add(parent)
+                    changed = true
+                }
+            }
+        }
+    }
+
+    return [...selected]
+}
 
 function addExtra() {
     draft.extraPerks = [...(draft.extraPerks ?? []), { key: '', value: '' }]

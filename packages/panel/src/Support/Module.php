@@ -13,9 +13,10 @@ use InvalidArgumentException;
  * Register on the panel (arrays still work):
  *
  *     Panel::make('admin')->modules([
+ *         Module::make('accounting')->label('Accounting')->children(['double-entry']),
+ *         Module::make('double-entry')->label('Double entry')->requires(['accounting']),
  *         Module::make('campaigns')
  *             ->label('Campaigns')
- *             ->description('Outbound campaigns')
  *             ->planLimit(kind: 'number')
  *             ->usage(fn (): int => Campaign::query()->count()),
  *     ]);
@@ -38,6 +39,14 @@ final class Module
     private ?string $limitHint = null;
 
     private ?Closure $usage = null;
+
+    /** @var list<string> */
+    private array $children = [];
+
+    /** @var list<string> */
+    private array $requires = [];
+
+    private ?Closure $onGrant = null;
 
     private function __construct(private readonly string $key) {}
 
@@ -89,6 +98,49 @@ final class Module
         return $this;
     }
 
+    /**
+     * Child module keys that only make sense when this parent is granted.
+     *
+     * `ModuleRegistry::enabled($child)` is false unless every parent is also
+     * in the grant list. Declaring children here is enough; the child may also
+     * call `requires()`.
+     *
+     * @param  list<string>  $keys
+     */
+    public function children(array $keys): self
+    {
+        $this->children = array_values(array_unique(array_map('strval', $keys)));
+
+        return $this;
+    }
+
+    /**
+     * Parent keys that must be granted before this module is enabled.
+     *
+     * @param  list<string>  $keys
+     */
+    public function requires(array $keys): self
+    {
+        $this->requires = array_values(array_unique(array_map('strval', $keys)));
+
+        return $this;
+    }
+
+    /**
+     * Called once when this key is newly present in `ModuleRegistry::applyGrants()`.
+     *
+     * PlanSetupPage::save() calls that hook after expanding required parents.
+     * Apps that persist plans themselves should call `applyGrants()` too.
+     *
+     * @param  Closure(mixed): void  $callback
+     */
+    public function onGrant(Closure $callback): self
+    {
+        $this->onGrant = $callback;
+
+        return $this;
+    }
+
     public function key(): string
     {
         return $this->key;
@@ -103,7 +155,10 @@ final class Module
      *     limitLabel: string|null,
      *     limitStep: float|int|null,
      *     limitHint: string|null,
-     *     usage: Closure|null
+     *     usage: Closure|null,
+     *     children: list<string>,
+     *     requires: list<string>,
+     *     onGrant: Closure|null
      * }
      */
     public function toDefinition(): array
@@ -117,6 +172,9 @@ final class Module
             'limitStep' => $this->limitStep,
             'limitHint' => $this->limitHint,
             'usage' => $this->usage,
+            'children' => $this->children,
+            'requires' => $this->requires,
+            'onGrant' => $this->onGrant,
         ];
     }
 }

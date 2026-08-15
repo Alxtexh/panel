@@ -99,6 +99,13 @@ final class AdminPanelProvider extends ServiceProvider
                 ->modules(KitDemo::saasModules())
 
                 /*
+                 * Subscription expiry wall stays OFF here. Nairobi Fibre is the
+                 * ISP demo; `subscriptionGate()` would send operators to plan
+                 * setup. A SaaS host opts in with:
+                 * Panel::make('admin')->subscriptionGate(fn (): bool => $org->planIsActive());
+                 */
+
+                /*
                  * SAME-PAGE HELP / FAQ / WHAT'S NEW / ABOUT EDITING.
                  *
                  * The footer links here (`/help`, `/faq`, `/whats-new`, `/about`).
