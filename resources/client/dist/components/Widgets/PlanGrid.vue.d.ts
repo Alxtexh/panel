@@ -3,6 +3,8 @@ type __VLS_Props = {
     plans: PlanRecord[];
     title?: string;
     description?: string | null;
+    /** Drop page padding so this can sit on a settings or dashboard screen. */
+    embedded?: boolean;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     delete: (id: string) => any;
