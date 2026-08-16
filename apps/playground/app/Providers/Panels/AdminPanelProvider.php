@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Providers\Panels;
 
-use Illuminate\Support\ServiceProvider;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Support\ModuleRegistry;
+use Alxtexh\Panel\Support\TenantContext;
 use App\Panel\KitDemo;
+use Illuminate\Support\ServiceProvider;
 
 /**
  * The operator portal: the ISP back-office itself.
@@ -97,6 +97,12 @@ final class AdminPanelProvider extends ServiceProvider
                 ->without(['operations', 'assistant-settings'])
                 ->brandName(fn (): ?string => app(TenantContext::class)->tenant()?->name)
                 ->pageFooter(true)
+                /*
+                 * SHELL CHROME: this portal keeps the default `inset` sidebar
+                 * (shadcn sidebar-08 / dashboard-01). Superadmin uses
+                 * `floating` (sidebar-04) so both can be compared on :8899.
+                 * Collapse-to-icons is kit-wide (sidebar-07).
+                 */
                 ->modules(KitDemo::saasModules())
 
                 /*

@@ -207,6 +207,12 @@ final class SharePanelProps
                      * off.
                      */
                     'pageFooter' => $panel->hasPageFooter(),
+                    /*
+                     * SIDEBAR CHROME: inset (default), floating, or flush
+                     * sidebar. Shared so AppSidebar can set Sidebar's variant
+                     * without the host forking the shell.
+                     */
+                    'sidebarVariant' => $panel->getSidebarVariant(),
                     'authLayout' => $panel->getAuthLayout(),
                     'authTestimonial' => $panel->getAuthTestimonial(),
 

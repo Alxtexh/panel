@@ -81,9 +81,7 @@ const pageFooter = useShellPageFooter()
  * Per-tenant branding, applied at runtime rather than compiled per tenant.
  * `panelTheme` is what the reference app shares; absent, this applies nothing.
  */
-useTenantTheme(
-    computed(() => page.props.panelTheme as Record<string, string> | undefined),
-)
+useTenantTheme(computed(() => page.props.panelTheme as Record<string, string> | undefined))
 
 /**
  * The PANEL'S palette - `Panel::colors()` via `SharePanelProps` - as bare
@@ -106,6 +104,12 @@ const palette = computed<Record<string, string>>(() =>
 )
 
 const horizontal = computed(() => appearance.value.sidebarSide === 'horizontal')
+
+const sidebarVariant = computed<'inset' | 'floating' | 'sidebar'>(() => {
+    const shared = (page.props.panel as { sidebarVariant?: string } | undefined)?.sidebarVariant
+
+    return shared === 'floating' || shared === 'sidebar' || shared === 'inset' ? shared : 'inset'
+})
 
 /**
  * The handset navigation, built from the same shared props the sidebar reads -
@@ -180,7 +184,7 @@ router.on('success', () => {
         to the inset.
     -->
     <div class="pk-shell relative flex h-svh flex-col overflow-hidden" :style="palette">
-    <!--
+        <!--
         FIRST IN THE DOCUMENT, because that is the only position that works. A
         skip link placed anywhere else is reached after the thing it exists to
         skip. It targets #pk-main, which AppContent renders focusable.
@@ -189,119 +193,125 @@ router.on('success', () => {
         never copied `.pk-skip-link` still gets a real skip link, not a chip
         over the logo.
     -->
-    <a
-        href="#pk-main"
-        class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring"
-    >
-        Skip to content
-    </a>
+        <a
+            href="#pk-main"
+            class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+            Skip to content
+        </a>
 
-    <!--
+        <!--
         PADDING FOR THE BOTTOM BAR, so the last row of a table is not
         permanently underneath it. `sm:pb-0` because the bar disappears there.
         `min-h-0` so this flex child can shrink; without it the inner `h-svh`
         rail overflows and the document scrolls again.
     -->
-    <div class="flex min-h-0 flex-1 flex-col overflow-hidden pb-14 sm:pb-0">
-        <!-- Top navigation, by preference: no rail, no provider. -->
-        <div v-if="horizontal" class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-sidebar">
-            <PanelImpersonationBanner />
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden pb-14 sm:pb-0">
+            <!-- Top navigation, by preference: no rail, no provider. -->
+            <div
+                v-if="horizontal"
+                class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-sidebar"
+            >
+                <PanelImpersonationBanner />
 
-            <!--
+                <!--
                 FORWARDED ONLY WHEN GIVEN. An unconditional forward renders an
                 empty slot where the sidebar would have rendered its default
                 menu - the dropdown opens onto nothing, silently.
             -->
-            <AppTopNav :breadcrumbs="props.breadcrumbs">
-                <template v-if="$slots.userMenu" #userMenu="{ user }">
-                    <slot name="userMenu" :user="user" />
-                </template>
-            </AppTopNav>
+                <AppTopNav :breadcrumbs="props.breadcrumbs">
+                    <template v-if="$slots.userMenu" #userMenu="{ user }">
+                        <slot name="userMenu" :user="user" />
+                    </template>
+                </AppTopNav>
 
-            <main
-                id="pk-main"
-                tabindex="-1"
-                class="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background md:m-2 md:rounded-xl md:border"
-            >
-                <div data-slot="app-content-column" class="flex min-h-full w-full shrink-0 flex-col">
+                <main
+                    id="pk-main"
+                    tabindex="-1"
+                    class="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background md:m-2 md:rounded-xl md:border"
+                >
+                    <div
+                        data-slot="app-content-column"
+                        class="flex min-h-full w-full shrink-0 flex-col"
+                    >
+                        <slot />
+                        <AppPageFooter v-if="pageFooter" host />
+                    </div>
+                </main>
+
+                <Toaster />
+            </div>
+
+            <AppShell v-else variant="sidebar">
+                <AppSidebar :variant="sidebarVariant">
+                    <template v-if="$slots.userMenu" #userMenu="{ user }">
+                        <slot name="userMenu" :user="user" />
+                    </template>
+                </AppSidebar>
+
+                <AppContent variant="sidebar" class="min-h-0 overflow-x-hidden overflow-y-auto">
+                    <PanelImpersonationBanner />
+
+                    <AppSidebarHeader :breadcrumbs="props.breadcrumbs">
+                        <template v-if="$slots.topbar" #topbar>
+                            <slot name="topbar" />
+                        </template>
+                        <template v-if="$slots.actions" #actions>
+                            <slot name="actions" />
+                        </template>
+                    </AppSidebarHeader>
+
                     <slot />
-                    <AppPageFooter v-if="pageFooter" host />
-                </div>
-            </main>
+                </AppContent>
 
-            <Toaster />
+                <Toaster />
+            </AppShell>
         </div>
 
-        <AppShell v-else variant="sidebar">
-            <AppSidebar>
-                <template v-if="$slots.userMenu" #userMenu="{ user }">
-                    <slot name="userMenu" :user="user" />
-                </template>
-            </AppSidebar>
+        <PkBottomNav :items="bottomNavItems" :current="page.url" @more="openFullNav" />
 
-            <AppContent variant="sidebar" class="min-h-0 overflow-x-hidden overflow-y-auto">
-                <PanelImpersonationBanner />
-
-                <AppSidebarHeader :breadcrumbs="props.breadcrumbs">
-                    <template v-if="$slots.topbar" #topbar>
-                        <slot name="topbar" />
-                    </template>
-                    <template v-if="$slots.actions" #actions>
-                        <slot name="actions" />
-                    </template>
-                </AppSidebarHeader>
-
-                <slot />
-            </AppContent>
-
-            <Toaster />
-        </AppShell>
-    </div>
-
-    <PkBottomNav :items="bottomNavItems" :current="page.url" @more="openFullNav" />
-
-    <!--
+        <!--
         EVERY DESTINATION, when the bar's slots are not enough and there is no
         sidebar to open (horizontal mode). A sheet rather than a page: "more"
         is a disclosure, and navigating away to a menu loses the page.
     -->
-    <PkModal v-if="showAllNav" :open="showAllNav" title="Go to" @close="showAllNav = false">
-        <nav class="flex flex-col">
-            <a
-                v-for="item in bottomNavItems"
-                :key="item.key"
-                :href="item.href"
-                class="-mx-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
-                :class="page.url === item.href ? 'font-medium text-primary' : ''"
-                >{{ item.title }}</a
-            >
-        </nav>
+        <PkModal v-if="showAllNav" :open="showAllNav" title="Go to" @close="showAllNav = false">
+            <nav class="flex flex-col">
+                <a
+                    v-for="item in bottomNavItems"
+                    :key="item.key"
+                    :href="item.href"
+                    class="-mx-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+                    :class="page.url === item.href ? 'font-medium text-primary' : ''"
+                    >{{ item.title }}</a
+                >
+            </nav>
 
-        <template #footer>
-            <button
-                type="button"
-                class="text-sm text-muted-foreground hover:text-foreground"
-                @click="showAllNav = false"
-            >
-                Close
-            </button>
-        </template>
-    </PkModal>
+            <template #footer>
+                <button
+                    type="button"
+                    class="text-sm text-muted-foreground hover:text-foreground"
+                    @click="showAllNav = false"
+                >
+                    Close
+                </button>
+            </template>
+        </PkModal>
 
-    <!--
+        <!--
         SPA navigation is silent to a screen reader; a polite live region
         carrying the page title is the standard remedy.
     -->
-    <div class="sr-only" role="status" aria-live="polite">
-        {{ announcement }}
-    </div>
+        <div class="sr-only" role="status" aria-live="polite">
+            {{ announcement }}
+        </div>
 
-    <!--
+        <!--
         Mounted once, for every panel page. A stale session can be discovered
         on any click anywhere, so the dialog that reports it has to already
         exist wherever that click happened.
     -->
-    <SessionExpired />
-    <PanelIdleLockGuard />
+        <SessionExpired />
+        <PanelIdleLockGuard />
     </div>
 </template>

@@ -101,6 +101,7 @@ export { default as PkBoundary } from './components/Layout/PkBoundary.vue'
  * block everything else sits in.
  */
 export { default as PkCard } from './components/Layout/PkCard.vue'
+export { default as PkSiteHeader } from './components/Layout/PkSiteHeader.vue'
 export { default as AppPageFooter } from './components/Layout/AppPageFooter.vue'
 export { useShellPageFooter } from './composables/useShellPageFooter'
 export { default as PkDeviceFrame } from './components/Layout/PkDeviceFrame.vue'
@@ -158,11 +159,7 @@ export { default as CatalogCard } from './components/Widgets/CatalogCard.vue'
 export { default as PlanCard } from './components/Widgets/PlanCard.vue'
 export { default as PlanGrid } from './components/Widgets/PlanGrid.vue'
 export { default as PlanEditor } from './components/Widgets/PlanEditor.vue'
-export {
-    cycleLabel,
-    formatPerkValue,
-    perkGranted,
-} from './components/Widgets/planTypes'
+export { cycleLabel, formatPerkValue, perkGranted } from './components/Widgets/planTypes'
 export type {
     ExtraPerk,
     PlanLimitField,
@@ -253,10 +250,7 @@ export { buttonClasses } from './components/primitives/buttonClasses'
 export type { ButtonClassesOptions } from './components/primitives/buttonClasses'
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
-export {
-    DASHBOARD_HIDE_KEY,
-    DASHBOARD_HIDDEN_STORAGE_KEY,
-} from './composables/dashboardHide'
+export { DASHBOARD_HIDE_KEY, DASHBOARD_HIDDEN_STORAGE_KEY } from './composables/dashboardHide'
 export type { DashboardHide } from './composables/dashboardHide'
 export { useLiveUpdates } from './composables/useLiveUpdates'
 export {

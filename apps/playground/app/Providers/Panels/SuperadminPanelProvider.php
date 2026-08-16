@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Providers\Panels;
 
-use App\Policies\ContentEntryPolicy;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\ServiceProvider;
 use Alxtexh\Panel\Models\ContentEntry;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
+use App\Policies\ContentEntryPolicy;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
 
 /**
  * The superadmin portal: the installation looking at itself.
@@ -108,6 +108,7 @@ final class SuperadminPanelProvider extends ServiceProvider
                 )
 
                 ->brandName(fn (): string => config('app.name').' Superadmin')
+                ->sidebarVariant('floating')
                 ->colors(fn (): array => [
                     'primary' => 'oklch(0.72 0.17 65)',
                     'primary-foreground' => 'oklch(0.21 0.02 65)',

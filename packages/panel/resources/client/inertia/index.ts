@@ -171,6 +171,7 @@ export { default as UserInfo } from './components/shell/UserInfo.vue'
 export { default as AppHeader } from './components/shell/AppHeader.vue'
 export { default as AppTopNav } from './components/shell/AppTopNav.vue'
 export { default as AppSidebarHeader } from './components/shell/AppSidebarHeader.vue'
+export { PkSiteHeader } from '@alxtexh-enterprise/panel'
 export { default as AssistantDrawer } from './components/shell/AssistantDrawer.vue'
 export { default as Breadcrumbs } from './components/shell/Breadcrumbs.vue'
 export { default as TopNavUser } from './components/shell/TopNavUser.vue'
@@ -225,7 +226,7 @@ export const PANEL_PAGES = {
     'support/Help': () => import('./pages/support/Help.vue'),
     'support/Faq': () => import('./pages/support/Faq.vue'),
     'support/About': () => import('./pages/support/About.vue'),
-    'UserManagement': () => import('./pages/UserManagement.vue'),
+    UserManagement: () => import('./pages/UserManagement.vue'),
     'settings/Workspaces': () => import('./pages/settings/Workspaces.vue'),
     'settings/Organisation': () => import('./pages/settings/Organisation.vue'),
     'settings/Index': () => import('./pages/settings/Index.vue'),
