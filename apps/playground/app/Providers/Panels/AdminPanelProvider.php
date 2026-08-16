@@ -102,6 +102,10 @@ final class AdminPanelProvider extends ServiceProvider
                  * (shadcn sidebar-08 / dashboard-01). Superadmin uses
                  * `floating` (sidebar-04) so both can be compared on :8899.
                  * Collapse-to-icons is kit-wide (sidebar-07).
+                 *
+                 * LOGIN CHROME stays `simple` (shadcn login-01). The kit also
+                 * offers split, muted, card, and email via loginLayout().
+                 * Do not set a dramatic login here; the test app does.
                  */
                 ->modules(KitDemo::saasModules())
 

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Alxtexh\Panel\Auth\Impersonation;
+use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\EditableContent;
 use Alxtexh\Panel\Support\SettingsIndex;
@@ -213,7 +214,18 @@ final class SharePanelProps
                      * without the host forking the shell.
                      */
                     'sidebarVariant' => $panel->getSidebarVariant(),
-                    'authLayout' => $panel->getAuthLayout(),
+                    /*
+                     * LOGIN CHROME: simple (default, login-01), split, muted,
+                     * card, email. `loginLayout()` is the kit API; debug may
+                     * override with ?loginLayout= so a host can preview without
+                     * five apps. authLayout stays for older Vue.
+                     */
+                    'loginLayout' => self::sharedLoginLayout($panel),
+                    'authLayout' => match (self::sharedLoginLayout($panel)) {
+                        'split', 'card' => 'split',
+                        'showcase' => 'showcase',
+                        default => 'centered',
+                    },
                     'authTestimonial' => $panel->getAuthTestimonial(),
 
                     /*
@@ -635,5 +647,33 @@ final class SharePanelProps
             'logs' => $resolve('logs'),
             'monitoring' => $resolve('monitoring'),
         ];
+    }
+
+    /**
+     * Login chrome for this request. `Panel::loginLayout()` is the source;
+     * `?loginLayout=` may override in debug so a developer can preview the
+     * five shadcn blocks without five apps.
+     *
+     * @return 'simple'|'split'|'muted'|'card'|'email'|'showcase'
+     */
+    private static function sharedLoginLayout(Panel $panel): string
+    {
+        $layout = $panel->getLoginLayout();
+
+        if (! config('app.debug')) {
+            return $layout;
+        }
+
+        $requested = request()->query('loginLayout');
+
+        if (! is_string($requested)) {
+            return $layout;
+        }
+
+        if (in_array($requested, [...Panel::LOGIN_LAYOUTS, 'showcase'], true)) {
+            return $requested;
+        }
+
+        return $layout;
     }
 }

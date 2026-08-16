@@ -171,6 +171,40 @@ final class SharedPanelPropsTest extends TestCase
         $this->assertSame('floating', $this->sharedFor('superadmin')['panel']['sidebarVariant']);
     }
 
+    public function test_login_layout_defaults_to_simple(): void
+    {
+        app(PanelManager::class)->registerPanel(
+            Panel::make('loginsimple')
+                ->path('loginsimple')
+                ->guard('web')
+                ->middleware(['web']),
+        );
+
+        $this->assertSame('simple', $this->sharedFor('loginsimple')['panel']['loginLayout']);
+    }
+
+    public function test_a_card_login_layout_is_shared_with_the_client(): void
+    {
+        app(PanelManager::class)->registerPanel(
+            Panel::make('logincard')
+                ->path('logincard')
+                ->guard('web')
+                ->middleware(['web'])
+                ->loginLayout('card'),
+        );
+
+        $this->assertSame('card', $this->sharedFor('logincard')['panel']['loginLayout']);
+    }
+
+    public function test_playground_admin_keeps_simple_login_chrome(): void
+    {
+        $this->assertSame(
+            'simple',
+            $this->sharedFor('admin')['panel']['loginLayout'],
+            'Nairobi Fibre must not jump to a dramatic login layout.',
+        );
+    }
+
     /**
      * THE SIDEBAR CARRIES THIS PANEL'S PREFIX, which is the half that fails
      * silently.

@@ -91,22 +91,61 @@ describe('AuthLayout', () => {
             expect(wrapper.find('h1').text()).toBe('Log in')
         })
 
-        it('shows the brand name in the split image panel', () => {
+        it('shows the brand name in the split form column', () => {
             const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme — Admin', authLayout: 'split' } })
-            // Desktop image panel contains the brand name link.
-            expect(wrapper.find('.bg-muted a span').text()).toBe('Acme — Admin')
+            expect(wrapper.find('[data-login-layout="split"] a span').text()).toBe('Acme — Admin')
         })
 
         it('shows the form description in split layout', () => {
             const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme', authLayout: 'split' } })
-            // Target the description p in the form panel (not inside the muted panel).
-            expect(wrapper.find('.bg-background p').text()).toBe('Enter your details')
+            expect(wrapper.find('[data-login-layout="split"] p').text()).toBe('Enter your details')
         })
 
-        it('falls back to centered when authLayout is absent', () => {
+        it('falls back to simple when authLayout is absent', () => {
             const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme' } })
-            // Centered layout has no .bg-muted image panel.
+            expect(wrapper.find('[data-login-layout="simple"]').exists()).toBe(true)
             expect(wrapper.find('.bg-muted').exists()).toBe(false)
+        })
+    })
+
+    describe('loginLayout variants', () => {
+        function mountLayout(loginLayout: string) {
+            page.props = { name: 'Acme', panel: { brand: 'Acme', loginLayout } }
+            return mount(AuthLayout, { props: { title: 'Log in', description: 'Enter your details' } })
+        }
+
+        it('marks simple chrome as login-01', () => {
+            const wrapper = mountLayout('simple')
+            expect(wrapper.find('[data-login-layout="simple"]').exists()).toBe(true)
+            expect(wrapper.find('[data-login-layout="simple"]').classes()).toContain('bg-background')
+        })
+
+        it('marks split chrome as login-02 two-column cover', () => {
+            const wrapper = mountLayout('split')
+            expect(wrapper.find('[data-login-layout="split"]').exists()).toBe(true)
+            expect(wrapper.find('[data-login-layout="split"]').classes()).toContain('lg:grid-cols-2')
+            expect(wrapper.find('.bg-muted').exists()).toBe(true)
+        })
+
+        it('marks muted chrome as login-03', () => {
+            const wrapper = mountLayout('muted')
+            expect(wrapper.find('[data-login-layout="muted"]').exists()).toBe(true)
+            expect(wrapper.find('[data-login-layout="muted"]').classes()).toContain('bg-muted')
+        })
+
+        it('marks card chrome as login-04 form plus image card', () => {
+            const wrapper = mountLayout('card')
+            expect(wrapper.find('[data-login-layout="card"]').exists()).toBe(true)
+            expect(wrapper.find('[data-login-layout="card"]').classes()).toContain('bg-muted')
+            expect(wrapper.find('.md\\:max-w-4xl').exists()).toBe(true)
+            expect(wrapper.find('.md\\:grid-cols-2').exists()).toBe(true)
+        })
+
+        it('marks email chrome as login-05, same stack as simple', () => {
+            const wrapper = mountLayout('email')
+            expect(wrapper.find('[data-login-layout="email"]').exists()).toBe(true)
+            expect(wrapper.find('[data-login-layout="email"]').classes()).toContain('bg-background')
+            expect(wrapper.find('.max-w-sm').exists()).toBe(true)
         })
     })
 })

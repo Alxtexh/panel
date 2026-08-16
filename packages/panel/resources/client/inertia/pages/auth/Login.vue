@@ -28,7 +28,7 @@ defineOptions({ inheritAttrs: false })
  * generated portal's route names are the application's and this component is
  * the package's. The server sends `action`; nothing here guesses it.
  */
-import { Form, Head, Link } from '@inertiajs/vue3'
+import { Form, Head, Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
@@ -111,12 +111,33 @@ const passkeyRoutes = computed(() =>
  * has its own.
  */
 const providers = computed(() => props.socialProviders ?? [])
+
+const emailFirst = computed(() => {
+    const panel = usePage().props.panel
+    const layout = panel && typeof panel === 'object'
+        ? (panel as Record<string, unknown>).loginLayout
+        : null
+
+    return layout === 'email'
+})
+
+const heading = computed(() =>
+    props.heading
+        ?? (emailFirst.value ? 'Welcome back' : 'Log in to your account'),
+)
+
+const description = computed(() =>
+    props.description
+        ?? (emailFirst.value
+            ? 'Enter your email to continue'
+            : 'Enter your email and password below to log in'),
+)
 </script>
 
 <template>
     <AuthLayout
-        :title="props.heading ?? 'Log in to your account'"
-        :description="props.description ?? 'Enter your email and password below to log in'"
+        :title="heading"
+        :description="description"
     >
         <Head title="Log in" />
 
