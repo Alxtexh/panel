@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Support;
 
-use Illuminate\Support\Facades\Artisan;
 use Alxtexh\Panel\Alerts;
 use Alxtexh\Panel\Documents;
 use Alxtexh\Panel\PanelManager;
+use Illuminate\Support\Facades\Artisan;
 
 /**
  * The instructions an AI agent needs to build in this panel without guessing.
@@ -613,6 +613,11 @@ final class Blueprint
         A `DashboardPage` can declare `stats()` and `charts()`. The generated Vue
         is an empty canvas: import `StatCard` / `ChartCard`, or return
         `PanelDashboard` from `component()` to use the packaged screen.
+
+        Packing is a kit option. Default `classic` is a StatStrip plus independent
+        column tracks. `Panel::dashboardLayout('blocks')` (or `dashboardLayout()`
+        on the page) uses the dashboard-01 recipe: a row of StatCards, one
+        full-width area/line ChartCard, remaining widgets below.
 
         ```php
         final class OverviewPage extends DashboardPage

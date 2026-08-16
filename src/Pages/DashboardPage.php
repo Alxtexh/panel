@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Pages;
 
-use DateTimeImmutable;
-use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Alxtexh\Panel\Alerts\Announcement;
+use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\Ability;
 use Alxtexh\Panel\Support\SetupChecklist;
@@ -18,6 +14,11 @@ use Alxtexh\Panel\Widgets\ChartWidget;
 use Alxtexh\Panel\Widgets\DashboardFilters;
 use Alxtexh\Panel\Widgets\Period;
 use Alxtexh\Panel\Widgets\StatWidget;
+use DateTimeImmutable;
+use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 /**
  * The host `StatWidget` and `ChartWidget` never had.
@@ -243,6 +244,41 @@ abstract class DashboardPage extends Page
     }
 
     /**
+     * Packing recipe for the packaged PanelDashboard screen.
+     *
+     * NULL MEANS INHERIT THE PANEL. `Panel::dashboardLayout('classic')` is the
+     * default so playground and every host that never asked stay as they were.
+     * Return `blocks` for dashboard-01: four StatCards, one full-width
+     * area/line ChartCard, remaining widgets below.
+     *
+     * @return 'classic'|'blocks'|null
+     */
+    public static function dashboardLayout(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * The packing the client should render: page override, then the panel.
+     *
+     * @return 'classic'|'blocks'
+     */
+    public static function resolvedDashboardLayout(): string
+    {
+        $declared = static::dashboardLayout();
+
+        if (is_string($declared) && $declared !== '') {
+            if (! in_array($declared, Panel::DASHBOARD_LAYOUTS, true)) {
+                throw new \RuntimeException("Unknown dashboard layout [{$declared}].");
+            }
+
+            return $declared;
+        }
+
+        return app(PanelManager::class)->currentPanel()?->getDashboardLayout() ?? 'classic';
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function data(Request $request): array
@@ -303,6 +339,7 @@ abstract class DashboardPage extends Page
             'filters' => $filters->toArray(),
             'filterDimensions' => static::filterDimensions(),
             'heading' => static::label(),
+            'layout' => static::resolvedDashboardLayout(),
 
             /*
              * THE NOTICES, WHICH ARE THE REASON ANNOUNCEMENTS WORK AT ALL.

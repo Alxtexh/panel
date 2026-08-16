@@ -131,6 +131,15 @@ final class Panel
      */
     private string $sidebarVariant = 'inset';
 
+    /**
+     * How PanelDashboard packs widgets. Default `classic` is the current
+     * StatStrip plus independent column tracks. `blocks` is dashboard-01:
+     * section StatCards, one full-width area/line chart, remaining below.
+     *
+     * @var 'classic'|'blocks'
+     */
+    private string $dashboardLayout = 'classic';
+
     /** @var Closure|null */
     private mixed $paymentGatewaysResolver = null;
 
@@ -741,6 +750,14 @@ final class Panel
     public const LOGIN_LAYOUTS = ['simple', 'split', 'muted', 'card', 'email'];
 
     /**
+     * Packaged dashboard packing recipes. `classic` is the default so a host
+     * that never called `dashboardLayout()` does not jump.
+     *
+     * @var list<'classic'|'blocks'>
+     */
+    public const DASHBOARD_LAYOUTS = ['classic', 'blocks'];
+
+    /**
      * Sign-in chrome: `simple` (login-01, default), `split` (login-02),
      * `muted` (login-03), `card` (login-04), or `email` (login-05).
      *
@@ -844,7 +861,7 @@ final class Panel
      * it. The declaration remains in code and is ready once the conflict is
      * resolved.
      *
-     * @param non-empty-string $path
+     * @param  non-empty-string  $path
      */
     public function sharedLogin(string $path = 'login'): self
     {
@@ -1064,6 +1081,31 @@ final class Panel
     public function getSidebarVariant(): string
     {
         return $this->sidebarVariant;
+    }
+
+    /**
+     * Dashboard packing: `classic` (default) or `blocks` (dashboard-01).
+     *
+     * This is packing only. Widget data still comes from `stats()` / `charts()`
+     * on a DashboardPage. Invalid names throw at registration.
+     *
+     * @param  'classic'|'blocks'  $layout
+     */
+    public function dashboardLayout(string $layout): self
+    {
+        if (! in_array($layout, self::DASHBOARD_LAYOUTS, true)) {
+            throw new RuntimeException("Unknown dashboard layout [{$layout}].");
+        }
+
+        $this->dashboardLayout = $layout;
+
+        return $this;
+    }
+
+    /** @return 'classic'|'blocks' */
+    public function getDashboardLayout(): string
+    {
+        return $this->dashboardLayout;
     }
 
     /**
