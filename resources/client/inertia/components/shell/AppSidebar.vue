@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
-import { ChevronLeft, ChevronRight, HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Sparkles } from '@lucide/vue'
+import {
+    ChevronLeft,
+    ChevronRight,
+    HelpCircle,
+    Info,
+    LayoutGrid,
+    MessageCircleQuestion,
+    Sparkles,
+} from '@lucide/vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { PkBoundary, PkDropdown, useAppearance } from '@alxtexh-enterprise/panel'
 import {
@@ -28,6 +36,16 @@ import NavUser from './NavUser.vue'
 import NestedNavGroups from './NestedNavGroups.vue'
 import TeamSwitcher from './TeamSwitcher.vue'
 
+type SidebarChrome = 'inset' | 'floating' | 'sidebar'
+
+const props = defineProps<{
+    /**
+     * Sidebar surface. Defaults to `panel.sidebarVariant` from SharePanelProps,
+     * then `inset` (current dashboard-01 / sidebar-08 look).
+     */
+    variant?: SidebarChrome
+}>()
+
 /**
  * Built from the resource registry, delivered with the initial payload.
  *
@@ -37,6 +55,17 @@ import TeamSwitcher from './TeamSwitcher.vue'
  * the user cannot view never reaches the client at all.
  */
 const page = usePage()
+
+const sidebarVariant = computed<SidebarChrome>(() => {
+    if (props.variant === 'floating' || props.variant === 'sidebar' || props.variant === 'inset') {
+        return props.variant
+    }
+
+    const shared = (page.props.panel as { sidebarVariant?: string } | null | undefined)
+        ?.sidebarVariant
+
+    return shared === 'floating' || shared === 'sidebar' || shared === 'inset' ? shared : 'inset'
+})
 
 /**
  * Sidebar side comes from the user preference.
@@ -197,7 +226,12 @@ const toPath = (url: string): string => url.replace(/^https?:\/\/[^/]+/, '') || 
 
 const supportNavItems = computed<NavItem[]>(() => {
     const panel = page.props.panel as
-        | { help?: string | null; faq?: string | null; about?: string | null; whatsNew?: string | null }
+        | {
+              help?: string | null
+              faq?: string | null
+              about?: string | null
+              whatsNew?: string | null
+          }
         | null
         | undefined
 
@@ -533,7 +567,7 @@ watch(
 <template>
     <Sidebar
         :collapsible="isMobile ? 'offcanvas' : 'icon'"
-        variant="inset"
+        :variant="sidebarVariant"
         :side="appearance.sidebarSide === 'right' ? 'right' : 'left'"
     >
         <SidebarHeader>
@@ -587,7 +621,10 @@ watch(
                                 :aria-label="group.name"
                                 :title="group.name"
                             >
-                                <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4" />
+                                <component
+                                    :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                                    class="size-4"
+                                />
                             </button>
                         </template>
 
@@ -602,7 +639,10 @@ watch(
                             <p
                                 class="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground"
                             >
-                                <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" />
+                                <component
+                                    :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                                    class="size-4 shrink-0"
+                                />
                                 {{ group.name }}
                             </p>
 
@@ -700,7 +740,11 @@ watch(
                         <p
                             class="flex w-full items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground"
                         >
-                            <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
+                            <component
+                                :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                                class="size-4 shrink-0"
+                                aria-hidden="true"
+                            />
                             <span class="flex-1 text-left">{{ group.name }}</span>
                         </p>
 
@@ -711,7 +755,11 @@ watch(
                             <button
                                 type="button"
                                 class="flex w-full items-center gap-2 rounded-md py-1.5 pl-4 text-sm transition-colors hover:bg-sidebar-accent"
-                                :class="groupIsActive(sub.items) ? 'bg-sidebar-accent font-medium' : 'text-muted-foreground hover:text-foreground'"
+                                :class="
+                                    groupIsActive(sub.items)
+                                        ? 'bg-sidebar-accent font-medium'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                "
                                 @click="focusGroup(group.name); focusGroup(sub.name)"
                             >
                                 <span class="flex-1 text-left">{{ sub.name }}</span>
@@ -724,10 +772,18 @@ watch(
                         v-else
                         type="button"
                         class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sidebar-accent"
-                        :class="groupContainsActive(group) ? 'bg-sidebar-accent font-medium' : 'text-muted-foreground hover:text-foreground'"
+                        :class="
+                            groupContainsActive(group)
+                                ? 'bg-sidebar-accent font-medium'
+                                : 'text-muted-foreground hover:text-foreground'
+                        "
                         @click="focusGroup(group.name)"
                     >
-                        <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
+                        <component
+                            :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                            class="size-4 shrink-0"
+                            aria-hidden="true"
+                        />
                         <span class="flex-1 text-left">{{ group.name }}</span>
                         <ChevronRight class="size-3.5 shrink-0" aria-hidden="true" />
                     </button>
@@ -758,7 +814,11 @@ watch(
                         <button
                             type="button"
                             class="flex w-full items-center gap-2 rounded-md py-1.5 pl-4 text-sm transition-colors hover:bg-sidebar-accent"
-                            :class="groupIsActive(sub.items) ? 'bg-sidebar-accent font-medium' : 'text-muted-foreground hover:text-foreground'"
+                            :class="
+                                groupIsActive(sub.items)
+                                    ? 'bg-sidebar-accent font-medium'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            "
                             @click="focusGroup(sub.name)"
                         >
                             <span class="flex-1 text-left">{{ sub.name }}</span>
@@ -816,7 +876,11 @@ watch(
                         :aria-expanded="!collapsed.has(group.name)"
                         @click="toggleGroup(group.name, group.collapsible)"
                     >
-                        <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
+                        <component
+                            :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                            class="size-4 shrink-0"
+                            aria-hidden="true"
+                        />
                         <span class="flex-1 text-left">{{ group.name }}</span>
                         <svg
                             viewBox="0 0 24 24"

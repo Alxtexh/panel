@@ -579,7 +579,14 @@ final class {$studly}PanelProvider extends ServiceProvider
                  * PAGE COPYRIGHT FOOTER. Off by default: the kit is an empty
                  * canvas. Uncomment to render AppPageFooter after every page.
                  */
-                // ->pageFooter(true),
+                // ->pageFooter(true)
+
+                /*
+                 * SIDEBAR CHROME. Default `inset` matches dashboard-01.
+                 * `floating` is sidebar-04; `sidebar` is flush. Collapse
+                 * to icons is always on (sidebar-07).
+                 */
+                // ->sidebarVariant('inset'),
         );
     }
 }

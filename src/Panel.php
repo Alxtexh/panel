@@ -122,6 +122,15 @@ final class Panel
      */
     private bool $pageFooter = false;
 
+    /**
+     * Sidebar chrome. Default `inset` is the current look (shadcn sidebar-08
+     * / dashboard-01). `floating` is sidebar-04. `sidebar` is the flush
+     * shadcn default. Collapse-to-icons is always on (sidebar-07).
+     *
+     * @var 'inset'|'floating'|'sidebar'
+     */
+    private string $sidebarVariant = 'inset';
+
     /** @var Closure|null */
     private mixed $paymentGatewaysResolver = null;
 
@@ -966,6 +975,31 @@ final class Panel
     public function hasPageFooter(): bool
     {
         return $this->pageFooter;
+    }
+
+    /**
+     * Sidebar surface: `inset` (default), `floating`, or flush `sidebar`.
+     *
+     * This is chrome only. Pages stay the host's to compose. Invalid names
+     * throw at registration rather than rendering a silent default.
+     *
+     * @param  'inset'|'floating'|'sidebar'  $variant
+     */
+    public function sidebarVariant(string $variant): self
+    {
+        if (! in_array($variant, ['inset', 'floating', 'sidebar'], true)) {
+            throw new RuntimeException("Unknown sidebar variant [{$variant}].");
+        }
+
+        $this->sidebarVariant = $variant;
+
+        return $this;
+    }
+
+    /** @return 'inset'|'floating'|'sidebar' */
+    public function getSidebarVariant(): string
+    {
+        return $this->sidebarVariant;
     }
 
     /**
