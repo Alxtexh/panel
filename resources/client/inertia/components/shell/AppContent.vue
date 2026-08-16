@@ -27,6 +27,9 @@ const className = computed(() => props.class)
  * Only this inner wrapper narrows; `SidebarInset` itself keeps stretching to
  * fill the space beside the rail, or the background stops at the text instead
  * of the window edge.
+ *
+ * CENTERING MUST NOT WRAP THE FOOTER. A max-w wrapper that includes the
+ * copyright makes the bar sit in the first content cell on a dashboard.
  */
 const { appearance } = useAppearance()
 const centered = computed(() => appearance.value.contentLayout === 'centered')
@@ -40,24 +43,22 @@ const centered = computed(() => appearance.value.contentLayout === 'centered')
         the person was trying to skip. `-1` makes it programmatically focusable
         without adding it to the tab order.
 
-        THE INNER COLUMN IS THE FOOTER FIX. The inset is the scrollport
-        (`overflow-y-auto`, a definite height). A page that declares `h-full`
-        then fills that scrollport. Putting the copyright as a flex sibling of
-        that page pinned it to the first viewport, and dashboard widgets
-        overflowed over it, which is how "© 20…" sat under the doughnut instead
-        of under the page. `min-h-full` (not `h-full`, not `flex-1`) lets this
-        column grow with the page so the footer is after the widgets; on a short
-        screen it still fills the scrollport and `mt-auto` on the footer holds
-        the bottom edge.
+        THE SCROLLPORT IS `#pk-main`. The page and the footer are block siblings
+        inside a column that is allowed to grow (`shrink-0 min-h-full`, never
+        `h-full`). Wrapping the page in `flex-1` (flex-basis 0%) made this
+        column resolve to the first screen. `mt-auto` then pinned the copyright
+        to that screen while dashboard widgets overflowed over it.
+
+        Do not put `flex-1` or `h-full` on the page slot. Short pages still pin
+        the footer with `mt-auto` because the column is at least as tall as the
+        scrollport and the page is only as tall as its content.
     -->
     <SidebarInset v-if="props.variant === 'sidebar'" id="pk-main" tabindex="-1" :class="className">
-        <div data-slot="app-content-column" class="flex min-h-full flex-col">
-            <div v-if="centered" class="mx-auto w-full max-w-7xl flex-1">
+        <div data-slot="app-content-column" class="flex min-h-full w-full shrink-0 flex-col">
+            <div v-if="centered" class="mx-auto w-full max-w-7xl">
                 <slot />
             </div>
-            <div v-else class="flex-1">
-                <slot />
-            </div>
+            <slot v-else />
             <slot name="footer">
                 <AppPageFooter />
             </slot>
@@ -67,13 +68,11 @@ const centered = computed(() => appearance.value.contentLayout === 'centered')
         v-else
         id="pk-main"
         tabindex="-1"
-        class="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col gap-4 rounded-xl"
+        class="mx-auto w-full max-w-7xl flex-1 overflow-y-auto rounded-xl"
         :class="className"
     >
-        <div data-slot="app-content-column" class="flex min-h-full flex-1 flex-col">
-            <div class="flex-1">
-                <slot />
-            </div>
+        <div data-slot="app-content-column" class="flex min-h-full w-full shrink-0 flex-col">
+            <slot />
             <slot name="footer">
                 <AppPageFooter />
             </slot>
