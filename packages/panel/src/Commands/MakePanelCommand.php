@@ -175,7 +175,7 @@ final class MakePanelCommand extends Command
         $this->components->twoColumnDetail('Guard', "{$guard} <fg=red>(not defined in config/auth.php)</>");
         $this->components->warn(
             "This portal cannot serve a request: auth.guards.{$guard} does not exist. "
-            ."Re-run with --new-guard to create it, or point --guard at one that does."
+            .'Re-run with --new-guard to create it, or point --guard at one that does.'
         );
     }
 
@@ -586,7 +586,16 @@ final class {$studly}PanelProvider extends ServiceProvider
                  * `floating` is sidebar-04; `sidebar` is flush. Collapse
                  * to icons is always on (sidebar-07).
                  */
-                // ->sidebarVariant('inset'),
+                // ->sidebarVariant('inset')
+
+                /*
+                 * DASHBOARD PACKING. Default `classic` is StatStrip plus
+                 * independent column tracks. `blocks` is dashboard-01:
+                 * section StatCards, one full-width area/line chart,
+                 * remaining widgets below. A DashboardPage may still
+                 * return dashboardLayout() to override this panel.
+                 */
+                // ->dashboardLayout('classic'),
         );
     }
 }

@@ -32,6 +32,7 @@ import {
     PkBoundary,
     PkSlideover,
     SetupChecklist,
+    StatCard,
     StatStrip,
     iconPath,
     packWidgetColumns,
@@ -42,6 +43,7 @@ import DashboardChartPane from '../components/widgets/DashboardChartPane.vue'
 import { emptySeries, type Chart, type Series } from '../components/widgets/types'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
+import { packDashboardBlocks } from '../lib/packDashboardBlocks'
 import type { Announcement } from '../types'
 
 interface Widget {
@@ -114,6 +116,11 @@ const props = withDefaults(
         /** Filter dimensions this dashboard declared, with their options. */
         filterDimensions?: Dimension[]
         heading?: string
+        /**
+         * Packing recipe. `classic` is StatStrip plus column tracks (default).
+         * `blocks` is dashboard-01: section StatCards, hero area/line, rest below.
+         */
+        layout?: 'classic' | 'blocks'
         /** Panel path prefix; the dismiss and report routes sit inside it. */
         prefix?: string
         shortcuts?: {
@@ -136,6 +143,7 @@ const props = withDefaults(
         }),
         filterDimensions: () => [],
         heading: 'Dashboard',
+        layout: 'classic',
         prefix: '',
         shortcuts: null,
     },
@@ -542,6 +550,33 @@ const chartBands = computed(() =>
     packWidgetColumns(visibleCharts.value, wideLayout.value ? 2 : 1),
 )
 
+/**
+ * PAGE PROP FIRST, then the panel shared prop. A DashboardPage that returns
+ * `blocks` wins over a panel still on `classic`, which is how one portal can
+ * mix recipes without a second Vue screen.
+ */
+const dashboardLayout = computed<'classic' | 'blocks'>(() => {
+    if (props.layout === 'blocks') {
+        return 'blocks'
+    }
+
+    const shared = (page.props.panel as { dashboardLayout?: string } | undefined)?.dashboardLayout
+
+    return shared === 'blocks' && props.layout !== 'classic' ? 'blocks' : 'classic'
+})
+
+const isBlocks = computed(() => dashboardLayout.value === 'blocks')
+
+const blocksPacking = computed(() => packDashboardBlocks(visibleCharts.value))
+
+const restChartBands = computed(() =>
+    packWidgetColumns(blocksPacking.value.rest, wideLayout.value ? 2 : 1),
+)
+
+function heroBodyHeight(chart: Chart): number {
+    return Math.max(bodyHeight(chart), 250)
+}
+
 const hiddenEntries = computed(() => {
     const entries: { id: string; label: string }[] = []
 
@@ -564,7 +599,10 @@ const hiddenEntries = computed(() => {
 <template>
     <Head :title="heading" />
 
-    <div class="flex w-full min-w-0 flex-col gap-4 p-3 sm:p-4">
+    <div
+        class="flex w-full min-w-0 flex-col gap-4 p-3 sm:p-4"
+        :data-dashboard-layout="dashboardLayout"
+    >
         <!--
             ABOVE EVERYTHING, because a notice below the fold is a notice nobody
             read - which is exactly what the dedicated Announcements page turned
@@ -736,7 +774,7 @@ const hiddenEntries = computed(() => {
             Wrapping the grid once instead would trade a broken widget for a
             broken dashboard, which is the trade this exists to refuse.
         -->
-        <PkBoundary v-if="'strip' in page.props" label="The summary strip">
+        <PkBoundary v-if="!isBlocks && 'strip' in page.props" label="The summary strip">
             <Deferred data="strip">
                 <template #fallback>
                     <StatStrip :segments="STRIP_PLACEHOLDER" loading />
@@ -764,11 +802,12 @@ const hiddenEntries = computed(() => {
             so the loading state carries the row's shape without pretending to
             know its wording.
         -->
-        <PkBoundary
-            v-for="extra in extraStrips"
-            :key="extra.key"
-            :label="extra.label ?? 'A summary strip'"
-        >
+        <template v-if="!isBlocks">
+            <PkBoundary
+                v-for="extra in extraStrips"
+                :key="extra.key"
+                :label="extra.label ?? 'A summary strip'"
+            >
             <Deferred :data="`strip_${extra.key}`">
                 <template #fallback>
                     <StatStrip :segments="STRIP_PLACEHOLDER" loading />
@@ -779,13 +818,13 @@ const hiddenEntries = computed(() => {
                 </template>
             </Deferred>
         </PkBoundary>
+        </template>
 
         <!--
-            ONE `Deferred` FOR THE WHOLE ROW. Per-card deferral is right for
-            tiles that land independently and wrong for a joined strip: the
-            divider grid would reflow as each cell arrived.
+            CLASSIC: one joined StatStrip. BLOCKS: dashboard-01 section cards,
+            four independent StatCards in a row, not a dense MiniStatCard grid.
         -->
-        <PkBoundary v-if="widgets.length" label="Statistics">
+        <PkBoundary v-if="!isBlocks && widgets.length" label="Statistics">
             <Deferred :data="statKeys">
                 <template #fallback>
                     <StatStrip
@@ -803,8 +842,39 @@ const hiddenEntries = computed(() => {
         </PkBoundary>
 
         <div
+            v-if="isBlocks && widgets.length"
+            class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+            data-slot="section-cards"
+        >
+            <PkBoundary v-for="widget in widgets" :key="widget.key" :label="widget.label" fill>
+                <Deferred :data="statKeys">
+                    <template #fallback>
+                        <StatCard :label="widget.label" :description="widget.description" loading />
+                    </template>
+
+                    <template #default>
+                        <StatCard
+                            :label="widget.label"
+                            :description="widget.description"
+                            :value="stat(widget.key)?.value"
+                            :trend="stat(widget.key)?.trend"
+                            :sparkline="stat(widget.key)?.sparkline"
+                            :error="stat(widget.key)?.error"
+                            comparison="vs previous 30 days"
+                        />
+                    </template>
+                </Deferred>
+            </PkBoundary>
+        </div>
+
+        <div
             v-if="visibleCharts.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0"
-            class="flex flex-col gap-3"
+            class="flex flex-col gap-4"
+            :class="
+                isBlocks
+                    ? '[&_[data-slot=chart-card]]:gap-0 [&_[data-slot=chart-card]]:overflow-hidden [&_[data-slot=chart-card]]:rounded-xl [&_[data-slot=chart-card]]:p-0 [&_[data-slot=chart-card]>:first-child]:border-b [&_[data-slot=chart-card]>:first-child]:bg-muted/50 [&_[data-slot=chart-card]>:first-child]:px-4 [&_[data-slot=chart-card]>:first-child]:py-3 [&_[data-slot=chart-card]>:nth-child(2)]:px-4 [&_[data-slot=chart-card]>:nth-child(2)]:pb-4'
+                    : 'gap-3'
+            "
             data-slot="dashboard-charts"
         >
             <slot name="before-charts">
@@ -816,6 +886,60 @@ const hiddenEntries = computed(() => {
                 />
             </slot>
 
+            <template v-if="isBlocks">
+                <DashboardChartPane
+                    v-if="blocksPacking.hero"
+                    :chart="blocksPacking.hero"
+                    :series="series(blocksPacking.hero.key)"
+                    :periods="periodsFor(blocksPacking.hero)"
+                    :period="periods[blocksPacking.hero.key]"
+                    :comparison="comparison[periods[blocksPacking.hero.key]]"
+                    :body-height="heroBodyHeight(blocksPacking.hero)"
+                    data-slot="chart-area-interactive"
+                    @update:period="(value: string) => setPeriod(blocksPacking.hero!.key, value)"
+                    @hide="hideWidget(blocksPacking.hero!.key, blocksPacking.hero!.label)"
+                />
+
+                <template v-for="(band, bandIndex) in restChartBands" :key="'rest-' + bandIndex">
+                    <DashboardChartPane
+                        v-if="band.type === 'wide'"
+                        :chart="band.item"
+                        :series="series(band.item.key)"
+                        :periods="periodsFor(band.item)"
+                        :period="periods[band.item.key]"
+                        :comparison="comparison[periods[band.item.key]]"
+                        :body-height="bodyHeight(band.item)"
+                        @update:period="(value: string) => setPeriod(band.item.key, value)"
+                        @hide="hideWidget(band.item.key, band.item.label)"
+                    />
+                    <div
+                        v-else
+                        class="flex flex-col items-start gap-4 lg:flex-row"
+                        data-slot="dashboard-widget-columns"
+                    >
+                        <div
+                            v-for="(column, columnIndex) in band.columns"
+                            :key="columnIndex"
+                            class="flex w-full min-w-0 flex-1 flex-col gap-4"
+                        >
+                            <DashboardChartPane
+                                v-for="chart in column"
+                                :key="chart.key"
+                                :chart="chart"
+                                :series="series(chart.key)"
+                                :periods="periodsFor(chart)"
+                                :period="periods[chart.key]"
+                                :comparison="comparison[periods[chart.key]]"
+                                :body-height="bodyHeight(chart)"
+                                @update:period="(value: string) => setPeriod(chart.key, value)"
+                                @hide="hideWidget(chart.key, chart.label)"
+                            />
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <template v-else>
             <!--
                 COLUMN TRACKS, NOT A SHARED-ROW GRID. Each track is a flex
                 column so a collapsed header frees space for the widget below
@@ -857,6 +981,7 @@ const hiddenEntries = computed(() => {
                         />
                     </div>
                 </div>
+            </template>
             </template>
         </div>
     </div>
