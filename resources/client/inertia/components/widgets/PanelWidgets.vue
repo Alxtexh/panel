@@ -29,8 +29,9 @@
  * thrown away. That bug has been paid for twice in this codebase already.
  */
 import { Deferred, usePage } from '@inertiajs/vue3'
-import { ChartCard, PkBoundary, StatCard, TrendBadge } from '@alxtexh-enterprise/panel'
+import { ChartCard, PkBoundary, StatCard, TrendBadge, packWidgetColumns } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import ChartBody from './ChartBody.vue'
 import { emptySeries, type Chart, type Series, type StatDefinition, type StatValue } from './types'
 
@@ -92,6 +93,9 @@ function bodyHeight(chart: Chart): number {
 
     return 220
 }
+
+const wideLayout = useMediaQuery('(min-width: 1024px)')
+const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.value ? 2 : 1))
 </script>
 
 <template>
@@ -127,50 +131,95 @@ function bodyHeight(chart: Chart): number {
     </div>
 
     <!--
-        `fill` because these are GRID CELLS: without it a row of cards is only
-        as tall as its shortest, which reads as misalignment.
+        COLUMN TRACKS, not a shared-row grid: collapsing one card must not
+        stretch its neighbour or leave a hole above the next widget.
     -->
-    <div v-if="charts?.length" class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <PkBoundary
-            v-for="chart in charts"
-            :key="chart.key"
-            :label="chart.label"
-            :class="chart.span >= 2 ? 'lg:col-span-2' : ''"
-            fill
-        >
-            <Deferred :data="`${prefix}_chart_${chart.key}`">
-                <template #fallback>
-                    <ChartCard
-                        :label="chart.label"
-                        :description="chart.description"
-                        :body-height="bodyHeight(chart)"
-                        loading
-                    />
-                </template>
-
-                <template #default>
-                    <ChartCard
-                        :label="chart.label"
-                        :description="chart.description"
-                        :error="series(chart.key).error"
-                        :body-height="bodyHeight(chart)"
-                    >
-                        <template v-if="series(chart.key).trend" #trend>
-                            <TrendBadge
-                                class="mt-1"
-                                :direction="series(chart.key).trend!.direction"
-                                :percentage="series(chart.key).trend!.percentage"
-                            />
-                        </template>
-
-                        <ChartBody
-                            :chart="chart"
-                            :data="series(chart.key)"
-                            :item-path="typeof bag.itemPath === 'string' ? bag.itemPath : null"
+    <div v-if="charts?.length" class="flex flex-col gap-3">
+        <template v-for="(band, bandIndex) in chartBands" :key="bandIndex">
+            <PkBoundary
+                v-if="band.type === 'wide'"
+                :label="band.item.label"
+            >
+                <Deferred :data="`${prefix}_chart_${band.item.key}`">
+                    <template #fallback>
+                        <ChartCard
+                            :label="band.item.label"
+                            :description="band.item.description"
+                            :body-height="bodyHeight(band.item)"
+                            loading
                         />
-                    </ChartCard>
-                </template>
-            </Deferred>
-        </PkBoundary>
+                    </template>
+                    <template #default>
+                        <ChartCard
+                            :label="band.item.label"
+                            :description="band.item.description"
+                            :error="series(band.item.key).error"
+                            :body-height="bodyHeight(band.item)"
+                        >
+                            <template v-if="series(band.item.key).trend" #trend>
+                                <TrendBadge
+                                    class="mt-1"
+                                    :direction="series(band.item.key).trend!.direction"
+                                    :percentage="series(band.item.key).trend!.percentage"
+                                />
+                            </template>
+                            <ChartBody
+                                :chart="band.item"
+                                :data="series(band.item.key)"
+                                :item-path="typeof bag.itemPath === 'string' ? bag.itemPath : null"
+                            />
+                        </ChartCard>
+                    </template>
+                </Deferred>
+            </PkBoundary>
+            <div
+                v-else
+                class="flex flex-col items-start gap-3 lg:flex-row"
+            >
+                <div
+                    v-for="(column, columnIndex) in band.columns"
+                    :key="columnIndex"
+                    class="flex w-full min-w-0 flex-1 flex-col gap-3"
+                >
+                    <PkBoundary
+                        v-for="chart in column"
+                        :key="chart.key"
+                        :label="chart.label"
+                    >
+                        <Deferred :data="`${prefix}_chart_${chart.key}`">
+                            <template #fallback>
+                                <ChartCard
+                                    :label="chart.label"
+                                    :description="chart.description"
+                                    :body-height="bodyHeight(chart)"
+                                    loading
+                                />
+                            </template>
+                            <template #default>
+                                <ChartCard
+                                    :label="chart.label"
+                                    :description="chart.description"
+                                    :error="series(chart.key).error"
+                                    :body-height="bodyHeight(chart)"
+                                >
+                                    <template v-if="series(chart.key).trend" #trend>
+                                        <TrendBadge
+                                            class="mt-1"
+                                            :direction="series(chart.key).trend!.direction"
+                                            :percentage="series(chart.key).trend!.percentage"
+                                        />
+                                    </template>
+                                    <ChartBody
+                                        :chart="chart"
+                                        :data="series(chart.key)"
+                                        :item-path="typeof bag.itemPath === 'string' ? bag.itemPath : null"
+                                    />
+                                </ChartCard>
+                            </template>
+                        </Deferred>
+                    </PkBoundary>
+                </div>
+            </div>
+        </template>
     </div>
 </template>

@@ -16,9 +16,11 @@
  * detailer (label/value rows) sizes to its content instead.
  *
  * COLLAPSE IS LOCAL AND EPHEMERAL. Hide is the page's job: this card emits
- * `hide` and stays mounted until the parent stops rendering it. `v-show`,
- * not `v-if`: a chart's canvas is real work to lay out, and collapsing must
- * not force a resolved widget to redraw itself from nothing when reopened.
+ * `hide` and stays mounted until the parent stops rendering it. The body
+ * uses `v-if`, not `v-show`: a hidden plot with min-height still reserved
+ * a white hole, and a grid neighbour could stretch the card around it.
+ * Unmounting the body leaves a thin header; the plot remounts on expand,
+ * the same as a widget that was hidden and restored.
  */
 type __VLS_Props = {
     label: string;
