@@ -3,10 +3,10 @@
  * The page footer: copyright and brand at the bottom of the MAIN COLUMN.
  *
  * This is not a second overlay and not the sidebar's Help/FAQ/What's new/About
- * list. Those stay on the rail. AppContent wraps the page in a `min-h-full`
- * column so this is AFTER the widgets, never a flex sibling of an `h-full`
- * dashboard. Short screens still pin it with `mt-auto`; long screens scroll to
- * it with the rest of the content.
+ * list. Those stay on the rail. AppContent places this AFTER the page slot,
+ * as a sibling of the widgets, never inside the dashboard grid and never as a
+ * `flex-1` / `h-full` peer. `mt-auto` only eats leftover space on a short
+ * screen; it must not fight a page that claims the whole scrollport.
  *
  * BRAND COMES FROM THE PANEL, then `app.name`, then "Panel". Extra links are
  * whatever `panel.footer.links` shared; empty by default so a stock install
