@@ -200,6 +200,13 @@ final class SharePanelProps
                             (array) config('panel.footer.links', []),
                         ),
                     )),
+                    /*
+                     * WHETHER THE SHELL RENDERS AppPageFooter. Default false:
+                     * hosts opt in with Panel::pageFooter(true). Shared so the
+                     * Vue shell does not hard-wire chrome the PHP API turned
+                     * off.
+                     */
+                    'pageFooter' => $panel->hasPageFooter(),
                     'authLayout' => $panel->getAuthLayout(),
                     'authTestimonial' => $panel->getAuthTestimonial(),
 

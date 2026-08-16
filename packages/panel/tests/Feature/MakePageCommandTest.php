@@ -57,6 +57,8 @@ final class MakePageCommandTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/^\s*import\s+.+Directory/m', $vueContents);
         $this->assertStringNotContainsString('PlanSetup', $vueContents);
         $this->assertStringContainsString("import { CatalogGrid } from '@alxtexh-enterprise/panel'", $vueContents);
+        $this->assertStringContainsString("import { AppPageFooter } from '@alxtexh-enterprise/panel'", $vueContents);
+        $this->assertDoesNotMatchRegularExpression('/^\s*import\s+.+AppPageFooter/m', $vueContents);
         $this->assertStringContainsString('from \'@inertiajs/vue3\'', $vueContents);
         $this->assertStringContainsString('<Head', $vueContents);
         $this->assertStringContainsString('pageHeading', $vueContents);

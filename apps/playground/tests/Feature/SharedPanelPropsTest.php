@@ -79,6 +79,55 @@ final class SharedPanelPropsTest extends TestCase
         $this->assertNotEmpty($shared['name']);
     }
 
+    public function test_the_page_footer_is_off_by_default(): void
+    {
+        app(PanelManager::class)->registerPanel(
+            Panel::make('footercanvas')
+                ->path('footercanvas')
+                ->guard('web')
+                ->middleware(['web']),
+        );
+
+        $this->assertFalse(
+            $this->sharedFor('footercanvas')['panel']['pageFooter'],
+            'The kit injected a page footer without Panel::pageFooter(true).',
+        );
+    }
+
+    public function test_page_footer_true_is_shared_with_the_client(): void
+    {
+        app(PanelManager::class)->registerPanel(
+            Panel::make('footeron')
+                ->path('footeron')
+                ->guard('web')
+                ->middleware(['web'])
+                ->pageFooter(true),
+        );
+
+        $this->assertTrue($this->sharedFor('footeron')['panel']['pageFooter']);
+    }
+
+    public function test_page_footer_false_hides_the_shared_flag(): void
+    {
+        app(PanelManager::class)->registerPanel(
+            Panel::make('footeroff')
+                ->path('footeroff')
+                ->guard('web')
+                ->middleware(['web'])
+                ->pageFooter(false),
+        );
+
+        $this->assertFalse($this->sharedFor('footeroff')['panel']['pageFooter']);
+    }
+
+    public function test_the_admin_demo_opts_into_the_page_footer(): void
+    {
+        $this->assertTrue(
+            $this->sharedFor('admin')['panel']['pageFooter'],
+            'Playground admin should still show the copyright footer.',
+        );
+    }
+
     /**
      * THE SIDEBAR CARRIES THIS PANEL'S PREFIX, which is the half that fails
      * silently.

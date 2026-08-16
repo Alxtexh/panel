@@ -7,7 +7,7 @@
  * anyway would leave a hidden fixed-position panel and a spacer reserving space
  * for a sidebar that is not rendered.
  */
-import { AppPageFooter } from '@alxtexh-enterprise/panel/inertia';
+import { AppPageFooter, useShellPageFooter } from '@alxtexh-enterprise/panel';
 import AppTopNav from '@/components/AppTopNav.vue';
 import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
@@ -15,6 +15,8 @@ import type { BreadcrumbItem } from '@/types';
 withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
     breadcrumbs: () => [],
 });
+
+const pageFooter = useShellPageFooter();
 </script>
 
 <template>
@@ -32,7 +34,7 @@ withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
         >
             <div data-slot="app-content-column" class="flex min-h-full w-full shrink-0 flex-col">
                 <slot />
-                <AppPageFooter />
+                <AppPageFooter v-if="pageFooter" host />
             </div>
         </main>
 

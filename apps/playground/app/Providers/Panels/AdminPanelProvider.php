@@ -96,6 +96,7 @@ final class AdminPanelProvider extends ServiceProvider
                  */
                 ->without(['operations', 'assistant-settings'])
                 ->brandName(fn (): ?string => app(TenantContext::class)->tenant()?->name)
+                ->pageFooter(true)
                 ->modules(KitDemo::saasModules())
 
                 /*

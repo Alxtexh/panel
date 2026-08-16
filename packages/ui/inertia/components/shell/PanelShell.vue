@@ -32,9 +32,11 @@
 import { router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import {
+    AppPageFooter,
     PkBottomNav,
     PkModal,
     useAppearance,
+    useShellPageFooter,
     useTenantTheme,
 } from '@alxtexh-enterprise/panel'
 import type { BottomNavItem } from '@alxtexh-enterprise/panel'
@@ -42,7 +44,6 @@ import { useSidebarOpener } from '../../lib/mobileNav'
 import SessionExpired from '../SessionExpired.vue'
 import Toaster from '../Toaster.vue'
 import AppContent from './AppContent.vue'
-import AppPageFooter from './AppPageFooter.vue'
 import AppShell from './AppShell.vue'
 import AppSidebar from './AppSidebar.vue'
 import AppSidebarHeader from './AppSidebarHeader.vue'
@@ -74,6 +75,7 @@ defineSlots<{
 const page = usePage()
 
 const { appearance } = useAppearance()
+const pageFooter = useShellPageFooter()
 
 /**
  * Per-tenant branding, applied at runtime rather than compiled per tenant.
@@ -223,7 +225,7 @@ router.on('success', () => {
             >
                 <div data-slot="app-content-column" class="flex min-h-full w-full shrink-0 flex-col">
                     <slot />
-                    <AppPageFooter />
+                    <AppPageFooter v-if="pageFooter" host />
                 </div>
             </main>
 

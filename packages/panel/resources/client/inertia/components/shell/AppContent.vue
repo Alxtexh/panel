@@ -6,8 +6,7 @@
  * only interesting thing about it.
  */
 import { computed } from 'vue'
-import { SidebarInset, useAppearance } from '@alxtexh-enterprise/panel'
-import AppPageFooter from './AppPageFooter.vue'
+import { AppPageFooter, SidebarInset, useAppearance, useShellPageFooter } from '@alxtexh-enterprise/panel'
 
 type Props = {
     variant?: 'sidebar' | 'header'
@@ -33,6 +32,7 @@ const className = computed(() => props.class)
  */
 const { appearance } = useAppearance()
 const centered = computed(() => appearance.value.contentLayout === 'centered')
+const pageFooter = useShellPageFooter()
 </script>
 
 <template>
@@ -59,9 +59,7 @@ const centered = computed(() => appearance.value.contentLayout === 'centered')
                 <slot />
             </div>
             <slot v-else />
-            <slot name="footer">
-                <AppPageFooter />
-            </slot>
+            <AppPageFooter v-if="pageFooter" host />
         </div>
     </SidebarInset>
     <main
@@ -73,9 +71,7 @@ const centered = computed(() => appearance.value.contentLayout === 'centered')
     >
         <div data-slot="app-content-column" class="flex min-h-full w-full shrink-0 flex-col">
             <slot />
-            <slot name="footer">
-                <AppPageFooter />
-            </slot>
+            <AppPageFooter v-if="pageFooter" host />
         </div>
     </main>
 </template>
