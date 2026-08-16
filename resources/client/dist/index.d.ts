@@ -58,6 +58,8 @@ export * from './components/shadcn/switch';
 export { Input as ShadcnInput } from './components/shadcn/input';
 export { default as PkBoundary } from './components/Layout/PkBoundary.vue';
 export { default as PkCard } from './components/Layout/PkCard.vue';
+export { default as AppPageFooter } from './components/Layout/AppPageFooter.vue';
+export { useShellPageFooter } from './composables/useShellPageFooter';
 export { default as PkDeviceFrame } from './components/Layout/PkDeviceFrame.vue';
 export { default as PkStepIndicator } from './components/Layout/PkStepIndicator.vue';
 export { default as PkRepeater } from './components/Form/PkRepeater.vue';

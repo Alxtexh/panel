@@ -113,6 +113,15 @@ final class Panel
      */
     private bool $paymentSettings = false;
 
+    /**
+     * PAGE COPYRIGHT FOOTER after every screen. Off by default.
+     *
+     * The kit is an empty canvas. Hosts that want the packaged
+     * `AppPageFooter` on every page call `->pageFooter(true)`. A page can
+     * still import the Vue component itself when this is off.
+     */
+    private bool $pageFooter = false;
+
     /** @var Closure|null */
     private mixed $paymentGatewaysResolver = null;
 
@@ -938,6 +947,25 @@ final class Panel
     public function isSupportEditable(): bool
     {
         return $this->editableSupport;
+    }
+
+    /**
+     * Render `AppPageFooter` after every page in this panel's shell.
+     *
+     * OFF BY DEFAULT. The copyright bar is chrome the host opts into, not
+     * something the kit injects. `true` is panel-wide; a single screen still
+     * imports the Vue component when this stays false.
+     */
+    public function pageFooter(bool $enabled): self
+    {
+        $this->pageFooter = $enabled;
+
+        return $this;
+    }
+
+    public function hasPageFooter(): bool
+    {
+        return $this->pageFooter;
     }
 
     /**

@@ -294,6 +294,10 @@ final class MakePageCommand extends Command
          * Empty canvas. Import what you need from `@alxtexh-enterprise/panel`:
          *
          *   import { {$example} } from '@alxtexh-enterprise/panel'
+         *   import { AppPageFooter } from '@alxtexh-enterprise/panel'
+         *
+         * Put AppPageFooter at the bottom of this file when the panel did not
+         * call ->pageFooter(true). The shell already renders one if it did.
          *
          * Props come from `{$name}Page::data()`.
          */

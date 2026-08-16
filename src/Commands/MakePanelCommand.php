@@ -573,7 +573,13 @@ final class {$studly}PanelProvider extends ServiceProvider
                     for: 'App\\\\Panel\\\\{$studly}\\\\Resources',
                 )
 
-                ->brandName(fn (): string => config('app.name')),
+                ->brandName(fn (): string => config('app.name'))
+
+                /*
+                 * PAGE COPYRIGHT FOOTER. Off by default: the kit is an empty
+                 * canvas. Uncomment to render AppPageFooter after every page.
+                 */
+                // ->pageFooter(true),
         );
     }
 }
