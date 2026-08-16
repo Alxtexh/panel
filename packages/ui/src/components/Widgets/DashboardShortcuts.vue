@@ -79,7 +79,7 @@ const hidden = computed(() => hide?.hidden.value.has('shortcuts') ?? false)
 </script>
 
 <template>
-    <div v-if="!hidden" class="lg:col-span-2" data-slot="dashboard-shortcuts">
+    <div v-if="!hidden" class="w-full" data-slot="dashboard-shortcuts">
         <ShortcutsWidget
             :items="items"
             :catalog="catalog"

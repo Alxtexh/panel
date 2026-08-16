@@ -37,6 +37,8 @@ export { default as PkHeading } from './components/primitives/PkHeading.vue';
 export { default as PkAlertError } from './components/primitives/PkAlertError.vue';
 export { default as PkPasswordInput } from './components/primitives/PkPasswordInput.vue';
 export { cn, toUrl } from './lib/cn';
+export { packWidgetColumns } from './lib/packWidgetColumns';
+export type { WidgetColumnBand } from './lib/packWidgetColumns';
 export { TRANSPARENT_IMAGE_HELP, OPAQUE_IMAGE_ERROR, JPEG_IMAGE_ERROR, assertTransparentImage, imageHasTransparency, } from './lib/transparentImage';
 export * from './components/shadcn/sidebar';
 export * from './components/shadcn/sheet';

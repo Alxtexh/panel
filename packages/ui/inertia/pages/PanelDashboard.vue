@@ -24,8 +24,8 @@
  */
 import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
 import { computed, provide, ref, watch } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import {
-    ChartCard,
     DASHBOARD_HIDE_KEY,
     DASHBOARD_HIDDEN_STORAGE_KEY,
     DashboardShortcuts,
@@ -33,12 +33,12 @@ import {
     PkSlideover,
     SetupChecklist,
     StatStrip,
-    TrendBadge,
     iconPath,
+    packWidgetColumns,
     useColumnVisibility,
 } from '@alxtexh-enterprise/panel'
 import type { DashboardHide, SetupChecklistItem, StatSegment } from '@alxtexh-enterprise/panel'
-import ChartBody from '../components/widgets/ChartBody.vue'
+import DashboardChartPane from '../components/widgets/DashboardChartPane.vue'
 import { emptySeries, type Chart, type Series } from '../components/widgets/types'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
@@ -440,10 +440,11 @@ function stripSegments(key: string): StatSegment[] {
 }
 
 /**
- * HIDE UNMOUNTS. Collapse is local to ChartCard (`v-show`). Hide uses `v-if`
- * via `visibleCharts`, so ChartCard / echarts never mount for a hidden key.
- * Inertia still fetches every deferred key in the `charts` group, so the
- * cookie `panel_dashboard_hidden` lets PHP omit those props on the next visit.
+ * HIDE UNMOUNTS. Collapse is local to ChartCard (`v-if` on the body). Hide
+ * uses `v-if` via `visibleCharts`, so ChartCard / echarts never mount for a
+ * hidden key. Inertia still fetches every deferred key in the `charts` group,
+ * so the cookie `panel_dashboard_hidden` lets PHP omit those props on the
+ * next visit.
  */
 const hiddenWidgets = useColumnVisibility(DASHBOARD_HIDDEN_STORAGE_KEY)
 const extraLabels = ref<Record<string, string>>({})
@@ -529,6 +530,16 @@ function restoreAllHidden() {
 
 const visibleCharts = computed(() =>
     props.charts.filter((chart) => !hiddenWidgets.hidden.value.has(chart.key)),
+)
+
+/**
+ * Independent column tracks from `lg` up. Below that, one stack in
+ * declaration order. Round-robin assignment (not a shared CSS-grid row)
+ * is what lets a collapsed card give its space to the widget under it.
+ */
+const wideLayout = useMediaQuery('(min-width: 1024px)')
+const chartBands = computed(() =>
+    packWidgetColumns(visibleCharts.value, wideLayout.value ? 2 : 1),
 )
 
 const hiddenEntries = computed(() => {
@@ -793,7 +804,8 @@ const hiddenEntries = computed(() => {
 
         <div
             v-if="visibleCharts.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0"
-            class="grid grid-cols-1 gap-3 lg:grid-cols-2"
+            class="flex flex-col gap-3"
+            data-slot="dashboard-charts"
         >
             <slot name="before-charts">
                 <DashboardShortcuts
@@ -804,59 +816,48 @@ const hiddenEntries = computed(() => {
                 />
             </slot>
 
-            <!-- `fill` because these are GRID CELLS: without it a row of cards
-                 is only as tall as its shortest, which reads as misalignment. -->
-            <PkBoundary
-                v-for="chart in visibleCharts"
-                :key="chart.key"
-                :label="chart.label"
-                :class="chart.span >= 2 ? 'lg:col-span-2' : ''"
-                fill
-            >
-                <Deferred :data="`chart_${chart.key}`">
-                    <template #fallback>
-                        <ChartCard
-                            :label="chart.label"
-                            :description="chart.description"
-                            :icon="chart.icon"
+            <!--
+                COLUMN TRACKS, NOT A SHARED-ROW GRID. Each track is a flex
+                column so a collapsed header frees space for the widget below
+                it. Neighbours in the other track keep their own height.
+            -->
+            <template v-for="(band, bandIndex) in chartBands" :key="bandIndex">
+                <DashboardChartPane
+                    v-if="band.type === 'wide'"
+                    :chart="band.item"
+                    :series="series(band.item.key)"
+                    :periods="periodsFor(band.item)"
+                    :period="periods[band.item.key]"
+                    :comparison="comparison[periods[band.item.key]]"
+                    :body-height="bodyHeight(band.item)"
+                    @update:period="(value: string) => setPeriod(band.item.key, value)"
+                    @hide="hideWidget(band.item.key, band.item.label)"
+                />
+                <div
+                    v-else
+                    class="flex flex-col items-start gap-3 lg:flex-row"
+                    data-slot="dashboard-widget-columns"
+                >
+                    <div
+                        v-for="(column, columnIndex) in band.columns"
+                        :key="columnIndex"
+                        class="flex w-full min-w-0 flex-1 flex-col gap-3"
+                    >
+                        <DashboardChartPane
+                            v-for="chart in column"
+                            :key="chart.key"
+                            :chart="chart"
+                            :series="series(chart.key)"
                             :periods="periodsFor(chart)"
                             :period="periods[chart.key]"
+                            :comparison="comparison[periods[chart.key]]"
                             :body-height="bodyHeight(chart)"
-                            :fit-body="chart.type === 'table'"
-                            hideable
-                            loading
-                            @hide="hideWidget(chart.key, chart.label)"
-                        />
-                    </template>
-
-                    <template #default>
-                        <ChartCard
-                            :label="chart.label"
-                            :description="chart.description"
-                            :icon="chart.icon"
-                            :periods="periodsFor(chart)"
-                            :period="periods[chart.key]"
-                            :error="series(chart.key).error"
-                            :body-height="bodyHeight(chart)"
-                            :fit-body="chart.type === 'table'"
-                            hideable
                             @update:period="(value: string) => setPeriod(chart.key, value)"
                             @hide="hideWidget(chart.key, chart.label)"
-                        >
-                            <template v-if="series(chart.key).trend" #trend>
-                                <TrendBadge
-                                    class="mt-1"
-                                    :direction="series(chart.key).trend!.direction"
-                                    :percentage="series(chart.key).trend!.percentage"
-                                    :comparison="comparison[periods[chart.key]]"
-                                />
-                            </template>
-
-                            <ChartBody :chart="chart" :data="series(chart.key)" />
-                        </ChartCard>
-                    </template>
-                </Deferred>
-            </PkBoundary>
+                        />
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 </template>

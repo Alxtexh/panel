@@ -20,9 +20,11 @@ import { iconPath } from '../primitives/icons'
  * detailer (label/value rows) sizes to its content instead.
  *
  * COLLAPSE IS LOCAL AND EPHEMERAL. Hide is the page's job: this card emits
- * `hide` and stays mounted until the parent stops rendering it. `v-show`,
- * not `v-if`: a chart's canvas is real work to lay out, and collapsing must
- * not force a resolved widget to redraw itself from nothing when reopened.
+ * `hide` and stays mounted until the parent stops rendering it. The body
+ * uses `v-if`, not `v-show`: a hidden plot with min-height still reserved
+ * a white hole, and a grid neighbour could stretch the card around it.
+ * Unmounting the body leaves a thin header; the plot remounts on expand,
+ * the same as a widget that was hidden and restored.
  */
 const props = withDefaults(
     defineProps<{
@@ -77,7 +79,12 @@ const bodyStyle = computed(() => {
 </script>
 
 <template>
-    <div class="bg-card flex flex-col gap-3 rounded-lg border p-4" data-slot="chart-card">
+    <div
+        class="bg-card flex w-full flex-col self-start rounded-lg border"
+        :class="collapsed ? 'px-4 py-2' : 'gap-3 p-4'"
+        data-slot="chart-card"
+        :data-collapsed="collapsed ? 'true' : 'false'"
+    >
         <div class="flex flex-wrap items-start justify-between gap-2">
             <div class="flex min-w-0 items-start gap-2">
                 <slot name="icon">
@@ -150,7 +157,7 @@ const bodyStyle = computed(() => {
                 >
                     <svg
                         class="size-4 transition-transform"
-                        :class="collapsed ? '-rotate-90' : ''"
+                        :class="collapsed ? '' : 'rotate-180'"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -188,7 +195,7 @@ const bodyStyle = computed(() => {
         </div>
 
         <div
-            v-show="!collapsed"
+            v-if="!collapsed"
             :style="bodyStyle"
             class="flex flex-col justify-center"
             data-slot="chart-card-body"

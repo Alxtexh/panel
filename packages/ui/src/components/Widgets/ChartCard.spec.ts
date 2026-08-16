@@ -3,19 +3,23 @@ import { describe, expect, it } from 'vitest'
 import ChartCard from './ChartCard.vue'
 
 describe('ChartCard', () => {
-    it('collapses the body without unmounting it', async () => {
+    it('unmounts the body on collapse so no chart area is reserved', async () => {
         const wrapper = mount(ChartCard, {
             props: { label: 'Sessions' },
             slots: { default: '<p>plot</p>' },
         })
 
         expect(wrapper.text()).toContain('plot')
+        expect(wrapper.get('[data-slot="chart-card"]').attributes('data-collapsed')).toBe('false')
+        expect(wrapper.get('[aria-label="Collapse Sessions"] svg').classes()).toContain('rotate-180')
 
         await wrapper.get('[aria-label="Collapse Sessions"]').trigger('click')
 
         expect(wrapper.get('[aria-label="Expand Sessions"]').exists()).toBe(true)
-        expect(wrapper.get('[data-slot="chart-card-body"]').isVisible()).toBe(false)
-        expect(wrapper.text()).toContain('plot')
+        expect(wrapper.find('[data-slot="chart-card-body"]').exists()).toBe(false)
+        expect(wrapper.text()).not.toContain('plot')
+        expect(wrapper.get('[data-slot="chart-card"]').attributes('data-collapsed')).toBe('true')
+        expect(wrapper.get('[aria-label="Expand Sessions"] svg').classes()).not.toContain('rotate-180')
     })
 
     it('emits hide when hideable', async () => {
