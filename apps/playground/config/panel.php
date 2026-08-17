@@ -1,13 +1,13 @@
 <?php
 
 declare(strict_types=1);
+use Alxtexh\Panel\Alerts\AnnouncementsPlugin;
+use Alxtexh\Panel\Ticketing\TicketingPlugin;
 use App\Knowledge\GuideSource;
 use App\Knowledge\HelpSource;
 use App\Models\SavedView;
 use App\Models\Tenant;
 use App\Panel\Singulars\BillingSettingsResource;
-use Alxtexh\Panel\Alerts\AnnouncementsPlugin;
-use Alxtexh\Panel\Ticketing\TicketingPlugin;
 
 return [
 
@@ -796,6 +796,10 @@ return [
     | Written as an operator would read it: what changed, grouped by kind, most
     | recent first. Not a commit log.
     */
+    'about' => [
+        'version' => '1.0.9',
+    ],
+
     'changelog' => [
         [
             'version' => '2.4',

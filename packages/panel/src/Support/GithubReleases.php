@@ -16,6 +16,15 @@ use Throwable;
 final class GithubReleases
 {
     /**
+     * Tags that restored the v1.0.9 tree under later numbers. They remain on
+     * GitHub (not deleted) so Composer `^1.0` still prefers them. What's new
+     * must not advertise them as newer product.
+     *
+     * @var list<string>
+     */
+    private const HIDDEN = ['1.0.10', '1.0.11', '1.0.12', '1.0.13', '1.0.14', '1.0.15'];
+
+    /**
      * @return list<array{version: string, date: string, highlight: string}>
      */
     public static function fetch(string $repository): array
@@ -50,7 +59,7 @@ final class GithubReleases
 
             $version = ltrim((string) ($release['tag_name'] ?? $release['name'] ?? ''), 'v');
 
-            if ($version === '') {
+            if ($version === '' || in_array($version, self::HIDDEN, true)) {
                 continue;
             }
 

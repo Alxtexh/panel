@@ -21,10 +21,12 @@ This is the whole thing. Add the repository, require the package, install:
 ```
 
 ```bash
-composer require alxtexh-enterprise/panel:^1.0
+composer require alxtexh-enterprise/panel:1.0.9
 php artisan panel:install
 npm install && npm run build
 ```
+
+Pin **1.0.9**. `^1.0` still resolves to v1.0.15 because those later tags were not deleted.
 
 **There is no second install.** The Vue screens ship *inside* this Composer package
 at `resources/client`, and `panel:install` points your `package.json` at them with a
