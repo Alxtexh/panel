@@ -122,24 +122,6 @@ final class Panel
      */
     private bool $pageFooter = false;
 
-    /**
-     * Sidebar chrome. Default `inset` is the current look (shadcn sidebar-08
-     * / dashboard-01). `floating` is sidebar-04. `sidebar` is the flush
-     * shadcn default. Collapse-to-icons is always on (sidebar-07).
-     *
-     * @var 'inset'|'floating'|'sidebar'
-     */
-    private string $sidebarVariant = 'inset';
-
-    /**
-     * How PanelDashboard packs widgets. Default `classic` is the current
-     * StatStrip plus independent column tracks. `blocks` is dashboard-01:
-     * section StatCards, one full-width area/line chart, remaining below.
-     *
-     * @var 'classic'|'blocks'
-     */
-    private string $dashboardLayout = 'classic';
-
     /** @var Closure|null */
     private mixed $paymentGatewaysResolver = null;
 
@@ -193,24 +175,21 @@ final class Panel
     private string $loginComponent = 'panel/auth/Login';
 
     /**
-     * Sign-in chrome from the shadcn/vue login blocks (login-01..05).
+     * Which auth-screen layout this panel uses: 'centered' (default), 'split', or 'showcase'.
      *
-     * Null means nobody called `loginLayout()`, so `authLayout()` still wins.
-     * The default the client sees is `simple` (login-01), which matches the
-     * previous centred form. Existing apps that never set a layout do not jump.
-     *
-     * @var 'simple'|'split'|'muted'|'card'|'email'|null
-     */
-    private ?string $loginLayout = null;
-
-    /**
-     * Legacy auth chrome: 'centered' (default), 'split', or 'showcase'.
-     *
-     * Prefer `loginLayout()` for new code. This remains so a panel that already
-     * called `authLayout('showcase')` keeps that pitch layout instead of
-     * silently becoming `simple`.
-     *
-     * @var 'centered'|'split'|'showcase'
+     * 'centered' — a card in the middle of a plain background, the existing style.
+     * 'split'    — branding panel on the left, form on the right. The choice
+     *              propagates to every auth screen this panel owns: login, register,
+     *              password request / reset, OTP, and lock screen all inherit it via
+     *              the shared `AuthLayout` wrapper, so selecting it once covers the
+     *              whole authentication flow.
+     * 'showcase' — form on the left, a preview panel on the right holding an
+     *              optional image and an optional testimonial (`authTestimonial()`).
+     *              The mirror of 'split': there the form is what a returning user
+     *              wants fastest and the image is decoration, so it gives way on a
+     *              narrow screen; here the preview is the pitch to somebody who has
+     *              not decided to sign up yet, which is a case this panel itself
+     *              never needs but a public-facing registration screen can.
      */
     private string $authLayout = 'centered';
 
@@ -742,87 +721,18 @@ final class Panel
         return $this->loginComponent;
     }
 
-    /**
-     * Public login chrome ids, matching shadcn/vue login-01..05.
-     *
-     * @var list<'simple'|'split'|'muted'|'card'|'email'>
-     */
-    public const LOGIN_LAYOUTS = ['simple', 'split', 'muted', 'card', 'email'];
-
-    /**
-     * Packaged dashboard packing recipes. `classic` is the default so a host
-     * that never called `dashboardLayout()` does not jump.
-     *
-     * @var list<'classic'|'blocks'>
-     */
-    public const DASHBOARD_LAYOUTS = ['classic', 'blocks'];
-
-    /**
-     * Sign-in chrome: `simple` (login-01, default), `split` (login-02),
-     * `muted` (login-03), `card` (login-04), or `email` (login-05).
-     *
-     * Applies to every AuthLayout screen on this panel (login, register,
-     * password reset, OTP). Invalid names throw at registration.
-     *
-     * @param  'simple'|'split'|'muted'|'card'|'email'  $layout
-     */
-    public function loginLayout(string $layout): self
-    {
-        if (! in_array($layout, self::LOGIN_LAYOUTS, true)) {
-            throw new RuntimeException("Unknown login layout [{$layout}].");
-        }
-
-        $this->loginLayout = $layout;
-
-        return $this;
-    }
-
-    /**
-     * Chrome the client should render. `loginLayout()` wins when set;
-     * otherwise `authLayout()` is mapped: centered -> simple, split -> split,
-     * showcase stays showcase so a pitch portal does not jump.
-     *
-     * @return 'simple'|'split'|'muted'|'card'|'email'|'showcase'
-     */
-    public function getLoginLayout(): string
-    {
-        if ($this->loginLayout !== null) {
-            return $this->loginLayout;
-        }
-
-        return match ($this->authLayout) {
-            'split' => 'split',
-            'showcase' => 'showcase',
-            default => 'simple',
-        };
-    }
-
-    /**
-     * @param  'centered'|'split'|'showcase'  $layout
-     */
+    /** @param 'centered'|'split'|'showcase' $layout */
     public function authLayout(string $layout): self
     {
-        if (! in_array($layout, ['centered', 'split', 'showcase'], true)) {
-            throw new RuntimeException("Unknown auth layout [{$layout}].");
-        }
-
         $this->authLayout = $layout;
 
         return $this;
     }
 
-    /**
-     * Legacy id for older Vue that still reads `panel.authLayout`.
-     *
-     * @return 'centered'|'split'|'showcase'
-     */
+    /** @return 'centered'|'split'|'showcase' */
     public function getAuthLayout(): string
     {
-        return match ($this->getLoginLayout()) {
-            'split', 'card' => 'split',
-            'showcase' => 'showcase',
-            default => 'centered',
-        };
+        return $this->authLayout;
     }
 
     /**
@@ -861,7 +771,7 @@ final class Panel
      * it. The declaration remains in code and is ready once the conflict is
      * resolved.
      *
-     * @param  non-empty-string  $path
+     * @param non-empty-string $path
      */
     public function sharedLogin(string $path = 'login'): self
     {
@@ -1056,56 +966,6 @@ final class Panel
     public function hasPageFooter(): bool
     {
         return $this->pageFooter;
-    }
-
-    /**
-     * Sidebar surface: `inset` (default), `floating`, or flush `sidebar`.
-     *
-     * This is chrome only. Pages stay the host's to compose. Invalid names
-     * throw at registration rather than rendering a silent default.
-     *
-     * @param  'inset'|'floating'|'sidebar'  $variant
-     */
-    public function sidebarVariant(string $variant): self
-    {
-        if (! in_array($variant, ['inset', 'floating', 'sidebar'], true)) {
-            throw new RuntimeException("Unknown sidebar variant [{$variant}].");
-        }
-
-        $this->sidebarVariant = $variant;
-
-        return $this;
-    }
-
-    /** @return 'inset'|'floating'|'sidebar' */
-    public function getSidebarVariant(): string
-    {
-        return $this->sidebarVariant;
-    }
-
-    /**
-     * Dashboard packing: `classic` (default) or `blocks` (dashboard-01).
-     *
-     * This is packing only. Widget data still comes from `stats()` / `charts()`
-     * on a DashboardPage. Invalid names throw at registration.
-     *
-     * @param  'classic'|'blocks'  $layout
-     */
-    public function dashboardLayout(string $layout): self
-    {
-        if (! in_array($layout, self::DASHBOARD_LAYOUTS, true)) {
-            throw new RuntimeException("Unknown dashboard layout [{$layout}].");
-        }
-
-        $this->dashboardLayout = $layout;
-
-        return $this;
-    }
-
-    /** @return 'classic'|'blocks' */
-    public function getDashboardLayout(): string
-    {
-        return $this->dashboardLayout;
     }
 
     /**

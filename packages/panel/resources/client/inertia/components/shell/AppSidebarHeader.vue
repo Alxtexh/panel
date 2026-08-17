@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { AppearanceDrawer, PkSiteHeader, useAppearance } from '@alxtexh-enterprise/panel'
+import { AppearanceDrawer, useAppearance } from '@alxtexh-enterprise/panel'
+import { SidebarTrigger } from '@alxtexh-enterprise/panel'
 import type { BreadcrumbItem } from '../../types'
 import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
@@ -60,16 +61,35 @@ const trail = computed<BreadcrumbItem[]>(() =>
 </script>
 
 <template>
-    <PkSiteHeader :mirrored="mirrored">
-        <slot name="topbar">
-            <!-- Breadcrumbs are the first thing to give up on a phone; the
-                 search trigger earns that space more. -->
-            <template v-if="trail.length > 0">
-                <Breadcrumbs :breadcrumbs="trail" class="hidden sm:flex" />
-            </template>
-        </slot>
+    <!--
+        SPACING COMES FROM justify-between, NOT FROM ml-auto ON THE SECOND GROUP.
 
-        <template #trailing>
+        `ml-auto` only reads as "push to the far end" while the main axis runs
+        left-to-right. Under flex-row-reverse the axis is inverted, so an auto
+        LEFT margin absorbs the free space on the item's left and drags it
+        toward its sibling - both groups ended up jammed into the right corner
+        with the whole left half empty.
+
+        justify-between has no handedness: it pins the first child to one edge
+        and the last to the other, and reversing the row swaps which edge is
+        which. That is the mirror, rather than a second hardcoded layout.
+    -->
+    <header
+        class="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-sidebar-border/70 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sm:px-6 md:px-4"
+        :class="mirrored ? 'flex-row-reverse' : ''"
+    >
+        <div class="flex min-w-0 items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
+            <SidebarTrigger :class="mirrored ? '-mr-1' : '-ml-1'" />
+            <slot name="topbar">
+                <!-- Breadcrumbs are the first thing to give up on a phone; the
+                     search trigger earns that space more. -->
+                <template v-if="trail.length > 0">
+                    <Breadcrumbs :breadcrumbs="trail" class="hidden sm:flex" />
+                </template>
+            </slot>
+        </div>
+
+        <div class="flex items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
             <div class="flex items-center gap-2">
                 <PanelLockButton />
                 <PanelCommandPalette />
@@ -82,6 +102,6 @@ const trail = computed<BreadcrumbItem[]>(() =>
             <slot name="actions" />
             <!-- Appearance belongs where you can see what it changes. -->
             <AppearanceDrawer />
-        </template>
-    </PkSiteHeader>
+        </div>
+    </header>
 </template>

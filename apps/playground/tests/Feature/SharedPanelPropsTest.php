@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Tenant;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Inertia;
 use Alxtexh\Panel\Auth\Impersonation;
 use Alxtexh\Panel\Http\Middleware\SharePanelProps;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\PanelNavigation;
-use App\Models\Tenant;
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Inertia;
 use Tests\TestCase;
 
 /**
@@ -125,83 +125,6 @@ final class SharedPanelPropsTest extends TestCase
         $this->assertTrue(
             $this->sharedFor('admin')['panel']['pageFooter'],
             'Playground admin should still show the copyright footer.',
-        );
-    }
-
-    public function test_the_sidebar_variant_defaults_to_inset(): void
-    {
-        app(PanelManager::class)->registerPanel(
-            Panel::make('chromedefault')
-                ->path('chromedefault')
-                ->guard('web')
-                ->middleware(['web']),
-        );
-
-        $this->assertSame(
-            'inset',
-            $this->sharedFor('chromedefault')['panel']['sidebarVariant'],
-            'A new panel must keep the current inset sidebar unless asked.',
-        );
-    }
-
-    public function test_a_floating_sidebar_variant_is_shared_with_the_client(): void
-    {
-        app(PanelManager::class)->registerPanel(
-            Panel::make('chromefloat')
-                ->path('chromefloat')
-                ->guard('web')
-                ->middleware(['web'])
-                ->sidebarVariant('floating'),
-        );
-
-        $this->assertSame('floating', $this->sharedFor('chromefloat')['panel']['sidebarVariant']);
-    }
-
-    public function test_an_unknown_sidebar_variant_is_refused(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Unknown sidebar variant [docked].');
-
-        Panel::make('badchrome')->sidebarVariant('docked');
-    }
-
-    public function test_playground_admin_keeps_inset_and_superadmin_uses_floating(): void
-    {
-        $this->assertSame('inset', $this->sharedFor('admin')['panel']['sidebarVariant']);
-        $this->assertSame('floating', $this->sharedFor('superadmin')['panel']['sidebarVariant']);
-    }
-
-    public function test_login_layout_defaults_to_simple(): void
-    {
-        app(PanelManager::class)->registerPanel(
-            Panel::make('loginsimple')
-                ->path('loginsimple')
-                ->guard('web')
-                ->middleware(['web']),
-        );
-
-        $this->assertSame('simple', $this->sharedFor('loginsimple')['panel']['loginLayout']);
-    }
-
-    public function test_a_card_login_layout_is_shared_with_the_client(): void
-    {
-        app(PanelManager::class)->registerPanel(
-            Panel::make('logincard')
-                ->path('logincard')
-                ->guard('web')
-                ->middleware(['web'])
-                ->loginLayout('card'),
-        );
-
-        $this->assertSame('card', $this->sharedFor('logincard')['panel']['loginLayout']);
-    }
-
-    public function test_playground_admin_keeps_simple_login_chrome(): void
-    {
-        $this->assertSame(
-            'simple',
-            $this->sharedFor('admin')['panel']['loginLayout'],
-            'Nairobi Fibre must not jump to a dramatic login layout.',
         );
     }
 

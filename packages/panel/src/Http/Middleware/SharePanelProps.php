@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Middleware;
 
-use Alxtexh\Panel\Auth\Impersonation;
-use Alxtexh\Panel\Panel;
-use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Support\Ability;
-use Alxtexh\Panel\Support\EditableContent;
-use Alxtexh\Panel\Support\ModuleRegistry;
-use Alxtexh\Panel\Support\PanelHome;
-use Alxtexh\Panel\Support\PanelIdleActivity;
-use Alxtexh\Panel\Support\PanelNavigation;
-use Alxtexh\Panel\Support\SettingsIndex;
-use Alxtexh\Panel\Support\Tenants;
-use Alxtexh\Panel\Trash\TrashBin;
 use Closure;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Alxtexh\Panel\Auth\Impersonation;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\EditableContent;
+use Alxtexh\Panel\Support\SettingsIndex;
+use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\ModuleRegistry;
+use Alxtexh\Panel\Support\PanelNavigation;
+use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\PanelIdleActivity;
+use Alxtexh\Panel\Support\Tenants;
+use Alxtexh\Panel\Trash\TrashBin;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -208,30 +207,7 @@ final class SharePanelProps
                      * off.
                      */
                     'pageFooter' => $panel->hasPageFooter(),
-                    /*
-                     * SIDEBAR CHROME: inset (default), floating, or flush
-                     * sidebar. Shared so AppSidebar can set Sidebar's variant
-                     * without the host forking the shell.
-                     */
-                    'sidebarVariant' => $panel->getSidebarVariant(),
-                    /*
-                     * DASHBOARD PACKING: classic (default StatStrip + columns)
-                     * or blocks (dashboard-01 section cards + hero chart).
-                     * A DashboardPage may still override per screen.
-                     */
-                    'dashboardLayout' => $panel->getDashboardLayout(),
-                    /*
-                     * LOGIN CHROME: simple (default, login-01), split, muted,
-                     * card, email. `loginLayout()` is the kit API; debug may
-                     * override with ?loginLayout= so a host can preview without
-                     * five apps. authLayout stays for older Vue.
-                     */
-                    'loginLayout' => self::sharedLoginLayout($panel),
-                    'authLayout' => match (self::sharedLoginLayout($panel)) {
-                        'split', 'card' => 'split',
-                        'showcase' => 'showcase',
-                        default => 'centered',
-                    },
+                    'authLayout' => $panel->getAuthLayout(),
                     'authTestimonial' => $panel->getAuthTestimonial(),
 
                     /*
@@ -303,7 +279,7 @@ final class SharePanelProps
                         ->map(static fn (array $i): array => [
                             'key' => $i['key'] ?? '',
                             'label' => $i['label'] ?? '',
-                            'href' => ($i['href'] ?? '') instanceof Closure ? ($i['href'])() : (string) ($i['href'] ?? ''),
+                            'href' => ($i['href'] ?? '') instanceof \Closure ? ($i['href'])() : (string) ($i['href'] ?? ''),
                             'icon' => $i['icon'] ?? null,
                         ])
                         ->values()
@@ -604,7 +580,7 @@ final class SharePanelProps
      * @param  list<string>  $suffixes
      * @param  list<string>  $defaultFallbacks
      */
-    private static function namedUrl(Panel $panel, array $suffixes, array $defaultFallbacks = []): ?string
+    private static function namedUrl(\Alxtexh\Panel\Panel $panel, array $suffixes, array $defaultFallbacks = []): ?string
     {
         foreach ($suffixes as $suffix) {
             $name = $panel->getRouteName().$suffix;
@@ -637,7 +613,7 @@ final class SharePanelProps
      *
      * @return array{backups: ?string, logs: ?string, monitoring: ?string}
      */
-    private static function operationsUrls(Panel $panel): array
+    private static function operationsUrls(\Alxtexh\Panel\Panel $panel): array
     {
         $prefixed = $panel->getRouteName().'operations.';
         $isDefault = $panel->id === (string) config('panel.default', 'admin');
@@ -653,33 +629,5 @@ final class SharePanelProps
             'logs' => $resolve('logs'),
             'monitoring' => $resolve('monitoring'),
         ];
-    }
-
-    /**
-     * Login chrome for this request. `Panel::loginLayout()` is the source;
-     * `?loginLayout=` may override in debug so a developer can preview the
-     * five shadcn blocks without five apps.
-     *
-     * @return 'simple'|'split'|'muted'|'card'|'email'|'showcase'
-     */
-    private static function sharedLoginLayout(Panel $panel): string
-    {
-        $layout = $panel->getLoginLayout();
-
-        if (! config('app.debug')) {
-            return $layout;
-        }
-
-        $requested = request()->query('loginLayout');
-
-        if (! is_string($requested)) {
-            return $layout;
-        }
-
-        if (in_array($requested, [...Panel::LOGIN_LAYOUTS, 'showcase'], true)) {
-            return $requested;
-        }
-
-        return $layout;
     }
 }

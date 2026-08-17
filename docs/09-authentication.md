@@ -23,37 +23,28 @@ oracle.
 
 ## Auth layout
 
-Five sign-in layouts match the shadcn/vue login blocks. Set one on the panel:
+Three sign-in layouts are available. Set one on the panel:
 
 ```php
 Panel::make('admin')
-    ->loginLayout('card')   // simple (default) | split | muted | card | email
-    ->sidebarVariant('floating') // inset (default) | floating | sidebar
+    ->authLayout('split')   // or 'centered' (default) or 'showcase'
 ```
 
-| kit id | shadcn | Description |
-|---|---|---|
-| `simple` | login-01 | Form centred on the page background. The default, so existing apps do not jump. |
-| `split` | login-02 | Form column plus a full-height cover on large screens. |
-| `muted` | login-03 | Form centred on a muted canvas. |
-| `card` | login-04 | Form and image inside one card. |
-| `email` | login-05 | Same chrome as `simple`; the login screen leads with email (password and passkeys stay). |
+| Layout | Description |
+|---|---|
+| `centered` | Form centred on a plain background. The default. |
+| `split` | Neutral left panel with a brand name and image slot; form on the right. |
+| `showcase` | Form on the left; a preview panel and an optional testimonial on the right. |
 
-The layout applies to every AuthLayout screen on that panel: sign-in, register,
-forgot password, reset password, OTP. The idle lock screen draws its own page
-and is unchanged.
+The layout applies to every auth screen on that panel — sign-in, register,
+forgot password, reset password, OTP, lock screen — so one call covers all of
+them.
 
-With `APP_DEBUG=true`, append `?loginLayout=split` (or any of the five ids) to
-preview another variant without a rebuild. Production ignores the query.
+Both `split` and `showcase` provide the same named `#image` slot for placing a
+logo, illustration, or screenshot. Without it a placeholder is shown.
 
-`authLayout('centered'|'split'|'showcase')` still works. `centered` maps to
-`simple`, `split` to `split`, and `showcase` keeps the pitch layout so a portal
-that already called it does not jump. Prefer `loginLayout()` in new code.
-
-Both `split` and `card` (and the legacy `showcase`) provide the same named
-`#image` slot. Without it a muted cover is shown.
-
-`showcase` also accepts a testimonial:
+`showcase` also accepts a testimonial, declared as text rather than a
+component - the renderer owns how it looks:
 
 ```php
 Panel::make('admin')
@@ -61,9 +52,12 @@ Panel::make('admin')
     ->authTestimonial(
         'Switching subscribers between plans used to mean a support ticket. Now it is a click.',
         'Amara Odhiambo',
-        'Head of Operations',
+        'Head of Operations',   // optional
     )
 ```
+
+Calling it is optional. A `showcase` panel that never does shows the preview
+panel with no quote under it, rather than a placeholder attributed to nobody.
 
 ## Shared sign-in
 

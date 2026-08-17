@@ -37,35 +37,21 @@ final class Dashboard extends DashboardPage
 }
 ```
 
-## Stats packing
+## Stats render as one joined strip
 
-Default `classic` packing renders `stats()` as one joined `StatStrip`. Optional
-`Panel::dashboardLayout('blocks')` (or a page `dashboardLayout()` override)
-draws independent section `StatCard`s instead: larger type, soft gradient,
-trend chip - the dashboard-01 section-card look without leaving kit widgets.
+Four separate cards say "four things". One card divided by hairlines says "four
+measures of this panel", so `stats()` renders through `StatStrip` — a single
+bordered container whose cells sit on a 1px grid gap, which draws the dividers
+wherever cells meet at any breakpoint.
 
-```php
-Panel::make('admin')->dashboardLayout('blocks');
-```
+The trend badge sits beside the value so the row keeps a fixed height; the
+sparkline goes last, because it is the least precise part and should yield space
+rather than compete. The same shape renders wherever a stat row appears — a
+dashboard, a resource header, a custom page.
 
-## Chart chrome
-
-`ChartCard` carries the dashboard-01 interactive chrome (muted header, period
-tabs, collapse / hide) wherever a `ChartWidget` is used: the home dashboard,
-resource header widgets, and hand-composed pages. The host still owns data via
-props-in / events-out; the card never fetches.
-
-## Shell chrome
-
-`Panel::sidebarVariant('floating'|'inset'|'sidebar')` is panel-wide. Settings,
-administration and the dashboard share that shell. Do not mount a second
-CLI `AppSidebar` for one route.
-
-## One-off CLI recipe
-
-`npx shadcn-vue@latest add dashboard-01` is a reference for hosts who want a
-standalone Acme-style page. PanelKit's default remains kit-composed
-`PanelDashboard` with the visual language above.
+**Values are not masked here.** A strip declared directly starts covered, which
+is right for figures somebody deliberately put behind an eye; dashboard counters
+would all arrive hidden, so masking is off for `stats()`.
 
 ## Every chart type
 
