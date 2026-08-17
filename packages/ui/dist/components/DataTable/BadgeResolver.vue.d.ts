@@ -13,8 +13,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     onChange?: ((value: string) => any) | undefined;
 }>, {
     label: string;
-    busy: boolean;
     disabled: boolean;
+    busy: boolean;
     colors: Record<string, string>;
     options: Record<string, string>;
     defaultColor: string;

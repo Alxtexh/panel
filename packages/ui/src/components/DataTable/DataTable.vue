@@ -16,7 +16,7 @@
  * needed badges, formatted dates, currency and units, and an enum would have
  * grown a case per screen forever.
  */
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import type { SortDirection, TableColumn } from './types'
 
 const props = withDefaults(
@@ -269,9 +269,45 @@ function onRowClick(row: Record<string, unknown>, event: MouseEvent) {
 
 const copied = ref<string | null>(null)
 
+/** Unique prefix so two tables on one page do not share checkbox ids. */
+const instanceId = useId()
+
 const visibleColumns = computed(() => props.columns.filter((c) => !props.hidden?.has(c.key)))
 
-const pageIds = computed(() => props.rows.map((r) => r[props.rowKey] as string | number))
+/**
+ * The value the selection Set is keyed by, or null when the row has none.
+ *
+ * A missing key MUST NOT become `undefined` in the Set: every such row would
+ * then share one membership test, and ticking one checkbox would check them
+ * all. Rows without an identity cannot be bulk-acted on anyway.
+ */
+function rowId(row: Record<string, unknown>): string | number | null {
+    const value = row[props.rowKey]
+
+    if (value === null || value === undefined || value === '') {
+        return null
+    }
+
+    return value as string | number
+}
+
+function isSelected(row: Record<string, unknown>): boolean {
+    const id = rowId(row)
+
+    return id !== null && !!props.selected?.has(id)
+}
+
+function onToggleRow(row: Record<string, unknown>) {
+    const id = rowId(row)
+
+    if (id !== null) {
+        emit('toggle-row', id)
+    }
+}
+
+const pageIds = computed(() =>
+    props.rows.map((r) => rowId(r)).filter((id): id is string | number => id !== null),
+)
 
 const allOnPageSelected = computed(
     () => pageIds.value.length > 0 && pageIds.value.every((id) => props.selected?.has(id)),
@@ -295,10 +331,10 @@ function isSortedBy(column: TableColumn): boolean {
     return props.sort === sortKeyOf(column)
 }
 
-async function copy(rowId: string, column: TableColumn, value: unknown) {
+async function copy(recordId: string, column: TableColumn, value: unknown) {
     try {
         await navigator.clipboard.writeText(String(value))
-        copied.value = `${rowId}-${column.key}`
+        copied.value = `${recordId}-${column.key}`
         setTimeout(() => (copied.value = null), 1200)
     } catch {
         // Clipboard needs a secure context; failing silently beats throwing.
@@ -373,12 +409,14 @@ function summaryValue(key: string): string {
 
                     <th v-if="selectable && !reordering" class="w-10 border-b px-3 py-2.5">
                         <input
+                            :id="`${instanceId}-page`"
                             type="checkbox"
                             class="accent-primary size-3.5 cursor-pointer align-middle"
                             :checked="allOnPageSelected"
                             :indeterminate="someOnPageSelected"
                             aria-label="Select all rows on this page"
-                            @change="emit('toggle-page', !allOnPageSelected)"
+                            @click.stop
+                            @change.stop="emit('toggle-page', !allOnPageSelected)"
                         />
                     </th>
 
@@ -417,7 +455,7 @@ function summaryValue(key: string): string {
             <!-- Dimmed, never unmounted - scroll position and selection survive
                  a reload (§10). -->
             <tbody :class="loading ? 'opacity-50 transition-opacity' : 'transition-opacity'">
-                <template v-for="(row, index) in rows" :key="row[rowKey]">
+                <template v-for="(row, index) in rows" :key="rowId(row) ?? `row-${index}`">
                     <!--
                         A heading whenever the value changes from the previous
                         row - including on the FIRST row of a page, which is how
@@ -439,7 +477,7 @@ function summaryValue(key: string): string {
                     <tr
                         class="hover:bg-muted/40 group pk-row border-b transition-colors"
                         :class="[
-                            selected?.has(row[rowKey])
+                            isSelected(row)
                                 ? 'bg-primary/5 shadow-[inset_3px_0_0_0_var(--color-primary)]'
                                 : '',
                             dragging === index ? 'opacity-40' : '',
@@ -489,11 +527,19 @@ function summaryValue(key: string): string {
 
                         <td v-if="selectable && !reordering" class="px-3 py-2">
                             <input
+                                :id="`${instanceId}-row-${rowId(row) ?? index}`"
                                 type="checkbox"
                                 class="accent-primary size-3.5 cursor-pointer align-middle"
-                                :checked="selected?.has(row[rowKey])"
-                                :aria-label="`Select row ${row[rowKey]}`"
-                                @change="emit('toggle-row', row[rowKey])"
+                                :value="rowId(row) ?? undefined"
+                                :checked="isSelected(row)"
+                                :disabled="rowId(row) === null"
+                                :aria-label="
+                                    rowId(row) === null
+                                        ? 'This row has no id and cannot be selected'
+                                        : `Select row ${rowId(row)}`
+                                "
+                                @click.stop
+                                @change.stop="onToggleRow(row)"
                             />
                         </td>
 

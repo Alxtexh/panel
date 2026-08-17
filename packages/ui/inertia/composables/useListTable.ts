@@ -32,7 +32,13 @@ export interface ListPageProps {
     tabs: string[]
 }
 
-export function useListTable(url: string, props: ListPageProps) {
+export interface ListTableOptions {
+    /** Property on each row that uniquely identifies it. Defaults to `id`. */
+    rowKey?: string
+}
+
+export function useListTable(url: string, props: ListPageProps, options: ListTableOptions = {}) {
+    const rowKey = options.rowKey ?? 'id'
     const rows = ref<Record<string, any>[]>([...props.records])
     const loading = ref(false)
     const showSpinner = ref(false)
@@ -65,12 +71,26 @@ export function useListTable(url: string, props: ListPageProps) {
     const selected = ref<Set<string | number>>(new Set())
     const allMatching = ref(false)
 
+    function idOf(row: Record<string, any>): string | number | null {
+        const value = row[rowKey]
+
+        if (value === null || value === undefined || value === '') {
+            return null
+        }
+
+        return value as string | number
+    }
+
     function clearSelection() {
         selected.value = new Set()
         allMatching.value = false
     }
 
     function toggleRow(id: string | number) {
+        if (id === '') {
+            return
+        }
+
         const next = new Set(selected.value)
 
         if (next.has(id)) {
@@ -88,10 +108,16 @@ export function useListTable(url: string, props: ListPageProps) {
         const next = new Set(selected.value)
 
         for (const row of props.records) {
+            const id = idOf(row)
+
+            if (id === null) {
+                continue
+            }
+
             if (select) {
-                next.add(row.id)
+                next.add(id)
             } else {
-                next.delete(row.id)
+                next.delete(id)
             }
         }
 

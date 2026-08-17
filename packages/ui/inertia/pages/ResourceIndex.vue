@@ -85,6 +85,12 @@ interface ResourceSchema {
             falseLabel?: string
         }[]
         tabs: string[]
+        /**
+         * Property on each row that uniquely identifies it. The list SELECT
+         * always includes this even when it is not a visible column, so
+         * checkboxes can tell rows apart.
+         */
+        rowKey?: string
         /** Structure only; the values arrive with the rows. */
         groupBy?: { key: string; label: string } | null
         /** The order column, when this table can be dragged into order. */
@@ -205,7 +211,9 @@ defineOptions({
     },
 })
 
-const t = useListTable(props.schema.routes.index, props)
+const t = useListTable(props.schema.routes.index, props, {
+    rowKey: props.schema.table.rowKey ?? 'id',
+})
 
 // Keyed by resource, so hiding a column on Clients does not hide it on Routers.
 const { hidden, setHidden } = useColumnVisibility(`alxtexhpanel.${props.schema.key}.columns`)
@@ -1209,6 +1217,7 @@ function badgeLabel(key: string, value: unknown): string {
                     @row-click="onRowClick"
                     :columns="columns"
                     :rows="t.rows.value"
+                    :row-key="schema.table.rowKey ?? 'id'"
                     :hidden="hidden"
                     :sort="sort"
                     :direction="direction"

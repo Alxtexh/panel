@@ -13,8 +13,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onChange?: ((value: unknown) => any) | undefined;
 }>, {
-    busy: boolean;
     disabled: boolean;
+    busy: boolean;
     options: Record<string, string>;
     onLabel: string | null;
     offLabel: string | null;
