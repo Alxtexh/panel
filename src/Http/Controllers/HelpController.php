@@ -80,7 +80,7 @@ final class HelpController
             'name' => $about['name'] ?? config('app.name'),
             'tagline' => $about['tagline'] ?? null,
             'description' => $about['description'] ?? null,
-            'version' => $about['version'] ?? null,
+            'version' => $about['version'] ?? $this->installedPackageVersion(),
             /*
              * A LIST OF {label, href}, NOT FIXED FIELDS. Every installation has
              * a different set - a status page, a contract, an internal runbook -
@@ -106,5 +106,36 @@ final class HelpController
             'pageHeading' => "What's new",
             'support' => SupportEditing::props(ContentEntry::KIND_RELEASE),
         ]);
+    }
+
+    /**
+     * Composer tag for this package, when config did not name one.
+     *
+     * PATH / BRANCH INSTALLS REPORT `dev-main` and similar. Those are not
+     * product versions, so About stays quiet rather than printing a branch.
+     */
+    private function installedPackageVersion(): ?string
+    {
+        if (! class_exists(\Composer\InstalledVersions::class)) {
+            return null;
+        }
+
+        if (! \Composer\InstalledVersions::isInstalled('alxtexh-enterprise/panel')) {
+            return null;
+        }
+
+        $pretty = \Composer\InstalledVersions::getPrettyVersion('alxtexh-enterprise/panel');
+
+        if (! is_string($pretty) || $pretty === '') {
+            return null;
+        }
+
+        $pretty = ltrim($pretty, 'v');
+
+        if (preg_match('/^\d+\.\d+/', $pretty) !== 1) {
+            return null;
+        }
+
+        return $pretty;
     }
 }
