@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Support;
 
+use Illuminate\Support\Facades\Artisan;
 use Alxtexh\Panel\Alerts;
 use Alxtexh\Panel\Documents;
 use Alxtexh\Panel\PanelManager;
-use Illuminate\Support\Facades\Artisan;
 
 /**
  * The instructions an AI agent needs to build in this panel without guessing.
@@ -613,35 +613,6 @@ final class Blueprint
         A `DashboardPage` can declare `stats()` and `charts()`. The generated Vue
         is an empty canvas: import `StatCard` / `ChartCard`, or return
         `PanelDashboard` from `component()` to use the packaged screen.
-
-        PanelKit's default product dashboard is that packaged screen with kit
-        widgets (props-in / events-out, collapse, hide, deferred props). Apply
-        the dashboard-01 *visual language* at the Panel: `sidebarVariant` for
-        the shared shell on every page, and `dashboardLayout('blocks')` for
-        section StatCards plus a hero ChartCard. ChartCard itself carries the
-        muted-header chrome everywhere a ChartWidget is drawn.
-
-        ```php
-        Panel::make('admin')
-            ->sidebarVariant('floating')   // shared shell (settings too)
-            ->dashboardLayout('blocks');   // section cards + hero chart packing
-        ```
-
-        `npx shadcn-vue@latest add dashboard-01` remains a host recipe for a
-        one-off Acme-style page (private AppSidebar, sample DataTable). Prefer
-        the kit-composed dashboard unless you intentionally abandon PanelShell
-        and widgets:
-
-        ```bash
-        npx shadcn-vue@latest add dashboard-01 -y
-        ```
-
-        ```php
-        public static function component(): string
-        {
-            return 'Dashboard01'; // only when you want the CLI block, not kit widgets
-        }
-        ```
 
         ```php
         final class OverviewPage extends DashboardPage
