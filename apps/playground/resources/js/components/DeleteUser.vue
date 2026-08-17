@@ -1,15 +1,13 @@
 <script setup lang="ts">
 /**
- * Account deletion is the package's now.
+ * Account deletion uses the packaged action URL.
  *
- * This application's own destroy route is passed in, because the packaged
- * component defaults to Laravel's `/settings/profile` and this one is generated
- * from a controller that could be renamed.
+ * Profile destroy is the kit's `settings/profile` route. Pass no override when
+ * the packaged Profile screen already posts there.
  */
 import { DeleteUser } from '@alxtexh-enterprise/panel/inertia';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 </script>
 
 <template>
-    <DeleteUser :action="ProfileController.destroy.url()" />
+    <DeleteUser />
 </template>

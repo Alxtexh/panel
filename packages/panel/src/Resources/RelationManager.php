@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
+use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Tables\ListResult;
 use Alxtexh\Panel\Tables\Table;
 
@@ -43,9 +44,16 @@ final class RelationManager
 
     private ?Closure $modifyQuery = null;
 
+    /** @var Closure(Form): Form|null */
+    private ?Closure $form = null;
+
     private ?string $icon = null;
 
     private string $ability = 'view';
+
+    private string $createAbility = 'create';
+
+    private string $updateAbility = 'update';
 
     private function __construct(
         public readonly string $key,
@@ -119,6 +127,42 @@ final class RelationManager
         return $this;
     }
 
+    /**
+     * Create/edit form for related rows (Vue modal / Inertia partial).
+     *
+     * FOUNDATION FOR KIT CREATE/EDIT WITHOUT LIVEWIRE. Declaring the form ships
+     * its schema on the relation payload so the client can open a modal; the
+     * write endpoints land in a follow-up. Until then hosts still use nested
+     * resources or full-page forms for mutations.
+     *
+     * @param  Closure(Form): Form  $form
+     */
+    public function form(Closure $form): self
+    {
+        $this->form = $form;
+
+        return $this;
+    }
+
+    public function createAbility(string $ability): self
+    {
+        $this->createAbility = $ability;
+
+        return $this;
+    }
+
+    public function updateAbility(string $ability): self
+    {
+        $this->updateAbility = $ability;
+
+        return $this;
+    }
+
+    public function hasForm(): bool
+    {
+        return $this->form !== null;
+    }
+
     public function getAbility(): string
     {
         return $this->ability;
@@ -174,11 +218,26 @@ final class RelationManager
     /** @return array<string, mixed> Structure only. Never runs a query. */
     public function toSchema(): array
     {
+        $formSchema = null;
+
+        if ($this->form !== null) {
+            $formSchema = ($this->form)(Form::make())->toSchema();
+        }
+
         return [
             'key' => $this->key,
             'label' => $this->label,
             'icon' => $this->icon,
             'table' => $this->definition()->toSchema(),
+            /*
+             * Schema only until create/edit endpoints ship. Clients may render
+             * a disabled "Add" when form is set and canCreate stays false.
+             */
+            'form' => $formSchema,
+            'canCreate' => false,
+            'canEdit' => false,
+            'createAbility' => $this->createAbility,
+            'updateAbility' => $this->updateAbility,
         ];
     }
 }

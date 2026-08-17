@@ -24,41 +24,32 @@ use Tests\TestCase;
  * AND THE ROUTES NEARLY TOOK SOMEBODY ELSE'S. Laravel's `RouteCollection` is
  * indexed by method+URI: a second `GET settings/profile` does not sit beside the
  * first, it REPLACES it, and the name lookup is then rebuilt from what survives.
- * Registering these routes unconditionally deleted this application's own
- * `profile.edit` NAME, and every `route('profile.edit')` in it began throwing -
- * from a package installed for its screens. A Laravel starter kit ships exactly
- * that URL, so this would have reached almost everyone.
- *
- * The tests below pin both halves: the routes yield where an application has
- * claimed the URL, and register where it has not.
+ * Registering these routes unconditionally deleted an application's own
+ * `profile.edit` NAME. Package tests cover yield via ClaimsProfileProvider; this
+ * application no longer claims the URL so the kit Profile registers.
  */
 final class AccountScreensTest extends TestCase
 {
     use RefreshDatabase;
 
     /**
-     * THE COLLISION, ASSERTED FROM THE VICTIM'S SIDE.
-     *
-     * Checking that our own route is absent would pass just as well if the
-     * package had never registered anything. What matters is that the
-     * application's route still answers under its own name.
+     * THE ADMIN PANEL OWNS THE KIT PROFILE ROUTE when nothing claimed it first.
      */
-    public function test_the_applications_own_settings_route_survives(): void
+    public function test_the_packaged_profile_route_registers_on_the_operator_panel(): void
     {
         $this->assertTrue(
-            Route::has('profile.edit'),
-            'The packaged account routes displaced the application’s own profile.edit.',
+            Route::has('panel.settings.profile'),
+            'The packaged profile route did not register on the operator panel.',
         );
 
         $this->assertSame(
             '/settings/profile',
-            parse_url(route('profile.edit'), PHP_URL_PATH),
+            parse_url(route('panel.settings.profile'), PHP_URL_PATH),
         );
 
-        // And ours yielded rather than registering alongside it.
         $this->assertFalse(
-            Route::has('admin.settings.profile'),
-            'The packaged route registered over a URL the application already owned.',
+            Route::has('profile.edit'),
+            'A leftover application profile.edit name should not shadow the kit.',
         );
     }
 

@@ -240,9 +240,10 @@ final class BlueprintCatalogueTest extends TestCase
         $this->assertStringNotContainsString('Routers online', (string) $install);
         $this->assertStringNotContainsString('Total clients', (string) $install);
         $this->assertStringNotContainsString('Sessions over time', (string) $install);
-        $this->assertStringContainsString('Open orders', (string) $install);
-        $this->assertStringContainsString("type('catalog')", (string) $install);
-        $this->assertStringContainsString('function shortcuts()', (string) $install);
+        $this->assertStringNotContainsString('Open orders', (string) $install);
+        $this->assertStringNotContainsString("type('catalog')", (string) $install);
+        $this->assertStringNotContainsString('function shortcuts()', (string) $install);
+        $this->assertStringContainsString('EMPTY ON PURPOSE', (string) $install);
         $this->assertStringContainsString('publishAndMigratePasskeys', (string) $install);
         $this->assertStringContainsString("Kept', 'laravel/passkeys already installed", (string) $install);
     }

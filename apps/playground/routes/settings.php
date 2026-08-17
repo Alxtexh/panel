@@ -2,7 +2,6 @@
 
 use Alxtexh\Panel\Http\Controllers\AssistantSettingsController;
 use App\Http\Controllers\Auth\PasswordRenewalController;
-use App\Http\Controllers\Settings\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,20 +34,14 @@ Route::middleware(['auth'])->group(function () {
      | with no descriptions. Now it renders a searchable index instead.
      */
     /*
-     | THE SETTINGS INDEX IS THE PACKAGE'S NOW. `PanelRoutes` registers the same
-     | URL for any panel that has not claimed it, and derives every row from
-     | what that panel actually routes - so a portal that dropped a screen with
-     | `->without()` stops listing it without this file being edited. This
+     | THE SETTINGS INDEX AND PROFILE ARE THE PACKAGE'S NOW. `PanelRoutes`
+     | registers them for any panel that has not claimed the URLs, and derives
+     | every SettingsIndex row from what that panel actually routes. This
      | application's assistant entry arrives through `SettingsIndex::add()`.
      */
-
-    Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     /*
      | THE SECURITY SCREEN IS THE PACKAGE'S NOW, routes and all.
      |

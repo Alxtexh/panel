@@ -21,6 +21,7 @@
  */
 import { createInertiaApp } from '@inertiajs/vue3'
 import { initializeAppearance } from '@alxtexh-enterprise/panel'
+import { SettingsLayout } from '@alxtexh-enterprise/panel/inertia'
 import { createApp, h } from 'vue'
 import type { DefineComponent } from 'vue'
 import PanelLayout from './layouts/PanelLayout.vue'
@@ -34,7 +35,7 @@ import '../css/app.css'
 initializeAppearance()
 
 createInertiaApp({
-    title: (title) => (title ? `${title} — ${import.meta.env.VITE_APP_NAME ?? 'Panel'}` : String(import.meta.env.VITE_APP_NAME ?? 'Panel')),
+    title: (title) => (title ? `${title} - ${import.meta.env.VITE_APP_NAME ?? 'Panel'}` : String(import.meta.env.VITE_APP_NAME ?? 'Panel')),
 
     resolve: (name) => {
         const pages = import.meta.glob<DefineComponent>('./pages/**/*.vue', { eager: true })
@@ -65,6 +66,10 @@ createInertiaApp({
          *
          * Landing and error pages also draw their own chrome: a guest has no
          * panel to be inside, and an unmatched URL never starts a session.
+         *
+         * SETTINGS NEST SettingsLayout beside PanelLayout (playground pattern,
+         * kit-owned). Index is the exception: it IS the nav list, so wrapping
+         * it would draw the same links twice.
          */
         const standalone =
             name.startsWith('panel/auth/') ||
@@ -72,7 +77,15 @@ createInertiaApp({
             name.startsWith('landing/') ||
             name.startsWith('errors/')
 
-        page.default.layout ??= standalone ? undefined : PanelLayout
+        if (standalone) {
+            page.default.layout ??= undefined
+        } else if (name === 'settings/Index') {
+            page.default.layout ??= PanelLayout
+        } else if (name.startsWith('settings/')) {
+            page.default.layout ??= [PanelLayout, SettingsLayout]
+        } else {
+            page.default.layout ??= PanelLayout
+        }
 
         return page
     },

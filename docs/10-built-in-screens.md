@@ -16,11 +16,28 @@ mounted by default and can be dropped per panel.
 | **Roles and permissions** | Settings | `manage_roles` |
 | **Documents** | Navigation | `manage_documents` |
 | **Assistant settings** | Settings | `manage_assistant` |
-| **Workspaces** | Settings | — |
-| **Organisation** | Settings | — |
-| **Profile, Security** | Account menu | — (your own account) |
-| **Help, FAQ, About, Changelog** | Navigation | — |
-| **Sitemap, Environment** | Navigation | — |
+| **Workspaces** | Settings | - |
+| **Organisation** | Settings | - |
+| **Profile, Security** | Settings (SettingsLayout) | - (your own account) |
+| **Help, FAQ, About, Changelog** | Navigation | - |
+| **Sitemap, Environment** | Navigation | - |
+
+## What does NOT ship as default routes
+
+A fresh install is **chrome + empty CRUD**, not a vertical demo. These Vue
+screens stay in the npm package and can be mirrored with
+`PanelPages::writeOptional()` when you subclass the matching page base:
+
+| Screen | Page base | How it mounts |
+|---|---|---|
+| Catalog / CatalogItem / CatalogRegister | `CatalogBrowserPage` etc. | Your page class |
+| PlanSetup | `PlanSetupPage` | `make:panel-page --plan-setup` |
+| Signatures | `SignatureStudioPage` | Your page class |
+| Directory | `DirectoryPage` | Your page class |
+| Payment gateways | `PaymentSettingsPage` | `Panel::paymentSettings()` |
+
+The dashboard ships **empty** (`stats()` / `charts()` commented). Fill them, or
+register widgets with `Panel::widgets()`.
 
 ## "Why can I not see Monitoring / Backups / Logs?"
 

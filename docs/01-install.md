@@ -38,11 +38,12 @@ leaves `package.json` byte-identical.
 |---|---|
 | Publishes `config/panel.php` | Every option, commented |
 | Writes `resources/views/app.blade.php` | The root view Inertia renders into |
-| Writes `resources/js/app.ts` | The Inertia bootstrap, if you have none |
+| Writes `resources/js/app.ts` | Inertia bootstrap with `PanelLayout` + nested `SettingsLayout` for settings pages |
 | Writes `resources/js/layouts/PanelLayout.vue` | A layout you are meant to replace |
 | Merges `resources/css/app.css` | Points Tailwind at the package — **without this you get a working panel with no styling** |
 | Wires `vite.config.js` | Adds the Vue plugin if the app has none |
-| Writes 33 page files | Inertia resolves page names by globbing `resources/js/pages`, and cannot see into `node_modules` |
+| Writes core page files | Auth, CRUD, settings, dashboard host. Catalog / PlanSetup / Signatures / Directory are optional (`PanelPages::writeOptional()`) |
+| Writes empty `DashboardPage` | No sample revenue or orders; host fills `stats()` / `charts()` |
 | Creates `app/Panel/` | Where your resources live |
 | Writes `AGENTS.md` | Conventions, regenerate with `panel:blueprint` |
 

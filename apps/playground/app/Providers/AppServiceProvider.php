@@ -78,27 +78,13 @@ class AppServiceProvider extends ServiceProvider
          * no row rather than a disabled one.
          */
         /*
-         * PROFILE AND SECURITY ARE THIS APPLICATION'S OWN ROUTES, so the
-         * packaged entries for them never appear - `SettingsIndex` lists a row
-         * only when the panel registered that route, and ours claimed the URL
-         * first. `order` puts them where they belong rather than after the
-         * organisation's logo.
+         * HOST-ONLY SETTINGS ROWS. Profile and Security are the kit's now: the
+         * packaged routes register when unclaimed, and SettingsIndex lists them
+         * from those routes. Adding them here duplicated kit rows and kept this
+         * app's ProfileController claiming `/settings/profile`. Assistant is
+         * playground-only and arrives through add().
          */
         SettingsIndex::add([[
-            'key' => 'profile',
-            'title' => 'Profile',
-            'description' => 'Your name and your email address.',
-            'href' => static fn (): string => route('profile.edit'),
-            'order' => 0,
-        ], [
-            'key' => 'security',
-            'title' => 'Security',
-            'description' => 'Password, two-factor authentication, passkeys and signed-in devices.',
-            // `panel.` because the security screen is the package's now and this
-            // panel sets `->routeName('panel')`; the app no longer declares one.
-            'href' => static fn (): string => route('panel.settings.security'),
-            'order' => 1,
-        ], [
             'key' => 'assistant',
             'title' => 'Assistant',
             'description' => 'The AI provider the assistant runs on, and its key.',
