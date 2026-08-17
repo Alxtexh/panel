@@ -619,6 +619,12 @@ final class Table
              * ordering moves a row somewhere the operator cannot see.
              */
             'reorderable' => $this->reorderColumn,
+            /*
+             * THE CLIENT SELECTS BY THIS KEY. A table whose SELECT omits it
+             * ships every row with `id: undefined`, and every checkbox then
+             * shares one membership test - ticking one row ticks them all.
+             */
+            'rowKey' => $this->rowKeyName(),
             'groupBy' => $this->groupBy === null ? null : [
                 'key' => $this->groupBy,
                 'label' => $this->groupLabel ?? str($this->groupBy)->headline()->value(),
@@ -683,7 +689,13 @@ final class Table
 
     public function toListQuery(string $model): ListQuery
     {
-        $query = ListQuery::for($model)
+        $query = ListQuery::for($model);
+
+        if ($this->keyColumn !== null) {
+            $query->keyColumn($this->keyColumn);
+        }
+
+        $query
             ->select($this->resolveSelect())
             ->sortable($this->resolveSortable())
             ->searchable($this->resolveSearchable())
@@ -694,10 +706,6 @@ final class Table
             ->defaultSort($this->defaultSort, $this->defaultDirection)
             ->perPage($this->perPage)
             ->perPageOptions($this->perPageOptions);
-
-        if ($this->keyColumn !== null) {
-            $query->keyColumn($this->keyColumn);
-        }
 
         if ($this->query !== null) {
             $query->join($this->query);
@@ -758,7 +766,15 @@ final class Table
             $select[] = $column->selectExpression();
         }
 
-        $all = [...$select, ...$this->additionalSelect, ...$extra];
+        /*
+         * THE ROW KEY IS ALWAYS SELECTED, even when it is not a visible column.
+         *
+         * Lists select only declared columns (never SELECT *) so a resource
+         * that shows name and status and never `id` used to ship rows with no
+         * identity. The table then keyed every checkbox on `undefined`, and
+         * ticking one row selected every row on the page.
+         */
+        $all = [$this->keySelectExpression(), ...$select, ...$this->additionalSelect, ...$extra];
 
         /*
          * RAW EXPRESSIONS ARE HELD BACK FROM `array_unique`, which compares by
@@ -775,6 +791,36 @@ final class Table
         $expressions = array_values(array_filter($all, static fn ($c): bool => ! is_string($c)));
 
         return [...$strings, ...$expressions];
+    }
+
+    /**
+     * The key as the client reads it on a row, not the SQL column.
+     *
+     * `keyColumn('posts.id')` is what the query orders by. The row that comes
+     * back is keyed `id`, because SELECT aliases drop the table prefix.
+     */
+    private function rowKeyName(): string
+    {
+        $column = $this->keyColumn ?? 'id';
+
+        return str_contains($column, '.')
+            ? substr($column, strrpos($column, '.') + 1)
+            : $column;
+    }
+
+    /** The SELECT term that puts {@see rowKeyName()} on every row. */
+    private function keySelectExpression(): string
+    {
+        $column = $this->keyColumn ?? 'id';
+        $bare = $this->rowKeyName();
+
+        if (! str_contains($column, '.')) {
+            return $column;
+        }
+
+        $suffix = substr($column, strrpos($column, '.') + 1);
+
+        return $suffix === $bare ? $column : "{$column} as {$bare}";
     }
 
     /** @return array<string, string> */

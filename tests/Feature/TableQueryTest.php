@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Feature;
 
+use Alxtexh\Panel\Tables\Table;
 use Alxtexh\Panel\Tests\Fixtures\Models\Post;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
+use Alxtexh\Panel\Tests\Fixtures\Resources\PostResource;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -136,5 +138,44 @@ final class TableQueryTest extends TestCase
         $this->makePosts(1);
 
         $this->get('/posts')->assertRedirect();
+    }
+
+    /**
+     * THE ROW KEY IS ON THE ROW EVEN WHEN IT IS NOT A COLUMN.
+     *
+     * PostResource shows title, status and created_at, never `id`. A SELECT
+     * built only from visible columns used to omit the key, so every checkbox
+     * keyed on `undefined` and ticking one row selected the page.
+     */
+    public function test_list_rows_include_unique_ids_when_id_is_not_a_column(): void
+    {
+        $this->makePosts(3);
+
+        $records = $this->actingAs($this->user)
+            ->get('/posts')
+            ->assertOk()
+            ->viewData('page')['props']['records'];
+
+        $ids = array_column($records, 'id');
+
+        $this->assertCount(3, $ids);
+        $this->assertCount(3, array_unique($ids));
+        $this->assertNotContains(null, $ids);
+        $this->assertTrue(
+            collect($ids)->every(fn (mixed $id): bool => is_int($id) || is_string($id)),
+        );
+    }
+
+    public function test_the_list_select_includes_the_key_column(): void
+    {
+        $columns = PostResource::table(Table::make())->toListQuery(Post::class)->selectedColumns();
+
+        $this->assertTrue(
+            collect($columns)->contains(
+                fn (mixed $column): bool => is_string($column)
+                    && ($column === 'id' || str_ends_with($column, '.id') || str_contains(strtolower($column), ' as id')),
+            ),
+            'List SELECT must include the row key. Got: '.implode(', ', array_map('strval', $columns)),
+        );
     }
 }

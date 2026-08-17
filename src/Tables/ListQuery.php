@@ -562,7 +562,7 @@ final class ListQuery
         // toBase() applies the tenant scope, so a crafted id list can only ever
         // return rows this tenant already owns.
         $rows = $eloquent->toBase()
-            ->select($this->select)
+            ->select($this->selectedColumns())
             ->whereIn($this->keyColumn, $ids)
             // Parsed, not passed through. The client sends ISO-8601 with an
             // offset (2026-07-27T09:15:00+00:00) while the column holds
@@ -747,7 +747,7 @@ final class ListQuery
         // toBase() applies the tenant global scope before dropping to the query
         // builder, so another tenant's record is simply not found.
         $row = $eloquent->toBase()
-            ->select($this->select)
+            ->select($this->selectedColumns())
             ->where($this->keyColumn, $id)
             ->first();
 
@@ -824,7 +824,7 @@ final class ListQuery
         $after = null;
 
         while (true) {
-            $query = $this->base($state)->select($this->select);
+            $query = $this->base($state)->select($this->selectedColumns());
 
             if ($ids !== null) {
                 $query->whereIn($key, $ids);
@@ -905,9 +905,59 @@ final class ListQuery
             : $this->keyColumn;
     }
 
+    /**
+     * Guarantee the row key is in the SELECT, even when the caller listed
+     * display columns and forgot it.
+     *
+     * Without this, every row arrives with no identity, Vue keys every
+     * checkbox on `undefined`, and ticking one row selects the page.
+     */
+    private function ensureKeyIsSelected(): void
+    {
+        if ($this->select === [] || in_array('*', $this->select, true)) {
+            return;
+        }
+
+        $expression = $this->keySelectExpression();
+        $bare = $this->rowKeyName();
+
+        foreach ($this->select as $column) {
+            if (! is_string($column)) {
+                continue;
+            }
+
+            if ($column === $expression || $column === $this->keyColumn || $column === $bare) {
+                return;
+            }
+
+            if (stripos($column, ' as '.$bare) !== false) {
+                return;
+            }
+        }
+
+        $this->select[] = $expression;
+    }
+
+    /** The SELECT term that puts {@see rowKeyName()} on every fetched row. */
+    private function keySelectExpression(): string
+    {
+        $column = $this->keyColumn;
+        $bare = $this->rowKeyName();
+
+        if (! str_contains($column, '.')) {
+            return $column;
+        }
+
+        $suffix = substr($column, strrpos($column, '.') + 1);
+
+        return $suffix === $bare ? $column : "{$column} as {$bare}";
+    }
+
     /** @return list<string> The columns the list selects, for an export header. */
     public function selectedColumns(): array
     {
+        $this->ensureKeyIsSelected();
+
         return $this->select;
     }
 
@@ -1143,7 +1193,7 @@ final class ListQuery
 
         $ordering = $this->orderingColumns($column);
 
-        $query = $this->base($state)->select($this->select);
+        $query = $this->base($state)->select($this->selectedColumns());
 
         /*
          * Group first, then the chosen sort. That single extra ORDER BY term is
