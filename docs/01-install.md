@@ -11,10 +11,10 @@ repository to your application's `composer.json`:
 ]
 ```
 
-Then pin **1.0.9** (do not use `^1.0`: later tags v1.0.10 through v1.0.15 still exist and Composer would pick v1.0.15):
+Then require **^1.0**:
 
 ```bash
-composer require alxtexh-enterprise/panel:1.0.9
+composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
 npm install && npm run build
 ```

@@ -796,8 +796,12 @@ return [
     | Written as an operator would read it: what changed, grouped by kind, most
     | recent first. Not a commit log.
     */
+    /*
+    | Playground is a path install, so Composer reports `dev-main` rather than
+    | a product tag. Pin the current release here so About matches consumers.
+    */
     'about' => [
-        'version' => '1.0.9',
+        'version' => '1.0.10',
     ],
 
     'changelog' => [

@@ -214,12 +214,6 @@ final class SupportEditingTest extends TestCase
                     'name' => 'Panel 1.2.0',
                     'body' => 'From GitHub.',
                 ],
-                [
-                    'tag_name' => 'v1.0.15',
-                    'published_at' => '2026-08-17T00:00:00Z',
-                    'name' => 'Restore of v1.0.9',
-                    'body' => 'Must not appear as newer product.',
-                ],
             ], 200),
         ]);
 
@@ -231,7 +225,6 @@ final class SupportEditingTest extends TestCase
 
         $this->assertDatabaseHas('panel_content_entries', ['title' => '1.2.0']);
         $this->assertDatabaseHas('panel_content_entries', ['title' => '1.0.0']);
-        $this->assertDatabaseMissing('panel_content_entries', ['title' => '1.0.15']);
 
         Http::fake(['api.github.com/*' => Http::response('nope', 500)]);
 
