@@ -89,6 +89,12 @@ final class PanelPages
         'panel/auth/Login',
         'panel/auth/ForgotPassword',
         'panel/auth/ResetPassword',
+        /*
+         * LOCK SCREEN lives under `auth/` (not `panel/auth/`) because the
+         * session lock is a signed-in interrupt, not a guest portal. Still a
+         * packaged screen that must have a page file on every install.
+         */
+        'auth/LockScreen',
 
         /*
          * NESTED NAMES, because the server renders `documents/Templates` and a
@@ -163,17 +169,34 @@ final class PanelPages
         'settings/Workspaces',
         'settings/Organisation',
         'settings/Index',
+        /*
+         * PAYMENTS STAYS WRITTEN: `Panel::paymentSettings()` mounts the route
+         * later, and a white page then is the failure this list exists to stop.
+         * The screen is OFF until the host opts in; it is not a demo default.
+         */
         'settings/Payments',
+
+        'support/Help',
+        'support/Faq',
+        'support/About',
+    ];
+
+    /**
+     * Opt-in merchandising / studio screens. NOT written on `panel:install`.
+     *
+     * Catalog, PlanSetup, Signatures and Directory are empty canvases the host
+     * subclasses when needed (`CatalogBrowserPage`, `PlanSetupPage`, …). Shipping
+     * their page files on every install made a fresh kit look like a POS demo.
+     * Call `PanelPages::writeOptional()` (or copy a stub) when you add one of
+     * those page classes; the npm package still exports the Vue components.
+     */
+    public const OPTIONAL_SCREENS = [
         'Directory',
         'Catalog',
         'PlanSetup',
         'CatalogItem',
         'CatalogRegister',
         'Signatures',
-
-        'support/Help',
-        'support/Faq',
-        'support/About',
     ];
 
     /**
@@ -216,6 +239,27 @@ final class PanelPages
 
     public static function write(bool $force = false): array
     {
+        return self::writeScreens(self::SCREENS, $force);
+    }
+
+    /**
+     * Write Catalog / PlanSetup / Signatures / Directory page files when the
+     * host opts into those page bases. Safe to call repeatedly; never overwrites
+     * unless `$force`.
+     *
+     * @return array{written: list<string>, skipped: list<string>, directory: ?string}
+     */
+    public static function writeOptional(bool $force = false): array
+    {
+        return self::writeScreens(self::OPTIONAL_SCREENS, $force);
+    }
+
+    /**
+     * @param  list<string>  $screens
+     * @return array{written: list<string>, skipped: list<string>, directory: ?string}
+     */
+    private static function writeScreens(array $screens, bool $force = false): array
+    {
         $directory = resource_path('js/pages');
 
         /*
@@ -247,7 +291,7 @@ final class PanelPages
         $written = [];
         $skipped = [];
 
-        foreach (self::SCREENS as $screen) {
+        foreach ($screens as $screen) {
             $path = $directory.'/'.$screen.'.vue';
 
             if (file_exists($path) && ! $force) {

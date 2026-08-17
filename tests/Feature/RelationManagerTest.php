@@ -206,4 +206,26 @@ final class RelationManagerTest extends TestCase
             'Relation rows travelled with the record page instead of being fetched on demand.',
         );
     }
+
+    public function test_relation_form_schema_is_serialised_when_declared(): void
+    {
+        $manager = \Alxtexh\Panel\Resources\RelationManager::make('comments', 'Comments')
+            ->related(Comment::class, 'comments.article_id')
+            ->table(fn (\Alxtexh\Panel\Tables\Table $table): \Alxtexh\Panel\Tables\Table => $table
+                ->columns([
+                    \Alxtexh\Panel\Tables\Columns\TextColumn::make('body')->from('comments.body'),
+                ])
+                ->keyColumn('comments.id'))
+            ->form(fn (\Alxtexh\Panel\Forms\Form $form): \Alxtexh\Panel\Forms\Form => $form->schema([
+                \Alxtexh\Panel\Forms\Fields\TextField::make('body')->required(),
+            ]));
+
+        $schema = $manager->toSchema();
+
+        $this->assertTrue($manager->hasForm());
+        $this->assertNotNull($schema['form']);
+        $this->assertSame('body', $schema['form']['fields'][0]['key'] ?? null);
+        $this->assertFalse($schema['canCreate'], 'Write endpoints are not shipped yet.');
+        $this->assertFalse($schema['canEdit']);
+    }
 }

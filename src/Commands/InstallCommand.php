@@ -872,22 +872,17 @@ final class InstallCommand extends Command
 
         namespace App\\Panel\\Pages;
 
-        use DateTimeImmutable;
         use Alxtexh\\Panel\\Pages\\DashboardPage as AlxtexhpanelDashboard;
         use Alxtexh\\Panel\\Widgets\\ChartWidget;
-        use Alxtexh\\Panel\\Widgets\\DashboardFilters;
-        use Alxtexh\\Panel\\Widgets\\Period;
         use Alxtexh\\Panel\\Widgets\\StatWidget;
-        use Alxtexh\\Panel\\Widgets\\Trend;
 
         /**
          * The panel's home screen - where signing in lands.
          *
-         * SAMPLE WIDGETS SHIP SO A FRESH INSTALL IS NOT AN EMPTY PAGE.
-         * They are domain-neutral on purpose: this is a kit, not a vertical
-         * product. Replace the closures with your own queries when you have
-         * models; the layout, deferred props and period selectors stay the
-         * same.
+         * EMPTY ON PURPOSE. A fresh install is chrome plus an empty canvas, not
+         * sample orders or revenue. Fill `stats()` / `charts()`, or register
+         * widgets with `Panel::widgets()`. Same shape as
+         * `make:panel-page --dashboard`.
          *
          * To use your own layout instead, override `component()` and point it
          * at a page of your own; the declarations, the permission filtering and
@@ -899,120 +894,30 @@ final class InstallCommand extends Command
 
             protected static ?int \$sort = -100;
 
-            /** Four glanceable windows above the widget grid. */
-            public static function strip(): ?callable
-            {
-                return static function (DashboardFilters \$filters, DateTimeImmutable \$now, string \$tenantKey): array {
-                    return [
-                        ['key' => 'today', 'label' => 'Today', 'value' => 145, 'caption' => 'orders so far', 'sensitive' => false],
-                        ['key' => 'week', 'label' => 'Last 7 days', 'value' => 982, 'caption' => 'rolling window', 'sensitive' => true],
-                        ['key' => 'month', 'label' => 'This month', 'value' => 3_412, 'caption' => 'since the 1st', 'sensitive' => false],
-                        ['key' => 'quarter', 'label' => 'Last 90 days', 'value' => 11_208, 'caption' => 'rolling window', 'sensitive' => true],
-                    ];
-                };
-            }
-
-            /** The counters across the top. */
+            /**
+             * WIDGETS RESOLVE ONE AT A TIME, each in its own deferred prop, so
+             * the layout arrives before any query has run and one slow
+             * aggregate delays only itself.
+             *
+             * @return list<StatWidget>
+             */
             public static function stats(): array
             {
                 return [
-                    StatWidget::make('orders_open', 'Open orders')
-                        ->value(fn (): int => 48)
-                        ->description('Awaiting fulfilment'),
-
-                    StatWidget::make('inventory', 'On hand')
-                        ->value(fn (): int => 1_240)
-                        ->description('Units in stock'),
-
-                    StatWidget::make('revenue', 'Revenue')
-                        ->value(fn (): int => 18_440)
-                        ->trend(fn (): Trend => Trend::between(18_440, 16_900))
-                        ->sparkline(fn (): array => [
-                            'points' => [
-                                ['label' => 'Mon', 'value' => 2_100],
-                                ['label' => 'Tue', 'value' => 2_450],
-                                ['label' => 'Wed', 'value' => 2_280],
-                                ['label' => 'Thu', 'value' => 2_610],
-                                ['label' => 'Fri', 'value' => 2_900],
-                                ['label' => 'Sat', 'value' => 3_050],
-                                ['label' => 'Sun', 'value' => 3_050],
-                            ],
-                        ]),
-
-                    StatWidget::make('due_soon', 'Due this week')
-                        ->value(fn (): int => 12)
-                        ->description('Returns and invoices'),
+                    // StatWidget::make('clients', 'Clients')
+                    //     ->value(fn (): int => Client::query()->count())
+                    //     ->ability('view_commercial_widgets'),
                 ];
             }
 
-            /** The charts below them. */
+            /** @return list<ChartWidget> */
             public static function charts(): array
             {
                 return [
-                    ChartWidget::make('revenue', 'Revenue over time')
-                        ->type('area')
-                        ->description('Takings over the period')
-                        ->withPeriods()
-                        ->span(2)
-                        ->data(fn (Period \$p, ?DateTimeImmutable \$now): array => [
-                            'points' => [
-                                ['label' => 'Mon', 'value' => 210],
-                                ['label' => 'Tue', 'value' => 245],
-                                ['label' => 'Wed', 'value' => 228],
-                                ['label' => 'Thu', 'value' => 261],
-                                ['label' => 'Fri', 'value' => 290],
-                                ['label' => 'Sat', 'value' => 305],
-                                ['label' => 'Sun', 'value' => 298],
-                            ],
-                        ])
-                        ->trend(fn (Period \$p, ?DateTimeImmutable \$now): Trend => Trend::between(1_837, 1_650)),
-
-                    ChartWidget::make('status', 'By status')
-                        ->type('doughnut')
-                        ->data(fn (): array => [
-                            ['label' => 'Paid', 'value' => 1_583],
-                            ['label' => 'Unpaid', 'value' => 587],
-                            ['label' => 'Overdue', 'value' => 330],
-                        ]),
-
-                    ChartWidget::make('featured', 'Featured')
-                        ->type('catalog')
-                        ->description('Replace with products, units or listings')
-                        ->data(fn (): array => [
-                            'items' => [
-                                ['key' => 'a', 'label' => 'Day desk', 'caption' => 'Studio 3', 'price' => '12.00', 'status' => 'available'],
-                                ['key' => 'b', 'label' => 'Oak table', 'caption' => 'Floor 2', 'price' => '48.00', 'status' => 'occupied', 'progress' => ['value' => 80, 'total' => 100, 'tone' => 'success']],
-                                ['key' => 'c', 'label' => 'Filter pack', 'caption' => 'SKU-1042', 'price' => '6.50', 'status' => 'low', 'progress' => ['value' => 8, 'total' => 40, 'tone' => 'warning']],
-                            ],
-                        ]),
-
-                    ChartWidget::make('lines', 'Recent lines')
-                        ->type('items')
-                        ->description('Orders, cart rows or upcoming returns')
-                        ->data(fn (): array => [
-                            'items' => [
-                                ['key' => '1', 'label' => 'Filter pack', 'detail' => 'SKU-1042', 'qty' => 2, 'amount' => '13.00', 'status' => 'paid'],
-                                ['key' => '2', 'label' => 'Oak table', 'detail' => 'Due Fri', 'qty' => 1, 'amount' => '48.00', 'status' => 'due'],
-                                ['key' => '3', 'label' => 'Day desk', 'detail' => 'Walk-in', 'qty' => 1, 'amount' => '12.00', 'status' => 'unpaid'],
-                            ],
-                        ]),
-                ];
-            }
-
-            /**
-             * Shortcut chips on the dashboard. Point these at your own screens.
-             *
-             * @return array<string, mixed>
-             */
-            public static function shortcuts(): array
-            {
-                return [
-                    'defaults' => ['settings', 'organisation'],
-                    'catalog' => [
-                        ['id' => 'settings', 'label' => 'Settings', 'href' => '/settings', 'icon' => 'sliders'],
-                        ['id' => 'organisation', 'label' => 'Organisation', 'href' => '/settings/organisation', 'icon' => 'home'],
-                        ['id' => 'people', 'label' => 'People', 'href' => '/user-management', 'icon' => 'users'],
-                    ],
+                    // ChartWidget::make('signups', 'Sign-ups')
+                    //     ->type('line')
+                    //     ->withPeriods()
+                    //     ->data(fn (\$period, \$now): array => [...]),
                 ];
             }
         }
