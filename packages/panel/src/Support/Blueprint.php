@@ -614,10 +614,23 @@ final class Blueprint
         is an empty canvas: import `StatCard` / `ChartCard`, or return
         `PanelDashboard` from `component()` to use the packaged screen.
 
-        For the REAL shadcn-vue dashboard-01 block (AppSidebar, SiteHeader,
-        SectionCards, ChartAreaInteractive, DataTable), add it with the CLI and
-        point the page at that Vue file. That is not the same as rearranging
-        PanelDashboard widgets:
+        PanelKit's default product dashboard is that packaged screen with kit
+        widgets (props-in / events-out, collapse, hide, deferred props). Apply
+        the dashboard-01 *visual language* at the Panel: `sidebarVariant` for
+        the shared shell on every page, and `dashboardLayout('blocks')` for
+        section StatCards plus a hero ChartCard. ChartCard itself carries the
+        muted-header chrome everywhere a ChartWidget is drawn.
+
+        ```php
+        Panel::make('admin')
+            ->sidebarVariant('floating')   // shared shell (settings too)
+            ->dashboardLayout('blocks');   // section cards + hero chart packing
+        ```
+
+        `npx shadcn-vue@latest add dashboard-01` remains a host recipe for a
+        one-off Acme-style page (private AppSidebar, sample DataTable). Prefer
+        the kit-composed dashboard unless you intentionally abandon PanelShell
+        and widgets:
 
         ```bash
         npx shadcn-vue@latest add dashboard-01 -y
@@ -626,15 +639,9 @@ final class Blueprint
         ```php
         public static function component(): string
         {
-            return 'Dashboard01'; // resources/js/pages/Dashboard01.vue from the block
+            return 'Dashboard01'; // only when you want the CLI block, not kit widgets
         }
         ```
-
-        Packing on `PanelDashboard` is a separate kit option. Default `classic`
-        is a StatStrip plus independent column tracks. Optional
-        `Panel::dashboardLayout('blocks')` only changes how that packaged
-        screen packs StatCard / ChartCard widgets. Prefer the CLI block when
-        you want the shadcn-vue dashboard-01 shell itself.
 
         ```php
         final class OverviewPage extends DashboardPage

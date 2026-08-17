@@ -10,6 +10,10 @@
  * of its own; nesting a bordered chart inside a bordered card is the wrapper
  * stack the layout renderer already avoids.
  *
+ * CHROME MATCHES dashboard-01 ChartAreaInteractive: muted header bar, border
+ * under the title row, roomier body padding, rounded-xl. Period tabs stay
+ * props-in / events-out. Collapse and hide keep their kit semantics.
+ *
  * The body height is FIXED across loading, error and loaded states unless
  * `fitBody` is set. A skeleton shorter than the chart makes the whole
  * dashboard jump when six cards resolve at slightly different times. A

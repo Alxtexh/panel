@@ -113,11 +113,17 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
         <PkBoundary v-for="widget in stats" :key="widget.key" :label="widget.label" fill>
             <Deferred :data="`${prefix}_stat_${widget.key}`">
                 <template #fallback>
-                    <StatCard :label="widget.label" :description="widget.description" loading />
+                    <StatCard
+                        variant="section"
+                        :label="widget.label"
+                        :description="widget.description"
+                        loading
+                    />
                 </template>
 
                 <template #default>
                     <StatCard
+                        variant="section"
                         :label="widget.label"
                         :description="widget.description"
                         :value="stat(widget.key)?.value"

@@ -883,11 +883,7 @@ const hiddenEntries = computed(() => {
         <div
             v-if="visibleCharts.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0"
             class="flex flex-col"
-            :class="
-                isBlocks
-                    ? 'gap-6 [&_[data-slot=chart-card]]:gap-0 [&_[data-slot=chart-card]]:overflow-hidden [&_[data-slot=chart-card]]:rounded-xl [&_[data-slot=chart-card]]:border [&_[data-slot=chart-card]]:border-border/80 [&_[data-slot=chart-card]]:bg-card [&_[data-slot=chart-card]]:p-0 [&_[data-slot=chart-card]]:shadow-sm [&_[data-slot=chart-card]>:first-child]:border-b [&_[data-slot=chart-card]>:first-child]:bg-muted [&_[data-slot=chart-card]>:first-child]:px-5 [&_[data-slot=chart-card]>:first-child]:py-4 [&_[data-slot=chart-card]>:nth-child(2)]:px-5 [&_[data-slot=chart-card]>:nth-child(2)]:pb-5'
-                    : 'gap-3'
-            "
+            :class="isBlocks ? 'gap-6' : 'gap-3'"
             data-slot="dashboard-charts"
         >
             <!--

@@ -14,6 +14,10 @@ import { iconPath } from '../primitives/icons'
  * of its own; nesting a bordered chart inside a bordered card is the wrapper
  * stack the layout renderer already avoids.
  *
+ * CHROME MATCHES dashboard-01 ChartAreaInteractive: muted header bar, border
+ * under the title row, roomier body padding, rounded-xl. Period tabs stay
+ * props-in / events-out. Collapse and hide keep their kit semantics.
+ *
  * The body height is FIXED across loading, error and loaded states unless
  * `fitBody` is set. A skeleton shorter than the chart makes the whole
  * dashboard jump when six cards resolve at slightly different times. A
@@ -80,12 +84,14 @@ const bodyStyle = computed(() => {
 
 <template>
     <div
-        class="bg-card flex w-full flex-col self-start rounded-lg border"
-        :class="collapsed ? 'px-4 py-2' : 'gap-3 p-4'"
+        class="bg-card flex w-full flex-col self-start overflow-hidden rounded-xl border border-border/80 shadow-sm"
         data-slot="chart-card"
         :data-collapsed="collapsed ? 'true' : 'false'"
     >
-        <div class="flex flex-wrap items-start justify-between gap-2">
+        <div
+            class="bg-muted flex flex-wrap items-start justify-between gap-2 border-b px-5 py-4"
+            data-slot="chart-card-header"
+        >
             <div class="flex min-w-0 items-start gap-2">
                 <slot name="icon">
                     <svg
@@ -120,7 +126,7 @@ const bodyStyle = computed(() => {
 
                 <div
                     v-if="periods && periods.length"
-                    class="bg-muted/60 flex items-center gap-0.5 rounded-md p-0.5"
+                    class="bg-background/70 flex items-center gap-0.5 rounded-md p-0.5"
                     role="group"
                     aria-label="Period"
                 >
@@ -149,7 +155,7 @@ const bodyStyle = computed(() => {
                 <button
                     v-if="collapsible"
                     type="button"
-                    class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md p-1 transition-colors"
+                    class="text-muted-foreground hover:bg-background/80 hover:text-foreground rounded-md p-1 transition-colors"
                     :aria-expanded="!collapsed"
                     :aria-label="collapsed ? `Expand ${label}` : `Collapse ${label}`"
                     :title="collapsed ? 'Expand' : 'Collapse'"
@@ -173,7 +179,7 @@ const bodyStyle = computed(() => {
                 <button
                     v-if="hideable"
                     type="button"
-                    class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md p-1 transition-colors"
+                    class="text-muted-foreground hover:bg-background/80 hover:text-foreground rounded-md p-1 transition-colors"
                     :aria-label="`Hide ${label}`"
                     title="Hide"
                     @click="$emit('hide')"
@@ -197,7 +203,7 @@ const bodyStyle = computed(() => {
         <div
             v-if="!collapsed"
             :style="bodyStyle"
-            class="flex flex-col justify-center"
+            class="flex flex-col justify-center px-5 py-5"
             data-slot="chart-card-body"
         >
             <PkSkeleton v-if="loading" variant="block" :height="bodyHeight" />
