@@ -17,11 +17,15 @@ import PkSkeleton from '../primitives/PkSkeleton.vue'
  * which is what makes a row of these scannable.
  *
  * Grid rows stretch, so a card with a series and one without still line up.
+ *
+ * `variant="section"` is the dashboard-01 card: larger type, roomier padding,
+ * and a shadow so a row of four reads as separate blocks rather than a strip.
  */
 import Sparkline from './Sparkline.vue'
 import TrendBadge from './TrendBadge.vue'
+import { computed } from 'vue'
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         label: string
         description?: string | null
@@ -36,6 +40,11 @@ withDefaults(
         error?: boolean
         /** True when a DECREASE is the good outcome. */
         inverted?: boolean
+        /**
+         * `section` is dashboard-01 packing: taller cards that cannot be
+         * mistaken for a joined StatStrip cell.
+         */
+        variant?: 'default' | 'section'
     }>(),
     {
         description: null,
@@ -44,17 +53,34 @@ withDefaults(
         loading: false,
         error: false,
         inverted: false,
+        variant: 'default',
     },
 )
+
+const isSection = computed(() => props.variant === 'section')
 
 const format = (v: unknown) =>
     typeof v === 'number' ? new Intl.NumberFormat().format(v) : String(v ?? '-')
 </script>
 
 <template>
-    <div class="bg-card flex flex-col overflow-hidden rounded-lg border">
-        <div class="flex flex-1 flex-col gap-1 p-4">
-            <p class="text-muted-foreground relative text-xs font-medium">
+    <div
+        class="bg-card flex flex-col overflow-hidden border"
+        :class="
+            isSection
+                ? 'min-h-[8.75rem] rounded-xl shadow-sm ring-1 ring-foreground/5'
+                : 'rounded-lg'
+        "
+        :data-slot="isSection ? 'section-stat-card' : 'stat-card'"
+    >
+        <div
+            class="flex flex-1 flex-col gap-1"
+            :class="isSection ? 'p-5 sm:p-6' : 'p-4'"
+        >
+            <p
+                class="text-muted-foreground relative font-medium"
+                :class="isSection ? 'text-[0.7rem] uppercase tracking-wide' : 'text-xs'"
+            >
                 {{ label }}
             </p>
 
@@ -64,13 +90,18 @@ const format = (v: unknown) =>
 
             <span
                 v-else-if="error"
-                class="text-destructive relative flex h-8 items-center text-sm"
+                class="text-destructive relative flex items-center text-sm"
+                :class="isSection ? 'h-10' : 'h-8'"
                 role="alert"
             >
                 Could not load
             </span>
 
-            <span v-else class="relative flex h-8 items-center text-2xl font-semibold tabular-nums">
+            <span
+                v-else
+                class="relative flex items-center font-semibold tabular-nums"
+                :class="isSection ? 'h-10 text-3xl tracking-tight' : 'h-8 text-2xl'"
+            >
                 {{ format(value) }}
             </span>
 
@@ -94,7 +125,7 @@ const format = (v: unknown) =>
             class="-mb-px"
             aria-hidden="true"
         >
-            <Sparkline :data="sparkline" :height="44" filled />
+            <Sparkline :data="sparkline" :height="isSection ? 52 : 44" filled />
         </div>
     </div>
 </template>

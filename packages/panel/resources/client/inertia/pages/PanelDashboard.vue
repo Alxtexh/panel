@@ -119,8 +119,13 @@ const props = withDefaults(
         /**
          * Packing recipe. `classic` is StatStrip plus column tracks (default).
          * `blocks` is dashboard-01: section StatCards, hero area/line, rest below.
+         *
+         * UNDEFINED / omitted inherits `panel.dashboardLayout`. Defaulting this to
+         * `classic` used to shadow a panel that asked for `blocks` whenever the
+         * page prop failed to bind (attrs-only wrappers), so both URLs looked
+         * identical.
          */
-        layout?: 'classic' | 'blocks'
+        layout?: 'classic' | 'blocks' | null
         /** Panel path prefix; the dismiss and report routes sit inside it. */
         prefix?: string
         shortcuts?: {
@@ -143,7 +148,7 @@ const props = withDefaults(
         }),
         filterDimensions: () => [],
         heading: 'Dashboard',
-        layout: 'classic',
+        layout: null,
         prefix: '',
         shortcuts: null,
     },
@@ -552,17 +557,18 @@ const chartBands = computed(() =>
 
 /**
  * PAGE PROP FIRST, then the panel shared prop. A DashboardPage that returns
- * `blocks` wins over a panel still on `classic`, which is how one portal can
- * mix recipes without a second Vue screen.
+ * `blocks` or `classic` wins; null/omitted inherits the panel. That is how one
+ * portal can mix recipes without a second Vue screen, and how a panel-level
+ * `dashboardLayout('blocks')` still reaches attrs-only page wrappers.
  */
 const dashboardLayout = computed<'classic' | 'blocks'>(() => {
-    if (props.layout === 'blocks') {
-        return 'blocks'
+    if (props.layout === 'blocks' || props.layout === 'classic') {
+        return props.layout
     }
 
     const shared = (page.props.panel as { dashboardLayout?: string } | undefined)?.dashboardLayout
 
-    return shared === 'blocks' && props.layout !== 'classic' ? 'blocks' : 'classic'
+    return shared === 'blocks' ? 'blocks' : 'classic'
 })
 
 const isBlocks = computed(() => dashboardLayout.value === 'blocks')
@@ -574,7 +580,7 @@ const restChartBands = computed(() =>
 )
 
 function heroBodyHeight(chart: Chart): number {
-    return Math.max(bodyHeight(chart), 250)
+    return Math.max(bodyHeight(chart), 320)
 }
 
 const hiddenEntries = computed(() => {
@@ -600,7 +606,8 @@ const hiddenEntries = computed(() => {
     <Head :title="heading" />
 
     <div
-        class="flex w-full min-w-0 flex-col gap-4 p-3 sm:p-4"
+        class="flex w-full min-w-0 flex-col"
+        :class="isBlocks ? 'gap-6 p-4 sm:gap-8 sm:p-6' : 'gap-4 p-3 sm:p-4'"
         :data-dashboard-layout="dashboardLayout"
     >
         <!--
@@ -843,17 +850,23 @@ const hiddenEntries = computed(() => {
 
         <div
             v-if="isBlocks && widgets.length"
-            class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+            class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4"
             data-slot="section-cards"
         >
             <PkBoundary v-for="widget in widgets" :key="widget.key" :label="widget.label" fill>
                 <Deferred :data="statKeys">
                     <template #fallback>
-                        <StatCard :label="widget.label" :description="widget.description" loading />
+                        <StatCard
+                            variant="section"
+                            :label="widget.label"
+                            :description="widget.description"
+                            loading
+                        />
                     </template>
 
                     <template #default>
                         <StatCard
+                            variant="section"
                             :label="widget.label"
                             :description="widget.description"
                             :value="stat(widget.key)?.value"
@@ -869,15 +882,20 @@ const hiddenEntries = computed(() => {
 
         <div
             v-if="visibleCharts.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0"
-            class="flex flex-col gap-4"
+            class="flex flex-col"
             :class="
                 isBlocks
-                    ? '[&_[data-slot=chart-card]]:gap-0 [&_[data-slot=chart-card]]:overflow-hidden [&_[data-slot=chart-card]]:rounded-xl [&_[data-slot=chart-card]]:p-0 [&_[data-slot=chart-card]>:first-child]:border-b [&_[data-slot=chart-card]>:first-child]:bg-muted/50 [&_[data-slot=chart-card]>:first-child]:px-4 [&_[data-slot=chart-card]>:first-child]:py-3 [&_[data-slot=chart-card]>:nth-child(2)]:px-4 [&_[data-slot=chart-card]>:nth-child(2)]:pb-4'
+                    ? 'gap-6 [&_[data-slot=chart-card]]:gap-0 [&_[data-slot=chart-card]]:overflow-hidden [&_[data-slot=chart-card]]:rounded-xl [&_[data-slot=chart-card]]:border [&_[data-slot=chart-card]]:border-border/80 [&_[data-slot=chart-card]]:bg-card [&_[data-slot=chart-card]]:p-0 [&_[data-slot=chart-card]]:shadow-sm [&_[data-slot=chart-card]>:first-child]:border-b [&_[data-slot=chart-card]>:first-child]:bg-muted [&_[data-slot=chart-card]>:first-child]:px-5 [&_[data-slot=chart-card]>:first-child]:py-4 [&_[data-slot=chart-card]>:nth-child(2)]:px-5 [&_[data-slot=chart-card]>:nth-child(2)]:pb-5'
                     : 'gap-3'
             "
             data-slot="dashboard-charts"
         >
-            <slot name="before-charts">
+            <!--
+                CLASSIC: shortcuts sit above the masonry. BLOCKS: hero chart is
+                the second glance after the section cards, so shortcuts drop
+                below it rather than breaking the full-width hero.
+            -->
+            <slot v-if="!isBlocks" name="before-charts">
                 <DashboardShortcuts
                     v-if="shortcuts?.catalog?.length"
                     :catalog="shortcuts.catalog"
@@ -895,10 +913,20 @@ const hiddenEntries = computed(() => {
                     :period="periods[blocksPacking.hero.key]"
                     :comparison="comparison[periods[blocksPacking.hero.key]]"
                     :body-height="heroBodyHeight(blocksPacking.hero)"
+                    class="w-full"
                     data-slot="chart-area-interactive"
                     @update:period="(value: string) => setPeriod(blocksPacking.hero!.key, value)"
                     @hide="hideWidget(blocksPacking.hero!.key, blocksPacking.hero!.label)"
                 />
+
+                <slot name="before-charts">
+                    <DashboardShortcuts
+                        v-if="shortcuts?.catalog?.length"
+                        :catalog="shortcuts.catalog"
+                        :defaults="shortcuts.defaults ?? []"
+                        :storage-key="shortcuts.storageKey ?? 'panel.dashboard.shortcuts'"
+                    />
+                </slot>
 
                 <template v-for="(band, bandIndex) in restChartBands" :key="'rest-' + bandIndex">
                     <DashboardChartPane
@@ -914,13 +942,13 @@ const hiddenEntries = computed(() => {
                     />
                     <div
                         v-else
-                        class="flex flex-col items-start gap-4 lg:flex-row"
+                        class="flex flex-col items-start gap-5 lg:flex-row"
                         data-slot="dashboard-widget-columns"
                     >
                         <div
                             v-for="(column, columnIndex) in band.columns"
                             :key="columnIndex"
-                            class="flex w-full min-w-0 flex-1 flex-col gap-4"
+                            class="flex w-full min-w-0 flex-1 flex-col gap-5"
                         >
                             <DashboardChartPane
                                 v-for="chart in column"

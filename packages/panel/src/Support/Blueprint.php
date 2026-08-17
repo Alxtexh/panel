@@ -614,10 +614,27 @@ final class Blueprint
         is an empty canvas: import `StatCard` / `ChartCard`, or return
         `PanelDashboard` from `component()` to use the packaged screen.
 
-        Packing is a kit option. Default `classic` is a StatStrip plus independent
-        column tracks. `Panel::dashboardLayout('blocks')` (or `dashboardLayout()`
-        on the page) uses the dashboard-01 recipe: a row of StatCards, one
-        full-width area/line ChartCard, remaining widgets below.
+        For the REAL shadcn-vue dashboard-01 block (AppSidebar, SiteHeader,
+        SectionCards, ChartAreaInteractive, DataTable), add it with the CLI and
+        point the page at that Vue file. That is not the same as rearranging
+        PanelDashboard widgets:
+
+        ```bash
+        npx shadcn-vue@latest add dashboard-01 -y
+        ```
+
+        ```php
+        public static function component(): string
+        {
+            return 'Dashboard01'; // resources/js/pages/Dashboard01.vue from the block
+        }
+        ```
+
+        Packing on `PanelDashboard` is a separate kit option. Default `classic`
+        is a StatStrip plus independent column tracks. Optional
+        `Panel::dashboardLayout('blocks')` only changes how that packaged
+        screen packs StatCard / ChartCard widgets. Prefer the CLI block when
+        you want the shadcn-vue dashboard-01 shell itself.
 
         ```php
         final class OverviewPage extends DashboardPage
