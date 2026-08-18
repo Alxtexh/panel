@@ -110,14 +110,27 @@ final class OnboardingSteps
     {
         $request ??= request();
 
-        if ((string) $request->cookie(self::COOKIE) === '1') {
-            return true;
-        }
-
         $user = $request->user();
         $appearance = is_array($user?->appearance ?? null) ? $user->appearance : [];
 
-        return ($appearance[self::APPEARANCE_KEY] ?? false) === true;
+        /*
+         * THE ACCOUNT WINS WHEN IT HAS AN OPINION. A skipped guide writes both
+         * the cookie and appearance. Replay from What's new, or a demo reset of
+         * `appearance.onboardingDone`, must show the card even if this browser
+         * still has `panel_onboarding_done=1`. Cookie-only still hides it when
+         * appearance has not been stored yet.
+         */
+        if (array_key_exists(self::APPEARANCE_KEY, $appearance)) {
+            $done = $appearance[self::APPEARANCE_KEY] === true;
+
+            if (! $done && (string) $request->cookie(self::COOKIE) === '1') {
+                cookie()->queue(self::doneCookie(false));
+            }
+
+            return $done;
+        }
+
+        return (string) $request->cookie(self::COOKIE) === '1';
     }
 
     public static function persistDone(?Request $request = null): void
