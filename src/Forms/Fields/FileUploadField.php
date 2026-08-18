@@ -38,6 +38,8 @@ final class FileUploadField extends Field
 
     private bool $image = false;
 
+    private bool $libraryPicker = false;
+
     public function type(): string
     {
         return 'file';
@@ -74,6 +76,13 @@ final class FileUploadField extends Field
         if ($image && $this->extensions === []) {
             $this->extensions = FileStore::IMAGES;
         }
+
+        return $this;
+    }
+
+    public function fromLibrary(bool $enabled = true): self
+    {
+        $this->libraryPicker = $enabled;
 
         return $this;
     }
@@ -183,6 +192,7 @@ final class FileUploadField extends Field
             'accept' => $this->extensions(),
             'maxKilobytes' => $this->limitKilobytes(),
             'image' => $this->image,
+            'libraryPicker' => $this->libraryPicker,
         ];
     }
 }
