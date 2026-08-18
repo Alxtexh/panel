@@ -33,6 +33,11 @@ final class MakePageCommand extends Command
                             {--api-keys : Empty ApiKeysPage; Vue shims packaged ApiKeys}
                             {--invites : Empty InvitePage; Vue shims packaged Invites}
                             {--feature-flags : Empty FeatureFlagsPage; Vue shims packaged FeatureFlags}
+                            {--webhooks : Empty WebhookEndpointsPage; Vue shims packaged Webhooks}
+                            {--billing-portal : Empty BillingPortalPage; Vue shims packaged BillingPortal}
+                            {--email-templates : Empty EmailTemplatePage; Vue shims packaged EmailTemplates}
+                            {--onboarding : Empty OnboardingPage; Vue shims packaged Onboarding}
+                            {--media-library : Empty MediaLibraryPage; Vue shims packaged MediaLibrary}
                             {--panel= : The panel this screen belongs to. Defaults to panel.default}
                             {--force : Overwrite an existing class or component}';
 
@@ -52,6 +57,11 @@ final class MakePageCommand extends Command
         'api-keys',
         'invites',
         'feature-flags',
+        'webhooks',
+        'billing-portal',
+        'email-templates',
+        'onboarding',
+        'media-library',
     ];
 
     public function handle(): int
@@ -110,6 +120,11 @@ final class MakePageCommand extends Command
             'api-keys' => $this->apiKeysStub($class, $slug, $name, $panel),
             'invites' => $this->invitesStub($class, $slug, $name, $panel),
             'feature-flags' => $this->featureFlagsStub($class, $slug, $name, $panel),
+            'webhooks' => $this->webhooksStub($class, $slug, $name, $panel),
+            'billing-portal' => $this->billingPortalStub($class, $slug, $name, $panel),
+            'email-templates' => $this->emailTemplatesStub($class, $slug, $name, $panel),
+            'onboarding' => $this->onboardingStub($class, $slug, $name, $panel),
+            'media-library' => $this->mediaLibraryStub($class, $slug, $name, $panel),
             default => $this->pageStub($class, $slug, $name, $panel),
         });
 
@@ -118,7 +133,7 @@ final class MakePageCommand extends Command
 
         $this->writeComponent($name, $variant);
 
-        if (in_array($variant, ['plan-setup', 'till', 'catalog', 'catalog-item', 'register', 'directory', 'signatures', 'device-preview', 'api-keys', 'invites', 'feature-flags'], true)) {
+        if (in_array($variant, ['plan-setup', 'till', 'catalog', 'catalog-item', 'register', 'directory', 'signatures', 'device-preview', 'api-keys', 'invites', 'feature-flags', 'webhooks', 'billing-portal', 'email-templates', 'onboarding', 'media-library'], true)) {
             $optional = PanelPages::writeOptional((bool) $this->option('force'));
 
             if ($optional['written'] !== []) {
@@ -728,6 +743,31 @@ final class MakePageCommand extends Command
     private function featureFlagsStub(string $class, string $slug, string $name, string $panel): string
     {
         return $this->extendsPageStub($class, $name, $panel, 'FeatureFlagsPage', 'Feature flags for this organisation.');
+    }
+
+    private function webhooksStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return $this->extendsPageStub($class, $name, $panel, 'WebhookEndpointsPage', 'Outbound webhook endpoints.');
+    }
+
+    private function billingPortalStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return $this->extendsPageStub($class, $name, $panel, 'BillingPortalPage', 'Subscription and invoices.');
+    }
+
+    private function emailTemplatesStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return $this->extendsPageStub($class, $name, $panel, 'EmailTemplatePage', 'Transactional email templates.');
+    }
+
+    private function onboardingStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return $this->extendsPageStub($class, $name, $panel, 'OnboardingPage', 'First-run onboarding steps.');
+    }
+
+    private function mediaLibraryStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return $this->extendsPageStub($class, $name, $panel, 'MediaLibraryPage', 'Shared media files.');
     }
 
     private function extendsPageStub(

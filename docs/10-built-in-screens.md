@@ -41,6 +41,11 @@ screens stay in the npm package and can be mirrored with
 | API keys | `ApiKeysPage` | `Panel::apps(['api-keys'])` |
 | Invites | `InvitePage` | `Panel::apps(['invites'])` |
 | Feature flags | `FeatureFlagsPage` | `Panel::apps(['feature-flags'])` |
+| Webhooks | `WebhookEndpointsPage` | `Panel::webhooks()` or `apps(['webhooks'])` |
+| Billing portal | `BillingPortalPage` | `Panel::apps(['billing-portal'])` |
+| Email templates | `EmailTemplatePage` | `Panel::apps(['email-templates'])` |
+| Onboarding | `OnboardingPage` | `Panel::apps(['onboarding'])` |
+| Media library | `MediaLibraryPage` | `Panel::apps(['media-library'])` |
 | Payment gateways | `PaymentSettingsPage` | `Panel::paymentSettings()` |
 
 The dashboard ships **empty** (`stats()` / `charts()` commented). Fill them, or

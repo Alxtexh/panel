@@ -689,7 +689,16 @@ final class Blueprint
 
         ```php
         Panel::make('admin')->apps(['mail', 'chat']);
+        Panel::make('admin')->webhooks();
+        Panel::make('admin')->apps([
+            'api-keys', 'invites', 'billing-portal', 'email-templates',
+            'onboarding', 'media-library', 'feature-flags',
+        ]);
         ```
+
+        SaaS stubs include `--webhooks`, `--billing-portal`, `--email-templates`,
+        `--onboarding`, `--media-library`. Webhooks live in `packages/panel/src/Webhooks/`.
+        Dispatch with `WebhookDispatcher::dispatch('invoice.paid', $payload)`.
 
         `->without(['mail'])` still drops a screen you enabled. Appearance
         persists on PUT `{panel}/settings/appearance` (users.appearance JSON).
