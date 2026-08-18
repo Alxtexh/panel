@@ -1,0 +1,106 @@
+import { mount } from '@vue/test-utils'
+import { describe, expect, it } from 'vitest'
+import InfoNode from './InfoNode.vue'
+import type { InfoNode as InfoNodeType } from './InfoNode.vue'
+
+describe('InfoNode - dedicated view entries', () => {
+    const record = {
+        title: 'Headline',
+        cover: 'https://example.test/cover.png',
+        meta: { region: 'west' },
+        accent: '#7c3aed',
+        snippet: '{"ok":true}',
+        extras: [{ label: 'Docs', url: 'https://example.test' }],
+    }
+
+    it('renders an image entry', () => {
+        const node: InfoNodeType = {
+            component: 'entry',
+            key: 'cover',
+            label: 'Cover',
+            type: 'image',
+        }
+
+        const html = mount(InfoNode, { props: { node, record } }).html()
+
+        expect(html).toContain('https://example.test/cover.png')
+        expect(html).toContain('Cover')
+    })
+
+    it('renders key-value pairs', () => {
+        const node: InfoNodeType = {
+            component: 'entry',
+            key: 'meta',
+            label: 'Meta',
+            type: 'keyvalue',
+        }
+
+        const text = mount(InfoNode, { props: { node, record } }).text()
+
+        expect(text).toContain('region')
+        expect(text).toContain('west')
+    })
+
+    it('renders a colour swatch', () => {
+        const node: InfoNodeType = {
+            component: 'entry',
+            key: 'accent',
+            label: 'Accent',
+            type: 'color',
+        }
+
+        const html = mount(InfoNode, { props: { node, record } }).html()
+
+        expect(html).toContain('#7c3aed')
+        expect(html).toContain('background-color')
+    })
+
+    it('renders a code block with a language hint', () => {
+        const node: InfoNodeType = {
+            component: 'entry',
+            key: 'snippet',
+            label: 'Snippet',
+            type: 'code',
+            language: 'json',
+        }
+
+        const text = mount(InfoNode, { props: { node, record } }).text()
+
+        expect(text).toContain('json')
+        expect(text).toContain('{"ok":true}')
+    })
+
+    it('renders repeatable child entries', () => {
+        const node: InfoNodeType = {
+            component: 'entry',
+            key: 'extras',
+            label: 'Extras',
+            type: 'repeatable',
+            entries: [
+                { component: 'entry', key: 'label', label: 'Label', type: 'text' },
+                { component: 'entry', key: 'url', label: 'Url', type: 'text' },
+            ],
+        }
+
+        const text = mount(InfoNode, { props: { node, record } }).text()
+
+        expect(text).toContain('Docs')
+        expect(text).toContain('https://example.test')
+    })
+
+    it('keeps url and action on a text entry', () => {
+        const node: InfoNodeType = {
+            component: 'entry',
+            key: 'title',
+            label: 'Title',
+            type: 'text',
+            url: 'https://example.test/articles',
+            action: { key: 'copy', label: 'Copy' },
+        }
+
+        const wrapper = mount(InfoNode, { props: { node, record } })
+
+        expect(wrapper.find('a').attributes('href')).toBe('https://example.test/articles')
+        expect(wrapper.text()).toContain('Copy')
+    })
+})

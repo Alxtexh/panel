@@ -277,6 +277,16 @@ final class Form
                 continue;
             }
 
+            $expanded = $field->expandStorage($input[$field->key]);
+
+            if ($expanded !== null) {
+                foreach ($expanded as $column => $stored) {
+                    $out[$column] = $stored;
+                }
+
+                continue;
+            }
+
             $out[$field->key] = $field->transformForStorage($input[$field->key]);
         }
 
@@ -293,14 +303,14 @@ final class Form
         $values = [];
 
         foreach ($this->fields() as $field) {
-            $value = $record?->getAttribute($field->key);
-
-            // Dates serialise to ISO so the client can parse them without
-            // guessing a format; a locale-formatted string here would be
-            // unparseable and is a localisation trap (addendum D2).
-            $values[$field->key] = $value instanceof \DateTimeInterface
-                ? $value->format(str_contains($field->type(), 'time') ? 'Y-m-d\TH:i' : 'Y-m-d')
-                : $field->presentValue($value);
+            foreach ($field->valuesFrom($record) as $key => $value) {
+                // Dates serialise to ISO so the client can parse them without
+                // guessing a format; a locale-formatted string here would be
+                // unparseable and is a localisation trap (addendum D2).
+                $values[$key] = $value instanceof \DateTimeInterface
+                    ? $value->format(str_contains($field->type(), 'time') ? 'Y-m-d\TH:i' : 'Y-m-d')
+                    : $value;
+            }
         }
 
         return $values;

@@ -71,7 +71,8 @@ field cannot be submitted by a crafted request.
 changes, the page POSTs `{ field, values }` to `{resource}/form-state`. The
 server returns `{ options, schema, values }` so `afterStateUpdated` can hide,
 disable, or replace fields. `visibleWhen` stays a client-side hide. There is
-no Livewire round-trip.
+no Livewire round-trip. Agents should assert that shape with
+`assertFormState()`; see [Tests](tests.md).
 
 ### SelectField::relationship()
 
@@ -86,6 +87,34 @@ SelectField::make('article_id')
     })
     ->live();
 ```
+
+### SelectField::morphTo()
+
+Type plus id. Filament MorphToSelect without Livewire. The submitted value is
+`{ type, id }`. Storage writes `{key}_type` and `{key}_id`. Exists validation
+is scoped to the selected type's model.
+
+```php
+SelectField::make('notable')
+    ->morphTo([
+        Article::class => 'title',
+        Tag::class => 'name',
+    ]);
+```
+
+### SelectField::tableSelect()
+
+A dedicated picker page that reuses `ListQuery`. Not a modal. Skip
+ModalTableSelect and RelationshipRepeater; nested HasMany already has pages.
+
+```php
+SelectField::make('article_id')
+    ->relationship(Article::class, 'title')
+    ->tableSelect(ArticleResource::class);
+```
+
+The page lives at `{resource}/pick/{field}`. Choosing a row returns to the
+form with the id on the query string.
 
 ## Fields worth extra care
 

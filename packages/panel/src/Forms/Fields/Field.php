@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Forms\Fields;
 
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Alxtexh\Panel\Schema\Renderable;
 
 /**
@@ -400,6 +401,34 @@ abstract class Field implements Renderable
             ],
             'chips' => $this->chips,
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
+    }
+
+    /**
+     * Current form values for this field, read from the record.
+     *
+     * ONE KEY FOR MOST FIELDS. MorphTo is the exception: it stores
+     * `{key}_type` and `{key}_id` and presents `{ type, id }` under `$this->key`.
+     *
+     * @return array<string, mixed>
+     */
+    public function valuesFrom(?Model $record): array
+    {
+        $value = $record?->getAttribute($this->key);
+
+        return [$this->key => $this->presentValue($value)];
+    }
+
+    /**
+     * Extra columns to write instead of `$this->key`, or null to keep the default.
+     *
+     * MorphTo uses this to stamp `{key}_type` and `{key}_id` and to keep the
+     * synthetic `{ type, id }` payload off the model.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function expandStorage(mixed $value): ?array
+    {
+        return null;
     }
 
     /**

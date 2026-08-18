@@ -22,6 +22,10 @@ type __VLS_Props = {
     /** Performs an upload for a file field. See PkFileUpload. */
     upload?: (field: string, file: File, onProgress: (percent: number) => void) => Promise<UploadedFileValue>;
     discard?: (handle: string) => Promise<void>;
+    /** Base URL of this form's resource, for tableSelect picker pages. */
+    pickerBase?: string;
+    /** Path to return to after picking a row. */
+    returnUrl?: string;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     change: (key: string, value: unknown) => any;

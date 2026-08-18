@@ -13,6 +13,8 @@
 import { computed, ref } from 'vue'
 import PkBadge from '../primitives/PkBadge.vue'
 import IconCell from '../DataTable/IconCell.vue'
+import ImageCell from '../DataTable/ImageCell.vue'
+import ColourCell from '../DataTable/ColourCell.vue'
 import { BADGE_VARIANTS, hasBadgeValue } from '../../composables/useSchemaColumns'
 
 export interface InfoNode {
@@ -126,6 +128,67 @@ const badgeVariant = computed(() => {
                 :labels="node.labels"
                 :default-icon="node.defaultIcon"
             />
+            <ImageCell
+                v-else-if="node.type === 'image'"
+                :src="value"
+                :fallback-text="record[node.fallbackFrom ?? 'name']"
+                :rounded="node.rounded !== false"
+                :size="node.size ?? 'md'"
+                :fallback="node.fallback ?? 'initials'"
+            />
+            <ColourCell
+                v-else-if="node.type === 'color' || node.type === 'colour'"
+                :value="typeof value === 'string' ? value : null"
+                :show-value="node.showValue !== false"
+            />
+            <div v-else-if="node.type === 'code'" class="max-w-full">
+                <p
+                    v-if="node.language"
+                    class="text-muted-foreground mb-1 font-mono text-[10px] uppercase"
+                >
+                    {{ node.language }}
+                </p>
+                <pre
+                    class="bg-muted/50 overflow-x-auto rounded-md border p-3 font-mono text-xs"
+                ><code>{{ value ?? '' }}</code></pre>
+            </div>
+            <div v-else-if="node.type === 'keyvalue'">
+                <dl
+                    v-if="value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length"
+                    class="divide-y rounded-md border"
+                >
+                    <div
+                        v-for="(item, k) in value"
+                        :key="k"
+                        class="grid grid-cols-3 gap-2 px-3 py-2 text-sm"
+                    >
+                        <dt class="text-muted-foreground truncate font-medium">{{ k }}</dt>
+                        <dd class="col-span-2 break-words">{{ item }}</dd>
+                    </div>
+                </dl>
+                <span v-else class="text-muted-foreground">-</span>
+            </div>
+            <div v-else-if="node.type === 'repeatable'" class="flex flex-col gap-3">
+                <div
+                    v-for="(item, i) in Array.isArray(value) ? value : []"
+                    :key="i"
+                    class="rounded-md border p-3"
+                >
+                    <InfoNode
+                        v-for="(child, j) in node.entries ?? []"
+                        :key="j"
+                        :node="child"
+                        :record="item"
+                        :depth="depth + 1"
+                        @action="emit('action', $event)"
+                    />
+                </div>
+                <span
+                    v-if="!Array.isArray(value) || value.length === 0"
+                    class="text-muted-foreground"
+                    >-</span
+                >
+            </div>
             <a
                 v-else-if="node.url"
                 :href="node.url"

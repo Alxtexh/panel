@@ -39,9 +39,12 @@ import {
 } from '@alxtexh-enterprise/panel'
 import type { DashboardHide, SetupChecklistItem, StatSegment } from '@alxtexh-enterprise/panel'
 import DashboardChartPane from '../components/widgets/DashboardChartPane.vue'
+import DashboardTablePane from '../components/widgets/DashboardTablePane.vue'
+import type { TableWidgetDecl } from '../components/widgets/DashboardTablePane.vue'
 import { emptySeries, type Chart, type Series } from '../components/widgets/types'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
+import EmptyGrantsNotice from '../components/EmptyGrantsNotice.vue'
 import type { Announcement } from '../types'
 
 interface Widget {
@@ -116,6 +119,7 @@ const props = withDefaults(
         heading?: string
         /** Panel path prefix; the dismiss and report routes sit inside it. */
         prefix?: string
+        tables?: TableWidgetDecl[]
         shortcuts?: {
             catalog: { id: string; label: string; href: string; icon: string }[]
             defaults?: string[]
@@ -137,6 +141,7 @@ const props = withDefaults(
         filterDimensions: () => [],
         heading: 'Dashboard',
         prefix: '',
+        tables: () => [],
         shortcuts: null,
     },
 )
@@ -411,7 +416,9 @@ const comparison: Record<string, string> = {
  * indistinguishable from one that failed to load, and this is the first screen
  * a new installation opens on.
  */
-const hasAnything = computed(() => props.widgets.length > 0 || props.charts.length > 0)
+const hasAnything = computed(
+    () => props.widgets.length > 0 || props.charts.length > 0 || props.tables.length > 0,
+)
 const emptyGrants = computed(() => Boolean((page.props as Record<string, any>).panelEmptyGrants))
 
 /**
@@ -720,13 +727,11 @@ const hiddenEntries = computed(() => {
             </template>
         </PkSlideover>
 
-        <p v-if="emptyGrants" class="text-sm text-muted-foreground">
-            You are signed in, but this account has no panel grants yet. Ask an
-            administrator to assign a role, then refresh.
-        </p>
+        <EmptyGrantsNotice v-if="emptyGrants" />
         <p v-else-if="!hasAnything" class="text-sm text-muted-foreground">
             This dashboard has no widgets yet. Declare them in <code>stats()</code> and
-            <code>charts()</code> on the page class.
+            <code>charts()</code> on the page class, or
+            <code>discoverWidgets(app_path('Panel/Widgets'))</code>.
         </p>
 
         <!--
@@ -863,6 +868,15 @@ const hiddenEntries = computed(() => {
                     </div>
                 </div>
             </template>
+        </div>
+
+        <div v-if="tables.length" class="flex flex-col gap-3" data-slot="dashboard-tables">
+            <DashboardTablePane
+                v-for="table in tables"
+                :key="table.key"
+                :table="table"
+                :data-key="`table_${table.key}`"
+            />
         </div>
     </div>
 </template>

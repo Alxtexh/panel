@@ -21,7 +21,7 @@
  * Emits its value only. The parent owns state; this never mutates anything.
  */
 
-import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { fieldControl } from '../../composables/useFieldControls'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import { Checkbox } from '../shadcn/checkbox'
@@ -154,6 +154,45 @@ function pick(option: { value: any; label: string }) {
 function clearChoice() {
     chosenLabel.value = null
     emit('change', null)
+}
+
+const picker = inject<{ base: string; returnUrl: string } | null>('panelPicker', null)
+
+const pickerHref = computed(() => {
+    if (!props.field.tableSelect || !picker?.base) {
+        return undefined
+    }
+
+    const returnUrl = picker.returnUrl || '/'
+
+    return `${picker.base}/pick/${props.field.key}?return=${encodeURIComponent(returnUrl)}`
+})
+
+const morphTypes = computed(() => props.field.morphTo ?? [])
+
+const morphValue = computed(() => {
+    const raw = props.value
+
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        return raw as { type?: string; id?: unknown }
+    }
+
+    return { type: undefined, id: undefined }
+})
+
+function setMorphType(type: string) {
+    emit('change', { type: type || null, id: null })
+}
+
+function setMorphId(id: unknown) {
+    emit('change', { type: morphValue.value.type ?? null, id })
+}
+
+function pickMorph(option: { value: any; label: string }) {
+    chosenLabel.value = option.label
+    setMorphId(option.value)
+    open.value = false
+    term.value = ''
 }
 
 onBeforeUnmount(() => clearTimeout(debounce))
@@ -343,6 +382,57 @@ function insertChip(token: string) {
             :placeholder="field.placeholder ?? 'Select…'"
             @update:model-value="(next) => emit('change', next)"
         />
+
+        <div v-else-if="morphTypes.length" class="flex flex-col gap-2">
+            <select
+                :id="`f-${field.key}-type`"
+                :value="morphValue.type ?? ''"
+                :disabled="field.disabled || processing"
+                class="border-input bg-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                @change="setMorphType(($event.target as HTMLSelectElement).value)"
+            >
+                <option value="">Type</option>
+                <option v-for="opt in morphTypes" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                </option>
+            </select>
+            <div v-if="morphValue.type && searchOptions" class="relative">
+                <button
+                    type="button"
+                    class="border-input bg-background focus-visible:ring-ring flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                    :disabled="field.disabled || processing"
+                    @click="openSearch"
+                >
+                    <span :class="chosenLabel || morphValue.id ? '' : 'text-muted-foreground'">
+                        {{ chosenLabel ?? (morphValue.id ? String(morphValue.id) : 'Search…') }}
+                    </span>
+                </button>
+                <div
+                    v-if="open"
+                    class="bg-popover absolute z-50 mt-1 w-full overflow-hidden rounded-md border shadow-md"
+                >
+                    <input
+                        v-model="term"
+                        type="search"
+                        class="h-9 w-full border-b bg-transparent px-3 text-sm outline-none"
+                        placeholder="Type to search…"
+                        autofocus
+                    />
+                    <div class="max-h-56 overflow-y-auto p-1">
+                        <button
+                            v-for="opt in results"
+                            :key="String(opt.value)"
+                            type="button"
+                            class="hover:bg-accent hover:text-accent-foreground flex w-full items-center rounded px-2 py-1.5 text-left text-sm"
+                            @click="pickMorph(opt)"
+                        >
+                            {{ opt.label }}
+                        </button>
+                    </div>
+                </div>
+                <div v-if="open" class="fixed inset-0 z-40" @click="open = false" />
+            </div>
+        </div>
 
         <div v-else-if="field.type === 'select' && searchOptions" class="relative">
             <button
@@ -549,6 +639,14 @@ function insertChip(token: string) {
                 {{ token }}
             </button>
         </div>
+
+        <a
+            v-if="pickerHref"
+            :href="pickerHref"
+            class="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
+        >
+            Browse
+        </a>
 
         <p v-if="error" class="text-destructive text-xs" role="alert">
             {{ error }}

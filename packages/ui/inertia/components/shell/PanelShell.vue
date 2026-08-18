@@ -30,7 +30,8 @@
  * modes have different DOM, not different styling.
  */
 import { router, usePage } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 import {
     AppPageFooter,
     PkBottomNav,
@@ -50,6 +51,7 @@ import AppSidebarHeader from './AppSidebarHeader.vue'
 import AppTopNav from './AppTopNav.vue'
 import PanelIdleLockGuard from './PanelIdleLockGuard.vue'
 import PanelImpersonationBanner from './PanelImpersonationBanner.vue'
+import EmptyGrantsNotice from '../EmptyGrantsNotice.vue'
 import type { BreadcrumbItem, User } from '../../types'
 
 const props = withDefaults(
@@ -73,6 +75,35 @@ defineSlots<{
 }>()
 
 const page = usePage()
+
+type FlashToast = { type?: string; message?: string }
+
+function showFlashToast(data: FlashToast | null | undefined): void {
+    if (!data?.message) {
+        return
+    }
+
+    const type = data.type === 'danger' ? 'error' : (data.type ?? 'info')
+    const fn =
+        type === 'success'
+            ? toast.success
+            : type === 'error'
+              ? toast.error
+              : type === 'warning'
+                ? toast.warning
+                : toast.info
+
+    fn(data.message)
+}
+
+onMounted(() => {
+    showFlashToast(page.props.toast as FlashToast | undefined)
+
+    router.on('flash', (event) => {
+        const flash = (event as CustomEvent).detail?.flash
+        showFlashToast(flash?.toast as FlashToast | undefined)
+    })
+})
 
 const { appearance } = useAppearance()
 const pageFooter = useShellPageFooter()
@@ -206,6 +237,9 @@ router.on('success', () => {
         <!-- Top navigation, by preference: no rail, no provider. -->
         <div v-if="horizontal" class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-sidebar">
             <PanelImpersonationBanner />
+            <div v-if="(page.props as any).panelEmptyGrants" class="px-4 pt-3">
+                <EmptyGrantsNotice compact />
+            </div>
 
             <!--
                 FORWARDED ONLY WHEN GIVEN. An unconditional forward renders an
@@ -241,6 +275,9 @@ router.on('success', () => {
 
             <AppContent variant="sidebar" class="min-h-0 overflow-x-hidden overflow-y-auto">
                 <PanelImpersonationBanner />
+                <div v-if="(page.props as any).panelEmptyGrants" class="px-4 pt-3">
+                    <EmptyGrantsNotice compact />
+                </div>
 
                 <AppSidebarHeader :breadcrumbs="props.breadcrumbs">
                     <template v-if="$slots.topbar" #topbar>

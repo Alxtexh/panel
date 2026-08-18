@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Testing;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Testing\TestResponse;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
@@ -324,6 +325,244 @@ trait InteractsWithPanels
         $model = $class::model();
 
         $this->assertDatabaseHas((new $model)->getTable(), $expect === [] ? $payload : $expect);
+
+        return $this;
+    }
+
+    /* ---------------------------------------------------------- form-state */
+
+    /**
+     * POST `{resource}/form-state` and assert the live() contract.
+     *
+     * The kit returns `{ options, schema, values }`. A helper that only
+     * checked 200 would stay green if the endpoint started returning an
+     * option list alone, which is how `afterStateUpdated` silently dies.
+     *
+     * `$suffix` is `form-state` for a flat resource, or
+     * `{parentId}/comments/form-state` for a nested one: `panelUrl()` already
+     * prefixes the portal, so the parent segment belongs in the suffix.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    protected function assertFormState(
+        object $user,
+        string $resourceKey,
+        array $payload,
+        string $suffix = 'form-state',
+    ): array {
+        $json = $this->actingAs($user)
+            ->postJson($this->panelUrl($resourceKey, $suffix), $payload)
+            ->assertOk()
+            ->json();
+
+        foreach (['options', 'schema', 'values'] as $key) {
+            $this->assertArrayHasKey(
+                $key,
+                $json,
+                "[{$resourceKey}] form-state must return {$key}. It returned: "
+                .implode(', ', array_keys($json)),
+            );
+        }
+
+        return $json;
+    }
+
+    /* ------------------------------------------------ nested attach/detach */
+
+    /**
+     * Nested resource URL: `/{parent}/{parentId}/{child}/{suffix}`.
+     *
+     * Built from the PARENT key, because a nested child has no flat route.
+     * `/comments/attach` 404s; `/articles/12/tags/attach` is the page.
+     */
+    protected function nestedPanelUrl(
+        string $parentKey,
+        Model $parent,
+        string $childKey,
+        string $suffix = '',
+    ): string {
+        $base = $this->panelUrl($parentKey, $parent->getKey().'/'.$childKey);
+
+        return $suffix === '' ? $base : $base.'/'.ltrim($suffix, '/');
+    }
+
+    /**
+     * Attach existing rows on a BelongsToMany nested resource.
+     *
+     * `/attach` is a dedicated page, not a modal. Another tenant's id is a
+     * 404 from the endpoint; this helper asserts the happy path succeeded.
+     *
+     * @param  list<int|string>|int|string  $ids
+     */
+    protected function assertNestedAttach(
+        object $user,
+        string $parentKey,
+        Model $parent,
+        string $childKey,
+        array|int|string $ids,
+    ): static {
+        $ids = is_array($ids) ? $ids : [$ids];
+
+        $this->actingAs($user)
+            ->post($this->nestedPanelUrl($parentKey, $parent, $childKey, 'attach'), ['ids' => $ids])
+            ->assertSessionHasNoErrors();
+
+        return $this;
+    }
+
+    /**
+     * Detach one related row. The related record itself stays.
+     */
+    protected function assertNestedDetach(
+        object $user,
+        string $parentKey,
+        Model $parent,
+        string $childKey,
+        Model $related,
+    ): static {
+        $this->actingAs($user)
+            ->postJson(
+                $this->nestedPanelUrl($parentKey, $parent, $childKey, $related->getKey().'/action'),
+                ['action' => 'detach'],
+            )
+            ->assertSuccessful();
+
+        return $this;
+    }
+
+    /* ---------------------------------------------------- infolist-action */
+
+    /**
+     * POST `{resource}/{id}/infolist-action`. The view page stays a page.
+     */
+    protected function assertInfolistAction(
+        object $user,
+        string $resourceKey,
+        Model $record,
+        string $action,
+    ): TestResponse {
+        return $this->actingAs($user)
+            ->postJson(
+                $this->panelUrl($resourceKey, $record->getKey().'/infolist-action'),
+                ['action' => $action],
+            )
+            ->assertSuccessful();
+    }
+
+    /* ------------------------------------------------------------- import */
+
+    /**
+     * A resource that did not opt into `importable()` 404s the import endpoints.
+     */
+    protected function assertNotImportable(object $user, string $resourceKey): static
+    {
+        $csv = UploadedFile::fake()->createWithContent('rows.csv', "title\nNope\n");
+
+        $this->actingAs($user)
+            ->post($this->panelUrl($resourceKey, 'import/inspect'), ['file' => $csv])
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->post($this->panelUrl($resourceKey, 'import'), [
+                'file' => $csv,
+                'mapping' => ['title' => 'title'],
+            ])
+            ->assertNotFound();
+
+        return $this;
+    }
+
+    /**
+     * Import a CSV through the HTTP surface the operator uses.
+     *
+     * @param  array<string, string>  $mapping
+     * @return array<string, mixed>
+     */
+    protected function assertPanelImports(
+        object $user,
+        string $resourceKey,
+        string $csv,
+        array $mapping,
+        bool $dryRun = false,
+    ): array {
+        $file = UploadedFile::fake()->createWithContent('rows.csv', $csv);
+
+        return $this->actingAs($user)
+            ->post($this->panelUrl($resourceKey, 'import'), [
+                'file' => $file,
+                'mapping' => $mapping,
+                'dryRun' => $dryRun ? '1' : '0',
+            ])
+            ->assertOk()
+            ->json();
+    }
+
+    /**
+     * Failed rows from an import are downloadable as CSV.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    protected function assertImportFailuresDownload(
+        object $user,
+        string $resourceKey,
+        array $payload,
+    ): static {
+        $this->assertGreaterThan(
+            0,
+            $payload['failed'] ?? 0,
+            "[{$resourceKey}] import reported no failures, so there is nothing to download.",
+        );
+        $this->assertNotEmpty(
+            $payload['failuresDownload'] ?? null,
+            "[{$resourceKey}] import failed but sent no failuresDownload URL.",
+        );
+
+        $this->actingAs($user)
+            ->get($payload['failuresDownload'])
+            ->assertOk()
+            ->assertHeader('content-disposition');
+
+        return $this;
+    }
+
+    /* ----------------------------------------------------- empty grants */
+
+    /**
+     * The first-run empty-grants hint is on the shared Inertia props.
+     *
+     * The dashboard still opens. Everything else hides. The hint tells the
+     * installer what to run instead of staring at a blank canvas.
+     */
+    protected function assertEmptyGrantsHint(object $user, string $url = '/settings/plans'): static
+    {
+        $props = $this->actingAs($user)
+            ->get($url)
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertTrue(
+            $props['panelEmptyGrants'] ?? false,
+            'panelEmptyGrants was not shared. The account still has something to open.',
+        );
+        $this->assertSame('You have no grants', $props['panelEmptyGrantsHint']['title'] ?? null);
+        $this->assertNotEmpty($props['panelEmptyGrantsHint']['commands'] ?? []);
+
+        return $this;
+    }
+
+    /* -------------------------------------------------------------- toast */
+
+    /**
+     * The last response flashed an Inertia toast.
+     */
+    protected function assertPanelToast(string $message, string $type = 'success'): static
+    {
+        $toast = session('toast');
+
+        $this->assertIsArray($toast, 'No toast was flashed onto the session.');
+        $this->assertSame($message, $toast['message'] ?? null);
+        $this->assertSame($type, $toast['type'] ?? null);
 
         return $this;
     }

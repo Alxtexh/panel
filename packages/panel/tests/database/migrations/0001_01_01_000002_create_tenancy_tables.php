@@ -23,6 +23,11 @@ return new class extends Migration
             $table->string('title');
             $table->string('status')->default('draft');
             $table->string('attachment')->nullable();
+            $table->string('cover')->nullable();
+            $table->json('meta')->nullable();
+            $table->string('accent')->nullable();
+            $table->text('snippet')->nullable();
+            $table->json('extras')->nullable();
             // Where custom-field values land - one JSON column rather than a
             // migration per definition. See `Resource::customFields()`.
             $table->json('custom')->nullable();

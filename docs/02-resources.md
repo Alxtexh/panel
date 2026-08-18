@@ -112,13 +112,26 @@ column:
 
 ```php
 use Alxtexh\Panel\Actions\Action;
+use Alxtexh\Panel\Infolists\CodeEntry;
+use Alxtexh\Panel\Infolists\ColorEntry;
 use Alxtexh\Panel\Infolists\IconEntry;
+use Alxtexh\Panel\Infolists\ImageEntry;
+use Alxtexh\Panel\Infolists\KeyValueEntry;
+use Alxtexh\Panel\Infolists\RepeatableEntry;
 use Alxtexh\Panel\Infolists\TextEntry;
 
 public static function infolist(): array
 {
     return [
         TextEntry::make('title'),
+        ImageEntry::make('cover'),
+        KeyValueEntry::make('meta')->labels('Key', 'Value'),
+        ColorEntry::make('accent'),
+        CodeEntry::make('snippet')->language('json'),
+        RepeatableEntry::make('extras')->schema([
+            TextEntry::make('label'),
+            TextEntry::make('url'),
+        ]),
         IconEntry::make('status')->icons(['published' => 'check'])->colors(['published' => 'success']),
         TextEntry::make('email')->action(
             Action::make('copy')->handle(fn ($record) => $record->touch()),
@@ -126,6 +139,8 @@ public static function infolist(): array
     ];
 }
 ```
+
+Empty `infolist()` still falls back to table columns on the view page.
 
 Click POSTs `{ action }` to `{resource}/{id}/infolist-action`. `Entry::url()` remains a plain link. The view page stays a dedicated page.
 

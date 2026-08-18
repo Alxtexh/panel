@@ -15,7 +15,7 @@
  * Takes a TREE when the schema has one, and falls back to a flat field list
  * otherwise - so a resource that never declares layout keeps working unchanged.
  */
-import { computed } from 'vue'
+import { computed, provide } from 'vue'
 import FormFieldControl from './FormFieldControl.vue'
 import type { UploadedFileValue } from './PkFileUpload.vue'
 import SchemaNode from './SchemaNode.vue'
@@ -42,6 +42,10 @@ const props = withDefaults(
             onProgress: (percent: number) => void,
         ) => Promise<UploadedFileValue>
         discard?: (handle: string) => Promise<void>
+        /** Base URL of this form's resource, for tableSelect picker pages. */
+        pickerBase?: string
+        /** Path to return to after picking a row. */
+        returnUrl?: string
     }>(),
     {
         nodes: () => [],
@@ -52,6 +56,15 @@ const props = withDefaults(
         processing: false,
     },
 )
+
+provide('panelPicker', {
+    get base() {
+        return props.pickerBase ?? ''
+    },
+    get returnUrl() {
+        return props.returnUrl ?? ''
+    },
+})
 
 /**
  * Emits ONE FIELD at a time, not a whole replacement object.

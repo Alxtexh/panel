@@ -163,6 +163,7 @@ const props = defineProps<
             update: boolean
             delete: boolean
             import: boolean
+            excelImport?: boolean
         }
         /** Transport for staying fresh. The page does not know which driver. */
         live: {
@@ -1432,6 +1433,7 @@ function badgeLabel(key: string, value: unknown): string {
             :open="importing"
             :base-url="schema.routes.index"
             :resource-label="schema.labelPlural"
+            :excel="Boolean(can.excelImport)"
             @close="importing = false"
             @imported="onImported"
         />

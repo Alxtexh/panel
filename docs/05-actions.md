@@ -115,4 +115,18 @@ public static function importable(): bool|string
 
 Failed rows download as CSV. Excel is optional, not a kit dependency:
 `Resource::excelImport()` plus `composer require phpoffice/phpspreadsheet`.
-CSV stays the default path.
+CSV stays the default path. Assert the 404 vs CSV vs failures download with
+`assertNotImportable`, `assertPanelImports` and `assertImportFailuresDownload`
+from [Tests](tests.md).
+
+## Toasts
+
+```php
+use Alxtexh\Panel\Notifications\Notification;
+
+Notification::make()->title('Saved')->success()->send();
+```
+
+This flashes the existing Inertia toast (`{ type, message }`). `->bell()` also
+writes a `BellText` row the topbar already renders. There is no Livewire toast
+stack. `assertPanelToast('Saved')` checks the flash.

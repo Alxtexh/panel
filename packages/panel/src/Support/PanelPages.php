@@ -31,6 +31,7 @@ final class PanelPages
         'ResourceForm',
         'ResourceView',
         'ResourceAttach',
+        'ResourcePicker',
         'Trash',
         'PanelHome',
 

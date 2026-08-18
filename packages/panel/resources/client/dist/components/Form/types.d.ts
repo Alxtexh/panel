@@ -57,6 +57,18 @@ export interface FormField {
     /** Fetches options on demand instead of rendering them inline. */
     searchable?: boolean;
     /**
+     * MorphTo: type + id. The value is `{ type, id }`.
+     */
+    morphTo?: {
+        value: string;
+        label: string;
+        titleAttribute?: string;
+    }[];
+    /**
+     * Dedicated ListQuery picker page, not a modal.
+     */
+    tableSelect?: boolean;
+    /**
      * After this field changes, the page POSTs form-state and may replace
      * option lists. Not Livewire: the client emits, the server returns JSON.
      */

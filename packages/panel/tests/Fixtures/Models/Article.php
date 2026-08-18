@@ -37,7 +37,7 @@ class Article extends Model
 
     protected function casts(): array
     {
-        return ['custom' => 'array'];
+        return ['custom' => 'array', 'meta' => 'array', 'extras' => 'array'];
     }
 
     public function comments(): HasMany

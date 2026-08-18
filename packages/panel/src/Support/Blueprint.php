@@ -1243,7 +1243,7 @@ final class Blueprint
         npx vue-tsc --noEmit            # the client half
         ```
 
-        For a new resource, write these three assertions first — they are the
+        For a new resource, write these three assertions first. They are the
         failures that return 200:
 
         ```php
@@ -1257,6 +1257,12 @@ final class Blueprint
         `assertTenantIsolation` checks the record URL as well as the list. The list
         is the obvious half; the record URL is the half people forget, and the one
         an attacker uses.
+
+        Also assert the HTTP surfaces that are easy to skip: `assertFormState`
+        (`{ options, schema, values }`), nested `assertNestedAttach` /
+        `assertNestedDetach`, `assertInfolistAction`, `assertNotImportable` vs
+        `assertPanelImports` plus `assertImportFailuresDownload`, and
+        `assertEmptyGrantsHint` for a signed-in account with no abilities.
         MD;
     }
 }

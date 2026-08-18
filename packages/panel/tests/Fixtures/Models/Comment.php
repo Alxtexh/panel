@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Tests\Fixtures\Models;
 use Alxtexh\Panel\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * A child record, for the relation manager.
@@ -20,4 +21,9 @@ use Illuminate\Database\Eloquent\Model;
 class Comment extends Model
 {
     protected $guarded = [];
+
+    public function notable(): MorphTo
+    {
+        return $this->morphTo();
+    }
 }
