@@ -3,7 +3,8 @@
  * A capped resource list on the dashboard. Same DataTable as the index.
  *
  * ChartWidget type('table') is a labelled fact list. This is the resource's
- * own columns and a limited ListQuery: no pager, no selection.
+ * own columns and a limited ListQuery: no pager, no selection. Echo replaces
+ * poll when `table.live` is set and `window.Echo` exists.
  */
 import { Deferred, Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
@@ -19,6 +20,7 @@ export interface TableWidgetDecl {
     limit: number
     href: string | null
     poll?: number | null
+    live?: string | null
 }
 
 interface TableWidgetValue {
@@ -42,7 +44,11 @@ const resolved = computed(
 const schemaColumns = computed<SchemaColumn[]>(() => resolved.value?.columns ?? [])
 const { columns } = useSchemaColumns(schemaColumns)
 
-useWidgetPoll(() => [props.dataKey], () => props.table.poll ?? null)
+useWidgetPoll(
+    () => [props.dataKey],
+    () => props.table.poll ?? null,
+    () => props.table.live ?? null,
+)
 </script>
 
 <template>

@@ -60,12 +60,24 @@ final class TableWidgetTest extends TestCase
         $this->assertSame(5, $widget->toArray()['limit']);
         $this->assertNotEmpty($widget->toArray()['href']);
         $this->assertNull($widget->toArray()['poll']);
+        $this->assertNull($widget->toArray()['live']);
     }
 
     public function test_poll_serialises_milliseconds(): void
     {
         $widget = TableWidget::make('recent')->resource(PostResource::class)->poll('10s');
 
+        $this->assertSame(10_000, $widget->toArray()['poll']);
+    }
+
+    public function test_live_serialises_the_channel(): void
+    {
+        $widget = TableWidget::make('recent')
+            ->resource(PostResource::class)
+            ->live('dashboard.tables')
+            ->poll('10s');
+
+        $this->assertSame('dashboard.tables', $widget->toArray()['live']);
         $this->assertSame(10_000, $widget->toArray()['poll']);
     }
 

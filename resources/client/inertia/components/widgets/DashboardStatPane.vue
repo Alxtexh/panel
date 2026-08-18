@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /**
- * One stat tile, with optional poll of its deferred prop.
+ * One stat tile, with optional Echo or poll of its deferred prop.
  *
- * Chart and table widgets already poll. Stats use the same CanPoll JSON and
- * pause while the tab is hidden.
+ * Reverb when `window.Echo` and `widget.live` are set: push, no periodic HTTP.
+ * Poll when Echo is absent: works everywhere, pauses while the tab is hidden.
+ * Never both. Redis is not the UI transport.
  */
 import { Deferred } from '@inertiajs/vue3'
 import { PkBoundary, StatCard } from '@alxtexh-enterprise/panel'
@@ -18,7 +19,11 @@ const props = defineProps<{
 
 const dataKey = `${props.prefix}_stat_${props.widget.key}`
 
-useWidgetPoll(() => [dataKey], () => props.widget.poll ?? null)
+useWidgetPoll(
+    () => [dataKey],
+    () => props.widget.poll ?? null,
+    () => props.widget.live ?? null,
+)
 </script>
 
 <template>

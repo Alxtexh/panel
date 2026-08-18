@@ -179,7 +179,7 @@ final class StatWidget
             'label' => $this->label,
             'description' => $this->description,
             'span' => $this->span,
-            'poll' => $this->pollInterval(),
+            ...$this->refreshToArray(),
         ];
     }
 
