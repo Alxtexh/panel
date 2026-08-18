@@ -47,29 +47,35 @@ final class Locale
     /**
      * The locales this installation actually has translations for.
      *
-     * READ FROM DISK rather than configured, so a language added by dropping in
-     * a directory appears without a second edit somebody forgets - and, more
-     * importantly, so a language REMOVED cannot linger in a config and be
-     * offered as an option that renders nothing.
+     * PACKAGE FILES PLUS ANY THE HOST ADDED. A language dropped into
+     * `lang/{locale}` or published under `lang/vendor/panel` appears without a
+     * second edit. A language whose files were removed cannot linger as an
+     * option that renders raw keys.
      *
      * @return list<string>
      */
     public static function available(): array
     {
-        $path = lang_path();
+        $found = [];
 
-        if (! is_dir($path)) {
-            return [config('app.locale', 'en')];
+        foreach (self::localeDirectories() as $path) {
+            if (! is_dir($path)) {
+                continue;
+            }
+
+            foreach (glob($path.'/*', GLOB_ONLYDIR) ?: [] as $dir) {
+                $name = basename($dir);
+
+                if (preg_match('/^[a-z]{2,3}([-_][A-Za-z]{2,4})?$/', $name)) {
+                    $found[$name] = true;
+                }
+            }
         }
 
-        $found = array_values(array_filter(
-            array_map('basename', glob($path.'/*', GLOB_ONLYDIR) ?: []),
-            static fn (string $dir): bool => (bool) preg_match('/^[a-z]{2,3}([-_][A-Za-z]{2,4})?$/', $dir),
-        ));
-
+        $found = array_keys($found);
         sort($found);
 
-        return $found === [] ? [config('app.locale', 'en')] : $found;
+        return $found === [] ? [(string) config('app.locale', 'en')] : $found;
     }
 
     /**
@@ -80,22 +86,84 @@ final class Locale
      * where every label on screen is a translation key. Shipping it inline costs
      * less than the flash costs.
      *
+     * Package groups (`billing`, `operations`, …) come from `panel::*` lang
+     * files. A host file at `lang/{locale}/panel.php` overlays extra keys
+     * (`actions.save`, and so on) without replacing the kit groups.
+     *
      * @return array<string, mixed>
      */
     public static function messages(?string $locale = null): array
     {
         $locale = $locale ?? app()->getLocale();
-        $file = lang_path($locale.'/panel.php');
+        $messages = [];
+        $loader = app('translator')->getLoader();
+        $fallback = (string) config('app.fallback_locale', 'en');
 
-        if (! is_file($file)) {
-            /*
-             * FALL BACK RATHER THAN FAIL. A missing file means a locale was
-             * selected that has no strings - the honest result is English, not
-             * an exception on every page or a screen of raw keys.
-             */
-            $file = lang_path(config('app.fallback_locale', 'en').'/panel.php');
+        foreach (self::groups() as $group) {
+            $line = $loader->load($locale, $group, 'panel');
+
+            if ($line === [] && $locale !== $fallback) {
+                $line = $loader->load($fallback, $group, 'panel');
+            }
+
+            $messages[$group] = is_array($line) ? $line : [];
         }
 
-        return is_file($file) ? (array) require $file : [];
+        $overlay = lang_path($locale.'/panel.php');
+
+        if (is_file($overlay)) {
+            $messages = array_replace_recursive($messages, (array) require $overlay);
+        }
+
+        return $messages;
+    }
+
+    /**
+     * @return array{current: string, direction: 'rtl'|'ltr', available: list<string>}
+     */
+    public static function shared(?string $locale = null): array
+    {
+        $locale = $locale ?? app()->getLocale();
+
+        return [
+            'current' => $locale,
+            'direction' => self::direction($locale),
+            'available' => self::available(),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function groups(): array
+    {
+        $dir = self::packageLangPath().'/en';
+
+        if (! is_dir($dir)) {
+            return ['auth', 'billing', 'directory', 'grants', 'operations', 'support'];
+        }
+
+        $files = glob($dir.'/*.php') ?: [];
+        $groups = array_map(static fn (string $file): string => basename($file, '.php'), $files);
+        sort($groups);
+
+        return array_values($groups);
+    }
+
+    public static function packageLangPath(): string
+    {
+        return dirname(__DIR__, 2).'/resources/lang';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function localeDirectories(): array
+    {
+        return array_values(array_filter([
+            self::packageLangPath(),
+            lang_path(),
+            lang_path('vendor/panel'),
+        ], static fn (string $path): bool => $path !== ''));
     }
 }

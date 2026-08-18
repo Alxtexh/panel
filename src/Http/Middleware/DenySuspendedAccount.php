@@ -59,7 +59,7 @@ final class DenySuspendedAccount
         $request->session()->regenerateToken();
 
         return response()->view('panel::tenant-suspended', [
-            'name' => $tenant->name ?? 'This organisation',
+            'name' => $tenant->name ?? __('panel::billing.wall.organisation'),
             'reason' => $tenant->suspended_reason ?? null,
             'support' => config('panel.support_email'),
         ], 403);

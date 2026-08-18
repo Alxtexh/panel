@@ -57,9 +57,9 @@ final class OperationsNav
         $entries = [];
 
         $screens = [
-            ['key' => 'operations-backups', 'title' => 'Backups', 'href' => $urls['backups'], 'icon' => 'archive', 'sort' => 10],
-            ['key' => 'operations-logs', 'title' => 'Logs', 'href' => $urls['logs'], 'icon' => 'file-text', 'sort' => 20],
-            ['key' => 'operations-monitoring', 'title' => 'Monitoring', 'href' => $urls['monitoring'], 'icon' => 'gauge', 'sort' => 30],
+            ['key' => 'operations-backups', 'title' => __('panel::directory.links.backups'), 'href' => $urls['backups'], 'icon' => 'archive', 'sort' => 10],
+            ['key' => 'operations-logs', 'title' => __('panel::directory.links.logs'), 'href' => $urls['logs'], 'icon' => 'file-text', 'sort' => 20],
+            ['key' => 'operations-monitoring', 'title' => __('panel::directory.links.monitoring'), 'href' => $urls['monitoring'], 'icon' => 'gauge', 'sort' => 30],
         ];
 
         foreach ($screens as $screen) {
@@ -72,7 +72,7 @@ final class OperationsNav
                 'title' => $screen['title'],
                 'href' => $screen['href'],
                 'icon' => $screen['icon'],
-                'group' => 'Operations',
+                'group' => __('panel::operations.group'),
                 'sort' => $screen['sort'],
             ];
         }

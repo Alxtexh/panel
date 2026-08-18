@@ -27,7 +27,7 @@ class BillingPortalPage extends Page
 
     public static function label(): string
     {
-        return 'Billing';
+        return __('panel::billing.label');
     }
 
     public static function component(): string

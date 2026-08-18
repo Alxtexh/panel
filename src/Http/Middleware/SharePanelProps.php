@@ -16,6 +16,7 @@ use Alxtexh\Panel\Support\SettingsIndex;
 use Alxtexh\Panel\Support\Ability;
 use Alxtexh\Panel\Support\ModuleRegistry;
 use Alxtexh\Panel\Support\OperationsNav;
+use Alxtexh\Panel\Support\Locale;
 use Alxtexh\Panel\Support\PanelAccess;
 use Alxtexh\Panel\Support\PanelNavigation;
 use Alxtexh\Panel\Support\PanelHome;
@@ -92,6 +93,14 @@ final class SharePanelProps
              * packaged screen sees the same product name.
              */
             'name' => static fn (): string => (string) config('app.name', 'Panel'),
+
+            /*
+             * KIT STRINGS for Vue `t()`. A few kilobytes, sent once, so the
+             * first paint is not a flash of raw keys. Hosts overlay
+             * `lang/{locale}/panel.php`. See `Locale::messages()`.
+             */
+            'messages' => static fn (): array => Locale::messages(),
+            'locale' => static fn (): array => Locale::shared(),
 
             /*
              * FLASH TOAST. Controllers already `->with('toast', ...)` and

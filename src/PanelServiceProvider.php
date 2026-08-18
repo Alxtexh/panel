@@ -125,6 +125,13 @@ final class PanelServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'panel');
 
         /*
+         * KIT STRINGS, loaded as `panel::*`. Hosts publish and overlay; they do
+         * not invent a second i18n stack. Vue reads the same keys from the
+         * shared `messages` prop. See `Locale::messages()`.
+         */
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'panel');
+
+        /*
          * LOADED, NOT PUBLISHED. `panel_settings` is the package's own table -
          * an application never edits its columns - so publishing the migration
          * would only create a copy that drifts. Publishing is for things an
@@ -191,6 +198,10 @@ final class PanelServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/panel.php' => config_path('panel.php'),
             ], 'panel-config');
+
+            $this->publishes([
+                __DIR__.'/../resources/lang' => $this->app->langPath('vendor/panel'),
+            ], 'panel-lang');
         }
 
         /*

@@ -60,8 +60,8 @@ final class PanelAccess
         }
 
         return [
-            'title' => 'You have no grants',
-            'body' => 'This account is signed in and allowed into the panel, but it has no role and no abilities yet. The installer does not grant everything. Create an Administrator and assign it:',
+            'title' => __('panel::grants.empty.title'),
+            'body' => __('panel::grants.empty.body'),
             'commands' => [
                 'php artisan panel:permissions sync',
                 'php artisan panel:permissions grant --email=you@example.com',

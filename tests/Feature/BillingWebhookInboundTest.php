@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tests\Feature;
 
 use Alxtexh\Panel\Billing\BillingState;
+use Alxtexh\Panel\Billing\GenericBillingWebhookAdapter;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
@@ -58,6 +59,38 @@ final class BillingWebhookInboundTest extends TestCase
         ])->assertStatus(401);
 
         $this->assertSame(0, BillingState::query()->count());
+    }
+
+    public function test_signed_header_adapter_accepts_a_matching_hmac(): void
+    {
+        $secret = 'test-secret';
+
+        app(PanelManager::class)->panel('admin')
+            ->billingWebhookVerifier(GenericBillingWebhookAdapter::verifier($secret));
+
+        $payload = [
+            'billable_type' => 'tenant',
+            'billable_key' => '1',
+            'status' => 'active',
+        ];
+
+        $this->withHeaders([
+            'X-Webhook-Signature' => hash_hmac('sha256', json_encode($payload), $secret),
+        ])->postJson('/billing/webhooks/generic', $payload)->assertAccepted();
+    }
+
+    public function test_signed_header_adapter_rejects_a_bad_signature(): void
+    {
+        app(PanelManager::class)->panel('admin')
+            ->billingWebhookVerifier(GenericBillingWebhookAdapter::verifier('test-secret'));
+
+        $this->withHeaders(['X-Webhook-Signature' => 'nope'])
+            ->postJson('/billing/webhooks/generic', [
+                'billable_type' => 'tenant',
+                'billable_key' => '1',
+                'status' => 'active',
+            ])
+            ->assertStatus(401);
     }
 }
 

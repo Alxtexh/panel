@@ -35,6 +35,7 @@ import AuthField from '../../components/AuthField.vue'
 import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'
+import { useTranslations } from '../../composables/useTranslations'
 
 const props = defineProps<{
     /** Where to POST. Supplied by the server - see the note above. */
@@ -111,14 +112,15 @@ const passkeyRoutes = computed(() =>
  * has its own.
  */
 const providers = computed(() => props.socialProviders ?? [])
+const { t } = useTranslations()
 </script>
 
 <template>
     <AuthLayout
-        :title="props.heading ?? 'Log in to your account'"
-        :description="props.description ?? 'Enter your email and password below to log in'"
+        :title="props.heading ?? t('auth.login.heading')"
+        :description="props.description ?? t('auth.login.description')"
     >
-        <Head title="Log in" />
+        <Head :title="t('auth.login.title')" />
 
         <div
             v-if="props.status"
@@ -146,9 +148,9 @@ const providers = computed(() => props.socialProviders ?? [])
                     <span class="bg-border h-px w-full" />
                 </div>
                 <div class="relative flex justify-center text-xs uppercase">
-                    <span class="bg-background text-muted-foreground px-2">
-                        Or continue with email
-                    </span>
+                        <span class="bg-background text-muted-foreground px-2">
+                            {{ t('auth.login.or_email') }}
+                        </span>
                 </div>
             </div>
         </div>
@@ -165,7 +167,7 @@ const providers = computed(() => props.socialProviders ?? [])
                     id="email"
                     name="email"
                     type="email"
-                    label="Email address"
+                    :label="t('auth.login.email')"
                     autocomplete="email"
                     placeholder="email@example.com"
                     required
@@ -178,9 +180,9 @@ const providers = computed(() => props.socialProviders ?? [])
                     id="password"
                     name="password"
                     type="password"
-                    label="Password"
+                    :label="t('auth.login.password')"
                     autocomplete="current-password"
-                    placeholder="Password"
+                    :placeholder="t('auth.login.password')"
                     required
                     :error="errors.password"
                     :default-value="props.prefill?.password"
@@ -191,7 +193,7 @@ const providers = computed(() => props.socialProviders ?? [])
                             :href="props.forgotUrl"
                             class="text-sm underline-offset-4 hover:underline"
                         >
-                            Forgot password?
+                            {{ t('auth.login.forgot') }}
                         </Link>
                     </template>
                 </AuthField>
@@ -206,7 +208,7 @@ const providers = computed(() => props.socialProviders ?? [])
                     v-if="props.prefill"
                     class="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs"
                 >
-                    Local development: filled in with the seeded account
+                    {{ t('auth.login.prefill') }}
                     <span class="font-medium">{{ props.prefill.email }}</span
                     >.
                 </p>
@@ -218,7 +220,7 @@ const providers = computed(() => props.socialProviders ?? [])
                         value="1"
                         class="border-input accent-primary size-4 rounded"
                     />
-                    Remember me
+                    {{ t('auth.login.remember') }}
                 </label>
 
                 <!--
@@ -250,7 +252,7 @@ const providers = computed(() => props.socialProviders ?? [])
                         <circle cx="12" cy="12" r="9" class="opacity-25" />
                         <path d="M21 12a9 9 0 0 0-9-9" stroke-linecap="round" />
                     </svg>
-                    {{ processing ? 'Signing in…' : 'Log in' }}
+                    {{ processing ? t('auth.login.signing_in') : t('auth.login.submit') }}
                 </Button>
             </div>
 
@@ -263,7 +265,7 @@ const providers = computed(() => props.socialProviders ?? [])
             <div v-if="providers.length > 0" class="flex flex-col gap-3">
                 <div class="flex items-center gap-3">
                     <span class="bg-border h-px flex-1" />
-                    <span class="text-muted-foreground text-xs">or continue with</span>
+                    <span class="text-muted-foreground text-xs">{{ t('auth.login.or_provider') }}</span>
                     <span class="bg-border h-px flex-1" />
                 </div>
 
@@ -286,9 +288,9 @@ const providers = computed(() => props.socialProviders ?? [])
             </div>
 
             <div v-if="props.registerUrl" class="text-muted-foreground text-center text-sm">
-                Don't have an account?
+                {{ t('auth.login.no_account') }}
                 <Link :href="props.registerUrl" class="underline-offset-4 hover:underline">
-                    Sign up
+                    {{ t('auth.login.sign_up') }}
                 </Link>
             </div>
         </Form>

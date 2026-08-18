@@ -83,14 +83,14 @@ final class EmptyCoreInstallTest extends TestCase
         );
 
         $this->assertStringContainsString('chromeSections', $source);
-        $this->assertStringContainsString("'Settings'", $source);
-        $this->assertStringContainsString("'Users'", $source);
-        $this->assertStringContainsString("'Roles'", $source);
-        $this->assertStringContainsString("'Documents'", $source);
-        $this->assertStringContainsString("'Backups'", $source);
-        $this->assertStringContainsString("'Logs'", $source);
-        $this->assertStringContainsString("'Monitoring'", $source);
-        $this->assertStringContainsString("'Help'", $source);
+        $this->assertStringContainsString('panel::directory.links.settings', $source);
+        $this->assertStringContainsString('panel::directory.links.users', $source);
+        $this->assertStringContainsString('panel::directory.links.roles', $source);
+        $this->assertStringContainsString('panel::directory.links.documents', $source);
+        $this->assertStringContainsString('panel::directory.links.backups', $source);
+        $this->assertStringContainsString('panel::directory.links.logs', $source);
+        $this->assertStringContainsString('panel::directory.links.monitoring', $source);
+        $this->assertStringContainsString('panel::directory.links.help', $source);
         $this->assertStringNotContainsString('Clients', $source);
         $this->assertStringNotContainsString('Routers', $source);
         $this->assertStringNotContainsString('coffee', $source);

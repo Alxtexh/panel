@@ -278,6 +278,9 @@ return [
     | - Panel::billingWebhookVerifier(...)
     | - Panel::billingWebhookMapper(...)
     |
+    | Thin example: Alxtexh\Panel\Billing\GenericBillingWebhookAdapter
+    | Recipe: docs/13-billing-adapters.md and examples/generic-billing-webhook.php
+    |
     | `events` is informational for host UI and docs, not a locked schema.
     |
     */

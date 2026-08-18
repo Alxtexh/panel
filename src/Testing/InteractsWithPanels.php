@@ -545,10 +545,87 @@ trait InteractsWithPanels
             $props['panelEmptyGrants'] ?? false,
             'panelEmptyGrants was not shared. The account still has something to open.',
         );
-        $this->assertSame('You have no grants', $props['panelEmptyGrantsHint']['title'] ?? null);
+        $this->assertSame(__('panel::grants.empty.title'), $props['panelEmptyGrantsHint']['title'] ?? null);
         $this->assertNotEmpty($props['panelEmptyGrantsHint']['commands'] ?? []);
 
         return $this;
+    }
+
+    /* ----------------------------------------------------------- billing */
+
+    /**
+     * A blocked account is sent to the packaged suspended screen.
+     *
+     * Asserts the redirect contains `/account/suspended`, because a prefixed
+     * portal lives at `/reseller/account/suspended` and a hardcoded `/account`
+     * path would fail the second portal.
+     */
+    protected function assertBillingSuspendedRedirect(
+        object $user,
+        string $url,
+        ?string $expected = null,
+    ): static {
+        $response = $this->actingAs($user)->get($url);
+
+        $response->assertRedirect();
+
+        if ($expected !== null) {
+            $response->assertRedirect($expected);
+
+            return $this;
+        }
+
+        $location = (string) $response->headers->get('Location');
+
+        $this->assertTrue(
+            str_contains($location, '/account/suspended'),
+            "Expected a redirect to the suspended screen, got [{$location}].",
+        );
+
+        return $this;
+    }
+
+    /**
+     * Billing does not block this URL: the screen renders.
+     */
+    protected function assertBillingAllows(object $user, string $url): TestResponse
+    {
+        return $this->actingAs($user)->get($url)->assertOk();
+    }
+
+    /**
+     * POST the inbound billing webhook and assert it was accepted.
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, string>  $headers
+     */
+    protected function assertBillingWebhookAccepted(
+        array $payload,
+        string $path = '/billing/webhooks/generic',
+        array $headers = [],
+    ): TestResponse {
+        return $this->postJson($path, $payload, $headers)
+            ->assertAccepted()
+            ->assertJson(['ok' => true]);
+    }
+
+    /**
+     * The packaged suspended page renders with status copy.
+     */
+    protected function assertSuspendedPageRenders(
+        object $user,
+        string $url = '/account/suspended',
+    ): TestResponse {
+        $response = $this->actingAs($user)->get($url)->assertOk();
+
+        $props = $response->viewData('page')['props'] ?? [];
+
+        $this->assertArrayHasKey('status', $props);
+        $this->assertArrayHasKey('title', $props);
+        $this->assertArrayHasKey('blocksAccess', $props);
+        $this->assertNotSame('', (string) ($props['title'] ?? ''));
+
+        return $response;
     }
 
     /* -------------------------------------------------------------- toast */

@@ -33,12 +33,12 @@ abstract class DirectoryPage extends Page
 
     public static function heading(): ?string
     {
-        return 'Directory';
+        return __('panel::directory.title');
     }
 
     public static function description(): ?string
     {
-        return 'Jump to settings, people, documents, operations, and help.';
+        return __('panel::directory.description');
     }
 
     /**
@@ -70,15 +70,15 @@ abstract class DirectoryPage extends Page
             ?? app(PanelManager::class)->panel(static::panel());
 
         $workspace = array_values(array_filter([
-            self::link('Settings', self::url($panel, 'settings.index'), 'sliders'),
+            self::link(__('panel::directory.links.settings'), self::url($panel, 'settings.index'), 'sliders'),
             Ability::allows($user, 'manage_roles')
-                ? self::link('Users', self::url($panel, 'pages.user-management', ['tab' => 'users']), 'users')
+                ? self::link(__('panel::directory.links.users'), self::url($panel, 'pages.user-management', ['tab' => 'users']), 'users')
                 : null,
             ($panel?->offers('roles') ?? true) && Ability::allows($user, 'manage_roles')
-                ? self::link('Roles', self::url($panel, 'roles'), 'key')
+                ? self::link(__('panel::directory.links.roles'), self::url($panel, 'roles'), 'key')
                 : null,
             ($panel?->offers('documents') ?? true) && Ability::allows($user, 'manage_documents')
-                ? self::link('Documents', self::url($panel, 'documents.index'), 'file-text')
+                ? self::link(__('panel::directory.links.documents'), self::url($panel, 'documents.index'), 'file-text')
                 : null,
         ]));
 
@@ -87,34 +87,34 @@ abstract class DirectoryPage extends Page
         if ($panel !== null && $panel->offers('operations') && Ability::allows($user, 'view_operations')) {
             $urls = OperationsNav::urls($panel);
             $operations = array_values(array_filter([
-                self::link('Backups', $urls['backups'], 'archive'),
-                self::link('Logs', $urls['logs'], 'file-text'),
-                self::link('Monitoring', $urls['monitoring'], 'gauge'),
+                self::link(__('panel::directory.links.backups'), $urls['backups'], 'archive'),
+                self::link(__('panel::directory.links.logs'), $urls['logs'], 'file-text'),
+                self::link(__('panel::directory.links.monitoring'), $urls['monitoring'], 'gauge'),
             ]));
         }
 
         $help = array_values(array_filter([
             ($panel?->offers('help') ?? true)
-                ? self::link('Help', self::url($panel, 'support.help'), 'help')
+                ? self::link(__('panel::directory.links.help'), self::url($panel, 'support.help'), 'help')
                 : null,
         ]));
 
         return array_values(array_filter([
             $workspace === [] ? null : [
                 'key' => 'workspace',
-                'title' => 'Workspace',
+                'title' => __('panel::directory.sections.workspace'),
                 'accent' => '#64748b',
                 'links' => $workspace,
             ],
             $operations === [] ? null : [
                 'key' => 'operations',
-                'title' => 'Operations',
+                'title' => __('panel::directory.sections.operations'),
                 'accent' => '#0d9488',
                 'links' => $operations,
             ],
             $help === [] ? null : [
                 'key' => 'help',
-                'title' => 'Help',
+                'title' => __('panel::directory.sections.help'),
                 'accent' => '#2563eb',
                 'links' => $help,
             ],

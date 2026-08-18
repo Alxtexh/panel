@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { PkStatusBadge } from '@alxtexh-enterprise/panel'
+import { useTranslations } from '../composables/useTranslations'
 
 defineOptions({
     inheritAttrs: false,
@@ -34,6 +35,8 @@ const props = defineProps<{
     plan?: BillingPlan | null
 }>()
 
+const { t } = useTranslations()
+
 const tone = computed(() => {
     switch (props.status) {
         case 'active':
@@ -65,33 +68,33 @@ function logout(): void {
 </script>
 
 <template>
-    <Head :title="pageHeading ?? title ?? 'Subscription access'" />
+    <Head :title="pageHeading ?? title ?? t('billing.heading')" />
 
     <div class="mx-auto flex w-full max-w-3xl px-4 py-8 sm:px-6">
         <div class="w-full rounded-3xl border bg-card p-6 shadow-sm sm:p-8">
             <div class="flex flex-col gap-4">
                 <PkStatusBadge
-                    :status="statusLabel ?? 'Subscription status'"
+                    :status="statusLabel ?? t('billing.status.fallback')"
                     :tone="tone"
                     class="w-fit"
                 />
 
                 <div class="space-y-2">
                     <h1 class="text-2xl font-semibold tracking-tight text-foreground">
-                        {{ title ?? pageHeading ?? 'Subscription access is limited' }}
+                        {{ title ?? pageHeading ?? t('billing.title.limited') }}
                     </h1>
                     <p class="text-sm leading-6 text-muted-foreground">
-                        {{ body ?? pageDescription ?? 'Billing needs attention before access can continue.' }}
+                        {{ body ?? pageDescription ?? t('billing.body.attention') }}
                     </p>
                 </div>
 
                 <div class="grid gap-4 rounded-2xl border bg-muted/30 p-4 sm:grid-cols-2">
                     <div class="space-y-1">
                         <p class="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                            Plan
+                            {{ t('billing.plan') }}
                         </p>
                         <p class="text-sm font-medium text-foreground">
-                            {{ plan?.name ?? 'Current subscription' }}
+                            {{ plan?.name ?? t('billing.current_subscription') }}
                         </p>
                         <p v-if="planMeta" class="text-sm text-muted-foreground">
                             {{ planMeta }}
@@ -100,10 +103,10 @@ function logout(): void {
 
                     <div class="space-y-1">
                         <p class="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                            Status
+                            {{ t('billing.status_heading') }}
                         </p>
                         <p class="text-sm font-medium text-foreground">
-                            {{ statusLabel ?? 'Subscription status' }}
+                            {{ statusLabel ?? t('billing.status.fallback') }}
                         </p>
                         <p v-if="dueMessage || renewalMessage" class="text-sm text-muted-foreground">
                             {{ dueMessage ?? renewalMessage }}
@@ -121,7 +124,7 @@ function logout(): void {
                         :href="billingHref"
                         class="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-95"
                     >
-                        {{ billingLabel ?? 'Manage subscription' }}
+                        {{ billingLabel ?? t('billing.actions.manage_subscription') }}
                     </a>
 
                     <button
@@ -130,12 +133,12 @@ function logout(): void {
                         class="inline-flex items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                         @click="logout"
                     >
-                        {{ logoutLabel ?? 'Sign out' }}
+                        {{ logoutLabel ?? t('billing.actions.logout') }}
                     </button>
                 </div>
 
                 <p v-if="supportEmail" class="text-sm text-muted-foreground">
-                    Need help? Contact
+                    {{ t('billing.need_help') }}
                     <a :href="`mailto:${supportEmail}`" class="font-medium text-foreground underline underline-offset-4">
                         {{ supportEmail }}
                     </a>
