@@ -16,6 +16,7 @@ use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Tables\Filters\Filter;
 use Alxtexh\Panel\Tables\Filters\QueryBuilderFilter;
 use Alxtexh\Panel\Tables\Filters\TrashedFilter;
+use Alxtexh\Panel\Tables\Grouping\Group;
 
 /**
  * The shared list query, extracted in Phase 3 from three hardcoded controllers.
@@ -104,6 +105,22 @@ final class ListQuery
     private ?string $groupKey = null;
 
     private ?string $groupColumn = null;
+
+    private bool $groupDate = false;
+
+    private ?Group $activeGroup = null;
+
+    /**
+     * Declared groupings the request may pick from.
+     *
+     * @var list<array{0: Group, 1: string}>
+     */
+    private array $availableGroups = [];
+
+    private ?string $defaultGroupKey = null;
+
+    /** Whether `?group=` is honoured. False means the default is always on. */
+    private bool $groupPicker = false;
 
     private ?Tabs $tabs = null;
 
@@ -367,21 +384,25 @@ final class ListQuery
     }
 
     /**
-     * Row post-processing for computed columns.
-     *
-     * Runs on the already-fetched page only, so it costs nothing per row in the
-     * database and cannot reintroduce an N+1 - provided the closure does not
-     * query, which is the one rule callers must keep.
-     *
-     * @param  Closure(array<string, mixed>): array<string, mixed>  $transform
+     * @param  list<array{0: Group, 1: string}>  $groups  [Group, qualified column]
      */
+    public function grouping(array $groups, ?string $defaultKey, bool $picker): self
+    {
+        $this->availableGroups = $groups;
+        $this->defaultGroupKey = $defaultKey;
+        $this->groupPicker = $picker;
+
+        return $this;
+    }
+
     /**
-     * @param  list<RecordAction|ActionGroup>  $actions
+     * @deprecated Use {@see grouping()}. Kept for callers that already picked a group.
      */
     public function groupRowsBy(string $key, string $column): self
     {
         $this->groupKey = $key;
         $this->groupColumn = $column;
+        $this->activeGroup = Group::make($key);
 
         return $this;
     }
@@ -477,6 +498,10 @@ final class ListQuery
             $rows = array_map($this->transform, $rows);
         }
 
+        if ($this->activeGroup !== null) {
+            $rows = array_map(fn (array $row): array => $this->annotateGroup($row), $rows);
+        }
+
         if ($this->recordActions === []) {
             return $rows;
         }
@@ -505,6 +530,28 @@ final class ListQuery
                 ? $row
                 : [...$row, '_actions' => $resolved['keys'], '_actionUrls' => $resolved['urls']];
         }, $rows);
+    }
+
+    /**
+     * Stamp the clustering key and heading onto a fetched row.
+     *
+     * `__group` is what the client compares and what a date-group cursor
+     * carries. `__groupTitle` is what the heading prints, which may be a
+     * custom title rather than the raw value.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    private function annotateGroup(array $row): array
+    {
+        if ($this->activeGroup === null) {
+            return $row;
+        }
+
+        $row['__group'] = $this->activeGroup->clusterKey($row[$this->activeGroup->key()] ?? null);
+        $row['__groupTitle'] = $this->activeGroup->title($row);
+
+        return $row;
     }
 
     public function transform(Closure $transform): self
@@ -975,6 +1022,8 @@ final class ListQuery
 
         $state = $this->readState($request);
 
+        $this->activateGroup($state['group'] ?? null);
+
         // Request-supplied per-page, but only if it is on the allowlist.
         $requested = (int) $this->param($request, 'perPage', (string) $this->perPage);
         $perPage = in_array($requested, $this->perPageOptions, true) ? $requested : $this->perPage;
@@ -1013,10 +1062,8 @@ final class ListQuery
             ? null
             : Cursor::encode(
                 array_map(
-                    static fn (string $key): mixed => $last[$key] ?? null,
-                    $this->groupKey === null || $this->groupKey === $state['sort']
-                        ? [$state['sort']]
-                        : [$this->groupKey, $state['sort']],
+                    fn (string $key): mixed => $last[$key] ?? null,
+                    $this->cursorRowKeys($state['sort']),
                 ),
                 (int) ($last[$this->rowKeyName()] ?? 0),
             );
@@ -1041,6 +1088,8 @@ final class ListQuery
             // A closure, not a number. The caller wraps it in Inertia::defer()
             // so the rows paint before any COUNT runs (§10).
             total: fn (): int => $this->base($state, forCount: true)->count(),
+            indicators: $this->indicatorsFor($state['filters']),
+            groupBy: $this->activeGroup?->toSchema(),
         );
     }
 
@@ -1136,6 +1185,7 @@ final class ListQuery
             'cursor' => $this->param($request, 'cursor') ? (string) $this->param($request, 'cursor') : null,
             'page' => max(1, (int) $this->param($request, 'page', 1)),
             'filters' => $filters,
+            'group' => $this->param($request, 'group'),
         ];
     }
 
@@ -1191,7 +1241,7 @@ final class ListQuery
         $column = $this->sortable[$state['sort']];
         $direction = $state['direction'];
 
-        $ordering = $this->orderingColumns($column);
+        $terms = $this->orderingTerms($state['sort'], $column);
 
         $query = $this->base($state)->select($this->selectedColumns());
 
@@ -1200,8 +1250,12 @@ final class ListQuery
          * the whole of grouping - rows arrive clustered, and the client inserts
          * a heading wherever the value changes.
          */
-        foreach ($ordering as $orderColumn) {
-            $query->orderBy($orderColumn, $direction);
+        foreach ($terms as $term) {
+            if ($term['raw']) {
+                $query->orderByRaw($term['sql'].' '.$direction);
+            } else {
+                $query->orderBy($term['sql'], $direction);
+            }
         }
 
         /*
@@ -1224,7 +1278,7 @@ final class ListQuery
             $page = max(1, (int) ($state['page'] ?? 1));
             $query->forPage($page, $perPage);
         } else {
-            $this->applyCursor($query, $state, $ordering, $direction);
+            $this->applyCursor($query, $state, $terms, $direction);
         }
 
         $rows = array_map(
@@ -1473,13 +1527,6 @@ final class ListQuery
     }
 
     /**
-     * Keyset seek: WHERE (sort_col, id) < (?, ?), written as an explicit OR so
-     * it stays portable across Postgres, MySQL and SQLite. Postgres row-value
-     * syntax is tidier and can replace this once the engine is fixed.
-     *
-     * @param  array{cursor: string|null, ...}  $state
-     */
-    /**
      * The ORDER BY, minus the key: group first, then the chosen sort.
      *
      * ONE DEFINITION, used by the query, the cursor that is issued, and the
@@ -1490,17 +1537,106 @@ final class ListQuery
      *
      * The group column is dropped when it IS the sort column - ordering by a
      * column twice is harmless but makes the cursor carry a value the seek then
-     * compares against itself.
+     * compares against itself. Date grouping of that same column still
+     * clusters, because datetime order is date-then-time.
      *
-     * @return list<string>
+     * @return list<array{rowKey: string, sql: string, raw: bool}>
      */
-    private function orderingColumns(string $sortColumn): array
+    private function orderingTerms(string $sortKey, string $sortColumn): array
     {
-        if ($this->groupColumn === null || $this->groupColumn === $sortColumn) {
-            return [$sortColumn];
+        $sort = ['rowKey' => $sortKey, 'sql' => $sortColumn, 'raw' => false];
+
+        if ($this->groupColumn === null || $this->groupColumn === $sortColumn || $this->groupKey === $sortKey) {
+            return [$sort];
         }
 
-        return [$this->groupColumn, $sortColumn];
+        $group = $this->groupDate
+            ? ['rowKey' => '__group', 'sql' => 'date('.$this->wrapColumn($this->groupColumn).')', 'raw' => true]
+            : ['rowKey' => $this->groupKey, 'sql' => $this->groupColumn, 'raw' => false];
+
+        return [$group, $sort];
+    }
+
+    /** @return list<string> */
+    private function cursorRowKeys(string $sortKey): array
+    {
+        return array_map(
+            static fn (array $term): string => $term['rowKey'],
+            $this->orderingTerms($sortKey, $this->sortable[$sortKey]),
+        );
+    }
+
+    private function wrapColumn(string $column): string
+    {
+        return $this->model::query()->toBase()->getGrammar()->wrap($column);
+    }
+
+    /**
+     * Pick the grouping this request asked for, against the declared allowlist.
+     *
+     * WITHOUT A PICKER the default is always on and `?group=` is ignored: a
+     * table that only ever clusters by status should not let a URL turn that
+     * off. WITH A PICKER, `group=-` means none, an unknown key falls back to
+     * the default, and a declared key is used.
+     */
+    private function activateGroup(mixed $requested): void
+    {
+        if ($this->availableGroups === []) {
+            return;
+        }
+
+        $byKey = [];
+
+        foreach ($this->availableGroups as [$group, $column]) {
+            $byKey[$group->key()] = [$group, $column];
+        }
+
+        $key = is_string($requested) ? $requested : null;
+
+        if (! $this->groupPicker) {
+            $key = $this->defaultGroupKey;
+        } elseif ($key === '-' || $key === '') {
+            $this->groupKey = null;
+            $this->groupColumn = null;
+            $this->groupDate = false;
+            $this->activeGroup = null;
+
+            return;
+        } elseif ($key === null || ! isset($byKey[$key])) {
+            $key = $this->defaultGroupKey;
+        }
+
+        if ($key === null || ! isset($byKey[$key])) {
+            $this->groupKey = null;
+            $this->groupColumn = null;
+            $this->groupDate = false;
+            $this->activeGroup = null;
+
+            return;
+        }
+
+        [$group, $column] = $byKey[$key];
+        $this->activeGroup = $group;
+        $this->groupKey = $group->key();
+        $this->groupColumn = $column;
+        $this->groupDate = $group->isDate();
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return list<array{key: string, label: string, removable: bool}>
+     */
+    private function indicatorsFor(array $filters): array
+    {
+        $out = [];
+
+        foreach ($this->filters as $filter) {
+            foreach ($filter->indicators($filters[$filter->key] ?? null) as $indicator) {
+                $out[] = $indicator;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -1515,9 +1651,9 @@ final class ListQuery
      * one column ungrouped, two grouped, and hardcoding either would silently
      * paginate wrongly in the other case.
      *
-     * @param  list<string>  $columns
+     * @param  list<array{rowKey: string, sql: string, raw: bool}>  $terms
      */
-    private function applyCursor(Builder $query, array $state, array $columns, string $direction): void
+    private function applyCursor(Builder $query, array $state, array $terms, string $direction): void
     {
         $cursor = Cursor::decode($state['cursor']);
 
@@ -1537,7 +1673,7 @@ final class ListQuery
          * somewhere arbitrary, so the page restarts instead - which is what
          * every other state change already does.
          */
-        if (count($cursor->values) !== count($columns)) {
+        if (count($cursor->values) !== count($terms)) {
             return;
         }
 
@@ -1556,27 +1692,38 @@ final class ListQuery
             }
         }
 
-        $query->where(function (Builder $outer) use ($columns, $operator, $cursor, $key): void {
-            foreach ($columns as $depth => $column) {
-                $outer->orWhere(function (Builder $q) use ($columns, $depth, $operator, $cursor): void {
-                    // Every column before this one must be EQUAL...
+        $query->where(function (Builder $outer) use ($terms, $operator, $cursor, $key): void {
+            foreach ($terms as $depth => $term) {
+                $outer->orWhere(function (Builder $q) use ($terms, $depth, $operator, $cursor): void {
                     for ($i = 0; $i < $depth; $i++) {
-                        $q->where($columns[$i], '=', $cursor->values[$i]);
+                        $this->constrainTerm($q, $terms[$i], '=', $cursor->values[$i]);
                     }
 
-                    // ...and this one strictly past the cursor.
-                    $q->where($columns[$depth], $operator, $cursor->values[$depth]);
+                    $this->constrainTerm($q, $terms[$depth], $operator, $cursor->values[$depth]);
                 });
             }
 
-            // The final tier: every ordering column equal, broken by the key.
-            $outer->orWhere(function (Builder $q) use ($columns, $operator, $cursor, $key): void {
-                foreach ($columns as $i => $column) {
-                    $q->where($column, '=', $cursor->values[$i]);
+            $outer->orWhere(function (Builder $q) use ($terms, $operator, $cursor, $key): void {
+                foreach ($terms as $i => $term) {
+                    $this->constrainTerm($q, $term, '=', $cursor->values[$i]);
                 }
 
                 $q->where($key, $operator, $cursor->id);
             });
         });
+    }
+
+    /**
+     * @param  array{rowKey: string, sql: string, raw: bool}  $term
+     */
+    private function constrainTerm(Builder $query, array $term, string $operator, mixed $value): void
+    {
+        if ($term['raw']) {
+            $query->whereRaw($term['sql'].' '.$operator.' ?', [$value]);
+
+            return;
+        }
+
+        $query->where($term['sql'], $operator, $value);
     }
 }

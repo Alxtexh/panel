@@ -271,7 +271,7 @@ export {
 export { useTenantTheme } from './composables/useTenantTheme'
 export { useSchemaColumns, BADGE_VARIANTS, hasBadgeValue } from './composables/useSchemaColumns'
 
-export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types'
+export type { FilterSchema, FilterIndicator, GroupSchema, SortDirection, TableColumn } from './components/DataTable/types'
 export type { QueryField, QueryGroup, QueryRule } from './components/DataTable/PkQueryBuilder.vue'
 export type { BulkActionSchema } from './components/DataTable/BulkActions.vue'
 export type {

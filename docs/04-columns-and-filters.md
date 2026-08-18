@@ -77,5 +77,41 @@ $table
     ->reorderable('position');
 ```
 
+`groupBy('status')` still works. A `Group` object is the same thing with a
+label, collapsible headings, or clustering by calendar date:
+
+```php
+use Alxtexh\Panel\Tables\Grouping\Group;
+
+$table
+    ->groupBy(Group::make('status')->collapsible()->label('Workflow'))
+    ->groups([
+        Group::make('status')->collapsible()->label('Workflow'),
+        Group::make('created_at')->date()->label('Created date'),
+    ])
+    ->collapsedGroupsByDefault();
+```
+
+`groups()` is the picker, and it only appears on the table toolbar that already
+hosts search and filters. Without it, grouping stays on. `?group=` is
+allowlisted against those keys; unknown values fall back to the default, and
+`group=-` means none, only when a picker exists.
+
+Keyset pagination still seeks on `(group, sort, id)`. A group may span a page
+and is shown continuing rather than restarted.
+
 `reorderable()` adds drag-and-drop that writes a position column; the write is
 scoped to the tenant and to the nested parent, like every other write.
+
+## Filter chips
+
+Applied filters appear as chips under the toolbar, with a clear control per
+chip and Clear all when more than one is active. They are the same query
+string the filter panel already writes, so dismissing a chip and Reset cannot
+disagree.
+
+```php
+SelectFilter::make('status')
+    ->options(['paid' => 'Paid', 'overdue' => 'Overdue'])
+    ->indicateUsing(fn (mixed $value) => 'Only '.$value);
+```

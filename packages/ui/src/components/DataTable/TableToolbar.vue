@@ -24,7 +24,7 @@ import { computed, ref, watch } from 'vue'
 import PkDropdown from '../primitives/PkDropdown.vue'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import PkQueryBuilder from './PkQueryBuilder.vue'
-import type { FilterSchema } from './types'
+import type { FilterSchema, FilterIndicator, GroupSchema } from './types'
 
 const props = withDefaults(
     defineProps<{
@@ -45,8 +45,25 @@ const props = withDefaults(
          */
         reorderable?: boolean
         reordering?: boolean
+        /**
+         * Groupings the operator may pick. Empty means no picker: a table that
+         * only ever clusters one way should not grow a control that does nothing.
+         */
+        groups?: GroupSchema[]
+        /** The grouping currently applied, or null for none. */
+        groupBy?: GroupSchema | null
+        /** Applied-filter chips from the server. */
+        indicators?: FilterIndicator[]
     }>(),
-    { searchPlaceholder: 'Search…', loading: false, reorderable: false, reordering: false },
+    {
+        searchPlaceholder: 'Search…',
+        loading: false,
+        reorderable: false,
+        reordering: false,
+        groups: () => [],
+        groupBy: null,
+        indicators: () => [],
+    },
 )
 
 const emit = defineEmits<{
@@ -56,6 +73,9 @@ const emit = defineEmits<{
     (e: 'apply-columns', hidden: string[]): void
     (e: 'clear'): void
     (e: 'toggle-reorder'): void
+    (e: 'group', key: string | null): void
+    (e: 'clear-filter', key: string): void
+    (e: 'clear-filters'): void
 }>()
 
 /* ------------------------------------------------------------------ search */
@@ -107,6 +127,28 @@ const activeCount = computed(
 const draftDiffers = computed(() => JSON.stringify(draft.value) !== JSON.stringify(props.filters))
 
 const hasAnything = computed(() => props.search !== '' || activeCount.value > 0)
+
+const chips = computed(() => {
+    if (props.indicators.length) {
+        return props.indicators
+    }
+
+    return props.filterSchema
+        .filter((f) => props.filters[f.key] !== null && props.filters[f.key] !== undefined)
+        .map((f) => ({
+            key: f.key,
+            label: `${f.label}: ${String(props.filters[f.key])}`,
+            removable: true,
+        }))
+})
+
+function setGroup(key: string | null) {
+    emit('group', key)
+}
+
+function clearChip(key: string) {
+    emit('clear-filter', key)
+}
 
 function isMulti(filter: FilterSchema): boolean {
     return filter.type === 'multiselect'
@@ -272,6 +314,7 @@ function clearEverything() {
         `sm`, where it becomes a fixed width - on a phone a right-aligned
         stub of a search field would be worse than a full-width one.
     -->
+    <div class="flex flex-col gap-2">
     <div class="flex flex-wrap items-center justify-end gap-2">
         <!-- Geometry deliberately identical to the topbar search: two search
              boxes that are almost-but-not-quite alike read as inconsistency. -->
@@ -669,6 +712,52 @@ function clearEverything() {
             </svg>
         </button>
 
+        <PkDropdown v-if="groups.length" align="end">
+            <template #trigger>
+                <button
+                    type="button"
+                    dusk="group-picker"
+                    class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-9 shrink-0 items-center justify-center rounded-md border transition-colors"
+                    :class="groupBy ? 'border-primary text-primary' : ''"
+                    :aria-label="groupBy ? `Grouped by ${groupBy.label}` : 'Group records'"
+                    :title="groupBy ? `Grouped by ${groupBy.label}` : 'Group records'"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        class="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                    >
+                        <path d="M4 6h16M4 12h10M4 18h7" />
+                    </svg>
+                </button>
+            </template>
+            <template #panel="{ close }">
+                <div class="flex flex-col gap-0.5 p-1">
+                    <button
+                        type="button"
+                        class="hover:bg-accent rounded px-2 py-1.5 text-left text-sm"
+                        :class="!groupBy ? 'text-primary font-medium' : ''"
+                        @click="setGroup(null); close()"
+                    >
+                        No grouping
+                    </button>
+                    <button
+                        v-for="option in groups"
+                        :key="option.key"
+                        type="button"
+                        class="hover:bg-accent rounded px-2 py-1.5 text-left text-sm"
+                        :class="groupBy?.key === option.key ? 'text-primary font-medium' : ''"
+                        @click="setGroup(option.key); close()"
+                    >
+                        {{ option.label }}
+                    </button>
+                </div>
+            </template>
+        </PkDropdown>
+
         <button
             v-if="hasAnything"
             type="button"
@@ -679,5 +768,41 @@ function clearEverything() {
         </button>
 
         <span v-if="loading" class="text-muted-foreground shrink-0 text-xs">Loading…</span>
+    </div>
+
+    <div
+        v-if="chips.length"
+        class="flex flex-wrap items-center gap-1.5"
+        dusk="filter-indicators"
+    >
+        <span
+            v-for="chip in chips"
+            :key="chip.key + chip.label"
+            class="border-input bg-muted/60 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
+            :dusk="`filter-indicator-${chip.key}`"
+        >
+            {{ chip.label }}
+            <button
+                v-if="chip.removable !== false"
+                type="button"
+                class="hover:text-foreground text-muted-foreground"
+                :aria-label="`Clear ${chip.label}`"
+                @click="clearChip(chip.key)"
+            >
+                <svg viewBox="0 0 24 24" class="size-3" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+        </span>
+        <button
+            v-if="chips.length > 1"
+            type="button"
+            class="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
+            dusk="clear-all-filters"
+            @click="emit('clear-filters')"
+        >
+            Clear all
+        </button>
+    </div>
     </div>
 </template>

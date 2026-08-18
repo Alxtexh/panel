@@ -22,6 +22,8 @@ final readonly class ListResult
      * @param  list<array<string, mixed>>  $filterSchema
      * @param  list<int>  $perPageOptions
      * @param  list<string>  $tabs
+     * @param  list<array{key: string, label: string, removable: bool}>  $indicators
+     * @param  array<string, mixed>|null  $groupBy
      * @param  (Closure(): array<string, int>)|null  $tabCounts
      * @param  Closure(): int  $total
      */
@@ -38,6 +40,8 @@ final readonly class ListResult
         public ?Closure $summary,
         public Closure $total,
         public string $countStrategy = 'deferred',
+        public array $indicators = [],
+        public ?array $groupBy = null,
     ) {}
 
     /**
@@ -66,6 +70,8 @@ final readonly class ListResult
             'tabs' => $this->tabs,
             // The client renders page counts only when a total is coming.
             'countStrategy' => $this->countStrategy,
+            'indicators' => $this->indicators,
+            'groupBy' => $this->groupBy,
         ];
     }
 }

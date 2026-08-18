@@ -92,7 +92,21 @@ interface ResourceSchema {
          */
         rowKey?: string
         /** Structure only; the values arrive with the rows. */
-        groupBy?: { key: string; label: string } | null
+        groupBy?: {
+            key: string
+            label: string
+            collapsible?: boolean
+            date?: boolean
+            titlePrefixed?: boolean
+        } | null
+        groups?: {
+            key: string
+            label: string
+            collapsible?: boolean
+            date?: boolean
+            titlePrefixed?: boolean
+        }[]
+        collapsedGroupsByDefault?: boolean
         /** The order column, when this table can be dragged into order. */
         reorderable?: string | null
         /**
@@ -150,6 +164,14 @@ const props = defineProps<
         perPageOptions: number[]
         tab: string | null
         tabs: string[]
+        groupBy?: {
+            key: string
+            label: string
+            collapsible?: boolean
+            date?: boolean
+            titlePrefixed?: boolean
+        } | null
+        indicators?: { key: string; label: string; removable?: boolean }[]
     } & {
         schema: ResourceSchema
         /** Tenant data, delivered beside the records rather than in the schema. */
@@ -214,6 +236,7 @@ defineOptions({
 
 const t = useListTable(props.schema.routes.index, props, {
     rowKey: props.schema.table.rowKey ?? 'id',
+    groupKeys: (props.schema.table.groups ?? []).map((g) => g.key),
 })
 
 // Keyed by resource, so hiding a column on Clients does not hide it on Routers.
@@ -1197,11 +1220,17 @@ function badgeLabel(key: string, value: unknown): string {
                     :loading="t.showSpinner.value"
                     :reorderable="canReorder"
                     :reordering="reordering"
+                    :groups="schema.table.groups ?? []"
+                    :group-by="groupBy ?? null"
+                    :indicators="indicators ?? []"
                     @update:search="t.setSearch"
                     @apply-filters="t.applyFilters"
                     @apply-columns="applyColumns"
                     @clear="t.clearAll"
                     @toggle-reorder="reordering = !reordering"
+                    @group="t.setGroup"
+                    @clear-filter="t.setFilter($event, null)"
+                    @clear-filters="t.resetFilters"
                 />
             </template>
 
@@ -1217,7 +1246,8 @@ function badgeLabel(key: string, value: unknown): string {
             <PkBoundary label="The table" class="flex min-h-0 shrink grow-0 flex-col">
                 <DataTable
                     :framed="false"
-                    :group-by="schema.table.groupBy ?? null"
+                    :group-by="groupBy ?? schema.table.groupBy ?? null"
+                    :collapsed-groups-by-default="schema.table.collapsedGroupsByDefault ?? false"
                     :reordering="reordering"
                     @reorder="persistOrder"
                     @row-contextmenu="onRowContextMenu"

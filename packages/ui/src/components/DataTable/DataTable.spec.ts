@@ -93,3 +93,41 @@ describe('DataTable row selection', () => {
         expect(wrapper.emitted('toggle-row')).toBeFalsy()
     })
 })
+
+describe('DataTable grouping', () => {
+    const groupedRows = [
+        { id: 1, name: 'Amina', status: 'draft', __group: 'draft', __groupTitle: 'Status: draft' },
+        { id: 2, name: 'Brian', status: 'draft', __group: 'draft', __groupTitle: 'Status: draft' },
+        { id: 3, name: 'Chi', status: 'published', __group: 'published', __groupTitle: 'Status: published' },
+    ]
+
+    it('renders a heading when the group value changes', () => {
+        const wrapper = mount(DataTable, {
+            props: {
+                columns,
+                rows: groupedRows,
+                groupBy: { key: 'status', label: 'Status', collapsible: false },
+            },
+        })
+
+        expect(wrapper.text()).toContain('Status: draft')
+        expect(wrapper.text()).toContain('Status: published')
+        expect(wrapper.text()).toContain('Amina')
+    })
+
+    it('collapses rows under a heading without dropping the heading', async () => {
+        const wrapper = mount(DataTable, {
+            props: {
+                columns,
+                rows: groupedRows,
+                groupBy: { key: 'status', label: 'Status', collapsible: true },
+            },
+        })
+
+        await wrapper.get('[dusk="group-header-draft"]').trigger('click')
+
+        expect(wrapper.text()).toContain('Status: draft')
+        expect(wrapper.text()).not.toContain('Amina')
+        expect(wrapper.text()).toContain('Chi')
+    })
+})

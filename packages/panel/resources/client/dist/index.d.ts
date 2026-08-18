@@ -156,7 +156,7 @@ export { useLiveUpdates } from './composables/useLiveUpdates';
 export { useAppearance, initializeAppearance, applyAppearance, appearanceVars, readAppearance, isDark, setAppearancePersister, } from './composables/useAppearance';
 export { useTenantTheme } from './composables/useTenantTheme';
 export { useSchemaColumns, BADGE_VARIANTS, hasBadgeValue } from './composables/useSchemaColumns';
-export type { FilterSchema, SortDirection, TableColumn } from './components/DataTable/types';
+export type { FilterSchema, FilterIndicator, GroupSchema, SortDirection, TableColumn } from './components/DataTable/types';
 export type { QueryField, QueryGroup, QueryRule } from './components/DataTable/PkQueryBuilder.vue';
 export type { BulkActionSchema } from './components/DataTable/BulkActions.vue';
 export type { ChartSeries, ChartPoint, ChartXYPoint, ChartXYSeries, } from './components/Widgets/types';

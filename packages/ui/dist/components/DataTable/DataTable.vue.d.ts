@@ -9,11 +9,21 @@ type __VLS_Props = {
      * an aggregation - so all that happens here is inserting a heading
      * wherever the value changes. Nothing is re-sorted or bucketed on the
      * client, which is what keeps this free on a page of any size.
+     *
+     * `__group` / `__groupTitle` on the row, when present, are the
+     * clustering key and the heading the server already composed (a date
+     * group, a custom title). Fall back to the column value for older
+     * payloads that only sent `groupBy.key`.
      */
     groupBy?: {
         key: string;
         label: string;
+        collapsible?: boolean;
+        date?: boolean;
+        titlePrefixed?: boolean;
     } | null;
+    /** When true, collapsible headings start closed. */
+    collapsedGroupsByDefault?: boolean;
     /**
      * Whether the table is CURRENTLY in reorder mode.
      *
@@ -103,6 +113,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     "onRow-click"?: ((row: Record<string, unknown>) => any) | undefined;
     "onRow-contextmenu"?: ((row: Record<string, unknown>, event: MouseEvent) => any) | undefined;
 }>, {
+    collapsedGroupsByDefault: boolean;
     rowKey: string;
     direction: SortDirection;
     loading: boolean;

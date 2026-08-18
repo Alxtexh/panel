@@ -16,7 +16,7 @@
  * needed badges, formatted dates, currency and units, and an enum would have
  * grown a case per screen forever.
  */
-import { computed, ref, useId } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import type { SortDirection, TableColumn } from './types'
 
 const props = withDefaults(
@@ -30,8 +30,21 @@ const props = withDefaults(
          * an aggregation - so all that happens here is inserting a heading
          * wherever the value changes. Nothing is re-sorted or bucketed on the
          * client, which is what keeps this free on a page of any size.
+         *
+         * `__group` / `__groupTitle` on the row, when present, are the
+         * clustering key and the heading the server already composed (a date
+         * group, a custom title). Fall back to the column value for older
+         * payloads that only sent `groupBy.key`.
          */
-        groupBy?: { key: string; label: string } | null
+        groupBy?: {
+            key: string
+            label: string
+            collapsible?: boolean
+            date?: boolean
+            titlePrefixed?: boolean
+        } | null
+        /** When true, collapsible headings start closed. */
+        collapsedGroupsByDefault?: boolean
         /**
          * Whether the table is CURRENTLY in reorder mode.
          *
@@ -105,6 +118,7 @@ const props = withDefaults(
         summaryValues: null,
         emptyTitle: 'Nothing here yet',
         framed: true,
+        collapsedGroupsByDefault: false,
     },
 )
 
@@ -116,6 +130,20 @@ const props = withDefaults(
  * so page 2 may open mid-group, and it needs a heading saying which one or the
  * rows underneath have no label at all.
  */
+function clusterKey(row: Record<string, any> | undefined): string {
+    if (!row || !props.groupBy) {
+        return ''
+    }
+
+    if (row.__group !== undefined && row.__group !== null) {
+        return String(row.__group)
+    }
+
+    const value = row[props.groupBy.key]
+
+    return value === null || value === undefined || value === '' ? '' : String(value)
+}
+
 function startsGroup(index: number): boolean {
     if (!props.groupBy) {
         return false
@@ -125,15 +153,85 @@ function startsGroup(index: number): boolean {
         return true
     }
 
-    return props.rows[index]?.[props.groupBy.key] !== props.rows[index - 1]?.[props.groupBy.key]
+    return clusterKey(props.rows[index]) !== clusterKey(props.rows[index - 1])
 }
 
-/** The heading text: the row's own value, or a placeholder for null. */
+/** The heading text: the server's title, the row's own value, or a placeholder. */
 function groupValue(row: Record<string, any>): string {
-    const value = props.groupBy ? row[props.groupBy.key] : null
+    if (row.__groupTitle) {
+        return String(row.__groupTitle)
+    }
 
-    return value === null || value === undefined || value === '' ? 'None' : String(value)
+    const value = props.groupBy ? row[props.groupBy.key] : null
+    const text = value === null || value === undefined || value === '' ? 'None' : String(value)
+
+    if (!props.groupBy || props.groupBy.titlePrefixed === false) {
+        return text
+    }
+
+    return `${props.groupBy.label}: ${text}`
 }
+
+const collapsed = ref<Set<string>>(new Set())
+const touched = ref<Set<string>>(new Set())
+
+function isCollapsed(key: string): boolean {
+    if (!props.groupBy?.collapsible) {
+        return false
+    }
+
+    return collapsed.value.has(key)
+}
+
+function toggleGroup(key: string) {
+    if (!props.groupBy?.collapsible) {
+        return
+    }
+
+    const nextTouched = new Set(touched.value)
+    nextTouched.add(key)
+    touched.value = nextTouched
+
+    const next = new Set(collapsed.value)
+
+    if (next.has(key)) {
+        next.delete(key)
+    } else {
+        next.add(key)
+    }
+
+    collapsed.value = next
+}
+
+function rowVisible(index: number): boolean {
+    if (!props.groupBy?.collapsible) {
+        return true
+    }
+
+    return !isCollapsed(clusterKey(props.rows[index]))
+}
+
+watch(
+    () => props.rows,
+    (rows) => {
+        if (!props.groupBy?.collapsible || !props.collapsedGroupsByDefault) {
+            return
+        }
+
+        const next = new Set(collapsed.value)
+
+        for (const row of rows) {
+            const key = clusterKey(row)
+
+            if (key !== '' && !touched.value.has(key)) {
+                next.add(key)
+            }
+        }
+
+        collapsed.value = next
+    },
+    { immediate: true },
+)
 
 /* ------------------------------------------------------------- reordering */
 
@@ -469,12 +567,25 @@ function summaryValue(key: string): string {
                             "
                             class="text-muted-foreground px-3 py-1.5 text-[11px] font-semibold tracking-wider uppercase"
                         >
-                            <span class="text-muted-foreground/70">{{ groupBy.label }}:</span>
-                            {{ groupValue(row) }}
+                            <button
+                                v-if="groupBy.collapsible"
+                                type="button"
+                                class="hover:text-foreground inline-flex items-center gap-1.5"
+                                :aria-expanded="!isCollapsed(clusterKey(row))"
+                                :dusk="`group-header-${clusterKey(row) || 'none'}`"
+                                @click="toggleGroup(clusterKey(row))"
+                            >
+                                <span class="text-[9px]" aria-hidden="true">{{
+                                    isCollapsed(clusterKey(row)) ? '▸' : '▾'
+                                }}</span>
+                                {{ groupValue(row) }}
+                            </button>
+                            <span v-else dusk="group-header">{{ groupValue(row) }}</span>
                         </td>
                     </tr>
 
                     <tr
+                        v-if="rowVisible(index)"
                         class="hover:bg-muted/40 group pk-row border-b transition-colors"
                         :class="[
                             isSelected(row)

@@ -30,11 +30,21 @@ export interface ListPageProps {
     perPageOptions: number[]
     tab: string | null
     tabs: string[]
+    groupBy?: {
+        key: string
+        label: string
+        collapsible?: boolean
+        date?: boolean
+        titlePrefixed?: boolean
+    } | null
+    indicators?: { key: string; label: string; removable?: boolean }[]
 }
 
 export interface ListTableOptions {
     /** Property on each row that uniquely identifies it. Defaults to `id`. */
     rowKey?: string
+    /** Keys the group picker may send. Empty means grouping is not pickable. */
+    groupKeys?: string[]
 }
 
 export function useListTable(url: string, props: ListPageProps, options: ListTableOptions = {}) {
@@ -157,6 +167,7 @@ export function useListTable(url: string, props: ListPageProps, options: ListTab
             direction: props.direction,
             perPage: props.perPage,
             tab: props.tab,
+            group: props.groupBy?.key ?? ((options.groupKeys?.length ?? 0) > 0 ? '-' : null),
             ...props.filters,
             ...overrides,
         }
@@ -217,6 +228,8 @@ export function useListTable(url: string, props: ListPageProps, options: ListTab
                 'tab',
                 'total',
                 'tabCounts',
+                'groupBy',
+                'indicators',
             ],
             preserveState: true,
             preserveScroll: true,
@@ -298,6 +311,10 @@ export function useListTable(url: string, props: ListPageProps, options: ListTab
         apply(next)
     }
 
+    function setGroup(key: string | null) {
+        apply({ group: key ?? '-' })
+    }
+
     function setSearch(value: string) {
         apply({ search: value })
     }
@@ -342,6 +359,7 @@ export function useListTable(url: string, props: ListPageProps, options: ListTab
         sortBy,
         setFilter,
         applyFilters,
+        setGroup,
         setSearch,
         resetFilters,
         clearAll,

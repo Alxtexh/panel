@@ -72,4 +72,11 @@ final class BooleanFilter extends Filter
             'falseLabel' => $this->falseLabel,
         ];
     }
+
+    protected function indicatorLabel(mixed $value): string
+    {
+        $state = $value ? $this->trueLabel : $this->falseLabel;
+
+        return $this->resolvedLabel().': '.$state;
+    }
 }

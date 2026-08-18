@@ -16,6 +16,7 @@ use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\IconColumn;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Filters\SelectFilter;
+use Alxtexh\Panel\Tables\Grouping\Group;
 use Alxtexh\Panel\Tables\Table;
 
 final class RouterResource extends Resource
@@ -99,7 +100,11 @@ final class RouterResource extends Resource
              * that the group column must lead an index - see the note in
              * ClientResource for what happens on a large table when it does not.
              */
-            ->groupBy('status', 'Status')
+            ->groupBy(Group::make('status')->collapsible()->label('Status'))
+            ->groups([
+                Group::make('status')->collapsible()->label('Status'),
+                Group::make('created_at')->date()->label('Created date'),
+            ])
             ->columns([
                 TextColumn::make('name')->from('routers.name')->sortable()->searchable()->locked(),
                 TextColumn::make('ip_address')->from('routers.ip_address')->label('IP address')

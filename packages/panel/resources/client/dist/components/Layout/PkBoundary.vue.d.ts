@@ -30,8 +30,8 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onError?: ((error: unknown) => any) | undefined;
 }>, {
-    label: string;
     fill: boolean;
+    label: string;
     silent: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
