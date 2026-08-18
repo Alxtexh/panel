@@ -76,6 +76,8 @@ final class PanelManager
          */
         Pages\OrganisationPage::class,
         Pages\PaymentSettingsPage::class,
+        Pages\MailPage::class,
+        Pages\ChatPage::class,
     ];
 
     /** @var array<string, class-string<Pages\Page>> slug => class — first-registered wins; used as fallback when no panel context */

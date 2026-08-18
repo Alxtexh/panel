@@ -259,6 +259,7 @@ export {
 } from './composables/dashboardHide'
 export type { DashboardHide } from './composables/dashboardHide'
 export { useLiveUpdates } from './composables/useLiveUpdates'
+export type { LiveConfig, LiveUpdateOptions } from './composables/useLiveUpdates'
 export {
     useAppearance,
     initializeAppearance,

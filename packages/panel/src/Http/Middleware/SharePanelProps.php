@@ -111,6 +111,36 @@ final class SharePanelProps
              */
             'panelNav' => static fn (): array => PanelNavigation::build(),
 
+            /*
+             * DECLARED PAGES, when the application has not already shared them.
+             * The command palette and the shell both read this list. Playground
+             * merges extra entries first; that share wins.
+             */
+            'panelPages' => Inertia::getShared('panelPages')
+                ?? static fn (): array => app(PanelManager::class)->panelPages(),
+
+            /*
+             * Account appearance, so a second browser adopts the theme on
+             * first paint. Null for a guest, or when the user model has no
+             * `appearance` attribute.
+             */
+            'appearance' => Inertia::getShared('appearance')
+                ?? static function () use ($request): ?array {
+                    $user = $request->user();
+                    $value = $user?->appearance ?? null;
+
+                    return is_array($value) ? $value : null;
+                },
+
+            /*
+             * Shell-only render hooks (`shell.*`). Resource-scoped hooks stay
+             * on the page that asked for them.
+             */
+            'shellHooks' => static fn (): array => array_values(array_filter(
+                app(PanelManager::class)->renderHooks(null),
+                static fn (array $hook): bool => str_starts_with((string) ($hook['position'] ?? ''), 'shell.'),
+            )),
+
             'panelEmptyGrants' => static function () use ($panels): bool {
                 $panel = $panels->currentPanel();
 
@@ -314,6 +344,10 @@ final class SharePanelProps
                         ])
                         ->values()
                         ->all(),
+
+                    'feedback' => $panel->offersFeedback() && Route::has($panel->getRouteName().'feedback')
+                        ? route($panel->getRouteName().'feedback')
+                        : null,
 
                     'account' => self::namedUrl(
                         $panel,

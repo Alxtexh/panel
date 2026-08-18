@@ -25,6 +25,7 @@ import {
     Activity,
     DatabaseBackup,
     LogOut,
+    MessageSquare,
     ScrollText,
     Server,
     Settings,
@@ -56,6 +57,7 @@ const panel = computed(
                   help?: string | null
                   logout?: string | null
                   settings?: string | null
+                  feedback?: string | null
                   userManagement?: string | null
                   activity?: string | null
                   operations?: {
@@ -106,6 +108,10 @@ const trash = computed(
 const handleLogout = () => {
     router.flushAll()
 }
+
+function openFeedbackMenu(): void {
+    window.dispatchEvent(new CustomEvent('panel:feedback'))
+}
 </script>
 
 <template>
@@ -117,6 +123,11 @@ const handleLogout = () => {
     <DropdownMenuSeparator v-if="user" />
 
     <DropdownMenuGroup>
+        <DropdownMenuItem v-if="panel?.feedback" @click="openFeedbackMenu">
+            <MessageSquare class="mr-2 h-4 w-4" />
+            Send feedback
+        </DropdownMenuItem>
+
         <DropdownMenuItem v-if="panel?.account" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.account" prefetch>
                 <UserRound class="mr-2 h-4 w-4" />

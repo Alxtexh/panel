@@ -121,6 +121,18 @@ final class Panel
     private bool $paymentSettings = false;
 
     /**
+     * Optional empty kit apps (mail, chat). Off by default.
+     *
+     * @var array<string, bool>
+     */
+    private array $apps = [];
+
+    /** In-panel feedback dialog. Off by default. */
+    private bool $feedback = false;
+
+    private mixed $feedbackPersister = null;
+
+    /**
      * PAGE COPYRIGHT FOOTER after every screen. Off by default.
      *
      * The kit is an empty canvas. Hosts that want the packaged
@@ -1058,6 +1070,54 @@ final class Panel
     public function paymentGatewaysResolver(): ?Closure
     {
         return $this->paymentGatewaysResolver;
+    }
+
+    /**
+     * Opt this portal into empty kit apps: `mail`, `chat`.
+     *
+     * Each is an empty canvas (`MailPage` / `ChatPage`). Fill `folders()` /
+     * `threads()` or `conversations()` / `thread()` on a subclass, or live
+     * with empty lists. `without(['mail'])` still drops a screen you enabled.
+     *
+     * @param  list<string>  $names
+     */
+    public function apps(array $names): self
+    {
+        foreach ($names as $name) {
+            $this->apps[$name] = true;
+        }
+
+        return $this;
+    }
+
+    public function offersApp(string $name): bool
+    {
+        return ($this->apps[$name] ?? false) && $this->offers($name);
+    }
+
+    /**
+     * Opt this portal into in-panel feedback (`POST {panel}/feedback`).
+     *
+     * `$persist` receives the validated payload and the acting user. Without
+     * it the request still succeeds (toast only). Pair with the exported
+     * `FeedbackDialog` Vue, or a render hook at `shell.feedback`.
+     */
+    public function feedback(?Closure $persist = null): self
+    {
+        $this->feedback = true;
+        $this->feedbackPersister = $persist;
+
+        return $this;
+    }
+
+    public function offersFeedback(): bool
+    {
+        return $this->feedback && $this->offers('feedback');
+    }
+
+    public function feedbackPersister(): ?Closure
+    {
+        return $this->feedbackPersister instanceof Closure ? $this->feedbackPersister : null;
     }
 
     /**

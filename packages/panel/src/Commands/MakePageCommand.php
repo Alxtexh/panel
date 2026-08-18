@@ -7,19 +7,15 @@ namespace Alxtexh\Panel\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelPages;
 
 /**
  * Generate a panel page, and the one-line Vue file that resolves it.
  *
  * BOTH HALVES OR NEITHER. A page class with no component is a route that
- * resolves to nothing - a white page with a console error naming a file the
- * developer has never seen, which is the exact failure `@alxtexh-enterprise/panel/inertia`
- * exists to prevent. Writing the class alone would reintroduce it one screen at
- * a time.
- *
- * EVERY VARIANT WRITES AN EMPTY CANVAS. Widgets are drop-ins the developer
- * imports. `--dashboard` and `--plan-setup` still pick a PHP base class; the
- * Vue file is Head plus a heading, with a commented import example.
+ * resolves to nothing. Flags pick a PHP base; Vue is an empty canvas or a
+ * shim over a packaged screen (`--till`, `--device-preview`). Optional
+ * merchandising screens are written via `PanelPages::writeOptional()`.
  */
 final class MakePageCommand extends Command
 {
@@ -27,10 +23,30 @@ final class MakePageCommand extends Command
                             {name : The page class, e.g. ServerHealth}
                             {--dashboard : Empty canvas; PHP extends DashboardPage; commented StatCard import}
                             {--plan-setup : Empty canvas; PHP extends PlanSetupPage; commented PlanGrid import}
+                            {--till : Empty TillPage; Vue shims packaged Till (CatalogTill)}
+                            {--catalog : Empty CatalogBrowserPage; writes optional Catalog screen}
+                            {--catalog-item : Empty CatalogItemPage; writes optional CatalogItem screen}
+                            {--register : Empty CatalogRegisterPage; writes optional CatalogRegister screen}
+                            {--directory : Empty DirectoryPage; writes optional Directory screen}
+                            {--signatures : Empty SignatureStudioPage; writes optional Signatures screen}
+                            {--device-preview : Empty DevicePreviewPage; Vue shims packaged DevicePreview}
                             {--panel= : The panel this screen belongs to. Defaults to panel.default}
                             {--force : Overwrite an existing class or component}';
 
     protected $description = 'Create a panel page (a screen that is not a resource)';
+
+    /** @var list<string> */
+    private const VARIANTS = [
+        'dashboard',
+        'plan-setup',
+        'till',
+        'catalog',
+        'catalog-item',
+        'register',
+        'directory',
+        'signatures',
+        'device-preview',
+    ];
 
     public function handle(): int
     {
@@ -51,14 +67,21 @@ final class MakePageCommand extends Command
             return self::FAILURE;
         }
 
-        $dashboard = (bool) $this->option('dashboard');
-        $planSetup = (bool) $this->option('plan-setup');
+        $chosen = [];
 
-        if ($dashboard && $planSetup) {
-            $this->components->error('Use either --dashboard or --plan-setup, not both.');
+        foreach (self::VARIANTS as $flag) {
+            if ($this->option($flag)) {
+                $chosen[] = $flag;
+            }
+        }
+
+        if (count($chosen) > 1) {
+            $this->components->error('Use only one of --'.implode(', --', self::VARIANTS).'.');
 
             return self::FAILURE;
         }
+
+        $variant = $chosen[0] ?? 'page';
 
         try {
             $panel = $this->targetPanel();
@@ -68,20 +91,31 @@ final class MakePageCommand extends Command
             return self::FAILURE;
         }
 
-        file_put_contents($path, match (true) {
-            $dashboard => $this->dashboardStub($class, $slug, $name, $panel),
-            $planSetup => $this->planSetupStub($class, $slug, $name, $panel),
+        file_put_contents($path, match ($variant) {
+            'dashboard' => $this->dashboardStub($class, $slug, $name, $panel),
+            'plan-setup' => $this->planSetupStub($class, $slug, $name, $panel),
+            'till' => $this->tillStub($class, $slug, $name, $panel),
+            'catalog' => $this->catalogStub($class, $slug, $name, $panel),
+            'catalog-item' => $this->catalogItemStub($class, $slug, $name, $panel),
+            'register' => $this->registerStub($class, $slug, $name, $panel),
+            'directory' => $this->directoryStub($class, $slug, $name, $panel),
+            'signatures' => $this->signaturesStub($class, $slug, $name, $panel),
+            'device-preview' => $this->devicePreviewStub($class, $slug, $name, $panel),
             default => $this->pageStub($class, $slug, $name, $panel),
         });
 
         $this->components->info("Created app/Panel/Pages/{$class}.php");
         $this->components->twoColumnDetail('Panel', $panel);
 
-        $this->writeComponent($name, match (true) {
-            $dashboard => 'dashboard',
-            $planSetup => 'plan',
-            default => 'catalog',
-        });
+        $this->writeComponent($name, $variant);
+
+        if (in_array($variant, ['plan-setup', 'till', 'catalog', 'catalog-item', 'register', 'directory', 'signatures', 'device-preview'], true)) {
+            $optional = PanelPages::writeOptional((bool) $this->option('force'));
+
+            if ($optional['written'] !== []) {
+                $this->components->info('Wrote optional screens: '.implode(', ', $optional['written']));
+            }
+        }
 
         $this->newLine();
         $this->components->info("Visit /{$slug}. Discovery registers it; there is no route to add.");
@@ -104,7 +138,7 @@ final class MakePageCommand extends Command
      *
      * Always an empty Vue file. Flags only change the commented import.
      */
-    private function writeComponent(string $name, string $hint = 'catalog'): void
+    private function writeComponent(string $name, string $hint = 'page'): void
     {
         $directory = resource_path('js/pages');
 
@@ -125,7 +159,13 @@ final class MakePageCommand extends Command
             return;
         }
 
-        file_put_contents($path, $this->pageVue($name, $hint));
+        $shim = match ($hint) {
+            'till' => 'Till',
+            'device-preview' => 'DevicePreview',
+            default => null,
+        };
+
+        file_put_contents($path, $shim !== null ? PanelPages::stub($shim) : $this->pageVue($name, $hint));
 
         $this->components->info("Created resources/js/pages/{$name}.vue");
     }
@@ -284,7 +324,12 @@ final class MakePageCommand extends Command
     {
         $example = match ($hint) {
             'dashboard' => 'StatCard, ChartCard',
-            'plan' => 'PlanGrid, PlanEditor',
+            'plan-setup' => 'PlanGrid, PlanEditor',
+            'catalog' => 'CatalogGrid, CatalogBrowser',
+            'catalog-item' => 'CatalogItemView',
+            'register' => 'CatalogRegister',
+            'directory' => 'DirectoryPage',
+            'signatures' => 'SignatureStudio',
             default => 'CatalogGrid',
         };
 
@@ -371,6 +416,277 @@ final class MakePageCommand extends Command
 
             public static function forget(string \$id): void
             {
+            }
+        }
+
+        PHP;
+    }
+
+    private function tillStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use Alxtexh\\Panel\\Pages\\TillPage;
+
+        /**
+         * A till. Fill items() (and optional facets() / taxRate()). Tax defaults to 0.
+         */
+        final class {$class} extends TillPage
+        {
+            protected static string \$panel = '{$panel}';
+
+            protected static ?string \$group = null;
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
+
+            public static function ability(): ?string
+            {
+                return null;
+            }
+        }
+
+        PHP;
+    }
+
+    private function catalogStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use Alxtexh\\Panel\\Pages\\CatalogBrowserPage;
+
+        /**
+         * A merchandising grid. Fill tabs().
+         */
+        final class {$class} extends CatalogBrowserPage
+        {
+            protected static string \$panel = '{$panel}';
+
+            protected static ?string \$group = null;
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
+
+            public static function ability(): ?string
+            {
+                return null;
+            }
+
+            public static function tabs(): array
+            {
+                return [];
+            }
+        }
+
+        PHP;
+    }
+
+    private function catalogItemStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use Alxtexh\\Panel\\Pages\\CatalogItemPage;
+
+        /**
+         * One catalog item. Hide it from the sidebar; the grid is the way in.
+         */
+        final class {$class} extends CatalogItemPage
+        {
+            protected static string \$panel = '{$panel}';
+
+            public static function uri(): string
+            {
+                return 'catalog/{key}';
+            }
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
+
+            public static function ability(): ?string
+            {
+                return null;
+            }
+
+            public static function find(string \$key): ?array
+            {
+                return null;
+            }
+        }
+
+        PHP;
+    }
+
+    private function registerStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use Alxtexh\\Panel\\Pages\\CatalogRegisterPage;
+
+        /**
+         * Catalog cards plus a register table. Fill cards() and rows().
+         */
+        final class {$class} extends CatalogRegisterPage
+        {
+            protected static string \$panel = '{$panel}';
+
+            protected static ?string \$group = null;
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
+
+            public static function ability(): ?string
+            {
+                return null;
+            }
+
+            public static function cards(): array
+            {
+                return [];
+            }
+
+            public static function rows(): array
+            {
+                return [];
+            }
+        }
+
+        PHP;
+    }
+
+    private function directoryStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use Alxtexh\\Panel\\Pages\\DirectoryPage;
+
+        /**
+         * A searchable directory of links. Fill sections().
+         */
+        final class {$class} extends DirectoryPage
+        {
+            protected static string \$panel = '{$panel}';
+
+            protected static ?string \$group = null;
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
+
+            public static function ability(): ?string
+            {
+                return null;
+            }
+
+            public static function sections(): array
+            {
+                return [];
+            }
+        }
+
+        PHP;
+    }
+
+    private function signaturesStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use Alxtexh\\Panel\\Pages\\SignatureStudioPage;
+
+        /**
+         * Signature pad and document preview. Fill documents().
+         */
+        final class {$class} extends SignatureStudioPage
+        {
+            protected static string \$panel = '{$panel}';
+
+            protected static ?string \$group = null;
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
+
+            public static function ability(): ?string
+            {
+                return null;
+            }
+
+            public static function documents(): array
+            {
+                return [];
+            }
+        }
+
+        PHP;
+    }
+
+    private function devicePreviewStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use Alxtexh\\Panel\\Pages\\DevicePreviewPage;
+
+        /**
+         * The panel inside a device frame. Override previewUrl() if the host home is not enough.
+         */
+        final class {$class} extends DevicePreviewPage
+        {
+            protected static string \$panel = '{$panel}';
+
+            protected static ?string \$group = null;
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
+
+            public static function ability(): ?string
+            {
+                return null;
             }
         }
 

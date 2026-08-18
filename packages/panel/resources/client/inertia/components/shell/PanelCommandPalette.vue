@@ -52,16 +52,40 @@ const remoteGroups = ref<Group[]>([])
 const inputEl = ref<HTMLInputElement | null>(null)
 const listEl = ref<HTMLElement | null>(null)
 
-/** The navigation the sidebar draws, as palette items. Already ability-filtered. */
-const pages = computed<Item[]>(() =>
-    ((page.props as any).panelNav ?? []).map((entry: any) => ({
-        id: `page-${entry.key}`,
-        title: entry.title,
-        subtitle: entry.group ?? null,
-        href: entry.href,
-        kind: 'page' as const,
-    })),
-)
+/** The navigation the sidebar draws, plus declared panel pages, as palette items. */
+function navItems(entries: any[]): Item[] {
+    const items: Item[] = []
+
+    for (const entry of entries ?? []) {
+        if (!entry?.href || !entry?.title) {
+            continue
+        }
+
+        items.push({
+            id: `page-${entry.key ?? entry.href}`,
+            title: entry.title,
+            subtitle: entry.group ?? null,
+            href: entry.href,
+            kind: 'page',
+        })
+
+        if (Array.isArray(entry.members) && entry.members.length > 0) {
+            items.push(...navItems(entry.members))
+        }
+    }
+
+    return items
+}
+
+const pages = computed<Item[]>(() => {
+    const fromNav = navItems((page.props as any).panelNav ?? [])
+    const seen = new Set(fromNav.map((item) => item.href))
+    const extra = navItems((page.props as any).panelPages ?? []).filter(
+        (item) => !seen.has(item.href),
+    )
+
+    return [...fromNav, ...extra]
+})
 
 const searchUrl = computed<string>(() => {
     if (props.endpoint) {

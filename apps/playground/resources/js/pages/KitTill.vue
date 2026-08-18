@@ -19,8 +19,12 @@ const props = defineProps<{
     pageHeading?: string;
     pageDescription?: string | null;
     products?: CatalogItem[];
+    items?: CatalogItem[];
+    facets?: CatalogFacet[];
     statuses?: string[];
     itemPath?: string;
+    taxRate?: number;
+    taxLabel?: string;
 }>();
 
 const tenOff = ref(false);
@@ -70,10 +74,10 @@ const discountRate = computed(() => (tenOff.value ? 0.1 : 0));
         <PanelWidgets />
 
         <CatalogTill
-            :items="products ?? []"
-            :facets="productFacets"
-            :tax-rate="0.16"
-            tax-label="VAT 16%"
+            :items="items ?? products ?? []"
+            :facets="facets ?? productFacets"
+            :tax-rate="taxRate ?? 0.16"
+            :tax-label="taxLabel ?? 'VAT 16%'"
             :discount-rate="discountRate"
             :format-money="formatKes"
             @select="openItem"

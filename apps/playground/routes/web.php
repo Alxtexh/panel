@@ -9,13 +9,11 @@ use Alxtexh\Panel\Http\PanelRoutes;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\Blueprint;
 use App\Http\Controllers\ApiReferenceController;
-use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\OtpPasswordResetController;
 use App\Http\Controllers\ChatController;
-use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\LockController;
@@ -455,10 +453,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('settings/roles/{role}', [RoleController::class, 'update'])->name('settings.roles.update');
     Route::delete('settings/roles/{role}', [RoleController::class, 'destroy'])->name('settings.roles.destroy');
 
-    Route::post('feedback', [FeedbackController::class, 'store'])
-        ->middleware('throttle:12,60')
-        ->name('feedback.store');
-
     /*
      | App screens. Under /apps/ so they never collide with the resource routes,
      | which match a bare {resource} segment.
@@ -590,8 +584,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
      */
     Route::delete('settings/connected-accounts/{connectedAccount}', [SocialLoginController::class, 'destroy'])
         ->name('social.destroy');
-
-    Route::put('settings/appearance', [AppearanceController::class, 'update'])->name('appearance.update');
 
     /*
      | THE BELL IS THE PACKAGE'S NOW. These four routes moved into

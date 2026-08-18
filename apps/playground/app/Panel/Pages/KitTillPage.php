@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Panel\Pages;
 
-use Alxtexh\Panel\Pages\Page;
+use Alxtexh\Panel\Pages\TillPage;
 use Alxtexh\Panel\Widgets\ChartWidget;
 use App\Panel\KitDemo;
 use Illuminate\Http\Request;
 
 /**
- * Till lines, status pills, and the same shapes hosted as ChartWidgets.
+ * Playground till: demo SKUs and tax live here, not in the kit.
  */
-final class KitTillPage extends Page
+final class KitTillPage extends TillPage
 {
     protected static string $panel = 'admin';
 
@@ -47,6 +47,26 @@ final class KitTillPage extends Page
         return 'Tap products into a cart. LineItems, PkStatusBadge, and catalog ChartWidgets.';
     }
 
+    public static function items(): array
+    {
+        return KitDemo::products();
+    }
+
+    public static function taxRate(): float
+    {
+        return 0.16;
+    }
+
+    public static function taxLabel(): string
+    {
+        return 'VAT 16%';
+    }
+
+    public static function itemPath(): ?string
+    {
+        return '/kit-catalog';
+    }
+
     /**
      * @return list<ChartWidget>
      */
@@ -72,10 +92,10 @@ final class KitTillPage extends Page
     public static function data(Request $request): array
     {
         return [
-            'products' => KitDemo::products(),
+            ...parent::data($request),
+            'products' => static::items(),
             'lines' => KitDemo::lines(),
             'statuses' => KitDemo::statuses(),
-            'itemPath' => '/kit-catalog',
         ];
     }
 }

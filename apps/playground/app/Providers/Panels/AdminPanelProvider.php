@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Panels;
 
+use App\Models\Feedback;
 use Illuminate\Support\ServiceProvider;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
@@ -116,7 +117,16 @@ final class AdminPanelProvider extends ServiceProvider
                  * `panel.abilities`).
                  */
                 ->editableSupport()
-                ->paymentSettings(static fn (): array => KitDemo::gateways()),
+                ->paymentSettings(static fn (): array => KitDemo::gateways())
+                ->feedback(function (array $validated, $user): void {
+                    $feedback = new Feedback($validated);
+                    $feedback->user_agent = $validated['user_agent'] ?? null;
+
+                    $feedback->forceFill([
+                        'tenant_id' => $user->tenant_id,
+                        'user_id' => $user->id,
+                    ])->save();
+                }),
         );
 
         /*

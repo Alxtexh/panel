@@ -641,6 +641,21 @@ final class PanelRoutes
                         ->name('settings.profile.destroy');
                 }
 
+                /*
+                 * APPEARANCE, packaged so a host does not copy the playground
+                 * controller. Yields when the application already owns the URI.
+                 */
+                if (self::unclaimed('PUT', $panel->getPath().'/settings/appearance')) {
+                    Route::put('settings/appearance', [Controllers\AppearanceController::class, 'update'])
+                        ->name('settings.appearance');
+                }
+
+                if ($panel->offersFeedback() && self::unclaimed('POST', $panel->getPath().'/feedback')) {
+                    Route::post('feedback', [Controllers\FeedbackController::class, 'store'])
+                        ->middleware('throttle:10,1')
+                        ->name('feedback');
+                }
+
                 if (self::unclaimed('GET', $panel->getPath().'/settings/security')) {
                     /*
                      * PASSWORD CONFIRMATION TO LOOK, NOT ONLY TO CHANGE. The

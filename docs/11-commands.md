@@ -7,7 +7,7 @@
 | `panel:install` | Publish config, page files, layout, wire Vite. `--auth`, `--force` |
 | `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard`, `--guard-model`, `--central`, `--auth` |
 | `make:panel-resource` | A resource. `--generate` infers from the table, `--panel=` |
-| `make:panel-page` | A custom page. `--dashboard`, `--plan-setup` |
+| `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` |
 | `make:panel-widget` | Empty StatWidget, or `--chart` for ChartWidget |
 | `make:panel-relation-manager` | Nested child resource plus a relation-manager factory (dedicated pages, not a modal) |
 | `make:panel-module` | A plan-gated module: page (or `--resource`) plus a `Module::make` snippet |

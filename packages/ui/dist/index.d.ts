@@ -153,6 +153,7 @@ export { useColumnVisibility } from './composables/useColumnVisibility';
 export { DASHBOARD_HIDE_KEY, DASHBOARD_HIDDEN_STORAGE_KEY, } from './composables/dashboardHide';
 export type { DashboardHide } from './composables/dashboardHide';
 export { useLiveUpdates } from './composables/useLiveUpdates';
+export type { LiveConfig, LiveUpdateOptions } from './composables/useLiveUpdates';
 export { useAppearance, initializeAppearance, applyAppearance, appearanceVars, readAppearance, isDark, setAppearancePersister, } from './composables/useAppearance';
 export { useTenantTheme } from './composables/useTenantTheme';
 export { useSchemaColumns, BADGE_VARIANTS, hasBadgeValue } from './composables/useSchemaColumns';

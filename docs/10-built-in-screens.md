@@ -33,7 +33,11 @@ screens stay in the npm package and can be mirrored with
 | Catalog / CatalogItem / CatalogRegister | `CatalogBrowserPage` etc. | Your page class |
 | PlanSetup | `PlanSetupPage` | `make:panel-page --plan-setup` |
 | Signatures | `SignatureStudioPage` | Your page class |
-| Directory | `DirectoryPage` | Your page class |
+| Directory | `DirectoryPage` | `make:panel-page --directory` |
+| Till | `TillPage` | `make:panel-page --till` |
+| Device preview | `DevicePreviewPage` | `make:panel-page --device-preview` |
+| Mail | `MailPage` | `Panel::apps(['mail'])` on the portal |
+| Chat | `ChatPage` | `Panel::apps(['chat'])` on the portal |
 | Payment gateways | `PaymentSettingsPage` | `Panel::paymentSettings()` |
 
 The dashboard ships **empty** (`stats()` / `charts()` commented). Fill them, or

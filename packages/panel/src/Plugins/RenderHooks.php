@@ -57,6 +57,12 @@ final class RenderHooks
     /** Top of the dashboard, above the widgets. */
     public const DASHBOARD_BEFORE = 'dashboard.before';
 
+    /**
+     * Inside the panel shell, for chrome that is not a resource screen.
+     * Mount `FeedbackDialog` here, or any other portal-wide dialog.
+     */
+    public const SHELL_FEEDBACK = 'shell.feedback';
+
     /** @return list<string> Every position a plugin may name. */
     public static function positions(): array
     {
@@ -69,6 +75,7 @@ final class RenderHooks
             self::VIEW_BEFORE,
             self::VIEW_AFTER,
             self::DASHBOARD_BEFORE,
+            self::SHELL_FEEDBACK,
         ];
     }
 
