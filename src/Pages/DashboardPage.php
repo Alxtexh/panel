@@ -18,6 +18,7 @@ use Alxtexh\Panel\Widgets\ChartWidget;
 use Alxtexh\Panel\Widgets\DashboardFilters;
 use Alxtexh\Panel\Widgets\Period;
 use Alxtexh\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Widgets\TableWidget;
 
 /**
  * The host `StatWidget` and `ChartWidget` never had.
@@ -231,6 +232,20 @@ abstract class DashboardPage extends Page
     }
 
     /**
+     * Capped resource lists below the charts.
+     *
+     * EMPTY BY DEFAULT, like stats() and charts(). A fresh install stays an
+     * empty canvas. discoverWidgets() is the normal way these appear; this
+     * method is for a dashboard that wants a specific table on this page.
+     *
+     * @return list<TableWidget>
+     */
+    public static function tables(): array
+    {
+        return [];
+    }
+
+    /**
      * The packaged screen that draws them.
      *
      * OVERRIDABLE, because a dashboard is the screen most likely to want its own
@@ -287,12 +302,18 @@ abstract class DashboardPage extends Page
             static fn (ChartWidget $c): bool => $c->visibleTo($user),
         ));
 
+        $tables = array_values(array_filter(
+            [...static::tables(), ...array_filter($registered, static fn ($w): bool => $w instanceof TableWidget)],
+            static fn (TableWidget $w): bool => $w->visibleTo($user),
+        ));
+
         $props = [
             // The DECLARATIONS travel with the page: labels, spans and
             // descriptions are what lets the layout render before any number
             // has been counted.
             'widgets' => array_map(static fn (StatWidget $w): array => $w->toArray(), $stats),
             'charts' => array_map(static fn (ChartWidget $c): array => $c->toArray(), $charts),
+            'tables' => array_map(static fn (TableWidget $t): array => $t->toArray(), $tables),
 
             /*
              * ECHOED BACK rather than left to the client, so a shared or
@@ -461,6 +482,13 @@ abstract class DashboardPage extends Page
             $props["chart_{$chart->key}"] = Inertia::defer(
                 static fn (): array => $chart->resolve($period, $tenantKey, $now),
                 'charts',
+            );
+        }
+
+        foreach ($tables as $table) {
+            $props["table_{$table->key}"] = Inertia::defer(
+                static fn (): array => $table->resolve(),
+                'tables',
             );
         }
 

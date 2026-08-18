@@ -82,9 +82,13 @@ final class Blueprint
      * class list.
      */
     private const WIDGET_CAVEAT = '**declare them on a `DashboardPage`, which is what draws '
-        .'them.** `php artisan make:panel-page Overview --dashboard` writes one; its '
-        .'`stats()` and `charts()` return these classes and the packaged `PanelDashboard` '
-        .'screen renders them, each as its own deferred prop. A widget built anywhere else '
+        .'them, or drop a factory under a directory the panel passed to `discoverWidgets()`.** '
+        .'`php artisan make:panel-page Overview --dashboard` writes one; its '
+        .'`stats()`, `charts()` and `tables()` return these classes and the packaged `PanelDashboard` '
+        .'screen renders them, each as its own deferred prop. `TableWidget::make(\'recent\')->resource(OrderResource::class)->limit(5)` '
+        .'renders the existing DataTable with a capped list query. '
+        .'`Panel::make(\'admin\')->discoverWidgets(app_path(\'Panel/Widgets\'))` is the normal path '
+        .'(namespace is optional when the directory is under `app_path()`). A widget built anywhere else '
         .'is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 '
         .'that was true of every widget, which is why this line exists';
 
@@ -619,7 +623,7 @@ final class Blueprint
         php artisan make:panel-page Overview --dashboard
         ```
 
-        A `DashboardPage` can declare `stats()` and `charts()`. The generated Vue
+        A `DashboardPage` can declare `stats()`, `charts()` and `tables()`. The generated Vue
         is an empty canvas: import `StatCard` / `ChartCard`, or return
         `PanelDashboard` from `component()` to use the packaged screen.
 
@@ -634,7 +638,16 @@ final class Blueprint
                         ->visibleTo(fn ($user) => $user->can('view_any_clients')),
                 ];
             }
+
+            public static function tables(): array
+            {
+                return [
+                    TableWidget::make('recent')->resource(OrderResource::class)->limit(5),
+                ];
+            }
         }
+
+        Panel::make('admin')->discoverWidgets(app_path('Panel/Widgets'));
         ```
 
         EVERY WIDGET IS ITS OWN DEFERRED PROP, so the layout is on screen before

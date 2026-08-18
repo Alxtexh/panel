@@ -271,7 +271,7 @@ final class Panel
      * registering one here cannot put a number in the payload for somebody who
      * may not see it.
      *
-     * @param  list<Widgets\StatWidget|Widgets\ChartWidget>  $widgets
+     * @param  list<Widgets\StatWidget|Widgets\ChartWidget|Widgets\TableWidget>  $widgets
      */
     public function widgets(array $widgets): self
     {
@@ -280,7 +280,7 @@ final class Panel
         return $this;
     }
 
-    /** @return list<Widgets\StatWidget|Widgets\ChartWidget> */
+    /** @return list<Widgets\StatWidget|Widgets\ChartWidget|Widgets\TableWidget> */
     public function getWidgets(): array
     {
         return [...$this->widgets, ...$this->discoveredWidgets()];
@@ -343,16 +343,54 @@ final class Panel
      * same reason it scans resources - discovery is what keeps a provider a
      * DECLARATION rather than a manifest.
      *
-     * A CLASS IS FOUND IF IT DECLARES `make(): StatWidget|ChartWidget`. There is
-     * no interface to implement because the widgets themselves are final value
-     * objects, not a hierarchy - so the contract is the static factory, which is
-     * also the thing a reader would look for.
+     * A CLASS IS FOUND IF IT DECLARES `make(): StatWidget|ChartWidget|TableWidget`.
+     * There is no interface to implement because the widgets themselves are
+     * final value objects, not a hierarchy - so the contract is the static
+     * factory, which is also the thing a reader would look for.
+     *
+     * THE NAMESPACE IS OPTIONAL. `discoverWidgets(app_path('Panel/Widgets'))`
+     * is the normal path: the namespace is `App\Panel\Widgets`. Pass `$for`
+     * when the directory is not under `app_path()`.
      */
-    public function discoverWidgets(string $in, string $for): self
+    public function discoverWidgets(string $in, ?string $for = null): self
     {
-        $this->widgetDirectories[$in] = $for;
+        $this->widgetDirectories[$in] = $for ?? $this->namespaceFromDirectory($in);
 
         return $this;
+    }
+
+    /**
+     * `App\Panel\Widgets` from `app_path('Panel/Widgets')`.
+     *
+     * ANY OTHER DIRECTORY MUST NAME ITS NAMESPACE. Guessing `App\` from a path
+     * under `tests/` or `vendor/` would load the wrong class, silently, and a
+     * dashboard would miss widgets that exist on disk.
+     */
+    private function namespaceFromDirectory(string $directory): string
+    {
+        $app = rtrim(str_replace('\\', '/', app_path()), '/');
+        $directory = rtrim(str_replace('\\', '/', $directory), '/');
+
+        if ($directory === $app || str_starts_with($directory, $app.'/')) {
+            $relative = trim(substr($directory, strlen($app)), '/');
+            $base = rtrim($this->appNamespace(), '\\');
+
+            return $relative === ''
+                ? $base
+                : $base.'\\'.str_replace('/', '\\', $relative);
+        }
+
+        throw new RuntimeException(
+            "discoverWidgets('{$directory}') needs a namespace. "
+            .'Pass the second argument: discoverWidgets($in, $for).'
+        );
+    }
+
+    private function appNamespace(): string
+    {
+        return function_exists('app') && method_exists(app(), 'getNamespace')
+            ? app()->getNamespace()
+            : 'App\\';
     }
 
     /** @return array<string, string> */
@@ -362,7 +400,7 @@ final class Panel
     }
 
     /**
-     * @return list<Widgets\StatWidget|Widgets\ChartWidget>
+     * @return list<Widgets\StatWidget|Widgets\ChartWidget|Widgets\TableWidget>
      */
     private function discoveredWidgets(): array
     {
@@ -384,7 +422,9 @@ final class Panel
 
                 $made = $class::make();
 
-                if ($made instanceof Widgets\StatWidget || $made instanceof Widgets\ChartWidget) {
+                if ($made instanceof Widgets\StatWidget
+                    || $made instanceof Widgets\ChartWidget
+                    || $made instanceof Widgets\TableWidget) {
                     $out[] = $made;
                 }
             }

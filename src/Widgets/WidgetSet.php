@@ -44,14 +44,14 @@ final class WidgetSet
      * `$prefix` NAMESPACES THE PROPS so a screen can host more than one set -
      * a header row and a footer row - without their deferred props colliding.
      *
-     * @param  list<StatWidget|ChartWidget>  $widgets
+     * @param  list<StatWidget|ChartWidget|TableWidget>  $widgets
      * @return array<string, mixed>
      */
     public static function props(array $widgets, ?Authenticatable $user, string $prefix = 'header'): array
     {
         $visible = array_values(array_filter(
             $widgets,
-            static fn (StatWidget|ChartWidget $w): bool => $w->visibleTo($user),
+            static fn (StatWidget|ChartWidget|TableWidget $w): bool => $w->visibleTo($user),
         ));
 
         if ($visible === []) {
@@ -68,10 +68,12 @@ final class WidgetSet
 
         $stats = array_values(array_filter($visible, static fn ($w): bool => $w instanceof StatWidget));
         $charts = array_values(array_filter($visible, static fn ($w): bool => $w instanceof ChartWidget));
+        $tables = array_values(array_filter($visible, static fn ($w): bool => $w instanceof TableWidget));
 
         $props = [
             $prefix.'Widgets' => array_map(static fn (StatWidget $w): array => $w->toArray(), $stats),
             $prefix.'Charts' => array_map(static fn (ChartWidget $c): array => $c->toArray(), $charts),
+            $prefix.'Tables' => array_map(static fn (TableWidget $t): array => $t->toArray(), $tables),
         ];
 
         foreach ($stats as $widget) {
@@ -84,6 +86,13 @@ final class WidgetSet
         foreach ($charts as $chart) {
             $props[$prefix.'_chart_'.$chart->key] = Inertia::defer(
                 static fn (): array => $chart->resolve(Period::default(), $tenantKey, new \DateTimeImmutable),
+                $prefix.'-widgets',
+            );
+        }
+
+        foreach ($tables as $table) {
+            $props[$prefix.'_table_'.$table->key] = Inertia::defer(
+                static fn (): array => $table->resolve(),
                 $prefix.'-widgets',
             );
         }

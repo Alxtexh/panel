@@ -55,7 +55,7 @@ abstract class Page
      * see is never sent and never queried, and the whole row is ONE deferred
      * request rather than one per card.
      *
-     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget>
+     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
      */
     public static function headerWidgets(): array
     {

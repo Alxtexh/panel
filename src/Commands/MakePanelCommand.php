@@ -74,9 +74,11 @@ final class MakePanelCommand extends Command
         }
 
         $resourceDirectory = app_path("Panel/{$studly}/Resources");
+        $widgetDirectory = app_path("Panel/{$studly}/Widgets");
 
         $this->write($providerPath, $this->provider($id, $studly, $path));
         $this->ensureDirectory($resourceDirectory);
+        $this->ensureDirectory($widgetDirectory);
         $this->registerProvider("App\\Providers\\Panels\\{$studly}PanelProvider");
 
         /*
@@ -571,6 +573,10 @@ final class {$studly}PanelProvider extends ServiceProvider
                 ->discoverResources(
                     in: app_path('Panel/{$studly}/Resources'),
                     for: 'App\\\\Panel\\\\{$studly}\\\\Resources',
+                )
+                ->discoverWidgets(
+                    in: app_path('Panel/{$studly}/Widgets'),
+                    for: 'App\\\\Panel\\\\{$studly}\\\\Widgets',
                 )
 
                 ->brandName(fn (): string => config('app.name'))

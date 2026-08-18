@@ -108,4 +108,24 @@ final class ImportHttpTest extends TestCase
             ->assertOk()
             ->assertHeader('content-disposition');
     }
+
+    public function test_excel_is_refused_unless_the_resource_opts_in(): void
+    {
+        $xlsx = UploadedFile::fake()->create('rows.xlsx', 12, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $this->post('/articles/import/inspect', ['file' => $xlsx])
+            ->assertStatus(422);
+    }
+
+    public function test_excel_reader_names_the_optional_package_when_missing(): void
+    {
+        if (class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class)) {
+            $this->markTestSkipped('PhpSpreadsheet is installed; the optional path is available.');
+        }
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('phpoffice/phpspreadsheet');
+
+        new \Alxtexh\Panel\Imports\ExcelReader('/tmp/missing.xlsx');
+    }
 }

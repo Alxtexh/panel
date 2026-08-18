@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Jobs;
 use Alxtexh\Panel\Actions\ExportedFile;
 use Alxtexh\Panel\Actions\JobStatus;
 use Alxtexh\Panel\Imports\Importer;
+use Alxtexh\Panel\Imports\RowsReader;
 use Alxtexh\Panel\Support\TenantContext;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -54,9 +55,13 @@ final class ImportRecords implements ShouldQueue
                 throw new \RuntimeException("Not authorized to import [{$this->resource}].");
             }
 
-            $form = $class::formDefinition();
+            if (RowsReader::isExcel($this->path) && ! $class::excelImport()) {
+                throw new \RuntimeException('This resource imports CSV only.');
+            }
+
+            $form = $class::importForm();
             $importer = new Importer($form, $this->mapping);
-            $reader = new \Alxtexh\Panel\Imports\CsvReader($this->path);
+            $reader = RowsReader::open($this->path);
             $result = $importer->process($reader->rows());
 
             $written = 0;
