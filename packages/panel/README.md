@@ -227,7 +227,7 @@ the connection for **every** tenant unconditionally and throws on the first shar
 | `make:panel` | Generate a second portal (`--new-guard` gives it its own sign-in) |
 | `make:panel-resource` | Generate a resource (`--generate` infers from the table) |
 | `make:panel-widget` | Empty StatWidget or `--chart` ChartWidget |
-| `make:panel-relation-manager` | Nested child pages (list/create/edit), not a modal |
+| `make:panel-relation-manager` | Nested child pages (list/create/edit/attach), not a modal |
 | `panel:permissions` | List or reconcile abilities and roles |
 | `panel:doctor` | **Find configuration that is silently wrong** |
 | `panel:benchmark` | Time every list surface, warm, as a median |

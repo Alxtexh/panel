@@ -74,7 +74,7 @@ interface ResourceSchema {
     purpose: string | null
     icon: string
     group: string | null
-    routes: { index: string }
+        routes: { index: string; attach?: string }
     table: {
         columns: SchemaColumn[]
         filters: {
@@ -1092,6 +1092,13 @@ function badgeLabel(key: string, value: unknown): string {
                         as an `<a>` INSIDE it: two interactive elements where a
                         screen reader or keyboard user expects one.
                     -->
+                    <Link
+                        v-if="schema.routes.attach && canWrite && can.update && !reordering"
+                        :href="schema.routes.attach"
+                        :class="buttonClasses({ variant: 'outline', size: 'sm' })"
+                    >
+                        Attach
+                    </Link>
                     <Link
                         v-if="canWrite && can.create && !reordering"
                         :href="`${schema.routes.index}/create`"

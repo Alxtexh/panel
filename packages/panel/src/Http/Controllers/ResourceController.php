@@ -19,6 +19,7 @@ use Alxtexh\Panel\Forms\Fields\Field;
 use Alxtexh\Panel\Widgets;
 use Alxtexh\Panel\Forms\Fields\SelectField;
 use Alxtexh\Panel\Http\NestedContext;
+use Alxtexh\Panel\Http\NestedRelation;
 use Alxtexh\Panel\Live\LiveConfig;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
@@ -90,11 +91,12 @@ final class ResourceController extends Controller
     }
 
     /**
-     * Re-resolve searchable option lists from the current form values.
+     * Re-resolve options and schema from the current form values.
      *
      * `live()` contract: the client POSTs `{ field, values }`. This returns
-     * `{ options: { fieldKey: [...] } }` so dependent relationship selects
-     * can refresh without Livewire. `visibleWhen` stays a client-side hide.
+     * `{ options, schema, values }` so afterStateUpdated-style server logic
+     * can hide, disable, or replace fields. `visibleWhen` stays a client-side
+     * hide. There is no Livewire round-trip.
      */
     public function formState(Request $request, string $resource): JsonResponse
     {
@@ -103,6 +105,15 @@ final class ResourceController extends Controller
         abort_unless($class::can('create') || $class::can('update'), 403);
 
         $values = (array) $request->input('values', []);
+        $changed = (string) $request->input('field', '');
+        $form = $class::formDefinition();
+
+        foreach ($form->fields() as $field) {
+            if ($changed !== '' && $field->key === $changed && $field->isLive()) {
+                $values = $field->applyAfterStateUpdated($values);
+            }
+        }
+
         $options = [];
 
         foreach ($this->searchableFields($class) as $field) {
@@ -113,7 +124,11 @@ final class ResourceController extends Controller
             $options[$field->key] = array_slice($field->search('', $values), 0, 25);
         }
 
-        return response()->json(['options' => $options]);
+        return response()->json([
+            'options' => $options,
+            'schema' => $form->toSchema($values),
+            'values' => $values,
+        ]);
     }
 
     /**
@@ -188,6 +203,30 @@ final class ResourceController extends Controller
         ]);
     }
 
+    /**
+     * Pick existing related records. A dedicated page, not a modal.
+     *
+     * BelongsToMany only. HasMany creates new children; this attaches rows
+     * that already exist. `/attach` is a fixed segment beside `/create`.
+     */
+    public function attachForm(Request $request, string $resource): Response
+    {
+        $class = $this->guard($resource);
+        $parent = NestedContext::parent($request, $class);
+
+        abort_if($parent === null || ! NestedRelation::belongsToMany($class), 404);
+        abort_unless($class::can('update'), 403);
+
+        return Inertia::render('ResourceAttach', [
+            'schema' => NestedContext::schema($class::schema(), $class, $parent),
+            'options' => NestedRelation::attachableOptions($parent, $class),
+            'breadcrumbs' => [
+                ...NestedContext::breadcrumbs($class, $parent),
+                ['title' => 'Attach', 'href' => '#'],
+            ],
+        ]);
+    }
+
     /** Read-only detail page. */
     public function show(Request $request, string $resource, string $id): Response
     {
@@ -203,7 +242,7 @@ final class ResourceController extends Controller
         $parent = NestedContext::parent($request, $class);
 
         if ($parent !== null) {
-            abort_unless((string) $record->getAttribute($class::parentColumn()) === (string) $parent->getKey(), 404);
+            abort_unless(self::childBelongs($class, $parent, $record), 404);
         }
 
         // Fetched through the TABLE's select and joins, so joined columns like
@@ -291,7 +330,7 @@ final class ResourceController extends Controller
         $parent = NestedContext::parent($request, $class);
 
         if ($parent !== null) {
-            abort_unless((string) $record->getAttribute($class::parentColumn()) === (string) $parent->getKey(), 404);
+            abort_unless(self::childBelongs($class, $parent, $record), 404);
         }
 
         $form = $class::formDefinition();
@@ -458,6 +497,23 @@ final class ResourceController extends Controller
         return $class;
     }
 
+    /**
+     * Whether this child row belongs to the URL parent.
+     *
+     * HasMany compares the foreign key. BelongsToMany checks the pivot.
+     * A miss is a 404, never a 403: confirming the row exists would leak.
+     *
+     * @param  class-string<resource>  $class
+     */
+    private static function childBelongs(string $class, Model $parent, Model $record): bool
+    {
+        if (NestedRelation::belongsToMany($class)) {
+            return NestedRelation::of($parent, $class)->whereKey($record->getKey())->exists();
+        }
+
+        return (string) $record->getAttribute($class::parentColumn()) === (string) $parent->getKey();
+    }
+
     public function index(Request $request, string $resource): Response
     {
         $class = app(PanelManager::class)->resource($resource);
@@ -492,10 +548,7 @@ final class ResourceController extends Controller
         $query = $definition->toListQuery($class::model());
 
         if ($parent !== null) {
-            $key = $parent->getKey();
-            $column = (new ($class::model()))->getTable().'.'.$class::parentColumn();
-
-            $query->constrain(static fn ($q) => $q->where($column, $key));
+            $query->constrain(static fn ($q) => NestedRelation::constrain($q, $class, $parent));
         }
 
         $result = $query->run($request);

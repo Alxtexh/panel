@@ -61,6 +61,11 @@ export interface FormField {
      * option lists. Not Livewire: the client emits, the server returns JSON.
      */
     live?: boolean;
+    /**
+     * Server-evaluated hide after a live() form-state patch.
+     * `visibleWhen` stays the cheap client-side rule.
+     */
+    hidden?: boolean;
     /** File fields: allowed extensions, the size ceiling, and preview intent. */
     accept?: string[];
     maxKilobytes?: number;

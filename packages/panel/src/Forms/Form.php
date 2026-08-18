@@ -99,11 +99,16 @@ final class Form
     /**
      * Structure only, safe to cache. Never resolves an option closure.
      *
+     * Pass `$values` after a live() round-trip so hidden/disabled closures
+     * evaluate against the posted form. Cached schema (no values) leaves those
+     * flags off; `visibleWhen` still hides cheaply on the client.
+     *
+     * @param  array<string, mixed>|null  $values
      * @return array<string, mixed>
      */
-    public function toSchema(): array
+    public function toSchema(?array $values = null): array
     {
-        return [
+        $schema = [
             'columns' => $this->columns,
             // The TREE, so the client can render layout. Fields are leaves.
             'nodes' => array_map(
@@ -114,6 +119,52 @@ final class Form
             // exist, and re-walking the tree client-side to find out is waste.
             'fields' => array_map(static fn (Field $f): array => $f->toSchema(), $this->fields()),
         ];
+
+        if ($values !== null) {
+            $schema = $this->applyLiveFlags($schema, $values);
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Overlay hidden/disabled from the current values onto a cached-shaped schema.
+     *
+     * @param  array<string, mixed>  $schema
+     * @param  array<string, mixed>  $values
+     * @return array<string, mixed>
+     */
+    private function applyLiveFlags(array $schema, array $values): array
+    {
+        $flags = [];
+
+        foreach ($this->fields() as $field) {
+            $flags[$field->key] = [
+                'hidden' => $field->isHidden($values),
+                'disabled' => $field->isDisabled($values),
+            ];
+        }
+
+        $patch = static function (array $node) use (&$patch, $flags): array {
+            if (($node['component'] ?? null) === 'field' && isset($flags[$node['key'] ?? ''])) {
+                $node['hidden'] = $flags[$node['key']]['hidden'] ? true : null;
+                $node['disabled'] = $flags[$node['key']]['disabled'] ? true : null;
+                $node = array_filter($node, static fn (mixed $v): bool => $v !== null);
+            }
+
+            foreach (['children', 'fields'] as $key) {
+                if (isset($node[$key]) && is_array($node[$key])) {
+                    $node[$key] = array_map($patch, $node[$key]);
+                }
+            }
+
+            return $node;
+        };
+
+        $schema['nodes'] = array_map($patch, $schema['nodes']);
+        $schema['fields'] = array_map($patch, $schema['fields']);
+
+        return $schema;
     }
 
     /**
@@ -191,6 +242,9 @@ final class Form
         $out = [];
 
         foreach (Component::visibleFields($this->nodes, $input) as $field) {
+            if ($field->isHidden($input)) {
+                continue;
+            }
             if (! array_key_exists($field->key, $input)) {
                 /*
                  * AN ABSENT KEY USUALLY MEANS "LEAVE IT ALONE" - a blank

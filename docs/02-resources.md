@@ -80,6 +80,10 @@ The parent is resolved from the URL and authorised: a caller must be able to
 404 rather than a 403 because confirming existence would itself leak. Writes
 stamp the parent from the URL, so a submitted foreign key cannot move the row.
 
+BelongsToMany: set `$relationship` to the parent model's method. Attach is a
+dedicated page at `/{parent}/{id}/{child}/attach`. Detach is a row action on
+the nested index. Not a modal, not Livewire.
+
 ## Relation managers
 
 The tab on the parent view page is a summary. It links to the nested pages
@@ -107,6 +111,7 @@ The dedicated view page can declare entries instead of reusing every table
 column:
 
 ```php
+use Alxtexh\Panel\Actions\Action;
 use Alxtexh\Panel\Infolists\IconEntry;
 use Alxtexh\Panel\Infolists\TextEntry;
 
@@ -115,9 +120,14 @@ public static function infolist(): array
     return [
         TextEntry::make('title'),
         IconEntry::make('status')->icons(['published' => 'check'])->colors(['published' => 'success']),
+        TextEntry::make('email')->action(
+            Action::make('copy')->handle(fn ($record) => $record->touch()),
+        ),
     ];
 }
 ```
+
+Click POSTs `{ action }` to `{resource}/{id}/infolist-action`. `Entry::url()` remains a plain link. The view page stays a dedicated page.
 
 ## Header widgets
 

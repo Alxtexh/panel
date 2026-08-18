@@ -42,6 +42,21 @@ endpoint with a nicer label.
 
 Group related actions with `ActionGroup`.
 
+## Infolist actions
+
+```php
+use Alxtexh\Panel\Actions\Action;
+use Alxtexh\Panel\Infolists\TextEntry;
+
+TextEntry::make('email')->action(
+    Action::make('copy')->handle(fn (Invoice $invoice) => $invoice->touch()),
+);
+```
+
+Click POSTs `{ action }` to `{resource}/{id}/infolist-action`. Same gates as a
+table `RecordAction`: the key must be declared, the ability is checked against
+this record. `Entry::url()` remains. The view page stays dedicated.
+
 ## Bulk actions
 
 ```php

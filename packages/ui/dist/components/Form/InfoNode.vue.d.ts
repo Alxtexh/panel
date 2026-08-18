@@ -23,7 +23,19 @@ type __VLS_Props = {
     /** 0 is the outermost layout node - the only one that draws a frame. */
     depth?: number;
 };
-declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
+declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
+    action: (action: {
+        key: string;
+        label?: string;
+        confirmation?: string;
+    }) => any;
+}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
+    onAction?: ((action: {
+        key: string;
+        label?: string;
+        confirmation?: string;
+    }) => any) | undefined;
+}>, {
     depth: number;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

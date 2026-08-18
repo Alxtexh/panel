@@ -259,6 +259,35 @@ function render(key: string): string {
     return [column?.prefix, text, column?.suffix].filter(Boolean).join(' ')
 }
 
+async function runInfolistAction(action: { key: string; label?: string }) {
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+    const token = match ? decodeURIComponent(match[1]) : ''
+
+    const response = await fetch(
+        `${props.schema.routes.index}/${props.record.id}/infolist-action`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': token,
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: action.key }),
+        },
+    )
+
+    if (!response.ok) {
+        toast.error('Could not run that action')
+
+        return
+    }
+
+    toast.success(action.label ?? 'Done')
+    router.reload()
+}
+
 function destroy() {
     if (!window.confirm(`Delete ${title.value}? This cannot be undone.`)) {
         return
@@ -303,7 +332,7 @@ function destroy() {
 
         <!-- Layout tree: tabs and sections, same components the form uses. -->
         <template v-if="hasLayout">
-            <InfoNode v-for="(node, i) in schema.infolist" :key="i" :node="node" :record="record" />
+            <InfoNode v-for="(node, i) in schema.infolist" :key="i" :node="node" :record="record" @action="runInfolistAction" />
         </template>
 
         <!-- Fallback: a definition list. One record's attributes read better as

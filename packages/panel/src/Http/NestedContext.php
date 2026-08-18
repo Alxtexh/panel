@@ -119,6 +119,10 @@ final class NestedContext
             'destroy' => $base.'/{id}',
         ];
 
+        if (NestedRelation::belongsToMany($class)) {
+            $schema['routes']['attach'] = $base.'/attach';
+        }
+
         return $schema;
     }
 

@@ -80,10 +80,19 @@ const form = useForm<Record<string, any>>({ ...withDownloadUrls(props.values) })
 
 const liveOptions = ref({ ...props.formOptions })
 
+const formSchema = ref(props.schema.form)
+
 watch(
     () => props.formOptions,
     (next) => {
         liveOptions.value = { ...next }
+    },
+)
+
+watch(
+    () => props.schema.form,
+    (next) => {
+        formSchema.value = next
     },
 )
 
@@ -361,14 +370,14 @@ function cancel() {
  * with from inside an expression. Hoisting it is clearer anyway: template
  * expressions are not where type surgery belongs.
  */
-const formFields = computed(() => props.schema.form.fields as FormField[] | undefined)
+const formFields = computed(() => formSchema.value.fields as FormField[] | undefined)
 
 function fieldIsLive(key: string): boolean {
     if ((formFields.value ?? []).some((field) => field.key === key && field.live)) {
         return true
     }
 
-    return nodeHasLiveField(props.schema.form.nodes, key)
+    return nodeHasLiveField(formSchema.value.nodes, key)
 }
 
 function nodeHasLiveField(nodes: any[] | undefined, key: string): boolean {
@@ -416,6 +425,16 @@ async function onFieldChange(key: string, value: any): Promise<void> {
 
     if (payload.options && typeof payload.options === 'object') {
         liveOptions.value = { ...liveOptions.value, ...payload.options }
+    }
+
+    if (payload.schema && typeof payload.schema === 'object') {
+        formSchema.value = payload.schema
+    }
+
+    if (payload.values && typeof payload.values === 'object') {
+        for (const [k, v] of Object.entries(payload.values as Record<string, unknown>)) {
+            ;(form as any)[k] = v
+        }
     }
 }
 
@@ -518,12 +537,12 @@ onBeforeUnmount(() => {
             their own frame, and wrapping them puts a border around a border.
             The flat fallback has no frame of its own, so it still gets one.
         -->
-        <div :class="schema.form.nodes?.length ? '' : 'bg-card rounded-lg border p-4 sm:p-6'">
+        <div :class="formSchema.nodes?.length ? '' : 'bg-card rounded-lg border p-4 sm:p-6'">
             <RecordForm
                 :model-value="formValues"
-                :nodes="schema.form.nodes"
+                :nodes="formSchema.nodes"
                 :fields="formFields"
-                :columns="schema.form.columns"
+                :columns="formSchema.columns"
                 :errors="form.errors as any"
                 :options="liveOptions"
                 :processing="form.processing"

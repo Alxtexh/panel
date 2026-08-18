@@ -45,6 +45,10 @@ const props = withDefaults(
     { depth: 0 },
 )
 
+const emit = defineEmits<{
+    (e: 'action', action: { key: string; label?: string; confirmation?: string }): void
+}>()
+
 const open = ref(!props.node.collapsed)
 const activeTab = ref(0)
 
@@ -138,6 +142,14 @@ const badgeVariant = computed(() => {
             >
                 {{ display }}
             </span>
+            <button
+                v-if="node.action"
+                type="button"
+                class="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
+                @click="emit('action', node.action)"
+            >
+                {{ node.action.label }}
+            </button>
         </dd>
     </div>
 
@@ -173,6 +185,7 @@ const badgeVariant = computed(() => {
                 :node="child"
                 :record="record"
                 :depth="depth + 1"
+                @action="emit('action', $event)"
             />
         </dl>
     </section>
@@ -185,6 +198,7 @@ const badgeVariant = computed(() => {
             :node="child"
             :record="record"
             :depth="depth + 1"
+            @action="emit('action', $event)"
         />
     </dl>
 
@@ -226,6 +240,7 @@ const badgeVariant = computed(() => {
                 :node="child"
                 :record="record"
                 :depth="depth + 1"
+                @action="emit('action', $event)"
             />
         </div>
     </div>

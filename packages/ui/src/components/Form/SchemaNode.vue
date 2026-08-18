@@ -189,6 +189,10 @@ function tabHasError(tab: SchemaNode): boolean {
  * looks like a missing field rather than a comparison bug.
  */
 function conditionMet(node: Record<string, any>): boolean {
+    if (node.hidden) {
+        return false
+    }
+
     const condition = node.visibleWhen
 
     if (!condition) {

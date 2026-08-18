@@ -69,8 +69,9 @@ field cannot be submitted by a crafted request.
 
 `live()` is the Inertia equivalent of Filament's live fields. After the field
 changes, the page POSTs `{ field, values }` to `{resource}/form-state`. The
-server returns `{ options: { fieldKey: [...] } }`. `visibleWhen` stays a
-client-side hide. There is no Livewire round-trip.
+server returns `{ options, schema, values }` so `afterStateUpdated` can hide,
+disable, or replace fields. `visibleWhen` stays a client-side hide. There is
+no Livewire round-trip.
 
 ### SelectField::relationship()
 

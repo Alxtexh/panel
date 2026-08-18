@@ -323,6 +323,15 @@ final class Blueprint
         8. **Every screen needs a way in.** A page that is in no menu is
            indistinguishable from one nobody wrote. Resources place themselves;
            anything else goes in `App\Panel\Pages` or the coverage test fails.
+
+        ## Kit conventions
+
+        Dedicated pages only: create, edit, view, attach and detach are routes,
+        never a modal and never Livewire. BelongsTo pickers use
+        `SelectField::relationship()`. Nested resources live at
+        `/{parent}/{id}/{child}`; BelongsToMany attach is
+        `/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas.
+        Catalog is not in core. Do not resurrect dashboard sample widgets.
         MD;
     }
 
@@ -679,16 +688,23 @@ final class Blueprint
         parent segment is the authorisation context: every request resolves
         the parent through its own tenant-scoped model, checks `view` on it,
         constrains the list to its rows, and stamps the foreign key on create
-        from the URL, never from the form body. Use it when the child only
-        makes sense inside one parent record; a relation manager remains the
-        right tool for a glance on the parent's own page.
+        from the URL, never from the form body. Dedicated pages only, never a
+        modal, never Livewire. Use it when the child only makes sense inside
+        one parent record; a relation manager remains the right tool for a
+        glance on the parent's own page.
+
+        BelongsToMany: set `$relationship` to the parent model's method. The
+        nested index lists attached rows; `/{parent}/{id}/{child}/attach` picks
+        existing records; detach is a row action. Another tenant's id is a 404,
+        not a 403.
 
         ```php
         final class ClientSessionResource extends Resource
         {
             protected static string $model = ClientSession::class;
             protected static ?string $parent = ClientResource::class;
-            // foreign key defaults to client_id; override with $parentColumn
+            // HasMany: foreign key defaults to client_id; override with $parentColumn
+            // BelongsToMany: protected static ?string $relationship = 'tags';
         }
         ```
 
