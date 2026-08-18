@@ -1,20 +1,22 @@
-# Dashboard starter
+# Alxtexhpanel
 
-A Laravel + Inertia + Vue dashboard, meant to be **copied as the starting point
-for a new dashboard** rather than installed as a dependency.
+A Laravel + Inertia + Vue admin panel you install into an app. Filament's
+developer experience, SPA transport.
 
-**[Full documentation →](docs/README.md)** — every field, column, filter, action,
+**[Full documentation →](docs/README.md)** for every field, column, filter, action,
 widget and command, and how to switch each part on.
 
-The demo application in `apps/playground` is the reference: its shell, sidebar,
-tables, charts and forms are the design. A new dashboard starts from that and
-replaces the data.
+```bash
+composer require alxtexh-enterprise/panel:^1.0
+php artisan panel:install
+npm install && npm run build
+```
 
-> **This paragraph is the direction, and it is settled.** `STARTER_PLAN.md`
-> argues the opposite — that the packages are the product and nothing is
-> cloned. It is superseded and marked as such. A session followed it instead of
-> this file and spent itself building a delivery model nobody asked for, so if
-> the two ever appear to disagree again: **this one wins.**
+First visit is **chrome plus an empty canvas**: dashboard, user menu, Get started.
+Not Nairobi Fibre, not sample orders. Create and edit are dedicated pages.
+
+`apps/playground` is an **ISP demo application**, not the kit default. Use it to
+see a fully dressed vertical. Judge a fresh install from `panel:install`.
 
 Add a screen by writing **one PHP class**. No Vue.
 
@@ -43,15 +45,11 @@ actions.
 
 ---
 
-## Starting a new dashboard from this
+## Running the ISP demo
 
-This repository **is** the product. **`public/build/` is committed**, so a clone
-needs no Node toolchain and no `npm run build` - which is the half that actually
-costs a newcomer time. `vendor/` is not committed: cloning with it in the tree
-fails on Windows, because `aws-sdk-php` and `phpunit` carry paths that blow the
-260-character `MAX_PATH` and the clone aborts partway.
-
-So one `composer install`, and nothing else:
+The playground is a fully dressed demo, not a starter you copy as the product.
+**`public/build/` is committed**, so a clone of this monorepo can run the demo
+without Node. `vendor/` is not committed.
 
 ```bash
 git clone <this-repo> myapp && cd myapp/apps/playground
@@ -87,7 +85,9 @@ cp .env.example .env && php artisan key:generate
 php artisan migrate --seed && php artisan panel:permissions sync
 ```
 
-Then `php artisan serve` and `http://localhost:8000`.
+Then `composer run serve` (or `composer run dev` for PHP + Vite) and
+`http://127.0.0.1:8899`. Do not start serve from a Cursor agent terminal; those
+sessions abort it. Use a real terminal, or `nohup php artisan serve --host=127.0.0.1 --port=8899`.
 
 **`panel:permissions sync` is not optional.** The panel denies by default, so an
 installation with an empty permissions table shows a working sign-in and then an
@@ -128,7 +128,7 @@ Then `http://localhost:8000`. `make help` lists everything.
 ```
 packages/panel/    The PHP half: resources, pages, commands, widgets
 packages/ui/       The Vue half: shell, tables, charts, form fields
-apps/playground/   The demo application - the design reference and the starter
+apps/playground/   Demo ISP app (Nairobi Fibre). Not the kit default.
 ```
 
 The split is a workspace, not a distribution: `apps/playground` consumes both

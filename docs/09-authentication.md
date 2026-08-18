@@ -8,7 +8,8 @@ section rather than failing to render.
 ## Sign-in
 
 ```bash
-php artisan panel:install --auth              # the default panel
+php artisan panel:install                     # auth is on by default
+php artisan panel:install --no-auth           # keep a starter-kit login
 php artisan make:panel reseller --auth        # a generated portal
 ```
 

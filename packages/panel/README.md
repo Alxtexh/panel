@@ -26,6 +26,10 @@ php artisan panel:install
 npm install && npm run build
 ```
 
+First visit is dashboard, user menu, and Get started. Auth is on by default;
+`--no-user` skips the Administrator so you can see the empty-sidebar notice.
+`--no-auth` keeps a starter-kit login.
+
 **There is no second install.** The Vue screens ship *inside* this Composer package
 at `resources/client`, and `panel:install` points your `package.json` at them with a
 `file:` dependency — so npm needs no registry and no token either. One source, one

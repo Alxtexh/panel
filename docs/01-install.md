@@ -1,6 +1,6 @@
 # 1. Install
 
-## From GitHub — no registry account needed
+## From GitHub, no registry account needed
 
 Alxtexhpanel is not on Packagist or npm, and does not need to be. Add the
 repository to your application's `composer.json`:
@@ -19,9 +19,12 @@ php artisan panel:install
 npm install && npm run build
 ```
 
+Run `npm install && npm run build` in **your** terminal. Filament publishes CSS;
+this kit needs Vite once. Skipping that step is a blank white page.
+
 **`"no-api": true` is load-bearing.** Without it Composer calls GitHub's API for
 a VCS repository and authenticates even for a public one, failing with
-`Could not authenticate against github.com` — which reads as the repository
+`Could not authenticate against github.com`, which reads as the repository
 being private. With it, Composer clones and no credential is involved.
 
 **There is no second install for the front end.** The Vue screens ship *inside*
@@ -29,55 +32,88 @@ the Composer package at `resources/client`, and `panel:install` points your
 `package.json` at them with a `file:` dependency. One source, one version, and
 the two halves cannot drift apart.
 
+## What first visit looks like
+
+A fresh install is **chrome plus an empty canvas**, not the Nairobi Fibre ISP
+demo. After sign-in you should see:
+
+- the dashboard (no sample revenue or orders)
+- the user menu (Profile, Settings, Log out)
+- a **Get started** card with kit chrome steps
+- Directory in the sidebar once you hold Administrator
+
+Create and edit stay **dedicated pages**. They are not Livewire modals.
+
+`apps/playground` in this monorepo is a **demo application** (an ISP back office)
+for design reference. It is not the kit default and not what `panel:install`
+writes.
+
 ## What `panel:install` does
 
 It is idempotent and never overwrites a file you have edited. Running it twice
 leaves `package.json` byte-identical.
 
+Auth is **on by default** (login exists), matching `filament:install --panels`.
+Pass `--no-auth` to skip. After install it prompts for `panel:make-user` and
+grants **Administrator** (`grants_all`) so the sidebar is not empty. Pass
+`--no-user` to skip. It also runs `panel:permissions sync`, appends
+`SharePanelProps` to the `web` middleware group, and sets tenancy to `none`
+when the users table has no `tenant_id`.
+
 | Step | Result |
 |---|---|
-| Publishes `config/panel.php` | Every option, commented |
+| Publishes `config/panel.php` | Every option, commented. Tenancy default `none` |
 | Publishes kit lang (`panel-lang`) | `lang/vendor/panel/{en,es}` - overlay with `__('panel::...')` |
 | Writes `resources/views/app.blade.php` | The root view Inertia renders into |
 | Writes `resources/js/app.ts` | Inertia bootstrap with `PanelLayout` + nested `SettingsLayout` for settings pages |
 | Writes `resources/js/layouts/PanelLayout.vue` | A layout you are meant to replace |
-| Merges `resources/css/app.css` | Points Tailwind at the package — **without this you get a working panel with no styling** |
+| Merges `resources/css/app.css` | Points Tailwind at the package. Without this you get a working panel with no styling |
 | Wires `vite.config.js` | Adds the Vue plugin if the app has none |
+| Appends `SharePanelProps` to `web` | App-owned routes keep the shell (account menu, footer). This is not optional |
 | Writes core page files | Auth, CRUD, settings, dashboard host, Directory chrome hub, and the SaaS suspended-access screen. Catalog / PlanSetup / Signatures stay optional (`PanelPages::writeOptional()`) |
 | Writes empty `DashboardPage` | No sample revenue or orders; host fills `stats()` / `charts()` |
+| Scaffolds sign-in | Default. `--no-auth` to skip |
+| Syncs permissions + first user | Administrator with `grants_all`. `--no-user` to skip |
 | Creates `app/Panel/` | Where your resources live |
 | Writes `AGENTS.md` | Conventions, regenerate with `panel:blueprint` |
 
-Add `--auth` to also scaffold sign-in, sign-out and password reset for the
-default panel. Add `--force` to overwrite the published config and page files.
+Non-interactive first user:
+
+```bash
+php artisan panel:install --name="Ada" --email=ada@example.com --password=secret
+```
+
+Add `--force` to overwrite the published config and page files.
 
 ## After installing
 
-**1. Decide your tenancy mode.** The panel denies every query when it expects a
-tenant and cannot resolve one — a deliberate deny-by-default. For a
-single-tenant application:
-
-```php
-// config/panel.php
-'tenancy' => ['mode' => 'none'],
-```
-
-For multi-tenant, add a `tenant_id` column to your users table and leave the
-mode as `column`. See [Authorisation and tenancy](08-authorisation-and-tenancy.md).
-
-**2. Create the ability names and an administrator.**
+**1. Build assets** (required):
 
 ```bash
-php artisan panel:permissions sync
+npm install && npm run build
+```
+
+**2. Serve from a real terminal.** Cursor agent shells abort `php artisan serve`.
+Use your own terminal, or:
+
+```bash
+composer run serve
+# or
+nohup php artisan serve --host=127.0.0.1 --port=8899 > storage/logs/serve.log 2>&1 &
+```
+
+**3. Tenancy is `none` unless you asked for more.** Add a `tenant_id` column and
+set `panel.tenancy.mode` to `column` when you actually have organisations. See
+[Authorisation and tenancy](08-authorisation-and-tenancy.md).
+
+**4. Empty sidebar** only happens with `--no-user` (or if you skipped the
+prompt). That is deny-by-default with no grants, not a broken install:
+
+```bash
 php artisan panel:make-user
 ```
 
-**Without a role, every screen is empty and most menu entries are absent.**
-This is the single most common "the panel is missing things" report, and it is
-authorisation working correctly — see
-[Built-in screens](10-built-in-screens.md).
-
-**3. Add a resource.**
+**5. Add a resource.**
 
 ```bash
 php artisan make:panel-resource Invoice --generate
@@ -86,7 +122,7 @@ php artisan make:panel-resource Invoice --generate
 `--generate` reads the table and infers columns, fields and filters. Visit
 `/invoices`; discovery registers it, and there is no route to add.
 
-**4. Review the generated policy.** The panel denies any ability whose model has
+**6. Review the generated policy.** The panel denies any ability whose model has
 no policy, so an unreviewed stub is a real grant.
 
 ## Checking your work
@@ -95,7 +131,7 @@ no policy, so an unreviewed stub is a real grant.
 php artisan panel:doctor
 ```
 
-Every check in `panel:doctor` exists because the failure is otherwise **silent** —
+Every check in `panel:doctor` exists because the failure is otherwise **silent**,
 a working panel serving wrong or unprotected data, where every page returns 200
 and every test passes. Run it first on any new installation.
 

@@ -62,7 +62,11 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "@php artisan dev"
+            "npx concurrently -c \"#93c5fd,#c4b5fd\" \"php artisan serve --host=127.0.0.1 --port=8899\" \"npm run dev\" --names=server,vite --kill-others"
+        ],
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan serve --host=127.0.0.1 --port=8899"
         ],
         "lint": [
             "pint --parallel"

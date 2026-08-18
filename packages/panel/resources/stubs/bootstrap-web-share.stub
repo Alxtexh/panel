@@ -1,0 +1,8 @@
+<?php
+
+// Appended by panel:install. Default stub for new apps.
+// App-owned web routes keep the shell only when SharePanelProps is on this group.
+
+$middleware->web(append: [
+    \Alxtexh\Panel\Http\Middleware\SharePanelProps::class,
+]);

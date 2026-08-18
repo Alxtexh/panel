@@ -4,7 +4,7 @@
 
 | Command | Does |
 |---|---|
-| `panel:install` | Publish config, page files, layout, wire Vite. `--auth`, `--force` |
+| `panel:install` | Publish config, page files, layout, wire Vite, scaffold auth (default), sync permissions, first Administrator. `--no-auth`, `--no-user`, `--name`, `--email`, `--password`, `--force` |
 | `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard`, `--guard-model`, `--central`, `--auth` |
 | `make:panel-resource` | A resource. `--generate` infers from the table, `--panel=` |
 | `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`, `--api-keys`, `--invites`, `--feature-flags`, `--webhooks`, `--billing-portal`, `--email-templates`, `--onboarding`, `--media-library` |

@@ -67,7 +67,8 @@ somebody else's data, and `panel:doctor` tells you which are missing.
 
 ## This is not tied to any industry
 
-The reference application under `apps/playground` is an ISP billing system, and
-that is a fixture rather than the product. Two test suites enforce it — one over
-the Vue, one over the PHP — so no shipped string can assume a business. Build a
-veterinary practice, a law firm or a warehouse on the same package.
+A fresh `panel:install` is chrome plus an empty canvas: dashboard, user menu,
+Get started. The application under `apps/playground` is an **ISP demo**
+(Nairobi Fibre), not the kit default. Two test suites enforce that no shipped
+string assumes a business. Build a veterinary practice, a law firm or a
+warehouse on the same package.

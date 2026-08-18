@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 use Alxtexh\Panel\Support\PanelPages;
 use Alxtexh\Panel\Support\UserRoles;
+use Alxtexh\Panel\Support\WebSharePanelProps;
 use Symfony\Component\Process\Process;
 
 /**
@@ -26,10 +27,15 @@ final class InstallCommand extends Command
     use Concerns\ScaffoldsPanelAuth;
 
     protected $signature = 'panel:install
-                            {--auth : Also scaffold sign-in, sign-out and password reset for the default panel}
+                            {--auth : (Default) Scaffold sign-in. Kept so older docs still work}
+                            {--no-auth : Skip scaffolding sign-in}
+                            {--no-user : Skip creating the first Administrator}
+                            {--name= : First Administrator name (with --email and --password)}
+                            {--email= : First Administrator email}
+                            {--password= : First Administrator password (non-interactive; prefer a prompt)}
                             {--force : Overwrite the published config and page files}';
 
-    protected $description = 'Publish config, create the app/Panel tree and the page files, and print next steps';
+    protected $description = 'Publish config, scaffold auth, create the first Administrator, sync permissions, and print next steps';
 
     public function handle(): int
     {
@@ -39,6 +45,7 @@ final class InstallCommand extends Command
         $this->ensureInertiaScriptElement();
         $this->createTree();
         $this->publishBootstrap();
+        $this->wireSharePanelProps();
         $this->wireVite();
         $this->scaffoldPackageJson();
         $this->repointViews();
@@ -48,7 +55,7 @@ final class InstallCommand extends Command
         $this->writeDirectory();
         $this->writePageFiles();
 
-        if ($this->option('auth')) {
+        if ($this->shouldScaffoldAuth()) {
             $this->scaffoldAuth();
             $this->enableDefaultPasswordReset();
             $this->writeLocalAuthPrefill();
@@ -72,42 +79,150 @@ final class InstallCommand extends Command
          * before Composer’s in-memory classmap knows about laravel/passkeys
          * fatals the install with a trait-not-found error.
          */
-        if ($this->option('auth')) {
+        if ($this->shouldScaffoldAuth()) {
             $this->wirePasskeyUserModel();
         }
 
+        $this->syncPermissions();
+        $this->createFirstUser();
+
         $this->newLine();
-        $this->components->info('Done. Next:');
+        $this->components->info('Done. Required next line (Filament publishes CSS; we need Vite once):');
         /*
          * THIS IS THE STEP THAT STRANDS PEOPLE - skip it and every route
          * answers 200 with a blank screen - so it prints as something to
          * paste rather than something to work out.
          */
-        $this->line('  1. npm install && npm run build');
-        $this->line('     The screens are Vue and come from `resources/client` inside this');
-        $this->line('     Composer package (`file:vendor/alxtexh-enterprise/panel/resources/client`).');
-        $this->line('     Path repositories must copy, not symlink (`"symlink": false`), or');
-        $this->line('     Vite resolves types outside the app and the build fails.');
-        $this->line('     The published resources/css/app.css already points Tailwind at it -');
-        $this->line('     without that every utility used only inside the package is purged,');
-        $this->line('     and you get a correct table with no styling at all.');
-        $this->line('  2. Add a `tenant_id` column to your admin users table, or configure');
-        $this->line('     panel.tenancy.resolver for stancl/tenancy. For a single-tenant app,');
-        $this->line('     set panel.tenancy.mode to "none" instead.');
+        $this->line('  npm install && npm run build');
+        $this->line('  The screens are Vue and come from `resources/client` inside this');
+        $this->line('  Composer package (`file:vendor/alxtexh-enterprise/panel/resources/client`).');
+        $this->newLine();
+        $this->components->info('Then:');
+        $this->line('  1. php artisan serve   (a real terminal, not a Cursor agent shell)');
+        $this->line('  2. Visit /login. First paint is dashboard + user menu + Get started,');
+        $this->line('     not a vertical demo. Create/edit stay dedicated pages.');
         $this->line('  3. php artisan make:panel-resource YourModel --generate');
         $this->line('  4. Review the generated policy - the panel DENIES any ability whose');
         $this->line('     model has no policy, so an unreviewed stub is a real grant.');
-        $this->line('  5. Visit /your-models. Discovery registers it; there is no route to add.');
-        $this->line('  6. php artisan panel:permissions sync');
-        $this->line('     Then grant one account: php artisan panel:permissions grant --email=you@example.com');
-        $this->line('     The installer does not grant every ability. Until someone is an');
-        $this->line('     Administrator, the dashboard explains that you have no grants.');
+        $this->newLine();
+        $this->line('  Without a first user (`--no-user`) the sidebar is empty: that is');
+        $this->line('  deny-by-default, not a broken install. Run panel:make-user.');
         $this->newLine();
         $this->line('  AGENTS.md now holds the conventions and the full list of fields,');
         $this->line('  columns, filters and actions available. Re-run `panel:blueprint`');
         $this->line('  after adding resources - it is generated, so it stays true.');
 
         return self::SUCCESS;
+    }
+
+    /** Auth is on by default, matching `filament:install --panels`. */
+    private function shouldScaffoldAuth(): bool
+    {
+        return ! (bool) $this->option('no-auth');
+    }
+
+    /**
+     * Chrome props on every web route, including ones this application owns.
+     *
+     * Packaged panel routes already run SharePanelProps after UsePanel. Host
+     * pages do not unless the class is on the `web` group. See
+     * `Support\WebSharePanelProps`.
+     */
+    private function wireSharePanelProps(): void
+    {
+        $path = base_path('bootstrap/app.php');
+
+        if (! is_file($path)) {
+            $this->components->warn(
+                'No bootstrap/app.php. Append SharePanelProps to the web middleware group by hand:',
+            );
+            $this->line(WebSharePanelProps::SNIPPET);
+
+            return;
+        }
+
+        $source = (string) file_get_contents($path);
+
+        if (WebSharePanelProps::present($source)) {
+            $this->components->twoColumnDetail('Already on web group', 'SharePanelProps');
+
+            return;
+        }
+
+        $updated = WebSharePanelProps::add($source);
+
+        if ($updated === null) {
+            $this->components->warn(
+                'Could not append SharePanelProps to the web group automatically. Add:',
+            );
+            $this->line('  '.WebSharePanelProps::IMPORT);
+            $this->line(WebSharePanelProps::SNIPPET);
+
+            return;
+        }
+
+        file_put_contents($path, $updated);
+        $this->components->twoColumnDetail('Appended to web group', 'SharePanelProps');
+    }
+
+    /**
+     * Ability rows and an Administrator role, before the first user is created.
+     */
+    private function syncPermissions(): void
+    {
+        try {
+            $this->call('panel:permissions', ['action' => 'sync']);
+        } catch (\Throwable $e) {
+            $this->components->warn(
+                'Could not run panel:permissions sync ('.$e->getMessage().'). Run it by hand.',
+            );
+        }
+    }
+
+    /**
+     * The first account, with Administrator / grants_all, so day one is not an
+     * empty sidebar. `--no-user` skips this; that empty-grants notice is then
+     * the honest state, not a surprise.
+     */
+    private function createFirstUser(): void
+    {
+        if ((bool) $this->option('no-user')) {
+            $this->components->twoColumnDetail(
+                'Skipped first user',
+                '--no-user. Sidebar stays empty until panel:make-user.',
+            );
+
+            return;
+        }
+
+        $name = $this->option('name');
+        $email = $this->option('email');
+        $password = $this->option('password');
+
+        if (is_string($name) && $name !== ''
+            && is_string($email) && $email !== ''
+            && is_string($password) && $password !== '') {
+            $this->call('panel:make-user', [
+                '--name' => $name,
+                '--email' => $email,
+                '--password' => $password,
+            ]);
+
+            return;
+        }
+
+        if ($this->input->isInteractive()) {
+            if ($this->confirm('Create an Administrator so the sidebar is not empty?', true)) {
+                $this->call('panel:make-user');
+            }
+
+            return;
+        }
+
+        $this->components->warn(
+            'No first user created (non-interactive, no --name/--email/--password). '
+            .'Run `php artisan panel:make-user` or pass those flags. Without a role the sidebar is empty.',
+        );
     }
 
     /**
@@ -1366,15 +1481,14 @@ PHP;
          */
         $written = $this->writeTenancyMode('none');
 
-        $this->components->warn(
-            "Your users table has no [{$column}] column, so the panel cannot resolve a tenant "
-            .'in shared-database mode - it would deny every query and every write.'
+        $this->components->info(
+            "No [{$column}] column on the users table, so tenancy is single-tenant (`none`).",
         );
 
         $this->components->twoColumnDetail(
             $written ? 'Set panel.tenancy.mode' : 'Set panel.tenancy.mode by hand',
             $written
-                ? 'none - single-tenant. Change it to "column" once your users table has one.'
+                ? 'none. Switch to "column" once your users table has a tenant id.'
                 : 'none - could not edit config/panel.php; set it yourself.',
         );
     }
@@ -1467,7 +1581,8 @@ PHP;
         $this->line('  first panel page fails with "Route [login] not defined" - which does');
         $this->line('  not mention authentication and is not obviously about this package.');
         $this->line('  Either:');
-        $this->line('    php artisan panel:install --auth    # this package\'s sign-in, on this panel\'s guard');
+        $this->line('    php artisan panel:install              # auth is on by default');
+        $this->line('    php artisan panel:install --no-auth    # if you already have a starter-kit login');
         $this->line('  or install a starter kit (Breeze, Jetstream) or Fortify, or define a');
         $this->line('  route named `login` yourself.');
     }

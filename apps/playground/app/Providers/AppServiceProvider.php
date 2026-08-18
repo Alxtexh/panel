@@ -112,7 +112,7 @@ class AppServiceProvider extends ServiceProvider
          * replaces it - userland registration outranks the framework's.
          */
         if ($this->app->runningInConsole()) {
-            DevCommands::artisan('serve --host=127.0.0.1', 'server');
+            DevCommands::artisan('serve --host=127.0.0.1 --port=8899', 'server');
         }
 
         // Explicit registration for now. Filesystem discovery (spec S6

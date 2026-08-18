@@ -40,7 +40,9 @@ final class EmptyCoreInstallTest extends TestCase
         $this->assertStringContainsString('return [', $install);
         $this->assertStringNotContainsString('givePermissionTo', $install);
         $this->assertStringNotContainsString('grantsEverything', $install);
-        $this->assertStringContainsString('does not grant every ability', $install);
+        $this->assertStringContainsString('--no-user', $install);
+        $this->assertStringContainsString('createFirstUser', $install);
+        $this->assertStringContainsString('grants_all', $install);
     }
 
     public function test_demo_screens_are_optional_not_default(): void
@@ -94,5 +96,70 @@ final class EmptyCoreInstallTest extends TestCase
         $this->assertStringNotContainsString('Clients', $source);
         $this->assertStringNotContainsString('Routers', $source);
         $this->assertStringNotContainsString('coffee', $source);
+    }
+
+    public function test_auth_is_on_by_default_with_an_opt_out(): void
+    {
+        $install = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
+        );
+
+        $this->assertStringContainsString('{--no-auth', $install);
+        $this->assertStringContainsString('shouldScaffoldAuth', $install);
+        $this->assertStringContainsString('option(\'no-auth\')', $install);
+        $this->assertStringContainsString('scaffoldAuth', $install);
+        $auth = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Commands/Concerns/ScaffoldsPanelAuth.php'
+        );
+
+        $this->assertStringContainsString('routes/panel-', $auth);
+        $this->assertStringContainsString('PanelAuthController', $auth);
+        $this->assertStringContainsString('.login', $auth);
+        $this->assertStringContainsString('showLogin', $auth);
+    }
+
+    public function test_install_prints_npm_as_the_required_next_line(): void
+    {
+        $install = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
+        );
+
+        $this->assertStringContainsString('npm install && npm run build', $install);
+        $this->assertStringContainsString('Required next line', $install);
+        $this->assertStringContainsString('panel:permissions', $install);
+        $this->assertStringContainsString('syncPermissions', $install);
+        $this->assertStringContainsString('wireSharePanelProps', $install);
+        $this->assertStringNotContainsString('Add a `tenant_id` column', $install);
+    }
+
+    public function test_empty_sidebar_is_the_no_user_path_not_the_default(): void
+    {
+        $install = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
+        );
+
+        $this->assertStringContainsString('Without a first user (`--no-user`) the sidebar is empty', $install);
+        $this->assertStringContainsString('deny-by-default, not a broken install', $install);
+    }
+
+    public function test_published_tenancy_default_is_none(): void
+    {
+        $config = (string) file_get_contents(
+            dirname(__DIR__, 2).'/config/panel.php'
+        );
+
+        $this->assertStringContainsString("env('PANEL_TENANCY_MODE', 'none')", $config);
+        $this->assertStringNotContainsString("env('PANEL_TENANCY_MODE', 'column')", $config);
+    }
+
+    public function test_install_help_names_the_filament_gap_flags(): void
+    {
+        $this->artisan('panel:install', ['--help' => true])
+            ->expectsOutputToContain('--no-auth')
+            ->expectsOutputToContain('--no-user')
+            ->expectsOutputToContain('--name')
+            ->expectsOutputToContain('--email')
+            ->expectsOutputToContain('--password')
+            ->assertSuccessful();
     }
 }

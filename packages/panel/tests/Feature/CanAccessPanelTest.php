@@ -86,6 +86,10 @@ final class CanAccessPanelTest extends TestCase
         $this->assertTrue($props['panelEmptyGrants'] ?? false);
         $this->assertSame(__('panel::grants.empty.title'), $props['panelEmptyGrantsHint']['title'] ?? null);
         $this->assertContains(
+            'php artisan panel:make-user',
+            $props['panelEmptyGrantsHint']['commands'] ?? [],
+        );
+        $this->assertContains(
             'php artisan panel:permissions sync',
             $props['panelEmptyGrantsHint']['commands'] ?? [],
         );
