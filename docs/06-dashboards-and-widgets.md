@@ -71,17 +71,56 @@ ChartWidget::make('revenue', 'Revenue')->withPeriods()
 
 The click re-runs one grouped query, not every counter on the page.
 
-## Polling
+## Polling and live updates
+
+Priority, and why:
+
+1. **Reverb / Echo** when the host has `window.Echo` (Laravel Reverb, typically
+   with Redis as Laravel's cache / queue / broadcast backend). Push, no
+   periodic HTTP, scales to many open dashboards.
+2. **HTTP poll** when Echo is absent. Works on a stock PHP-FPM install. Cost is
+   N widgets times the interval in requests. Pauses while the tab is hidden.
+3. **Redis** is not a UI transport. Use it for `CACHE_STORE` /
+   `QUEUE_CONNECTION` / `BROADCAST_CONNECTION` if the host already runs it.
+   The kit does not require Redis and does not start Reverb.
+
+Never poll and subscribe for the same widget. Set both in PHP so a host
+without Reverb still refreshes:
 
 ```php
 StatWidget::make('online', 'Online')
     ->value(fn (): int => Session::query()->where('status', 'online')->count())
+    ->live('dashboard.stats')
     ->poll('10s');
 ```
 
-`poll()` is the same `CanPoll` API as `ChartWidget` and `TableWidget`: seconds
-as an int, or a string like `10s`. The Vue host reloads only that widget's
-deferred prop. Polling pauses while the tab is hidden. There is no Livewire.
+`->live('dashboard.stats')` is the Echo channel. `->poll('10s')` (or an integer
+number of seconds) is the fallback interval. The Vue host reloads only that
+widget's deferred prop (Inertia partial JSON, not a full visit). There is no
+Livewire. The kit does not crash if `window.Echo` is undefined.
+
+Host recipe when Reverb is already installed:
+
+```env
+BROADCAST_CONNECTION=reverb
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REVERB_APP_KEY=
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="${REVERB_HOST}"
+VITE_REVERB_PORT="${REVERB_PORT}"
+VITE_REVERB_SCHEME="${REVERB_SCHEME}"
+```
+
+Construct Echo in `app.js` / `echo.ts` the way Laravel's Reverb docs show, and
+only when `VITE_REVERB_APP_KEY` is set. Broadcast `.WidgetUpdated` (via
+`broadcastAs()`) on that private channel when the numbers change. Authorise
+the channel in `routes/channels.php`. A stock install leaves Echo undefined
+and keeps `->poll()`.
 
 ## Time series without gaps
 
@@ -128,8 +167,10 @@ Panel::make('admin')->discoverWidgets(app_path('Panel/Widgets'));
 ```
 
 `TableWidget` renders the existing DataTable with a capped list query.
-`->poll('10s')` (or an integer number of seconds) reloads only that widget's
-deferred prop. Polling pauses while the tab is hidden. The namespace is optional
+`->live('dashboard.stats')` prefers Echo/Reverb when `window.Echo` exists;
+`->poll('10s')` (or an integer number of seconds) is the HTTP fallback.
+Never both for the same widget at runtime. Redis is infrastructure, not the
+UI transport. The namespace is optional
 when the directory is under `app_path()`. An empty dashboard stays the install
 default.
 

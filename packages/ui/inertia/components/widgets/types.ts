@@ -111,6 +111,12 @@ export interface Chart {
     icon?: string | null
     /** Milliseconds. Null means do not poll. */
     poll?: number | null
+    /**
+     * Echo / Reverb channel from `->live()`. Preferred over poll when
+     * `window.Echo` exists. Redis is not this field; it is the host's
+     * cache / queue / broadcast backend.
+     */
+    live?: string | null
 }
 
 /**
@@ -134,6 +140,8 @@ export interface StatDefinition {
     description?: string
     /** Milliseconds. Null means do not poll. */
     poll?: number | null
+    /** Echo / Reverb channel from `->live()`. Preferred over poll when Echo exists. */
+    live?: string | null
 }
 
 /**

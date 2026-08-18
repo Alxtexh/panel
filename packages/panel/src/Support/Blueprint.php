@@ -87,8 +87,9 @@ final class Blueprint
         .'`stats()`, `charts()` and `tables()` return these classes and the packaged `PanelDashboard` '
         .'screen renders them, each as its own deferred prop. `TableWidget::make(\'recent\')->resource(OrderResource::class)->limit(5)` '
         .'renders the existing DataTable with a capped list query. '
-        .'`->poll(\'10s\')` on `StatWidget`, `TableWidget` or `ChartWidget` reloads that deferred prop on an interval '
-        .'(pauses while the tab is hidden). '
+        .'`->live(\'dashboard.stats\')` prefers Echo/Reverb when `window.Echo` exists; '
+        .'`->poll(\'10s\')` on `StatWidget`, `TableWidget` or `ChartWidget` is the HTTP fallback '
+        .'(pauses while the tab is hidden; never both at runtime). Redis is not a UI transport. '
         .'`Panel::make(\'admin\')->discoverWidgets(app_path(\'Panel/Widgets\'))` is the normal path '
         .'(namespace is optional when the directory is under `app_path()`). A widget built anywhere else '
         .'is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 '
@@ -695,8 +696,11 @@ final class Blueprint
         filtering it client-side would ship the number to them and rely on CSS
         to keep the secret.
 
-        `->poll('10s')` on `StatWidget`, `TableWidget` or `ChartWidget` reloads only that
-        widget. Polling pauses while the tab is hidden.
+        `->live('dashboard.stats')` prefers Echo/Reverb when `window.Echo` exists.
+        `->poll('10s')` on `StatWidget`, `TableWidget` or `ChartWidget` is the HTTP
+        fallback and reloads only that widget. Polling pauses while the tab is hidden.
+        Never poll and subscribe for the same widget. Redis is infrastructure,
+        not a UI transport.
 
         ### Add a till, catalog, directory or device preview
 

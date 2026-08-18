@@ -4,7 +4,8 @@
  *
  * EXTRACTED so the masonry columns and a full-width band can render the same
  * frame without copying the Deferred tree. Layout (which column) stays on the
- * page; this is only the card.
+ * page; this is only the card. Echo replaces poll when `chart.live` is set and
+ * `window.Echo` exists.
  */
 import { Deferred } from '@inertiajs/vue3'
 import { ChartCard, PkBoundary, TrendBadge } from '@alxtexh-enterprise/panel'
@@ -26,7 +27,11 @@ defineEmits<{
     (e: 'hide'): void
 }>()
 
-useWidgetPoll(() => [`chart_${props.chart.key}`], () => props.chart.poll ?? null)
+useWidgetPoll(
+    () => [`chart_${props.chart.key}`],
+    () => props.chart.poll ?? null,
+    () => props.chart.live ?? null,
+)
 </script>
 
 <template>

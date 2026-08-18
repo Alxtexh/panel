@@ -42,7 +42,7 @@ import DashboardChartPane from '../components/widgets/DashboardChartPane.vue'
 import DashboardTablePane from '../components/widgets/DashboardTablePane.vue'
 import type { TableWidgetDecl } from '../components/widgets/DashboardTablePane.vue'
 import { emptySeries, type Chart, type Series } from '../components/widgets/types'
-import { useWidgetPoll } from '../composables/useWidgetPoll'
+import { useWidgetPoll, useWidgetChannels, canUseEcho } from '../composables/useWidgetPoll'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
 import EmptyGrantsNotice from '../components/EmptyGrantsNotice.vue'
@@ -54,6 +54,7 @@ interface Widget {
     description: string | null
     span: number
     poll?: number | null
+    live?: string | null
 }
 
 /*
@@ -229,6 +230,10 @@ function skipOnboarding() {
  * THE WHOLE STAT ROW AS ONE STRIP - see the template for why this replaced a
  * grid of separate cards, and `StatSegment` for why nothing is lost by it.
  *
+ * Refresh: Echo when `window.Echo` and `->live()` are set (push, no periodic
+ * HTTP). Poll when they are not. Never both for the same widget. Redis is
+ * not a UI transport.
+ *
  * `sensitive: false` throughout: a strip masks by default, which is right for
  * figures somebody deliberately put behind an eye and wrong for the counters at
  * the top of a dashboard - those would all arrive covered.
@@ -236,11 +241,14 @@ function skipOnboarding() {
 const statKeys = computed(() => props.widgets.map((w) => `stat_${w.key}`))
 
 const pollingStatKeys = computed(() =>
-    props.widgets.filter((w) => w.poll).map((w) => `stat_${w.key}`),
+    props.widgets
+        .filter((w) => w.poll && !canUseEcho(w.live))
+        .map((w) => `stat_${w.key}`),
 )
 
 const statsPollMs = computed(() => {
     const intervals = props.widgets
+        .filter((w) => !canUseEcho(w.live))
         .map((w) => w.poll)
         .filter((n): n is number => typeof n === 'number' && n >= 1000)
 
@@ -248,6 +256,13 @@ const statsPollMs = computed(() => {
 })
 
 useWidgetPoll(pollingStatKeys, statsPollMs)
+
+useWidgetChannels(() =>
+    props.widgets.map((w) => ({
+        keys: [`stat_${w.key}`],
+        channel: w.live,
+    })),
+)
 
 const statColumns = computed(
     () => Math.min(Math.max(props.widgets.length, 2), 6) as 2 | 3 | 4 | 5 | 6,

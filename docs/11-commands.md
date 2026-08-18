@@ -117,7 +117,7 @@ screen the kit already ships.
 | `Panel::feedback($persist)` + `FeedbackDialog` | In-panel reports. CTA lives on What's new only, not the account menu or shell |
 | Account menu | Profile (account area) and Settings (hub). Security is a settings tab, not a third dropdown row |
 | `TicketAnalysis` | Packaged screen; `TicketingPlugin` mounts it |
-| `TableWidget` / `ChartWidget` `->poll('10s')` | Reload that deferred prop. Pauses while the tab is hidden |
+| `TableWidget` / `ChartWidget` `->live()` / `->poll('10s')` | Echo/Reverb when `window.Echo` exists; otherwise reload that deferred prop. Pauses while the tab is hidden |
 | `Notification::make()->title('Saved')->success()->send()` | Inertia toast. `bell()` also writes the topbar |
 | Infolist `TextEntry` / `ImageEntry` / `RepeatableEntry` | Dedicated view page, never a modal |
 | `SelectField::relationship()` | BelongsTo picker |

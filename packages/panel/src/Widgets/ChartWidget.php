@@ -261,7 +261,7 @@ final class ChartWidget
             'periods' => $this->periodSelector ? Period::options() : null,
             'thresholds' => $this->thresholds === [] ? null : $this->thresholds,
             'maxValue' => $this->maxValue,
-            'poll' => $this->pollInterval(),
+            ...$this->refreshToArray(),
         ];
     }
 

@@ -37,6 +37,7 @@ import DashboardStatPane from './DashboardStatPane.vue'
 import DashboardTablePane from './DashboardTablePane.vue'
 import type { TableWidgetDecl } from './DashboardTablePane.vue'
 import { emptySeries, type Chart, type Series, type StatDefinition, type StatValue } from './types'
+import WidgetRefresh from './WidgetRefresh.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -123,6 +124,14 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
             :value="stat(widget.key)"
         />
     </div>
+
+    <WidgetRefresh
+        v-for="chart in charts"
+        :key="`refresh-${chart.key}`"
+        :keys="[`${prefix}_chart_${chart.key}`]"
+        :poll="chart.poll"
+        :live="chart.live"
+    />
 
     <!--
         COLUMN TRACKS, not a shared-row grid: collapsing one card must not

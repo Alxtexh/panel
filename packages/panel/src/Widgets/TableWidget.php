@@ -138,7 +138,7 @@ final class TableWidget
             'span' => $this->span,
             'limit' => $this->limit,
             'href' => $href,
-            'poll' => $this->pollInterval(),
+            ...$this->refreshToArray(),
         ];
     }
 
