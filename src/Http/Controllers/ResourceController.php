@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -129,6 +130,131 @@ final class ResourceController extends Controller
             'schema' => $form->toSchema($values),
             'values' => $values,
         ]);
+    }
+
+    /**
+     * Table-backed picker. A dedicated page, not a modal.
+     *
+     * Reuses ListQuery of the related resource. The form field opted in with
+     * `SelectField::tableSelect()`. Choosing a row returns to the form.
+     */
+    public function picker(Request $request, string $resource, string $field): Response
+    {
+        $class = $this->guard($resource);
+        abort_unless($class::can('create') || $class::can('update'), 403);
+
+        $select = $this->tableSelectField($class, $field);
+        $related = $select->pickerResource();
+
+        abort_if($related === null, 404);
+        abort_unless($related::isEnabled() && $related::isAccessible(), 404);
+        abort_unless($related::can('viewAny'), 403);
+
+        $result = $related::definition()->toListQuery($related::model())->run($request);
+        $return = $this->safeReturnUrl($request, $class);
+
+        return Inertia::render('ResourcePicker', [
+            'schema' => $related::schema(),
+            'field' => $field,
+            'formResource' => $class::key(),
+            'chooseBase' => $this->pickerChooseBase($request, $class, $field),
+            'returnUrl' => $return,
+            'breadcrumbs' => [
+                ...($this->formTrail($request, $class)),
+                ['title' => 'Choose '.$related::label(), 'href' => '#'],
+            ],
+            ...$result->toProps(),
+        ]);
+    }
+
+    /**
+     * Stamp the chosen id onto the return URL. The related row must be visible
+     * to this tenant; another organisation's id is a 404.
+     */
+    public function choose(Request $request, string $resource, string $field, string $id): RedirectResponse
+    {
+        $class = $this->guard($resource);
+        abort_unless($class::can('create') || $class::can('update'), 403);
+
+        $select = $this->tableSelectField($class, $field);
+        $related = $select->pickerResource();
+
+        abort_if($related === null, 404);
+
+        $record = $related::model()::query()->find($id);
+
+        abort_if($record === null, 404);
+        abort_unless($related::can('view', $record), 404);
+
+        $return = $this->safeReturnUrl($request, $class);
+        $separator = str_contains($return, '?') ? '&' : '?';
+
+        return redirect($return.$separator.http_build_query([$field => $record->getKey()]));
+    }
+
+    /**
+     * @param  class-string<resource>  $class
+     */
+    private function tableSelectField(string $class, string $field): SelectField
+    {
+        foreach ($class::formDefinition()->fields() as $candidate) {
+            if ($candidate instanceof SelectField && $candidate->key === $field && $candidate->pickerResource() !== null) {
+                return $candidate;
+            }
+        }
+
+        throw new NotFoundHttpException("No table-select field [{$field}] on [{$class::key()}].");
+    }
+
+    /**
+     * @param  class-string<resource>  $class
+     */
+    private function safeReturnUrl(Request $request, string $class): string
+    {
+        $return = (string) $request->query('return', '');
+
+        if ($return !== '' && str_starts_with($return, '/') && ! str_starts_with($return, '//')) {
+            return $return;
+        }
+
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            return NestedContext::schema($class::schema(), $class, $parent)['routes']['index'].'/create';
+        }
+
+        return $class::baseUrl('create');
+    }
+
+    /**
+     * @param  class-string<resource>  $class
+     */
+    private function pickerChooseBase(Request $request, string $class, string $field): string
+    {
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            $index = NestedContext::schema($class::schema(), $class, $parent)['routes']['index'] ?? $class::baseUrl();
+
+            return rtrim((string) $index, '/').'/pick/'.$field;
+        }
+
+        return $class::baseUrl('pick/'.$field);
+    }
+
+    /**
+     * @param  class-string<resource>  $class
+     * @return list<array{title: string, href: string}>
+     */
+    private function formTrail(Request $request, string $class): array
+    {
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            return NestedContext::breadcrumbs($class, $parent);
+        }
+
+        return $this->trail($class, 'New');
     }
 
     /**

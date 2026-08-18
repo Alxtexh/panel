@@ -14,6 +14,7 @@ use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Table;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Comment;
+use Alxtexh\Panel\Tests\Fixtures\Models\Tag;
 
 /**
  * Nested under ArticleResource: dedicated list/create/edit/view pages at
@@ -38,7 +39,13 @@ final class CommentResource extends Resource
         return $form->schema([
             SelectField::make('article_id')
                 ->relationship(Article::class, 'title')
+                ->tableSelect(ArticleResource::class)
                 ->live(),
+            SelectField::make('notable')
+                ->morphTo([
+                    Article::class => 'title',
+                    Tag::class => 'name',
+                ]),
             TextField::make('body')->required()->live(),
         ]);
     }

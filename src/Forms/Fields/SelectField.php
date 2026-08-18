@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 use Alxtexh\Panel\Forms\Rules\ExistsInScope;
+use Alxtexh\Panel\Forms\Rules\MorphExistsInScope;
+use Alxtexh\Panel\Resources\Resource;
 
 /**
  * A single-choice field.
@@ -36,6 +38,16 @@ final class SelectField extends Field
     private ?string $relatedModel = null;
 
     private ?string $titleAttribute = null;
+
+    /**
+     * MorphTo types: model class => title attribute.
+     *
+     * @var array<class-string<Model>, string>
+     */
+    private array $morphTypes = [];
+
+    /** @var class-string<Resource>|null */
+    private ?string $pickerResource = null;
 
     /**
      * Above this, rendering every option inline stops being reasonable.
@@ -104,27 +116,116 @@ final class SelectField extends Field
         $this->searchable = true;
 
         $this->searchQuery = function (string $term, array $form = []) use ($model, $titleAttribute, $modifyQuery): array {
-            $query = $model::query();
-
-            if ($modifyQuery !== null) {
-                $modifyQuery($query, $form);
-            }
-
-            if ($term !== '') {
-                $query->where($titleAttribute, 'like', '%'.addcslashes($term, '%_\\').'%');
-            }
-
-            $key = (new $model)->getKeyName();
-            $out = [];
-
-            foreach ($query->orderBy($titleAttribute)->limit(25)->get([$key, $titleAttribute]) as $row) {
-                $out[$row->getKey()] = (string) $row->getAttribute($titleAttribute);
-            }
-
-            return $out;
+            return $this->searchModel($model, $titleAttribute, $term, $modifyQuery, $form);
         };
 
         return $this->rule(ExistsInScope::of($model));
+    }
+
+    /**
+     * MorphTo picker: a type and an id, with scoped Exists validation.
+     *
+     * Filament MorphToSelect without Livewire. The client submits
+     * `{ type, id }` under this field's key. Storage writes `{key}_type`
+     * and `{key}_id`. `$types` is model class => title attribute.
+     *
+     * @param  array<class-string<Model>, string>  $types
+     */
+    public function morphTo(array $types): static
+    {
+        if ($types === []) {
+            throw new InvalidArgumentException('morphTo() needs at least one model => title attribute pair.');
+        }
+
+        foreach ($types as $model => $titleAttribute) {
+            if (! is_string($model) || ! is_subclass_of($model, Model::class)) {
+                throw new InvalidArgumentException("[{$model}] is not an Eloquent model.");
+            }
+
+            $this->morphTypes[$model] = $titleAttribute;
+        }
+
+        $this->searchable = true;
+        $this->live = true;
+
+        $this->searchQuery = function (string $term, array $form = []): array {
+            $type = data_get($form, $this->key.'.type');
+
+            if (! is_string($type) || ! isset($this->morphTypes[$type])) {
+                return [];
+            }
+
+            return $this->searchModel($type, $this->morphTypes[$type], $term);
+        };
+
+        return $this;
+    }
+
+    /**
+     * Dedicated picker page that reuses ListQuery. Not a modal.
+     *
+     * TableSelect without Livewire. The page lists `$resource` through the
+     * same query the related index uses. Skip ModalTableSelect.
+     *
+     * @param  class-string<Resource>  $resource
+     */
+    public function tableSelect(string $resource, ?string $titleAttribute = null): static
+    {
+        if (! is_subclass_of($resource, Resource::class)) {
+            throw new InvalidArgumentException("[{$resource}] is not a panel resource.");
+        }
+
+        $this->pickerResource = $resource;
+        $this->searchable = true;
+
+        if ($this->relatedModel === null && $this->morphTypes === []) {
+            $this->relationship($resource::model(), $titleAttribute ?? 'title');
+        }
+
+        return $this;
+    }
+
+    public function isMorphTo(): bool
+    {
+        return $this->morphTypes !== [];
+    }
+
+    /** @return class-string<Resource>|null */
+    public function pickerResource(): ?string
+    {
+        return $this->pickerResource;
+    }
+
+    /**
+     * @param  class-string<Model>  $model
+     * @param  Closure(Builder, array<string, mixed>): void|null  $modifyQuery
+     * @return array<string|int, string>
+     */
+    private function searchModel(
+        string $model,
+        string $titleAttribute,
+        string $term,
+        ?Closure $modifyQuery = null,
+        array $form = [],
+    ): array {
+        $query = $model::query();
+
+        if ($modifyQuery !== null) {
+            $modifyQuery($query, $form);
+        }
+
+        if ($term !== '') {
+            $query->where($titleAttribute, 'like', '%'.addcslashes($term, '%_\\').'%');
+        }
+
+        $key = (new $model)->getKeyName();
+        $out = [];
+
+        foreach ($query->orderBy($titleAttribute)->limit(25)->get([$key, $titleAttribute]) as $row) {
+            $out[$row->getKey()] = (string) $row->getAttribute($titleAttribute);
+        }
+
+        return $out;
     }
 
     /**
@@ -184,6 +285,10 @@ final class SelectField extends Field
          * field with no validation would be the exact hole this whole change is
          * fixing.
          */
+        if ($this->morphTypes !== []) {
+            return ['array'];
+        }
+
         if ($this->searchable) {
             return $this->rules === [] ? [Rule::in([])] : [];
         }
@@ -191,9 +296,72 @@ final class SelectField extends Field
         return [Rule::in(array_keys($this->resolvedOptionMap()))];
     }
 
+    public function additionalRules(): array
+    {
+        if ($this->morphTypes === []) {
+            return [];
+        }
+
+        $presence = $this->isRequired() ? ['required'] : ['nullable'];
+
+        return [
+            $this->key.'.type' => [...$presence, 'string', Rule::in(array_keys($this->morphTypes))],
+            $this->key.'.id' => [...$presence, new MorphExistsInScope($this->morphTypes, $this->key)],
+        ];
+    }
+
+    public function valuesFrom(?Model $record): array
+    {
+        if ($this->morphTypes === []) {
+            return parent::valuesFrom($record);
+        }
+
+        return [$this->key => [
+            'type' => $record?->getAttribute($this->key.'_type'),
+            'id' => $record?->getAttribute($this->key.'_id'),
+        ]];
+    }
+
+    public function expandStorage(mixed $value): ?array
+    {
+        if ($this->morphTypes === []) {
+            return null;
+        }
+
+        $type = is_array($value) ? ($value['type'] ?? null) : null;
+        $id = is_array($value) ? ($value['id'] ?? null) : null;
+
+        if (! is_string($type) || ! isset($this->morphTypes[$type]) || $id === null || $id === '') {
+            return [
+                $this->key.'_type' => null,
+                $this->key.'_id' => null,
+            ];
+        }
+
+        return [
+            $this->key.'_type' => $type,
+            $this->key.'_id' => $id,
+        ];
+    }
+
     public function toSchema(): array
     {
-        return [...parent::toSchema(), 'searchable' => $this->searchable];
+        $morphTo = [];
+
+        foreach ($this->morphTypes as $model => $title) {
+            $morphTo[] = [
+                'value' => $model,
+                'label' => class_basename($model),
+                'titleAttribute' => $title,
+            ];
+        }
+
+        return [
+            ...parent::toSchema(),
+            'searchable' => $this->searchable,
+            ...($morphTo === [] ? [] : ['morphTo' => $morphTo]),
+            ...($this->pickerResource !== null ? ['tableSelect' => true] : []),
+        ];
     }
 
     public function resolveOptions(): ?array

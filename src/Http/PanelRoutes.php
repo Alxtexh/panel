@@ -1044,6 +1044,17 @@ final class PanelRoutes
         Route::post('{resource}/form-state', [ResourceController::class, 'formState'])
             ->whereIn('resource', $keys)->name('formState');
 
+        Route::get('{resource}/pick/{field}', [ResourceController::class, 'picker'])
+            ->whereIn('resource', $keys)
+            ->where('field', '[a-zA-Z0-9_]+')
+            ->name('pick');
+
+        Route::get('{resource}/pick/{field}/{id}', [ResourceController::class, 'choose'])
+            ->whereIn('resource', $keys)
+            ->where('field', '[a-zA-Z0-9_]+')
+            ->whereNumber('id')
+            ->name('pick.choose');
+
         Route::post('{resource}/import/inspect', [ImportController::class, 'inspect'])
             ->whereIn('resource', $keys)->name('import.inspect');
 

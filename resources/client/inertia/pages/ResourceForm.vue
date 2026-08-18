@@ -462,6 +462,15 @@ let removeNavigationGuard: (() => void) | undefined
 onMounted(() => {
     window.addEventListener('beforeunload', onBeforeUnload)
 
+    const params = new URLSearchParams(window.location.search)
+
+    for (const field of formFields.value ?? []) {
+        if (field.tableSelect && params.has(field.key)) {
+            const picked = params.get(field.key)
+            ;(form as any)[field.key] = picked
+        }
+    }
+
     removeNavigationGuard = router.on('before', (event) => {
         // A submit and an explicit Cancel both navigate; only an UNRELATED
         // navigation should prompt.
@@ -549,6 +558,8 @@ onBeforeUnmount(() => {
                 :search-options="searchOptions"
                 :upload="upload"
                 :discard="discardUpload"
+                :picker-base="schema.routes.index"
+                :return-url="typeof window === 'undefined' ? schema.routes.index : window.location.pathname"
                 @change="onFieldChange"
             />
         </div>

@@ -93,6 +93,19 @@ final class SharePanelProps
             'name' => static fn (): string => (string) config('app.name', 'Panel'),
 
             /*
+             * FLASH TOAST. Controllers already `->with('toast', ...)` and
+             * `Inertia::flash('toast', ...)`. Sharing it here is what lets
+             * `Notification::make()->send()` reach the packaged Toaster
+             * without a Livewire stack and without every host copying
+             * playground `flashToast.ts`.
+             */
+            'toast' => static function (): ?array {
+                $toast = session('toast');
+
+                return is_array($toast) ? $toast : null;
+            },
+
+            /*
              * THE SIDEBAR. See `PanelNavigation` for why the prefix and the
              * current-panel filter are the two things worth getting right.
              */

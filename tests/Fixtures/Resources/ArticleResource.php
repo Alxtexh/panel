@@ -10,7 +10,12 @@ use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Forms\Fields\FileUploadField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Infolists\CodeEntry;
+use Alxtexh\Panel\Infolists\ColorEntry;
 use Alxtexh\Panel\Infolists\IconEntry;
+use Alxtexh\Panel\Infolists\ImageEntry;
+use Alxtexh\Panel\Infolists\KeyValueEntry;
+use Alxtexh\Panel\Infolists\RepeatableEntry;
 use Alxtexh\Panel\Infolists\TextEntry;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\BadgeColumn;
@@ -98,6 +103,14 @@ final class ArticleResource extends Resource
                     'published' => 'Published',
                     'archived' => 'Archived',
                 ]),
+            ImageEntry::make('cover')->fallbackFrom('title'),
+            KeyValueEntry::make('meta')->labels('Key', 'Value'),
+            ColorEntry::make('accent'),
+            CodeEntry::make('snippet')->language('json'),
+            RepeatableEntry::make('extras')->schema([
+                TextEntry::make('label'),
+                TextEntry::make('url'),
+            ]),
         ];
     }
 
