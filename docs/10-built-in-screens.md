@@ -59,17 +59,52 @@ For SaaS panels, the access-state flow is now packaged:
 ```php
 Panel::make('admin')
     ->apps(['billing-portal'])
-    ->billingState(fn (): array => [
-        'status' => 'suspended', // active, past_due, suspended, canceled, expired
-        'plan' => ['name' => 'Growth'],
-        'reason' => 'Payment failed for the latest invoice.',
-    ]);
+    ->billingState(); // packaged persistence-backed default
 ```
 
 When the state blocks access, the panel redirects signed-in users to
 `/account/suspended`, not to a blank shell. The packaged screen shows sane
 default copy from status alone, links to the billing portal when present, and
 always leaves logout reachable.
+
+`billingState()` accepts your own callback too, but with no callback it now
+reads `panel_billing_states` for the current billable key (tenant first, user
+fallback) so hosts can start without custom resolver code.
+
+### Inbound webhook contract
+
+The packaged inbound endpoint is provider-neutral:
+
+- `POST /{panel}/billing/webhooks/{adapter?}`
+- verifier hook: `Panel::billingWebhookVerifier(...)`
+- mapper hook: `Panel::billingWebhookMapper(...)`
+- fallback mapper: generic payload keys (`billable_type`, `billable_key`,
+  `status`, `period_end_at`, `grace_ends_at`, `provider_ref`)
+
+Minimal mapper pseudocode:
+
+```php
+Panel::make('admin')
+    ->billingWebhookVerifier(function (string $rawBody, Request $request): bool {
+        return hash_equals(
+            hash_hmac('sha256', $rawBody, config('services.gateway.secret')),
+            (string) $request->header('X-Gateway-Signature')
+        );
+    })
+    ->billingWebhookMapper(function (array $payload): array {
+        return [
+            'billable_type' => 'tenant',
+            'billable_key' => (string) $payload['account_id'],
+            'status' => match ($payload['event']) {
+                'payment.settled' => 'active',
+                'payment.failed' => 'past_due',
+                'subscription.closed' => 'canceled',
+                default => 'active',
+            },
+            'provider_ref' => (string) $payload['reference'],
+        ];
+    });
+```
 
 ## "Why can I not see Monitoring / Backups / Logs?"
 

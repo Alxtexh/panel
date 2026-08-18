@@ -40,7 +40,7 @@ final class BillingAccess
             'renewalMessage' => $renewal,
             'plan' => $plan,
             'billingHref' => self::billingHref($panel, $state ?? []),
-            'billingLabel' => self::stringOrNull($state['billingLabel'] ?? Arr::get($state, 'actions.billing.label')) ?? 'Manage subscription',
+            'billingLabel' => self::stringOrNull($state['billingLabel'] ?? Arr::get($state, 'actions.billing.label')) ?? 'Manage billing',
             'logoutHref' => self::logoutHref($panel),
             'logoutLabel' => self::stringOrNull($state['logoutLabel'] ?? Arr::get($state, 'actions.logout.label')) ?? 'Sign out',
             'supportEmail' => config('panel.support_email'),
@@ -61,6 +61,61 @@ final class BillingAccess
             'expired' => 'Expired',
             default => 'Active',
         };
+    }
+
+    /**
+     * @return array<string, array{label: string, href: string|null}>
+     */
+    public static function defaultPortalActions(): array
+    {
+        return [
+            'pay_now' => ['label' => 'Pay now', 'href' => null],
+            'update_method' => ['label' => 'Update payment method', 'href' => null],
+            'view_invoices' => ['label' => 'View invoices', 'href' => null],
+            'contact_billing' => ['label' => 'Contact billing', 'href' => null],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $actions
+     * @return array<string, array{label: string, href: string|null}>
+     */
+    public static function normalizePortalActions(array $actions): array
+    {
+        $normalized = self::defaultPortalActions();
+
+        foreach ($actions as $key => $action) {
+            if (! is_string($key)) {
+                continue;
+            }
+
+            $name = trim($key);
+
+            if ($name === '') {
+                continue;
+            }
+
+            if (is_string($action)) {
+                $normalized[$name] = [
+                    'label' => $normalized[$name]['label'] ?? self::labelFromKey($name),
+                    'href' => trim($action) !== '' ? trim($action) : null,
+                ];
+
+                continue;
+            }
+
+            if (! is_array($action)) {
+                continue;
+            }
+
+            $normalized[$name] = [
+                'label' => self::stringOrNull($action['label'] ?? null)
+                    ?? ($normalized[$name]['label'] ?? self::labelFromKey($name)),
+                'href' => self::stringOrNull($action['href'] ?? null),
+            ];
+        }
+
+        return $normalized;
     }
 
     public static function billingHref(Panel $panel, array $state = []): string
@@ -167,5 +222,13 @@ final class BillingAccess
         $value = trim($value);
 
         return $value === '' ? null : $value;
+    }
+
+    private static function labelFromKey(string $key): string
+    {
+        $words = preg_split('/[_-]+/', strtolower($key)) ?: [$key];
+        $words = array_map(static fn (string $word): string => ucfirst($word), $words);
+
+        return trim(implode(' ', $words));
     }
 }

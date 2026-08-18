@@ -156,6 +156,7 @@ final class PanelServiceProvider extends ServiceProvider
          */
         $this->commands([
             Commands\BackupCommand::class,
+            Commands\BillingCheckCommand::class,
             Commands\BlueprintCommand::class,
             Commands\CacheClearCommand::class,
             Commands\InstallCommand::class,

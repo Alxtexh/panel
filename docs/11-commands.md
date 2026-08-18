@@ -61,6 +61,7 @@ Schedule::command('panel:search-index')->hourly();
 | `panel:dispatch-scheduled-reports` | Email saved reports |
 | `panel:doctor-alert` | Run the doctor and alert on problems |
 | `panel:search-index` | Rebuild the search index |
+| `panel:billing-check` | Apply grace-period transitions (`past_due` -> `suspended`) |
 | `panel:index-knowledge` | Index help articles for the assistant |
 | `panel:sitemap-generate` | Write the sitemap |
 | `panel:cache-clear` | Invalidate cached panel schemas |
@@ -102,8 +103,9 @@ screen the kit already ships.
 | `InvitePage` / `--invites` | Pending invites canvas. Override `pending()`, `send()`, `revoke()`, `roles()`. Host owns persistence. Accept URL: `{app}/invites/accept/{token}` |
 | `FeatureFlagsPage` / `--feature-flags` | Toggle UI for `panel.tenancy.features`. Override `flags()`, `toggle()` to persist |
 | `WebhookEndpointsPage` / `--webhooks` | Endpoints, HMAC delivery log, retry. Opt in with `Panel::webhooks()` or `apps(['webhooks'])`. Override `events()`. Dispatch with `WebhookDispatcher::dispatch()` |
-| `BillingPortalPage` / `--billing-portal` | Empty billing canvas. Override `subscription()`, `invoices()`, `paymentMethods()` and actions. Host wires Stripe/Cashier |
-| `Panel::billingState()` | Declares `active`, `past_due`, `suspended`, `canceled`, `expired` and feeds the packaged access wall |
+| `BillingPortalPage` / `--billing-portal` | Empty billing canvas. Override `subscription()`, `invoices()`, `paymentMethods()`, and provider-neutral action URLs/labels |
+| `Panel::billingState()` | Declares `active`, `past_due`, `suspended`, `canceled`, `expired` and feeds the packaged access wall. `billingState()` with no callback uses packaged persistence |
+| `Panel::billingWebhookVerifier()` + `billingWebhookMapper()` | Provider-agnostic inbound mapping hooks for `POST {panel}/billing/webhooks/{adapter?}` |
 | `Panel::subscriptionGate()` | Legacy bool gate, now redirecting to the packaged suspended screen |
 | `Panel::suspendedPage()` | Swap the suspended-screen component while keeping the packaged route and middleware flow |
 | `EmailTemplatePage` / `--email-templates` | Subject/body templates with variables. Packaged migration. Override `templates()`, `save()`, `sendTest()` |

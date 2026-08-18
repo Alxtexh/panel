@@ -141,6 +141,12 @@ final class SaaSPagesTest extends TestCase
 
         $this->assertNull($data['subscription']);
         $this->assertSame([], $data['invoices']);
+        $this->assertSame([
+            'pay_now' => ['label' => 'Pay now', 'href' => null],
+            'update_method' => ['label' => 'Update payment method', 'href' => null],
+            'view_invoices' => ['label' => 'View invoices', 'href' => null],
+            'contact_billing' => ['label' => 'Contact billing', 'href' => null],
+        ], $data['billingActions']);
     }
 
     public function test_media_library_serializes_empty_items(): void
