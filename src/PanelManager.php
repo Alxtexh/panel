@@ -81,6 +81,8 @@ final class PanelManager
         Pages\ApiKeysPage::class,
         Pages\InvitePage::class,
         Pages\FeatureFlagsPage::class,
+        Pages\OnboardingPage::class,
+        Pages\BillingPortalPage::class,
     ];
 
     /** @var array<string, class-string<Pages\Page>> slug => class — first-registered wins; used as fallback when no panel context */

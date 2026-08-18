@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Pages;
 use Illuminate\Http\Request;
 use Alxtexh\Panel\Models\ContentEntry;
 use Alxtexh\Panel\Support\Changelog;
+use Alxtexh\Panel\Support\OnboardingSteps;
 use Alxtexh\Panel\Support\SupportEditing;
 
 /**
@@ -73,6 +74,7 @@ final class ChangelogPage extends Page
         return [
             'releases' => Changelog::releases(),
             'support' => SupportEditing::props(ContentEntry::KIND_RELEASE),
+            ...OnboardingSteps::whatsNewProps($request),
         ];
     }
 }

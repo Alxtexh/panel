@@ -1,26 +1,48 @@
 <script setup lang="ts">
 /** Onboarding wizard shell. Props from OnboardingPage. */
-import { Head } from '@inertiajs/vue3'
+import { Head, Link, router } from '@inertiajs/vue3'
+import { computed, markRaw } from 'vue'
+import { SetupChecklist } from '@alxtexh-enterprise/panel'
+import type { SetupChecklistItem } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
-defineProps<{
+const InertiaLink = markRaw(Link)
+
+const props = defineProps<{
     pageHeading?: string
-    steps?: { key: string; label: string; done: boolean; href?: string | null }[]
+    steps?: { key: string; label: string; done: boolean; href?: string | null; description?: string; actionLabel?: string }[]
     dismissed?: boolean
 }>()
+
+const items = computed<SetupChecklistItem[]>(() =>
+    (props.steps ?? []).map((step) => ({
+        key: step.key,
+        title: step.label,
+        detail: step.description ?? '',
+        done: step.done,
+        href: step.href,
+        actionLabel: step.actionLabel ?? 'Open',
+    })),
+)
+
+function skipRemaining() {
+    router.post('dismiss')
+}
 </script>
 
 <template>
     <Head :title="pageHeading ?? 'Get started'" />
     <div class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
-        <h1 class="text-2xl font-semibold">{{ pageHeading ?? 'Get started' }}</h1>
-        <p v-if="!steps?.length" class="text-sm text-muted-foreground">Override steps() on your page class.</p>
-        <ol v-else class="space-y-3 text-sm">
-            <li v-for="step in steps" :key="step.key" class="flex gap-2">
-                <span>{{ step.done ? '✓' : '○' }}</span>
-                <span>{{ step.label }}</span>
-            </li>
-        </ol>
+        <SetupChecklist
+            :items="items"
+            :heading="pageHeading ?? 'Get started'"
+            skip-label="Skip remaining"
+            :link-component="InertiaLink"
+            @skip="skipRemaining"
+        />
+        <p v-if="!steps?.length" class="text-sm text-muted-foreground">
+            Override steps() on your page class, or open the dashboard setup guide.
+        </p>
     </div>
 </template>

@@ -133,6 +133,13 @@ final class Panel
     private mixed $feedbackPersister = null;
 
     /**
+     * Host override for first-run setup steps. Null uses kit chrome defaults.
+     *
+     * @var \Closure|null
+     */
+    private mixed $onboardingStepsResolver = null;
+
+    /**
      * PAGE COPYRIGHT FOOTER after every screen. Off by default.
      *
      * The kit is an empty canvas. Hosts that want the packaged
@@ -1283,8 +1290,8 @@ final class Panel
      * Opt this portal into in-panel feedback (`POST {panel}/feedback`).
      *
      * `$persist` receives the validated payload and the acting user. Without
-     * it the request still succeeds (toast only). Pair with the exported
-     * `FeedbackDialog` Vue, or a render hook at `shell.feedback`.
+     * it the request still succeeds (toast only). Mount `FeedbackDialog` on
+     * What's new. Do not put Send feedback in the account menu or the shell.
      */
     public function feedback(?Closure $persist = null): self
     {
@@ -1302,6 +1309,27 @@ final class Panel
     public function feedbackPersister(): ?Closure
     {
         return $this->feedbackPersister instanceof Closure ? $this->feedbackPersister : null;
+    }
+
+    /**
+     * Replace or wrap the default first-run setup steps shown on the dashboard.
+     *
+     * The closure receives the kit chrome steps (organisation, settings,
+     * security, and so on) and returns the list to render. Each step needs
+     * `key`, `label`, `done`, and `href` to a real panel route.
+     *
+     * @param  \Closure(list<array<string, mixed>>): list<array<string, mixed>>  $resolver
+     */
+    public function onboardingSteps(Closure $resolver): self
+    {
+        $this->onboardingStepsResolver = $resolver;
+
+        return $this;
+    }
+
+    public function onboardingStepsResolver(): ?Closure
+    {
+        return $this->onboardingStepsResolver instanceof Closure ? $this->onboardingStepsResolver : null;
     }
 
     /**

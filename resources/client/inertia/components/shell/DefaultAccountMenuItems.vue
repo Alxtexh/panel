@@ -25,11 +25,9 @@ import {
     Activity,
     DatabaseBackup,
     LogOut,
-    MessageSquare,
     ScrollText,
     Server,
     Settings,
-    Shield,
     Trash2,
     UserRound,
     UsersRound,
@@ -51,13 +49,13 @@ const panel = computed(
         (page.props as Record<string, any>).panel as
             | {
                   account?: string | null
+                  /** Present only when Profile is absent, so Security is not a third door. */
                   security?: string | null
                   /** What this portal added - see `Panel::userMenuItems()`. */
                   menuItems?: { key: string; label: string; href: string; icon?: string | null }[]
                   help?: string | null
                   logout?: string | null
                   settings?: string | null
-                  feedback?: string | null
                   userManagement?: string | null
                   activity?: string | null
                   operations?: {
@@ -99,18 +97,13 @@ const trash = computed(
 )
 
 /**
- * Profile, Security and Settings stay in this menu even when a settings
- * centre exists. Deduping them behind Settings emptied the dropdown for
- * anybody whose operations items were ability-gated, leaving Trash and
- * sometimes nothing else. Help stays in the sidebar footer. The lock
- * padlock is in the header immediately before search, not here.
+ * Profile and Settings stay in this menu. Security is a sibling tab inside
+ * the settings layout, not a third dropdown row. Help stays in the sidebar
+ * footer. The lock padlock is in the header immediately before search, not
+ * here.
  */
 const handleLogout = () => {
     router.flushAll()
-}
-
-function openFeedbackMenu(): void {
-    window.dispatchEvent(new CustomEvent('panel:feedback'))
 }
 </script>
 
@@ -123,22 +116,10 @@ function openFeedbackMenu(): void {
     <DropdownMenuSeparator v-if="user" />
 
     <DropdownMenuGroup>
-        <DropdownMenuItem v-if="panel?.feedback" @click="openFeedbackMenu">
-            <MessageSquare class="mr-2 h-4 w-4" />
-            Send feedback
-        </DropdownMenuItem>
-
         <DropdownMenuItem v-if="panel?.account" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.account" prefetch>
                 <UserRound class="mr-2 h-4 w-4" />
                 Profile
-            </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem v-if="panel?.security" as-child>
-            <Link class="block w-full cursor-pointer" :href="panel.security" prefetch>
-                <Shield class="mr-2 h-4 w-4" />
-                Security
             </Link>
         </DropdownMenuItem>
 

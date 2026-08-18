@@ -71,7 +71,8 @@ final class FixturePanelProvider extends ServiceProvider
                 ->discoverPages(
                     __DIR__.'/../Pages',
                     'Alxtexh\\Panel\\Tests\\Fixtures\\Pages',
-                ),
+                )
+                ->feedback(),
         );
 
         /*

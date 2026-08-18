@@ -37,7 +37,6 @@ import { computed } from 'vue'
 import { PkButton as Button, ThemeToggle } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
-import { useTranslations } from '../../composables/useTranslations'
 
 const props = defineProps<{
     /** Where the password posts. */
@@ -53,7 +52,6 @@ const props = defineProps<{
 }>()
 
 const page = usePage()
-const { t } = useTranslations()
 
 const user = computed(() => (page.props as any)?.auth?.user ?? null)
 
@@ -68,7 +66,7 @@ const initials = computed(() =>
 </script>
 
 <template>
-    <Head :title="t('auth.lock.title')" />
+    <Head title="Locked" />
 
     <div
         class="bg-background relative flex min-h-svh flex-col items-center justify-center gap-6 p-6"
@@ -87,9 +85,9 @@ const initials = computed(() =>
                 </span>
 
                 <div class="text-center">
-                    <h1 class="text-xl font-medium">{{ user?.name ?? t('auth.lock.heading') }}</h1>
+                    <h1 class="text-xl font-medium">{{ user?.name ?? 'Locked' }}</h1>
                     <p class="text-muted-foreground text-sm">
-                        {{ t('auth.lock.prompt') }}
+                        Confirm it is you to pick up where you left off.
                     </p>
                 </div>
             </div>
@@ -97,8 +95,8 @@ const initials = computed(() =>
             <div v-if="props.passkeys" class="mt-8">
                 <AuthPasskeyButton
                     :routes="props.passkeys"
-                    :label="t('auth.lock.passkey')"
-                    :loading-label="t('auth.lock.unlocking')"
+                    label="Unlock with a passkey"
+                    loading-label="Unlocking…"
                     :fallback="props.action"
                 />
 
@@ -108,7 +106,7 @@ const initials = computed(() =>
                     </div>
                     <div class="relative flex justify-center text-xs uppercase">
                         <span class="bg-background text-muted-foreground px-2">
-                            {{ t('auth.lock.or_password') }}
+                            Or use your password
                         </span>
                     </div>
                 </div>
@@ -125,26 +123,26 @@ const initials = computed(() =>
                     id="password"
                     name="password"
                     type="password"
-                    :label="t('auth.lock.password')"
-                    :placeholder="t('auth.lock.password')"
+                    label="Password"
+                    placeholder="Password"
                     autocomplete="current-password"
                     required
                     autofocus
                     :error="errors.password"
                 />
 
-                <Button type="submit" class="w-full" :disabled="processing">{{ t('auth.lock.unlock') }}</Button>
+                <Button type="submit" class="w-full" :disabled="processing">Unlock</Button>
             </Form>
 
             <p class="text-muted-foreground mt-6 text-center text-sm" v-if="props.logoutUrl">
-                {{ t('auth.lock.not_you') }}
+                Not you?
                 <Link
                     :href="props.logoutUrl"
                     method="post"
                     as="button"
                     class="underline underline-offset-4"
                 >
-                    {{ t('auth.lock.someone_else') }}
+                    Sign in as someone else
                 </Link>
             </p>
         </div>
