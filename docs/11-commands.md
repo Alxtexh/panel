@@ -7,7 +7,7 @@
 | `panel:install` | Publish config, page files, layout, wire Vite. `--auth`, `--force` |
 | `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard`, `--guard-model`, `--central`, `--auth` |
 | `make:panel-resource` | A resource. `--generate` infers from the table, `--panel=` |
-| `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`, `--api-keys`, `--invites`, `--feature-flags` |
+| `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`, `--api-keys`, `--invites`, `--feature-flags`, `--webhooks`, `--billing-portal`, `--email-templates`, `--onboarding`, `--media-library` |
 | `make:panel-widget` | Empty StatWidget, or `--chart` for ChartWidget |
 | `make:panel-relation-manager` | Nested child resource plus a relation-manager factory (dedicated pages, not a modal) |
 | `make:panel-module` | A plan-gated module: page (or `--resource`) plus a `Module::make` snippet |
@@ -88,7 +88,7 @@ it would do first.
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
 | `make test-package` | The package's own Testbench suite |
 
-## Agent APIs (v1.0.12 to v1.0.19)
+## Agent APIs (v1.0.12 to v1.0.20)
 
 `panel:blueprint` regenerates `AGENTS.md` from these. Do not invent Vue for a
 screen the kit already ships.
@@ -101,6 +101,11 @@ screen the kit already ships.
 | `ApiKeysPage` / `--api-keys` | Wraps `ApiToken`. Override `keys()`, `issue()`, `revoke()`. Opt in with `Panel::apps(['api-keys'])` |
 | `InvitePage` / `--invites` | Pending invites canvas. Override `pending()`, `send()`, `revoke()`, `roles()`. Host owns persistence. Accept URL: `{app}/invites/accept/{token}` |
 | `FeatureFlagsPage` / `--feature-flags` | Toggle UI for `panel.tenancy.features`. Override `flags()`, `toggle()` to persist |
+| `WebhookEndpointsPage` / `--webhooks` | Endpoints, HMAC delivery log, retry. Opt in with `Panel::webhooks()` or `apps(['webhooks'])`. Override `events()`. Dispatch with `WebhookDispatcher::dispatch()` |
+| `BillingPortalPage` / `--billing-portal` | Empty billing canvas. Override `subscription()`, `invoices()`, `paymentMethods()` and actions. Host wires Stripe/Cashier |
+| `EmailTemplatePage` / `--email-templates` | Subject/body templates with variables. Packaged migration. Override `templates()`, `save()`, `sendTest()` |
+| `OnboardingPage` / `--onboarding` | Get-started wizard. Override `steps()`, `complete()`. Host middleware redirects first login |
+| `MediaLibraryPage` / `--media-library` | Tenant-scoped uploads on local disk. Packaged migration. Override disk via Laravel config |
 | `PUT {panel}/settings/appearance` | Persist appearance on the user (`appearance` JSON column) |
 | `Panel::feedback($persist)` + `FeedbackDialog` | In-panel feature/bug reports |
 | `TicketAnalysis` | Packaged screen; `TicketingPlugin` mounts it |
