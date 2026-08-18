@@ -9,6 +9,7 @@
 import { Terminal } from '@lucide/vue'
 import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import { useTranslations } from '../composables/useTranslations'
 
 withDefaults(
     defineProps<{
@@ -18,6 +19,7 @@ withDefaults(
 )
 
 const page = usePage()
+const { t } = useTranslations()
 
 const hint = computed(() => {
     const props = page.props as Record<string, any>
@@ -35,8 +37,8 @@ const hint = computed(() => {
     }
 
     return {
-        title: 'You have no grants',
-        body: 'This account is signed in and allowed into the panel, but it has no role and no abilities yet. The installer does not grant everything. Create an Administrator and assign it:',
+        title: t('grants.empty.title'),
+        body: t('grants.empty.body'),
         commands: [
             'php artisan panel:permissions sync',
             'php artisan panel:permissions grant --email=you@example.com',
@@ -56,7 +58,7 @@ const hint = computed(() => {
             <p class="text-sm font-medium">{{ hint.title }}</p>
             <p v-if="!compact" class="text-muted-foreground mt-1 text-sm">{{ hint.body }}</p>
             <p v-else class="text-muted-foreground mt-1 text-sm">
-                Assign a role with `panel:permissions`. The installer does not grant everything.
+                {{ t('grants.empty.compact') }}
             </p>
         </div>
         <code

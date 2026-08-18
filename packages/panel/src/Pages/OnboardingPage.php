@@ -7,7 +7,7 @@ namespace Alxtexh\Panel\Pages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\OnboardingSteps;
 
 /**
  * Onboarding wizard. OFF until `apps(['onboarding'])`.
@@ -46,11 +46,11 @@ class OnboardingPage extends Page
     }
 
     /**
-     * @return list<array{key: string, label: string, done: bool, href?: string|null}>
+     * @return list<array{key: string, label: string, done: bool, href: string|null, description?: string, actionLabel?: string}>
      */
     public static function steps(Request $request): array
     {
-        return [];
+        return OnboardingSteps::items($request);
     }
 
     public static function actions(): array
@@ -72,14 +72,14 @@ class OnboardingPage extends Page
     {
         return [
             'steps' => static::steps($request),
-            'dismissed' => (bool) app(InstallationState::class)->get('onboarding:dismissed', false),
+            'dismissed' => OnboardingSteps::isDone($request),
         ];
     }
 
     public static function dismiss(Request $request): RedirectResponse
     {
-        app(InstallationState::class)->put('onboarding:dismissed', true);
+        OnboardingSteps::persistDone($request);
 
-        return redirect('/');
+        return redirect('/')->withCookie(OnboardingSteps::doneCookie(true));
     }
 }

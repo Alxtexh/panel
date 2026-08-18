@@ -22,8 +22,8 @@
  * the whole point of the per-chart query parameter: the click re-runs one
  * grouped query, not the six counters and two breakdowns that did not change.
  */
-import { Deferred, Head, router, usePage } from '@inertiajs/vue3'
-import { computed, provide, ref, watch } from 'vue'
+import { Deferred, Head, Link, router, usePage } from '@inertiajs/vue3'
+import { computed, markRaw, provide, ref, watch } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import {
     DASHBOARD_HIDE_KEY,
@@ -156,6 +156,7 @@ type _AnnouncementMatch = NonNullable<typeof props.announcements>[number] extend
     : never
 
 const page = usePage()
+const InertiaLink = markRaw(Link)
 
 /**
  * Read the resolved value from PAGE PROPS, not from the Deferred slot.
@@ -199,6 +200,28 @@ const strip = computed(
 const checklist = computed(
     () => ((page.props as Record<string, any>).checklist as SetupChecklistItem[] | undefined) ?? [],
 )
+
+const onboarding = computed(
+    () => ((page.props as Record<string, any>).onboarding as SetupChecklistItem[] | undefined) ?? [],
+)
+
+const onboardingDismiss = computed(
+    () => ((page.props as Record<string, any>).onboardingDismiss as string | null | undefined) ?? null,
+)
+
+function skipOnboarding() {
+    const href = onboardingDismiss.value
+
+    if (!href) {
+        return
+    }
+
+    if (typeof document !== 'undefined') {
+        document.cookie = 'panel_onboarding_done=1;path=/;max-age=31536000;SameSite=Lax'
+    }
+
+    router.post(href, {}, { preserveScroll: true })
+}
 
 /**
  * THE WHOLE STAT ROW AS ONE STRIP - see the template for why this replaced a
@@ -417,7 +440,11 @@ const comparison: Record<string, string> = {
  * a new installation opens on.
  */
 const hasAnything = computed(
-    () => props.widgets.length > 0 || props.charts.length > 0 || props.tables.length > 0,
+    () =>
+        props.widgets.length > 0
+        || props.charts.length > 0
+        || props.tables.length > 0
+        || onboarding.value.length > 0,
 )
 const emptyGrants = computed(() => Boolean((page.props as Record<string, any>).panelEmptyGrants))
 
@@ -579,6 +606,16 @@ const hiddenEntries = computed(() => {
             out to be.
         -->
         <AnnouncementBanners :announcements="announcements" :prefix="prefix" />
+
+        <PkBoundary v-if="'onboarding' in page.props && onboarding.length" label="Get started">
+            <SetupChecklist
+                :items="onboarding"
+                heading="Get started"
+                skip-label="Skip remaining"
+                :link-component="InertiaLink"
+                @skip="skipOnboarding"
+            />
+        </PkBoundary>
 
         <!--
             GUARDED ON THE PROP'S PRESENCE, not just its resolved value. The page

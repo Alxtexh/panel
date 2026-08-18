@@ -24,9 +24,9 @@ final class PanelPagesMapTest extends TestCase
         return $matches[1] ?? [];
     }
 
-    public function test_panel_pages_includes_ticket_analysis(): void
+    public function test_panel_pages_includes_onboarding(): void
     {
-        $this->assertContains('TicketAnalysis', $this->mappedScreens());
+        $this->assertContains('Onboarding', $this->mappedScreens());
     }
 
     public function test_panel_pages_includes_new_kit_screens(): void

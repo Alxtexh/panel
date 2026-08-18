@@ -35,7 +35,6 @@ import AuthField from '../../components/AuthField.vue'
 import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'
-import { useTranslations } from '../../composables/useTranslations'
 
 const props = defineProps<{
     /** Where to POST. Supplied by the server - see the note above. */
@@ -112,15 +111,14 @@ const passkeyRoutes = computed(() =>
  * has its own.
  */
 const providers = computed(() => props.socialProviders ?? [])
-const { t } = useTranslations()
 </script>
 
 <template>
     <AuthLayout
-        :title="props.heading ?? t('auth.login.heading')"
-        :description="props.description ?? t('auth.login.description')"
+        :title="props.heading ?? 'Log in to your account'"
+        :description="props.description ?? 'Enter your email and password below to log in'"
     >
-        <Head :title="t('auth.login.title')" />
+        <Head title="Log in" />
 
         <div
             v-if="props.status"
@@ -148,9 +146,9 @@ const { t } = useTranslations()
                     <span class="bg-border h-px w-full" />
                 </div>
                 <div class="relative flex justify-center text-xs uppercase">
-                        <span class="bg-background text-muted-foreground px-2">
-                            {{ t('auth.login.or_email') }}
-                        </span>
+                    <span class="bg-background text-muted-foreground px-2">
+                        Or continue with email
+                    </span>
                 </div>
             </div>
         </div>
@@ -167,7 +165,7 @@ const { t } = useTranslations()
                     id="email"
                     name="email"
                     type="email"
-                    :label="t('auth.login.email')"
+                    label="Email address"
                     autocomplete="email"
                     placeholder="email@example.com"
                     required
@@ -180,9 +178,9 @@ const { t } = useTranslations()
                     id="password"
                     name="password"
                     type="password"
-                    :label="t('auth.login.password')"
+                    label="Password"
                     autocomplete="current-password"
-                    :placeholder="t('auth.login.password')"
+                    placeholder="Password"
                     required
                     :error="errors.password"
                     :default-value="props.prefill?.password"
@@ -193,7 +191,7 @@ const { t } = useTranslations()
                             :href="props.forgotUrl"
                             class="text-sm underline-offset-4 hover:underline"
                         >
-                            {{ t('auth.login.forgot') }}
+                            Forgot password?
                         </Link>
                     </template>
                 </AuthField>
@@ -208,7 +206,7 @@ const { t } = useTranslations()
                     v-if="props.prefill"
                     class="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs"
                 >
-                    {{ t('auth.login.prefill') }}
+                    Local development: filled in with the seeded account
                     <span class="font-medium">{{ props.prefill.email }}</span
                     >.
                 </p>
@@ -220,7 +218,7 @@ const { t } = useTranslations()
                         value="1"
                         class="border-input accent-primary size-4 rounded"
                     />
-                    {{ t('auth.login.remember') }}
+                    Remember me
                 </label>
 
                 <!--
@@ -252,7 +250,7 @@ const { t } = useTranslations()
                         <circle cx="12" cy="12" r="9" class="opacity-25" />
                         <path d="M21 12a9 9 0 0 0-9-9" stroke-linecap="round" />
                     </svg>
-                    {{ processing ? t('auth.login.signing_in') : t('auth.login.submit') }}
+                    {{ processing ? 'Signing in…' : 'Log in' }}
                 </Button>
             </div>
 
@@ -265,7 +263,7 @@ const { t } = useTranslations()
             <div v-if="providers.length > 0" class="flex flex-col gap-3">
                 <div class="flex items-center gap-3">
                     <span class="bg-border h-px flex-1" />
-                    <span class="text-muted-foreground text-xs">{{ t('auth.login.or_provider') }}</span>
+                    <span class="text-muted-foreground text-xs">or continue with</span>
                     <span class="bg-border h-px flex-1" />
                 </div>
 
@@ -288,9 +286,9 @@ const { t } = useTranslations()
             </div>
 
             <div v-if="props.registerUrl" class="text-muted-foreground text-center text-sm">
-                {{ t('auth.login.no_account') }}
+                Don't have an account?
                 <Link :href="props.registerUrl" class="underline-offset-4 hover:underline">
-                    {{ t('auth.login.sign_up') }}
+                    Sign up
                 </Link>
             </div>
         </Form>

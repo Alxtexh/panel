@@ -7,21 +7,20 @@
  */
 import { PkModal } from '@alxtexh-enterprise/panel'
 import { usePanelIdleLock } from '../../composables/usePanelIdleLock'
-import { useTranslations } from '../../composables/useTranslations'
 
 const { warningOpen, warningSecondsLeft, dismissWarning } = usePanelIdleLock()
-const { t } = useTranslations()
 </script>
 
 <template>
     <PkModal
         :open="warningOpen"
-        :title="t('auth.idle.title')"
-        :description="t('auth.idle.description', { seconds: warningSecondsLeft })"
+        title="Still there?"
+        :description="`You will be locked in ${warningSecondsLeft} seconds.`"
         @close="dismissWarning"
     >
         <p class="text-sm text-muted-foreground">
-            {{ t('auth.idle.body') }}
+            Move the mouse or press a key to stay signed in. If nobody does,
+            the panel locks and asks for your password.
         </p>
 
         <template #footer>
@@ -30,7 +29,7 @@ const { t } = useTranslations()
                 class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
                 @click="dismissWarning"
             >
-                {{ t('auth.idle.stay') }}
+                Stay signed in
             </button>
         </template>
     </PkModal>

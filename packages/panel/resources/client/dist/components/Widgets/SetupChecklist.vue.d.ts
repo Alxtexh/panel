@@ -1,28 +1,29 @@
-/**
- * The dashboard checklist. Purely presentational - see `SetupChecklist` in
- * `alxtexh-enterprise/panel` (packages/panel/src/Support/SetupChecklist.php) for where
- * `items` actually comes from and why "done" can un-happen.
- *
- * ONE ITEM IS HIGHLIGHTED, THE REST ARE A LIST. A page with six equally-loud
- * cards asks an operator to triage; this asks them to read one thing. `items`
- * arrives already ordered - every undone item first, done ones after - so
- * the first entry is the highlighted one and nothing here re-sorts.
- *
- * DONE ITEMS ARE STRUCK THROUGH, NOT REMOVED. A card that only ever shows
- * problems reads as "still broken" even seconds after the last one clears;
- * seeing yesterday's fixed items is what makes an empty problem list read as
- * "fixed", not "empty because nobody has looked yet".
- */
+import type { Component } from 'vue';
 export interface SetupChecklistItem {
     key: string;
     title: string;
     detail: string;
     done: boolean;
+    href?: string | null;
+    actionLabel?: string | null;
 }
 type __VLS_Props = {
     items: SetupChecklistItem[];
     /** Where "see the full report" points - the panel's own monitoring page, typically. */
     reportHref?: string | null;
+    heading?: string;
+    skipLabel?: string | null;
+    /** Inertia `<Link>`, or any router link. Defaults to a plain `<a>`. */
+    linkComponent?: string | Component;
 };
-declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    skip: () => any;
+}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
+    onSkip?: (() => any) | undefined;
+}>, {
+    heading: string;
+    linkComponent: string | Component;
+    reportHref: string | null;
+    skipLabel: string | null;
+}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

@@ -26,12 +26,13 @@ defineOptions({ inheritAttrs: false })
  * declares - a framework shipping its own version history would put Alxtexhpanel's
  * releases on somebody else's operations screen.
  */
-import { Head } from '@inertiajs/vue3'
-import { Bug, ChevronDown, Lightbulb, Sparkles } from '@lucide/vue'
-import { ref } from 'vue'
+import { Head, router, usePage } from '@inertiajs/vue3'
+import { Bug, ChevronDown, Lightbulb, MessageSquare, Sparkles } from '@lucide/vue'
+import { computed, ref } from 'vue'
 import SupportPageEditor, {
     type SupportProps,
 } from '../components/support/SupportPageEditor.vue'
+import FeedbackDialog from '../components/FeedbackDialog.vue'
 
 type Release = {
     version: string
@@ -48,9 +49,33 @@ const props = withDefaults(
         pageHeading?: string
         pageDescription?: string | null
         support?: SupportProps | null
+        feedbackAction?: string | null
+        onboardingReset?: string | null
     }>(),
-    { releases: () => [], pageHeading: "What's new", pageDescription: null },
+    { releases: () => [], pageHeading: "What's new", pageDescription: null, feedbackAction: null, onboardingReset: null },
 )
+
+const page = usePage()
+const feedbackOpen = ref(false)
+const feedbackUrl = computed(() => {
+    if (props.feedbackAction) {
+        return props.feedbackAction
+    }
+
+    return ((page.props as Record<string, any>).panel?.feedback as string | null | undefined) ?? null
+})
+
+function replayOnboarding() {
+    if (!props.onboardingReset) {
+        return
+    }
+
+    if (typeof document !== 'undefined') {
+        document.cookie = 'panel_onboarding_done=0;path=/;max-age=0;SameSite=Lax'
+    }
+
+    router.post(props.onboardingReset)
+}
 
 /** Only the newest starts open - see the note above. */
 const open = ref<Set<string>>(new Set(props.releases.length ? [props.releases[0].version] : []))
@@ -120,6 +145,25 @@ const SECTIONS = [
             <p v-if="pageDescription" class="text-muted-foreground mt-1 text-sm">
                 {{ pageDescription }}
             </p>
+            <div v-if="feedbackUrl || onboardingReset" class="mt-4 flex flex-wrap gap-2">
+                <button
+                    v-if="feedbackUrl"
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                    @click="feedbackOpen = true"
+                >
+                    <MessageSquare class="size-4" />
+                    Send feedback
+                </button>
+                <button
+                    v-if="onboardingReset"
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                    @click="replayOnboarding"
+                >
+                    Show setup guide
+                </button>
+            </div>
         </header>
 
         <!--
@@ -210,5 +254,10 @@ const SECTIONS = [
             </div>
         </article>
         </SupportPageEditor>
+        <FeedbackDialog
+            v-if="feedbackUrl"
+            v-model:open="feedbackOpen"
+            :action="feedbackUrl"
+        />
     </div>
 </template>

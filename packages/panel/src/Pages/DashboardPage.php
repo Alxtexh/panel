@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use Alxtexh\Panel\Alerts\Announcement;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\OnboardingSteps;
 use Alxtexh\Panel\Support\SetupChecklist;
 use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Widgets\ChartWidget;
@@ -417,6 +418,27 @@ abstract class DashboardPage extends Page
                 static fn (): array => app(SetupChecklist::class)->items(),
                 'checklist',
             );
+        }
+
+        /*
+         * FIRST-RUN GUIDE, eager, not ops-gated. An empty dashboard after
+         * install still looks guided: ordered chrome steps with a button to
+         * the real page. Dismiss or complete persists per person so the next
+         * login does not reopen it. Doctor findings stay on `checklist`.
+         */
+        if ($user !== null) {
+            $guide = OnboardingSteps::dashboardItems($request);
+
+            if ($guide !== []) {
+                $panel = app(PanelManager::class)->panel(static::panel())
+                    ?? app(PanelManager::class)->currentPanel();
+                $dismissName = $panel !== null ? $panel->getRouteName().'onboarding.dismiss' : '';
+
+                $props['onboarding'] = $guide;
+                $props['onboardingDismiss'] = $dismissName !== '' && \Illuminate\Support\Facades\Route::has($dismissName)
+                    ? route($dismissName)
+                    : null;
+            }
         }
 
         /*

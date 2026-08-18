@@ -208,6 +208,11 @@ final class PanelPages
         'ApiKeys',
         'Invites',
         'FeatureFlags',
+        'Onboarding',
+        'BillingPortal',
+        'Webhooks',
+        'EmailTemplates',
+        'MediaLibrary',
     ];
 
     /**

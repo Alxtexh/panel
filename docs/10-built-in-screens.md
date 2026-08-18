@@ -52,6 +52,21 @@ screens stay in the npm package and can be mirrored with
 The dashboard ships **empty** (`stats()` / `charts()` commented). Fill them, or
 register widgets with `Panel::widgets()`.
 
+On a first visit the dashboard also shows a **Get started** card
+(`SetupChecklist`) with ordered kit chrome (organisation, profile/security,
+settings, and so on). Each step is a button that links to the real page. Skip
+remaining, or finishing every step, writes `panel_onboarding_done` and
+`appearance.onboardingDone` so the next login does not reopen it. What's new
+can show it again.
+
+**Send feedback** is on **What's new** only (`/help` footer, `/whats-new`). It
+is not in the account dropdown or a global shell button.
+
+The account menu is **Profile** (settings/profile) and **Settings** (the hub),
+then unique items such as User management, operations, Trash, and Log out.
+Security is a tab beside Profile inside the settings layout, not a third menu
+row.
+
 ## SaaS access states
 
 For SaaS panels, the access-state flow is now packaged:

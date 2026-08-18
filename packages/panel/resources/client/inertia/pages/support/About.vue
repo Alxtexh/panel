@@ -22,7 +22,6 @@ import { ExternalLink, Info, LifeBuoy } from '@lucide/vue'
 import SupportPageEditor, {
     type SupportProps,
 } from '../../components/support/SupportPageEditor.vue'
-import { useTranslations } from '../../composables/useTranslations'
 
 defineOptions({
     // Page props arrive as attributes and this root is a fragment.
@@ -49,25 +48,23 @@ withDefaults(
         extras: () => [],
     },
 )
-
-const { t } = useTranslations()
 </script>
 
 <template>
-    <Head :title="t('support.about.title')" />
+    <Head title="About" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 sm:p-6">
         <SupportPageEditor :support="support">
         <header class="flex flex-col gap-2">
             <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
-                {{ name ?? t('support.about.title') }}
+                {{ name ?? 'About' }}
             </h1>
 
             <p v-if="tagline" class="text-muted-foreground text-sm">
                 {{ tagline }}
             </p>
 
-            <p v-if="version" class="text-muted-foreground text-xs">{{ t('support.about.version', { version }) }}</p>
+            <p v-if="version" class="text-muted-foreground text-xs">Version {{ version }}</p>
         </header>
 
         <div v-if="description" class="bg-card rounded-lg border p-5 text-sm leading-relaxed">
@@ -85,7 +82,9 @@ const { t } = useTranslations()
             v-if="!description && links.length === 0 && !contact"
             class="text-muted-foreground rounded-lg border border-dashed p-6 text-sm"
         >
-            {{ t('support.about.empty') }}
+            Nothing has been written here yet. Fill in
+            <code class="bg-muted rounded px-1 py-0.5 text-xs">panel.about</code>
+            in your configuration to describe this installation, add links, and say who to contact.
         </div>
 
         <div v-if="links.length > 0" class="flex flex-col gap-2">

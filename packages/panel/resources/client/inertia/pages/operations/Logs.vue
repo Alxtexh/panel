@@ -24,7 +24,6 @@
  */
 import { Head, router } from '@inertiajs/vue3'
 import { nextTick, onMounted, ref, watch } from 'vue'
-import { useTranslations } from '../../composables/useTranslations'
 
 const props = defineProps<{
     /** Where this screen re-fetches itself with a new filter. */
@@ -36,7 +35,6 @@ const props = defineProps<{
 
 const search = ref(props.query)
 const pane = ref<HTMLElement | null>(null)
-const { t } = useTranslations()
 
 function open(name: string) {
     router.get(props.routes.logs, { file: name, q: search.value }, { preserveState: true })
@@ -80,12 +78,12 @@ watch(() => props.tail, toBottom)
 </script>
 
 <template>
-    <Head :title="t('operations.logs.title')" />
+    <Head title="Logs" />
 
     <div class="flex flex-col gap-4 p-4">
         <div>
-            <h1 class="text-xl font-semibold">{{ t('operations.logs.title') }}</h1>
-            <p class="text-sm text-muted-foreground">{{ t('operations.logs.subtitle') }}</p>
+            <h1 class="text-xl font-semibold">Logs</h1>
+            <p class="text-sm text-muted-foreground">The last part of each file. Reading only.</p>
         </div>
 
         <!--
@@ -101,7 +99,7 @@ watch(() => props.tail, toBottom)
             v-if="!props.files.length"
             class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
         >
-            {{ t('operations.logs.empty') }}
+            No log files yet.
         </p>
 
         <div v-else class="flex min-h-0 flex-col divide-y rounded-lg border bg-card">
@@ -117,7 +115,7 @@ watch(() => props.tail, toBottom)
                     v-if="props.files.length > 1"
                     class="h-9 rounded-md border border-input bg-background px-3 text-sm"
                     :value="props.tail.name ?? ''"
-                    :aria-label="t('operations.logs.file')"
+                    aria-label="Log file"
                     @change="open(($event.target as HTMLSelectElement).value)"
                 >
                     <option v-for="f in props.files" :key="f.name" :value="f.name">
@@ -135,15 +133,15 @@ watch(() => props.tail, toBottom)
                 <input
                     v-model="search"
                     type="search"
-                    :placeholder="t('operations.logs.filter_placeholder')"
-                    :aria-label="t('operations.logs.filter')"
+                    placeholder="Filter lines…"
+                    aria-label="Filter lines"
                     class="h-9 min-w-40 flex-1 rounded-md border border-input bg-background px-3 text-sm"
                     @keyup.enter="runSearch"
                 />
             </div>
 
             <p v-if="props.tail.truncated" class="px-3 py-2 text-xs text-muted-foreground">
-                {{ t('operations.logs.truncated') }}
+                Showing the end of the file - earlier entries are on disk.
             </p>
 
             <div
@@ -151,7 +149,7 @@ watch(() => props.tail, toBottom)
                 class="max-h-[65vh] min-h-0 overflow-auto p-3 font-mono text-xs leading-relaxed"
             >
                 <p v-if="!props.tail.lines.length" class="text-muted-foreground">
-                    {{ t('operations.logs.nothing') }}
+                    Nothing to show.
                 </p>
 
                 <p

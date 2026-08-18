@@ -35,7 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
      */
     ->withBroadcasting(__DIR__.'/../routes/channels.php')
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'panel_dashboard_hidden']);
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'panel_dashboard_hidden', 'panel_onboarding_done']);
 
         /*
          | THE CLIENT'S IP, NOT THE LOAD BALANCER'S.

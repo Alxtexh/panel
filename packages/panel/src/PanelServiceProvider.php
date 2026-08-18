@@ -132,6 +132,14 @@ final class PanelServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'panel');
 
         /*
+         * JS writes this cookie as plaintext, like sidebar_state. Encrypting
+         * it would drop the next request's value and reopen the guide.
+         */
+        \Illuminate\Cookie\Middleware\EncryptCookies::except([
+            Support\OnboardingSteps::COOKIE,
+        ]);
+
+        /*
          * LOADED, NOT PUBLISHED. `panel_settings` is the package's own table -
          * an application never edits its columns - so publishing the migration
          * would only create a copy that drifts. Publishing is for things an

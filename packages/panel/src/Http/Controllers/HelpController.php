@@ -10,6 +10,7 @@ use Inertia\Response;
 use Alxtexh\Panel\Models\ContentEntry;
 use Alxtexh\Panel\Support\Changelog;
 use Alxtexh\Panel\Support\HelpCentre;
+use Alxtexh\Panel\Support\OnboardingSteps;
 use Alxtexh\Panel\Support\SupportEditing;
 
 /**
@@ -105,6 +106,7 @@ final class HelpController
             'releases' => Changelog::releases(),
             'pageHeading' => __('panel::support.whats_new'),
             'support' => SupportEditing::props(ContentEntry::KIND_RELEASE),
+            ...OnboardingSteps::whatsNewProps(request()),
         ]);
     }
 

@@ -58,6 +58,48 @@ describe('SetupChecklist', () => {
         expect(wrapper.find('.border-amber-500\\/30').exists()).toBe(false)
     })
 
+    it('puts a primary button on the next step when it has an href', () => {
+        const wrapper = mount(SetupChecklist, {
+            props: {
+                items: [
+                    {
+                        key: 'organisation',
+                        title: 'Organisation',
+                        detail: 'Name and logo.',
+                        done: false,
+                        href: '/settings/organisation',
+                        actionLabel: 'Open',
+                    },
+                    {
+                        key: 'settings',
+                        title: 'Settings',
+                        detail: '',
+                        done: false,
+                        href: '/settings',
+                        actionLabel: 'Open',
+                    },
+                ],
+            },
+        })
+
+        expect(wrapper.find('a[href="/settings/organisation"]').exists()).toBe(true)
+        expect(wrapper.find('a[href="/settings"]').exists()).toBe(true)
+        expect(wrapper.find('a[href="/settings/organisation"]').text()).toContain('Open')
+    })
+
+    it('emits skip when Skip remaining is clicked', async () => {
+        const wrapper = mount(SetupChecklist, {
+            props: {
+                items: [{ key: 'a', title: 'X', detail: '', done: false, href: '/x' }],
+                skipLabel: 'Skip remaining',
+            },
+        })
+
+        await wrapper.get('button').trigger('click')
+
+        expect(wrapper.emitted('skip')).toHaveLength(1)
+    })
+
     it('links to the full report only when a reportHref is given', () => {
         const withHref = mount(SetupChecklist, {
             props: {

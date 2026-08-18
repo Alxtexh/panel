@@ -220,7 +220,15 @@ export const PANEL_PAGES = {
     Chat: () => import('./pages/Chat.vue'),
     'landing/Composed': () => import('./pages/landing/Composed.vue'),
     PanelDashboard: () => import('./pages/PanelDashboard.vue'),
+    Onboarding: () => import('./pages/Onboarding.vue'),
     Changelog: () => import('./pages/Changelog.vue'),
+    ApiKeys: () => import('./pages/ApiKeys.vue'),
+    BillingPortal: () => import('./pages/BillingPortal.vue'),
+    EmailTemplates: () => import('./pages/EmailTemplates.vue'),
+    FeatureFlags: () => import('./pages/FeatureFlags.vue'),
+    Invites: () => import('./pages/Invites.vue'),
+    MediaLibrary: () => import('./pages/MediaLibrary.vue'),
+    Webhooks: () => import('./pages/Webhooks.vue'),
     Environment: () => import('./pages/Environment.vue'),
     Sitemap: () => import('./pages/Sitemap.vue'),
 
@@ -304,6 +312,7 @@ export { default as RenderHook } from './components/RenderHook.vue'
 export { default as TicketThread } from './components/TicketThread.vue'
 export { default as AnnouncementBanners } from './components/AnnouncementBanners.vue'
 export { default as FeedbackDialog } from './components/FeedbackDialog.vue'
+export { default as Onboarding } from './pages/Onboarding.vue'
 /*
  * `User` IS EXPORTED because the shell hands one out.
  *

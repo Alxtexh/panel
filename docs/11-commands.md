@@ -89,7 +89,7 @@ it would do first.
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
 | `make test-package` | The package's own Testbench suite |
 
-## Agent APIs (v1.0.12 to v1.0.20)
+## Agent APIs (v1.0.12 to v1.0.24)
 
 `panel:blueprint` regenerates `AGENTS.md` from these. Do not invent Vue for a
 screen the kit already ships.
@@ -109,10 +109,13 @@ screen the kit already ships.
 | `Panel::subscriptionGate()` | Legacy bool gate, now redirecting to the packaged suspended screen |
 | `Panel::suspendedPage()` | Swap the suspended-screen component while keeping the packaged route and middleware flow |
 | `EmailTemplatePage` / `--email-templates` | Subject/body templates with variables. Packaged migration. Override `templates()`, `save()`, `sendTest()` |
-| `OnboardingPage` / `--onboarding` | Get-started wizard. Override `steps()`, `complete()`. Host middleware redirects first login |
+| `OnboardingPage` / `--onboarding` | Dedicated get-started page (`apps(['onboarding'])`). Same step list as the dashboard guide |
+| `Panel::onboardingSteps()` | Replace or wrap default first-run steps. Each step needs `key`, `label`, `done`, and `href` to a real route |
+| Dashboard first-run guide | Ordered chrome steps on `/dashboard` until skip or every step is done. Persist: cookie `panel_onboarding_done` and `users.appearance.onboardingDone`. Replay from What's new |
 | `MediaLibraryPage` / `--media-library` | Tenant-scoped uploads on local disk. Packaged migration. Override disk via Laravel config |
 | `PUT {panel}/settings/appearance` | Persist appearance on the user (`appearance` JSON column) |
-| `Panel::feedback($persist)` + `FeedbackDialog` | In-panel feature/bug reports |
+| `Panel::feedback($persist)` + `FeedbackDialog` | In-panel reports. CTA lives on What's new only, not the account menu or shell |
+| Account menu | Profile (account area) and Settings (hub). Security is a settings tab, not a third dropdown row |
 | `TicketAnalysis` | Packaged screen; `TicketingPlugin` mounts it |
 | `TableWidget` / `ChartWidget` `->poll('10s')` | Reload that deferred prop. Pauses while the tab is hidden |
 | `Notification::make()->title('Saved')->success()->send()` | Inertia toast. `bell()` also writes the topbar |

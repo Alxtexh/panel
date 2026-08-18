@@ -124,13 +124,15 @@ final class SaaSPagesTest extends TestCase
         ], $data['flags']);
     }
 
-    public function test_onboarding_page_serializes_empty_steps(): void
+    public function test_onboarding_page_serializes_chrome_steps_until_dismissed(): void
     {
-        $request = Request::create('/get-started');
+        $request = \Illuminate\Http\Request::create('/get-started');
 
         $data = \Alxtexh\Panel\Pages\OnboardingPage::data($request);
 
-        $this->assertSame([], $data['steps']);
+        $this->assertNotEmpty($data['steps']);
+        $this->assertContains('organisation', array_column($data['steps'], 'key'));
+        $this->assertFalse($data['dismissed']);
     }
 
     public function test_billing_portal_serializes_empty(): void

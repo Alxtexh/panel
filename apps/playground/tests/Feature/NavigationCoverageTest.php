@@ -110,10 +110,8 @@ final class NavigationCoverageTest extends TestCase
              * This test's own history is why that sentence needs care: backups,
              * logs and the activity trail were once reachable ONLY from the
              * account popup, and that was the bug - operational screens hidden
-             * behind an avatar. Profile and Security are the opposite case.
-             * "Where do I change my password" is answered by the avatar menu in
-             * every application anybody has used, and putting them in the
-             * sidebar is what roadmap #116 deliberately undid.
+             * behind an avatar. Profile is the account-area door. Security is a
+             * sibling tab in SettingsLayout, not a third dropdown row.
              *
              * RESOLVED FROM THE ROUTES, exactly as SharePanelProps resolves the
              * prop the menu renders from. `PanelAccountMenu` took an

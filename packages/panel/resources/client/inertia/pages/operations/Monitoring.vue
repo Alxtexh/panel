@@ -57,7 +57,6 @@ import {
 } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { MiniStatCard } from '@alxtexh-enterprise/panel'
-import { useTranslations } from '../../composables/useTranslations'
 
 interface Health {
     cpu: {
@@ -366,16 +365,15 @@ const debugInProduction = computed(
 const updated = computed(() => new Date(health.value.at).toLocaleTimeString())
 
 const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toLocaleString())
-const { t } = useTranslations()
 </script>
 
 <template>
-    <Head :title="t('operations.monitoring.title')" />
+    <Head title="Monitoring" />
 
     <div class="flex flex-col gap-6 p-4">
         <header class="flex flex-wrap items-start justify-between gap-3">
             <div>
-                <h1 class="text-xl font-semibold">{{ t('operations.monitoring.title') }}</h1>
+                <h1 class="text-xl font-semibold">Monitoring</h1>
                 <p class="text-sm text-muted-foreground">
                     This host, measured from inside the application. Refreshes every
                     {{ REFRESH_MS / 1000 }} seconds while this tab is open.
@@ -686,14 +684,16 @@ const { t } = useTranslations()
         -->
         <div class="rounded-lg border bg-card">
             <div class="flex items-baseline justify-between border-b px-4 py-2.5">
-                <p class="text-sm font-medium">{{ t('operations.monitoring.last_24h') }}</p>
+                <p class="text-sm font-medium">Last 24 hours</p>
                 <p v-if="history.length" class="text-xs text-muted-foreground">
                     {{ history.length }} samples, every 5 minutes
                 </p>
             </div>
 
             <p v-if="!history.length" class="px-4 py-6 text-sm text-muted-foreground">
-                {{ t('operations.monitoring.no_samples') }}
+                No samples yet. History appears once the scheduler has run
+                <code class="font-mono text-xs">panel:monitor-sample</code>, every five minutes
+                when cron is ticking.
             </p>
 
             <!--

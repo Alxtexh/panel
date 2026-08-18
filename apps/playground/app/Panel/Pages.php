@@ -200,6 +200,9 @@ final class Pages
              * the operator's subject matter. A trail of what the panel did to
              * itself and a bin of what was deleted from it are both about the
              * INSTALLATION, which is what the rest of this list already holds.
+             *
+             * Profile is the account-area door. Security is a sibling tab
+             * inside the settings layout, not a third avatar-menu row.
              */
             '/activities' => 'activity',
             '/trash' => 'trash',

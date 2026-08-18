@@ -125,6 +125,14 @@ final class PanelMenuItemsTest extends TestCase
         $this->assertSame(['status'], array_column($this->props()['panel']['menuItems'] ?? [], 'key'));
     }
 
+    public function test_serialized_account_urls_do_not_include_security_when_profile_exists(): void
+    {
+        $panel = $this->props()['panel'];
+
+        $this->assertNotEmpty($panel['account'] ?? null);
+        $this->assertNull($panel['security'] ?? null);
+    }
+
     /* ---------------------------------------------------------- navigation */
 
     public function test_a_panel_can_add_a_navigation_entry_that_is_not_a_resource(): void

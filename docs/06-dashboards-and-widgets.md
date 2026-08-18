@@ -121,6 +121,16 @@ deferred prop. Polling pauses while the tab is hidden. The namespace is optional
 when the directory is under `app_path()`. An empty dashboard stays the install
 default.
 
+## First-run setup guide
+
+The empty canvas still needs a path through kit chrome. `DashboardPage` shares
+`onboarding` (and `onboardingDismiss`) until the operator skips or every step
+is done. Persist is per person: cookie `panel_onboarding_done` (same idea as
+hidden dashboard widgets; leave it out of cookie encryption) and
+`users.appearance.onboardingDone`. Override the
+list with `Panel::onboardingSteps()`. Defaults never name a vertical (no
+clients or routers). Replay from What's new after dismiss.
+
 ## Rollups
 
 For counters too expensive to compute per request, `panel:refresh-rollups`

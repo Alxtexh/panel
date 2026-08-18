@@ -683,6 +683,16 @@ final class PanelRoutes
                         ->name('feedback');
                 }
 
+                if (self::unclaimed('POST', $panel->getPath().'/onboarding/dismiss')) {
+                    Route::post('onboarding/dismiss', [Controllers\OnboardingController::class, 'dismiss'])
+                        ->name('onboarding.dismiss');
+                }
+
+                if (self::unclaimed('POST', $panel->getPath().'/onboarding/reset')) {
+                    Route::post('onboarding/reset', [Controllers\OnboardingController::class, 'reset'])
+                        ->name('onboarding.reset');
+                }
+
                 if (self::unclaimed('GET', $panel->getPath().'/settings/security')) {
                     /*
                      * PASSWORD CONFIRMATION TO LOOK, NOT ONLY TO CHANGE. The

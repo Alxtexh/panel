@@ -329,7 +329,7 @@ final class SharePanelProps
                     /*
                      * ENTRIES THIS PORTAL ADDS TO THE ACCOUNT DROPDOWN.
                      *
-                     * The core three - profile, security, sign out - are the
+                     * The core two - profile and sign out - are the
                      * keys around this one and are unconditional, because every
                      * portal authenticates somebody and every one of them must
                      * let that person reach their own account. This is what a
@@ -359,16 +359,24 @@ final class SharePanelProps
                         ? route($panel->getRouteName().'feedback')
                         : null,
 
-                    'account' => self::namedUrl(
+                    'account' => $accountUrl = self::namedUrl(
                         $panel,
                         ['settings.profile'],
                         ['profile.edit', 'settings.profile'],
                     ),
-                    'security' => self::namedUrl(
-                        $panel,
-                        ['settings.security'],
-                        ['security.edit', 'settings.security'],
-                    ),
+                    /*
+                     * SECURITY IS NOT A DROPDOWN ROW when Profile is present.
+                     * Profile opens the account area; security is the sibling
+                     * tab inside SettingsLayout. A Profile + Security +
+                     * Settings triplet was three doors into the same rooms.
+                     */
+                    'security' => $accountUrl !== null
+                        ? null
+                        : self::namedUrl(
+                            $panel,
+                            ['settings.security'],
+                            ['security.edit', 'settings.security'],
+                        ),
 
                     /*
                      * AND HELP, for the same reason and in the same place. A

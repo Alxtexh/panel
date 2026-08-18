@@ -1,47 +1,91 @@
 <script setup lang="ts">
 /**
- * The dashboard checklist. Purely presentational - see `SetupChecklist` in
- * `alxtexh-enterprise/panel` (packages/panel/src/Support/SetupChecklist.php) for where
- * `items` actually comes from and why "done" can un-happen.
+ * The dashboard checklist and first-run setup guide. Purely presentational.
  *
- * ONE ITEM IS HIGHLIGHTED, THE REST ARE A LIST. A page with six equally-loud
- * cards asks an operator to triage; this asks them to read one thing. `items`
- * arrives already ordered - every undone item first, done ones after - so
- * the first entry is the highlighted one and nothing here re-sorts.
+ * Doctor findings and onboarding steps share this card: undone work first,
+ * a primary button on the current step when it has an href, skip remaining
+ * when the host offers it.
  *
- * DONE ITEMS ARE STRUCK THROUGH, NOT REMOVED. A card that only ever shows
- * problems reads as "still broken" even seconds after the last one clears;
- * seeing yesterday's fixed items is what makes an empty problem list read as
- * "fixed", not "empty because nobody has looked yet".
+ * NOTHING INERTIA HERE. Pass `linkComponent` as Inertia `<Link>` from a page.
  */
+import { computed, markRaw } from 'vue'
+import type { Component } from 'vue'
+import { buttonClasses } from '../primitives/buttonClasses'
+
 export interface SetupChecklistItem {
     key: string
     title: string
     detail: string
     done: boolean
+    href?: string | null
+    actionLabel?: string | null
 }
 
-const props = defineProps<{
-    items: SetupChecklistItem[]
-    /** Where "see the full report" points - the panel's own monitoring page, typically. */
-    reportHref?: string | null
+const props = withDefaults(
+    defineProps<{
+        items: SetupChecklistItem[]
+        /** Where "see the full report" points - the panel's own monitoring page, typically. */
+        reportHref?: string | null
+        heading?: string
+        skipLabel?: string | null
+        /** Inertia `<Link>`, or any router link. Defaults to a plain `<a>`. */
+        linkComponent?: string | Component
+    }>(),
+    {
+        reportHref: null,
+        heading: 'Setup checklist',
+        skipLabel: null,
+        linkComponent: 'a',
+    },
+)
+
+const emit = defineEmits<{
+    skip: []
 }>()
 
-const next = props.items.find((item) => !item.done) ?? null
-const rest = props.items.filter((item) => item.key !== next?.key)
+const next = computed(() => props.items.find((item) => !item.done) ?? null)
+const rest = computed(() => props.items.filter((item) => item.key !== next.value?.key))
+
+const resolvedLink = computed(() => {
+    const component = props.linkComponent
+
+    return typeof component === 'string' ? component : markRaw(component)
+})
+
+const primaryClass = buttonClasses({
+    variant: 'default',
+    size: 'sm',
+    class: 'no-underline mt-2 self-start',
+})
+
+const ghostClass = buttonClasses({
+    variant: 'outline',
+    size: 'sm',
+    class: 'no-underline shrink-0',
+})
 </script>
 
 <template>
     <section v-if="items.length" class="flex flex-col gap-3 rounded-lg border bg-card p-4">
         <div class="flex items-center justify-between gap-2">
-            <h2 class="text-sm font-semibold">Setup checklist</h2>
-            <a
-                v-if="reportHref"
-                :href="reportHref"
-                class="text-xs text-muted-foreground hover:text-foreground hover:underline"
-            >
-                Full report
-            </a>
+            <h2 class="text-sm font-semibold">{{ heading }}</h2>
+            <div class="flex items-center gap-3">
+                <button
+                    v-if="skipLabel"
+                    type="button"
+                    class="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                    @click="emit('skip')"
+                >
+                    {{ skipLabel }}
+                </button>
+                <a
+                    v-if="reportHref"
+                    :href="reportHref"
+                    class="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                >
+                    Full report
+                </a>
+            </div>
         </div>
 
         <div
@@ -52,9 +96,17 @@ const rest = props.items.filter((item) => item.key !== next?.key)
                 class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-amber-500"
                 aria-hidden="true"
             />
-            <div class="flex flex-col gap-0.5">
+            <div class="flex min-w-0 flex-col gap-0.5">
                 <p class="text-sm font-medium">{{ next.title }}</p>
-                <p class="text-xs text-muted-foreground">{{ next.detail }}</p>
+                <p v-if="next.detail" class="text-xs text-muted-foreground">{{ next.detail }}</p>
+                <component
+                    :is="resolvedLink"
+                    v-if="next.href"
+                    :href="next.href"
+                    :class="primaryClass"
+                >
+                    {{ next.actionLabel || 'Open' }}
+                </component>
             </div>
         </div>
 
@@ -82,15 +134,25 @@ const rest = props.items.filter((item) => item.key !== next?.key)
                         <path d="M20 6 9 17l-5-5" />
                     </svg>
                 </span>
-                <div class="flex flex-col gap-0.5">
+                <div class="flex min-w-0 flex-1 flex-col gap-0.5">
                     <p
                         class="text-sm"
                         :class="item.done ? 'text-muted-foreground line-through' : 'font-medium'"
                     >
                         {{ item.title }}
                     </p>
-                    <p v-if="!item.done" class="text-xs text-muted-foreground">{{ item.detail }}</p>
+                    <p v-if="!item.done && item.detail" class="text-xs text-muted-foreground">
+                        {{ item.detail }}
+                    </p>
                 </div>
+                <component
+                    :is="resolvedLink"
+                    v-if="!item.done && item.href"
+                    :href="item.href"
+                    :class="ghostClass"
+                >
+                    {{ item.actionLabel || 'Open' }}
+                </component>
             </li>
         </ul>
     </section>

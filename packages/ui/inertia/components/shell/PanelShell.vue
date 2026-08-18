@@ -30,7 +30,7 @@
  * modes have different DOM, not different styling.
  */
 import { router, usePage } from '@inertiajs/vue3'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import {
     AppPageFooter,
@@ -53,7 +53,6 @@ import PanelIdleLockGuard from './PanelIdleLockGuard.vue'
 import PanelImpersonationBanner from './PanelImpersonationBanner.vue'
 import EmptyGrantsNotice from '../EmptyGrantsNotice.vue'
 import RenderHook from '../RenderHook.vue'
-import FeedbackDialog from '../FeedbackDialog.vue'
 import type { BreadcrumbItem, User } from '../../types'
 
 const props = withDefaults(
@@ -105,31 +104,17 @@ onMounted(() => {
         const flash = (event as CustomEvent).detail?.flash
         showFlashToast(flash?.toast as FlashToast | undefined)
     })
-
-    window.addEventListener('panel:feedback', openFeedback)
-})
-
-onBeforeUnmount(() => {
-    window.removeEventListener('panel:feedback', openFeedback)
 })
 
 const { appearance } = useAppearance()
 const pageFooter = useShellPageFooter()
 
-const feedbackOpen = ref(false)
-const feedbackUrl = computed(
-    () => ((page.props as Record<string, any>).panel?.feedback as string | null | undefined) ?? null,
-)
 const shellHooks = computed(
     () =>
         ((page.props as Record<string, any>).shellHooks as
             | { position: string; component: string; props: Record<string, unknown> }[]
             | undefined) ?? [],
 )
-
-function openFeedback(): void {
-    feedbackOpen.value = true
-}
 
 /**
  * Per-tenant branding, applied at runtime rather than compiled per tenant.
@@ -364,10 +349,5 @@ router.on('success', () => {
     <SessionExpired />
     <PanelIdleLockGuard />
     <RenderHook position="shell.feedback" :hooks="shellHooks" />
-    <FeedbackDialog
-        v-if="feedbackUrl"
-        v-model:open="feedbackOpen"
-        :action="feedbackUrl"
-    />
     </div>
 </template>
