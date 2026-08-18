@@ -38,6 +38,9 @@ screens stay in the npm package and can be mirrored with
 | Device preview | `DevicePreviewPage` | `make:panel-page --device-preview` |
 | Mail | `MailPage` | `Panel::apps(['mail'])` on the portal |
 | Chat | `ChatPage` | `Panel::apps(['chat'])` on the portal |
+| API keys | `ApiKeysPage` | `Panel::apps(['api-keys'])` |
+| Invites | `InvitePage` | `Panel::apps(['invites'])` |
+| Feature flags | `FeatureFlagsPage` | `Panel::apps(['feature-flags'])` |
 | Payment gateways | `PaymentSettingsPage` | `Panel::paymentSettings()` |
 
 The dashboard ships **empty** (`stats()` / `charts()` commented). Fill them, or

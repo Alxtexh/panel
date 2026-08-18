@@ -77,7 +77,7 @@ final class Abilities
      * `grants_all` role. `manage_assistant` is currently in exactly that state,
      * gated in `AssistantSettingsController` and absent from here.
      */
-    public const PANEL = ['manage_roles', 'impersonate_users', 'view_operations', 'manage_backups', 'manage_documents'];
+    public const PANEL = ['manage_roles', 'impersonate_users', 'view_operations', 'manage_backups', 'manage_documents', 'manage_api_keys', 'manage_invites', 'manage_feature_flags'];
 
     /**
      * What each panel ability is called on the permission matrix.
@@ -95,6 +95,9 @@ final class Abilities
         'view_operations' => 'See backups and server logs',
         'manage_backups' => 'Delete, restore and reschedule backups',
         'manage_documents' => 'Edit the templates invoices and receipts print from',
+        'manage_api_keys' => 'Create and revoke API keys',
+        'manage_invites' => 'Send and revoke staff invites',
+        'manage_feature_flags' => 'Toggle tenant feature flags',
     ];
 
     /**

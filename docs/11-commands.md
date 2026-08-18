@@ -7,7 +7,7 @@
 | `panel:install` | Publish config, page files, layout, wire Vite. `--auth`, `--force` |
 | `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard`, `--guard-model`, `--central`, `--auth` |
 | `make:panel-resource` | A resource. `--generate` infers from the table, `--panel=` |
-| `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` |
+| `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`, `--api-keys`, `--invites`, `--feature-flags` |
 | `make:panel-widget` | Empty StatWidget, or `--chart` for ChartWidget |
 | `make:panel-relation-manager` | Nested child resource plus a relation-manager factory (dedicated pages, not a modal) |
 | `make:panel-module` | A plan-gated module: page (or `--resource`) plus a `Module::make` snippet |
@@ -88,7 +88,7 @@ it would do first.
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
 | `make test-package` | The package's own Testbench suite |
 
-## Agent APIs (v1.0.12 to v1.0.18)
+## Agent APIs (v1.0.12 to v1.0.19)
 
 `panel:blueprint` regenerates `AGENTS.md` from these. Do not invent Vue for a
 screen the kit already ships.
@@ -98,6 +98,9 @@ screen the kit already ships.
 | `TillPage` / `--till` | Empty till canvas. Vue shims packaged Till |
 | `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` | Empty page bases. Directory inherits chrome sections |
 | `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |
+| `ApiKeysPage` / `--api-keys` | Wraps `ApiToken`. Override `keys()`, `issue()`, `revoke()`. Opt in with `Panel::apps(['api-keys'])` |
+| `InvitePage` / `--invites` | Pending invites canvas. Override `pending()`, `send()`, `revoke()`, `roles()`. Host owns persistence. Accept URL: `{app}/invites/accept/{token}` |
+| `FeatureFlagsPage` / `--feature-flags` | Toggle UI for `panel.tenancy.features`. Override `flags()`, `toggle()` to persist |
 | `PUT {panel}/settings/appearance` | Persist appearance on the user (`appearance` JSON column) |
 | `Panel::feedback($persist)` + `FeedbackDialog` | In-panel feature/bug reports |
 | `TicketAnalysis` | Packaged screen; `TicketingPlugin` mounts it |
