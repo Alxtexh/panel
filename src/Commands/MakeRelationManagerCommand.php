@@ -62,6 +62,7 @@ final class MakeRelationManagerCommand extends Command
         $this->line("  On {$parent}Resource::relations(), return:");
         $this->line("    {$related}RelationManager::make(),");
         $this->line('  Pages: /'.Str::plural(Str::kebab($parent)).'/{id}/'.Str::plural(Str::kebab($related)));
+        $this->line('  BelongsToMany: set $relationship on the nested resource; /attach is a page, detach is a row action.');
         $this->line('  The parent view tab stays a summary that links to those pages.');
 
         return self::SUCCESS;
@@ -106,6 +107,11 @@ final class MakeRelationManagerCommand extends Command
         /**
          * Nested under {$parentClass}. Dedicated list/create/edit/view pages,
          * not a dialog.
+         *
+         * HasMany: leave \$relationship null. BelongsToMany: set
+         * protected static ?string \$relationship = '{relation}';
+         * then /{parent}/{id}/{child}/attach is a page (pick existing rows)
+         * and detach is a row action on the nested index.
          */
         final class {$related}Resource extends Resource
         {
@@ -114,6 +120,10 @@ final class MakeRelationManagerCommand extends Command
             protected static string \$panel = '{$panel}';
 
             protected static ?string \$parent = {$parentClass}::class;
+
+            // BelongsToMany: protected static ?string \$relationship = 'tags';
+            // Attach page: /{parent}/{id}/{child}/attach
+            // Detach: row action on the nested index.
 
             protected static ?string \$purpose = 'Related {$related} records.';
 
@@ -155,6 +165,9 @@ final class MakeRelationManagerCommand extends Command
 
         /**
          * Summary tab on the parent view page. Links to {$related}Resource nested pages.
+         *
+         * Dedicated URLs only: list/create/edit/view, plus /attach for
+         * BelongsToMany. Detach is a row action. Never a dialog.
          */
         final class {$related}RelationManager
         {

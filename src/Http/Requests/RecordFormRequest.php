@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Http\Requests;
 
 use Alxtexh\Panel\Http\NestedContext;
+use Alxtexh\Panel\Http\NestedRelation;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
 use Illuminate\Database\Eloquent\Model;
@@ -145,7 +146,7 @@ final class RecordFormRequest extends FormRequest
         $parent = NestedContext::parent($this, $class);
 
         if ($parent !== null) {
-            $query->where($class::parentColumn(), $parent->getKey());
+            NestedRelation::constrain($query, $class, $parent);
         }
 
         return $query->findOrFail($this->route('id'));

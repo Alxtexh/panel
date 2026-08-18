@@ -52,7 +52,24 @@ abstract class Field implements Renderable
      */
     protected ?array $chips = null;
 
-    protected bool $disabled = false;
+    protected bool|Closure $disabled = false;
+
+    /**
+     * Hide this field after a live() round-trip (or immediately when a bool).
+     *
+     * Closures receive the current form values. Cheap show/hide still uses
+     * `visibleWhen`, which the client evaluates without a request.
+     *
+     * @var bool|Closure(array<string, mixed>): bool
+     */
+    protected bool|Closure $hidden = false;
+
+    /**
+     * Mutate other values after this live field changes.
+     *
+     * @var Closure(mixed, callable(string, mixed): void, array<string, mixed>): void|null
+     */
+    protected ?Closure $afterStateUpdated = null;
 
     /** When true, the client posts form-state after this field changes. */
     protected bool $live = false;
@@ -100,7 +117,7 @@ abstract class Field implements Renderable
         return $this;
     }
 
-    public function disabled(bool $disabled = true): static
+    public function disabled(bool|Closure $disabled = true): static
     {
         $this->disabled = $disabled;
 
@@ -108,12 +125,68 @@ abstract class Field implements Renderable
     }
 
     /**
-     * Ask the server for option patches after this field changes.
+     * Hide this field. A Closure is evaluated on `{resource}/form-state`
+     * against the posted values. `visibleWhen` stays the cheap client-side rule.
      *
-     * KIT CONTRACT (Inertia, not Livewire): the client emits the new value,
-     * POSTs current form values to `{resource}/form-state`, and applies
-     * returned `options`. `visibleWhen` still hides fields locally. Closures
-     * on `relationship()` receive those values as the second argument.
+     * @param  bool|Closure(array<string, mixed>): bool  $hidden
+     */
+    public function hidden(bool|Closure $hidden = true): static
+    {
+        $this->hidden = $hidden;
+
+        return $this;
+    }
+
+    /**
+     * Run after this live() field changes, before the schema patch is built.
+     *
+     * `$set('other', $value)` writes into the values returned to the client.
+     *
+     * @param  Closure(mixed, callable(string, mixed): void, array<string, mixed>): void  $callback
+     */
+    public function afterStateUpdated(Closure $callback): static
+    {
+        $this->afterStateUpdated = $callback;
+
+        return $this;
+    }
+
+    public function isHidden(array $values = []): bool
+    {
+        return $this->resolveFlag($this->hidden, $values);
+    }
+
+    public function isDisabled(array $values = []): bool
+    {
+        return $this->resolveFlag($this->disabled, $values);
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @return array<string, mixed>
+     */
+    public function applyAfterStateUpdated(array $values): array
+    {
+        if ($this->afterStateUpdated === null) {
+            return $values;
+        }
+
+        $set = static function (string $key, mixed $value) use (&$values): void {
+            $values[$key] = $value;
+        };
+
+        ($this->afterStateUpdated)($values[$this->key] ?? null, $set, $values);
+
+        return $values;
+    }
+
+    /**
+     * Ask the server for option and schema patches after this field changes.
+     *
+     * KIT CONTRACT (Inertia, not Livewire): the client POSTs `{ field, values }`
+     * to `{resource}/form-state`. The server returns `{ options, schema, values }`
+     * so afterStateUpdated-style logic can hide, disable, or replace fields.
+     * `visibleWhen` still hides fields locally without a round-trip.
      */
     public function live(bool $live = true): static
     {
@@ -125,6 +198,12 @@ abstract class Field implements Renderable
     public function isLive(): bool
     {
         return $this->live;
+    }
+
+    /** @param  bool|Closure(array<string, mixed>): bool  $flag */
+    private function resolveFlag(bool|Closure $flag, array $values): bool
+    {
+        return $flag instanceof Closure ? (bool) $flag($values) : $flag;
     }
 
     /**
@@ -304,7 +383,8 @@ abstract class Field implements Renderable
             'required' => $this->required,
             'help' => $this->help,
             'placeholder' => $this->placeholder,
-            'disabled' => $this->disabled,
+            'disabled' => $this->isDisabled() ? true : null,
+            'hidden' => $this->isHidden() ? true : null,
             'live' => $this->live ? true : null,
             'span' => $this->span > 1 ? $this->span : null,
             /*

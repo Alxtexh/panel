@@ -1058,6 +1058,12 @@ final class PanelRoutes
         Route::get('{resource}/create', [ResourceController::class, 'create'])
             ->whereIn('resource', $keys)->name('create');
 
+        Route::get('{resource}/attach', [ResourceController::class, 'attachForm'])
+            ->whereIn('resource', $keys)->name('attach');
+
+        Route::post('{resource}/attach', [RecordController::class, 'attach'])
+            ->whereIn('resource', $keys)->name('attach.store');
+
         Route::post('{resource}/bulk', [BulkController::class, 'run'])
             ->whereIn('resource', $keys)->name('bulk');
 
@@ -1126,6 +1132,9 @@ final class PanelRoutes
          */
         Route::post('{resource}/{id}/action', [RecordController::class, 'runAction'])
             ->whereIn('resource', $keys)->whereNumber('id')->name('action');
+
+        Route::post('{resource}/{id}/infolist-action', [RecordController::class, 'runInfolistAction'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('infolistAction');
 
         // One cell, from an editable column. Outside the precognitive group: an
         // inline edit has no form to validate ahead of, it just writes.

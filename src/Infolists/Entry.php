@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Infolists;
 
+use Alxtexh\Panel\Actions\Action;
 use Alxtexh\Panel\Schema\Component;
 
 /**
@@ -17,6 +18,8 @@ abstract class Entry extends Component
     protected ?string $label = null;
 
     protected ?string $url = null;
+
+    protected ?Action $action = null;
 
     final public function __construct(public readonly string $key) {}
 
@@ -48,6 +51,23 @@ abstract class Entry extends Component
         return $this;
     }
 
+    /**
+     * Click POSTs `{ action }` to `{resource}/{id}/infolist-action`.
+     *
+     * Independent of `url()`. The view page stays a dedicated page.
+     */
+    public function action(Action $action): static
+    {
+        $this->action = $action;
+
+        return $this;
+    }
+
+    public function getAction(): ?Action
+    {
+        return $this->action;
+    }
+
     abstract public function type(): string;
 
     public function toSchema(): array
@@ -58,6 +78,7 @@ abstract class Entry extends Component
             'label' => $this->label ?? str($this->key)->headline()->value(),
             'type' => $this->type(),
             'url' => $this->url,
+            'action' => $this->action?->toArray(),
             'children' => [],
         ], static fn (mixed $v): bool => $v !== null && $v !== []);
     }

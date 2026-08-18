@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Fixtures\Resources;
 
+use Alxtexh\Panel\Actions\Action;
 use Alxtexh\Panel\Actions\BulkAction;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Forms\Fields\FileUploadField;
@@ -43,8 +44,17 @@ final class ArticleResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            TextField::make('title')->required()->live(),
-            TextField::make('status'),
+            TextField::make('title')
+                ->required()
+                ->live()
+                ->afterStateUpdated(static function (mixed $state, callable $set): void {
+                    if ($state === 'lock-status') {
+                        $set('status', 'draft');
+                    }
+                }),
+            TextField::make('status')
+                ->hidden(static fn (array $values): bool => ($values['title'] ?? '') === 'hide-status')
+                ->disabled(static fn (array $values): bool => ($values['title'] ?? '') === 'lock-status'),
             /*
              * AN UPLOAD FIELD, so the upload endpoints have a declared target.
              * `accept()` is the allowlist those endpoints check a filename
@@ -64,7 +74,14 @@ final class ArticleResource extends Resource
     public static function infolist(): array
     {
         return [
-            TextEntry::make('title'),
+            TextEntry::make('title')
+                ->url('https://example.test/articles')
+                ->action(
+                    Action::make('copy')
+                        ->label('Copy')
+                        ->authorize('update')
+                        ->mutate(['status' => 'copied']),
+                ),
             IconEntry::make('status')
                 ->icons([
                     'draft' => 'dot',
@@ -134,6 +151,15 @@ final class ArticleResource extends Resource
                     ])
                     ->keyColumn('comments.id')
                     ->alsoSelect(['comments.id'])),
+            RelationManager::make('tags', 'Tags')
+                ->resource(TagResource::class)
+                ->table(fn (Table $table): Table => $table
+                    ->columns([
+                        TextColumn::make('name')->from('tags.name')->sortable(),
+                        DateColumn::make('created_at')->from('tags.created_at')->sortable()->withTime(),
+                    ])
+                    ->keyColumn('tags.id')
+                    ->alsoSelect(['tags.id'])),
         ];
     }
 

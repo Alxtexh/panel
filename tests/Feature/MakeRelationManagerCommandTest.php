@@ -42,6 +42,9 @@ final class MakeRelationManagerCommandTest extends TestCase
         $this->assertStringContainsString('Dedicated list/create/edit/view pages', $resourceContents);
         $this->assertStringContainsString('->resource(CommentResource::class)', $managerContents);
         $this->assertStringContainsString('Links to CommentResource nested pages', $managerContents);
+        $this->assertStringContainsString('$relationship', $resourceContents);
+        $this->assertStringContainsString('/attach', $resourceContents);
+        $this->assertStringContainsString('row action', $resourceContents);
         $this->assertStringNotContainsString('modal', strtolower($managerContents));
         $this->assertStringNotContainsString('Livewire', $resourceContents);
         $this->assertStringNotContainsString('Livewire', $managerContents);

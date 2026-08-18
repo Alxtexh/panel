@@ -96,6 +96,18 @@ final class CommandsTest extends TestCase
         $this->assertStringContainsString('make:panel-resource', Blueprint::markdown());
     }
 
+    public function test_the_blueprint_names_kit_conventions(): void
+    {
+        $markdown = Blueprint::markdown();
+
+        $this->assertStringContainsString('Kit conventions', $markdown);
+        $this->assertStringContainsString('never Livewire', $markdown);
+        $this->assertStringContainsString('SelectField::relationship()', $markdown);
+        $this->assertStringContainsString('/{parent}/{id}/{child}/attach', $markdown);
+        $this->assertStringContainsString('empty canvas', $markdown);
+        $this->assertStringContainsString('Catalog is not in core', $markdown);
+    }
+
     public function test_the_blueprint_command_writes_the_file(): void
     {
         $this->artisan('panel:blueprint')->assertSuccessful();

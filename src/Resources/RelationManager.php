@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Http\NestedRelation;
 use Alxtexh\Panel\Tables\ListResult;
 use Alxtexh\Panel\Tables\Table;
 
@@ -154,9 +155,15 @@ final class RelationManager
 
         if (! isset($this->model)) {
             $model = $resource::model();
-            $table = (new $model)->getTable();
 
-            $this->related($model, $table.'.'.$resource::parentColumn());
+            if (NestedRelation::belongsToMany($resource)) {
+                $this->model = $model;
+                $this->foreignKey = '';
+            } else {
+                $table = (new $model)->getTable();
+
+                $this->related($model, $table.'.'.$resource::parentColumn());
+            }
         }
 
         return $this;
@@ -239,6 +246,22 @@ final class RelationManager
 
         $query = $definition->toListQuery($this->model);
 
+        if ($this->resource !== null && NestedRelation::belongsToMany($this->resource)) {
+            $parentClass = $this->resource::parentResource();
+            $parent = $parentClass::model()::query()->findOrFail($parentKey);
+            $resource = $this->resource;
+
+            $query->constrain(function ($builder) use ($parent, $resource, $modify): void {
+                NestedRelation::constrain($builder, $resource, $parent);
+
+                if ($modify !== null) {
+                    $modify($builder);
+                }
+            });
+
+            return $query->run($request);
+        }
+
         // Layered on top of whatever join the table already declares, so a
         // relation manager can still show joined columns.
         $query->join(function ($builder) use ($foreignKey, $parentKey, $modify, $definition): void {
@@ -278,6 +301,9 @@ final class RelationManager
             $canCreate = (bool) ($permissions['create'] ?? false);
             $canEdit = (bool) ($permissions['update'] ?? false);
             $pages = ['resource' => $this->resource::key()];
+            if (NestedRelation::belongsToMany($this->resource)) {
+                $pages['attach'] = true;
+            }
         }
 
         return [

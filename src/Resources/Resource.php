@@ -11,10 +11,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Alxtexh\Panel\Actions\Action;
+use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\CustomFields\CustomField;
 use Alxtexh\Panel\CustomFields\CustomFieldFactory;
 use Alxtexh\Panel\Forms\Fields\Field;
 use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Http\NestedContext;
+use Alxtexh\Panel\Http\NestedRelation;
+use Alxtexh\Panel\Infolists\Entry;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Schema\Component;
 use Alxtexh\Panel\Support\Abilities;
@@ -93,6 +98,15 @@ abstract class Resource
      * singular key snake-cased with `_id`: `clients` gives `client_id`.
      */
     protected static ?string $parentColumn = null;
+
+    /**
+     * Parent-model method name for a BelongsToMany nested resource.
+     *
+     * HasMany uses `$parentColumn`. BelongsToMany sets this to the relation
+     * method (`tags`) and answers at the same nested URLs, plus `/attach`.
+     * Detach is a row action on the nested index. Dedicated pages, not modals.
+     */
+    protected static ?string $relationship = null;
 
     protected static ?int $sort = null;
 
@@ -483,6 +497,53 @@ abstract class Resource
             ->singular()->snake()->append('_id')->value();
     }
 
+    /**
+     * BelongsToMany method on the parent model, or null for HasMany nested resources.
+     */
+    public static function relationship(): ?string
+    {
+        $name = static::$relationship;
+
+        return $name === null || $name === '' ? null : $name;
+    }
+
+    /**
+     * An infolist entry action by key, or null.
+     *
+     * The infolist-action endpoint resolves through this, the same way table
+     * record actions resolve through `Table::recordAction()`.
+     */
+    public static function infolistAction(string $key): ?Action
+    {
+        return self::findInfolistAction(static::infolist(), $key);
+    }
+
+    /**
+     * @param  list<Component|\Alxtexh\Panel\Schema\Renderable>  $nodes
+     */
+    private static function findInfolistAction(array $nodes, string $key): ?Action
+    {
+        foreach ($nodes as $node) {
+            if ($node instanceof Entry) {
+                $action = $node->getAction();
+
+                if ($action !== null && $action->key === $key) {
+                    return $action;
+                }
+            }
+
+            if ($node instanceof Component) {
+                $found = self::findInfolistAction($node->children(), $key);
+
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static function purpose(): ?string
     {
         return static::$purpose;
@@ -608,6 +669,26 @@ abstract class Resource
     public static function definition(): Table
     {
         $table = static::table(Table::make());
+
+        if (NestedRelation::belongsToMany(static::class) && $table->recordAction('detach') === null) {
+            $resource = static::class;
+
+            $table->recordActions([
+                ...$table->getRecordActions(),
+                RecordAction::make('detach', 'Detach')
+                    ->authorize('update')
+                    ->destructive()
+                    ->confirm('Detach this record from the parent?')
+                    ->removesRow()
+                    ->handle(static function (Model $record) use ($resource): void {
+                        $parent = NestedContext::parent(request(), $resource);
+
+                        abort_if($parent === null, 404);
+
+                        NestedRelation::of($parent, $resource)->detach($record->getKey());
+                    }),
+            ]);
+        }
 
         $definitions = static::customFields();
 

@@ -19,6 +19,7 @@ use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\CustomFields\CustomField;
 use Alxtexh\Panel\CustomFields\CustomFieldFactory;
 use Alxtexh\Panel\Http\NestedContext;
+use Alxtexh\Panel\Http\NestedRelation;
 use Alxtexh\Panel\Http\Requests\RecordFormRequest;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
@@ -87,11 +88,15 @@ final class RecordController extends Controller
          */
         $parent = NestedContext::parent($request, $class);
 
-        if ($parent !== null) {
+        if ($parent !== null && ! NestedRelation::belongsToMany($class)) {
             $record->setAttribute($class::parentColumn(), $parent->getKey());
         }
 
         $this->save($record);
+
+        if ($parent !== null && NestedRelation::belongsToMany($class)) {
+            NestedRelation::of($parent, $class)->syncWithoutDetaching([$record->getKey()]);
+        }
 
         return back()->with('success', $class::label().' created.');
     }
@@ -119,7 +124,7 @@ final class RecordController extends Controller
         $parent = NestedContext::parent($request, $class);
 
         if ($parent !== null) {
-            $record->setAttribute($class::parentColumn(), $parent->getKey());
+            NestedRelation::restamp($class, $parent, $record);
         }
 
         $this->save($record);
@@ -172,6 +177,59 @@ final class RecordController extends Controller
         $action->run($record, $this->actionInput($request, $action));
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Run one declared infolist action against one record.
+     *
+     * Same gates as `runAction`: the key must be declared on this resource's
+     * infolist, the ability is checked against this record, and the view page
+     * stays a dedicated page. The client POSTs `{ action }`.
+     */
+    public function runInfolistAction(Request $request, string $resource, string $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'action' => ['required', 'string', 'max:64'],
+        ]);
+
+        $class = $this->resolve($resource);
+        $record = $this->findScoped($class, $id);
+
+        $action = $class::infolistAction($validated['action']);
+
+        if ($action === null) {
+            throw new NotFoundHttpException(
+                "No infolist action [{$validated['action']}] on [{$resource}]."
+            );
+        }
+
+        abort_unless($class::can($action->ability(), $record), 403);
+
+        $action->run($record);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Attach existing related records. Dedicated page POST, not a modal.
+     */
+    public function attach(Request $request, string $resource): RedirectResponse
+    {
+        $class = $this->resolve($resource);
+        $parent = NestedContext::parent($request, $class);
+
+        abort_if($parent === null || ! NestedRelation::belongsToMany($class), 404);
+        abort_unless($class::can('update'), 403);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:50'],
+            'ids.*' => ['required'],
+        ]);
+
+        NestedRelation::attach($class, $parent, $validated['ids']);
+
+        return redirect(NestedContext::base($class, $parent))
+            ->with('success', $class::pluralLabel().' attached.');
     }
 
     /**
@@ -261,7 +319,7 @@ final class RecordController extends Controller
         $parent = NestedContext::parent($request, $class);
 
         if ($parent !== null) {
-            $query->where($class::parentColumn(), $parent->getKey());
+            NestedRelation::constrain($query, $class, $parent);
         }
 
         $written = (new Reorderer($column))->apply(
@@ -445,7 +503,7 @@ final class RecordController extends Controller
         $parent = NestedContext::parent(request(), $class);
 
         if ($parent !== null) {
-            $query->where($class::parentColumn(), $parent->getKey());
+            NestedRelation::constrain($query, $class, $parent);
         }
 
         return $query->findOrFail($id);
@@ -670,7 +728,7 @@ final class RecordController extends Controller
         $parent = NestedContext::parent(request(), $class);
 
         if ($parent !== null) {
-            $query->where($class::parentColumn(), $parent->getKey());
+            NestedRelation::constrain($query, $class, $parent);
         }
 
         return $query->findOrFail($id);
