@@ -95,7 +95,14 @@ watch(() => props.tail, toBottom)
             own controls. Same reasoning as the table shell: one border round
             the whole object, `divide-y` between the bands, nothing floating.
         -->
-        <div class="flex min-h-0 flex-col divide-y rounded-lg border bg-card">
+        <p
+            v-if="!props.files.length"
+            class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
+        >
+            No log files yet.
+        </p>
+
+        <div v-else class="flex min-h-0 flex-col divide-y rounded-lg border bg-card">
             <div class="flex flex-wrap items-center gap-2 p-3">
                 <!--
                     A PICKER ONLY WHERE THERE IS SOMETHING TO PICK - design

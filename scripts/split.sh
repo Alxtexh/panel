@@ -46,8 +46,9 @@ cd "$(dirname "$0")/.."
 
 # A split reads committed history, not the working tree. Splitting with
 # uncommitted changes silently produces a package WITHOUT them, which looks like
-# the split dropped your work.
-if [[ -n "$(git status --porcelain)" ]]; then
+# the split dropped your work. Untracked directories (erpgosaas, temp-filament)
+# are ignored: they are not in history and cannot enter the split.
+if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
     echo "Working tree is not clean. Commit or stash first - a subtree split" >&2
     echo "reads history, so uncommitted changes would be silently omitted." >&2
     exit 1

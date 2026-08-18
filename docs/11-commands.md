@@ -26,7 +26,7 @@
 | `panel:benchmark` | Time every list surface, warm, as a median |
 
 `panel:doctor` is the one to run first on a new installation. Every check exists
-because the failure is silent — a working panel serving wrong or unprotected
+because the failure is silent: a working panel serving wrong or unprotected
 data, where every page returns 200 and every test passes. For example: with
 `BROADCAST_CONNECTION=log`, channel authorisation never runs at all and every
 channel authorises, including for guests.
@@ -53,7 +53,7 @@ Schedule::command('panel:search-index')->hourly();
 
 | Command | Does |
 |---|---|
-| `panel:monitor-sample` | Sample queue depth, failed jobs, cache — the Monitoring screen is empty without it |
+| `panel:monitor-sample` | Sample queue depth, failed jobs, cache. The Monitoring screen is empty without it |
 | `panel:refresh-rollups` | Maintain pre-aggregated counters |
 | `panel:prune-trash` | Permanently delete expired soft-deletes. **`--pretend`** |
 | `panel:prune-exports` | Remove finished export files |
@@ -87,3 +87,25 @@ it would do first.
 | `make ssr` | Build the SSR bundle and start the server |
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
 | `make test-package` | The package's own Testbench suite |
+
+## Agent APIs (v1.0.12 to v1.0.18)
+
+`panel:blueprint` regenerates `AGENTS.md` from these. Do not invent Vue for a
+screen the kit already ships.
+
+| API | Does |
+|---|---|
+| `TillPage` / `--till` | Empty till canvas. Vue shims packaged Till |
+| `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` | Empty page bases. Directory inherits chrome sections |
+| `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |
+| `PUT {panel}/settings/appearance` | Persist appearance on the user (`appearance` JSON column) |
+| `Panel::feedback($persist)` + `FeedbackDialog` | In-panel feature/bug reports |
+| `TicketAnalysis` | Packaged screen; `TicketingPlugin` mounts it |
+| `TableWidget` / `ChartWidget` `->poll('10s')` | Reload that deferred prop. Pauses while the tab is hidden |
+| `Notification::make()->title('Saved')->success()->send()` | Inertia toast. `bell()` also writes the topbar |
+| Infolist `TextEntry` / `ImageEntry` / `RepeatableEntry` | Dedicated view page, never a modal |
+| `SelectField::relationship()` | BelongsTo picker |
+| `/{parent}/{id}/{child}/attach` | BelongsToMany attach page |
+| `InteractsWithPanels` | `assertFormState`, `assertNestedAttach`, `assertPanelToast`, `assertEmptyGrantsHint` |
+| Operations nav group | Backups / Logs / Monitoring in the sidebar when the panel offers `operations` |
+| Directory on install | Chrome hub: Settings, Users, Roles, Documents, Backups, Logs, Monitoring, Help |

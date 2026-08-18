@@ -716,6 +716,13 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                 </table>
             </div>
         </div>
+
+        <p
+            v-else-if="props.status.configured"
+            class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
+        >
+            No snapshots yet.
+        </p>
         <!--
             THE TRAIL, UNDER THE LIST IT DESCRIBES.
 

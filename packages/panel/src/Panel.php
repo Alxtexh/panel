@@ -1003,7 +1003,7 @@ final class Panel
      * answering, and a bookmarked `/portal/environment` would still edit the
      * application's environment file for somebody the panel meant to keep out.
      *
-     * @param  list<string>  $screens  any of: roles, trash, documents
+     * @param  list<string>  $screens  any of: operations, roles, trash, documents, help
      */
     public function without(array $screens): self
     {

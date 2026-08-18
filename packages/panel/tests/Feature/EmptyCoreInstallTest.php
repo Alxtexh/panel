@@ -45,7 +45,7 @@ final class EmptyCoreInstallTest extends TestCase
 
     public function test_demo_screens_are_optional_not_default(): void
     {
-        foreach (['Catalog', 'PlanSetup', 'CatalogItem', 'CatalogRegister', 'Signatures', 'Directory', 'Till', 'DevicePreview', 'Mail', 'Chat'] as $screen) {
+        foreach (['Catalog', 'PlanSetup', 'CatalogItem', 'CatalogRegister', 'Signatures', 'Till', 'DevicePreview', 'Mail', 'Chat'] as $screen) {
             $this->assertNotContains(
                 $screen,
                 PanelPages::SCREENS,
@@ -54,8 +54,45 @@ final class EmptyCoreInstallTest extends TestCase
             $this->assertContains($screen, PanelPages::OPTIONAL_SCREENS);
         }
 
+        $this->assertContains('Directory', PanelPages::SCREENS);
+        $this->assertNotContains('Directory', PanelPages::OPTIONAL_SCREENS);
+
         foreach (['settings/Profile', 'settings/Security', 'settings/Organisation', 'settings/Index', 'PanelDashboard', 'ResourcePicker'] as $core) {
             $this->assertContains($core, PanelPages::SCREENS);
         }
+    }
+
+    public function test_install_writes_a_chrome_directory_without_merchandising(): void
+    {
+        $install = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
+        );
+
+        $this->assertStringContainsString('writeDirectory', $install);
+        $this->assertStringContainsString('app/Panel/Pages/DirectoryPage.php', $install);
+        $this->assertStringContainsString('No clients, routers, or catalog', $install);
+        $this->assertStringNotContainsString('coffee', $install);
+        $this->assertStringNotContainsString("'/clients'", $install);
+        $this->assertStringNotContainsString("'/routers'", $install);
+    }
+
+    public function test_kit_directory_defaults_are_chrome_only(): void
+    {
+        $source = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Pages/DirectoryPage.php'
+        );
+
+        $this->assertStringContainsString('chromeSections', $source);
+        $this->assertStringContainsString("'Settings'", $source);
+        $this->assertStringContainsString("'Users'", $source);
+        $this->assertStringContainsString("'Roles'", $source);
+        $this->assertStringContainsString("'Documents'", $source);
+        $this->assertStringContainsString("'Backups'", $source);
+        $this->assertStringContainsString("'Logs'", $source);
+        $this->assertStringContainsString("'Monitoring'", $source);
+        $this->assertStringContainsString("'Help'", $source);
+        $this->assertStringNotContainsString('Clients', $source);
+        $this->assertStringNotContainsString('Routers', $source);
+        $this->assertStringNotContainsString('coffee', $source);
     }
 }

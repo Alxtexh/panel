@@ -42,7 +42,7 @@ leaves `package.json` byte-identical.
 | Writes `resources/js/layouts/PanelLayout.vue` | A layout you are meant to replace |
 | Merges `resources/css/app.css` | Points Tailwind at the package — **without this you get a working panel with no styling** |
 | Wires `vite.config.js` | Adds the Vue plugin if the app has none |
-| Writes core page files | Auth, CRUD, settings, dashboard host. Catalog / PlanSetup / Signatures / Directory are optional (`PanelPages::writeOptional()`) |
+| Writes core page files | Auth, CRUD, settings, dashboard host, Directory chrome hub. Catalog / PlanSetup / Signatures stay optional (`PanelPages::writeOptional()`) |
 | Writes empty `DashboardPage` | No sample revenue or orders; host fills `stats()` / `charts()` |
 | Creates `app/Panel/` | Where your resources live |
 | Writes `AGENTS.md` | Conventions, regenerate with `panel:blueprint` |

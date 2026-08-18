@@ -168,6 +168,7 @@ final class PanelPages
          * an ISP's articles about fibre plans.
          */
         'UserManagement',
+        'Directory',
         'settings/Workspaces',
         'settings/Organisation',
         'settings/Index',
@@ -186,14 +187,14 @@ final class PanelPages
     /**
      * Opt-in merchandising / studio screens. NOT written on `panel:install`.
      *
-     * Catalog, PlanSetup, Signatures and Directory are empty canvases the host
-     * subclasses when needed (`CatalogBrowserPage`, `PlanSetupPage`, …). Shipping
-     * their page files on every install made a fresh kit look like a POS demo.
+     * Catalog, PlanSetup, Signatures are empty canvases the host subclasses
+     * when needed. Directory is default chrome (Settings, Users, Roles,
+     * Documents, Backups, Logs, Monitoring, Help) and lives in SCREENS.
+     * Shipping Catalog on every install made a fresh kit look like a POS demo.
      * Call `PanelPages::writeOptional()` (or copy a stub) when you add one of
      * those page classes; the npm package still exports the Vue components.
      */
     public const OPTIONAL_SCREENS = [
-        'Directory',
         'Catalog',
         'PlanSetup',
         'CatalogItem',
@@ -249,9 +250,9 @@ final class PanelPages
     }
 
     /**
-     * Write Catalog / PlanSetup / Signatures / Directory page files when the
-     * host opts into those page bases. Safe to call repeatedly; never overwrites
-     * unless `$force`.
+     * Write Catalog / PlanSetup / Signatures page files when the host opts
+     * into those page bases. Directory is a default screen. Safe to call
+     * repeatedly; never overwrites unless `$force`.
      *
      * @return array{written: list<string>, skipped: list<string>, directory: ?string}
      */

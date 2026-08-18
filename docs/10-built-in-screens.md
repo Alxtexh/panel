@@ -7,10 +7,11 @@ mounted by default and can be dropped per panel.
 
 | Screen | Where it appears | Ability |
 |---|---|---|
-| **Backups** | Account menu | `view_operations`, `manage_backups` to restore or delete |
-| **Logs** | Account menu | `view_operations` |
-| **Monitoring** | Account menu | `view_operations` |
-| **Activity** | Account menu | — |
+| **Backups** | Operations nav group (and account menu) | `view_operations`, `manage_backups` to restore or delete |
+| **Logs** | Operations nav group (and account menu) | `view_operations` |
+| **Monitoring** | Operations nav group (and account menu) | `view_operations` |
+| **Directory** | Navigation | Chrome links; individual cards still ability-gated |
+| **Activity** | Account menu | - |
 | **Trash** | Account menu | Per-resource `restore` / `forceDelete` |
 | **User management** | Account menu | Resource abilities |
 | **Roles and permissions** | Settings | `manage_roles` |
@@ -33,7 +34,6 @@ screens stay in the npm package and can be mirrored with
 | Catalog / CatalogItem / CatalogRegister | `CatalogBrowserPage` etc. | Your page class |
 | PlanSetup | `PlanSetupPage` | `make:panel-page --plan-setup` |
 | Signatures | `SignatureStudioPage` | Your page class |
-| Directory | `DirectoryPage` | `make:panel-page --directory` |
 | Till | `TillPage` | `make:panel-page --till` |
 | Device preview | `DevicePreviewPage` | `make:panel-page --device-preview` |
 | Mail | `MailPage` | `Panel::apps(['mail'])` on the portal |
@@ -47,10 +47,9 @@ register widgets with `Panel::widgets()`.
 
 **Almost always: the signed-in account holds no role.**
 
-These entries live in the **account menu** — the dropdown under your avatar —
-rather than the sidebar, because backups and logs belong to the *installation*
-rather than to the organisation whose records fill the navigation. They are
-gated on `view_operations`, and an account with no role holds nothing.
+These entries also sit in an **Operations** sidebar group when the panel
+offers `operations`. They remain in the account menu. They are gated on
+`view_operations`, and an account with no role holds nothing.
 
 Check it:
 

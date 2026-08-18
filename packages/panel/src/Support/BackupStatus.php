@@ -94,7 +94,7 @@ final class BackupStatus
                 'configured' => true,
                 'disk' => $disk,
                 'healthy' => false,
-                'problem' => 'No backups have been taken yet.',
+                'problem' => 'No snapshots yet.',
             ];
         }
 

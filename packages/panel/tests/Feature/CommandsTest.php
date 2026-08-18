@@ -104,8 +104,12 @@ final class CommandsTest extends TestCase
         $this->assertStringContainsString('never Livewire', $markdown);
         $this->assertStringContainsString('SelectField::relationship()', $markdown);
         $this->assertStringContainsString('/{parent}/{id}/{child}/attach', $markdown);
-        $this->assertStringContainsString('empty canvas', $markdown);
+        $this->assertStringContainsString('empty canvas plus', $markdown);
         $this->assertStringContainsString('Catalog is not in core', $markdown);
+        $this->assertStringContainsString('Notification::make()', $markdown);
+        $this->assertStringContainsString('make:panel-page Front --till', $markdown);
+        $this->assertStringContainsString("apps(['mail', 'chat'])", $markdown);
+        $this->assertStringContainsString("->poll('10s')", $markdown);
     }
 
     public function test_the_blueprint_command_writes_the_file(): void

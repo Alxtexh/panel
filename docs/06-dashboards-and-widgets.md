@@ -109,14 +109,17 @@ Generate an empty factory with `php artisan make:panel-widget Revenue` or
 `--chart`. Discovery picks it up from `discoverWidgets()`.
 
 ```php
-TableWidget::make('recent')->resource(OrderResource::class)->limit(5);
+TableWidget::make('recent')->resource(OrderResource::class)->limit(5)->poll('10s');
+ChartWidget::make('load', 'Load')->poll(15);
 
 Panel::make('admin')->discoverWidgets(app_path('Panel/Widgets'));
 ```
 
-`TableWidget` renders the existing DataTable with a capped list query. The
-namespace is optional when the directory is under `app_path()`. An empty
-dashboard stays the install default.
+`TableWidget` renders the existing DataTable with a capped list query.
+`->poll('10s')` (or an integer number of seconds) reloads only that widget's
+deferred prop. Polling pauses while the tab is hidden. The namespace is optional
+when the directory is under `app_path()`. An empty dashboard stays the install
+default.
 
 ## Rollups
 

@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/vue3'
 import {
     Activity,
+    Archive,
     BookOpen,
     FileQuestion,
     Gauge,
@@ -51,7 +52,9 @@ import type { NavItem } from '../types'
  * Resources are permission-filtered server-side, so one the user may not open
  * never reaches the client at all - the client never decides who sees what.
  * Declared pages carry no ability, because the guarded screens are reached from
- * the account menu instead and are deliberately not repeated here.
+ * the account menu instead and are deliberately not repeated here. Operations
+ * (Backups, Logs, Monitoring) are an exception: they also arrive in
+ * `panelPages` under the Operations group when the panel offers them.
  */
 
 const ICONS: Record<string, typeof LayoutGrid> = {
@@ -60,6 +63,7 @@ const ICONS: Record<string, typeof LayoutGrid> = {
     router: RouterIcon,
     package: Package,
     activity: Activity,
+    archive: Archive,
     sliders: SlidersHorizontal,
     'layout-grid': LayoutGrid,
     'shopping-bag': ShoppingBag,

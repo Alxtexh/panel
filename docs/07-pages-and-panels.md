@@ -5,7 +5,23 @@
 ```bash
 php artisan make:panel-page Reports
 php artisan make:panel-page Overview --dashboard   # a widget host
+php artisan make:panel-page Front --till
+php artisan make:panel-page Hub --directory         # chrome hub; install already writes one
 ```
+
+A fresh `panel:install` writes `app/Panel/Pages/DirectoryPage.php`. Default
+`sections()` are chrome only: Settings, Users, Roles, Documents, Backups, Logs,
+Monitoring, Help. Override `sections()` for a vertical. Playground
+AdministrationPage keeps its own demo hrefs.
+
+Mail and Chat are empty apps, not default routes:
+
+```php
+Panel::make('admin')->apps(['mail', 'chat']);
+```
+
+Feedback is `Panel::feedback($persist)` plus `FeedbackDialog`. Appearance
+persists at `PUT {panel}/settings/appearance`.
 
 ```php
 final class Reports extends Page

@@ -10,8 +10,9 @@ import { Deferred } from '@inertiajs/vue3'
 import { ChartCard, PkBoundary, TrendBadge } from '@alxtexh-enterprise/panel'
 import ChartBody from './ChartBody.vue'
 import type { Chart, Series } from './types'
+import { useWidgetPoll } from '../../composables/useWidgetPoll'
 
-defineProps<{
+const props = defineProps<{
     chart: Chart
     series: Series
     periods: { value: string; label: string }[] | null
@@ -24,6 +25,8 @@ defineEmits<{
     (e: 'update:period', value: string): void
     (e: 'hide'): void
 }>()
+
+useWidgetPoll(() => [`chart_${props.chart.key}`], () => props.chart.poll ?? null)
 </script>
 
 <template>

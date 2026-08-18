@@ -25,6 +25,8 @@ use Throwable;
  */
 final class TableWidget
 {
+    use CanPoll;
+
     /** @var class-string<Resource>|null */
     private ?string $resource = null;
 
@@ -136,6 +138,7 @@ final class TableWidget
             'span' => $this->span,
             'limit' => $this->limit,
             'href' => $href,
+            'poll' => $this->pollInterval(),
         ];
     }
 

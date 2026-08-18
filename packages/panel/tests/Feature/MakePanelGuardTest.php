@@ -99,7 +99,7 @@ final class MakePanelGuardTest extends TestCase
     /** Everything `make:panel` writes, for the portals this file generates. */
     private function cleanSkeleton(): void
     {
-        foreach (['Reseller', 'Platform', 'Ops'] as $studly) {
+        foreach (['Reseller', 'Platform', 'Ops', 'Admin'] as $studly) {
             @unlink(app_path("Providers/Panels/{$studly}PanelProvider.php"));
             @unlink(base_path("tests/Feature/{$studly}PanelIsolationTest.php"));
 
@@ -313,5 +313,26 @@ PHP;
 
         // Still parses, and still says exactly what it said before.
         $this->assertSame(['defaults' => ['guard' => 'web']], $this->written());
+    }
+
+    public function test_admin_keeps_operations_and_extra_portals_drop_them(): void
+    {
+        $this->artisan('make:panel', ['id' => 'admin', '--force' => true])
+            ->assertSuccessful();
+
+        $admin = (string) file_get_contents(app_path('Providers/Panels/AdminPanelProvider.php'));
+
+        $this->assertStringContainsString("'assistant-settings'", $admin);
+        $this->assertStringNotContainsString("'operations',", $admin);
+        $this->assertStringNotContainsString("'documents',", $admin);
+
+        $this->artisan('make:panel', ['id' => 'reseller', '--guard' => 'web', '--force' => true])
+            ->assertSuccessful();
+
+        $reseller = (string) file_get_contents(app_path('Providers/Panels/ResellerPanelProvider.php'));
+
+        $this->assertStringContainsString("'operations',", $reseller);
+        $this->assertStringContainsString("'documents',", $reseller);
+        $this->assertStringContainsString("'trash',", $reseller);
     }
 }

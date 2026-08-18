@@ -27,7 +27,7 @@ final class MakePageCommand extends Command
                             {--catalog : Empty CatalogBrowserPage; writes optional Catalog screen}
                             {--catalog-item : Empty CatalogItemPage; writes optional CatalogItem screen}
                             {--register : Empty CatalogRegisterPage; writes optional CatalogRegister screen}
-                            {--directory : Empty DirectoryPage; writes optional Directory screen}
+                            {--directory : Chrome DirectoryPage; install already writes one}
                             {--signatures : Empty SignatureStudioPage; writes optional Signatures screen}
                             {--device-preview : Empty DevicePreviewPage; Vue shims packaged DevicePreview}
                             {--panel= : The panel this screen belongs to. Defaults to panel.default}
@@ -593,7 +593,8 @@ final class MakePageCommand extends Command
         use Alxtexh\\Panel\\Pages\\DirectoryPage;
 
         /**
-         * A searchable directory of links. Fill sections().
+         * A searchable directory of links. Inherits chrome sections
+         * (Settings, Users, Roles, Documents, Backups, Logs, Monitoring, Help).
          */
         final class {$class} extends DirectoryPage
         {
@@ -611,10 +612,11 @@ final class MakePageCommand extends Command
                 return null;
             }
 
-            public static function sections(): array
-            {
-                return [];
-            }
+            /*
+             * Inherit DirectoryPage::chromeSections() (Settings, Users, Roles,
+             * Documents, Backups, Logs, Monitoring, Help). Override sections()
+             * to replace those cards. Do not add Clients or Routers here.
+             */
         }
 
         PHP;

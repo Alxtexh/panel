@@ -9,6 +9,7 @@ import { Deferred, Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { DataTable, PkBoundary, useSchemaColumns } from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
+import { useWidgetPoll } from '../../composables/useWidgetPoll'
 
 export interface TableWidgetDecl {
     key: string
@@ -17,6 +18,7 @@ export interface TableWidgetDecl {
     span: number
     limit: number
     href: string | null
+    poll?: number | null
 }
 
 interface TableWidgetValue {
@@ -39,6 +41,8 @@ const resolved = computed(
 
 const schemaColumns = computed<SchemaColumn[]>(() => resolved.value?.columns ?? [])
 const { columns } = useSchemaColumns(schemaColumns)
+
+useWidgetPoll(() => [props.dataKey], () => props.table.poll ?? null)
 </script>
 
 <template>
