@@ -33,7 +33,7 @@ namespace Alxtexh\Panel\Tables;
 final class ViewState
 {
     /** Keys a view may carry. Anything else is not table state. */
-    private const KEYS = ['search', 'sort', 'direction', 'perPage', 'tab', 'filters', 'hidden'];
+    private const KEYS = ['search', 'sort', 'direction', 'perPage', 'tab', 'filters', 'hidden', 'group'];
 
     /**
      * Reduce arbitrary input to state this table can honour.
@@ -92,6 +92,27 @@ final class ViewState
 
         if (isset($input['tab']) && in_array($input['tab'], $schema['tabs'] ?? [], true)) {
             $out['tab'] = (string) $input['tab'];
+        }
+
+        /*
+         * GROUPING, against the declared picker plus the default.
+         *
+         * `-` means none, and is only meaningful when the table offered a
+         * picker. A key the table never declared is dropped, same as a sort.
+         */
+        if (isset($input['group']) && is_string($input['group'])) {
+            $allowed = array_column($schema['groups'] ?? [], 'key');
+            $default = is_array($schema['groupBy'] ?? null) ? ($schema['groupBy']['key'] ?? null) : null;
+
+            if ($default !== null) {
+                $allowed[] = $default;
+            }
+
+            if ($input['group'] === '-' && ($schema['groups'] ?? []) !== []) {
+                $out['group'] = '-';
+            } elseif (in_array($input['group'], $allowed, true)) {
+                $out['group'] = $input['group'];
+            }
         }
 
         /* Filters, by declared key only, and never a nested structure. */

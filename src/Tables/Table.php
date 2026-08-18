@@ -13,6 +13,7 @@ use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Tables\Columns\Column;
 use Alxtexh\Panel\Tables\Filters\Filter;
 use Alxtexh\Panel\Tables\Filters\HasOptions;
+use Alxtexh\Panel\Tables\Grouping\Group;
 
 /**
  * Declarative table definition. Produces the schema, and configures ListQuery.
@@ -82,10 +83,21 @@ final class Table
     /** The column rows are dragged into order along. */
     private ?string $reorderColumn = null;
 
-    /** The column rows are clustered under, and what to call it. */
-    private ?string $groupBy = null;
+    /** Default grouping, when the table always clusters or the picker has a default. */
+    private ?Group $defaultGroup = null;
 
-    private ?string $groupLabel = null;
+    /**
+     * Groupings the operator may pick between.
+     *
+     * Empty means there is no picker: the default grouping is always on, which
+     * is what `groupBy('status')` has always meant. A non-empty list is the
+     * toolbar dropdown, and only then can grouping be turned off.
+     *
+     * @var list<Group>
+     */
+    private array $groups = [];
+
+    private bool $collapsedGroupsByDefault = false;
 
     private ?Tabs $tabs = null;
 
@@ -206,21 +218,21 @@ final class Table
     }
 
     /**
-     * The qualified column behind the grouping key.
+     * The qualified column behind a grouping key.
      *
      * Resolved through the declared columns rather than guessed, so a grouped
      * column that is really `plans.name AS plan_name` orders by the real column
      * instead of by an alias the ORDER BY cannot see.
      */
-    private function resolveGroupColumn(): string
+    private function resolveGroupColumn(string $key): string
     {
         foreach ($this->columns as $column) {
-            if ($column->key === $this->groupBy) {
-                return $column->resolvedDatabaseColumn() ?? $this->groupBy;
+            if ($column->key === $key) {
+                return $column->resolvedDatabaseColumn() ?? $key;
             }
         }
 
-        return $this->groupBy;
+        return $key;
     }
 
     /**
@@ -279,18 +291,96 @@ final class Table
      * The alternative - padding each page so groups never straddle a boundary -
      * means a variable number of rows per page and a cursor that cannot be
      * derived from the last row.
+     *
+     * A string is the original shape: `groupBy('status')`. A {@see Group} is
+     * the same thing with a label, a collapse affordance, or date clustering.
      */
-    public function groupBy(string $column, ?string $label = null): self
+    public function groupBy(string|Group $column, ?string $label = null): self
     {
-        $this->groupBy = $column;
-        $this->groupLabel = $label;
+        $group = $column instanceof Group ? $column : Group::make($column);
+
+        if ($label !== null) {
+            $group->label($label);
+        }
+
+        $this->defaultGroup = $group;
+
+        return $this;
+    }
+
+    /** Filament's name for the default grouping. {@see groupBy()}. */
+    public function defaultGroup(string|Group|null $group): self
+    {
+        if ($group === null) {
+            $this->defaultGroup = null;
+
+            return $this;
+        }
+
+        return $this->groupBy($group);
+    }
+
+    /**
+     * Groupings the operator may pick between, shown in the existing toolbar.
+     *
+     * THERE IS NO PICKER WITHOUT THIS. `groupBy('status')` still clusters
+     * always, with no dropdown, because a table that only ever groups one way
+     * should not grow a control that does nothing. Pass two or more (or one
+     * plus a default of none) when the operator actually chooses.
+     *
+     * Each entry is a column name or a {@see Group}. The picker lives on the
+     * table toolbar that already hosts search and filters; a table without
+     * that toolbar does not grow a second chrome just for this.
+     *
+     * @param  list<string|Group>  $groups
+     */
+    public function groups(array $groups): self
+    {
+        $this->groups = array_map(
+            static fn (string|Group $group): Group => $group instanceof Group ? $group : Group::make($group),
+            array_values($groups),
+        );
+
+        return $this;
+    }
+
+    /**
+     * Collapse every heading when the table first loads.
+     *
+     * Only headings marked {@see Group::collapsible()} honour it. Expanded is
+     * the default, because collapsing a page the operator has not read yet
+     * hides the rows they came for.
+     */
+    public function collapsedGroupsByDefault(bool $collapsed = true): self
+    {
+        $this->collapsedGroupsByDefault = $collapsed;
 
         return $this;
     }
 
     public function getGroupBy(): ?string
     {
-        return $this->groupBy;
+        return $this->defaultGroup?->key();
+    }
+
+    /**
+     * Default grouping plus picker options, keyed uniquely.
+     *
+     * A default that is also in `groups()` must not appear twice: the picker
+     * would list "Status" twice and the allowlist would not mind, but the
+     * dropdown would.
+     *
+     * @return list<Group>
+     */
+    private function groupsForQuery(): array
+    {
+        $out = [];
+
+        foreach ([...($this->defaultGroup === null ? [] : [$this->defaultGroup]), ...$this->groups] as $group) {
+            $out[$group->key()] = $group;
+        }
+
+        return array_values($out);
     }
 
     /**
@@ -625,10 +715,12 @@ final class Table
              * shares one membership test - ticking one row ticks them all.
              */
             'rowKey' => $this->rowKeyName(),
-            'groupBy' => $this->groupBy === null ? null : [
-                'key' => $this->groupBy,
-                'label' => $this->groupLabel ?? str($this->groupBy)->headline()->value(),
-            ],
+            'groupBy' => $this->defaultGroup?->toSchema(),
+            'groups' => array_map(
+                static fn (Group $group): array => $group->toSchema(),
+                $this->groups,
+            ),
+            'collapsedGroupsByDefault' => $this->collapsedGroupsByDefault,
             'defaultSort' => $this->defaultSort,
             'defaultDirection' => $this->defaultDirection,
             'perPage' => $this->perPage,
@@ -727,8 +819,14 @@ final class Table
             $query->recordActions($this->recordActions);
         }
 
-        if ($this->groupBy !== null) {
-            $query->groupRowsBy($this->groupBy, $this->resolveGroupColumn());
+        $available = [];
+
+        foreach ($this->groupsForQuery() as $group) {
+            $available[] = [$group, $this->resolveGroupColumn($group->key())];
+        }
+
+        if ($available !== []) {
+            $query->grouping($available, $this->defaultGroup?->key(), $this->groups !== []);
         }
 
         if ($this->tabs !== null) {

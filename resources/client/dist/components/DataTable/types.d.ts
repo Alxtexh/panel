@@ -38,4 +38,18 @@ export interface FilterSchema {
     /** Date ranges only. Structure, so it ships with the cached schema. */
     presets?: Record<string, string>;
 }
+/** A grouping the operator may pick, from `Table::groups()`. */
+export interface GroupSchema {
+    key: string;
+    label: string;
+    collapsible?: boolean;
+    date?: boolean;
+    titlePrefixed?: boolean;
+}
+/** An applied-filter chip. Clearing it drops that filter's query parameter. */
+export interface FilterIndicator {
+    key: string;
+    label: string;
+    removable?: boolean;
+}
 export type SortDirection = 'asc' | 'desc';

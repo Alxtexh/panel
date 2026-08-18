@@ -149,4 +149,12 @@ final class DateRangeFilter extends Filter
         // schema - unlike a select's options, which are rows.
         return [...parent::toSchema(), 'presets' => self::PRESETS];
     }
+
+    protected function indicatorLabel(mixed $value): string
+    {
+        $preset = is_array($value) ? ($value['preset'] ?? '') : '';
+        $shown = self::PRESETS[$preset] ?? (is_string($preset) && $preset !== '' ? $preset : $this->displayValue($value));
+
+        return $this->resolvedLabel().': '.$shown;
+    }
 }

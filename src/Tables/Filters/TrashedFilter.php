@@ -95,4 +95,14 @@ final class TrashedFilter extends Filter implements HasOptions
      * with an exception is a rule someone has to remember. The client already
      * knows what a `trashed` filter offers from its type.
      */
+    protected function indicatorLabel(mixed $value): string
+    {
+        $shown = match ($value) {
+            'trashed' => 'Trashed',
+            'all' => 'With trashed',
+            default => (string) $value,
+        };
+
+        return $this->resolvedLabel().': '.$shown;
+    }
 }
