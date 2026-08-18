@@ -55,6 +55,7 @@ export { default as SettingsIndex } from './pages/settings/Index.vue'
 export { default as SettingsPayments } from './pages/settings/Payments.vue'
 export { default as SettingsLayout } from './layouts/SettingsLayout.vue'
 export { default as Directory } from './pages/Directory.vue'
+export { default as BillingSuspended } from './pages/BillingSuspended.vue'
 export { default as Catalog } from './pages/Catalog.vue'
 export { default as PlanSetup } from './pages/PlanSetup.vue'
 export { default as CatalogItem } from './pages/CatalogItem.vue'
@@ -245,6 +246,7 @@ export const PANEL_PAGES = {
     'settings/Index': () => import('./pages/settings/Index.vue'),
     'settings/Payments': () => import('./pages/settings/Payments.vue'),
     Directory: () => import('./pages/Directory.vue'),
+    BillingSuspended: () => import('./pages/BillingSuspended.vue'),
     Catalog: () => import('./pages/Catalog.vue'),
     PlanSetup: () => import('./pages/PlanSetup.vue'),
     CatalogItem: () => import('./pages/CatalogItem.vue'),

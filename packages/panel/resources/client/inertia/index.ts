@@ -55,6 +55,7 @@ export { default as SettingsIndex } from './pages/settings/Index.vue'
 export { default as SettingsPayments } from './pages/settings/Payments.vue'
 export { default as SettingsLayout } from './layouts/SettingsLayout.vue'
 export { default as Directory } from './pages/Directory.vue'
+export { default as BillingSuspended } from './pages/BillingSuspended.vue'
 export { default as Catalog } from './pages/Catalog.vue'
 export { default as PlanSetup } from './pages/PlanSetup.vue'
 export { default as CatalogItem } from './pages/CatalogItem.vue'
@@ -64,14 +65,6 @@ export { default as Till } from './pages/Till.vue'
 export { default as DevicePreview } from './pages/DevicePreview.vue'
 export { default as Mail } from './pages/Mail.vue'
 export { default as Chat } from './pages/Chat.vue'
-export { default as ApiKeys } from './pages/ApiKeys.vue'
-export { default as Invites } from './pages/Invites.vue'
-export { default as FeatureFlags } from './pages/FeatureFlags.vue'
-export { default as Webhooks } from './pages/Webhooks.vue'
-export { default as BillingPortal } from './pages/BillingPortal.vue'
-export { default as EmailTemplates } from './pages/EmailTemplates.vue'
-export { default as Onboarding } from './pages/Onboarding.vue'
-export { default as MediaLibrary } from './pages/MediaLibrary.vue'
 export { default as TicketAnalysis } from './pages/TicketAnalysis.vue'
 export { default as DocumentTemplates } from './pages/documents/Templates.vue'
 export { default as DocumentTemplateDesigner } from './pages/documents/TemplateDesigner.vue'
@@ -253,6 +246,7 @@ export const PANEL_PAGES = {
     'settings/Index': () => import('./pages/settings/Index.vue'),
     'settings/Payments': () => import('./pages/settings/Payments.vue'),
     Directory: () => import('./pages/Directory.vue'),
+    BillingSuspended: () => import('./pages/BillingSuspended.vue'),
     Catalog: () => import('./pages/Catalog.vue'),
     PlanSetup: () => import('./pages/PlanSetup.vue'),
     CatalogItem: () => import('./pages/CatalogItem.vue'),

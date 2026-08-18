@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Alxtexh\Panel\Pages\BillingPortalPage;
 use Alxtexh\Panel\Pages\PaymentSettingsPage;
 use Alxtexh\Panel\Pages\PlanSetupPage;
 use Alxtexh\Panel\Panel;
@@ -44,6 +45,7 @@ final class EnforceSubscriptionGate
         'password.change',
         'password.change.update',
         'user-password.update',
+        'billing.suspended',
         'login',
         'password.request',
         'password.reset',
@@ -65,7 +67,9 @@ final class EnforceSubscriptionGate
             return $next($request);
         }
 
-        if ($panel->subscriptionIsActive()) {
+        $billing = $panel->resolveBillingState();
+
+        if (! ($billing['blocksAccess'] ?? false)) {
             return $next($request);
         }
 
@@ -82,10 +86,10 @@ final class EnforceSubscriptionGate
         }
 
         return redirect()
-            ->to($panel->subscriptionBillingPath())
+            ->to(self::suspendedPath($panel))
             ->with('toast', [
                 'type' => 'warning',
-                'message' => 'This organisation\'s subscription has ended. Choose a plan to carry on.',
+                'message' => 'Billing access is limited. Manage billing to restore access.',
             ]);
     }
 
@@ -118,7 +122,8 @@ final class EnforceSubscriptionGate
     private static function pageIsBilling(string $class): bool
     {
         return is_a($class, PlanSetupPage::class, true)
-            || is_a($class, PaymentSettingsPage::class, true);
+            || is_a($class, PaymentSettingsPage::class, true)
+            || is_a($class, BillingPortalPage::class, true);
     }
 
     private static function relativePath(Request $request, Panel $panel): string
@@ -131,5 +136,10 @@ final class EnforceSubscriptionGate
         }
 
         return $path;
+    }
+
+    private static function suspendedPath(Panel $panel): string
+    {
+        return '/'.trim($panel->getPath().'/account/suspended', '/');
     }
 }

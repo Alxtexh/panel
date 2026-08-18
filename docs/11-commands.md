@@ -103,6 +103,9 @@ screen the kit already ships.
 | `FeatureFlagsPage` / `--feature-flags` | Toggle UI for `panel.tenancy.features`. Override `flags()`, `toggle()` to persist |
 | `WebhookEndpointsPage` / `--webhooks` | Endpoints, HMAC delivery log, retry. Opt in with `Panel::webhooks()` or `apps(['webhooks'])`. Override `events()`. Dispatch with `WebhookDispatcher::dispatch()` |
 | `BillingPortalPage` / `--billing-portal` | Empty billing canvas. Override `subscription()`, `invoices()`, `paymentMethods()` and actions. Host wires Stripe/Cashier |
+| `Panel::billingState()` | Declares `active`, `past_due`, `suspended`, `canceled`, `expired` and feeds the packaged access wall |
+| `Panel::subscriptionGate()` | Legacy bool gate, now redirecting to the packaged suspended screen |
+| `Panel::suspendedPage()` | Swap the suspended-screen component while keeping the packaged route and middleware flow |
 | `EmailTemplatePage` / `--email-templates` | Subject/body templates with variables. Packaged migration. Override `templates()`, `save()`, `sendTest()` |
 | `OnboardingPage` / `--onboarding` | Get-started wizard. Override `steps()`, `complete()`. Host middleware redirects first login |
 | `MediaLibraryPage` / `--media-library` | Tenant-scoped uploads on local disk. Packaged migration. Override disk via Laravel config |

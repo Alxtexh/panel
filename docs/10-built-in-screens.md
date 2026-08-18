@@ -20,6 +20,7 @@ mounted by default and can be dropped per panel.
 | **Workspaces** | Settings | - |
 | **Organisation** | Settings | - |
 | **Profile, Security** | Settings (SettingsLayout) | - (your own account) |
+| **Subscription access** | Redirect target when `Panel::billingState()` or `subscriptionGate()` blocks access | - |
 | **Help, FAQ, About, Changelog** | Navigation | - |
 | **Sitemap, Environment** | Navigation | - |
 
@@ -50,6 +51,25 @@ screens stay in the npm package and can be mirrored with
 
 The dashboard ships **empty** (`stats()` / `charts()` commented). Fill them, or
 register widgets with `Panel::widgets()`.
+
+## SaaS access states
+
+For SaaS panels, the access-state flow is now packaged:
+
+```php
+Panel::make('admin')
+    ->apps(['billing-portal'])
+    ->billingState(fn (): array => [
+        'status' => 'suspended', // active, past_due, suspended, canceled, expired
+        'plan' => ['name' => 'Growth'],
+        'reason' => 'Payment failed for the latest invoice.',
+    ]);
+```
+
+When the state blocks access, the panel redirects signed-in users to
+`/account/suspended`, not to a blank shell. The packaged screen shows sane
+default copy from status alone, links to the billing portal when present, and
+always leaves logout reachable.
 
 ## "Why can I not see Monitoring / Backups / Logs?"
 
