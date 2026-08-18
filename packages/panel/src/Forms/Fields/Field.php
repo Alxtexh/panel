@@ -54,6 +54,9 @@ abstract class Field implements Renderable
 
     protected bool $disabled = false;
 
+    /** When true, the client posts form-state after this field changes. */
+    protected bool $live = false;
+
     /** @var list<object|string> */
     protected array $rules = [];
 
@@ -102,6 +105,26 @@ abstract class Field implements Renderable
         $this->disabled = $disabled;
 
         return $this;
+    }
+
+    /**
+     * Ask the server for option patches after this field changes.
+     *
+     * KIT CONTRACT (Inertia, not Livewire): the client emits the new value,
+     * POSTs current form values to `{resource}/form-state`, and applies
+     * returned `options`. `visibleWhen` still hides fields locally. Closures
+     * on `relationship()` receive those values as the second argument.
+     */
+    public function live(bool $live = true): static
+    {
+        $this->live = $live;
+
+        return $this;
+    }
+
+    public function isLive(): bool
+    {
+        return $this->live;
     }
 
     /**
@@ -282,6 +305,7 @@ abstract class Field implements Renderable
             'help' => $this->help,
             'placeholder' => $this->placeholder,
             'disabled' => $this->disabled,
+            'live' => $this->live ? true : null,
             'span' => $this->span > 1 ? $this->span : null,
             /*
              * The visibility condition, so the client can hide the control.

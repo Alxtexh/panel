@@ -62,30 +62,60 @@ $table
 
 ## Nested resources
 
-A resource can live under a parent:
+A resource can live under a parent. Create, edit and view are dedicated pages
+(the Filament `CreateRecord` / `EditRecord` model), never a modal.
 
 ```php
 final class LineResource extends Resource
 {
     protected static string $model = Line::class;
-    protected static ?string $parentResource = InvoiceResource::class;
+    protected static ?string $parent = InvoiceResource::class;
     protected static ?string $parentColumn = 'invoice_id';
 }
 ```
 
-The URL becomes `/invoices/{invoice}/lines`. The parent is resolved from the URL
-and authorised — a caller must be able to `view` the parent, a mismatched
-pairing is a 404, and another tenant's id is a 404 rather than a 403 because
-confirming existence would itself leak.
+The URL becomes `/invoices/{invoice}/lines`, plus `/create` and `/{id}/edit`.
+The parent is resolved from the URL and authorised: a caller must be able to
+`view` the parent, a mismatched pairing is a 404, and another tenant's id is a
+404 rather than a 403 because confirming existence would itself leak. Writes
+stamp the parent from the URL, so a submitted foreign key cannot move the row.
 
 ## Relation managers
 
-Show related records on a record's own screen:
+The tab on the parent view page is a summary. It links to the nested pages
+above. Do not implement Filament's modal CRUD here.
 
 ```php
 public static function relations(): array
 {
-    return [LinesRelationManager::class];
+    return [
+        RelationManager::make('lines', 'Lines')
+            ->resource(LineResource::class)
+            ->table(fn (Table $t) => $t->columns([
+                TextColumn::make('name')->from('lines.name'),
+            ])->keyColumn('lines.id')),
+    ];
+}
+```
+
+`php artisan make:panel-relation-manager Invoice Line` writes the nested
+resource and a factory that returns that `RelationManager`.
+
+## Infolists
+
+The dedicated view page can declare entries instead of reusing every table
+column:
+
+```php
+use Alxtexh\Panel\Infolists\IconEntry;
+use Alxtexh\Panel\Infolists\TextEntry;
+
+public static function infolist(): array
+{
+    return [
+        TextEntry::make('title'),
+        IconEntry::make('status')->icons(['published' => 'check'])->colors(['published' => 'success']),
+    ];
 }
 ```
 

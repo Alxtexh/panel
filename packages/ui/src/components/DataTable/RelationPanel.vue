@@ -29,6 +29,10 @@ const props = withDefaults(
         /** True once at least one page has been requested. */
         loaded?: boolean
         emptyText?: string
+        /** Dedicated nested list URL. The tab stays a summary that links there. */
+        indexHref?: string | null
+        /** Prefix for a related row's dedicated view page. */
+        recordBase?: string | null
     }>(),
     {
         loading: false,
@@ -36,6 +40,8 @@ const props = withDefaults(
         capped: false,
         loaded: false,
         emptyText: 'Nothing here yet.',
+        indexHref: null,
+        recordBase: null,
     },
 )
 
@@ -114,7 +120,14 @@ function format(column: SchemaColumn, value: unknown): string {
                                 :value="row[column.key]"
                                 :column="column"
                             >
-                                {{ format(column, row[column.key]) }}
+                                <a
+                                    v-if="recordBase && row.id != null && column === visible[0]"
+                                    :href="`${recordBase}/${row.id}`"
+                                    class="text-foreground underline-offset-2 hover:underline"
+                                >
+                                    {{ format(column, row[column.key]) }}
+                                </a>
+                                <template v-else>{{ format(column, row[column.key]) }}</template>
                             </slot>
                         </td>
                     </tr>
@@ -143,7 +156,15 @@ function format(column: SchemaColumn, value: unknown): string {
             home: its own screen, with tabs, filters and paging.
         -->
         <p v-else-if="capped" class="text-muted-foreground border-t px-3 py-2 text-center text-xs">
-            Showing the first {{ rows.length }}. Open the full list to search or filter the rest.
+            Showing the first {{ rows.length }}.
+            <a
+                v-if="indexHref"
+                :href="indexHref"
+                class="text-foreground underline-offset-2 hover:underline"
+            >
+                Open the full list
+            </a>
+            <template v-else>Open the full list to search or filter the rest.</template>
         </p>
     </div>
 </template>

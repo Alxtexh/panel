@@ -12,6 +12,7 @@
  */
 import { computed, ref } from 'vue'
 import PkBadge from '../primitives/PkBadge.vue'
+import IconCell from '../DataTable/IconCell.vue'
 import { BADGE_VARIANTS, hasBadgeValue } from '../../composables/useSchemaColumns'
 
 export interface InfoNode {
@@ -113,6 +114,21 @@ const badgeVariant = computed(() => {
                 {{ value }}
             </PkBadge>
             <span v-else-if="node.type === 'badge'">-</span>
+            <IconCell
+                v-else-if="node.type === 'icon'"
+                :value="value"
+                :icons="node.icons"
+                :colors="node.colors"
+                :labels="node.labels"
+                :default-icon="node.defaultIcon"
+            />
+            <a
+                v-else-if="node.url"
+                :href="node.url"
+                class="text-foreground underline-offset-2 hover:underline"
+            >
+                {{ display }}
+            </a>
             <span
                 v-else
                 :class="[

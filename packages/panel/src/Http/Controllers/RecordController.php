@@ -109,6 +109,19 @@ final class RecordController extends Controller
         $this->assertNotStale($request, $record);
 
         $record->forceFill($this->foldCustomFields($class::key(), $form->sanitize($validated), $record));
+
+        /*
+         * NESTED PARENT IS THE URL, ON UPDATE TOO. Create already stamped it.
+         * Without this, a nested form that includes the foreign key (a
+         * relationship select, a hidden input) could move the row under a
+         * different parent while the address still named the old one.
+         */
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            $record->setAttribute($class::parentColumn(), $parent->getKey());
+        }
+
         $this->save($record);
 
         return back()->with('success', $class::label().' updated.');

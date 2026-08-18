@@ -31,6 +31,9 @@ export interface ImportRunResult {
     truncated: boolean
     written?: number
     message?: string
+    queued?: boolean
+    token?: string
+    failuresDownload?: string | null
 }
 
 /**
@@ -64,6 +67,42 @@ async function postForm(
     const payload = await response.json().catch(() => ({}))
 
     return { ok: response.ok, status: response.status, payload }
+}
+
+async function waitForJob(baseUrl: string, token: string): Promise<ImportRunResult> {
+    for (let attempt = 0; attempt < 60; attempt++) {
+        const response = await fetch(`${baseUrl}/jobs/${token}`, {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+        })
+        const payload = await response.json().catch(() => ({}))
+
+        if (!response.ok) {
+            throw new Error(payload.message ?? 'That import failed.')
+        }
+
+        if (payload.status === 'done') {
+            return {
+                importable: payload.importable ?? payload.total ?? 0,
+                failed: payload.failed ?? 0,
+                failures: payload.failures ?? [],
+                truncated: Boolean(payload.truncated),
+                written: payload.written ?? payload.done ?? 0,
+                token,
+                failuresDownload: payload.downloadable
+                    ? `${baseUrl}/import/failures/${token}`
+                    : null,
+            }
+        }
+
+        if (payload.status === 'failed') {
+            throw new Error(payload.error ?? 'That import failed.')
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 500))
+    }
+
+    throw new Error('That import is still running.')
 }
 
 export function useImport(baseUrl: string) {
@@ -115,6 +154,10 @@ export function useImport(baseUrl: string) {
             )
 
             const { ok, status, payload } = await postForm(`${baseUrl}/import`, body)
+
+            if (ok && payload?.queued && payload.token) {
+                return await waitForJob(baseUrl, payload.token)
+            }
 
             if (ok || (status === 422 && Array.isArray(payload.failures))) {
                 return payload

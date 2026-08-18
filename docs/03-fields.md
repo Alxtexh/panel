@@ -26,7 +26,7 @@ mass assignment is bounded by what you wrote rather than by `$fillable`.
 | `TextareaField` | Multi-line text |
 | `NumberField` | Numbers, with `min()` / `max()` |
 | `PasswordField` | Passwords — blank means *unchanged*, never *null* |
-| `SelectField` | One of a list; `searchable()` for long lists |
+| `SelectField` | One of a list; `searchable()` or `relationship()` for long lists |
 | `MultiSelectField` | Several of a list |
 | `RadioField` | One of a few, all visible |
 | `CheckboxField` | A single boolean tickbox |
@@ -66,6 +66,25 @@ TextField::make('reference')
 
 `visibleWhen()` is evaluated in the browser *and* on the server, so a hidden
 field cannot be submitted by a crafted request.
+
+`live()` is the Inertia equivalent of Filament's live fields. After the field
+changes, the page POSTs `{ field, values }` to `{resource}/form-state`. The
+server returns `{ options: { fieldKey: [...] } }`. `visibleWhen` stays a
+client-side hide. There is no Livewire round-trip.
+
+### SelectField::relationship()
+
+BelongsTo picker. Searchable by default. Options come from the related model
+(tenant scopes apply). Validation uses `ExistsInScope`, so another tenant's id
+is invalid the same way a missing id is.
+
+```php
+SelectField::make('article_id')
+    ->relationship(Article::class, 'title', function ($query, array $form): void {
+        // Optional: narrow options from the current form (live() dependents).
+    })
+    ->live();
+```
 
 ## Fields worth extra care
 

@@ -53,6 +53,13 @@ final class Panel
     private ?array $authMiddleware = null;
 
     /**
+     * Extra panel-access check, after authentication.
+     *
+     * @var Closure(Authenticatable): bool|null
+     */
+    private ?Closure $canAccess = null;
+
+    /**
      * Plugins named by THIS panel, on top of any registered globally.
      *
      * BOTH ROUTES EXIST BECAUSE THEY ANSWER DIFFERENT QUESTIONS. A package
@@ -886,6 +893,26 @@ final class Panel
         return $this;
     }
 
+    /**
+     * First-class panel access hook, after the guard authenticates.
+     *
+     * Combined with `CanAccessPanel` on the user. Either returning false is a
+     * 403, not an empty broken shell.
+     *
+     * @param  Closure(Authenticatable): bool|null  $callback  Pass null to clear.
+     */
+    public function canAccess(?Closure $callback): self
+    {
+        $this->canAccess = $callback;
+
+        return $this;
+    }
+
+    public function accessUsing(): ?Closure
+    {
+        return $this->canAccess;
+    }
+
     public function context(string $context): self
     {
         if (! in_array($context, [self::CONTEXT_TENANT, self::CONTEXT_CENTRAL], true)) {
@@ -1146,6 +1173,7 @@ final class Panel
     public function getMiddleware(): array
     {
         $stack = [...$this->middleware, ...($this->authMiddleware ?? ['auth:'.$this->guard])];
+        $stack[] = Http\Middleware\EnsureCanAccessPanel::class;
         $stack = $this->withIdleLockMiddleware($stack);
         $stack[] = Http\Middleware\EnforceSubscriptionGate::class;
 

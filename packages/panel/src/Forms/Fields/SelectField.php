@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Forms\Fields;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
+use InvalidArgumentException;
+use Alxtexh\Panel\Forms\Rules\ExistsInScope;
 
 /**
  * A single-choice field.
@@ -25,8 +29,13 @@ final class SelectField extends Field
 
     private bool $searchable = false;
 
-    /** @var (Closure(string): array<string|int, string>)|null */
+    /** @var (Closure(string, array<string, mixed>): array<string|int, string>)|null */
     private ?Closure $searchQuery = null;
+
+    /** @var class-string<Model>|null */
+    private ?string $relatedModel = null;
+
+    private ?string $titleAttribute = null;
 
     /**
      * Above this, rendering every option inline stops being reasonable.
@@ -59,7 +68,7 @@ final class SelectField extends Field
      * every client to the browser. The callback receives the search term and
      * returns value => label, already tenant-scoped by the model it queries.
      *
-     * @param  (Closure(string): array<string|int, string>)|null  $query
+     * @param  (Closure(string, array<string, mixed>): array<string|int, string>)|null  $query
      */
     public function searchable(?Closure $query = null): static
     {
@@ -75,17 +84,59 @@ final class SelectField extends Field
     }
 
     /**
+     * Options from a related Eloquent model (BelongsTo picker).
+     *
+     * Searchable by default. Validation uses ExistsInScope so another tenant's
+     * id is invalid the same way a missing id is. `$modifyQuery` receives the
+     * query and the current form values (from `live()` / form-state).
+     *
+     * @param  class-string<Model>  $model
+     * @param  Closure(Builder, array<string, mixed>): void|null  $modifyQuery
+     */
+    public function relationship(string $model, string $titleAttribute, ?Closure $modifyQuery = null): static
+    {
+        if (! is_subclass_of($model, Model::class)) {
+            throw new InvalidArgumentException("[{$model}] is not an Eloquent model.");
+        }
+
+        $this->relatedModel = $model;
+        $this->titleAttribute = $titleAttribute;
+        $this->searchable = true;
+
+        $this->searchQuery = function (string $term, array $form = []) use ($model, $titleAttribute, $modifyQuery): array {
+            $query = $model::query();
+
+            if ($modifyQuery !== null) {
+                $modifyQuery($query, $form);
+            }
+
+            if ($term !== '') {
+                $query->where($titleAttribute, 'like', '%'.addcslashes($term, '%_\\').'%');
+            }
+
+            $key = (new $model)->getKeyName();
+            $out = [];
+
+            foreach ($query->orderBy($titleAttribute)->limit(25)->get([$key, $titleAttribute]) as $row) {
+                $out[$row->getKey()] = (string) $row->getAttribute($titleAttribute);
+            }
+
+            return $out;
+        };
+
+        return $this->rule(ExistsInScope::of($model));
+    }
+
+    /**
      * Options for a search term. Only meaningful on a searchable field.
      *
+     * @param  array<string, mixed>  $form  Current form values, for live() dependents.
      * @return list<array{value: mixed, label: string}>
      */
-    public function search(string $term): array
+    public function search(string $term, array $form = []): array
     {
         $map = $this->searchQuery !== null
-            ? ($this->searchQuery)($term)
-            // No dedicated query: filter the declared options in PHP. Correct
-            // for a modest list, and the reason a large relation must supply a
-            // query rather than relying on this.
+            ? ($this->searchQuery)($term, $form)
             : array_filter(
                 $this->resolvedOptionMap(),
                 static fn (string $label): bool => $term === '' || stripos($label, $term) !== false,

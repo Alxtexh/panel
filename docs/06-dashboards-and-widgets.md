@@ -105,6 +105,9 @@ public static function headerWidgets(): array { return [ /* stats, charts */ ]; 
 
 They render through the same component, so a header row and a dashboard agree.
 
+Generate an empty factory with `php artisan make:panel-widget Revenue` or
+`--chart`. Discovery picks it up from `discoverWidgets()`.
+
 ## Rollups
 
 For counters too expensive to compute per request, `panel:refresh-rollups`

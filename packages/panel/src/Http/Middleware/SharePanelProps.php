@@ -15,6 +15,7 @@ use Alxtexh\Panel\Support\EditableContent;
 use Alxtexh\Panel\Support\SettingsIndex;
 use Alxtexh\Panel\Support\Ability;
 use Alxtexh\Panel\Support\ModuleRegistry;
+use Alxtexh\Panel\Support\PanelAccess;
 use Alxtexh\Panel\Support\PanelNavigation;
 use Alxtexh\Panel\Support\PanelHome;
 use Alxtexh\Panel\Support\PanelIdleActivity;
@@ -96,6 +97,12 @@ final class SharePanelProps
              * current-panel filter are the two things worth getting right.
              */
             'panelNav' => static fn (): array => PanelNavigation::build(),
+
+            'panelEmptyGrants' => static function () use ($panels): bool {
+                $panel = $panels->currentPanel();
+
+                return $panel !== null && PanelAccess::emptyGrants($panel, $panel->user());
+            },
 
             /*
              * IDLE LOCK, when this panel authenticates. The client timer,

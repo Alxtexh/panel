@@ -9,6 +9,8 @@ use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Forms\Fields\FileUploadField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Infolists\IconEntry;
+use Alxtexh\Panel\Infolists\TextEntry;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\BadgeColumn;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
@@ -41,7 +43,7 @@ final class ArticleResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            TextField::make('title')->required(),
+            TextField::make('title')->required()->live(),
             TextField::make('status'),
             /*
              * AN UPLOAD FIELD, so the upload endpoints have a declared target.
@@ -52,6 +54,34 @@ final class ArticleResource extends Resource
              */
             FileUploadField::make('attachment')->accept(['pdf', 'txt'])->maxKilobytes(64),
         ]);
+    }
+
+    public static function importable(): bool
+    {
+        return true;
+    }
+
+    public static function infolist(): array
+    {
+        return [
+            TextEntry::make('title'),
+            IconEntry::make('status')
+                ->icons([
+                    'draft' => 'dot',
+                    'published' => 'check',
+                    'archived' => 'x',
+                ])
+                ->colors([
+                    'draft' => 'neutral',
+                    'published' => 'success',
+                    'archived' => 'warning',
+                ])
+                ->labels([
+                    'draft' => 'Draft',
+                    'published' => 'Published',
+                    'archived' => 'Archived',
+                ]),
+        ];
     }
 
     /**
@@ -93,6 +123,7 @@ final class ArticleResource extends Resource
         return [
             RelationManager::make('comments', 'Comments')
                 ->related(Comment::class, 'comments.article_id')
+                ->resource(CommentResource::class)
                 ->table(fn (Table $table): Table => $table
                     ->columns([
                         TextColumn::make('body')->from('comments.body')->sortable(),

@@ -90,7 +90,7 @@ final class NestedContext
     {
         $parentClass = $class::parentResource();
 
-        return '/'.$parentClass::key().'/'.$parent->getKey().'/'.$class::key();
+        return rtrim($parentClass::baseUrl(), '/').'/'.$parent->getKey().'/'.$class::key();
     }
 
     /**
@@ -112,6 +112,9 @@ final class NestedContext
         $schema['routes'] = [
             'index' => $base,
             'store' => $base,
+            'create' => $base.'/create',
+            'show' => $base.'/{id}',
+            'edit' => $base.'/{id}/edit',
             'update' => $base.'/{id}',
             'destroy' => $base.'/{id}',
         ];
@@ -133,9 +136,11 @@ final class NestedContext
         // fallback order the audit trail uses for its labels.
         $title = (string) ($parent->name ?? $parent->title ?? $parent->email ?? ('#'.$parent->getKey()));
 
+        $parentBase = rtrim($parentClass::baseUrl(), '/');
+
         return [
-            ['title' => $parentClass::pluralLabel(), 'href' => '/'.$parentClass::key()],
-            ['title' => $title, 'href' => '/'.$parentClass::key().'/'.$parent->getKey()],
+            ['title' => $parentClass::pluralLabel(), 'href' => $parentBase],
+            ['title' => $title, 'href' => $parentBase.'/'.$parent->getKey()],
             ['title' => $class::pluralLabel(), 'href' => self::base($class, $parent)],
         ];
     }

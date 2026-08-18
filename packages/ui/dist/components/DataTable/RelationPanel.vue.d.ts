@@ -10,6 +10,10 @@ type __VLS_Props = {
     /** True once at least one page has been requested. */
     loaded?: boolean;
     emptyText?: string;
+    /** Dedicated nested list URL. The tab stays a summary that links there. */
+    indexHref?: string | null;
+    /** Prefix for a related row's dedicated view page. */
+    recordBase?: string | null;
 };
 declare var __VLS_2: `cell:${string}`, __VLS_3: {
     row: Record<string, any>;
@@ -29,6 +33,8 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     capped: boolean;
     loaded: boolean;
     emptyText: string;
+    indexHref: string | null;
+    recordBase: string | null;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;

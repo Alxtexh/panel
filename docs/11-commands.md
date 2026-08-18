@@ -8,6 +8,8 @@
 | `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard`, `--guard-model`, `--central`, `--auth` |
 | `make:panel-resource` | A resource. `--generate` infers from the table, `--panel=` |
 | `make:panel-page` | A custom page. `--dashboard`, `--plan-setup` |
+| `make:panel-widget` | Empty StatWidget, or `--chart` for ChartWidget |
+| `make:panel-relation-manager` | Nested child resource plus a relation-manager factory (dedicated pages, not a modal) |
 | `make:panel-module` | A plan-gated module: page (or `--resource`) plus a `Module::make` snippet |
 | `panel:backup` | Run a backup now. `--tenant=` for one organisation only |
 | `panel:make-user` | Create an account and grant it a role |

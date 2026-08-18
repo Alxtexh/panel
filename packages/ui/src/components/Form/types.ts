@@ -74,6 +74,11 @@ export interface FormField {
     presets?: number[]
     /** Fetches options on demand instead of rendering them inline. */
     searchable?: boolean
+    /**
+     * After this field changes, the page POSTs form-state and may replace
+     * option lists. Not Livewire: the client emits, the server returns JSON.
+     */
+    live?: boolean
     /** File fields: allowed extensions, the size ceiling, and preview intent. */
     accept?: string[]
     maxKilobytes?: number

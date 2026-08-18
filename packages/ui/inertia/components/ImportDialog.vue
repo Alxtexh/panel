@@ -226,6 +226,14 @@ async function confirmImport(): Promise<void> {
                         …and more. Fix these first.
                     </li>
                 </ul>
+
+                <a
+                    v-if="dryRunResult?.failuresDownload"
+                    :href="dryRunResult.failuresDownload"
+                    class="text-sm underline-offset-2 hover:underline"
+                >
+                    Download failed rows
+                </a>
             </div>
         </div>
 

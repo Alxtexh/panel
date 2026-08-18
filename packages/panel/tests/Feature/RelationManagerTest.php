@@ -228,4 +228,18 @@ final class RelationManagerTest extends TestCase
         $this->assertFalse($schema['canCreate'], 'Write endpoints are not shipped yet.');
         $this->assertFalse($schema['canEdit']);
     }
+
+    public function test_a_linked_nested_resource_exposes_dedicated_pages(): void
+    {
+        $relations = $this->get("/articles/{$this->article->getKey()}")
+            ->assertOk()
+            ->viewData('page')['props']['schema']['relations'] ?? [];
+
+        $comments = collect($relations)->firstWhere('key', 'comments');
+
+        $this->assertNotNull($comments);
+        $this->assertSame('comments', $comments['pages']['resource'] ?? null);
+        $this->assertTrue($comments['canCreate']);
+        $this->assertTrue($comments['canEdit']);
+    }
 }

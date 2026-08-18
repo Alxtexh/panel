@@ -66,6 +66,9 @@ const props = defineProps<{
             label: string
             icon: string | null
             table: { columns: SchemaColumn[] }
+            canCreate?: boolean
+            canEdit?: boolean
+            pages?: { resource: string } | null
         }[]
     }
     record: Record<string, any>
@@ -121,6 +124,14 @@ const MAX_RELATION_ROWS = 300
 
 const relations = computed(() => props.schema.relations ?? [])
 const activeRelation = ref<string | null>(relations.value[0]?.key ?? null)
+
+function relationPages(relation: { pages?: { resource: string } | null }): string | null {
+    if (!relation.pages?.resource) {
+        return null
+    }
+
+    return `${props.schema.routes.index}/${props.record.id}/${relation.pages.resource}`
+}
 
 const state = ref<Record<string, RelationState>>({})
 
@@ -416,17 +427,38 @@ function destroy() {
             </div>
 
             <template v-for="relation in relations" :key="relation.key">
-                <RelationPanel
-                    v-if="activeRelation === relation.key"
-                    :columns="relation.table.columns"
-                    :rows="relationState(relation.key).rows"
-                    :loading="relationState(relation.key).loading"
-                    :loaded="relationState(relation.key).loaded"
-                    :next-cursor="relationState(relation.key).cursor"
-                    :capped="relationState(relation.key).capped"
-                    :empty-text="`No ${relation.label.toLowerCase()} for this ${schema.label.toLowerCase()}.`"
-                    @load="(cursor) => loadRelation(relation.key, cursor)"
-                />
+                <div v-if="activeRelation === relation.key" class="flex flex-col gap-2">
+                    <div
+                        v-if="relationPages(relation)"
+                        class="flex flex-wrap items-center justify-end gap-2"
+                    >
+                        <Link
+                            :href="relationPages(relation)!"
+                            :class="buttonClasses({ variant: 'outline', size: 'sm' })"
+                        >
+                            View all
+                        </Link>
+                        <Link
+                            v-if="relation.canCreate"
+                            :href="`${relationPages(relation)}/create`"
+                            :class="buttonClasses({ variant: 'default', size: 'sm' })"
+                        >
+                            Add
+                        </Link>
+                    </div>
+                    <RelationPanel
+                        :columns="relation.table.columns"
+                        :rows="relationState(relation.key).rows"
+                        :loading="relationState(relation.key).loading"
+                        :loaded="relationState(relation.key).loaded"
+                        :next-cursor="relationState(relation.key).cursor"
+                        :capped="relationState(relation.key).capped"
+                        :empty-text="`No ${relation.label.toLowerCase()} for this ${schema.label.toLowerCase()}.`"
+                        :record-base="relationPages(relation)"
+                        :index-href="relationPages(relation)"
+                        @load="(cursor) => loadRelation(relation.key, cursor)"
+                    />
+                </div>
             </template>
         </section>
 

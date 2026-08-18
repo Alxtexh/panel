@@ -30,6 +30,31 @@ under `abilities`.
 later**. Inferring that from "currently holds all of them" would make a role
 become a superuser the moment somebody ticked the last box.
 
+## Panel access
+
+Signing in is not the same as using a portal. After the guard authenticates,
+the kit asks whether this person may use **this** panel at all.
+
+```php
+use Alxtexh\Panel\Contracts\CanAccessPanel;
+use Alxtexh\Panel\Panel;
+
+final class User extends Authenticatable implements CanAccessPanel
+{
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->is_staff;
+    }
+}
+
+// And/or on the panel:
+Panel::make('admin')->canAccess(fn ($user) => $user->is_staff);
+```
+
+Either returning false is a 403, not an empty broken shell. When the person is
+allowed in but the sidebar is empty (no grants), the dashboard says so instead
+of looking like a failed install. Shared prop: `panelEmptyGrants`.
+
 ## A resource with no policy is denied entirely
 
 Forgetting to write one locks the resource down rather than opening it up.
