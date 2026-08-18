@@ -23,12 +23,13 @@ This is the whole thing. Add the repository, require the package, install:
 ```bash
 composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
-npm install && npm run build
 ```
 
 First visit is dashboard, user menu, and Get started. Auth is on by default;
 `--no-user` skips the Administrator so you can see the empty-sidebar notice.
-`--no-auth` keeps a starter-kit login.
+`--no-auth` keeps a starter-kit login. Kit CSS/JS is published to
+`public/vendor/panel`, so there is no white page. `npm run build` is optional
+if you customise Vue.
 
 **There is no second install.** The Vue screens ship *inside* this Composer package
 at `resources/client`, and `panel:install` points your `package.json` at them with a

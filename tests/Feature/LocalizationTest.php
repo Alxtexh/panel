@@ -35,9 +35,9 @@ final class LocalizationTest extends TestCase
         ]);
     }
 
-    public function test_package_lang_files_exist_for_english_and_spanish(): void
+    public function test_package_lang_files_exist_for_english_spanish_and_french(): void
     {
-        foreach (['en', 'es'] as $locale) {
+        foreach (['en', 'es', 'fr'] as $locale) {
             foreach (Locale::groups() as $group) {
                 $this->assertFileExists(
                     Locale::packageLangPath().'/'.$locale.'/'.$group.'.php',
@@ -48,6 +48,8 @@ final class LocalizationTest extends TestCase
 
         $this->assertContains('en', Locale::available());
         $this->assertContains('es', Locale::available());
+        $this->assertContains('fr', Locale::available());
+        $this->assertContains('chrome', Locale::groups());
     }
 
     public function test_the_suspended_screen_uses_translation_keys(): void
@@ -92,6 +94,14 @@ final class LocalizationTest extends TestCase
 
         $this->assertSame('Subscription access', $messages['billing']['heading'] ?? null);
         $this->assertSame('You have no grants', $messages['grants']['empty']['title'] ?? null);
+        $this->assertSame('Profile', $messages['chrome']['account']['profile'] ?? null);
+
+        $menu = (string) file_get_contents(
+            dirname(__DIR__, 2).'/resources/client/inertia/components/shell/DefaultAccountMenuItems.vue'
+        );
+
+        $this->assertStringContainsString("t('chrome.account.profile')", $menu);
+        $this->assertStringContainsString("t('chrome.account.logout')", $menu);
     }
 
     public function test_shared_props_include_messages_and_locale(): void

@@ -17,12 +17,10 @@ use Alxtexh\Panel\Schema\Renderable;
  * drifts is always the client one, so the failure is "the form said it was fine
  * and the save rejected it".
  *
- * LIVE validation while typing is not wired yet. The route carries the
- * `precognitive` middleware, so the endpoint already answers precognitive
- * requests, but `laravel-precognition-vue-inertia` peers on Inertia ^1 || ^2 and
- * this app is on Inertia 3. Errors currently arrive on submit. Wiring it needs
- * either that package to support Inertia 3, or a thin client of our own against
- * the same endpoint.
+ * LIVE validation while typing uses the same JSON POST as `live()` form-state,
+ * against the existing `precognitive` store/update routes. The Vue page sends
+ * `{ field, values }` (values at the top level, field in
+ * `Precognition-Validate-Only`). There is no Livewire and no extra PHP stack.
  *
  * Like columns, a field emits SEMANTIC values only. No CSS classes ever reach
  * the schema (antipatterns §6.1), and no tenant data either - an option list
@@ -31,6 +29,8 @@ use Alxtexh\Panel\Schema\Renderable;
  */
 abstract class Field implements Renderable
 {
+    use HasAffixes;
+
     protected ?string $label = null;
 
     protected bool $required = false;
@@ -400,6 +400,7 @@ abstract class Field implements Renderable
                 'value' => $this->visibleWhen[1],
             ],
             'chips' => $this->chips,
+            ...$this->affixSchema(),
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
     }
 

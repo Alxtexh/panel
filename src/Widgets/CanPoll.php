@@ -9,6 +9,7 @@ use InvalidArgumentException;
 /**
  * Filament-shaped poll interval on a dashboard widget.
  *
+ *     StatWidget::make('online', 'Online')->poll('10s');
  *     TableWidget::make('recent')->resource(OrderResource::class)->poll('10s');
  *     ChartWidget::make('load', 'Load')->poll(15);
  *

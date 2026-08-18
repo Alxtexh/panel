@@ -5,9 +5,9 @@
     application has none, and without one the first panel route answers with
     "View [app] not found" - an error about a file nobody told you to write.
 
-    `@vite` COMPILES THE ASSETS. This is the one thing Alxtexhpanel needs that a
-    server-rendered admin panel does not: the screens are Vue, so they are built
-    rather than published. `npm run build` once, or `npm run dev` while you work.
+    DEFAULT PATH: published kit CSS/JS at public/vendor/panel. That is why
+    `panel:install` after Composer is not a white page. `@vite` is used only
+    when you have run `npm run build` and a Vite manifest exists.
 
     NO `@routes` DIRECTIVE. Ziggy and Wayfinder are both fine and neither is
     required: the packaged screens are given the URLs they need as props, so a
@@ -31,7 +31,13 @@
         --}}
         <title inertia>{{ config('app.name', 'Panel') }}</title>
 
-        @vite(['resources/js/app.ts'])
+        @if (\Alxtexh\Panel\Support\KitAssets::hostViteManifestExists())
+            @vite(['resources/js/app.ts'])
+        @else
+            @php(\Alxtexh\Panel\Support\KitAssets::publishIfMissing())
+            <link rel="stylesheet" href="{{ asset('vendor/panel/app.css') }}">
+            <script type="module" src="{{ asset('vendor/panel/app.js') }}"></script>
+        @endif
         @inertiaHead
     </head>
 

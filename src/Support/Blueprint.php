@@ -87,7 +87,7 @@ final class Blueprint
         .'`stats()`, `charts()` and `tables()` return these classes and the packaged `PanelDashboard` '
         .'screen renders them, each as its own deferred prop. `TableWidget::make(\'recent\')->resource(OrderResource::class)->limit(5)` '
         .'renders the existing DataTable with a capped list query. '
-        .'`->poll(\'10s\')` on `TableWidget` or `ChartWidget` reloads that deferred prop on an interval '
+        .'`->poll(\'10s\')` on `StatWidget`, `TableWidget` or `ChartWidget` reloads that deferred prop on an interval '
         .'(pauses while the tab is hidden). '
         .'`Panel::make(\'admin\')->discoverWidgets(app_path(\'Panel/Widgets\'))` is the normal path '
         .'(namespace is optional when the directory is under `app_path()`). A widget built anywhere else '
@@ -695,7 +695,7 @@ final class Blueprint
         filtering it client-side would ship the number to them and rely on CSS
         to keep the secret.
 
-        `->poll('10s')` on `TableWidget` or `ChartWidget` reloads only that
+        `->poll('10s')` on `StatWidget`, `TableWidget` or `ChartWidget` reloads only that
         widget. Polling pauses while the tab is hidden.
 
         ### Add a till, catalog, directory or device preview

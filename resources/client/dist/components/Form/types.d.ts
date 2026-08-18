@@ -126,4 +126,22 @@ export interface FormField {
      * actually have.
      */
     chips?: Record<string, string>;
+    /** Text before the control, e.g. a currency code. */
+    prefix?: string;
+    /** Text after the control, e.g. a unit. */
+    suffix?: string;
+    prefixIcon?: string;
+    suffixIcon?: string;
+    /** Small label-row hint, distinct from `help` under the control. */
+    hint?: string;
+    hintIcon?: string;
+    prefixAction?: FieldAffixAction;
+    suffixAction?: FieldAffixAction;
+    hintAction?: FieldAffixAction;
+}
+export interface FieldAffixAction {
+    label?: string;
+    icon?: string;
+    copy?: boolean;
+    url?: string;
 }

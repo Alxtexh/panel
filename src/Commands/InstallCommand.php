@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
+use Alxtexh\Panel\Support\KitAssets;
 use Alxtexh\Panel\Support\PanelPages;
 use Alxtexh\Panel\Support\UserRoles;
 use Alxtexh\Panel\Support\WebSharePanelProps;
@@ -14,9 +15,10 @@ use Symfony\Component\Process\Process;
 /**
  * php artisan panel:install
  *
- * Spec §13: `composer require`, `panel:install`, `npm install && npm run build`,
- * then a resource - and a working panel in under ten minutes on a fresh app. If
- * it takes longer, the packaging is not finished.
+ * Spec §13: `composer require`, `panel:install`, then a resource. First visit
+ * loads published kit CSS/JS. `npm run build` is optional for hosts who
+ * customise Vue. If it takes longer than ten minutes, the packaging is not
+ * finished.
  *
  * Deliberately IDEMPOTENT and non-destructive. An installer that overwrites a
  * file someone has edited is worse than one that skips it, so every step
@@ -45,6 +47,7 @@ final class InstallCommand extends Command
         $this->ensureInertiaScriptElement();
         $this->createTree();
         $this->publishBootstrap();
+        $this->publishKitAssets();
         $this->wireSharePanelProps();
         $this->wireVite();
         $this->scaffoldPackageJson();
@@ -87,13 +90,9 @@ final class InstallCommand extends Command
         $this->createFirstUser();
 
         $this->newLine();
-        $this->components->info('Done. Required next line (Filament publishes CSS; we need Vite once):');
-        /*
-         * THIS IS THE STEP THAT STRANDS PEOPLE - skip it and every route
-         * answers 200 with a blank screen - so it prints as something to
-         * paste rather than something to work out.
-         */
-        $this->line('  npm install && npm run build');
+        $this->components->info('Done. First visit uses published kit CSS/JS (no npm).');
+        $this->line('  public/vendor/panel/{app.css,app.js} is the default path.');
+        $this->line('  npm install && npm run build is optional, only if you customise Vue.');
         $this->line('  The screens are Vue and come from `resources/client` inside this');
         $this->line('  Composer package (`file:vendor/alxtexh-enterprise/panel/resources/client`).');
         $this->newLine();
@@ -297,6 +296,32 @@ final class InstallCommand extends Command
         }
 
         $this->mergeStylesheet("{$stubs}/app.css.stub");
+    }
+
+    /**
+     * Copy prebuilt kit CSS/JS into public/vendor/panel.
+     *
+     * THIS IS WHAT KILLS THE WHITE PAGE. The published root view loads these
+     * files when `public/build/manifest.json` is absent, so `panel:install`
+     * after Composer is enough. `npm run build` is for hosts who edit Vue.
+     */
+    private function publishKitAssets(): void
+    {
+        if (! KitAssets::kitBundleExists()) {
+            $this->components->warn(
+                'Kit dist/kit is missing from the package. First visit needs public/vendor/panel or npm run build.',
+            );
+
+            return;
+        }
+
+        if (KitAssets::publish()) {
+            $this->components->twoColumnDetail('Published kit assets', 'public/vendor/panel');
+
+            return;
+        }
+
+        $this->components->warn('Could not copy kit assets to public/vendor/panel.');
     }
 
     /**
