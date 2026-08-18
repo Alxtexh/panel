@@ -48,8 +48,9 @@ final class PanelAccess
     }
 
     /**
-     * Copy for the first-run empty shell. The installer does not grant every
-     * ability; this is what to run instead of staring at a blank dashboard.
+     * Copy for `--no-user` and for accounts that hold no role. The installer
+     * grants Administrator (`grants_all`) to the first user by default, so a
+     * normal first visit never sees this.
      *
      * @return array{title: string, body: string, commands: list<string>}|null
      */
@@ -63,6 +64,7 @@ final class PanelAccess
             'title' => __('panel::grants.empty.title'),
             'body' => __('panel::grants.empty.body'),
             'commands' => [
+                'php artisan panel:make-user',
                 'php artisan panel:permissions sync',
                 'php artisan panel:permissions grant --email=you@example.com',
             ],

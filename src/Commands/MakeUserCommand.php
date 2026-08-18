@@ -40,6 +40,7 @@ final class MakeUserCommand extends Command
     protected $signature = 'panel:make-user
                             {--name= : The person\'s name}
                             {--email= : Their email address}
+                            {--password= : Password. Non-interactive only; prefer a prompt so it stays out of shell history}
                             {--tenant= : The organisation id, under column-mode tenancy}';
 
     protected $description = 'Create an account that can sign in to the panel';
@@ -64,24 +65,30 @@ final class MakeUserCommand extends Command
         }
 
         /*
-         * PROMPTED, NEVER PASSED. See the class note - the whole point is that
-         * this value does not reach the shell history or a log.
+         * PROMPTED UNLESS `--password` IS SET. A password on the command line
+         * lands in shell history and in CI logs; the prompt is the right path.
+         * Install and tests need a non-interactive flag, which is why one
+         * exists at all.
          */
-        if (! $this->input->isInteractive()) {
-            $this->components->error(
-                'panel:make-user needs an interactive terminal, because it will not take a '
-                .'password as an argument - that puts it in your shell history and in any CI log.',
-            );
+        $password = $this->option('password');
 
-            return self::FAILURE;
-        }
+        if (! is_string($password) || $password === '') {
+            if (! $this->input->isInteractive()) {
+                $this->components->error(
+                    'panel:make-user needs an interactive terminal, or --password=, because it will not '
+                    .'invent a default - a printed password is one nobody changes.',
+                );
 
-        $password = password('Password', required: true);
+                return self::FAILURE;
+            }
 
-        if ($password !== password('Confirm password', required: true)) {
-            $this->components->error('The passwords do not match.');
+            $password = password('Password', required: true);
 
-            return self::FAILURE;
+            if ($password !== password('Confirm password', required: true)) {
+                $this->components->error('The passwords do not match.');
+
+                return self::FAILURE;
+            }
         }
 
         $attributes = [

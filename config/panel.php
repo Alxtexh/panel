@@ -245,7 +245,9 @@ return [
     |              column, so the panel must NOT add one - isolation is already
     |              done by the time the panel sees the request.
     |
-    |   'none'     Single-tenant application.
+    |   'none'     Single-tenant application. THE DEFAULT: a fresh Laravel
+    |              app has no tenant_id column, and column mode would deny
+    |              every query. Switch to `column` once that column exists.
     |
     | resolver
     |   null       Auto-detect: use stancl/tenancy if it is installed and
@@ -896,7 +898,7 @@ return [
     ],
 
     'tenancy' => [
-        'mode' => env('PANEL_TENANCY_MODE', 'column'),
+        'mode' => env('PANEL_TENANCY_MODE', 'none'),
         'column' => 'tenant_id',
         'resolver' => null,
 

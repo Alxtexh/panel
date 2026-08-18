@@ -253,6 +253,18 @@ final class PanelServiceProvider extends ServiceProvider
         );
 
         /*
+         * SHELL PROPS ON EVERY WEB REQUEST, not only packaged panel routes.
+         *
+         * App-owned pages (a host operations screen, `/about`, a lock route
+         * the application registered) used to skip SharePanelProps, so the
+         * account menu, footer and padlock vanished the moment you left a
+         * packaged URL. `panel:install` also writes this into bootstrap/app.php
+         * so the host can see it; this registration is the floor if that
+         * patch is skipped. Panel route groups still run it AFTER UsePanel.
+         */
+        $this->sharePanelPropsOnWeb();
+
+        /*
          * The AI SDK's conversation tables are tenant data and arrive without a
          * tenant. Attached rather than forked, because the package is 0.x and a
          * fork would be silently dropped by the next `composer update`.
@@ -263,6 +275,37 @@ final class PanelServiceProvider extends ServiceProvider
         Alerts\AnnouncementDelivery::attach();
         $this->registerTelegram();
         $this->registerOctaneFlush();
+    }
+
+    /**
+     * Share panel chrome on every `web` request.
+     *
+     * THE HTTP KERNEL, not only the router. `Router::pushMiddlewareToGroup`
+     * updates the router's map; Laravel 11+ still dispatches from the kernel's
+     * own copy, so a host route whose middleware is the group name `web` never
+     * ran SharePanelProps and the shell fell off. The kernel method keeps both
+     * in step. Idempotent: `panel:install` may already have appended the class
+     * in `bootstrap/app.php`.
+     */
+    private function sharePanelPropsOnWeb(): void
+    {
+        $class = Http\Middleware\SharePanelProps::class;
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+        $groups = method_exists($kernel, 'getMiddlewareGroups')
+            ? $kernel->getMiddlewareGroups()
+            : $this->app['router']->getMiddlewareGroups();
+
+        if (in_array($class, $groups['web'] ?? [], true)) {
+            return;
+        }
+
+        if (method_exists($kernel, 'pushMiddlewareToGroup')) {
+            $kernel->pushMiddlewareToGroup('web', $class);
+
+            return;
+        }
+
+        $this->app['router']->pushMiddlewareToGroup('web', $class);
     }
 
     /**
