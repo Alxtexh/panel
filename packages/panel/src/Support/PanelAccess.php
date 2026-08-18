@@ -46,4 +46,26 @@ final class PanelAccess
 
         return PanelNavigation::build($panel->id) === [];
     }
+
+    /**
+     * Copy for the first-run empty shell. The installer does not grant every
+     * ability; this is what to run instead of staring at a blank dashboard.
+     *
+     * @return array{title: string, body: string, commands: list<string>}|null
+     */
+    public static function emptyGrantsHint(Panel $panel, ?Authenticatable $user): ?array
+    {
+        if (! self::emptyGrants($panel, $user)) {
+            return null;
+        }
+
+        return [
+            'title' => 'You have no grants',
+            'body' => 'This account is signed in and allowed into the panel, but it has no role and no abilities yet. The installer does not grant everything. Create an Administrator and assign it:',
+            'commands' => [
+                'php artisan panel:permissions sync',
+                'php artisan panel:permissions grant --email=you@example.com',
+            ],
+        ];
+    }
 }

@@ -84,5 +84,26 @@ final class CanAccessPanelTest extends TestCase
         $props = $this->get('/settings/plans')->assertOk()->viewData('page')['props'];
 
         $this->assertTrue($props['panelEmptyGrants'] ?? false);
+        $this->assertSame('You have no grants', $props['panelEmptyGrantsHint']['title'] ?? null);
+        $this->assertContains(
+            'php artisan panel:permissions sync',
+            $props['panelEmptyGrantsHint']['commands'] ?? [],
+        );
+        $this->assertContains(
+            'php artisan panel:permissions grant --email=you@example.com',
+            $props['panelEmptyGrantsHint']['commands'] ?? [],
+        );
+    }
+
+    public function test_empty_grants_copy_is_in_the_kit_empty_state(): void
+    {
+        $vue = (string) file_get_contents(
+            dirname(__DIR__, 2).'/resources/client/inertia/components/EmptyGrantsNotice.vue'
+        );
+
+        $this->assertStringContainsString('You have no grants', $vue);
+        $this->assertStringContainsString('panel:permissions', $vue);
+        $this->assertStringContainsString('does not grant everything', $vue);
+        $this->assertStringNotContainsString('—', $vue);
     }
 }

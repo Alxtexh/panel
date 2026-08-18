@@ -104,6 +104,16 @@ final class SharePanelProps
                 return $panel !== null && PanelAccess::emptyGrants($panel, $panel->user());
             },
 
+            'panelEmptyGrantsHint' => static function () use ($panels): ?array {
+                $panel = $panels->currentPanel();
+
+                if ($panel === null) {
+                    return null;
+                }
+
+                return PanelAccess::emptyGrantsHint($panel, $panel->user());
+            },
+
             /*
              * IDLE LOCK, when this panel authenticates. The client timer,
              * warning modal and header padlock read this; `->idleLock(false)`

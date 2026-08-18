@@ -6,8 +6,8 @@ namespace Alxtexh\Panel\Http\Controllers;
 
 use Alxtexh\Panel\Actions\ExportedFile;
 use Alxtexh\Panel\Actions\JobStatus;
-use Alxtexh\Panel\Imports\CsvReader;
 use Alxtexh\Panel\Imports\Importer;
+use Alxtexh\Panel\Imports\RowsReader;
 use Alxtexh\Panel\Jobs\ImportRecords;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
@@ -20,17 +20,17 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * Opt-in CSV import. Inspect, dry-run, queue the write, download failed rows.
+ * Opt-in CSV import (Excel optional). Inspect, dry-run, queue, failed-row CSV.
  */
 final class ImportController extends Controller
 {
     public function inspect(Request $request, string $resource): JsonResponse
     {
         $class = $this->guard($resource);
-        $path = $this->uploadedPath($request);
+        $path = $this->uploadedPath($request, $class);
 
         try {
-            $headers = (new CsvReader($path))->headers();
+            $headers = RowsReader::open($path)->headers();
         } finally {
             @unlink($path);
         }
@@ -41,7 +41,7 @@ final class ImportController extends Controller
                 'label' => $field->resolvedLabel(),
                 'required' => $field->isRequired(),
             ],
-            $class::formDefinition()->fields(),
+            $class::importForm()->fields(),
         );
 
         return response()->json(['headers' => $headers, 'fields' => $fields]);
@@ -64,12 +64,12 @@ final class ImportController extends Controller
             static fn (string $field): bool => $field !== '',
         );
 
-        $path = $this->uploadedPath($request);
+        $path = $this->uploadedPath($request, $class);
 
         if ($dryRun) {
             try {
-                $result = (new Importer($class::formDefinition(), $mapping))
-                    ->process((new CsvReader($path))->rows());
+                $result = (new Importer($class::importForm(), $mapping))
+                    ->process(RowsReader::open($path)->rows());
             } finally {
                 @unlink($path);
             }
@@ -148,7 +148,8 @@ final class ImportController extends Controller
         return $class;
     }
 
-    private function uploadedPath(Request $request): string
+    /** @param  class-string<resource>  $class */
+    private function uploadedPath(Request $request, string $class): string
     {
         $file = $request->file('file');
 
@@ -158,7 +159,22 @@ final class ImportController extends Controller
 
         abort_if($path === false, 422, 'That file could not be read.');
 
-        $copy = sys_get_temp_dir().'/panel-import-'.uniqid('', true).'.csv';
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'csv');
+
+        if (! in_array($extension, [...RowsReader::CSV, ...RowsReader::EXCEL], true)) {
+            abort(422, 'A CSV file is required.');
+        }
+
+        if (in_array($extension, RowsReader::EXCEL, true)) {
+            abort_unless($class::excelImport(), 422, 'This resource imports CSV only. Call excelImport() and require phpoffice/phpspreadsheet to accept Excel.');
+            abort_unless(
+                class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class),
+                422,
+                'Excel import needs phpoffice/phpspreadsheet. composer require phpoffice/phpspreadsheet',
+            );
+        }
+
+        $copy = sys_get_temp_dir().'/panel-import-'.uniqid('', true).'.'.$extension;
         copy($path, $copy);
 
         return $copy;
@@ -168,7 +184,8 @@ final class ImportController extends Controller
     {
         $disk = Storage::disk(config('panel.exports.disk', 'local'));
         $disk->makeDirectory('panel-imports');
-        $stored = 'panel-imports/pending-'.uniqid('', true).'.csv';
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION) ?: 'csv');
+        $stored = 'panel-imports/pending-'.uniqid('', true).'.'.$extension;
         $disk->put($stored, (string) file_get_contents($path));
         @unlink($path);
 

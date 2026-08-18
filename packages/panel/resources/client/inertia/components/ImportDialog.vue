@@ -27,6 +27,8 @@ const props = defineProps<{
     /** The resource's base URL, e.g. `/clients` - import routes hang off it. */
     baseUrl: string
     resourceLabel: string
+    /** Excel is optional: Resource::excelImport() plus phpoffice/phpspreadsheet. */
+    excel?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -36,11 +38,14 @@ const emit = defineEmits<{
 
 const { busy, error, inspect, run } = useImport(props.baseUrl)
 
-const steps = [
-    { label: 'Upload', description: 'Choose a CSV file' },
+const steps = computed(() => [
+    {
+        label: 'Upload',
+        description: props.excel ? 'Choose a CSV or Excel file' : 'Choose a CSV file',
+    },
     { label: 'Map columns', description: 'Match each column to a field' },
     { label: 'Review', description: 'Check before writing anything' },
-]
+])
 
 const activeStep = ref(0)
 const file = ref<File | null>(null)
@@ -154,10 +159,10 @@ async function confirmImport(): Promise<void> {
             <!-- Step 0: upload -->
             <div v-if="activeStep === 0" class="flex flex-col gap-2">
                 <label class="flex flex-col gap-1">
-                    <span class="text-xs font-medium">CSV file</span>
+                    <span class="text-xs font-medium">{{ excel ? 'CSV or Excel file' : 'CSV file' }}</span>
                     <input
                         type="file"
-                        accept=".csv,text/csv"
+                        :accept="excel ? '.csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel' : '.csv,text/csv'"
                         class="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
                         :disabled="busy"
                         @change="chooseFile"

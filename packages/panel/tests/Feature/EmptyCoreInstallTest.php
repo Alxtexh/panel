@@ -38,6 +38,9 @@ final class EmptyCoreInstallTest extends TestCase
         $this->assertStringNotContainsString("type('catalog')", $install);
         $this->assertStringNotContainsString('function shortcuts()', $install);
         $this->assertStringContainsString('return [', $install);
+        $this->assertStringNotContainsString('givePermissionTo', $install);
+        $this->assertStringNotContainsString('grantsEverything', $install);
+        $this->assertStringContainsString('does not grant every ability', $install);
     }
 
     public function test_demo_screens_are_optional_not_default(): void

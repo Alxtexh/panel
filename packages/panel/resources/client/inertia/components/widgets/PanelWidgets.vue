@@ -33,6 +33,8 @@ import { ChartCard, PkBoundary, StatCard, TrendBadge, packWidgetColumns } from '
 import { computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import ChartBody from './ChartBody.vue'
+import DashboardTablePane from './DashboardTablePane.vue'
+import type { TableWidgetDecl } from './DashboardTablePane.vue'
 import { emptySeries, type Chart, type Series, type StatDefinition, type StatValue } from './types'
 
 const props = withDefaults(
@@ -50,6 +52,8 @@ const bag = computed(() => page.props as Record<string, any>)
 const stats = computed<StatDefinition[]>(() => bag.value[`${props.prefix}Widgets`] ?? [])
 
 const charts = computed<Chart[]>(() => bag.value[`${props.prefix}Charts`] ?? [])
+
+const tables = computed<TableWidgetDecl[]>(() => bag.value[`${props.prefix}Tables`] ?? [])
 
 function stat(key: string): StatValue | undefined {
     return bag.value[`${props.prefix}_stat_${key}`] as StatValue | undefined
@@ -221,5 +225,14 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
                 </div>
             </div>
         </template>
+    </div>
+
+    <div v-if="tables.length" class="flex flex-col gap-3">
+        <DashboardTablePane
+            v-for="table in tables"
+            :key="table.key"
+            :table="table"
+            :data-key="`${prefix}_table_${table.key}`"
+        />
     </div>
 </template>

@@ -52,8 +52,10 @@ Panel::make('admin')->canAccess(fn ($user) => $user->is_staff);
 ```
 
 Either returning false is a 403, not an empty broken shell. When the person is
-allowed in but the sidebar is empty (no grants), the dashboard says so instead
-of looking like a failed install. Shared prop: `panelEmptyGrants`.
+allowed in but the sidebar is empty (no grants), the dashboard and shell say so
+instead of looking like a failed install. Shared props: `panelEmptyGrants` and
+`panelEmptyGrantsHint` (create Administrator via `panel:permissions sync` then
+`panel:permissions grant --email=...`). The installer does not grant every ability.
 
 ## A resource with no policy is denied entirely
 

@@ -100,5 +100,19 @@ and pruned by `panel:prune-exports`.
 
 `ImportController` maps a CSV's columns to declared fields, validates each row
 against the same rules the form uses, and stamps the tenant from context after
-the mapped row rather than from the file — a CSV column named `tenant_id`
+the mapped row rather than from the file: a CSV column named `tenant_id`
 cannot move records between organisations.
+
+Import is opt-in (`Resource::importable()`). `php artisan make:panel-importer Order`
+writes an empty importer class the resource can name:
+
+```php
+public static function importable(): bool|string
+{
+    return OrderImporter::class;
+}
+```
+
+Failed rows download as CSV. Excel is optional, not a kit dependency:
+`Resource::excelImport()` plus `composer require phpoffice/phpspreadsheet`.
+CSV stays the default path.

@@ -108,6 +108,16 @@ They render through the same component, so a header row and a dashboard agree.
 Generate an empty factory with `php artisan make:panel-widget Revenue` or
 `--chart`. Discovery picks it up from `discoverWidgets()`.
 
+```php
+TableWidget::make('recent')->resource(OrderResource::class)->limit(5);
+
+Panel::make('admin')->discoverWidgets(app_path('Panel/Widgets'));
+```
+
+`TableWidget` renders the existing DataTable with a capped list query. The
+namespace is optional when the directory is under `app_path()`. An empty
+dashboard stays the install default.
+
 ## Rollups
 
 For counters too expensive to compute per request, `panel:refresh-rollups`

@@ -59,8 +59,8 @@ final class MakeWidgetCommand extends Command
             : $this->statStub($class, $key, $label, $panel));
 
         $this->components->info("Created {$path}");
-        $this->line('  Register discovery:  ->discoverWidgets(app_path(\'Panel/Widgets\'), \'App\\\\Panel\\\\Widgets\')');
-        $this->line('  Or return the widget from DashboardPage::stats() / charts().');
+        $this->line('  Register discovery:  ->discoverWidgets(app_path(\'Panel/Widgets\'))');
+        $this->line('  Or return the widget from DashboardPage::stats() / charts() / tables().');
 
         return self::SUCCESS;
     }

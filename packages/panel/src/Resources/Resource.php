@@ -284,13 +284,48 @@ abstract class Resource
      * administrative act with a wizard, a mapping step and a write of hundreds
      * of rows behind it.
      *
+     * Return true, or the importer class `make:panel-importer` wrote:
+     *
+     *     public static function importable(): bool|string
+     *     {
+     *         return OrderImporter::class;
+     *     }
+     *
+     * A class string is still opt-in: it is truthy, and the kit uses that
+     * class's `form()` when present. CSV is the default file type.
+     *
      * Return true from a subclass that actually wants a CSV. `permissions()`
      * still ands `isWritable()` and `can('create')`, so a read-only list cannot
      * advertise Import even if a subclass gets this wrong.
+     *
+     * @return bool|class-string
      */
-    public static function importable(): bool
+    public static function importable(): bool|string
     {
         return false;
+    }
+
+    /**
+     * Accept .xlsx/.xls in the import dialog.
+     *
+     * OPTIONAL. CSV stays the kit path. This is off until the resource asks,
+     * and Excel still needs `phpoffice/phpspreadsheet` (composer suggest).
+     * Without that package the endpoint names it rather than fatalling.
+     */
+    public static function excelImport(): bool
+    {
+        return false;
+    }
+
+    public static function importForm(): \Alxtexh\Panel\Forms\Form
+    {
+        $importer = static::importable();
+
+        if (is_string($importer) && class_exists($importer) && method_exists($importer, 'form')) {
+            return $importer::form();
+        }
+
+        return static::formDefinition();
     }
 
     /** Whether a create or edit PAGE can be rendered at all. */
@@ -386,9 +421,11 @@ abstract class Resource
 
             // Its own flag rather than a reading of `create` - see
             // `importable()` for the screen that made the difference clear.
-            'import' => static::importable()
+            'import' => (bool) static::importable()
                 && static::isWritable()
                 && static::can('create'),
+            'excelImport' => static::excelImport()
+                && class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class),
         ];
     }
 
@@ -465,7 +502,7 @@ abstract class Resource
      * subtly different on a second surface is how a panel leaks a number here
      * that it correctly withholds there.
      *
-     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget>
+     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
      */
     public static function headerWidgets(): array
     {

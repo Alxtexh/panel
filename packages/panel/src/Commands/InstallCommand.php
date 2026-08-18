@@ -97,6 +97,10 @@ final class InstallCommand extends Command
         $this->line('  4. Review the generated policy - the panel DENIES any ability whose');
         $this->line('     model has no policy, so an unreviewed stub is a real grant.');
         $this->line('  5. Visit /your-models. Discovery registers it; there is no route to add.');
+        $this->line('  6. php artisan panel:permissions sync');
+        $this->line('     Then grant one account: php artisan panel:permissions grant --email=you@example.com');
+        $this->line('     The installer does not grant every ability. Until someone is an');
+        $this->line('     Administrator, the dashboard explains that you have no grants.');
         $this->newLine();
         $this->line('  AGENTS.md now holds the conventions and the full list of fields,');
         $this->line('  columns, filters and actions available. Re-run `panel:blueprint`');
@@ -643,8 +647,18 @@ final class InstallCommand extends Command
 
         if (file_exists($provider)) {
             file_put_contents($provider, str_replace(
-                ['Panel/Admin/Resources', 'App\\\\Panel\\\\Admin\\\\Resources'],
-                ['Panel/Resources', 'App\\\\Panel\\\\Resources'],
+                [
+                    'Panel/Admin/Resources',
+                    'App\\\\Panel\\\\Admin\\\\Resources',
+                    'Panel/Admin/Widgets',
+                    'App\\\\Panel\\\\Admin\\\\Widgets',
+                ],
+                [
+                    'Panel/Resources',
+                    'App\\\\Panel\\\\Resources',
+                    'Panel/Widgets',
+                    'App\\\\Panel\\\\Widgets',
+                ],
                 (string) file_get_contents($provider),
             ));
 
@@ -881,8 +895,8 @@ final class InstallCommand extends Command
          *
          * EMPTY ON PURPOSE. A fresh install is chrome plus an empty canvas, not
          * sample orders or revenue. Fill `stats()` / `charts()`, or register
-         * widgets with `Panel::widgets()`. Same shape as
-         * `make:panel-page --dashboard`.
+         * widgets with `Panel::widgets()` or `->discoverWidgets(app_path('Panel/Widgets'))`.
+         * Same shape as `make:panel-page --dashboard`.
          *
          * To use your own layout instead, override `component()` and point it
          * at a page of your own; the declarations, the permission filtering and
@@ -918,6 +932,14 @@ final class InstallCommand extends Command
                     //     ->type('line')
                     //     ->withPeriods()
                     //     ->data(fn (\$period, \$now): array => [...]),
+                ];
+            }
+
+            /** @return list<\\Alxtexh\\Panel\\Widgets\\TableWidget> */
+            public static function tables(): array
+            {
+                return [
+                    // TableWidget::make('recent')->resource(OrderResource::class)->limit(5),
                 ];
             }
         }
