@@ -30,6 +30,9 @@ final class MakePageCommand extends Command
                             {--directory : Chrome DirectoryPage; install already writes one}
                             {--signatures : Empty SignatureStudioPage; writes optional Signatures screen}
                             {--device-preview : Empty DevicePreviewPage; Vue shims packaged DevicePreview}
+                            {--api-keys : Empty ApiKeysPage; Vue shims packaged ApiKeys}
+                            {--invites : Empty InvitePage; Vue shims packaged Invites}
+                            {--feature-flags : Empty FeatureFlagsPage; Vue shims packaged FeatureFlags}
                             {--panel= : The panel this screen belongs to. Defaults to panel.default}
                             {--force : Overwrite an existing class or component}';
 
@@ -46,6 +49,9 @@ final class MakePageCommand extends Command
         'directory',
         'signatures',
         'device-preview',
+        'api-keys',
+        'invites',
+        'feature-flags',
     ];
 
     public function handle(): int
@@ -101,6 +107,9 @@ final class MakePageCommand extends Command
             'directory' => $this->directoryStub($class, $slug, $name, $panel),
             'signatures' => $this->signaturesStub($class, $slug, $name, $panel),
             'device-preview' => $this->devicePreviewStub($class, $slug, $name, $panel),
+            'api-keys' => $this->apiKeysStub($class, $slug, $name, $panel),
+            'invites' => $this->invitesStub($class, $slug, $name, $panel),
+            'feature-flags' => $this->featureFlagsStub($class, $slug, $name, $panel),
             default => $this->pageStub($class, $slug, $name, $panel),
         });
 
@@ -109,7 +118,7 @@ final class MakePageCommand extends Command
 
         $this->writeComponent($name, $variant);
 
-        if (in_array($variant, ['plan-setup', 'till', 'catalog', 'catalog-item', 'register', 'directory', 'signatures', 'device-preview'], true)) {
+        if (in_array($variant, ['plan-setup', 'till', 'catalog', 'catalog-item', 'register', 'directory', 'signatures', 'device-preview', 'api-keys', 'invites', 'feature-flags'], true)) {
             $optional = PanelPages::writeOptional((bool) $this->option('force'));
 
             if ($optional['written'] !== []) {
@@ -162,6 +171,9 @@ final class MakePageCommand extends Command
         $shim = match ($hint) {
             'till' => 'Till',
             'device-preview' => 'DevicePreview',
+            'api-keys' => 'ApiKeys',
+            'invites' => 'Invites',
+            'feature-flags' => 'FeatureFlags',
             default => null,
         };
 
@@ -330,6 +342,14 @@ final class MakePageCommand extends Command
             'register' => 'CatalogRegister',
             'directory' => 'DirectoryPage',
             'signatures' => 'SignatureStudio',
+            'api-keys' => 'ApiKeys',
+            'invites' => 'Invites',
+            'webhooks' => 'Webhooks',
+            'feature-flags' => 'FeatureFlags',
+            'billing-portal' => 'BillingPortal',
+            'email-templates' => 'EmailTemplates',
+            'onboarding' => 'Onboarding',
+            'media-library' => 'MediaLibrary',
             default => 'CatalogGrid',
         };
 
@@ -680,6 +700,56 @@ final class MakePageCommand extends Command
             protected static string \$panel = '{$panel}';
 
             protected static ?string \$group = null;
+
+            public static function component(): string
+            {
+                return '{$name}';
+            }
+
+            public static function ability(): ?string
+            {
+                return null;
+            }
+        }
+
+        PHP;
+    }
+
+    private function apiKeysStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return $this->extendsPageStub($class, $name, $panel, 'ApiKeysPage', 'API keys for the public API.');
+    }
+
+    private function invitesStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return $this->extendsPageStub($class, $name, $panel, 'InvitePage', 'Pending team invites.');
+    }
+
+    private function featureFlagsStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return $this->extendsPageStub($class, $name, $panel, 'FeatureFlagsPage', 'Feature flags for this organisation.');
+    }
+
+    private function extendsPageStub(
+        string $class,
+        string $name,
+        string $panel,
+        string $base,
+        string $description,
+    ): string {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Panel\\Pages;
+
+        use Alxtexh\\Panel\\Pages\\{$base};
+
+        /** {$description} Enable with `Panel::apps([...])` on the portal. */
+        final class {$class} extends {$base}
+        {
+            protected static string \$panel = '{$panel}';
 
             public static function component(): string
             {

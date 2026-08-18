@@ -204,6 +204,9 @@ final class PanelPages
         'DevicePreview',
         'Mail',
         'Chat',
+        'ApiKeys',
+        'Invites',
+        'FeatureFlags',
     ];
 
     /**

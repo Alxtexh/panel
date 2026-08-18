@@ -1073,10 +1073,10 @@ final class Panel
     }
 
     /**
-     * Opt this portal into empty kit apps: `mail`, `chat`.
+     * Opt this portal into empty kit apps: `mail`, `chat`, `api-keys`, `invites`,
+     * `feature-flags`.
      *
-     * Each is an empty canvas (`MailPage` / `ChatPage`). Fill `folders()` /
-     * `threads()` or `conversations()` / `thread()` on a subclass, or live
+     * Each is an empty canvas or thin wrapper. Fill hooks on a subclass, or live
      * with empty lists. `without(['mail'])` still drops a screen you enabled.
      *
      * @param  list<string>  $names
@@ -1088,6 +1088,14 @@ final class Panel
         }
 
         return $this;
+    }
+
+    /**
+     * Shorthand for `->apps(['webhooks'])`.
+     */
+    public function webhooks(): self
+    {
+        return $this->apps(['webhooks']);
     }
 
     public function offersApp(string $name): bool

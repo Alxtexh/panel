@@ -78,6 +78,9 @@ final class PanelManager
         Pages\PaymentSettingsPage::class,
         Pages\MailPage::class,
         Pages\ChatPage::class,
+        Pages\ApiKeysPage::class,
+        Pages\InvitePage::class,
+        Pages\FeatureFlagsPage::class,
     ];
 
     /** @var array<string, class-string<Pages\Page>> slug => class — first-registered wins; used as fallback when no panel context */
