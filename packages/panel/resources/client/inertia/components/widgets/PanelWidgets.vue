@@ -29,10 +29,11 @@
  * thrown away. That bug has been paid for twice in this codebase already.
  */
 import { Deferred, usePage } from '@inertiajs/vue3'
-import { ChartCard, PkBoundary, StatCard, TrendBadge, packWidgetColumns } from '@alxtexh-enterprise/panel'
+import { ChartCard, PkBoundary, TrendBadge, packWidgetColumns } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import ChartBody from './ChartBody.vue'
+import DashboardStatPane from './DashboardStatPane.vue'
 import DashboardTablePane from './DashboardTablePane.vue'
 import type { TableWidgetDecl } from './DashboardTablePane.vue'
 import { emptySeries, type Chart, type Series, type StatDefinition, type StatValue } from './types'
@@ -114,24 +115,13 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
         v-if="stats?.length"
         class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
     >
-        <PkBoundary v-for="widget in stats" :key="widget.key" :label="widget.label" fill>
-            <Deferred :data="`${prefix}_stat_${widget.key}`">
-                <template #fallback>
-                    <StatCard :label="widget.label" :description="widget.description" loading />
-                </template>
-
-                <template #default>
-                    <StatCard
-                        :label="widget.label"
-                        :description="widget.description"
-                        :value="stat(widget.key)?.value"
-                        :trend="stat(widget.key)?.trend"
-                        :sparkline="stat(widget.key)?.sparkline"
-                        :error="stat(widget.key)?.error"
-                    />
-                </template>
-            </Deferred>
-        </PkBoundary>
+        <DashboardStatPane
+            v-for="widget in stats"
+            :key="widget.key"
+            :prefix="prefix"
+            :widget="widget"
+            :value="stat(widget.key)"
+        />
     </div>
 
     <!--

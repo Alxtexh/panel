@@ -132,6 +132,8 @@ export interface StatDefinition {
     key: string
     label: string
     description?: string
+    /** Milliseconds. Null means do not poll. */
+    poll?: number | null
 }
 
 /**

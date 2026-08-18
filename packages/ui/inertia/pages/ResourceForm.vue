@@ -35,7 +35,7 @@ const props = defineProps<{
         key: string
         label: string
         labelPlural: string
-        routes: { index: string }
+        routes: { index: string; store?: string; update?: string }
         /**
          * Places to go from this screen - normally the thing it configures.
          *
@@ -402,6 +402,8 @@ async function onFieldChange(key: string, value: any): Promise<void> {
     ;(form as any)[key] = value
 
     if (!fieldIsLive(key)) {
+        scheduleLiveValidation(key)
+
         return
     }
 
@@ -435,6 +437,72 @@ async function onFieldChange(key: string, value: any): Promise<void> {
         for (const [k, v] of Object.entries(payload.values as Record<string, unknown>)) {
             ;(form as any)[k] = v
         }
+    }
+
+    scheduleLiveValidation(key)
+}
+
+/**
+ * Live typing validation over the existing precognitive store/update route.
+ *
+ * JSON POST of the current values, field named in Precognition-Validate-Only.
+ * Same transport as live() form-state. No Livewire.
+ */
+let validateTimer: ReturnType<typeof setTimeout> | undefined
+
+function validateUrl(): string | null {
+    if (props.record?.id && props.schema.routes.update) {
+        return props.schema.routes.update.replace('{id}', String(props.record.id))
+    }
+
+    return props.schema.routes.store ?? props.schema.routes.index ?? null
+}
+
+function scheduleLiveValidation(key: string): void {
+    clearTimeout(validateTimer)
+    validateTimer = setTimeout(() => {
+        void validateField(key)
+    }, 350)
+}
+
+async function validateField(key: string): Promise<void> {
+    const url = validateUrl()
+
+    if (!url) {
+        return
+    }
+
+    const res = await fetch(url, {
+        method: props.record?.id ? 'PUT' : 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Precognition: 'true',
+            'Precognition-Validate-Only': key,
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-XSRF-TOKEN': csrf(),
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ field: key, ...form.data() }),
+    })
+
+    if (res.status === 204 || res.headers.get('Precognition-Success') === 'true') {
+        form.clearErrors(key)
+
+        return
+    }
+
+    if (res.status !== 422) {
+        return
+    }
+
+    const body = await res.json().catch(() => ({}))
+    const messages = (body as { errors?: Record<string, string[]> }).errors?.[key]
+
+    if (messages) {
+        form.setError(key, Array.isArray(messages) ? String(messages[0]) : String(messages))
+    } else {
+        form.clearErrors(key)
     }
 }
 
@@ -487,6 +555,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
     window.removeEventListener('beforeunload', onBeforeUnload)
     removeNavigationGuard?.()
+    clearTimeout(validateTimer)
 })
 </script>
 

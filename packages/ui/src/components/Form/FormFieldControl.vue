@@ -213,6 +213,42 @@ onBeforeUnmount(() => clearTimeout(debounce))
  */
 const registered = computed(() => fieldControl(props.field.type))
 
+const hasInputAffixes = computed(
+    () =>
+        Boolean(props.field.prefix) ||
+        Boolean(props.field.suffix) ||
+        Boolean(props.field.prefixIcon) ||
+        Boolean(props.field.suffixIcon) ||
+        Boolean(props.field.prefixAction) ||
+        Boolean(props.field.suffixAction),
+)
+
+function affixAction(action: FormField['suffixAction']): void {
+    if (!action) {
+        return
+    }
+
+    if (action.copy) {
+        const text = props.value == null ? '' : String(props.value)
+
+        if (text !== '' && typeof navigator !== 'undefined' && navigator.clipboard) {
+            void navigator.clipboard.writeText(text)
+        }
+
+        return
+    }
+
+    if (action.url && typeof window !== 'undefined') {
+        window.open(action.url, '_blank', 'noopener,noreferrer')
+    }
+}
+
+const inputClass =
+    'border-input bg-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50'
+
+const affixedInputClass =
+    'bg-background h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-sm focus-visible:ring-0 focus-visible:outline-none disabled:opacity-50'
+
 /* ------------------------------------------------------------------- chips */
 
 /**
@@ -261,14 +297,29 @@ function insertChip(token: string) {
         <!-- `sr-only`, never removed: the input keeps its accessible name
              when a container hides a visually redundant label (see
              FormField.labelHidden). -->
-        <label
-            :for="`f-${field.key}`"
-            class="text-sm font-medium"
-            :class="{ 'sr-only': field.labelHidden }"
-        >
-            {{ field.label }}
-            <span v-if="field.required" class="text-destructive" aria-hidden="true">*</span>
-        </label>
+        <div class="flex items-center justify-between gap-2">
+            <label
+                :for="`f-${field.key}`"
+                class="text-sm font-medium"
+                :class="{ 'sr-only': field.labelHidden }"
+            >
+                {{ field.label }}
+                <span v-if="field.required" class="text-destructive" aria-hidden="true">*</span>
+            </label>
+            <span v-if="field.hint" class="text-muted-foreground flex items-center gap-1 text-xs">
+                {{ field.hint }}
+                <button
+                    v-if="field.hintAction"
+                    type="button"
+                    class="hover:text-foreground rounded px-1"
+                    :aria-label="field.hintAction.label ?? 'Copy'"
+                    :disabled="field.disabled || processing"
+                    @click="affixAction(field.hintAction)"
+                >
+                    {{ field.hintAction.label ?? '⧉' }}
+                </button>
+            </span>
+        </div>
 
         <!--
             A REGISTERED CONTROL WINS. Everything below is a built-in; this is
@@ -540,7 +591,7 @@ function insertChip(token: string) {
         </label>
 
         <textarea
-            v-else-if="field.type === 'textarea'"
+            v-else-if="field.type === 'textarea' && !hasInputAffixes"
             :id="`f-${field.key}`"
             :value="(value as string) ?? ''"
             :rows="field.rows ?? 3"
@@ -551,8 +602,53 @@ function insertChip(token: string) {
             @input="emit('change', ($event.target as HTMLTextAreaElement).value)"
         />
 
+        <div
+            v-else-if="field.type === 'textarea'"
+            class="border-input focus-within:ring-ring flex overflow-hidden rounded-md border focus-within:ring-2"
+            :class="{ 'opacity-50': field.disabled || processing }"
+        >
+            <span
+                v-if="field.prefix || field.prefixIcon"
+                class="bg-muted text-muted-foreground flex items-center px-2 text-sm"
+            >{{ field.prefix ?? field.prefixIcon }}</span>
+            <button
+                v-if="field.prefixAction"
+                type="button"
+                class="bg-muted text-muted-foreground hover:text-foreground px-2 text-xs"
+                :aria-label="field.prefixAction.label ?? 'Action'"
+                :disabled="field.disabled || processing"
+                @click="affixAction(field.prefixAction)"
+            >
+                {{ field.prefixAction.label ?? '⧉' }}
+            </button>
+            <textarea
+                :id="`f-${field.key}`"
+                :value="(value as string) ?? ''"
+                :rows="field.rows ?? 3"
+                :placeholder="field.placeholder"
+                :disabled="field.disabled || processing"
+                :aria-invalid="!!error"
+                class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm focus-visible:outline-none"
+                @input="emit('change', ($event.target as HTMLTextAreaElement).value)"
+            />
+            <span
+                v-if="field.suffix || field.suffixIcon"
+                class="bg-muted text-muted-foreground flex items-center px-2 text-sm"
+            >{{ field.suffix ?? field.suffixIcon }}</span>
+            <button
+                v-if="field.suffixAction"
+                type="button"
+                class="bg-muted text-muted-foreground hover:text-foreground px-2 text-xs"
+                :aria-label="field.suffixAction.label ?? 'Copy'"
+                :disabled="field.disabled || processing"
+                @click="affixAction(field.suffixAction)"
+            >
+                {{ field.suffixAction.label ?? '⧉' }}
+            </button>
+        </div>
+
         <input
-            v-else
+            v-else-if="!hasInputAffixes"
             :id="`f-${field.key}`"
             :type="
                 field.type === 'number'
@@ -572,9 +668,67 @@ function insertChip(token: string) {
             :max="field.max"
             :disabled="field.disabled || processing"
             :aria-invalid="!!error"
-            class="border-input bg-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+            :class="inputClass"
             @input="emit('change', ($event.target as HTMLInputElement).value)"
         />
+
+        <div
+            v-else
+            class="border-input focus-within:ring-ring flex h-9 overflow-hidden rounded-md border focus-within:ring-2"
+            :class="{ 'opacity-50': field.disabled || processing }"
+        >
+            <span
+                v-if="field.prefix || field.prefixIcon"
+                class="bg-muted text-muted-foreground flex items-center px-2 text-sm"
+            >{{ field.prefix ?? field.prefixIcon }}</span>
+            <button
+                v-if="field.prefixAction"
+                type="button"
+                class="bg-muted text-muted-foreground hover:text-foreground px-2 text-xs"
+                :aria-label="field.prefixAction.label ?? 'Action'"
+                :disabled="field.disabled || processing"
+                @click="affixAction(field.prefixAction)"
+            >
+                {{ field.prefixAction.label ?? '⧉' }}
+            </button>
+            <input
+                :id="`f-${field.key}`"
+                :type="
+                    field.type === 'number'
+                        ? 'number'
+                        : field.type === 'date'
+                          ? 'date'
+                          : field.type === 'datetime'
+                            ? 'datetime-local'
+                            : field.type === 'password'
+                              ? 'password'
+                              : (field.inputType ?? 'text')
+                "
+                :value="value ?? ''"
+                :placeholder="field.placeholder"
+                :autocomplete="field.type === 'password' ? 'new-password' : undefined"
+                :min="field.min"
+                :max="field.max"
+                :disabled="field.disabled || processing"
+                :aria-invalid="!!error"
+                :class="affixedInputClass"
+                @input="emit('change', ($event.target as HTMLInputElement).value)"
+            />
+            <span
+                v-if="field.suffix || field.suffixIcon"
+                class="bg-muted text-muted-foreground flex items-center px-2 text-sm"
+            >{{ field.suffix ?? field.suffixIcon }}</span>
+            <button
+                v-if="field.suffixAction"
+                type="button"
+                class="bg-muted text-muted-foreground hover:text-foreground px-2 text-xs"
+                :aria-label="field.suffixAction.label ?? 'Copy'"
+                :disabled="field.disabled || processing"
+                @click="affixAction(field.suffixAction)"
+            >
+                {{ field.suffixAction.label ?? '⧉' }}
+            </button>
+        </div>
 
         <!--
             THE PRESETS SIT BESIDE THE INPUT, not instead of it. Most answers to

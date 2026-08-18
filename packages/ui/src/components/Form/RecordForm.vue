@@ -8,9 +8,9 @@
  * putting network latency in front of a confirmation dialog.
  *
  * Errors come from the SAME Laravel rules the server enforces, so the client
- * never carries a second copy to drift out of step. They arrive on submit; live
- * per-keystroke validation needs a Precognition client that supports Inertia 3,
- * which does not exist yet.
+ * never carries a second copy to drift out of step. While typing, the page
+ * POSTs field+values as JSON to the precognitive store/update route (the same
+ * shape as live() form-state). There is no Livewire.
  *
  * Takes a TREE when the schema has one, and falls back to a flat field list
  * otherwise - so a resource that never declares layout keeps working unchanged.

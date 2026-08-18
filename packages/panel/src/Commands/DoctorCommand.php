@@ -19,6 +19,7 @@ use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Support\BackupStatus;
 use Alxtexh\Panel\Support\Contrast;
 use Alxtexh\Panel\Support\Discovery;
+use Alxtexh\Panel\Support\KitAssets;
 use Alxtexh\Panel\Support\PanelPages;
 use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Support\TicketTables;
@@ -803,8 +804,8 @@ final class DoctorCommand extends Command
             'The panel is pointed at a Vite dev server that is not running',
             "public/hot says assets come from {$url}, and nothing is listening there. Every page "
             .'will load, return 200 with a complete payload, and render blank - no error, nothing '
-            .'in the log. Either start the dev server with `npm run dev`, or delete public/hot and '
-            .'serve the built assets with `npm run build`.',
+            .'in the log. Either start the dev server with `npm run dev`, or delete public/hot. '
+            .'The default path is public/vendor/panel kit CSS/JS; `npm run build` is only for a Vite customisation.',
         );
     }
 
@@ -1027,6 +1028,10 @@ final class DoctorCommand extends Command
 
     private function checkStylesheet(): void
     {
+        if (! KitAssets::hostViteManifestExists() && is_file(KitAssets::publicPath('app.css'))) {
+            return;
+        }
+
         $path = resource_path('css/app.css');
 
         if (! file_exists($path)) {
@@ -1075,32 +1080,43 @@ final class DoctorCommand extends Command
     }
 
     /**
-     * THE CLIENT HALF IS ACTUALLY INSTALLED.
+     * CSS/JS that the first visit actually loads.
      *
-     * The worst failure this package has shipped, and it has shipped twice. The
-     * PHP installs, the routes answer 200, the policies and migrations all
-     * work - and every screen is blank, because `node_modules` has no
-     * `@alxtexh-enterprise/panel` in it. There is no error to search for.
-     * Nothing errored.
+     * DEFAULT PATH: published kit at public/vendor/panel (or the package
+     * dist/kit copy that panel:install publishes). No npm. A missing
+     * node_modules is not a white page on that path.
      *
-     * IT NO LONGER COMPARES VERSIONS. That check existed because the client
-     * shipped as a tarball vendored inside this package, so the two halves had
-     * separate versions that could drift apart. The workspace installs the
-     * client straight from `packages/ui`, so there is one copy and nothing to
-     * disagree with itself.
+     * VITE PATH: public/build/manifest.json exists, so the root view uses
+     * @vite and then node_modules/@alxtexh-enterprise/panel must exist.
      */
     private function checkClientHalf(): void
     {
-        $installed = base_path('node_modules/@alxtexh-enterprise/panel/package.json');
+        if (KitAssets::hostViteManifestExists()) {
+            $installed = base_path('node_modules/@alxtexh-enterprise/panel/package.json');
 
-        if (! is_file($installed)) {
-            $this->problem(
-                'the client half is not installed - every panel screen will be blank',
-                'The screens are Vue and come from `packages/ui`. Nothing renders without '
-                .'them and the failure is silent: routes answer 200 and the page is empty. '
-                .'Run: npm install && npm run build',
-            );
+            if (! is_file($installed)) {
+                $this->problem(
+                    'Vite is in use but the client half is not in node_modules',
+                    'public/build/manifest.json exists, so the root view loads @vite. '
+                    .'Install the Vue package: npm install && npm run build',
+                );
+            }
+
+            return;
         }
+
+        if (is_file(KitAssets::publicPath('app.js')) && is_file(KitAssets::publicPath('app.css'))) {
+            return;
+        }
+
+        if (KitAssets::kitBundleExists()) {
+            return;
+        }
+
+        $this->problem(
+            'kit CSS/JS is missing and Vite has not been built - first visit will be a white page',
+            'The package should ship resources/client/dist/kit. Reinstall, or run: npm install && npm run build',
+        );
     }
 
     /**

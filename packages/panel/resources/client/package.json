@@ -62,10 +62,12 @@
         "@inertiajs/vue3": "^3.0.0",
         "@laravel/passkeys": "^0.2.0",
         "@lucide/vue": "^1.17.0",
+        "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.0",
         "@vue/test-utils": "^2.4.11",
         "jsdom": "^25.0.1",
         "prettier": "^3.9.6",
+        "tailwindcss": "^4.3.3",
         "typescript": "^5.7.0",
         "vite": "^7.0.0",
         "vitest": "^3.2.7",
@@ -79,7 +81,8 @@
         "lint:check": "../../apps/playground/node_modules/.bin/eslint .",
         "format": "prettier --write src/ inertia/",
         "format:check": "prettier --check src/ inertia/",
-        "build": "vite build && vue-tsc -p tsconfig.build.json",
+        "build": "vite build && vue-tsc -p tsconfig.build.json && vite build --config vite.kit.config.ts",
+        "build:kit": "vite build --config vite.kit.config.ts",
         "prepack": "npm run build"
     },
     "peerDependenciesMeta": {

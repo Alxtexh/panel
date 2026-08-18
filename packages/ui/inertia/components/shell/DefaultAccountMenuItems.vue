@@ -40,9 +40,11 @@ import {
     DropdownMenuSeparator,
 } from '@alxtexh-enterprise/panel'
 import type { User } from '../../types'
+import { useTranslations } from '../../composables/useTranslations'
 import UserInfo from './UserInfo.vue'
 
 const page = usePage()
+const { t } = useTranslations()
 
 const panel = computed(
     () =>
@@ -125,14 +127,14 @@ const handleLogout = () => {
         <DropdownMenuItem v-if="panel?.account" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.account" prefetch>
                 <UserRound class="mr-2 h-4 w-4" />
-                Profile
+                {{ t('chrome.account.profile') }}
             </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem v-if="panel?.settings" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.settings" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
-                Settings
+                {{ t('chrome.account.settings') }}
             </Link>
         </DropdownMenuItem>
 
@@ -144,7 +146,7 @@ const handleLogout = () => {
         <DropdownMenuItem v-if="panel?.userManagement && can.manageRoles" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.userManagement" prefetch>
                 <UsersRound class="mr-2 h-4 w-4" />
-                User management
+                {{ t('chrome.account.users') }}
             </Link>
         </DropdownMenuItem>
 
@@ -156,21 +158,21 @@ const handleLogout = () => {
         <DropdownMenuItem v-if="operations.backups && can.viewOperations" as-child>
             <Link class="block w-full cursor-pointer" :href="operations.backups" prefetch>
                 <DatabaseBackup class="mr-2 h-4 w-4" />
-                Backups
+                {{ t('chrome.account.backups') }}
             </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem v-if="operations.logs && can.viewOperations" as-child>
             <Link class="block w-full cursor-pointer" :href="operations.logs" prefetch>
                 <ScrollText class="mr-2 h-4 w-4" />
-                Logs
+                {{ t('chrome.account.logs') }}
             </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem v-if="operations.monitoring && can.viewOperations" as-child>
             <Link class="block w-full cursor-pointer" :href="operations.monitoring" prefetch>
                 <Server class="mr-2 h-4 w-4" />
-                Monitoring
+                {{ t('chrome.account.monitoring') }}
             </Link>
         </DropdownMenuItem>
 
@@ -181,7 +183,7 @@ const handleLogout = () => {
         <DropdownMenuItem v-if="panel?.activity && can.viewOperations" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.activity" prefetch>
                 <Activity class="mr-2 h-4 w-4" />
-                Activity
+                {{ t('chrome.account.activity') }}
             </Link>
         </DropdownMenuItem>
 
@@ -262,7 +264,7 @@ const handleLogout = () => {
             @click="handleLogout"
         >
             <LogOut class="mr-2 h-4 w-4" />
-            Log out
+            {{ t('chrome.account.logout') }}
         </Link>
     </DropdownMenuItem>
 </template>

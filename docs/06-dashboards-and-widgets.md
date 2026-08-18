@@ -71,6 +71,18 @@ ChartWidget::make('revenue', 'Revenue')->withPeriods()
 
 The click re-runs one grouped query, not every counter on the page.
 
+## Polling
+
+```php
+StatWidget::make('online', 'Online')
+    ->value(fn (): int => Session::query()->where('status', 'online')->count())
+    ->poll('10s');
+```
+
+`poll()` is the same `CanPoll` API as `ChartWidget` and `TableWidget`: seconds
+as an int, or a string like `10s`. The Vue host reloads only that widget's
+deferred prop. Polling pauses while the tab is hidden. There is no Livewire.
+
 ## Time series without gaps
 
 `Bucket`, `Period` and `Trend` handle the arithmetic. Bucketing a timestamp is

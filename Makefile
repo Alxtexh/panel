@@ -57,7 +57,7 @@ install: ## Install PHP and JS dependencies
 	@cd $(PLAYGROUND) && composer install && npm install
 
 .PHONY: sync-client
-sync-client: ## Build packages/ui and mirror it into packages/panel/resources/client for distribution
+sync-client: ## Build packages/ui (lib + kit SPA) and mirror it into packages/panel/resources/client
 	@cd packages/ui && npm run build
 	@rm -rf packages/panel/resources/client
 	@mkdir -p packages/panel/resources/client

@@ -118,14 +118,15 @@ final class EmptyCoreInstallTest extends TestCase
         $this->assertStringContainsString('showLogin', $auth);
     }
 
-    public function test_install_prints_npm_as_the_required_next_line(): void
+    public function test_install_treats_npm_as_optional_and_publishes_kit_assets(): void
     {
         $install = (string) file_get_contents(
             dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
         );
 
-        $this->assertStringContainsString('npm install && npm run build', $install);
-        $this->assertStringContainsString('Required next line', $install);
+        $this->assertStringContainsString('publishKitAssets', $install);
+        $this->assertStringContainsString('npm install && npm run build is optional', $install);
+        $this->assertStringContainsString('public/vendor/panel', $install);
         $this->assertStringContainsString('panel:permissions', $install);
         $this->assertStringContainsString('syncPermissions', $install);
         $this->assertStringContainsString('wireSharePanelProps', $install);

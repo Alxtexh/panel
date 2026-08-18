@@ -16,11 +16,13 @@ Then require **^1.0**:
 ```bash
 composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
-npm install && npm run build
 ```
 
-Run `npm install && npm run build` in **your** terminal. Filament publishes CSS;
-this kit needs Vite once. Skipping that step is a blank white page.
+First visit uses **published kit CSS/JS** at `public/vendor/panel`. There is no
+white page and no `npm run build` required. `npm install && npm run build` is
+optional, only if you customise Vue. The default root view loads kit dist when
+`public/build/manifest.json` is missing, and `@vite` only when that manifest
+exists.
 
 **`"no-api": true` is load-bearing.** Without it Composer calls GitHub's API for
 a VCS repository and authenticates even for a public one, failing with
@@ -63,8 +65,9 @@ when the users table has no `tenant_id`.
 | Step | Result |
 |---|---|
 | Publishes `config/panel.php` | Every option, commented. Tenancy default `none` |
-| Publishes kit lang (`panel-lang`) | `lang/vendor/panel/{en,es}` - overlay with `__('panel::...')` |
-| Writes `resources/views/app.blade.php` | The root view Inertia renders into |
+| Publishes kit lang (`panel-lang`) | `lang/vendor/panel/{en,es,fr}` - overlay with `__('panel::...')` |
+| Publishes kit assets | `public/vendor/panel/{app.css,app.js}` from package `dist/kit`. First visit has CSS without npm |
+| Writes `resources/views/app.blade.php` | Root view. Loads kit dist unless a Vite manifest exists |
 | Writes `resources/js/app.ts` | Inertia bootstrap with `PanelLayout` + nested `SettingsLayout` for settings pages |
 | Writes `resources/js/layouts/PanelLayout.vue` | A layout you are meant to replace |
 | Merges `resources/css/app.css` | Points Tailwind at the package. Without this you get a working panel with no styling |
@@ -87,11 +90,11 @@ Add `--force` to overwrite the published config and page files.
 
 ## After installing
 
-**1. Build assets** (required):
+**1. Assets are already published.** `panel:install` copies kit CSS/JS to
+`public/vendor/panel`. First visit has chrome, not a white page.
 
-```bash
-npm install && npm run build
-```
+`npm install && npm run build` is optional, only if you customise Vue. After a
+Vite build the root view uses `@vite` instead of kit dist.
 
 **2. Serve from a real terminal.** Cursor agent shells abort `php artisan serve`.
 Use your own terminal, or:

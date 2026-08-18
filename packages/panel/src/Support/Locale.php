@@ -140,7 +140,7 @@ final class Locale
         $dir = self::packageLangPath().'/en';
 
         if (! is_dir($dir)) {
-            return ['auth', 'billing', 'directory', 'grants', 'operations', 'support'];
+            return ['auth', 'billing', 'chrome', 'directory', 'grants', 'onboarding', 'operations', 'support'];
         }
 
         $files = glob($dir.'/*.php') ?: [];

@@ -150,3 +150,41 @@ describe('FormFieldControl - message chips', () => {
         wrapper.unmount()
     })
 })
+
+describe('FormFieldControl - affixes', () => {
+    it('renders prefix and suffix text in the schema chrome', () => {
+        const wrapper = mount(FormFieldControl, {
+            props: {
+                field: {
+                    key: 'price',
+                    label: 'Price',
+                    type: 'text',
+                    prefix: 'KES',
+                    suffix: '.00',
+                } as FormField,
+                value: '10',
+            },
+        })
+
+        expect(wrapper.text()).toContain('KES')
+        expect(wrapper.text()).toContain('.00')
+    })
+
+    it('renders a copy suffix action as a button', () => {
+        const wrapper = mount(FormFieldControl, {
+            props: {
+                field: {
+                    key: 'slug',
+                    label: 'Slug',
+                    type: 'text',
+                    suffixAction: { label: 'Copy', copy: true },
+                } as FormField,
+                value: 'acme',
+            },
+        })
+
+        const copy = wrapper.find('button[aria-label="Copy"]')
+        expect(copy.exists()).toBe(true)
+        expect(copy.attributes('type')).toBe('button')
+    })
+})

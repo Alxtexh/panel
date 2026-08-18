@@ -9,11 +9,12 @@ widget and command, and how to switch each part on.
 ```bash
 composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
-npm install && npm run build
 ```
 
 First visit is **chrome plus an empty canvas**: dashboard, user menu, Get started.
 Not Nairobi Fibre, not sample orders. Create and edit are dedicated pages.
+The default path loads published kit CSS/JS (`public/vendor/panel`), so there
+is no white page without npm. `npm run build` is optional if you customise Vue.
 
 `apps/playground` is an **ISP demo application**, not the kit default. Use it to
 see a fully dressed vertical. Judge a fresh install from `panel:install`.

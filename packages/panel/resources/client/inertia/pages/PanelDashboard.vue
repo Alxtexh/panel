@@ -42,6 +42,7 @@ import DashboardChartPane from '../components/widgets/DashboardChartPane.vue'
 import DashboardTablePane from '../components/widgets/DashboardTablePane.vue'
 import type { TableWidgetDecl } from '../components/widgets/DashboardTablePane.vue'
 import { emptySeries, type Chart, type Series } from '../components/widgets/types'
+import { useWidgetPoll } from '../composables/useWidgetPoll'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
 import EmptyGrantsNotice from '../components/EmptyGrantsNotice.vue'
@@ -52,6 +53,7 @@ interface Widget {
     label: string
     description: string | null
     span: number
+    poll?: number | null
 }
 
 /*
@@ -232,6 +234,20 @@ function skipOnboarding() {
  * the top of a dashboard - those would all arrive covered.
  */
 const statKeys = computed(() => props.widgets.map((w) => `stat_${w.key}`))
+
+const pollingStatKeys = computed(() =>
+    props.widgets.filter((w) => w.poll).map((w) => `stat_${w.key}`),
+)
+
+const statsPollMs = computed(() => {
+    const intervals = props.widgets
+        .map((w) => w.poll)
+        .filter((n): n is number => typeof n === 'number' && n >= 1000)
+
+    return intervals.length ? Math.min(...intervals) : null
+})
+
+useWidgetPoll(pollingStatKeys, statsPollMs)
 
 const statColumns = computed(
     () => Math.min(Math.max(props.widgets.length, 2), 6) as 2 | 3 | 4 | 5 | 6,

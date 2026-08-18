@@ -61,8 +61,15 @@ TextField::make('reference')
     ->span(2)                      // Columns in the form grid
     ->rules(['string', 'max:64'])  // Extra Laravel rules
     ->chips(['INV-', 'CR-'])       // One-tap values
+    ->prefix('INV-')               // Text before the control
+    ->suffixAction(['label' => 'Copy', 'copy' => true])
+    ->hint('Keep this private')
     ->visibleWhen('type', 'invoice');  // Show only when another field matches
 ```
+
+`prefix()`, `suffix()`, `prefixAction()`, `suffixAction()`, `hint()`, and
+`copyable()` serialise into the Vue schema. Copy actions write the current
+value to the clipboard in the browser. There is no Livewire.
 
 `visibleWhen()` is evaluated in the browser *and* on the server, so a hidden
 field cannot be submitted by a crafted request.
@@ -70,9 +77,12 @@ field cannot be submitted by a crafted request.
 `live()` is the Inertia equivalent of Filament's live fields. After the field
 changes, the page POSTs `{ field, values }` to `{resource}/form-state`. The
 server returns `{ options, schema, values }` so `afterStateUpdated` can hide,
-disable, or replace fields. `visibleWhen` stays a client-side hide. There is
-no Livewire round-trip. Agents should assert that shape with
-`assertFormState()`; see [Tests](tests.md).
+disable, or replace fields. `visibleWhen` stays a client-side hide.
+
+Typing validation uses the same JSON POST against the existing precognitive
+store/update route (`Precognition-Validate-Only` names the field). Errors
+arrive while typing, from the same Laravel rules as submit. No Livewire.
+Agents should assert form-state with `assertFormState()`; see [Tests](tests.md).
 
 ### SelectField::relationship()
 
