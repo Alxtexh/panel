@@ -8,6 +8,9 @@
 import { router, usePage } from '@inertiajs/vue3'
 import { Lock } from '@lucide/vue'
 import { computed } from 'vue'
+import { useTranslations } from '../../composables/useTranslations'
+
+const { t } = useTranslations()
 
 const lockUrl = computed(() => {
     const props = usePage().props as {
@@ -30,8 +33,8 @@ function lockNow(): void {
         v-if="lockUrl"
         type="button"
         class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        aria-label="Lock screen"
-        title="Lock screen"
+        :aria-label="t('auth.lock.button')"
+        :title="t('auth.lock.button')"
         @click="lockNow"
     >
         <Lock class="size-4" />

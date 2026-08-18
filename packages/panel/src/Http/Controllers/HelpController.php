@@ -103,7 +103,7 @@ final class HelpController
     {
         return Inertia::render('Changelog', [
             'releases' => Changelog::releases(),
-            'pageHeading' => "What's new",
+            'pageHeading' => __('panel::support.whats_new'),
             'support' => SupportEditing::props(ContentEntry::KIND_RELEASE),
         ]);
     }

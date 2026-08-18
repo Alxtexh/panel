@@ -6,10 +6,12 @@ import { Head, Link } from '@inertiajs/vue3'
 import { markRaw } from 'vue'
 import { DirectoryPage } from '@alxtexh-enterprise/panel'
 import type { DirectorySection } from '@alxtexh-enterprise/panel'
+import { useTranslations } from '../composables/useTranslations'
 
 defineOptions({ inheritAttrs: false })
 
 const InertiaLink = markRaw(Link)
+const { t } = useTranslations()
 
 const props = defineProps<{
     pageHeading?: string
@@ -19,11 +21,11 @@ const props = defineProps<{
 </script>
 
 <template>
-    <Head :title="pageHeading ?? 'Directory'" />
+    <Head :title="pageHeading ?? t('directory.title')" />
 
     <div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
         <DirectoryPage
-            :title="pageHeading ?? 'Directory'"
+            :title="pageHeading ?? t('directory.title')"
             :description="pageDescription"
             :sections="sections ?? []"
             :link-component="InertiaLink"

@@ -49,6 +49,7 @@ import { Download, RotateCcw, Settings2, Trash2, TriangleAlert } from '@lucide/v
 import { computed, ref } from 'vue'
 import { PkModal, PkStepIndicator } from '@alxtexh-enterprise/panel'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import { useTranslations } from '../../composables/useTranslations'
 
 interface Snapshot {
     path: string
@@ -373,15 +374,16 @@ const eventLabel = (event: string) =>
     EVENT_LABELS[event] ?? event.replace(/^backup\./, '').replace(/[-_]/g, ' ')
 
 const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURIComponent(path)}`
+const { t } = useTranslations()
 </script>
 
 <template>
-    <Head title="Backups" />
+    <Head :title="t('operations.backups.title')" />
 
     <div class="flex flex-col gap-6 p-4">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
-                <h1 class="text-xl font-semibold">Backups</h1>
+                <h1 class="text-xl font-semibold">{{ t('operations.backups.title') }}</h1>
                 <p class="text-sm text-muted-foreground">
                     {{ props.schedule }}, kept for {{ props.settings.keepDays }} days.
                 </p>
@@ -402,7 +404,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                     :href="props.routes.configure"
                 >
                     <Settings2 class="size-4" />
-                    Settings
+                    {{ t('operations.backups.settings') }}
                 </Button>
 
                 <Button size="sm" :disabled="starting" @click="backUpNow">
@@ -418,7 +420,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                 :class="tab === 'snapshots' ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent'"
                 @click="tab = 'snapshots'"
             >
-                Snapshots
+                {{ t('operations.backups.snapshots') }}
             </button>
             <button
                 type="button"
@@ -426,7 +428,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                 :class="tab === 'database' ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent'"
                 @click="tab = 'database'"
             >
-                Database
+                {{ t('operations.backups.database') }}
             </button>
 
             <label
@@ -721,7 +723,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
             v-else-if="props.status.configured"
             class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
         >
-            No snapshots yet.
+            {{ t('operations.backups.empty') }}
         </p>
         <!--
             THE TRAIL, UNDER THE LIST IT DESCRIBES.

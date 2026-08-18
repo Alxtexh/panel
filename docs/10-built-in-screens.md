@@ -81,30 +81,10 @@ The packaged inbound endpoint is provider-neutral:
 - fallback mapper: generic payload keys (`billable_type`, `billable_key`,
   `status`, `period_end_at`, `grace_ends_at`, `provider_ref`)
 
-Minimal mapper pseudocode:
-
-```php
-Panel::make('admin')
-    ->billingWebhookVerifier(function (string $rawBody, Request $request): bool {
-        return hash_equals(
-            hash_hmac('sha256', $rawBody, config('services.gateway.secret')),
-            (string) $request->header('X-Gateway-Signature')
-        );
-    })
-    ->billingWebhookMapper(function (array $payload): array {
-        return [
-            'billable_type' => 'tenant',
-            'billable_key' => (string) $payload['account_id'],
-            'status' => match ($payload['event']) {
-                'payment.settled' => 'active',
-                'payment.failed' => 'past_due',
-                'subscription.closed' => 'canceled',
-                default => 'active',
-            },
-            'provider_ref' => (string) $payload['reference'],
-        ];
-    });
-```
+Minimal mapper pseudocode is in [Billing adapters](13-billing-adapters.md).
+The packaged helper is `GenericBillingWebhookAdapter` (HMAC header + generic
+payload map). Copy `packages/panel/examples/generic-billing-webhook.php` for a
+host-side wiring sample.
 
 ## "Why can I not see Monitoring / Backups / Logs?"
 

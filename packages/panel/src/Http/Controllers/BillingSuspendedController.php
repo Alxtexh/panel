@@ -21,8 +21,8 @@ final class BillingSuspendedController extends Controller
         return Inertia::render($panel->getSuspendedPageComponent(), array_merge(
             $panel->resolveBillingState(),
             [
-                'pageHeading' => 'Subscription access',
-                'pageDescription' => 'Billing needs attention before access to this panel can continue.',
+                'pageHeading' => __('panel::billing.heading'),
+                'pageDescription' => __('panel::billing.description'),
             ],
         ));
     }

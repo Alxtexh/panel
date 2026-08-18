@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /** Billing portal shell. Props from BillingPortalPage. */
 import { Head } from '@inertiajs/vue3'
+import { useTranslations } from '../composables/useTranslations'
 
 defineOptions({ inheritAttrs: false })
 
@@ -11,14 +12,16 @@ defineProps<{
     paymentMethods?: Record<string, unknown>[]
     billingActions?: Record<string, { label?: string | null; href?: string | null }>
 }>()
+
+const { t } = useTranslations()
 </script>
 
 <template>
-    <Head :title="pageHeading ?? 'Billing'" />
+    <Head :title="pageHeading ?? t('billing.portal.title')" />
     <div class="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
-        <h1 class="text-2xl font-semibold">{{ pageHeading ?? 'Billing' }}</h1>
+        <h1 class="text-2xl font-semibold">{{ pageHeading ?? t('billing.portal.title') }}</h1>
         <p v-if="!subscription && !invoices?.length" class="text-sm text-muted-foreground">
-            No billing data yet. Connect your billing gateway mapping on a subclass.
+            {{ t('billing.portal.empty') }}
         </p>
         <div v-if="billingActions && Object.keys(billingActions).length" class="grid gap-3 sm:grid-cols-2">
             <a

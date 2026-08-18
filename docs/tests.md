@@ -109,3 +109,29 @@ Notification::make()->title('Saved')->success()->send();
 
 $this->assertPanelToast('Saved');
 ```
+
+## Billing access and inbound webhooks
+
+The packaged wall redirects blocked accounts to `{panel}/account/suspended`.
+Inbound webhooks POST `{panel}/billing/webhooks/{adapter?}`. Helpers go
+through HTTP, same as the rest of the trait.
+
+```php
+app(PanelManager::class)->panel('admin')
+    ->billingState(fn (): array => ['status' => 'suspended']);
+
+$this->assertBillingSuspendedRedirect($this->operator, '/invoices');
+$this->assertSuspendedPageRenders($this->operator);
+$this->assertBillingAllows($this->operator, '/account/suspended');
+
+$this->assertBillingWebhookAccepted([
+    'billable_type' => 'tenant',
+    'billable_key' => (string) $tenant->id,
+    'status' => 'past_due',
+]);
+```
+
+`assertBillingAllows` is the inverse of the redirect: the URL renders 200.
+Pass a full path as `$expected` to `assertBillingSuspendedRedirect` when the
+portal is prefixed (`/reseller/account/suspended`).
+

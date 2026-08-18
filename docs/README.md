@@ -20,7 +20,8 @@ These pages are the catalogue: what ships, and how to switch each part on.
 | [10. Built-in screens](10-built-in-screens.md) | Operations, trash, documents, help — and why you may not see them |
 | [11. Commands](11-commands.md) | Every artisan command |
 | [12. Going to production](12-production.md) | Queues, sockets, SSR, backups |
-| [Tests](tests.md) | `InteractsWithPanels`: isolation, form-state, attach, import, toasts |
+| [13. Billing adapters](13-billing-adapters.md) | Provider-agnostic inbound webhooks: signature header + payload map |
+| [Tests](tests.md) | `InteractsWithPanels`: isolation, form-state, attach, import, toasts, billing |
 
 ## The shortest useful thing
 

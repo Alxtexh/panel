@@ -15,13 +15,13 @@
     page, so offering a way "back" would be offering a loop.
 --}}
 <!doctype html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {{-- The one page in the panel that must never be indexed or cached. --}}
     <meta name="robots" content="noindex, nofollow">
-    <title>Access suspended</title>
+    <title>{{ __('panel::billing.wall.page_title') }}</title>
     <style>
         :root { color-scheme: light dark; }
         body {
@@ -50,18 +50,18 @@
 </head>
 <body>
     <div class="card">
-        <h1>{{ $name }} is suspended</h1>
+        <h1>{{ __('panel::billing.wall.heading', ['name' => $name]) }}</h1>
 
-        <p>This account cannot be used at the moment. Your data has not been deleted.</p>
+        <p>{{ __('panel::billing.wall.body') }}</p>
 
         @if ($reason)
             <p class="reason">{{ $reason }}</p>
         @endif
 
         @if ($support)
-            <p>Contact <a href="mailto:{{ $support }}">{{ $support }}</a> to resolve this.</p>
+            <p>{!! __('panel::billing.wall.contact_named', ['email' => '<a href="mailto:'.e($support).'">'.e($support).'</a>']) !!}</p>
         @else
-            <p>Please contact your account administrator to resolve this.</p>
+            <p>{{ __('panel::billing.wall.contact_admin') }}</p>
         @endif
     </div>
 </body>

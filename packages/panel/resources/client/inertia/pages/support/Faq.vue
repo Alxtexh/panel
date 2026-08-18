@@ -16,6 +16,7 @@ import { computed, ref } from 'vue'
 import SupportPageEditor, {
     type SupportProps,
 } from '../../components/support/SupportPageEditor.vue'
+import { useTranslations } from '../../composables/useTranslations'
 
 defineOptions({
     // Page props arrive as attributes and this root is a fragment.
@@ -57,6 +58,7 @@ const sections = computed(() =>
 )
 
 const openId = ref<string | null>('0-0')
+const { t } = useTranslations()
 
 function toggle(id: string) {
     openId.value = openId.value === id ? null : id
@@ -64,15 +66,15 @@ function toggle(id: string) {
 </script>
 
 <template>
-    <Head title="FAQ" />
+    <Head :title="t('support.faq.title')" />
 
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 sm:p-6">
         <SupportPageEditor :support="support">
         <header class="flex flex-col gap-1">
             <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
-                Frequently asked questions
+                {{ t('support.faq.heading') }}
             </h1>
-            <p class="text-sm text-muted-foreground">The things people ask in the first week.</p>
+            <p class="text-sm text-muted-foreground">{{ t('support.faq.subtitle') }}</p>
         </header>
 
         <section v-for="group in sections" :key="group.title" class="flex flex-col gap-2">

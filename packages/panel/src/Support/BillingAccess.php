@@ -40,9 +40,9 @@ final class BillingAccess
             'renewalMessage' => $renewal,
             'plan' => $plan,
             'billingHref' => self::billingHref($panel, $state ?? []),
-            'billingLabel' => self::stringOrNull($state['billingLabel'] ?? Arr::get($state, 'actions.billing.label')) ?? 'Manage billing',
+            'billingLabel' => self::stringOrNull($state['billingLabel'] ?? Arr::get($state, 'actions.billing.label')) ?? __('panel::billing.actions.manage'),
             'logoutHref' => self::logoutHref($panel),
-            'logoutLabel' => self::stringOrNull($state['logoutLabel'] ?? Arr::get($state, 'actions.logout.label')) ?? 'Sign out',
+            'logoutLabel' => self::stringOrNull($state['logoutLabel'] ?? Arr::get($state, 'actions.logout.label')) ?? __('panel::billing.actions.logout'),
             'supportEmail' => config('panel.support_email'),
         ];
     }
@@ -54,13 +54,10 @@ final class BillingAccess
 
     public static function label(string $status): string
     {
-        return match ($status) {
-            'past_due' => 'Past due',
-            'suspended' => 'Suspended',
-            'canceled' => 'Canceled',
-            'expired' => 'Expired',
-            default => 'Active',
-        };
+        $key = 'panel::billing.status.'.$status;
+        $translated = __($key);
+
+        return $translated === $key ? __('panel::billing.status.fallback') : $translated;
     }
 
     /**
@@ -69,10 +66,10 @@ final class BillingAccess
     public static function defaultPortalActions(): array
     {
         return [
-            'pay_now' => ['label' => 'Pay now', 'href' => null],
-            'update_method' => ['label' => 'Update payment method', 'href' => null],
-            'view_invoices' => ['label' => 'View invoices', 'href' => null],
-            'contact_billing' => ['label' => 'Contact billing', 'href' => null],
+            'pay_now' => ['label' => __('panel::billing.actions.pay_now'), 'href' => null],
+            'update_method' => ['label' => __('panel::billing.actions.update_method'), 'href' => null],
+            'view_invoices' => ['label' => __('panel::billing.actions.view_invoices'), 'href' => null],
+            'contact_billing' => ['label' => __('panel::billing.actions.contact_billing'), 'href' => null],
         ];
     }
 
@@ -191,26 +188,24 @@ final class BillingAccess
 
     private static function defaultTitle(string $status): string
     {
-        return match ($status) {
-            'past_due' => 'Payment is due',
-            'suspended' => 'Subscription suspended',
-            'canceled' => 'Subscription canceled',
-            'expired' => 'Subscription expired',
-            default => 'Subscription active',
-        };
+        $key = 'panel::billing.title.'.$status;
+        $translated = __($key);
+
+        return $translated === $key ? __('panel::billing.title.limited') : $translated;
     }
 
     private static function defaultBody(string $status, ?string $plan): string
     {
-        $planCopy = $plan !== null && $plan !== '' ? " for {$plan}" : '';
+        $planCopy = $plan !== null && $plan !== ''
+            ? __('panel::billing.plan_suffix', ['plan' => $plan])
+            : '';
 
-        return match ($status) {
-            'past_due' => "Your billing is behind{$planCopy}. Update payment details to avoid interruption.",
-            'suspended' => "Access is paused{$planCopy} until billing is brought back into good standing.",
-            'canceled' => "This subscription{$planCopy} has been canceled. Choose a plan to restore access.",
-            'expired' => "This subscription{$planCopy} has ended. Renew or change plan to continue.",
-            default => "This subscription{$planCopy} is active.",
-        };
+        $key = 'panel::billing.body.'.$status;
+        $translated = __($key, ['plan' => $planCopy]);
+
+        return $translated === $key
+            ? __('panel::billing.body.attention')
+            : $translated;
     }
 
     private static function stringOrNull(mixed $value): ?string

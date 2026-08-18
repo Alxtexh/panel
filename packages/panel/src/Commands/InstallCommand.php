@@ -754,12 +754,16 @@ final class InstallCommand extends Command
 
         if (file_exists($target) && ! $this->option('force')) {
             $this->components->warn('config/panel.php already exists, skipping. Use --force to replace it.');
-
-            return;
+        } else {
+            $this->callSilently('vendor:publish', ['--tag' => 'panel-config', '--force' => true]);
+            $this->components->info('Published config/panel.php');
         }
 
-        $this->callSilently('vendor:publish', ['--tag' => 'panel-config', '--force' => true]);
-        $this->components->info('Published config/panel.php');
+        /*
+         * WITHOUT --force: a host that translated a string must keep it on
+         * upgrade. First install creates `lang/vendor/panel`.
+         */
+        $this->callSilently('vendor:publish', ['--tag' => 'panel-lang']);
     }
 
     /**

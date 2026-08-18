@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Feature;
 
+use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Testing\InteractsWithPanels;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tag;
@@ -158,5 +159,35 @@ final class TestingHelpersTest extends TestCase
         Gate::before(static fn (): bool => false);
 
         $this->assertEmptyGrantsHint($this->user);
+    }
+
+    public function test_billing_helpers_redirect_and_render_the_suspended_screen(): void
+    {
+        app(PanelManager::class)->panel('admin')
+            ->billingState(fn (): array => ['status' => 'suspended']);
+
+        $this->assertBillingSuspendedRedirect($this->user, '/posts', '/account/suspended');
+        $this->assertSuspendedPageRenders($this->user);
+        $this->assertBillingAllows($this->user, '/account/suspended');
+    }
+
+    public function test_billing_allows_when_the_state_is_active(): void
+    {
+        app(PanelManager::class)->panel('admin')
+            ->billingState(fn (): array => ['status' => 'active']);
+
+        $this->assertBillingAllows($this->user, '/posts');
+    }
+
+    public function test_billing_webhook_helper_accepts_a_generic_payload(): void
+    {
+        app(PanelManager::class)->panel('admin')
+            ->billingWebhookVerifier(static fn (): bool => true);
+
+        $this->assertBillingWebhookAccepted([
+            'billable_type' => 'tenant',
+            'billable_key' => (string) $this->mine->id,
+            'status' => 'past_due',
+        ]);
     }
 }

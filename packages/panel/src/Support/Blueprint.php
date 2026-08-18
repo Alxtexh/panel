@@ -346,7 +346,8 @@ final class Blueprint
         dashboard sample widgets. `Notification::make()->title('Saved')->success()->send()`
         is the toast. Infolist entries live on the dedicated view page.
         `InteractsWithPanels` is the test trait (assertFormState, assertNestedAttach,
-        assertPanelToast, assertEmptyGrantsHint).
+        assertPanelToast, assertEmptyGrantsHint, assertBillingSuspendedRedirect,
+        assertBillingAllows, assertBillingWebhookAccepted, assertSuspendedPageRenders).
         MD;
     }
 
@@ -627,6 +628,32 @@ final class Blueprint
         // Opt-in. Leave unset so a playground ISP is not locked out.
         // Panel::make('admin')->subscriptionGate(fn (): bool => $org->planIsActive());
         ```
+
+        ### Plug a billing webhook adapter
+
+        The inbound contract is provider-agnostic. POST
+        `{panel}/billing/webhooks/{adapter?}`. Verify the signature header, then
+        map the payload to `billable_key` + `status`. Not a marketplace, not
+        locked to one processor.
+
+        ```php
+        use Alxtexh\Panel\Billing\GenericBillingWebhookAdapter;
+        use Alxtexh\Panel\Panel;
+
+        Panel::make('admin')
+            ->apps(['billing-portal'])
+            ->billingState()
+            ->billingWebhookVerifier(GenericBillingWebhookAdapter::verifier(
+                (string) config('services.billing.webhook_secret'),
+                'X-Webhook-Signature',
+            ))
+            ->billingWebhookMapper(GenericBillingWebhookAdapter::mapper());
+        ```
+
+        `GenericInboundBillingMapper` already accepts `billable_type`,
+        `billable_key`, `status`, `period_end_at`, `grace_ends_at`,
+        `provider_ref`. Copy `examples/generic-billing-webhook.php` to map a
+        gateway's own event names onto those keys. See docs/13-billing-adapters.md.
 
         ### Add a dashboard
 
@@ -1337,7 +1364,9 @@ final class Blueprint
         `assertNestedDetach`, `assertInfolistAction`, `assertNotImportable` vs
         `assertPanelImports` plus `assertImportFailuresDownload`,
         `assertPanelToast` / `assertEmptyGrantsHint` for a signed-in account with
-        no abilities, and `assertResourceRegistered`.
+        no abilities, `assertBillingSuspendedRedirect` / `assertBillingAllows` /
+        `assertBillingWebhookAccepted` / `assertSuspendedPageRenders` for the
+        packaged billing wall, and `assertResourceRegistered`.
         MD;
     }
 }

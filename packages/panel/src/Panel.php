@@ -826,6 +826,9 @@ final class Panel
 
     /**
      * Optional signature verifier for inbound billing webhooks.
+     *
+     * Provider-agnostic. Use `GenericBillingWebhookAdapter::verifier($secret)`
+     * for HMAC of the raw body against a named header, or supply your own.
      */
     public function billingWebhookVerifier(?Closure $verifier): self
     {
@@ -841,6 +844,10 @@ final class Panel
 
     /**
      * Optional payload mapper for inbound billing webhooks.
+     *
+     * Map any gateway payload onto `billable_key` + `status`. The packaged
+     * `GenericInboundBillingMapper` / `GenericBillingWebhookAdapter::mapper()`
+     * accept those keys directly.
      */
     public function billingWebhookMapper(?Closure $mapper): self
     {

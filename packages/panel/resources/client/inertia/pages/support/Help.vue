@@ -43,6 +43,7 @@ import { computed, onMounted, ref } from 'vue'
 import SupportPageEditor, {
     type SupportProps,
 } from '../../components/support/SupportPageEditor.vue'
+import { useTranslations } from '../../composables/useTranslations'
 
 defineOptions({
     // Page props arrive as attributes and this root is a fragment.
@@ -95,6 +96,7 @@ const categories = computed(() =>
 const query = ref('')
 const category = ref<string | null>(null)
 const open = ref<string | null>(null)
+const { t } = useTranslations()
 
 const results = computed(() => {
     const q = query.value.trim().toLowerCase()
@@ -158,12 +160,12 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head title="Help" />
+    <Head :title="t('support.help.title')" />
 
     <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-6">
         <SupportPageEditor :support="support">
         <header class="flex flex-col items-center gap-4 py-4 text-center">
-            <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">How can we help?</h1>
+            <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">{{ t('support.help.heading') }}</h1>
 
             <div class="relative w-full max-w-lg">
                 <Search
@@ -173,14 +175,14 @@ onMounted(() => {
                     v-model="query"
                     type="search"
                     class="w-full rounded-full border bg-background py-2.5 pr-10 pl-9 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
-                    placeholder="Search help - try export, bulk or theme"
-                    aria-label="Search help"
+                    :placeholder="t('support.help.search_placeholder')"
+                    :aria-label="t('support.help.search')"
                 />
                 <button
                     v-if="query"
                     type="button"
                     class="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label="Clear search"
+                    :aria-label="t('support.help.clear')"
                     @click="query = ''"
                 >
                     <X class="size-4" />
@@ -198,7 +200,7 @@ onMounted(() => {
                     "
                     @click="category = null"
                 >
-                    All
+                    {{ t('support.help.all') }}
                 </button>
                 <button
                     v-for="c in categories"
@@ -223,14 +225,14 @@ onMounted(() => {
             v-if="results.length === 0"
             class="flex flex-col items-center gap-3 rounded-lg border bg-card p-8 text-center"
         >
-            <p class="text-sm font-medium">Nothing matched “{{ query }}”</p>
-            <p class="text-sm text-muted-foreground">Try a shorter word, or browse everything.</p>
+            <p class="text-sm font-medium">{{ t('support.help.no_match', { term: query }) }}</p>
+            <p class="text-sm text-muted-foreground">{{ t('support.help.no_match_hint') }}</p>
             <button
                 type="button"
                 class="rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
                 @click="clearAll"
             >
-                Show all articles
+                {{ t('support.help.show_all') }}
             </button>
         </div>
 

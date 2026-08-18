@@ -37,6 +37,7 @@ leaves `package.json` byte-identical.
 | Step | Result |
 |---|---|
 | Publishes `config/panel.php` | Every option, commented |
+| Publishes kit lang (`panel-lang`) | `lang/vendor/panel/{en,es}` - overlay with `__('panel::...')` |
 | Writes `resources/views/app.blade.php` | The root view Inertia renders into |
 | Writes `resources/js/app.ts` | Inertia bootstrap with `PanelLayout` + nested `SettingsLayout` for settings pages |
 | Writes `resources/js/layouts/PanelLayout.vue` | A layout you are meant to replace |

@@ -119,6 +119,6 @@ screen the kit already ships.
 | Infolist `TextEntry` / `ImageEntry` / `RepeatableEntry` | Dedicated view page, never a modal |
 | `SelectField::relationship()` | BelongsTo picker |
 | `/{parent}/{id}/{child}/attach` | BelongsToMany attach page |
-| `InteractsWithPanels` | `assertFormState`, `assertNestedAttach`, `assertPanelToast`, `assertEmptyGrantsHint` |
+| `InteractsWithPanels` | `assertFormState`, `assertNestedAttach`, `assertPanelToast`, `assertEmptyGrantsHint`, `assertBillingSuspendedRedirect`, `assertBillingAllows`, `assertBillingWebhookAccepted`, `assertSuspendedPageRenders` |
 | Operations nav group | Backups / Logs / Monitoring in the sidebar when the panel offers `operations` |
 | Directory on install | Chrome hub: Settings, Users, Roles, Documents, Backups, Logs, Monitoring, Help |
