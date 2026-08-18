@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
+use Alxtexh\Panel\Support\PanelPages;
 
 /**
  * Scaffold a whole portal: `php artisan make:panel platform`.
@@ -79,6 +80,8 @@ final class MakePanelCommand extends Command
         $this->write($providerPath, $this->provider($id, $studly, $path));
         $this->ensureDirectory($resourceDirectory);
         $this->ensureDirectory($widgetDirectory);
+        $this->writeDirectoryPage($id, $studly);
+        $this->writeDirectoryVue();
         $this->registerProvider("App\\Providers\\Panels\\{$studly}PanelProvider");
 
         /*
@@ -120,6 +123,12 @@ final class MakePanelCommand extends Command
         $this->components->twoColumnDetail('Provider', "app/Providers/Panels/{$studly}PanelProvider.php");
         $this->components->twoColumnDetail('Isolation test', "tests/Feature/{$studly}PanelIsolationTest.php");
         $this->components->twoColumnDetail('Resources', "app/Panel/{$studly}/Resources");
+        $this->components->twoColumnDetail(
+            'Directory',
+            $id === 'admin'
+                ? 'app/Panel/Pages/DirectoryPage.php'
+                : "app/Panel/{$studly}/Pages/DirectoryPage.php",
+        );
         $this->components->twoColumnDetail('URL', '/'.$path);
 
         $this->reportGuard(
@@ -523,6 +532,8 @@ PHP
                 ])
 PHP;
 
+        $discoverPages = $this->discoverPagesBlock($id, $studly);
+
         return <<<PHP
 <?php
 
@@ -599,7 +610,7 @@ final class {$studly}PanelProvider extends ServiceProvider
                     in: app_path('Panel/{$studly}/Widgets'),
                     for: 'App\\\\Panel\\\\{$studly}\\\\Widgets',
                 )
-
+{$discoverPages}
                 ->brandName(fn (): string => config('app.name'))
 
                 /*
@@ -687,5 +698,80 @@ PHP;
         }
 
         file_put_contents($file, $updated);
+    }
+
+    /**
+     * Chrome Directory hub for this portal. Admin uses the shared Pages tree
+     * (same path as `panel:install`); extra portals get their own Pages dir.
+     */
+    private function writeDirectoryPage(string $id, string $studly): void
+    {
+        $admin = $id === 'admin';
+        $path = $admin
+            ? app_path('Panel/Pages/DirectoryPage.php')
+            : app_path("Panel/{$studly}/Pages/DirectoryPage.php");
+
+        if (file_exists($path) && ! $this->option('force')) {
+            $relative = str_replace(base_path().'/', '', $path);
+
+            $this->components->twoColumnDetail('Kept yours', $relative);
+
+            return;
+        }
+
+        $this->write($path, $this->directoryPageStub($id, $studly, $admin));
+
+        $relative = str_replace(base_path().'/', '', $path);
+        $this->components->twoColumnDetail('Wrote', $relative);
+    }
+
+    /** Directory.vue when `resources/js/pages` exists (same as install). */
+    private function writeDirectoryVue(): void
+    {
+        PanelPages::write();
+    }
+
+    private function discoverPagesBlock(string $id, string $studly): string
+    {
+        if ($id === 'admin') {
+            return '';
+        }
+
+        return <<<PHP
+
+                ->discoverPages(
+                    in: app_path('Panel/{$studly}/Pages'),
+                    for: 'App\\\\Panel\\\\{$studly}\\\\Pages',
+                )
+PHP;
+    }
+
+    private function directoryPageStub(string $id, string $studly, bool $admin): string
+    {
+        $namespace = $admin ? 'App\\Panel\\Pages' : "App\\Panel\\{$studly}\\Pages";
+
+        return <<<PHP
+<?php
+
+declare(strict_types=1);
+
+namespace {$namespace};
+
+use Alxtexh\\Panel\\Pages\\DirectoryPage as AlxtexhpanelDirectory;
+
+/**
+ * Chrome hub: Settings, Users, Roles, Documents, Backups, Logs,
+ * Monitoring, Help. Inherits DirectoryPage::chromeSections() and
+ * filters by this panel's offers() and abilities. Override sections()
+ * for your vertical. No clients, routers, or catalog.
+ */
+final class DirectoryPage extends AlxtexhpanelDirectory
+{
+    protected static string \$panel = '{$id}';
+
+    protected static ?int \$sort = -50;
+}
+
+PHP;
     }
 }

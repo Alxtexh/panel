@@ -102,14 +102,19 @@ final class MakePanelGuardTest extends TestCase
         foreach (['Reseller', 'Platform', 'Ops', 'Admin'] as $studly) {
             @unlink(app_path("Providers/Panels/{$studly}PanelProvider.php"));
             @unlink(base_path("tests/Feature/{$studly}PanelIsolationTest.php"));
+            @unlink(app_path("Panel/{$studly}/Pages/DirectoryPage.php"));
 
             $resources = app_path("Panel/{$studly}");
 
             if (is_dir($resources)) {
+                @rmdir($resources.'/Pages');
                 @rmdir($resources.'/Resources');
+                @rmdir($resources.'/Widgets');
                 @rmdir($resources);
             }
         }
+
+        @unlink(app_path('Panel/Pages/DirectoryPage.php'));
 
         /*
          * `bootstrap/providers.php` IS APPENDED TO, so left alone it accumulates
@@ -334,5 +339,44 @@ PHP;
         $this->assertStringContainsString("'operations',", $reseller);
         $this->assertStringContainsString("'documents',", $reseller);
         $this->assertStringContainsString("'trash',", $reseller);
+    }
+
+    public function test_extra_portals_get_a_chrome_directory_page(): void
+    {
+        $this->artisan('make:panel', ['id' => 'reseller', '--guard' => 'web', '--force' => true])
+            ->assertSuccessful();
+
+        $path = app_path('Panel/Reseller/Pages/DirectoryPage.php');
+
+        $this->assertFileExists($path);
+
+        $contents = (string) file_get_contents($path);
+
+        $this->assertStringContainsString('extends AlxtexhpanelDirectory', $contents);
+        $this->assertStringContainsString("protected static string \$panel = 'reseller'", $contents);
+        $this->assertStringContainsString('chromeSections()', $contents);
+        $this->assertStringNotContainsString('extends Page', $contents);
+        $this->assertStringNotContainsString("'/clients'", $contents);
+        $this->assertStringNotContainsString("'/routers'", $contents);
+
+        $provider = (string) file_get_contents(app_path('Providers/Panels/ResellerPanelProvider.php'));
+
+        $this->assertStringContainsString('discoverPages', $provider);
+        $this->assertStringContainsString('Panel/Reseller/Pages', $provider);
+    }
+
+    public function test_admin_directory_uses_shared_pages_tree(): void
+    {
+        $this->artisan('make:panel', ['id' => 'admin', '--force' => true])
+            ->assertSuccessful();
+
+        $path = app_path('Panel/Pages/DirectoryPage.php');
+
+        $this->assertFileExists($path);
+        $this->assertStringContainsString("protected static string \$panel = 'admin'", (string) file_get_contents($path));
+
+        $provider = (string) file_get_contents(app_path('Providers/Panels/AdminPanelProvider.php'));
+
+        $this->assertStringNotContainsString('discoverPages', $provider);
     }
 }
