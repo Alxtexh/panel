@@ -55,6 +55,13 @@ final class RelationManager
 
     private string $updateAbility = 'update';
 
+    /**
+     * Nested child resource that owns the dedicated list/create/edit pages.
+     *
+     * @var class-string<resource>|null
+     */
+    private ?string $resource = null;
+
     private function __construct(
         public readonly string $key,
         private readonly string $label,
@@ -128,12 +135,37 @@ final class RelationManager
     }
 
     /**
-     * Create/edit form for related rows (Vue modal / Inertia partial).
+     * Dedicated nested resource that owns list/create/edit pages for this relation.
      *
-     * FOUNDATION FOR KIT CREATE/EDIT WITHOUT LIVEWIRE. Declaring the form ships
-     * its schema on the relation payload so the client can open a modal; the
-     * write endpoints land in a follow-up. Until then hosts still use nested
-     * resources or full-page forms for mutations.
+     * NOT A MODAL. Filament's default relation manager mutates in a dialog; this
+     * kit routes related records as their own pages under the parent URL
+     * (`/{parent}/{id}/{child}`), the same surface `$parent` already provides.
+     * The relation tab on the view page stays a summary that LINKS there.
+     *
+     * @param  class-string<resource>  $resource
+     */
+    public function resource(string $resource): self
+    {
+        if (! is_subclass_of($resource, Resource::class)) {
+            throw new InvalidArgumentException("[{$resource}] is not a panel resource.");
+        }
+
+        $this->resource = $resource;
+
+        if (! isset($this->model)) {
+            $model = $resource::model();
+            $table = (new $model)->getTable();
+
+            $this->related($model, $table.'.'.$resource::parentColumn());
+        }
+
+        return $this;
+    }
+
+    /**
+     * Create/edit form schema, used when the nested resource has not supplied one.
+     *
+     * Writes go to the nested resource's dedicated pages, not to a modal.
      *
      * @param  Closure(Form): Form  $form
      */
@@ -174,11 +206,22 @@ final class RelationManager
         return $this->model;
     }
 
+    public function nestedResource(): ?string
+    {
+        return $this->resource;
+    }
+
     public function definition(): Table
     {
-        $table = Table::make();
+        if ($this->table !== null) {
+            return ($this->table)(Table::make());
+        }
 
-        return $this->table !== null ? ($this->table)($table) : $table;
+        if ($this->resource !== null) {
+            return $this->resource::definition();
+        }
+
+        return Table::make();
     }
 
     /**
@@ -222,6 +265,19 @@ final class RelationManager
 
         if ($this->form !== null) {
             $formSchema = ($this->form)(Form::make())->toSchema();
+        } elseif ($this->resource !== null) {
+            $formSchema = $this->resource::formDefinition()->toSchema();
+        }
+
+        $canCreate = false;
+        $canEdit = false;
+        $pages = null;
+
+        if ($this->resource !== null) {
+            $permissions = $this->resource::permissions();
+            $canCreate = (bool) ($permissions['create'] ?? false);
+            $canEdit = (bool) ($permissions['update'] ?? false);
+            $pages = ['resource' => $this->resource::key()];
         }
 
         return [
@@ -229,13 +285,14 @@ final class RelationManager
             'label' => $this->label,
             'icon' => $this->icon,
             'table' => $this->definition()->toSchema(),
-            /*
-             * Schema only until create/edit endpoints ship. Clients may render
-             * a disabled "Add" when form is set and canCreate stays false.
-             */
             'form' => $formSchema,
-            'canCreate' => false,
-            'canEdit' => false,
+            /*
+             * True only when a nested resource owns dedicated pages. The view
+             * tab is a summary; Add / Edit / View all are links, not modals.
+             */
+            'canCreate' => $canCreate,
+            'canEdit' => $canEdit,
+            'pages' => $pages,
             'createAbility' => $this->createAbility,
             'updateAbility' => $this->updateAbility,
         ];

@@ -197,14 +197,10 @@ abstract class Resource
     /**
      * Optional layout for the VIEW page.
      *
-     * Leaves are Columns, not a separate Entry hierarchy - a column already
-     * carries key, label, type and colour intent, so a parallel set of classes
-     * would be duplication under a different name.
+     * A labelled value on a dedicated view page (`TextEntry`, `IconEntry`).
+     * Empty means the view falls back to table columns.
      *
-     * A resource that declares none gets a flat list of its table columns,
-     * which is what every resource had before layout existed.
-     *
-     * @return list<Component>
+     * @return list<Component|\Alxtexh\Panel\Schema\Renderable>
      */
     public static function infolist(): array
     {
@@ -709,7 +705,7 @@ abstract class Resource
                     'table' => $table->toSchema(),
                     'form' => static::formDefinition()->toSchema(),
                     'infolist' => array_map(
-                        static fn (Component $c): array => $c->toSchema(),
+                        static fn (Component|\Alxtexh\Panel\Schema\Renderable $c): array => $c->toSchema(),
                         static::infolist(),
                     ),
                     // Structure only - column definitions for each related list.

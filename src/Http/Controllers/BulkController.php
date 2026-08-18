@@ -239,13 +239,12 @@ final class BulkController extends Controller
             'total' => $state['total'],
             'error' => $state['error'],
             'downloadable' => $state['file'] !== null,
-            /*
-             * THE URL COMES FROM THE SERVER, which is the only side that knows
-             * the portal's path prefix. The client used to build
-             * `/{resource}/jobs/{token}/download` itself, which is correct for
-             * exactly one portal and wrong for every other one.
-             */
             'download' => $state['file'] === null ? null : $this->downloadPath($resource, $token),
+            'importable' => $state['importable'] ?? $state['total'],
+            'failed' => $state['failed'] ?? 0,
+            'failures' => $state['failures'] ?? [],
+            'truncated' => $state['truncated'] ?? false,
+            'written' => $state['written'] ?? $state['done'],
         ]);
     }
 

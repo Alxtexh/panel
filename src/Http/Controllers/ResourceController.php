@@ -56,6 +56,8 @@ final class ResourceController extends Controller
 
         $key = (string) $request->query('field', '');
         $term = trim((string) $request->query('q', ''));
+        $form = $request->query('form', $request->input('form', []));
+        $values = is_string($form) ? (json_decode($form, true) ?: []) : (array) $form;
 
         /*
          * THE RECORD FORM'S FIELDS AND EVERY ACTION FORM'S.
@@ -81,10 +83,37 @@ final class ResourceController extends Controller
                 break;
             }
 
-            return response()->json(['options' => array_slice($field->search($term), 0, 25)]);
+            return response()->json(['options' => array_slice($field->search($term, $values), 0, 25)]);
         }
 
         return response()->json(['options' => []]);
+    }
+
+    /**
+     * Re-resolve searchable option lists from the current form values.
+     *
+     * `live()` contract: the client POSTs `{ field, values }`. This returns
+     * `{ options: { fieldKey: [...] } }` so dependent relationship selects
+     * can refresh without Livewire. `visibleWhen` stays a client-side hide.
+     */
+    public function formState(Request $request, string $resource): JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        abort_unless($class::can('create') || $class::can('update'), 403);
+
+        $values = (array) $request->input('values', []);
+        $options = [];
+
+        foreach ($this->searchableFields($class) as $field) {
+            if (! $field instanceof SelectField || ! $field->isSearchable()) {
+                continue;
+            }
+
+            $options[$field->key] = array_slice($field->search('', $values), 0, 25);
+        }
+
+        return response()->json(['options' => $options]);
     }
 
     /**

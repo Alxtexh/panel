@@ -7,8 +7,10 @@ namespace Alxtexh\Panel\Tests\Fixtures\Providers;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
+use Alxtexh\Panel\Tests\Fixtures\Models\Comment;
 use Alxtexh\Panel\Tests\Fixtures\Models\Post;
 use Alxtexh\Panel\Tests\Fixtures\Policies\ArticlePolicy;
+use Alxtexh\Panel\Tests\Fixtures\Policies\CommentPolicy;
 use Alxtexh\Panel\Tests\Fixtures\Policies\PostPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +36,7 @@ final class FixturePanelProvider extends ServiceProvider
     {
         Gate::policy(Post::class, PostPolicy::class);
         Gate::policy(Article::class, ArticlePolicy::class);
+        Gate::policy(Comment::class, CommentPolicy::class);
 
         /*
          * A `login` ROUTE, because `auth:web` redirects to one by name and a

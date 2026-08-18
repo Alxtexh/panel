@@ -23,7 +23,7 @@ defineOptions({ inheritAttrs: false })
  * whether `record` is null.
  */
 import { Head, Link, router, useForm } from '@inertiajs/vue3'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { RecordForm, UnsavedBar, buttonClasses } from '@alxtexh-enterprise/panel'
@@ -77,6 +77,15 @@ const isEdit = computed(() => props.record !== null)
 const definingField = ref(false)
 
 const form = useForm<Record<string, any>>({ ...withDownloadUrls(props.values) })
+
+const liveOptions = ref({ ...props.formOptions })
+
+watch(
+    () => props.formOptions,
+    (next) => {
+        liveOptions.value = { ...next }
+    },
+)
 
 /**
  * Attaches a download URL to each stored file.
@@ -307,7 +316,11 @@ async function searchOptions(
     field: string,
     term: string,
 ): Promise<{ value: any; label: string }[]> {
-    const query = new URLSearchParams({ field, q: term })
+    const query = new URLSearchParams({
+        field,
+        q: term,
+        form: JSON.stringify(form.data()),
+    })
     const res = await fetch(`${props.schema.routes.index}/field-options?${query}`, {
         headers: { Accept: 'application/json' },
     })
@@ -349,6 +362,62 @@ function cancel() {
  * expressions are not where type surgery belongs.
  */
 const formFields = computed(() => props.schema.form.fields as FormField[] | undefined)
+
+function fieldIsLive(key: string): boolean {
+    if ((formFields.value ?? []).some((field) => field.key === key && field.live)) {
+        return true
+    }
+
+    return nodeHasLiveField(props.schema.form.nodes, key)
+}
+
+function nodeHasLiveField(nodes: any[] | undefined, key: string): boolean {
+    if (!nodes) {
+        return false
+    }
+
+    for (const node of nodes) {
+        if (node?.component === 'field' && node.key === key && node.live) {
+            return true
+        }
+
+        if (nodeHasLiveField(node?.children, key) || nodeHasLiveField(node?.fields, key)) {
+            return true
+        }
+    }
+
+    return false
+}
+
+async function onFieldChange(key: string, value: any): Promise<void> {
+    ;(form as any)[key] = value
+
+    if (!fieldIsLive(key)) {
+        return
+    }
+
+    const res = await fetch(`${props.schema.routes.index}/form-state`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-XSRF-TOKEN': csrf(),
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ field: key, values: form.data() }),
+    })
+
+    if (!res.ok) {
+        return
+    }
+
+    const payload = await res.json()
+
+    if (payload.options && typeof payload.options === 'object') {
+        liveOptions.value = { ...liveOptions.value, ...payload.options }
+    }
+}
 
 function discard() {
     form.reset()
@@ -456,12 +525,12 @@ onBeforeUnmount(() => {
                 :fields="formFields"
                 :columns="schema.form.columns"
                 :errors="form.errors as any"
-                :options="formOptions"
+                :options="liveOptions"
                 :processing="form.processing"
                 :search-options="searchOptions"
                 :upload="upload"
                 :discard="discardUpload"
-                @change="(key: string, value: any) => ((form as any)[key] = value)"
+                @change="onFieldChange"
             />
         </div>
 

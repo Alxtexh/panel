@@ -82,6 +82,13 @@ final class CrossTenantMatrixTest extends TestCase
         foreach (app(PanelManager::class)->resources() as $key => $class) {
             $table = (new ($class::model()))->getTable();
 
+            if ($class::parentResource() !== null) {
+                // Nested resources have no flat URL. Isolation for those is
+                // NestedResourceTest; including them here would 404 /comments
+                // and call that a pass.
+                continue;
+            }
+
             if (Schema::hasColumn($table, $column)) {
                 $keys[] = (string) $key;
             }

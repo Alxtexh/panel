@@ -412,6 +412,7 @@ const comparison: Record<string, string> = {
  * a new installation opens on.
  */
 const hasAnything = computed(() => props.widgets.length > 0 || props.charts.length > 0)
+const emptyGrants = computed(() => Boolean((page.props as Record<string, any>).panelEmptyGrants))
 
 /**
  * ADDITIONAL STRIPS THE PAGE DECLARED - `DashboardPage::strips()`.
@@ -719,7 +720,11 @@ const hiddenEntries = computed(() => {
             </template>
         </PkSlideover>
 
-        <p v-if="!hasAnything" class="text-sm text-muted-foreground">
+        <p v-if="emptyGrants" class="text-sm text-muted-foreground">
+            You are signed in, but this account has no panel grants yet. Ask an
+            administrator to assign a role, then refresh.
+        </p>
+        <p v-else-if="!hasAnything" class="text-sm text-muted-foreground">
             This dashboard has no widgets yet. Declare them in <code>stats()</code> and
             <code>charts()</code> on the page class.
         </p>

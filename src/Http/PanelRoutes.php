@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Http;
 use Alxtexh\Panel\Auth;
 use Alxtexh\Panel\Auth\Passkeys;
 use Alxtexh\Panel\Http\Controllers\BulkController;
+use Alxtexh\Panel\Http\Controllers\ImportController;
 use Alxtexh\Panel\Http\Controllers\RecordController;
 use Alxtexh\Panel\Http\Controllers\ResourceController;
 use Alxtexh\Panel\Http\Controllers\UploadController;
@@ -1039,6 +1040,20 @@ final class PanelRoutes
 
         Route::get('{resource}/field-options', [ResourceController::class, 'fieldOptions'])
             ->whereIn('resource', $keys)->name('fieldOptions');
+
+        Route::post('{resource}/form-state', [ResourceController::class, 'formState'])
+            ->whereIn('resource', $keys)->name('formState');
+
+        Route::post('{resource}/import/inspect', [ImportController::class, 'inspect'])
+            ->whereIn('resource', $keys)->name('import.inspect');
+
+        Route::post('{resource}/import', [ImportController::class, 'store'])
+            ->whereIn('resource', $keys)->name('import');
+
+        Route::get('{resource}/import/failures/{token}', [ImportController::class, 'failures'])
+            ->whereIn('resource', $keys)
+            ->where('token', '[0-9a-fA-F-]{36}')
+            ->name('import.failures');
 
         Route::get('{resource}/create', [ResourceController::class, 'create'])
             ->whereIn('resource', $keys)->name('create');
