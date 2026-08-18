@@ -88,9 +88,14 @@ final class FixturePanelProvider extends ServiceProvider
                 ->middleware(['web'])
                 ->authMiddleware(['auth:web'])
                 ->login()
+                ->apps(['billing-portal'])
                 ->discoverResources(
                     __DIR__.'/../Second',
                     'Alxtexh\\Panel\\Tests\\Fixtures\\Second',
+                )
+                ->discoverPages(
+                    __DIR__.'/../Pages',
+                    'Alxtexh\\Panel\\Tests\\Fixtures\\Pages',
                 ),
         );
     }

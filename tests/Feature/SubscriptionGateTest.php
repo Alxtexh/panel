@@ -60,7 +60,7 @@ final class SubscriptionGateTest extends TestCase
 
         $this->actingAs($this->user)
             ->get('/posts')
-            ->assertRedirect('/settings/plans');
+            ->assertRedirect('/account/suspended');
     }
 
     public function test_an_active_subscription_does_not_redirect(): void
@@ -101,7 +101,7 @@ final class SubscriptionGateTest extends TestCase
 
         $this->actingAs($this->user)
             ->get('/second/reports')
-            ->assertRedirect('/second/settings/plans');
+            ->assertRedirect('/second/account/suspended');
     }
 
     public function test_staff_on_a_central_panel_get_403(): void
@@ -123,5 +123,74 @@ final class SubscriptionGateTest extends TestCase
         $this->actingAs($this->user)
             ->getJson('/posts')
             ->assertStatus(402);
+    }
+
+    public function test_a_suspended_billing_state_redirects_to_the_packaged_screen(): void
+    {
+        app(PanelManager::class)->panel('admin')
+            ->billingState(fn (): array => ['status' => 'suspended', 'plan' => 'Growth']);
+
+        $response = $this->actingAs($this->user)
+            ->get('/posts')
+            ->assertRedirect('/account/suspended');
+
+        $response->assertSessionHas('toast');
+    }
+
+    public function test_the_suspended_screen_renders_sane_defaults_from_minimal_state(): void
+    {
+        app(PanelManager::class)->panel('admin')
+            ->billingState(fn (): array => ['status' => 'suspended']);
+
+        $props = $this->actingAs($this->user)
+            ->get('/account/suspended')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertSame('suspended', $props['status']);
+        $this->assertSame('Suspended', $props['statusLabel']);
+        $this->assertSame('Subscription suspended', $props['title']);
+        $this->assertSame('Manage subscription', $props['billingLabel']);
+        $this->assertSame('/settings/plans', $props['billingHref']);
+    }
+
+    public function test_a_suspended_user_can_reach_the_billing_portal(): void
+    {
+        app(PanelManager::class)->panel('second')
+            ->billingState(fn (): array => ['status' => 'suspended']);
+
+        $props = $this->actingAs($this->user)
+            ->get('/second/account/billing')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertTrue($props['fixture']);
+    }
+
+    public function test_a_suspended_user_is_still_blocked_from_panel_resources(): void
+    {
+        app(PanelManager::class)->panel('second')
+            ->billingState(fn (): array => ['status' => 'suspended']);
+
+        $this->actingAs($this->user)
+            ->get('/second/reports')
+            ->assertRedirect('/second/account/suspended');
+    }
+
+    public function test_logout_still_works_while_access_is_blocked(): void
+    {
+        app(PanelManager::class)->panel('second')
+            ->billingState(fn (): array => ['status' => 'expired']);
+
+        $this->actingAs($this->user)
+            ->post('/second/logout')
+            ->assertRedirect('/second/login');
+
+        $remaining = array_filter(
+            array_keys($this->app['session']->all()),
+            static fn (string $key): bool => str_starts_with($key, 'login_'),
+        );
+
+        $this->assertSame([], $remaining);
     }
 }

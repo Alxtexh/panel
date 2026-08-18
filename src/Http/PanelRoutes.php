@@ -476,6 +476,17 @@ final class PanelRoutes
                     ->name('custom-fields.store');
 
                 /*
+                 * THE BILLING ACCESS SCREEN, for expired or suspended SaaS access.
+                 *
+                 * A FIXED PATH INSIDE EVERY PANEL, rather than a `Page`
+                 * subclass, because packaged pages belong to one panel at
+                 * registration time. This route must exist on whichever portal
+                 * a host decides to gate.
+                 */
+                Route::get('account/suspended', Controllers\BillingSuspendedController::class)
+                    ->name('billing.suspended');
+
+                /*
                  * PAGES FIRST, BEFORE THE `{resource}` PATTERNS, and the order
                  * is the whole correctness of it.
                  *

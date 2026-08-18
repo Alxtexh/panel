@@ -172,6 +172,7 @@ final class PanelPages
         'settings/Workspaces',
         'settings/Organisation',
         'settings/Index',
+        'BillingSuspended',
         /*
          * PAYMENTS STAYS WRITTEN: `Panel::paymentSettings()` mounts the route
          * later, and a white page then is the failure this list exists to stop.

@@ -185,8 +185,17 @@ final class Panel
      */
     private ?Closure $subscriptionGate = null;
 
+    /**
+     * Rich billing state for SaaS access surfaces. Null means no billing state
+     * hook was configured and legacy `subscriptionGate()` rules apply.
+     */
+    private ?Closure $billingState = null;
+
     /** Override for the company billing URL. Null uses PlanSetup's URI. */
     private ?string $subscriptionBillingPath = null;
+
+    /** Override for the packaged suspended screen component. */
+    private ?string $suspendedPageComponent = null;
 
     private bool $passwordReset = true;
 
@@ -719,16 +728,81 @@ final class Panel
 
     public function hasSubscriptionGate(): bool
     {
-        return $this->subscriptionGate instanceof Closure;
+        return $this->subscriptionGate instanceof Closure || $this->billingState instanceof Closure;
     }
 
     public function subscriptionIsActive(): bool
     {
+        if ($this->billingState instanceof Closure) {
+            return ! Support\BillingAccess::blocks($this);
+        }
+
         if (! $this->subscriptionGate instanceof Closure) {
             return true;
         }
 
-        return (bool) ($this->subscriptionGate)();
+        return (bool) app()->call($this->subscriptionGate, [
+            'panel' => $this,
+            'user' => $this->user(),
+            'request' => request(),
+        ]);
+    }
+
+    /**
+     * Rich subscription state for packaged SaaS access flows.
+     *
+     * The callback may return:
+     * - `['status' => 'active'|'past_due'|'suspended'|'canceled'|'expired']`
+     * - optional copy: `title`, `body`, `reason`, `dueMessage`, `renewalMessage`
+     * - optional plan: `plan` as a string or `['name' => ..., 'price' => ..., 'interval' => ...]`
+     * - optional routing: `billingHref` or `actions.billing.href`
+     * - optional `blocksAccess` override, defaulting to true for suspended/canceled/expired
+     *
+     * Leave unset for non-billable panels.
+     */
+    public function billingState(Closure $state, ?string $billingPath = null): self
+    {
+        $this->billingState = $state;
+
+        if ($billingPath !== null) {
+            $this->subscriptionBillingPath = $billingPath;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function billingStateData(): ?array
+    {
+        if (! $this->billingState instanceof Closure) {
+            return null;
+        }
+
+        $state = app()->call($this->billingState, [
+            'panel' => $this,
+            'user' => $this->user(),
+            'request' => request(),
+        ]);
+
+        return is_array($state) ? $state : null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function resolveBillingState(): array
+    {
+        if ($this->billingState instanceof Closure) {
+            return Support\BillingAccess::normalize($this->billingStateData(), $this);
+        }
+
+        if ($this->subscriptionGate instanceof Closure && ! $this->subscriptionIsActive()) {
+            return Support\BillingAccess::normalize(['status' => 'expired'], $this);
+        }
+
+        return Support\BillingAccess::normalize(['status' => 'active'], $this);
     }
 
     public function subscriptionBillingPath(): string
@@ -743,6 +817,23 @@ final class Panel
         $uri = trim(Pages\PlanSetupPage::uri(), '/');
 
         return ($prefix === '' ? '' : '/'.$prefix).'/'.$uri;
+    }
+
+    /**
+     * Which component the packaged suspended route renders.
+     */
+    public function suspendedPage(?string $component = 'BillingSuspended'): self
+    {
+        $this->suspendedPageComponent = $component === null || trim($component) === ''
+            ? null
+            : trim($component);
+
+        return $this;
+    }
+
+    public function getSuspendedPageComponent(): string
+    {
+        return $this->suspendedPageComponent ?? 'BillingSuspended';
     }
 
     /**
