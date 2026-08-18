@@ -40,6 +40,13 @@ final class DashboardPage extends AlxtexhpanelDashboard
 {
     protected static string $panel = 'admin';
 
+    /*
+     * GET STARTED is the kit card on PanelDashboard (`onboarding` page prop
+     * from the parent `data()`). Demo widgets do not replace it. It hides
+     * after skip/complete via cookie `panel_onboarding_done` and
+     * `appearance.onboardingDone`. Clear those to see the card again.
+     */
+
     protected static ?int $sort = -100;
 
     /**

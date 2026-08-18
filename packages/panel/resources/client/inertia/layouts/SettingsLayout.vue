@@ -67,8 +67,10 @@ function iconFor(entry: NavEntry): string {
         </Link>
 
         <PkHeading
-            title="Settings"
-            description="Manage your profile, security and organisation"
+            :title="currentItem?.title ?? 'Settings'"
+            :description="currentItem?.key === 'profile'
+                ? 'Your name and email. Security is a tab in this layout, not a separate account-menu item.'
+                : 'Organisation, roles, payments and the rest of this portal.'"
         />
 
         <div class="mt-6 md:hidden">

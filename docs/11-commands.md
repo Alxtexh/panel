@@ -89,7 +89,7 @@ it would do first.
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
 | `make test-package` | The package's own Testbench suite |
 
-## Agent APIs (v1.0.12 to v1.0.24)
+## Agent APIs (v1.0.12 to v1.0.25)
 
 `panel:blueprint` regenerates `AGENTS.md` from these. Do not invent Vue for a
 screen the kit already ships.

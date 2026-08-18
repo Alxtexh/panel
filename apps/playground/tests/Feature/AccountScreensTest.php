@@ -79,12 +79,10 @@ final class AccountScreensTest extends TestCase
     }
 
     /**
-     * THE MENU LINKS THEM, which is the seam that was empty.
+     * THE MENU LINKS PROFILE AND SETTINGS as different doors.
      *
-     * `PanelAccountMenu` took an `accountUrl` prop for two releases and nothing
-     * ever passed one, so no installation's account menu offered a profile link.
-     * A screen reachable only by typing its URL is the failure this whole family
-     * of tests exists to catch.
+     * Profile is `/settings/profile`. Settings is the `/settings` hub.
+     * Security is a tab on the settings layout, not a third dropdown row.
      */
     public function test_the_account_menu_is_given_the_urls(): void
     {
@@ -101,7 +99,18 @@ final class AccountScreensTest extends TestCase
             ->viewData('page')['props'];
 
         $this->assertNotNull($props['panel']['account'] ?? null, 'The account menu was given no profile URL.');
-        $this->assertNotNull($props['panel']['security'] ?? null, 'The account menu was given no security URL.');
+        $this->assertNull($props['panel']['security'] ?? null, 'Security must not be a third dropdown row when Profile is present.');
+        $this->assertNotNull($props['panel']['settings'] ?? null, 'The account menu was given no settings hub URL.');
+        $this->assertNotSame(
+            $props['panel']['account'],
+            $props['panel']['settings'],
+            'Profile and Settings must not share an href.',
+        );
+        $accountPath = parse_url((string) $props['panel']['account'], PHP_URL_PATH);
+        $settingsPath = parse_url((string) $props['panel']['settings'], PHP_URL_PATH);
+        $this->assertStringEndsWith('/settings/profile', (string) $accountPath);
+        $this->assertStringEndsWith('/settings', (string) $settingsPath);
+        $this->assertStringNotContainsString('/settings/profile', (string) $settingsPath);
     }
 
     /**

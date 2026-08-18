@@ -116,6 +116,12 @@ const handleLogout = () => {
     <DropdownMenuSeparator v-if="user" />
 
     <DropdownMenuGroup>
+        <!--
+            DISTINCT HREFS. Profile is `/settings/profile` (name, email;
+            security is a tab on that layout). Settings is `/settings` (the
+            hub: organisation, roles, payments). Never the same URL. Send
+            feedback is not an item here; it lives on What's new.
+        -->
         <DropdownMenuItem v-if="panel?.account" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.account" prefetch>
                 <UserRound class="mr-2 h-4 w-4" />

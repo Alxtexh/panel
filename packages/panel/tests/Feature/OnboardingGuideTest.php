@@ -140,6 +140,21 @@ final class OnboardingGuideTest extends TestCase
         $this->assertArrayNotHasKey('onboarding', $props);
     }
 
+    public function test_account_open_overrides_a_stale_done_cookie(): void
+    {
+        $this->user->appearance = [OnboardingSteps::APPEARANCE_KEY => false];
+        $this->user->save();
+
+        $props = $this->actingAs($this->user->fresh())
+            ->withUnencryptedCookie(OnboardingSteps::COOKIE, '1')
+            ->get('/dashboard')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertArrayHasKey('onboarding', $props);
+        $this->assertNotEmpty($props['onboarding']);
+    }
+
     public function test_account_menu_does_not_share_security_when_profile_is_present(): void
     {
         $panel = $this->actingAs($this->user)
@@ -149,6 +164,9 @@ final class OnboardingGuideTest extends TestCase
 
         $this->assertNotEmpty($panel['account'] ?? null);
         $this->assertNull($panel['security'] ?? null);
+        $this->assertSame('/settings/profile', parse_url((string) $panel['account'], PHP_URL_PATH));
+        $this->assertSame('/settings', parse_url((string) ($panel['settings'] ?? ''), PHP_URL_PATH));
+        $this->assertNotSame($panel['account'], $panel['settings']);
     }
 
     public function test_send_feedback_lives_on_whats_new_not_the_account_menu(): void

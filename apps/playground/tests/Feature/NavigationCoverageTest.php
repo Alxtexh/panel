@@ -120,11 +120,10 @@ final class NavigationCoverageTest extends TestCase
              * same question the middleware asks means a regression to that state
              * fails here rather than passing.
              *
-             * PER PANEL, not from the one set of props above. The demo's own
-             * `/settings/profile` shadows the packaged route in the admin panel
-             * while the generated portals get the packaged one, so reading a
-             * single panel's props would leave the portals' copies looking like
-             * orphans.
+             * PER PANEL, not from the one set of props above. Generated
+             * portals register their own `settings.profile` under their prefix,
+             * so reading a single panel's props would leave those copies
+             * looking like orphans.
              */
             ...collect(app(PanelManager::class)->panels())
                 ->flatMap(static fn ($panel): array => array_values(array_filter([
