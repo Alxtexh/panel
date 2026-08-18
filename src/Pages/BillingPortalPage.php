@@ -6,12 +6,13 @@ namespace Alxtexh\Panel\Pages;
 
 use Illuminate\Http\Request;
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\BillingAccess;
 
 /**
  * Billing portal empty canvas. OFF until `apps(['billing-portal'])`.
  *
- * Host implements Stripe/Cashier/M-Pesa via subscription(), invoices(),
- * paymentMethods() and actions(). Mount on client/tenant panels.
+ * Host implements gateway-specific data via subscription(), invoices(),
+ * paymentMethods() and actions(). Mount on client or tenant panels.
  */
 class BillingPortalPage extends Page
 {
@@ -66,13 +67,19 @@ class BillingPortalPage extends Page
     }
 
     /**
-     * Host-defined billing actions (checkout, portal, cancel, etc.).
+     * Host-defined billing actions.
      *
-     * @return array<string, string|null>
+     * @return array<string, array{label: string, href: string|null}>
      */
-    public static function billingActions(): array
+    public static function billingActions(Request $request): array
     {
-        return [];
+        $panel = app(PanelManager::class)->panel(static::panel());
+
+        if ($panel === null) {
+            return BillingAccess::defaultPortalActions();
+        }
+
+        return $panel->resolveBillingPortalActions();
     }
 
     /**
@@ -84,7 +91,7 @@ class BillingPortalPage extends Page
             'subscription' => static::subscription($request),
             'invoices' => static::invoices($request),
             'paymentMethods' => static::paymentMethods($request),
-            'billingActions' => array_keys(static::billingActions()),
+            'billingActions' => static::billingActions($request),
         ];
     }
 }

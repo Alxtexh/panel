@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Feature;
 
+use Alxtexh\Panel\Billing\BillingState;
 use Alxtexh\Panel\Http\Middleware\EnforceSubscriptionGate;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\BillingStateStore;
 use Alxtexh\Panel\Support\PanelIdleActivity;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
@@ -21,12 +23,14 @@ final class SubscriptionGateTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+    private Tenant $tenant;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
+        $this->tenant = $tenant;
 
         $this->user = User::create([
             'tenant_id' => $tenant->id,
@@ -150,7 +154,7 @@ final class SubscriptionGateTest extends TestCase
         $this->assertSame('suspended', $props['status']);
         $this->assertSame('Suspended', $props['statusLabel']);
         $this->assertSame('Subscription suspended', $props['title']);
-        $this->assertSame('Manage subscription', $props['billingLabel']);
+        $this->assertSame('Manage billing', $props['billingLabel']);
         $this->assertSame('/settings/plans', $props['billingHref']);
     }
 
@@ -192,5 +196,76 @@ final class SubscriptionGateTest extends TestCase
         );
 
         $this->assertSame([], $remaining);
+    }
+
+    public function test_default_billing_state_uses_packaged_persistence(): void
+    {
+        app(PanelManager::class)->panel('admin')->billingState();
+
+        BillingStateStore::upsert(
+            'tenant',
+            (string) $this->tenant->id,
+            'suspended',
+            null,
+            null,
+            'provider-ref-1',
+        );
+
+        $this->actingAs($this->user)
+            ->get('/posts')
+            ->assertRedirect('/account/suspended');
+    }
+
+    public function test_suspend_if_past_due_beyond_grace_transitions_status(): void
+    {
+        BillingState::query()->create([
+            'billable_type' => 'tenant',
+            'billable_key' => (string) $this->tenant->id,
+            'status' => 'past_due',
+            'grace_ends_at' => now()->subMinute(),
+        ]);
+
+        $result = BillingStateStore::suspendIfPastDueBeyondGrace('tenant', (string) $this->tenant->id);
+
+        $this->assertTrue($result['updated']);
+        $this->assertSame('suspended', BillingState::query()->firstOrFail()->status);
+    }
+
+    public function test_suspend_if_past_due_beyond_grace_is_noop_before_grace_end(): void
+    {
+        BillingState::query()->create([
+            'billable_type' => 'tenant',
+            'billable_key' => (string) $this->tenant->id,
+            'status' => 'past_due',
+            'grace_ends_at' => now()->addHour(),
+        ]);
+
+        $result = BillingStateStore::suspendIfPastDueBeyondGrace('tenant', (string) $this->tenant->id);
+
+        $this->assertFalse($result['updated']);
+        $this->assertSame('past_due', BillingState::query()->firstOrFail()->status);
+    }
+
+    public function test_reactivate_and_cancel_at_period_end_helpers_update_status(): void
+    {
+        BillingStateStore::upsert('tenant', (string) $this->tenant->id, 'suspended');
+
+        BillingStateStore::reactivate(
+            'tenant',
+            (string) $this->tenant->id,
+            now()->addMonth(),
+            'provider-ref-2',
+        );
+
+        $this->assertSame('active', BillingState::query()->firstOrFail()->status);
+
+        BillingStateStore::cancelAtPeriodEnd(
+            'tenant',
+            (string) $this->tenant->id,
+            now()->addMonth(),
+            'provider-ref-3',
+        );
+
+        $this->assertSame('canceled', BillingState::query()->firstOrFail()->status);
     }
 }

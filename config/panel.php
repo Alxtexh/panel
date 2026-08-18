@@ -267,6 +267,31 @@ return [
     'support_email' => env('PANEL_SUPPORT_EMAIL'),
 
     /*
+    |--------------------------------------------------------------------------
+    | Billing webhook adapters
+    |--------------------------------------------------------------------------
+    |
+    | Generic inbound billing webhooks post to:
+    |   /{panel}/billing/webhooks/{adapter?}
+    |
+    | The package validates and maps through panel hooks:
+    | - Panel::billingWebhookVerifier(...)
+    | - Panel::billingWebhookMapper(...)
+    |
+    | `events` is informational for host UI and docs, not a locked schema.
+    |
+    */
+    'webhooks' => [
+        'events' => [
+            'billing.active',
+            'billing.past_due',
+            'billing.suspended',
+            'billing.canceled',
+            'billing.expired',
+        ],
+    ],
+
+    /*
     | Auth screens.
     |
     | Turnstile is OFF by default and a single switch for every door - sign-in,

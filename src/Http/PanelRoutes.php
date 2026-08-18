@@ -359,6 +359,22 @@ final class PanelRoutes
                 });
         }
 
+        /*
+         * Provider-agnostic billing webhook ingress. The payload verifier and
+         * mapper are host hooks on the panel.
+         */
+        Route::middleware([
+            Middleware\UsePanel::class.':'.$panel->id,
+            ...$panel->getGuestMiddleware(),
+        ])
+            ->prefix($panel->getPath())
+            ->name($panel->getRouteName())
+            ->group(function (): void {
+                Route::post('billing/webhooks/{adapter?}', Controllers\BillingWebhookInboundController::class)
+                    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+                    ->name('billing.webhooks.inbound');
+            });
+
         $mainGroup = Route::middleware([
             Middleware\UsePanel::class.':'.$panel->id,
             ...$panel->getMiddleware(),

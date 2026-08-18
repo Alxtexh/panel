@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Alxtexh\Panel\Tests\Feature;
+
+use Alxtexh\Panel\Billing\BillingState;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
+use Alxtexh\Panel\Tests\Fixtures\Models\User;
+use Alxtexh\Panel\Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+final class BillingWebhookInboundTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_generic_inbound_webhook_maps_and_persists_billing_state(): void
+    {
+        $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
+
+        User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Operator',
+            'email' => 'operator@example.test',
+            'password' => 'password',
+            'email_verified_at' => now(),
+        ]);
+
+        app(PanelManager::class)->panel('admin')
+            ->billingWebhookVerifier(static fn (): bool => true);
+
+        $this->postJson('/billing/webhooks/generic', [
+            'billable_type' => 'tenant',
+            'billable_key' => (string) $tenant->id,
+            'status' => 'past_due',
+            'grace_ends_at' => now()->addDay()->toIso8601String(),
+            'provider_ref' => 'ref-100',
+        ])->assertAccepted();
+
+        $state = BillingState::query()->firstOrFail();
+
+        $this->assertSame('tenant', $state->billable_type);
+        $this->assertSame((string) $tenant->id, $state->billable_key);
+        $this->assertSame('past_due', $state->status);
+        $this->assertSame('ref-100', $state->provider_ref);
+    }
+
+    public function test_inbound_webhook_rejects_when_signature_verifier_fails(): void
+    {
+        app(PanelManager::class)->panel('admin')
+            ->billingWebhookVerifier(static fn (): bool => false);
+
+        $this->postJson('/billing/webhooks/generic', [
+            'billable_type' => 'tenant',
+            'billable_key' => '1',
+            'status' => 'active',
+        ])->assertStatus(401);
+
+        $this->assertSame(0, BillingState::query()->count());
+    }
+}
+

@@ -191,6 +191,18 @@ final class Panel
      */
     private ?Closure $billingState = null;
 
+    /** Use packaged persistence resolver when `billingState()` has no callback. */
+    private bool $billingStateUsesDefaultStore = false;
+
+    /** Optional inbound webhook signature verifier. */
+    private ?Closure $billingWebhookVerifier = null;
+
+    /** Optional inbound webhook payload mapper. */
+    private ?Closure $billingWebhookMapper = null;
+
+    /** Optional billing portal action resolver. */
+    private ?Closure $billingPortalActions = null;
+
     /** Override for the company billing URL. Null uses PlanSetup's URI. */
     private ?string $subscriptionBillingPath = null;
 
@@ -728,7 +740,9 @@ final class Panel
 
     public function hasSubscriptionGate(): bool
     {
-        return $this->subscriptionGate instanceof Closure || $this->billingState instanceof Closure;
+        return $this->subscriptionGate instanceof Closure
+            || $this->billingState instanceof Closure
+            || $this->billingStateUsesDefaultStore;
     }
 
     public function subscriptionIsActive(): bool
@@ -760,9 +774,10 @@ final class Panel
      *
      * Leave unset for non-billable panels.
      */
-    public function billingState(Closure $state, ?string $billingPath = null): self
+    public function billingState(?Closure $state = null, ?string $billingPath = null): self
     {
         $this->billingState = $state;
+        $this->billingStateUsesDefaultStore = $state === null;
 
         if ($billingPath !== null) {
             $this->subscriptionBillingPath = $billingPath;
@@ -776,6 +791,10 @@ final class Panel
      */
     public function billingStateData(): ?array
     {
+        if ($this->billingStateUsesDefaultStore) {
+            return Support\BillingStateStore::forCurrentContext($this);
+        }
+
         if (! $this->billingState instanceof Closure) {
             return null;
         }
@@ -794,7 +813,7 @@ final class Panel
      */
     public function resolveBillingState(): array
     {
-        if ($this->billingState instanceof Closure) {
+        if ($this->billingState instanceof Closure || $this->billingStateUsesDefaultStore) {
             return Support\BillingAccess::normalize($this->billingStateData(), $this);
         }
 
@@ -803,6 +822,65 @@ final class Panel
         }
 
         return Support\BillingAccess::normalize(['status' => 'active'], $this);
+    }
+
+    /**
+     * Optional signature verifier for inbound billing webhooks.
+     */
+    public function billingWebhookVerifier(?Closure $verifier): self
+    {
+        $this->billingWebhookVerifier = $verifier;
+
+        return $this;
+    }
+
+    public function billingWebhookVerifierUsing(): ?Closure
+    {
+        return $this->billingWebhookVerifier;
+    }
+
+    /**
+     * Optional payload mapper for inbound billing webhooks.
+     */
+    public function billingWebhookMapper(?Closure $mapper): self
+    {
+        $this->billingWebhookMapper = $mapper;
+
+        return $this;
+    }
+
+    public function billingWebhookMapperUsing(): ?Closure
+    {
+        return $this->billingWebhookMapper;
+    }
+
+    /**
+     * Optional billing portal action resolver.
+     */
+    public function billingPortalActions(?Closure $actions): self
+    {
+        $this->billingPortalActions = $actions;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, array{label: string, href: string|null}>
+     */
+    public function resolveBillingPortalActions(): array
+    {
+        if (! $this->billingPortalActions instanceof Closure) {
+            return Support\BillingAccess::defaultPortalActions();
+        }
+
+        $resolved = app()->call($this->billingPortalActions, [
+            'panel' => $this,
+            'user' => $this->user(),
+            'request' => request(),
+            'defaults' => Support\BillingAccess::defaultPortalActions(),
+        ]);
+
+        return Support\BillingAccess::normalizePortalActions(is_array($resolved) ? $resolved : []);
     }
 
     public function subscriptionBillingPath(): string
