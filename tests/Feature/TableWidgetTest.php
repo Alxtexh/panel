@@ -59,6 +59,14 @@ final class TableWidgetTest extends TestCase
         $this->assertSame('recent', $widget->toArray()['key']);
         $this->assertSame(5, $widget->toArray()['limit']);
         $this->assertNotEmpty($widget->toArray()['href']);
+        $this->assertNull($widget->toArray()['poll']);
+    }
+
+    public function test_poll_serialises_milliseconds(): void
+    {
+        $widget = TableWidget::make('recent')->resource(PostResource::class)->poll('10s');
+
+        $this->assertSame(10_000, $widget->toArray()['poll']);
     }
 
     public function test_it_is_hidden_when_the_resource_cannot_be_listed(): void

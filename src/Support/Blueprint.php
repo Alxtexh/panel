@@ -87,6 +87,8 @@ final class Blueprint
         .'`stats()`, `charts()` and `tables()` return these classes and the packaged `PanelDashboard` '
         .'screen renders them, each as its own deferred prop. `TableWidget::make(\'recent\')->resource(OrderResource::class)->limit(5)` '
         .'renders the existing DataTable with a capped list query. '
+        .'`->poll(\'10s\')` on `TableWidget` or `ChartWidget` reloads that deferred prop on an interval '
+        .'(pauses while the tab is hidden). '
         .'`Panel::make(\'admin\')->discoverWidgets(app_path(\'Panel/Widgets\'))` is the normal path '
         .'(namespace is optional when the directory is under `app_path()`). A widget built anywhere else '
         .'is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 '
@@ -123,10 +125,13 @@ final class Blueprint
         and `type('items')` do mount `CatalogGrid` / `LineItems` on a dashboard._
         MD;
 
-    private const PAGE_HOW = 'extend `Page` (or `DashboardPage` / `PlanSetupPage`) in `app/Panel/Pages` and '
+    private const PAGE_HOW = 'extend `Page` (or `DashboardPage` / `PlanSetupPage` / `TillPage` / '
+        .'`DirectoryPage` / `DevicePreviewPage` / `MailPage` / `ChatPage`) in `app/Panel/Pages` and '
         .'discovery routes it - `php artisan make:panel-page ServerHealth` writes the class '
-        .'and its Vue file. `make:panel-page BillingPlans --plan-setup` writes an empty '
-        .'page (import PlanGrid). `ChangelogPage` and `EnvironmentPage` are the package\'s OWN '
+        .'and its Vue file. Flags: `--dashboard`, `--plan-setup`, `--till`, `--catalog`, '
+        .'`--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`. '
+        .'`make:panel-page BillingPlans --plan-setup` writes an empty page (import PlanGrid). '
+        .'`ChangelogPage` and `EnvironmentPage` are the package\'s OWN '
         .'screens rather than things to extend: each appears only once configured '
         .'(`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so '
         .'check those keys before concluding the capability is missing';
@@ -334,8 +339,14 @@ final class Blueprint
         never a modal and never Livewire. BelongsTo pickers use
         `SelectField::relationship()`. Nested resources live at
         `/{parent}/{id}/{child}`; BelongsToMany attach is
-        `/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas.
-        Catalog is not in core. Do not resurrect dashboard sample widgets.
+        `/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas plus
+        a Directory of chrome links (Settings, Users, Roles, Documents, Backups,
+        Logs, Monitoring, Help). Operations appear in an Operations nav group
+        when the panel offers them. Catalog is not in core. Do not resurrect
+        dashboard sample widgets. `Notification::make()->title('Saved')->success()->send()`
+        is the toast. Infolist entries live on the dedicated view page.
+        `InteractsWithPanels` is the test trait (assertFormState, assertNestedAttach,
+        assertPanelToast, assertEmptyGrantsHint).
         MD;
     }
 
@@ -349,7 +360,7 @@ final class Blueprint
             $path = trim($panel->getPath(), '/');
 
             $panels[] = sprintf(
-                '- `%s` — mounted at `/%s`, guard `%s`, %s context',
+                '- `%s` - mounted at `/%s`, guard `%s`, %s context',
                 $panel->id,
                 $path,
                 $panel->getGuard(),
@@ -378,7 +389,7 @@ final class Blueprint
 
         {$discoverList}
 
-        A resource belongs to exactly one panel — its key is a URL segment and an
+        A resource belongs to exactly one panel. Its key is a URL segment and an
         ability name, both globally unique. A second portal needing the same screen
         gets a subclass with its own `key()`.
 
@@ -657,6 +668,60 @@ final class Blueprint
         filtering it client-side would ship the number to them and rely on CSS
         to keep the secret.
 
+        `->poll('10s')` on `TableWidget` or `ChartWidget` reloads only that
+        widget. Polling pauses while the tab is hidden.
+
+        ### Add a till, catalog, directory or device preview
+
+        ```bash
+        php artisan make:panel-page Front --till
+        php artisan make:panel-page Browse --catalog
+        php artisan make:panel-page Hub --directory
+        php artisan make:panel-page Preview --device-preview
+        ```
+
+        `TillPage` / `CatalogBrowserPage` / `DirectoryPage` / `DevicePreviewPage`
+        are empty canvases. Directory inherits chrome links (Settings, Users,
+        Roles, Documents, Backups, Logs, Monitoring, Help). Override
+        `sections()` for a vertical. `panel:install` already writes a Directory.
+
+        Mail and Chat are opt-in empty apps, not merchandising:
+
+        ```php
+        Panel::make('admin')->apps(['mail', 'chat']);
+        ```
+
+        `->without(['mail'])` still drops a screen you enabled. Appearance
+        persists on PUT `{panel}/settings/appearance` (users.appearance JSON).
+        Feedback is `Panel::feedback($persist)` plus the exported
+        `FeedbackDialog`. Ticket analysis is the packaged `TicketAnalysis`
+        screen, written on install, mounted by `TicketingPlugin`.
+
+        ### Flash a toast the Filament way
+
+        ```php
+        Notification::make()->title('Saved')->success()->send();
+        Notification::make()->title('Queued')->body('Export started')->bell()->send();
+        ```
+
+        This is the Inertia toast, not a Livewire stack. `bell()` also writes a
+        topbar row.
+
+        ### Infolist on the dedicated view page
+
+        ```php
+        public static function infolist(): array
+        {
+            return [
+                TextEntry::make('name'),
+                ImageEntry::make('photo'),
+                RepeatableEntry::make('lines'),
+            ];
+        }
+        ```
+
+        View is a page. Click POSTs `{ action }` to `{resource}/{id}/infolist-action`.
+
         ### Group several resources under one sidebar entry
 
         Write a `Cluster` class and point each member's `$cluster` at it. The
@@ -788,15 +853,15 @@ final class Blueprint
 
         ### Choose the right text field
 
-        - `TextareaField` — plain text, no formatting.
-        - `MarkdownField` — prose whose SOURCE you want stored: diffable in an
+        - `TextareaField`: plain text, no formatting.
+        - `MarkdownField`: prose whose SOURCE you want stored: diffable in an
           audit entry, readable in a database client, renderable to email, PDF
           or plain text later.
-        - `RichEditorField` — prose stored as sanitised HTML, when the stored
+        - `RichEditorField`: prose stored as sanitised HTML, when the stored
           value IS the rendering.
-        - `CodeField` — config and snippets: monospace, Tab indents, line
+        - `CodeField`: config and snippets: monospace, Tab indents, line
           numbers, and `->language('json')` adds a server-side `json` rule.
-        - `BuilderField` — blocks of DIFFERENT shapes in a chosen order
+        - `BuilderField`: blocks of DIFFERENT shapes in a chosen order
           (heading, paragraph, image). A `RepeaterField` is many rows of ONE
           shape; reach for the builder only when the shapes genuinely differ.
 
@@ -1211,7 +1276,7 @@ final class Blueprint
                 continue;
             }
 
-            $lines[] = '- `php artisan '.$name.'` — '.$command->getDescription();
+            $lines[] = '- `php artisan '.$name.'` - '.$command->getDescription();
         }
 
         sort($lines);
@@ -1261,8 +1326,9 @@ final class Blueprint
         Also assert the HTTP surfaces that are easy to skip: `assertFormState`
         (`{ options, schema, values }`), nested `assertNestedAttach` /
         `assertNestedDetach`, `assertInfolistAction`, `assertNotImportable` vs
-        `assertPanelImports` plus `assertImportFailuresDownload`, and
-        `assertEmptyGrantsHint` for a signed-in account with no abilities.
+        `assertPanelImports` plus `assertImportFailuresDownload`,
+        `assertPanelToast` / `assertEmptyGrantsHint` for a signed-in account with
+        no abilities, and `assertResourceRegistered`.
         MD;
     }
 }

@@ -109,6 +109,8 @@ export interface Chart {
     thresholds: { max: number; color: string }[] | null
     maxValue: number | null
     icon?: string | null
+    /** Milliseconds. Null means do not poll. */
+    poll?: number | null
 }
 
 /**

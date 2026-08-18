@@ -692,7 +692,7 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
 
             <p v-if="!history.length" class="px-4 py-6 text-sm text-muted-foreground">
                 No samples yet. History appears once the scheduler has run
-                <code class="font-mono text-xs">panel:monitor-sample</code> — every five minutes
+                <code class="font-mono text-xs">panel:monitor-sample</code>, every five minutes
                 when cron is ticking.
             </p>
 

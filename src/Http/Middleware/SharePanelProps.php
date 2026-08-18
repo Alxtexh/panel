@@ -15,6 +15,7 @@ use Alxtexh\Panel\Support\EditableContent;
 use Alxtexh\Panel\Support\SettingsIndex;
 use Alxtexh\Panel\Support\Ability;
 use Alxtexh\Panel\Support\ModuleRegistry;
+use Alxtexh\Panel\Support\OperationsNav;
 use Alxtexh\Panel\Support\PanelAccess;
 use Alxtexh\Panel\Support\PanelNavigation;
 use Alxtexh\Panel\Support\PanelHome;
@@ -436,7 +437,7 @@ final class SharePanelProps
                      * restore button, and a menu that routes around `without()`
                      * un-decides that.
                      */
-                    'operations' => self::operationsUrls($panel),
+                    'operations' => OperationsNav::urls($panel),
                     'modules' => ModuleRegistry::all(),
                     'grantedModules' => ModuleRegistry::granted(),
                 ];
@@ -473,13 +474,26 @@ final class SharePanelProps
                  * rather than merging a callable into an array of data.
                  */
                 $existing = $sharedAuth instanceof Closure ? $sharedAuth() : $sharedAuth;
+                $existing = is_array($existing) ? $existing : [];
+                $can = is_array($existing['can'] ?? null) ? $existing['can'] : [];
 
-                return array_merge(is_array($existing) ? $existing : [], [
+                return array_merge($existing, [
                     'user' => $user === null ? null : [
                         'id' => $user->getAuthIdentifier(),
                         'name' => $user->name ?? null,
                         'email' => $user->email ?? null,
                     ],
+                    /*
+                     * KIT DEFAULTS for the packaged account menu. A host that
+                     * already shared `auth.can` keeps its extra keys; these
+                     * two are what Backups / Logs / Monitoring and Roles
+                     * check. Ability::allows, not hasPermission(), so a fresh
+                     * install without the playground User helper still works.
+                     */
+                    'can' => array_merge([
+                        'manageRoles' => Ability::allows($user, 'manage_roles'),
+                        'viewOperations' => Ability::allows($user, 'view_operations'),
+                    ], $can),
                 ]);
             },
 
@@ -667,31 +681,4 @@ final class SharePanelProps
         return null;
     }
 
-    /**
-     * The operations screens this panel may link to, null per screen when it
-     * may not.
-     *
-     * See the share above: the bare root names are honoured only for the
-     * default panel, because that is the one arrangement where "mounted at the
-     * root instead" is a relocation rather than an escape.
-     *
-     * @return array{backups: ?string, logs: ?string, monitoring: ?string}
-     */
-    private static function operationsUrls(\Alxtexh\Panel\Panel $panel): array
-    {
-        $prefixed = $panel->getRouteName().'operations.';
-        $isDefault = $panel->id === (string) config('panel.default', 'admin');
-
-        $resolve = static fn (string $screen): ?string => match (true) {
-            Route::has($prefixed.$screen) => route($prefixed.$screen),
-            $isDefault && Route::has('operations.'.$screen) => route('operations.'.$screen),
-            default => null,
-        };
-
-        return [
-            'backups' => $resolve('backups'),
-            'logs' => $resolve('logs'),
-            'monitoring' => $resolve('monitoring'),
-        ];
-    }
 }

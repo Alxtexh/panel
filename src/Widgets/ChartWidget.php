@@ -33,6 +33,8 @@ use Throwable;
  */
 final class ChartWidget
 {
+    use CanPoll;
+
     /*
      * `segments` is a single proportional bar rather than a plot - a limit or a
      * breakdown. It lives here rather than in its own widget class because the
@@ -259,6 +261,7 @@ final class ChartWidget
             'periods' => $this->periodSelector ? Period::options() : null,
             'thresholds' => $this->thresholds === [] ? null : $this->thresholds,
             'maxValue' => $this->maxValue,
+            'poll' => $this->pollInterval(),
         ];
     }
 

@@ -480,6 +480,49 @@ PHP
                 ->passwordReset(false)
 PHP;
 
+        /*
+         * OPERATIONS BELONG ON THE INSTALLATION ADMIN, not on extra portals.
+         * `panel:install` generates `admin` via this command. Customer portals
+         * still drop backups, logs and monitoring: a route that exists is a
+         * route somebody can probe.
+         */
+        $without = $id === 'admin'
+            ? <<<'PHP'
+                /*
+                 * THIS IS THE INSTALLATION ADMIN. Backups, Logs and Monitoring
+                 * stay mounted so they appear in the Operations nav group.
+                 * Extra portals from make:panel still drop them.
+                 */
+                ->without([
+                    'assistant-settings',
+                ])
+PHP
+            : <<<'PHP'
+                /*
+                 * WHAT THIS PORTAL DOES NOT MOUNT, AND WHY THE DEFAULT IS OFF.
+                 *
+                 * BACKUPS, LOGS AND MONITORING ARE THE INSTALLATION'S, not a
+                 * portal's. They shipped ON by default, which is right for the
+                 * one panel that IS the installation's admin and wrong for
+                 * every other - and the cost of the wrong default was found
+                 * here rather than reasoned about: the reference app's CUSTOMER
+                 * portal mounted all three, so the people who BUY the service
+                 * were one URL away from the log output. An ability gated them,
+                 * but a route that exists is a route somebody can probe, and a
+                 * permission is one grant away from being wrong.
+                 *
+                 * Delete a line to mount one deliberately. Opting in is a
+                 * decision somebody made; opting out is a decision nobody
+                 * knew they had to make.
+                 */
+                ->without([
+                    'operations',
+                    'assistant-settings',
+                    'documents',
+                    'trash',
+                ])
+PHP;
+
         return <<<PHP
 <?php
 
@@ -538,29 +581,7 @@ final class {$studly}PanelProvider extends ServiceProvider
 
 {$passwordReset}
 
-                /*
-                 * WHAT THIS PORTAL DOES NOT MOUNT, AND WHY THE DEFAULT IS OFF.
-                 *
-                 * BACKUPS, LOGS AND MONITORING ARE THE INSTALLATION'S, not a
-                 * portal's. They shipped ON by default, which is right for the
-                 * one panel that IS the installation's admin and wrong for
-                 * every other - and the cost of the wrong default was found
-                 * here rather than reasoned about: the reference app's CUSTOMER
-                 * portal mounted all three, so the people who BUY the service
-                 * were one URL away from the log output. An ability gated them,
-                 * but a route that exists is a route somebody can probe, and a
-                 * permission is one grant away from being wrong.
-                 *
-                 * Delete a line to mount one deliberately. Opting in is a
-                 * decision somebody made; opting out is a decision nobody
-                 * knew they had to make.
-                 */
-                ->without([
-                    'operations',
-                    'assistant-settings',
-                    'documents',
-                    'trash',
-                ])
+{$without}
 
                 /*
                  * DISCOVERY BELONGS TO THE PANEL. It used to be an append to
