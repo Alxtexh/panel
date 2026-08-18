@@ -45,7 +45,7 @@ final class EmptyCoreInstallTest extends TestCase
 
     public function test_demo_screens_are_optional_not_default(): void
     {
-        foreach (['Catalog', 'PlanSetup', 'CatalogItem', 'CatalogRegister', 'Signatures', 'Directory'] as $screen) {
+        foreach (['Catalog', 'PlanSetup', 'CatalogItem', 'CatalogRegister', 'Signatures', 'Directory', 'Till', 'DevicePreview', 'Mail', 'Chat'] as $screen) {
             $this->assertNotContains(
                 $screen,
                 PanelPages::SCREENS,

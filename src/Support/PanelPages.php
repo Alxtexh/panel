@@ -199,6 +199,10 @@ final class PanelPages
         'CatalogItem',
         'CatalogRegister',
         'Signatures',
+        'Till',
+        'DevicePreview',
+        'Mail',
+        'Chat',
     ];
 
     /**

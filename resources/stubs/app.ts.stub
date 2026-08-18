@@ -20,7 +20,7 @@
  *              looks frozen on any request slower than instant.
  */
 import { createInertiaApp } from '@inertiajs/vue3'
-import { initializeAppearance } from '@alxtexh-enterprise/panel'
+import { initializeAppearance, setAppearancePersister } from '@alxtexh-enterprise/panel'
 import { SettingsLayout } from '@alxtexh-enterprise/panel/inertia'
 import { createApp, h } from 'vue'
 import type { DefineComponent } from 'vue'
@@ -33,6 +33,39 @@ import '../css/app.css'
  * agree - which is what stops the theme flickering on a full page load.
  */
 initializeAppearance()
+
+/*
+ * Persist a preference change to the packaged route. Fire-and-forget: the
+ * change is already applied locally. Guests and offline browsers keep the
+ * local copy.
+ */
+setAppearancePersister((patch) => {
+    let prefix = ''
+
+    try {
+        const raw = document.getElementById('app')?.dataset.page
+        prefix = raw ? (JSON.parse(raw)?.props?.panel?.path ?? '') : ''
+    } catch {
+        prefix = ''
+    }
+
+    const base = !prefix || prefix === '/' ? '' : String(prefix).replace(/\/$/, '')
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+
+    fetch(`${base}/settings/appearance`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-XSRF-TOKEN': match ? decodeURIComponent(match[1]) : '',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(patch),
+    }).catch(() => {
+        // Offline, or a guest. The preference still applies in this browser.
+    })
+})
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${import.meta.env.VITE_APP_NAME ?? 'Panel'}` : String(import.meta.env.VITE_APP_NAME ?? 'Panel')),

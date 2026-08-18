@@ -60,6 +60,11 @@ export { default as PlanSetup } from './pages/PlanSetup.vue'
 export { default as CatalogItem } from './pages/CatalogItem.vue'
 export { default as CatalogRegister } from './pages/CatalogRegister.vue'
 export { default as Signatures } from './pages/Signatures.vue'
+export { default as Till } from './pages/Till.vue'
+export { default as DevicePreview } from './pages/DevicePreview.vue'
+export { default as Mail } from './pages/Mail.vue'
+export { default as Chat } from './pages/Chat.vue'
+export { default as TicketAnalysis } from './pages/TicketAnalysis.vue'
 export { default as DocumentTemplates } from './pages/documents/Templates.vue'
 export { default as DocumentTemplateDesigner } from './pages/documents/TemplateDesigner.vue'
 export { default as DocumentPrint } from './pages/documents/DocumentPrint.vue'
@@ -203,8 +208,15 @@ export const PANEL_PAGES = {
     ResourceIndex: () => import('./pages/ResourceIndex.vue'),
     ResourceForm: () => import('./pages/ResourceForm.vue'),
     ResourceView: () => import('./pages/ResourceView.vue'),
+    ResourceAttach: () => import('./pages/ResourceAttach.vue'),
+    ResourcePicker: () => import('./pages/ResourcePicker.vue'),
     Trash: () => import('./pages/Trash.vue'),
     PanelHome: () => import('./pages/PanelHome.vue'),
+    TicketAnalysis: () => import('./pages/TicketAnalysis.vue'),
+    Till: () => import('./pages/Till.vue'),
+    DevicePreview: () => import('./pages/DevicePreview.vue'),
+    Mail: () => import('./pages/Mail.vue'),
+    Chat: () => import('./pages/Chat.vue'),
     'landing/Composed': () => import('./pages/landing/Composed.vue'),
     PanelDashboard: () => import('./pages/PanelDashboard.vue'),
     Changelog: () => import('./pages/Changelog.vue'),
@@ -275,6 +287,8 @@ export const PANEL_PAGES = {
     'panel/auth/Login': () => import('./pages/panel/auth/Login.vue'),
     'panel/auth/ForgotPassword': () => import('./pages/panel/auth/ForgotPassword.vue'),
     'panel/auth/ResetPassword': () => import('./pages/panel/auth/ResetPassword.vue'),
+    'auth/LockScreen': () => import('./pages/auth/LockScreen.vue'),
+    'errors/Error': () => import('./pages/errors/Error.vue'),
 } as const
 
 /*
@@ -287,6 +301,7 @@ export const PANEL_PAGES = {
 export { default as RenderHook } from './components/RenderHook.vue'
 export { default as TicketThread } from './components/TicketThread.vue'
 export { default as AnnouncementBanners } from './components/AnnouncementBanners.vue'
+export { default as FeedbackDialog } from './components/FeedbackDialog.vue'
 /*
  * `User` IS EXPORTED because the shell hands one out.
  *

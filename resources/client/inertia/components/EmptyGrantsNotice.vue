@@ -7,7 +7,8 @@
  * create an Administrator.
  */
 import { Terminal } from '@lucide/vue'
-import { computed, usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 
 withDefaults(
     defineProps<{
