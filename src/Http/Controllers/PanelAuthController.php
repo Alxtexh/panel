@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ use Inertia\Response;
 use Alxtexh\Panel\Auth\Passkeys;
 use Alxtexh\Panel\Auth\SocialProviders;
 use Alxtexh\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Auth\TwoFactor;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\PanelHome;
@@ -178,7 +180,9 @@ final class PanelAuthController extends Controller
             ]);
         }
 
-        if (! Auth::guard($panel->getGuard())->attempt($credentials, $request->boolean('remember'))) {
+        $user = $this->userFromCredentials($panel, $credentials);
+
+        if ($user === null) {
             RateLimiter::hit($key, (int) config('panel.auth.decay_seconds', 60));
 
             throw ValidationException::withMessages([
@@ -189,12 +193,100 @@ final class PanelAuthController extends Controller
         RateLimiter::clear($key);
 
         /*
+         * THE PASSWORD IS NOT THE WHOLE DOOR when this person confirmed 2FA
+         * on Security. Logging them in here would skip the challenge the
+         * settings screen promised. Passkeys remain an alternative on the
+         * form above; a typed password still has to clear TOTP or recovery.
+         */
+        if ($panel->hasTwoFactorChallenge() && TwoFactor::enabled($user)) {
+            TwoFactor::begin($request, $user, $panel->id, $request->boolean('remember'));
+            $request->session()->regenerate();
+
+            return redirect($this->url($panel, 'two-factor-challenge'));
+        }
+
+        Auth::guard($panel->getGuard())->login($user, $request->boolean('remember'));
+
+        /*
          * REGENERATED, WHICH IS NOT OPTIONAL. Without it the session id that
          * existed before sign-in still identifies the session after, so anyone
          * who planted one - a link with a session id, a shared machine - is
          * signed in as whoever used it. Session fixation is old and still the
          * easiest authentication bug to leave in.
          */
+        $request->session()->regenerate();
+
+        return redirect($this->destination($request, $panel));
+    }
+
+    /**
+     * The TOTP / recovery pause. Not skippable: there is no "remember this
+     * browser" bypass. A missing pending login sends them back to the form.
+     */
+    public function showTwoFactorChallenge(Request $request): Response|RedirectResponse
+    {
+        $panel = $this->panel($request);
+        $user = $this->challengedUser($request, $panel);
+
+        if ($user === null) {
+            return redirect($this->url($panel, 'login'));
+        }
+
+        return Inertia::render('panel/auth/TwoFactorChallenge', [
+            'action' => $this->url($panel, 'two-factor-challenge'),
+        ]);
+    }
+
+    public function twoFactorChallenge(Request $request): RedirectResponse
+    {
+        $panel = $this->panel($request);
+        $user = $this->challengedUser($request, $panel);
+
+        if ($user === null) {
+            return redirect($this->url($panel, 'login'));
+        }
+
+        $key = 'two-factor|'.$user->getAuthIdentifier().'|'.$request->ip();
+        $max = max(1, (int) config('panel.auth.max_attempts', 5));
+
+        if (RateLimiter::tooManyAttempts($key, $max)) {
+            throw ValidationException::withMessages([
+                'code' => __('auth.throttle', [
+                    'seconds' => $seconds = RateLimiter::availableIn($key),
+                    'minutes' => (int) ceil($seconds / 60),
+                ]),
+            ]);
+        }
+
+        $code = (string) $request->input('code', '');
+        $recovery = (string) $request->input('recovery_code', '');
+
+        if ($recovery !== '') {
+            $matched = TwoFactor::verifyRecovery($user, $recovery);
+
+            if ($matched === null) {
+                RateLimiter::hit($key, (int) config('panel.auth.decay_seconds', 60));
+
+                throw ValidationException::withMessages([
+                    'recovery_code' => __('The provided two factor authentication code was invalid.'),
+                ]);
+            }
+
+            TwoFactor::consumeRecovery($user, $matched);
+        } elseif (! TwoFactor::verifyCode($user, $code)) {
+            RateLimiter::hit($key, (int) config('panel.auth.decay_seconds', 60));
+
+            throw ValidationException::withMessages([
+                'code' => __('The provided two factor authentication code was invalid.'),
+            ]);
+        }
+
+        RateLimiter::clear($key);
+
+        $remember = TwoFactor::remember($request);
+        TwoFactor::forget($request);
+
+        Auth::guard($panel->getGuard())->login($user, $remember);
         $request->session()->regenerate();
 
         return redirect($this->destination($request, $panel));
@@ -394,6 +486,53 @@ final class PanelAuthController extends Controller
     }
 
     /* ------------------------------------------------------------- helpers */
+
+    /**
+     * Retrieve and check the password WITHOUT logging in.
+     *
+     * `Auth::attempt` would create the session before the TOTP pause, which is
+     * the bug this method exists to avoid. Fortify's login pipeline does the
+     * same split: credentials first, then either a challenge or a login.
+     */
+    private function userFromCredentials(Panel $panel, array $credentials): ?Authenticatable
+    {
+        $provider = Auth::guard($panel->getGuard())->getProvider();
+        $user = $provider->retrieveByCredentials($credentials);
+
+        if ($user === null || ! $provider->validateCredentials($user, ['password' => $credentials['password']])) {
+            return null;
+        }
+
+        if (config('hashing.rehash_on_login', true) && method_exists($provider, 'rehashPasswordIfRequired')) {
+            $provider->rehashPasswordIfRequired($user, ['password' => $credentials['password']]);
+        }
+
+        return $user;
+    }
+
+    private function challengedUser(Request $request, Panel $panel): ?Authenticatable
+    {
+        $provider = Auth::guard($panel->getGuard())->getProvider();
+        $model = method_exists($provider, 'getModel') ? $provider->getModel() : '';
+
+        if (! is_string($model) || $model === '') {
+            return null;
+        }
+
+        $user = TwoFactor::challengedUser($request, $model);
+
+        if ($user === null) {
+            return null;
+        }
+
+        $pendingPanel = TwoFactor::panelId($request);
+
+        if ($pendingPanel !== null && $pendingPanel !== $panel->id) {
+            return null;
+        }
+
+        return $user;
+    }
 
     /**
      * WHICH PANEL THIS REQUEST BELONGS TO.

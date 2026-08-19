@@ -47,6 +47,8 @@ final class EnforceSubscriptionGate
         'user-password.update',
         'billing.suspended',
         'login',
+        'two-factor.login',
+        'two-factor.login.store',
         'password.request',
         'password.reset',
         'social.redirect',

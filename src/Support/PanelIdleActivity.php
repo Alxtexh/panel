@@ -41,6 +41,8 @@ final class PanelIdleActivity
      */
     private const EXEMPT_SUFFIXES = [
         'login',
+        'two-factor.login',
+        'two-factor.login.store',
         'logout',
         'unlock',
         'unlock.passkey',

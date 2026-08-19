@@ -468,6 +468,15 @@ final class Blueprint
         Optional packaged wall (not Stripe): uncomment `->apps(['billing-portal'])`
         and `->billingState()` on the panel provider.
 
+        ### MFA at the login door
+
+        `->login()` already honours two-factor from Security. After a correct
+        password, a user with 2FA confirmed is paused on
+        `{panel}/two-factor-challenge` until TOTP or a recovery code succeeds.
+        Passkeys stay a button on the login form. `->twoFactorChallenge(false)`
+        skips the pause. Do not invent a third MFA stack. Missing `passkeys`
+        table is an empty list, not a 500.
+
         ### Add a screen for a model
 
         ```bash

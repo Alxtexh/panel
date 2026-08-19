@@ -222,6 +222,14 @@ final class Panel
     private string $loginComponent = 'panel/auth/Login';
 
     /**
+     * Challenge TOTP / recovery after password when the user has 2FA.
+     *
+     * ON BY DEFAULT. Enabling two-factor on Security is the switch; this flag
+     * is only the escape hatch that turns the login-door prompt off.
+     */
+    private bool $twoFactorChallenge = true;
+
+    /**
      * Which auth-screen layout this panel uses: 'centered' (default), 'split', or 'showcase'.
      *
      * 'centered' — a card in the middle of a plain background, the existing style.
@@ -715,6 +723,27 @@ final class Panel
         }
 
         return $this->hasLogin() || $this->authMiddleware !== null;
+    }
+
+    /**
+     * After a correct password, ask for TOTP or a recovery code when the
+     * account has 2FA confirmed.
+     *
+     * DEFAULT TRUE: the user's Security settings are honoured. Pass `false`
+     * only when this portal must not pause at the door (a kiosk that cannot
+     * type a code, for example). Passkeys remain an alternative on the login
+     * screen; a password sign-in still challenges when 2FA is on.
+     */
+    public function twoFactorChallenge(bool $enabled = true): self
+    {
+        $this->twoFactorChallenge = $enabled;
+
+        return $this;
+    }
+
+    public function hasTwoFactorChallenge(): bool
+    {
+        return $this->twoFactorChallenge;
     }
 
     public function idleLockMinutes(): ?int

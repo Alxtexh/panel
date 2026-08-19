@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -14,6 +15,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Alxtexh\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Auth\TwoFactor;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\PanelHome;
@@ -123,13 +125,26 @@ final class SharedAuthController extends Controller
         }
 
         foreach ($this->panels($request) as $panel) {
-            if (Auth::guard($panel->getGuard())->attempt($credentials, $request->boolean('remember'))) {
-                RateLimiter::clear($key);
+            $user = $this->userFromCredentials($panel, $credentials);
 
+            if ($user === null) {
+                continue;
+            }
+
+            RateLimiter::clear($key);
+
+            if ($panel->hasTwoFactorChallenge() && TwoFactor::enabled($user)) {
+                TwoFactor::begin($request, $user, $panel->id, $request->boolean('remember'));
                 $request->session()->regenerate();
 
-                return redirect($this->destination($request, $panel));
+                return redirect($this->challengeUrl($request, $panel));
             }
+
+            Auth::guard($panel->getGuard())->login($user, $request->boolean('remember'));
+
+            $request->session()->regenerate();
+
+            return redirect($this->destination($request, $panel));
         }
 
         RateLimiter::hit($key, (int) config('panel.auth.decay_seconds', 60));
@@ -137,6 +152,75 @@ final class SharedAuthController extends Controller
         throw ValidationException::withMessages([
             'email' => __('auth.failed'),
         ]);
+    }
+
+    public function showTwoFactorChallenge(Request $request): Response|RedirectResponse
+    {
+        $panel = $this->pendingPanel($request);
+        $user = $panel === null ? null : $this->challengedUser($request, $panel);
+
+        if ($panel === null || $user === null) {
+            return redirect($this->sharedBase($request));
+        }
+
+        return Inertia::render('panel/auth/TwoFactorChallenge', [
+            'action' => rtrim($this->sharedBase($request), '/').'/two-factor-challenge',
+        ]);
+    }
+
+    public function twoFactorChallenge(Request $request): RedirectResponse
+    {
+        $panel = $this->pendingPanel($request);
+        $user = $panel === null ? null : $this->challengedUser($request, $panel);
+
+        if ($panel === null || $user === null) {
+            return redirect($this->sharedBase($request));
+        }
+
+        $key = 'two-factor|'.$user->getAuthIdentifier().'|'.$request->ip();
+        $max = max(1, (int) config('panel.auth.max_attempts', 5));
+
+        if (RateLimiter::tooManyAttempts($key, $max)) {
+            throw ValidationException::withMessages([
+                'code' => __('auth.throttle', [
+                    'seconds' => $seconds = RateLimiter::availableIn($key),
+                    'minutes' => (int) ceil($seconds / 60),
+                ]),
+            ]);
+        }
+
+        $code = (string) $request->input('code', '');
+        $recovery = (string) $request->input('recovery_code', '');
+
+        if ($recovery !== '') {
+            $matched = TwoFactor::verifyRecovery($user, $recovery);
+
+            if ($matched === null) {
+                RateLimiter::hit($key, (int) config('panel.auth.decay_seconds', 60));
+
+                throw ValidationException::withMessages([
+                    'recovery_code' => __('The provided two factor authentication code was invalid.'),
+                ]);
+            }
+
+            TwoFactor::consumeRecovery($user, $matched);
+        } elseif (! TwoFactor::verifyCode($user, $code)) {
+            RateLimiter::hit($key, (int) config('panel.auth.decay_seconds', 60));
+
+            throw ValidationException::withMessages([
+                'code' => __('The provided two factor authentication code was invalid.'),
+            ]);
+        }
+
+        RateLimiter::clear($key);
+
+        $remember = TwoFactor::remember($request);
+        TwoFactor::forget($request);
+
+        Auth::guard($panel->getGuard())->login($user, $remember);
+        $request->session()->regenerate();
+
+        return redirect($this->destination($request, $panel));
     }
 
     /**
@@ -164,6 +248,71 @@ final class SharedAuthController extends Controller
             : ($path === $prefix || str_starts_with($path, rtrim($prefix, '/').'/'));
 
         return $belongs ? $intended : PanelHome::urlFor($panel);
+    }
+
+    private function userFromCredentials(Panel $panel, array $credentials): ?Authenticatable
+    {
+        $provider = Auth::guard($panel->getGuard())->getProvider();
+        $user = $provider->retrieveByCredentials($credentials);
+
+        if ($user === null || ! $provider->validateCredentials($user, ['password' => $credentials['password']])) {
+            return null;
+        }
+
+        if (config('hashing.rehash_on_login', true) && method_exists($provider, 'rehashPasswordIfRequired')) {
+            $provider->rehashPasswordIfRequired($user, ['password' => $credentials['password']]);
+        }
+
+        return $user;
+    }
+
+    private function challengedUser(Request $request, Panel $panel): ?Authenticatable
+    {
+        $provider = Auth::guard($panel->getGuard())->getProvider();
+        $model = method_exists($provider, 'getModel') ? $provider->getModel() : '';
+
+        if (! is_string($model) || $model === '') {
+            return null;
+        }
+
+        return TwoFactor::challengedUser($request, $model);
+    }
+
+    private function pendingPanel(Request $request): ?Panel
+    {
+        $id = TwoFactor::panelId($request);
+
+        if ($id === null) {
+            return null;
+        }
+
+        foreach ($this->panels($request) as $panel) {
+            if ($panel->id === $id) {
+                return $panel;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Prefer the panel's own challenge URL so UsePanel brands the screen.
+     * Shared-only portals stay on this path.
+     */
+    private function challengeUrl(Request $request, Panel $panel): string
+    {
+        if ($panel->hasLogin()) {
+            return '/'.trim($panel->getPath().'/two-factor-challenge', '/');
+        }
+
+        return rtrim($this->sharedBase($request), '/').'/two-factor-challenge';
+    }
+
+    private function sharedBase(Request $request): string
+    {
+        $path = '/'.ltrim((string) parse_url($request->url(), PHP_URL_PATH), '/');
+
+        return preg_replace('#/two-factor-challenge/?$#', '', $path) ?: '/';
     }
 
     /** @return list<Panel> */

@@ -287,7 +287,7 @@ final class HelpCentre
                 'keywords' => 'password change security passkey two factor 2fa mfa authenticator devices sessions sign out',
                 'body' => [
                     'Open the account menu from your avatar. Profile changes your name and email address; Security is everything about getting in.',
-                    'On Security you can change your password, add a passkey so you can sign in without typing one, and turn on two-factor authentication.',
+                    'On Security you can change your password, add a passkey so you can sign in without typing one, and turn on two-factor authentication. When two-factor is on, signing in with a password asks for the authenticator code (or a recovery code) before the dashboard.',
                     'That screen also lists every browser currently signed in to your account. Sign out anything you do not recognise - it takes effect on that device\'s very next request.',
                 ],
             ],

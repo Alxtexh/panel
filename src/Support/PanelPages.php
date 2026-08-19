@@ -92,6 +92,12 @@ final class PanelPages
         'panel/auth/ForgotPassword',
         'panel/auth/ResetPassword',
         /*
+         * THE LOGIN-DOOR CHALLENGE. Security already enrols TOTP; this is the
+         * screen that asks for the code after password. Same component as
+         * Fortify's `auth/TwoFactorChallenge`, under a name no starter kit owns.
+         */
+        'panel/auth/TwoFactorChallenge',
+        /*
          * LOCK SCREEN lives under `auth/` (not `panel/auth/`) because the
          * session lock is a signed-in interrupt, not a guest portal. Still a
          * packaged screen that must have a page file on every install.
