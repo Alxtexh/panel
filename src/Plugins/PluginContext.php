@@ -8,6 +8,10 @@ use Closure;
 use InvalidArgumentException;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Pages\Page;
+use Alxtexh\Panel\Widgets\ChartWidget;
+use Alxtexh\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Widgets\TableWidget;
 
 /**
  * What a plugin is allowed to do to a panel.
@@ -31,6 +35,12 @@ final class PluginContext
 
     /** @var list<array{title: string, href: string, icon: string, group: string|null}> */
     private array $pages = [];
+
+    /** @var list<StatWidget|ChartWidget|TableWidget> */
+    private array $widgets = [];
+
+    /** @var list<class-string<Page>> */
+    private array $pageClasses = [];
 
     /** @var list<Closure> */
     private array $routes = [];
@@ -92,6 +102,31 @@ final class PluginContext
     }
 
     /**
+     * Register routable Page classes into this plugin's target panel.
+     *
+     * The registration happens immediately through `PanelManager`, so the
+     * panel's route table can also mount them at boot time.
+     *
+     * @param  list<class-string<Page>>  $classes
+     */
+    public function pageClasses(array $classes): self
+    {
+        foreach ($classes as $class) {
+            if (! is_string($class) || ! is_subclass_of($class, Page::class)) {
+                throw new InvalidArgumentException(
+                    'pageClasses() expects a list of Page classes.'
+                );
+            }
+        }
+
+        $this->manager->registerPages($classes, $this->panel->id);
+
+        $this->pageClasses = [...$this->pageClasses, ...$classes];
+
+        return $this;
+    }
+
+    /**
      * Add routes inside this panel's group.
      *
      * MOUNTED WITH THE PANEL'S PREFIX, MIDDLEWARE AND NAME ALREADY APPLIED, so a
@@ -107,6 +142,28 @@ final class PluginContext
     public function routes(Closure $routes): self
     {
         $this->routes[] = $routes;
+
+        return $this;
+    }
+
+    /**
+     * Register widgets into this plugin's target panel.
+     *
+     * @param  list<StatWidget|ChartWidget|TableWidget>  $widgets
+     */
+    public function widgets(array $widgets): self
+    {
+        foreach ($widgets as $widget) {
+            if (! ($widget instanceof StatWidget
+                || $widget instanceof ChartWidget
+                || $widget instanceof TableWidget)) {
+                throw new InvalidArgumentException(
+                    'widgets() expects a list of StatWidget, ChartWidget, or TableWidget instances.'
+                );
+            }
+        }
+
+        $this->widgets = [...$this->widgets, ...$widgets];
 
         return $this;
     }
@@ -156,6 +213,14 @@ final class PluginContext
     }
 
     /**
+     * @return list<class-string<Page>>
+     */
+    public function registeredPageClasses(): array
+    {
+        return $this->pageClasses;
+    }
+
+    /**
      * @return list<array{position: string, component: string, props: array<string, mixed>, resources: list<string>|null}>
      */
     public function registeredRenders(): array
@@ -167,6 +232,14 @@ final class PluginContext
     public function registeredPages(): array
     {
         return $this->pages;
+    }
+
+    /**
+     * @return list<StatWidget|ChartWidget|TableWidget>
+     */
+    public function registeredWidgets(): array
+    {
+        return $this->widgets;
     }
 
     /** @return list<Closure> */

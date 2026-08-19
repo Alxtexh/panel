@@ -185,6 +185,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\MakePanelCommand::class,
             Commands\MakeRelationManagerCommand::class,
             Commands\MakeWidgetCommand::class,
+            Commands\MakePanelPluginCommand::class,
             Commands\MakeImporterCommand::class,
             Commands\SearchIndexCommand::class,
             Commands\MakeUserCommand::class,
