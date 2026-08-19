@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel;
 
+use Alxtexh\Panel\Auth\Turnstile;
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
@@ -135,7 +136,7 @@ final class Panel
     /**
      * Host override for first-run setup steps. Null uses kit chrome defaults.
      *
-     * @var \Closure|null
+     * @var Closure|null
      */
     private mixed $onboardingStepsResolver = null;
 
@@ -220,6 +221,23 @@ final class Panel
 
     /** See `loginComponent()` for why this is not `auth/Login`. */
     private string $loginComponent = 'panel/auth/Login';
+
+    /**
+     * Social sign-in for this portal.
+     *
+     * TRUE (default): every provider with a client id and secret in
+     * `config/services.php`. A list narrows that. FALSE hides the buttons even
+     * when credentials exist.
+     *
+     * @var bool|list<string>
+     */
+    private bool|array $socialite = true;
+
+    /**
+     * Turnstile for this portal. Null inherits the env keys. FALSE never
+     * challenges here even when `TURNSTILE_SITE_KEY` is set.
+     */
+    private ?bool $turnstile = null;
 
     /**
      * Challenge TOTP / recovery after password when the user has 2FA.
@@ -746,6 +764,70 @@ final class Panel
         return $this->twoFactorChallenge;
     }
 
+    /**
+     * Social buttons on this portal's login.
+     *
+     * CREDENTIALS ARE STILL THE SWITCH. `->socialite()` (or omitting it) offers
+     * every provider with a client id and secret. `->socialite(['google',
+     * 'github'])` offers only those, and only when both credentials exist.
+     * `->socialite(false)` offers none.
+     *
+     *     Panel::make('admin')->login()->socialite(['google', 'github']);
+     *
+     * @param  bool|list<string>  $providers
+     */
+    public function socialite(bool|array $providers = true): self
+    {
+        $this->socialite = $providers;
+
+        return $this;
+    }
+
+    /**
+     * Null means every configured provider. An empty list means none.
+     *
+     * @return list<string>|null
+     */
+    public function socialiteAllowlist(): ?array
+    {
+        if ($this->socialite === false) {
+            return [];
+        }
+
+        if ($this->socialite === true) {
+            return null;
+        }
+
+        return array_values(array_filter(
+            $this->socialite,
+            static fn (mixed $key): bool => is_string($key) && $key !== '',
+        ));
+    }
+
+    /**
+     * Cloudflare Turnstile on this portal's auth writes.
+     *
+     * KEYS ARE THE SWITCH for the installation: set `TURNSTILE_SITE_KEY` and
+     * `TURNSTILE_SECRET_KEY`. This call is the per-panel override.
+     * `->turnstile(false)` never challenges here. `->turnstile()` is explicit
+     * on, still requiring both keys.
+     */
+    public function turnstile(bool $enabled = true): self
+    {
+        $this->turnstile = $enabled;
+
+        return $this;
+    }
+
+    public function hasTurnstile(): bool
+    {
+        if ($this->turnstile === false) {
+            return false;
+        }
+
+        return Turnstile::enabled();
+    }
+
     public function idleLockMinutes(): ?int
     {
         return $this->hasIdleLock() ? $this->idleLockMinutes : null;
@@ -1042,7 +1124,7 @@ final class Panel
      * it. The declaration remains in code and is ready once the conflict is
      * resolved.
      *
-     * @param non-empty-string $path
+     * @param  non-empty-string  $path
      */
     public function sharedLogin(string $path = 'login'): self
     {
@@ -1347,7 +1429,7 @@ final class Panel
      * security, and so on) and returns the list to render. Each step needs
      * `key`, `label`, `done`, and `href` to a real panel route.
      *
-     * @param  \Closure(list<array<string, mixed>>): list<array<string, mixed>>  $resolver
+     * @param  Closure(list<array<string, mixed>>): list<array<string, mixed>>  $resolver
      */
     public function onboardingSteps(Closure $resolver): self
     {

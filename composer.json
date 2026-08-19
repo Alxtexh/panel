@@ -38,6 +38,7 @@
     },
     "suggest": {
         "laravel/ai": "Needed only for ProviderEmbedder - model-backed retrieval. The default embedder is local and needs nothing.",
+        "laravel/socialite": "Needed only for social sign-in buttons. Credentials in config/services.php are the switch; without this package the buttons stay hidden.",
         "phpoffice/phpspreadsheet": "Needed only for Excel import (Resource::excelImport()). CSV import needs nothing.",
         "stancl/tenancy": "Needed only for `database` tenancy mode - dedicated database per tenant. The default `column` mode needs nothing."
     },

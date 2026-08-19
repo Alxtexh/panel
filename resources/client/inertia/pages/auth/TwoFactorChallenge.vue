@@ -28,11 +28,13 @@ import { computed, ref } from 'vue'
 import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthInputError from '../../components/AuthInputError.vue'
+import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{
     /** Where the code posts. */
     action: string
+    turnstileSiteKey?: string | null
 }>()
 
 const recovery = ref(false)
@@ -104,6 +106,8 @@ function toggle(clearErrors: () => void): void {
                         :error="errors.recovery_code"
                     />
                 </template>
+
+                <AuthTurnstile :site-key="props.turnstileSiteKey" />
 
                 <Button type="submit" class="w-full" :disabled="processing">
                     <Spinner v-if="processing" />

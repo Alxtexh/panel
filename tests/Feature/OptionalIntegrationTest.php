@@ -9,7 +9,11 @@ use Alxtexh\Panel\Auth\SocialProviders;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
+use Laravel\Fortify\Features;
+use Laravel\Socialite\Facades\Socialite;
 
 /**
  * What the panel does when an OPTIONAL dependency is not installed.
@@ -55,7 +59,7 @@ final class OptionalIntegrationTest extends TestCase
     public function test_this_suite_runs_without_fortify(): void
     {
         $this->assertFalse(
-            class_exists(\Laravel\Fortify\Features::class),
+            class_exists(Features::class),
             'Fortify is installed, so the assertions below are testing the other branch.',
         );
     }
@@ -103,7 +107,7 @@ final class OptionalIntegrationTest extends TestCase
 
     public function test_a_present_passkeys_table_is_detected_without_querying_rows(): void
     {
-        \Illuminate\Support\Facades\Schema::create('passkeys', function (\Illuminate\Database\Schema\Blueprint $table): void {
+        Schema::create('passkeys', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('name');
@@ -113,7 +117,7 @@ final class OptionalIntegrationTest extends TestCase
         $this->assertTrue(Passkeys::tableExists());
         $this->assertSame([], Passkeys::forUser($this->user));
 
-        \Illuminate\Support\Facades\Schema::drop('passkeys');
+        Schema::drop('passkeys');
 
         $this->assertFalse(Passkeys::tableExists());
     }
@@ -142,15 +146,18 @@ final class OptionalIntegrationTest extends TestCase
         $this->assertFalse(SocialProviders::isEnabled('google'));
     }
 
-    public function test_a_provider_appears_once_both_credentials_are_configured(): void
+    public function test_a_provider_is_offered_only_when_socialite_and_credentials_exist(): void
     {
         config([
             'services.google.client_id' => 'an-id',
             'services.google.client_secret' => 'a-secret',
         ]);
 
-        $this->assertArrayHasKey('google', SocialProviders::enabled());
-        $this->assertTrue(SocialProviders::isEnabled('google'));
+        $this->assertSame(
+            class_exists(Socialite::class),
+            SocialProviders::isEnabled('google'),
+            'Credentials without laravel/socialite must not offer a button that 500s.',
+        );
     }
 
     /**

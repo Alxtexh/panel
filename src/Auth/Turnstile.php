@@ -21,22 +21,51 @@ use Illuminate\Support\Facades\Http;
  * misconfiguration or an outage into an open door, and it does so silently, at
  * exactly the moment nobody is looking. If Turnstile is on, it is load-bearing.
  *
- * OFF IS A FIRST-CLASS STATE. `enabled` false means the middleware never runs
+ * OFF IS A FIRST-CLASS STATE. Missing keys mean the middleware never runs
  * and no token is expected anywhere, so a development machine and a test suite
- * need no keys and no network. There is deliberately no "on but tolerant".
+ * need no keys and no network. There is deliberately no "on but tolerant"
+ * once both keys exist: Cloudflare down is a refusal.
+ *
+ * KEYS ARE THE SWITCH. Hosts set `TURNSTILE_SITE_KEY` and
+ * `TURNSTILE_SECRET_KEY`. `PANEL_TURNSTILE=false` still forces it off, for a
+ * staging box that has production keys in env and must not challenge.
  */
 final class Turnstile
 {
     private const ENDPOINT = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
+    /**
+     * Both Cloudflare keys are present. That is what makes a widget and a
+     * server check possible; either missing is "off".
+     */
+    public static function configured(): bool
+    {
+        $site = config('panel.auth.turnstile.site_key');
+        $secret = config('panel.auth.turnstile.secret_key');
+
+        return is_string($site) && $site !== '' && is_string($secret) && $secret !== '';
+    }
+
     public static function enabled(): bool
     {
-        return (bool) config('panel.auth.turnstile.enabled', false);
+        if (! self::configured()) {
+            return false;
+        }
+
+        $flag = config('panel.auth.turnstile.enabled');
+
+        if ($flag === false || $flag === 0 || $flag === '0' || $flag === 'false') {
+            return false;
+        }
+
+        return true;
     }
 
     public static function siteKey(): ?string
     {
-        return config('panel.auth.turnstile.site_key');
+        $key = config('panel.auth.turnstile.site_key');
+
+        return is_string($key) && $key !== '' ? $key : null;
     }
 
     /**

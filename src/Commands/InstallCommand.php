@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Schema;
 use Alxtexh\Panel\Support\KitAssets;
 use Alxtexh\Panel\Support\PanelPages;
 use Alxtexh\Panel\Support\UserRoles;
 use Alxtexh\Panel\Support\WebSharePanelProps;
+use Composer\Autoload\ClassLoader;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Schema;
+use Laravel\Passkeys\Passkey;
+use Laravel\Passkeys\PasskeyAuthenticatable;
+use Laravel\Passkeys\Passkeys;
 use Symfony\Component\Process\Process;
 
 /**
@@ -396,7 +400,6 @@ final class InstallCommand extends Command
             $relative.($hasTokens ? ' (sources only - kept your tokens)' : ' (sources and tokens)'),
         );
     }
-
 
     /**
      * POINT VITE AT THE BOOTSTRAP AND TEACH IT VUE.
@@ -971,6 +974,51 @@ final class InstallCommand extends Command
             file_put_contents($env, "\nINERTIA_USE_SCRIPT_ELEMENT_FOR_INITIAL_PAGE=true\n", FILE_APPEND);
             $this->components->twoColumnDetail('Wrote', '.env INERTIA_USE_SCRIPT_ELEMENT_FOR_INITIAL_PAGE=true');
         }
+
+        $this->ensureAuthEnvExamples();
+    }
+
+    /**
+     * Empty keys in `.env.example`, so a host can fill them without hunting
+     * docs. Existing values are left alone.
+     */
+    private function ensureAuthEnvExamples(): void
+    {
+        $path = base_path('.env.example');
+
+        if (! file_exists($path)) {
+            return;
+        }
+
+        $contents = (string) file_get_contents($path);
+        $missing = [];
+
+        foreach ([
+            'GOOGLE_CLIENT_ID',
+            'GOOGLE_CLIENT_SECRET',
+            'GITHUB_CLIENT_ID',
+            'GITHUB_CLIENT_SECRET',
+            'MICROSOFT_CLIENT_ID',
+            'MICROSOFT_CLIENT_SECRET',
+            'APPLE_CLIENT_ID',
+            'APPLE_CLIENT_SECRET',
+            'FACEBOOK_CLIENT_ID',
+            'FACEBOOK_CLIENT_SECRET',
+            'TURNSTILE_SITE_KEY',
+            'TURNSTILE_SECRET_KEY',
+        ] as $key) {
+            if (! str_contains($contents, $key.'=')) {
+                $missing[] = $key.'=';
+            }
+        }
+
+        if ($missing === []) {
+            return;
+        }
+
+        $contents .= (str_ends_with($contents, "\n") ? '' : "\n")."\n".implode("\n", $missing)."\n";
+        file_put_contents($path, $contents);
+        $this->components->twoColumnDetail('Wrote', '.env.example social and Turnstile keys');
     }
 
     private function createTree(): void
@@ -1267,11 +1315,11 @@ PHP;
      */
     private function scaffoldPasskeys(): void
     {
-        $already = class_exists(\Laravel\Passkeys\Passkeys::class)
-            || class_exists(\Laravel\Passkeys\Passkey::class)
+        $already = class_exists(Passkeys::class)
+            || class_exists(Passkey::class)
             || is_dir(base_path('vendor/laravel/passkeys'));
 
-        if ($already && (class_exists(\Laravel\Passkeys\Passkeys::class) || class_exists(\Laravel\Passkeys\Passkey::class))) {
+        if ($already && (class_exists(Passkeys::class) || class_exists(Passkey::class))) {
             $this->components->twoColumnDetail('Kept', 'laravel/passkeys already installed');
             $this->publishAndMigratePasskeys();
 
@@ -1307,7 +1355,7 @@ PHP;
             $this->refreshComposerAutoload();
         }
 
-        if (! class_exists(\Laravel\Passkeys\Passkey::class) && ! class_exists(\Laravel\Passkeys\Passkeys::class)) {
+        if (! class_exists(Passkey::class) && ! class_exists(Passkeys::class)) {
             $this->components->warn(
                 'laravel/passkeys is on disk but not autoloadable in this process. '
                 .'Re-run `php artisan panel:install --auth` after `composer dump-autoload`.',
@@ -1330,8 +1378,8 @@ PHP;
      */
     private function publishAndMigratePasskeys(): void
     {
-        if (! class_exists(\Laravel\Passkeys\Passkey::class)
-            && ! class_exists(\Laravel\Passkeys\Passkeys::class)
+        if (! class_exists(Passkey::class)
+            && ! class_exists(Passkeys::class)
             && ! is_dir(base_path('vendor/laravel/passkeys'))) {
             return;
         }
@@ -1372,11 +1420,11 @@ PHP;
         }
 
         foreach (spl_autoload_functions() ?: [] as $autoload) {
-            if (! is_array($autoload) || ! $autoload[0] instanceof \Composer\Autoload\ClassLoader) {
+            if (! is_array($autoload) || ! $autoload[0] instanceof ClassLoader) {
                 continue;
             }
 
-            /** @var \Composer\Autoload\ClassLoader $loader */
+            /** @var ClassLoader $loader */
             $loader = $autoload[0];
 
             foreach (require $psr4 as $prefix => $paths) {
@@ -1394,8 +1442,8 @@ PHP;
     /** Point the User model at laravel/passkeys contracts when the class exists. */
     private function wirePasskeyUserModel(): void
     {
-        if (! class_exists(\Laravel\Passkeys\PasskeyAuthenticatable::class)
-            && ! trait_exists(\Laravel\Passkeys\PasskeyAuthenticatable::class)) {
+        if (! class_exists(PasskeyAuthenticatable::class)
+            && ! trait_exists(PasskeyAuthenticatable::class)) {
             return;
         }
 

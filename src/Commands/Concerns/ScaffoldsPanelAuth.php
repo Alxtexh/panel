@@ -219,7 +219,8 @@ use Alxtexh\Panel\Http\Controllers\PanelAuthController;
 
     Route::post('login', [PanelAuthController::class, 'login'])
         ->defaults('panel', \$panel)
-        ->middleware('throttle:20,1');
+        ->middleware('throttle:20,1')
+        ->name('{$id}.login.store');
 
     Route::get('two-factor-challenge', [PanelAuthController::class, 'showTwoFactorChallenge'])
         ->defaults('panel', \$panel)
@@ -251,7 +252,8 @@ use Alxtexh\Panel\Http\Controllers\PanelAuthController;
 
     Route::post('forgot-password', [PanelAuthController::class, 'sendResetLink'])
         ->defaults('panel', \$panel)
-        ->middleware('throttle:6,1');
+        ->middleware('throttle:6,1')
+        ->name('{$id}.password.email');
 
     Route::get('reset-password/{token}', [PanelAuthController::class, 'showResetPassword'])
         ->defaults('panel', \$panel)
@@ -259,7 +261,8 @@ use Alxtexh\Panel\Http\Controllers\PanelAuthController;
 
     Route::post('reset-password', [PanelAuthController::class, 'resetPassword'])
         ->defaults('panel', \$panel)
-        ->middleware('throttle:6,1');
+        ->middleware('throttle:6,1')
+        ->name('{$id}.password.update');
 });
 
 PHP;

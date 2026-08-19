@@ -6,7 +6,9 @@ namespace Alxtexh\Panel;
 
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Middleware\Authenticate;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
@@ -135,7 +137,7 @@ final class PanelServiceProvider extends ServiceProvider
          * JS writes this cookie as plaintext, like sidebar_state. Encrypting
          * it would drop the next request's value and reopen the guide.
          */
-        \Illuminate\Cookie\Middleware\EncryptCookies::except([
+        EncryptCookies::except([
             Support\OnboardingSteps::COOKIE,
         ]);
 
@@ -264,6 +266,7 @@ final class PanelServiceProvider extends ServiceProvider
          * patch is skipped. Panel route groups still run it AFTER UsePanel.
          */
         $this->sharePanelPropsOnWeb();
+        $this->verifyTurnstileOnWeb();
 
         /*
          * The AI SDK's conversation tables are tenant data and arrive without a
@@ -291,7 +294,35 @@ final class PanelServiceProvider extends ServiceProvider
     private function sharePanelPropsOnWeb(): void
     {
         $class = Http\Middleware\SharePanelProps::class;
-        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+        $kernel = $this->app->make(Kernel::class);
+        $groups = method_exists($kernel, 'getMiddlewareGroups')
+            ? $kernel->getMiddlewareGroups()
+            : $this->app['router']->getMiddlewareGroups();
+
+        if (in_array($class, $groups['web'] ?? [], true)) {
+            return;
+        }
+
+        if (method_exists($kernel, 'pushMiddlewareToGroup')) {
+            $kernel->pushMiddlewareToGroup('web', $class);
+
+            return;
+        }
+
+        $this->app['router']->pushMiddlewareToGroup('web', $class);
+    }
+
+    /**
+     * Turnstile on every auth write, without the host having to remember it.
+     *
+     * SAME SHAPE AS `sharePanelPropsOnWeb`. Playground already lists
+     * VerifyTurnstile in bootstrap/app.php; a generated portal did not, so the
+     * widget on `{panel}/login` posted a token nothing checked.
+     */
+    private function verifyTurnstileOnWeb(): void
+    {
+        $class = Http\Middleware\VerifyTurnstile::class;
+        $kernel = $this->app->make(Kernel::class);
         $groups = method_exists($kernel, 'getMiddlewareGroups')
             ? $kernel->getMiddlewareGroups()
             : $this->app['router']->getMiddlewareGroups();
