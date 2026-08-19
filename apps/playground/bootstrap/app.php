@@ -1,14 +1,5 @@
 <?php
 
-use App\Http\Middleware\EnsurePanelIsUnlocked;
-use App\Http\Middleware\HandleAppearance;
-use App\Http\Middleware\HandleInertiaRequests;
-use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Alxtexh\Panel\Alerts\ReportsToTelegram;
 use Alxtexh\Panel\Auth\SetPermissionsTeam;
 use Alxtexh\Panel\Http\Middleware\BlockImpersonatedCredentialChanges;
@@ -21,6 +12,15 @@ use Alxtexh\Panel\Http\Middleware\ScopeSessionToTenant;
 use Alxtexh\Panel\Http\Middleware\SetPanelLocale;
 use Alxtexh\Panel\Http\Middleware\SharePanelProps;
 use Alxtexh\Panel\Http\Middleware\VerifyTurnstile;
+use App\Http\Middleware\EnsurePanelIsUnlocked;
+use App\Http\Middleware\HandleAppearance;
+use App\Http\Middleware\HandleInertiaRequests;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -169,8 +169,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
             /*
              | Turnstile on every auth write, matched by route name. Off unless
-             | `PANEL_TURNSTILE` is set, so development and the test suite need
-             | no keys and no network.
+             | both TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY are set, so
+             | development and the test suite need no keys and no network.
              */
             VerifyTurnstile::class,
             HandleAppearance::class,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tests\Feature;
 
 use Alxtexh\Panel\Http\Middleware\SharePanelProps;
+use Alxtexh\Panel\Http\Middleware\VerifyTurnstile;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,6 +27,12 @@ final class HostRouteSharePanelPropsTest extends TestCase
             SharePanelProps::class,
             $web,
             'SharePanelProps must be on the web group so host routes keep the shell.',
+        );
+
+        $this->assertContains(
+            VerifyTurnstile::class,
+            $web,
+            'VerifyTurnstile must be on the web group so a generated portal checks tokens.',
         );
     }
 

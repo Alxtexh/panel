@@ -34,6 +34,7 @@ const props = defineProps<{
     prefill?: { email: string; password: string } | null;
     /** Fortify's passkey routes, when `laravel/passkeys` registered them. */
     passkeys?: { options: string; verify: string } | null;
+    turnstileSiteKey?: string | null;
 }>();
 
 /**
@@ -59,5 +60,6 @@ const providers = computed(() =>
         :prefill="prefill"
         :passkeys="passkeys"
         :social-providers="providers"
+        :turnstile-site-key="turnstileSiteKey"
     />
 </template>

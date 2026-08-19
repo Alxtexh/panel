@@ -20,6 +20,7 @@ defineOptions({ inheritAttrs: false })
 import { Form, Head } from '@inertiajs/vue3'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
+import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{
@@ -28,6 +29,7 @@ const props = defineProps<{
     /** Back to sign-in. */
     loginUrl: string
     status?: string | null
+    turnstileSiteKey?: string | null
 }>()
 </script>
 
@@ -62,6 +64,8 @@ const props = defineProps<{
                 autofocus
                 :error="errors.email"
             />
+
+            <AuthTurnstile :site-key="props.turnstileSiteKey" />
 
             <Button type="submit" class="w-full" :disabled="processing">
                 {{ processing ? 'Sending…' : 'Email password reset link' }}

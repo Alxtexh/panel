@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Auth\TwoFactor;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelHome;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,11 +19,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Alxtexh\Panel\Auth\Turnstile;
-use Alxtexh\Panel\Auth\TwoFactor;
-use Alxtexh\Panel\Panel;
-use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Support\PanelHome;
 
 /**
  * ONE SIGN-IN PAGE, MULTIPLE PANELS.
@@ -93,7 +93,7 @@ final class SharedAuthController extends Controller
              * the credential. Setting them null means the components render
              * nothing rather than broken buttons.
              */
-            'passkeys'        => null,
+            'passkeys' => null,
             'socialProviders' => [],
         ]);
     }
@@ -108,7 +108,7 @@ final class SharedAuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ]);
 
@@ -165,6 +165,7 @@ final class SharedAuthController extends Controller
 
         return Inertia::render('panel/auth/TwoFactorChallenge', [
             'action' => rtrim($this->sharedBase($request), '/').'/two-factor-challenge',
+            'turnstileSiteKey' => Turnstile::enabled() ? Turnstile::siteKey() : null,
         ]);
     }
 

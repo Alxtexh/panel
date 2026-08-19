@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Auth\TwoFactor;
+use Alxtexh\Panel\Models\ConnectedAccount;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelHome;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -11,10 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
-use Alxtexh\Panel\Auth\SocialProviders;
-use Alxtexh\Panel\Models\ConnectedAccount;
-use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Support\PanelHome;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirect;
 
 /**
@@ -126,7 +128,7 @@ final class SocialLoginController extends Controller
     /** Off to the provider. */
     public function redirect(Request $request, string $provider): SymfonyRedirect|RedirectResponse
     {
-        abort_unless(SocialProviders::isEnabled($provider), 404);
+        abort_unless(SocialProviders::installed() && SocialProviders::isEnabled($provider, $this->panel()), 404);
 
         /*
          * WHY WE ARE GOING IS REMEMBERED HERE rather than inferred on the way
@@ -137,18 +139,22 @@ final class SocialLoginController extends Controller
          */
         $request->session()->put('social.intent', Auth::guard($this->guard())->check() ? 'link' : 'login');
 
-        return Socialite::driver($provider)->redirect();
+        try {
+            return $this->driver($provider)->redirect();
+        } catch (\Throwable) {
+            return $this->back('login', 'That sign-in provider is not available.');
+        }
     }
 
     /** And back again. */
     public function callback(Request $request, string $provider): RedirectResponse
     {
-        abort_unless(SocialProviders::isEnabled($provider), 404);
+        abort_unless(SocialProviders::installed() && SocialProviders::isEnabled($provider, $this->panel()), 404);
 
         $intent = $request->session()->pull('social.intent', 'login');
 
         try {
-            $account = Socialite::driver($provider)->user();
+            $account = $this->driver($provider)->user();
         } catch (\Throwable) {
             /*
              * A FAILED EXCHANGE IS NOT AN ERROR PAGE. It happens when somebody
@@ -203,9 +209,7 @@ final class SocialLoginController extends Controller
         if ($existing !== null) {
             $existing->forceFill(['last_used_at' => now()])->save();
 
-            Auth::guard($this->guard())->login($existing->user);
-
-            return redirect()->intended($this->home());
+            return $this->authenticate($existing->user);
         }
 
         $user = $this->matchByVerifiedEmail($provider, $account);
@@ -220,9 +224,7 @@ final class SocialLoginController extends Controller
 
         $this->attach($user, $provider, $account);
 
-        Auth::guard($this->guard())->login($user);
-
-        return redirect()->intended($this->home());
+        return $this->authenticate($user);
     }
 
     private function link(Request $request, string $provider, mixed $account, ?ConnectedAccount $existing): RedirectResponse
@@ -252,12 +254,67 @@ final class SocialLoginController extends Controller
     }
 
     /**
-     * The one place a provider identity is allowed to find an account it has
-     * never been linked to.
+     * Socialite's driver for THIS panel's callback URL.
+     *
+     * A SINGLE `services.{provider}.redirect` CANNOT NAME EVERY PORTAL. Admin
+     * is `/auth/google/callback`; a reseller is `/reseller/auth/google/callback`.
+     * Setting it per request is what makes the button on a generated portal
+     * complete the exchange instead of sending Google back to somebody else's
+     * door.
      */
+    private function driver(string $provider): mixed
+    {
+        $socialite = Socialite::driver($provider);
+        $panel = $this->panel();
+        $callback = url('/'.trim(($panel?->getPath() ?? '').'/auth/'.$provider.'/callback', '/'));
+
+        if (method_exists($socialite, 'redirectUrl')) {
+            $socialite->redirectUrl($callback);
+        }
+
+        return $socialite;
+    }
+
+    /**
+     * Sign in, or pause for 2FA when Security has it on.
+     *
+     * SOCIAL IS NOT A BYPASS. The password door already challenges; a Google
+     * click that skipped TOTP would make 2FA a suggestion. Passkeys remain an
+     * alternative on the form; a social callback still has to clear the code.
+     */
+    private function authenticate(Authenticatable $user): RedirectResponse
+    {
+        $panel = $this->panel();
+        $request = request();
+
+        if ($panel !== null && $panel->hasTwoFactorChallenge() && TwoFactor::enabled($user)) {
+            TwoFactor::begin($request, $user, $panel->id, false);
+            $request->session()->regenerate();
+
+            if ($panel->hasLogin()) {
+                return redirect('/'.trim($panel->getPath().'/two-factor-challenge', '/'));
+            }
+
+            if (app('router')->has('two-factor.login')) {
+                return redirect()->route('two-factor.login');
+            }
+        }
+
+        Auth::guard($this->guard())->login($user);
+        $request->session()->regenerate();
+
+        return redirect()->intended($this->home());
+    }
+
+    private function panel(): ?Panel
+    {
+        return app(PanelManager::class)->currentPanel();
+    }
+
+    /** The panel's guard, resolved from the portal serving this request. */
     private function guard(): ?string
     {
-        return app(PanelManager::class)->currentPanel()?->getGuard();
+        return $this->panel()?->getGuard();
     }
 
     private function matchByVerifiedEmail(string $provider, mixed $account): ?Authenticatable

@@ -14,6 +14,7 @@ use Alxtexh\Panel\Http\Controllers\UploadController;
 use Alxtexh\Panel\Landing;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -89,7 +90,7 @@ final class PanelRoutes
      * route defers to whoever declared first. The panels' `sharedLogin()` call
      * still compiles - it is available the moment the conflict is resolved.
      *
-     * @param list<string> $panelIds
+     * @param  list<string>  $panelIds
      */
     private static function registerSharedLogin(string $path, array $panelIds): void
     {
@@ -320,7 +321,8 @@ final class PanelRoutes
 
                     Route::post($slug, [Controllers\PanelAuthController::class, 'login'])
                         ->defaults('panel', $panel->id)
-                        ->middleware('throttle:20,1');
+                        ->middleware('throttle:20,1')
+                        ->name('login.store');
 
                     if ($panel->hasTwoFactorChallenge()) {
                         Route::get('two-factor-challenge', [Controllers\PanelAuthController::class, 'showTwoFactorChallenge'])
@@ -350,7 +352,8 @@ final class PanelRoutes
 
                         Route::post('forgot-password', [Controllers\PanelAuthController::class, 'sendResetLink'])
                             ->defaults('panel', $panel->id)
-                            ->middleware('throttle:6,1');
+                            ->middleware('throttle:6,1')
+                            ->name('password.email');
 
                         Route::get('reset-password/{token}', [Controllers\PanelAuthController::class, 'showResetPassword'])
                             ->defaults('panel', $panel->id)
@@ -358,12 +361,13 @@ final class PanelRoutes
 
                         Route::post('reset-password', [Controllers\PanelAuthController::class, 'resetPassword'])
                             ->defaults('panel', $panel->id)
-                            ->middleware('throttle:6,1');
+                            ->middleware('throttle:6,1')
+                            ->name('password.update');
                     }
                 });
         }
 
-        if (Auth\SocialProviders::enabled() !== []) {
+        if (Auth\SocialProviders::enabled($panel) !== []) {
             Route::middleware([
                 Middleware\UsePanel::class.':'.$panel->id,
                 ...$panel->getGuestMiddleware(),
@@ -391,7 +395,7 @@ final class PanelRoutes
             ->name($panel->getRouteName())
             ->group(function (): void {
                 Route::post('billing/webhooks/{adapter?}', Controllers\BillingWebhookInboundController::class)
-                    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+                    ->withoutMiddleware([VerifyCsrfToken::class])
                     ->name('billing.webhooks.inbound');
             });
 
@@ -645,7 +649,7 @@ final class PanelRoutes
                  * controller: `auth` proves somebody is signed in and says
                  * nothing about whose row this is.
                  */
-                if (Auth\SocialProviders::enabled() !== []) {
+                if (Auth\SocialProviders::enabled($panel) !== []) {
                     Route::delete('connected-accounts/{connectedAccount}', [Controllers\SocialLoginController::class, 'destroy'])
                         ->name('social.destroy');
                 }

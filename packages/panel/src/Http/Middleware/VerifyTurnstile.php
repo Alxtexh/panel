@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Middleware;
 
+use Alxtexh\Panel\Auth\Turnstile;
+use Alxtexh\Panel\PanelManager;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Alxtexh\Panel\Auth\Turnstile;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -59,9 +60,19 @@ final class VerifyTurnstile
             return $next($request);
         }
 
+        $panelId = $request->route()?->defaults['panel'] ?? null;
+
+        if (is_string($panelId) && $panelId !== '') {
+            $panel = app(PanelManager::class)->panel($panelId);
+
+            if ($panel !== null && ! $panel->hasTurnstile()) {
+                return $next($request);
+            }
+        }
+
         $name = $request->route()?->getName();
 
-        if ($name === null || ! in_array($name, self::GUARDED, true)) {
+        if ($name === null || ! self::guards($name)) {
             return $next($request);
         }
 
@@ -72,5 +83,27 @@ final class VerifyTurnstile
         throw ValidationException::withMessages([
             'cf-turnstile-response' => 'Please complete the verification and try again.',
         ]);
+    }
+
+    /**
+     * Fortify names these without a prefix. A generated portal names them
+     * `{id}.login.store`. The shared door uses `*.attempt`. Matching only the
+     * Fortify literals left every packaged POST unguarded: the widget showed
+     * and the token was never checked.
+     */
+    private static function guards(string $name): bool
+    {
+        if (in_array($name, self::GUARDED, true)) {
+            return true;
+        }
+
+        foreach (self::GUARDED as $suffix) {
+            if (str_ends_with($name, '.'.$suffix)) {
+                return true;
+            }
+        }
+
+        return str_contains($name, 'shared-login')
+            && (str_ends_with($name, '.attempt') || str_ends_with($name, '.two-factor.store'));
     }
 }

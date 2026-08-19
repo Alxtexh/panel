@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use Alxtexh\Panel\Auth\Turnstile;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-use Alxtexh\Panel\Auth\Turnstile;
 use Tests\TestCase;
 
 /**
@@ -94,21 +94,19 @@ final class TurnstileTest extends TestCase
     /* ------------------------------------------------------------ fail closed */
 
     /**
-     * THE CENTRAL CASE. Enabled with no secret refuses - it does NOT wave the
-     * request through on the grounds that it could not check.
+     * KEYS ARE THE SWITCH. Enabled-with-no-secret used to refuse every
+     * request, which locked a host that copied empty keys from .env.example
+     * out of their own panel. Missing either key is off: login works, no HTTP.
      */
-    public function test_a_missing_secret_refuses_every_request(): void
+    public function test_a_missing_secret_is_off_not_a_lockout(): void
     {
         $this->turnstileOn(secret: null);
 
         Http::fake();
 
-        $this->attemptLogin(['cf-turnstile-response' => 'looks-fine'])
-            ->assertSessionHasErrors('cf-turnstile-response');
+        $this->attemptLogin()->assertRedirect();
 
-        $this->assertGuest();
-
-        // It never even asked Cloudflare - there was nothing to ask with.
+        $this->assertAuthenticatedAs($this->user);
         Http::assertNothingSent();
     }
 

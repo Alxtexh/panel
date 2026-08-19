@@ -432,8 +432,16 @@ return [
             'refuse_reuse' => env('PANEL_PASSWORD_REFUSE_REUSE', true),
         ],
 
+        /*
+        | CLOUDFLARE TURNSTILE.
+        |
+        | KEYS ARE THE SWITCH. Set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`
+        | and the widget appears on sign-in (and register, reset, the 2FA
+        | challenge). Missing either key is off: no widget, no extra HTTP.
+        | `PANEL_TURNSTILE=false` forces it off even when keys exist.
+        */
         'turnstile' => [
-            'enabled' => env('PANEL_TURNSTILE', false),
+            'enabled' => env('PANEL_TURNSTILE'),
             'site_key' => env('TURNSTILE_SITE_KEY'),
             'secret_key' => env('TURNSTILE_SECRET_KEY'),
         ],

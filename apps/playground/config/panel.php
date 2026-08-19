@@ -460,16 +460,15 @@ return [
         /*
         | Cloudflare Turnstile on the auth screens.
         |
-        | OFF BY DEFAULT and a single switch for every door - sign-in,
-        | registration, password reset, OTP and magic link. Protecting some of
-        | them protects none.
+        | KEYS ARE THE SWITCH. Set TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY
+        | to show the widget and verify on POST. PANEL_TURNSTILE=false forces
+        | it off even when keys exist.
         |
-        | ON WITH NO SECRET REFUSES EVERY REQUEST, deliberately. See the
-        | `Turnstile` class: a check that passes when it cannot run is an open
-        | door that reports itself as locked.
+        | ON WITH BOTH KEYS, Cloudflare down still refuses. See the
+        | `Turnstile` class.
         */
         'turnstile' => [
-            'enabled' => env('PANEL_TURNSTILE', false),
+            'enabled' => env('PANEL_TURNSTILE'),
             'site_key' => env('TURNSTILE_SITE_KEY'),
             'secret_key' => env('TURNSTILE_SECRET_KEY'),
         ],

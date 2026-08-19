@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use Alxtexh\Panel\Http\Controllers\PanelAuthController;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ViewErrorBag;
-use Alxtexh\Panel\Http\Controllers\PanelAuthController;
-use Alxtexh\Panel\Panel;
-use Alxtexh\Panel\PanelManager;
 use Tests\TestCase;
 
 /**
@@ -59,19 +59,22 @@ final class PanelAuthTest extends TestCase
                 ->defaults('panel', 'authfixture')->name('authfixture.login');
 
             Route::post('login', [PanelAuthController::class, 'login'])
-                ->defaults('panel', 'authfixture');
+                ->defaults('panel', 'authfixture')
+                ->name('authfixture.login.store');
 
             Route::get('two-factor-challenge', [PanelAuthController::class, 'showTwoFactorChallenge'])
                 ->defaults('panel', 'authfixture');
 
             Route::post('two-factor-challenge', [PanelAuthController::class, 'twoFactorChallenge'])
-                ->defaults('panel', 'authfixture');
+                ->defaults('panel', 'authfixture')
+                ->name('authfixture.two-factor.login.store');
 
             Route::post('logout', [PanelAuthController::class, 'logout'])
                 ->defaults('panel', 'authfixture')->middleware('auth:web');
 
             Route::post('forgot-password', [PanelAuthController::class, 'sendResetLink'])
-                ->defaults('panel', 'authfixture');
+                ->defaults('panel', 'authfixture')
+                ->name('authfixture.password.email');
         });
 
         RateLimiter::clear($this->throttleKey());
@@ -419,26 +422,72 @@ final class PanelAuthTest extends TestCase
     /**
      * THE SITE KEY TRAVELS ONLY WHEN TURNSTILE IS ON.
      *
-     * `enabled` false with a key still configured is the ordinary shape of an
-     * installation that turned it off for a staging box, and sending the key
-     * anyway would render a widget whose token the middleware never checks.
+     * `enabled` false with keys still configured is a staging box that must
+     * not challenge. Sending the key anyway would render a widget whose token
+     * the middleware never checks.
+     *
+     * BOTH KEYS ARE REQUIRED. A site key with no secret is not "on": the
+     * widget would mint tokens nothing can verify.
      */
     public function test_the_turnstile_key_is_sent_only_when_it_is_enabled(): void
     {
         config([
             'panel.auth.turnstile.enabled' => false,
             'panel.auth.turnstile.site_key' => 'site-key-here',
+            'panel.auth.turnstile.secret_key' => 'secret-here',
         ]);
 
         $this->get('/authfixture/login')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('turnstileSiteKey', null));
 
-        config(['panel.auth.turnstile.enabled' => true]);
+        config(['panel.auth.turnstile.enabled' => null]);
 
         $this->get('/authfixture/login')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('turnstileSiteKey', 'site-key-here'));
+    }
+
+    public function test_a_site_key_without_a_secret_does_not_show_the_widget(): void
+    {
+        config([
+            'panel.auth.turnstile.site_key' => 'site-key-here',
+            'panel.auth.turnstile.secret_key' => null,
+        ]);
+
+        $this->get('/authfixture/login')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('turnstileSiteKey', null));
+    }
+
+    public function test_login_without_a_turnstile_token_fails_when_keys_are_set(): void
+    {
+        config([
+            'panel.auth.turnstile.site_key' => 'site-key-here',
+            'panel.auth.turnstile.secret_key' => 'secret-here',
+        ]);
+
+        $user = $this->operator();
+
+        $this->post('/authfixture/login', [
+            'email' => $user->email,
+            'password' => 'correct-horse',
+        ])->assertSessionHasErrors('cf-turnstile-response');
+
+        $this->assertGuest();
+    }
+
+    public function test_socialite_false_hides_configured_providers(): void
+    {
+        config([
+            'services.google' => ['client_id' => 'id', 'client_secret' => 'secret'],
+        ]);
+
+        app(PanelManager::class)->panel('authfixture')->socialite(false);
+
+        $this->get('/authfixture/login')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('socialProviders', []));
     }
 
     /**

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use Alxtexh\Panel\Models\ConnectedAccount;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
-use Alxtexh\Panel\Models\ConnectedAccount;
 use Tests\TestCase;
 
 /**
@@ -326,5 +326,33 @@ final class SocialLoginTest extends TestCase
         $this->assertCount(1, $props['connectedAccounts']);
         $this->assertSame('Google', $props['connectedAccounts'][0]['label']);
         $this->assertSame('grace.personal@gmail.test', $props['connectedAccounts'][0]['email']);
+    }
+
+    /**
+     * SOCIAL IS NOT A 2FA BYPASS. A linked Google account still pauses on
+     * the challenge when Security has two-factor confirmed.
+     */
+    public function test_a_2fa_user_is_challenged_after_social_sign_in(): void
+    {
+        $user = User::factory()->withTwoFactor()->create([
+            'tenant_id' => $this->tenant->id,
+            'email' => 'grace@acme.test',
+            'email_verified_at' => now(),
+        ]);
+
+        ConnectedAccount::query()->create([
+            'guard' => 'web',
+            'user_id' => $user->getKey(),
+            'provider' => 'google',
+            'provider_id' => 'g-2fa',
+            'email' => 'grace@acme.test',
+        ]);
+
+        $this->providerReturns('g-2fa', 'grace@acme.test');
+
+        $this->get('/auth/google/callback')
+            ->assertRedirect(route('two-factor.login'));
+
+        $this->assertGuest();
     }
 }

@@ -57,9 +57,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | CREDENTIALS ARE THE SWITCH. A provider with no client id is not offered
-    | on the sign-in screen at all - see `App\Support\SocialProviders` - so
-    | there is never a button that cannot work. Leave these unset to ship
-    | without social sign-in.
+    | on the sign-in screen at all - see `Alxtexh\Panel\Auth\SocialProviders` -
+    | so there is never a button that cannot work. Leave these unset to ship
+    | without social sign-in. Microsoft and Apple need a Socialite community
+    | provider; without one the button 404s rather than 500s.
     |
     */
 
@@ -73,6 +74,24 @@ return [
         'client_id' => env('GITHUB_CLIENT_ID'),
         'client_secret' => env('GITHUB_CLIENT_SECRET'),
         'redirect' => env('GITHUB_REDIRECT_URI', '/auth/github/callback'),
+    ],
+
+    'microsoft' => [
+        'client_id' => env('MICROSOFT_CLIENT_ID'),
+        'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
+        'redirect' => env('MICROSOFT_REDIRECT_URI', '/auth/microsoft/callback'),
+    ],
+
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect' => env('APPLE_REDIRECT_URI', '/auth/apple/callback'),
+    ],
+
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI', '/auth/facebook/callback'),
     ],
 
 ];

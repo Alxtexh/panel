@@ -33,6 +33,7 @@ import { computed } from 'vue'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
+import AuthProviderButton from '../../components/AuthProviderButton.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import AuthLayout from './AuthLayout.vue'
 
@@ -274,14 +275,11 @@ const providers = computed(() => props.socialProviders ?? [])
                         navigation; an XHR would be answered with an opaque
                         redirect the page cannot follow.
                     -->
-                    <a
+                    <AuthProviderButton
                         v-for="provider in providers"
                         :key="provider.key"
-                        :href="provider.url"
-                        class="bg-background hover:bg-accent inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors"
-                    >
-                        {{ provider.label }}
-                    </a>
+                        :provider="provider"
+                    />
                 </div>
             </div>
 

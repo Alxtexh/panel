@@ -151,6 +151,19 @@ Passkeys stay a button on the login form. `->twoFactorChallenge(false)`
 skips the pause. Do not invent a third MFA stack. Missing `passkeys`
 table is an empty list, not a 500.
 
+Social callbacks challenge too: a Google click is not a 2FA bypass.
+
+### Social sign-in and Turnstile
+
+Credentials are the switch. Set `GOOGLE_CLIENT_ID` / secret (and the
+same for GitHub, Microsoft, Apple, Facebook) and the login screen shows
+those buttons. `->socialite(['google', 'github'])` narrows the list.
+Without `laravel/socialite` the buttons stay hidden.
+
+Set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for the widget above
+submit. Missing keys: no widget, login works. `->turnstile(false)` opts
+one portal out.
+
 ### Add a screen for a model
 
 ```bash

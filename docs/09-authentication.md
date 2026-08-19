@@ -121,12 +121,28 @@ is resolved. The path is never replaced.
 ## Social sign-in
 
 ```env
-GITHUB_CLIENT_ID=…
-GITHUB_CLIENT_SECRET=…
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
 ```
 
+Microsoft, Apple and Facebook follow the same shape (`MICROSOFT_CLIENT_ID`,
+`APPLE_CLIENT_ID`, `FACEBOOK_CLIENT_ID` plus secrets). Community Socialite
+providers are listed in `config/panel.php` under `auth.social.providers`.
+
 **Credentials are the switch.** A provider with none is not offered and its
-routes are not registered — the button and the endpoint appear together.
+routes are not registered. `laravel/socialite` is a composer suggest: without
+the package there are no buttons and no 500.
+
+```php
+Panel::make('admin')
+    ->login()
+    ->socialite(['google', 'github']);   // optional: narrow the list
+    // ->socialite(false)                // hide even when keys exist
+```
 
 Two conditions must both hold before an address matches an account: the provider
 must have verified it, *and* the panel account must have verified its own.
@@ -137,8 +153,22 @@ become them, with nothing in the log looking unusual.
 carrying a tenant and a role, and neither is knowable from a provider.
 
 Accounts are recorded per guard, so a link made on a customer portal cannot
-answer a sign-in on the operator panel — two guards mean two id spaces, and
+answer a sign-in on the operator panel. Two guards mean two id spaces, and
 `user_id` alone names no table.
+
+**Social does not skip 2FA.** A user who confirmed two-factor on Security is
+paused on `two-factor-challenge` after Google or GitHub, the same as after a
+password. Passkeys remain a button on the login form.
+
+## Cloudflare Turnstile
+
+Both `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` enable the widget on
+sign-in, register, password reset and the two-factor challenge. Missing either
+key is off: no widget, no extra HTTP. `PANEL_TURNSTILE=false` forces it off
+even when keys exist. `->turnstile(false)` does the same for one portal.
+
+A login POST without a token fails validation when Turnstile is on. Cloudflare
+unreachable is a refusal, not a pass.
 
 ## Two-factor and passkeys
 

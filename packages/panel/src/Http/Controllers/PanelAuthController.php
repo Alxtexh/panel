@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Auth\TwoFactor;
+use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelHome;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -16,13 +23,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Alxtexh\Panel\Auth\Passkeys;
-use Alxtexh\Panel\Auth\SocialProviders;
-use Alxtexh\Panel\Auth\Turnstile;
-use Alxtexh\Panel\Auth\TwoFactor;
-use Alxtexh\Panel\Panel;
-use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Support\PanelHome;
 
 /**
  * Signing in to ONE panel, using that panel's own guard.
@@ -81,7 +81,7 @@ final class PanelAuthController extends Controller
              * "Sign up" link to a route nobody registered, is a screen that
              * advertises something and then fails.
              */
-            'turnstileSiteKey' => Turnstile::enabled() ? Turnstile::siteKey() : null,
+            'turnstileSiteKey' => $panel->hasTurnstile() ? Turnstile::siteKey() : null,
             'socialProviders' => $this->socialProviders($panel),
 
             /*
@@ -122,7 +122,7 @@ final class PanelAuthController extends Controller
          * already are, and `PanelRoutes` registers the routes on exactly the
          * same condition.
          */
-        foreach (SocialProviders::enabled() as $key => $label) {
+        foreach (SocialProviders::enabled($panel) as $key => $label) {
             $out[] = [
                 'key' => $key,
                 'label' => $label,
@@ -234,6 +234,7 @@ final class PanelAuthController extends Controller
 
         return Inertia::render('panel/auth/TwoFactorChallenge', [
             'action' => $this->url($panel, 'two-factor-challenge'),
+            'turnstileSiteKey' => $panel->hasTurnstile() ? Turnstile::siteKey() : null,
         ]);
     }
 
@@ -389,6 +390,7 @@ final class PanelAuthController extends Controller
             'action' => $this->url($panel, 'forgot-password'),
             'loginUrl' => $this->url($panel, 'login'),
             'status' => $request->session()->get('status'),
+            'turnstileSiteKey' => $panel->hasTurnstile() ? Turnstile::siteKey() : null,
         ]);
     }
 
