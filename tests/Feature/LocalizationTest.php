@@ -35,9 +35,9 @@ final class LocalizationTest extends TestCase
         ]);
     }
 
-    public function test_package_lang_files_exist_for_english_spanish_french_and_german(): void
+    public function test_package_lang_files_exist_for_all_shipped_locales(): void
     {
-        foreach (['en', 'es', 'fr', 'de'] as $locale) {
+        foreach (['en', 'es', 'fr', 'de', 'ar'] as $locale) {
             foreach (Locale::groups() as $group) {
                 $this->assertFileExists(
                     Locale::packageLangPath().'/'.$locale.'/'.$group.'.php',
@@ -50,6 +50,7 @@ final class LocalizationTest extends TestCase
         $this->assertContains('es', Locale::available());
         $this->assertContains('fr', Locale::available());
         $this->assertContains('de', Locale::available());
+        $this->assertContains('ar', Locale::available());
         $this->assertContains('chrome', Locale::groups());
     }
 
@@ -114,6 +115,10 @@ final class LocalizationTest extends TestCase
 
         $this->assertSame('en', $props['locale']['current'] ?? null);
         $this->assertSame('ltr', $props['locale']['direction'] ?? null);
+
+        $this->assertSame('rtl', Locale::direction('ar'));
+        $this->assertSame('rtl', Locale::direction('ar-EG'));
+        $this->assertTrue(Locale::isRtl('ar'));
         $this->assertSame('Subscription access', $props['messages']['billing']['heading'] ?? null);
     }
 }
