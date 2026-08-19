@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Forms\Fields;
 
+use Alxtexh\Panel\Actions\Action;
+
 /**
  * Filament-shaped prefix, suffix, and hint chrome, serialised into Vue schema.
  *
  * No Livewire. The client draws text, icons, and copy/hint actions from JSON.
+ * A named `Action` POSTs to `{resource}/form-action` and patches values.
  *
  *     TextField::make('price')->prefix('KES')->suffix('.00');
  *     TextField::make('slug')->suffixAction(['label' => 'Copy', 'copy' => true]);
+ *     TextField::make('slug')->suffixAction(
+ *         Action::make('generate')->action(fn ($get, $set) => $set('slug', Str::slug($get('title'))))
+ *     );
  *     TextField::make('api_key')->hint('Keep this private')->copyable();
  */
 trait HasAffixes
@@ -27,14 +33,14 @@ trait HasAffixes
 
     protected ?string $hintIcon = null;
 
-    /** @var array{label?: string, icon?: string, copy?: bool, url?: string}|null */
-    protected ?array $prefixAction = null;
+    /** @var Action|array{label?: string, icon?: string, copy?: bool, url?: string}|null */
+    protected Action|array|null $prefixAction = null;
 
-    /** @var array{label?: string, icon?: string, copy?: bool, url?: string}|null */
-    protected ?array $suffixAction = null;
+    /** @var Action|array{label?: string, icon?: string, copy?: bool, url?: string}|null */
+    protected Action|array|null $suffixAction = null;
 
-    /** @var array{label?: string, icon?: string, copy?: bool, url?: string}|null */
-    protected ?array $hintAction = null;
+    /** @var Action|array{label?: string, icon?: string, copy?: bool, url?: string}|null */
+    protected Action|array|null $hintAction = null;
 
     public function prefix(?string $prefix): static
     {
@@ -65,9 +71,9 @@ trait HasAffixes
     }
 
     /**
-     * @param  array{label?: string, icon?: string, copy?: bool, url?: string}|null  $action
+     * @param  Action|array{label?: string, icon?: string, copy?: bool, url?: string}|null  $action
      */
-    public function prefixAction(?array $action): static
+    public function prefixAction(Action|array|null $action): static
     {
         $this->prefixAction = $action;
 
@@ -75,9 +81,9 @@ trait HasAffixes
     }
 
     /**
-     * @param  array{label?: string, icon?: string, copy?: bool, url?: string}|null  $action
+     * @param  Action|array{label?: string, icon?: string, copy?: bool, url?: string}|null  $action
      */
-    public function suffixAction(?array $action): static
+    public function suffixAction(Action|array|null $action): static
     {
         $this->suffixAction = $action;
 
@@ -99,9 +105,9 @@ trait HasAffixes
     }
 
     /**
-     * @param  array{label?: string, icon?: string, copy?: bool, url?: string}|null  $action
+     * @param  Action|array{label?: string, icon?: string, copy?: bool, url?: string}|null  $action
      */
-    public function hintAction(?array $action): static
+    public function hintAction(Action|array|null $action): static
     {
         $this->hintAction = $action;
 
@@ -118,6 +124,22 @@ trait HasAffixes
             : null;
 
         return $this;
+    }
+
+    /**
+     * The named POST action on this field, if the request named one.
+     *
+     * Copy and URL affixes are arrays, not `Action`, so they never resolve here.
+     */
+    public function affixAction(string $key): ?Action
+    {
+        foreach ([$this->prefixAction, $this->suffixAction, $this->hintAction] as $action) {
+            if ($action instanceof Action && $action->key === $key) {
+                return $action;
+            }
+        }
+
+        return null;
     }
 
     /** @return array<string, mixed> */
@@ -137,11 +159,15 @@ trait HasAffixes
     }
 
     /**
-     * @param  array{label?: string, icon?: string, copy?: bool, url?: string}|null  $action
+     * @param  Action|array{label?: string, icon?: string, copy?: bool, url?: string}|null  $action
      * @return array<string, mixed>|null
      */
-    private function actionSchema(?array $action): ?array
+    private function actionSchema(Action|array|null $action): ?array
     {
+        if ($action instanceof Action) {
+            return $action->toAffixSchema();
+        }
+
         if ($action === null) {
             return null;
         }

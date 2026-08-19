@@ -309,7 +309,7 @@ export type {
     CardStyle,
 } from './composables/useAppearance'
 export type { SchemaColumn } from './composables/useSchemaColumns'
-export type { FormField } from './components/Form/types'
+export type { FormField, FieldAffixAction } from './components/Form/types'
 
 /*
  * THE FIELD REGISTRY, and the five controls this package registers into it.

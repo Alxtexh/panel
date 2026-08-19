@@ -368,6 +368,37 @@ trait InteractsWithPanels
         return $json;
     }
 
+    /* ---------------------------------------------------------- form-action */
+
+    /**
+     * POST `{resource}/form-action` and assert the affix-action contract.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    protected function assertFormAction(
+        object $user,
+        string $resourceKey,
+        array $payload,
+        string $suffix = 'form-action',
+    ): array {
+        $json = $this->actingAs($user)
+            ->postJson($this->panelUrl($resourceKey, $suffix), $payload)
+            ->assertOk()
+            ->json();
+
+        foreach (['schema', 'values'] as $key) {
+            $this->assertArrayHasKey(
+                $key,
+                $json,
+                "[{$resourceKey}] form-action must return {$key}. It returned: "
+                .implode(', ', array_keys($json)),
+            );
+        }
+
+        return $json;
+    }
+
     /* ------------------------------------------------ nested attach/detach */
 
     /**

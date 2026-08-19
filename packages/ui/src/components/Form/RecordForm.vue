@@ -92,6 +92,7 @@ provide('panelCreateOption', {
  */
 const emit = defineEmits<{
     (e: 'change', key: string, value: unknown): void
+    (e: 'affix-action', field: string, action: string): void
 }>()
 
 const hasLayout = computed(() => props.nodes.length > 0)
@@ -142,6 +143,7 @@ function uploadFor(key: string) {
                 :upload="upload"
                 :discard="discard"
                 @change="(key, value) => emit('change', key, value)"
+                @affix-action="(field, action) => emit('affix-action', field, action)"
             />
         </template>
 
@@ -166,6 +168,7 @@ function uploadFor(key: string) {
                 :discard="discard"
                 :class="field.span && field.span >= 2 ? 'sm:col-span-2' : ''"
                 @change="(value) => emit('change', field.key, value)"
+                @affix-action="(action) => emit('affix-action', field.key, action)"
             />
         </div>
     </div>

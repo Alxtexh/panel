@@ -178,7 +178,7 @@ export { ICON_PATHS, iconPath } from './components/primitives/icons';
 export type { UploadedFileValue } from './components/Form/PkFileUpload.vue';
 export type { Appearance, Theme, Density, SidebarSide, CardStyle, } from './composables/useAppearance';
 export type { SchemaColumn } from './composables/useSchemaColumns';
-export type { FormField } from './components/Form/types';
+export type { FormField, FieldAffixAction } from './components/Form/types';
 export { registerFieldControl, fieldControl, hasFieldControl, registeredFieldTypes, resetFieldControls, } from './composables/useFieldControls';
 export { registerOptionPreview, optionPreview, hasOptionPreview, registeredOptionPreviews, resetOptionPreviews, } from './composables/useOptionPreviews';
 import { registerBuiltInFieldControls } from './components/Form/builtInFields';

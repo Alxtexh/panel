@@ -16,6 +16,7 @@ use Inertia\Response;
 use Alxtexh\Panel\CustomFields\CustomField;
 use Alxtexh\Panel\CustomFields\CustomFieldFactory;
 use Alxtexh\Panel\CustomFields\CustomFieldStorage;
+use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Forms\Fields\Field;
 use Alxtexh\Panel\Widgets;
 use Alxtexh\Panel\Forms\Fields\SelectField;
@@ -143,21 +144,50 @@ final class ResourceController extends Controller
             }
         }
 
-        $options = [];
+        return response()->json($this->formStatePayload($class, $form, $values));
+    }
 
-        foreach ($this->searchableFields($class) as $field) {
-            if (! $field instanceof SelectField || ! $field->isSearchable()) {
+    /**
+     * Run a named prefix/suffix Action against the posted form values.
+     *
+     * The client POSTs `{ field, action, values }`. Only an `Action` declared
+     * on that field is runnable. Copy and URL affixes never reach this.
+     * Returns `{ options, schema, values }` like `form-state`. No Livewire.
+     */
+    public function formAction(Request $request, string $resource): JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        abort_unless($class::can('create') || $class::can('update'), 403);
+
+        $validated = $request->validate([
+            'field' => ['required', 'string', 'max:64'],
+            'action' => ['required', 'string', 'max:64'],
+            'values' => ['nullable', 'array'],
+        ]);
+
+        $values = (array) ($validated['values'] ?? []);
+        $form = $class::formDefinition();
+        $action = null;
+
+        foreach ($form->fields() as $field) {
+            if ($field->key !== $validated['field']) {
                 continue;
             }
 
-            $options[$field->key] = array_slice($field->search('', $values), 0, 25);
+            $action = $field->affixAction($validated['action']);
+            break;
         }
 
-        return response()->json([
-            'options' => $options,
-            'schema' => $form->toSchema($values),
-            'values' => $values,
-        ]);
+        if ($action === null || ! $action->hasFormAction()) {
+            throw new NotFoundHttpException(
+                "No affix action [{$validated['action']}] on [{$validated['field']}]."
+            );
+        }
+
+        $values = $action->runForm($values);
+
+        return response()->json($this->formStatePayload($class, $form, $values));
     }
 
     /**
@@ -624,6 +654,32 @@ final class ResourceController extends Controller
         }
 
         return $fields;
+    }
+
+    /**
+     * Shared `{ options, schema, values }` body for live() and affix POST.
+     *
+     * @param  class-string<Resource>  $class
+     * @param  array<string, mixed>  $values
+     * @return array{options: array<string, mixed>, schema: array<string, mixed>, values: array<string, mixed>}
+     */
+    private function formStatePayload(string $class, Form $form, array $values): array
+    {
+        $options = [];
+
+        foreach ($this->searchableFields($class) as $field) {
+            if (! $field instanceof SelectField || ! $field->isSearchable()) {
+                continue;
+            }
+
+            $options[$field->key] = array_slice($field->search('', $values), 0, 25);
+        }
+
+        return [
+            'options' => $options,
+            'schema' => $form->toSchema($values),
+            'values' => $values,
+        ];
     }
 
     private function customFieldSupport(string $class): ?array

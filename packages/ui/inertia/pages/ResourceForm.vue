@@ -449,8 +449,35 @@ async function onFieldChange(key: string, value: any): Promise<void> {
         return
     }
 
-    const payload = await res.json()
+    applyFormPatch(await res.json())
+    scheduleLiveValidation(key)
+}
 
+/**
+ * Named prefix/suffix Action. Same JSON family as live() form-state.
+ * Copy and URL affixes never reach here: FormFieldControl handles those locally.
+ */
+async function onAffixAction(field: string, action: string): Promise<void> {
+    const res = await fetch(`${props.schema.routes.index}/form-action`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-XSRF-TOKEN': csrf(),
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ field, action, values: form.data() }),
+    })
+
+    if (!res.ok) {
+        return
+    }
+
+    applyFormPatch(await res.json())
+}
+
+function applyFormPatch(payload: any): void {
     if (payload.options && typeof payload.options === 'object') {
         liveOptions.value = { ...liveOptions.value, ...payload.options }
     }
@@ -464,8 +491,6 @@ async function onFieldChange(key: string, value: any): Promise<void> {
             ;(form as any)[k] = v
         }
     }
-
-    scheduleLiveValidation(key)
 }
 
 /**
@@ -657,6 +682,7 @@ onBeforeUnmount(() => {
                 :return-url="typeof window === 'undefined' ? schema.routes.index : window.location.pathname"
                 :create-option="createOption"
                 @change="onFieldChange"
+                @affix-action="onAffixAction"
             />
         </div>
 

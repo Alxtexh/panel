@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import FormFieldControl from './FormFieldControl.vue'
 import type { FormField } from './types'
 
@@ -186,5 +186,63 @@ describe('FormFieldControl - affixes', () => {
         const copy = wrapper.find('button[aria-label="Copy"]')
         expect(copy.exists()).toBe(true)
         expect(copy.attributes('type')).toBe('button')
+    })
+
+    it('does not emit affix-action for a copy suffix', async () => {
+        const writeText = vi.fn().mockResolvedValue(undefined)
+        Object.assign(navigator, { clipboard: { writeText } })
+
+        const wrapper = mount(FormFieldControl, {
+            props: {
+                field: {
+                    key: 'slug',
+                    label: 'Slug',
+                    type: 'text',
+                    suffixAction: { label: 'Copy', copy: true },
+                } as FormField,
+                value: 'acme',
+            },
+        })
+
+        await wrapper.find('button[aria-label="Copy"]').trigger('click')
+
+        expect(wrapper.emitted('affix-action')).toBeUndefined()
+        expect(writeText).toHaveBeenCalledWith('acme')
+    })
+
+    it('emits affix-action for a named POST suffix', async () => {
+        const wrapper = mount(FormFieldControl, {
+            props: {
+                field: {
+                    key: 'slug',
+                    label: 'Slug',
+                    type: 'text',
+                    suffixAction: { key: 'generate', label: 'Generate', post: true },
+                } as FormField,
+                value: '',
+            },
+        })
+
+        await wrapper.find('button[aria-label="Generate"]').trigger('click')
+
+        expect(wrapper.emitted('affix-action')).toEqual([['generate']])
+    })
+
+    it('emits affix-action for a named POST prefix', async () => {
+        const wrapper = mount(FormFieldControl, {
+            props: {
+                field: {
+                    key: 'slug',
+                    label: 'Slug',
+                    type: 'text',
+                    prefixAction: { key: 'upper', label: 'Upper', post: true },
+                } as FormField,
+                value: 'hello',
+            },
+        })
+
+        await wrapper.find('button[aria-label="Upper"]').trigger('click')
+
+        expect(wrapper.emitted('affix-action')).toEqual([['upper']])
     })
 })

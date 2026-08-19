@@ -9,14 +9,19 @@ use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
 /**
- * A mutation hung off an infolist entry on the dedicated view page.
+ * A named PHP action. Two homes, one key-from-the-client rule:
  *
- * THE REQUEST NAMES A KEY, NEVER AN ATTRIBUTE SET. Same contract as
- * `RecordAction`: only a key the resource declared on an entry is runnable,
- * the ability is checked against this record, and `handle()` / `mutate()`
- * live in PHP. The client POSTs `{ action }` to
- * `{resource}/{id}/infolist-action`. The view stays a page, never a modal
- * and never Livewire.
+ *   Infolist: `Entry::action()`. Click POSTs `{ action }` to
+ *   `{resource}/{id}/infolist-action`. `handle()` / `mutate()` touch the
+ *   record. The view stays a page, never a modal and never Livewire.
+ *
+ *   Form affix: `Field::suffixAction()` / `prefixAction()`. Click POSTs
+ *   `{ field, action, values }` to `{resource}/form-action`. `action()`
+ *   patches the form through `$get` / `$set`. Same family as `live()`
+ *   form-state. Copy/url affixes stay client-only and never hit this.
+ *
+ * THE REQUEST NAMES A KEY, NEVER AN ATTRIBUTE SET. Only a key the resource
+ * declared is runnable.
  *
  * `Entry::url()` is a separate link. An entry may have a URL, an action,
  * both, or neither.
@@ -35,6 +40,13 @@ final class Action
     private array $mutate = [];
 
     private ?Closure $handle = null;
+
+    /**
+     * Form affix callback. Distinct from `handle()`, which mutates a record.
+     *
+     * @var Closure(callable(string): mixed, callable(string, mixed): void): mixed|null
+     */
+    private ?Closure $formAction = null;
 
     private function __construct(public readonly string $key, private string $label)
     {
@@ -99,6 +111,48 @@ final class Action
         return $this;
     }
 
+    /**
+     * Patch form values. `$get('title')` reads, `$set('slug', $value)` writes.
+     *
+     *     Action::make('generate')->action(fn ($get, $set) => $set('slug', Str::slug($get('title'))))
+     *
+     * @param  Closure(callable(string): mixed, callable(string, mixed): void): mixed  $callback
+     */
+    public function action(Closure $callback): self
+    {
+        $this->formAction = $callback;
+
+        return $this;
+    }
+
+    public function hasFormAction(): bool
+    {
+        return $this->formAction !== null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @return array<string, mixed>
+     */
+    public function runForm(array $values): array
+    {
+        if ($this->formAction === null) {
+            throw new InvalidArgumentException("[{$this->key}] declares no form action.");
+        }
+
+        $get = static function (string $key) use (&$values): mixed {
+            return $values[$key] ?? null;
+        };
+
+        $set = static function (string $key, mixed $value) use (&$values): void {
+            $values[$key] = $value;
+        };
+
+        ($this->formAction)($get, $set);
+
+        return $values;
+    }
+
     public function ability(): string
     {
         return $this->ability;
@@ -128,6 +182,22 @@ final class Action
             'icon' => $this->icon,
             'destructive' => $this->destructive,
             'confirmation' => $this->confirmation,
+        ], static fn (mixed $v): bool => $v !== null && $v !== false);
+    }
+
+    /**
+     * Schema for a prefix/suffix button. `post: true` tells Vue to POST the
+     * named key rather than copy or open a URL.
+     *
+     * @return array<string, mixed>
+     */
+    public function toAffixSchema(): array
+    {
+        return array_filter([
+            'key' => $this->key,
+            'label' => $this->label,
+            'icon' => $this->icon,
+            'post' => true,
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
     }
 }

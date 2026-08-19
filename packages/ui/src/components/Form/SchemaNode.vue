@@ -76,6 +76,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
     (e: 'change', key: string, value: unknown): void
+    (e: 'affix-action', field: string, action: string): void
 }>()
 
 const open = ref(!props.node.collapsed)
@@ -242,6 +243,7 @@ function uploadFor(key: string) {
         :upload="uploadFor(node.key)"
         :discard="discard"
         @change="(value: unknown) => emit('change', node.key, value)"
+        @affix-action="(action: string) => emit('affix-action', node.key, action)"
     />
 
     <!--
@@ -305,6 +307,7 @@ function uploadFor(key: string) {
                 :depth="depth + 1"
                 :class="child.span && child.span >= 2 ? 'sm:col-span-2' : ''"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
+                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
             />
         </div>
     </section>
@@ -324,6 +327,7 @@ function uploadFor(key: string) {
             :discard="discard"
             :depth="depth + 1"
             @change="(key: string, value: unknown) => emit('change', key, value)"
+            @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
         />
     </div>
 
@@ -345,6 +349,7 @@ function uploadFor(key: string) {
             :discard="discard"
             :depth="depth + 1"
             @change="(key: string, value: unknown) => emit('change', key, value)"
+            @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
         />
     </div>
 
@@ -377,6 +382,7 @@ function uploadFor(key: string) {
                 :discard="discard"
                 :depth="depth + 1"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
+                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
             />
         </div>
     </fieldset>
@@ -453,6 +459,7 @@ function uploadFor(key: string) {
                 :discard="discard"
                 :depth="depth + 1"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
+                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
             />
         </div>
     </div>
@@ -501,6 +508,7 @@ function uploadFor(key: string) {
                 :discard="discard"
                 :depth="depth + 1"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
+                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
             />
         </div>
 

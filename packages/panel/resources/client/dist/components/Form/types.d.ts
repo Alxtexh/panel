@@ -149,4 +149,11 @@ export interface FieldAffixAction {
     icon?: string;
     copy?: boolean;
     url?: string;
+    /**
+     * Named PHP action. The page POSTs `{ field, action, values }` to
+     * `{resource}/form-action`. Copy and URL affixes omit this.
+     */
+    key?: string;
+    /** True when `key` is a server action, not a client copy/url hint. */
+    post?: boolean;
 }

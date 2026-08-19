@@ -95,7 +95,10 @@ const props = withDefaults(
     },
 )
 
-const emit = defineEmits<{ (e: 'change', value: unknown): void }>()
+const emit = defineEmits<{
+    (e: 'change', value: unknown): void
+    (e: 'affix-action', action: string): void
+}>()
 
 /* ----------------------------------------------------- searchable select */
 
@@ -277,6 +280,12 @@ function affixAction(action: FormField['suffixAction']): void {
 
     if (action.url && typeof window !== 'undefined') {
         window.open(action.url, '_blank', 'noopener,noreferrer')
+
+        return
+    }
+
+    if (action.key) {
+        emit('affix-action', action.key)
     }
 }
 

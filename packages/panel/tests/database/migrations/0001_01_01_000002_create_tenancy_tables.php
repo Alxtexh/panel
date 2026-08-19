@@ -21,6 +21,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('title');
+            $table->string('slug')->nullable();
             $table->string('status')->default('draft');
             $table->string('attachment')->nullable();
             $table->string('cover')->nullable();

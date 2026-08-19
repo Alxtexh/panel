@@ -44,8 +44,10 @@ type __VLS_Props = {
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     change: (value: unknown) => any;
+    "affix-action": (action: string) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onChange?: ((value: unknown) => any) | undefined;
+    "onAffix-action"?: ((action: string) => any) | undefined;
 }>, {
     options: {
         value: any;

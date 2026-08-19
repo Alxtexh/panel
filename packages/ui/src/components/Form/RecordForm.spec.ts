@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import RecordForm from './RecordForm.vue'
 import type { FormField } from './types'
 
@@ -111,5 +111,42 @@ describe('RecordForm', () => {
         })
 
         expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    })
+
+    it('re-emits a named affix POST from the flat fallback', async () => {
+        const slugField: FormField = {
+            key: 'slug',
+            label: 'Slug',
+            type: 'text',
+            suffixAction: { key: 'generate', label: 'Generate', post: true },
+        }
+
+        const wrapper = mount(RecordForm, {
+            props: { fields: [slugField], modelValue: { slug: '' } },
+        })
+
+        await wrapper.find('button[aria-label="Generate"]').trigger('click')
+
+        expect(wrapper.emitted('affix-action')).toEqual([['slug', 'generate']])
+    })
+
+    it('does not emit affix-action for a copy suffix', async () => {
+        const writeText = vi.fn().mockResolvedValue(undefined)
+        Object.assign(navigator, { clipboard: { writeText } })
+
+        const slugField: FormField = {
+            key: 'slug',
+            label: 'Slug',
+            type: 'text',
+            suffixAction: { label: 'Copy', copy: true },
+        }
+
+        const wrapper = mount(RecordForm, {
+            props: { fields: [slugField], modelValue: { slug: 'acme' } },
+        })
+
+        await wrapper.find('button[aria-label="Copy"]').trigger('click')
+
+        expect(wrapper.emitted('affix-action')).toBeUndefined()
     })
 })
