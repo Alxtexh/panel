@@ -6,11 +6,24 @@ developer experience, SPA transport.
 **[Full documentation →](docs/README.md)** for every field, column, filter, action,
 widget and command, and how to switch each part on.
 
+From GitHub panelkit (no Packagist account), add this to your application's
+`composer.json`:
+
+```json
+"repositories": [
+    { "type": "vcs", "url": "https://github.com/Alxtexh/panelkit", "no-api": true }
+]
+```
+
+Then run:
+
 ```bash
 composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
 php artisan make:panel-recipe Invoices
 ```
+
+`panel:install` does not run `composer install`. Run it after `composer require`.
 
 First visit is **chrome plus an empty canvas**: dashboard, user menu, Get started.
 Not Nairobi Fibre, not sample orders. After install, next is that card or the

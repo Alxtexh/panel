@@ -2,12 +2,12 @@
 
 ## From GitHub, no registry account needed
 
-Alxtexhpanel is not on Packagist or npm, and does not need to be. Add the
-repository to your application's `composer.json`:
+panelkit hosts the panel on GitHub. There is no Packagist or npm account
+needed. Add the VCS repository to your application's `composer.json`:
 
 ```json
 "repositories": [
-    { "type": "vcs", "url": "https://github.com/Alxtexh/panel", "no-api": true }
+    { "type": "vcs", "url": "https://github.com/Alxtexh/panelkit", "no-api": true }
 ]
 ```
 
@@ -16,6 +16,21 @@ Then require **^1.0**:
 ```bash
 composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
+```
+
+`panel:install` does not run `composer install`. Run the installer after
+`composer require`, and it will publish config, scaffold panel plumbing, and
+write front-end wiring based on the version Composer already installed.
+
+Optional flags:
+
+```bash
+# If you already have a login (starter kit, Fortify, etc.)
+php artisan panel:install --no-auth
+
+# If you want to create the first Administrator yourself
+php artisan panel:install --no-user
+php artisan panel:make-user
 ```
 
 First visit uses **published kit CSS/JS** at `public/vendor/panel`. There is no
