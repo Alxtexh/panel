@@ -150,6 +150,25 @@ half of it gets audited.
 Passkeys work with `laravel/passkeys` alone; Fortify's feature flag is also
 honoured, and an explicit "off" wins over an available implementation.
 
+### At the login door
+
+Enabling two-factor on Security is the switch. After a correct password, a
+panel that declared `->login()` pauses on `two-factor-challenge` until TOTP or
+a recovery code succeeds. The pause is not skippable. A user with no 2FA
+reaches the dashboard as before. Passkeys remain a button on the login form;
+typing a password still has to clear 2FA when it is on.
+
+```php
+Panel::make('admin')
+    ->login()
+    ->twoFactorChallenge();       // default: honour the user's 2FA setting
+    // ->twoFactorChallenge(false)  // escape hatch: password is enough
+```
+
+Fortify's own `/login` already does this pause. The packaged controller is
+the copy generated portals actually use. A missing `passkeys` table is still
+an empty list, not a 500.
+
 ## Sensitive actions
 
 Changing a password requires the current one — every other control on the

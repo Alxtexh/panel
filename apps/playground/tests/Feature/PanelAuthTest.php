@@ -7,7 +7,6 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ViewErrorBag;
@@ -60,6 +59,12 @@ final class PanelAuthTest extends TestCase
                 ->defaults('panel', 'authfixture')->name('authfixture.login');
 
             Route::post('login', [PanelAuthController::class, 'login'])
+                ->defaults('panel', 'authfixture');
+
+            Route::get('two-factor-challenge', [PanelAuthController::class, 'showTwoFactorChallenge'])
+                ->defaults('panel', 'authfixture');
+
+            Route::post('two-factor-challenge', [PanelAuthController::class, 'twoFactorChallenge'])
                 ->defaults('panel', 'authfixture');
 
             Route::post('logout', [PanelAuthController::class, 'logout'])
@@ -129,6 +134,29 @@ final class PanelAuthTest extends TestCase
         $this->post('/authfixture/login', [
             'email' => $user->email,
             'password' => 'correct-horse',
+        ])->assertRedirect('/authfixture');
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_a_2fa_user_does_not_reach_the_panel_until_the_challenge_succeeds(): void
+    {
+        $user = User::factory()->withTwoFactor()->create([
+            'tenant_id' => $this->tenant->getKey(),
+            'email' => 'operator@example.test',
+            'password' => bcrypt('correct-horse'),
+        ]);
+
+        $this->post('/authfixture/login', [
+            'email' => $user->email,
+            'password' => 'correct-horse',
+        ])->assertRedirect('/authfixture/two-factor-challenge');
+
+        $this->assertGuest();
+        $this->get('/dashboard')->assertRedirect();
+
+        $this->post('/authfixture/two-factor-challenge', [
+            'recovery_code' => 'recovery-code-1',
         ])->assertRedirect('/authfixture');
 
         $this->assertAuthenticatedAs($user);

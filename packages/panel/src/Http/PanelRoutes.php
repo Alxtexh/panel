@@ -109,6 +109,15 @@ final class PanelRoutes
                     ->defaults('panels', $panelIds)
                     ->middleware('throttle:20,1')
                     ->name($name.'.attempt');
+
+                Route::get($path.'/two-factor-challenge', [Controllers\SharedAuthController::class, 'showTwoFactorChallenge'])
+                    ->defaults('panels', $panelIds)
+                    ->name($name.'.two-factor');
+
+                Route::post($path.'/two-factor-challenge', [Controllers\SharedAuthController::class, 'twoFactorChallenge'])
+                    ->defaults('panels', $panelIds)
+                    ->middleware('throttle:5,1')
+                    ->name($name.'.two-factor.store');
             });
     }
 
@@ -312,6 +321,17 @@ final class PanelRoutes
                     Route::post($slug, [Controllers\PanelAuthController::class, 'login'])
                         ->defaults('panel', $panel->id)
                         ->middleware('throttle:20,1');
+
+                    if ($panel->hasTwoFactorChallenge()) {
+                        Route::get('two-factor-challenge', [Controllers\PanelAuthController::class, 'showTwoFactorChallenge'])
+                            ->defaults('panel', $panel->id)
+                            ->name('two-factor.login');
+
+                        Route::post('two-factor-challenge', [Controllers\PanelAuthController::class, 'twoFactorChallenge'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware('throttle:5,1')
+                            ->name('two-factor.login.store');
+                    }
 
                     /*
                      * LOGOUT IS BEHIND THE GUARD, so an unauthenticated POST is

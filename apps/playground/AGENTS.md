@@ -3,7 +3,7 @@
 # Building in this panel
 
 This application uses Alxtexhpanel: administration screens are declared as PHP
-classes and rendered by Inertia and Vue. `Alxtexhpanel` is the application; the
+classes and rendered by Inertia and Vue. `PanelKit` is the application; the
 panel is the framework it is built with.
 
 Read this before adding a screen. It describes the conventions that are not
@@ -51,26 +51,33 @@ Dedicated pages only: create, edit, view, attach and detach are routes,
 never a modal and never Livewire. BelongsTo pickers use
 `SelectField::relationship()`. Nested resources live at
 `/{parent}/{id}/{child}`; BelongsToMany attach is
-`/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas.
-Catalog is not in core. Do not resurrect dashboard sample widgets.
+`/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas plus
+a Directory of chrome links (Settings, Users, Roles, Documents, Backups,
+Logs, Monitoring, Help). Operations appear in an Operations nav group
+when the panel offers them. Catalog is not in core. Do not resurrect
+dashboard sample widgets. `Notification::make()->title('Saved')->success()->send()`
+is the toast. Infolist entries live on the dedicated view page.
+`InteractsWithPanels` is the test trait (assertFormState, assertNestedAttach,
+assertPanelToast, assertEmptyGrantsHint, assertBillingSuspendedRedirect,
+assertBillingAllows, assertBillingWebhookAccepted, assertSuspendedPageRenders).
 
 ## Where things live
 
 Panels registered in this application:
 
-- `admin` — mounted at `/`, guard `web`, tenant context
-- `platform` — mounted at `/platform`, guard `web`, central context
-- `reseller` — mounted at `/reseller`, guard `web`, tenant context
-- `superadmin` — mounted at `/superadmin`, guard `superadmins`, central context
-- `client` — mounted at `/client`, guard `customers`, tenant context
-- `authfixture` — mounted at `/authfixture`, guard `web`, tenant context
+- `admin` - mounted at `/`, guard `web`, tenant context
+- `platform` - mounted at `/platform`, guard `web`, central context
+- `reseller` - mounted at `/reseller`, guard `web`, tenant context
+- `superadmin` - mounted at `/superadmin`, guard `superadmins`, central context
+- `client` - mounted at `/client`, guard `customers`, tenant context
+- `authfixture` - mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
 
 - `app/Panel/Resources` → `App\Panel\Resources`
 - `app/Demo/Panel/Resources` → `App\Demo\Panel\Resources`
 
-A resource belongs to exactly one panel — its key is a URL segment and an
+A resource belongs to exactly one panel. Its key is a URL segment and an
 ability name, both globally unique. A second portal needing the same screen
 gets a subclass with its own `key()`.
 
@@ -118,6 +125,31 @@ in generated resources in 0.6.0. "It is not there" and "it is not there
 *yet*" are different reports, and `composer show` distinguishes them.
 
 ## Recipes
+
+### Official starter (copy this, do not clone Nairobi Fibre)
+
+After `panel:install`, next is the Get started card **or**:
+
+```bash
+php artisan make:panel-recipe Invoices
+# alias: php artisan panel:recipe invoices
+```
+
+Writes `InvoiceResource` (number, status, total, dated_at), a model, a
+policy, and a migration. Vue is kit ResourceIndex / ResourceForm /
+ResourceView: do not add a Vue page. Default: no rows (`--seed` for fake
+data, `--migrate` to create the table). Dashboard is already empty.
+Optional packaged wall (not Stripe): uncomment `->apps(['billing-portal'])`
+and `->billingState()` on the panel provider.
+
+### MFA at the login door
+
+`->login()` already honours two-factor from Security. After a correct
+password, a user with 2FA confirmed is paused on
+`{panel}/two-factor-challenge` until TOTP or a recovery code succeeds.
+Passkeys stay a button on the login form. `->twoFactorChallenge(false)`
+skips the pause. Do not invent a third MFA stack. Missing `passkeys`
+table is an empty list, not a 500.
 
 ### Add a screen for a model
 
@@ -251,14 +283,87 @@ rather than merely hidden. Hidden still routes, and a routed screen the
 menu never shows is how a package quietly takes a URI the application
 was already using.
 
+### Add a SaaS plan catalogue
+
+```bash
+php artisan make:panel-page BillingPlans --plan-setup
+```
+
+`PlanSetupPage` supplies plan data. The generated Vue is empty: import
+`PlanGrid` and `PlanEditor` from `@alxtexh-enterprise/panel`. `modules()`
+and `limits()` default from the panel module registry. Persist to your
+models. Numeric limits use -1 for Unlimited.
+A SaaS MUST set `ModuleRegistry::grants()` from the subscriber plan;
+until that callback is set, every registered module stays enabled.
+A child key (`->requires()` / `->children()`) is enabled only when every
+parent is also granted. `PlanSetupPage::save()` expands parents via
+`ModuleRegistry::applyGrants()`, which also runs `onGrant` once per newly
+granted key. `Panel::subscriptionGate()` is an opt-in expiry wall:
+company (tenant) users go to plan setup; staff on a central panel get 403.
+Discovered screens set `protected static ?string $module = 'campaigns'`
+so an ungranted key 403s and drops out of the sidebar. Hand-written
+routes still use `panel.module:campaigns`. PanelKit itself is not
+locked to a paid SKU.
+
+```bash
+php artisan make:panel-module campaigns
+```
+
+```php
+use Alxtexh\Panel\Support\Module;
+use Alxtexh\Panel\Support\ModuleRegistry;
+
+Panel::make('admin')->modules([
+    Module::make('accounting')->label('Accounting')->children(['double-entry']),
+    Module::make('double-entry')->label('Double entry')->requires(['accounting']),
+    Module::make('campaigns')
+        ->label('Campaigns')
+        ->description('Outbound campaigns')
+        ->planLimit(kind: 'number')
+        ->usage(fn (): int => Campaign::query()->count()),
+]);
+
+ModuleRegistry::grants(fn (): array => $org->plan->moduleKeys());
+ModuleRegistry::caps(fn (): array => $org->plan->moduleCaps());
+// Opt-in. Leave unset so a playground ISP is not locked out.
+// Panel::make('admin')->subscriptionGate(fn (): bool => $org->planIsActive());
+```
+
+### Plug a billing webhook adapter
+
+The inbound contract is provider-agnostic. POST
+`{panel}/billing/webhooks/{adapter?}`. Verify the signature header, then
+map the payload to `billable_key` + `status`. Not a marketplace, not
+locked to one processor.
+
+```php
+use Alxtexh\Panel\Billing\GenericBillingWebhookAdapter;
+use Alxtexh\Panel\Panel;
+
+Panel::make('admin')
+    ->apps(['billing-portal'])
+    ->billingState()
+    ->billingWebhookVerifier(GenericBillingWebhookAdapter::verifier(
+        (string) config('services.billing.webhook_secret'),
+        'X-Webhook-Signature',
+    ))
+    ->billingWebhookMapper(GenericBillingWebhookAdapter::mapper());
+```
+
+`GenericInboundBillingMapper` already accepts `billable_type`,
+`billable_key`, `status`, `period_end_at`, `grace_ends_at`,
+`provider_ref`. Copy `examples/generic-billing-webhook.php` to map a
+gateway's own event names onto those keys. See docs/13-billing-adapters.md.
+
 ### Add a dashboard
 
 ```bash
 php artisan make:panel-page Overview --dashboard
 ```
 
-A `DashboardPage` declares `stats()` and `charts()`; the packaged
-`PanelDashboard` screen draws them. There is no dashboard Vue to write.
+A `DashboardPage` can declare `stats()`, `charts()` and `tables()`. The generated Vue
+is an empty canvas: import `StatCard` / `ChartCard`, or return
+`PanelDashboard` from `component()` to use the packaged screen.
 
 ```php
 final class OverviewPage extends DashboardPage
@@ -271,7 +376,16 @@ final class OverviewPage extends DashboardPage
                 ->visibleTo(fn ($user) => $user->can('view_any_clients')),
         ];
     }
+
+    public static function tables(): array
+    {
+        return [
+            TableWidget::make('recent')->resource(OrderResource::class)->limit(5),
+        ];
+    }
 }
+
+Panel::make('admin')->discoverWidgets(app_path('Panel/Widgets'));
 ```
 
 EVERY WIDGET IS ITS OWN DEFERRED PROP, so the layout is on screen before
@@ -280,6 +394,72 @@ than the page. `visibleTo` is applied BEFORE resolution - a widget
 somebody may not see is never queried and never serialised, because
 filtering it client-side would ship the number to them and rely on CSS
 to keep the secret.
+
+`->live('dashboard.stats')` prefers Echo/Reverb when `window.Echo` exists.
+`->poll('10s')` on `StatWidget`, `TableWidget` or `ChartWidget` is the HTTP
+fallback and reloads only that widget. Polling pauses while the tab is hidden.
+Never poll and subscribe for the same widget. Redis is infrastructure,
+not a UI transport.
+
+### Add a till, catalog, directory or device preview
+
+```bash
+php artisan make:panel-page Front --till
+php artisan make:panel-page Browse --catalog
+php artisan make:panel-page Hub --directory
+php artisan make:panel-page Preview --device-preview
+```
+
+`TillPage` / `CatalogBrowserPage` / `DirectoryPage` / `DevicePreviewPage`
+are empty canvases. Directory inherits chrome links (Settings, Users,
+Roles, Documents, Backups, Logs, Monitoring, Help). Override
+`sections()` for a vertical. `panel:install` already writes a Directory.
+
+Mail and Chat are opt-in empty apps, not merchandising:
+
+```php
+Panel::make('admin')->apps(['mail', 'chat']);
+Panel::make('admin')->webhooks();
+Panel::make('admin')->apps([
+    'api-keys', 'invites', 'billing-portal', 'email-templates',
+    'onboarding', 'media-library', 'feature-flags',
+]);
+```
+
+SaaS stubs include `--webhooks`, `--billing-portal`, `--email-templates`,
+`--onboarding`, `--media-library`. Webhooks live in `packages/panel/src/Webhooks/`.
+Dispatch with `WebhookDispatcher::dispatch('invoice.paid', $payload)`.
+
+`->without(['mail'])` still drops a screen you enabled. Appearance
+persists on PUT `{panel}/settings/appearance` (users.appearance JSON).
+Feedback is `Panel::feedback($persist)` plus the exported
+`FeedbackDialog`. Ticket analysis is the packaged `TicketAnalysis`
+screen, written on install, mounted by `TicketingPlugin`.
+
+### Flash a toast the Filament way
+
+```php
+Notification::make()->title('Saved')->success()->send();
+Notification::make()->title('Queued')->body('Export started')->bell()->send();
+```
+
+This is the Inertia toast, not a Livewire stack. `bell()` also writes a
+topbar row.
+
+### Infolist on the dedicated view page
+
+```php
+public static function infolist(): array
+{
+    return [
+        TextEntry::make('name'),
+        ImageEntry::make('photo'),
+        RepeatableEntry::make('lines'),
+    ];
+}
+```
+
+View is a page. Click POSTs `{ action }` to `{resource}/{id}/infolist-action`.
 
 ### Group several resources under one sidebar entry
 
@@ -412,15 +592,15 @@ everybody, which is wrong for most of the world.
 
 ### Choose the right text field
 
-- `TextareaField` — plain text, no formatting.
-- `MarkdownField` — prose whose SOURCE you want stored: diffable in an
+- `TextareaField`: plain text, no formatting.
+- `MarkdownField`: prose whose SOURCE you want stored: diffable in an
   audit entry, readable in a database client, renderable to email, PDF
   or plain text later.
-- `RichEditorField` — prose stored as sanitised HTML, when the stored
+- `RichEditorField`: prose stored as sanitised HTML, when the stored
   value IS the rendering.
-- `CodeField` — config and snippets: monospace, Tab indents, line
+- `CodeField`: config and snippets: monospace, Tab indents, line
   numbers, and `->language('json')` adds a server-side `json` rule.
-- `BuilderField` — blocks of DIFFERENT shapes in a chosen order
+- `BuilderField`: blocks of DIFFERENT shapes in a chosen order
   (heading, paragraph, image). A `RepeaterField` is many rows of ONE
   shape; reach for the builder only when the shapes genuinely differ.
 
@@ -637,29 +817,32 @@ not hand-roll one in Vue. Ask for it, or compose what is here.
 EXISTING AND BEING MOUNTABLE ARE DIFFERENT CLAIMS, so each group says how it
 is used. Read that line before planning around anything below.
 
-**Form fields** (26): `BuilderField` `CheckboxField` `CheckboxListField` `CodeField` `ColourField` `CountryField` `DateField` `Field` `FileUploadField` `HasChoices` `HiddenField` `KeyValueField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `RadioField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleField` `VisualSelectField`
+**Form fields** (27): `BuilderField` `CheckboxField` `CheckboxListField` `CodeField` `ColourField` `CountryField` `DateField` `Field` `FileUploadField` `HasAffixes` `HasChoices` `HiddenField` `KeyValueField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `RadioField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleField` `VisualSelectField`
 _How to use them: name them in `form()`._
-**Table columns** (14): `BadgeColumn` `CheckboxColumn` `CodeColumn` `ColourColumn` `Column` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `KeyValueColumn` `MoneyColumn` `SelectColumn` `TextColumn` `ToggleColumn`
+**Table columns** (15): `BadgeColumn` `CheckboxColumn` `CodeColumn` `ColourColumn` `Column` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `InlineWritableColumn` `KeyValueColumn` `MoneyColumn` `SelectColumn` `TextColumn` `ToggleColumn`
 _How to use them: name them in `table()`._
-**Table filters** (8): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `MultiSelectFilter` `QueryBuilderFilter` `SelectFilter` `TrashedFilter`
+**Table filters** (10): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `Indicator` `MultiSelectFilter` `NumberRangeFilter` `QueryBuilderFilter` `SelectFilter` `TrashedFilter`
 _How to use them: name them in `table()`._
-**Actions** (7): `ActionGroup` `BulkAction` `BulkRunner` `ExportedFile` `JobStatus` `RecordAction` `ReplicateAction`
+**Actions** (8): `Action` `ActionGroup` `BulkAction` `BulkRunner` `ExportedFile` `JobStatus` `RecordAction` `ReplicateAction`
 _How to use them: name them in `table()` or the resource's actions._
 **Schema (form layout)** (11): `Callout` `Component` `Fieldset` `Flex` `Grid` `Renderable` `Section` `Step` `Tab` `Tabs` `Wizard`
 _How to use them: wrap fields with them inside `form()`._
-**Dashboard widgets** (10): `Bucket` `ChartWidget` `DashboardFilters` `Period` `Rollup` `StatWidget` `TimeSeries` `Trend` `WidgetSet` `Window`
-_How to use them: **declare them on a `DashboardPage`, which is what draws them.** `php artisan make:panel-page Overview --dashboard` writes one; its `stats()` and `charts()` return these classes and the packaged `PanelDashboard` screen renders them, each as its own deferred prop. A widget built anywhere else is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 that was true of every widget, which is why this line exists._
-**Pages (screens that are not resources)** (8): `ChangelogPage` `DashboardPage` `EnvironmentPage` `OrganisationPage` `Page` `SitemapPage` `UserManagementPage` `Workspace`
-_How to use them: extend `Page` (or `DashboardPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._
+**Dashboard widgets** (12): `Bucket` `CanPoll` `ChartWidget` `DashboardFilters` `Period` `Rollup` `StatWidget` `TableWidget` `TimeSeries` `Trend` `WidgetSet` `Window`
+_How to use them: **declare them on a `DashboardPage`, which is what draws them, or drop a factory under a directory the panel passed to `discoverWidgets()`.** `php artisan make:panel-page Overview --dashboard` writes one; its `stats()`, `charts()` and `tables()` return these classes and the packaged `PanelDashboard` screen renders them, each as its own deferred prop. `TableWidget::make('recent')->resource(OrderResource::class)->limit(5)` renders the existing DataTable with a capped list query. `->live('dashboard.stats')` prefers Echo/Reverb when `window.Echo` exists; `->poll('10s')` on `StatWidget`, `TableWidget` or `ChartWidget` is the HTTP fallback (pauses while the tab is hidden; never both at runtime). Redis is not a UI transport. `Panel::make('admin')->discoverWidgets(app_path('Panel/Widgets'))` is the normal path (namespace is optional when the directory is under `app_path()`). A widget built anywhere else is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 that was true of every widget, which is why this line exists._
+**Pages (screens that are not resources)** (27): `ApiKeysPage` `BillingPortalPage` `CatalogBrowserPage` `CatalogItemPage` `CatalogRegisterPage` `ChangelogPage` `ChatPage` `DashboardPage` `DevicePreviewPage` `DirectoryPage` `EmailTemplatePage` `EnvironmentPage` `FeatureFlagsPage` `InvitePage` `MailPage` `MediaLibraryPage` `OnboardingPage` `OrganisationPage` `Page` `PaymentSettingsPage` `PlanSetupPage` `SignatureStudioPage` `SitemapPage` `TillPage` `UserManagementPage` `WebhookEndpointsPage` `Workspace`
+_How to use them: extend `Page` (or `DashboardPage` / `PlanSetupPage` / `TillPage` / `DirectoryPage` / `DevicePreviewPage` / `MailPage` / `ChatPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. Flags: `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`. `make:panel-page BillingPlans --plan-setup` writes an empty page (import PlanGrid). `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._
 **Ticketing** (3): `MyTicketResource` `TicketResource` `TicketingPlugin`
 _How to use them: do not name these directly - `TicketingPlugin` mounts them from `panel.ticketing.operator` / `.opener`. See the recipe._
 **Client-side components** (`@alxtexh-enterprise/panel`, no PHP equivalent): `StatStrip`
 `MiniStatCard` `SegmentedBar` `HeatmapChart` `ComboChart` `PolarAreaChart`
-`RadarChart` `SetupChecklist`
-_How to reach them: import them into YOUR OWN Vue page. `DashboardPage`
-renders `StatCard` and `ChartCard` only, so a `StatWidget` cannot produce
+`RadarChart` `SetupChecklist` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid` `CatalogTill` `CatalogBrowser` `CatalogRegister` `DirectoryPage` `LineItems` `CartPanel`
+`PkQtyStepper` `PkStatusBadge` `PkSignaturePad` `PaymentGateways`
+_How to reach them: import them into YOUR OWN Vue page. A `CatalogBrowserPage` or
+`PlanSetupPage` is optional routing, not a requirement to draw the widget.
+`DashboardPage` renders `StatCard` and `ChartCard` only, so a `StatWidget` cannot produce
 a `StatStrip` - if you want one card split into four windows of the same
-metric, that screen is hand-written today._
+metric, that screen is hand-written today. `ChartWidget::type('catalog')`
+and `type('items')` do mount `CatalogGrid` / `LineItems` on a dashboard._
 
 Abstract bases and traits appear in those lists - `Field`, `Column`,
 `HasChoices` - because they are what you extend when a genuinely new one is
@@ -769,33 +952,41 @@ too quiet.
 
 ## Commands
 
-- `php artisan make:panel-page` — Create a panel page (a screen that is not a resource)
-- `php artisan make:panel-resource` — Create a panel resource
-- `php artisan make:panel` — Create a panel: a provider, a resource directory, and its routes
-- `php artisan panel:api-token` — Issue an API token for the public API
-- `php artisan panel:benchmark` — Time the panel's list surfaces, warm, and report medians
-- `php artisan panel:blueprint` — Write the panel conventions an AI agent should follow into the project
-- `php artisan panel:cache-clear` — Invalidate every cached panel schema
-- `php artisan panel:doctor-alert` — Run panel:doctor and announce changes through Telegram
-- `php artisan panel:doctor` — Check for configuration that is silently wrong
-- `php artisan panel:install` — Publish config, create the app/Panel tree and the page files, and print next steps
-- `php artisan panel:journey` — Time a full signed-in journey through the panel over real HTTP
-- `php artisan panel:knowledge` — Index panel content so the assistant can cite it instead of guessing
-- `php artisan panel:make-user` — Create an account that can sign in to the panel
-- `php artisan panel:monitor-sample` — Record one monitoring sample and alert on any crossed threshold
-- `php artisan panel:permissions` — Reconcile roles and permissions against the registered resources
-- `php artisan panel:prune-exports` — Delete exports past their retention window, file and record together
-- `php artisan panel:prune-trash` — Permanently delete records that have been in the trash past their retention window
-- `php artisan panel:prune-uploads` — Delete pending uploads that were never saved to a record
-- `php artisan panel:refresh-rollups` — Pre-aggregate dashboard time series
-- `php artisan panel:reindex-tenant` — Add indexes suited to a dedicated tenant database, where the tenant column is redundant
-- `php artisan panel:reports-due` — Dispatch any scheduled reports that are due
-- `php artisan panel:search-index` — The trigram or fulltext indexes this panel's search would use, for the current engine
-- `php artisan panel:seed-demo` — Seed realistic multi-tenant demo data at scale
-- `php artisan panel:seed-reference` — Seed the five-tenant reference estate used by panel:benchmark
-- `php artisan panel:sitemap-generate` — Write sitemap.xml from every registered URL
-- `php artisan panel:tenant-suspension` — Suspend a tenant from the panel, or lift a suspension
-- `php artisan panel:update` — Reconcile page files, config and the agent guide after upgrading the package
+- `php artisan make:panel-importer` - Create an empty panel importer the resource can name from importable()
+- `php artisan make:panel-module` - Create a plan-gated panel module (Module::make snippet plus a $module screen)
+- `php artisan make:panel-page` - Create a panel page (a screen that is not a resource)
+- `php artisan make:panel-recipe` - Write the official starter recipe: one resource, kit Vue, empty table
+- `php artisan make:panel-relation-manager` - Create nested relation pages (dedicated list/create/edit, not a modal)
+- `php artisan make:panel-resource` - Create a panel resource
+- `php artisan make:panel-widget` - Create a panel widget (empty StatWidget or ChartWidget factory)
+- `php artisan make:panel` - Create a panel: a provider, a resource directory, and its routes
+- `php artisan panel:api-token` - Issue an API token for the public API
+- `php artisan panel:backup` - Run a backup, optionally for one tenant only
+- `php artisan panel:benchmark` - Time the panel's list surfaces, warm, and report medians
+- `php artisan panel:billing-check` - Apply grace-period billing transitions.
+- `php artisan panel:blueprint` - Write the panel conventions an AI agent should follow into the project
+- `php artisan panel:cache-clear` - Invalidate every cached panel schema
+- `php artisan panel:doctor-alert` - Run panel:doctor and announce changes through Telegram
+- `php artisan panel:doctor` - Check for configuration that is silently wrong
+- `php artisan panel:install` - Publish config, scaffold auth, create the first Administrator, sync permissions, and print next steps
+- `php artisan panel:journey` - Time a full signed-in journey through the panel over real HTTP
+- `php artisan panel:knowledge` - Index panel content so the assistant can cite it instead of guessing
+- `php artisan panel:make-user` - Create an account that can sign in to the panel
+- `php artisan panel:monitor-sample` - Record one monitoring sample and alert on any crossed threshold
+- `php artisan panel:permissions` - Reconcile roles and permissions against the registered resources
+- `php artisan panel:prune-exports` - Delete exports past their retention window, file and record together
+- `php artisan panel:prune-trash` - Permanently delete records that have been in the trash past their retention window
+- `php artisan panel:prune-uploads` - Delete pending uploads that were never saved to a record
+- `php artisan panel:recipe` - Write the official starter recipe: one resource, kit Vue, empty table
+- `php artisan panel:refresh-rollups` - Pre-aggregate dashboard time series
+- `php artisan panel:reindex-tenant` - Add indexes suited to a dedicated tenant database, where the tenant column is redundant
+- `php artisan panel:reports-due` - Dispatch any scheduled reports that are due
+- `php artisan panel:search-index` - The trigram or fulltext indexes this panel's search would use, for the current engine
+- `php artisan panel:seed-demo` - Seed realistic multi-tenant demo data at scale
+- `php artisan panel:seed-reference` - Seed the five-tenant reference estate used by panel:benchmark
+- `php artisan panel:sitemap-generate` - Write sitemap.xml from every registered URL
+- `php artisan panel:tenant-suspension` - Suspend a tenant from the panel, or lift a suspension
+- `php artisan panel:update` - Reconcile page files, config and the agent guide after upgrading the package
 
 ## Before you call it done
 
@@ -805,7 +996,7 @@ php artisan test                # the suite
 npx vue-tsc --noEmit            # the client half
 ```
 
-For a new resource, write these three assertions first — they are the
+For a new resource, write these three assertions first. They are the
 failures that return 200:
 
 ```php
@@ -819,5 +1010,14 @@ $this->assertResourceRefuses($this->stranger, 'invoices');
 `assertTenantIsolation` checks the record URL as well as the list. The list
 is the obvious half; the record URL is the half people forget, and the one
 an attacker uses.
+
+Also assert the HTTP surfaces that are easy to skip: `assertFormState`
+(`{ options, schema, values }`), nested `assertNestedAttach` /
+`assertNestedDetach`, `assertInfolistAction`, `assertNotImportable` vs
+`assertPanelImports` plus `assertImportFailuresDownload`,
+`assertPanelToast` / `assertEmptyGrantsHint` for a signed-in account with
+no abilities, `assertBillingSuspendedRedirect` / `assertBillingAllows` /
+`assertBillingWebhookAccepted` / `assertSuspendedPageRenders` for the
+packaged billing wall, and `assertResourceRegistered`.
 
 <!-- alxtexhpanel:blueprint:end -->

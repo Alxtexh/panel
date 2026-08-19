@@ -90,7 +90,7 @@ it would do first.
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
 | `make test-package` | The package's own Testbench suite |
 
-## Agent APIs (v1.0.12 to v1.0.29)
+## Agent APIs (v1.0.12 to v1.0.30)
 
 `panel:blueprint` regenerates `AGENTS.md` from these. Do not invent Vue for a
 screen the kit already ships.
@@ -98,6 +98,7 @@ screen the kit already ships.
 | API | Does |
 |---|---|
 | `make:panel-recipe` / `panel:recipe` | Official starter. One Invoice (or Item) resource, kit Vue, empty table. `--migrate`, `--seed`. Optional comment: `apps(['billing-portal'])` + `billingState()` |
+| `Panel::twoFactorChallenge()` | After password, require TOTP or a recovery code when the user has 2FA. Default true. `false` skips the pause. Passkeys stay on the login form. |
 | `TillPage` / `--till` | Empty till canvas. Vue shims packaged Till |
 | `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` | Empty page bases. Directory inherits chrome sections |
 | `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |
