@@ -15,12 +15,15 @@ type __VLS_Props = {
     skipLabel?: string | null;
     /** Inertia `<Link>`, or any router link. Defaults to a plain `<a>`. */
     linkComponent?: string | Component;
+    /** Compact stepper for first-run onboarding; full list for doctor findings. */
+    variant?: 'doctor' | 'onboarding';
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     skip: () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onSkip?: (() => any) | undefined;
 }>, {
+    variant: "doctor" | "onboarding";
     heading: string;
     linkComponent: string | Component;
     reportHref: string | null;

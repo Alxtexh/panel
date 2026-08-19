@@ -101,11 +101,28 @@ final class DashboardChecklistTest extends TestCase
         $this->assertNull($response->json('props.checklist'));
     }
 
+    public function test_the_ops_checklist_is_omitted_while_the_first_run_guide_is_open(): void
+    {
+        $user = $this->operator(['view_operations']);
+
+        $props = $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertArrayHasKey('onboarding', $props);
+        $this->assertArrayNotHasKey('checklist', $props);
+    }
+
     public function test_an_operator_with_view_operations_receives_a_checklist_array(): void
     {
         $user = $this->operator(['view_operations']);
 
-        $response = $this->actingAs($user)
+        // The first-run guide and the ops checklist share one card shape; while
+        // the guide is open the dashboard omits `checklist` entirely.
+        $this->actingAs($user)->post('/onboarding/dismiss')->assertRedirect();
+
+        $response = $this->actingAs($user->fresh())
             ->get('/dashboard', $this->inertiaHeaders('checklist'))
             ->assertOk();
 

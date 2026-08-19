@@ -36,6 +36,7 @@ function skipRemaining() {
     <div class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
         <SetupChecklist
             :items="items"
+            variant="onboarding"
             :heading="pageHeading ?? 'Get started'"
             skip-label="Skip remaining"
             :link-component="InertiaLink"

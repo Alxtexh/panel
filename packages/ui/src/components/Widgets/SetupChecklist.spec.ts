@@ -114,4 +114,62 @@ describe('SetupChecklist', () => {
         expect(withHref.find('a[href="/operations/monitoring"]').exists()).toBe(true)
         expect(withoutHref.find('a').exists()).toBe(false)
     })
+
+    it('onboarding variant shows step progress and hides future step rows', () => {
+        const wrapper = mount(SetupChecklist, {
+            props: {
+                variant: 'onboarding',
+                items: [
+                    { key: 'a', title: 'First', detail: 'Do first.', done: true },
+                    {
+                        key: 'b',
+                        title: 'Second',
+                        detail: 'Do second.',
+                        done: false,
+                        href: '/second',
+                        actionLabel: 'Open',
+                    },
+                    { key: 'c', title: 'Third', detail: 'Do third.', done: false },
+                ],
+            },
+        })
+
+        const text = wrapper.text()
+        expect(text).toContain('Step 2 of 3')
+        expect(text).toContain('1 complete')
+        expect(text).toContain('Second')
+        expect(text).toContain('Do second.')
+        expect(text).not.toContain('Do third.')
+        expect(wrapper.find('[role="progressbar"]').attributes('aria-valuenow')).toBe('33')
+        expect(wrapper.find('ul').exists()).toBe(false)
+        expect(wrapper.find('a[href="/second"]').exists()).toBe(true)
+    })
+
+    it('onboarding variant does not list ghost buttons for future steps', () => {
+        const wrapper = mount(SetupChecklist, {
+            props: {
+                variant: 'onboarding',
+                items: [
+                    {
+                        key: 'a',
+                        title: 'Current',
+                        detail: '',
+                        done: false,
+                        href: '/current',
+                    },
+                    {
+                        key: 'b',
+                        title: 'Future',
+                        detail: '',
+                        done: false,
+                        href: '/future',
+                    },
+                ],
+            },
+        })
+
+        expect(wrapper.find('a[href="/current"]').exists()).toBe(true)
+        expect(wrapper.find('a[href="/future"]').exists()).toBe(false)
+        expect(wrapper.text()).not.toContain('Future')
+    })
 })

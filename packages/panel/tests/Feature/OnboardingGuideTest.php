@@ -109,6 +109,14 @@ final class OnboardingGuideTest extends TestCase
         );
     }
 
+    public function test_the_ops_checklist_is_omitted_while_the_first_run_guide_is_open(): void
+    {
+        $props = $this->dashboardProps();
+
+        $this->assertArrayHasKey('onboarding', $props);
+        $this->assertArrayNotHasKey('checklist', $props);
+    }
+
     public function test_second_visit_after_dismiss_does_not_include_the_guide(): void
     {
         $this->assertArrayHasKey('onboarding', $this->dashboardProps());

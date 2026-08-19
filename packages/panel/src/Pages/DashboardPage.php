@@ -413,32 +413,33 @@ abstract class DashboardPage extends Page
             $props['strips'] = $extra;
         }
 
-        if ($user !== null && static::allows($user, static::checklistAbility())) {
-            $props['checklist'] = Inertia::defer(
-                static fn (): array => app(SetupChecklist::class)->items(),
-                'checklist',
-            );
-        }
-
         /*
          * FIRST-RUN GUIDE, eager, not ops-gated. An empty dashboard after
          * install still looks guided: ordered chrome steps with a button to
          * the real page. Dismiss or complete persists per person so the next
-         * login does not reopen it. Doctor findings stay on `checklist`.
+         * login does not reopen it.
+         *
+         * DOCTOR FINDINGS WAIT. Both cards use SetupChecklist, so showing the
+         * guide and the ops checklist together reads as one feature twice.
+         * While the guide is open, skip `checklist`; after dismiss or
+         * completion, operators with view_operations see doctor findings only.
          */
-        if ($user !== null) {
-            $guide = OnboardingSteps::dashboardItems($request);
+        $guide = $user !== null ? OnboardingSteps::dashboardItems($request) : [];
 
-            if ($guide !== []) {
-                $panel = app(PanelManager::class)->panel(static::panel())
-                    ?? app(PanelManager::class)->currentPanel();
-                $dismissName = $panel !== null ? $panel->getRouteName().'onboarding.dismiss' : '';
+        if ($guide !== []) {
+            $panel = app(PanelManager::class)->panel(static::panel())
+                ?? app(PanelManager::class)->currentPanel();
+            $dismissName = $panel !== null ? $panel->getRouteName().'onboarding.dismiss' : '';
 
-                $props['onboarding'] = $guide;
-                $props['onboardingDismiss'] = $dismissName !== '' && \Illuminate\Support\Facades\Route::has($dismissName)
-                    ? route($dismissName)
-                    : null;
-            }
+            $props['onboarding'] = $guide;
+            $props['onboardingDismiss'] = $dismissName !== '' && \Illuminate\Support\Facades\Route::has($dismissName)
+                ? route($dismissName)
+                : null;
+        } elseif ($user !== null && static::allows($user, static::checklistAbility())) {
+            $props['checklist'] = Inertia::defer(
+                static fn (): array => app(SetupChecklist::class)->items(),
+                'checklist',
+            );
         }
 
         /*

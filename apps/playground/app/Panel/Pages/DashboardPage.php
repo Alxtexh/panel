@@ -45,6 +45,9 @@ final class DashboardPage extends AlxtexhpanelDashboard
      * from the parent `data()`). Demo widgets do not replace it. It hides
      * after skip/complete via cookie `panel_onboarding_done` and
      * `appearance.onboardingDone`. Clear those to see the card again.
+     *
+     * The ops Setup checklist is suppressed while this guide is open so the
+     * dashboard does not show two SetupChecklist cards at once.
      */
 
     protected static ?int $sort = -100;
