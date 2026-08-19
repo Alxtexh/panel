@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Tests;
 
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\PanelServiceProvider;
+use Alxtexh\Panel\Resources\ResourceConfigurator;
 use Alxtexh\Panel\Tests\Fixtures\Providers\FixturePanelProvider;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Inertia\Inertia;
@@ -132,6 +133,7 @@ abstract class TestCase extends BaseTestCase
          * listener makes, for the same reason.
          */
         PanelManager::flushMemoization();
+        ResourceConfigurator::flush();
     }
 
     /**

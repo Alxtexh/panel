@@ -38,6 +38,7 @@ export interface ListPageProps {
         titlePrefixed?: boolean
     } | null
     indicators?: { key: string; label: string; removable?: boolean }[]
+    lens?: string | null
 }
 
 export interface ListTableOptions {
@@ -45,6 +46,8 @@ export interface ListTableOptions {
     rowKey?: string
     /** Keys the group picker may send. Empty means grouping is not pickable. */
     groupKeys?: string[]
+    /** Active resource lens key, when switching alternate index views. */
+    lens?: string | null
 }
 
 export function useListTable(url: string, props: ListPageProps, options: ListTableOptions = {}) {
@@ -168,6 +171,7 @@ export function useListTable(url: string, props: ListPageProps, options: ListTab
             perPage: props.perPage,
             tab: props.tab,
             group: props.groupBy?.key ?? ((options.groupKeys?.length ?? 0) > 0 ? '-' : null),
+            lens: options.lens ?? props.lens ?? null,
             ...props.filters,
             ...overrides,
         }
@@ -230,6 +234,7 @@ export function useListTable(url: string, props: ListPageProps, options: ListTab
                 'tabCounts',
                 'groupBy',
                 'indicators',
+                'lens',
             ],
             preserveState: true,
             preserveScroll: true,

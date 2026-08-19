@@ -58,6 +58,7 @@ import {
 import type { RecordActionGroup, RecordActionItem, SchemaColumn } from '@alxtexh-enterprise/panel'
 import PanelWidgets from '../components/widgets/PanelWidgets.vue'
 import ImportDialog from '../components/ImportDialog.vue'
+import ResourceCrudModal from '../components/ResourceCrudModal.vue'
 import RenderHook from '../components/RenderHook.vue'
 import { useBulkJob } from '../composables/useBulkJob'
 import { useListTable } from '../composables/useListTable'
@@ -75,6 +76,8 @@ interface ResourceSchema {
     icon: string
     group: string | null
         routes: { index: string; attach?: string }
+        forms?: { create: 'page' | 'modal'; edit: 'page' | 'modal'; view: 'page' | 'modal' }
+        lenses?: { key: string; label: string }[]
     table: {
         columns: SchemaColumn[]
         filters: {
@@ -197,6 +200,7 @@ const props = defineProps<
             pauseWhenHidden: boolean
         }
         total?: number
+        lens?: string | null
         tabCounts?: Record<string, number>
         /**
          * The cluster this resource belongs to, if any - roadmap 4.1. Items
@@ -237,6 +241,7 @@ defineOptions({
 const t = useListTable(props.schema.routes.index, props, {
     rowKey: props.schema.table.rowKey ?? 'id',
     groupKeys: (props.schema.table.groups ?? []).map((g) => g.key),
+    lens: props.lens ?? null,
 })
 
 // Keyed by resource, so hiding a column on Clients does not hide it on Routers.
@@ -330,6 +335,32 @@ const badgeKeys = computed(() =>
  * ------------------------------------------------------------------------- */
 
 const confirmingDelete = ref<Record<string, any> | null>(null)
+
+const crudModal = ref<{ mode: 'create' | 'edit' | 'view'; recordId?: string | number | null } | null>(
+    null,
+)
+
+function formUsesModal(action: 'create' | 'edit' | 'view'): boolean {
+    return props.schema.forms?.[action] === 'modal'
+}
+
+function openCrudModal(mode: 'create' | 'edit' | 'view', row?: Record<string, any>) {
+    crudModal.value = {
+        mode,
+        recordId: row?.id ?? null,
+    }
+}
+
+function onCrudSaved() {
+    router.reload({
+        only: ['records', 'total', 'tabCounts', 'summary', 'filters', 'filterOptions'],
+        preserveScroll: true,
+    })
+}
+
+function setLens(key: string | null) {
+    t.apply({ lens: key })
+}
 
 const canWrite = computed(() => props.schema.form.fields.length > 0)
 
@@ -482,7 +513,19 @@ function menuFor(row: Record<string, any>): RecordActionGroup[] {
                 )
                 // The URL is per-row, so it is resolved here rather than in the
                 // schema - the schema is cached across every record.
-                .map((a: any) => ({ ...a, url: row._actionUrls?.[a.key] })),
+                .map((a: any) => {
+                    const action = { ...a, url: row._actionUrls?.[a.key] }
+
+                    if (
+                        a.link &&
+                        ((a.key === 'view' && formUsesModal('view')) ||
+                            (a.key === 'edit' && formUsesModal('edit')))
+                    ) {
+                        return { ...action, link: false }
+                    }
+
+                    return action
+                }),
         }))
         // A heading over nothing reads as something failing to load.
         .filter((group: any) => group.actions.length > 0)
@@ -554,6 +597,12 @@ function onRowContextMenu(row: Record<string, any>, event: MouseEvent) {
  * which is the correct outcome for a table whose records are edited in place.
  */
 function onRowClick(row: Record<string, any>) {
+    if (formUsesModal('view')) {
+        openCrudModal('view', row)
+
+        return
+    }
+
     const view = menuFor(row)
         .flatMap((group) => group.actions)
         .find((a) => a.key === 'view' && a.link && a.url)
@@ -565,6 +614,18 @@ function onRowClick(row: Record<string, any>) {
 
 /** One entry point for both the inline buttons and the menu. */
 function onRecordAction(row: Record<string, any>, action: RecordActionItem) {
+    if (action.key === 'view' && formUsesModal('view')) {
+        openCrudModal('view', row)
+
+        return
+    }
+
+    if (action.key === 'edit' && formUsesModal('edit')) {
+        openCrudModal('edit', row)
+
+        return
+    }
+
     if (action.key === DELETE_ACTION) {
         confirmingDelete.value = row
 
@@ -1124,12 +1185,19 @@ function badgeLabel(key: string, value: unknown): string {
                         Attach
                     </Link>
                     <Link
-                        v-if="canWrite && can.create && !reordering"
+                        v-if="canWrite && can.create && !reordering && !formUsesModal('create')"
                         :href="`${schema.routes.index}/create`"
                         :class="buttonClasses({ size: 'sm' })"
                     >
                         New {{ schema.label }}
                     </Link>
+                    <Button
+                        v-else-if="canWrite && can.create && !reordering && formUsesModal('create')"
+                        size="sm"
+                        @click="openCrudModal('create')"
+                    >
+                        New {{ schema.label }}
+                    </Button>
                 </div>
             </div>
 
@@ -1142,6 +1210,32 @@ function badgeLabel(key: string, value: unknown): string {
             <p v-if="schema.purpose" class="text-muted-foreground text-sm">
                 {{ schema.purpose }}
             </p>
+
+            <div v-if="schema.lenses?.length" class="flex flex-wrap items-center gap-2">
+                <span class="text-muted-foreground text-xs font-medium uppercase tracking-wide">Lens</span>
+                <button
+                    type="button"
+                    :class="buttonClasses({
+                        variant: !lens ? 'default' : 'outline',
+                        size: 'sm',
+                    })"
+                    @click="setLens(null)"
+                >
+                    All
+                </button>
+                <button
+                    v-for="item in schema.lenses"
+                    :key="item.key"
+                    type="button"
+                    :class="buttonClasses({
+                        variant: lens === item.key ? 'default' : 'outline',
+                        size: 'sm',
+                    })"
+                    @click="setLens(item.key)"
+                >
+                    {{ item.label }}
+                </button>
+            </div>
         </div>
 
         <!--
@@ -1466,6 +1560,17 @@ function badgeLabel(key: string, value: unknown): string {
             :excel="Boolean(can.excelImport)"
             @close="importing = false"
             @imported="onImported"
+        />
+
+        <ResourceCrudModal
+            v-if="crudModal"
+            :open="!!crudModal"
+            :mode="crudModal.mode"
+            :base-url="schema.routes.index"
+            :schema="schema"
+            :record-id="crudModal.recordId"
+            @close="crudModal = null"
+            @saved="onCrudSaved"
         />
     </div>
 </template>

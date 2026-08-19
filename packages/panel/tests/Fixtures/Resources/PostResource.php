@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Fixtures\Resources;
 
+use Alxtexh\Panel\Resources\Lens;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
@@ -29,6 +30,14 @@ final class PostResource extends Resource
     public static function searchWeight(): float
     {
         return 2;
+    }
+
+    public static function lenses(): array
+    {
+        return [
+            Lens::make('draft', 'Draft only')
+                ->query(static fn ($query): mixed => $query->where('posts.status', 'draft')),
+        ];
     }
 
     public static function table(Table $table): Table

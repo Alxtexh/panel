@@ -50,7 +50,6 @@ import {
     TableToolbar,
     PkModal,
     SchemaNode,
-    PkStepIndicator,
     useColumnVisibility,
     useLiveUpdates,
     hasBadgeValue,
@@ -59,6 +58,7 @@ import {
 import type { RecordActionGroup, RecordActionItem, SchemaColumn } from '@alxtexh-enterprise/panel'
 import PanelWidgets from '../components/widgets/PanelWidgets.vue'
 import ImportDialog from '../components/ImportDialog.vue'
+import ResourceCrudModal from '../components/ResourceCrudModal.vue'
 import RenderHook from '../components/RenderHook.vue'
 import { useBulkJob } from '../composables/useBulkJob'
 import { useListTable } from '../composables/useListTable'
@@ -76,6 +76,8 @@ interface ResourceSchema {
     icon: string
     group: string | null
         routes: { index: string; attach?: string }
+        forms?: { create: 'page' | 'modal'; edit: 'page' | 'modal'; view: 'page' | 'modal' }
+        lenses?: { key: string; label: string }[]
     table: {
         columns: SchemaColumn[]
         filters: {
@@ -198,6 +200,7 @@ const props = defineProps<
             pauseWhenHidden: boolean
         }
         total?: number
+        lens?: string | null
         tabCounts?: Record<string, number>
         /**
          * The cluster this resource belongs to, if any - roadmap 4.1. Items
@@ -238,6 +241,7 @@ defineOptions({
 const t = useListTable(props.schema.routes.index, props, {
     rowKey: props.schema.table.rowKey ?? 'id',
     groupKeys: (props.schema.table.groups ?? []).map((g) => g.key),
+    lens: props.lens ?? null,
 })
 
 // Keyed by resource, so hiding a column on Clients does not hide it on Routers.
@@ -331,6 +335,32 @@ const badgeKeys = computed(() =>
  * ------------------------------------------------------------------------- */
 
 const confirmingDelete = ref<Record<string, any> | null>(null)
+
+const crudModal = ref<{ mode: 'create' | 'edit' | 'view'; recordId?: string | number | null } | null>(
+    null,
+)
+
+function formUsesModal(action: 'create' | 'edit' | 'view'): boolean {
+    return props.schema.forms?.[action] === 'modal'
+}
+
+function openCrudModal(mode: 'create' | 'edit' | 'view', row?: Record<string, any>) {
+    crudModal.value = {
+        mode,
+        recordId: row?.id ?? null,
+    }
+}
+
+function onCrudSaved() {
+    router.reload({
+        only: ['records', 'total', 'tabCounts', 'summary', 'filters', 'filterOptions'],
+        preserveScroll: true,
+    })
+}
+
+function setLens(key: string | null) {
+    t.apply({ lens: key })
+}
 
 const canWrite = computed(() => props.schema.form.fields.length > 0)
 
@@ -483,7 +513,19 @@ function menuFor(row: Record<string, any>): RecordActionGroup[] {
                 )
                 // The URL is per-row, so it is resolved here rather than in the
                 // schema - the schema is cached across every record.
-                .map((a: any) => ({ ...a, url: row._actionUrls?.[a.key] })),
+                .map((a: any) => {
+                    const action = { ...a, url: row._actionUrls?.[a.key] }
+
+                    if (
+                        a.link &&
+                        ((a.key === 'view' && formUsesModal('view')) ||
+                            (a.key === 'edit' && formUsesModal('edit')))
+                    ) {
+                        return { ...action, link: false }
+                    }
+
+                    return action
+                }),
         }))
         // A heading over nothing reads as something failing to load.
         .filter((group: any) => group.actions.length > 0)
@@ -555,6 +597,12 @@ function onRowContextMenu(row: Record<string, any>, event: MouseEvent) {
  * which is the correct outcome for a table whose records are edited in place.
  */
 function onRowClick(row: Record<string, any>) {
+    if (formUsesModal('view')) {
+        openCrudModal('view', row)
+
+        return
+    }
+
     const view = menuFor(row)
         .flatMap((group) => group.actions)
         .find((a) => a.key === 'view' && a.link && a.url)
@@ -566,6 +614,18 @@ function onRowClick(row: Record<string, any>) {
 
 /** One entry point for both the inline buttons and the menu. */
 function onRecordAction(row: Record<string, any>, action: RecordActionItem) {
+    if (action.key === 'view' && formUsesModal('view')) {
+        openCrudModal('view', row)
+
+        return
+    }
+
+    if (action.key === 'edit' && formUsesModal('edit')) {
+        openCrudModal('edit', row)
+
+        return
+    }
+
     if (action.key === DELETE_ACTION) {
         confirmingDelete.value = row
 
@@ -582,41 +642,12 @@ function onRecordAction(row: Record<string, any>, action: RecordActionItem) {
      * spinner.
      */
     if (action.form) {
-        const wizardSteps = recordWizardSteps(action)
-
-        actionForm.value = {
-            row,
-            action,
-            values: {},
-            errors: {},
-            processing: false,
-            wizardId: wizardSteps ? newWizardId() : undefined,
-            wizardActiveStep: wizardSteps ? 0 : undefined,
-        }
+        actionForm.value = { row, action, values: {}, errors: {}, processing: false }
 
         return
     }
 
     runRecordAction(row, action)
-}
-
-function recordWizardSteps(action: RecordActionItem | any): any[] | null {
-    const nodes = action?.form?.nodes ?? []
-    const wizardNode = nodes.find((n: any) => n?.component === 'wizard')
-
-    if (!wizardNode) {
-        return null
-    }
-
-    return wizardNode.children ?? []
-}
-
-function newWizardId(): string {
-    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto && typeof crypto.randomUUID === 'function') {
-        return crypto.randomUUID()
-    }
-
-    return `wiz-${Math.random().toString(16).slice(2)}`
 }
 
 /**
@@ -633,58 +664,7 @@ const actionForm = ref<{
     values: Record<string, any>
     errors: Record<string, string>
     processing: boolean
-    wizardId?: string
-    wizardActiveStep?: number
 } | null>(null)
-
-const actionWizard = computed(() => {
-    const open = actionForm.value
-
-    if (!open) {
-        return null
-    }
-
-    const steps = recordWizardSteps(open.action)
-
-    if (steps === null) {
-        return null
-    }
-
-    const activeStep = open.wizardActiveStep ?? 0
-    const currentStep = steps[activeStep] ?? null
-
-    return {
-        steps,
-        activeStep,
-        lastStepIndex: steps.length - 1,
-        currentStep,
-        displaySteps: steps.map((s: any) => ({
-            label: s.label ?? '',
-            description: s.description,
-        })),
-    }
-})
-
-function stepHasError(stepNode: any): boolean {
-    const errors = actionForm.value?.errors ?? {}
-    const keys: string[] = []
-
-    const walk = (node: any) => {
-        if (node?.component === 'field' && node?.key) {
-            keys.push(String(node.key))
-        }
-
-        if (Array.isArray(node?.children)) {
-            for (const child of node.children) {
-                walk(child)
-            }
-        }
-    }
-
-    walk(stepNode)
-
-    return keys.some((k) => !!errors[k])
-}
 
 /**
  * Submit what the dialog collected.
@@ -719,12 +699,6 @@ async function submitActionForm() {
     }
 
     try {
-        const wizardSteps = recordWizardSteps(open.action)
-        const isWizard = wizardSteps !== null
-
-        const wizardStepIndex = isWizard ? open.wizardActiveStep ?? 0 : null
-        const wizardId = isWizard ? open.wizardId ?? '' : null
-
         const response = await fetch(`${props.schema.routes.index}/${open.row.id}/action`, {
             method: 'POST',
             headers: {
@@ -734,11 +708,7 @@ async function submitActionForm() {
                 'X-XSRF-TOKEN': csrfToken(),
             },
             credentials: 'same-origin',
-            body: JSON.stringify({
-                action: open.action.key,
-                data: open.values,
-                ...(isWizard ? { wizardStep: wizardStepIndex, wizardId } : {}),
-            }),
+            body: JSON.stringify({ action: open.action.key, data: open.values }),
         })
 
         if (response.status === 422) {
@@ -760,23 +730,6 @@ async function submitActionForm() {
             toast.error(body?.message ?? 'That action could not be completed.')
 
             return
-        }
-
-        const body = await response.json().catch(() => null)
-
-        if (body?.values && actionForm.value) {
-            open.values = { ...open.values, ...(body.values as Record<string, any>) }
-        }
-
-        if (isWizard && wizardSteps && wizardStepIndex !== null) {
-            const lastIndex = wizardSteps.length - 1
-
-            if (wizardStepIndex < lastIndex) {
-                open.wizardActiveStep = wizardStepIndex + 1
-                open.errors = {}
-
-                return
-            }
         }
 
         toast.success(`${open.action.label} done`)
@@ -1232,12 +1185,19 @@ function badgeLabel(key: string, value: unknown): string {
                         Attach
                     </Link>
                     <Link
-                        v-if="canWrite && can.create && !reordering"
+                        v-if="canWrite && can.create && !reordering && !formUsesModal('create')"
                         :href="`${schema.routes.index}/create`"
                         :class="buttonClasses({ size: 'sm' })"
                     >
                         New {{ schema.label }}
                     </Link>
+                    <Button
+                        v-else-if="canWrite && can.create && !reordering && formUsesModal('create')"
+                        size="sm"
+                        @click="openCrudModal('create')"
+                    >
+                        New {{ schema.label }}
+                    </Button>
                 </div>
             </div>
 
@@ -1250,6 +1210,32 @@ function badgeLabel(key: string, value: unknown): string {
             <p v-if="schema.purpose" class="text-muted-foreground text-sm">
                 {{ schema.purpose }}
             </p>
+
+            <div v-if="schema.lenses?.length" class="flex flex-wrap items-center gap-2">
+                <span class="text-muted-foreground text-xs font-medium uppercase tracking-wide">Lens</span>
+                <button
+                    type="button"
+                    :class="buttonClasses({
+                        variant: !lens ? 'default' : 'outline',
+                        size: 'sm',
+                    })"
+                    @click="setLens(null)"
+                >
+                    All
+                </button>
+                <button
+                    v-for="item in schema.lenses"
+                    :key="item.key"
+                    type="button"
+                    :class="buttonClasses({
+                        variant: lens === item.key ? 'default' : 'outline',
+                        size: 'sm',
+                    })"
+                    @click="setLens(item.key)"
+                >
+                    {{ item.label }}
+                </button>
+            </div>
         </div>
 
         <!--
@@ -1539,39 +1525,16 @@ function badgeLabel(key: string, value: unknown): string {
             @close="actionForm = null"
         >
             <form class="flex flex-col gap-4" @submit.prevent="submitActionForm">
-                <template v-if="actionWizard">
-                    <PkStepIndicator
-                        :steps="actionWizard.displaySteps"
-                        :active-step="actionWizard.activeStep"
-                        :has-error="(i: number) => stepHasError(actionWizard.steps[i])"
-                        :interactive="false"
-                    />
-
-                    <SchemaNode
-                        v-for="(node, index) in actionWizard.currentStep?.children ?? []"
-                        :key="index"
-                        :node="node as any"
-                        :values="actionForm!.values"
-                        :errors="actionForm!.errors"
-                        :processing="actionForm!.processing"
-                        :search-options="searchActionOptions"
-                        :depth="1"
-                        @update="(key: string, value: any) => (actionForm!.values[key] = value)"
-                    />
-                </template>
-
-                <template v-else>
-                    <SchemaNode
-                        v-for="(node, index) in actionForm?.action.form?.nodes ?? []"
-                        :key="index"
-                        :node="node as any"
-                        :values="actionForm!.values"
-                        :errors="actionForm!.errors"
-                        :processing="actionForm!.processing"
-                        :search-options="searchActionOptions"
-                        @update="(key: string, value: any) => (actionForm!.values[key] = value)"
-                    />
-                </template>
+                <SchemaNode
+                    v-for="(node, index) in actionForm?.action.form?.nodes ?? []"
+                    :key="index"
+                    :node="node as any"
+                    :values="actionForm!.values"
+                    :errors="actionForm!.errors"
+                    :processing="actionForm!.processing"
+                    :search-options="searchActionOptions"
+                    @update="(key: string, value: any) => (actionForm!.values[key] = value)"
+                />
             </form>
 
             <template #footer>
@@ -1584,38 +1547,7 @@ function badgeLabel(key: string, value: unknown): string {
                     Cancel
                 </Button>
 
-                <template v-if="actionWizard">
-                    <Button
-                        v-if="actionWizard.activeStep > 0"
-                        variant="ghost"
-                        size="sm"
-                        :disabled="actionForm?.processing"
-                        @click="actionForm!.wizardActiveStep = actionWizard.activeStep - 1"
-                    >
-                        Back
-                    </Button>
-
-                    <Button
-                        size="sm"
-                        type="submit"
-                        :disabled="actionForm?.processing"
-                    >
-                        {{
-                            actionForm?.processing
-                                ? 'Working…'
-                                : actionWizard.activeStep < actionWizard.lastStepIndex
-                                  ? actionWizard.currentStep?.submitLabel ?? 'Next'
-                                  : actionWizard.currentStep?.submitLabel ?? actionForm.action.label
-                        }}
-                    </Button>
-                </template>
-
-                <Button
-                    v-else
-                    size="sm"
-                    type="submit"
-                    :disabled="actionForm?.processing"
-                >
+                <Button size="sm" :disabled="actionForm?.processing" @click="submitActionForm">
                     {{ actionForm?.processing ? 'Working…' : actionForm?.action.label }}
                 </Button>
             </template>
@@ -1628,6 +1560,17 @@ function badgeLabel(key: string, value: unknown): string {
             :excel="Boolean(can.excelImport)"
             @close="importing = false"
             @imported="onImported"
+        />
+
+        <ResourceCrudModal
+            v-if="crudModal"
+            :open="!!crudModal"
+            :mode="crudModal.mode"
+            :base-url="schema.routes.index"
+            :schema="schema"
+            :record-id="crudModal.recordId"
+            @close="crudModal = null"
+            @saved="onCrudSaved"
         />
     </div>
 </template>
