@@ -57,6 +57,11 @@ export interface FormField {
     /** Fetches options on demand instead of rendering them inline. */
     searchable?: boolean;
     /**
+     * Mini-form fields for creating a related row without leaving this select.
+     * JSON create, not resource CRUD.
+     */
+    createOption?: FormField[];
+    /**
      * MorphTo: type + id. The value is `{ type, id }`.
      */
     morphTo?: {

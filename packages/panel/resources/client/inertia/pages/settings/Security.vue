@@ -67,6 +67,8 @@ type Props = {
     canManageTwoFactor?: boolean
     requiresConfirmation?: boolean
     twoFactorEnabled?: boolean
+    canManageEmailTwoFactor?: boolean
+    emailTwoFactorEnabled?: boolean
 }
 
 const props = defineProps<Props>()
@@ -188,6 +190,41 @@ defineOptions({
         :requiresConfirmation="requiresConfirmation"
         :twoFactorEnabled="twoFactorEnabled"
     />
+
+    <div v-if="canManageEmailTwoFactor" class="space-y-6">
+        <Heading
+            variant="small"
+            title="Email codes"
+            description="A one-time code is emailed after your password, as a second factor."
+        />
+
+        <p class="text-muted-foreground text-sm">
+            Turn this on if you would rather receive a code at your address than
+            use an authenticator app. You can keep both.
+        </p>
+
+        <Form
+            v-if="!emailTwoFactorEnabled"
+            :action="at('/settings/security/email-two-factor')"
+            method="post"
+            :options="{ preserveScroll: true }"
+            #default="{ processing }"
+        >
+            <Button type="submit" :disabled="processing">Enable email codes</Button>
+        </Form>
+
+        <Form
+            v-else
+            :action="at('/settings/security/email-two-factor')"
+            method="delete"
+            :options="{ preserveScroll: true }"
+            #default="{ processing }"
+        >
+            <Button variant="destructive" type="submit" :disabled="processing">
+                Disable email codes
+            </Button>
+        </Form>
+    </div>
 
     <ManagePasskeys :canManagePasskeys="canManagePasskeys" :passkeys="passkeys" />
 

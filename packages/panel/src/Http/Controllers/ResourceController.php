@@ -92,6 +92,34 @@ final class ResourceController extends Controller
     }
 
     /**
+     * Create a related option without leaving the form.
+     *
+     * The field opted in with `SelectField::createOption()`. Resource CRUD
+     * stays on dedicated pages; this is only the picker shortcut.
+     */
+    public function createFieldOption(Request $request, string $resource): JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        abort_unless($class::can('create') || $class::can('update'), 403);
+
+        $key = (string) $request->input('field', '');
+        $values = (array) $request->input('values', []);
+
+        foreach ($this->searchableFields($class) as $field) {
+            if ($field->key !== $key || ! $field instanceof SelectField) {
+                continue;
+            }
+
+            abort_unless($field->canCreateOption(), 404);
+
+            return response()->json(['option' => $field->createRelated($values)]);
+        }
+
+        abort(404);
+    }
+
+    /**
      * Re-resolve options and schema from the current form values.
      *
      * `live()` contract: the client POSTs `{ field, values }`. This returns

@@ -182,20 +182,30 @@ honoured, and an explicit "off" wins over an available implementation.
 
 ### At the login door
 
-Enabling two-factor on Security is the switch. After a correct password, a
-panel that declared `->login()` pauses on `two-factor-challenge` until TOTP or
-a recovery code succeeds. The pause is not skippable. A user with no 2FA
-reaches the dashboard as before. Passkeys remain a button on the login form;
-typing a password still has to clear 2FA when it is on.
+Enabling a factor on Security is the switch. After a correct password (or a
+social match), a panel that declared `->login()` pauses on
+`two-factor-challenge` until the code succeeds. Authenticator TOTP and
+recovery codes are one method; email OTP (Filament EmailAuthentication, without
+Livewire) is the other. TOTP wins when both are on. Sends are throttled by
+user and IP. The pause is not skippable. A user with no factor reaches the
+dashboard as before. Passkeys remain a button on the login form; typing a
+password still has to clear an enrolled factor.
 
 ```php
 Panel::make('admin')
     ->login()
     ->twoFactorChallenge();       // default: honour the user's 2FA setting
     // ->twoFactorChallenge(false)  // escape hatch: password is enough
+    ->requireTwoFactor();         // optional: enrol before the dashboard
+    // ->registration()             // mount register.store
+    // ->emailVerification();       // mailbox proof before the panel
 ```
 
-Fortify's own `/login` already does this pause. The packaged controller is
+`requireTwoFactor()` (alias `twoFactorRequired()`) is **off by default**.
+When on, a signed-in user with no TOTP, email OTP, or passkey is redirected
+to Security and cannot open the dashboard until they enrol.
+
+Fortify's own `/login` already does the TOTP pause. The packaged controller is
 the copy generated portals actually use. A missing `passkeys` table is still
 an empty list, not a 500.
 

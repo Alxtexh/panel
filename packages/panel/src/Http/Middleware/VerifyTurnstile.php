@@ -45,6 +45,7 @@ final class VerifyTurnstile
         // refusal passed the request straight through, silently unprotected.
         'login.store',
         'two-factor.login.store',
+        'two-factor.email',
         'passkey.login',
         'register.store',
         'password.email',
@@ -52,6 +53,7 @@ final class VerifyTurnstile
         'magic-link.request',
         'otp.send',
         'otp.reset',
+        'verification.send',
     ];
 
     public function handle(Request $request, Closure $next): Response
@@ -104,6 +106,8 @@ final class VerifyTurnstile
         }
 
         return str_contains($name, 'shared-login')
-            && (str_ends_with($name, '.attempt') || str_ends_with($name, '.two-factor.store'));
+            && (str_ends_with($name, '.attempt')
+                || str_ends_with($name, '.two-factor.store')
+                || str_ends_with($name, '.two-factor.email'));
     }
 }

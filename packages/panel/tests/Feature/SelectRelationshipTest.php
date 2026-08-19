@@ -108,6 +108,38 @@ final class SelectRelationshipTest extends TestCase
 
         $this->assertTrue($article['live'] ?? false);
         $this->assertTrue($article['searchable'] ?? false);
+        $this->assertNotEmpty($article['createOption'] ?? []);
+    }
+
+    public function test_create_option_inserts_a_related_row_and_returns_the_pick(): void
+    {
+        $response = $this->postJson("/articles/{$this->article->getKey()}/comments/field-options", [
+            'field' => 'article_id',
+            'values' => [
+                'title' => 'Created from picker',
+                'status' => 'draft',
+            ],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('option.label', 'Created from picker');
+
+        $created = Article::query()->find($response->json('option.value'));
+
+        $this->assertNotNull($created);
+        $this->assertSame($this->mine->id, $created->tenant_id);
+        $this->assertSame('Created from picker', $created->title);
+    }
+
+    public function test_create_option_validates_required_fields(): void
+    {
+        $this->postJson("/articles/{$this->article->getKey()}/comments/field-options", [
+            'field' => 'article_id',
+            'values' => [
+                'status' => 'draft',
+            ],
+        ])->assertStatus(422);
     }
 
     public function test_another_tenants_id_fails_relationship_validation(): void

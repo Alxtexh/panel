@@ -23,6 +23,8 @@
 
 import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { fieldControl } from '../../composables/useFieldControls'
+import PkModal from '../Overlay/PkModal.vue'
+import PkButton from '../primitives/PkButton.vue'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import { Checkbox } from '../shadcn/checkbox'
 import { Switch } from '../shadcn/switch'
@@ -157,6 +159,41 @@ function clearChoice() {
 }
 
 const picker = inject<{ base: string; returnUrl: string } | null>('panelPicker', null)
+
+const createOptionApi = inject<{
+    run: (field: string, values: Record<string, unknown>) => Promise<{ value: any; label: string }>
+} | null>('panelCreateOption', null)
+
+const createOpen = ref(false)
+const createBusy = ref(false)
+const createValues = ref<Record<string, unknown>>({})
+const createError = ref<string | null>(null)
+
+function openCreate() {
+    createValues.value = {}
+    createError.value = null
+    createOpen.value = true
+    open.value = false
+}
+
+async function submitCreate() {
+    if (!createOptionApi) {
+        return
+    }
+
+    createBusy.value = true
+    createError.value = null
+
+    try {
+        const option = await createOptionApi.run(props.field.key, { ...createValues.value })
+        pick(option)
+        createOpen.value = false
+    } catch (error) {
+        createError.value = error instanceof Error ? error.message : 'Could not create that option.'
+    } finally {
+        createBusy.value = false
+    }
+}
 
 const pickerHref = computed(() => {
     if (!props.field.tableSelect || !picker?.base) {
@@ -538,6 +575,14 @@ function insertChip(token: string) {
                     >
                         {{ opt.label }}
                     </button>
+                    <button
+                        v-if="field.createOption && createOptionApi"
+                        type="button"
+                        class="text-primary hover:bg-accent mt-1 w-full rounded border-t px-2 py-1.5 text-left text-sm"
+                        @click="openCreate"
+                    >
+                        Create new
+                    </button>
                 </div>
             </div>
 
@@ -809,4 +854,38 @@ function insertChip(token: string) {
             {{ field.help }}
         </p>
     </div>
+
+    <PkModal
+        v-if="field.createOption && createOptionApi"
+        :open="createOpen"
+        title="Create"
+        :busy="createBusy"
+        @close="createOpen = false"
+    >
+        <div class="space-y-3">
+            <p v-if="createError" class="text-destructive text-sm" role="alert">{{ createError }}</p>
+            <div v-for="child in field.createOption" :key="child.key" class="flex flex-col gap-1">
+                <label class="text-sm font-medium" :for="`create-${field.key}-${child.key}`">
+                    {{ child.label }}
+                </label>
+                <input
+                    :id="`create-${field.key}-${child.key}`"
+                    class="border-input bg-background h-9 rounded-md border px-3 text-sm"
+                    :type="child.inputType === 'email' ? 'email' : 'text'"
+                    :required="child.required"
+                    :placeholder="child.placeholder"
+                    :value="(createValues[child.key] as string) ?? ''"
+                    @input="
+                        createValues[child.key] = ($event.target as HTMLInputElement).value
+                    "
+                />
+            </div>
+        </div>
+        <template #footer>
+            <PkButton type="button" variant="outline" :disabled="createBusy" @click="createOpen = false">
+                Cancel
+            </PkButton>
+            <PkButton type="button" :disabled="createBusy" @click="submitCreate">Save</PkButton>
+        </template>
+    </PkModal>
 </template>

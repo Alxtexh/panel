@@ -90,7 +90,7 @@ it would do first.
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
 | `make test-package` | The package's own Testbench suite |
 
-## Agent APIs (v1.0.12 to v1.0.31)
+## Agent APIs (v1.0.12 to v1.0.32)
 
 `panel:blueprint` regenerates `AGENTS.md` from these. Do not invent Vue for a
 screen the kit already ships.
@@ -98,7 +98,11 @@ screen the kit already ships.
 | API | Does |
 |---|---|
 | `make:panel-recipe` / `panel:recipe` | Official starter. One Invoice (or Item) resource, kit Vue, empty table. `--migrate`, `--seed`. Optional comment: `apps(['billing-portal'])` + `billingState()` |
-| `Panel::twoFactorChallenge()` | After password, require TOTP or a recovery code when the user has 2FA. Default true. `false` skips the pause. Passkeys stay on the login form. |
+| `Panel::twoFactorChallenge()` | After password, require TOTP, a recovery code, or an email OTP when the user has that factor. Default true. `false` skips the pause. Passkeys stay on the login form. |
+| `Panel::requireTwoFactor()` / `twoFactorRequired()` | After login, send users with no TOTP, email OTP, or passkey to Security until they enrol. Default false. |
+| `Panel::registration()` | Mount register GET/POST the way `login()` mounts sign-in. Off until called. Optional slug. |
+| `Panel::emailVerification()` | Prove the mailbox before the panel. Mounts the notice, signed verify link, and resend. Off until called. |
+| `SelectField::createOption()` | Create-and-pick a related row from a small JSON dialog. Not resource CRUD as a modal. |
 | `Panel::socialite()` | Social buttons on this portal's login. Default: every provider with a client id and secret. `['google', 'github']` narrows. `false` hides them. Needs `laravel/socialite` (composer suggest). |
 | `Panel::turnstile()` | Cloudflare Turnstile on this portal. Keys (`TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`) are the install switch. `false` never challenges here. |
 | `TillPage` / `--till` | Empty till canvas. Vue shims packaged Till |

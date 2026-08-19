@@ -347,6 +347,11 @@ return [
         */
         'max_attempts' => 5,
         'decay_seconds' => 60,
+        'email_otp' => [
+            'lifetime_minutes' => 10,
+            'max_sends' => 3,
+            'send_decay_seconds' => 60,
+        ],
 
         'session' => [
             /*

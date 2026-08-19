@@ -35,13 +35,31 @@ const props = defineProps<{
     /** Where the code posts. */
     action: string
     turnstileSiteKey?: string | null
+    /** totp (authenticator / recovery) or email (one-time code we sent). */
+    method?: 'totp' | 'email'
+    /** Where "send another" posts, for email OTP. */
+    resendUrl?: string | null
+    /** Masked address the email code went to. */
+    sentTo?: string | null
+    status?: string | null
 }>()
 
 const recovery = ref(false)
 const code = ref('')
+const emailMode = computed(() => props.method === 'email')
 
-const content = computed(() =>
-    recovery.value
+const content = computed(() => {
+    if (emailMode.value) {
+        return {
+            title: 'Email code',
+            description: props.sentTo
+                ? `Enter the code we sent to ${props.sentTo}.`
+                : 'Enter the code we just emailed you.',
+            buttonText: '',
+        }
+    }
+
+    return recovery.value
         ? {
               title: 'Recovery code',
               description:
@@ -53,8 +71,8 @@ const content = computed(() =>
               description:
                   'Enter the authentication code provided by your authenticator application.',
               buttonText: 'login using a recovery code',
-          },
-)
+          }
+})
 
 function toggle(clearErrors: () => void): void {
     recovery.value = !recovery.value
@@ -68,6 +86,13 @@ function toggle(clearErrors: () => void): void {
         <Head title="Two-factor authentication" />
 
         <div class="space-y-6">
+            <p
+                v-if="props.status"
+                class="text-center text-sm font-medium text-green-600"
+            >
+                {{ props.status }}
+            </p>
+
             <Form
                 :action="props.action"
                 method="post"
@@ -114,7 +139,7 @@ function toggle(clearErrors: () => void): void {
                     Continue
                 </Button>
 
-                <div class="text-center text-sm">
+                <div v-if="!emailMode" class="text-center text-sm">
                     <span class="text-muted-foreground">or you can </span>
                     <button
                         type="button"
@@ -124,6 +149,22 @@ function toggle(clearErrors: () => void): void {
                         {{ content.buttonText }}
                     </button>
                 </div>
+            </Form>
+
+            <Form
+                v-if="emailMode && props.resendUrl"
+                :action="props.resendUrl"
+                method="post"
+                class="text-center"
+                #default="{ processing: resending }"
+            >
+                <button
+                    type="submit"
+                    class="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
+                    :disabled="resending"
+                >
+                    Send another code
+                </button>
             </Form>
         </div>
     </AuthLayout>

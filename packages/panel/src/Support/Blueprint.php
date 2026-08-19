@@ -338,7 +338,9 @@ final class Blueprint
 
         Dedicated pages only: create, edit, view, attach and detach are routes,
         never a modal and never Livewire. BelongsTo pickers use
-        `SelectField::relationship()`. Nested resources live at
+        `SelectField::relationship()` and `SelectField::createOption()` for a
+        create-and-pick dialog (JSON, not a Livewire modal; resource CRUD stays
+        on dedicated pages). Nested resources live at
         `/{parent}/{id}/{child}`; BelongsToMany attach is
         `/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas plus
         a Directory of chrome links (Settings, Users, Roles, Documents, Backups,
@@ -471,10 +473,14 @@ final class Blueprint
         ### MFA at the login door
 
         `->login()` already honours two-factor from Security. After a correct
-        password, a user with 2FA confirmed is paused on
-        `{panel}/two-factor-challenge` until TOTP or a recovery code succeeds.
-        Passkeys stay a button on the login form. `->twoFactorChallenge(false)`
-        skips the pause. Do not invent a third MFA stack. Missing `passkeys`
+        password, a user with TOTP or email OTP confirmed is paused on
+        `{panel}/two-factor-challenge` until the code succeeds. Passkeys stay
+        a button on the login form. `->twoFactorChallenge(false)` skips the
+        pause. `->requireTwoFactor()` (alias `twoFactorRequired()`) is OFF by
+        default: when on, a user with no TOTP, email OTP, or passkey is sent
+        to Security and cannot reach the dashboard until they enrol.
+        `->registration()` / `->emailVerification()` mount register.store and
+        the verify notice the way `login()` mounts login. Missing `passkeys`
         table is an empty list, not a 500.
 
         Social callbacks challenge too: a Google click is not a 2FA bypass.

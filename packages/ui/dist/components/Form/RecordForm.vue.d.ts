@@ -26,6 +26,11 @@ type __VLS_Props = {
     pickerBase?: string;
     /** Path to return to after picking a row. */
     returnUrl?: string;
+    /** Create a related option without leaving the form. */
+    createOption?: (field: string, values: Record<string, unknown>) => Promise<{
+        value: any;
+        label: string;
+    }>;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     change: (key: string, value: unknown) => any;

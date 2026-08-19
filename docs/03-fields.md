@@ -126,6 +126,24 @@ SelectField::make('article_id')
 The page lives at `{resource}/pick/{field}`. Choosing a row returns to the
 form with the id on the query string.
 
+### SelectField::createOption()
+
+Create a related row from a small form, then pick it. JSON, not a Livewire
+modal. Resource CRUD stays on dedicated pages; this is only the option-list
+shortcut.
+
+```php
+SelectField::make('article_id')
+    ->relationship(Article::class, 'title')
+    ->createOption([
+        TextField::make('title')->required(),
+    ]);
+```
+
+`POST {resource}/field-options` with `{ field, values }` returns
+`{ option: { value, label } }`. Pass a `using` callback to insert yourself;
+omit it to write into the `relationship()` model (tenant-stamped).
+
 ## Fields worth extra care
 
 ### PasswordField

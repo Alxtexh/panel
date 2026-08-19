@@ -17,9 +17,9 @@ defineOptions({ inheritAttrs: false })
  * sees is the same, which is the whole point of moving rather than rewriting.
  *
  * ROUTED ONLY WHERE A PANEL ASKS FOR IT. A staff console should not offer
- * self-registration, so `PanelAuthController` mounts this only when
- * `panel.auth.{id}.register` names somewhere - and the sign-in screen links to
- * it on the same condition.
+ * self-registration. Call `Panel::registration()` (the same shape as
+ * `login()`) or set `panel.auth.{id}.register`. The sign-in screen links
+ * to it on the same condition.
  */
 import { Form, Head, Link } from '@inertiajs/vue3'
 import { PkButton as Button, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'

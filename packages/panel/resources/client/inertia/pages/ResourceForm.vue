@@ -341,6 +341,32 @@ async function searchOptions(
     return (await res.json()).options
 }
 
+async function createOption(
+    field: string,
+    values: Record<string, unknown>,
+): Promise<{ value: any; label: string }> {
+    const res = await fetch(`${props.schema.routes.index}/field-options`, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-XSRF-TOKEN': csrf(),
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ field, values }),
+    })
+
+    const payload = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+        const first = payload?.errors ? Object.values(payload.errors).flat()[0] : null
+        throw new Error(typeof first === 'string' ? first : 'Could not create that option.')
+    }
+
+    return payload.option
+}
+
 function cancel() {
     cancelling = true
 
@@ -629,6 +655,7 @@ onBeforeUnmount(() => {
                 :discard="discardUpload"
                 :picker-base="schema.routes.index"
                 :return-url="typeof window === 'undefined' ? schema.routes.index : window.location.pathname"
+                :create-option="createOption"
                 @change="onFieldChange"
             />
         </div>

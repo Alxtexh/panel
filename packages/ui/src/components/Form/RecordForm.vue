@@ -46,6 +46,11 @@ const props = withDefaults(
         pickerBase?: string
         /** Path to return to after picking a row. */
         returnUrl?: string
+        /** Create a related option without leaving the form. */
+        createOption?: (
+            field: string,
+            values: Record<string, unknown>,
+        ) => Promise<{ value: any; label: string }>
     }>(),
     {
         nodes: () => [],
@@ -63,6 +68,16 @@ provide('panelPicker', {
     },
     get returnUrl() {
         return props.returnUrl ?? ''
+    },
+})
+
+provide('panelCreateOption', {
+    run(field: string, values: Record<string, unknown>) {
+        if (!props.createOption) {
+            return Promise.reject(new Error('Create is not available on this field.'))
+        }
+
+        return props.createOption(field, values)
     },
 })
 
