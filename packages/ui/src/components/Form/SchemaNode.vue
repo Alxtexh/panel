@@ -26,6 +26,9 @@ export interface SchemaNode {
     component:
         | 'field'
         | 'section'
+        | 'card'
+        | 'columns'
+        | 'column'
         | 'grid'
         | 'flex'
         | 'fieldset'
@@ -36,8 +39,10 @@ export interface SchemaNode {
         | 'step'
     children?: SchemaNode[]
     label?: string
+    title?: string
     description?: string
     columns?: number
+    span?: number
     collapsible?: boolean
     collapsed?: boolean
     icon?: string | null
@@ -150,6 +155,36 @@ const gridClass = computed(() => {
 
     return columns >= 3 ? 'sm:grid-cols-3' : columns === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1'
 })
+
+function columnsGridClass(node: SchemaNode): string {
+    const count = node.children?.length ?? 1
+
+    if (count >= 3) {
+        return 'md:grid-cols-3'
+    }
+
+    if (count === 2) {
+        return 'md:grid-cols-2'
+    }
+
+    return 'md:grid-cols-1'
+}
+
+function columnSpanClass(span = 1): string {
+    if (span >= 4) {
+        return 'md:col-span-4'
+    }
+
+    if (span === 3) {
+        return 'md:col-span-3'
+    }
+
+    if (span === 2) {
+        return 'md:col-span-2'
+    }
+
+    return 'md:col-span-1'
+}
 
 /**
  * Whether a tab contains a field with an error.
@@ -311,6 +346,80 @@ function uploadFor(key: string) {
             />
         </div>
     </section>
+
+    <!-- Card: titled shell for page layouts. -->
+    <section
+        v-else-if="node.component === 'card' && conditionMet(node)"
+        class="bg-card rounded-lg border"
+    >
+        <header class="border-b px-4 py-3">
+            <h3 class="text-sm font-semibold">{{ node.title }}</h3>
+            <p v-if="node.description" class="text-muted-foreground mt-0.5 text-xs">
+                {{ node.description }}
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 gap-4 px-4 py-4" :class="gridClass">
+            <SchemaNode
+                v-for="(child, i) in node.children ?? []"
+                :key="i"
+                :node="child"
+                :values="values"
+                :errors="errors"
+                :options="options"
+                :processing="processing"
+                :search-options="searchOptions"
+                :upload="upload"
+                :discard="discard"
+                :depth="depth + 1"
+                @change="(key: string, value: unknown) => emit('change', key, value)"
+                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
+            />
+        </div>
+    </section>
+
+    <!-- Columns: responsive row of Column nodes. -->
+    <div
+        v-else-if="node.component === 'columns' && conditionMet(node)"
+        class="grid grid-cols-1 gap-4"
+        :class="columnsGridClass(node)"
+    >
+        <SchemaNode
+            v-for="(child, i) in node.children ?? []"
+            :key="i"
+            :node="child"
+            :values="values"
+            :errors="errors"
+            :options="options"
+            :processing="processing"
+            :search-options="searchOptions"
+            :upload="upload"
+            :discard="discard"
+            :depth="depth + 1"
+            :class="child.component === 'column' ? columnSpanClass(child.span) : ''"
+            @change="(key: string, value: unknown) => emit('change', key, value)"
+            @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
+        />
+    </div>
+
+    <!-- Column: one slot inside Columns. -->
+    <div v-else-if="node.component === 'column' && conditionMet(node)" class="min-w-0 space-y-4">
+        <SchemaNode
+            v-for="(child, i) in node.children ?? []"
+            :key="i"
+            :node="child"
+            :values="values"
+            :errors="errors"
+            :options="options"
+            :processing="processing"
+            :search-options="searchOptions"
+            :upload="upload"
+            :discard="discard"
+            :depth="depth + 1"
+            @change="(key: string, value: unknown) => emit('change', key, value)"
+            @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
+        />
+    </div>
 
     <!-- Grid: layout with no heading, so it never draws a frame. -->
     <div v-else-if="node.component === 'grid'" class="grid grid-cols-1 gap-4" :class="gridClass">
