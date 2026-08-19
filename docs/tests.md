@@ -102,7 +102,8 @@ $this->assertEmptyGrantsHint($this->operator);
 
 `Notification::make()->title('Saved')->success()->send()` flashes the same
 Inertia toast the shell already shows. Optional `->bell()` also writes
-`BellText`.
+`BellText`. Optional `->actions([Action::make('view')->url($url)])` puts hrefs
+on the toast and the bell.
 
 ```php
 Notification::make()->title('Saved')->success()->send();

@@ -23,9 +23,15 @@
  * version could not do - it wrote `/notifications` in its own source, so a
  * portal mounted at `/reseller` asked the wrong panel and got the wrong bell.
  */
-import { usePage } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import { PkSlideover } from '@alxtexh-enterprise/panel'
+import {
+    followNotificationAction,
+    linkedNotificationActions,
+    notificationActionIsPost,
+    type NotificationAction,
+} from '../../lib/notificationActions'
 
 /*
  * INLINE, NOT IMPORTED. A type imported into `defineProps` makes the SFC
@@ -65,6 +71,7 @@ interface Note {
     severity: string
     read: boolean
     at: string | null
+    actions?: NotificationAction[]
 }
 
 const page = usePage()
@@ -214,6 +221,12 @@ function follow(href: string | null): void {
 function openNote(note: Note): void {
     void markRead(note)
     follow(note.href)
+}
+
+function runNoteAction(note: Note, action: NotificationAction, event: Event): void {
+    event.stopPropagation()
+    void markRead(note)
+    followNotificationAction(action)
 }
 </script>
 
@@ -378,20 +391,55 @@ function openNote(note: Note): void {
                             :aria-label="note.read ? 'Read' : 'Unread'"
                         />
 
-                        <button
-                            type="button"
-                            class="min-w-0 flex-1 text-left"
-                            @click="openNote(note)"
-                        >
-                            <span class="block text-sm font-medium">{{ note.title }}</span>
-                            <span class="text-muted-foreground block text-xs">{{ note.body }}</span>
-                            <span
-                                v-if="note.at"
-                                class="text-muted-foreground/70 mt-0.5 block text-[11px]"
+                        <div class="min-w-0 flex-1">
+                            <button
+                                type="button"
+                                class="w-full text-left"
+                                @click="openNote(note)"
                             >
-                                {{ note.at }}
+                                <span class="block text-sm font-medium">{{ note.title }}</span>
+                                <span class="text-muted-foreground block text-xs">{{
+                                    note.body
+                                }}</span>
+                                <span
+                                    v-if="note.at"
+                                    class="text-muted-foreground/70 mt-0.5 block text-[11px]"
+                                >
+                                    {{ note.at }}
+                                </span>
+                            </button>
+                            <span
+                                v-if="linkedNotificationActions(note.actions).length"
+                                class="mt-2 flex flex-wrap gap-2"
+                            >
+                                <a
+                                    v-for="action in linkedNotificationActions(note.actions).filter(
+                                        (item) => !notificationActionIsPost(item),
+                                    )"
+                                    :key="action.key"
+                                    :href="action.href ?? undefined"
+                                    class="text-primary text-xs font-medium underline"
+                                    data-notification-action
+                                    :target="action.newTab ? '_blank' : undefined"
+                                    :rel="action.newTab ? 'noopener noreferrer' : undefined"
+                                    @click="runNoteAction(note, action, $event)"
+                                >
+                                    {{ action.label }}
+                                </a>
+                                <button
+                                    v-for="action in linkedNotificationActions(note.actions).filter(
+                                        (item) => notificationActionIsPost(item),
+                                    )"
+                                    :key="action.key"
+                                    type="button"
+                                    class="text-primary text-xs font-medium underline"
+                                    data-notification-action
+                                    @click="runNoteAction(note, action, $event)"
+                                >
+                                    {{ action.label }}
+                                </button>
                             </span>
-                        </button>
+                        </div>
 
                         <button
                             type="button"

@@ -4,18 +4,29 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Notifications;
 
+use Alxtexh\Panel\Actions\Action;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use InvalidArgumentException;
 
 /**
  * Filament-shaped flash, mapped onto the kit's Inertia toast.
  *
  *     Notification::make()->title('Saved')->success()->send();
  *
+ *     Notification::make()
+ *         ->title('Invoice posted')
+ *         ->success()
+ *         ->actions([
+ *             Action::make('view')->url($url),
+ *             Action::make('download')->url($download)->openUrlInNewTab(),
+ *         ])
+ *         ->send();
+ *
  * This is not a Livewire toast stack. `send()` flashes `{ type, message }`
- * the same way Profile and Operations already do. `bell()` also writes a
- * `BellText` row the topbar already renders.
+ * and optional `actions` the same way Profile and Operations already do.
+ * `bell()` also writes a `BellText` row the topbar already renders.
  */
 final class Notification
 {
@@ -28,6 +39,9 @@ final class Notification
     private string $type = 'info';
 
     private bool $bell = false;
+
+    /** @var list<Action> */
+    private array $actions = [];
 
     public static function make(): self
     {
@@ -51,6 +65,24 @@ final class Notification
     public function href(?string $href): self
     {
         $this->href = $href;
+
+        return $this;
+    }
+
+    /**
+     * Buttons on the toast and, with `bell()`, the inbox row.
+     *
+     * @param  list<Action>  $actions
+     */
+    public function actions(array $actions): self
+    {
+        foreach ($actions as $action) {
+            if (! $action instanceof Action) {
+                throw new InvalidArgumentException('Notification actions must be Alxtexh\\Panel\\Actions\\Action instances.');
+            }
+        }
+
+        $this->actions = array_values($actions);
 
         return $this;
     }
@@ -99,11 +131,7 @@ final class Notification
 
     public function send(): void
     {
-        $payload = [
-            'type' => $this->type,
-            'message' => $this->title,
-            'body' => $this->body,
-        ];
+        $payload = $this->toArray();
 
         session()->flash('toast', $payload);
         Inertia::flash('toast', $payload);
@@ -125,18 +153,61 @@ final class Notification
             default => 'info',
         };
 
-        $user->notify(new BellText($this->title, $this->body, $this->href, $severity));
+        $user->notify(new BellText(
+            $this->title,
+            $this->body,
+            $this->href ?? $this->firstActionHref(),
+            $severity,
+            $this->serializedActions(),
+        ));
     }
 
     /**
-     * @return array{type: string, message: string, body: string}
+     * @return array{type: string, message: string, body: string, actions?: list<array<string, mixed>>}
      */
     public function toArray(): array
     {
-        return [
+        $payload = [
             'type' => $this->type,
             'message' => $this->title,
             'body' => $this->body,
         ];
+
+        $actions = $this->serializedActions();
+
+        if ($actions !== []) {
+            $payload['actions'] = $actions;
+        }
+
+        return $payload;
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function serializedActions(): array
+    {
+        $out = [];
+
+        foreach ($this->actions as $action) {
+            $schema = $action->toNotificationSchema();
+
+            if ($schema !== null) {
+                $out[] = $schema;
+            }
+        }
+
+        return $out;
+    }
+
+    private function firstActionHref(): ?string
+    {
+        foreach ($this->serializedActions() as $action) {
+            $href = $action['href'] ?? null;
+
+            if (is_string($href) && $href !== '') {
+                return $href;
+            }
+        }
+
+        return null;
     }
 }

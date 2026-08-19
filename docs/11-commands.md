@@ -127,7 +127,7 @@ screen the kit already ships.
 | Account menu | Profile (account area) and Settings (hub). Security is a settings tab, not a third dropdown row |
 | `TicketAnalysis` | Packaged screen; `TicketingPlugin` mounts it |
 | `TableWidget` / `ChartWidget` `->live()` / `->poll('10s')` | Echo/Reverb when `window.Echo` exists; otherwise reload that deferred prop. Pauses while the tab is hidden |
-| `Notification::make()->title('Saved')->success()->send()` | Inertia toast. `bell()` also writes the topbar |
+| `Notification::make()->title('Saved')->success()->send()` | Inertia toast. `bell()` also writes the topbar. `actions([Action::make('view')->url($url)])` adds buttons |
 | Infolist `TextEntry` / `ImageEntry` / `RepeatableEntry` | Dedicated view page, never a modal |
 | `SelectField::relationship()` | BelongsTo picker |
 | `/{parent}/{id}/{child}/attach` | BelongsToMany attach page |

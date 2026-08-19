@@ -31,7 +31,7 @@
  */
 import { router, usePage } from '@inertiajs/vue3'
 import { computed, onMounted, ref } from 'vue'
-import { toast } from 'vue-sonner'
+import { showFlashToast, type FlashToast } from '../../lib/notificationActions'
 import {
     AppPageFooter,
     PkBottomNav,
@@ -76,26 +76,6 @@ defineSlots<{
 }>()
 
 const page = usePage()
-
-type FlashToast = { type?: string; message?: string }
-
-function showFlashToast(data: FlashToast | null | undefined): void {
-    if (!data?.message) {
-        return
-    }
-
-    const type = data.type === 'danger' ? 'error' : (data.type ?? 'info')
-    const fn =
-        type === 'success'
-            ? toast.success
-            : type === 'error'
-              ? toast.error
-              : type === 'warning'
-                ? toast.warning
-                : toast.info
-
-    fn(data.message)
-}
 
 onMounted(() => {
     showFlashToast(page.props.toast as FlashToast | undefined)

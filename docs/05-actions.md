@@ -122,11 +122,24 @@ from [Tests](tests.md).
 ## Toasts
 
 ```php
+use Alxtexh\Panel\Actions\Action;
 use Alxtexh\Panel\Notifications\Notification;
 
 Notification::make()->title('Saved')->success()->send();
+
+Notification::make()
+    ->title('Invoice posted')
+    ->success()
+    ->actions([
+        Action::make('view')->url($url),
+        Action::make('download')->url($download)->openUrlInNewTab(),
+        Action::make('approve')->url(route('invoices.approve', $invoice))->method('post'),
+    ])
+    ->send();
 ```
 
-This flashes the existing Inertia toast (`{ type, message }`). `->bell()` also
-writes a `BellText` row the topbar already renders. There is no Livewire toast
-stack. `assertPanelToast('Saved')` checks the flash.
+This flashes the existing Inertia toast (`{ type, message }`, optional
+`actions`). `->bell()` also writes a `BellText` row the topbar already renders.
+There is no Livewire toast stack. URL actions are hrefs on the toast and the
+bell. `method('post')` POSTs that href with the same CSRF the infolist uses.
+`assertPanelToast('Saved')` checks the flash.
