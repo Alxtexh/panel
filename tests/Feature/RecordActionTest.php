@@ -165,7 +165,7 @@ final class RecordActionTest extends TestCase
          * only which of them apply to it, so a thousand-row page does not
          * repeat every label a thousand times.
          */
-        $this->assertContains('publish', $row['_actions']);
+        $this->assertNotContains('publish', $row['_actions'], 'Publish is not allowed from archived.');
         $this->assertNotContains('archive', $row['_actions'], 'A hidden action reached the client.');
     }
 

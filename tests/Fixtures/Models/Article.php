@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Fixtures\Models;
 
+use Alxtexh\Panel\Models\Concerns\HasStateTransitions;
 use Alxtexh\Panel\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
@@ -32,6 +33,14 @@ class Article extends Model
      * hard-deleted would leave those paths testable only through the demo.
      */
     use SoftDeletes;
+    use HasStateTransitions;
+
+    /** @var array<string, list<string>> */
+    protected array $transitions = [
+        'draft' => ['published', 'archived'],
+        'published' => ['archived'],
+        'archived' => [],
+    ];
 
     protected $guarded = [];
 

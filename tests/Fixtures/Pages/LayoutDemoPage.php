@@ -11,11 +11,15 @@ use Alxtexh\Panel\Schema\Card;
 use Alxtexh\Panel\Schema\Column;
 use Alxtexh\Panel\Schema\Columns;
 use Alxtexh\Panel\Schema\Section;
+use Alxtexh\Panel\Support\InstallationState;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /** Fixture for page layout schema serialization and render tests. */
 final class LayoutDemoPage extends Page
 {
+    private const STATE_KEY = 'layout-demo:values';
+
     protected static string $panel = 'admin';
 
     public static function ability(): ?string
@@ -26,6 +30,27 @@ final class LayoutDemoPage extends Page
     public static function component(): string
     {
         return 'PanelPage';
+    }
+
+    public static function actions(): array
+    {
+        return [
+            'save' => static::ability(),
+        ];
+    }
+
+    public static function actionMethods(): array
+    {
+        return [
+            'save' => 'put',
+        ];
+    }
+
+    public static function actionUris(): array
+    {
+        return [
+            'save' => '',
+        ];
     }
 
     public static function layout(): ?PageLayout
@@ -51,12 +76,29 @@ final class LayoutDemoPage extends Page
 
     public static function data(Request $request): array
     {
+        /** @var array<string, mixed> $stored */
+        $stored = (array) app(InstallationState::class)->get(self::STATE_KEY, []);
+
         return [
             'values' => [
-                'headline' => 'Demo',
-                'left_note' => 'Left side',
-                'right_note' => 'Right side',
+                'headline' => (string) ($stored['headline'] ?? 'Demo'),
+                'left_note' => (string) ($stored['left_note'] ?? 'Left side'),
+                'right_note' => (string) ($stored['right_note'] ?? 'Right side'),
             ],
         ];
+    }
+
+    public static function save(Request $request): RedirectResponse
+    {
+        $form = static::layoutForm();
+
+        abort_if($form === null, 404);
+
+        $validated = $request->validate($form->rules());
+        $values = $form->sanitize($validated);
+
+        app(InstallationState::class)->put(self::STATE_KEY, $values);
+
+        return redirect()->back()->with('success', 'Layout saved.');
     }
 }

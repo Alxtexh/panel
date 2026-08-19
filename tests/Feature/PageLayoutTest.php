@@ -79,5 +79,26 @@ final class PageLayoutTest extends TestCase
         $this->assertArrayHasKey('pageLayout', $page);
         $this->assertSame('section', $page['pageLayout']['nodes'][0]['component'] ?? null);
         $this->assertSame('Demo', $page['values']['headline'] ?? null);
+        $this->assertSame(route('panel.pages.layout-demo.save'), $page['saveHref'] ?? null);
+        $this->assertSame('put', $page['saveMethod'] ?? null);
+    }
+
+    public function test_a_layout_page_save_persists_declared_fields(): void
+    {
+        $this->put('/layout-demo', [
+            'headline' => 'Updated headline',
+            'left_note' => 'New left',
+            'right_note' => 'New right',
+        ])->assertRedirect();
+
+        $response = $this->get('/layout-demo');
+
+        $response->assertOk();
+
+        $page = $response->viewData('page')['props'];
+
+        $this->assertSame('Updated headline', $page['values']['headline'] ?? null);
+        $this->assertSame('New left', $page['values']['left_note'] ?? null);
+        $this->assertSame('New right', $page['values']['right_note'] ?? null);
     }
 }

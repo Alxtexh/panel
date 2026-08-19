@@ -245,6 +245,14 @@ abstract class Page
         return $layout?->toSchema();
     }
 
+    /** Form rules for a layout-only page, when one is declared. */
+    public static function layoutForm(): ?\Alxtexh\Panel\Forms\Form
+    {
+        $layout = static::layout();
+
+        return $layout?->toForm();
+    }
+
     /**
      * The props the screen needs.
      *

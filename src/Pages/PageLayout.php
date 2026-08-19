@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Pages;
 
 use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Schema\Component;
 use Alxtexh\Panel\Schema\Renderable;
 
@@ -38,6 +39,12 @@ final class PageLayout
     public function fields(): array
     {
         return Component::collectFields($this->nodes);
+    }
+
+    /** Build a form definition from the layout tree. */
+    public function toForm(): Form
+    {
+        return Form::make()->schema($this->nodes);
     }
 
     /** @return array<string, mixed> */
