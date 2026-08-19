@@ -15,7 +15,7 @@ type __VLS_Props = {
     skipLabel?: string | null;
     /** Inertia `<Link>`, or any router link. Defaults to a plain `<a>`. */
     linkComponent?: string | Component;
-    /** Compact stepper for first-run onboarding; full list for doctor findings. */
+    /** Slim first-run banner, or the full doctor findings list. */
     variant?: 'doctor' | 'onboarding';
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
