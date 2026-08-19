@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Http\Controllers;
 
 use Alxtexh\Panel\Auth\Devices;
+use Alxtexh\Panel\Auth\EmailTwoFactor;
 use Alxtexh\Panel\Auth\Passkeys;
 use Alxtexh\Panel\Auth\PasswordPolicy;
 use Alxtexh\Panel\Auth\SensitiveAction;
@@ -84,6 +85,8 @@ final class SecurityController
              */
             'canManagePasskeys' => Passkeys::available($user),
             'passkeys' => Passkeys::forUser($user),
+            'canManageEmailTwoFactor' => EmailTwoFactor::enabled($user) || self::emailTwoFactorAvailable($user),
+            'emailTwoFactorEnabled' => EmailTwoFactor::enabled($user),
         ];
 
         return Inertia::render('settings/Security', $props + self::twoFactor($request));
@@ -196,6 +199,32 @@ final class SecurityController
         return back()->with('success', __('Every other device was signed out.'));
     }
 
+    public function enableEmailTwoFactor(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_if($user === null || ! self::emailTwoFactorAvailable($user), 404);
+
+        EmailTwoFactor::enable($user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Email codes are on. The next sign-in will send one.')]);
+
+        return back();
+    }
+
+    public function disableEmailTwoFactor(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_if($user === null, 404);
+
+        EmailTwoFactor::disable($user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Email codes are off.')]);
+
+        return back();
+    }
+
     /**
      * @return list<array<string, mixed>>
      */
@@ -278,5 +307,10 @@ final class SecurityController
                 : $user->two_factor_confirmed_at !== null,
             'requiresConfirmation' => $features::optionEnabled($features::twoFactorAuthentication(), 'confirm'),
         ];
+    }
+
+    private static function emailTwoFactorAvailable(?\Illuminate\Contracts\Auth\Authenticatable $user): bool
+    {
+        return $user !== null && \Illuminate\Support\Facades\Schema::hasColumn($user->getTable(), 'email_two_factor_confirmed_at');
     }
 }

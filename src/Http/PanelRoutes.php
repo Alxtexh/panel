@@ -119,6 +119,11 @@ final class PanelRoutes
                     ->defaults('panels', $panelIds)
                     ->middleware('throttle:5,1')
                     ->name($name.'.two-factor.store');
+
+                Route::post($path.'/two-factor-challenge/email', [Controllers\SharedAuthController::class, 'resendEmailTwoFactor'])
+                    ->defaults('panels', $panelIds)
+                    ->middleware('throttle:3,1')
+                    ->name($name.'.two-factor.email');
             });
     }
 
@@ -333,6 +338,41 @@ final class PanelRoutes
                             ->defaults('panel', $panel->id)
                             ->middleware('throttle:5,1')
                             ->name('two-factor.login.store');
+
+                        Route::post('two-factor-challenge/email', [Controllers\PanelAuthController::class, 'resendEmailTwoFactor'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware('throttle:3,1')
+                            ->name('two-factor.email');
+                    }
+
+                    if ($panel->hasRegistration()) {
+                        $register = $panel->getRegistrationSlug();
+
+                        Route::get($register, [Controllers\PanelAuthController::class, 'showRegister'])
+                            ->defaults('panel', $panel->id)
+                            ->name('register');
+
+                        Route::post($register, [Controllers\PanelAuthController::class, 'register'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware('throttle:10,1')
+                            ->name('register.store');
+                    }
+
+                    if ($panel->hasEmailVerification() || $panel->hasRegistration()) {
+                        Route::get('email/verify', [Controllers\PanelAuthController::class, 'showVerifyEmail'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware('auth:'.$panel->getGuard())
+                            ->name('verification.notice');
+
+                        Route::get('email/verify/{id}/{hash}', [Controllers\PanelAuthController::class, 'verifyEmail'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware(['auth:'.$panel->getGuard(), 'signed'])
+                            ->name('verification.verify');
+
+                        Route::post('email/verification-notification', [Controllers\PanelAuthController::class, 'sendVerification'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware(['auth:'.$panel->getGuard(), 'throttle:6,1'])
+                            ->name('verification.send');
                     }
 
                     /*
@@ -746,6 +786,14 @@ final class PanelRoutes
                         ->middleware('throttle:6,1')
                         ->name('settings.password');
 
+                    Route::post('settings/security/email-two-factor', [Controllers\SecurityController::class, 'enableEmailTwoFactor'])
+                        ->middleware('throttle:6,1')
+                        ->name('settings.email-two-factor');
+
+                    Route::delete('settings/security/email-two-factor', [Controllers\SecurityController::class, 'disableEmailTwoFactor'])
+                        ->middleware('throttle:6,1')
+                        ->name('settings.email-two-factor.destroy');
+
                     /*
                      * THE DEVICE ROUTES BELONG TO THE SECURITY SCREEN, so they
                      * are registered with it or not at all. An application that
@@ -1116,6 +1164,9 @@ final class PanelRoutes
 
         Route::get('{resource}/field-options', [ResourceController::class, 'fieldOptions'])
             ->whereIn('resource', $keys)->name('fieldOptions');
+
+        Route::post('{resource}/field-options', [ResourceController::class, 'createFieldOption'])
+            ->whereIn('resource', $keys)->name('fieldOptions.store');
 
         Route::post('{resource}/form-state', [ResourceController::class, 'formState'])
             ->whereIn('resource', $keys)->name('formState');

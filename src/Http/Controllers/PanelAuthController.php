@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\Auth\EmailTwoFactor;
+use Alxtexh\Panel\Auth\Mfa;
 use Alxtexh\Panel\Auth\Passkeys;
 use Alxtexh\Panel\Auth\SocialProviders;
 use Alxtexh\Panel\Auth\Turnstile;
 use Alxtexh\Panel\Auth\TwoFactor;
+use Alxtexh\Panel\Notifications\PanelVerifyEmail;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\PanelHome;
@@ -17,9 +20,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -94,6 +100,134 @@ final class PanelAuthController extends Controller
         ]);
     }
 
+    public function showRegister(Request $request): Response
+    {
+        $panel = $this->panel($request);
+
+        return Inertia::render('panel/auth/Register', [
+            'action' => $this->url($panel, $panel->getRegistrationSlug()),
+            'loginUrl' => $this->url($panel, $panel->getLoginSlug()),
+            'passwordRules' => PasswordRule::defaults()->toPasswordRulesString(),
+            'turnstileSiteKey' => $panel->hasTurnstile() ? Turnstile::siteKey() : null,
+            'heading' => config("panel.auth.{$panel->id}.register_heading"),
+            'description' => config("panel.auth.{$panel->id}.register_description"),
+        ]);
+    }
+
+    public function register(Request $request): RedirectResponse
+    {
+        $panel = $this->panel($request);
+        $model = $this->userModel($panel);
+
+        abort_if($model === '', 404);
+
+        $table = (new $model)->getTable();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:'.$table.',email'],
+            'password' => ['required', 'string', 'confirmed', PasswordRule::defaults()],
+        ]);
+
+        $key = Str::transliterate(Str::lower($validated['email']).'|'.$request->ip());
+        $max = max(1, (int) config('panel.auth.max_attempts', 5));
+
+        if (RateLimiter::tooManyAttempts($key, $max)) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.throttle', [
+                    'seconds' => $seconds = RateLimiter::availableIn($key),
+                    'minutes' => (int) ceil($seconds / 60),
+                ]),
+            ]);
+        }
+
+        $attributes = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+        ];
+
+        if (Schema::hasColumn($table, 'email_verified_at') && ! $panel->hasEmailVerification()) {
+            $attributes['email_verified_at'] = now();
+        }
+
+        $user = $model::query()->create($attributes);
+
+        RateLimiter::clear($key);
+
+        Auth::guard($panel->getGuard())->login($user);
+        $request->session()->regenerate();
+        $request->session()->put('auth.password_confirmed_at', time());
+
+        if ($panel->hasEmailVerification()) {
+            Notification::route('mail', $user->email)->notify(new PanelVerifyEmail($panel));
+
+            return redirect($this->url($panel, 'email/verify'));
+        }
+
+        return redirect($this->destination($request, $panel));
+    }
+
+    public function showVerifyEmail(Request $request): Response|RedirectResponse
+    {
+        $panel = $this->panel($request);
+        $user = $request->user($panel->getGuard());
+
+        if ($user !== null && ($user->email_verified_at ?? null) !== null) {
+            return redirect($this->panelHome($panel));
+        }
+
+        return Inertia::render('panel/auth/VerifyEmail', [
+            'action' => $this->url($panel, 'email/verification-notification'),
+            'logoutUrl' => $this->url($panel, 'logout'),
+            'status' => $request->session()->get('status'),
+        ]);
+    }
+
+    public function sendVerification(Request $request): RedirectResponse
+    {
+        $panel = $this->panel($request);
+        $user = $request->user($panel->getGuard());
+
+        if ($user === null) {
+            return redirect($this->url($panel, $panel->getLoginSlug()));
+        }
+
+        if (($user->email_verified_at ?? null) !== null) {
+            return redirect($this->panelHome($panel));
+        }
+
+        Notification::route('mail', $user->email)->notify(new PanelVerifyEmail($panel));
+
+        return back()->with('status', 'verification-link-sent');
+    }
+
+    public function verifyEmail(Request $request): RedirectResponse
+    {
+        $panel = $this->panel($request);
+        $user = $request->user($panel->getGuard());
+
+        if ($user === null) {
+            return redirect($this->url($panel, $panel->getLoginSlug()));
+        }
+
+        if (! hash_equals((string) $request->route('id'), (string) $user->getAuthIdentifier())) {
+            abort(403);
+        }
+
+        $email = (string) ($user->email ?? '');
+
+        if (! hash_equals((string) $request->route('hash'), sha1($email))) {
+            abort(403);
+        }
+
+        if (($user->email_verified_at ?? null) === null && Schema::hasColumn($user->getTable(), 'email_verified_at')) {
+            $user->forceFill(['email_verified_at' => now()])->save();
+        }
+
+        return redirect($this->panelHome($panel));
+    }
+
     /**
      * Sign-in providers, declared by the application.
      *
@@ -142,9 +276,21 @@ final class PanelAuthController extends Controller
      */
     private function registerUrl(Panel $panel): ?string
     {
+        if ($panel->hasRegistration()) {
+            return $this->url($panel, $panel->getRegistrationSlug());
+        }
+
         $url = config("panel.auth.{$panel->id}.register");
 
         return is_string($url) && $url !== '' ? $url : null;
+    }
+
+    private function userModel(Panel $panel): string
+    {
+        $provider = Auth::guard($panel->getGuard())->getProvider();
+        $model = method_exists($provider, 'getModel') ? $provider->getModel() : '';
+
+        return is_string($model) ? $model : '';
     }
 
     /**
@@ -192,29 +338,11 @@ final class PanelAuthController extends Controller
 
         RateLimiter::clear($key);
 
-        /*
-         * THE PASSWORD IS NOT THE WHOLE DOOR when this person confirmed 2FA
-         * on Security. Logging them in here would skip the challenge the
-         * settings screen promised. Passkeys remain an alternative on the
-         * form above; a typed password still has to clear TOTP or recovery.
-         */
-        if ($panel->hasTwoFactorChallenge() && TwoFactor::enabled($user)) {
-            TwoFactor::begin($request, $user, $panel->id, $request->boolean('remember'));
-            $request->session()->regenerate();
-
-            return redirect($this->url($panel, 'two-factor-challenge'));
+        if (Mfa::shouldChallenge($panel, $user)) {
+            return Mfa::begin($request, $panel, $user, $request->boolean('remember'));
         }
 
-        Auth::guard($panel->getGuard())->login($user, $request->boolean('remember'));
-
-        /*
-         * REGENERATED, WHICH IS NOT OPTIONAL. Without it the session id that
-         * existed before sign-in still identifies the session after, so anyone
-         * who planted one - a link with a session id, a shared machine - is
-         * signed in as whoever used it. Session fixation is old and still the
-         * easiest authentication bug to leave in.
-         */
-        $request->session()->regenerate();
+        Mfa::complete($request, $panel, $user, $request->boolean('remember'));
 
         return redirect($this->destination($request, $panel));
     }
@@ -234,8 +362,34 @@ final class PanelAuthController extends Controller
 
         return Inertia::render('panel/auth/TwoFactorChallenge', [
             'action' => $this->url($panel, 'two-factor-challenge'),
+            'method' => EmailTwoFactor::method($request),
+            'resendUrl' => EmailTwoFactor::method($request) === EmailTwoFactor::METHOD_EMAIL
+                ? $this->url($panel, 'two-factor-challenge/email')
+                : null,
+            'sentTo' => EmailTwoFactor::method($request) === EmailTwoFactor::METHOD_EMAIL
+                ? EmailTwoFactor::maskedAddress($user)
+                : null,
+            'status' => $request->session()->get('status'),
             'turnstileSiteKey' => $panel->hasTurnstile() ? Turnstile::siteKey() : null,
         ]);
+    }
+
+    public function resendEmailTwoFactor(Request $request): RedirectResponse
+    {
+        $panel = $this->panel($request);
+        $user = $this->challengedUser($request, $panel);
+
+        if ($user === null) {
+            return redirect($this->url($panel, 'login'));
+        }
+
+        if (! EmailTwoFactor::enabled($user)) {
+            return redirect($this->url($panel, 'two-factor-challenge'));
+        }
+
+        EmailTwoFactor::send($request, $user);
+
+        return back()->with('status', 'A new code is on its way.');
     }
 
     public function twoFactorChallenge(Request $request): RedirectResponse
@@ -261,8 +415,17 @@ final class PanelAuthController extends Controller
 
         $code = (string) $request->input('code', '');
         $recovery = (string) $request->input('recovery_code', '');
+        $method = EmailTwoFactor::method($request);
 
-        if ($recovery !== '') {
+        if ($method === EmailTwoFactor::METHOD_EMAIL) {
+            if (! EmailTwoFactor::verify($request, $code)) {
+                RateLimiter::hit($key, (int) config('panel.auth.decay_seconds', 60));
+
+                throw ValidationException::withMessages([
+                    'code' => __('The provided two factor authentication code was invalid.'),
+                ]);
+            }
+        } elseif ($recovery !== '') {
             $matched = TwoFactor::verifyRecovery($user, $recovery);
 
             if ($matched === null) {
@@ -285,10 +448,7 @@ final class PanelAuthController extends Controller
         RateLimiter::clear($key);
 
         $remember = TwoFactor::remember($request);
-        TwoFactor::forget($request);
-
-        Auth::guard($panel->getGuard())->login($user, $remember);
-        $request->session()->regenerate();
+        Mfa::complete($request, $panel, $user, $remember);
 
         return redirect($this->destination($request, $panel));
     }

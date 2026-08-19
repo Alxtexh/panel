@@ -97,6 +97,8 @@ final class PanelPages
          * Fortify's `auth/TwoFactorChallenge`, under a name no starter kit owns.
          */
         'panel/auth/TwoFactorChallenge',
+        'panel/auth/Register',
+        'panel/auth/VerifyEmail',
         /*
          * LOCK SCREEN lives under `auth/` (not `panel/auth/`) because the
          * session lock is a signed-in interrupt, not a guest portal. Still a

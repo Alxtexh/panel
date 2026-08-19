@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\Auth\EmailTwoFactor;
+use Alxtexh\Panel\Auth\Mfa;
 use Alxtexh\Panel\Auth\Turnstile;
 use Alxtexh\Panel\Auth\TwoFactor;
 use Alxtexh\Panel\Panel;
@@ -133,16 +135,17 @@ final class SharedAuthController extends Controller
 
             RateLimiter::clear($key);
 
-            if ($panel->hasTwoFactorChallenge() && TwoFactor::enabled($user)) {
-                TwoFactor::begin($request, $user, $panel->id, $request->boolean('remember'));
-                $request->session()->regenerate();
-
-                return redirect($this->challengeUrl($request, $panel));
+            if (Mfa::shouldChallenge($panel, $user)) {
+                return Mfa::begin(
+                    $request,
+                    $panel,
+                    $user,
+                    $request->boolean('remember'),
+                    $this->challengeUrl($request, $panel),
+                );
             }
 
-            Auth::guard($panel->getGuard())->login($user, $request->boolean('remember'));
-
-            $request->session()->regenerate();
+            Mfa::complete($request, $panel, $user, $request->boolean('remember'));
 
             return redirect($this->destination($request, $panel));
         }
@@ -165,8 +168,34 @@ final class SharedAuthController extends Controller
 
         return Inertia::render('panel/auth/TwoFactorChallenge', [
             'action' => rtrim($this->sharedBase($request), '/').'/two-factor-challenge',
+            'method' => EmailTwoFactor::method($request),
+            'resendUrl' => EmailTwoFactor::method($request) === EmailTwoFactor::METHOD_EMAIL
+                ? rtrim($this->sharedBase($request), '/').'/two-factor-challenge/email'
+                : null,
+            'sentTo' => EmailTwoFactor::method($request) === EmailTwoFactor::METHOD_EMAIL
+                ? EmailTwoFactor::maskedAddress($user)
+                : null,
+            'status' => $request->session()->get('status'),
             'turnstileSiteKey' => Turnstile::enabled() ? Turnstile::siteKey() : null,
         ]);
+    }
+
+    public function resendEmailTwoFactor(Request $request): RedirectResponse
+    {
+        $panel = $this->pendingPanel($request);
+        $user = $panel === null ? null : $this->challengedUser($request, $panel);
+
+        if ($panel === null || $user === null) {
+            return redirect($this->sharedBase($request));
+        }
+
+        if (! EmailTwoFactor::enabled($user)) {
+            return redirect($this->challengeUrl($request, $panel));
+        }
+
+        EmailTwoFactor::send($request, $user);
+
+        return back()->with('status', 'A new code is on its way.');
     }
 
     public function twoFactorChallenge(Request $request): RedirectResponse
@@ -192,8 +221,17 @@ final class SharedAuthController extends Controller
 
         $code = (string) $request->input('code', '');
         $recovery = (string) $request->input('recovery_code', '');
+        $method = EmailTwoFactor::method($request);
 
-        if ($recovery !== '') {
+        if ($method === EmailTwoFactor::METHOD_EMAIL) {
+            if (! EmailTwoFactor::verify($request, $code)) {
+                RateLimiter::hit($key, (int) config('panel.auth.decay_seconds', 60));
+
+                throw ValidationException::withMessages([
+                    'code' => __('The provided two factor authentication code was invalid.'),
+                ]);
+            }
+        } elseif ($recovery !== '') {
             $matched = TwoFactor::verifyRecovery($user, $recovery);
 
             if ($matched === null) {
@@ -216,10 +254,7 @@ final class SharedAuthController extends Controller
         RateLimiter::clear($key);
 
         $remember = TwoFactor::remember($request);
-        TwoFactor::forget($request);
-
-        Auth::guard($panel->getGuard())->login($user, $remember);
-        $request->session()->regenerate();
+        Mfa::complete($request, $panel, $user, $remember);
 
         return redirect($this->destination($request, $panel));
     }

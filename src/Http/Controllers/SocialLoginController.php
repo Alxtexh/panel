@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\Auth\Mfa;
 use Alxtexh\Panel\Auth\SocialProviders;
-use Alxtexh\Panel\Auth\TwoFactor;
 use Alxtexh\Panel\Models\ConnectedAccount;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
@@ -287,21 +287,13 @@ final class SocialLoginController extends Controller
         $panel = $this->panel();
         $request = request();
 
-        if ($panel !== null && $panel->hasTwoFactorChallenge() && TwoFactor::enabled($user)) {
-            TwoFactor::begin($request, $user, $panel->id, false);
-            $request->session()->regenerate();
-
-            if ($panel->hasLogin()) {
-                return redirect('/'.trim($panel->getPath().'/two-factor-challenge', '/'));
-            }
-
-            if (app('router')->has('two-factor.login')) {
-                return redirect()->route('two-factor.login');
-            }
+        if ($panel !== null && Mfa::shouldChallenge($panel, $user)) {
+            return Mfa::begin($request, $panel, $user, false);
         }
 
         Auth::guard($this->guard())->login($user);
         $request->session()->regenerate();
+        $request->session()->put('auth.password_confirmed_at', time());
 
         return redirect()->intended($this->home());
     }

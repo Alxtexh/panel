@@ -240,12 +240,32 @@ final class Panel
     private ?bool $turnstile = null;
 
     /**
-     * Challenge TOTP / recovery after password when the user has 2FA.
+     * Challenge TOTP / recovery / email OTP after password when the user has
+     * a second factor.
      *
-     * ON BY DEFAULT. Enabling two-factor on Security is the switch; this flag
+     * ON BY DEFAULT. Enabling a factor on Security is the switch; this flag
      * is only the escape hatch that turns the login-door prompt off.
      */
     private bool $twoFactorChallenge = true;
+
+    /**
+     * Force enrolment of some second factor before the dashboard.
+     *
+     * OFF BY DEFAULT so existing apps do not trap operators who never turned
+     * 2FA on. `requireTwoFactor()` / `twoFactorRequired()` is the opt-in.
+     */
+    private bool $requireTwoFactor = false;
+
+    /** Self-service register slug, or null when this portal does not offer it. */
+    private ?string $registrationSlug = null;
+
+    /**
+     * Prove the mailbox after register (and on later visits) before the panel.
+     *
+     * OFF BY DEFAULT. A staff console that invites operators should not wall
+     * them on a verification notice they never asked for.
+     */
+    private bool $emailVerification = false;
 
     /**
      * Which auth-screen layout this panel uses: 'centered' (default), 'split', or 'showcase'.
@@ -744,13 +764,13 @@ final class Panel
     }
 
     /**
-     * After a correct password, ask for TOTP or a recovery code when the
-     * account has 2FA confirmed.
+     * After a correct password, ask for TOTP, a recovery code, or an email
+     * OTP when the account has that factor confirmed.
      *
      * DEFAULT TRUE: the user's Security settings are honoured. Pass `false`
      * only when this portal must not pause at the door (a kiosk that cannot
      * type a code, for example). Passkeys remain an alternative on the login
-     * screen; a password sign-in still challenges when 2FA is on.
+     * screen; a password sign-in still challenges when a factor is on.
      */
     public function twoFactorChallenge(bool $enabled = true): self
     {
@@ -762,6 +782,73 @@ final class Panel
     public function hasTwoFactorChallenge(): bool
     {
         return $this->twoFactorChallenge;
+    }
+
+    /**
+     * After login, send users with no TOTP, email OTP, or passkey to Security
+     * until they enrol. Cannot reach the dashboard until then.
+     *
+     * DEFAULT FALSE. Existing apps must not trap operators. `true` is the
+     * Filament-shaped required-enrol wall.
+     */
+    public function requireTwoFactor(bool $required = true): self
+    {
+        $this->requireTwoFactor = $required;
+
+        return $this;
+    }
+
+    /** Alias of `requireTwoFactor()`. */
+    public function twoFactorRequired(bool $required = true): self
+    {
+        return $this->requireTwoFactor($required);
+    }
+
+    public function requiresTwoFactor(): bool
+    {
+        return $this->requireTwoFactor;
+    }
+
+    /**
+     * Self-service registration on this portal, the way `login()` mounts
+     * sign-in. Off until called: a staff console should not offer a sign-up
+     * nobody approved.
+     *
+     *     Panel::make('admin')->login()->registration();
+     */
+    public function registration(bool|string $slug = 'register'): self
+    {
+        $this->registrationSlug = $slug === false ? null : (is_string($slug) ? trim($slug, '/') : 'register');
+
+        return $this;
+    }
+
+    public function hasRegistration(): bool
+    {
+        return $this->registrationSlug !== null;
+    }
+
+    public function getRegistrationSlug(): string
+    {
+        return $this->registrationSlug ?? 'register';
+    }
+
+    /**
+     * Prove the mailbox before the panel. Mounts the notice, the signed
+     * verify link, and resend. Off until called.
+     *
+     *     Panel::make('admin')->login()->registration()->emailVerification();
+     */
+    public function emailVerification(bool $enabled = true): self
+    {
+        $this->emailVerification = $enabled;
+
+        return $this;
+    }
+
+    public function hasEmailVerification(): bool
+    {
+        return $this->emailVerification;
     }
 
     /**
@@ -1598,6 +1685,8 @@ final class Panel
         $stack = [...$this->middleware, ...($this->authMiddleware ?? ['auth:'.$this->guard])];
         $stack[] = Http\Middleware\EnsureCanAccessPanel::class;
         $stack = $this->withIdleLockMiddleware($stack);
+        $stack[] = Http\Middleware\EnsurePanelEmailIsVerified::class;
+        $stack[] = Http\Middleware\RequireTwoFactorEnrolment::class;
         $stack[] = Http\Middleware\EnforceSubscriptionGate::class;
 
         return $stack;

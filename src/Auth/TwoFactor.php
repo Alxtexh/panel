@@ -101,6 +101,8 @@ final class TwoFactor
             self::SESSION_REMEMBER,
             self::SESSION_PANEL,
         ]);
+
+        EmailTwoFactor::forget($request);
     }
 
     /**

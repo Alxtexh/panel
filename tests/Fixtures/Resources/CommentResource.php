@@ -39,6 +39,10 @@ final class CommentResource extends Resource
         return $form->schema([
             SelectField::make('article_id')
                 ->relationship(Article::class, 'title')
+                ->createOption([
+                    TextField::make('title')->required(),
+                    TextField::make('status'),
+                ])
                 ->tableSelect(ArticleResource::class)
                 ->live(),
             SelectField::make('notable')

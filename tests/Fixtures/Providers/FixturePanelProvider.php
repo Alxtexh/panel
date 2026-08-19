@@ -89,6 +89,7 @@ final class FixturePanelProvider extends ServiceProvider
                 ->middleware(['web'])
                 ->authMiddleware(['auth:web'])
                 ->login()
+                ->registration()
                 ->apps(['billing-portal'])
                 ->discoverResources(
                     __DIR__.'/../Second',

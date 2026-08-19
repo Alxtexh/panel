@@ -7,11 +7,17 @@ namespace Alxtexh\Panel\Forms\Fields;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
+use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Forms\Rules\ExistsInScope;
 use Alxtexh\Panel\Forms\Rules\MorphExistsInScope;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
 use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\TenantContext;
 
 /**
  * A single-choice field.
@@ -48,6 +54,16 @@ final class SelectField extends Field
 
     /** @var class-string<Resource>|null */
     private ?string $pickerResource = null;
+
+    /**
+     * Mini-form used to create a related row without leaving this field.
+     *
+     * @var list<Field>
+     */
+    private array $createOptionFields = [];
+
+    /** @var Closure(array<string, mixed>): mixed|null */
+    private ?Closure $createOptionUsing = null;
 
     /**
      * Above this, rendering every option inline stops being reasonable.
@@ -183,6 +199,129 @@ final class SelectField extends Field
         }
 
         return $this;
+    }
+
+    /**
+     * Create a related row from a small form, then pick it.
+     *
+     * JSON, not a Livewire modal. Resource CRUD stays on dedicated pages;
+     * this is only for filling an option list. `$using` receives sanitised
+     * values and must return the new key. Omit it to insert into the
+     * `relationship()` model.
+     *
+     *     SelectField::make('article_id')
+     *         ->relationship(Article::class, 'title')
+     *         ->createOption([
+     *             TextField::make('title')->required(),
+     *         ]);
+     *
+     * @param  list<Field>  $fields
+     * @param  Closure(array<string, mixed>): mixed|null  $using
+     */
+    public function createOption(array $fields, ?Closure $using = null): static
+    {
+        foreach ($fields as $field) {
+            if (! $field instanceof Field) {
+                throw new InvalidArgumentException('createOption() fields must be Field instances.');
+            }
+        }
+
+        $this->createOptionFields = array_values($fields);
+        $this->createOptionUsing = $using;
+
+        return $this;
+    }
+
+    public function canCreateOption(): bool
+    {
+        return $this->createOptionFields !== [];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function createOptionSchema(): array
+    {
+        return array_map(static fn (Field $field): array => $field->toSchema(), $this->createOptionFields);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array{value: mixed, label: string}
+     */
+    public function createRelated(array $input): array
+    {
+        $form = Form::make()->schema($this->createOptionFields);
+        Validator::make($input, $form->rules())->validate();
+        $data = $form->sanitize($input);
+
+        if ($this->createOptionUsing !== null) {
+            $id = ($this->createOptionUsing)($data);
+            $label = $this->labelForCreated($id);
+
+            return ['value' => $id, 'label' => $label];
+        }
+
+        if ($this->relatedModel === null) {
+            throw new InvalidArgumentException('createOption() needs relationship() or a using callback.');
+        }
+
+        $model = $this->relatedModel;
+        $record = new $model;
+
+        if (Gate::getPolicyFor($model) !== null) {
+            abort_unless(Gate::allows('create', $model), 403);
+        }
+
+        $this->stampTenant($record);
+
+        foreach ($data as $column => $value) {
+            $record->setAttribute($column, $value);
+        }
+
+        $record->save();
+
+        $label = $this->titleAttribute !== null
+            ? (string) $record->getAttribute($this->titleAttribute)
+            : (string) $record->getKey();
+
+        return ['value' => $record->getKey(), 'label' => $label];
+    }
+
+    private function stampTenant(Model $record): void
+    {
+        $context = app(TenantContext::class);
+
+        if (! $context->shouldScopeByColumn()) {
+            return;
+        }
+
+        if (! Schema::hasColumn($record->getTable(), $context->column())) {
+            return;
+        }
+
+        if (! $record->hasGlobalScope(TenantScope::class)) {
+            return;
+        }
+
+        $key = $context->currentKey();
+
+        abort_if($key === null, 403, 'No tenant resolved; refusing to write an unscoped record.');
+
+        $record->setAttribute($context->column(), $key);
+    }
+
+    private function labelForCreated(mixed $id): string
+    {
+        if ($this->relatedModel !== null && $this->titleAttribute !== null) {
+            $row = $this->relatedModel::query()->find($id);
+
+            if ($row !== null) {
+                return (string) $row->getAttribute($this->titleAttribute);
+            }
+        }
+
+        return is_scalar($id) ? (string) $id : '';
     }
 
     public function isMorphTo(): bool
@@ -361,6 +500,7 @@ final class SelectField extends Field
             'searchable' => $this->searchable,
             ...($morphTo === [] ? [] : ['morphTo' => $morphTo]),
             ...($this->pickerResource !== null ? ['tableSelect' => true] : []),
+            ...($this->canCreateOption() ? ['createOption' => $this->createOptionSchema()] : []),
         ];
     }
 

@@ -89,7 +89,7 @@ trait ScaffoldsPanelAuth
          */
         $skipped = [];
 
-        foreach (['Login', 'ForgotPassword', 'ResetPassword', 'TwoFactorChallenge'] as $screen) {
+        foreach (['Login', 'ForgotPassword', 'ResetPassword', 'TwoFactorChallenge', 'Register', 'VerifyEmail'] as $screen) {
             /*
              * `panel/auth/`, NOT `auth/`, AND THE OLD PATH WAS THE BUG.
              *
@@ -230,6 +230,11 @@ use Alxtexh\Panel\Http\Controllers\PanelAuthController;
         ->defaults('panel', \$panel)
         ->middleware('throttle:5,1')
         ->name('{$id}.two-factor.login.store');
+
+    Route::post('two-factor-challenge/email', [PanelAuthController::class, 'resendEmailTwoFactor'])
+        ->defaults('panel', \$panel)
+        ->middleware('throttle:3,1')
+        ->name('{$id}.two-factor.email');
 
     /*
      * LOGOUT IS BEHIND THE GUARD, so an unauthenticated POST is a redirect to

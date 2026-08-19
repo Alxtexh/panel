@@ -298,6 +298,8 @@ export const PANEL_PAGES = {
     'panel/auth/ForgotPassword': () => import('./pages/panel/auth/ForgotPassword.vue'),
     'panel/auth/ResetPassword': () => import('./pages/panel/auth/ResetPassword.vue'),
     'panel/auth/TwoFactorChallenge': () => import('./pages/panel/auth/TwoFactorChallenge.vue'),
+    'panel/auth/Register': () => import('./pages/panel/auth/Register.vue'),
+    'panel/auth/VerifyEmail': () => import('./pages/panel/auth/VerifyEmail.vue'),
     'auth/LockScreen': () => import('./pages/auth/LockScreen.vue'),
     'errors/Error': () => import('./pages/errors/Error.vue'),
 } as const
