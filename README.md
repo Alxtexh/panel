@@ -23,9 +23,11 @@ This is the whole thing. Add the repository, require the package, install:
 ```bash
 composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
+php artisan make:panel-recipe Invoices
 ```
 
-First visit is dashboard, user menu, and Get started. Auth is on by default;
+First visit is dashboard, user menu, and Get started. After install, next is
+that card or the starter recipe (one Invoice resource, kit Vue, empty table).
 `--no-user` skips the Administrator so you can see the empty-sidebar notice.
 `--no-auth` keeps a starter-kit login. Kit CSS/JS is published to
 `public/vendor/panel`, so there is no white page. `npm run build` is optional
@@ -231,6 +233,7 @@ the connection for **every** tenant unconditionally and throws on the first shar
 | `panel:install` | Publish config, wire the provider |
 | `make:panel` | Generate a second portal (`--new-guard` gives it its own sign-in) |
 | `make:panel-resource` | Generate a resource (`--generate` infers from the table) |
+| `make:panel-recipe` | Official starter recipe (`panel:recipe`). One resource, empty table |
 | `make:panel-widget` | Empty StatWidget or `--chart` ChartWidget |
 | `make:panel-relation-manager` | Nested child pages (list/create/edit/attach), not a modal |
 | `panel:permissions` | List or reconcile abilities and roles |

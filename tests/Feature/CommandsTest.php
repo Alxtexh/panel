@@ -94,6 +94,7 @@ final class CommandsTest extends TestCase
     public function test_the_blueprint_names_the_generator_command(): void
     {
         $this->assertStringContainsString('make:panel-resource', Blueprint::markdown());
+        $this->assertStringContainsString('make:panel-recipe', Blueprint::markdown());
     }
 
     public function test_the_blueprint_names_kit_conventions(): void
