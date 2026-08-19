@@ -142,6 +142,22 @@ final class SelectRelationshipTest extends TestCase
         ])->assertStatus(422);
     }
 
+    public function test_create_option_schema_can_carry_dialog_labels(): void
+    {
+        $field = SelectField::make('article_id')
+            ->relationship(Article::class, 'title')
+            ->createOption([
+                \Alxtexh\Panel\Forms\Fields\TextField::make('title')->required(),
+            ])
+            ->createOptionLabel('Add article')
+            ->createOptionActionLabel('New article');
+
+        $schema = $field->toSchema();
+
+        $this->assertSame('Add article', $schema['createOptionLabel']);
+        $this->assertSame('New article', $schema['createOptionActionLabel']);
+    }
+
     public function test_another_tenants_id_fails_relationship_validation(): void
     {
         $foreign = Article::withoutGlobalScopes()

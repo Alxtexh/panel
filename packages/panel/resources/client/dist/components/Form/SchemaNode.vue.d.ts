@@ -49,8 +49,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
         value: any;
         label: string;
     }[]>;
-    errors: Record<string, string>;
     processing: boolean;
+    errors: Record<string, string>;
     depth: number;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

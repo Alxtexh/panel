@@ -24,8 +24,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }>, {
     image: boolean;
     disabled: boolean;
+    discard: (handle: string) => Promise<void>;
     accept: string[];
     maxKilobytes: number;
-    discard: (handle: string) => Promise<void>;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

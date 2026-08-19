@@ -79,6 +79,10 @@ export interface FormField {
      * JSON create, not resource CRUD.
      */
     createOption?: FormField[]
+    /** Modal title. Defaults to "Create {label}" on the client. */
+    createOptionLabel?: string
+    /** Dropdown action label. Defaults to "Create {label}" on the client. */
+    createOptionActionLabel?: string
     /**
      * MorphTo: type + id. The value is `{ type, id }`.
      */

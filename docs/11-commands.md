@@ -102,7 +102,7 @@ screen the kit already ships.
 | `Panel::requireTwoFactor()` / `twoFactorRequired()` | After login, send users with no TOTP, email OTP, or passkey to Security until they enrol. Default false. |
 | `Panel::registration()` | Mount register GET/POST the way `login()` mounts sign-in. Off until called. Optional slug. |
 | `Panel::emailVerification()` | Prove the mailbox before the panel. Mounts the notice, signed verify link, and resend. Off until called. |
-| `SelectField::createOption()` | Create-and-pick a related row from a small JSON dialog. Not resource CRUD as a modal. |
+| `SelectField::createOption()` | Create-and-pick a related row from a modal mini-form on relationship selects. Not resource CRUD. |
 | `Panel::socialite()` | Social buttons on this portal's login. Default: every provider with a client id and secret. `['google', 'github']` narrows. `false` hides them. Needs `laravel/socialite` (composer suggest). |
 | `Panel::turnstile()` | Cloudflare Turnstile on this portal. Keys (`TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`) are the install switch. `false` never challenges here. |
 | `TillPage` / `--till` | Empty till canvas. Vue shims packaged Till |

@@ -26,8 +26,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
         nodes?: unknown[];
     } | null;
     title: string;
-    errors: Record<string, string>;
     processing: boolean;
+    errors: Record<string, string>;
     searchOptions: (field: string, term: string) => Promise<{
         value: any;
         label: string;

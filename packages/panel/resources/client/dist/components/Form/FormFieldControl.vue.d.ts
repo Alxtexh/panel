@@ -53,11 +53,11 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
         value: any;
         label: string;
     }[];
+    processing: boolean;
     errors: Record<string, string>;
     childOptions: Record<string, {
         value: any;
         label: string;
     }[]>;
-    processing: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

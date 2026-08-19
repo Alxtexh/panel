@@ -144,6 +144,14 @@ SelectField::make('article_id')
 `{ option: { value, label } }`. Pass a `using` callback to insert yourself;
 omit it to write into the `relationship()` model (tenant-stamped).
 
+The client opens a modal mini-form (not resource CRUD). On success it picks
+the new option and closes the dialog. Optional labels:
+
+```php
+->createOptionLabel('Add article')
+->createOptionActionLabel('New article')
+```
+
 ## Fields worth extra care
 
 ### PasswordField

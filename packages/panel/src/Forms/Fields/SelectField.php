@@ -65,6 +65,10 @@ final class SelectField extends Field
     /** @var Closure(array<string, mixed>): mixed|null */
     private ?Closure $createOptionUsing = null;
 
+    private ?string $createOptionDialogTitle = null;
+
+    private ?string $createOptionButtonLabel = null;
+
     /**
      * Above this, rendering every option inline stops being reasonable.
      *
@@ -228,6 +232,20 @@ final class SelectField extends Field
 
         $this->createOptionFields = array_values($fields);
         $this->createOptionUsing = $using;
+
+        return $this;
+    }
+
+    public function createOptionLabel(string $label): static
+    {
+        $this->createOptionDialogTitle = $label;
+
+        return $this;
+    }
+
+    public function createOptionActionLabel(string $label): static
+    {
+        $this->createOptionButtonLabel = $label;
 
         return $this;
     }
@@ -500,7 +518,11 @@ final class SelectField extends Field
             'searchable' => $this->searchable,
             ...($morphTo === [] ? [] : ['morphTo' => $morphTo]),
             ...($this->pickerResource !== null ? ['tableSelect' => true] : []),
-            ...($this->canCreateOption() ? ['createOption' => $this->createOptionSchema()] : []),
+            ...($this->canCreateOption() ? [
+                'createOption' => $this->createOptionSchema(),
+                ...($this->createOptionDialogTitle !== null ? ['createOptionLabel' => $this->createOptionDialogTitle] : []),
+                ...($this->createOptionButtonLabel !== null ? ['createOptionActionLabel' => $this->createOptionButtonLabel] : []),
+            ] : []),
         ];
     }
 
