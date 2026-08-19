@@ -1,9 +1,9 @@
 # 1. Install
 
-## From GitHub, no registry account needed
+## GitHub only install (VCS composer repository)
 
-panelkit hosts the panel on GitHub. There is no Packagist or npm account
-needed. Add the VCS repository to your application's `composer.json`:
+panelkit hosts the panel on GitHub. This installer flow avoids any Packagist or
+npm account. Add the VCS repository to your application's `composer.json`:
 
 ```json
 "repositories": [
@@ -32,6 +32,17 @@ php artisan panel:install --no-auth
 php artisan panel:install --no-user
 php artisan panel:make-user
 ```
+
+## What we shipped recently
+
+These changes matter during installation and first login:
+
+- Email OTP MFA as a second factor at the login door.
+- Optional required-enrol wall after login (enrol TOTP, email OTP, or passkey before reaching the dashboard).
+- Registration plus email verification flow for self-service sign-up.
+- Tenant scoping foundation and the tenant switcher admin UI once tenancy is configured.
+- Notification toasts with action buttons, plus the bell/inbox stored through the database channel.
+- Table UX improvements: range selection, toggleable columns, and global search.
 
 First visit uses **published kit CSS/JS** at `public/vendor/panel`. There is no
 white page and no `npm run build` required. `npm install && npm run build` is
@@ -103,57 +114,32 @@ php artisan panel:install --name="Ada" --email=ada@example.com --password=secret
 
 Add `--force` to overwrite the published config and page files.
 
-## After installing
+## What is next after install
 
-**1. Assets are already published.** `panel:install` copies kit CSS/JS to
-`public/vendor/panel`. First visit has chrome, not a white page.
+`panel:install` already publishes kit CSS/JS to `public/vendor/panel`. Next:
 
-`npm install && npm run build` is optional, only if you customise Vue. After a
-Vite build the root view uses `@vite` instead of kit dist.
-
-**2. Serve from a real terminal.** Cursor agent shells abort `php artisan serve`.
-Use your own terminal, or:
+1. Run migrations, then reconcile permissions if you added new resources:
 
 ```bash
-composer run serve
-# or
-nohup php artisan serve --host=127.0.0.1 --port=8899 > storage/logs/serve.log 2>&1 &
+php artisan migrate
+php artisan panel:permissions sync
 ```
 
-**3. Tenancy is `none` unless you asked for more.** Add a `tenant_id` column and
-set `panel.tenancy.mode` to `column` when you actually have organisations. See
-[Authorisation and tenancy](08-authorisation-and-tenancy.md).
+2. Set environment variables for mail and auth providers:
 
-**4. Empty sidebar** only happens with `--no-user` (or if you skipped the
-prompt). That is deny-by-default with no grants, not a broken install:
+- Mail: set `MAIL_*` in `.env` for email OTP and email verification.
+- Auth providers: set any provider keys used by `config/services.php`.
+- Turnstile (optional): set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`.
 
-```bash
-php artisan panel:make-user
-```
+3. Create your first Administrator:
 
-**5. Add a resource.** Next is the **Get started** card, or the official starter:
+- Default install: follow the installer prompt after `panel:install`.
+- If you used `--no-user`: run `php artisan panel:make-user`.
 
-```bash
-php artisan make:panel-recipe Invoices
-# alias: php artisan panel:recipe invoices
-```
+4. Verify demo vs production differences:
 
-That writes `InvoiceResource` (number, status, total, dated_at), a model, a
-policy, and a migration. Vue is kit ResourceIndex / Form / View. Default: no
-rows. Pass `--migrate` to create the table, `--seed` for fake data. See
-[Starter recipe: Invoices](recipes/01-invoices.md).
-
-Or point a resource at a table you already have:
-
-```bash
-php artisan make:panel-resource Invoice --generate
-```
-
-`--generate` reads the table and infers columns, fields and filters. Visit
-`/invoices`; discovery registers it, and there is no route to add.
-
-**6. Review the generated policy.** The panel denies any ability whose model has
-no policy, so an unreviewed stub is a real grant.
+A fresh install is an empty canvas. Confirm tenancy settings match your
+production schema, and do not rely on the repo's demo data layout.
 
 ## Checking your work
 

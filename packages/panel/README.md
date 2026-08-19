@@ -10,7 +10,7 @@ component tree per click.
 **[Full documentation →](../../docs/README.md)** — every field, column, filter,
 action, widget and command.
 
-## Install from GitHub — no registry account needed
+## Install from GitHub only (VCS composer repository)
 
 This is the whole thing. Add the repository, require the package, install:
 
@@ -26,12 +26,28 @@ php artisan panel:install
 php artisan make:panel-recipe Invoices
 ```
 
+Optional installer flags:
+```bash
+php artisan panel:install --no-auth
+php artisan panel:install --no-user
+php artisan panel:make-user
+```
+
 First visit is dashboard, user menu, and Get started. After install, next is
 that card or the starter recipe (one Invoice resource, kit Vue, empty table).
-`--no-user` skips the Administrator so you can see the empty-sidebar notice.
-`--no-auth` keeps a starter-kit login. Kit CSS/JS is published to
-`public/vendor/panel`, so there is no white page. `npm run build` is optional
-if you customise Vue.
+Kit CSS/JS is published to `public/vendor/panel`, so there is no white page.
+`npm run build` is optional if you customise Vue.
+
+## What we shipped recently
+
+These changes matter during installation and first login:
+
+- Email OTP MFA as a second factor at the login door.
+- Optional required-enrol wall after login (enrol TOTP, email OTP, or passkey before reaching the dashboard).
+- Registration plus email verification flow for self-service sign-up.
+- Tenant scoping foundation and the tenant switcher admin UI once tenancy is configured.
+- Notification toasts with action buttons, plus the bell/inbox stored through the database channel.
+- Table UX improvements: range selection, toggleable columns, and global search.
 
 **There is no second install.** The Vue screens ship *inside* this Composer package
 at `resources/client`, and `panel:install` points your `package.json` at them with a
@@ -41,6 +57,33 @@ version, and the two halves cannot drift apart.
 > `"no-api": true` makes Composer clone rather than call GitHub's API, which is what
 > lets this work with no token at all. Without it Composer authenticates against
 > github.com even for a public repository, and fails when it cannot.
+
+## What is next after install
+
+`panel:install` already publishes kit CSS/JS to `public/vendor/panel`. Next:
+
+1. Run migrations, then reconcile permissions if you added new resources:
+
+```bash
+php artisan migrate
+php artisan panel:permissions sync
+```
+
+2. Set environment variables for mail and auth providers:
+
+- Mail: set `MAIL_*` in `.env` for email OTP and email verification.
+- Auth providers: set any provider keys used by `config/services.php`.
+- Turnstile (optional): set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`.
+
+3. Create your first Administrator:
+
+- Default install: follow the installer prompt after `panel:install`.
+- If you used `--no-user`: run `php artisan panel:make-user`.
+
+4. Verify demo vs production differences:
+
+A fresh install is an empty canvas. Confirm tenancy settings match your
+production schema, and do not rely on the repo's demo data layout.
 
 ### Or from the registries
 
