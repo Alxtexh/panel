@@ -48,6 +48,22 @@ php artisan panel:install --no-user
 php artisan panel:make-user
 ```
 
+## Post-install setup checklist
+
+After `panel:install`, run an optional doctor-backed checklist for the settings
+most hosts configure next:
+
+```bash
+php artisan panel:setup
+```
+
+It reports whether mail, the application key (needed for MFA), tenancy, and
+Turnstile look ready, then lists any open `panel:doctor` problems. Use
+`--json` when you want machine-readable output for scripts or CI.
+
+The dashboard SetupChecklist card uses the same doctor findings over time; this
+command is the terminal equivalent right after install.
+
 ## What we shipped recently
 
 These changes matter during installation and first login:

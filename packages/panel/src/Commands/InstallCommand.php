@@ -109,6 +109,9 @@ final class InstallCommand extends Command
         $this->line('  4. Review the generated policy - the panel DENIES any ability whose');
         $this->line('     model has no policy, so an unreviewed stub is a real grant.');
         $this->newLine();
+        $this->line('  After install, run `php artisan panel:setup` for a checklist of mail,');
+        $this->line('  MFA, tenancy, and Turnstile settings.');
+        $this->newLine();
         $this->line('  Without a first user (`--no-user`) the sidebar is empty: that is');
         $this->line('  deny-by-default, not a broken install. Run panel:make-user.');
         $this->newLine();
