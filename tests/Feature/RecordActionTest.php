@@ -226,4 +226,67 @@ final class RecordActionTest extends TestCase
         $this->assertSame('Details', $wizardAction['form']['nodes'][0]['children'][0]['label'] ?? null);
         $this->assertSame('Confirm', $wizardAction['form']['nodes'][0]['children'][1]['label'] ?? null);
     }
+
+    public function test_a_step_wizard_action_collects_inputs_step_by_step_and_runs_on_last_step(): void
+    {
+        $wizardId = 'publish-wizard-1';
+
+        $this->postJson("/articles/{$this->article->getKey()}/action", [
+            'action' => 'publish-wizard',
+            'wizardId' => $wizardId,
+            'wizardStep' => 0,
+            'data' => [
+                'reason' => '  Hello  ',
+            ],
+        ])->assertSuccessful()
+            ->assertJsonPath('values.reason', 'Hello')
+            ->assertJsonPath('nextStepIndex', 1);
+
+        $this->assertSame('draft', $this->article->fresh()->status);
+
+        $this->postJson("/articles/{$this->article->getKey()}/action", [
+            'action' => 'publish-wizard',
+            'wizardId' => $wizardId,
+            'wizardStep' => 1,
+            'data' => [
+                'confirm' => true,
+            ],
+        ])->assertSuccessful()
+            ->assertJsonPath('values.reason', 'Hello')
+            ->assertJsonPath('values.confirmed', true);
+
+        $fresh = $this->article->fresh();
+
+        $this->assertSame('published', $fresh->status);
+        $this->assertIsArray($fresh->custom ?? []);
+        $this->assertSame('Hello', $fresh->custom['reason'] ?? null);
+        $this->assertSame(true, $fresh->custom['confirmed'] ?? null);
+    }
+
+    public function test_a_step_wizard_action_validation_failure_on_step_one_prevents_step_two(): void
+    {
+        $wizardId = 'publish-wizard-2';
+
+        $this->postJson("/articles/{$this->article->getKey()}/action", [
+            'action' => 'publish-wizard',
+            'wizardId' => $wizardId,
+            'wizardStep' => 0,
+            'data' => [
+                'reason' => str_repeat('A', 200),
+            ],
+        ])->assertStatus(422)->assertJsonValidationErrors('reason');
+
+        $this->assertSame('draft', $this->article->fresh()->status);
+
+        $this->postJson("/articles/{$this->article->getKey()}/action", [
+            'action' => 'publish-wizard',
+            'wizardId' => $wizardId,
+            'wizardStep' => 1,
+            'data' => [
+                'confirm' => true,
+            ],
+        ])->assertStatus(422)->assertJsonValidationErrors('wizardStep');
+
+        $this->assertSame('draft', $this->article->fresh()->status);
+    }
 }

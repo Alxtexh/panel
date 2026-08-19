@@ -24,16 +24,38 @@ final class ActionStep
 
     private ?string $description = null;
 
+    private ?string $submitLabel = null;
+
     /**
      * @var Closure(Model, array<string, mixed>): array<string, mixed>|void|null
      */
     private ?Closure $validate = null;
 
-    private function __construct(public readonly string $label) {}
-
-    public static function make(string $label): self
+    private function __construct(public readonly string $label, public readonly string $key)
     {
-        return new self($label);
+        if (preg_match('/^[a-z][a-z0-9_-]*$/', $key) !== 1) {
+            throw new \InvalidArgumentException("[{$key}] is not a valid wizard step key.");
+        }
+    }
+
+    public static function make(string $label, ?string $key = null): self
+    {
+        $resolvedKey = $key ?? static::keyFromLabel($label);
+
+        return new self($label, $resolvedKey);
+    }
+
+    private static function keyFromLabel(string $label): string
+    {
+        $value = strtolower(trim($label));
+        $value = preg_replace('/[^a-z0-9_-]+/', '-', $value) ?? '';
+        $value = trim($value, '-');
+
+        if ($value === '' || preg_match('/^[a-z]/', $value) !== 1) {
+            $value = 'step-'.$value;
+        }
+
+        return $value;
     }
 
     public function describe(string $description): self
@@ -41,6 +63,23 @@ final class ActionStep
         $this->description = $description;
 
         return $this;
+    }
+
+    public function submitLabel(string $label): self
+    {
+        $this->submitLabel = $label;
+
+        return $this;
+    }
+
+    public function stepKey(): string
+    {
+        return $this->key;
+    }
+
+    public function getSubmitLabel(): ?string
+    {
+        return $this->submitLabel;
     }
 
     /**
@@ -56,11 +95,21 @@ final class ActionStep
     /**
      * @param  Closure(Model, array<string, mixed>): array<string, mixed>|void  $callback
      */
-    public function validate(Closure $callback): self
+    public function onExecute(Closure $callback): self
     {
         $this->validate = $callback;
 
         return $this;
+    }
+
+    /**
+     * Backwards-compatible alias for `onExecute()`.
+     *
+     * @deprecated Use `onExecute()` instead.
+     */
+    public function validate(Closure $callback): self
+    {
+        return $this->onExecute($callback);
     }
 
     public function formDefinition(): ?Form

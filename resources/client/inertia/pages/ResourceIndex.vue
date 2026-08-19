@@ -50,6 +50,7 @@ import {
     TableToolbar,
     PkModal,
     SchemaNode,
+    PkStepIndicator,
     useColumnVisibility,
     useLiveUpdates,
     hasBadgeValue,
@@ -581,12 +582,41 @@ function onRecordAction(row: Record<string, any>, action: RecordActionItem) {
      * spinner.
      */
     if (action.form) {
-        actionForm.value = { row, action, values: {}, errors: {}, processing: false }
+        const wizardSteps = recordWizardSteps(action)
+
+        actionForm.value = {
+            row,
+            action,
+            values: {},
+            errors: {},
+            processing: false,
+            wizardId: wizardSteps ? newWizardId() : undefined,
+            wizardActiveStep: wizardSteps ? 0 : undefined,
+        }
 
         return
     }
 
     runRecordAction(row, action)
+}
+
+function recordWizardSteps(action: RecordActionItem | any): any[] | null {
+    const nodes = action?.form?.nodes ?? []
+    const wizardNode = nodes.find((n: any) => n?.component === 'wizard')
+
+    if (!wizardNode) {
+        return null
+    }
+
+    return wizardNode.children ?? []
+}
+
+function newWizardId(): string {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID()
+    }
+
+    return `wiz-${Math.random().toString(16).slice(2)}`
 }
 
 /**
@@ -603,7 +633,58 @@ const actionForm = ref<{
     values: Record<string, any>
     errors: Record<string, string>
     processing: boolean
+    wizardId?: string
+    wizardActiveStep?: number
 } | null>(null)
+
+const actionWizard = computed(() => {
+    const open = actionForm.value
+
+    if (!open) {
+        return null
+    }
+
+    const steps = recordWizardSteps(open.action)
+
+    if (steps === null) {
+        return null
+    }
+
+    const activeStep = open.wizardActiveStep ?? 0
+    const currentStep = steps[activeStep] ?? null
+
+    return {
+        steps,
+        activeStep,
+        lastStepIndex: steps.length - 1,
+        currentStep,
+        displaySteps: steps.map((s: any) => ({
+            label: s.label ?? '',
+            description: s.description,
+        })),
+    }
+})
+
+function stepHasError(stepNode: any): boolean {
+    const errors = actionForm.value?.errors ?? {}
+    const keys: string[] = []
+
+    const walk = (node: any) => {
+        if (node?.component === 'field' && node?.key) {
+            keys.push(String(node.key))
+        }
+
+        if (Array.isArray(node?.children)) {
+            for (const child of node.children) {
+                walk(child)
+            }
+        }
+    }
+
+    walk(stepNode)
+
+    return keys.some((k) => !!errors[k])
+}
 
 /**
  * Submit what the dialog collected.
@@ -638,6 +719,12 @@ async function submitActionForm() {
     }
 
     try {
+        const wizardSteps = recordWizardSteps(open.action)
+        const isWizard = wizardSteps !== null
+
+        const wizardStepIndex = isWizard ? open.wizardActiveStep ?? 0 : null
+        const wizardId = isWizard ? open.wizardId ?? '' : null
+
         const response = await fetch(`${props.schema.routes.index}/${open.row.id}/action`, {
             method: 'POST',
             headers: {
@@ -647,7 +734,11 @@ async function submitActionForm() {
                 'X-XSRF-TOKEN': csrfToken(),
             },
             credentials: 'same-origin',
-            body: JSON.stringify({ action: open.action.key, data: open.values }),
+            body: JSON.stringify({
+                action: open.action.key,
+                data: open.values,
+                ...(isWizard ? { wizardStep: wizardStepIndex, wizardId } : {}),
+            }),
         })
 
         if (response.status === 422) {
@@ -675,6 +766,17 @@ async function submitActionForm() {
 
         if (body?.values && actionForm.value) {
             open.values = { ...open.values, ...(body.values as Record<string, any>) }
+        }
+
+        if (isWizard && wizardSteps && wizardStepIndex !== null) {
+            const lastIndex = wizardSteps.length - 1
+
+            if (wizardStepIndex < lastIndex) {
+                open.wizardActiveStep = wizardStepIndex + 1
+                open.errors = {}
+
+                return
+            }
         }
 
         toast.success(`${open.action.label} done`)
@@ -1437,16 +1539,39 @@ function badgeLabel(key: string, value: unknown): string {
             @close="actionForm = null"
         >
             <form class="flex flex-col gap-4" @submit.prevent="submitActionForm">
-                <SchemaNode
-                    v-for="(node, index) in actionForm?.action.form?.nodes ?? []"
-                    :key="index"
-                    :node="node as any"
-                    :values="actionForm!.values"
-                    :errors="actionForm!.errors"
-                    :processing="actionForm!.processing"
-                    :search-options="searchActionOptions"
-                    @update="(key: string, value: any) => (actionForm!.values[key] = value)"
-                />
+                <template v-if="actionWizard">
+                    <PkStepIndicator
+                        :steps="actionWizard.displaySteps"
+                        :active-step="actionWizard.activeStep"
+                        :has-error="(i: number) => stepHasError(actionWizard.steps[i])"
+                        :interactive="false"
+                    />
+
+                    <SchemaNode
+                        v-for="(node, index) in actionWizard.currentStep?.children ?? []"
+                        :key="index"
+                        :node="node as any"
+                        :values="actionForm!.values"
+                        :errors="actionForm!.errors"
+                        :processing="actionForm!.processing"
+                        :search-options="searchActionOptions"
+                        :depth="1"
+                        @update="(key: string, value: any) => (actionForm!.values[key] = value)"
+                    />
+                </template>
+
+                <template v-else>
+                    <SchemaNode
+                        v-for="(node, index) in actionForm?.action.form?.nodes ?? []"
+                        :key="index"
+                        :node="node as any"
+                        :values="actionForm!.values"
+                        :errors="actionForm!.errors"
+                        :processing="actionForm!.processing"
+                        :search-options="searchActionOptions"
+                        @update="(key: string, value: any) => (actionForm!.values[key] = value)"
+                    />
+                </template>
             </form>
 
             <template #footer>
@@ -1459,7 +1584,38 @@ function badgeLabel(key: string, value: unknown): string {
                     Cancel
                 </Button>
 
-                <Button size="sm" :disabled="actionForm?.processing" @click="submitActionForm">
+                <template v-if="actionWizard">
+                    <Button
+                        v-if="actionWizard.activeStep > 0"
+                        variant="ghost"
+                        size="sm"
+                        :disabled="actionForm?.processing"
+                        @click="actionForm!.wizardActiveStep = actionWizard.activeStep - 1"
+                    >
+                        Back
+                    </Button>
+
+                    <Button
+                        size="sm"
+                        type="submit"
+                        :disabled="actionForm?.processing"
+                    >
+                        {{
+                            actionForm?.processing
+                                ? 'Working…'
+                                : actionWizard.activeStep < actionWizard.lastStepIndex
+                                  ? actionWizard.currentStep?.submitLabel ?? 'Next'
+                                  : actionWizard.currentStep?.submitLabel ?? actionForm.action.label
+                        }}
+                    </Button>
+                </template>
+
+                <Button
+                    v-else
+                    size="sm"
+                    type="submit"
+                    :disabled="actionForm?.processing"
+                >
                     {{ actionForm?.processing ? 'Working…' : actionForm?.action.label }}
                 </Button>
             </template>
