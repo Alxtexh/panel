@@ -453,8 +453,10 @@ final class RecordAction
 
             return [
                 'component' => 'step',
+                'key' => $step->stepKey(),
                 'label' => $step->label,
                 'description' => $step->getDescription(),
+                'submitLabel' => $step->getSubmitLabel(),
                 'children' => $nodes,
             ];
         }, $this->steps);
@@ -469,5 +471,35 @@ final class RecordAction
             ],
             'fields' => [],
         ];
+    }
+
+    /**
+     * Execute with already-collected and already-step-validated data.
+     *
+     * This bypasses step callbacks run in `run()` so a wizard can validate
+     * each step on its own request.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>|null
+     */
+    public function executeWithData(Model $record, array $data = []): ?array
+    {
+        if ($this->link !== null) {
+            throw new InvalidArgumentException("[{$this->key}] is a link and cannot be executed.");
+        }
+
+        if ($this->handle !== null) {
+            $result = ($this->handle)($record, $data);
+
+            return is_array($result) ? $result : null;
+        }
+
+        if ($this->mutate === []) {
+            throw new InvalidArgumentException("[{$this->key}] declares nothing to do.");
+        }
+
+        $record->forceFill($this->mutate)->save();
+
+        return null;
     }
 }

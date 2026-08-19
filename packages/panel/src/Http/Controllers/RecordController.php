@@ -153,6 +153,8 @@ final class RecordController extends Controller
     {
         $validated = $request->validate([
             'action' => ['required', 'string', 'max:64'],
+            'wizardStep' => ['sometimes', 'integer', 'min:0'],
+            'wizardId' => ['sometimes', 'string', 'max:120'],
         ]);
 
         $class = $this->resolve($resource);
@@ -174,12 +176,165 @@ final class RecordController extends Controller
             'That action does not apply to this record.',
         );
 
+        if ($action->hasSteps() && array_key_exists('wizardStep', $validated)) {
+            $updates = $this->runWizardStep(
+                request: $request,
+                resource: $resource,
+                record: $record,
+                action: $action,
+                wizardStep: (int) $validated['wizardStep'],
+                wizardId: (string) ($validated['wizardId'] ?? ($id.'.'.$action->key)),
+            );
+
+            return $updates;
+        }
+
         $updates = $action->run($record, $this->actionInput($request, $action));
 
         return response()->json(array_filter([
             'ok' => true,
             'values' => $updates,
         ], static fn (mixed $v): bool => $v !== null));
+    }
+
+    /**
+     * Wizard step handler for declarative multi-step record actions.
+     *
+     * The server validates only the current step's rules, persists the
+     * validated values in session, and executes the action only after the
+     * last step succeeds.
+     */
+    private function runWizardStep(
+        Request $request,
+        string $resource,
+        Model $record,
+        RecordAction $action,
+        int $wizardStep,
+        string $wizardId,
+    ): JsonResponse {
+        $steps = $action->stepsDefinition();
+        $lastIndex = count($steps) - 1;
+
+        if ($wizardStep > $lastIndex) {
+            throw ValidationException::withMessages([
+                'wizardStep' => ['Unknown step.'],
+            ]);
+        }
+
+        $sessionKey = "panelkit.record_action_wizards.{$wizardId}";
+        $state = $request->session()->get($sessionKey);
+
+        if (! is_array($state)) {
+            if ($wizardStep !== 0) {
+                throw ValidationException::withMessages([
+                    'wizardStep' => ['Wizard must start at step 0.'],
+                ]);
+            }
+
+            $state = [
+                'resource' => $resource,
+                'recordId' => (string) $record->getKey(),
+                'actionKey' => $action->key,
+                'validatedUntil' => -1,
+                /**
+                 * @var array<int, array<string, mixed>>
+                 * Keys are wizard step indexes.
+                 */
+                'valuesByStep' => [],
+            ];
+        } else {
+            if (($state['recordId'] ?? null) !== (string) $record->getKey()) {
+                $request->session()->forget($sessionKey);
+
+                throw ValidationException::withMessages([
+                    'wizardStep' => ['Wizard state does not match this record.'],
+                ]);
+            }
+
+            if (($state['actionKey'] ?? null) !== $action->key) {
+                $request->session()->forget($sessionKey);
+
+                throw ValidationException::withMessages([
+                    'wizardStep' => ['Wizard state does not match this action.'],
+                ]);
+            }
+        }
+
+        $validatedUntil = (int) ($state['validatedUntil'] ?? -1);
+        $valuesByStep = is_array($state['valuesByStep'] ?? null) ? $state['valuesByStep'] : [];
+
+        if ($wizardStep > $validatedUntil + 1) {
+            throw ValidationException::withMessages([
+                'wizardStep' => ['This step is not reachable yet.'],
+            ]);
+        }
+
+        if ($wizardStep <= $validatedUntil) {
+            // Going back: discard any later validated values.
+            foreach (array_keys($valuesByStep) as $stepIndex) {
+                if ((int) $stepIndex > $wizardStep) {
+                    unset($valuesByStep[$stepIndex]);
+                }
+            }
+
+            $validatedUntil = $wizardStep;
+        }
+
+        $step = $steps[$wizardStep];
+        $form = $step->formDefinition();
+        $input = (array) $request->input('data', []);
+
+        $sanitized = [];
+
+        if ($form !== null) {
+            $validatedForStep = validator(
+                $input,
+                $form->rules(),
+            )->validate();
+
+            $sanitized = $form->sanitize($validatedForStep);
+        }
+
+        $collected = [];
+
+        for ($i = 0; $i < $wizardStep; $i++) {
+            if (array_key_exists($i, $valuesByStep)) {
+                $collected = array_merge($collected, $valuesByStep[$i]);
+            }
+        }
+
+        $collected = array_merge($collected, $sanitized);
+
+        $patch = $step->runValidate($record, $collected);
+
+        if ($patch !== null) {
+            $collected = array_merge($collected, $patch);
+        }
+
+        $valuesByStep[$wizardStep] = $collected;
+        $validatedUntil = max($validatedUntil, $wizardStep);
+
+        if ($wizardStep === $lastIndex) {
+            $fullData = $valuesByStep[$lastIndex] ?? $collected;
+            $updates = $action->executeWithData($record, $fullData);
+
+            $request->session()->forget($sessionKey);
+
+            return response()->json(array_filter([
+                'ok' => true,
+                'values' => $updates,
+            ], static fn (mixed $v): bool => $v !== null));
+        }
+
+        $state['validatedUntil'] = $validatedUntil;
+        $state['valuesByStep'] = $valuesByStep;
+        $request->session()->put($sessionKey, $state);
+
+        return response()->json([
+            'ok' => true,
+            'values' => $collected,
+            'nextStepIndex' => $wizardStep + 1,
+        ]);
     }
 
     /**

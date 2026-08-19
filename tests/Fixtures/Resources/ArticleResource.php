@@ -264,7 +264,8 @@ final class ArticleResource extends Resource
                 RecordAction::make('publish-wizard', 'Publish with steps')
                     ->authorize('update')
                     ->steps([
-                        ActionStep::make('Details')
+                        ActionStep::make('Details', 'details')
+                            ->submitLabel('Continue')
                             ->form(static function (Form $form): Form {
                                 return $form->schema([
                                     TextField::make('reason')
@@ -272,19 +273,20 @@ final class ArticleResource extends Resource
                                         ->rule('max:120'),
                                 ]);
                             })
-                            ->validate(static function (Article $article, array $data): array {
+                            ->onExecute(static function (Article $article, array $data): array {
                                 $reason = trim((string) ($data['reason'] ?? ''));
 
                                 return ['reason' => $reason];
                             }),
-                        ActionStep::make('Confirm')
+                        ActionStep::make('Confirm', 'confirm')
                             ->describe('Confirm the change')
+                            ->submitLabel('Publish')
                             ->form(static function (Form $form): Form {
                                 return $form->schema([
                                     CheckboxField::make('confirm')->rule('accepted'),
                                 ]);
                             })
-                            ->validate(static function (Article $article, array $data): array {
+                            ->onExecute(static function (Article $article, array $data): array {
                                 return ['confirmed' => true];
                             }),
                     ])
