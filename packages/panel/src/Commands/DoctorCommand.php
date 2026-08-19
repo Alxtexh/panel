@@ -15,6 +15,8 @@ use Alxtexh\Panel\Knowledge;
 use Alxtexh\Panel\Live\LiveConfig;
 use Alxtexh\Panel\Pages\Page;
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Plugins\PanelPlugin;
+use Alxtexh\Panel\Plugins\Plugin;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Support\BackupStatus;
 use Alxtexh\Panel\Support\Contrast;
@@ -115,6 +117,8 @@ final class DoctorCommand extends Command
             $this->checkUserHoldsRoles();
             $this->checkSomebodyCanOpenThePanel();
         }
+
+        $this->checkPluginCompatibility($panels);
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -1624,6 +1628,96 @@ final class DoctorCommand extends Command
                 .'fails on the first query. Correct the name, or run migrate.',
             );
         }
+    }
+
+    /**
+     * Compare installed plugins against the PanelKit plugin contract version.
+     *
+     * Explicit registration only: config, global registry, and per-panel lists.
+     * A mismatch is a problem because hooks may not exist or may behave differently.
+     */
+    private function checkPluginCompatibility(PanelManager $panels): void
+    {
+        $expected = Plugin::CONTRACT_VERSION;
+        $byId = [];
+        $classesById = [];
+
+        foreach ($this->discoveredPlugins($panels) as $plugin) {
+            $id = $plugin->id();
+            $class = $plugin::class;
+
+            if (isset($classesById[$id]) && $classesById[$id] !== $class) {
+                $this->problem(
+                    "Duplicate plugin id [{$id}]",
+                    "Both {$classesById[$id]} and {$class} claim this id. Only one plugin may use an id.",
+                    'Override id() on one plugin or remove the duplicate registration.',
+                );
+            } else {
+                $classesById[$id] = $class;
+            }
+
+            $byId[$id] = $plugin;
+        }
+
+        if ($byId === []) {
+            $this->note(
+                'No Panel plugins registered',
+                'Add plugins through config(panel.plugins) or Panel::plugins(). This is informational only.',
+            );
+
+            return;
+        }
+
+        foreach ($byId as $id => $plugin) {
+            $version = $plugin->getVersion();
+
+            if ($version === $expected) {
+                continue;
+            }
+
+            $this->problem(
+                "Plugin [{$id}] targets contract {$version}",
+                get_class($plugin)." reports plugin contract {$version}, but this PanelKit release expects {$expected}.",
+                'Upgrade the plugin package or pin PanelKit to a matching release.',
+            );
+        }
+    }
+
+    /**
+     * @return list<PanelPlugin>
+     */
+    private function discoveredPlugins(PanelManager $panels): array
+    {
+        /** @var array<string, PanelPlugin> $instances */
+        $instances = [];
+
+        foreach ($panels->plugins() as $plugin) {
+            $instances[$plugin->id()] = $plugin;
+        }
+
+        foreach ((array) config('panel.plugins', []) as $class) {
+            if (! is_string($class) || ! class_exists($class)) {
+                continue;
+            }
+
+            try {
+                $plugin = app($class);
+            } catch (Throwable) {
+                continue;
+            }
+
+            if ($plugin instanceof PanelPlugin) {
+                $instances[$plugin->id()] = $plugin;
+            }
+        }
+
+        foreach ($panels->panels() as $panel) {
+            foreach ($panel->getPlugins() as $plugin) {
+                $instances[$plugin->id()] = $plugin;
+            }
+        }
+
+        return array_values($instances);
     }
 
     private function problem(string $title, string $detail, ?string $suggested = null): void

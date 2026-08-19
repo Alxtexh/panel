@@ -300,6 +300,7 @@ final class PanelManager
         }
 
         $contexts = [];
+        $widgets = [];
 
         foreach ([...self::$plugins, ...$panel->getPlugins()] as $plugin) {
             if (! $plugin->appliesTo($panel)) {
@@ -311,6 +312,11 @@ final class PanelManager
             $plugin->register($context);
 
             $contexts[] = $context;
+            $widgets = [...$widgets, ...$context->registeredWidgets()];
+        }
+
+        if ($widgets !== []) {
+            $panel->widgets($widgets);
         }
 
         $this->pluginContexts[$panel->id] = $contexts;
@@ -1021,7 +1027,11 @@ final class PanelManager
     /**
      * @param  list<class-string<Pages\Page>>  $classes
      */
-    public function registerPages(array $classes): void
+    /**
+     * @param  list<class-string<Pages\Page>>  $classes
+     * @param  string|null  $panelIdOverride  Overrides the class `panel()` declaration.
+     */
+    public function registerPages(array $classes, ?string $panelIdOverride = null): void
     {
         foreach ($classes as $class) {
             /*
@@ -1034,7 +1044,7 @@ final class PanelManager
             }
 
             $slug = $class::slug();
-            $panelId = $class::panel();
+            $panelId = $panelIdOverride ?? $class::panel();
 
             $this->panelPageMap[$panelId] ??= [];
 

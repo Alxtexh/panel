@@ -66,4 +66,12 @@ interface PanelPlugin
      * with its prefix, middleware and guard already in place.
      */
     public function register(PluginContext $context): void;
+
+    /**
+     * Compatibility metadata for `panel:doctor`.
+     *
+     * Prefer matching `Plugin::CONTRACT_VERSION` unless the plugin targets an
+     * older PanelKit release deliberately.
+     */
+    public function getVersion(): string;
 }
