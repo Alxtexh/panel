@@ -1247,7 +1247,8 @@ final class DoctorCommand extends Command
                 $this->problem(
                     'Vite is in use but the client half is not in node_modules',
                     'public/build/manifest.json exists, so the root view loads @vite. '
-                    .'Install the Vue package: npm install && npm run build',
+                    .'Run npm install (resolves the file: dependency from the Composer package) '
+                    .'and npm run build. Do not install @alxtexh-enterprise/panel from the npm registry.',
                 );
             }
 
@@ -1264,7 +1265,8 @@ final class DoctorCommand extends Command
 
         $this->problem(
             'kit CSS/JS is missing and Vite has not been built - first visit will be a white page',
-            'The package should ship resources/client/dist/kit. Reinstall, or run: npm install && npm run build',
+            'Re-run php artisan panel:install to publish public/vendor/panel. '
+            .'Or run npm install && npm run build only if you customise Vue (file: dependency, not npm registry).',
         );
     }
 

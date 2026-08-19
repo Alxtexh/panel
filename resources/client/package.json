@@ -22,6 +22,7 @@
         "dashboard",
         "alxtexhpanel"
     ],
+    "private": true,
     "publishConfig": {
         "access": "public"
     },
