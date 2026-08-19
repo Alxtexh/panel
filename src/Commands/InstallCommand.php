@@ -41,7 +41,7 @@ final class InstallCommand extends Command
                             {--password= : First Administrator password (non-interactive; prefer a prompt)}
                             {--force : Overwrite the published config and page files}';
 
-    protected $description = 'Publish config, scaffold auth, create the first Administrator, sync permissions, and print next steps';
+    protected $description = 'Publish config, scaffold auth, create the first Administrator, sync permissions, and print next steps. It does not run `composer install`. Run it after `composer require`.';
 
     public function handle(): int
     {
