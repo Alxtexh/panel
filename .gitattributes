@@ -1,0 +1,30 @@
+# What does NOT go into an installation.
+#
+# `composer install` from Packagist fetches a DIST ARCHIVE built from the git
+# tree, and everything tracked here is in it unless said otherwise. Without this
+# file every consumer downloaded the package's own 548K test suite, its Testbench
+# host and its PHPUnit config - none of which they can run, because the tools
+# those need are `require-dev` and dev requirements of a DEPENDENCY are never
+# installed.
+#
+# So it was not merely wasted bytes; it was a `tests/` directory inside
+# `vendor/` that looks runnable and is not, and a `phpunit.xml` sitting where a
+# test runner scanning the tree might pick it up.
+#
+# `export-ignore` is the mechanism Laravel, Symfony and Filament all use for
+# exactly this. The source of truth stays the repository - nothing here deletes
+# anything - it only bounds what an installation receives.
+
+/tests            export-ignore
+/phpunit.xml      export-ignore
+/testbench.yaml   export-ignore
+/.gitattributes   export-ignore
+
+# THE LOCKFILE IS DELIBERATELY EXCLUDED. A library's `composer.lock` is never
+# read by a consumer - only the root project's is - and shipping one invites the
+# reader to believe those are the versions they will get.
+/composer.lock    export-ignore
+
+# `resources/client` STAYS. It is the mirrored copy of the npm package that the
+# installer publishes into an application, so it is not a build artefact here -
+# it is the thing being distributed. See `make sync-client`.

@@ -1,0 +1,248 @@
+/**
+ * The panel's stylesheet.
+ *
+ * PUBLISHED BY `panel:install` AND YOURS TO EDIT.
+ *
+ * THE TWO `@source` LINES ARE THE ONES THAT MATTER, and leaving them out is the
+ * most common way a first install ends up looking broken. Tailwind 4 scans your
+ * project for class names and does not scan `node_modules` - so every utility
+ * used ONLY inside the packaged components is purged, and you get a correctly
+ * structured table with no styling at all. Nothing errors; the page is simply
+ * unreadable.
+ *
+ * THE TWO LINES POINT AT DIFFERENT THINGS, and that is deliberate rather than
+ * an oversight. `@alxtexh-enterprise/panel` ships COMPILED - it has to, because its shadcn
+ * components declare props with types imported from `reka-ui` and a consumer's
+ * Vite cannot resolve those across a package boundary - so its class names live
+ * in `dist` as string literals in the render functions, which Tailwind reads
+ * exactly as well as it reads a template. `@alxtexh-enterprise/panel/inertia` still ships
+ * source, so its line still points at `src`.
+ */
+@import 'tailwindcss';
+
+@source '../../node_modules/@alxtexh-enterprise/panel/dist/**/*.js';
+@source '../../node_modules/@alxtexh-enterprise/panel/inertia/**/*.{vue,ts}';
+
+/**
+ * The design tokens every packaged component reads.
+ *
+ * THE SET IS NOT DECORATIVE - IT IS THE ONE THE COMPONENTS ACTUALLY ASK FOR.
+ * An earlier version of this file was short of `popover`, `accent` and
+ * `secondary`, so the command palette, the account menu, every hover state and
+ * every secondary button rendered with no surface at all - on an installation
+ * whose stylesheet was otherwise wired correctly. `verify-install.sh` greps the
+ * BUILT css for `.bg-popover` for exactly that reason.
+ *
+ * A later version was short of `sidebar` and `radius` the same way: the
+ * sidebar panel rendered fully transparent (no `--sidebar` token to resolve),
+ * and every rounded corner was square until the appearance drawer's own JS
+ * set `--radius` after mount. Both are defined here now for the same reason
+ * `popover` is - this file is a snapshot of tokens the demo app's stylesheet
+ * evolves independently of, and drift here is silent until someone looks.
+ *
+ * SEMANTIC NAMES, NOT COLOURS. A component asks for `bg-card` and
+ * `text-muted-foreground`; what those mean is decided here, once, and a panel
+ * is rebranded by editing this block rather than by finding every component
+ * that hardcoded a slate.
+ *
+ * `--primary` IS THE ONE TO CHANGE FIRST. It is the accent on buttons, links
+ * and active navigation; an organisation's brand colour overrides it per tenant
+ * at runtime, which is why components read the variable rather than a class.
+ */
+@theme {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-sidebar: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+}
+
+/*
+ * THESE VALUES ARE THE DEMO'S. Keep them in lockstep with
+ * apps/playground/resources/css/app.css - a fresh install must look like that
+ * shell, not a near-neighbour palette that drifts into "broken design".
+ */
+:root {
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(0 0% 3.9%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(0 0% 3.9%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(0 0% 3.9%);
+    --primary: hsl(0 0% 9%);
+    --primary-foreground: hsl(0 0% 98%);
+    --secondary: hsl(0 0% 92.1%);
+    --secondary-foreground: hsl(0 0% 9%);
+    --muted: hsl(0 0% 96.1%);
+    --muted-foreground: hsl(0 0% 40%);
+    --accent: hsl(0 0% 96.1%);
+    --accent-foreground: hsl(0 0% 9%);
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --border: hsl(0 0% 92.8%);
+    --input: hsl(0 0% 89.8%);
+    --ring: hsl(0 0% 3.9%);
+    --chart-1: hsl(12 76% 61%);
+    --chart-2: hsl(173 58% 39%);
+    --chart-3: hsl(197 37% 24%);
+    --chart-4: hsl(43 74% 66%);
+    --chart-5: hsl(27 87% 67%);
+    --radius: 0.5rem;
+    --sidebar-background: hsl(0 0% 98%);
+    --sidebar-foreground: hsl(240 5.3% 26.1%);
+    --sidebar-primary: hsl(0 0% 10%);
+    --sidebar-primary-foreground: hsl(0 0% 98%);
+    --sidebar-accent: hsl(0 0% 94%);
+    --sidebar-accent-foreground: hsl(0 0% 30%);
+    --sidebar-border: hsl(0 0% 91%);
+    --sidebar-ring: hsl(217.2 91.2% 59.8%);
+    --sidebar: hsl(0 0% 98%);
+    --pk-font-size: 16px;
+    --pk-row-padding: 0.5rem;
+}
+
+/*
+ * DARK IS A CLASS, NOT A MEDIA QUERY. The root view sets it from a cookie
+ * before the first paint, so somebody on dark does not get a white flash on
+ * every full page load - and so a person can choose a theme that differs from
+ * their operating system's.
+ */
+.dark {
+    --background: hsl(0 0% 3.9%);
+    --foreground: hsl(0 0% 98%);
+    --card: hsl(0 0% 3.9%);
+    --card-foreground: hsl(0 0% 98%);
+    --popover: hsl(0 0% 3.9%);
+    --popover-foreground: hsl(0 0% 98%);
+    --primary: hsl(0 0% 98%);
+    --primary-foreground: hsl(0 0% 9%);
+    --secondary: hsl(0 0% 14.9%);
+    --secondary-foreground: hsl(0 0% 98%);
+    --muted: hsl(0 0% 16.08%);
+    --muted-foreground: hsl(0 0% 63.9%);
+    --accent: hsl(0 0% 14.9%);
+    --accent-foreground: hsl(0 0% 98%);
+    --destructive: hsl(0 84% 60%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --border: hsl(0 0% 14.9%);
+    --input: hsl(0 0% 14.9%);
+    --ring: hsl(0 0% 83.1%);
+    --chart-1: hsl(220 70% 50%);
+    --chart-2: hsl(160 60% 45%);
+    --chart-3: hsl(30 80% 55%);
+    --chart-4: hsl(280 65% 60%);
+    --chart-5: hsl(340 75% 55%);
+    --sidebar-background: hsl(0 0% 7%);
+    --sidebar-foreground: hsl(0 0% 95.9%);
+    --sidebar-primary: hsl(360, 100%, 100%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(0 0% 15.9%);
+    --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+    --sidebar-border: hsl(0 0% 15.9%);
+    --sidebar-ring: hsl(217.2 91.2% 59.8%);
+    --sidebar: hsl(240 5.9% 10%);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+html {
+    font-size: var(--pk-font-size);
+}
+
+/*
+ * The shell is one viewport tall. Without this, `html`/`body` scroll AND the
+ * inset scrolls, because a skip link or bottom-bar padding made the document
+ * taller than the `h-svh` rail.
+ */
+html:has(.pk-shell),
+body:has(.pk-shell) {
+    height: 100%;
+    overflow: hidden;
+}
+
+.pk-row td {
+    padding-top: var(--pk-row-padding);
+    padding-bottom: var(--pk-row-padding);
+}
+
+:root[data-sidebar='right'] [data-slot='sidebar-wrapper'] {
+    flex-direction: row-reverse;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
