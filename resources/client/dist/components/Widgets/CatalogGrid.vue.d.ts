@@ -33,9 +33,9 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_PublicProps, 
     "onUpdate:modelValue"?: ((value: "grid" | "list") => any) | undefined;
     onScan?: ((query: string) => any) | undefined;
 }>, {
-    autofocus: boolean;
     searchPlaceholder: string;
     searchable: boolean;
+    autofocus: boolean;
     facets: CatalogFacet[];
     layoutToggle: boolean;
     pageSize: number | null;

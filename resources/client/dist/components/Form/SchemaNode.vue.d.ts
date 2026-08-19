@@ -43,12 +43,12 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onChange?: ((key: string, value: unknown) => any) | undefined;
 }>, {
-    depth: number;
     options: Record<string, {
         value: any;
         label: string;
     }[]>;
     errors: Record<string, string>;
     processing: boolean;
+    depth: number;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

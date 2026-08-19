@@ -405,12 +405,27 @@ final class ResourceController extends Controller
         // data rather than an omission.
         $row = $class::definition()->toListQuery($class::model())->find($id) ?? $record->toArray();
 
+        $relationFormOptions = [];
+
+        foreach ($class::relations() as $manager) {
+            if (! $manager->canInlineCreate($class, $record)) {
+                continue;
+            }
+
+            $form = $manager->formDefinition();
+
+            if ($form !== null) {
+                $relationFormOptions[$manager->key] = $form->resolveOptions();
+            }
+        }
+
         return Inertia::render('ResourceView', [
             'schema' => $parent === null
                 ? $class::schema()
                 : NestedContext::schema($class::schema(), $class, $parent),
             'record' => [...$row, 'id' => $record->getKey()],
             'can' => $class::permissions(),
+            'relationFormOptions' => $relationFormOptions,
 
             /*
              * PLUGIN MARKUP ON THE RECORD PAGE TOO - roadmap 4.4.
@@ -469,6 +484,53 @@ final class ResourceController extends Controller
             'nextCursor' => $result->nextCursor,
             'perPage' => $result->perPage,
         ]);
+    }
+
+    /**
+     * Create a related row from the parent record page without leaving it.
+     *
+     * Edit and view stay on the nested resource's dedicated pages. The parent
+     * key is stamped from the URL, never from the form body.
+     */
+    public function storeRelation(Request $request, string $resource, string $id, string $relation): JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        $parent = $class::model()::query()->findOrFail($id);
+
+        $manager = $class::relation($relation);
+
+        if ($manager === null) {
+            throw new NotFoundHttpException("No relation [{$relation}] on [{$resource}].");
+        }
+
+        abort_unless($class::can($manager->getAbility(), $parent), 403);
+        abort_unless($manager->canInlineCreate($class, $parent), 403);
+
+        $form = $manager->formDefinition();
+
+        abort_if($form === null, 404);
+
+        $rules = $form->rules();
+        $parentColumn = $manager->stampedParentColumn();
+
+        if ($parentColumn !== null) {
+            unset($rules[$parentColumn]);
+        }
+
+        $validated = $request->validate($rules);
+
+        $record = $manager->store($class, $parent, $validated);
+
+        $rows = $manager->rows($request, $parent->getKey())->records;
+
+        $row = collect($rows)->first(
+            static fn (array $candidate): bool => (string) ($candidate['id'] ?? '') === (string) $record->getKey(),
+        );
+
+        return response()->json([
+            'record' => $row ?? ['id' => $record->getKey()],
+        ], 201);
     }
 
     /** Edit form. A real page, for the same reasons as create. */
