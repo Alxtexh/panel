@@ -26,7 +26,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
-import { RecordForm, UnsavedBar, buttonClasses } from '@alxtexh-enterprise/panel'
+import { CreateOptionError, RecordForm, UnsavedBar, buttonClasses, fieldErrorsFromPayload } from '@alxtexh-enterprise/panel'
 import type { FormField, UploadedFileValue } from '@alxtexh-enterprise/panel'
 import DefineFieldDialog from '../components/DefineFieldDialog.vue'
 
@@ -360,8 +360,15 @@ async function createOption(
     const payload = await res.json().catch(() => ({}))
 
     if (!res.ok) {
-        const first = payload?.errors ? Object.values(payload.errors).flat()[0] : null
-        throw new Error(typeof first === 'string' ? first : 'Could not create that option.')
+        const fieldErrors = fieldErrorsFromPayload(payload?.errors)
+        const first =
+            Object.values(fieldErrors)[0] ??
+            (payload?.message && typeof payload.message === 'string' ? payload.message : null)
+
+        throw new CreateOptionError(
+            typeof first === 'string' ? first : 'Could not create that option.',
+            fieldErrors,
+        )
     }
 
     return payload.option
