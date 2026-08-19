@@ -24,13 +24,13 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     "onUpdate:modelValue"?: ((value: Row[] | null) => any) | undefined;
 }>, {
     disabled: boolean;
+    itemLabel: string;
+    minItems: number | null;
+    maxItems: number | null;
     errors: Record<string, string>;
     childOptions: Record<string, {
         value: any;
         label: string;
     }[]>;
-    itemLabel: string;
-    minItems: number | null;
-    maxItems: number | null;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

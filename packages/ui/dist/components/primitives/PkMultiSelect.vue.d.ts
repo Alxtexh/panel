@@ -20,8 +20,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }>, {
     disabled: boolean;
     placeholder: string;
-    max: number | null;
     searchPlaceholder: string;
     searchable: boolean | null;
+    max: number | null;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

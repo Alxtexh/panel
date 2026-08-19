@@ -1248,6 +1248,12 @@ final class PanelRoutes
             ->where('relation', '[a-z0-9_-]+')
             ->name('relation');
 
+        Route::post('{resource}/{id}/relations/{relation}', [ResourceController::class, 'storeRelation'])
+            ->whereIn('resource', $keys)
+            ->whereNumber('id')
+            ->where('relation', '[a-z0-9_-]+')
+            ->name('relation.store');
+
         Route::get('{resource}/{id}/edit', [ResourceController::class, 'edit'])
             ->whereIn('resource', $keys)->whereNumber('id')->name('edit');
 

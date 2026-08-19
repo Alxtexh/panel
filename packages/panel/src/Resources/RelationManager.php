@@ -7,9 +7,12 @@ namespace Alxtexh\Panel\Resources;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Http\NestedRelation;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
+use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Tables\ListResult;
 use Alxtexh\Panel\Tables\Table;
 
@@ -199,7 +202,107 @@ final class RelationManager
 
     public function hasForm(): bool
     {
-        return $this->form !== null;
+        return $this->form !== null || $this->resource !== null;
+    }
+
+    public function formDefinition(): ?Form
+    {
+        if ($this->form !== null) {
+            return ($this->form)(Form::make());
+        }
+
+        if ($this->resource !== null) {
+            return $this->resource::formDefinition();
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether create-from-tab is offered. Edit and view stay on dedicated pages.
+     *
+     * @param  class-string<resource>  $parentResourceClass
+     */
+    public function canInlineCreate(string $parentResourceClass, Model $parent): bool
+    {
+        $form = $this->formDefinition();
+
+        if ($form === null || $form->fields() === []) {
+            return false;
+        }
+
+        if ($this->resource !== null) {
+            return (bool) ($this->resource::permissions()['create'] ?? false);
+        }
+
+        return $parentResourceClass::can($this->createAbility, $parent);
+    }
+
+    /**
+     * Persist one related row from the parent record page.
+     *
+     * The parent key is stamped from the URL context, never honoured from input.
+     *
+     * @param  class-string<resource>  $parentResourceClass
+     * @param  array<string, mixed>  $validated
+     */
+    public function store(string $parentResourceClass, Model $parent, array $validated): Model
+    {
+        $form = $this->formDefinition();
+
+        abort_if($form === null, 404);
+
+        /** @var class-string<Model> $modelClass */
+        $modelClass = $this->resource !== null ? $this->resource::model() : $this->model;
+
+        $record = new $modelClass;
+        $record->forceFill($form->sanitize($validated));
+
+        $this->applyTenant($record);
+
+        if ($this->resource !== null) {
+            if (! NestedRelation::belongsToMany($this->resource)) {
+                $record->setAttribute($this->resource::parentColumn(), $parent->getKey());
+            }
+
+            $record->save();
+
+            if (NestedRelation::belongsToMany($this->resource)) {
+                NestedRelation::associateNew($this->resource, $parent, $record);
+            }
+        } else {
+            $column = str_contains($this->foreignKey, '.')
+                ? substr($this->foreignKey, strrpos($this->foreignKey, '.') + 1)
+                : $this->foreignKey;
+
+            $record->setAttribute($column, $parent->getKey());
+            $record->save();
+        }
+
+        return $record->fresh() ?? $record;
+    }
+
+    private function applyTenant(Model $record): void
+    {
+        $context = app(TenantContext::class);
+
+        if (! $context->shouldScopeByColumn()) {
+            return;
+        }
+
+        if (! Schema::hasColumn($record->getTable(), $context->column())) {
+            return;
+        }
+
+        if (! $record->hasGlobalScope(TenantScope::class)) {
+            return;
+        }
+
+        $key = $context->currentKey();
+
+        abort_if($key === null, 403, 'No tenant resolved; refusing to write an unscoped record.');
+
+        $record->setAttribute($context->column(), $key);
     }
 
     public function getAbility(): string
@@ -216,6 +319,28 @@ final class RelationManager
     public function nestedResource(): ?string
     {
         return $this->resource;
+    }
+
+    /**
+     * Foreign key stamped from the parent URL on inline create, never from input.
+     */
+    public function stampedParentColumn(): ?string
+    {
+        if ($this->resource !== null) {
+            if (NestedRelation::belongsToMany($this->resource)) {
+                return null;
+            }
+
+            return $this->resource::parentColumn();
+        }
+
+        if (! isset($this->foreignKey) || $this->foreignKey === '') {
+            return null;
+        }
+
+        return str_contains($this->foreignKey, '.')
+            ? substr($this->foreignKey, strrpos($this->foreignKey, '.') + 1)
+            : $this->foreignKey;
     }
 
     public function definition(): Table
@@ -292,9 +417,13 @@ final class RelationManager
             $formSchema = $this->resource::formDefinition()->toSchema();
         }
 
+        $formSchema = $this->withoutStampedParentField($formSchema);
+
         $canCreate = false;
         $canEdit = false;
         $pages = null;
+
+        $inlineCreate = $formSchema !== null;
 
         if ($this->resource !== null) {
             $permissions = $this->resource::permissions();
@@ -304,6 +433,7 @@ final class RelationManager
             if (NestedRelation::belongsToMany($this->resource)) {
                 $pages['attach'] = true;
             }
+            $inlineCreate = $canCreate;
         }
 
         return [
@@ -313,14 +443,71 @@ final class RelationManager
             'table' => $this->definition()->toSchema(),
             'form' => $formSchema,
             /*
-             * True only when a nested resource owns dedicated pages. The view
-             * tab is a summary; Add / Edit / View all are links, not modals.
+             * Create opens inline on the parent tab when a form exists. Edit
+             * and view stay on the nested resource's dedicated pages.
              */
-            'canCreate' => $canCreate,
+            'canCreate' => $inlineCreate,
             'canEdit' => $canEdit,
+            'inlineCreate' => $inlineCreate,
             'pages' => $pages,
             'createAbility' => $this->createAbility,
             'updateAbility' => $this->updateAbility,
         ];
+    }
+
+    /**
+     * Drop the parent foreign key from the inline create form. It is stamped
+     * from the URL after validation, so offering it in the dialog would let
+     * the body claim a different parent.
+     *
+     * @param  array<string, mixed>|null  $schema
+     * @return array<string, mixed>|null
+     */
+    private function withoutStampedParentField(?array $schema): ?array
+    {
+        if ($schema === null) {
+            return null;
+        }
+
+        $column = $this->stampedParentColumn();
+
+        if ($column === null) {
+            return $schema;
+        }
+
+        $schema['fields'] = array_values(array_filter(
+            $schema['fields'] ?? [],
+            static fn (mixed $field): bool => ! is_array($field) || ($field['key'] ?? null) !== $column,
+        ));
+
+        $strip = static function (array $node) use (&$strip, $column): ?array {
+            if (($node['component'] ?? null) === 'field' && ($node['key'] ?? null) === $column) {
+                return null;
+            }
+
+            foreach (['children', 'fields', 'schema'] as $key) {
+                if (! isset($node[$key]) || ! is_array($node[$key])) {
+                    continue;
+                }
+
+                $node[$key] = array_values(array_filter(
+                    array_map(
+                        static fn (mixed $child): ?array => is_array($child) ? $strip($child) : null,
+                        $node[$key],
+                    ),
+                ));
+            }
+
+            return $node;
+        };
+
+        $schema['nodes'] = array_values(array_filter(
+            array_map(
+                static fn (mixed $node): ?array => is_array($node) ? $strip($node) : null,
+                $schema['nodes'] ?? [],
+            ),
+        ));
+
+        return $schema;
     }
 }

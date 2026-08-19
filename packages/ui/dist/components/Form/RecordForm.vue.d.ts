@@ -38,13 +38,13 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     onChange?: ((key: string, value: unknown) => any) | undefined;
 }>, {
     columns: number;
-    fields: FormField[];
     options: Record<string, {
         value: any;
         label: string;
     }[]>;
     errors: Record<string, string>;
     processing: boolean;
+    fields: FormField[];
     nodes: SchemaNodeType[];
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

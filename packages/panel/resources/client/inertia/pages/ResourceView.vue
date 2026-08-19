@@ -43,6 +43,7 @@ import {
     IconCell,
     ImageCell,
     InfoNode,
+    RelationCreateDialog,
     RelationPanel,
     useSchemaColumns,
 } from '@alxtexh-enterprise/panel'
@@ -66,13 +67,17 @@ const props = defineProps<{
             label: string
             icon: string | null
             table: { columns: SchemaColumn[] }
+            form?: { nodes?: unknown[] } | null
             canCreate?: boolean
             canEdit?: boolean
+            inlineCreate?: boolean
             pages?: { resource: string } | null
         }[]
     }
     record: Record<string, any>
     can: { update: boolean; delete: boolean }
+    /** Option lists for inline relation create dialogs. */
+    relationFormOptions?: Record<string, Record<string, { value: any; label: string }[]>>
     /** Markup contributed by plugins, at named positions - roadmap 4.4. */
     renderHooks?: { position: string; component: string; props: Record<string, unknown> }[]
     breadcrumbs: { title: string; href: string }[]
@@ -200,6 +205,115 @@ async function loadRelation(key: string, cursor: string | null = null) {
 function openRelation(key: string) {
     activeRelation.value = key
     loadRelation(key)
+}
+
+const creatingRelation = ref<string | null>(null)
+const createProcessing = ref(false)
+const createErrors = ref<Record<string, string>>({})
+
+const creating = computed(
+    () => relations.value.find((relation) => relation.key === creatingRelation.value) ?? null,
+)
+
+function openCreate(key: string) {
+    createErrors.value = {}
+    creatingRelation.value = key
+}
+
+function closeCreate() {
+    if (createProcessing.value) {
+        return
+    }
+
+    creatingRelation.value = null
+    createErrors.value = {}
+}
+
+function csrfToken(): string {
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+
+    return match ? decodeURIComponent(match[1]) : ''
+}
+
+async function searchRelationOptions(
+    field: string,
+    term: string,
+): Promise<{ value: any; label: string }[]> {
+    const relation = creating.value
+    const base = relation ? relationPages(relation) : null
+
+    if (!base) {
+        return []
+    }
+
+    const query = new URLSearchParams({ field, q: term })
+    const response = await fetch(`${base}/field-options?${query}`, {
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+    })
+
+    if (!response.ok) {
+        throw new Error(String(response.status))
+    }
+
+    return (await response.json()).options
+}
+
+async function submitRelationCreate(values: Record<string, unknown>) {
+    const key = creatingRelation.value
+
+    if (!key) {
+        return
+    }
+
+    createProcessing.value = true
+    createErrors.value = {}
+
+    try {
+        const response = await fetch(
+            `${props.schema.routes.index}/${props.record.id}/relations/${key}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': csrfToken(),
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(values),
+            },
+        )
+
+        if (response.status === 422) {
+            const body = await response.json().catch(() => null)
+            createErrors.value = Object.fromEntries(
+                Object.entries(body?.errors ?? {}).map(([field, messages]) => [
+                    field,
+                    Array.isArray(messages) ? String(messages[0]) : String(messages),
+                ]),
+            )
+
+            return
+        }
+
+        if (!response.ok) {
+            toast.error('Could not create the related record.')
+
+            return
+        }
+
+        creatingRelation.value = null
+        const current = relationState(key)
+        current.loaded = false
+        current.rows = []
+        current.cursor = null
+        current.capped = false
+        await loadRelation(key)
+        toast.success('Created.')
+    } finally {
+        createProcessing.value = false
+    }
 }
 
 // The first tab loads once the page is up, because it is the one being looked
@@ -458,22 +572,24 @@ function destroy() {
             <template v-for="relation in relations" :key="relation.key">
                 <div v-if="activeRelation === relation.key" class="flex flex-col gap-2">
                     <div
-                        v-if="relationPages(relation)"
+                        v-if="relationPages(relation) || relation.canCreate"
                         class="flex flex-wrap items-center justify-end gap-2"
                     >
                         <Link
+                            v-if="relationPages(relation)"
                             :href="relationPages(relation)!"
                             :class="buttonClasses({ variant: 'outline', size: 'sm' })"
                         >
                             View all
                         </Link>
-                        <Link
+                        <button
                             v-if="relation.canCreate"
-                            :href="`${relationPages(relation)}/create`"
+                            type="button"
                             :class="buttonClasses({ variant: 'default', size: 'sm' })"
+                            @click="openCreate(relation.key)"
                         >
                             Add
-                        </Link>
+                        </button>
                     </div>
                     <RelationPanel
                         :columns="relation.table.columns"
@@ -490,6 +606,20 @@ function destroy() {
                 </div>
             </template>
         </section>
+
+        <RelationCreateDialog
+            :open="!!creating"
+            :title="creating ? `Add ${creating.label}` : 'Add'"
+            :form="creating?.form ?? null"
+            :form-options="
+                creating ? (relationFormOptions?.[creating.key] ?? {}) : {}
+            "
+            :processing="createProcessing"
+            :errors="createErrors"
+            :search-options="searchRelationOptions"
+            @close="closeCreate"
+            @submit="submitRelationCreate"
+        />
 
         <!--
             ANYTHING A PLUGIN ADDS TO THIS RECORD goes here: below the record

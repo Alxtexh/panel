@@ -225,7 +225,8 @@ final class RelationManagerTest extends TestCase
         $this->assertTrue($manager->hasForm());
         $this->assertNotNull($schema['form']);
         $this->assertSame('body', $schema['form']['fields'][0]['key'] ?? null);
-        $this->assertFalse($schema['canCreate'], 'Write endpoints are not shipped yet.');
+        $this->assertTrue($schema['canCreate']);
+        $this->assertTrue($schema['inlineCreate']);
         $this->assertFalse($schema['canEdit']);
     }
 
@@ -240,6 +241,62 @@ final class RelationManagerTest extends TestCase
         $this->assertNotNull($comments);
         $this->assertSame('comments', $comments['pages']['resource'] ?? null);
         $this->assertTrue($comments['canCreate']);
+        $this->assertTrue($comments['inlineCreate']);
         $this->assertTrue($comments['canEdit']);
+        $this->assertSame(
+            [],
+            array_filter(
+                $comments['form']['fields'] ?? [],
+                static fn (array $field): bool => ($field['key'] ?? null) === 'article_id',
+            ),
+            'The parent foreign key must not appear on the inline create form.',
+        );
+    }
+
+    public function test_inline_create_from_a_relation_tab_stamps_the_parent(): void
+    {
+        $response = $this->postJson("/articles/{$this->article->getKey()}/relations/comments", [
+            'body' => 'From the parent tab',
+        ]);
+
+        $response->assertCreated();
+        $this->assertSame('From the parent tab', $response->json('record.body'));
+
+        $this->assertDatabaseHas('comments', [
+            'article_id' => $this->article->getKey(),
+            'body' => 'From the parent tab',
+            'tenant_id' => $this->mine->id,
+        ]);
+    }
+
+    public function test_inline_create_refuses_an_undeclared_relation(): void
+    {
+        $this->postJson("/articles/{$this->article->getKey()}/relations/somethingElse", [
+            'body' => 'Nope',
+        ])->assertNotFound();
+    }
+
+    public function test_inline_create_ignores_a_claimed_parent_in_the_body(): void
+    {
+        $other = Article::withoutGlobalScopes()->create([
+            'tenant_id' => $this->mine->id,
+            'title' => 'Other parent',
+            'status' => 'draft',
+        ]);
+
+        $this->postJson("/articles/{$this->article->getKey()}/relations/comments", [
+            'body' => 'Stamped from the URL',
+            'article_id' => $other->getKey(),
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('comments', [
+            'body' => 'Stamped from the URL',
+            'article_id' => $this->article->getKey(),
+        ]);
+
+        $this->assertDatabaseMissing('comments', [
+            'body' => 'Stamped from the URL',
+            'article_id' => $other->getKey(),
+        ]);
     }
 }
