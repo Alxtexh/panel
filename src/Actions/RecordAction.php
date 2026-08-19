@@ -81,9 +81,6 @@ final class RecordAction
     /**
      * Ordered steps for a declarative action wizard.
      *
-     * When set, the action's collected input comes from the steps' forms,
-     * instead of from `form()`.
-     *
      * @var list<ActionStep>
      */
     private array $steps = [];

@@ -1696,10 +1696,10 @@ final class DoctorCommand extends Command
 
         foreach ($this->findings as $finding) {
             $severity = $finding['level'] === 'problem' ? 'ERROR' : 'WARN';
-            $this->line('- '.$severity.': '.$finding['title']);
+            $this->line("- {$severity}: {$finding['title']}");
 
             if (isset($finding['suggested']) && is_string($finding['suggested']) && $finding['suggested'] !== '') {
-                $this->line('  Suggested: '.$finding['suggested']);
+                $this->line("  Suggested: ".$finding['suggested']);
             }
 
             $this->line('  '.wordwrap($finding['detail'], 90, "\n  "));

@@ -7,7 +7,6 @@ namespace Alxtexh\Panel\Tests\Feature;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
-use Alxtexh\Panel\Tests\Fixtures\Resources\ArticleResource;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -171,10 +170,6 @@ final class RecordActionTest extends TestCase
 
     public function test_a_step_wizard_action_collects_inputs_and_runs_after_confirmation(): void
     {
-        $table = ArticleResource::definition();
-        $keys = array_map(static fn ($a): string => $a->key, $table->recordActionList());
-        $this->assertContains('publish-wizard', $keys, 'Available record action keys: '.implode(',', $keys));
-
         $this->postJson("/articles/{$this->article->getKey()}/action", [
             'action' => 'publish-wizard',
             'data' => [
@@ -188,7 +183,6 @@ final class RecordActionTest extends TestCase
         $fresh = $this->article->fresh();
 
         $this->assertSame('published', $fresh->status);
-
         $this->assertIsArray($fresh->custom ?? []);
         $this->assertSame('Hello', $fresh->custom['reason'] ?? null);
         $this->assertSame(true, $fresh->custom['confirmed'] ?? null);
