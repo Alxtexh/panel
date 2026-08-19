@@ -12,6 +12,11 @@ action, widget and command.
 
 ## Install from GitHub only (VCS composer repository)
 
+PanelKit installs from GitHub via Composer. There is no Packagist package and no
+npm registry package for installers. Kit CSS/JS is published to
+`public/vendor/panel` by `panel:install`, so host apps do not need npm for the
+kit UI. npm is optional, only when you customise Vue and run your own Vite build.
+
 This is the whole thing. Add the repository, require the package, install:
 
 ```json
@@ -84,19 +89,6 @@ php artisan panel:permissions sync
 
 A fresh install is an empty canvas. Confirm tenancy settings match your
 production schema, and do not rely on the repo's demo data layout.
-
-### Or from the registries
-
-Once published, the ordinary spellings work too:
-
-```bash
-composer require alxtexh-enterprise/panel
-php artisan panel:install
-```
-
-The npm package `@alxtexh-enterprise/panel` is the same client half published
-separately. You need it only if you would rather resolve the screens from npm than
-from the Composer package — most installations should not bother.
 
 ## Panel plugins
 
@@ -381,15 +373,11 @@ a test harness with no router at all. It ships compiled, because a Vue SFC canno
 resolve a type imported into `defineProps` across a package boundary.
 
 `@alxtexh-enterprise/panel/inertia` is the screens this package renders, and they are Inertia
-to their bones — `useForm`, `Link`, partial reloads by prop name. They name no
-layout: the shell stays the application's. They ship as source, so you can read the
-screen you are about to override.
+to their bones: `useForm`, `Link`, partial reloads by prop name. They name no
+layout: the shell stays the application's. They ship inside the Composer package
+at `resources/client`, not from the npm registry.
 
-```bash
-npm install @alxtexh-enterprise/panel
-```
-
-`panel:install` then writes one page file per screen into `resources/js/pages`,
+`panel:install` writes one page file per screen into `resources/js/pages`,
 because Inertia resolves page names by globbing that directory and cannot see into
 `node_modules`. Each file is one line, and each is where you override that screen.
 
@@ -454,15 +442,13 @@ So a local `composer require` against a file path is **not** a valid check: a
 file-path VCS repository has no dist URL, Composer clones the source instead, and
 every excluded file reappears. Use `make publish-preview`.
 
-### The npm half
+### The Vue client half (monorepo only, not npm registry)
 
-`packages/ui` publishes directly from its directory — no split needed, because npm
-packs a directory rather than a repository root.
+The Vue rendering layer lives in `packages/ui` in the monorepo. It is bundled
+into the Composer package at `resources/client/dist/kit` and copied to
+`public/vendor/panel` on install. **Installers do not fetch it from npm.**
 
-```bash
-cd packages/ui && npm publish
-```
-
-It is a **scoped** package, so `publishConfig.access` is set to `public`; without
-that npm defaults to restricted and the publish fails on an account with no paid
-org. `prepack` rebuilds `dist` first, so a stale build cannot ship.
+We do not publish `@alxtexh-enterprise/panel` to the npm registry. The
+`publishConfig` in `packages/ui/package.json` exists for historical tooling only;
+do not run `npm publish`. Use `make verify-install` to validate the client
+tarball shape, and `make split` to push the PHP package to its GitHub split repo.

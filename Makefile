@@ -126,9 +126,9 @@ ssr: ## Build the SSR bundle and start the SSR server (flag first - see the note
 # clones the source instead and every excluded file reappears. That looks like
 # the exclusions failing when it is the install method differing.
 .PHONY: publish-preview
-publish-preview: ## Show exactly what `composer require` and `npm install` would fetch
+publish-preview: ## Show exactly what a Composer dist install would fetch (maintainer check)
 	@echo "== alxtexh-enterprise/panel (composer dist) =="
 	@git archive HEAD:packages/panel | tar -t | awk -F/ 'NF>1{print "  "$$1"/"} NF==1{print "  "$$1}' | sort -u
 	@echo
-	@echo "== @alxtexh-enterprise/panel (npm tarball) =="
+	@echo "== @alxtexh-enterprise/panel (client tarball shape, maintainer verify only; not npm registry) =="
 	@cd packages/ui && npm pack --dry-run 2>&1 | grep -E "package size|unpacked size|total files" | sed 's/npm notice/ /'

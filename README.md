@@ -6,7 +6,7 @@ developer experience, SPA transport.
 **[Full documentation →](docs/README.md)** for every field, column, filter, action,
 widget and command, and how to switch each part on.
 
-From GitHub panelkit (no Packagist account), add this to your application's
+From GitHub panelkit (no Packagist or npm registry), add this to your application's
 `composer.json`:
 
 ```json
@@ -30,7 +30,8 @@ Not Nairobi Fibre, not sample orders. After install, next is that card or the
 starter recipe (one Invoice resource, kit Vue, empty table). Create and edit
 are dedicated pages.
 The default path loads published kit CSS/JS (`public/vendor/panel`), so there
-is no white page without npm. `npm run build` is optional if you customise Vue.
+is no white page without npm. Host apps do not install the kit from npm.
+`npm run build` is optional, only if you customise Vue in your own Vite pipeline.
 
 `apps/playground` is an **ISP demo application**, not the kit default. Use it to
 see a fully dressed vertical. Judge a fresh install from `panel:install`.

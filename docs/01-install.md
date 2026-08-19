@@ -1,9 +1,24 @@
 # 1. Install
 
+## Distribution policy (GitHub only)
+
+PanelKit installs from GitHub via a Composer VCS repository. There is no
+Packagist package and no npm registry package for installers to fetch.
+
+| What | How installers get it |
+|---|---|
+| PHP package | `composer require alxtexh-enterprise/panel` from the GitHub VCS repo |
+| Kit CSS/JS | Shipped inside the Composer package; `panel:install` copies to `public/vendor/panel` |
+| Vue screens (optional) | `file:` dependency on `vendor/.../resources/client` when you run your own Vite build |
+
+Host applications do **not** need npm for the kit UI. npm is optional, only when
+you customise Vue and run `npm run build` for your app. The monorepo uses npm
+internally to build the playground demo; that is not part of the installer path.
+
 ## GitHub only install (VCS composer repository)
 
 panelkit hosts the panel on GitHub. This installer flow avoids any Packagist or
-npm account. Add the VCS repository to your application's `composer.json`:
+npm registry account. Add the VCS repository to your application's `composer.json`:
 
 ```json
 "repositories": [
@@ -55,10 +70,11 @@ a VCS repository and authenticates even for a public one, failing with
 `Could not authenticate against github.com`, which reads as the repository
 being private. With it, Composer clones and no credential is involved.
 
-**There is no second install for the front end.** The Vue screens ship *inside*
-the Composer package at `resources/client`, and `panel:install` points your
-`package.json` at them with a `file:` dependency. One source, one version, and
-the two halves cannot drift apart.
+**There is no npm registry install for the kit.** The Vue screens ship *inside*
+the Composer package at `resources/client`. If you later customise Vue,
+`panel:install` points your `package.json` at them with a `file:` dependency (not
+`npm install @alxtexh-enterprise/panel`). One source, one version, and the two
+halves cannot drift apart.
 
 ## What first visit looks like
 
