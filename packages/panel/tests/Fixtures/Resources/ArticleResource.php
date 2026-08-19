@@ -251,15 +251,11 @@ final class ArticleResource extends Resource
             ->recordActions([
                 RecordAction::make('publish', 'Publish')
                     ->authorize('update')
-                    ->mutate(['status' => 'published']),
+                    ->transitionTo('published', 'status', Article::class),
 
-                // Hidden for an already-published row. `visible()` is enforced
-                // on EXECUTION, not merely used to draw the menu - forcing the
-                // key on a row it is hidden for must still refuse.
                 RecordAction::make('archive', 'Archive')
                     ->authorize('update')
-                    ->visible(static fn (array $row): bool => ($row['status'] ?? null) !== 'archived')
-                    ->mutate(['status' => 'archived']),
+                    ->transitionTo('archived', 'status', Article::class),
 
                 RecordAction::make('publish-wizard', 'Publish with steps')
                     ->authorize('update')

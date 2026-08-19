@@ -66,7 +66,29 @@ final class PageController extends Controller
             $payload['pageLayout'] = $layout;
         }
 
+        if (array_key_exists('save', $class::actions())) {
+            $payload['saveHref'] = $this->pageActionUrl($class, 'save');
+            $payload['saveMethod'] = strtolower($class::actionMethods()['save'] ?? 'post');
+        }
+
         return Inertia::render($class::component(), $payload);
+    }
+
+    /**
+     * @param  class-string<Page>  $class
+     */
+    private function pageActionUrl(string $class, string $action): string
+    {
+        $suffix = $class::actionUris()[$action] ?? $action;
+        $uri = $suffix === ''
+            ? $class::uri()
+            : rtrim($class::uri(), '/').'/'.$suffix;
+
+        $panel = app(PanelManager::class)->currentPanel();
+        $prefix = trim((string) ($panel?->getPath() ?? ''), '/');
+        $path = ($prefix !== '' ? '/'.$prefix : '').'/'.ltrim($uri, '/');
+
+        return url($path);
     }
 
     /**

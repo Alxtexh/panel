@@ -8,6 +8,8 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Models\Concerns\HasStateTransitions;
+use Alxtexh\Panel\Audit\AuditRecorder;
 
 /**
  * A mutation applied to ONE record, from its row menu.
@@ -102,6 +104,13 @@ final class RecordAction
 
     private ?Closure $visible = null;
 
+    private ?string $transitionState = null;
+
+    private string $transitionColumn = 'status';
+
+    /** @var class-string<Model>|null */
+    private ?string $transitionModel = null;
+
     private function __construct(public readonly string $key, private readonly string $label)
     {
         if (preg_match('/^[a-z][a-z0-9_-]*$/', $key) !== 1) {
@@ -179,6 +188,43 @@ final class RecordAction
         $this->mutate = $attributes;
 
         return $this;
+    }
+
+    /**
+     * Move a workflow column to a fixed state.
+     *
+     * Pair with `when()` or pass a model class that uses `HasStateTransitions`
+     * so the menu and execution both refuse disallowed hops.
+     *
+     * @param  class-string<Model>|null  $model
+     */
+    public function transitionTo(string $state, string $column = 'status', ?string $model = null): self
+    {
+        $this->transitionState = $state;
+        $this->transitionColumn = $column;
+        $this->transitionModel = $model;
+        $this->mutate([$column => $state]);
+
+        if ($model !== null && in_array(HasStateTransitions::class, class_uses_recursive($model), true)) {
+            $this->visible(static function (array $row) use ($model, $state, $column): bool {
+                /** @var class-string<Model&HasStateTransitions> $model */
+                return $model::canTransitionFromAttributes($row, $state, $column);
+            });
+        }
+
+        return $this;
+    }
+
+    /**
+     * Show and allow this action only when the row matches.
+     *
+     * Alias for `visible()` in LaraAdmin / Nova style action definitions.
+     *
+     * @param  Closure(array<string, mixed>): bool  $when
+     */
+    public function when(Closure $when): self
+    {
+        return $this->visible($when);
     }
 
     /**
@@ -402,10 +448,18 @@ final class RecordAction
             throw new InvalidArgumentException("[{$this->key}] declares nothing to do.");
         }
 
+        $this->assertTransitionAllowed($record);
+
         // forceFill, because the attributes come from the DEFINITION rather
         // than from a request - the mass-assignment guard is protecting against
         // input, and there is none here.
         $record->forceFill($this->mutate)->save();
+
+        if ($this->transitionState !== null) {
+            app(AuditRecorder::class)->record($record, 'state_transition', [
+                $this->transitionColumn => $this->transitionState,
+            ]);
+        }
 
         return null;
     }
@@ -498,8 +552,30 @@ final class RecordAction
             throw new InvalidArgumentException("[{$this->key}] declares nothing to do.");
         }
 
+        $this->assertTransitionAllowed($record);
+
         $record->forceFill($this->mutate)->save();
 
+        if ($this->transitionState !== null) {
+            app(AuditRecorder::class)->record($record, 'state_transition', [
+                $this->transitionColumn => $this->transitionState,
+            ]);
+        }
+
         return null;
+    }
+
+    private function assertTransitionAllowed(Model $record): void
+    {
+        if ($this->transitionState === null) {
+            return;
+        }
+
+        if (! in_array(HasStateTransitions::class, class_uses_recursive($record), true)) {
+            return;
+        }
+
+        /** @var Model&HasStateTransitions $record */
+        $record->assertCanTransitionTo($this->transitionState, $this->transitionColumn);
     }
 }
