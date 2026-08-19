@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel;
 
 use Alxtexh\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Resources\ResourceConfigurator;
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
@@ -75,6 +76,9 @@ final class Panel
 
     /** See `widgets()`. Concatenated with whatever the dashboard page declares. */
     private array $widgets = [];
+
+    /** Default create/edit/view presentation for resources that do not override. */
+    private string $resourceForms = ResourceConfigurator::MODE_PAGE;
 
     /**
      * Product modules this portal sells access to. See `modules()`.
@@ -364,6 +368,28 @@ final class Panel
         $this->widgets = [...$this->widgets, ...$widgets];
 
         return $this;
+    }
+
+    /**
+     * Default create, edit and view presentation for resources on this panel.
+     *
+     * Resources may override per operation through `Resource::configure()`.
+     * The default stays `page` so existing installations keep dedicated screens.
+     */
+    public function resourceForms(string $mode): self
+    {
+        if (! in_array($mode, [ResourceConfigurator::MODE_PAGE, ResourceConfigurator::MODE_MODAL], true)) {
+            throw new RuntimeException("[{$mode}] is not a resource form mode. Use 'page' or 'modal'.");
+        }
+
+        $this->resourceForms = $mode;
+
+        return $this;
+    }
+
+    public function getResourceForms(): string
+    {
+        return $this->resourceForms;
     }
 
     /** @return list<Widgets\StatWidget|Widgets\ChartWidget|Widgets\TableWidget> */

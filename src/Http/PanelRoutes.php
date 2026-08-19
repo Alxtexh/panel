@@ -1207,6 +1207,15 @@ final class PanelRoutes
         Route::get('{resource}/create', [ResourceController::class, 'create'])
             ->whereIn('resource', $keys)->name('create');
 
+        Route::get('{resource}/forms/create', [ResourceController::class, 'modalCreate'])
+            ->whereIn('resource', $keys)->name('forms.create');
+
+        Route::get('{resource}/{id}/forms/edit', [ResourceController::class, 'modalEdit'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('forms.edit');
+
+        Route::get('{resource}/{id}/forms/view', [ResourceController::class, 'modalView'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('forms.view');
+
         Route::get('{resource}/attach', [ResourceController::class, 'attachForm'])
             ->whereIn('resource', $keys)->name('attach');
 

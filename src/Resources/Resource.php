@@ -505,9 +505,73 @@ abstract class Resource
      *
      * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
      */
+    /**
+     * Stat strip above this resource's index. Deferred through `WidgetSet`.
+     *
+     * Prefer this over `headerWidgets()` on new resources. When empty, the
+     * controller falls back to `headerWidgets()` for backwards compatibility.
+     *
+     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     */
+    public static function indexMetrics(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     */
     public static function headerWidgets(): array
     {
         return [];
+    }
+
+    /**
+     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     */
+    public static function resolvedIndexWidgets(): array
+    {
+        $metrics = static::indexMetrics();
+
+        return $metrics !== [] ? $metrics : static::headerWidgets();
+    }
+
+    /**
+     * Nova-style alternate index views. Empty means the default table only.
+     *
+     * @return list<class-string|Lens>
+     */
+    public static function lenses(): array
+    {
+        return [];
+    }
+
+    /** Fluent per-resource overrides for page vs modal CRUD. */
+    public static function configure(): ResourceConfigurator
+    {
+        return ResourceConfigurator::for(static::class);
+    }
+
+    /** @return array{create: string, edit: string, view: string} */
+    public static function formPresentation(): array
+    {
+        $panel = app(PanelManager::class)->panel(static::panel());
+
+        return ResourceConfigurator::formsFor(
+            static::class,
+            $panel?->getResourceForms() ?? ResourceConfigurator::MODE_PAGE,
+        );
+    }
+
+    public static function resolveLens(?string $key): ?Lens
+    {
+        return ResourceConfigurator::findLens(static::class, $key);
+    }
+
+    /** @return list<Lens> */
+    public static function resolvedLenses(): array
+    {
+        return ResourceConfigurator::resolvedLenses(static::class);
     }
 
     /** @return class-string<Cluster>|null */
@@ -844,6 +908,11 @@ abstract class Resource
                     'relations' => array_map(
                         static fn (RelationManager $r): array => $r->toSchema(),
                         static::relations(),
+                    ),
+                    'forms' => static::formPresentation(),
+                    'lenses' => array_map(
+                        static fn (Lens $lens): array => $lens->toSchema(),
+                        static::resolvedLenses(),
                     ),
                 ];
             },

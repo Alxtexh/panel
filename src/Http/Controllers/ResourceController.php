@@ -609,6 +609,91 @@ final class ResourceController extends Controller
     }
 
     /**
+     * Modal create payload. Same authorization and shape as `create()`, JSON only.
+     */
+    public function modalCreate(Request $request, string $resource): JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        abort_unless($class::can('create'), 403);
+        abort_if($class::formDefinition()->fields() === [], 404, "Resource [{$resource}] has no form.");
+
+        return response()->json($this->modalFormPayload($class, null));
+    }
+
+    /** Modal edit payload. */
+    public function modalEdit(Request $request, string $resource, string $id): JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        $record = $class::model()::query()->findOrFail($id);
+
+        abort_unless($class::can('update', $record), 403);
+
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            abort_unless(self::childBelongs($class, $parent, $record), 404);
+        }
+
+        $form = $class::formDefinition();
+        abort_if($form->fields() === [], 404, "Resource [{$resource}] has no form.");
+
+        return response()->json($this->modalFormPayload($class, $record));
+    }
+
+    /** Modal view payload. */
+    public function modalView(Request $request, string $resource, string $id): JsonResponse
+    {
+        $class = $this->guard($resource);
+
+        $record = $class::model()::query()->findOrFail($id);
+
+        abort_unless($class::can('view', $record), 403);
+
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            abort_unless(self::childBelongs($class, $parent, $record), 404);
+        }
+
+        $row = $class::definition()->toListQuery($class::model())->find($id) ?? $record->toArray();
+
+        return response()->json([
+            'mode' => 'view',
+            'record' => [...$row, 'id' => $record->getKey()],
+            'can' => [
+                'update' => $class::can('update', $record),
+                'delete' => $class::can('delete', $record),
+            ],
+        ]);
+    }
+
+    /**
+     * @param  class-string<resource>  $class
+     * @return array<string, mixed>
+     */
+    private function modalFormPayload(string $class, ?Model $record): array
+    {
+        $form = $class::formDefinition();
+
+        return [
+            'mode' => $record === null ? 'create' : 'edit',
+            'record' => $record === null
+                ? null
+                : ['id' => $record->getKey(), 'label' => (string) ($record->name ?? "#{$record->getKey()}")],
+            'values' => $record === null
+                ? $form->valuesFor(null)
+                : [
+                    ...$form->valuesFor($record),
+                    ...$this->customFieldValues($class::key(), $record),
+                    '_updated_at' => $record->updated_at?->toIso8601String(),
+                ],
+            'formOptions' => $form->resolveOptions(),
+        ];
+    }
+
+    /**
      * Whether THIS form offers "+ Add a field to every {resource}", and what
      * the dialog needs if it does.
      *
@@ -808,6 +893,12 @@ final class ResourceController extends Controller
         // Built ONCE and reused for both the query and the option lists.
         $definition = $class::definition();
 
+        $lens = $class::resolveLens($request->query('lens'));
+
+        if ($lens !== null) {
+            $definition = $lens->applyTable($definition);
+        }
+
         /*
          * NESTED - roadmap 4.2. The parent is resolved, tenant-scoped and
          * authorised in NestedContext; what remains here is the constraint:
@@ -819,6 +910,12 @@ final class ResourceController extends Controller
 
         $query = $definition->toListQuery($class::model());
 
+        if ($lens !== null) {
+            $query->modifyEloquent(static function ($eloquent) use ($lens): void {
+                $lens->applyQuery($eloquent);
+            });
+        }
+
         if ($parent !== null) {
             $query->constrain(static fn ($q) => NestedRelation::constrain($q, $class, $parent));
         }
@@ -829,6 +926,13 @@ final class ResourceController extends Controller
 
         if ($parent !== null) {
             $schema = NestedContext::schema($schema, $class, $parent);
+        }
+
+        if ($lens !== null) {
+            $schema = [
+                ...$schema,
+                'table' => $definition->toSchema(),
+            ];
         }
 
         return Inertia::render('ResourceIndex', [
@@ -886,7 +990,9 @@ final class ResourceController extends Controller
              * `WidgetSet`, shared with every other host rather than re-derived
              * here.
              */
-            ...Widgets\WidgetSet::props($class::headerWidgets(), $request->user()),
+            ...Widgets\WidgetSet::props($class::resolvedIndexWidgets(), $request->user()),
+
+            'lens' => $request->query('lens'),
 
             /*
              * This person's saved views for this resource.
