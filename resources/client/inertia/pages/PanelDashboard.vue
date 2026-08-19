@@ -641,6 +641,7 @@ const hiddenEntries = computed(() => {
         <PkBoundary v-if="'onboarding' in page.props && onboarding.length" label="Get started">
             <SetupChecklist
                 :items="onboarding"
+                variant="onboarding"
                 heading="Get started"
                 skip-label="Skip remaining"
                 :link-component="InertiaLink"
