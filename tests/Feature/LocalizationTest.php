@@ -35,9 +35,9 @@ final class LocalizationTest extends TestCase
         ]);
     }
 
-    public function test_package_lang_files_exist_for_english_spanish_and_french(): void
+    public function test_package_lang_files_exist_for_english_spanish_french_and_german(): void
     {
-        foreach (['en', 'es', 'fr'] as $locale) {
+        foreach (['en', 'es', 'fr', 'de'] as $locale) {
             foreach (Locale::groups() as $group) {
                 $this->assertFileExists(
                     Locale::packageLangPath().'/'.$locale.'/'.$group.'.php',
@@ -49,6 +49,7 @@ final class LocalizationTest extends TestCase
         $this->assertContains('en', Locale::available());
         $this->assertContains('es', Locale::available());
         $this->assertContains('fr', Locale::available());
+        $this->assertContains('de', Locale::available());
         $this->assertContains('chrome', Locale::groups());
     }
 
