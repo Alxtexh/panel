@@ -115,19 +115,20 @@ describe('SetupChecklist', () => {
         expect(withoutHref.find('a').exists()).toBe(false)
     })
 
-    it('onboarding variant shows step progress and hides future step rows', () => {
+    it('onboarding variant is a slim banner with step progress, not a stacked card', () => {
         const wrapper = mount(SetupChecklist, {
             props: {
                 variant: 'onboarding',
+                heading: 'Get started',
                 items: [
                     { key: 'a', title: 'First', detail: 'Do first.', done: true },
                     {
                         key: 'b',
                         title: 'Second',
                         detail: 'Do second.',
-                        done: false,
                         href: '/second',
                         actionLabel: 'Open',
+                        done: false,
                     },
                     { key: 'c', title: 'Third', detail: 'Do third.', done: false },
                 ],
@@ -136,13 +137,16 @@ describe('SetupChecklist', () => {
 
         const text = wrapper.text()
         expect(text).toContain('Step 2 of 3')
-        expect(text).toContain('1 complete')
         expect(text).toContain('Second')
         expect(text).toContain('Do second.')
         expect(text).not.toContain('Do third.')
-        expect(wrapper.find('[role="progressbar"]').attributes('aria-valuenow')).toBe('33')
+        expect(text).not.toContain('1 complete')
+        expect(wrapper.find('h2').exists()).toBe(false)
         expect(wrapper.find('ul').exists()).toBe(false)
+        expect(wrapper.findAll('section')).toHaveLength(1)
+        expect(wrapper.find('[role="progressbar"]').attributes('aria-valuenow')).toBe('33')
         expect(wrapper.find('a[href="/second"]').exists()).toBe(true)
+        expect(wrapper.find('.rounded-full').exists()).toBe(false)
     })
 
     it('onboarding variant does not list ghost buttons for future steps', () => {
@@ -171,5 +175,19 @@ describe('SetupChecklist', () => {
         expect(wrapper.find('a[href="/current"]').exists()).toBe(true)
         expect(wrapper.find('a[href="/future"]').exists()).toBe(false)
         expect(wrapper.text()).not.toContain('Future')
+    })
+
+    it('onboarding variant keeps skip remaining on the same row', async () => {
+        const wrapper = mount(SetupChecklist, {
+            props: {
+                variant: 'onboarding',
+                skipLabel: 'Skip remaining',
+                items: [{ key: 'a', title: 'X', detail: 'Hover detail.', href: '/x', done: false }],
+            },
+        })
+
+        expect(wrapper.find('h2').exists()).toBe(false)
+        await wrapper.get('button').trigger('click')
+        expect(wrapper.emitted('skip')).toHaveLength(1)
     })
 })

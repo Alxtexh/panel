@@ -2,12 +2,9 @@
 /**
  * The dashboard checklist and first-run setup guide. Purely presentational.
  *
- * Doctor findings and onboarding steps share this card: undone work first,
- * a primary button on the current step when it has an href, skip remaining
- * when the host offers it.
- *
- * `variant="onboarding"` shows one step at a time with a progress bar.
- * `variant="doctor"` (default) keeps the full vertical checklist.
+ * Doctor findings and onboarding steps share this component. Doctor keeps the
+ * full vertical list. Onboarding is a thin single-row banner: progress fill,
+ * step index, current title, Open, Skip remaining.
  *
  * NOTHING INERTIA HERE. Pass `linkComponent` as Inertia `<Link>` from a page.
  */
@@ -33,7 +30,7 @@ const props = withDefaults(
         skipLabel?: string | null
         /** Inertia `<Link>`, or any router link. Defaults to a plain `<a>`. */
         linkComponent?: string | Component
-        /** Compact stepper for first-run onboarding; full list for doctor findings. */
+        /** Slim first-run banner, or the full doctor findings list. */
         variant?: 'doctor' | 'onboarding'
     }>(),
     {
@@ -79,27 +76,78 @@ const primaryClass = buttonClasses({
     class: 'no-underline mt-2 self-start',
 })
 
+const bannerPrimaryClass = buttonClasses({
+    variant: 'default',
+    size: 'sm',
+    class: 'no-underline shrink-0',
+})
+
 const ghostClass = buttonClasses({
     variant: 'outline',
     size: 'sm',
     class: 'no-underline shrink-0',
 })
-
-function stepPillClass(item: SetupChecklistItem): string {
-    if (item.done) {
-        return 'border border-emerald-500/40 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-    }
-
-    if (next.value?.key === item.key) {
-        return 'border-2 border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-300'
-    }
-
-    return 'border border-muted-foreground/25 bg-muted/40 text-muted-foreground'
-}
 </script>
 
 <template>
-    <section v-if="items.length" class="flex flex-col gap-3 rounded-lg border bg-card p-4">
+    <section
+        v-if="items.length && variant === 'onboarding'"
+        class="overflow-hidden rounded-md border bg-card"
+        :aria-label="heading"
+    >
+        <div
+            class="h-0.5 w-full bg-muted"
+            role="progressbar"
+            :aria-valuenow="progressPercent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-label="`${heading}, ${progressPercent} percent complete`"
+        >
+            <div
+                class="h-full bg-amber-500 transition-[width] duration-300 ease-out"
+                :style="{ width: `${progressPercent}%` }"
+            />
+        </div>
+
+        <div class="flex min-h-9 items-center gap-2 px-3 py-1.5 sm:gap-3">
+            <span class="text-muted-foreground shrink-0 text-xs tabular-nums">
+                Step {{ currentStepIndex }} of {{ totalSteps }}
+            </span>
+
+            <p
+                class="min-w-0 flex-1 truncate text-sm"
+                :title="next?.detail || undefined"
+            >
+                <span class="font-medium">{{ next ? next.title : heading }}</span>
+                <span
+                    v-if="next?.detail"
+                    class="text-muted-foreground hidden sm:inline"
+                >
+                    {{ ': ' + next.detail }}
+                </span>
+            </p>
+
+            <component
+                :is="resolvedLink"
+                v-if="next?.href"
+                :href="next.href"
+                :class="bannerPrimaryClass"
+            >
+                {{ next.actionLabel || 'Open' }}
+            </component>
+
+            <button
+                v-if="skipLabel"
+                type="button"
+                class="text-muted-foreground hover:text-foreground shrink-0 text-xs hover:underline"
+                @click="emit('skip')"
+            >
+                {{ skipLabel }}
+            </button>
+        </div>
+    </section>
+
+    <section v-else-if="items.length" class="flex flex-col gap-3 rounded-lg border bg-card p-4">
         <div class="flex items-center justify-between gap-2">
             <h2 class="text-sm font-semibold">{{ heading }}</h2>
             <div class="flex items-center gap-3">
@@ -121,137 +169,72 @@ function stepPillClass(item: SetupChecklistItem): string {
             </div>
         </div>
 
-        <template v-if="variant === 'onboarding'">
-            <div class="flex flex-col gap-3">
-                <div class="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                    <span>Step {{ currentStepIndex }} of {{ totalSteps }}</span>
-                    <span>{{ completedCount }} complete</span>
-                </div>
-
-                <div class="flex flex-col gap-2">
-                    <div
-                        class="h-1.5 w-full overflow-hidden rounded-full bg-muted"
-                        role="progressbar"
-                        :aria-valuenow="progressPercent"
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                        :aria-label="`Setup progress, ${progressPercent} percent complete`"
-                    >
-                        <div
-                            class="h-full rounded-full bg-amber-500 transition-[width] duration-300 ease-out"
-                            :style="{ width: `${progressPercent}%` }"
-                        />
-                    </div>
-
-                    <div class="flex items-center justify-between gap-1">
-                        <span
-                            v-for="(item, index) in items"
-                            :key="item.key"
-                            class="flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold leading-none"
-                            :class="stepPillClass(item)"
-                            :aria-label="`${item.title}${item.done ? ', completed' : next?.key === item.key ? ', current step' : ''}`"
-                        >
-                            <svg
-                                v-if="item.done"
-                                viewBox="0 0 24 24"
-                                class="size-3"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="3"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                            >
-                                <path d="M20 6 9 17l-5-5" />
-                            </svg>
-                            <span v-else aria-hidden="true">{{ index + 1 }}</span>
-                        </span>
-                    </div>
-                </div>
-
-                <div v-if="next" class="flex flex-col gap-0.5 pt-0.5">
-                    <p class="text-sm font-medium">{{ next.title }}</p>
-                    <p v-if="next.detail" class="text-xs text-muted-foreground">{{ next.detail }}</p>
-                    <component
-                        :is="resolvedLink"
-                        v-if="next.href"
-                        :href="next.href"
-                        :class="primaryClass"
-                    >
-                        {{ next.actionLabel || 'Open' }}
-                    </component>
-                </div>
+        <div
+            v-if="next"
+            class="flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-3"
+        >
+            <span
+                class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-amber-500"
+                aria-hidden="true"
+            />
+            <div class="flex min-w-0 flex-col gap-0.5">
+                <p class="text-sm font-medium">{{ next.title }}</p>
+                <p v-if="next.detail" class="text-xs text-muted-foreground">{{ next.detail }}</p>
+                <component
+                    :is="resolvedLink"
+                    v-if="next.href"
+                    :href="next.href"
+                    :class="primaryClass"
+                >
+                    {{ next.actionLabel || 'Open' }}
+                </component>
             </div>
-        </template>
+        </div>
 
-        <template v-else>
-            <div
-                v-if="next"
-                class="flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-3"
-            >
+        <ul v-if="rest.length" class="flex flex-col gap-2">
+            <li v-for="item in rest" :key="item.key" class="flex items-start gap-3">
                 <span
-                    class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-amber-500"
+                    class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full"
+                    :class="
+                        item.done
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                            : 'border-2 border-amber-500'
+                    "
                     aria-hidden="true"
-                />
-                <div class="flex min-w-0 flex-col gap-0.5">
-                    <p class="text-sm font-medium">{{ next.title }}</p>
-                    <p v-if="next.detail" class="text-xs text-muted-foreground">{{ next.detail }}</p>
-                    <component
-                        :is="resolvedLink"
-                        v-if="next.href"
-                        :href="next.href"
-                        :class="primaryClass"
+                >
+                    <svg
+                        v-if="item.done"
+                        viewBox="0 0 24 24"
+                        class="size-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                     >
-                        {{ next.actionLabel || 'Open' }}
-                    </component>
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                </span>
+                <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <p
+                        class="text-sm"
+                        :class="item.done ? 'text-muted-foreground line-through' : 'font-medium'"
+                    >
+                        {{ item.title }}
+                    </p>
+                    <p v-if="!item.done && item.detail" class="text-xs text-muted-foreground">
+                        {{ item.detail }}
+                    </p>
                 </div>
-            </div>
-
-            <ul v-if="rest.length" class="flex flex-col gap-2">
-                <li v-for="item in rest" :key="item.key" class="flex items-start gap-3">
-                    <span
-                        class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full"
-                        :class="
-                            item.done
-                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                                : 'border-2 border-amber-500'
-                        "
-                        aria-hidden="true"
-                    >
-                        <svg
-                            v-if="item.done"
-                            viewBox="0 0 24 24"
-                            class="size-3.5"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="3"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M20 6 9 17l-5-5" />
-                        </svg>
-                    </span>
-                    <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <p
-                            class="text-sm"
-                            :class="item.done ? 'text-muted-foreground line-through' : 'font-medium'"
-                        >
-                            {{ item.title }}
-                        </p>
-                        <p v-if="!item.done && item.detail" class="text-xs text-muted-foreground">
-                            {{ item.detail }}
-                        </p>
-                    </div>
-                    <component
-                        :is="resolvedLink"
-                        v-if="!item.done && item.href"
-                        :href="item.href"
-                        :class="ghostClass"
-                    >
-                        {{ item.actionLabel || 'Open' }}
-                    </component>
-                </li>
-            </ul>
-        </template>
+                <component
+                    :is="resolvedLink"
+                    v-if="!item.done && item.href"
+                    :href="item.href"
+                    :class="ghostClass"
+                >
+                    {{ item.actionLabel || 'Open' }}
+                </component>
+            </li>
+        </ul>
     </section>
 </template>
