@@ -395,12 +395,66 @@ function isSelected(row: Record<string, unknown>): boolean {
     return id !== null && !!props.selected?.has(id)
 }
 
-function onToggleRow(row: Record<string, unknown>) {
+/** Anchor for shift-click range selection (current page only). */
+const lastSelectedId = ref<string | number | null>(null)
+
+function indexOfRowId(id: string | number): number {
+    return props.rows.findIndex((r) => {
+        const rid = rowId(r)
+
+        return rid !== null && rid === id
+    })
+}
+
+function onCheckboxClick(row: Record<string, unknown>, event: MouseEvent) {
     const id = rowId(row)
 
-    if (id !== null) {
-        emit('toggle-row', id)
+    if (id === null) {
+        return
     }
+
+    const shift = event.shiftKey
+    const clickedSelected = !!props.selected?.has(id)
+
+    // If shift-clicking with an anchor that is not on the current page,
+    // range selection is ambiguous, so fall back to single-row behaviour.
+    if (shift && lastSelectedId.value !== null && lastSelectedId.value !== id) {
+        const from = indexOfRowId(lastSelectedId.value)
+        const to = indexOfRowId(id)
+
+        if (from !== -1 && to !== -1) {
+            const start = Math.min(from, to)
+            const end = Math.max(from, to)
+
+            const wantSelected = !clickedSelected
+
+            for (let i = start; i <= end; i++) {
+                if (!rowVisible(i)) {
+                    continue
+                }
+
+                const rid = rowId(props.rows[i])
+
+                if (rid === null) {
+                    continue
+                }
+
+                const isSelectedNow = !!props.selected?.has(rid)
+
+                // Only emit toggles for ids that actually need a state change.
+                if (isSelectedNow !== wantSelected) {
+                    emit('toggle-row', rid)
+                }
+            }
+
+            lastSelectedId.value = id
+            return
+        }
+    }
+
+    // Regular click: toggle only the clicked row.
+    emit('toggle-row', id)
+    lastSelectedId.value = id
 }
 
 const pageIds = computed(() =>
@@ -649,8 +703,7 @@ function summaryValue(key: string): string {
                                         ? 'This row has no id and cannot be selected'
                                         : `Select row ${rowId(row)}`
                                 "
-                                @click.stop
-                                @change.stop="onToggleRow(row)"
+                                @click.stop="onCheckboxClick(row, $event)"
                             />
                         </td>
 
