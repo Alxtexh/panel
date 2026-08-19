@@ -17,11 +17,15 @@ use Illuminate\Notifications\Notification;
  */
 final class BellText extends Notification
 {
+    /**
+     * @param  list<array<string, mixed>>  $actions
+     */
     public function __construct(
         private readonly string $title,
         private readonly string $body = '',
         private readonly ?string $href = null,
         private readonly string $severity = 'info',
+        private readonly array $actions = [],
     ) {}
 
     /** @return list<string> */
@@ -38,6 +42,7 @@ final class BellText extends Notification
             'body' => $this->body,
             'href' => $this->href,
             'severity' => $this->severity,
+            'actions' => $this->actions,
         ];
     }
 }

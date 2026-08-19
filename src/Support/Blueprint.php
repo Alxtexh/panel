@@ -786,10 +786,19 @@ final class Blueprint
         ```php
         Notification::make()->title('Saved')->success()->send();
         Notification::make()->title('Queued')->body('Export started')->bell()->send();
+        Notification::make()
+            ->title('Invoice posted')
+            ->success()
+            ->actions([
+                Action::make('view')->url($url),
+                Action::make('download')->url($download)->openUrlInNewTab(),
+            ])
+            ->send();
         ```
 
         This is the Inertia toast, not a Livewire stack. `bell()` also writes a
-        topbar row.
+        topbar row. Action buttons are hrefs (or `method('post')` to a named
+        route). Closures do not travel to Vue.
 
         ### Infolist on the dedicated view page
 

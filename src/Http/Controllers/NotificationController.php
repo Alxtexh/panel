@@ -86,6 +86,7 @@ final class NotificationController extends Controller
                 'severity' => $n->data['severity'] ?? 'info',
                 'read' => $n->read_at !== null,
                 'at' => $n->created_at?->diffForHumans(),
+                'actions' => is_array($n->data['actions'] ?? null) ? $n->data['actions'] : [],
             ])
             ->values()
             ->all();

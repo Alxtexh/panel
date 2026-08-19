@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
 /**
- * A named PHP action. Two homes, one key-from-the-client rule:
+ * A named PHP action. Three homes, one key-from-the-client rule:
  *
  *   Infolist: `Entry::action()`. Click POSTs `{ action }` to
  *   `{resource}/{id}/infolist-action`. `handle()` / `mutate()` touch the
@@ -19,6 +19,11 @@ use InvalidArgumentException;
  *   `{ field, action, values }` to `{resource}/form-action`. `action()`
  *   patches the form through `$get` / `$set`. Same family as `live()`
  *   form-state. Copy/url affixes stay client-only and never hit this.
+ *
+ *   Notification: `Notification::make()->actions([...])`. `url()` is an
+ *   href on the toast and the bell. `openUrlInNewTab()` opens a new tab.
+ *   `method('post')` POSTs that href (named route, same CSRF as infolist).
+ *   Closures do not travel: a toast cannot run `handle()` without Livewire.
  *
  * THE REQUEST NAMES A KEY, NEVER AN ATTRIBUTE SET. Only a key the resource
  * declared is runnable.
@@ -47,6 +52,12 @@ final class Action
      * @var Closure(callable(string): mixed, callable(string, mixed): void): mixed|null
      */
     private ?Closure $formAction = null;
+
+    private ?string $url = null;
+
+    private bool $openUrlInNewTab = false;
+
+    private string $httpMethod = 'get';
 
     private function __construct(public readonly string $key, private string $label)
     {
@@ -125,6 +136,39 @@ final class Action
         return $this;
     }
 
+    /**
+     * Client-side href. Toast and bell render this as a button or link.
+     * Infolist `Entry::url()` is separate; this is for `Action::make()`.
+     */
+    public function url(?string $url, bool $shouldOpenInNewTab = false): self
+    {
+        $this->url = $url;
+
+        if ($shouldOpenInNewTab) {
+            $this->openUrlInNewTab = true;
+        }
+
+        return $this;
+    }
+
+    public function openUrlInNewTab(bool $condition = true): self
+    {
+        $this->openUrlInNewTab = $condition;
+
+        return $this;
+    }
+
+    /**
+     * HTTP verb for `url()`. `post` hits a named route the way infolist
+     * actions POST `{ action }` to `{resource}/{id}/infolist-action`.
+     */
+    public function method(string $method): self
+    {
+        $this->httpMethod = strtolower($method);
+
+        return $this;
+    }
+
     public function hasFormAction(): bool
     {
         return $this->formAction !== null;
@@ -193,11 +237,41 @@ final class Action
      */
     public function toAffixSchema(): array
     {
+        if ($this->url !== null && $this->url !== '') {
+            return array_filter([
+                'key' => $this->key,
+                'label' => $this->label,
+                'icon' => $this->icon,
+                'url' => $this->url,
+            ], static fn (mixed $v): bool => $v !== null && $v !== false);
+        }
+
         return array_filter([
             'key' => $this->key,
             'label' => $this->label,
             'icon' => $this->icon,
             'post' => true,
+        ], static fn (mixed $v): bool => $v !== null && $v !== false);
+    }
+
+    /**
+     * Toast and bell payload. URL actions only: a closure cannot leave PHP.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function toNotificationSchema(): ?array
+    {
+        if ($this->url === null || $this->url === '') {
+            return null;
+        }
+
+        return array_filter([
+            'key' => $this->key,
+            'label' => $this->label,
+            'icon' => $this->icon,
+            'href' => $this->url,
+            'newTab' => $this->openUrlInNewTab ?: null,
+            'method' => $this->httpMethod !== 'get' ? $this->httpMethod : null,
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
     }
 }
