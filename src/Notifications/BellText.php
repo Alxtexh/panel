@@ -26,6 +26,7 @@ final class BellText extends Notification
         private readonly ?string $href = null,
         private readonly string $severity = 'info',
         private readonly array $actions = [],
+        private readonly string $category = 'general',
     ) {}
 
     /** @return list<string> */
@@ -43,6 +44,7 @@ final class BellText extends Notification
             'href' => $this->href,
             'severity' => $this->severity,
             'actions' => $this->actions,
+            'category' => $this->category,
         ];
     }
 }

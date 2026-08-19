@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tests\Fixtures\Resources;
 
 use Alxtexh\Panel\Actions\Action;
+use Alxtexh\Panel\Actions\ActionStep;
 use Alxtexh\Panel\Actions\BulkAction;
 use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Forms\Fields\CheckboxField;
 use Alxtexh\Panel\Forms\Fields\FileUploadField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
@@ -258,6 +260,49 @@ final class ArticleResource extends Resource
                     ->authorize('update')
                     ->visible(static fn (array $row): bool => ($row['status'] ?? null) !== 'archived')
                     ->mutate(['status' => 'archived']),
+
+                RecordAction::make('publish-wizard', 'Publish with steps')
+                    ->authorize('update')
+                    ->steps([
+                        ActionStep::make('Details')
+                            ->form(static function (Form $form): Form {
+                                return $form->schema([
+                                    TextField::make('reason')
+                                        ->required()
+                                        ->rule('max:120'),
+                                ]);
+                            })
+                            ->validate(static function (Article $article, array $data): array {
+                                $reason = trim((string) ($data['reason'] ?? ''));
+
+                                return ['reason' => $reason];
+                            }),
+                        ActionStep::make('Confirm')
+                            ->describe('Confirm the change')
+                            ->form(static function (Form $form): Form {
+                                return $form->schema([
+                                    CheckboxField::make('confirm')->rule('accepted'),
+                                ]);
+                            })
+                            ->validate(static function (Article $article, array $data): array {
+                                return ['confirmed' => true];
+                            }),
+                    ])
+                    ->handle(static function (Article $article, array $data): array {
+                        $custom = $article->custom ?? [];
+                        $custom['reason'] = $data['reason'] ?? null;
+                        $custom['confirmed'] = $data['confirmed'] ?? null;
+
+                        $article->forceFill([
+                            'status' => 'published',
+                            'custom' => $custom,
+                        ])->save();
+
+                        return [
+                            'reason' => $data['reason'] ?? null,
+                            'confirmed' => $data['confirmed'] ?? null,
+                        ];
+                    }),
             ])
             ->bulkActions([
                 BulkAction::make('publish', 'Publish')

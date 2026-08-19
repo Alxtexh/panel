@@ -126,6 +126,12 @@ final class SettingsIndex
                 'description' => 'Password, two-factor authentication, passkeys and signed-in devices.',
             ],
             [
+                'key' => 'notifications',
+                'route' => 'settings.notifications',
+                'title' => 'Notifications',
+                'description' => 'Control toast notifications and digest delivery by category.',
+            ],
+            [
                 'key' => 'organisation',
                 'route' => 'pages.organisation',
                 'title' => 'Organisation',

@@ -174,9 +174,12 @@ final class RecordController extends Controller
             'That action does not apply to this record.',
         );
 
-        $action->run($record, $this->actionInput($request, $action));
+        $updates = $action->run($record, $this->actionInput($request, $action));
 
-        return response()->json(['ok' => true]);
+        return response()->json(array_filter([
+            'ok' => true,
+            'values' => $updates,
+        ], static fn (mixed $v): bool => $v !== null));
     }
 
     /**
@@ -254,6 +257,27 @@ final class RecordController extends Controller
      */
     private function actionInput(Request $request, RecordAction $action): array
     {
+        if ($action->hasSteps()) {
+            $out = [];
+
+            foreach ($action->stepsDefinition() as $step) {
+                $form = $step->formDefinition();
+
+                if ($form === null) {
+                    continue;
+                }
+
+                $validated = validator(
+                    (array) $request->input('data', []),
+                    $form->rules(),
+                )->validate();
+
+                $out = array_merge($out, $form->sanitize($validated));
+            }
+
+            return $out;
+        }
+
         $form = $action->formDefinition();
 
         if ($form === null) {

@@ -84,6 +84,7 @@ final class NotificationController extends Controller
                 'body' => $n->data['body'] ?? '',
                 'href' => $n->data['href'] ?? null,
                 'severity' => $n->data['severity'] ?? 'info',
+                'category' => $n->data['category'] ?? 'general',
                 'read' => $n->read_at !== null,
                 'at' => $n->created_at?->diffForHumans(),
                 'actions' => is_array($n->data['actions'] ?? null) ? $n->data['actions'] : [],

@@ -78,6 +78,16 @@ final class RecordAction
      */
     private ?Form $form = null;
 
+    /**
+     * Ordered steps for a declarative action wizard.
+     *
+     * When set, the action's collected input comes from the steps' forms,
+     * instead of from `form()`.
+     *
+     * @var list<ActionStep>
+     */
+    private array $steps = [];
+
     private ?Closure $handle = null;
 
     private ?Closure $link = null;
@@ -210,6 +220,45 @@ final class RecordAction
     }
 
     /**
+     * Declarative, wizard-style action steps.
+     *
+     * The action modal renders the stepper from each step's form schema.
+     *
+     * @param  list<ActionStep>  $steps
+     */
+    public function steps(array $steps): self
+    {
+        if ($this->form !== null) {
+            throw new InvalidArgumentException(
+                "[{$this->key}] declares both `form()` and `steps()`. Use one or the other.",
+            );
+        }
+
+        foreach ($steps as $step) {
+            if (! $step instanceof ActionStep) {
+                throw new InvalidArgumentException('[steps()] accepts only ActionStep instances.');
+            }
+        }
+
+        $this->steps = array_values($steps);
+
+        return $this;
+    }
+
+    public function hasSteps(): bool
+    {
+        return $this->steps !== [];
+    }
+
+    /**
+     * @return list<ActionStep>
+     */
+    public function stepsDefinition(): array
+    {
+        return $this->steps;
+    }
+
+    /**
      * @param  Closure(Model, array<string, mixed>): mixed  $handle
      */
     public function handle(Closure $handle): self
@@ -309,7 +358,11 @@ final class RecordAction
      *                                      by the caller. Empty for an action
      *                                      that asks nothing.
      */
-    public function run(Model $record, array $data = []): void
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>|null
+     */
+    public function run(Model $record, array $data = []): ?array
     {
         if ($this->link !== null) {
             throw new InvalidArgumentException("[{$this->key}] is a link and cannot be executed.");
@@ -323,16 +376,26 @@ final class RecordAction
          * Refused here rather than at the endpoint, so it fails for whoever
          * wrote it rather than for whoever used it.
          */
-        if ($this->form !== null && $this->handle === null) {
+        if (($this->form !== null || $this->hasSteps()) && $this->handle === null) {
             throw new InvalidArgumentException(
-                "[{$this->key}] declares a form but no handle(), so the values it collects go nowhere."
+                "[{$this->key}] declares input but no handle(), so the values it collects go nowhere."
             );
         }
 
-        if ($this->handle !== null) {
-            ($this->handle)($record, $data);
+        if ($this->hasSteps()) {
+            foreach ($this->steps as $step) {
+                $patch = $step->runValidate($record, $data);
 
-            return;
+                if ($patch !== null) {
+                    $data = array_merge($data, $patch);
+                }
+            }
+        }
+
+        if ($this->handle !== null) {
+            $result = ($this->handle)($record, $data);
+
+            return is_array($result) ? $result : null;
         }
 
         if ($this->mutate === []) {
@@ -343,6 +406,8 @@ final class RecordAction
         // than from a request - the mass-assignment guard is protecting against
         // input, and there is none here.
         $record->forceFill($this->mutate)->save();
+
+        return null;
     }
 
     /**
@@ -366,9 +431,43 @@ final class RecordAction
              * `array_filter` below drops the key entirely so an action that
              * asks nothing carries nothing.
              */
-            'form' => $this->form?->toSchema(),
+            'form' => $this->hasSteps()
+                ? $this->stepsFormSchema()
+                : $this->form?->toSchema(),
             'removesRow' => $this->removesRow,
             'color' => $this->color,
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
+    }
+
+    /**
+     * Form schema for the action modal.
+     *
+     * The client only renders `form.nodes`, so the payload focuses on that.
+     *
+     * @return array{columns: int, nodes: list<array<string, mixed>>, fields: array<string, mixed>}
+     */
+    private function stepsFormSchema(): array
+    {
+        $steps = array_map(function (ActionStep $step): array {
+            $nodes = $step->formDefinition()?->toSchema()['nodes'] ?? [];
+
+            return [
+                'component' => 'step',
+                'label' => $step->label,
+                'description' => $step->getDescription(),
+                'children' => $nodes,
+            ];
+        }, $this->steps);
+
+        return [
+            'columns' => 1,
+            'nodes' => [
+                [
+                    'component' => 'wizard',
+                    'children' => $steps,
+                ],
+            ],
+            'fields' => [],
+        ];
     }
 }

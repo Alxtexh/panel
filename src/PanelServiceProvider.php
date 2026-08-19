@@ -203,6 +203,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\DoctorAlertCommand::class,
             Commands\PruneTrashCommand::class,
             Commands\PruneUploadsCommand::class,
+            Commands\NotificationsDigestCommand::class,
         ]);
 
         if ($this->app->runningInConsole()) {

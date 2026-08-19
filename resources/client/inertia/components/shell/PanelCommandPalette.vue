@@ -48,6 +48,7 @@ const term = ref('')
 const activeIndex = ref(0)
 const searching = ref(false)
 const remoteGroups = ref<Group[]>([])
+const recentItems = ref<Item[]>([])
 
 const inputEl = ref<HTMLInputElement | null>(null)
 const listEl = ref<HTMLElement | null>(null)
@@ -97,6 +98,52 @@ const searchUrl = computed<string>(() => {
     return `${prefix === '/' ? '' : prefix}/panel-search`
 })
 
+const recentStorageKey = computed<string>(
+    () => `alxtexhpanel.command-palette.recent.${searchUrl.value}`,
+)
+
+function loadRecent(): void {
+    try {
+        const raw = window.sessionStorage.getItem(recentStorageKey.value)
+
+        if (!raw) {
+            recentItems.value = []
+            return
+        }
+
+        const parsed = JSON.parse(raw) as unknown
+
+        if (!Array.isArray(parsed)) {
+            recentItems.value = []
+            return
+        }
+
+        recentItems.value = (parsed as unknown[]).filter((i) => i && typeof i === 'object')
+            .map((i) => i as Partial<Item>)
+            .filter((i) => i.kind === 'record' && typeof i.href === 'string' && typeof i.title === 'string')
+            .slice(0, 7)
+            .map((i) => ({ ...i, id: String(i.id ?? i.href) }) as Item)
+    } catch {
+        recentItems.value = []
+    }
+}
+
+function rememberRecent(item: Item): void {
+    if (item.kind !== 'record') {
+        return
+    }
+
+    const next = [item, ...recentItems.value.filter((i) => i.href !== item.href)].slice(0, 7)
+
+    recentItems.value = next
+
+    try {
+        window.sessionStorage.setItem(recentStorageKey.value, JSON.stringify(next))
+    } catch {
+        // Session storage can be disabled. Recent results are optional.
+    }
+}
+
 const pageGroup = computed<Group | null>(() => {
     const q = term.value.trim().toLowerCase()
 
@@ -109,6 +156,9 @@ const pageGroup = computed<Group | null>(() => {
 })
 
 const groups = computed<Group[]>(() => [
+    ...(term.value.trim() === '' && recentItems.value.length
+        ? [{ label: 'Recent', items: recentItems.value }]
+        : []),
     ...(pageGroup.value ? [pageGroup.value] : []),
     ...remoteGroups.value,
 ])
@@ -164,6 +214,8 @@ function remember(q: string, value: Group[]): void {
 }
 
 watch(term, (value) => {
+    activeIndex.value = 0
+
     clearTimeout(debounce)
     controller?.abort()
 
@@ -238,6 +290,7 @@ watch(term, (value) => {
 function show(): void {
     open.value = true
     activeIndex.value = 0
+    loadRecent()
     void nextTick(() => inputEl.value?.focus())
 }
 
@@ -260,6 +313,7 @@ function hide(): void {
 }
 
 function choose(item: Item): void {
+    rememberRecent(item)
     hide()
     router.visit(item.href)
 }

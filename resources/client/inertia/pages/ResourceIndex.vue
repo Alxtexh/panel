@@ -671,6 +671,12 @@ async function submitActionForm() {
             return
         }
 
+        const body = await response.json().catch(() => null)
+
+        if (body?.values && actionForm.value) {
+            open.values = { ...open.values, ...(body.values as Record<string, any>) }
+        }
+
         toast.success(`${open.action.label} done`)
         actionForm.value = null
 

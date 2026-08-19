@@ -53,15 +53,17 @@ use Throwable;
 
 final class DoctorCommand extends Command
 {
-    protected $signature = 'panel:doctor {--json : Emit a machine-readable report}';
+    protected $signature = 'panel:doctor {--profile=default : Doctor profile to run (default, production)} {--json : Emit a machine-readable report}';
 
     protected $description = 'Check for configuration that is silently wrong';
 
-    /** @var list<array{level: string, title: string, detail: string}> */
+    /** @var list<array{level: string, title: string, detail: string, suggested?: string}> */
     private array $findings = [];
 
     public function handle(PanelManager $panels, TenantContext $context): int
     {
+        $profile = (string) $this->option('profile', 'default');
+
         /*
          * EMPTIED FIRST, because the console kernel keeps command INSTANCES.
          *
@@ -79,35 +81,47 @@ final class DoctorCommand extends Command
          */
         $this->findings = [];
 
-        $this->checkPolicies($panels);
-        $this->checkBroadcasting();
-        $this->checkQueueIsReal($panels);
-        $this->checkSessionLimit();
-        $this->checkCacheTagging();
-        $this->checkTenancy($context);
-        $this->checkIndexes($context);
-        $this->checkKnowledge();
-        $this->checkDocumentTemplates();
-        $this->checkAnnouncementVariables();
-        $this->checkTemplateContrast();
-        $this->checkBackupFreshness();
-        $this->checkViteDevServer();
-        $this->checkShippedDefaults();
-        $this->checkPermissionTeams($context);
-        $this->checkTicketing($panels);
-        $this->checkVendoredCopy();
-        $this->checkDiscovery($panels);
-        $this->checkPageFiles();
-        $this->checkStylesheet();
-        $this->checkClientHalf();
-        $this->checkSignInRoute();
-        $this->checkUserHoldsRoles();
-        $this->checkSomebodyCanOpenThePanel();
+        if ($profile === 'production') {
+            $this->checkQueueWorker();
+            $this->checkCacheAndSessionDrivers();
+            $this->checkBroadcastDriver();
+            $this->checkStorageLink();
+            $this->checkNotificationTable();
+            $this->checkMailDefaults();
+            $this->checkTrustedProxyAndHttps();
+        } else {
+            $this->checkPolicies($panels);
+            $this->checkBroadcasting();
+            $this->checkQueueIsReal($panels);
+            $this->checkSessionLimit();
+            $this->checkCacheTagging();
+            $this->checkTenancy($context);
+            $this->checkIndexes($context);
+            $this->checkKnowledge();
+            $this->checkDocumentTemplates();
+            $this->checkAnnouncementVariables();
+            $this->checkTemplateContrast();
+            $this->checkBackupFreshness();
+            $this->checkViteDevServer();
+            $this->checkShippedDefaults();
+            $this->checkPermissionTeams($context);
+            $this->checkTicketing($panels);
+            $this->checkVendoredCopy();
+            $this->checkDiscovery($panels);
+            $this->checkPageFiles();
+            $this->checkStylesheet();
+            $this->checkClientHalf();
+            $this->checkSignInRoute();
+            $this->checkUserHoldsRoles();
+            $this->checkSomebodyCanOpenThePanel();
+        }
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
         } else {
-            $this->report();
+            $profile === 'production'
+                ? $this->reportProduction()
+                : $this->report();
         }
 
         // NON-ZERO ONLY FOR PROBLEMS. A note is information; failing a build over
@@ -116,6 +130,135 @@ final class DoctorCommand extends Command
     }
 
     /* ------------------------------------------------------------- checks */
+
+    /**
+     * Production operational preset.
+     *
+     * This is a smaller, operator-facing checklist intended to be run before
+     * putting the panel behind real traffic.
+     */
+    private function checkQueueWorker(): void
+    {
+        $queue = (string) config('queue.default', 'sync');
+
+        if ($queue === 'sync') {
+            $this->problem(
+                "Queue worker is disabled because QUEUE_CONNECTION is [sync]",
+                'Bulk actions and exports run inline in the web request. Under load this makes timeouts look like successful jobs, because the panel returns a token for work that has already finished inline.',
+                'Set QUEUE_CONNECTION=database or QUEUE_CONNECTION=redis, then run a worker with php artisan queue:work.'
+            );
+
+            return;
+        }
+
+        $this->note(
+            "Queue worker is configured for [$queue]",
+            'Make sure you run php artisan queue:work (or queue:listen) with a process supervisor so jobs actually execute.',
+        );
+    }
+
+    private function checkCacheAndSessionDrivers(): void
+    {
+        $cache = (string) config('cache.default', '');
+        $session = (string) config('session.driver', '');
+
+        $badCache = in_array($cache, ['array', 'file'], true);
+        $badSession = in_array($session, ['cookie', 'array', 'file'], true);
+
+        if ($badCache) {
+            $this->problem(
+                "Cache driver is [{$cache}] and is not production safe",
+                'A non-shared cache store breaks cross-process caching and can increase load. Use redis or a shared cache.',
+                'Set CACHE_DRIVER=redis (or a shared cache), then run php artisan config:cache.'
+            );
+        }
+
+        if ($badSession) {
+            $this->problem(
+                "Session driver is [{$session}] and is not production safe",
+                'A client-side session store is fragile under multiple web workers and makes some panel controls unreliable.',
+                'Set SESSION_DRIVER=database or SESSION_DRIVER=redis, then run php artisan config:cache.'
+            );
+        }
+    }
+
+    private function checkBroadcastDriver(): void
+    {
+        // Reuse the existing, severe check about misconfigured broadcast drivers.
+        $this->checkBroadcasting();
+    }
+
+    private function checkStorageLink(): void
+    {
+        $path = public_path('storage');
+
+        if (is_link($path) || is_dir($path)) {
+            return;
+        }
+
+        $this->problem(
+            'public/storage is missing',
+            'Uploaded files and other storage-backed assets cannot be served until the storage symlink exists.',
+            'Run php artisan storage:link.'
+        );
+    }
+
+    private function checkNotificationTable(): void
+    {
+        $table = (string) config('database.notifications', 'notifications');
+
+        if (Schema::hasTable($table)) {
+            return;
+        }
+
+        $this->problem(
+            "The notifications table [{$table}] is missing",
+            'The bell inbox writes and reads from Laravel notifications. Without the table the notification stream fails at runtime.',
+            'Run php artisan notifications:table && php artisan migrate.'
+        );
+    }
+
+    private function checkMailDefaults(): void
+    {
+        $default = config('mail.default');
+        $from = (string) config('mail.from.address', '');
+
+        if (! is_string($default) || $default === '' || ! is_array(config('mail.mailers'))) {
+            $this->problem(
+                'mail.default is not configured',
+                'No default mailer is selected, so queued mail and other emails cannot deliver.',
+                'Set MAIL_MAILER and related mailer config in .env, then run php artisan config:cache.'
+            );
+
+            return;
+        }
+
+        if ($from === '') {
+            $this->problem(
+                'mail.from.address is empty',
+                'Laravel needs a sender address for outbound emails and password resets.',
+                'Set MAIL_FROM_ADDRESS in .env, then run php artisan config:cache.'
+            );
+        }
+    }
+
+    private function checkTrustedProxyAndHttps(): void
+    {
+        $url = (string) config('app.url', '');
+        $production = app()->isProduction() || config('app.env') === 'production';
+
+        if (! $production) {
+            return;
+        }
+
+        if (str_starts_with($url, 'http://')) {
+            $this->problem(
+                'APP_URL uses http:// in production',
+                'When the panel is behind a TLS-terminating proxy, incorrect scheme detection can break secure cookies and redirects.',
+                'Set APP_URL=https://..., and ensure your trusted proxy configuration forwards X-Forwarded-Proto. Then run php artisan config:cache.'
+            );
+        }
+    }
 
     private function checkPolicies(PanelManager $panels): void
     {
@@ -1483,9 +1626,15 @@ final class DoctorCommand extends Command
         }
     }
 
-    private function problem(string $title, string $detail): void
+    private function problem(string $title, string $detail, ?string $suggested = null): void
     {
-        $this->findings[] = ['level' => 'problem', 'title' => $title, 'detail' => $detail];
+        $finding = ['level' => 'problem', 'title' => $title, 'detail' => $detail];
+
+        if ($suggested !== null && $suggested !== '') {
+            $finding['suggested'] = $suggested;
+        }
+
+        $this->findings[] = $finding;
     }
 
     private function note(string $title, string $detail): void
@@ -1516,7 +1665,12 @@ final class DoctorCommand extends Command
                 ? $this->components->error($finding['title'])
                 : $this->components->warn($finding['title']);
 
-            $this->line('    '.wordwrap($finding['detail'], 90, "\n    "));
+            $detail = $finding['detail'];
+            if (isset($finding['suggested']) && is_string($finding['suggested']) && $finding['suggested'] !== '') {
+                $detail = $detail.' Suggested: '.$finding['suggested'];
+            }
+
+            $this->line('    '.wordwrap($detail, 90, "\n    "));
             $this->newLine();
         }
 
@@ -1525,5 +1679,37 @@ final class DoctorCommand extends Command
         $problems > 0
             ? $this->components->error("{$problems} problem(s) found.")
             : $this->components->info('No problems - the notes above are informational.');
+    }
+
+    /**
+     * A tighter checklist view for the production preset.
+     */
+    private function reportProduction(): void
+    {
+        $this->newLine();
+
+        if ($this->findings === []) {
+            $this->components->info('Nothing to fix for the production preset.');
+
+            return;
+        }
+
+        foreach ($this->findings as $finding) {
+            $severity = $finding['level'] === 'problem' ? 'ERROR' : 'WARN';
+            $this->line('- '.$severity.': '.$finding['title']);
+
+            if (isset($finding['suggested']) && is_string($finding['suggested']) && $finding['suggested'] !== '') {
+                $this->line('  Suggested: '.$finding['suggested']);
+            }
+
+            $this->line('  '.wordwrap($finding['detail'], 90, "\n  "));
+            $this->newLine();
+        }
+
+        $problems = count(array_filter($this->findings, static fn (array $f): bool => $f['level'] === 'problem'));
+
+        $problems > 0
+            ? $this->components->error("{$problems} problem(s) found.")
+            : $this->components->info('No problems - the checklist items are warnings or notes.');
     }
 }

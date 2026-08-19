@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Tests\Feature;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
+use Alxtexh\Panel\Tests\Fixtures\Resources\ArticleResource;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -166,5 +167,63 @@ final class RecordActionTest extends TestCase
          */
         $this->assertContains('publish', $row['_actions']);
         $this->assertNotContains('archive', $row['_actions'], 'A hidden action reached the client.');
+    }
+
+    public function test_a_step_wizard_action_collects_inputs_and_runs_after_confirmation(): void
+    {
+        $table = ArticleResource::definition();
+        $keys = array_map(static fn ($a): string => $a->key, $table->recordActionList());
+        $this->assertContains('publish-wizard', $keys, 'Available record action keys: '.implode(',', $keys));
+
+        $this->postJson("/articles/{$this->article->getKey()}/action", [
+            'action' => 'publish-wizard',
+            'data' => [
+                'reason' => '  Hello  ',
+                'confirm' => true,
+            ],
+        ])->assertSuccessful()
+            ->assertJsonPath('values.reason', 'Hello')
+            ->assertJsonPath('values.confirmed', true);
+
+        $fresh = $this->article->fresh();
+
+        $this->assertSame('published', $fresh->status);
+
+        $this->assertIsArray($fresh->custom ?? []);
+        $this->assertSame('Hello', $fresh->custom['reason'] ?? null);
+        $this->assertSame(true, $fresh->custom['confirmed'] ?? null);
+    }
+
+    public function test_a_step_wizard_action_refuses_when_confirmation_is_missing(): void
+    {
+        $this->postJson("/articles/{$this->article->getKey()}/action", [
+            'action' => 'publish-wizard',
+            'data' => [
+                'reason' => 'Hello',
+                'confirm' => false,
+            ],
+        ])->assertStatus(422)->assertJsonValidationErrors('confirm');
+
+        $this->assertSame('draft', $this->article->fresh()->status);
+    }
+
+    public function test_a_step_wizard_action_emits_wizard_schema_for_the_modal(): void
+    {
+        $response = $this->get('/articles')->assertOk();
+
+        $schema = $response->viewData('page')['props']['schema'];
+
+        $entries = $schema['table']['recordActions'] ?? [];
+
+        $actions = collect($entries)->flatMap(static function (mixed $entry): array {
+            return is_array($entry) && array_key_exists('actions', $entry) ? $entry['actions'] ?? [] : [$entry];
+        })->values()->all();
+
+        $wizardAction = collect($actions)->first(static fn (array $a): bool => ($a['key'] ?? null) === 'publish-wizard');
+
+        $this->assertNotNull($wizardAction);
+        $this->assertSame('wizard', $wizardAction['form']['nodes'][0]['component'] ?? null);
+        $this->assertSame('Details', $wizardAction['form']['nodes'][0]['children'][0]['label'] ?? null);
+        $this->assertSame('Confirm', $wizardAction['form']['nodes'][0]['children'][1]['label'] ?? null);
     }
 }

@@ -807,6 +807,14 @@ final class PanelRoutes
                         ->name('settings.devices.destroyOthers');
                 }
 
+                if (self::unclaimed('GET', $panel->getPath().'/settings/notifications')) {
+                    Route::get('settings/notifications', [Controllers\NotificationPreferencesController::class, 'edit'])
+                        ->name('settings.notifications');
+
+                    Route::put('settings/notifications', [Controllers\NotificationPreferencesController::class, 'update'])
+                        ->name('settings.notifications.update');
+                }
+
                 /*
                  * THE SETTINGS INDEX. Declared BEFORE the screens it lists, so
                  * `settings` cannot be captured by anything with a wildcard

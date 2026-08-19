@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Notifications;
 use Alxtexh\Panel\Actions\Action;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use InvalidArgumentException;
 
@@ -38,6 +39,16 @@ final class Notification
 
     private string $type = 'info';
 
+    private string $category = 'general';
+
+    /**
+     * Whether this notification should flash an Inertia toast on `send()`.
+     *
+     * Historically `send()` always flashed a toast, and `bell()` only added a
+     * database row. This default preserves that behavior.
+     */
+    private bool $toast = true;
+
     private bool $bell = false;
 
     /** @var list<Action> */
@@ -65,6 +76,13 @@ final class Notification
     public function href(?string $href): self
     {
         $this->href = $href;
+
+        return $this;
+    }
+
+    public function category(string $category): self
+    {
+        $this->category = $category;
 
         return $this;
     }
@@ -125,23 +143,73 @@ final class Notification
     public function bell(): self
     {
         $this->bell = true;
+        $this->toast = true;
 
         return $this;
+    }
+
+    public function toToast(): self
+    {
+        $this->toast = true;
+        $this->bell = false;
+
+        return $this;
+    }
+
+    public function toDatabase(): self
+    {
+        $this->toast = false;
+        $this->bell = true;
+
+        return $this;
+    }
+
+    public function toBoth(): self
+    {
+        $this->toast = true;
+        $this->bell = true;
+
+        return $this;
+    }
+
+    /**
+     * Also persist to the database (the bell inbox) for the current user.
+     *
+     * Alias for `bell()` kept for Filament parity.
+     */
+    public function persist(): self
+    {
+        return $this->bell();
     }
 
     public function send(): void
     {
         $payload = $this->toArray();
-
-        session()->flash('toast', $payload);
-        Inertia::flash('toast', $payload);
-
-        if (! $this->bell) {
-            return;
-        }
-
         $user = Auth::user();
 
+        if ($this->toast && $this->toastAllowedFor($user)) {
+            session()->flash('toast', $payload);
+            Inertia::flash('toast', $payload);
+        }
+
+        if ($this->bell) {
+            $this->writeToDatabase($user);
+        }
+    }
+
+    /**
+     * Send this notification directly to another user's database inbox.
+     *
+     * No toast, no session flash - the recipient is not the acting user.
+     * The bell badge updates the next time they load a page or open the bell.
+     */
+    public function sendToDatabase(Authenticatable $recipient): void
+    {
+        $this->writeToDatabase($recipient);
+    }
+
+    private function writeToDatabase(?object $user): void
+    {
         if (! $user instanceof Authenticatable || ! method_exists($user, 'notify')) {
             return;
         }
@@ -159,7 +227,26 @@ final class Notification
             $this->href ?? $this->firstActionHref(),
             $severity,
             $this->serializedActions(),
+            $this->category,
         ));
+    }
+
+    private function toastAllowedFor(?object $user): bool
+    {
+        if (! $user instanceof Authenticatable) {
+            return true;
+        }
+
+        if (! DB::getSchemaBuilder()->hasTable('panel_notification_preferences')) {
+            return true;
+        }
+
+        $enabled = DB::table('panel_notification_preferences')
+            ->where('user_id', $user->getKey())
+            ->where('category', $this->category)
+            ->value('toast_enabled');
+
+        return $enabled === null ? true : (bool) $enabled;
     }
 
     /**
