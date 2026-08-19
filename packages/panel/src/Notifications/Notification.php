@@ -129,6 +129,16 @@ final class Notification
         return $this;
     }
 
+    /**
+     * Also persist to the database (the bell inbox) for the current user.
+     *
+     * Alias for `bell()` kept for Filament parity.
+     */
+    public function persist(): self
+    {
+        return $this->bell();
+    }
+
     public function send(): void
     {
         $payload = $this->toArray();
@@ -140,8 +150,22 @@ final class Notification
             return;
         }
 
-        $user = Auth::user();
+        $this->writeToDatabase(Auth::user());
+    }
 
+    /**
+     * Send this notification directly to another user's database inbox.
+     *
+     * No toast, no session flash - the recipient is not the acting user.
+     * The bell badge updates the next time they load a page or open the bell.
+     */
+    public function sendToDatabase(Authenticatable $recipient): void
+    {
+        $this->writeToDatabase($recipient);
+    }
+
+    private function writeToDatabase(?object $user): void
+    {
         if (! $user instanceof Authenticatable || ! method_exists($user, 'notify')) {
             return;
         }
