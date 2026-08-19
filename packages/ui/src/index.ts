@@ -257,6 +257,7 @@ export { buttonClasses } from './components/primitives/buttonClasses'
 export type { ButtonClassesOptions } from './components/primitives/buttonClasses'
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
+export { useWidgetOrder } from './composables/useWidgetOrder'
 export {
     DASHBOARD_HIDE_KEY,
     DASHBOARD_HIDDEN_STORAGE_KEY,

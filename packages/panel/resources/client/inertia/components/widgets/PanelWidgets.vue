@@ -29,7 +29,7 @@
  * thrown away. That bug has been paid for twice in this codebase already.
  */
 import { Deferred, usePage } from '@inertiajs/vue3'
-import { ChartCard, PkBoundary, TrendBadge, packWidgetColumns } from '@alxtexh-enterprise/panel'
+import { ChartCard, PkBoundary, TrendBadge, packWidgetColumns, useWidgetOrder } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import ChartBody from './ChartBody.vue'
@@ -51,9 +51,27 @@ const page = usePage()
 
 const bag = computed(() => page.props as Record<string, any>)
 
-const stats = computed<StatDefinition[]>(() => bag.value[`${props.prefix}Widgets`] ?? [])
+const rawStats = computed<StatDefinition[]>(() => bag.value[`${props.prefix}Widgets`] ?? [])
 
-const charts = computed<Chart[]>(() => bag.value[`${props.prefix}Charts`] ?? [])
+const rawCharts = computed<Chart[]>(() => bag.value[`${props.prefix}Charts`] ?? [])
+
+const {
+    ordered: stats,
+    dragging: statDragging,
+    onDragStart: onStatDragStart,
+    onDragOver: onStatDragOver,
+    onDrop: onStatDrop,
+    onDragEnd: onStatDragEnd,
+} = useWidgetOrder(`alxtexhpanel.widgets.${props.prefix}.stats`, () => rawStats.value)
+
+const {
+    ordered: charts,
+    dragging: chartDragging,
+    onDragStart: onChartDragStart,
+    onDragOver: onChartDragOver,
+    onDrop: onChartDrop,
+    onDragEnd: onChartDragEnd,
+} = useWidgetOrder(`alxtexhpanel.widgets.${props.prefix}.charts`, () => rawCharts.value)
 
 const tables = computed<TableWidgetDecl[]>(() => bag.value[`${props.prefix}Tables`] ?? [])
 
@@ -117,11 +135,17 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
         class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
     >
         <DashboardStatPane
-            v-for="widget in stats"
+            v-for="(widget, index) in stats"
             :key="widget.key"
             :prefix="prefix"
             :widget="widget"
             :value="stat(widget.key)"
+            draggable="true"
+            :class="{ 'opacity-50': statDragging === index }"
+            @dragstart="onStatDragStart(index, $event)"
+            @dragover="onStatDragOver(index, $event)"
+            @drop="onStatDrop(index)"
+            @dragend="onStatDragEnd"
         />
     </div>
 

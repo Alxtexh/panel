@@ -154,6 +154,7 @@ export type { SemanticTone } from './components/primitives/statusTone';
 export { buttonClasses } from './components/primitives/buttonClasses';
 export type { ButtonClassesOptions } from './components/primitives/buttonClasses';
 export { useColumnVisibility } from './composables/useColumnVisibility';
+export { useWidgetOrder } from './composables/useWidgetOrder';
 export { DASHBOARD_HIDE_KEY, DASHBOARD_HIDDEN_STORAGE_KEY, } from './composables/dashboardHide';
 export type { DashboardHide } from './composables/dashboardHide';
 export { useLiveUpdates } from './composables/useLiveUpdates';
