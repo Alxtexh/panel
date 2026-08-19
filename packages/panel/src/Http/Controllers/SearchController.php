@@ -100,18 +100,36 @@ final class SearchController extends Controller
                 continue;
             }
 
-            $items = $this->search($class, $term, $prefix);
+            $search = $this->search($class, $term, $prefix);
 
-            if ($items !== []) {
-                $groups[] = ['label' => $class::pluralLabel(), 'items' => $items];
+            if ($search['items'] !== []) {
+                $groups[] = [
+                    'label' => $class::pluralLabel(),
+                    'items' => $search['items'],
+                    'score' => $search['score'],
+                    'sort' => $class::searchSort(),
+                ];
             }
         }
 
-        return response()->json(['groups' => $groups]);
+        usort($groups, static fn (array $a, array $b): int => match (true) {
+            abs((float) $a['score'] - (float) $b['score']) < 0.00001 => $a['sort'] <=> $b['sort'],
+            default => $b['score'] <=> $a['score'],
+        });
+
+        $payload = array_map(
+            static fn (array $g): array => [
+                'label' => $g['label'],
+                'items' => $g['items'],
+            ],
+            $groups,
+        );
+
+        return response()->json(['groups' => $payload]);
     }
 
     /**
-     * @return list<array{id: mixed, title: string, subtitle: ?string, href: string}>
+     * @return array{score: float, items: list<array{id: mixed, title: string, subtitle: ?string, href: string}>}
      */
     private function search(string $class, string $term, string $prefix): array
     {
@@ -142,17 +160,103 @@ final class SearchController extends Controller
         $title = $this->titleColumn($result->records);
         $subtitle = $this->subtitleColumn($class, $result->records, $title);
 
-        return array_map(
+        $words = $this->words($term);
+        $weight = (float) $class::searchWeight();
+
+        $scored = array_map(
             static fn (array $row): array => [
-                'id' => $row[$key] ?? null,
-                'title' => (string) ($row[$title] ?? $row[$key] ?? ''),
-                'subtitle' => $subtitle !== null && ($row[$subtitle] ?? '') !== ''
+                'row' => $row,
+                'titleValue' => (string) ($row[$title] ?? $row[$key] ?? ''),
+                'subtitleValue' => $subtitle !== null && ($row[$subtitle] ?? '') !== ''
                     ? (string) $row[$subtitle]
                     : null,
-                'href' => $prefix.'/'.$class::key().'/'.($row[$key] ?? ''),
+                'score' => 0.0,
             ],
             array_slice($result->records, 0, $limit),
         );
+
+        foreach ($scored as &$entry) {
+            $text = $entry['titleValue'];
+
+            if ($entry['subtitleValue'] !== null) {
+                $text .= ' '.$entry['subtitleValue'];
+            }
+
+            $entry['score'] = $this->relevanceScore($text, $words) * $weight;
+        }
+
+        unset($entry);
+
+        usort($scored, static fn (array $a, array $b): int => match (true) {
+            abs((float) $a['score'] - (float) $b['score']) < 0.00001 => strcasecmp($a['titleValue'], $b['titleValue']),
+            default => $b['score'] <=> $a['score'],
+        });
+
+        $resourceScore = 0.0;
+
+        foreach ($scored as $entry) {
+            $resourceScore = max($resourceScore, (float) $entry['score']);
+        }
+
+        $items = array_map(
+            static fn (array $entry) => [
+                'id' => $entry['row'][$key] ?? null,
+                'title' => (string) $entry['titleValue'],
+                'subtitle' => $entry['subtitleValue'],
+                'href' => $prefix.'/'.$class::key().'/'.($entry['row'][$key] ?? ''),
+            ],
+            $scored,
+        );
+
+        return [
+            'score' => $resourceScore,
+            'items' => $items,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function words(string $term): array
+    {
+        $normalised = preg_replace('/\s+/u', ' ', mb_strtolower(trim($term))) ?? '';
+
+        if ($normalised === '') {
+            return [];
+        }
+
+        $parts = preg_split('/\s+/u', $normalised, flags: PREG_SPLIT_NO_EMPTY) ?? [];
+
+        return array_values(array_filter($parts, static fn (string $p): bool => trim($p) !== ''));
+    }
+
+    /**
+     * @param  string  $text  Title + optional subtitle, already cast as string.
+     * @param  list<string>  $words
+     */
+    private function relevanceScore(string $text, array $words): float
+    {
+        $score = 0.0;
+        $lower = mb_strtolower($text);
+
+        foreach ($words as $word) {
+            if ($word === '') {
+                continue;
+            }
+
+            if (str_starts_with($lower, $word)) {
+                $score += 2;
+                continue;
+            }
+
+            $pattern = '/(^|\s)'.preg_quote($word, '/').'($|\s)/u';
+
+            if (preg_match($pattern, $lower) === 1) {
+                $score += 1;
+            }
+        }
+
+        return $score;
     }
 
     /**

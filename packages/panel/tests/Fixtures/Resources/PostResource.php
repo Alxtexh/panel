@@ -26,6 +26,11 @@ final class PostResource extends Resource
 
     protected static string $panel = 'admin';
 
+    public static function searchWeight(): float
+    {
+        return 2;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
