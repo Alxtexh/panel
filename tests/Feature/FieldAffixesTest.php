@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Feature;
 
+use Alxtexh\Panel\Actions\Action;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
@@ -79,6 +80,80 @@ final class FieldAffixesTest extends TestCase
         $this->assertSame('https://example.test', $schema['prefixAction']['url'] ?? null);
         $this->assertTrue($schema['suffixAction']['copy'] ?? false);
         $this->assertTrue($schema['hintAction']['copy'] ?? false);
+        $this->assertArrayNotHasKey('key', $schema['suffixAction']);
+        $this->assertArrayNotHasKey('post', $schema['suffixAction']);
+        $this->assertArrayNotHasKey('key', $schema['prefixAction']);
+        $this->assertArrayNotHasKey('post', $schema['prefixAction']);
+    }
+
+    public function test_named_affix_actions_serialise_a_post_key(): void
+    {
+        $schema = TextField::make('slug')
+            ->suffixAction(
+                Action::make('generate')->action(
+                    static function (callable $get, callable $set): void {
+                        $set('slug', 'x');
+                    },
+                ),
+            )
+            ->toSchema();
+
+        $this->assertSame('generate', $schema['suffixAction']['key'] ?? null);
+        $this->assertTrue($schema['suffixAction']['post'] ?? false);
+        $this->assertSame('Generate', $schema['suffixAction']['label'] ?? null);
+        $this->assertArrayNotHasKey('copy', $schema['suffixAction']);
+        $this->assertArrayNotHasKey('url', $schema['suffixAction']);
+    }
+
+    public function test_suffix_action_post_generates_a_slug_from_title(): void
+    {
+        $payload = $this->postJson('/articles/form-action', [
+            'field' => 'slug',
+            'action' => 'generate',
+            'values' => ['title' => 'Hello World', 'slug' => '', 'status' => 'draft'],
+        ])->assertOk()->json();
+
+        $this->assertSame('hello-world', $payload['values']['slug'] ?? null);
+        $this->assertArrayHasKey('schema', $payload);
+        $this->assertArrayHasKey('values', $payload);
+        $this->assertDatabaseMissing('articles', ['slug' => 'hello-world']);
+    }
+
+    public function test_prefix_action_post_patches_the_field(): void
+    {
+        $payload = $this->postJson('/articles/form-action', [
+            'field' => 'slug',
+            'action' => 'upper',
+            'values' => ['title' => 'Hello', 'slug' => 'hello-world', 'status' => 'draft'],
+        ])->assertOk()->json();
+
+        $this->assertSame('HELLO-WORLD', $payload['values']['slug'] ?? null);
+    }
+
+    public function test_a_missing_affix_action_name_is_rejected(): void
+    {
+        $this->postJson('/articles/form-action', [
+            'field' => 'slug',
+            'values' => ['title' => 'Hello'],
+        ])->assertUnprocessable()->assertJsonValidationErrors('action');
+    }
+
+    public function test_a_wrong_affix_action_name_is_not_found(): void
+    {
+        $this->postJson('/articles/form-action', [
+            'field' => 'slug',
+            'action' => 'nuke',
+            'values' => ['title' => 'Hello', 'slug' => ''],
+        ])->assertNotFound();
+    }
+
+    public function test_copy_and_url_affixes_do_not_register_a_post_action(): void
+    {
+        $this->postJson('/articles/form-action', [
+            'field' => 'title',
+            'action' => 'generate',
+            'values' => ['title' => 'Hello'],
+        ])->assertNotFound();
     }
 
     public function test_precognitive_create_rejects_a_missing_required_field(): void

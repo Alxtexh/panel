@@ -28,6 +28,7 @@ use Alxtexh\Panel\Widgets\StatWidget;
 use Alxtexh\Panel\Resources\RelationManager;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Comment;
+use Illuminate\Support\Str;
 
 /** The tenant-scoped counterpart of `PostResource`. */
 final class ArticleResource extends Resource
@@ -57,6 +58,17 @@ final class ArticleResource extends Resource
                         $set('status', 'draft');
                     }
                 }),
+            TextField::make('slug')
+                ->prefixAction(
+                    Action::make('upper')->action(static function (callable $get, callable $set): void {
+                        $set('slug', strtoupper((string) $get('slug')));
+                    }),
+                )
+                ->suffixAction(
+                    Action::make('generate')->action(static function (callable $get, callable $set): void {
+                        $set('slug', Str::slug((string) $get('title')));
+                    }),
+                ),
             TextField::make('status')
                 ->hidden(static fn (array $values): bool => ($values['title'] ?? '') === 'hide-status')
                 ->disabled(static fn (array $values): bool => ($values['title'] ?? '') === 'lock-status'),

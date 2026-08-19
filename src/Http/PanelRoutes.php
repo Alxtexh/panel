@@ -1171,6 +1171,9 @@ final class PanelRoutes
         Route::post('{resource}/form-state', [ResourceController::class, 'formState'])
             ->whereIn('resource', $keys)->name('formState');
 
+        Route::post('{resource}/form-action', [ResourceController::class, 'formAction'])
+            ->whereIn('resource', $keys)->name('formAction');
+
         Route::get('{resource}/pick/{field}', [ResourceController::class, 'picker'])
             ->whereIn('resource', $keys)
             ->where('field', '[a-zA-Z0-9_]+')
