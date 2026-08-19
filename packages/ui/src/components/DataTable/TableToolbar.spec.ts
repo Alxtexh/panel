@@ -38,4 +38,21 @@ describe('TableToolbar filter chips', () => {
 
         expect(wrapper.emitted('clear-filters')).toHaveLength(1)
     })
+
+    it('shows a mobile tools trigger below the md breakpoint', () => {
+        Object.defineProperty(window, 'matchMedia', {
+            writable: true,
+            value: (query: string) => ({
+                matches: query.includes('max-width'),
+                media: query,
+                addEventListener: () => {},
+                removeEventListener: () => {},
+            }),
+        })
+
+        const wrapper = mountToolbar()
+
+        expect(wrapper.find('[dusk="mobile-table-tools"]').exists()).toBe(true)
+        expect(wrapper.find('.hidden.md\\:flex').exists()).toBe(true)
+    })
 })

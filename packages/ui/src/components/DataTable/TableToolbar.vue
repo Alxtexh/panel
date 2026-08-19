@@ -24,6 +24,8 @@ import { computed, ref, watch } from 'vue'
 import PkDropdown from '../primitives/PkDropdown.vue'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import PkQueryBuilder from './PkQueryBuilder.vue'
+import Sheet from '../shadcn/sheet/Sheet.vue'
+import SheetContent from '../shadcn/sheet/SheetContent.vue'
 import type { FilterSchema, FilterIndicator, GroupSchema } from './types'
 
 const props = withDefaults(
@@ -77,6 +79,8 @@ const emit = defineEmits<{
     (e: 'clear-filter', key: string): void
     (e: 'clear-filters'): void
 }>()
+
+const mobileDrawerOpen = ref(false)
 
 /* ------------------------------------------------------------------ search */
 
@@ -295,6 +299,11 @@ function resetColumns() {
     emit('apply-columns', [])
 }
 
+function applyFiltersMobile() {
+    emit('apply-filters', { ...draft.value })
+    mobileDrawerOpen.value = false
+}
+
 /** Clearing resets the local search box too, or it keeps a stale term. */
 function clearEverything() {
     local.value = ''
@@ -315,7 +324,153 @@ function clearEverything() {
         stub of a search field would be worse than a full-width one.
     -->
     <div class="flex flex-col gap-2">
-    <div class="flex flex-wrap items-center justify-end gap-2">
+    <!-- Mobile: search plus a bottom drawer for filters, columns, and grouping. -->
+    <div class="flex items-center gap-2 md:hidden">
+        <div class="relative min-w-0 flex-1">
+            <svg
+                class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+            >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input
+                v-model="local"
+                type="search"
+                :placeholder="searchPlaceholder"
+                :title="searchHint"
+                :aria-label="searchHint ?? searchPlaceholder"
+                class="border-input bg-background focus-visible:ring-ring h-9 w-full rounded-md border pr-8 pl-9 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            />
+        </div>
+
+        <button
+            type="button"
+            dusk="mobile-table-tools"
+            class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 text-sm"
+            @click="mobileDrawerOpen = true"
+        >
+            <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 5h18M6 12h12M10 19h4" />
+            </svg>
+            Tools
+            <span
+                v-if="activeCount"
+                class="bg-primary text-primary-foreground inline-flex size-4 items-center justify-center rounded-full text-[10px]"
+            >
+                {{ activeCount }}
+            </span>
+        </button>
+
+        <Sheet :open="mobileDrawerOpen" @update:open="mobileDrawerOpen = $event">
+            <SheetContent side="bottom" class="max-h-[85vh] gap-0 overflow-hidden p-0">
+                <div class="flex max-h-[85vh] flex-col">
+                    <div class="border-b px-4 py-3">
+                        <p class="text-sm font-semibold">Table tools</p>
+                        <p class="text-muted-foreground text-xs">Filters, columns, and grouping</p>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto px-4 py-3">
+                        <div v-if="filterSchema.length" class="mb-4 flex flex-col gap-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium">Filters</span>
+                                <button class="text-destructive text-xs hover:underline" @click="resetFilters">
+                                    Reset
+                                </button>
+                            </div>
+                            <div
+                                v-for="filter in filterSchema"
+                                :key="`mobile-${filter.key}`"
+                                class="flex flex-col gap-1.5"
+                            >
+                                <label class="text-xs font-medium">{{ filter.label }}</label>
+                                <select
+                                    v-if="filter.type !== 'multiselect' && filter.type !== 'querybuilder' && filter.type !== 'daterange' && filter.type !== 'numberrange' && filter.type !== 'boolean'"
+                                    :value="(draft[filter.key] as string) ?? ''"
+                                    class="border-input bg-background h-9 rounded-md border px-3 text-sm"
+                                    @change="setValue(filter, ($event.target as HTMLSelectElement).value)"
+                                >
+                                    <option value="">All</option>
+                                    <option
+                                        v-for="opt in optionsFor(filter)"
+                                        :key="String(opt.value)"
+                                        :value="opt.value"
+                                    >
+                                        {{ opt.label }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <p class="mb-2 text-sm font-medium">Columns</p>
+                            <div class="flex flex-col gap-1">
+                                <button
+                                    v-for="col in columns"
+                                    :key="`mobile-col-${col.key}`"
+                                    type="button"
+                                    class="hover:bg-accent flex items-center gap-2 rounded px-2 py-1.5 text-sm"
+                                    :disabled="col.locked"
+                                    @click="toggleColumn(col.key)"
+                                >
+                                    <span>{{ col.label }}</span>
+                                    <span v-if="!columnDraft.has(col.key)" class="text-primary ml-auto text-xs">On</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-if="groups.length" class="mb-4">
+                            <p class="mb-2 text-sm font-medium">Grouping</p>
+                            <div class="flex flex-col gap-1">
+                                <button
+                                    type="button"
+                                    class="hover:bg-accent rounded px-2 py-1.5 text-left text-sm"
+                                    @click="setGroup(null); mobileDrawerOpen = false"
+                                >
+                                    No grouping
+                                </button>
+                                <button
+                                    v-for="option in groups"
+                                    :key="option.key"
+                                    type="button"
+                                    class="hover:bg-accent rounded px-2 py-1.5 text-left text-sm"
+                                    @click="setGroup(option.key); mobileDrawerOpen = false"
+                                >
+                                    {{ option.label }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t p-4">
+                        <button
+                            v-if="filterSchema.length"
+                            type="button"
+                            class="bg-primary text-primary-foreground hover:bg-primary/90 mb-2 h-9 w-full rounded-md text-sm font-medium disabled:opacity-50"
+                            :disabled="!draftDiffers"
+                            @click="applyFiltersMobile"
+                        >
+                            Apply filters
+                        </button>
+                        <button
+                            v-if="hasAnything"
+                            type="button"
+                            class="text-muted-foreground hover:text-foreground w-full text-xs underline-offset-2 hover:underline"
+                            @click="clearEverything(); mobileDrawerOpen = false"
+                        >
+                            Clear search and filters
+                        </button>
+                    </div>
+                </div>
+            </SheetContent>
+        </Sheet>
+    </div>
+
+    <div class="hidden flex-wrap items-center justify-end gap-2 md:flex">
         <!-- Geometry deliberately identical to the topbar search: two search
              boxes that are almost-but-not-quite alike read as inconsistency. -->
         <div class="relative min-w-0 flex-1 sm:w-72 sm:flex-none">

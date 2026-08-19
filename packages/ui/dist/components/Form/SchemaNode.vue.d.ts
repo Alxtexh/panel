@@ -1,10 +1,12 @@
 import type { UploadedFileValue } from './PkFileUpload.vue';
 export interface SchemaNode {
-    component: 'field' | 'section' | 'grid' | 'flex' | 'fieldset' | 'callout' | 'tabs' | 'tab' | 'wizard' | 'step';
+    component: 'field' | 'section' | 'card' | 'columns' | 'column' | 'grid' | 'flex' | 'fieldset' | 'callout' | 'tabs' | 'tab' | 'wizard' | 'step';
     children?: SchemaNode[];
     label?: string;
+    title?: string;
     description?: string;
     columns?: number;
+    span?: number;
     collapsible?: boolean;
     collapsed?: boolean;
     icon?: string | null;
@@ -15,7 +17,6 @@ export interface SchemaNode {
     /** `callout` */
     tone?: 'info' | 'success' | 'warning' | 'danger';
     body?: string;
-    title?: string;
     [key: string]: any;
 }
 type __VLS_Props = {

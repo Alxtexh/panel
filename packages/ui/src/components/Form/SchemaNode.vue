@@ -53,7 +53,6 @@ export interface SchemaNode {
     /** `callout` */
     tone?: 'info' | 'success' | 'warning' | 'danger'
     body?: string
-    title?: string
     [key: string]: any
 }
 

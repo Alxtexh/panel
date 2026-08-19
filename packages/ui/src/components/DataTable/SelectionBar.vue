@@ -15,6 +15,10 @@
  * Actions come through the slot. This owns the selection surface, never what an
  * action does - it does not fetch (spec §4 rule 2).
  */
+import { ref } from 'vue'
+import Sheet from '../shadcn/sheet/Sheet.vue'
+import SheetContent from '../shadcn/sheet/SheetContent.vue'
+
 withDefaults(
     defineProps<{
         count: number
@@ -31,6 +35,8 @@ const emit = defineEmits<{
     (e: 'clear'): void
 }>()
 
+const mobileActionsOpen = ref(false)
+
 const format = (n: number) => new Intl.NumberFormat().format(n)
 </script>
 
@@ -39,9 +45,35 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
         class="bg-primary/5 border-primary/20 flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2 text-sm"
         role="status"
     >
-        <!-- Actions first, because that is why anyone selected anything. -->
-        <div class="flex items-center gap-2">
+        <!-- Desktop bulk actions stay inline. -->
+        <div class="hidden items-center gap-2 md:flex">
             <slot name="actions" />
+        </div>
+
+        <!-- Mobile: collapse bulk actions into a bottom drawer. -->
+        <div class="md:hidden">
+            <button
+                type="button"
+                dusk="mobile-bulk-actions"
+                class="border-input bg-background hover:bg-accent inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium"
+                @click="mobileActionsOpen = true"
+            >
+                Actions
+            </button>
+
+            <Sheet :open="mobileActionsOpen" @update:open="mobileActionsOpen = $event">
+                <SheetContent side="bottom" class="max-h-[70vh] gap-0 overflow-hidden p-0">
+                    <div class="border-b px-4 py-3">
+                        <p class="text-sm font-semibold">Bulk actions</p>
+                        <p class="text-muted-foreground text-xs">
+                            {{ allMatching ? 'All matching records' : `${format(count)} selected` }}
+                        </p>
+                    </div>
+                    <div class="flex flex-col gap-2 overflow-y-auto p-4">
+                        <slot name="actions" />
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
 
         <span class="font-medium tabular-nums">
