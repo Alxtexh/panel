@@ -29,6 +29,7 @@ interface Workspace {
 defineProps<{
     workspaces: Workspace[]
     canManageMembers: boolean
+    canSwitchWorkspaces: boolean
     /**
      * FALSE ON A SINGLE-TENANT INSTALLATION, or one whose user model has no
      * membership relation. The screen then says switching is unavailable here
@@ -56,7 +57,7 @@ const creating = useForm({ name: '' })
 
 function create() {
     creating.post(at('/settings/workspaces'), {
-        onSuccess: () => toast.success('Workspace created — you are now in it'),
+        onSuccess: () => toast.success('Workspace created, you are now in it'),
     })
 }
 
@@ -127,7 +128,7 @@ function switchTo(workspace: Workspace) {
                     someone is waiting to become possible.
                 -->
                 <Button
-                    v-if="!workspace.current && !workspace.suspended"
+                    v-if="canSwitchWorkspaces && !workspace.current && !workspace.suspended"
                     type="button"
                     variant="outline"
                     size="sm"
@@ -150,7 +151,11 @@ function switchTo(workspace: Workspace) {
             >.
         </p>
 
-        <form class="space-y-4 border-t pt-6" @submit.prevent="create">
+        <form
+            v-if="canSwitchWorkspaces"
+            class="space-y-4 border-t pt-6"
+            @submit.prevent="create"
+        >
             <Heading
                 variant="small"
                 title="New workspace"
@@ -160,12 +165,8 @@ function switchTo(workspace: Workspace) {
             <div class="grid gap-2">
                 <Label for="workspace-name">Name</Label>
                 <!--
-                    THE PLACEHOLDER IS DELIBERATELY NEUTRAL. It read "Nairobi
-                    Fibre West" - the reference application's domain leaking
-                    into a packaged screen, so a clinic or a law firm creating
-                    their first workspace was shown an ISP's name as the
-                    pattern to follow. This file ships to every installation;
-                    nothing in it may assume an industry.
+                    The placeholder is deliberately neutral. This file ships to
+                    every installation, so nothing in it may assume an industry.
                 -->
                 <Input
                     id="workspace-name"

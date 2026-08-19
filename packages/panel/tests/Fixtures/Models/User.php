@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Tests\Fixtures\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -32,5 +33,21 @@ class User extends Authenticatable
             'password' => 'hashed',
             'appearance' => 'array',
         ];
+    }
+
+    /**
+     * Tenant memberships for workspace switching.
+     *
+     * The panel package resolves the relation name at runtime, and accepts a
+     * few conventional names. `memberships` is one of them.
+     */
+    public function memberships(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Tenant::class,
+            'memberships',
+            'user_id',
+            'tenant_id',
+        );
     }
 }

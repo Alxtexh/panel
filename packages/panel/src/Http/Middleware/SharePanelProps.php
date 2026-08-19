@@ -577,6 +577,17 @@ final class SharePanelProps
                     return null;
                 }
 
+                $user = $request->user();
+
+                /*
+                 * The sidebar switcher is an admin control. Non-admin users can
+                 * still see the Workspaces settings screen when they are
+                 * members, but they cannot change the active tenant.
+                 */
+                if ($user === null || ! Ability::allows($user, 'manage_roles')) {
+                    return null;
+                }
+
                 $panel = $panels->currentPanel();
 
                 $switchUrl = $panel !== null && Route::has($panel->getRouteName().'settings.workspaces.switch')

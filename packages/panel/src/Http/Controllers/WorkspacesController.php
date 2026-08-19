@@ -14,6 +14,7 @@ use Inertia\Response;
 use Alxtexh\Panel\Audit\AuditRecorder;
 use Alxtexh\Panel\Http\Middleware\ScopeSessionToTenant;
 use Alxtexh\Panel\Models\Role;
+use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\Ability;
 use Alxtexh\Panel\Support\PanelHome;
@@ -48,9 +49,11 @@ final class WorkspacesController
     {
         $user = $request->user();
         $current = $user?->{Tenants::column()} ?? null;
+        $canSwitchWorkspaces = Ability::allows($user, 'manage_roles');
 
         return Inertia::render('settings/Workspaces', [
             'available' => Tenants::switchable($request),
+            'canSwitchWorkspaces' => $canSwitchWorkspaces,
 
             'workspaces' => array_map(
                 static fn (Model $tenant): array => Tenants::toArray($tenant) + [
@@ -88,11 +91,14 @@ final class WorkspacesController
             throw new NotFoundHttpException('Workspaces are not available here.');
         }
 
+        $user = $request->user();
+
+        abort_unless(Ability::allows($user, 'manage_roles'), 403);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:60'],
         ]);
 
-        $user = $request->user();
         $model = Tenants::model();
         $relation = Tenants::relation($user);
 
@@ -117,7 +123,11 @@ final class WorkspacesController
             'workspace' => $tenant->name ?? $tenant->getKey(),
         ]);
 
-        return redirect(PanelHome::urlFor(app(PanelManager::class)->currentPanel()));
+        $panel = app(PanelManager::class)->currentPanel();
+        $home = PanelHome::urlFor($panel);
+        $target = self::redirectToRefererOrHome($request, $panel, $home);
+
+        return redirect($target);
     }
 
     public function switch(Request $request): RedirectResponse
@@ -131,6 +141,9 @@ final class WorkspacesController
         ]);
 
         $user = $request->user();
+
+        abort_unless(Ability::allows($user, 'manage_roles'), 403);
+
         $relation = Tenants::relation($user);
 
         $tenant = $user->{$relation}()->whereKey($validated['workspace'])->first();
@@ -152,10 +165,12 @@ final class WorkspacesController
             ]);
         }
 
-        $home = PanelHome::urlFor(app(PanelManager::class)->currentPanel());
+        $panel = app(PanelManager::class)->currentPanel();
+        $home = PanelHome::urlFor($panel);
+        $target = self::redirectToRefererOrHome($request, $panel, $home);
 
         if ($tenant->getKey() === ($user->{Tenants::column()} ?? null)) {
-            return redirect($home);
+            return redirect($target);
         }
 
         $user->forceFill([Tenants::column() => $tenant->getKey()])->save();
@@ -172,7 +187,55 @@ final class WorkspacesController
             'workspace' => $tenant->name ?? $tenant->getKey(),
         ]);
 
-        return redirect($home);
+        return redirect($target);
+    }
+
+    private static function redirectToRefererOrHome(Request $request, ?Panel $panel, string $home): string
+    {
+        $referer = $request->headers->get('referer');
+
+        if (! is_string($referer) || $referer === '') {
+            return $home;
+        }
+
+        $host = parse_url($referer, PHP_URL_HOST);
+
+        if (is_string($host) && $host !== '' && $host !== $request->getHost()) {
+            return $home;
+        }
+
+        $path = parse_url($referer, PHP_URL_PATH);
+
+        if (! is_string($path) || $path === '') {
+            return $home;
+        }
+
+        $path = '/'.ltrim($path, '/');
+
+        $query = parse_url($referer, PHP_URL_QUERY);
+        $pathWithQuery = $path;
+
+        if (is_string($query) && $query !== '') {
+            $pathWithQuery .= '?'.$query;
+        }
+
+        /*
+         * Protect against open redirect: only redirect within this panel
+         * prefix.
+         */
+        $prefix = '/'.trim($panel?->getPath() ?? '', '/');
+
+        if ($prefix === '/') {
+            return $pathWithQuery;
+        }
+
+        $normalizedPrefix = rtrim($prefix, '/');
+
+        if ($pathWithQuery === $normalizedPrefix || str_starts_with($path, $normalizedPrefix.'/')) {
+            return $pathWithQuery;
+        }
+
+        return $home;
     }
 
     /**
