@@ -20,6 +20,12 @@ final class DemoConfigPanelPlugin extends Plugin
         return $panel->id === 'plugin-test-config';
     }
 
+    /** @return list<string> */
+    public static function panelIds(): ?array
+    {
+        return ['plugin-test-config'];
+    }
+
     public function registerPages(Panel $panel): void
     {
         $this->pageClasses([

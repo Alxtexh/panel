@@ -51,6 +51,9 @@ final class Notification
 
     private bool $bell = false;
 
+    /** @var list<string>|null Explicit channel list from channels(). */
+    private ?array $channels = null;
+
     /** @var list<Action> */
     private array $actions = [];
 
@@ -173,6 +176,36 @@ final class Notification
     }
 
     /**
+     * Route this notification through named channels.
+     *
+     * Supported: `toast`, `database` (bell inbox), `mail`. When omitted,
+     * `send()` uses the legacy `success()` / `bell()` flags instead.
+     *
+     * @param  list<string>  $channels
+     */
+    public function channels(array $channels): self
+    {
+        $allowed = ['toast', 'database', 'mail'];
+        $normalized = [];
+
+        foreach ($channels as $channel) {
+            if (! is_string($channel) || ! in_array($channel, $allowed, true)) {
+                throw new InvalidArgumentException(
+                    'Notification channels must be one of: '.implode(', ', $allowed).'.',
+                );
+            }
+
+            $normalized[] = $channel;
+        }
+
+        $this->channels = array_values(array_unique($normalized));
+        $this->toast = in_array('toast', $this->channels, true);
+        $this->bell = in_array('database', $this->channels, true);
+
+        return $this;
+    }
+
+    /**
      * Also persist to the database (the bell inbox) for the current user.
      *
      * Alias for `bell()` kept for Filament parity.
@@ -187,13 +220,30 @@ final class Notification
         $payload = $this->toArray();
         $user = Auth::user();
 
-        if ($this->toast && $this->toastAllowedFor($user)) {
+        if ($this->channels === null) {
+            if ($this->toast && $this->toastAllowedFor($user)) {
+                session()->flash('toast', $payload);
+                Inertia::flash('toast', $payload);
+            }
+
+            if ($this->bell) {
+                $this->writeToDatabase($user);
+            }
+
+            return;
+        }
+
+        if (in_array('toast', $this->channels, true) && $this->toastAllowedFor($user)) {
             session()->flash('toast', $payload);
             Inertia::flash('toast', $payload);
         }
 
-        if ($this->bell) {
+        if (in_array('database', $this->channels, true)) {
             $this->writeToDatabase($user);
+        }
+
+        if (in_array('mail', $this->channels, true)) {
+            $this->writeToMail($user);
         }
     }
 
@@ -228,6 +278,19 @@ final class Notification
             $severity,
             $this->serializedActions(),
             $this->category,
+        ));
+    }
+
+    private function writeToMail(?object $user): void
+    {
+        if (! $user instanceof Authenticatable || ! method_exists($user, 'notify')) {
+            return;
+        }
+
+        $user->notify(new PanelMailText(
+            $this->title,
+            $this->body,
+            $this->serializedActions(),
         ));
     }
 

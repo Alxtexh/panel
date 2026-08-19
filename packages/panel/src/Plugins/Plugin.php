@@ -34,7 +34,7 @@ abstract class Plugin implements PanelPlugin
      * different contract. For the MVP, Panel's `panel:doctor` reports
      * incompatibilities when the versions do not match.
      */
-    public const CONTRACT_VERSION = '1.0.53';
+    public const CONTRACT_VERSION = '1.0.54';
 
     /** @var PluginContext|null Set during `register()` only. */
     private ?PluginContext $context = null;
@@ -55,6 +55,19 @@ abstract class Plugin implements PanelPlugin
     public function appliesTo(Panel $panel): bool
     {
         return $panel->getContext() === Panel::CONTEXT_TENANT;
+    }
+
+    /**
+     * Panel ids this plugin may apply to, without constructing the plugin.
+     *
+     * Override with a narrow list so PanelKit can skip loading the class on
+     * portals this plugin never targets. Return null to use `appliesTo()` only.
+     *
+     * @return list<string>|null
+     */
+    public static function panelIds(): ?array
+    {
+        return null;
     }
 
     /**

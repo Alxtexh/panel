@@ -180,6 +180,14 @@ Vue/Inertia components referenced by render hooks or Page classes live in the
 Run `php artisan panel:doctor` to confirm plugin contract compatibility and
 catch duplicate page slugs before boot.
 
+### Plugin performance
+
+PanelKit does not scan for plugins. Only classes you list in
+`config('panel.plugins')` or `Panel::plugins()` load, and only when their panel
+is first used on a request. Register only what you need, host Vue components in
+your app, and run `panel:doctor --profile=production` for a lightweight plugin
+count note and missing-class checks.
+
 ## Checking your work
 
 ```bash

@@ -557,6 +557,11 @@ return [
     | Classes implementing `Plugins\PanelPlugin`, installed into every panel
     | that accepts them.
     |
+    | EXPLICIT ONLY. PanelKit does not scan directories or call marketplace
+    | hooks at boot. Name plugins here or on `Panel::plugins()`; nothing else
+    | loads. Config classes are constructed lazily when their panel is first
+    | used and `appliesTo()` passes.
+    |
     | USUALLY EMPTY, AND THAT IS FINE. A published plugin registers itself from
     | its own service provider - `PanelManager::plugin(new BillingPlugin)` - so
     | `composer require` is enough and nothing here needs editing. This list is

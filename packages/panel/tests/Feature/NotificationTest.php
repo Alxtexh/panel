@@ -104,6 +104,49 @@ final class NotificationTest extends TestCase
         NotificationFacade::assertSentTo($user, BellText::class);
     }
 
+    public function test_channels_database_and_mail_without_toast(): void
+    {
+        NotificationFacade::fake();
+
+        $user = $this->operator();
+        $this->actingAs($user);
+
+        Notification::make()
+            ->title('Export finished')
+            ->body('Your CSV is ready.')
+            ->success()
+            ->channels(['database', 'mail'])
+            ->send();
+
+        $this->assertNull(session('toast'));
+        NotificationFacade::assertSentTo($user, BellText::class);
+        NotificationFacade::assertSentTo($user, \Alxtexh\Panel\Notifications\PanelMailText::class);
+    }
+
+    public function test_channels_respects_toast_preference(): void
+    {
+        $user = $this->operator();
+        $this->actingAs($user);
+
+        \Illuminate\Support\Facades\DB::table('panel_notification_preferences')->insert([
+            'user_id' => $user->getKey(),
+            'category' => 'exports',
+            'toast_enabled' => false,
+            'digest_enabled' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Notification::make()
+            ->title('Export finished')
+            ->category('exports')
+            ->success()
+            ->channels(['toast', 'database'])
+            ->send();
+
+        $this->assertNull(session('toast'));
+    }
+
     public function test_danger_maps_to_an_error_toast(): void
     {
         Notification::make()->title('Nope')->danger()->send();
