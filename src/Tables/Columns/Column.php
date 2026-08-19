@@ -43,6 +43,10 @@ abstract class Column implements Renderable
 
     protected bool $locked = false;
 
+    protected bool $toggleable = false;
+
+    protected bool $isToggledHiddenByDefault = false;
+
     protected ?string $sortKey = null;
 
     protected ?string $databaseColumn = null;
@@ -128,6 +132,20 @@ abstract class Column implements Renderable
     public function locked(bool $locked = true): static
     {
         $this->locked = $locked;
+
+        return $this;
+    }
+
+    /**
+     * Included in the column-visibility toggle menu.
+     *
+     * Pass `isToggledHiddenByDefault: true` to start the column hidden until
+     * the user explicitly enables it via the toolbar dropdown.
+     */
+    public function toggleable(bool $toggleable = true, bool $isToggledHiddenByDefault = false): static
+    {
+        $this->toggleable = $toggleable;
+        $this->isToggledHiddenByDefault = $isToggledHiddenByDefault;
 
         return $this;
     }
@@ -328,6 +346,8 @@ abstract class Column implements Renderable
             'sortKey' => $this->sortKey,
             'copyable' => $this->copyable,
             'locked' => $this->locked,
+            'toggleable' => $this->toggleable,
+            'hiddenByDefault' => $this->isToggledHiddenByDefault,
             'align' => $this->align === 'left' ? null : $this->align,
             'muted' => $this->muted,
             'prefix' => $this->prefix,

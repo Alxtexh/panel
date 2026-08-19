@@ -29,14 +29,19 @@ function readStored(storageKey: string): Set<string> {
     return new Set()
 }
 
-export function useColumnVisibility(storageKey: string) {
+export function useColumnVisibility(storageKey: string, defaults?: Set<string>) {
     /*
      * READ NOW, not in onMounted. Dashboard charts that stay hidden must not
      * mount on the first paint: Inertia still fetches every deferred group on
      * the page, and a ChartCard that appears then hides still inits echarts.
      * SSR has no localStorage, so the set starts empty there.
+     *
+     * When no preference has been stored yet, `defaults` supplies the schema-
+     * declared hidden columns (toggleable with isToggledHiddenByDefault).
      */
-    const hidden = ref<Set<string>>(readStored(storageKey))
+    const stored = readStored(storageKey)
+    const hasStored = typeof localStorage !== 'undefined' && localStorage.getItem(storageKey) !== null
+    const hidden = ref<Set<string>>(hasStored ? stored : (defaults ?? new Set()))
 
     onMounted(() => {
         hidden.value = readStored(storageKey)

@@ -239,8 +239,15 @@ const t = useListTable(props.schema.routes.index, props, {
     groupKeys: (props.schema.table.groups ?? []).map((g) => g.key),
 })
 
+// Columns the schema declares as hidden by default (toggleable + isToggledHiddenByDefault).
+const defaultHidden = computed(() => new Set(
+    props.schema.table.columns
+        .filter((c: any) => c.hiddenByDefault)
+        .map((c: any) => c.key),
+))
+
 // Keyed by resource, so hiding a column on Clients does not hide it on Routers.
-const { hidden, setHidden } = useColumnVisibility(`alxtexhpanel.${props.schema.key}.columns`)
+const { hidden, setHidden } = useColumnVisibility(`alxtexhpanel.${props.schema.key}.columns`, defaultHidden.value)
 
 /** The column panel stages its choices and applies them together. */
 function applyColumns(keys: string[]) {
