@@ -36,6 +36,7 @@ final class MakeRecipeCommand extends Command
     public function handle(): int
     {
         [$model, $table, $label, $plural] = $this->names();
+        $preset = $this->recipePreset($model);
 
         try {
             [$panelId, $directory, $namespace] = $this->panelTarget();
@@ -49,7 +50,7 @@ final class MakeRecipeCommand extends Command
         $modelPath = app_path("Models/{$model}.php");
         $policyPath = app_path("Policies/{$model}Policy.php");
         $migrationPath = $this->migrationPath($table);
-        $docsPath = base_path('docs/recipes/01-'.Str::kebab($plural).'.md');
+        $docsPath = base_path('docs/recipes/'.$this->docsFilename($preset, $plural));
 
         if (! $this->option('force')) {
             foreach ([$resourcePath => 'Resource', $docsPath => 'Recipe docs'] as $path => $kind) {
@@ -61,11 +62,11 @@ final class MakeRecipeCommand extends Command
             }
         }
 
-        $this->writeFile($resourcePath, $this->resourceStub($model, $table, $label, $panelId, $namespace));
-        $this->writeModel($modelPath, $model);
+        $this->writeFile($resourcePath, $this->resourceStub($model, $table, $label, $panelId, $namespace, $preset));
+        $this->writeModel($modelPath, $model, $preset);
         $this->writePolicy($policyPath, $model);
-        $this->writeFile($migrationPath, $this->migrationStub($table));
-        $this->writeFile($docsPath, $this->docsStub($model, $table, $plural, $panelId));
+        $this->writeFile($migrationPath, $this->migrationStub($table, $preset));
+        $this->writeFile($docsPath, $this->docsStub($model, $table, $plural, $panelId, $preset));
 
         $this->components->info("Created {$resourcePath}");
         $this->components->twoColumnDetail('Model', $this->relative($modelPath));
@@ -82,6 +83,14 @@ final class MakeRecipeCommand extends Command
         $this->line('  Default: no rows. Pass --seed for fake data.');
         $this->line('  Dashboard is already empty from panel:install.');
         $this->newLine();
+
+        if ($preset === 'crm_contacts') {
+            $this->line('  Module gate: resource declares `$module = \'crm\'`. Register on the panel:');
+            $this->line("    Module::make('crm')->label('CRM')");
+            $this->line('  SaaS apps MUST also set ModuleRegistry::grants().');
+            $this->newLine();
+        }
+
         $this->line('  Optional SaaS suspension wall. Uncomment on the panel provider:');
         $this->line("    ->apps(['billing-portal'])");
         $this->line('    ->billingState()');
@@ -113,6 +122,22 @@ final class MakeRecipeCommand extends Command
         $plural = str($model)->plural()->headline()->value();
 
         return [$model, $table, $label, $plural];
+    }
+
+    private function recipePreset(string $model): string
+    {
+        return match (Str::lower($model)) {
+            'crmcontact' => 'crm_contacts',
+            default => 'invoices',
+        };
+    }
+
+    private function docsFilename(string $preset, string $plural): string
+    {
+        return match ($preset) {
+            'crm_contacts' => '02-crm-contacts.md',
+            default => '01-'.Str::kebab($plural).'.md',
+        };
     }
 
     /**
@@ -155,7 +180,7 @@ final class MakeRecipeCommand extends Command
         return $directory.'/2026_08_19_000000_create_'.$table.'_table.php';
     }
 
-    private function writeModel(string $path, string $model): void
+    private function writeModel(string $path, string $model, string $preset = 'invoices'): void
     {
         if (is_file($path) && ! $this->option('force')) {
             $this->components->twoColumnDetail('Kept yours', $this->relative($path));
@@ -163,7 +188,7 @@ final class MakeRecipeCommand extends Command
             return;
         }
 
-        $this->writeFile($path, $this->modelStub($model));
+        $this->writeFile($path, $this->modelStub($model, $preset));
     }
 
     private function writePolicy(string $path, string $model): void
@@ -259,6 +284,24 @@ final class MakeRecipeCommand extends Command
             $rows[] = $row;
         }
 
+        if ($table === 'crm_contacts') {
+            $rows = [];
+
+            foreach ([
+                ['name' => 'Ada Lovelace', 'email' => 'ada@example.test', 'company' => 'Analytical Engines', 'status' => 'lead'],
+                ['name' => 'Grace Hopper', 'email' => 'grace@example.test', 'company' => 'Compilers Inc', 'status' => 'customer'],
+                ['name' => 'Alan Turing', 'email' => 'alan@example.test', 'company' => 'Decryption Ltd', 'status' => 'lead'],
+            ] as $contact) {
+                $row = [...$contact, 'created_at' => $now, 'updated_at' => $now];
+
+                if (Schema::hasColumn($table, 'tenant_id')) {
+                    $row['tenant_id'] = $tenantId;
+                }
+
+                $rows[] = $row;
+            }
+        }
+
         DB::table($table)->insert($rows);
         $this->components->twoColumnDetail('Seed', '3 fake rows');
     }
@@ -274,7 +317,12 @@ final class MakeRecipeCommand extends Command
         string $label,
         string $panelId,
         string $namespace,
+        string $preset = 'invoices',
     ): string {
+        if ($preset === 'crm_contacts') {
+            return $this->crmContactResourceStub($model, $table, $label, $panelId, $namespace);
+        }
+
         return <<<PHP
         <?php
 
@@ -347,8 +395,109 @@ final class MakeRecipeCommand extends Command
         PHP;
     }
 
-    private function modelStub(string $model): string
+    private function crmContactResourceStub(
+        string $model,
+        string $table,
+        string $label,
+        string $panelId,
+        string $namespace,
+    ): string {
+        return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use App\\Models\\{$model};
+        use Alxtexh\\Panel\\Forms\\Fields\\SelectField;
+        use Alxtexh\\Panel\\Forms\\Fields\\TextField;
+        use Alxtexh\\Panel\\Forms\\Form;
+        use Alxtexh\\Panel\\Resources\\Resource;
+        use Alxtexh\\Panel\\Tables\\Columns\\BadgeColumn;
+        use Alxtexh\\Panel\\Tables\\Columns\\TextColumn;
+        use Alxtexh\\Panel\\Tables\\Filters\\SelectFilter;
+        use Alxtexh\\Panel\\Tables\\Table;
+
+        /**
+         * CRM contacts vertical starter. Plan-gated via `\$module`.
+         *
+         * Register on the panel provider:
+         *
+         *     Module::make('crm')->label('CRM')
+         *
+         * SaaS apps MUST set ModuleRegistry::grants() from the subscriber plan.
+         */
+        final class {$model}Resource extends Resource
+        {
+            protected static string \$model = {$model}::class;
+
+            protected static string \$panel = '{$panelId}';
+
+            protected static ?string \$module = 'crm';
+
+            protected static ?string \$purpose = '{$label} for this organisation.';
+
+            public static function form(Form \$form): Form
+            {
+                return \$form->columns(2)->schema([
+                    TextField::make('name')->required(),
+                    TextField::make('email')->required(),
+                    TextField::make('company'),
+                    SelectField::make('status')->required()->options([
+                        'lead' => 'Lead',
+                        'customer' => 'Customer',
+                        'churned' => 'Churned',
+                    ]),
+                ]);
+            }
+
+            public static function table(Table \$table): Table
+            {
+                return \$table
+                    ->columns([
+                        TextColumn::make('name')->from('{$table}.name')->sortable()->searchable()->locked(),
+                        TextColumn::make('email')->from('{$table}.email')->sortable()->searchable(),
+                        TextColumn::make('company')->from('{$table}.company')->sortable(),
+                        BadgeColumn::make('status')->from('{$table}.status')
+                            ->colors(['lead' => 'warning', 'customer' => 'success', 'churned' => 'neutral']),
+                    ])
+                    ->filters([
+                        SelectFilter::make('status')->column('{$table}.status')
+                            ->options(['lead', 'customer', 'churned']),
+                    ])
+                    ->keyColumn('{$table}.id')
+                    ->alsoSelect(['{$table}.id'])
+                    ->defaultSort('name');
+            }
+        }
+
+        PHP;
+    }
+
+    private function modelStub(string $model, string $preset = 'invoices'): string
     {
+        if ($preset === 'crm_contacts') {
+            return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\\Models;
+
+        use Alxtexh\\Panel\\Models\\Scopes\\TenantScope;
+        use Illuminate\\Database\\Eloquent\\Attributes\\ScopedBy;
+        use Illuminate\\Database\\Eloquent\\Model;
+
+        #[ScopedBy(TenantScope::class)]
+        class {$model} extends Model
+        {
+            protected \$guarded = [];
+        }
+
+        PHP;
+        }
+
         return <<<PHP
         <?php
 
@@ -402,8 +551,42 @@ final class MakeRecipeCommand extends Command
         PHP;
     }
 
-    private function migrationStub(string $table): string
+    private function migrationStub(string $table, string $preset = 'invoices'): string
     {
+        if ($preset === 'crm_contacts') {
+            return <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        use Illuminate\\Database\\Migrations\\Migration;
+        use Illuminate\\Database\\Schema\\Blueprint;
+        use Illuminate\\Support\\Facades\\Schema;
+
+        return new class extends Migration
+        {
+            public function up(): void
+            {
+                Schema::create('{$table}', function (Blueprint \$table): void {
+                    \$table->id();
+                    \$table->unsignedBigInteger('tenant_id')->nullable()->index();
+                    \$table->string('name');
+                    \$table->string('email');
+                    \$table->string('company')->nullable();
+                    \$table->string('status')->default('lead');
+                    \$table->timestamps();
+                });
+            }
+
+            public function down(): void
+            {
+                Schema::dropIfExists('{$table}');
+            }
+        };
+
+        PHP;
+        }
+
         return <<<PHP
         <?php
 
@@ -437,8 +620,42 @@ final class MakeRecipeCommand extends Command
         PHP;
     }
 
-    private function docsStub(string $model, string $table, string $plural, string $panelId): string
+    private function docsStub(string $model, string $table, string $plural, string $panelId, string $preset = 'invoices'): string
     {
+        if ($preset === 'crm_contacts') {
+            $kebab = Str::kebab($plural);
+            $command = 'php artisan make:panel-recipe CrmContacts';
+
+            return <<<MD
+        # Starter recipe: CRM contacts
+
+        Minimal CRM vertical with a plan-gated resource.
+
+        ```bash
+        {$command}
+        # alias: php artisan panel:recipe crm-contacts
+        ```
+
+        ## What it writes
+
+        - `app/Panel/Resources/{$model}Resource.php` (name, email, company, status)
+        - `app/Models/{$model}.php`
+        - `app/Policies/{$model}Policy.php`
+        - `database/migrations/*_create_{$table}_table.php`
+        - this file
+
+        The resource declares `protected static ?string \$module = 'crm';`. Register:
+
+        ```php
+        Module::make('crm')->label('CRM')
+        ```
+
+        SaaS apps MUST set `ModuleRegistry::grants()` from the subscriber plan.
+
+        Visit `/{$kebab}` once permissions are synced. Panel id: `{$panelId}`.
+        MD;
+        }
+
         $kebab = Str::kebab($plural);
         $command = "php artisan make:panel-recipe {$plural}";
 

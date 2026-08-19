@@ -114,6 +114,28 @@ final class MakeRecipeCommandTest extends TestCase
         $this->assertStringContainsString('Get started card', $install);
     }
 
+    public function test_it_writes_the_crm_contacts_vertical_recipe(): void
+    {
+        $resource = app_path('Panel/Resources/CrmContactResource.php');
+        $model = app_path('Models/CrmContact.php');
+        $policy = app_path('Policies/CrmContactPolicy.php');
+        $docs = base_path('docs/recipes/02-crm-contacts.md');
+        $this->forget($resource, $model, $policy, $docs);
+        $this->forgetMigrations('crm_contacts');
+
+        $this->artisan('make:panel-recipe', ['name' => 'CrmContacts', '--force' => true])
+            ->assertSuccessful();
+
+        $this->forgetMigrations('crm_contacts');
+
+        $contents = File::get($resource);
+
+        $this->assertStringContainsString("protected static ?string \$module = 'crm';", $contents);
+        $this->assertStringContainsString("TextField::make('name')", $contents);
+        $this->assertStringContainsString("SelectFilter::make('status')", $contents);
+        $this->assertFileExists($docs);
+    }
+
     private function forget(string ...$paths): void
     {
         foreach ($paths as $path) {

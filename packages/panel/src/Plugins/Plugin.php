@@ -34,7 +34,7 @@ abstract class Plugin implements PanelPlugin
      * different contract. For the MVP, Panel's `panel:doctor` reports
      * incompatibilities when the versions do not match.
      */
-    public const CONTRACT_VERSION = '1.0.55';
+    public const CONTRACT_VERSION = '1.0.56';
 
     /** @var PluginContext|null Set during `register()` only. */
     private ?PluginContext $context = null;

@@ -135,6 +135,15 @@ final class GeneratorTest extends TestCase
         }
     }
 
+    public function test_it_generates_status_select_fields_and_table_filters(): void
+    {
+        $this->artisan('make:panel-resource', ['model' => 'User', '--generate' => true])->assertSuccessful();
+
+        $code = File::get($this->resourcePath);
+
+        $this->assertStringContainsString("BooleanFilter::make('must_change_password')", $code);
+    }
+
     /**
      * `tenant_id` is set from request context. A generated form field for it
      * would be a supported way to write a record into another tenant.

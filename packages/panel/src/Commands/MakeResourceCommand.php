@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Alxtexh\Panel\PanelManager;
@@ -107,15 +108,33 @@ final class MakeResourceCommand extends Command
 
         $table = (new $modelClass)->getTable();
 
-        [$columns, $fields, $imports] = $this->option('generate')
-            ? $this->introspect($table)
+        $generated = $this->option('generate')
+            ? $this->introspect($table, $modelClass)
             : $this->placeholders();
+
+        $columns = $generated['columns'];
+        $fields = $generated['fields'];
+        $filters = $generated['filters'];
+        $imports = $generated['imports'];
+        $softDeletes = $generated['softDeletes'];
+        $hasMany = $generated['hasMany'];
 
         if (! is_dir(dirname($path))) {
             mkdir(dirname($path), 0755, true);
         }
 
-        file_put_contents($path, $this->render($model, $modelClass, $columns, $fields, $imports, $panelId, $namespace));
+        file_put_contents($path, $this->render(
+            $model,
+            $modelClass,
+            $columns,
+            $fields,
+            $filters,
+            $imports,
+            $panelId,
+            $namespace,
+            $softDeletes,
+            $hasMany,
+        ));
 
         $this->components->info("Created {$path}");
 
@@ -256,15 +275,26 @@ final class MakeResourceCommand extends Command
     }
 
     /**
-     * Map real database columns to columns and fields.
+     * Map real database columns to columns, fields, and filters.
      *
-     * @return array{0: list<string>, 1: list<string>, 2: list<string>}
+     * @return array{
+     *     columns: list<string>,
+     *     fields: list<string>,
+     *     filters: list<string>,
+     *     imports: list<string>,
+     *     softDeletes: bool,
+     *     hasMany: list<string>
+     * }
      */
-    private function introspect(string $table): array
+    private function introspect(string $table, string $modelClass): array
     {
         $columns = [];
         $fields = [];
+        $filters = [];
         $imports = [];
+        $softDeletes = Schema::hasColumn($table, 'deleted_at');
+        $model = new $modelClass;
+        $casts = method_exists($model, 'getCasts') ? $model->getCasts() : [];
 
         foreach (Schema::getColumns($table) as $column) {
             $name = $column['name'];
@@ -276,13 +306,12 @@ final class MakeResourceCommand extends Command
             $readOnly = in_array($name, self::READ_ONLY, true);
 
             $type = strtolower((string) ($column['type_name'] ?? $column['type'] ?? 'string'));
+            $rawType = strtolower((string) ($column['type'] ?? $type));
             $nullable = (bool) ($column['nullable'] ?? true);
             $qualified = "{$table}.{$name}";
             $required = $nullable ? '' : '->required()';
+            $enumOptions = $this->enumOptions($name, $rawType, $casts);
 
-            // Order matters: `*_at` and `*_id` are naming conventions that beat
-            // the declared type, because `expires_at` stored as a string is
-            // still a date to an operator.
             if (str_ends_with($name, '_at') || in_array($type, ['date', 'datetime', 'timestamp'], true)) {
                 $withTime = ! str_starts_with($type, 'date') || str_contains($type, 'time');
                 $columns[] = "DateColumn::make('{$name}')->from('{$qualified}')->sortable()"
@@ -294,13 +323,30 @@ final class MakeResourceCommand extends Command
                     $imports['DateField'] = 'Fields\DateField';
                 }
 
+                if (! $readOnly && ! in_array($name, ['created_at', 'updated_at'], true)) {
+                    $filters[] = "DateRangeFilter::make('{$name}')->column('{$qualified}')";
+                    $imports['DateRangeFilter'] = 'Filters\DateRangeFilter';
+                }
+
                 continue;
             }
 
             if (str_ends_with($name, '_id')) {
-                // A relationship select needs the related model's labels, which
-                // is a decision only the developer can make - so it is a TODO
-                // rather than a guess that silently queries the wrong table.
+                $related = $this->inferRelatedModel($name);
+
+                if ($related !== null) {
+                    $title = $this->inferTitleAttribute($related);
+                    $short = class_basename($related);
+                    $columns[] = "TextColumn::make('{$name}')->from('{$qualified}')->sortable()->muted()";
+                    $fields[] = "SelectField::make('{$name}'){$required}"
+                        ."->relationship({$short}::class, '{$title}')";
+                    $imports['TextColumn'] = 'Columns\TextColumn';
+                    $imports['SelectField'] = 'Fields\SelectField';
+                    $imports[$short] = "Models\\{$short}";
+
+                    continue;
+                }
+
                 $columns[] = "TextColumn::make('{$name}')->from('{$qualified}')->muted()";
                 $fields[] = "// TODO: point this at the related model\n            "
                     ."SelectField::make('{$name}'){$required}->options([])";
@@ -310,12 +356,35 @@ final class MakeResourceCommand extends Command
                 continue;
             }
 
+            if ($enumOptions !== []) {
+                $this->appendEnumColumn($columns, $fields, $filters, $imports, $name, $qualified, $required, $enumOptions);
+
+                continue;
+            }
+
+            if ($this->isLikelyEnumColumn($name, $type)) {
+                $this->appendEnumColumn(
+                    $columns,
+                    $fields,
+                    $filters,
+                    $imports,
+                    $name,
+                    $qualified,
+                    $required,
+                    $this->defaultEnumOptions($name),
+                );
+
+                continue;
+            }
+
             if (in_array($type, ['bool', 'boolean', 'tinyint'], true)) {
                 $columns[] = "BadgeColumn::make('{$name}')->from('{$qualified}')"
                     ."->colors(['1' => 'success', '' => 'neutral'])";
                 $fields[] = "ToggleField::make('{$name}')";
+                $filters[] = "BooleanFilter::make('{$name}')->column('{$qualified}')";
                 $imports['BadgeColumn'] = 'Columns\BadgeColumn';
                 $imports['ToggleField'] = 'Fields\ToggleField';
+                $imports['BooleanFilter'] = 'Filters\BooleanFilter';
 
                 continue;
             }
@@ -338,8 +407,6 @@ final class MakeResourceCommand extends Command
                 continue;
             }
 
-            // Default: a searchable string. The FIRST such column is locked, so
-            // the table always has a column that cannot be hidden.
             $locked = $columns === [] ? '->locked()' : '';
             $columns[] = "TextColumn::make('{$name}')->from('{$qualified}')->sortable()->searchable(){$locked}";
             $fields[] = "TextField::make('{$name}'){$required}";
@@ -347,42 +414,215 @@ final class MakeResourceCommand extends Command
             $imports['TextField'] = 'Fields\TextField';
         }
 
-        return [$columns, $fields, array_values($imports)];
+        if ($softDeletes) {
+            $filters[] = 'TrashedFilter::make(\'trashed\')';
+            $imports['TrashedFilter'] = 'Filters\TrashedFilter';
+        }
+
+        return [
+            'columns' => $columns,
+            'fields' => $fields,
+            'filters' => $filters,
+            'imports' => array_values($imports),
+            'softDeletes' => $softDeletes,
+            'hasMany' => $this->detectChildModels($table),
+        ];
     }
 
-    /** @return array{0: list<string>, 1: list<string>, 2: list<string>} */
+    /**
+     * @param  array<string, string>  $casts
+     * @return list<string>
+     */
+    private function enumOptions(string $name, string $rawType, array $casts): array
+    {
+        if (preg_match_all("/'([^']+)'/", $rawType, $matches) && ($matches[1] ?? []) !== []) {
+            return array_values($matches[1]);
+        }
+
+        $cast = $casts[$name] ?? null;
+
+        if (! is_string($cast) || ! enum_exists($cast)) {
+            return [];
+        }
+
+        if (is_subclass_of($cast, \BackedEnum::class)) {
+            return array_map(static fn (\BackedEnum $case): string => (string) $case->value, $cast::cases());
+        }
+
+        return array_map(static fn (\UnitEnum $case): string => $case->name, $cast::cases());
+    }
+
+    /** @param list<string> $enumOptions */
+    private function appendEnumColumn(
+        array &$columns,
+        array &$fields,
+        array &$filters,
+        array &$imports,
+        string $name,
+        string $qualified,
+        string $required,
+        array $enumOptions,
+    ): void {
+        $optionsCode = collect($enumOptions)
+            ->map(static fn (string $value): string => "'{$value}' => '".str($value)->headline()->value()."'")
+            ->implode(', ');
+        $colors = collect($enumOptions)
+            ->values()
+            ->map(static fn (string $value, int $index): string => "'{$value}' => '".(['neutral', 'warning', 'success', 'danger'][$index % 4])."'")
+            ->implode(', ');
+
+        $columns[] = "BadgeColumn::make('{$name}')->from('{$qualified}')->sortable()"
+            ."->colors([{$colors}])";
+        $fields[] = "SelectField::make('{$name}'){$required}->options([{$optionsCode}])";
+        $filters[] = "SelectFilter::make('{$name}')->column('{$qualified}')->options(["
+            .collect($enumOptions)->map(static fn (string $v): string => "'{$v}'")->implode(', ')
+            .'])';
+        $imports['BadgeColumn'] = 'Columns\BadgeColumn';
+        $imports['SelectField'] = 'Fields\SelectField';
+        $imports['SelectFilter'] = 'Filters\SelectFilter';
+    }
+
+    private function isLikelyEnumColumn(string $name, string $type): bool
+    {
+        return in_array($name, ['status', 'type', 'state'], true)
+            && in_array($type, ['varchar', 'string', 'char'], true);
+    }
+
+    /** @return list<string> */
+    private function defaultEnumOptions(string $name): array
+    {
+        return match ($name) {
+            'status' => ['draft', 'published', 'archived'],
+            'type' => ['default', 'custom'],
+            'state' => ['open', 'closed'],
+            default => ['option_a', 'option_b'],
+        };
+    }
+
+    /** @return class-string<Model>|null */
+    private function inferRelatedModel(string $column): ?string
+    {
+        if (! str_ends_with($column, '_id')) {
+            return null;
+        }
+
+        $base = Str::studly(Str::beforeLast($column, '_id'));
+
+        foreach ([$base, Str::studly(Str::singular($base))] as $studly) {
+            $class = "App\\Models\\{$studly}";
+
+            if (class_exists($class) && is_subclass_of($class, Model::class)) {
+                return $class;
+            }
+        }
+
+        return null;
+    }
+
+    /** @param  class-string<Model>  $modelClass */
+    private function inferTitleAttribute(string $modelClass): string
+    {
+        $relatedTable = (new $modelClass)->getTable();
+
+        foreach (['name', 'title', 'email', 'number', 'label'] as $attribute) {
+            if (Schema::hasColumn($relatedTable, $attribute)) {
+                return $attribute;
+            }
+        }
+
+        return 'id';
+    }
+
+    /** @return list<string> */
+    private function detectChildModels(string $table): array
+    {
+        $foreignKey = Str::snake(Str::singular($table)).'_id';
+        $children = [];
+
+        foreach (Schema::getTableListing() as $candidate) {
+            $name = str_contains($candidate, '.') ? Str::after($candidate, '.') : $candidate;
+
+            if ($name === $table || ! Schema::hasColumn($name, $foreignKey)) {
+                continue;
+            }
+
+            $children[] = Str::studly(Str::singular($name));
+        }
+
+        sort($children);
+
+        return $children;
+    }
+
+    /** @return array{columns: list<string>, fields: list<string>, filters: list<string>, imports: list<string>, softDeletes: bool, hasMany: list<string>} */
     private function placeholders(): array
     {
         return [
-            ["TextColumn::make('name')->sortable()->searchable()->locked()"],
-            ["TextField::make('name')->required()"],
-            ['Columns\TextColumn', 'Fields\TextField'],
+            'columns' => ["TextColumn::make('name')->sortable()->searchable()->locked()"],
+            'fields' => ["TextField::make('name')->required()"],
+            'filters' => [],
+            'imports' => ['Columns\TextColumn', 'Fields\TextField'],
+            'softDeletes' => false,
+            'hasMany' => [],
         ];
     }
 
     /**
      * @param  list<string>  $columns
      * @param  list<string>  $fields
+     * @param  list<string>  $filters
      * @param  list<string>  $imports
+     * @param  list<string>  $hasMany
      */
     private function render(
         string $model,
         string $modelClass,
         array $columns,
         array $fields,
+        array $filters,
         array $imports,
         string $panelId,
         string $namespace,
+        bool $softDeletes,
+        array $hasMany,
     ): string {
-        $use = collect($imports)
-            ->map(static fn (string $i): string => 'use Alxtexh\\Panel\\'
-                .(str_starts_with($i, 'Columns') ? 'Tables\\' : 'Forms\\').$i.';')
-            ->sort()
-            ->implode("\n");
+        $panelImports = collect($imports)
+            ->reject(static fn (string $i): bool => str_starts_with($i, 'Models\\'))
+            ->map(static function (string $i): string {
+                if (str_starts_with($i, 'Columns')) {
+                    return 'use Alxtexh\\Panel\\Tables\\'.$i.';';
+                }
+
+                if (str_starts_with($i, 'Filters')) {
+                    return 'use Alxtexh\\Panel\\Tables\\'.$i.';';
+                }
+
+                return 'use Alxtexh\\Panel\\Forms\\'.$i.';';
+            });
+
+        $modelImports = collect($imports)
+            ->filter(static fn (string $i): bool => str_starts_with($i, 'Models\\'))
+            ->map(static fn (string $i): string => 'use App\\'.$i.';');
+
+        $use = $panelImports->merge($modelImports)->sort()->implode("\n");
 
         $table = (new $modelClass)->getTable();
         $columnCode = collect($columns)->map(static fn (string $c): string => "                {$c},")->implode("\n");
         $fieldCode = collect($fields)->map(static fn (string $f): string => "            {$f},")->implode("\n");
+        $filterCode = $filters === []
+            ? ''
+            : "\n                    ->filters([\n"
+                .collect($filters)->map(static fn (string $f): string => "                        {$f},")->implode("\n")
+                ."\n                    ])";
+        $foreignKey = Str::snake(Str::singular($table)).'_id';
+        $hasManyBlock = $hasMany === []
+            ? ''
+            : "\n            /*\n             * HasMany children detected on `{$foreignKey}`:\n"
+                .collect($hasMany)->map(static fn (string $child): string => "             *     php artisan make:panel-relation-manager {$model} {$child}")->implode("\n")
+                ."\n             */";
+        $softDeleteNote = $softDeletes
+            ? "\n         * Soft deletes: `TrashedFilter` is wired on the table."
+            : '';
 
         return <<<PHP
         <?php
@@ -404,7 +644,7 @@ final class MakeResourceCommand extends Command
          * it up automatically, so there is nothing to register.
          *
          * `tenant_id` is deliberately absent from the form. It is set from request
-         * context, and a field for it would be a way to write into another tenant.
+         * context, and a field for it would be a way to write into another tenant.{$softDeleteNote}
          */
         final class {$model}Resource extends Resource
         {
@@ -417,6 +657,7 @@ final class MakeResourceCommand extends Command
              * panel split exists for rather than a naming convention.
              */
             protected static string \$panel = '{$panelId}';
+            {$hasManyBlock}
 
             public static function form(Form \$form): Form
             {
@@ -430,7 +671,7 @@ final class MakeResourceCommand extends Command
                 return \$table
                     ->columns([
         {$columnCode}
-                    ])
+                    ]){$filterCode}
                     ->keyColumn('{$table}.id')
                     ->alsoSelect(['{$table}.id'])
                     /*
