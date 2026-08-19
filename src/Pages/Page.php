@@ -226,6 +226,26 @@ abstract class Page
     abstract public static function component(): string;
 
     /**
+     * Optional layout tree for the generic `PanelPage` shell.
+     *
+     * Return a `PageLayout` when the screen is mostly structured fields and
+     * cards rather than bespoke Vue. Custom pages keep returning null and draw
+     * everything in their own component.
+     */
+    public static function layout(): ?PageLayout
+    {
+        return null;
+    }
+
+    /** @return array<string, mixed>|null */
+    public static function layoutSchema(): ?array
+    {
+        $layout = static::layout();
+
+        return $layout?->toSchema();
+    }
+
+    /**
      * The props the screen needs.
      *
      * MAY QUERY, unlike a resource's `table()` and `form()`. Those build a

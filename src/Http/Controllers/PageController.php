@@ -35,7 +35,7 @@ final class PageController extends Controller
 
         $this->authorise($class::ability());
 
-        return Inertia::render($class::component(), array_merge(
+        $payload = array_merge(
             $class::data($request),
             [
                 /*
@@ -58,7 +58,15 @@ final class PageController extends Controller
                  */
                 ...Widgets\WidgetSet::props($class::headerWidgets(), $request->user()),
             ],
-        ));
+        );
+
+        $layout = $class::layoutSchema();
+
+        if ($layout !== null) {
+            $payload['pageLayout'] = $layout;
+        }
+
+        return Inertia::render($class::component(), $payload);
     }
 
     /**
