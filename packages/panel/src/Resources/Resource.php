@@ -66,6 +66,14 @@ abstract class Resource
     protected static ?string $group = null;
 
     /**
+     * Whether this resource appears in global search (Ctrl+K).
+     *
+     * Defaults to true. Set to false to exclude a resource from the command
+     * palette's record search while keeping it navigable by page entry.
+     */
+    protected static bool $isGloballySearchable = true;
+
+    /**
      * The cluster this resource belongs to, if any - a `Cluster` class-string.
      *
      * A NAVIGATION FACT ONLY, like `$group` and `showsInNavigation()`: the
@@ -702,6 +710,25 @@ abstract class Resource
     public static function searchSort(): int
     {
         return 0;
+    }
+
+    /**
+     * Whether this resource participates in the global search endpoint.
+     *
+     * Chainable alias: override and return false to suppress a resource from
+     * the command palette while keeping its list screen searchable.
+     */
+    public static function isGloballySearchable(): bool
+    {
+        return static::$isGloballySearchable;
+    }
+
+    /**
+     * Fluent setter for use in resource definitions that want Filament parity.
+     */
+    public static function globallySearchable(bool $searchable = true): void
+    {
+        static::$isGloballySearchable = $searchable;
     }
 
     public static function definition(): Table

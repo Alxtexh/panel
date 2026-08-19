@@ -96,7 +96,7 @@ final class SearchController extends Controller
              * here because `can()` is the resource's own check, not a second
              * one written for this endpoint.
              */
-            if (! $class::can('viewAny')) {
+            if (! $class::isGloballySearchable() || ! $class::can('viewAny')) {
                 continue;
             }
 
