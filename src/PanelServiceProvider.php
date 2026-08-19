@@ -177,6 +177,7 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\BlueprintCommand::class,
             Commands\CacheClearCommand::class,
             Commands\InstallCommand::class,
+            Commands\SetupCommand::class,
             Commands\DispatchScheduledReportsCommand::class,
             Commands\IndexKnowledgeCommand::class,
             Commands\MakeApiTokenCommand::class,
