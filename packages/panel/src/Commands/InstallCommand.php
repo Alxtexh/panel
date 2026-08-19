@@ -100,7 +100,8 @@ final class InstallCommand extends Command
         $this->line('  1. php artisan serve   (a real terminal, not a Cursor agent shell)');
         $this->line('  2. Visit /login. First paint is dashboard + user menu + Get started,');
         $this->line('     not a vertical demo. Create/edit stay dedicated pages.');
-        $this->line('  3. php artisan make:panel-resource YourModel --generate');
+        $this->line('  3. Open the Get started card, or write the official starter:');
+        $this->line('     php artisan make:panel-recipe Invoices');
         $this->line('  4. Review the generated policy - the panel DENIES any ability whose');
         $this->line('     model has no policy, so an unreviewed stub is a real grant.');
         $this->newLine();

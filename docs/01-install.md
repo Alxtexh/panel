@@ -116,7 +116,19 @@ prompt). That is deny-by-default with no grants, not a broken install:
 php artisan panel:make-user
 ```
 
-**5. Add a resource.**
+**5. Add a resource.** Next is the **Get started** card, or the official starter:
+
+```bash
+php artisan make:panel-recipe Invoices
+# alias: php artisan panel:recipe invoices
+```
+
+That writes `InvoiceResource` (number, status, total, dated_at), a model, a
+policy, and a migration. Vue is kit ResourceIndex / Form / View. Default: no
+rows. Pass `--migrate` to create the table, `--seed` for fake data. See
+[Starter recipe: Invoices](recipes/01-invoices.md).
+
+Or point a resource at a table you already have:
 
 ```bash
 php artisan make:panel-resource Invoice --generate

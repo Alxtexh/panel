@@ -7,6 +7,7 @@
 | `panel:install` | Publish config, page files, layout, wire Vite, scaffold auth (default), sync permissions, first Administrator. `--no-auth`, `--no-user`, `--name`, `--email`, `--password`, `--force` |
 | `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard`, `--guard-model`, `--central`, `--auth` |
 | `make:panel-resource` | A resource. `--generate` infers from the table, `--panel=` |
+| `make:panel-recipe` | Official starter: one Invoice (or Item) resource, kit Vue, empty table. Alias `panel:recipe`. `--migrate`, `--seed`, `--panel=` |
 | `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`, `--api-keys`, `--invites`, `--feature-flags`, `--webhooks`, `--billing-portal`, `--email-templates`, `--onboarding`, `--media-library` |
 | `make:panel-widget` | Empty StatWidget, or `--chart` for ChartWidget |
 | `make:panel-relation-manager` | Nested child resource plus a relation-manager factory (dedicated pages, not a modal) |
@@ -89,13 +90,14 @@ it would do first.
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
 | `make test-package` | The package's own Testbench suite |
 
-## Agent APIs (v1.0.12 to v1.0.25)
+## Agent APIs (v1.0.12 to v1.0.29)
 
 `panel:blueprint` regenerates `AGENTS.md` from these. Do not invent Vue for a
 screen the kit already ships.
 
 | API | Does |
 |---|---|
+| `make:panel-recipe` / `panel:recipe` | Official starter. One Invoice (or Item) resource, kit Vue, empty table. `--migrate`, `--seed`. Optional comment: `apps(['billing-portal'])` + `billingState()` |
 | `TillPage` / `--till` | Empty till canvas. Vue shims packaged Till |
 | `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` | Empty page bases. Directory inherits chrome sections |
 | `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |

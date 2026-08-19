@@ -452,6 +452,22 @@ final class Blueprint
         return <<<'MD'
         ## Recipes
 
+        ### Official starter (copy this, do not clone Nairobi Fibre)
+
+        After `panel:install`, next is the Get started card **or**:
+
+        ```bash
+        php artisan make:panel-recipe Invoices
+        # alias: php artisan panel:recipe invoices
+        ```
+
+        Writes `InvoiceResource` (number, status, total, dated_at), a model, a
+        policy, and a migration. Vue is kit ResourceIndex / ResourceForm /
+        ResourceView: do not add a Vue page. Default: no rows (`--seed` for fake
+        data, `--migrate` to create the table). Dashboard is already empty.
+        Optional packaged wall (not Stripe): uncomment `->apps(['billing-portal'])`
+        and `->billingState()` on the panel provider.
+
         ### Add a screen for a model
 
         ```bash
@@ -461,7 +477,7 @@ final class Blueprint
         Then: register a policy, check the columns it guessed, and add filters. The
         route, the navigation entry and the abilities already exist. Nothing needs
         adding to `routes/web.php`.
-
+       
         ### Declare the list itself - columns, filters, tabs
 
         `--generate` writes a first draft from the table. This is what you edit

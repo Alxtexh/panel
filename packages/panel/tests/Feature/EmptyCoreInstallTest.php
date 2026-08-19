@@ -141,6 +141,8 @@ final class EmptyCoreInstallTest extends TestCase
 
         $this->assertStringContainsString('Without a first user (`--no-user`) the sidebar is empty', $install);
         $this->assertStringContainsString('deny-by-default, not a broken install', $install);
+        $this->assertStringContainsString('make:panel-recipe Invoices', $install);
+        $this->assertStringContainsString('Get started card', $install);
     }
 
     public function test_published_tenancy_default_is_none(): void

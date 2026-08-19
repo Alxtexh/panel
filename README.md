@@ -9,10 +9,13 @@ widget and command, and how to switch each part on.
 ```bash
 composer require alxtexh-enterprise/panel:^1.0
 php artisan panel:install
+php artisan make:panel-recipe Invoices
 ```
 
 First visit is **chrome plus an empty canvas**: dashboard, user menu, Get started.
-Not Nairobi Fibre, not sample orders. Create and edit are dedicated pages.
+Not Nairobi Fibre, not sample orders. After install, next is that card or the
+starter recipe (one Invoice resource, kit Vue, empty table). Create and edit
+are dedicated pages.
 The default path loads published kit CSS/JS (`public/vendor/panel`), so there
 is no white page without npm. `npm run build` is optional if you customise Vue.
 
