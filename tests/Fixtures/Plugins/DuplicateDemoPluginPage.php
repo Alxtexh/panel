@@ -7,9 +7,15 @@ namespace Alxtexh\Panel\Tests\Fixtures\Plugins;
 use Illuminate\Http\Request;
 use Alxtexh\Panel\Pages\Page;
 
-final class DemoPluginPage extends Page
+/** Second page claiming the demo-plugin slug for collision tests. */
+final class DuplicateDemoPluginPage extends Page
 {
     protected static string $panel = 'admin';
+
+    public static function slug(): string
+    {
+        return 'demo-plugin';
+    }
 
     public static function ability(): ?string
     {
@@ -26,4 +32,3 @@ final class DemoPluginPage extends Page
         return [];
     }
 }
-

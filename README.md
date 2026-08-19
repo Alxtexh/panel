@@ -98,6 +98,38 @@ The npm package `@alxtexh-enterprise/panel` is the same client half published
 separately. You need it only if you would rather resolve the screens from npm than
 from the Composer package — most installations should not bother.
 
+## Panel plugins
+
+Plugins extend a panel with resources, routable Page classes, widgets, sidebar
+entries, and render hooks. Register them explicitly (no auto-discovery):
+
+```php
+// config/panel.php
+'plugins' => [
+    \App\Plugins\Acme\BillingPlugin::class,
+],
+```
+
+Or on one portal:
+
+```php
+Panel::make('admin')->plugins([
+    new \App\Plugins\Acme\BillingPlugin(),
+]);
+```
+
+Scaffold a plugin:
+
+```bash
+php artisan make:panel-plugin Acme/Billing
+```
+
+`pageClasses()` mounts routes at boot and derives sidebar navigation from the
+Page class. `menuItem()` is sidebar-only: use it with `PluginContext::routes()`
+or prefer `pageClasses()` for full pages. Vue components for render hooks and
+Page screens live in the host app. Run `panel:doctor` for contract and slug
+checks.
+
 ---
 
 ## The shortest useful thing

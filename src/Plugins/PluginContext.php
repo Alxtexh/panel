@@ -79,13 +79,18 @@ final class PluginContext
     }
 
     /**
-     * Add a navigation entry.
+     * Add a sidebar navigation entry.
      *
      * THE HREF IS PREFIXED WITH THE PANEL'S PATH here, so a plugin passes
      * `billing/invoices` and gets `/reseller/billing/invoices` on a portal
      * mounted there. A plugin that had to assemble that itself would be a plugin
      * that works in exactly one installation - which is the same bug the export
      * download had, one layer up.
+     *
+     * THIS DOES NOT REGISTER A ROUTE. For a routable panel screen, use
+     * `pageClasses()` instead: the Page class mounts at boot and places itself
+     * in the sidebar. Pair `page()` with `routes()` when the handler is not a
+     * Page subclass.
      */
     public function page(string $title, string $href, string $icon = 'dot', ?string $group = null): self
     {

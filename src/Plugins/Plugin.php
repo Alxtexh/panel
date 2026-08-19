@@ -34,7 +34,7 @@ abstract class Plugin implements PanelPlugin
      * different contract. For the MVP, Panel's `panel:doctor` reports
      * incompatibilities when the versions do not match.
      */
-    public const CONTRACT_VERSION = '1.0.52';
+    public const CONTRACT_VERSION = '1.0.53';
 
     /** @var PluginContext|null Set during `register()` only. */
     private ?PluginContext $context = null;
@@ -106,7 +106,12 @@ abstract class Plugin implements PanelPlugin
     public function registerWidgets(Panel $panel): void {}
 
     /**
-     * Plugin hook for navigation/menu entries.
+     * Plugin hook for sidebar navigation entries that are not Page classes.
+     *
+     * Prefer `registerPages()` with `pageClasses()` when the screen is a routable
+     * `Page`: routes mount at boot and navigation is derived from the class.
+     * Use `menuItem()` here for links to routes you register with
+     * `PluginContext::routes()`, or for external URLs.
      *
      * @param  Panel  $panel
      */

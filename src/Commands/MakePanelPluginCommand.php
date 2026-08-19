@@ -145,6 +145,8 @@ final class MakePanelPluginCommand extends Command
 
             public function registerMenuItems(Panel \$panel): void
             {
+                // Sidebar link only. For a routable Page, use pageClasses() instead.
+                // For custom controllers, pair menuItem() with \$this->pluginContext()->routes().
                 // \$this->menuItem('Example', 'example', 'sparkles');
             }
 
@@ -216,6 +218,8 @@ final class MakePanelPluginCommand extends Command
         - No marketplace packaging or auto-scanning
         - Vue/Inertia components must live in the host application
         - Plugins can only add through `PluginContext` (no panel mutation)
+        - `pageClasses()` mounts routes at boot and adds sidebar navigation
+        - `menuItem()` adds a sidebar link only; pair it with `routes()` or use `pageClasses()`
 
         MD;
     }
