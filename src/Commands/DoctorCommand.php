@@ -120,6 +120,7 @@ final class DoctorCommand extends Command
 
         $this->checkPluginCompatibility($panels);
         $this->checkPluginPageRegistration($panels);
+        $this->checkPluginPerformance($panels);
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -1632,6 +1633,49 @@ final class DoctorCommand extends Command
     }
 
     /**
+     * Warn when many plugins are configured, and fail fast on missing classes.
+     */
+    private function checkPluginPerformance(PanelManager $panels): void
+    {
+        $configured = (array) config('panel.plugins', []);
+        $warnAbove = max(1, (int) config('panel.plugins_warn_above', 8));
+
+        foreach ($configured as $class) {
+            if (! is_string($class) || $class === '') {
+                continue;
+            }
+
+            if (! class_exists($class)) {
+                $this->problem(
+                    "Plugin class [{$class}] is missing",
+                    "config('panel.plugins') names [{$class}], but PHP cannot autoload it. "
+                    .'PanelKit does not scan for plugins: every entry must be a class you installed explicitly.',
+                    'Remove the entry, fix the namespace, or run composer require for the package that provides it.',
+                );
+            }
+        }
+
+        $unique = [];
+
+        foreach ($this->discoveredPlugins($panels) as $plugin) {
+            $unique[$plugin->id()] = true;
+        }
+
+        $count = count($unique);
+
+        if ($count <= $warnAbove) {
+            return;
+        }
+
+        $this->note(
+            "Many plugins configured ({$count})",
+            "Each plugin adds registration work the first time its panel is used. "
+            ."Only register plugins you need in config('panel.plugins') or Panel::plugins(). "
+            .'Host Vue components in your app; plugins add routes only when configured.',
+        );
+    }
+
+    /**
      * Compare installed plugins against the PanelKit plugin contract version.
      *
      * Explicit registration only: config, global registry, and per-panel lists.
@@ -1718,7 +1762,11 @@ final class DoctorCommand extends Command
         }
 
         foreach ((array) config('panel.plugins', []) as $class) {
-            if (! is_string($class) || ! class_exists($class)) {
+            if (! is_string($class) || $class === '') {
+                continue;
+            }
+
+            if (! class_exists($class)) {
                 continue;
             }
 

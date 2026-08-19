@@ -212,6 +212,7 @@ final class MakePanelPluginCommand extends Command
 
         - Plugin contract version: `{$contract}`
         - PanelKit ships the contract on `Alxtexh\\Panel\\Plugins\\Plugin::CONTRACT_VERSION`
+        - Override `panelIds()` when the plugin targets specific panels only
 
         ## MVP limits
 

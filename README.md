@@ -130,6 +130,22 @@ or prefer `pageClasses()` for full pages. Vue components for render hooks and
 Page screens live in the host app. Run `panel:doctor` for contract and slug
 checks.
 
+### Plugin performance
+
+PanelKit does **not** scan for plugins. Nothing loads at boot except what you
+name in `config('panel.plugins')` or `Panel::plugins()`. There is no marketplace
+hook and no filesystem auto-discovery.
+
+- Register only plugins you use. Each one adds registration work the first
+  time its panel is touched on a request.
+- Plugins run once per panel per request. Calling `resourcesFor`, `pagesFor`, and
+  `panelPages` does not double-register.
+- Config plugin classes are constructed only when their panel is actually used
+  and `appliesTo()` passes.
+- Host Vue components yourself. Plugins add routes only when configured.
+- Run `panel:doctor --profile=production` for a lightweight plugin count note
+  and missing-class checks.
+
 ---
 
 ## The shortest useful thing

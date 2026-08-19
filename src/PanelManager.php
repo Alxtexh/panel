@@ -164,6 +164,18 @@ final class PanelManager
     private static array $plugins = [];
 
     /**
+     * Config plugin classes resolved once, keyed by class name.
+     *
+     * STATIC BECAUSE A PLUGIN DEFINITION IS BOOT-TIME CONFIGURATION: the same
+     * class string in `panel.plugins` must resolve to one instance for the
+     * process, and resolving it must not run `register()` until a panel that
+     * accepts the plugin is actually used.
+     *
+     * @var array<class-string, Plugins\PanelPlugin>
+     */
+    private static array $resolvedConfigPlugins = [];
+
+    /**
      * Panels whose plugins have already run, so they run exactly once.
      *
      * PER INSTANCE, NOT STATIC, AND THAT DISTINCTION IS A BUG THAT SHIPPED.
@@ -291,22 +303,10 @@ final class PanelManager
         // asks for the panel's pages would otherwise recurse forever.
         $this->pluginsApplied[$panel->id] = true;
 
-        foreach ((array) config('panel.plugins', []) as $class) {
-            $instance = is_string($class) ? app($class) : $class;
-
-            if ($instance instanceof Plugins\PanelPlugin) {
-                $this->plugin($instance);
-            }
-        }
-
         $contexts = [];
         $widgets = [];
 
-        foreach ([...self::$plugins, ...$panel->getPlugins()] as $plugin) {
-            if (! $plugin->appliesTo($panel)) {
-                continue;
-            }
-
+        foreach ($this->pluginCandidates($panel) as $plugin) {
             $context = new Plugins\PluginContext($panel, $this);
 
             $plugin->register($context);
@@ -320,6 +320,144 @@ final class PanelManager
         }
 
         $this->pluginContexts[$panel->id] = $contexts;
+    }
+
+    /**
+     * Whether plugins have already run for a panel this request.
+     *
+     * TESTS ONLY. The flag is the guard that makes repeated calls to
+     * `resourcesFor`, `pagesFor`, `panelPages` and `pluginRoutes` cheap.
+     */
+    public function pluginsAppliedFor(string $panelId): bool
+    {
+        return isset($this->pluginsApplied[$panelId]);
+    }
+
+    /**
+     * Plugins that apply to `$panel`, deduplicated by id.
+     *
+     * Config entries are class strings until `appliesTo` passes, so a plugin
+     * aimed at one portal is not constructed when another portal boots first.
+     *
+     * @return list<Plugins\PanelPlugin>
+     */
+    private function pluginCandidates(Panel $panel): array
+    {
+        $seen = [];
+        $plugins = [];
+
+        foreach ($this->pluginSources($panel) as $source) {
+            $plugin = $this->resolvePluginForPanel($source, $panel);
+
+            if ($plugin === null) {
+                continue;
+            }
+
+            $id = $plugin->id();
+
+            if (isset($seen[$id])) {
+                continue;
+            }
+
+            if (! $plugin->appliesTo($panel)) {
+                continue;
+            }
+
+            $seen[$id] = true;
+            $plugins[] = $plugin;
+        }
+
+        return $plugins;
+    }
+
+    /**
+     * Every legitimate plugin source, in registration order.
+     *
+     * EXPLICIT ONLY: global registry, per-panel list, then `panel.plugins`.
+     * There is no filesystem scan and no marketplace hook at boot.
+     *
+     * @return list<Plugins\PanelPlugin|class-string<Plugins\PanelPlugin>>
+     */
+    private function pluginSources(Panel $panel): array
+    {
+        $sources = [];
+
+        foreach (self::$plugins as $plugin) {
+            $sources[] = $plugin;
+        }
+
+        foreach ($panel->getPlugins() as $plugin) {
+            $sources[] = $plugin;
+        }
+
+        foreach ((array) config('panel.plugins', []) as $class) {
+            if (is_string($class) && $class !== '') {
+                $sources[] = $class;
+            }
+        }
+
+        return $sources;
+    }
+
+    /**
+     * Resolve a plugin instance for `$panel`, caching config classes after first use.
+     */
+    private function resolvePluginForPanel(Plugins\PanelPlugin|string $source, Panel $panel): ?Plugins\PanelPlugin
+    {
+        if ($source instanceof Plugins\PanelPlugin) {
+            self::$plugins[$source->id()] = $source;
+
+            return $source->appliesTo($panel) ? $source : null;
+        }
+
+        if (! class_exists($source)) {
+            return null;
+        }
+
+        if (! $this->configPluginMayApply($source, $panel)) {
+            return null;
+        }
+
+        if (isset(self::$resolvedConfigPlugins[$source])) {
+            $plugin = self::$resolvedConfigPlugins[$source];
+
+            return $plugin->appliesTo($panel) ? $plugin : null;
+        }
+
+        $instance = app($source);
+
+        if (! $instance instanceof Plugins\PanelPlugin) {
+            return null;
+        }
+
+        if (! $instance->appliesTo($panel)) {
+            return null;
+        }
+
+        self::$resolvedConfigPlugins[$source] = $instance;
+        self::$plugins[$instance->id()] = $instance;
+
+        return $instance;
+    }
+
+    /**
+     * Whether a config plugin class might apply to `$panel` without constructing it.
+     *
+     * @param  class-string<Plugins\PanelPlugin>  $class
+     */
+    private function configPluginMayApply(string $class, Panel $panel): bool
+    {
+        if (! is_subclass_of($class, Plugins\PanelPlugin::class)) {
+            return false;
+        }
+
+        $ids = $class::panelIds();
+
+        if ($ids === null) {
+            return true;
+        }
+
+        return in_array($panel->id, $ids, true);
     }
 
     /**
@@ -486,6 +624,7 @@ final class PanelManager
     public static function forgetPlugins(): void
     {
         self::$plugins = [];
+        self::$resolvedConfigPlugins = [];
 
         $manager = app(self::class);
 

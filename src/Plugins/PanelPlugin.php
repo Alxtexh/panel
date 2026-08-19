@@ -69,9 +69,16 @@ interface PanelPlugin
 
     /**
      * Compatibility metadata for `panel:doctor`.
-     *
-     * Prefer matching `Plugin::CONTRACT_VERSION` unless the plugin targets an
-     * older PanelKit release deliberately.
      */
     public function getVersion(): string;
+
+    /**
+     * Panel ids this plugin may apply to, without constructing the plugin.
+     *
+     * Return a list to skip instantiation on other panels. Return null to
+     * fall back to `appliesTo()`, which may construct the plugin.
+     *
+     * @return list<string>|null
+     */
+    public static function panelIds(): ?array;
 }
