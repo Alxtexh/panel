@@ -119,6 +119,7 @@ final class DoctorCommand extends Command
         }
 
         $this->checkPluginCompatibility($panels);
+        $this->checkPluginPageRegistration($panels);
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -1680,6 +1681,27 @@ final class DoctorCommand extends Command
                 get_class($plugin)." reports plugin contract {$version}, but this PanelKit release expects {$expected}.",
                 'Upgrade the plugin package or pin PanelKit to a matching release.',
             );
+        }
+    }
+
+    /**
+     * Apply plugins and register their Page classes for every panel.
+     *
+     * Slug collisions throw during registration; doctor turns that into a named
+     * problem instead of a boot-time stack trace.
+     */
+    private function checkPluginPageRegistration(PanelManager $panels): void
+    {
+        foreach ($panels->panels() as $panel) {
+            try {
+                $panels->pagesFor($panel->id);
+            } catch (\RuntimeException $e) {
+                $this->problem(
+                    "Plugin page registration failed for panel [{$panel->id}]",
+                    $e->getMessage(),
+                    'Rename the conflicting page or resource slug, or remove the duplicate plugin registration.',
+                );
+            }
         }
     }
 

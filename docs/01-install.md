@@ -141,6 +141,45 @@ php artisan panel:permissions sync
 A fresh install is an empty canvas. Confirm tenancy settings match your
 production schema, and do not rely on the repo's demo data layout.
 
+## Panel plugins
+
+Plugins extend a panel with resources, routable Page classes, widgets, sidebar
+entries, and render hooks. They are registered explicitly (no auto-discovery).
+
+Register globally in published config:
+
+```php
+// config/panel.php
+'plugins' => [
+    \App\Plugins\Acme\BillingPlugin::class,
+],
+```
+
+Or on one portal in your panel provider:
+
+```php
+Panel::make('admin')->plugins([
+    new \App\Plugins\Acme\BillingPlugin(),
+]);
+```
+
+Scaffold a first-party plugin:
+
+```bash
+php artisan make:panel-plugin Acme/Billing
+```
+
+`registerPages()` with `pageClasses()` mounts routes when the panel boots and
+adds sidebar navigation from the Page class. `registerMenuItems()` with
+`menuItem()` adds a sidebar link only: pair it with `PluginContext::routes()`
+for custom controllers, or prefer `pageClasses()` for full pages.
+
+Vue/Inertia components referenced by render hooks or Page classes live in the
+**host application**, not inside the plugin package.
+
+Run `php artisan panel:doctor` to confirm plugin contract compatibility and
+catch duplicate page slugs before boot.
+
 ## Checking your work
 
 ```bash

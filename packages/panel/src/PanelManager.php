@@ -991,7 +991,24 @@ final class PanelManager
      */
     public function pagesFor(string $panelId): array
     {
+        /*
+         * PLUGINS RUN BEFORE THE LIST IS READ, and this is where it has to
+         * happen rather than at boot.
+         *
+         * Plugin Page classes registered through `registerPages()` / `pageClasses()`
+         * must be in the map when `PanelRoutes` mounts page routes. Applying
+         * here means boot-time registration and every later caller see the same
+         * set, whichever runs first. It is idempotent per panel, so this costs
+         * one array lookup after the first call.
+         */
+        $panel = $this->panel($panelId);
+
+        if ($panel !== null) {
+            $this->applyPlugins($panel);
+        }
+
         $this->pages(); // ensure discovery and panelPageMap are populated
+
         return $this->panelPageMap[$panelId] ?? [];
     }
 
