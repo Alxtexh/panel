@@ -49,6 +49,7 @@ const activeIndex = ref(0)
 const searching = ref(false)
 const remoteGroups = ref<Group[]>([])
 const recentItems = ref<Item[]>([])
+const pinnedItems = ref<Item[]>([])
 
 const inputEl = ref<HTMLInputElement | null>(null)
 const listEl = ref<HTMLElement | null>(null)
@@ -102,6 +103,12 @@ const recentStorageKey = computed<string>(
     () => `alxtexhpanel.command-palette.recent.${searchUrl.value}`,
 )
 
+const pinnedStorageKey = computed<string>(
+    () => `alxtexhpanel.command-palette.pinned.${searchUrl.value}`,
+)
+
+const recentLimit = 7
+
 function loadRecent(): void {
     try {
         const raw = window.sessionStorage.getItem(recentStorageKey.value)
@@ -121,11 +128,41 @@ function loadRecent(): void {
         recentItems.value = (parsed as unknown[]).filter((i) => i && typeof i === 'object')
             .map((i) => i as Partial<Item>)
             .filter((i) => i.kind === 'record' && typeof i.href === 'string' && typeof i.title === 'string')
-            .slice(0, 7)
+            .slice(0, recentLimit)
             .map((i) => ({ ...i, id: String(i.id ?? i.href) }) as Item)
     } catch {
         recentItems.value = []
     }
+}
+
+function loadPinned(): void {
+    try {
+        const raw = window.sessionStorage.getItem(pinnedStorageKey.value)
+
+        if (!raw) {
+            pinnedItems.value = []
+            return
+        }
+
+        const parsed = JSON.parse(raw) as unknown
+
+        if (!Array.isArray(parsed)) {
+            pinnedItems.value = []
+            return
+        }
+
+        pinnedItems.value = (parsed as unknown[]).filter((i) => i && typeof i === 'object')
+            .map((i) => i as Partial<Item>)
+            .filter((i) => i.kind === 'record' && typeof i.href === 'string' && typeof i.title === 'string')
+            .slice(0, recentLimit)
+            .map((i) => ({ ...i, id: String(i.id ?? i.href) }) as Item)
+    } catch {
+        pinnedItems.value = []
+    }
+}
+
+function isPinned(item: Item): boolean {
+    return pinnedItems.value.some((i) => i.href === item.href)
 }
 
 function rememberRecent(item: Item): void {
@@ -133,7 +170,21 @@ function rememberRecent(item: Item): void {
         return
     }
 
-    const next = [item, ...recentItems.value.filter((i) => i.href !== item.href)].slice(0, 7)
+    if (isPinned(item)) {
+        const nextPinned = [item, ...pinnedItems.value.filter((i) => i.href !== item.href)].slice(0, recentLimit)
+
+        pinnedItems.value = nextPinned
+
+        try {
+            window.sessionStorage.setItem(pinnedStorageKey.value, JSON.stringify(nextPinned))
+        } catch {
+            // Session storage can be disabled. Pinning is optional.
+        }
+
+        return
+    }
+
+    const next = [item, ...recentItems.value.filter((i) => i.href !== item.href)].slice(0, recentLimit)
 
     recentItems.value = next
 
@@ -143,6 +194,49 @@ function rememberRecent(item: Item): void {
         // Session storage can be disabled. Recent results are optional.
     }
 }
+
+function togglePin(item: Item): void {
+    if (item.kind !== 'record') {
+        return
+    }
+
+    if (isPinned(item)) {
+        const nextPinned = pinnedItems.value.filter((i) => i.href !== item.href)
+        const nextRecent = [item, ...recentItems.value.filter((i) => i.href !== item.href)].slice(0, recentLimit)
+
+        pinnedItems.value = nextPinned
+        recentItems.value = nextRecent
+
+        try {
+            window.sessionStorage.setItem(pinnedStorageKey.value, JSON.stringify(nextPinned))
+            window.sessionStorage.setItem(recentStorageKey.value, JSON.stringify(nextRecent))
+        } catch {
+            // Session storage can be disabled. Pinning is optional.
+        }
+
+        return
+    }
+
+    const nextPinned = [item, ...pinnedItems.value.filter((i) => i.href !== item.href)].slice(0, recentLimit)
+    const nextRecent = recentItems.value.filter((i) => i.href !== item.href)
+
+    pinnedItems.value = nextPinned
+    recentItems.value = nextRecent
+
+    try {
+        window.sessionStorage.setItem(pinnedStorageKey.value, JSON.stringify(nextPinned))
+        window.sessionStorage.setItem(recentStorageKey.value, JSON.stringify(nextRecent))
+    } catch {
+        // Session storage can be disabled. Pinning is optional.
+    }
+}
+
+const recentCombined = computed<Item[]>(() => {
+    const pinned = pinnedItems.value
+    const recent = recentItems.value.filter((i) => !pinned.some((p) => p.href === i.href))
+
+    return [...pinned, ...recent].slice(0, recentLimit)
+})
 
 const pageGroup = computed<Group | null>(() => {
     const q = term.value.trim().toLowerCase()
@@ -156,8 +250,8 @@ const pageGroup = computed<Group | null>(() => {
 })
 
 const groups = computed<Group[]>(() => [
-    ...(term.value.trim() === '' && recentItems.value.length
-        ? [{ label: 'Recent', items: recentItems.value }]
+    ...(term.value.trim() === '' && recentCombined.value.length
+        ? [{ label: 'Recent', items: recentCombined.value }]
         : []),
     ...(pageGroup.value ? [pageGroup.value] : []),
     ...remoteGroups.value,
@@ -290,6 +384,7 @@ watch(term, (value) => {
 function show(): void {
     open.value = true
     activeIndex.value = 0
+    loadPinned()
     loadRecent()
     void nextTick(() => inputEl.value?.focus())
 }
@@ -486,11 +581,47 @@ defineExpose({ show })
                             >
                                 <span class="min-w-0 truncate">{{ item.title }}</span>
 
-                                <span
-                                    v-if="item.subtitle"
-                                    class="text-muted-foreground shrink-0 text-xs"
-                                >
-                                    {{ item.subtitle }}
+                                <span class="flex shrink-0 items-center gap-2">
+                                    <span
+                                        v-if="item.subtitle"
+                                        class="text-muted-foreground text-xs"
+                                    >
+                                        {{ item.subtitle }}
+                                    </span>
+
+                                    <span
+                                        v-if="item.kind === 'record'"
+                                        class="inline-flex h-6 items-center rounded border px-1.5 text-[10px] leading-none transition-colors hover:bg-accent"
+                                        :class="isPinned(item) ? 'border-amber-500/60 text-amber-600 dark:text-amber-500' : 'border-border text-muted-foreground'"
+                                        role="button"
+                                        :aria-label="isPinned(item) ? 'Unpin' : 'Pin'"
+                                        tabindex="-1"
+                                        @click.stop="togglePin(item)"
+                                    >
+                                        <svg
+                                            v-if="isPinned(item)"
+                                            viewBox="0 0 24 24"
+                                            class="size-3"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                d="M14 2l-1 6 4 4 6-1-9 9-3-3-3 3-1-1 3-3-3-3 9-9z"
+                                            />
+                                        </svg>
+
+                                        <svg
+                                            v-else
+                                            viewBox="0 0 24 24"
+                                            class="size-3"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <path d="M14 2l-1 6 4 4 6-1-9 9-3-3-3 3-1-1 3-3-3-3 9-9z" />
+                                        </svg>
+                                    </span>
                                 </span>
                             </button>
                         </div>

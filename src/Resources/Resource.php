@@ -704,6 +704,18 @@ abstract class Resource
         return 0;
     }
 
+    /**
+     * How strongly this resource's rows count for command palette ranking.
+     *
+     * Applied as a multiplier to the relevance score the search endpoint
+     * computes, and defaults to `1` so it is a no-op unless a resource
+     * overrides it.
+     */
+    public static function searchWeight(): float
+    {
+        return 1;
+    }
+
     public static function definition(): Table
     {
         $table = static::table(Table::make());
