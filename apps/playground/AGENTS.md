@@ -49,7 +49,9 @@ visible in a single file, and the mistakes that return HTTP 200.
 
 Dedicated pages only: create, edit, view, attach and detach are routes,
 never a modal and never Livewire. BelongsTo pickers use
-`SelectField::relationship()`. Nested resources live at
+`SelectField::relationship()` and `SelectField::createOption()` for a
+create-and-pick dialog (JSON, not a Livewire modal; resource CRUD stays
+on dedicated pages). Nested resources live at
 `/{parent}/{id}/{child}`; BelongsToMany attach is
 `/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas plus
 a Directory of chrome links (Settings, Users, Roles, Documents, Backups,
@@ -70,7 +72,6 @@ Panels registered in this application:
 - `reseller` - mounted at `/reseller`, guard `web`, tenant context
 - `superadmin` - mounted at `/superadmin`, guard `superadmins`, central context
 - `client` - mounted at `/client`, guard `customers`, tenant context
-- `authfixture` - mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
 
@@ -126,7 +127,7 @@ in generated resources in 0.6.0. "It is not there" and "it is not there
 
 ## Recipes
 
-### Official starter (copy this, do not clone Nairobi Fibre)
+### Official starter (copy this, do not clone the reference demo)
 
 After `panel:install`, next is the Get started card **or**:
 
@@ -145,10 +146,14 @@ and `->billingState()` on the panel provider.
 ### MFA at the login door
 
 `->login()` already honours two-factor from Security. After a correct
-password, a user with 2FA confirmed is paused on
-`{panel}/two-factor-challenge` until TOTP or a recovery code succeeds.
-Passkeys stay a button on the login form. `->twoFactorChallenge(false)`
-skips the pause. Do not invent a third MFA stack. Missing `passkeys`
+password, a user with TOTP or email OTP confirmed is paused on
+`{panel}/two-factor-challenge` until the code succeeds. Passkeys stay
+a button on the login form. `->twoFactorChallenge(false)` skips the
+pause. `->requireTwoFactor()` (alias `twoFactorRequired()`) is OFF by
+default: when on, a user with no TOTP, email OTP, or passkey is sent
+to Security and cannot reach the dashboard until they enrol.
+`->registration()` / `->emailVerification()` mount register.store and
+the verify notice the way `login()` mounts login. Missing `passkeys`
 table is an empty list, not a 500.
 
 Social callbacks challenge too: a Google click is not a 2FA bypass.
@@ -306,7 +311,7 @@ php artisan make:panel-page BillingPlans --plan-setup
 `PlanGrid` and `PlanEditor` from `@alxtexh-enterprise/panel`. `modules()`
 and `limits()` default from the panel module registry. Persist to your
 models. Numeric limits use -1 for Unlimited.
-A SaaS MUST set `ModuleRegistry::grants()` from the subscriber plan;
+A SaaS MUST set `ModuleRegistry::grants()` from the active plan;
 until that callback is set, every registered module stays enabled.
 A child key (`->requires()` / `->children()`) is enabled only when every
 parent is also granted. `PlanSetupPage::save()` expands parents via
@@ -338,7 +343,7 @@ Panel::make('admin')->modules([
 
 ModuleRegistry::grants(fn (): array => $org->plan->moduleKeys());
 ModuleRegistry::caps(fn (): array => $org->plan->moduleCaps());
-// Opt-in. Leave unset so a playground ISP is not locked out.
+// Opt-in. Leave unset so a playground install is not locked out.
 // Panel::make('admin')->subscriptionGate(fn (): bool => $org->planIsActive());
 ```
 
@@ -432,6 +437,7 @@ Mail and Chat are opt-in empty apps, not merchandising:
 
 ```php
 Panel::make('admin')->apps(['mail', 'chat']);
+Panel::make('admin')->apiDocs();
 Panel::make('admin')->webhooks();
 Panel::make('admin')->apps([
     'api-keys', 'invites', 'billing-portal', 'email-templates',
@@ -454,10 +460,19 @@ screen, written on install, mounted by `TicketingPlugin`.
 ```php
 Notification::make()->title('Saved')->success()->send();
 Notification::make()->title('Queued')->body('Export started')->bell()->send();
+Notification::make()
+    ->title('Invoice posted')
+    ->success()
+    ->actions([
+        Action::make('view')->url($url),
+        Action::make('download')->url($download)->openUrlInNewTab(),
+    ])
+    ->send();
 ```
 
 This is the Inertia toast, not a Livewire stack. `bell()` also writes a
-topbar row.
+topbar row. Action buttons are hrefs (or `method('post')` to a named
+route). Closures do not travel to Vue.
 
 ### Infolist on the dedicated view page
 
@@ -836,13 +851,13 @@ _How to use them: name them in `form()`._
 _How to use them: name them in `table()`._
 **Table filters** (10): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `Indicator` `MultiSelectFilter` `NumberRangeFilter` `QueryBuilderFilter` `SelectFilter` `TrashedFilter`
 _How to use them: name them in `table()`._
-**Actions** (8): `Action` `ActionGroup` `BulkAction` `BulkRunner` `ExportedFile` `JobStatus` `RecordAction` `ReplicateAction`
+**Actions** (9): `Action` `ActionGroup` `ActionStep` `BulkAction` `BulkRunner` `ExportedFile` `JobStatus` `RecordAction` `ReplicateAction`
 _How to use them: name them in `table()` or the resource's actions._
-**Schema (form layout)** (11): `Callout` `Component` `Fieldset` `Flex` `Grid` `Renderable` `Section` `Step` `Tab` `Tabs` `Wizard`
+**Schema (form layout)** (14): `Callout` `Card` `Column` `Columns` `Component` `Fieldset` `Flex` `Grid` `Renderable` `Section` `Step` `Tab` `Tabs` `Wizard`
 _How to use them: wrap fields with them inside `form()`._
 **Dashboard widgets** (12): `Bucket` `CanPoll` `ChartWidget` `DashboardFilters` `Period` `Rollup` `StatWidget` `TableWidget` `TimeSeries` `Trend` `WidgetSet` `Window`
 _How to use them: **declare them on a `DashboardPage`, which is what draws them, or drop a factory under a directory the panel passed to `discoverWidgets()`.** `php artisan make:panel-page Overview --dashboard` writes one; its `stats()`, `charts()` and `tables()` return these classes and the packaged `PanelDashboard` screen renders them, each as its own deferred prop. `TableWidget::make('recent')->resource(OrderResource::class)->limit(5)` renders the existing DataTable with a capped list query. `->live('dashboard.stats')` prefers Echo/Reverb when `window.Echo` exists; `->poll('10s')` on `StatWidget`, `TableWidget` or `ChartWidget` is the HTTP fallback (pauses while the tab is hidden; never both at runtime). Redis is not a UI transport. `Panel::make('admin')->discoverWidgets(app_path('Panel/Widgets'))` is the normal path (namespace is optional when the directory is under `app_path()`). A widget built anywhere else is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 that was true of every widget, which is why this line exists._
-**Pages (screens that are not resources)** (27): `ApiKeysPage` `BillingPortalPage` `CatalogBrowserPage` `CatalogItemPage` `CatalogRegisterPage` `ChangelogPage` `ChatPage` `DashboardPage` `DevicePreviewPage` `DirectoryPage` `EmailTemplatePage` `EnvironmentPage` `FeatureFlagsPage` `InvitePage` `MailPage` `MediaLibraryPage` `OnboardingPage` `OrganisationPage` `Page` `PaymentSettingsPage` `PlanSetupPage` `SignatureStudioPage` `SitemapPage` `TillPage` `UserManagementPage` `WebhookEndpointsPage` `Workspace`
+**Pages (screens that are not resources)** (29): `ApiDocsPage` `ApiKeysPage` `BillingPortalPage` `CatalogBrowserPage` `CatalogItemPage` `CatalogRegisterPage` `ChangelogPage` `ChatPage` `DashboardPage` `DevicePreviewPage` `DirectoryPage` `EmailTemplatePage` `EnvironmentPage` `FeatureFlagsPage` `InvitePage` `MailPage` `MediaLibraryPage` `OnboardingPage` `OrganisationPage` `Page` `PageLayout` `PaymentSettingsPage` `PlanSetupPage` `SignatureStudioPage` `SitemapPage` `TillPage` `UserManagementPage` `WebhookEndpointsPage` `Workspace`
 _How to use them: extend `Page` (or `DashboardPage` / `PlanSetupPage` / `TillPage` / `DirectoryPage` / `DevicePreviewPage` / `MailPage` / `ChatPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. Flags: `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`. `make:panel-page BillingPlans --plan-setup` writes an empty page (import PlanGrid). `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._
 **Ticketing** (3): `MyTicketResource` `TicketResource` `TicketingPlugin`
 _How to use them: do not name these directly - `TicketingPlugin` mounts them from `panel.ticketing.operator` / `.opener`. See the recipe._
@@ -968,6 +983,7 @@ too quiet.
 - `php artisan make:panel-importer` - Create an empty panel importer the resource can name from importable()
 - `php artisan make:panel-module` - Create a plan-gated panel module (Module::make snippet plus a $module screen)
 - `php artisan make:panel-page` - Create a panel page (a screen that is not a resource)
+- `php artisan make:panel-plugin` - Scaffold a Panel plugin class and README
 - `php artisan make:panel-recipe` - Write the official starter recipe: one resource, kit Vue, empty table
 - `php artisan make:panel-relation-manager` - Create nested relation pages (dedicated list/create/edit, not a modal)
 - `php artisan make:panel-resource` - Create a panel resource
@@ -981,11 +997,12 @@ too quiet.
 - `php artisan panel:cache-clear` - Invalidate every cached panel schema
 - `php artisan panel:doctor-alert` - Run panel:doctor and announce changes through Telegram
 - `php artisan panel:doctor` - Check for configuration that is silently wrong
-- `php artisan panel:install` - Publish config, scaffold auth, create the first Administrator, sync permissions, and print next steps
+- `php artisan panel:install` - Publish config, scaffold auth, create the first Administrator, sync permissions, and print next steps. It does not run `composer install`. Run it after `composer require`.
 - `php artisan panel:journey` - Time a full signed-in journey through the panel over real HTTP
 - `php artisan panel:knowledge` - Index panel content so the assistant can cite it instead of guessing
 - `php artisan panel:make-user` - Create an account that can sign in to the panel
 - `php artisan panel:monitor-sample` - Record one monitoring sample and alert on any crossed threshold
+- `php artisan panel:notifications-digest` - Send grouped notification digests for users that enabled digest delivery
 - `php artisan panel:permissions` - Reconcile roles and permissions against the registered resources
 - `php artisan panel:prune-exports` - Delete exports past their retention window, file and record together
 - `php artisan panel:prune-trash` - Permanently delete records that have been in the trash past their retention window
@@ -997,6 +1014,7 @@ too quiet.
 - `php artisan panel:search-index` - The trigram or fulltext indexes this panel's search would use, for the current engine
 - `php artisan panel:seed-demo` - Seed realistic multi-tenant demo data at scale
 - `php artisan panel:seed-reference` - Seed the five-tenant reference estate used by panel:benchmark
+- `php artisan panel:setup` - Print a post-install setup checklist (mail, MFA, tenancy, Turnstile)
 - `php artisan panel:sitemap-generate` - Write sitemap.xml from every registered URL
 - `php artisan panel:tenant-suspension` - Suspend a tenant from the panel, or lift a suspension
 - `php artisan panel:update` - Reconcile page files, config and the agent guide after upgrading the package

@@ -121,11 +121,11 @@ final class Pages
             ],
             /*
              * Development surfaces, kept apart from the operator's screens. A
-             * device workbench and an API reference are for whoever is BUILDING
-             * the panel; listing them beside Clients would put two things an
-             * operator never needs into the column they use all day.
+             * device workbench is for whoever is BUILDING the panel; listing it
+             * beside Clients would put something an operator never needs into
+             * the column they use all day. API docs mount via Panel::apiDocs()
+             * under Developer, not here.
              */
-            ['title' => 'API reference', 'href' => '/docs', 'icon' => 'book-open', 'group' => 'Building'],
             ['title' => 'Device preview', 'href' => '/screens/devices', 'icon' => 'smartphone', 'group' => 'Building'],
 
             /*

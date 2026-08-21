@@ -8,7 +8,7 @@
 | `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard`, `--guard-model`, `--central`, `--auth` |
 | `make:panel-resource` | A resource. `--generate` infers from the table, `--panel=` |
 | `make:panel-recipe` | Official starter: one Invoice (or Item) resource, kit Vue, empty table. Alias `panel:recipe`. `--migrate`, `--seed`, `--panel=` |
-| `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`, `--api-keys`, `--invites`, `--feature-flags`, `--webhooks`, `--billing-portal`, `--email-templates`, `--onboarding`, `--media-library` |
+| `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`, `--api-keys`, `--api-docs`, `--invites`, `--feature-flags`, `--webhooks`, `--billing-portal`, `--email-templates`, `--onboarding`, `--media-library` |
 | `make:panel-widget` | Empty StatWidget, or `--chart` for ChartWidget |
 | `make:panel-relation-manager` | Nested child resource plus a relation-manager factory (dedicated pages, not a modal) |
 | `make:panel-module` | A plan-gated module: page (or `--resource`) plus a `Module::make` snippet |
@@ -109,6 +109,7 @@ screen the kit already ships.
 | `TillPage` / `--till` | Empty till canvas. Vue shims packaged Till |
 | `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` | Empty page bases. Directory inherits chrome sections |
 | `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |
+| `Panel::apiDocs()` / `apps(['api-docs'])` | Built-in Scalar API reference. OpenAPI at `{panel}/apps/api-docs/openapi.json`. Optional URL: `apiDocs('/path/to/openapi.json')`. Host Vite needs `@scalar/api-reference` (already a kit dependency when using the mirrored client) |
 | `ApiKeysPage` / `--api-keys` | Wraps `ApiToken`. Override `keys()`, `issue()`, `revoke()`. Opt in with `Panel::apps(['api-keys'])` |
 | `InvitePage` / `--invites` | Pending invites canvas. Override `pending()`, `send()`, `revoke()`, `roles()`. Host owns persistence. Accept URL: `{app}/invites/accept/{token}` |
 | `FeatureFlagsPage` / `--feature-flags` | Toggle UI for `panel.tenancy.features`. Override `flags()`, `toggle()` to persist |

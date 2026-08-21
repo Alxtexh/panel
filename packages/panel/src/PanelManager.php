@@ -79,6 +79,7 @@ final class PanelManager
         Pages\MailPage::class,
         Pages\ChatPage::class,
         Pages\ApiKeysPage::class,
+        Pages\ApiDocsPage::class,
         Pages\InvitePage::class,
         Pages\FeatureFlagsPage::class,
         Pages\OnboardingPage::class,

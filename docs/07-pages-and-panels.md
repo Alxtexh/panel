@@ -20,6 +20,20 @@ Mail and Chat are empty apps, not default routes:
 Panel::make('admin')->apps(['mail', 'chat']);
 ```
 
+API docs (Scalar) is the same opt-in shape:
+
+```php
+Panel::make('admin')->apiDocs();
+// or: ->apps(['api-docs'])
+// or: ->apiDocs('/docs/openapi.json')  // use your own OpenAPI URL
+```
+
+That mounts Developer → API docs at `/apps/api-docs`, serves OpenAPI at
+`/apps/api-docs/openapi.json`, and writes an `ApiDocs.vue` stub via
+`panel:install` / `panel:update` so Vite never misses the page. After Composer
+install from GitHub (`alxtexh-enterprise/panel`), run `panel:update` so the
+optional screen file exists before you enable the app.
+
 Feedback is `Panel::feedback($persist)` plus `FeedbackDialog`. Appearance
 persists at `PUT {panel}/settings/appearance`.
 

@@ -40,6 +40,7 @@ screens stay in the npm package and can be mirrored with
 | Mail | `MailPage` | `Panel::apps(['mail'])` on the portal |
 | Chat | `ChatPage` | `Panel::apps(['chat'])` on the portal |
 | API keys | `ApiKeysPage` | `Panel::apps(['api-keys'])` |
+| API docs | `ApiDocsPage` (Scalar) | `Panel::apiDocs()` or `apps(['api-docs'])` |
 | Invites | `InvitePage` | `Panel::apps(['invites'])` |
 | Feature flags | `FeatureFlagsPage` | `Panel::apps(['feature-flags'])` |
 | Webhooks | `WebhookEndpointsPage` | `Panel::webhooks()` or `apps(['webhooks'])` |

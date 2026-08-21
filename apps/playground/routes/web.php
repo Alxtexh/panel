@@ -147,10 +147,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('screens/devices', fn () => Inertia::render('DevicePreview'))
         ->name('screens.devices');
 
-    Route::get('docs', fn () => Inertia::render('Docs'))->name('docs');
+    Route::get('docs', fn () => redirect('/apps/api-docs'))->name('docs');
 
     /*
-     | The OpenAPI document Scalar renders.
+     | The OpenAPI document Scalar renders (alias of the kit route).
      |
      | A ROUTE rather than an inline object, so anything else that wants it - a
      | client generator, an HTTP client, another team - can fetch it too, and it

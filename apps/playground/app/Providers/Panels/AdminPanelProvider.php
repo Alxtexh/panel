@@ -119,6 +119,7 @@ final class AdminPanelProvider extends ServiceProvider
                 ->editableSupport()
                 ->paymentSettings(static fn (): array => KitDemo::gateways())
                 ->apps(['api-keys'])
+                ->apiDocs()
                 ->feedback(function (array $validated, $user): void {
                     $feedback = new Feedback($validated);
                     $feedback->user_agent = $validated['user_agent'] ?? null;

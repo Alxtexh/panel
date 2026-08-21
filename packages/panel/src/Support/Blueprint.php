@@ -764,6 +764,7 @@ final class Blueprint
 
         ```php
         Panel::make('admin')->apps(['mail', 'chat']);
+        Panel::make('admin')->apiDocs();
         Panel::make('admin')->webhooks();
         Panel::make('admin')->apps([
             'api-keys', 'invites', 'billing-portal', 'email-templates',

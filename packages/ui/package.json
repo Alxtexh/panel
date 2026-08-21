@@ -1,6 +1,6 @@
 {
     "name": "@alxtexh-enterprise/panel",
-    "version": "1.0.71",
+    "version": "1.0.72",
     "description": "The client half: the Vue rendering layer and the Inertia screens. Import from \".\" for components that name no transport, \"./inertia\" for the screens.",
     "type": "module",
     "license": "MIT",
@@ -51,8 +51,14 @@
         "vue": "^3.5.0",
         "vue-sonner": "^2.0.0"
     },
+    "peerDependenciesMeta": {
+        "@laravel/passkeys": {
+            "optional": true
+        }
+    },
     "dependencies": {
         "@lucide/vue": "^1.17.0",
+        "@scalar/api-reference": "^1.66.1",
         "@vueuse/core": "^12.8.2",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -85,10 +91,5 @@
         "build": "vite build && vue-tsc -p tsconfig.build.json && vite build --config vite.kit.config.ts",
         "build:kit": "vite build --config vite.kit.config.ts",
         "prepack": "npm run build"
-    },
-    "peerDependenciesMeta": {
-        "@laravel/passkeys": {
-            "optional": true
-        }
     }
 }

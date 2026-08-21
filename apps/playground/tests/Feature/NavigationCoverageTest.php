@@ -592,7 +592,7 @@ final class NavigationCoverageTest extends TestCase
         $hrefs = array_column($props['panelPages'], 'href');
 
         $this->assertContains('/apps/mail', $hrefs);
-        $this->assertContains('/docs', $hrefs);
+        $this->assertContains('/apps/api-docs', $hrefs);
         $this->assertTrue($props['panelHome']['isDefault']);
     }
 
