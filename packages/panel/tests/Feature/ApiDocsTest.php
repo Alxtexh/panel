@@ -48,6 +48,14 @@ final class ApiDocsTest extends TestCase
         $this->assertStringContainsString('ApiDocs', PanelPages::stub('ApiDocs'));
     }
 
+    public function test_api_docs_stub_is_written_with_optional_screens(): void
+    {
+        $this->assertContains('ApiDocs', PanelPages::OPTIONAL_SCREENS);
+        $stub = PanelPages::stub('ApiDocs');
+        $this->assertStringContainsString('ApiDocs', $stub);
+        $this->assertStringContainsString("@alxtexh-enterprise/panel/pages/ApiDocs.vue", $stub);
+    }
+
     public function test_openapi_spec_is_valid_even_without_documented_resources(): void
     {
         $doc = OpenApiSpec::document('Empty');

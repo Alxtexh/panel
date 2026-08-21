@@ -89,6 +89,7 @@ it would do first.
 | `make ssr` | Build the SSR bundle and start the server |
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
 | `make check-client` | Fail if `resources/client` is out of sync with `packages/ui` |
+| `make release-check` | Pre-tag gate: `check-client` + `test-package` (demo must match published kit) |
 | `make test-package` | The package's own Testbench suite |
 
 ## Agent APIs (v1.0.12 to v1.0.32)
@@ -110,6 +111,12 @@ screen the kit already ships.
 | `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` | Empty page bases. Directory inherits chrome sections |
 | `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |
 | `Panel::apiDocs()` / `apps(['api-docs'])` | Built-in Scalar API reference. OpenAPI at `{panel}/apps/api-docs/openapi.json`. Optional URL: `apiDocs('/path/to/openapi.json')`. Host Vite needs `@scalar/api-reference` (already a kit dependency when using the mirrored client) |
+| `MapField::make('location')->latLng('lat','lng')` | Leaflet geopoint field (bundled; lazy-loaded) |
+| `MapWidget::make('coverage', 'Coverage')->markers(...)` | Dashboard map card (Chart type `map`) |
+| `CalendarWidget::make('bookings', 'Bookings')->events(...)` | Month schedule card |
+| `QrCodeField::make('ticket')->from('public_url')` | QR preview field |
+| `DiffField::make('patch')->original('before')->modified('after')` | Side-by-side text diff |
+| `SelectFilter::make('author_id')->relationship(User::class, 'name')` | Related-model table filter |
 | `ApiKeysPage` / `--api-keys` | Wraps `ApiToken`. Override `keys()`, `issue()`, `revoke()`. Opt in with `Panel::apps(['api-keys'])` |
 | `InvitePage` / `--invites` | Pending invites canvas. Override `pending()`, `send()`, `revoke()`, `roles()`. Host owns persistence. Accept URL: `{app}/invites/accept/{token}` |
 | `FeatureFlagsPage` / `--feature-flags` | Toggle UI for `panel.tenancy.features`. Override `flags()`, `toggle()` to persist |

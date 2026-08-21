@@ -5,7 +5,10 @@ import PkVoucherCodeBoxPreview from '../Document/PkVoucherCodeBoxPreview.vue'
 import PkCheckboxList from './PkCheckboxList.vue'
 import PkCodeInput from './PkCodeInput.vue'
 import PkColourPicker from './PkColourPicker.vue'
+import PkDiff from './PkDiff.vue'
 import PkMarkdownInput from './PkMarkdownInput.vue'
+import PkMapField from './PkMapField.vue'
+import PkQrCode from './PkQrCode.vue'
 import PkRadioGroup from './PkRadioGroup.vue'
 import PkSeoPreview from './PkSeoPreview.vue'
 import PkSlider from './PkSlider.vue'
@@ -47,6 +50,9 @@ export function registerBuiltInFieldControls(): void {
      */
     registerFieldControl('markdown', PkMarkdownInput)
     registerFieldControl('code', PkCodeInput)
+    registerFieldControl('map', PkMapField)
+    registerFieldControl('qrcode', PkQrCode)
+    registerFieldControl('diff', PkDiff)
 
     /*
      * The SEO search-result preview. It stores nothing and reads its siblings -

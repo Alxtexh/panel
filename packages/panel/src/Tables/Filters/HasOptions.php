@@ -14,6 +14,8 @@ namespace Alxtexh\Panel\Tables\Filters;
  */
 interface HasOptions
 {
-    /** @return list<string> */
+    /**
+     * @return list<string|array{value: string, label: string}>
+     */
     public function resolvedOptions(): array;
 }

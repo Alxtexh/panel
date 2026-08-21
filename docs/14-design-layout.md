@@ -47,6 +47,19 @@ CSS variables over hard-coded `gap-4` / `py-2.5` when adding new chrome.
 3. Tables / relations still sit in a single `TableShell`.
 4. Catalogue grids sit under `CATALOGUE_CONTAINER`.
 
+## Demo UI must match the published kit
+
+The playground Vite-aliases `packages/ui` source. A polished demo can therefore
+drift from what Composer installs (`packages/panel/resources/client`). Before a
+release tag:
+
+1. `make sync-client` (rebuild kit dist and mirror into the PHP package)
+2. Rebuild playground assets when host pages changed
+3. `make release-check` (`check-client` + package Pest)
+
+If those disagree, ship the kit half first. Do not tag a demo that only looks
+right through the source alias.
+
 ## Future (not in scope)
 
 Marketplace packaging and Livewire-based admin UIs are explicitly out of

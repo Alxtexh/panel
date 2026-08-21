@@ -35,6 +35,9 @@ mass assignment is bounded by what you wrote rather than by `$fillable`.
 | `SliderField` | A number on a track |
 | `DateField` | Dates and datetimes |
 | `ColourField` | A colour picker |
+| `MapField` | Leaflet geopoint (`{lat,lng}`); lazy-loaded |
+| `QrCodeField` | QR preview of a string or sibling field |
+| `DiffField` | Side-by-side text diff of two siblings |
 | `CountryField` | An ISO country list, supplied |
 | `TagsField` | Free-form repeated strings |
 | `KeyValueField` | An arbitrary map |

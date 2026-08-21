@@ -105,6 +105,12 @@ jobs:
           PANELKIT_PG_DATABASE: panelkit_rag
         run: vendor/bin/phpunit
 
+      # Package Pest is half of `make release-check`. The playground suite above
+      # does not load packages/panel/tests; a stale mirror or a broken OpenAPI
+      # filter would still pass here without this step.
+      - name: Package suite
+        run: make test-package
+
       # Same story as the JS lint step below: Pint had a config and no
       # enforcement, so it drifted to ~70 files needing a fix - mostly
       # `ordered_imports` and `fully_qualified_strict_types`, nothing
@@ -191,6 +197,7 @@ jobs:
       # packages/ui without `make sync-client` leaves resources/client stale
       # while the playground (Vite-aliased to source) still looks fine. Compare
       # package.json + inertia (not dist bytes: Vite is not bit-identical).
+      # Full pre-tag gate is `make release-check` (this + package Pest).
       - name: Client mirror sync
         run: make check-client
 

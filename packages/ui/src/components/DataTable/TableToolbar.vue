@@ -266,7 +266,11 @@ function optionsFor(filter: FilterSchema): { value: unknown; label: string }[] {
         }))
     }
 
-    return (filter.options ?? []).map((o) => ({ value: o, label: o }))
+    return (filter.options ?? []).map((o) =>
+        typeof o === 'object' && o !== null && 'value' in o
+            ? { value: o.value, label: o.label }
+            : { value: o, label: String(o) },
+    )
 }
 
 /* ------------------------------------------------------------------ columns */

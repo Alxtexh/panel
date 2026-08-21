@@ -6,7 +6,7 @@
 namespace App\Panel\Pages;
 
 use Alxtexh\Panel\Pages\DashboardPage;
-use Alxtexh\Panel\Widgets\{StatWidget, ChartWidget, Trend, Period};
+use Alxtexh\Panel\Widgets\{StatWidget, ChartWidget, MapWidget, CalendarWidget, Trend, Period};
 
 final class Dashboard extends DashboardPage
 {
@@ -32,6 +32,17 @@ final class Dashboard extends DashboardPage
                 ->withPeriods()
                 ->span(2)
                 ->data(fn (Period $p): array => [...]),
+
+            MapWidget::make('coverage', 'Coverage')
+                ->center(-1.286389, 36.817223)
+                ->markers(fn (): array => [
+                    ['lat' => -1.29, 'lng' => 36.82, 'label' => 'HQ'],
+                ]),
+
+            CalendarWidget::make('bookings', 'Bookings')
+                ->events(fn (): array => [
+                    ['date' => '2026-08-21', 'label' => 'Install'],
+                ]),
         ];
     }
 }

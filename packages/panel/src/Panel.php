@@ -367,11 +367,23 @@ final class Panel
      * registering one here cannot put a number in the payload for somebody who
      * may not see it.
      *
-     * @param  list<Widgets\StatWidget|Widgets\ChartWidget|Widgets\TableWidget>  $widgets
+     * @param  list<Widgets\StatWidget|Widgets\ChartWidget|Widgets\TableWidget|Widgets\MapWidget|Widgets\CalendarWidget>  $widgets
      */
     public function widgets(array $widgets): self
     {
-        $this->widgets = [...$this->widgets, ...$widgets];
+        $normalised = [];
+
+        foreach ($widgets as $widget) {
+            if ($widget instanceof Widgets\MapWidget || $widget instanceof Widgets\CalendarWidget) {
+                $normalised[] = $widget->toChartWidget();
+
+                continue;
+            }
+
+            $normalised[] = $widget;
+        }
+
+        $this->widgets = [...$this->widgets, ...$normalised];
 
         return $this;
     }

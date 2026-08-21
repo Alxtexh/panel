@@ -32,7 +32,11 @@ export interface FilterSchema {
      * working server half nobody could reach.
      */
     type: 'select' | 'boolean' | 'multiselect' | 'daterange' | 'numberrange' | 'querybuilder';
-    options?: string[];
+    /** Plain strings, or `{ value, label }` when options come from a relationship. */
+    options?: Array<string | {
+        value: string | number;
+        label: string;
+    }>;
     trueLabel?: string;
     falseLabel?: string;
     /** Date ranges only. Structure, so it ships with the cached schema. */

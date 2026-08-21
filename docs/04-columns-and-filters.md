@@ -114,4 +114,8 @@ disagree.
 SelectFilter::make('status')
     ->options(['paid' => 'Paid', 'overdue' => 'Overdue'])
     ->indicateUsing(fn (mixed $value) => 'Only '.$value);
+
+// Related model options (BelongsTo-style FK), tenant-scoped:
+SelectFilter::make('article_id')
+    ->relationship(Article::class, 'title');
 ```

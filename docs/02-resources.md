@@ -163,9 +163,19 @@ They render as one joined strip, the same shape a dashboard uses — see
 
 ## The public API
 
-A resource marked `documented()` also appears in `/api/v1`, with OpenAPI
-generated from the same declaration. Tokens are issued by
-`php artisan panel:api-token` and carry their own abilities, intersected with
-the resource policy — a token cannot exceed its owner.
+A resource that answers `documented()` (true by default; return `false` to
+opt out) appears in `/api/v1`, with OpenAPI generated from the same declaration.
+Tokens are issued by `php artisan panel:api-token` (or the Api keys screen) and
+carry their abilities intersected with the resource policy.
 
-It is **off by default**: a resource is not an API endpoint until you say so.
+```php
+public static function documented(): bool
+{
+    return true; // default; return false to hide from /api/v1 and Scalar
+}
+```
+
+OpenAPI covers list/create/read/update/delete, bulk and record actions when
+declared, import when `importable()`, relation routes from `relations()`, and
+bearer auth via `/api/v1` in the generated document. Enable Scalar with
+`Panel::apiDocs()` or `apps(['api-docs'])`.

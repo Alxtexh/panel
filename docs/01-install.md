@@ -94,6 +94,10 @@ optional, only if you customise Vue. The default root view loads kit dist when
 `public/build/manifest.json` is missing, and `@vite` only when that manifest
 exists.
 
+Maintainers: the playground demo must match that published kit. Run
+`make sync-client`, rebuild playground assets when needed, then
+`make release-check` before tagging. See [14. Design layout](14-design-layout.md).
+
 **`"no-api": true` is load-bearing.** Without it Composer calls GitHub's API for
 a VCS repository and authenticates even for a public one, failing with
 `Could not authenticate against github.com`, which reads as the repository

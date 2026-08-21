@@ -80,6 +80,16 @@ test-package: ## Run packages/panel's own suite - Testbench, fixture models, no 
 	@cd packages/panel && [ -d vendor ] || composer install --no-interaction --no-progress
 	@cd packages/panel && vendor/bin/pest --no-coverage
 
+# THE RELEASE GATE FOR DEMO = KIT. Playground Vite aliases packages/ui source,
+# so a green demo can hide a stale Composer mirror. Before tagging:
+#   1. make sync-client   (rebuild packages/ui dist + mirror into resources/client)
+#   2. rebuild playground assets if you changed Vue hosts see
+#   3. make release-check (this target)
+.PHONY: release-check
+release-check: check-client test-package ## Pre-tag: client mirror sync + package Pest suite
+	@echo "release-check ok: client mirror matches packages/ui; package tests passed."
+	@echo "Remember: demo UI must match the published kit (sync-client before tag)."
+
 .PHONY: split
 split: ## Build the standalone package branches (see scripts/split.sh; nothing is pushed)
 	@scripts/split.sh
