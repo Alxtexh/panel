@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('article_id')->constrained()->cascadeOnDelete();
             $table->string('body');
+            $table->string('status')->default('open');
             $table->nullableMorphs('notable');
             $table->timestamps();
 

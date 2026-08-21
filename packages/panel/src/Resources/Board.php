@@ -7,9 +7,10 @@ namespace Alxtexh\Panel\Resources;
 /**
  * Opt-in Kanban board over one resource.
  *
- * DECLARE VIA `Resource::board()`. When null (default), no board route, no
- * move endpoint, and zero client cost. When set, the package mounts
- * `ResourceKanban` and accepts drag-to-move writes against the column field.
+ * DECLARE VIA `Resource::board()`. When null (default), the registered
+ * `/board` and `/board-move` actions 404 and there is zero client cost.
+ * When set, the package mounts `ResourceKanban` and accepts drag-to-move
+ * writes against the column field.
  *
  * COLUMNS ARE AN ALLOWLIST. A card may only move into a declared column value,
  * so a crafted request cannot invent statuses the resource never offered.

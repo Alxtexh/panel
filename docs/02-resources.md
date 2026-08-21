@@ -163,8 +163,8 @@ They render as one joined strip, the same shape a dashboard uses. See
 
 ## Kanban board (opt-in)
 
-Declare `board()` on a resource. Until you do, there is no `/board` route and
-no move endpoint.
+Declare `board()` on a resource. Until you do, `GET {resource}/board` and
+`POST {resource}/board-move` answer 404 (routes exist; the actions refuse).
 
 ```php
 use Alxtexh\Panel\Resources\Board;
@@ -184,7 +184,9 @@ public static function board(): ?Board
 
 That mounts `ResourceKanban` at `{resource}/board` and accepts
 `POST {resource}/board-move` with `{ id, column }` against the declared
-allowlist. Run `php artisan panel:update` so hosts get the Vite page stub.
+allowlist. Nested resources use the same paths under the parent prefix
+(`/{parent}/{id}/{resource}/board`). Run `php artisan panel:update` so hosts
+get the Vite page stub.
 
 ## Table chrome Pro (opt-in)
 

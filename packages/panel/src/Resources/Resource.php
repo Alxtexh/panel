@@ -547,7 +547,10 @@ abstract class Resource
     }
 
     /**
-     * Opt-in Kanban board. Null (default) means no board route and no move API.
+     * Opt-in Kanban board. Null (default) means the board actions 404.
+     *
+     * Routes are registered for every resource; without `board()` the GET
+     * and POST handlers refuse with 404. Zero client cost until declared.
      *
      *     public static function board(): ?Board
      *     {
@@ -915,6 +918,9 @@ abstract class Resource
                         'destroy' => $prefix.'/'.static::key().'/{id}',
                         'board' => static::board() !== null
                             ? $prefix.'/'.static::key().'/board'
+                            : null,
+                        'boardMove' => static::board() !== null
+                            ? $prefix.'/'.static::key().'/board-move'
                             : null,
                     ],
                     'table' => $table->toSchema(),

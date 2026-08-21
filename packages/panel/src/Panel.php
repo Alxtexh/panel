@@ -78,11 +78,12 @@ final class Panel
     private array $widgets = [];
 
     /**
-     * Per-user drag-and-drop widget layout on dashboards. Off by default.
+     * Per-user drag-and-drop chart order on dashboards. Off by default.
      *
-     * When on, `DashboardPage` ships the acting user's saved order and the
-     * packaged `PanelDashboard` offers rearrange + persist into
-     * `users.appearance.dashboardLayout`.
+     * When on, `DashboardPage` ships the acting user's saved chart order and
+     * the packaged `PanelDashboard` offers rearrange + persist into
+     * `users.appearance.dashboardLayout.chartOrder` only (not full widget
+     * layout).
      */
     private bool $userDashboards = false;
 
@@ -428,10 +429,12 @@ final class Panel
     }
 
     /**
-     * Let each operator rearrange dashboard widgets and persist the layout.
+     * Let each operator rearrange dashboard chart widgets and persist order.
      *
-     * OFF BY DEFAULT. Zero client cost when unused: the packaged dashboard
-     * skips drag handles and never reads `appearance.dashboardLayout`.
+     * OFF BY DEFAULT. Chart-order only (`appearance.dashboardLayout.chartOrder`),
+     * not arbitrary widget placement. Zero client cost when unused: the
+     * packaged dashboard skips drag handles and never reads that key. The
+     * appearance endpoint ignores `dashboardLayout` writes while this is off.
      */
     public function userDashboards(bool $enabled = true): self
     {

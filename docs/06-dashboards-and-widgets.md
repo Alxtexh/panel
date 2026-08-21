@@ -195,7 +195,9 @@ Panel::make('admin')->userDashboards();
 
 Operators can drag chart widgets into a new order. The order persists on
 `users.appearance.dashboardLayout.chartOrder` via the existing appearance
-endpoint. When the flag is off, the dashboard never reads that key.
+endpoint (chart order only, not full dashboard layout). When the flag is off,
+the dashboard never reads that key and the appearance endpoint ignores
+`dashboardLayout` writes.
 
 ## First-run setup guide
 

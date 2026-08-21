@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\PanelManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -18,6 +19,9 @@ use Illuminate\Routing\Controller;
  * Requires an `appearance` JSON column on the user model (the package
  * migration adds it when `users` exists). Hosts that persist another way
  * keep their own route; this one yields when the URI is already claimed.
+ *
+ * `dashboardLayout` (chart order only) is accepted only when the current
+ * panel enabled `Panel::userDashboards()`. Otherwise the key is ignored.
  */
 final class AppearanceController extends Controller
 {
@@ -72,17 +76,23 @@ final class AppearanceController extends Controller
 
         $current = is_array($user->appearance ?? null) ? $user->appearance : [];
 
-        if (isset($validated['dashboardLayout'])) {
-            $layout = $validated['dashboardLayout'];
-            $order = [];
+        if (array_key_exists('dashboardLayout', $validated)) {
+            $panel = app(PanelManager::class)->currentPanel();
 
-            foreach ($layout['chartOrder'] ?? [] as $key) {
-                if (is_string($key) && preg_match('/^[a-z0-9_-]+$/i', $key) === 1) {
-                    $order[] = $key;
+            if ($panel === null || ! $panel->hasUserDashboards()) {
+                unset($validated['dashboardLayout']);
+            } else {
+                $layout = $validated['dashboardLayout'];
+                $order = [];
+
+                foreach ($layout['chartOrder'] ?? [] as $key) {
+                    if (is_string($key) && preg_match('/^[a-z0-9_-]+$/i', $key) === 1) {
+                        $order[] = $key;
+                    }
                 }
-            }
 
-            $validated['dashboardLayout'] = ['chartOrder' => array_values(array_unique($order))];
+                $validated['dashboardLayout'] = ['chartOrder' => array_values(array_unique($order))];
+            }
         }
 
         $user->appearance = [...$current, ...$validated];

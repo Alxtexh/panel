@@ -62,3 +62,4 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.0.95 | Table chrome Pro: sticky first column, resize, table/cards layouts |
 | v1.0.96 | Kanban via `Resource::board()`, `ResourceKanban`, board-move |
 | v1.0.97 | `Panel::userDashboards()` DnD chart layout into appearance JSON |
+| v1.0.98 | Gate `dashboardLayout` writes; board via `toListQuery`; nested board URLs; board HTTP Pest |
