@@ -99,11 +99,11 @@ function disconnect(id: number) {
  * session at all.
  */
 function signOut(id: string) {
-    router.delete(at(`/settings/devices/${id}`), { preserveScroll: true })
+    router.delete(at(`/security/devices/${id}`), { preserveScroll: true })
 }
 
 function signOutOthers() {
-    router.delete(at('/settings/devices'), { preserveScroll: true })
+    router.delete(at('/security/devices'), { preserveScroll: true })
 }
 
 defineOptions({
@@ -128,7 +128,7 @@ defineOptions({
         />
 
         <Form
-            :action="at('/settings/password')"
+            :action="at('/security/password')"
             method="put"
             :options="{ preserveScroll: true }"
             reset-on-success
@@ -205,7 +205,7 @@ defineOptions({
 
         <Form
             v-if="!emailTwoFactorEnabled"
-            :action="at('/settings/security/email-two-factor')"
+            :action="at('/security/email-two-factor')"
             method="post"
             :options="{ preserveScroll: true }"
             #default="{ processing }"
@@ -215,7 +215,7 @@ defineOptions({
 
         <Form
             v-else
-            :action="at('/settings/security/email-two-factor')"
+            :action="at('/security/email-two-factor')"
             method="delete"
             :options="{ preserveScroll: true }"
             #default="{ processing }"

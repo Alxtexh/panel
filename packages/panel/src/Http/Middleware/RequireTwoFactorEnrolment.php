@@ -39,11 +39,17 @@ final class RequireTwoFactorEnrolment
         'password.confirmation',
         'user-password.update',
         'settings.security',
+        'security',
         'settings.password',
+        'security.password',
         'settings.devices.destroy',
         'settings.devices.destroyOthers',
+        'security.devices.destroy',
+        'security.devices.destroyOthers',
         'settings.email-two-factor',
         'settings.email-two-factor.destroy',
+        'security.email-two-factor',
+        'security.email-two-factor.destroy',
         'verification.notice',
         'verification.verify',
         'verification.send',
@@ -80,7 +86,7 @@ final class RequireTwoFactorEnrolment
             abort(423, 'A second factor must be enrolled before continuing.');
         }
 
-        $path = '/'.trim($panel->getPath().'/settings/security', '/');
+        $path = '/'.trim($panel->getPath().'/security', '/');
 
         return redirect()
             ->to($path)
@@ -108,7 +114,9 @@ final class RequireTwoFactorEnrolment
 
         $path = '/'.ltrim($request->path(), '/');
 
-        return str_contains($path, '/settings/security')
+        return str_ends_with($path, '/security')
+            || str_contains($path, '/settings/security')
+            || str_contains($path, '/security/')
             || str_contains($path, '/user/two-factor')
             || str_contains($path, '/user/confirmed-two-factor')
             || str_contains($path, '/passkeys');

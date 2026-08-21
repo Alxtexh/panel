@@ -80,6 +80,7 @@ final class PanelManager
         Pages\ChatPage::class,
         Pages\ApiKeysPage::class,
         Pages\ApiDocsPage::class,
+        Pages\LogsPage::class,
         Pages\InvitePage::class,
         Pages\FeatureFlagsPage::class,
         Pages\OnboardingPage::class,

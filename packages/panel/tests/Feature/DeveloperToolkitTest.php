@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Feature;
 
+use Alxtexh\Panel\Forms\Fields\BarcodeField;
 use Alxtexh\Panel\Forms\Fields\DiffField;
 use Alxtexh\Panel\Forms\Fields\MapField;
 use Alxtexh\Panel\Forms\Fields\QrCodeField;
@@ -86,6 +87,24 @@ final class DeveloperToolkitTest extends TestCase
         $this->assertSame('diff', $diff['type']);
         $this->assertSame('before', $diff['originalKey']);
         $this->assertSame('after', $diff['modifiedKey']);
+    }
+
+    public function test_barcode_field_schema(): void
+    {
+        $schema = BarcodeField::make('sku')
+            ->format('EAN13')
+            ->height(96)
+            ->barWidth(2)
+            ->from('ean')
+            ->hideValue()
+            ->toSchema();
+
+        $this->assertSame('barcode', $schema['type']);
+        $this->assertSame('EAN13', $schema['format']);
+        $this->assertSame(96, $schema['height']);
+        $this->assertSame(2, $schema['width']);
+        $this->assertFalse($schema['displayValue']);
+        $this->assertSame('ean', $schema['from']);
     }
 
     public function test_openapi_documents_bulk_relations_and_bearer_auth(): void

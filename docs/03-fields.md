@@ -37,6 +37,7 @@ mass assignment is bounded by what you wrote rather than by `$fillable`.
 | `ColourField` | A colour picker |
 | `MapField` | Leaflet geopoint (`{lat,lng}`); lazy-loaded |
 | `QrCodeField` | QR preview of a string or sibling field |
+| `BarcodeField` | Barcode preview (CODE128, EAN13, …); JsBarcode, lazy-loaded |
 | `DiffField` | Side-by-side text diff of two siblings |
 | `CountryField` | An ISO country list, supplied |
 | `TagsField` | Free-form repeated strings |

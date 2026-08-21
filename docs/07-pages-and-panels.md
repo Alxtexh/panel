@@ -63,8 +63,9 @@ php artisan make:panel reseller --guard=resellers --new-guard --auth
 ```
 
 That writes a provider, a resource directory, a discovery entry, a line in
-`bootstrap/providers.php`, an isolation test, and — with `--new-guard` — the
-guard and its user provider in `config/auth.php`.
+`bootstrap/providers.php`, an isolation test, and with `--new-guard` the guard,
+provider, password broker in `config/auth.php`, plus a model and migration when
+`--guard-model` is not already on disk.
 
 **`--new-guard` matters.** Without it, naming a guard that does not exist
 produces a portal that generates cleanly, reports success, and answers its first

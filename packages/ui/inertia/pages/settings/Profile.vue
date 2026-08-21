@@ -67,7 +67,7 @@ defineOptions({
         <Heading variant="small" title="Profile" description="Update your name and email address" />
 
         <Form
-            :action="at('/settings/profile')"
+            :action="at('/profile')"
             method="patch"
             class="space-y-6"
             v-slot="{ errors, processing }"
@@ -164,7 +164,7 @@ defineOptions({
 
             <!-- Classes on the link's own element - see ErrorScreen's note. -->
             <Link
-                :href="at('/settings/security')"
+                :href="at('/security')"
                 :class="buttonClasses({ variant: 'outline', size: 'sm' })"
             >
                 {{ twoFactorEnabled ? 'Manage' : 'Enable' }} two-factor authentication
@@ -179,5 +179,5 @@ defineOptions({
         does not exist, and a confirmation dialog that 404s on submit is worse
         than no dialog.
     -->
-    <DeleteUser :action="at('/settings/profile')" />
+    <DeleteUser :action="at('/profile')" />
 </template>

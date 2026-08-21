@@ -1,1 +1,0 @@
-import{On as e,k as t,mt as n,v as r}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{c as i}from"./inertia-CkCdZZK-.js";import{r as a}from"./password-DgzV_d5q.js";var o=t({__name:`ResetPassword`,props:{token:{},email:{}},setup(t){return(o,s)=>(n(),r(e(i),{action:e(a).form().action,token:t.token,email:t.email},null,8,[`action`,`token`,`email`]))}});export{o as default};

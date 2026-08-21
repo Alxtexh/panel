@@ -232,7 +232,10 @@ final class OnboardingSteps
             );
         }
 
-        $security = self::url($panel, 'settings.security') ?? self::url($panel, 'settings.profile');
+        $security = self::url($panel, 'security')
+            ?? self::url($panel, 'settings.security')
+            ?? self::url($panel, 'profile')
+            ?? self::url($panel, 'settings.profile');
 
         if ($security !== null) {
             $steps[] = self::step(

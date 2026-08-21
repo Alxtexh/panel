@@ -138,6 +138,20 @@ final class Panel
      */
     private ?string $openapiUrl = null;
 
+    /**
+     * Default log basename for `logTail()` (e.g. `laravel.log`). Null lets the
+     * reader pick the newest file in the allow-list.
+     */
+    private ?string $logTailDefault = null;
+
+    /**
+     * Basename allow-list for the log tail screen. Null = every `*.log` under
+     * `storage/logs`.
+     *
+     * @var list<string>|null
+     */
+    private ?array $logTailAllowlist = null;
+
     /** In-panel feedback dialog. Off by default. */
     private bool $feedback = false;
 
@@ -1499,7 +1513,7 @@ final class Panel
 
     /**
      * Opt this portal into empty kit apps: `mail`, `chat`, `api-keys`, `invites`,
-     * `feature-flags`, `api-docs`.
+     * `feature-flags`, `api-docs`, `logs`.
      *
      * Each is an empty canvas or thin wrapper. Fill hooks on a subclass, or live
      * with empty lists. `without(['mail'])` still drops a screen you enabled.
@@ -1539,6 +1553,43 @@ final class Panel
         }
 
         return $this;
+    }
+
+    /**
+     * Read-only log tail (`apps/logs`). Shorthand for `->apps(['logs'])`.
+     *
+     * @param  string|null  $defaultFile  Basename such as `laravel.log`
+     * @param  list<string>|null  $allowlist  Basename allow-list; null = all `*.log` in storage/logs
+     */
+    public function logTail(?string $defaultFile = 'laravel.log', ?array $allowlist = null): self
+    {
+        $this->apps(['logs']);
+
+        if (is_string($defaultFile) && $defaultFile !== '') {
+            $this->logTailDefault = basename($defaultFile);
+        }
+
+        if ($allowlist !== null) {
+            $this->logTailAllowlist = array_values(array_map(
+                static fn (string $name): string => basename($name),
+                $allowlist,
+            ));
+        }
+
+        return $this;
+    }
+
+    public function getLogTailDefault(): ?string
+    {
+        return $this->logTailDefault;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    public function getLogTailAllowlist(): ?array
+    {
+        return $this->logTailAllowlist;
     }
 
     /**

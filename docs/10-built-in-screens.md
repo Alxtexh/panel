@@ -19,7 +19,7 @@ mounted by default and can be dropped per panel.
 | **Assistant settings** | Settings | `manage_assistant` |
 | **Workspaces** | Settings | - |
 | **Organisation** | Settings | - |
-| **Profile, Security** | Settings (SettingsLayout) | - (your own account) |
+| **Profile, Security** | Top-level `{panel}/profile` and `{panel}/security` (settings aliases kept) | - (your own account) |
 | **Subscription access** | Redirect target when `Panel::billingState()` or `subscriptionGate()` blocks access | - |
 | **Help, FAQ, About, Changelog** | Navigation | - |
 | **Sitemap, Environment** | Navigation | - |
@@ -38,6 +38,7 @@ screens stay in the npm package and can be mirrored with
 | Till | `TillPage` | `make:panel-page --till` |
 | Device preview | `DevicePreviewPage` | `make:panel-page --device-preview` |
 | Mail | `MailPage` | `Panel::apps(['mail'])` on the portal |
+| Logs (opt-in tail) | `LogsPage` | `Panel::logTail()` / `apps(['logs'])`. Ability `view_operations` |
 | Chat | `ChatPage` | `Panel::apps(['chat'])` on the portal |
 | API keys | `ApiKeysPage` | `Panel::apps(['api-keys'])` |
 | API docs | `ApiDocsPage` (Scalar) | `Panel::apiDocs()` or `apps(['api-docs'])` |

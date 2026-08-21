@@ -5,7 +5,7 @@
 | Command | Does |
 |---|---|
 | `panel:install` | Publish config, page files, layout, wire Vite, scaffold auth (default), sync permissions, first Administrator. `--no-auth`, `--no-user`, `--name`, `--email`, `--password`, `--force` |
-| `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard`, `--guard-model`, `--central`, `--auth` |
+| `make:panel` | A whole portal: provider, resources dir, isolation test. `--guard`, `--new-guard` (auth.php guard+provider+password broker; scaffolds model+migration when `--guard-model` is missing on disk), `--guard-model`, `--central`, `--auth` |
 | `make:panel-resource` | A resource. `--generate` infers from the table, `--panel=` |
 | `make:panel-recipe` | Official starter: one Invoice (or Item) resource, kit Vue, empty table. Alias `panel:recipe`. `--migrate`, `--seed`, `--panel=` |
 | `make:panel-page` | A custom page. `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`, `--api-keys`, `--api-docs`, `--invites`, `--feature-flags`, `--webhooks`, `--billing-portal`, `--email-templates`, `--onboarding`, `--media-library` |
@@ -111,10 +111,12 @@ screen the kit already ships.
 | `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` | Empty page bases. Directory inherits chrome sections |
 | `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |
 | `Panel::apiDocs()` / `apps(['api-docs'])` | Built-in Scalar API reference. OpenAPI at `{panel}/apps/api-docs/openapi.json`. Optional URL: `apiDocs('/path/to/openapi.json')`. Host Vite needs `@scalar/api-reference` (already a kit dependency when using the mirrored client) |
+| `Panel::logTail()` / `apps(['logs'])` | Read-only log tail at `{panel}/apps/logs`. Ability `view_operations`. Optional allow-list: `logTail('laravel.log', ['laravel.log'])`. Polls `{page}/tail` |
 | `MapField::make('location')->latLng('lat','lng')` | Leaflet geopoint field (bundled; lazy-loaded) |
 | `MapWidget::make('coverage', 'Coverage')->markers(...)` | Dashboard map card (Chart type `map`) |
 | `CalendarWidget::make('bookings', 'Bookings')->events(...)` | Month schedule card |
 | `QrCodeField::make('ticket')->from('public_url')` | QR preview field |
+| `BarcodeField::make('sku')->format('CODE128')` | Barcode preview (JsBarcode; also `EAN13`). `->from('ean')` reads a sibling |
 | `DiffField::make('patch')->original('before')->modified('after')` | Side-by-side text diff |
 | `SelectFilter::make('author_id')->relationship(User::class, 'name')` | Related-model table filter |
 | `ApiKeysPage` / `--api-keys` | Wraps `ApiToken`. Override `keys()`, `issue()`, `revoke()`. Opt in with `Panel::apps(['api-keys'])` |

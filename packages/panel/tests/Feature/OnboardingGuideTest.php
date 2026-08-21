@@ -172,7 +172,7 @@ final class OnboardingGuideTest extends TestCase
 
         $this->assertNotEmpty($panel['account'] ?? null);
         $this->assertNull($panel['security'] ?? null);
-        $this->assertSame('/settings/profile', parse_url((string) $panel['account'], PHP_URL_PATH));
+        $this->assertSame('/profile', parse_url((string) $panel['account'], PHP_URL_PATH));
         $this->assertSame('/settings', parse_url((string) ($panel['settings'] ?? ''), PHP_URL_PATH));
         $this->assertNotSame($panel['account'], $panel['settings']);
     }
