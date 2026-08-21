@@ -12,8 +12,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     onSave?: ((dataUrl: string) => any) | undefined;
 }>, {
     label: string;
-    disabled: boolean;
-    width: number;
     height: number;
+    width: number;
+    disabled: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

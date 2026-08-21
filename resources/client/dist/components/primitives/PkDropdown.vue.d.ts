@@ -63,8 +63,8 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
     close: typeof close;
     openAt: typeof openAt;
 }, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
-    align: "start" | "end";
     width: string;
+    align: "start" | "end";
     offset: number;
     placement: "bottom" | "right" | "left";
     hoverable: boolean;

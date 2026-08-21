@@ -86,21 +86,21 @@ type __VLS_Props = {
      */
     framed?: boolean;
 };
-declare var __VLS_2: `cell:${string}`, __VLS_3: {
+declare var __VLS_14: `cell:${string}`, __VLS_15: {
     row: Record<string, any>;
     value: any;
     column: TableColumn;
-}, __VLS_5: {
+}, __VLS_17: {
     row: Record<string, any>;
-}, __VLS_10: {}, __VLS_15: {};
+}, __VLS_22: {}, __VLS_27: {};
 type __VLS_Slots = {} & {
-    [K in NonNullable<typeof __VLS_2>]?: (props: typeof __VLS_3) => any;
+    [K in NonNullable<typeof __VLS_14>]?: (props: typeof __VLS_15) => any;
 } & {
-    actions?: (props: typeof __VLS_5) => any;
+    actions?: (props: typeof __VLS_17) => any;
 } & {
-    'clear-filters'?: (props: typeof __VLS_10) => any;
+    'clear-filters'?: (props: typeof __VLS_22) => any;
 } & {
-    'empty-actions'?: (props: typeof __VLS_15) => any;
+    'empty-actions'?: (props: typeof __VLS_27) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     sort: (key: string) => any;

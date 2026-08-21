@@ -19,8 +19,8 @@ type __VLS_Slots = {} & {
     default?: (props: typeof __VLS_1) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
-    width: number;
     height: number;
+    width: number;
     notch: boolean;
     kind: "phone" | "laptop";
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
