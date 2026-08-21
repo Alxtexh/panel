@@ -111,6 +111,11 @@ const props = withDefaults(
          * by default so a bare table dropped anywhere still looks finished.
          */
         framed?: boolean
+        /**
+         * Alternate row wash for dense ops tables. Off by default so most
+         * lists stay calm; hover still applies either way.
+         */
+        striped?: boolean
     }>(),
     {
         rowKey: 'id',
@@ -123,6 +128,7 @@ const props = withDefaults(
         emptyTitle: 'Nothing here yet',
         emptyIcon: 'package',
         framed: true,
+        striped: false,
         collapsedGroupsByDefault: false,
     },
 )
@@ -676,11 +682,13 @@ function summaryValue(key: string): string {
 
                     <tr
                         v-if="rowVisible(index)"
-                        class="hover:bg-muted/40 group pk-row border-b transition-colors"
+                        class="group pk-row border-b transition-colors hover:bg-muted/50"
                         :class="[
                             isSelected(row)
                                 ? 'bg-primary/5 shadow-[inset_3px_0_0_0_var(--color-primary)]'
-                                : '',
+                                : striped && index % 2 === 1
+                                  ? 'bg-muted/20'
+                                  : '',
                             dragging === index ? 'opacity-40' : '',
                             dropEdge(index),
                             reordering ? 'cursor-grab active:cursor-grabbing' : '',

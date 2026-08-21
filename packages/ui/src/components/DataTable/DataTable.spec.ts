@@ -250,4 +250,22 @@ describe('DataTable empty states', () => {
         expect(wrapper.find('[data-slot="table-skeleton"]').exists()).toBe(true)
         expect(wrapper.find('[data-slot="empty-state"]').exists()).toBe(false)
     })
+
+    it('applies optional zebra stripes on odd rows', () => {
+        const wrapper = mount(DataTable, {
+            props: {
+                columns,
+                rows: [
+                    { id: 1, name: 'Amina' },
+                    { id: 2, name: 'Chi' },
+                ],
+                striped: true,
+            },
+        })
+
+        const rows = wrapper.findAll('tbody tr.pk-row')
+
+        expect(rows[1].classes()).toContain('bg-muted/20')
+        expect(rows[0].classes()).toContain('hover:bg-muted/50')
+    })
 })

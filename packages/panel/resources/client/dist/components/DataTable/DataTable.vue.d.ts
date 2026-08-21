@@ -85,6 +85,11 @@ type __VLS_Props = {
      * by default so a bare table dropped anywhere still looks finished.
      */
     framed?: boolean;
+    /**
+     * Alternate row wash for dense ops tables. Off by default so most
+     * lists stay calm; hover still applies either way.
+     */
+    striped?: boolean;
 };
 declare var __VLS_14: `cell:${string}`, __VLS_15: {
     row: Record<string, any>;
@@ -135,6 +140,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     }> | null;
     summaryValues: Record<string, number | null> | null;
     framed: boolean;
+    striped: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;

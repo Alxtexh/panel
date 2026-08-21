@@ -114,7 +114,7 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
     -->
     <div
         v-if="stats?.length"
-        class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
     >
         <DashboardStatPane
             v-for="widget in stats"
@@ -137,7 +137,7 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
         COLUMN TRACKS, not a shared-row grid: collapsing one card must not
         stretch its neighbour or leave a hole above the next widget.
     -->
-    <div v-if="charts?.length" class="flex flex-col gap-3">
+    <div v-if="charts?.length" class="flex flex-col gap-4">
         <template v-for="(band, bandIndex) in chartBands" :key="bandIndex">
             <PkBoundary
                 v-if="band.type === 'wide'"
@@ -177,12 +177,12 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
             </PkBoundary>
             <div
                 v-else
-                class="flex flex-col items-start gap-3 lg:flex-row"
+                class="flex flex-col items-start gap-4 lg:flex-row"
             >
                 <div
                     v-for="(column, columnIndex) in band.columns"
                     :key="columnIndex"
-                    class="flex w-full min-w-0 flex-1 flex-col gap-3"
+                    class="flex w-full min-w-0 flex-1 flex-col gap-4"
                 >
                     <PkBoundary
                         v-for="chart in column"
@@ -226,7 +226,7 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
         </template>
     </div>
 
-    <div v-if="tables.length" class="flex flex-col gap-3">
+    <div v-if="tables.length" class="flex flex-col gap-4">
         <DashboardTablePane
             v-for="table in tables"
             :key="table.key"
