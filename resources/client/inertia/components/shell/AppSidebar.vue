@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
-import { ChevronLeft, ChevronRight, HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Sparkles } from '@lucide/vue'
+import { ChevronLeft, ChevronRight, HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Search, Sparkles } from '@lucide/vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { PkBoundary, PkDropdown, useAppearance } from '@alxtexh-enterprise/panel'
 import {
@@ -18,6 +18,7 @@ import {
 import { useCurrentUrl } from '../../composables/useCurrentUrl'
 import { usePanelNav } from '../../composables/usePanelNav'
 import type { NavGroup } from '../../composables/usePanelNav'
+import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useSidebarOpener } from '../../lib/mobileNav'
 import type { NavItem } from '../../types'
 import AppLogo from './AppLogo.vue'
@@ -36,7 +37,25 @@ import TeamSwitcher from './TeamSwitcher.vue'
  * editing". Items are already permission-filtered server-side, so a resource
  * the user cannot view never reaches the client at all.
  */
+const props = defineProps<{
+    /** Gallery / preview override; wins over the panel's shared layout. */
+    forceSidebarLayout?: string | null
+}>()
+
 const page = usePage()
+
+const { chrome: sidebarChrome } = useSidebarLayout(() => props.forceSidebarLayout)
+
+function openCommandPalette(): void {
+    window.dispatchEvent(
+        new KeyboardEvent('keydown', {
+            key: 'k',
+            code: 'KeyK',
+            ctrlKey: true,
+            bubbles: true,
+        }),
+    )
+}
 
 /**
  * Sidebar side comes from the user preference.
@@ -532,8 +551,8 @@ watch(
 
 <template>
     <Sidebar
-        :collapsible="isMobile ? 'offcanvas' : 'icon'"
-        variant="inset"
+        :collapsible="isMobile ? 'offcanvas' : sidebarChrome.collapsible"
+        :variant="sidebarChrome.variant"
         :side="appearance.sidebarSide === 'right' ? 'right' : 'left'"
     >
         <SidebarHeader>
@@ -548,6 +567,20 @@ watch(
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
+
+            <!--
+                header family (sidebar-16): search in the rail. Opens the same
+                command palette the topbar already mounts (Ctrl+K).
+            -->
+            <button
+                v-if="sidebarChrome.sidebarSearch && !isCollapsed"
+                type="button"
+                class="mx-2 mb-1 flex h-8 items-center gap-2 rounded-md border bg-background px-2 text-left text-sm text-muted-foreground shadow-none hover:bg-muted"
+                @click="openCommandPalette"
+            >
+                <Search class="size-4 shrink-0" />
+                <span class="truncate">Search…</span>
+            </button>
         </SidebarHeader>
 
         <SidebarContent>

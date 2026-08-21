@@ -364,6 +364,46 @@ final class Panel
     private ?array $authTestimonial = null;
 
     /**
+     * SIDEBAR DESIGN FAMILIES. Prefer `sidebarLayout()`; `sidebarVariant()` is
+     * the same setter. Unknown names fall back to `inset` so a typo never
+     * blanks the rail. Default `inset` preserves the chrome panels already ship.
+     *
+     * | Family    | shadcn-vue blocks (layout pattern) | Composition                         |
+     * |-----------|------------------------------------|-------------------------------------|
+     * | inset     | sidebar-08                         | Inset rail + secondary footer nav   |
+     * | sidebar   | sidebar-01                         | Edge-flush grouped rail             |
+     * | floating  | sidebar-04                         | Floating card rail                  |
+     * | icon      | sidebar-07                         | Collapses to icon rail by default   |
+     * | header    | sidebar-16                         | Sticky site header + inset rail     |
+     *
+     * Patterns are reimplemented in AppSidebar / PanelShell against kit tokens.
+     * Hosts do not run `npx shadcn-vue add` into the monorepo for these.
+     *
+     * Deferred block ids (honest mapping, not shipped as live chrome):
+     * sidebar-05 / sidebar-06 (dropdown accordion submenus), sidebar-11 (file
+     * tree), sidebar-12 (calendar), sidebar-13 (sidebar in a dialog).
+     */
+    private string $sidebarLayout = 'inset';
+
+    /** @var list<string> */
+    private const SIDEBAR_LAYOUTS = ['inset', 'sidebar', 'floating', 'icon', 'header'];
+
+    /**
+     * shadcn-vue block ids and short aliases that resolve to a PanelKit layout.
+     *
+     * @var array<string, string>
+     */
+    private const SIDEBAR_LAYOUT_ALIASES = [
+        'sidebar-01' => 'sidebar',
+        'sidebar-04' => 'floating',
+        'sidebar-07' => 'icon',
+        'sidebar-08' => 'inset',
+        'sidebar-16' => 'header',
+        'edge' => 'sidebar',
+        'rail' => 'icon',
+    ];
+
+    /**
      * The shared sign-in path this panel participates in, or null for none.
      *
      * CREDENTIAL-BASED PANEL ROUTING. When two panels declare the same path,
@@ -1431,6 +1471,52 @@ final class Panel
     public function getAuthTestimonial(): ?array
     {
         return $this->authTestimonial;
+    }
+
+    /**
+     * Prefer `sidebarLayout()`. Alias kept for call sites that say "variant".
+     *
+     * @param  string  $variant  Layout name or shadcn block alias (see SIDEBAR_LAYOUT_ALIASES).
+     */
+    public function sidebarVariant(string $variant): self
+    {
+        return $this->sidebarLayout($variant);
+    }
+
+    /**
+     * Pick the sidebar chrome family for AppSidebar / PanelShell.
+     *
+     * Accepts a PanelKit name (`inset`, `sidebar`, `floating`, `icon`, `header`)
+     * or a shadcn-vue block id such as `sidebar-08` / `sidebar-07`. Unknown names
+     * fall back to `inset` (the historical default).
+     */
+    public function sidebarLayout(string $layout): self
+    {
+        $resolved = self::SIDEBAR_LAYOUT_ALIASES[$layout] ?? $layout;
+
+        $this->sidebarLayout = in_array($resolved, self::SIDEBAR_LAYOUTS, true)
+            ? $resolved
+            : 'inset';
+
+        return $this;
+    }
+
+    /** @return 'inset'|'sidebar'|'floating'|'icon'|'header' */
+    public function getSidebarLayout(): string
+    {
+        return $this->sidebarLayout;
+    }
+
+    /** @return 'inset'|'sidebar'|'floating'|'icon'|'header' */
+    public function getSidebarVariant(): string
+    {
+        return $this->sidebarLayout;
+    }
+
+    /** @return list<string> */
+    public static function sidebarLayouts(): array
+    {
+        return self::SIDEBAR_LAYOUTS;
     }
 
     /**

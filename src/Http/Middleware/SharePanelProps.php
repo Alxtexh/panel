@@ -299,6 +299,7 @@ final class SharePanelProps
                     'pageFooter' => $panel->hasPageFooter(),
                     'authLayout' => $panel->getAuthLayout(),
                     'authTestimonial' => $panel->getAuthTestimonial(),
+                    'sidebarLayout' => $panel->getSidebarLayout(),
 
                     /*
                      * THE PANEL'S OWN PALETTE, resolved per request because a
