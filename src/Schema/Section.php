@@ -20,6 +20,9 @@ final class Section extends Component
 
     private bool $collapsed = false;
 
+    /** Semantic icon name from the kit registry; rendered beside the section title. */
+    private ?string $icon = null;
+
     private function __construct(private readonly string $label) {}
 
     public static function make(string $label): self
@@ -30,6 +33,13 @@ final class Section extends Component
     public function description(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function icon(string $icon): self
+    {
+        $this->icon = $icon;
 
         return $this;
     }
@@ -89,6 +99,7 @@ final class Section extends Component
             'columns' => $this->columns,
             'collapsible' => $this->collapsible,
             'collapsed' => $this->collapsed,
+            'icon' => $this->icon,
             /*
              * A HINT, NOT A RULE - see the note on `visibleWhen()`. The client
              * uses this to decide whether to render the section at all;
