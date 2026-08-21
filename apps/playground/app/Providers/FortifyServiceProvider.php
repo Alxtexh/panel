@@ -55,12 +55,27 @@ class FortifyServiceProvider extends ServiceProvider
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'status' => $request->session()->get('status'),
             /*
-             * ONLY THE PROVIDERS THIS INSTALLATION HAS. An empty list renders
-             * no divider and no buttons, so an installation without social
-             * sign-in looks like one that never had it - rather than one whose
-             * buttons fail.
+             * THE PACKAGED CATALOGUE WHEN SOCIALITE IS LOADED. Credentials still
+             * gate the OAuth start; unconfigured buttons stay visible and say
+             * what to set in `.env`. See `SocialProviders::offered()`.
              */
-            'socialProviders' => SocialProviders::enabled(),
+            'socialProviders' => (static function (): array {
+                $out = [];
+
+                foreach (SocialProviders::offered() as $key => $label) {
+                    $configured = SocialProviders::hasCredentials($key);
+
+                    $out[] = [
+                        'key' => $key,
+                        'label' => $label,
+                        'url' => "/auth/{$key}/redirect",
+                        'configured' => $configured,
+                        'hint' => $configured ? null : SocialProviders::credentialsHint($key),
+                    ];
+                }
+
+                return $out;
+            })(),
 
             /*
              * A SEEDED ACCOUNT, TYPED IN FOR YOU, on a local machine only.

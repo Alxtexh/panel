@@ -487,12 +487,15 @@ final class Blueprint
 
         ### Social sign-in and Turnstile
 
-        Credentials are the switch. Set `GOOGLE_CLIENT_ID` / secret (and the
-        same for GitHub, GitLab, Bitbucket, Microsoft, Apple, Facebook,
-        LinkedIn, Twitter/X, Discord, Slack, Twitch) and the login screen shows
-        those buttons. `->socialite(['google', 'github'])` narrows the list.
-        Without `laravel/socialite` the buttons stay hidden. Microsoft, Apple
-        and Discord need a community Socialite driver.
+        Credentials gate the OAuth exchange, not the button list. With
+        socialite on, the login screen shows the packaged catalogue (Google,
+        GitHub, GitLab, Bitbucket, Facebook, LinkedIn, Microsoft, Apple, X,
+        Discord, Slack, Twitch). Unconfigured buttons stay visible and say
+        what to set in `.env`. `->socialite(['google', 'github'])` narrows
+        the list. Without `laravel/socialite` the buttons stay hidden.
+        Microsoft, Apple and Discord need a community Socialite driver.
+        Set `panel.auth.social.show_unconfigured` to false to hide providers
+        that lack keys.
 
         Set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for the widget above
         submit. Missing keys: no widget, login works. `->turnstile(false)` opts

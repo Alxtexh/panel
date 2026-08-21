@@ -16,15 +16,21 @@ use Illuminate\Support\Facades\Http;
 /**
  * Social buttons and Turnstile on the packaged login door.
  *
- * CREDENTIALS AND KEYS ARE THE SWITCH. A fresh install shows neither; filling
- * `services.google` (and having Socialite) shows a button; filling both
- * Turnstile keys shows the widget and refuses a POST without a token.
+ * Socialite on lists the packaged catalogue; credentials gate the OAuth start.
+ * Filling both Turnstile keys shows the widget and refuses a POST without a token.
  */
 final class SocialTurnstileLoginTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $user;
+
+    /** @var list<string> */
+    private const CATALOGUE = [
+        'google', 'github', 'gitlab', 'bitbucket', 'facebook',
+        'linkedin', 'microsoft', 'apple', 'x',
+        'discord', 'slack', 'twitch',
+    ];
 
     protected function setUp(): void
     {
@@ -41,16 +47,42 @@ final class SocialTurnstileLoginTest extends TestCase
         ]);
     }
 
-    public function test_no_providers_means_no_social_buttons(): void
+    public function test_socialite_false_means_no_social_buttons(): void
     {
-        config(['services.google' => [], 'services.github' => []]);
+        config([
+            'services.google.client_id' => 'id',
+            'services.google.client_secret' => 'secret',
+        ]);
+
+        app(PanelManager::class)->panel('second')->socialite(false);
 
         $this->get('/second/login')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('socialProviders', []));
     }
 
-    public function test_a_configured_provider_sends_a_button_href(): void
+    public function test_login_lists_the_catalogue_even_without_credentials(): void
+    {
+        config(['services.google' => [], 'services.github' => []]);
+
+        if (! SocialProviders::installed()) {
+            $this->get('/second/login')
+                ->assertOk()
+                ->assertInertia(fn ($page) => $page->where('socialProviders', []));
+
+            return;
+        }
+
+        $this->get('/second/login')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('socialProviders', count(self::CATALOGUE))
+                ->where('socialProviders.0.key', 'google')
+                ->where('socialProviders.0.configured', false)
+                ->where('socialProviders.'.(count(self::CATALOGUE) - 1).'.key', 'twitch'));
+    }
+
+    public function test_a_configured_provider_is_marked_on_the_button(): void
     {
         config([
             'services.google.client_id' => 'id',
@@ -68,26 +100,23 @@ final class SocialTurnstileLoginTest extends TestCase
         $this->get('/second/login')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->has('socialProviders', 1)
+                ->has('socialProviders', count(self::CATALOGUE))
                 ->where('socialProviders.0.key', 'google')
-                ->where('socialProviders.0.url', '/second/auth/google/redirect'));
+                ->where('socialProviders.0.configured', true)
+                ->where('socialProviders.0.url', '/second/auth/google/redirect')
+                ->where('socialProviders.1.key', 'github')
+                ->where('socialProviders.1.configured', false));
     }
 
-    public function test_every_common_provider_with_keys_appears_on_login(): void
+    public function test_every_common_provider_with_keys_appears_configured(): void
     {
         if (! SocialProviders::installed()) {
             $this->markTestSkipped('laravel/socialite is not installed');
         }
 
-        $keys = [
-            'google', 'github', 'gitlab', 'bitbucket', 'facebook',
-            'linkedin', 'microsoft', 'apple', 'twitter', 'x',
-            'discord', 'slack', 'twitch',
-        ];
-
         $config = [];
 
-        foreach ($keys as $key) {
+        foreach (self::CATALOGUE as $key) {
             $config["services.{$key}.client_id"] = "{$key}-id";
             $config["services.{$key}.client_secret"] = "{$key}-secret";
         }
@@ -97,12 +126,14 @@ final class SocialTurnstileLoginTest extends TestCase
         $this->get('/second/login')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->has('socialProviders', count($keys))
+                ->has('socialProviders', count(self::CATALOGUE))
                 ->where('socialProviders.0.key', 'google')
-                ->where('socialProviders.'.(count($keys) - 1).'.key', 'twitch'));
+                ->where('socialProviders.0.configured', true)
+                ->where('socialProviders.'.(count(self::CATALOGUE) - 1).'.key', 'twitch')
+                ->where('socialProviders.'.(count(self::CATALOGUE) - 1).'.configured', true));
     }
 
-    public function test_missing_secret_hides_the_provider_button(): void
+    public function test_missing_secret_keeps_the_button_but_marks_it_unconfigured(): void
     {
         config([
             'services.google.client_id' => 'id',
@@ -124,22 +155,53 @@ final class SocialTurnstileLoginTest extends TestCase
         $this->get('/second/login')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->has('socialProviders', 1)
-                ->where('socialProviders.0.key', 'github'));
+                ->has('socialProviders', count(self::CATALOGUE))
+                ->where('socialProviders.0.key', 'google')
+                ->where('socialProviders.0.configured', false)
+                ->where('socialProviders.1.key', 'github')
+                ->where('socialProviders.1.configured', true));
     }
 
-    public function test_socialite_false_hides_buttons(): void
+    public function test_show_unconfigured_false_hides_providers_without_keys(): void
     {
         config([
+            'panel.auth.social.show_unconfigured' => false,
             'services.google.client_id' => 'id',
             'services.google.client_secret' => 'secret',
+            'services.github' => [],
         ]);
 
-        app(PanelManager::class)->panel('second')->socialite(false);
+        if (! SocialProviders::installed()) {
+            $this->get('/second/login')
+                ->assertOk()
+                ->assertInertia(fn ($page) => $page->where('socialProviders', []));
+
+            return;
+        }
 
         $this->get('/second/login')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->where('socialProviders', []));
+            ->assertInertia(fn ($page) => $page
+                ->has('socialProviders', 1)
+                ->where('socialProviders.0.key', 'google')
+                ->where('socialProviders.0.configured', true));
+    }
+
+    public function test_unconfigured_redirect_explains_the_missing_env_keys(): void
+    {
+        if (! SocialProviders::installed()) {
+            $this->markTestSkipped('laravel/socialite is not installed');
+        }
+
+        config([
+            'services.google.client_id' => 'id',
+            'services.google.client_secret' => 'secret',
+            'services.github' => [],
+        ]);
+
+        $this->get('/second/auth/github/redirect')
+            ->assertRedirect('/second/login')
+            ->assertSessionHas('status', 'Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in .env');
     }
 
     public function test_missing_turnstile_keys_leave_login_working(): void

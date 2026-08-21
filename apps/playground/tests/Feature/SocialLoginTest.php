@@ -177,12 +177,14 @@ final class SocialLoginTest extends TestCase
         $this->assertSame($before, User::query()->count());
     }
 
-    /** A provider nobody configured is not a route at all. */
-    public function test_an_unconfigured_provider_is_not_offered(): void
+    /** A provider without credentials still routes, and explains what to set. */
+    public function test_an_unconfigured_provider_explains_the_missing_env_keys(): void
     {
         config(['services.github.client_id' => null, 'services.github.client_secret' => null]);
 
-        $this->get('/auth/github/redirect')->assertNotFound();
+        $this->get('/auth/github/redirect')
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('status', 'Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in .env');
     }
 
     /* ---------------------------------------------------------- attaching */
@@ -264,37 +266,47 @@ final class SocialLoginTest extends TestCase
     /* ------------------------------------------------------------ screens */
 
     /**
-     * The sign-in screen offers what is configured, and nothing else.
+     * The sign-in screen lists the packaged catalogue; credentials mark which
+     * buttons can start OAuth.
      *
-     * IT NOW STEPS DOWN THROUGH TWO PROVIDERS RATHER THAN ONE. Both are
-     * configured at boot - `phpunit.xml` has to set them there, because
-     * `PanelRoutes` decides whether the sign-in-with routes exist ONCE, during
-     * boot, and a `config()` call in `setUp` arrives after that decision.
-     *
-     * Turning them off one at a time is what distinguishes "filters by
-     * credentials" from "happens to list whatever it lists": a screen hardcoded
-     * to offer Google would pass the old single-provider version of this test
-     * unchanged.
+     * Google and GitHub are configured at boot in `phpunit.xml` because
+     * `PanelRoutes` decides whether social routes exist during boot.
      */
-    public function test_the_login_screen_offers_configured_providers_only(): void
+    public function test_the_login_screen_lists_all_provider_keys(): void
     {
-        $offered = fn (): array => $this->get(route('login'))
+        $props = $this->get(route('login'))
             ->assertOk()
             ->viewData('page')['props']['socialProviders'];
 
-        $this->assertSame(['google' => 'Google', 'github' => 'GitHub'], $offered());
+        $this->assertIsArray($props);
+        $this->assertNotEmpty($props);
+
+        $keys = array_column($props, 'key');
+        $byKey = collect($props)->keyBy('key');
+
+        foreach ([
+            'google', 'github', 'gitlab', 'bitbucket', 'facebook',
+            'linkedin', 'microsoft', 'apple', 'x',
+            'discord', 'slack', 'twitch',
+        ] as $key) {
+            $this->assertContains($key, $keys, "missing provider key {$key}");
+        }
+
+        $this->assertTrue($byKey['google']['configured']);
+        $this->assertTrue($byKey['github']['configured']);
 
         config(['services.github.client_secret' => null]);
 
+        $after = collect($this->get(route('login'))
+            ->assertOk()
+            ->viewData('page')['props']['socialProviders'])->keyBy('key');
+
+        $this->assertTrue($after['google']['configured']);
+        $this->assertFalse($after['github']['configured']);
         $this->assertSame(
-            ['google' => 'Google'],
-            $offered(),
-            'A provider missing half its credentials was still offered.'
+            'Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in .env',
+            $after['github']['hint'],
         );
-
-        config(['services.google.client_id' => null]);
-
-        $this->assertSame([], $offered(), 'A provider with no credentials was still offered.');
     }
 
     /** And the security screen lists what is attached, so it can be removed. */

@@ -83,8 +83,8 @@ $panelResources = array_keys(app(PanelManager::class)->resourcesFor('admin'));
 Route::middleware('throttle:10,1')->group(function (): void {
     /*
      | SOCIAL SIGN-IN IS THE PACKAGE'S NOW. `PanelRoutes` registers the redirect
-     | and callback inside every panel group, on the condition that a provider
-     | actually has credentials - see `SocialProviders::enabled()`.
+     | and callback inside every panel group when socialite is on - see
+     | `SocialProviders::offered()`. Credentials still gate the OAuth start.
      */
 });
 

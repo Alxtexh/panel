@@ -31,6 +31,7 @@
 import { Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { ThemeToggle } from '@alxtexh-enterprise/panel'
+import Toaster from '../../components/Toaster.vue'
 
 defineProps<{
     title?: string
@@ -90,6 +91,12 @@ const testimonial = computed((): { quote: string; author: string; role: string |
 </script>
 
 <template>
+    <!--
+        Toast outlet for unconfigured social buttons on this screen. Auth pages
+        sit outside PanelShell, so they need their own sonner root.
+    -->
+    <Toaster />
+
     <!-- ===== CENTERED (default) ===== -->
     <div
         v-if="authLayout === 'centered'"

@@ -352,7 +352,7 @@ final class PanelAuthTest extends TestCase
      * widget with no site key and a "Sign up" link to a route nobody registered.
      * Absent is the default; present is opt-in.
      */
-    public function test_a_plain_installation_offers_no_optional_sign_in_extras(): void
+    public function test_a_plain_installation_still_lists_social_buttons_without_keys(): void
     {
         // No credentials anywhere is what a fresh application looks like.
         config(['services.google' => [], 'services.github' => []]);
@@ -362,23 +362,20 @@ final class PanelAuthTest extends TestCase
             ->assertInertia(
                 fn ($page) => $page
                     ->where('turnstileSiteKey', null)
-                    ->where('socialProviders', [])
+                    ->has('socialProviders')
+                    ->where('socialProviders.0.key', 'google')
+                    ->where('socialProviders.0.configured', false)
                     ->where('registerUrl', null),
             );
     }
 
     /**
-     * THE CREDENTIALS DECIDE, AND THE URL IS THIS PANEL'S.
+     * THE CATALOGUE IS LISTED; CREDENTIALS MARK WHICH BUTTONS WORK.
      *
-     * The first version asked the application to declare a label and a url per
-     * provider - so a fresh install had no buttons until somebody hand-wrote
-     * config that nothing validated, which is "optional" in a way
-     * indistinguishable from missing. `SocialProviders::enabled()` reads
-     * `services.{provider}.client_id`, where the credentials already are, and
-     * `PanelRoutes` registers the redirect on exactly the same condition - so a
-     * button and the route behind it cannot disagree.
+     * `SocialProviders::offered()` shows every packaged provider when socialite
+     * is on. `configured` is true only when both client id and secret exist.
      */
-    public function test_a_provider_with_credentials_is_offered_at_this_panels_url(): void
+    public function test_a_provider_with_credentials_is_marked_configured_at_this_panels_url(): void
     {
         config([
             'services.google' => ['client_id' => 'id', 'client_secret' => 'secret'],
@@ -389,25 +386,27 @@ final class PanelAuthTest extends TestCase
             ->assertOk()
             ->assertInertia(
                 fn ($page) => $page
-                    ->has('socialProviders', 1)
                     ->where('socialProviders.0.key', 'google')
                     ->where('socialProviders.0.label', 'Google')
+                    ->where('socialProviders.0.configured', true)
                     /*
                      * PANEL-PREFIXED, because the callback has to sign somebody
                      * into THIS portal's guard. A root-relative `/auth/google/
                      * redirect` would hand a reseller portal's sign-in to the
                      * admin panel.
                      */
-                    ->where('socialProviders.0.url', '/authfixture/auth/google/redirect'),
+                    ->where('socialProviders.0.url', '/authfixture/auth/google/redirect')
+                    ->where('socialProviders.1.key', 'github')
+                    ->where('socialProviders.1.configured', false),
             );
     }
 
     /**
-     * HALF A CONFIGURATION OFFERS NOTHING. A client id with no secret is
-     * somebody mid-setup, and a button that cannot complete the exchange is
-     * worse than no button - it fails on the one screen nobody can get past.
+     * HALF A CONFIGURATION IS NOT CONFIGURED. The button stays visible so the
+     * catalogue does not look incomplete; clicking it explains the missing
+     * secret instead of starting a broken OAuth flow.
      */
-    public function test_a_provider_missing_its_secret_is_not_offered(): void
+    public function test_a_provider_missing_its_secret_stays_listed_as_unconfigured(): void
     {
         config([
             'services.google' => ['client_id' => 'id', 'client_secret' => null],
@@ -416,7 +415,9 @@ final class PanelAuthTest extends TestCase
 
         $this->get('/authfixture/login')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->where('socialProviders', []));
+            ->assertInertia(fn ($page) => $page
+                ->where('socialProviders.0.key', 'google')
+                ->where('socialProviders.0.configured', false));
     }
 
     /**

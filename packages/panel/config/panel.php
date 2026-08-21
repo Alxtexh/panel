@@ -416,11 +416,11 @@ return [
         /*
         | SOCIAL SIGN-IN.
         |
-        | THERE IS NO "ENABLED" FLAG, deliberately. A provider is offered when
-        | its credentials exist in `config/services.php` - which is where they
-        | already live - so the button, the route and the ability to complete
-        | the exchange cannot disagree. A separate switch would be a second
-        | thing to set and the one people forget.
+        | When `->socialite()` is on, the login UI lists the packaged catalogue.
+        | Credentials in `config/services.php` still gate the OAuth exchange:
+        | a button without keys stays visible and explains what to set in `.env`.
+        | Set `show_unconfigured` to false to hide providers that lack both a
+        | client id and a secret (the older credentials-are-the-switch behaviour).
         |
         | `providers` extends the packaged list for anything Socialite can drive
         | that this package does not name. `verifies_email` is a claim that a
@@ -432,6 +432,7 @@ return [
         'social' => [
             'table' => 'connected_accounts',
             'settings_url' => '/settings/security',
+            'show_unconfigured' => env('PANEL_SOCIAL_SHOW_UNCONFIGURED', true),
             'providers' => [],
             'verifies_email' => [],
         ],

@@ -18,12 +18,11 @@ use Laravel\Socialite\Facades\Socialite;
  * fourth provider through Socialite gets a button without editing the package.
  * It still has to say whether that provider verifies addresses - see below.
  *
- * CONFIGURED CREDENTIALS ARE THE SWITCH, not a separate list of enabled names.
- * A button for a provider with no client id is a control that cannot work -
- * DESIGN_RULES rule 5 - and it fails at the worst moment, on the sign-in
- * screen, for somebody who cannot get in to report it. Asking the credentials
- * whether they exist means the button and the ability to complete the exchange
- * cannot drift.
+ * WHEN SOCIALITE IS ON, THE LOGIN UI SHOWS THE FULL CATALOGUE. Credentials still
+ * gate the OAuth exchange (`enabled()` / `hasCredentials()`), but hiding every
+ * unconfigured button made a kit with only Google look broken: people thought
+ * the other providers were missing from the product. Unconfigured buttons stay
+ * visible and explain what to set in `.env` when clicked.
  *
  * SOCIALITE IS A SOFT DEPENDENCY. `class_exists` here is what keeps a missing
  * `laravel/socialite` from turning a configured client id into a 500: no class,
@@ -51,6 +50,31 @@ final class SocialProviders
     ];
 
     /**
+     * Keys shown on the login screen when socialite is enabled.
+     *
+     * ALIASES ARE COLLAPSED HERE so the screen does not render two "LinkedIn"
+     * or two "X" buttons. `linkedin-openid` and `twitter` remain in SUPPORTED
+     * for credentials and callbacks; they appear on login only when the panel
+     * allowlist names them explicitly.
+     *
+     * @var list<string>
+     */
+    private const LOGIN_CATALOGUE = [
+        'google',
+        'github',
+        'gitlab',
+        'bitbucket',
+        'facebook',
+        'linkedin',
+        'microsoft',
+        'apple',
+        'x',
+        'discord',
+        'slack',
+        'twitch',
+    ];
+
+    /**
      * Whether `laravel/socialite` is actually loaded.
      *
      * CREDENTIALS WITHOUT THE PACKAGE ARE NOT A PROVIDER. Offering a button
@@ -59,6 +83,18 @@ final class SocialProviders
     public static function installed(): bool
     {
         return class_exists(Socialite::class);
+    }
+
+    /**
+     * Whether the login UI lists providers that lack client id / secret.
+     *
+     * DEFAULT TRUE so a demo or kit with only Google still shows the rest of
+     * the catalogue. Set `panel.auth.social.show_unconfigured` to false to
+     * restore the old "credentials are the switch" behaviour.
+     */
+    public static function showUnconfigured(): bool
+    {
+        return (bool) config('panel.auth.social.show_unconfigured', true);
     }
 
     /**
@@ -86,11 +122,66 @@ final class SocialProviders
     }
 
     /**
+     * Providers listed on the login UI for this panel (or the app-wide door).
+     *
+     * WITH `show_unconfigured` ON (the default), this is the packaged catalogue
+     * (plus config extras), narrowed by `->socialite([...])` when set. WITH IT
+     * OFF, this matches `enabled()`: credentials only.
+     *
+     * @return array<string, string>
+     */
+    public static function offered(?Panel $panel = null): array
+    {
+        if (! self::installed()) {
+            return [];
+        }
+
+        $only = $panel?->socialiteAllowlist();
+
+        if ($only === []) {
+            return [];
+        }
+
+        if (! self::showUnconfigured()) {
+            return self::enabled($panel);
+        }
+
+        $named = self::supported($only);
+        $out = [];
+
+        if ($only !== null) {
+            foreach ($only as $key) {
+                if (isset($named[$key])) {
+                    $out[$key] = $named[$key];
+                }
+            }
+
+            return $out;
+        }
+
+        foreach (self::LOGIN_CATALOGUE as $key) {
+            if (isset($named[$key])) {
+                $out[$key] = $named[$key];
+            }
+        }
+
+        foreach ($named as $key => $label) {
+            if (isset($out[$key]) || in_array($key, ['linkedin-openid', 'twitter'], true)) {
+                continue;
+            }
+
+            $out[$key] = $label;
+        }
+
+        return $out;
+    }
+
+    /**
      * Providers with credentials configured, optionally restricted to one panel.
      *
      * A PANEL MAY NARROW THE LIST with `->socialite(['google', 'github'])`.
-     * `->socialite(false)` offers none. The default is every provider that has
-     * both a client id and a secret in `config/services.php`.
+     * `->socialite(false)` offers none. Credentials still decide whether the
+     * OAuth exchange can start; the login UI may list more via `offered()`.
      *
      * @return array<string, string>
      */
@@ -113,8 +204,7 @@ final class SocialProviders
                 continue;
             }
 
-            if (filled(config("services.{$key}.client_id"))
-                && filled(config("services.{$key}.client_secret"))) {
+            if (self::hasCredentials($key)) {
                 $out[$key] = $label;
             }
         }
@@ -122,14 +212,35 @@ final class SocialProviders
         return $out;
     }
 
+    public static function hasCredentials(string $provider): bool
+    {
+        return filled(config("services.{$provider}.client_id"))
+            && filled(config("services.{$provider}.client_secret"));
+    }
+
     public static function isEnabled(string $provider, ?Panel $panel = null): bool
     {
         return array_key_exists($provider, self::enabled($panel));
     }
 
+    public static function isOffered(string $provider, ?Panel $panel = null): bool
+    {
+        return array_key_exists($provider, self::offered($panel));
+    }
+
     public static function label(string $provider): string
     {
         return self::supported()[$provider] ?? ucfirst($provider);
+    }
+
+    /**
+     * What to tell an operator who clicks a button with no OAuth keys.
+     */
+    public static function credentialsHint(string $provider): string
+    {
+        $env = strtoupper(str_replace('-', '_', $provider));
+
+        return "Set {$env}_CLIENT_ID and {$env}_CLIENT_SECRET in .env";
     }
 
     /**

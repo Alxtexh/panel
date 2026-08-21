@@ -65,8 +65,17 @@ const props = defineProps<{
      * THE URL IS THE APPLICATION'S, not guessed here. Where a provider redirect
      * lives depends on how that application wired Socialite, and a package that
      * assumed `/auth/{key}/redirect` would send half its consumers to a 404.
+     *
+     * `configured` false keeps the button visible and explains what to set in
+     * `.env` on click, so a kit with only Google does not look incomplete.
      */
-    socialProviders?: { key: string; label: string; url: string }[]
+    socialProviders?: {
+        key: string
+        label: string
+        url: string
+        configured?: boolean
+        hint?: string | null
+    }[]
     /** Where "Sign up" goes, or null when registration is not offered. */
     registerUrl?: string | null
     /** Turnstile's public key, or null when it is off. See `AuthTurnstile`. */

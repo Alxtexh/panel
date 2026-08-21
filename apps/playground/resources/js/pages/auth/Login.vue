@@ -20,11 +20,21 @@ import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 
+type SocialProvider = {
+    key: string;
+    label: string;
+    url: string;
+    configured?: boolean;
+    hint?: string | null;
+};
+
 const props = defineProps<{
     status?: string;
     canResetPassword: boolean;
-    /** Provider key => human name, from the application's own Socialite config. */
-    socialProviders?: Record<string, string>;
+    /**
+     * List from the server (preferred), or a legacy key => label map.
+     */
+    socialProviders?: SocialProvider[] | Record<string, string>;
     /**
      * A seeded demo account, filled in ready to submit.
      *
@@ -38,17 +48,26 @@ const props = defineProps<{
 }>();
 
 /**
- * THE PACKAGE WANTS A LIST WITH URLS; this application has a key => label map
- * and its own redirect convention. Mapping it here keeps the convention where
- * it belongs - in the application that chose it.
+ * THE PACKAGE WANTS A LIST WITH URLS. Accept either the new list shape or the
+ * older key => label map so a stale publish does not blank the buttons.
  */
-const providers = computed(() =>
-    Object.entries(props.socialProviders ?? {}).map(([key, label]) => ({
+const providers = computed((): SocialProvider[] => {
+    const raw = props.socialProviders;
+
+    if (Array.isArray(raw)) {
+        return raw.map((provider) => ({
+            ...provider,
+            url: provider.url || `/auth/${provider.key}/redirect`,
+        }));
+    }
+
+    return Object.entries(raw ?? {}).map(([key, label]) => ({
         key,
         label,
         url: `/auth/${key}/redirect`,
-    })),
-);
+        configured: true,
+    }));
+});
 </script>
 
 <template>
