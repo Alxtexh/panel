@@ -1513,7 +1513,7 @@ final class Panel
 
     /**
      * Opt this portal into empty kit apps: `mail`, `chat`, `api-keys`, `invites`,
-     * `feature-flags`, `api-docs`, `logs`.
+     * `feature-flags`, `api-docs`, `logs`, `showcase`.
      *
      * Each is an empty canvas or thin wrapper. Fill hooks on a subclass, or live
      * with empty lists. `without(['mail'])` still drops a screen you enabled.
@@ -1577,6 +1577,16 @@ final class Panel
         }
 
         return $this;
+    }
+
+    /**
+     * Kit-only showcase of fields, columns, and widgets. Shorthand for
+     * `->apps(['showcase'])`. Domain-neutral sample data; keep vertical demos
+     * on separate host pages.
+     */
+    public function kitShowcase(): self
+    {
+        return $this->apps(['showcase']);
     }
 
     public function getLogTailDefault(): ?string

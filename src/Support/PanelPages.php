@@ -213,6 +213,7 @@ final class PanelPages
         'ApiKeys',
         'ApiDocs',
         'Logs',
+        'Showcase',
         'Invites',
         'FeatureFlags',
         'Onboarding',
