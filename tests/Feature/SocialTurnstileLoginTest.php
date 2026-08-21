@@ -73,6 +73,61 @@ final class SocialTurnstileLoginTest extends TestCase
                 ->where('socialProviders.0.url', '/second/auth/google/redirect'));
     }
 
+    public function test_every_common_provider_with_keys_appears_on_login(): void
+    {
+        if (! SocialProviders::installed()) {
+            $this->markTestSkipped('laravel/socialite is not installed');
+        }
+
+        $keys = [
+            'google', 'github', 'gitlab', 'bitbucket', 'facebook',
+            'linkedin', 'microsoft', 'apple', 'twitter', 'x',
+            'discord', 'slack', 'twitch',
+        ];
+
+        $config = [];
+
+        foreach ($keys as $key) {
+            $config["services.{$key}.client_id"] = "{$key}-id";
+            $config["services.{$key}.client_secret"] = "{$key}-secret";
+        }
+
+        config($config);
+
+        $this->get('/second/login')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('socialProviders', count($keys))
+                ->where('socialProviders.0.key', 'google')
+                ->where('socialProviders.'.(count($keys) - 1).'.key', 'twitch'));
+    }
+
+    public function test_missing_secret_hides_the_provider_button(): void
+    {
+        config([
+            'services.google.client_id' => 'id',
+            'services.google.client_secret' => null,
+            'services.github.client_id' => 'gh-id',
+            'services.github.client_secret' => 'gh-secret',
+            'services.discord.client_id' => 'discord-id',
+            'services.discord.client_secret' => '',
+        ]);
+
+        if (! SocialProviders::installed()) {
+            $this->get('/second/login')
+                ->assertOk()
+                ->assertInertia(fn ($page) => $page->where('socialProviders', []));
+
+            return;
+        }
+
+        $this->get('/second/login')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('socialProviders', 1)
+                ->where('socialProviders.0.key', 'github'));
+    }
+
     public function test_socialite_false_hides_buttons(): void
     {
         config([

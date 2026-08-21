@@ -6,6 +6,9 @@
  *
  * A LINK, NOT A FETCH. The provider redirect leaves the application, so this
  * has to be a real navigation.
+ *
+ * ICONS COVER THE PACKAGED LIST in SocialProviders::SUPPORTED. Credentials
+ * remain the switch on the server: a key with no client id never reaches here.
  */
 defineProps<{
     provider: { key: string; label: string; url: string }
@@ -53,6 +56,29 @@ defineProps<{
             />
         </svg>
         <svg
+            v-else-if="provider.key === 'gitlab'"
+            class="size-4"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <path fill="#E24329" d="M12 21.5 16.5 8.2h-2.7L12 13.1 10.2 8.2H7.5L12 21.5Z" />
+            <path fill="#FC6D26" d="M12 21.5 7.5 8.2H2.1L12 21.5Z" />
+            <path fill="#FCA326" d="M2.1 8.2.4 13.4c-.2.5 0 1.1.5 1.4L12 21.5 2.1 8.2Z" />
+            <path fill="#FC6D26" d="M12 21.5 16.5 8.2h5.4L12 21.5Z" />
+            <path fill="#FCA326" d="M21.9 8.2l1.7 5.2c.2.5 0 1.1-.5 1.4L12 21.5l9.9-13.3Z" />
+        </svg>
+        <svg
+            v-else-if="provider.key === 'bitbucket'"
+            class="size-4"
+            viewBox="0 0 24 24"
+            fill="#0052CC"
+            aria-hidden="true"
+        >
+            <path
+                d="M1.5 3.1A.9.9 0 0 0 .6 4.2l3.1 15.7a1.2 1.2 0 0 0 1.2 1h14.4a.9.9 0 0 0 .9-.7l3.2-15.9a.9.9 0 0 0-.9-1.1H1.5Zm13.3 11.4H9.3l-1.1-5.8h7.7l-1.1 5.8Z"
+            />
+        </svg>
+        <svg
             v-else-if="provider.key === 'microsoft'"
             class="size-4"
             viewBox="0 0 24 24"
@@ -83,6 +109,65 @@ defineProps<{
         >
             <path
                 d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.54-4.7 1.31 0 2.69.24 2.69.24v2.97h-1.52c-1.5 0-1.96.93-1.96 1.89v2.27h3.34l-.53 3.49h-2.81V24C19.61 23.09 24 18.1 24 12.07Z"
+            />
+        </svg>
+        <svg
+            v-else-if="provider.key === 'linkedin' || provider.key === 'linkedin-openid'"
+            class="size-4"
+            viewBox="0 0 24 24"
+            fill="#0A66C2"
+            aria-hidden="true"
+        >
+            <path
+                d="M22.2 0H1.8C.8 0 0 .8 0 1.8v20.4C0 23.2.8 24 1.8 24h20.4c1 0 1.8-.8 1.8-1.8V1.8C24 .8 23.2 0 22.2 0ZM7.1 20.5H3.6V9h3.5v11.5ZM5.3 7.4a2 2 0 1 1 0-4.1 2 2 0 0 1 0 4.1ZM20.5 20.5h-3.5v-5.6c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9v5.7H9.6V9h3.3v1.6h.1c.5-.9 1.6-1.8 3.3-1.8 3.5 0 4.2 2.3 4.2 5.3v6.4Z"
+            />
+        </svg>
+        <svg
+            v-else-if="provider.key === 'twitter' || provider.key === 'x'"
+            class="size-4"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+        >
+            <path
+                d="M18.9 1.2h3.3l-7.2 8.2L24 22.8h-7.4l-5.8-7.6-6.6 7.6H.9l7.7-8.8L0 1.2h7.6l5.2 7 6.1-7Zm-1.2 19.4h1.8L6.4 3.1H4.5l13.2 17.5Z"
+            />
+        </svg>
+        <svg
+            v-else-if="provider.key === 'discord'"
+            class="size-4"
+            viewBox="0 0 24 24"
+            fill="#5865F2"
+            aria-hidden="true"
+        >
+            <path
+                d="M20.3 4.4A19.3 19.3 0 0 0 15.6 3l-.3.6a18 18 0 0 1 3.5 1.4 14.5 14.5 0 0 0-13.6 0A18 18 0 0 1 8.7 3.6 19.2 19.2 0 0 0 4 4.4C.9 9.1.1 13.7.4 18.2A19.5 19.5 0 0 0 6.4 21l1.3-1.7a12.6 12.6 0 0 1-2-1l.5-.4c3.8 1.8 8 1.8 11.7 0l.5.4a12.6 12.6 0 0 1-2 1L17.6 21a19.4 19.4 0 0 0 6-2.8c.4-5.1-.7-9.6-3.3-13.8ZM8.3 15.4c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2 2 1 2 2.2-.9 2.2-2 2.2Zm7.4 0c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2 2 1 2 2.2-.9 2.2-2 2.2Z"
+            />
+        </svg>
+        <svg
+            v-else-if="provider.key === 'slack'"
+            class="size-4"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <path fill="#E01E5A" d="M9.7 12.8a1.8 1.8 0 1 1-1.8-1.8h1.8v1.8Z" />
+            <path fill="#E01E5A" d="M10.6 12.8a1.8 1.8 0 1 1 3.6 0v4.5a1.8 1.8 0 1 1-3.6 0v-4.5Z" />
+            <path fill="#36C5F0" d="M11.2 9.7a1.8 1.8 0 1 1 1.8-1.8v1.8h-1.8Z" />
+            <path fill="#36C5F0" d="M11.2 10.6a1.8 1.8 0 1 1 0 3.6H6.7a1.8 1.8 0 1 1 0-3.6h4.5Z" />
+            <path fill="#2EB67D" d="M14.3 11.2a1.8 1.8 0 1 1 1.8 1.8h-1.8v-1.8Z" />
+            <path fill="#2EB67D" d="M13.4 11.2a1.8 1.8 0 1 1-3.6 0V6.7a1.8 1.8 0 1 1 3.6 0v4.5Z" />
+            <path fill="#ECB22E" d="M12.8 14.3a1.8 1.8 0 1 1-1.8 1.8v-1.8h1.8Z" />
+            <path fill="#ECB22E" d="M12.8 13.4a1.8 1.8 0 1 1 0-3.6h4.5a1.8 1.8 0 1 1 0 3.6h-4.5Z" />
+        </svg>
+        <svg
+            v-else-if="provider.key === 'twitch'"
+            class="size-4"
+            viewBox="0 0 24 24"
+            fill="#9146FF"
+            aria-hidden="true"
+        >
+            <path
+                d="M3.2 0 1 3.8v16.4h5.6V24l3.8-3.8h4.5L23 12.1V0H3.2Zm17.4 11.1-3.4 3.4h-4.5l-3.2 3.2v-3.2H5.4V2.2h15.2v8.9ZM16.5 5.6h2.2v6.7h-2.2V5.6Zm-5.6 0H13v6.7h-2.1V5.6Z"
             />
         </svg>
         Continue with {{ provider.label }}
