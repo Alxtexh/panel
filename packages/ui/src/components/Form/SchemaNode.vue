@@ -18,6 +18,7 @@
  */
 import { computed, ref } from 'vue'
 import PkStepIndicator from '../Layout/PkStepIndicator.vue'
+import { iconPath } from '../primitives/icons'
 import FormFieldControl from './FormFieldControl.vue'
 import type { UploadedFileValue } from './PkFileUpload.vue'
 import type { FormField } from './types'
@@ -302,11 +303,30 @@ function uploadFor(key: string) {
             ]"
             @click="node.collapsible && (open = !open)"
         >
-            <div>
-                <h3 class="text-sm font-semibold">{{ node.label }}</h3>
-                <p v-if="node.description" class="text-muted-foreground mt-0.5 text-xs">
-                    {{ node.description }}
-                </p>
+            <div class="flex min-w-0 items-start gap-2.5">
+                <div
+                    v-if="node.icon"
+                    class="bg-muted text-muted-foreground mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md"
+                    aria-hidden="true"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.75"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="size-3.5"
+                    >
+                        <path :d="iconPath(node.icon)" />
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="text-sm font-semibold">{{ node.label }}</h3>
+                    <p v-if="node.description" class="text-muted-foreground mt-0.5 text-xs">
+                        {{ node.description }}
+                    </p>
+                </div>
             </div>
 
             <svg

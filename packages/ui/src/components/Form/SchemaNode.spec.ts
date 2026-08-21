@@ -242,4 +242,22 @@ describe('SchemaNode - callout', () => {
             'bg-muted/50',
         )
     })
+
+    it('renders an optional section icon beside the title', () => {
+        const wrapper = mount(SchemaNode, {
+            props: {
+                node: {
+                    component: 'section',
+                    label: 'Identity',
+                    icon: 'user',
+                    children: [],
+                },
+                values: {},
+            },
+        })
+
+        expect(wrapper.text()).toContain('Identity')
+        expect(wrapper.find('svg path').exists()).toBe(true)
+    })
+
 })

@@ -25,6 +25,7 @@ import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } f
 import { fieldControl } from '../../composables/useFieldControls'
 import { CreateOptionError } from '../../lib/createOptionError'
 import { createOptionActionLabel, createOptionTitle } from '../../lib/createOptionTitle'
+import { FOCUS_RING, FOCUS_RING_WITHIN } from '../../lib/focusRing'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import CreateOptionDialog from './CreateOptionDialog.vue'
 import { Checkbox } from '../shadcn/checkbox'
@@ -312,7 +313,7 @@ function affixAction(action: FormField['suffixAction']): void {
 }
 
 const inputClass =
-    'border-input bg-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50'
+    `border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50 ${FOCUS_RING}`
 
 const affixedInputClass =
     'bg-background h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-sm focus-visible:ring-0 focus-visible:outline-none disabled:opacity-50'
@@ -507,7 +508,7 @@ function insertChip(token: string) {
                 :id="`f-${field.key}-type`"
                 :value="morphValue.type ?? ''"
                 :disabled="field.disabled || processing"
-                class="border-input bg-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                :class="['border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50', FOCUS_RING]"
                 @change="setMorphType(($event.target as HTMLSelectElement).value)"
             >
                 <option value="">Type</option>
@@ -518,7 +519,7 @@ function insertChip(token: string) {
             <div v-if="morphValue.type && searchOptions" class="relative">
                 <button
                     type="button"
-                    class="border-input bg-background focus-visible:ring-ring flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                    :class="['border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm disabled:opacity-50', FOCUS_RING]"
                     :disabled="field.disabled || processing"
                     @click="openSearch"
                 >
@@ -556,7 +557,7 @@ function insertChip(token: string) {
         <div v-else-if="field.type === 'select' && searchOptions" class="relative">
             <button
                 type="button"
-                class="border-input bg-background focus-visible:ring-ring flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                :class="['border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm disabled:opacity-50', FOCUS_RING]"
                 :disabled="field.disabled || processing"
                 :aria-invalid="!!error"
                 @click="openSearch"
@@ -628,7 +629,7 @@ function insertChip(token: string) {
             :value="value ?? ''"
             :disabled="field.disabled || processing"
             :aria-invalid="!!error"
-            class="border-input bg-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+            :class="['border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50', FOCUS_RING]"
             @change="emit('change', ($event.target as HTMLSelectElement).value || null)"
         >
             <option value="">-</option>
@@ -675,14 +676,17 @@ function insertChip(token: string) {
             :placeholder="field.placeholder"
             :disabled="field.disabled || processing"
             :aria-invalid="!!error"
-            class="border-input bg-background focus-visible:ring-ring rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+            :class="['border-input bg-background rounded-md border px-3 py-2 text-sm disabled:opacity-50', FOCUS_RING]"
             @input="emit('change', ($event.target as HTMLTextAreaElement).value)"
         />
 
         <div
             v-else-if="field.type === 'textarea'"
-            class="border-input focus-within:ring-ring flex overflow-hidden rounded-md border focus-within:ring-2"
-            :class="{ 'opacity-50': field.disabled || processing }"
+            :class="[
+                'border-input flex overflow-hidden rounded-md border',
+                FOCUS_RING_WITHIN,
+                { 'opacity-50': field.disabled || processing },
+            ]"
         >
             <span
                 v-if="field.prefix || field.prefixIcon"
@@ -751,8 +755,11 @@ function insertChip(token: string) {
 
         <div
             v-else
-            class="border-input focus-within:ring-ring flex h-9 overflow-hidden rounded-md border focus-within:ring-2"
-            :class="{ 'opacity-50': field.disabled || processing }"
+            :class="[
+                'border-input flex h-9 overflow-hidden rounded-md border',
+                FOCUS_RING_WITHIN,
+                { 'opacity-50': field.disabled || processing },
+            ]"
         >
             <span
                 v-if="field.prefix || field.prefixIcon"
@@ -831,13 +838,14 @@ function insertChip(token: string) {
                 :key="preset"
                 type="button"
                 :disabled="field.disabled || processing"
-                class="focus-visible:ring-ring rounded-md border px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
-                :class="
+                :class="[
+                    'rounded-md border px-2.5 py-1 text-xs transition-colors disabled:opacity-50',
+                    FOCUS_RING,
                     // eslint-disable-next-line eqeqeq
                     value != null && value == preset
                         ? 'border-primary bg-primary/10 text-primary font-medium'
-                        : 'border-input hover:bg-muted'
-                "
+                        : 'border-input hover:bg-muted',
+                ]"
                 :aria-pressed="
                     // eslint-disable-next-line eqeqeq
                     value != null && value == preset

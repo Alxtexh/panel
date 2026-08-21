@@ -65,6 +65,7 @@ export {
     PAGE_SHELL_COMPACT,
     PAGE_SHELL_STACK,
 } from './lib/pageShell'
+export { FOCUS_RING, FOCUS_RING_SOFT, FOCUS_RING_WITHIN } from './lib/focusRing'
 export { packWidgetColumns } from './lib/packWidgetColumns'
 export type { WidgetColumnBand } from './lib/packWidgetColumns'
 export {

@@ -524,7 +524,7 @@ function summaryValue(key: string): string {
     // Null is "no matching rows", which is not zero - an average over nothing
     // is undefined, and printing 0 would assert something false.
     if (raw === null || raw === undefined) {
-        return '-'
+        return 'None'
     }
 
     const value = definition.divideBy ? raw / definition.divideBy : raw
@@ -768,7 +768,8 @@ function summaryValue(key: string): string {
                                         }}</span>
                                     </button>
                                 </span>
-                                <span v-else>{{ row[col.key] ?? '-' }}</span>
+                                <span v-else-if="row[col.key] == null || row[col.key] === ''" class="text-muted-foreground">None</span>
+                                <span v-else>{{ row[col.key] }}</span>
                             </slot>
                         </td>
 

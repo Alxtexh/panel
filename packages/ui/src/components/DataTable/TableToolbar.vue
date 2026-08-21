@@ -21,6 +21,7 @@
  * Emits only. Never fetches (spec §4 rule 2).
  */
 import { computed, ref, watch } from 'vue'
+import { FOCUS_RING } from '../../lib/focusRing'
 import PkDropdown from '../primitives/PkDropdown.vue'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import PkQueryBuilder from './PkQueryBuilder.vue'
@@ -344,7 +345,7 @@ function clearEverything() {
                 :placeholder="searchPlaceholder"
                 :title="searchHint"
                 :aria-label="searchHint ?? searchPlaceholder"
-                class="border-input bg-background focus-visible:ring-ring h-9 w-full rounded-md border pr-8 pl-9 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                :class="['border-input bg-background h-9 w-full rounded-md border pr-8 pl-9 text-sm transition-colors', FOCUS_RING]"
             />
         </div>
 
@@ -491,7 +492,7 @@ function clearEverything() {
                 :placeholder="searchPlaceholder"
                 :title="searchHint"
                 :aria-label="searchHint ?? searchPlaceholder"
-                class="border-input bg-background focus-visible:ring-ring h-9 w-full rounded-md border pr-8 pl-9 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                :class="['border-input bg-background h-9 w-full rounded-md border pr-8 pl-9 text-sm transition-colors', FOCUS_RING]"
             />
             <button
                 v-if="local"
