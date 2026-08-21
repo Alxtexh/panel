@@ -1101,11 +1101,19 @@ final class ResourceController extends Controller
             $description !== null ? "{$table}.{$description}" : null,
         ])));
 
-        $rows = $list->matching($request)
+        $query = $list->matching($request)
             ->select($select)
-            ->orderBy("{$table}.{$title}")
-            ->limit(500)
-            ->get();
+            ->orderBy("{$table}.{$title}");
+
+        /*
+         * matching() already returns a base Query\Builder (via toBase), so count
+         * with getCountForPagination() directly. Do not call toBase() again.
+         */
+        $totalMatching = (clone $query)->getCountForPagination();
+
+        $cardCap = 500;
+        $rows = $query->limit($cardCap)->get();
+        $capped = $totalMatching > $cardCap;
 
         $buckets = [];
 
@@ -1156,6 +1164,9 @@ final class ResourceController extends Controller
             'can' => $class::permissions(),
             'moveUrl' => $moveUrl,
             'indexUrl' => $indexUrl,
+            'cardCap' => $cardCap,
+            'capped' => $capped,
+            'totalMatching' => $totalMatching,
             'breadcrumbs' => $parent === null
                 ? [
                     ['title' => $schema['labelPlural'], 'href' => $indexUrl],

@@ -14,7 +14,15 @@ return [
 
     'portal' => [
         'title' => 'Facturation',
-        'empty' => 'Pas encore de donnees de facturation. Connectez la passerelle sur une sous-classe.',
+        'empty' => 'Pas encore de donnees de facturation. Surclasssez BillingPortalPage cote hote pour mapper votre passerelle.',
+        'empty_hint' => 'Abonnement, factures et moyens de paiement restent vides tant que l\'hote ne les renseigne pas. Les actions ci-dessous restent desactivees tant que les hrefs ne sont pas definis.',
+        'subscription' => 'Abonnement',
+        'invoices' => 'Factures',
+        'payment_methods' => 'Moyens de paiement',
+        'actions' => 'Actions de facturation',
+        'no_invoices' => 'Aucune facture a afficher.',
+        'no_methods' => 'Aucun moyen de paiement enregistre.',
+        'host_extension' => 'Extension hote : sous-classez BillingPortalPage et surchargez subscription(), invoices(), paymentMethods() et billingActions().',
     ],
 
     'status' => [

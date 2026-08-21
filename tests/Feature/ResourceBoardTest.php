@@ -88,7 +88,36 @@ final class ResourceBoardTest extends TestCase
                 ->component('ResourceKanban')
                 ->where('indexUrl', '/articles')
                 ->where('moveUrl', '/articles/board-move')
+                ->where('cardCap', 500)
+                ->where('capped', false)
+                ->where('totalMatching', 1)
                 ->has('columns', 3));
+    }
+
+    public function test_board_reports_capped_when_over_limit(): void
+    {
+        $now = now()->toDateTimeString();
+        $rows = [];
+
+        for ($i = 0; $i < 501; $i++) {
+            $rows[] = [
+                'tenant_id' => $this->mine->id,
+                'title' => "Card {$i}",
+                'status' => 'draft',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        Article::withoutGlobalScopes()->insert($rows);
+
+        $this->get('/articles/board')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('ResourceKanban')
+                ->where('cardCap', 500)
+                ->where('capped', true)
+                ->where('totalMatching', 502));
     }
 
     public function test_board_is_not_found_when_resource_has_no_board(): void

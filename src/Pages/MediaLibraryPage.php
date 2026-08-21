@@ -67,6 +67,11 @@ class MediaLibraryPage extends Page
         ];
     }
 
+    public static function description(): ?string
+    {
+        return 'Tenant-scoped files on local disk. Preview URLs are host-supplied when the disk is private.';
+    }
+
     /**
      * @return list<string>
      */
@@ -94,26 +99,41 @@ class MediaLibraryPage extends Page
     {
         $tenantId = app(TenantContext::class)->currentKey();
         $folder = (string) $request->query('folder', '');
+        $base = static::pageHref();
 
         $items = $tenantId === null ? [] : PanelMediaItem::query()
             ->where('tenant_id', $tenantId)
             ->where('folder', $folder)
             ->orderByDesc('id')
             ->get()
-            ->map(static fn (PanelMediaItem $row): array => [
-                'id' => $row->id,
-                'name' => $row->name,
-                'path' => $row->path,
-                'mime' => $row->mime,
-                'size' => $row->size,
-                'folder' => $row->folder,
-            ])
+            ->map(static function (PanelMediaItem $row): array {
+                $mime = $row->mime;
+                $isImage = is_string($mime) && str_starts_with($mime, 'image/');
+
+                return [
+                    'id' => $row->id,
+                    'name' => $row->name,
+                    'path' => $row->path,
+                    'mime' => $mime,
+                    'size' => $row->size,
+                    'folder' => $row->folder,
+                    /*
+                     * Private uploads have no public URL by design. Hosts that
+                     * serve media through a signed route can override data().
+                     */
+                    'url' => null,
+                    'is_image' => $isImage,
+                ];
+            })
             ->all();
 
         return [
             'folder' => $folder,
             'folders' => static::folders($request),
             'items' => $items,
+            'uploadHref' => $base.'/upload',
+            'moveHref' => $base.'/move',
+            'deleteHref' => $base.'/delete',
         ];
     }
 
@@ -200,5 +220,21 @@ class MediaLibraryPage extends Page
         Notification::make()->title('File deleted')->success()->send();
 
         return back();
+    }
+
+    protected static function pageHref(): string
+    {
+        $path = '/'.trim(static::navigationPath(), '/');
+        $prefix = app(PanelManager::class)->currentPanel()?->getPath() ?? '';
+
+        if ($prefix !== '' && $prefix !== '/') {
+            $path = rtrim($prefix, '/').$path;
+        }
+
+        if (! str_starts_with($path, '/')) {
+            $path = '/'.$path;
+        }
+
+        return $path;
     }
 }

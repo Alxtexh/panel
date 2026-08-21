@@ -17,6 +17,12 @@ npm registry package for installers. Kit CSS/JS is published to
 `public/vendor/panel` by `panel:install`, so host apps do not need npm for the
 kit UI. npm is optional, only when you customise Vue and run your own Vite build.
 
+**Repos and remotes:** develop in `Alxtexh/panelkit` (monorepo). This package is
+the consumer artifact at `Alxtexh/panel`. Vue ships inside this tree after
+`make sync-client` mirrors `packages/ui` into `resources/client`. A separate
+`panel-ui` GitHub repo is not required for installers (optional mirror /
+archive candidate only).
+
 This is the whole thing. Add the repository, require the package, install:
 
 ```json
