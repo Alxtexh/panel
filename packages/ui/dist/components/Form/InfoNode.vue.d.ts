@@ -7,6 +7,9 @@ export interface InfoNode {
     columns?: number;
     collapsible?: boolean;
     collapsed?: boolean;
+    icon?: string | null;
+    /** Optional status chip next to a section title. */
+    status?: string | null;
     type?: string;
     mono?: boolean;
     muted?: boolean;

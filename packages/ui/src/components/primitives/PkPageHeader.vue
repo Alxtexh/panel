@@ -5,6 +5,9 @@
  * DESIGN_RULES rules 1 and 2: exactly two flex children (identity, actions),
  * primary last inside the actions slot. Title scale is deliberately larger than
  * section headings so the page names itself before the table or form does.
+ *
+ * Optional `#status` sits beside the title for a record badge (paid, draft)
+ * without competing with the trailing actions.
  */
 defineProps<{
     title: string
@@ -16,7 +19,12 @@ defineProps<{
 <template>
     <header data-slot="page-header" class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0 space-y-1">
-            <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
+            <div class="flex flex-wrap items-center gap-2.5">
+                <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
+                <div v-if="$slots.status" class="flex items-center gap-2">
+                    <slot name="status" />
+                </div>
+            </div>
             <p v-if="purpose" class="text-muted-foreground text-sm">{{ purpose }}</p>
         </div>
 

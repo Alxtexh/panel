@@ -9,13 +9,19 @@
  *
  * Leaves are COLUMNS, the same objects the table renders, so a value cannot look
  * one way in the list and another here.
+ *
+ * Hierarchy tokens match SchemaNode section chrome: root sections are elevated
+ * cards; entries use a quiet label / loud value contrast so scanning a record
+ * page does not feel like reading a muted wall of text.
  */
 import { computed, ref } from 'vue'
 import PkBadge from '../primitives/PkBadge.vue'
+import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 import IconCell from '../DataTable/IconCell.vue'
 import ImageCell from '../DataTable/ImageCell.vue'
 import ColourCell from '../DataTable/ColourCell.vue'
 import { BADGE_VARIANTS, hasBadgeValue } from '../../composables/useSchemaColumns'
+import { iconPath } from '../primitives/icons'
 
 export interface InfoNode {
     component: 'entry' | 'section' | 'grid' | 'tabs' | 'tab'
@@ -26,6 +32,9 @@ export interface InfoNode {
     columns?: number
     collapsible?: boolean
     collapsed?: boolean
+    icon?: string | null
+    /** Optional status chip next to a section title. */
+    status?: string | null
     type?: string
     mono?: boolean
     muted?: boolean
@@ -56,8 +65,13 @@ const activeTab = ref(0)
 
 const isRoot = computed(() => props.depth === 0)
 
+/**
+ * Prefer a two-column entry grid when the schema did not declare a count.
+ * A single long column of labels feels utilitarian; two columns match form
+ * sections and let short fields scan side by side.
+ */
 const gridClass = computed(() => {
-    const columns = props.node.columns ?? 1
+    const columns = props.node.columns ?? (props.node.component === 'section' ? 2 : 1)
 
     return columns >= 3 ? 'sm:grid-cols-3' : columns === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1'
 })
@@ -75,12 +89,18 @@ const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
 
 const value = computed(() => (props.node.key ? props.record[props.node.key] : null))
 
-const display = computed(() => {
+const isBlank = computed(() => {
     const v = value.value
 
-    if (v === null || v === undefined || v === '') {
-        return '-'
+    return v === null || v === undefined || v === ''
+})
+
+const display = computed(() => {
+    if (isBlank.value) {
+        return 'None'
     }
+
+    const v = value.value
 
     if (props.node.type === 'date' || props.node.type === 'datetime') {
         return new Date(String(v)).toLocaleDateString(undefined, dateFormats[props.node.type])
@@ -108,10 +128,14 @@ const badgeVariant = computed(() => {
 </script>
 
 <template>
-    <!-- Entry: a labelled value. -->
-    <div v-if="node.component === 'entry'" class="flex flex-col gap-0.5">
-        <dt class="text-muted-foreground text-xs font-medium">{{ node.label }}</dt>
-        <dd class="text-sm">
+    <!-- Entry: a labelled value with quiet label / loud value contrast. -->
+    <div v-if="node.component === 'entry'" class="flex flex-col gap-1">
+        <dt
+            class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
+        >
+            {{ node.label }}
+        </dt>
+        <dd class="text-foreground text-sm font-medium">
             <PkBadge
                 v-if="node.type === 'badge' && hasBadgeValue(value)"
                 :variant="(badgeVariant as any)"
@@ -119,7 +143,7 @@ const badgeVariant = computed(() => {
             >
                 {{ value }}
             </PkBadge>
-            <span v-else-if="node.type === 'badge'">-</span>
+            <span v-else-if="node.type === 'badge'" class="text-muted-foreground font-normal">None</span>
             <IconCell
                 v-else-if="node.type === 'icon'"
                 :value="value"
@@ -141,7 +165,7 @@ const badgeVariant = computed(() => {
                 :value="typeof value === 'string' ? value : null"
                 :show-value="node.showValue !== false"
             />
-            <div v-else-if="node.type === 'code'" class="max-w-full">
+            <div v-else-if="node.type === 'code'" class="max-w-full font-normal">
                 <p
                     v-if="node.language"
                     class="text-muted-foreground mb-1 font-mono text-[10px] uppercase"
@@ -149,10 +173,10 @@ const badgeVariant = computed(() => {
                     {{ node.language }}
                 </p>
                 <pre
-                    class="bg-muted/50 overflow-x-auto rounded-md border p-3 font-mono text-xs"
+                    class="bg-muted/50 overflow-x-auto rounded-md border p-3 font-mono text-xs font-normal"
                 ><code>{{ value ?? '' }}</code></pre>
             </div>
-            <div v-else-if="node.type === 'keyvalue'">
+            <div v-else-if="node.type === 'keyvalue'" class="font-normal">
                 <dl
                     v-if="value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length"
                     class="divide-y rounded-md border"
@@ -163,12 +187,12 @@ const badgeVariant = computed(() => {
                         class="grid grid-cols-3 gap-2 px-3 py-2 text-sm"
                     >
                         <dt class="text-muted-foreground truncate font-medium">{{ k }}</dt>
-                        <dd class="col-span-2 break-words">{{ item }}</dd>
+                        <dd class="text-foreground col-span-2 break-words">{{ item }}</dd>
                     </div>
                 </dl>
-                <span v-else class="text-muted-foreground">-</span>
+                <span v-else class="text-muted-foreground font-normal">None</span>
             </div>
-            <div v-else-if="node.type === 'repeatable'" class="flex flex-col gap-3">
+            <div v-else-if="node.type === 'repeatable'" class="flex flex-col gap-3 font-normal">
                 <div
                     v-for="(item, i) in Array.isArray(value) ? value : []"
                     :key="i"
@@ -185,22 +209,22 @@ const badgeVariant = computed(() => {
                 </div>
                 <span
                     v-if="!Array.isArray(value) || value.length === 0"
-                    class="text-muted-foreground"
-                    >-</span
+                    class="text-muted-foreground font-normal"
+                    >None</span
                 >
             </div>
             <a
-                v-else-if="node.url"
+                v-else-if="node.url && !isBlank"
                 :href="node.url"
-                class="text-foreground underline-offset-2 hover:underline"
+                class="text-foreground font-medium underline-offset-2 hover:underline"
             >
                 {{ display }}
             </a>
             <span
                 v-else
                 :class="[
+                    isBlank || node.muted ? 'text-muted-foreground font-normal' : '',
                     node.mono ? 'font-mono text-xs' : '',
-                    node.muted ? 'text-muted-foreground' : '',
                 ]"
             >
                 {{ display }}
@@ -208,7 +232,7 @@ const badgeVariant = computed(() => {
             <button
                 v-if="node.action"
                 type="button"
-                class="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
+                class="text-muted-foreground hover:text-foreground mt-0.5 text-xs font-normal underline-offset-2 hover:underline"
                 @click="emit('action', node.action)"
             >
                 {{ node.action.label }}
@@ -216,7 +240,7 @@ const badgeVariant = computed(() => {
         </dd>
     </div>
 
-    <!-- Section. -->
+    <!-- Section: elevated chrome matches SchemaNode form sections. -->
     <section
         v-else-if="node.component === 'section'"
         :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
@@ -229,17 +253,39 @@ const badgeVariant = computed(() => {
             ]"
             @click="node.collapsible && (open = !open)"
         >
-            <div>
-                <h3 class="text-sm font-semibold">{{ node.label }}</h3>
-                <p v-if="node.description" class="text-muted-foreground mt-0.5 text-xs">
-                    {{ node.description }}
-                </p>
+            <div class="flex min-w-0 items-start gap-2.5">
+                <div
+                    v-if="node.icon"
+                    class="bg-muted text-muted-foreground mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md"
+                    aria-hidden="true"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.75"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="size-3.5"
+                    >
+                        <path :d="iconPath(node.icon)" />
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="text-sm font-semibold">{{ node.label }}</h3>
+                        <PkStatusBadge v-if="node.status" :status="node.status" class="capitalize" />
+                    </div>
+                    <p v-if="node.description" class="text-muted-foreground mt-0.5 text-xs">
+                        {{ node.description }}
+                    </p>
+                </div>
             </div>
         </header>
 
         <dl
             v-if="open"
-            class="grid grid-cols-1 gap-4"
+            class="grid grid-cols-1 gap-x-6 gap-y-4"
             :class="[gridClass, isRoot ? 'border-t px-4 py-4 sm:px-5 sm:py-5' : '']"
         >
             <InfoNode
@@ -254,7 +300,7 @@ const badgeVariant = computed(() => {
     </section>
 
     <!-- Grid. -->
-    <dl v-else-if="node.component === 'grid'" class="grid grid-cols-1 gap-4" :class="gridClass">
+    <dl v-else-if="node.component === 'grid'" class="grid grid-cols-1 gap-x-6 gap-y-4" :class="gridClass">
         <InfoNode
             v-for="(child, i) in node.children ?? []"
             :key="i"
@@ -295,7 +341,7 @@ const badgeVariant = computed(() => {
             v-show="activeTab === i"
             :key="i"
             class="flex flex-col gap-5"
-            :class="isRoot ? 'p-4' : 'pt-4'"
+            :class="isRoot ? 'p-4 sm:p-5' : 'pt-4'"
         >
             <InfoNode
                 v-for="(child, j) in tab.children ?? []"

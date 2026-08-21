@@ -13,9 +13,15 @@
  * counting a client's 40,000 sessions to print "1-10 of 40,000" is the blocking
  * count §10 forbids everywhere else, and it does not become acceptable because
  * the list is nested.
+ *
+ * ONE CARD. TableShell owns the chrome (title band, actions, load-more band)
+ * so a relation reads as the same object a resource index is, not a bolted-on
+ * table under a loose button row.
  */
-import { computed } from 'vue'
+import { computed, useSlots } from 'vue'
 import type { SchemaColumn } from '../../composables/useSchemaColumns'
+import PkEmptyState from '../primitives/PkEmptyState.vue'
+import TableShell from './TableShell.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -28,6 +34,9 @@ const props = withDefaults(
         capped?: boolean
         /** True once at least one page has been requested. */
         loaded?: boolean
+        /** Relation label shown in the title band. */
+        title?: string | null
+        emptyTitle?: string
         emptyText?: string
         /** Dedicated nested list URL. The tab stays a summary that links there. */
         indexHref?: string | null
@@ -39,7 +48,9 @@ const props = withDefaults(
         nextCursor: null,
         capped: false,
         loaded: false,
-        emptyText: 'Nothing here yet.',
+        title: null,
+        emptyTitle: 'Nothing here yet',
+        emptyText: 'Related records will show up here once they exist.',
         indexHref: null,
         recordBase: null,
     },
@@ -47,11 +58,14 @@ const props = withDefaults(
 
 const emit = defineEmits<{ (e: 'load', cursor: string | null): void }>()
 
+const slots = useSlots()
 const visible = computed(() => props.columns.filter((c) => c.type !== 'image'))
+const hasActions = computed(() => Boolean(slots.actions))
+const hasTitleBand = computed(() => Boolean(props.title) || hasActions.value)
 
 function format(column: SchemaColumn, value: unknown): string {
     if (value === null || value === undefined || value === '') {
-        return '-'
+        return 'None'
     }
 
     if (column.type === 'date' || column.type === 'datetime') {
@@ -65,20 +79,47 @@ function format(column: SchemaColumn, value: unknown): string {
 
     return typeof value === 'number' ? new Intl.NumberFormat().format(value) : String(value)
 }
+
+function isEmpty(value: unknown): boolean {
+    return value === null || value === undefined || value === ''
+}
 </script>
 
 <template>
-    <!-- ONE CARD - DESIGN_RULES rule 4: the load-more band shares the table's
-         border rather than floating beneath it as a separate object. -->
-    <div class="bg-card overflow-hidden rounded-lg border">
-        <div class="pk-scroll w-full overflow-x-auto">
+    <TableShell>
+        <template v-if="hasTitleBand" #title>
+            <div class="min-w-0">
+                <h3 v-if="title" class="text-sm font-semibold tracking-tight">{{ title }}</h3>
+            </div>
+            <div v-if="hasActions" class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                <slot name="actions" />
+            </div>
+        </template>
+
+        <div v-if="loading && rows.length === 0" class="text-muted-foreground px-4 py-10 text-center text-sm">
+            Loading…
+        </div>
+
+        <PkEmptyState
+            v-else-if="loaded && rows.length === 0"
+            compact
+            icon="package"
+            :title="emptyTitle"
+            :description="emptyText"
+        >
+            <template v-if="$slots['empty-actions']" #actions>
+                <slot name="empty-actions" />
+            </template>
+        </PkEmptyState>
+
+        <div v-else-if="rows.length > 0" class="pk-scroll w-full overflow-x-auto">
             <table class="w-full border-collapse text-sm">
                 <thead class="bg-muted/40">
                     <tr>
                         <th
                             v-for="column in visible"
                             :key="column.key"
-                            class="text-muted-foreground px-3 py-2 text-left text-xs font-medium whitespace-nowrap"
+                            class="text-muted-foreground px-3 py-2.5 text-left text-xs font-medium whitespace-nowrap"
                         >
                             {{ column.label }}
                         </th>
@@ -86,29 +127,15 @@ function format(column: SchemaColumn, value: unknown): string {
                 </thead>
 
                 <tbody class="divide-y">
-                    <tr v-if="loading && rows.length === 0">
-                        <td
-                            :colspan="visible.length"
-                            class="text-muted-foreground px-3 py-6 text-center text-sm"
-                        >
-                            Loading…
-                        </td>
-                    </tr>
-
-                    <tr v-else-if="loaded && rows.length === 0">
-                        <td
-                            :colspan="visible.length"
-                            class="text-muted-foreground px-3 py-6 text-center text-sm"
-                        >
-                            {{ emptyText }}
-                        </td>
-                    </tr>
-
-                    <tr v-for="(row, i) in rows" :key="row.id ?? i" class="hover:bg-accent/30">
+                    <tr
+                        v-for="(row, i) in rows"
+                        :key="row.id ?? i"
+                        class="hover:bg-muted/40 transition-colors"
+                    >
                         <td
                             v-for="column in visible"
                             :key="column.key"
-                            class="px-3 py-2 whitespace-nowrap"
+                            class="px-3 py-2.5 whitespace-nowrap"
                             :class="[
                                 column.mono ? 'font-mono text-xs' : '',
                                 column.muted ? 'text-muted-foreground' : '',
@@ -127,6 +154,9 @@ function format(column: SchemaColumn, value: unknown): string {
                                 >
                                     {{ format(column, row[column.key]) }}
                                 </a>
+                                <span v-else-if="isEmpty(row[column.key])" class="text-muted-foreground">
+                                    None
+                                </span>
                                 <template v-else>{{ format(column, row[column.key]) }}</template>
                             </slot>
                         </td>
@@ -136,35 +166,37 @@ function format(column: SchemaColumn, value: unknown): string {
         </div>
 
         <!-- "More", not a page number. There is no total to count against. -->
-        <div v-if="nextCursor" class="flex justify-center border-t px-3 py-2">
-            <button
-                type="button"
-                class="bg-background hover:bg-accent rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50"
-                :disabled="loading"
-                @click="emit('load', nextCursor)"
-            >
-                {{ loading ? 'Loading…' : 'Load more' }}
-            </button>
-        </div>
+        <template v-if="nextCursor || capped" #pagination>
+            <div v-if="nextCursor" class="flex justify-center">
+                <button
+                    type="button"
+                    class="bg-background hover:bg-accent rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50"
+                    :disabled="loading"
+                    @click="emit('load', nextCursor)"
+                >
+                    {{ loading ? 'Loading…' : 'Load more' }}
+                </button>
+            </div>
 
-        <!--
-            THE CEILING, SAID OUT LOUD. This panel appends every page it
-            fetches, so an unattended "Load more" grows the DOM without limit -
-            the one unbounded list left after the tables were paginated. It
-            stops at a cap and says why, rather than degrading the record page
-            for somebody who kept clicking. A relation this long has a real
-            home: its own screen, with tabs, filters and paging.
-        -->
-        <p v-else-if="capped" class="text-muted-foreground border-t px-3 py-2 text-center text-xs">
-            Showing the first {{ rows.length }}.
-            <a
-                v-if="indexHref"
-                :href="indexHref"
-                class="text-foreground underline-offset-2 hover:underline"
-            >
-                Open the full list
-            </a>
-            <template v-else>Open the full list to search or filter the rest.</template>
-        </p>
-    </div>
+            <!--
+                THE CEILING, SAID OUT LOUD. This panel appends every page it
+                fetches, so an unattended "Load more" grows the DOM without limit -
+                the one unbounded list left after the tables were paginated. It
+                stops at a cap and says why, rather than degrading the record page
+                for somebody who kept clicking. A relation this long has a real
+                home: its own screen, with tabs, filters and paging.
+            -->
+            <p v-else-if="capped" class="text-muted-foreground text-center text-xs">
+                Showing the first {{ rows.length }}.
+                <a
+                    v-if="indexHref"
+                    :href="indexHref"
+                    class="text-foreground underline-offset-2 hover:underline"
+                >
+                    Open the full list
+                </a>
+                <template v-else>Open the full list to search or filter the rest.</template>
+            </p>
+        </template>
+    </TableShell>
 </template>

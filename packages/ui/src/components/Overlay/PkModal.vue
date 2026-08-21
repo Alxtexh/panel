@@ -6,6 +6,9 @@
  * click that both started AND ended outside the panel. That last detail matters:
  * with a plain `@click.self`, selecting text inside the form and releasing
  * outside it closes the dialog and discards what you typed.
+ *
+ * HEADER AND FOOTER STAY PUT. Long action / bulk wizards scroll the body only,
+ * so Cancel and the primary action never leave the viewport while the form grows.
  */
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
@@ -121,21 +124,21 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                     role="dialog"
                     aria-modal="true"
                     :aria-label="title"
-                    class="bg-popover text-popover-foreground w-full max-w-lg rounded-xl border shadow-2xl"
+                    class="bg-popover text-popover-foreground flex w-full max-w-lg max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl"
                 >
-                    <div class="border-b px-5 py-4">
+                    <div class="bg-popover sticky top-0 z-10 shrink-0 border-b px-5 py-4">
                         <h2 class="text-base font-semibold">{{ title }}</h2>
                         <p v-if="description" class="text-muted-foreground mt-0.5 text-sm">
                             {{ description }}
                         </p>
                     </div>
 
-                    <div class="px-5 py-4">
+                    <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
                         <slot />
                     </div>
 
                     <div
-                        class="bg-muted/30 flex items-center justify-end gap-2 rounded-b-xl border-t px-5 py-3"
+                        class="bg-muted/30 sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-2 border-t px-5 py-3"
                     >
                         <slot name="footer" />
                     </div>

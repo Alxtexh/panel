@@ -103,4 +103,31 @@ describe('InfoNode - dedicated view entries', () => {
         expect(wrapper.find('a').attributes('href')).toBe('https://example.test/articles')
         expect(wrapper.text()).toContain('Copy')
     })
+
+    it('uses quiet labels, loud values, and None for blanks', () => {
+        const node: InfoNodeType = {
+            component: 'section',
+            label: 'Identity',
+            children: [
+                { component: 'entry', key: 'title', label: 'Title', type: 'text' },
+                { component: 'entry', key: 'missing', label: 'Missing', type: 'text' },
+            ],
+        }
+
+        const wrapper = mount(InfoNode, {
+            props: {
+                node,
+                record: { title: 'Headline', missing: null },
+            },
+        })
+
+        const dts = wrapper.findAll('dt')
+
+        expect(dts[0].classes()).toContain('uppercase')
+        expect(dts[0].classes()).toContain('text-muted-foreground')
+        expect(wrapper.find('dd').classes()).toContain('font-medium')
+        expect(wrapper.text()).toContain('None')
+        expect(wrapper.find('section').classes()).toContain('rounded-xl')
+        expect(wrapper.find('dl').classes().join(' ')).toMatch(/sm:grid-cols-2/)
+    })
 })

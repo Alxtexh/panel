@@ -101,6 +101,21 @@ const { byKey, badgeVariant } = useSchemaColumns(schemaColumns)
 
 const title = computed(() => String(props.record.name ?? `#${props.record.id}`))
 
+/**
+ * Optional status chip beside the page title. Prefer a badge column named
+ * `status`; otherwise the first badge column on the table schema.
+ */
+const statusColumn = computed(() => {
+    const columns = props.schema.table.columns
+    const named = columns.find((column) => column.key === 'status' && column.type === 'badge')
+
+    if (named) {
+        return named
+    }
+
+    return columns.find((column) => column.type === 'badge') ?? null
+})
+
 /* ---------------------------------------------------------------------------
  * Related lists
  *
@@ -428,6 +443,14 @@ function destroy() {
 
     <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4']">
         <PkPageHeader :title="title" :purpose="schema.label">
+            <template v-if="statusColumn && record[statusColumn.key] != null" #status>
+                <Badge
+                    :variant="badgeVariant(statusColumn.key, record[statusColumn.key]) as any"
+                    class="capitalize"
+                >
+                    {{ record[statusColumn.key] }}
+                </Badge>
+            </template>
             <template #actions>
                 <!-- Primary last (DESIGN_RULES rule 2): Edit is the action this
                      page exists for, so it takes the outside edge. -->
@@ -461,10 +484,12 @@ function destroy() {
                 <div
                     v-for="column in schema.table.columns"
                     :key="column.key"
-                    class="grid grid-cols-1 gap-1 px-4 py-3 sm:grid-cols-3 sm:gap-4"
+                    class="grid grid-cols-1 gap-1 px-4 py-3.5 sm:grid-cols-3 sm:gap-4 sm:px-5"
                 >
-                    <dt class="text-muted-foreground text-sm font-medium">{{ column.label }}</dt>
-                    <dd class="text-sm sm:col-span-2">
+                    <dt class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase sm:pt-0.5">
+                        {{ column.label }}
+                    </dt>
+                    <dd class="text-foreground text-sm font-medium sm:col-span-2">
                         <Badge
                             v-if="column.type === 'badge'"
                             :variant="badgeVariant(column.key, record[column.key]) as any"
@@ -538,7 +563,7 @@ function destroy() {
                                     <dd class="col-span-2 break-words">{{ v }}</dd>
                                 </div>
                             </dl>
-                            <span v-else class="text-muted-foreground">—</span>
+                                <span v-else class="text-muted-foreground font-normal">None</span>
                         </div>
 
                         <ImageCell
@@ -549,17 +574,32 @@ function destroy() {
                             :size="(column as any).size ?? 'md'"
                             :fallback="(column as any).fallback ?? 'initials'"
                         />
-                        <span v-else :class="column.mono ? 'font-mono text-xs' : ''">{{
-                            render(column.key)
-                        }}</span>
+                        <span
+                            v-else
+                            :class="[
+                                column.mono ? 'font-mono text-xs' : '',
+                                record[column.key] == null || record[column.key] === ''
+                                    ? 'text-muted-foreground font-normal'
+                                    : '',
+                            ]"
+                        >
+                            {{
+                                record[column.key] == null || record[column.key] === ''
+                                    ? 'None'
+                                    : render(column.key)
+                            }}
+                        </span>
                     </dd>
                 </div>
             </dl>
         </div>
 
-        <!-- Related lists. -->
+        <!-- Related lists: tabs outside, TableShell chrome inside RelationPanel. -->
         <section v-if="relations.length" class="flex flex-col gap-3">
-            <div class="bg-muted/40 flex w-fit gap-1 rounded-md p-1">
+            <div
+                v-if="relations.length > 1"
+                class="bg-muted/40 flex w-fit gap-1 rounded-md p-1"
+            >
                 <button
                     v-for="relation in relations"
                     :key="relation.key"
@@ -577,10 +617,24 @@ function destroy() {
             </div>
 
             <template v-for="relation in relations" :key="relation.key">
-                <div v-if="activeRelation === relation.key" class="flex flex-col gap-2">
-                    <div
+                <RelationPanel
+                    v-if="activeRelation === relation.key"
+                    :title="relation.label"
+                    :columns="relation.table.columns"
+                    :rows="relationState(relation.key).rows"
+                    :loading="relationState(relation.key).loading"
+                    :loaded="relationState(relation.key).loaded"
+                    :next-cursor="relationState(relation.key).cursor"
+                    :capped="relationState(relation.key).capped"
+                    :empty-title="`No ${relation.label.toLowerCase()} yet`"
+                    :empty-text="`No ${relation.label.toLowerCase()} for this ${schema.label.toLowerCase()}.`"
+                    :record-base="relationPages(relation)"
+                    :index-href="relationPages(relation)"
+                    @load="(cursor) => loadRelation(relation.key, cursor)"
+                >
+                    <template
                         v-if="relationPages(relation) || relation.canCreate"
-                        class="flex flex-wrap items-center justify-end gap-2"
+                        #actions
                     >
                         <Link
                             v-if="relationPages(relation)"
@@ -597,20 +651,17 @@ function destroy() {
                         >
                             Add
                         </button>
-                    </div>
-                    <RelationPanel
-                        :columns="relation.table.columns"
-                        :rows="relationState(relation.key).rows"
-                        :loading="relationState(relation.key).loading"
-                        :loaded="relationState(relation.key).loaded"
-                        :next-cursor="relationState(relation.key).cursor"
-                        :capped="relationState(relation.key).capped"
-                        :empty-text="`No ${relation.label.toLowerCase()} for this ${schema.label.toLowerCase()}.`"
-                        :record-base="relationPages(relation)"
-                        :index-href="relationPages(relation)"
-                        @load="(cursor) => loadRelation(relation.key, cursor)"
-                    />
-                </div>
+                    </template>
+                    <template v-if="relation.canCreate" #empty-actions>
+                        <button
+                            type="button"
+                            :class="buttonClasses({ size: 'sm' })"
+                            @click="openCreate(relation.key)"
+                        >
+                            Add {{ relation.label }}
+                        </button>
+                    </template>
+                </RelationPanel>
             </template>
         </section>
 

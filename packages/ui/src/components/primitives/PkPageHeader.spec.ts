@@ -33,5 +33,17 @@ describe('PkPageHeader', () => {
         expect(wrapper.find('p').exists()).toBe(false)
         expect(wrapper.text()).toBe('Clients')
     })
+
+    it('renders an optional status beside the title', () => {
+        const wrapper = mount(PkPageHeader, {
+            props: { title: 'Acme Fibre' },
+            slots: {
+                status: '<span data-test="status">Active</span>',
+            },
+        })
+
+        expect(wrapper.find('[data-test="status"]').text()).toBe('Active')
+        expect(wrapper.text()).toContain('Acme Fibre')
+    })
 })
 
