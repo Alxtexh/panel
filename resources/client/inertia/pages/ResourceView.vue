@@ -28,6 +28,7 @@ import {
     FORM_MEASURE,
     PAGE_SHELL_COMPACT,
     PkButton as Button,
+    PkPageHeader,
     buttonClasses,
 } from '@alxtexh-enterprise/panel'
 /*
@@ -426,15 +427,10 @@ function destroy() {
     <Head :title="title" />
 
     <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4']">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-            <div>
-                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">{{ title }}</h1>
-                <p class="text-muted-foreground text-sm">{{ schema.label }}</p>
-            </div>
-
-            <!-- Primary last (DESIGN_RULES rule 2): Edit is the action this
-                 page exists for, so it takes the outside edge. -->
-            <div class="flex shrink-0 items-center gap-2">
+        <PkPageHeader :title="title" :purpose="schema.label">
+            <template #actions>
+                <!-- Primary last (DESIGN_RULES rule 2): Edit is the action this
+                     page exists for, so it takes the outside edge. -->
                 <Button v-if="can.delete" variant="outline" size="sm" @click="destroy"
                     >Delete</Button
                 >
@@ -446,8 +442,8 @@ function destroy() {
                 >
                     Edit
                 </Link>
-            </div>
-        </div>
+            </template>
+        </PkPageHeader>
 
         <!--
             Full-bleed shell; left-aligned FORM_MEASURE for the record body
@@ -461,7 +457,7 @@ function destroy() {
 
             <!-- Fallback: a definition list. One record's attributes read better as
                  labelled pairs than as a table row turned on its side. -->
-            <dl v-else class="bg-card divide-y rounded-lg border">
+            <dl v-else class="bg-card divide-y rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10">
                 <div
                     v-for="column in schema.table.columns"
                     :key="column.key"

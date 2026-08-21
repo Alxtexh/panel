@@ -1,16 +1,23 @@
-import { type SemanticTone } from './statusTone';
 type __VLS_Props = {
-    status?: string | null;
-    tone?: SemanticTone | null;
-    class?: string;
+    title: string;
+    description?: string;
+    /** Semantic icon name from the kit registry. */
+    icon?: string;
+    /**
+     * Filtered / compact empty: less vertical padding, smaller icon.
+     * Use when the operator already has filters on and just needs a clear path.
+     */
+    compact?: boolean;
 };
-declare var __VLS_5: {};
+declare var __VLS_1: {}, __VLS_3: {};
 type __VLS_Slots = {} & {
-    default?: (props: typeof __VLS_5) => any;
+    icon?: (props: typeof __VLS_1) => any;
+} & {
+    actions?: (props: typeof __VLS_3) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
-    status: string | null;
-    tone: SemanticTone | null;
+    icon: string;
+    compact: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;

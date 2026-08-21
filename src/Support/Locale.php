@@ -111,6 +111,10 @@ final class Locale
 
         $overlay = lang_path($locale.'/panel.php');
 
+        if (! is_file($overlay) && $locale !== $fallback) {
+            $overlay = lang_path($fallback.'/panel.php');
+        }
+
         if (is_file($overlay)) {
             $messages = array_replace_recursive($messages, (array) require $overlay);
         }

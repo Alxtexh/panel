@@ -454,7 +454,7 @@ final class Blueprint
         return <<<'MD'
         ## Recipes
 
-        ### Official starter (copy this, do not clone Nairobi Fibre)
+        ### Official starter (copy this, do not clone the reference demo)
 
         After `panel:install`, next is the Get started card **or**:
 
@@ -638,7 +638,7 @@ final class Blueprint
         `PlanGrid` and `PlanEditor` from `@alxtexh-enterprise/panel`. `modules()`
         and `limits()` default from the panel module registry. Persist to your
         models. Numeric limits use -1 for Unlimited.
-        A SaaS MUST set `ModuleRegistry::grants()` from the subscriber plan;
+        A SaaS MUST set `ModuleRegistry::grants()` from the active plan;
         until that callback is set, every registered module stays enabled.
         A child key (`->requires()` / `->children()`) is enabled only when every
         parent is also granted. `PlanSetupPage::save()` expands parents via
@@ -670,7 +670,7 @@ final class Blueprint
 
         ModuleRegistry::grants(fn (): array => $org->plan->moduleKeys());
         ModuleRegistry::caps(fn (): array => $org->plan->moduleCaps());
-        // Opt-in. Leave unset so a playground ISP is not locked out.
+        // Opt-in. Leave unset so a playground install is not locked out.
         // Panel::make('admin')->subscriptionGate(fn (): bool => $org->planIsActive());
         ```
 

@@ -16,6 +16,7 @@ import {
     FORM_MEASURE,
     PAGE_SHELL_COMPACT,
     PkButton as Button,
+    PkPageHeader,
     buttonClasses,
 } from '@alxtexh-enterprise/panel'
 
@@ -51,20 +52,22 @@ function submit() {
     <Head :title="`Attach ${schema.labelPlural}`" />
 
     <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4 pb-24']">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="min-w-0">
-                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
-                    Attach {{ schema.labelPlural }}
-                </h1>
-                <p class="text-muted-foreground text-sm">Pick existing records. This is a page, not a dialog.</p>
-            </div>
-            <Link :href="schema.routes.index" :class="buttonClasses({ variant: 'outline', size: 'sm' })">
-                Back
-            </Link>
-        </div>
+        <PkPageHeader
+            :title="`Attach ${schema.labelPlural}`"
+            purpose="Pick existing records. This is a page, not a dialog."
+        >
+            <template #actions>
+                <Link
+                    :href="schema.routes.index"
+                    :class="buttonClasses({ variant: 'outline', size: 'sm' })"
+                >
+                    Back
+                </Link>
+            </template>
+        </PkPageHeader>
 
         <form
-            :class="[FORM_MEASURE, 'bg-card flex flex-col gap-3 rounded-lg border p-4 sm:p-6']"
+            :class="[FORM_MEASURE, 'bg-card flex flex-col gap-3 rounded-xl border p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10']"
             @submit.prevent="submit"
         >
             <p v-if="options.length === 0" class="text-muted-foreground text-sm">

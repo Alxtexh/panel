@@ -14,7 +14,11 @@ defineOptions({ inheritAttrs: false })
 import { Head, Link, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import {
-    PAGE_SHELL_COMPACT, PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
+    PAGE_SHELL_COMPACT,
+    PkButton as Button,
+    PkPageHeader,
+    buttonClasses,
+} from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
 
 const props = defineProps<{
@@ -61,20 +65,16 @@ function cell(row: Record<string, any>, column: SchemaColumn): string {
     <Head :title="`Choose ${schema.label}`" />
 
     <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4 pb-24']">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="min-w-0">
-                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
-                    Choose {{ schema.label }}
-                </h1>
-                <p class="text-muted-foreground text-sm">
-                    A page, not a dialog. The list is the same query the related
-                    resource uses.
-                </p>
-            </div>
-            <Link :href="returnUrl" :class="buttonClasses({ variant: 'outline', size: 'sm' })">
-                Back
-            </Link>
-        </div>
+        <PkPageHeader
+            :title="`Choose ${schema.label}`"
+            purpose="A page, not a dialog. The list is the same query the related resource uses."
+        >
+            <template #actions>
+                <Link :href="returnUrl" :class="buttonClasses({ variant: 'outline', size: 'sm' })">
+                    Back
+                </Link>
+            </template>
+        </PkPageHeader>
 
         <form class="flex gap-2" @submit.prevent="runSearch">
             <input

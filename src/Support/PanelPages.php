@@ -168,6 +168,7 @@ final class PanelPages
          */
         'settings/Profile',
         'settings/Security',
+        'settings/Notifications',
 
         /*
          * THE HELP CENTRE. Generic by construction - `HelpCentre` ships articles

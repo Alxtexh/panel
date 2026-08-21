@@ -21,15 +21,15 @@ type __VLS_Slots = {} & {
     toolbar?: (props: typeof __VLS_8) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_PublicProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    select: (key: string) => any;
-    filter: (filters: CatalogFilters) => any;
     cart: (key: string) => any;
+    filter: (filters: CatalogFilters) => any;
+    select: (key: string) => any;
     "update:modelValue": (value: "grid" | "list") => any;
     scan: (query: string) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_PublicProps> & Readonly<{
-    onSelect?: ((key: string) => any) | undefined;
-    onFilter?: ((filters: CatalogFilters) => any) | undefined;
     onCart?: ((key: string) => any) | undefined;
+    onFilter?: ((filters: CatalogFilters) => any) | undefined;
+    onSelect?: ((key: string) => any) | undefined;
     "onUpdate:modelValue"?: ((value: "grid" | "list") => any) | undefined;
     onScan?: ((query: string) => any) | undefined;
 }>, {

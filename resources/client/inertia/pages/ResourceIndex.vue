@@ -29,7 +29,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, ref, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
-import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
+import { PkButton as Button, buttonClasses, PkPageHeader } from '@alxtexh-enterprise/panel'
 import {
     BulkActions,
     DataTable,
@@ -374,7 +374,7 @@ const canWrite = computed(() => props.schema.form.fields.length > 0)
  */
 const emptyHint = computed(() =>
     canWrite.value && props.can.create
-        ? `Click "New ${props.schema.label}" to add one.`
+        ? `Create the first ${props.schema.label.toLowerCase()} to get started.`
         : undefined,
 )
 
@@ -868,6 +868,10 @@ const canReorder = computed(
  */
 const reordering = ref(false)
 
+const showEmptyCreate = computed(
+    () => canWrite.value && props.can.create && !reordering.value,
+)
+
 /*
  * Leaving the ordering drops out of the mode.
  *
@@ -1137,29 +1141,18 @@ function badgeLabel(key: string, value: unknown): string {
             :base-url="schema.routes.index"
         />
 
-        <div class="flex flex-col gap-1">
-            <div class="flex items-center justify-between gap-3">
-                <!--
-                    NO LIVE BADGE, by the user's direct instruction. The green
-                    "live" chip sat beside every title and said the same thing
-                    on every screen, which is how a signal becomes wallpaper.
-                    The transport still runs and rows still move; a DEGRADED
-                    transport is the only state worth a mark, and that arrives
-                    with its own treatment when it matters.
-                -->
-                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
-                    {{ schema.labelPlural }}
-                </h1>
-                <!--
-                    ONE GROUP, TRAILING EDGE, PRIMARY LAST - DESIGN_RULES rules
-                    1 and 2. The header row has exactly TWO flex children; with
-                    the actions loose, `justify-between` distributed them across
-                    the full width - one left, one centre, one right - which is
-                    not a layout anyone chose, just what the browser does when
-                    nobody groups. (Reorder is not here at all: it is a MODE,
-                    so it lives in the table's own toolbar as an icon - rule 3.)
-                -->
-                <div class="flex shrink-0 items-center gap-2">
+        <div class="flex flex-col gap-3">
+            <PkPageHeader :title="schema.labelPlural" :purpose="schema.purpose">
+                <template #actions>
+                    <!--
+                        ONE GROUP, TRAILING EDGE, PRIMARY LAST - DESIGN_RULES rules
+                        1 and 2. The header row has exactly TWO flex children; with
+                        the actions loose, `justify-between` distributed them across
+                        the full width - one left, one centre, one right - which is
+                        not a layout anyone chose, just what the browser does when
+                        nobody groups. (Reorder is not here at all: it is a MODE,
+                        so it lives in the table's own toolbar as an icon - rule 3.)
+                    -->
                     <Button
                         v-if="canWrite && can.import && !reordering"
                         variant="outline"
@@ -1198,18 +1191,8 @@ function badgeLabel(key: string, value: unknown): string {
                     >
                         New {{ schema.label }}
                     </Button>
-                </div>
-            </div>
-
-            <!--
-                ONE SENTENCE, DECLARED ON THE RESOURCE - roadmap 3.9. Every
-                index otherwise looks identical at a glance (a title, a
-                table); this is the one line that says what THIS one is for,
-                rather than making the operator infer it from column headers.
-            -->
-            <p v-if="schema.purpose" class="text-muted-foreground text-sm">
-                {{ schema.purpose }}
-            </p>
+                </template>
+            </PkPageHeader>
 
             <div v-if="schema.lenses?.length" class="flex flex-wrap items-center gap-2">
                 <span class="text-muted-foreground text-xs font-medium uppercase tracking-wide">Lens</span>
@@ -1244,7 +1227,7 @@ function badgeLabel(key: string, value: unknown): string {
         -->
         <p
             v-if="reordering"
-            class="bg-primary/5 text-muted-foreground rounded-lg border px-3 py-2 text-xs"
+            class="bg-muted/40 text-muted-foreground rounded-xl border px-3 py-2.5 text-xs sm:px-4"
         >
             Drag rows to change their order. Changes save as you drop them.
         </p>
@@ -1267,7 +1250,7 @@ function badgeLabel(key: string, value: unknown): string {
             as separate widgets that happened to be nearby. The shell owns the
             border; the bands own their content.
         -->
-        <TableShell>
+        <TableShell :toolbar-tint="t.selected.value.size || reordering ? 'muted' : 'none'">
             <template v-if="schema.table.tabs.length" #tabs>
                 <TableTabs
                     :tabs="schema.table.tabs"
@@ -1461,6 +1444,19 @@ function badgeLabel(key: string, value: unknown): string {
 
                     <template #clear-filters>
                         <Button variant="link" size="sm" @click="t.clearAll">Clear filters</Button>
+                    </template>
+
+                    <template v-if="showEmptyCreate" #empty-actions>
+                        <Link
+                            v-if="!formUsesModal('create')"
+                            :href="`${schema.routes.index}/create`"
+                            :class="buttonClasses({ size: 'sm' })"
+                        >
+                            New {{ schema.label }}
+                        </Link>
+                        <Button v-else size="sm" @click="openCrudModal('create')">
+                            New {{ schema.label }}
+                        </Button>
                     </template>
 
                     <template #actions="{ row }">
