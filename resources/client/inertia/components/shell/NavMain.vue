@@ -4,6 +4,7 @@ import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarMenu,
+    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@alxtexh-enterprise/panel'
@@ -63,7 +64,7 @@ const { isCurrentUrl } = useCurrentUrl()
                     :href="item.href"
                     prefetch="hover"
                     cache-for="30s"
-                    class="flex items-center gap-2.5 rounded-md py-1.5 pr-2 pl-8 text-sm transition-colors"
+                    class="relative flex items-center gap-2.5 rounded-md py-1.5 pr-2 pl-8 text-sm transition-colors"
                     @click="emit('navigate')"
                     :aria-current="isCurrentUrl(item.href) ? 'page' : undefined"
                     :class="
@@ -73,6 +74,12 @@ const { isCurrentUrl } = useCurrentUrl()
                     "
                 >
                     <span class="truncate">{{ item.title }}</span>
+                    <span
+                        v-if="item.badge != null && item.badge !== ''"
+                        class="bg-sidebar-accent text-sidebar-accent-foreground ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md px-1 text-xs font-medium tabular-nums"
+                    >
+                        {{ item.badge }}
+                    </span>
                 </Link>
             </SidebarMenuItem>
         </SidebarMenu>
@@ -112,6 +119,9 @@ const { isCurrentUrl } = useCurrentUrl()
                         <span>{{ item.title }}</span>
                     </Link>
                 </SidebarMenuButton>
+                <SidebarMenuBadge v-if="item.badge != null && item.badge !== ''">
+                    {{ item.badge }}
+                </SidebarMenuBadge>
             </SidebarMenuItem>
         </SidebarMenu>
     </SidebarGroup>

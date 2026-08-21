@@ -513,6 +513,13 @@ final class ResourceController extends Controller
             // a blocking count in front of its rows any more than a table does.
             'nextCursor' => $result->nextCursor,
             'perPage' => $result->perPage,
+            // Same filter contract as ResourceIndex: search + filter keys on
+            // the query string, options and chips on the payload so the
+            // relation TableShell can reuse TableToolbar without a second trip.
+            'search' => $result->state['search'] ?? '',
+            'filters' => $result->state['filters'] ?? [],
+            'filterOptions' => $manager->definition()->resolveFilterOptions(),
+            'indicators' => $result->indicators,
         ]);
     }
 

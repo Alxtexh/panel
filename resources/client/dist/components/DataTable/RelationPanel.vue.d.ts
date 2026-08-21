@@ -1,4 +1,5 @@
 import type { SchemaColumn } from '../../composables/useSchemaColumns';
+import type { FilterIndicator, FilterSchema } from './types';
 type __VLS_Props = {
     columns: SchemaColumn[];
     rows: Record<string, any>[];
@@ -17,27 +18,46 @@ type __VLS_Props = {
     indexHref?: string | null;
     /** Prefix for a related row's dedicated view page. */
     recordBase?: string | null;
+    /** Filter schema from the relation table (structure; options merged). */
+    filterSchema?: FilterSchema[];
+    filters?: Record<string, unknown>;
+    search?: string;
+    indicators?: FilterIndicator[];
 };
-declare var __VLS_5: {}, __VLS_10: {}, __VLS_13: `cell:${string}`, __VLS_14: {
+declare var __VLS_5: {}, __VLS_22: {}, __VLS_24: {}, __VLS_27: `cell:${string}`, __VLS_28: {
     row: Record<string, any>;
     value: any;
     column: SchemaColumn;
 };
 type __VLS_Slots = {} & {
-    [K in NonNullable<typeof __VLS_13>]?: (props: typeof __VLS_14) => any;
+    [K in NonNullable<typeof __VLS_27>]?: (props: typeof __VLS_28) => any;
 } & {
     actions?: (props: typeof __VLS_5) => any;
 } & {
-    'empty-actions'?: (props: typeof __VLS_10) => any;
+    illustration?: (props: typeof __VLS_22) => any;
+} & {
+    'empty-actions'?: (props: typeof __VLS_24) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
+    "clear-filters": () => any;
     load: (cursor: string | null) => any;
+    "update:search": (value: string) => any;
+    "apply-filters": (filters: Record<string, unknown>) => any;
+    "clear-filter": (key: string) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
+    "onClear-filters"?: (() => any) | undefined;
     onLoad?: ((cursor: string | null) => any) | undefined;
+    "onUpdate:search"?: ((value: string) => any) | undefined;
+    "onApply-filters"?: ((filters: Record<string, unknown>) => any) | undefined;
+    "onClear-filter"?: ((key: string) => any) | undefined;
 }>, {
+    search: string;
     title: string | null;
     loading: boolean;
     emptyTitle: string;
+    filterSchema: FilterSchema[];
+    filters: Record<string, unknown>;
+    indicators: FilterIndicator[];
     nextCursor: string | null;
     capped: boolean;
     loaded: boolean;

@@ -9,11 +9,13 @@ type __VLS_Props = {
      */
     compact?: boolean;
 };
-declare var __VLS_1: {}, __VLS_3: {};
+declare var __VLS_1: {}, __VLS_3: {}, __VLS_5: {};
 type __VLS_Slots = {} & {
-    icon?: (props: typeof __VLS_1) => any;
+    illustration?: (props: typeof __VLS_1) => any;
 } & {
-    actions?: (props: typeof __VLS_3) => any;
+    icon?: (props: typeof __VLS_3) => any;
+} & {
+    actions?: (props: typeof __VLS_5) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
     icon: string;

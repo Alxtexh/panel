@@ -124,7 +124,7 @@ function when(iso: string): string {
     <section class="bg-card rounded-lg border">
         <button
             type="button"
-            class="hover:bg-accent/50 flex w-full items-center gap-2 p-4 text-left transition-colors"
+            class="hover:bg-accent/50 flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors"
             :aria-expanded="opened"
             aria-controls="audit-timeline"
             @click="opened ? (opened = false) : open()"
@@ -136,7 +136,7 @@ function when(iso: string): string {
             </span>
         </button>
 
-        <div v-if="opened" id="audit-timeline" class="border-t p-4">
+        <div v-if="opened" id="audit-timeline" class="border-t px-3 py-2.5">
             <p v-if="failed" class="text-destructive text-sm">
                 {{ t('history.failed') }}
                 <button type="button" class="underline underline-offset-2" @click="load">
@@ -157,34 +157,34 @@ function when(iso: string): string {
                 a screen reader should be told how many there are and where it is
                 in them - a stack of divs says none of that.
             -->
-            <ol v-else class="flex flex-col gap-4">
-                <li v-for="entry in entries" :key="entry.id" class="flex gap-3">
+            <ol v-else class="flex flex-col gap-2">
+                <li v-for="entry in entries" :key="entry.id" class="flex gap-2.5">
                     <!-- The rail, drawn once per row rather than as a border on
                          the list, so the last entry's line stops at its dot. -->
                     <div class="flex flex-col items-center">
                         <span
-                            class="bg-primary mt-1.5 size-2 shrink-0 rounded-full"
+                            class="bg-primary mt-1.5 size-1.5 shrink-0 rounded-full"
                             aria-hidden="true"
                         />
                         <span class="bg-border w-px grow" aria-hidden="true" />
                     </div>
 
-                    <div class="min-w-0 flex-1 pb-1">
-                        <p class="text-sm">
+                    <div class="min-w-0 flex-1 pb-0.5">
+                        <p class="text-sm leading-snug">
                             <span class="font-medium">{{ entry.actor }}</span>
                             {{ eventLabel(entry.event) }}
                         </p>
 
-                        <p class="text-muted-foreground text-xs">
+                        <p class="text-muted-foreground text-xs leading-snug">
                             <time :datetime="entry.at">{{ when(entry.at) }}</time>
                             <template v-if="entry.ip"> · from {{ entry.ip }}</template>
                         </p>
 
-                        <dl v-if="entry.changes.length" class="mt-2 flex flex-col gap-1">
+                        <dl v-if="entry.changes.length" class="mt-1 flex flex-col gap-0.5">
                             <div
                                 v-for="change in entry.changes"
                                 :key="change.field"
-                                class="text-xs"
+                                class="text-xs leading-snug"
                             >
                                 <dt class="text-muted-foreground inline capitalize">
                                     {{ change.field }}:
@@ -202,7 +202,7 @@ function when(iso: string): string {
                 </li>
             </ol>
 
-            <div v-if="hasMore && entries.length > 0" class="mt-4">
+            <div v-if="hasMore && entries.length > 0" class="mt-2">
                 <Button variant="ghost" size="sm" :disabled="loading" @click="load">
                     {{ loading ? '…' : t('history.earlier') }}
                 </Button>
