@@ -19,6 +19,8 @@ export interface TableColumn {
     copyable?: boolean
     /** Extra classes for the cell. */
     cellClass?: string
+    /** Header band from ColumnGroup::make(). */
+    group?: string
 }
 
 /** A filter as described by the server's filterSchema prop. */

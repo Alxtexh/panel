@@ -31,6 +31,7 @@ export { default as CheckboxCell } from './components/DataTable/CheckboxCell.vue
 export { default as CodeCell } from './components/DataTable/CodeCell.vue'
 export { default as PkQueryBuilder } from './components/DataTable/PkQueryBuilder.vue'
 export { default as KeyValueCell } from './components/DataTable/KeyValueCell.vue'
+export { default as TagsCell } from './components/DataTable/TagsCell.vue'
 export { default as EditableCell } from './components/DataTable/EditableCell.vue'
 export { default as BadgeResolver } from './components/DataTable/BadgeResolver.vue'
 export { default as RecordActions } from './components/DataTable/RecordActions.vue'

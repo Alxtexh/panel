@@ -1,1 +1,0 @@
-import{$n as e,k as t,mt as n,v as r,z as i}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{t as a}from"./PanelHome-BAXGW8Ux.js";var o=t({inheritAttrs:!1,__name:`PanelHome`,setup(t){return(t,o)=>(n(),r(a,e(i(t.$attrs)),null,16))}});export{o as default};

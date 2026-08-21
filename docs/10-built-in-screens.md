@@ -42,6 +42,7 @@ screens stay in the npm package and can be mirrored with
 | Chat | `ChatPage` | `Panel::apps(['chat'])` on the portal |
 | API keys | `ApiKeysPage` | `Panel::apps(['api-keys'])` |
 | API docs | `ApiDocsPage` (Scalar) | `Panel::apiDocs()` or `apps(['api-docs'])` |
+| Showcase | `ShowcasePage` | `Panel::kitShowcase()` or `apps(['showcase'])`. Domain-neutral kit demo; keep vertical demos on separate host pages |
 | Invites | `InvitePage` | `Panel::apps(['invites'])` |
 | Feature flags | `FeatureFlagsPage` | `Panel::apps(['feature-flags'])` |
 | Webhooks | `WebhookEndpointsPage` | `Panel::webhooks()` or `apps(['webhooks'])` |

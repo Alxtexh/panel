@@ -15,20 +15,34 @@ From `Alxtexh\Panel\Tables\Columns`:
 | `ColourColumn` | A colour swatch |
 | `CodeColumn` | Monospaced |
 | `KeyValueColumn` | A map, summarised |
+| `TagsColumn` | Chips from an array, JSON array string, or separator-split string |
 | `CheckboxColumn` | A read-only tick |
 | `ToggleColumn` | A switch that **writes** on click |
 | `SelectColumn` | A dropdown that **writes** on change |
 | `EditableColumn` | Base for the two above |
 
 ```php
+use Alxtexh\Panel\Tables\Columns\{TextColumn, BadgeColumn, ColumnGroup, TagsColumn, MoneyColumn, DateColumn};
+
 $table->columns([
     TextColumn::make('reference')->sortable()->searchable()->locked(),
+    ColumnGroup::make('Contact', [
+        TextColumn::make('email')->sortable(),
+        TextColumn::make('phone'),
+    ]),
+    TagsColumn::make('tags')->limit(3),
     BadgeColumn::make('status')
         ->colours(['paid' => 'success', 'overdue' => 'danger']),
     MoneyColumn::make('total_cents')->label('Total')->currency('KES')->sortable(),
     DateColumn::make('created_at')->sortable()->muted(),
 ]);
 ```
+
+`ColumnGroup::make('Contact', [...])` is layout only: the nested columns still
+query and render as a flat list, with a two-row header when any group is
+present. `TagsColumn` accepts arrays, JSON array strings, or
+`->separator(',')` split strings; relation labels belong in the row payload
+(transform / cast / `fromRaw()`), not in the schema.
 
 `locked()` keeps a column visible when the person hides others.
 

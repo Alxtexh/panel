@@ -765,12 +765,17 @@ final class Blueprint
         ```php
         Panel::make('admin')->apps(['mail', 'chat']);
         Panel::make('admin')->apiDocs();
+        Panel::make('admin')->kitShowcase();
         Panel::make('admin')->webhooks();
         Panel::make('admin')->apps([
             'api-keys', 'invites', 'billing-portal', 'email-templates',
             'onboarding', 'media-library', 'feature-flags',
         ]);
         ```
+
+        `kitShowcase()` mounts a domain-neutral kit demo (fields, ColumnGroup,
+        TagsColumn, widgets) at `{panel}/apps/showcase`. Keep vertical demos
+        on separate host pages.
 
         SaaS stubs include `--webhooks`, `--billing-portal`, `--email-templates`,
         `--onboarding`, `--media-library`. Webhooks live in `packages/panel/src/Webhooks/`.

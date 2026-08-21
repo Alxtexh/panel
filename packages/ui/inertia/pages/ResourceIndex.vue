@@ -39,6 +39,7 @@ import {
     IconCell,
     ImageCell,
     KeyValueCell,
+    TagsCell,
     ColourCell,
     CheckboxCell,
     PkBoundary,
@@ -1397,6 +1398,12 @@ function badgeLabel(key: string, value: unknown): string {
                         <KeyValueCell
                             v-else-if="byKey[col.key]?.type === 'keyvalue'"
                             :value="row[col.key]"
+                        />
+                        <TagsCell
+                            v-else-if="byKey[col.key]?.type === 'tags'"
+                            :value="row[col.key]"
+                            :limit="byKey[col.key].limit ?? null"
+                            :separator="byKey[col.key].separator ?? ','"
                         />
                         <ImageCell
                             v-else-if="byKey[col.key]?.type === 'image'"

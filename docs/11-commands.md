@@ -23,6 +23,7 @@
 | Command | Does |
 |---|---|
 | **`panel:doctor`** | **Find configuration that is silently wrong** |
+| `panel:search-index` | Print (or `--apply`) search DDL for large catalogues |
 | `panel:blueprint` | Regenerate `AGENTS.md` from the running application |
 | `panel:benchmark` | Time every list surface, warm, as a median |
 
@@ -31,6 +32,28 @@ because the failure is silent: a working panel serving wrong or unprotected
 data, where every page returns 200 and every test passes. For example: with
 `BROADCAST_CONNECTION=log`, channel authorisation never runs at all and every
 channel authorises, including for guests.
+
+### Search indexes at scale
+
+Global search and list search both use `LIKE '%term%'` (plus a prefix form).
+That is fine under roughly ten thousand rows per searchable table, and the
+first thing to fall over at millions.
+
+```bash
+php artisan panel:search-index           # print DDL for the current engine
+php artisan panel:search-index --apply   # run it (laptop / staging only)
+```
+
+- **Postgres:** `pg_trgm` GIN per searchable column (`CREATE INDEX CONCURRENTLY`)
+- **MySQL / MariaDB:** one covering `FULLTEXT` per table
+- **SQLite:** refused honestly (FTS5 needs a shadow table, not an index)
+
+It prints by default on purpose. Which tables are actually large, when the quiet
+hour is, and whether to build concurrently belong to whoever runs the install.
+`--apply` is for a laptop. `panel:doctor` notes when approximate row counts on
+Postgres / MySQL look past `panel.search.index_nudge_rows` (default 10_000) and
+searchable columns exist. An index nobody needed is write cost and disk for
+nothing.
 
 **Do not trust a single benchmark reading.** This project has published a 2×
 regression that did not exist, from one measurement on a busy machine. The
@@ -49,19 +72,20 @@ Schedule::command('panel:prune-exports')->daily();
 Schedule::command('panel:prune-uploads')->daily();
 Schedule::command('panel:dispatch-scheduled-reports')->hourly();
 Schedule::command('panel:doctor-alert')->daily();
-Schedule::command('panel:search-index')->hourly();
+// Do NOT schedule panel:search-index hourly. It prints (or applies) DDL for
+// trigram / FULLTEXT indexes. Run it when row counts demand it, in a quiet hour.
 ```
 
 | Command | Does |
 |---|---|
-| `panel:monitor-sample` | Sample queue depth, failed jobs, cache. The Monitoring screen is empty without it |
+| `panel:monitor-sample` | Sample queue depth, failed jobs, cache. The monitoring screen is empty without it |
 | `panel:refresh-rollups` | Maintain pre-aggregated counters |
 | `panel:prune-trash` | Permanently delete expired soft-deletes. **`--pretend`** |
 | `panel:prune-exports` | Remove finished export files |
 | `panel:prune-uploads` | Remove orphaned pending uploads |
 | `panel:dispatch-scheduled-reports` | Email saved reports |
 | `panel:doctor-alert` | Run the doctor and alert on problems |
-| `panel:search-index` | Rebuild the search index |
+| `panel:search-index` | Print trigram (Postgres) or FULLTEXT (MySQL) DDL for searchable columns. **`--apply`** runs the statements (laptop / staging). Does nothing useful on a schedule |
 | `panel:billing-check` | Apply grace-period transitions (`past_due` -> `suspended`) |
 | `panel:index-knowledge` | Index help articles for the assistant |
 | `panel:sitemap-generate` | Write the sitemap |
@@ -112,6 +136,10 @@ screen the kit already ships.
 | `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |
 | `Panel::apiDocs()` / `apps(['api-docs'])` | Built-in Scalar API reference. OpenAPI at `{panel}/apps/api-docs/openapi.json`. Optional URL: `apiDocs('/path/to/openapi.json')`. Host Vite needs `@scalar/api-reference` (already a kit dependency when using the mirrored client) |
 | `Panel::logTail()` / `apps(['logs'])` | Read-only log tail at `{panel}/apps/logs`. Ability `view_operations`. Optional allow-list: `logTail('laravel.log', ['laravel.log'])`. Polls `{page}/tail` |
+| `Panel::kitShowcase()` / `apps(['showcase'])` | Domain-neutral kit demo at `{panel}/apps/showcase` (fields, ColumnGroup, TagsColumn, widgets). Keep vertical demos on separate host pages |
+| `ColumnGroup::make('Contact', [...columns])` | Two-row table header group. Leaf columns stay flat for queries |
+| `TagsColumn::make('tags')->limit(3)` | Chip UI from array / JSON / separator-split string |
+| `panel:search-index` / `--apply` | Print (or apply) trigram / FULLTEXT DDL for searchable columns. Doctor notes when tables look large |
 | `MapField::make('location')->latLng('lat','lng')` | Leaflet geopoint field (bundled; lazy-loaded) |
 | `MapWidget::make('coverage', 'Coverage')->markers(...)` | Dashboard map card (Chart type `map`) |
 | `CalendarWidget::make('bookings', 'Bookings')->events(...)` | Month schedule card |

@@ -333,6 +333,20 @@ return [
         'queue_threshold' => (int) env('PANEL_BULK_QUEUE_THRESHOLD', 250),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Search index nudge
+    |--------------------------------------------------------------------------
+    |
+    | `panel:doctor` notes when searchable tables look this large (approximate
+    | planner rows on Postgres / MySQL). Below this, `%term%` search is fine.
+    | `panel:search-index` prints the DDL; doctor never applies it.
+    |
+    */
+    'search' => [
+        'index_nudge_rows' => (int) env('PANEL_SEARCH_INDEX_NUDGE_ROWS', 10_000),
+    ],
+
     'auth' => [
         /*
         | SIGNING IN TO A GENERATED PANEL - only read by panels made with

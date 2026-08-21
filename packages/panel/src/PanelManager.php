@@ -81,6 +81,7 @@ final class PanelManager
         Pages\ApiKeysPage::class,
         Pages\ApiDocsPage::class,
         Pages\LogsPage::class,
+        Pages\ShowcasePage::class,
         Pages\InvitePage::class,
         Pages\FeatureFlagsPage::class,
         Pages\OnboardingPage::class,

@@ -33,6 +33,7 @@ export interface SchemaColumn {
         | 'money'
         | 'code'
         | 'keyvalue'
+        | 'tags'
     sortable?: boolean
     sortKey?: string
     copyable?: boolean
@@ -45,6 +46,8 @@ export interface SchemaColumn {
     suffix?: string
     colors?: Record<string, string>
     defaultColor?: string
+    /** Set when the column sits under ColumnGroup::make(). */
+    group?: string
 
     /*
      * money
@@ -84,6 +87,10 @@ export interface SchemaColumn {
     /* checkbox - roadmap 4.6. Read-only state, not a control. */
     trueLabel?: string | null
     falseLabel?: string | null
+
+    /* tags */
+    limit?: number | null
+    separator?: string
 }
 
 /**
@@ -181,6 +188,7 @@ export function useSchemaColumns(schemaColumns: Ref<SchemaColumn[]>) {
             locked: c.locked,
             copyable: c.copyable,
             cellClass: cellClassFor(c),
+            group: c.group,
         })),
     )
 

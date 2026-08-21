@@ -12,16 +12,37 @@ php artisan queue:work --queue=default
 
 ## Live updates
 
-Lists refresh themselves. Two drivers:
+Lists and dashboard widgets refresh themselves. Two paths, pick one per surface:
 
-**`poll`** — the default. Zero infrastructure, works on plain PHP-FPM.
+### 1. HTTP poll (default)
 
-**`broadcast`** — a websocket, when you run one.
+Zero infrastructure. Works on plain PHP-FPM. Widgets declare
+`->poll('10s')` (or an integer number of seconds). The Vue host reloads only
+that widget's deferred prop (Inertia partial JSON). Polling pauses while the
+tab is hidden. Cost is N widgets times the interval in authenticated requests.
+
+### 2. Reverb / Echo live (optional)
+
+Push when the host has `window.Echo` (Laravel Reverb, typically with Redis as
+Laravel's cache / queue / broadcast backend). Widgets declare
+`->live('dashboard.stats')`. Prefer live over poll when Echo exists; set both
+in PHP so a stock install without Reverb still refreshes:
+
+```php
+StatWidget::make('online', 'Online')
+    ->live('dashboard.stats')
+    ->poll('10s');
+```
+
+Never poll and subscribe for the same widget at once on the client: if Echo is
+present and a live channel is set, the interval is skipped.
+
+Lists also support a package-level live driver:
 
 ```php
 // config/panel.php
 'live' => [
-    'driver' => 'broadcast',
+    'driver' => 'broadcast', // or 'poll' / 'auto'
     'channel' => 'tenant.{tenant}.{resource}',
     'events' => ['RecordChanged'],
 ],
@@ -45,6 +66,17 @@ Nothing else will tell you. `useLiveUpdates` degrades to polling when
 
 Also: with `BROADCAST_CONNECTION=log`, channel authorisation never runs at all
 and every channel authorises, including for guests. `panel:doctor` reports it.
+
+Redis is not a UI transport. Use it for `CACHE_STORE` / `QUEUE_CONNECTION` /
+`BROADCAST_CONNECTION` if the host already runs it. The kit does not require
+Redis and does not start Reverb.
+
+See also [Dashboards and widgets](06-dashboards-and-widgets.md#polling-and-live-updates).
+
+## Search at scale
+
+See [Commands](11-commands.md#search-indexes-at-scale) for `panel:search-index`
+and the doctor nudge when catalogues grow past ~10k searchable rows.
 
 ## SSR
 

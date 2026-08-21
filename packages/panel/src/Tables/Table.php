@@ -11,6 +11,7 @@ use Alxtexh\Panel\Actions\ActionGroup;
 use Alxtexh\Panel\Actions\BulkAction;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Tables\Columns\Column;
+use Alxtexh\Panel\Tables\Columns\ColumnGroup;
 use Alxtexh\Panel\Tables\Filters\Filter;
 use Alxtexh\Panel\Tables\Filters\HasOptions;
 use Alxtexh\Panel\Tables\Grouping\Group;
@@ -59,7 +60,7 @@ final class Table
 
     private bool $striped = false;
 
-    /** @var list<Column> */
+    /** @var list<Column|ColumnGroup> */
     private array $columns = [];
 
     /** @var list<Filter> */
@@ -129,7 +130,7 @@ final class Table
         return new self;
     }
 
-    /** @param list<Column> $columns */
+    /** @param list<Column|ColumnGroup> $columns */
     public function columns(array $columns): self
     {
         $this->columns = $columns;
@@ -143,13 +144,45 @@ final class Table
      * stays a replace: a resource author who calls it twice by mistake
      * should see their first list vanish, not silently gain an extra one.
      *
-     * @param  list<Column>  $columns
+     * @param  list<Column|ColumnGroup>  $columns
      */
     public function appendColumns(array $columns): self
     {
         $this->columns = [...$this->columns, ...$columns];
 
         return $this;
+    }
+
+    /**
+     * Leaf columns only. ColumnGroup is layout; queries and cells never see it.
+     *
+     * @return list<Column>
+     */
+    public function getColumns(): array
+    {
+        return $this->flattenColumns();
+    }
+
+    /**
+     * @return list<Column>
+     */
+    private function flattenColumns(): array
+    {
+        $out = [];
+
+        foreach ($this->columns as $entry) {
+            if ($entry instanceof ColumnGroup) {
+                foreach ($entry->getColumns() as $column) {
+                    $out[] = $column;
+                }
+
+                continue;
+            }
+
+            $out[] = $entry;
+        }
+
+        return $out;
     }
 
     /** @param list<Filter> $filters */
@@ -228,7 +261,7 @@ final class Table
      */
     private function resolveGroupColumn(string $key): string
     {
-        foreach ($this->columns as $column) {
+        foreach ($this->flattenColumns() as $column) {
             if ($column->key === $key) {
                 return $column->resolvedDatabaseColumn() ?? $key;
             }
@@ -635,12 +668,6 @@ final class Table
         return $this->query;
     }
 
-    /** @return list<Column> */
-    public function getColumns(): array
-    {
-        return $this->columns;
-    }
-
     /** @return list<Filter> */
     public function getFilters(): array
     {
@@ -685,8 +712,37 @@ final class Table
 
     public function toSchema(): array
     {
+        $columns = [];
+        $columnGroups = [];
+
+        foreach ($this->columns as $entry) {
+            if ($entry instanceof ColumnGroup) {
+                $keys = [];
+
+                foreach ($entry->getColumns() as $column) {
+                    $keys[] = $column->key;
+                    $columns[] = [
+                        ...$column->toArray(),
+                        'group' => $entry->getLabel(),
+                    ];
+                }
+
+                if ($keys !== []) {
+                    $columnGroups[] = [
+                        'label' => $entry->getLabel(),
+                        'columns' => $keys,
+                    ];
+                }
+
+                continue;
+            }
+
+            $columns[] = $entry->toArray();
+        }
+
         return [
-            'columns' => array_map(static fn (Column $c): array => $c->toArray(), $this->columns),
+            'columns' => $columns,
+            'columnGroups' => $columnGroups,
             // toSchema(), never toArray(): the latter resolves option closures,
             // so stripping options afterwards would still have executed their
             // queries. Options are tenant data and ship with the records
@@ -873,7 +929,7 @@ final class Table
 
         $select = [];
 
-        foreach ($this->columns as $column) {
+        foreach ($this->flattenColumns() as $column) {
             // The ALIASED expression: a joined column must arrive under the key
             // the schema declares, or the row carries a key nothing reads and
             // the cell renders an em dash with no error anywhere.
@@ -957,7 +1013,7 @@ final class Table
             $map[$this->reorderColumn] = $this->reorderColumn;
         }
 
-        foreach ($this->columns as $column) {
+        foreach ($this->flattenColumns() as $column) {
             if (! $column->isSortable()) {
                 continue;
             }
@@ -983,7 +1039,7 @@ final class Table
     {
         $out = [];
 
-        foreach ($this->columns as $column) {
+        foreach ($this->flattenColumns() as $column) {
             $summarizer = $column->summarizer();
 
             if ($summarizer === null) {
@@ -1030,7 +1086,7 @@ final class Table
     {
         $columns = [];
 
-        foreach ($this->columns as $column) {
+        foreach ($this->flattenColumns() as $column) {
             if (! $column->isSearchable()) {
                 continue;
             }

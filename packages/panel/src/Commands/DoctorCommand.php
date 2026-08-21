@@ -99,6 +99,7 @@ final class DoctorCommand extends Command
             $this->checkCacheTagging();
             $this->checkTenancy($context);
             $this->checkIndexes($context);
+            $this->checkSearchIndexes($panels);
             $this->checkKnowledge();
             $this->checkDocumentTemplates();
             $this->checkAnnouncementVariables();
@@ -556,6 +557,105 @@ final class DoctorCommand extends Command
                 .'when its leading column is unconstrained - so these indexes are unusable and '
                 .'every list falls back to a full scan. Run panel:reindex-tenant.',
             );
+        }
+    }
+
+    /**
+     * Large searchable tables without a confirmed search index plan.
+     *
+     * Search uses `%term%` per keystroke. That is fine under ~10k rows and the
+     * first thing to fall over at millions. `panel:search-index` prints the
+     * trigram / FULLTEXT DDL; this note only fires when approximate row counts
+     * say the tables are big enough to care. SQLite is skipped: FTS5 needs a
+     * shadow table, which is a schema decision the command will not make.
+     */
+    private function checkSearchIndexes(PanelManager $panels): void
+    {
+        $driver = DB::connection()->getDriverName();
+
+        if (! in_array($driver, ['pgsql', 'mysql', 'mariadb'], true)) {
+            return;
+        }
+
+        $threshold = (int) config('panel.search.index_nudge_rows', 10_000);
+        $large = [];
+
+        foreach ($panels->resources() as $class) {
+            try {
+                $searchable = $class::definition()->searchableColumns();
+            } catch (\Throwable) {
+                continue;
+            }
+
+            if ($searchable === []) {
+                continue;
+            }
+
+            try {
+                $table = (new ($class::model()))->getTable();
+            } catch (\Throwable) {
+                continue;
+            }
+
+            $count = $this->approximateRowCount($table, $driver);
+
+            if ($count !== null && $count >= $threshold) {
+                $large[$table] = max($large[$table] ?? 0, $count);
+            }
+        }
+
+        if ($large === []) {
+            return;
+        }
+
+        arsort($large);
+        $names = array_keys($large);
+        $top = number_format((int) reset($large));
+
+        $this->note(
+            'Large searchable tables may need panel:search-index',
+            count($names).' table(s) declare searchable columns and look large '
+            .'(about '.$top.'+ rows on '.$names[0]
+            .(count($names) > 1 ? ', plus '.implode(', ', array_slice($names, 1)) : '')
+            .'). Run `php artisan panel:search-index` to print trigram (Postgres) or '
+            .'FULLTEXT (MySQL) DDL, review which tables are actually big, then apply '
+            .'in a quiet hour. Use `--apply` only on a laptop or staging. An index '
+            .'nobody needed is write cost and disk for nothing.',
+        );
+    }
+
+    /**
+     * Cheap planner estimate, not an exact COUNT(*).
+     *
+     * Doctor must stay fast on large installs. Postgres `reltuples` and MySQL
+     * `TABLE_ROWS` are approximate and good enough for a nudge threshold.
+     */
+    private function approximateRowCount(string $table, string $driver): ?int
+    {
+        try {
+            if ($driver === 'pgsql') {
+                $row = DB::selectOne(
+                    'select coalesce(reltuples::bigint, 0) as estimate
+                     from pg_class
+                     where relkind = \'r\' and relname = ?',
+                    [$table],
+                );
+
+                return $row !== null ? max(0, (int) $row->estimate) : null;
+            }
+
+            $row = DB::selectOne(
+                'select table_rows as estimate
+                 from information_schema.tables
+                 where table_schema = database() and table_name = ?',
+                [$table],
+            );
+
+            return $row !== null && $row->estimate !== null
+                ? max(0, (int) $row->estimate)
+                : null;
+        } catch (\Throwable) {
+            return null;
         }
     }
 

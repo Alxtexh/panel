@@ -327,6 +327,7 @@ the connection for **every** tenant unconditionally and throws on the first shar
 | `make:panel-relation-manager` | Nested child pages (list/create/edit/attach), not a modal |
 | `panel:permissions` | List or reconcile abilities and roles |
 | `panel:doctor` | **Find configuration that is silently wrong** |
+| `panel:search-index` | Print (or `--apply`) trigram / FULLTEXT DDL for searchable columns |
 | `panel:benchmark` | Time every list surface, warm, as a median |
 | `panel:reindex-tenant` | Fix index shape inside a dedicated database |
 

@@ -383,6 +383,25 @@ const instanceId = useId()
 
 const visibleColumns = computed(() => props.columns.filter((c) => !props.hidden?.has(c.key)))
 
+const hasColumnGroups = computed(() => visibleColumns.value.some((c) => !!c.group))
+
+const headerBands = computed(() => {
+    const bands: Array<{ label: string | null; span: number; key: string }> = []
+
+    for (const col of visibleColumns.value) {
+        const label = col.group ?? null
+        const last = bands[bands.length - 1]
+
+        if (last && last.label === label) {
+            last.span += 1
+        } else {
+            bands.push({ label, span: 1, key: `${label ?? 'loose'}-${col.key}` })
+        }
+    }
+
+    return bands
+})
+
 /**
  * The value the selection Set is keyed by, or null when the row has none.
  *
@@ -565,6 +584,22 @@ function summaryValue(key: string): string {
     >
         <table class="w-full border-collapse text-sm">
             <thead class="bg-background sticky top-0 z-10">
+                <tr v-if="hasColumnGroups" class="bg-muted/40">
+                    <th v-if="reordering" class="w-8 border-b px-2 py-1.5" />
+                    <th v-if="selectable && !reordering" class="w-10 border-b px-3 py-1.5" />
+                    <th
+                        v-for="band in headerBands"
+                        :key="band.key"
+                        :colspan="band.span"
+                        class="text-muted-foreground border-b px-3 py-1.5 text-left text-xs font-medium"
+                    >
+                        {{ band.label ?? '' }}
+                    </th>
+                    <th
+                        v-if="$slots.actions"
+                        class="pk-actions bg-muted/40 sticky right-0 w-12 border-b border-l px-2 py-1.5 shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.25)]"
+                    />
+                </tr>
                 <tr class="bg-muted/50">
                     <!-- Unlabelled: the handles below say what it is, and a
                          heading over a column of grips is noise. -->

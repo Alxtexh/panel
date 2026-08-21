@@ -17,7 +17,7 @@ import type { TableColumn } from '../components/DataTable/types';
 export interface SchemaColumn {
     key: string;
     label: string;
-    type: 'text' | 'badge' | 'date' | 'datetime' | 'icon' | 'image' | 'toggle' | 'select' | 'colour' | 'checkbox' | 'money' | 'code' | 'keyvalue';
+    type: 'text' | 'badge' | 'date' | 'datetime' | 'icon' | 'image' | 'toggle' | 'select' | 'colour' | 'checkbox' | 'money' | 'code' | 'keyvalue' | 'tags';
     sortable?: boolean;
     sortKey?: string;
     copyable?: boolean;
@@ -30,6 +30,8 @@ export interface SchemaColumn {
     suffix?: string;
     colors?: Record<string, string>;
     defaultColor?: string;
+    /** Set when the column sits under ColumnGroup::make(). */
+    group?: string;
     currency?: string;
     currencyColumn?: string;
     major?: boolean;
@@ -50,6 +52,8 @@ export interface SchemaColumn {
     showValue?: boolean;
     trueLabel?: string | null;
     falseLabel?: string | null;
+    limit?: number | null;
+    separator?: string;
 }
 /**
  * Semantic intent to badge variant. The only place the mapping exists.
