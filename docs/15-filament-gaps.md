@@ -1,0 +1,52 @@
+# Filament recompare (post v1.0.87)
+
+Short gap notes after Scalar API docs, maps, developer toolkit surfaces,
+barcode/log-tail, kit showcase, ColumnGroup/TagsColumn, and outbound webhooks.
+This is not a Livewire parity checklist. PanelKit stays Vue + Inertia.
+
+## Where we match or beat Filament today
+
+| Area | PanelKit |
+| --- | --- |
+| Install (GitHub-only) | VCS `Alxtexh/panel` + `panel:install` (auth + first Administrator + `SharePanelProps` on web) |
+| Empty canvas | Settings shell, blank dashboard, kit Profile/Security, Directory chrome |
+| CRUD IA | Dedicated create/edit/view pages, nested resources, attach pages |
+| Tables | Keyset lists, filters, ColumnGroup, TagsColumn, relation filters in TableShell |
+| Forms | Schema fields including MapField, BarcodeField, relationship selects, createOption |
+| Built-in apps | Scalar `apiDocs()`, outbound `webhooks()` (CRUD + ping + delivery log), `logTail()`, `kitShowcase()` |
+| Ops / doctor | Backups, logs, monitoring, search-index doctor, deny-by-default abilities |
+| Design freeze | `PAGE_SHELL` / `FORM_MEASURE`; `make check-page-shell` blocks congested `mx-auto` + `max-w-*` |
+
+## Where Filament is still ahead (honest)
+
+| Gap | Notes |
+| --- | --- |
+| Ecosystem / plugins | Large marketplace; we stay GitHub-only kit + `PanelPlugin` |
+| In-place form feel | Livewire mutates without full Inertia visits; we keep dedicated pages on purpose |
+| Infolist / field breadth | Filament still has more specialty entries; we add when a host needs them |
+| Docs / training data | Agents still invent Filament verbs; keep `panel:blueprint` and these docs honest |
+| Slide-overs / dense modals | Optional polish; not a default create/edit path |
+
+## Intentional non-goals
+
+- Livewire admin UI or a second runtime beside Inertia
+- Packagist / npm registry for consumers (Composer VCS + bundled kit assets)
+- ISP / Nairobi Fibre domain inside the package
+- Auto-granting abilities (deny-by-default stays)
+
+## Design freeze enforcement
+
+```bash
+make check-page-shell
+# or
+scripts/check-page-shell.sh
+scripts/check-page-shell.sh --self-test
+```
+
+Wired into `make release-check` with client mirror sync and package Pest.
+
+## Suggested next (not in this tag)
+
+- Barcode / log-tail **widgets** (field/page exist today)
+- Kit-only public landing for installers (no ISP demo)
+- Reset or drop a diverged `panel/dev` remote branch if it keeps confusing consumers

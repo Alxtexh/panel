@@ -46,6 +46,18 @@ CSS variables over hard-coded `gap-4` / `py-2.5` when adding new chrome.
 2. No new `mx-auto max-w-*` on resource, settings, or kit app pages.
 3. Tables / relations still sit in a single `TableShell`.
 4. Catalogue grids sit under `CATALOGUE_CONTAINER`.
+5. `make check-page-shell` is green (also part of `make release-check`).
+
+## CI / maintainer gate
+
+```bash
+make check-page-shell
+scripts/check-page-shell.sh --self-test
+```
+
+Scans `packages/ui/inertia` layouts and pages. Allow-listed: auth, onboarding,
+landing, print, errors, support reading pages, and `BillingSuspended`. Everything
+else that pairs `mx-auto` with `max-w-*` fails the gate.
 
 ## Demo UI must match the published kit
 
@@ -55,7 +67,7 @@ release tag:
 
 1. `make sync-client` (rebuild kit dist and mirror into the PHP package)
 2. Rebuild playground assets when host pages changed
-3. `make release-check` (`check-client` + package Pest)
+3. `make release-check` (`check-client` + `check-page-shell` + package Pest)
 
 If those disagree, ship the kit half first. Do not tag a demo that only looks
 right through the source alias.

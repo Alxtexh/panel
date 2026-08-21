@@ -75,6 +75,10 @@ sync-client: ## Build packages/ui (lib + kit SPA) and mirror it into packages/pa
 check-client: ## Fail if packages/panel/resources/client is out of sync with packages/ui
 	@scripts/check-client-sync.sh
 
+.PHONY: check-page-shell
+check-page-shell: ## Fail on new mx-auto + max-w-* congested admin chrome (design freeze)
+	@scripts/check-page-shell.sh
+
 .PHONY: test-package
 test-package: ## Run packages/panel's own suite - Testbench, fixture models, no playground
 	@cd packages/panel && [ -d vendor ] || composer install --no-interaction --no-progress
@@ -86,8 +90,8 @@ test-package: ## Run packages/panel's own suite - Testbench, fixture models, no 
 #   2. rebuild playground assets if you changed Vue hosts see
 #   3. make release-check (this target)
 .PHONY: release-check
-release-check: check-client test-package ## Pre-tag: client mirror sync + package Pest suite
-	@echo "release-check ok: client mirror matches packages/ui; package tests passed."
+release-check: check-client check-page-shell test-package ## Pre-tag: mirror sync + page-shell freeze + Pest
+	@echo "release-check ok: client mirror matches packages/ui; page-shell freeze ok; package tests passed."
 	@echo "Remember: demo UI must match the published kit (sync-client before tag)."
 
 .PHONY: split
