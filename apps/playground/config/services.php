@@ -44,13 +44,6 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'slack' => [
-        'notifications' => [
-            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
-        ],
-    ],
-
     /*
     |--------------------------------------------------------------------------
     | Sign-in providers
@@ -59,8 +52,11 @@ return [
     | CREDENTIALS ARE THE SWITCH. A provider with no client id is not offered
     | on the sign-in screen at all - see `Alxtexh\Panel\Auth\SocialProviders` -
     | so there is never a button that cannot work. Leave these unset to ship
-    | without social sign-in. Microsoft and Apple need a Socialite community
-    | provider; without one the button 404s rather than 500s.
+    | without social sign-in. Microsoft, Apple and Discord need a Socialite
+    | community provider; without one the button 404s rather than 500s.
+    |
+    | Slack OAuth keys live on the same `services.slack` entry as the
+    | notifications bot token (below under social providers).
     |
     */
 
@@ -92,6 +88,68 @@ return [
         'client_id' => env('FACEBOOK_CLIENT_ID'),
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
         'redirect' => env('FACEBOOK_REDIRECT_URI', '/auth/facebook/callback'),
+    ],
+
+    'gitlab' => [
+        'client_id' => env('GITLAB_CLIENT_ID'),
+        'client_secret' => env('GITLAB_CLIENT_SECRET'),
+        'redirect' => env('GITLAB_REDIRECT_URI', '/auth/gitlab/callback'),
+    ],
+
+    'bitbucket' => [
+        'client_id' => env('BITBUCKET_CLIENT_ID'),
+        'client_secret' => env('BITBUCKET_CLIENT_SECRET'),
+        'redirect' => env('BITBUCKET_REDIRECT_URI', '/auth/bitbucket/callback'),
+    ],
+
+    'linkedin' => [
+        'client_id' => env('LINKEDIN_CLIENT_ID'),
+        'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
+        'redirect' => env('LINKEDIN_REDIRECT_URI', '/auth/linkedin/callback'),
+    ],
+
+    'linkedin-openid' => [
+        'client_id' => env('LINKEDIN_OPENID_CLIENT_ID', env('LINKEDIN_CLIENT_ID')),
+        'client_secret' => env('LINKEDIN_OPENID_CLIENT_SECRET', env('LINKEDIN_CLIENT_SECRET')),
+        'redirect' => env('LINKEDIN_OPENID_REDIRECT_URI', '/auth/linkedin-openid/callback'),
+    ],
+
+    'twitter' => [
+        'client_id' => env('TWITTER_CLIENT_ID'),
+        'client_secret' => env('TWITTER_CLIENT_SECRET'),
+        'redirect' => env('TWITTER_REDIRECT_URI', '/auth/twitter/callback'),
+    ],
+
+    'x' => [
+        'client_id' => env('X_CLIENT_ID', env('TWITTER_CLIENT_ID')),
+        'client_secret' => env('X_CLIENT_SECRET', env('TWITTER_CLIENT_SECRET')),
+        'redirect' => env('X_REDIRECT_URI', '/auth/x/callback'),
+    ],
+
+    'discord' => [
+        'client_id' => env('DISCORD_CLIENT_ID'),
+        'client_secret' => env('DISCORD_CLIENT_SECRET'),
+        'redirect' => env('DISCORD_REDIRECT_URI', '/auth/discord/callback'),
+    ],
+
+    /*
+     * Sign-in OAuth and notification bot share this key. client_id / secret
+     * enable the Slack button; notifications.* is the outbound channel.
+     */
+    'slack' => [
+        'client_id' => env('SLACK_CLIENT_ID'),
+        'client_secret' => env('SLACK_CLIENT_SECRET'),
+        'redirect' => env('SLACK_REDIRECT_URI', '/auth/slack/callback'),
+        'notifications' => [
+            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+        ],
+    ],
+
+    'twitch' => [
+        'client_id' => env('TWITCH_CLIENT_ID'),
+        'client_secret' => env('TWITCH_CLIENT_SECRET'),
+        'redirect' => env('TWITCH_REDIRECT_URI', '/auth/twitch/callback'),
     ],
 
 ];

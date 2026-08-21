@@ -120,18 +120,58 @@ is resolved. The path is never replaced.
 
 ## Social sign-in
 
+Packaged provider keys (button when both `client_id` and `client_secret` are
+set under `config/services.php`):
+
+| Key | Env vars | Notes |
+|---|---|---|
+| `google` | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Trusts email |
+| `github` | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | Trusts email |
+| `gitlab` | `GITLAB_CLIENT_ID` / `GITLAB_CLIENT_SECRET` | Built-in Socialite |
+| `bitbucket` | `BITBUCKET_CLIENT_ID` / `BITBUCKET_CLIENT_SECRET` | Built-in Socialite |
+| `facebook` | `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | |
+| `linkedin` / `linkedin-openid` | `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` | Prefer OpenID |
+| `microsoft` | `MICROSOFT_CLIENT_ID` / `MICROSOFT_CLIENT_SECRET` | Community driver; trusts email |
+| `apple` | `APPLE_CLIENT_ID` / `APPLE_CLIENT_SECRET` | Community driver |
+| `twitter` / `x` | `TWITTER_*` or `X_CLIENT_ID` / `X_CLIENT_SECRET` | |
+| `discord` | `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | Community driver |
+| `slack` | `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` | Same `services.slack` as bot token |
+| `twitch` | `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | Built-in Socialite |
+
 ```env
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+GITLAB_CLIENT_ID=
+GITLAB_CLIENT_SECRET=
+BITBUCKET_CLIENT_ID=
+BITBUCKET_CLIENT_SECRET=
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+APPLE_CLIENT_ID=
+APPLE_CLIENT_SECRET=
+FACEBOOK_CLIENT_ID=
+FACEBOOK_CLIENT_SECRET=
+LINKEDIN_CLIENT_ID=
+LINKEDIN_CLIENT_SECRET=
+TWITTER_CLIENT_ID=
+TWITTER_CLIENT_SECRET=
+X_CLIENT_ID=
+X_CLIENT_SECRET=
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+SLACK_CLIENT_ID=
+SLACK_CLIENT_SECRET=
+TWITCH_CLIENT_ID=
+TWITCH_CLIENT_SECRET=
 TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
 ```
 
-Microsoft, Apple and Facebook follow the same shape (`MICROSOFT_CLIENT_ID`,
-`APPLE_CLIENT_ID`, `FACEBOOK_CLIENT_ID` plus secrets). Community Socialite
-providers are listed in `config/panel.php` under `auth.social.providers`.
+Extra providers (beyond the packaged list) go in `config/panel.php` under
+`auth.social.providers`, with matching `services.{key}` credentials and a
+Socialite driver.
 
 **Credentials are the switch.** A provider with none is not offered and its
 routes are not registered. `laravel/socialite` is a composer suggest: without
@@ -140,8 +180,9 @@ the package there are no buttons and no 500.
 ```php
 Panel::make('admin')
     ->login()
-    ->socialite(['google', 'github']);   // optional: narrow the list
-    // ->socialite(false)                // hide even when keys exist
+    ->socialite();                       // every provider that has keys
+    // ->socialite(['google', 'github']); // optional: narrow the list
+    // ->socialite(false)                 // hide even when keys exist
 ```
 
 Two conditions must both hold before an address matches an account: the provider

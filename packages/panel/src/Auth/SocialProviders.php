@@ -45,6 +45,7 @@ final class SocialProviders
         'apple' => 'Apple',
         'twitter' => 'X',
         'x' => 'X',
+        'discord' => 'Discord',
         'slack' => 'Slack',
         'twitch' => 'Twitch',
     ];
