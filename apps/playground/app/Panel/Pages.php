@@ -238,6 +238,7 @@ final class Pages
             '/settings' => 'The searchable settings index. Reached from the account menu\'s Settings link.',
             '/settings/profile' => 'Reached from the account menu; settings have their own sub-navigation.',
             '/settings/security' => 'Reached from the settings sub-navigation.',
+            '/settings/notifications' => 'Reached from the settings sub-navigation.',
             '/settings/organisation' => 'Reached from the settings sub-navigation.',
             '/settings/payments' => 'Reached from the settings sub-navigation. Platform-wide gateways, not a till.',
             '/kit-payments' => 'Redirects to organisation payment gateway settings.',
@@ -308,6 +309,26 @@ final class Pages
             '/whats-new' => 'Linked from the sidebar footer.',
             '/about' => 'Linked from the sidebar footer.',
             '/about/building' => 'The build guide, linked from About.',
+            /*
+             * BILLING SUSPENSION WALL. Reached only when a tenant is suspended;
+             * a menu entry would advertise a dead end.
+             */
+            '/account/suspended' => 'Reached by redirect when the tenant is billing-suspended. Not a destination.',
+            '/platform/account/suspended' => 'Reached by redirect when the tenant is billing-suspended. Not a destination.',
+            '/reseller/account/suspended' => 'Reached by redirect when the tenant is billing-suspended. Not a destination.',
+            '/superadmin/account/suspended' => 'Reached by redirect when the tenant is billing-suspended. Not a destination.',
+            '/client/account/suspended' => 'Reached by redirect when the tenant is billing-suspended. Not a destination.',
+            /*
+             * SETTINGS AND CHANGELOG COPIES PER PORTAL. Same destinations as
+             * the operator portal's, mounted under each portal prefix.
+             */
+            '/platform/settings/notifications' => 'Reached from that portal\'s settings sub-navigation.',
+            '/reseller/settings/notifications' => 'Reached from that portal\'s settings sub-navigation.',
+            '/superadmin/settings/notifications' => 'Reached from that portal\'s settings sub-navigation.',
+            '/client/settings/notifications' => 'Reached from that portal\'s settings sub-navigation.',
+            '/platform/whats-new' => 'Each portal routes its own changelog. The operator footer links /whats-new; this copy is the platform portal\'s.',
+            '/reseller/whats-new' => 'Each portal routes its own changelog. The operator footer links /whats-new; this copy is the reseller portal\'s.',
+            '/client/whats-new' => 'Each portal routes its own changelog. The operator footer links /whats-new; this copy is the client portal\'s.',
             /*
              * A GENERATED PORTAL'S OWN ROOT. It is not in this portal's
              * navigation and must not be: a link to another portal is a link

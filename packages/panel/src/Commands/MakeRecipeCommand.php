@@ -426,7 +426,7 @@ final class MakeRecipeCommand extends Command
          *
          *     Module::make('crm')->label('CRM')
          *
-         * SaaS apps MUST set ModuleRegistry::grants() from the subscriber plan.
+         * SaaS apps MUST set ModuleRegistry::grants() from the active plan.
          */
         final class {$model}Resource extends Resource
         {
@@ -650,7 +650,7 @@ final class MakeRecipeCommand extends Command
         Module::make('crm')->label('CRM')
         ```
 
-        SaaS apps MUST set `ModuleRegistry::grants()` from the subscriber plan.
+        SaaS apps MUST set `ModuleRegistry::grants()` from the active plan.
 
         Visit `/{$kebab}` once permissions are synced. Panel id: `{$panelId}`.
         MD;
@@ -662,9 +662,8 @@ final class MakeRecipeCommand extends Command
         return <<<MD
         # Starter recipe: {$plural}
 
-        Copyable, non-ISP. This is the official next step after `panel:install`
-        and the Get started card. It is not Nairobi Fibre and not the playground
-        demo.
+        Copyable and industry-neutral. This is the official next step after `panel:install`
+        and the Get started card. It is not the reference demo.
 
         ```bash
         {$command}

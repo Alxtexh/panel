@@ -35,6 +35,8 @@ export { default as PkFieldLabel } from './components/primitives/PkFieldLabel.vu
 export { default as PkSpinner } from './components/primitives/PkSpinner.vue';
 export { default as PkOtpInput } from './components/primitives/PkOtpInput.vue';
 export { default as PkHeading } from './components/primitives/PkHeading.vue';
+export { default as PkEmptyState } from './components/primitives/PkEmptyState.vue';
+export { default as PkPageHeader } from './components/primitives/PkPageHeader.vue';
 export { default as PkAlertError } from './components/primitives/PkAlertError.vue';
 export { default as PkPasswordInput } from './components/primitives/PkPasswordInput.vue';
 export { cn, toUrl } from './lib/cn';

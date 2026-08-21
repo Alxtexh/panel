@@ -25,8 +25,8 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     onRemove?: ((key: string) => any) | undefined;
     onQty?: ((key: string, qty: number) => any) | undefined;
 }>, {
-    emptyTitle: string;
     title: string;
+    emptyTitle: string;
     total: string | null;
     emptyDescription: string;
     subtotal: string | null;

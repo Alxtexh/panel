@@ -46,6 +46,7 @@ export { default as Sitemap } from './pages/Sitemap.vue'
 export { default as Roles } from './pages/settings/Roles.vue'
 export { default as Profile } from './pages/settings/Profile.vue'
 export { default as Security } from './pages/settings/Security.vue'
+export { default as Notifications } from './pages/settings/Notifications.vue'
 export { default as Help } from './pages/support/Help.vue'
 export { default as Faq } from './pages/support/Faq.vue'
 export { default as About } from './pages/support/About.vue'
@@ -247,6 +248,7 @@ export const PANEL_PAGES = {
     'settings/Roles': () => import('./pages/settings/Roles.vue'),
     'settings/Profile': () => import('./pages/settings/Profile.vue'),
     'settings/Security': () => import('./pages/settings/Security.vue'),
+    'settings/Notifications': () => import('./pages/settings/Notifications.vue'),
     'support/Help': () => import('./pages/support/Help.vue'),
     'support/Faq': () => import('./pages/support/Faq.vue'),
     'support/About': () => import('./pages/support/About.vue'),

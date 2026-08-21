@@ -27,6 +27,7 @@ type NavEntry = {
 const ICONS: Record<string, string> = {
     profile: 'users',
     security: 'lock',
+    notifications: 'bell',
     organisation: 'home',
     payments: 'sliders',
     workspaces: 'package',

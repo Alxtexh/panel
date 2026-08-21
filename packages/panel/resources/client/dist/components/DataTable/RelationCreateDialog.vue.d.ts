@@ -22,10 +22,10 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     onSubmit?: ((values: Record<string, unknown>) => any) | undefined;
     onClose?: (() => any) | undefined;
 }>, {
+    title: string;
     form: {
         nodes?: unknown[];
     } | null;
-    title: string;
     processing: boolean;
     errors: Record<string, string>;
     searchOptions: (field: string, term: string) => Promise<{

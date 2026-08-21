@@ -59,7 +59,7 @@ final class EmptyCoreInstallTest extends TestCase
         $this->assertContains('Directory', PanelPages::SCREENS);
         $this->assertNotContains('Directory', PanelPages::OPTIONAL_SCREENS);
 
-        foreach (['settings/Profile', 'settings/Security', 'settings/Organisation', 'settings/Index', 'PanelDashboard', 'ResourcePicker'] as $core) {
+        foreach (['settings/Profile', 'settings/Security', 'settings/Notifications', 'settings/Organisation', 'settings/Index', 'PanelDashboard', 'ResourcePicker'] as $core) {
             $this->assertContains($core, PanelPages::SCREENS);
         }
     }

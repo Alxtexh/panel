@@ -17,6 +17,7 @@
  * grown a case per screen forever.
  */
 import { computed, ref, useId, watch } from 'vue'
+import PkEmptyState from '../primitives/PkEmptyState.vue'
 import type { SortDirection, TableColumn } from './types'
 
 const props = withDefaults(
@@ -81,6 +82,8 @@ const props = withDefaults(
         filtered?: boolean
         emptyTitle?: string
         emptyHint?: string
+        /** Semantic icon for the empty catalogue state. */
+        emptyIcon?: string
         /**
          * Footer aggregate DEFINITIONS, keyed by column key - how to render.
          * Structure travels with the schema; the values arrive separately.
@@ -117,6 +120,7 @@ const props = withDefaults(
         summaries: null,
         summaryValues: null,
         emptyTitle: 'Nothing here yet',
+        emptyIcon: 'package',
         framed: true,
         collapsedGroupsByDefault: false,
     },
@@ -781,14 +785,27 @@ function summaryValue(key: string): string {
 
         <!-- "No results for your filter" and "no data at all" are different
              problems with different fixes, so they are different states (§8). -->
-        <div v-if="rows.length === 0 && filtered" class="text-muted-foreground p-10 text-center">
-            <p class="font-medium">Nothing matches these filters</p>
-            <slot name="clear-filters" />
-        </div>
-        <div v-else-if="rows.length === 0" class="text-muted-foreground p-10 text-center">
-            <p class="font-medium">{{ emptyTitle }}</p>
-            <p v-if="emptyHint" class="text-sm">{{ emptyHint }}</p>
-        </div>
+        <PkEmptyState
+            v-if="rows.length === 0 && filtered"
+            compact
+            icon="search"
+            title="Nothing matches these filters"
+            description="Try clearing filters or searching for something else."
+        >
+            <template v-if="$slots['clear-filters']" #actions>
+                <slot name="clear-filters" />
+            </template>
+        </PkEmptyState>
+        <PkEmptyState
+            v-else-if="rows.length === 0"
+            :icon="emptyIcon"
+            :title="emptyTitle"
+            :description="emptyHint"
+        >
+            <template v-if="$slots['empty-actions']" #actions>
+                <slot name="empty-actions" />
+            </template>
+        </PkEmptyState>
     </div>
 </template>
 

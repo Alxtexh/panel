@@ -426,7 +426,7 @@ final class MakePageCommand extends Command
          *
          * Register modules on the panel with Module::make(). modules() and
          * limits() default from that registry. SaaS apps MUST set
-         * ModuleRegistry::grants() from the subscriber plan.
+         * ModuleRegistry::grants() from the active plan.
          */
         final class {$class} extends PlanSetupPage
         {

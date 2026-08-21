@@ -30,6 +30,7 @@ import {
     CreateOptionError,
     FORM_MEASURE,
     PAGE_SHELL_COMPACT,
+    PkPageHeader,
     RecordForm,
     UnsavedBar,
     buttonClasses,
@@ -636,15 +637,11 @@ onBeforeUnmount(() => {
         padding means fully scrolled content ends above the bar, always.
     -->
     <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4 pb-24']">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="min-w-0">
-                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
-                    {{ isEdit ? `Edit ${schema.label}` : `New ${schema.label}` }}
-                </h1>
-                <p v-if="record" class="text-muted-foreground text-sm">{{ record.label }}</p>
-            </div>
-
-            <div v-if="schema.links?.length" class="flex items-center gap-2">
+        <PkPageHeader
+            :title="isEdit ? `Edit ${schema.label}` : `New ${schema.label}`"
+            :purpose="record?.label ?? null"
+        >
+            <template v-if="schema.links?.length" #actions>
                 <template v-for="link in schema.links" :key="link.href">
                     <a
                         v-if="link.external"
@@ -673,8 +670,8 @@ onBeforeUnmount(() => {
                         {{ link.label }}
                     </Link>
                 </template>
-            </div>
-        </div>
+            </template>
+        </PkPageHeader>
 
         <!--
             Full-bleed PAGE_SHELL_COMPACT for the page; FORM_MEASURE keeps fields
@@ -684,7 +681,7 @@ onBeforeUnmount(() => {
             The flat fallback has no frame of its own, so it still gets one.
         -->
         <div :class="FORM_MEASURE">
-            <div :class="formSchema.nodes?.length ? '' : 'bg-card rounded-lg border p-4 sm:p-6'">
+            <div :class="formSchema.nodes?.length ? '' : 'bg-card rounded-xl border p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10'">
                 <RecordForm
                     :model-value="formValues"
                     :nodes="formSchema.nodes"

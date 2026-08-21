@@ -63,7 +63,10 @@ final class SettingsIndexTest extends TestCase
 
         $titles = array_column($entries, 'title');
 
-        $this->assertSame(['Profile', 'Security', 'Organisation', 'Payment gateways', 'Workspaces'], $titles);
+        $this->assertSame(
+            ['Profile', 'Security', 'Notifications', 'Organisation', 'Payment gateways', 'Workspaces'],
+            $titles,
+        );
     }
 
     /** The Assistant entry appears only for holders of manage_assistant. */

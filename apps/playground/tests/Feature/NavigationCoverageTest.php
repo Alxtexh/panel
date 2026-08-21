@@ -133,6 +133,9 @@ final class NavigationCoverageTest extends TestCase
                     Route::has($panel->getRouteName().'settings.security')
                         ? parse_url(route($panel->getRouteName().'settings.security'), PHP_URL_PATH)
                         : null,
+                    Route::has($panel->getRouteName().'settings.notifications')
+                        ? parse_url(route($panel->getRouteName().'settings.notifications'), PHP_URL_PATH)
+                        : null,
                     Route::has($panel->getRouteName().'support.help')
                         ? parse_url(route($panel->getRouteName().'support.help'), PHP_URL_PATH)
                         : null,

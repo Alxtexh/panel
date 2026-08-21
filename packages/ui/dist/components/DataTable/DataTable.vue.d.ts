@@ -60,6 +60,8 @@ type __VLS_Props = {
     filtered?: boolean;
     emptyTitle?: string;
     emptyHint?: string;
+    /** Semantic icon for the empty catalogue state. */
+    emptyIcon?: string;
     /**
      * Footer aggregate DEFINITIONS, keyed by column key - how to render.
      * Structure travels with the schema; the values arrive separately.
@@ -90,13 +92,15 @@ declare var __VLS_2: `cell:${string}`, __VLS_3: {
     column: TableColumn;
 }, __VLS_5: {
     row: Record<string, any>;
-}, __VLS_7: {};
+}, __VLS_10: {}, __VLS_15: {};
 type __VLS_Slots = {} & {
     [K in NonNullable<typeof __VLS_2>]?: (props: typeof __VLS_3) => any;
 } & {
     actions?: (props: typeof __VLS_5) => any;
 } & {
-    'clear-filters'?: (props: typeof __VLS_7) => any;
+    'clear-filters'?: (props: typeof __VLS_10) => any;
+} & {
+    'empty-actions'?: (props: typeof __VLS_15) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     sort: (key: string) => any;
@@ -120,6 +124,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     selectable: boolean;
     filtered: boolean;
     emptyTitle: string;
+    emptyIcon: string;
     summaries: Record<string, {
         kind: string;
         label: string | null;

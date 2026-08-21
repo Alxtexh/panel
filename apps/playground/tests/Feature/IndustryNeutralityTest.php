@@ -48,9 +48,11 @@ final class IndustryNeutralityTest extends TestCase
      * DELIBERATELY NOT "client", "plan", "session" or "device" - those are
      * generic words any application uses, and a list that flagged them would
      * be switched off within a week, taking the useful entries with it. These
-     * are words that cannot be anything but an internet provider.
+     * are words that cannot be anything but an internet provider. `radius` is
+     * deliberately absent: CSS border-radius uses the same English word and is
+     * everywhere in UI code.
      */
-    private const INDUSTRY = '/\b(subscribers?|fibre|fiber|broadband|mikrotik|hotspot|pppoe|radius|mbps|isp)\b/i';
+    private const INDUSTRY = '/\b(subscribers?|fibre|fiber|broadband|mikrotik|hotspot|pppoe|mbps|isp)\b/i';
 
     /**
      * THERE IS NO EXEMPTION LIST, and that is the finding rather than an

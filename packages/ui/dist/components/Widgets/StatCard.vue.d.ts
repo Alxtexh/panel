@@ -17,8 +17,8 @@ type __VLS_Props = {
     inverted?: boolean;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
-    loading: boolean;
     description: string | null;
+    loading: boolean;
     error: boolean;
     inverted: boolean;
     trend: {

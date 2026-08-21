@@ -19,8 +19,8 @@ type __VLS_Slots = {} & {
     menu?: (props: typeof __VLS_1) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
-    loading: boolean;
     caption: string | null;
+    loading: boolean;
     color: string;
     series: {
         label: string;

@@ -178,7 +178,7 @@ final class KitShowcasePagesTest extends TestCase
                 ->where('plans.1.name', 'Pro')
                 ->where('plans.2.name', 'Enterprise')
                 ->where('plans.1.perks.credits.value', -1)
-                ->has('modules', 5)
+                ->has('modules', 7)
                 ->where('modules.0.key', 'devices')
                 ->where('mode', 'index'));
     }

@@ -32,11 +32,11 @@ type __VLS_Props = {
     layout?: 'grid' | 'list';
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    select: (key: string) => any;
     cart: (key: string) => any;
+    select: (key: string) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
-    onSelect?: ((key: string) => any) | undefined;
     onCart?: ((key: string) => any) | undefined;
+    onSelect?: ((key: string) => any) | undefined;
 }>, {
     layout: "grid" | "list";
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;

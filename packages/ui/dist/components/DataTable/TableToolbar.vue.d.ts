@@ -33,22 +33,22 @@ type __VLS_Props = {
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     clear: () => any;
+    "clear-filters": () => any;
     group: (key: string | null) => any;
     "update:search": (value: string) => any;
     "apply-filters": (filters: Record<string, unknown>) => any;
     "apply-columns": (hidden: string[]) => any;
     "toggle-reorder": () => any;
     "clear-filter": (key: string) => any;
-    "clear-filters": () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onClear?: (() => any) | undefined;
+    "onClear-filters"?: (() => any) | undefined;
     onGroup?: ((key: string | null) => any) | undefined;
     "onUpdate:search"?: ((value: string) => any) | undefined;
     "onApply-filters"?: ((filters: Record<string, unknown>) => any) | undefined;
     "onApply-columns"?: ((hidden: string[]) => any) | undefined;
     "onToggle-reorder"?: (() => any) | undefined;
     "onClear-filter"?: ((key: string) => any) | undefined;
-    "onClear-filters"?: (() => any) | undefined;
 }>, {
     groupBy: GroupSchema | null;
     reordering: boolean;

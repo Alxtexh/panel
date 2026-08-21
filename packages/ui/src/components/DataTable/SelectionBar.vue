@@ -42,7 +42,7 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
 
 <template>
     <div
-        class="bg-primary/5 border-primary/20 flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2 text-sm"
+        class="flex flex-wrap items-center gap-3 text-sm"
         role="status"
     >
         <!-- Desktop bulk actions stay inline. -->

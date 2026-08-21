@@ -198,3 +198,43 @@ describe('DataTable grouping', () => {
         expect(wrapper.text()).toContain('Chi')
     })
 })
+
+describe('DataTable empty states', () => {
+    it('renders PkEmptyState for an empty catalogue', () => {
+        const wrapper = mount(DataTable, {
+            props: {
+                columns,
+                rows: [],
+                emptyTitle: 'No clients yet',
+                emptyHint: 'Create the first client to get started.',
+            },
+            slots: {
+                'empty-actions': '<button type="button">New Client</button>',
+            },
+        })
+
+        expect(wrapper.find('[data-slot="empty-state"]').exists()).toBe(true)
+        expect(wrapper.text()).toContain('No clients yet')
+        expect(wrapper.text()).toContain('New Client')
+    })
+
+    it('uses the compact filtered empty state', () => {
+        const wrapper = mount(DataTable, {
+            props: {
+                columns,
+                rows: [],
+                filtered: true,
+            },
+            slots: {
+                'clear-filters': '<button type="button">Clear filters</button>',
+            },
+        })
+
+        const empty = wrapper.find('[data-slot="empty-state"]')
+
+        expect(empty.exists()).toBe(true)
+        expect(empty.classes()).toContain('py-8')
+        expect(wrapper.text()).toContain('Nothing matches these filters')
+        expect(wrapper.text()).toContain('Clear filters')
+    })
+})

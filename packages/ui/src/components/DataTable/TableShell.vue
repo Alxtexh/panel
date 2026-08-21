@@ -18,24 +18,38 @@
  * SLOTS, NOT PROPS. The shell knows nothing about what a toolbar or a tab
  * strip is - Trash's list and a resource index share this frame while
  * filling it with entirely different controls.
+ *
+ * `toolbarTint` softens the toolbar band while selection or reorder is
+ * active, so the mode reads as a temporary state of the table card rather
+ * than a second floating widget.
  */
+withDefaults(
+    defineProps<{
+        toolbarTint?: 'none' | 'muted'
+    }>(),
+    { toolbarTint: 'none' },
+)
 </script>
 
 <template>
     <div
-        class="bg-card flex min-h-0 w-full min-w-0 shrink grow-0 flex-col overflow-hidden rounded-lg border"
+        class="bg-card flex min-h-0 w-full min-w-0 shrink grow-0 flex-col overflow-hidden rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10"
     >
-        <div v-if="$slots.tabs" class="shrink-0 border-b px-2 py-2">
+        <div v-if="$slots.tabs" class="shrink-0 border-b px-3 py-2.5 sm:px-4">
             <slot name="tabs" />
         </div>
 
-        <div v-if="$slots.toolbar" class="shrink-0 border-b px-2 py-2">
+        <div
+            v-if="$slots.toolbar"
+            class="shrink-0 border-b px-3 py-2.5 sm:px-4"
+            :class="toolbarTint === 'muted' ? 'bg-muted/40' : ''"
+        >
             <slot name="toolbar" />
         </div>
 
         <slot />
 
-        <div v-if="$slots.pagination" class="shrink-0 border-t px-3 py-2">
+        <div v-if="$slots.pagination" class="shrink-0 border-t px-3 py-2.5 sm:px-4">
             <slot name="pagination" />
         </div>
     </div>

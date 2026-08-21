@@ -61,10 +61,10 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     "onUpdate:period"?: ((value: string) => any) | undefined;
     onHide?: (() => any) | undefined;
 }>, {
-    loading: boolean;
     description: string | null;
-    error: boolean;
     icon: string | null;
+    loading: boolean;
+    error: boolean;
     collapsible: boolean;
     periods: {
         value: string;

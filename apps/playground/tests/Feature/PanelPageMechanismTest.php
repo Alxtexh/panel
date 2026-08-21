@@ -163,6 +163,15 @@ final class PanelPageMechanismTest extends TestCase
                 continue;
             }
 
+            /*
+             * Opt-in pages (`apps([...])`, config gates) stay dormant until
+             * enabled. Asserting them into `pages()` without enabling them
+             * confuses "absent on purpose" with "never registered".
+             */
+            if (! $class::isEnabled()) {
+                continue;
+            }
+
             $this->assertContains(
                 $class,
                 $registered,
