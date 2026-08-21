@@ -62,6 +62,8 @@ final class ChartWidget
         // Both axes measured rather than one being a category. `bubble` is
         // `scatter` with a size channel, the same way `doughnut` is `pie`.
         'scatter', 'bubble',
+        // Developer toolkit: Leaflet map card and month schedule (v1.0.76+).
+        'map', 'calendar',
     ];
 
     private string $type = 'line';
@@ -280,7 +282,21 @@ final class ChartWidget
      */
     public function resolve(Period $period, string $tenantKey, ?DateTimeImmutable $now = null): array
     {
-        $empty = ['points' => [], 'series' => null, 'bars' => null, 'lines' => null, 'rows' => null, 'items' => null, 'total' => null, 'trend' => null, 'error' => true];
+        $empty = [
+            'points' => [],
+            'series' => null,
+            'bars' => null,
+            'lines' => null,
+            'rows' => null,
+            'items' => null,
+            'markers' => null,
+            'center' => null,
+            'zoom' => null,
+            'events' => null,
+            'total' => null,
+            'trend' => null,
+            'error' => true,
+        ];
 
         if ($this->data === null) {
             return $empty;
@@ -322,6 +338,25 @@ final class ChartWidget
                     'lines' => null,
                     'rows' => null,
                     'items' => array_values($resolved['items']),
+                    'total' => null,
+                    'trend' => null,
+                    'error' => false,
+                ];
+            }
+
+            // Map / calendar cards carry their own shape, not plot points.
+            if (array_key_exists('markers', $resolved) || array_key_exists('events', $resolved)) {
+                return [
+                    'points' => [],
+                    'series' => null,
+                    'bars' => null,
+                    'lines' => null,
+                    'rows' => null,
+                    'items' => null,
+                    'markers' => isset($resolved['markers']) ? array_values((array) $resolved['markers']) : null,
+                    'center' => $resolved['center'] ?? null,
+                    'zoom' => $resolved['zoom'] ?? null,
+                    'events' => isset($resolved['events']) ? array_values((array) $resolved['events']) : null,
                     'total' => null,
                     'trend' => null,
                     'error' => false,

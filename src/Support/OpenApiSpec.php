@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Support;
 
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\RelationManager;
 use Alxtexh\Panel\Tables\Table;
 
 /**
@@ -20,7 +21,28 @@ final class OpenApiSpec
      */
     public static function document(?string $title = null): array
     {
-        $paths = [];
+        $paths = [
+            '/api/v1' => [
+                'get' => self::operation(
+                    'Public API',
+                    'Public API overview',
+                    "Bearer-token surface at `/api/v1/{resource}`.\n\n"
+                    ."Issue a token with `php artisan panel:api-token` or the Api keys screen "
+                    ."(`Panel::apps(['api-keys'])`). Abilities on the token are intersected with "
+                    .'the resource policy; a token cannot exceed its owner.',
+                    responds: [
+                        'type' => 'object',
+                        'properties' => [
+                            'message' => [
+                                'type' => 'string',
+                                'description' => 'Informational. CRUD lives under /api/v1/{resource}.',
+                            ],
+                        ],
+                    ],
+                    security: [['bearer' => []]],
+                ),
+            ],
+        ];
 
         foreach (app(PanelManager::class)->resources() as $key => $class) {
             if (! $class::documented()) {
@@ -32,6 +54,7 @@ final class OpenApiSpec
             $form = $class::formDefinition();
             $schema = new JsonSchema;
             $supports = static fn (string $action): bool => in_array($action, $class::actions(), true);
+            $bearer = [['bearer' => []]];
 
             $paths["/{$key}"] = [
                 'get' => self::operation(
@@ -40,6 +63,7 @@ final class OpenApiSpec
                     'Keyset-paginated. The total arrives as a deferred prop rather than blocking the rows.',
                     query: self::listQuery($table),
                     responds: $schema->page($table->getColumns()),
+                    security: $bearer,
                 ),
             ];
 
@@ -50,6 +74,7 @@ final class OpenApiSpec
                     'Validated against the resource form - the same declaration that generated this schema.',
                     accepts: $schema->writeBody($form->fields()),
                     responds: $schema->row($table->getColumns()),
+                    security: $bearer,
                 );
             }
 
@@ -61,6 +86,7 @@ final class OpenApiSpec
                         '',
                         path: true,
                         responds: $schema->row($table->getColumns()),
+                        security: $bearer,
                     )
                     : null,
                 'put' => $supports('update')
@@ -71,42 +97,91 @@ final class OpenApiSpec
                         path: true,
                         accepts: $schema->writeBody($form->fields(), partial: true),
                         responds: $schema->row($table->getColumns()),
+                        security: $bearer,
                     )
                     : null,
                 'delete' => $supports('delete')
-                    ? self::operation($label, "Delete a {$class::label()}", '', path: true)
+                    ? self::operation(
+                        $label,
+                        "Delete a {$class::label()}",
+                        '',
+                        path: true,
+                        security: $bearer,
+                    )
                     : null,
             ]);
 
-            $paths["/{$key}/bulk"] = [
-                'post' => self::operation(
-                    $label,
-                    'Run a bulk action',
-                    'The request names a declared action KEY and a selection. It never describes what the action does.',
-                    accepts: $schema->bulkBody(array_column(
-                        array_map(static fn ($a): array => $a->toArray(), $table->getBulkActions()),
-                        'key',
-                    )),
-                ),
-            ];
+            $bulkKeys = array_column(
+                array_map(static fn ($a): array => $a->toArray(), $table->getBulkActions()),
+                'key',
+            );
 
-            $paths["/{$key}/{id}/action"] = [
-                'post' => self::operation(
-                    $label,
-                    'Run a record action',
-                    'Same rule as bulk: a key the resource declared, never an attribute set.',
-                    path: true,
-                    accepts: $schema->recordActionBody(self::recordActionKeys($table)),
-                ),
-            ];
+            if ($bulkKeys !== []) {
+                $paths["/{$key}/bulk"] = [
+                    'post' => self::operation(
+                        $label,
+                        'Run a bulk action',
+                        'The request names a declared action KEY and a selection. It never describes what the action does.',
+                        accepts: $schema->bulkBody($bulkKeys),
+                        security: $bearer,
+                    ),
+                ];
+            }
 
-            $paths["/{$key}/import"] = [
-                'post' => self::operation(
-                    $label,
-                    'Import a CSV',
-                    'Send `dryRun` to validate without writing. Rows fail independently and are reported by spreadsheet line.',
-                ),
-            ];
+            $recordKeys = self::recordActionKeys($table);
+
+            if ($recordKeys !== []) {
+                $paths["/{$key}/{id}/action"] = [
+                    'post' => self::operation(
+                        $label,
+                        'Run a record action',
+                        'Same rule as bulk: a key the resource declared, never an attribute set.',
+                        path: true,
+                        accepts: $schema->recordActionBody($recordKeys),
+                        security: $bearer,
+                    ),
+                ];
+            }
+
+            if ((bool) $class::importable()) {
+                $paths["/{$key}/import"] = [
+                    'post' => self::operation(
+                        $label,
+                        'Import a CSV',
+                        'Send `dryRun` to validate without writing. Rows fail independently and are reported by spreadsheet line.',
+                        security: $bearer,
+                    ),
+                ];
+            }
+
+            foreach ($class::relations() as $relation) {
+                if (! $relation instanceof RelationManager) {
+                    continue;
+                }
+
+                $relationKey = $relation->key;
+                $relationLabel = (string) ($relation->toSchema()['label'] ?? $relationKey);
+
+                $paths["/{$key}/{id}/relations/{$relationKey}"] = array_filter([
+                    'get' => self::operation(
+                        $label,
+                        "List {$relationLabel}",
+                        'Keyset-paginated related rows for one parent. The foreign key is declared on the relation manager, never taken from the request.',
+                        path: true,
+                        responds: $schema->page($relation->definition()->getColumns()),
+                        security: $bearer,
+                    ),
+                    'post' => $relation->nestedResource() !== null
+                        ? self::operation(
+                            $label,
+                            "Create a {$relationLabel} row",
+                            'Nested create under the parent id. The parent foreign key is stamped from the URL.',
+                            path: true,
+                            security: $bearer,
+                        )
+                        : null,
+                ]);
+            }
         }
 
         return [
@@ -117,7 +192,8 @@ final class OpenApiSpec
                 'description' => "The HTTP surface every resource screen uses.\n\n"
                     ."Every endpoint is tenant-scoped and authorized per record; an id belonging to another\n"
                     ."organisation is *not found* rather than forbidden.\n\n"
-                    .'The stable public API is at `/api/v1` (bearer token via `php artisan panel:api-token`).',
+                    ."The stable public API is at `/api/v1` (bearer token via `php artisan panel:api-token` "
+                    .'or the Api keys screen). Resources appear when `documented()` is true (opt-out).',
             ],
             'servers' => [['url' => (string) config('app.url')]],
             'components' => [
@@ -131,7 +207,7 @@ final class OpenApiSpec
                     'bearer' => [
                         'type' => 'http',
                         'scheme' => 'bearer',
-                        'description' => 'The public API at /api/v1. Issue a token with `php artisan panel:api-token`.',
+                        'description' => 'The public API at /api/v1. Issue a token with `php artisan panel:api-token` or ApiKeysPage.',
                     ],
                 ],
             ],
@@ -258,6 +334,7 @@ final class OpenApiSpec
      * @param  list<array<string, mixed>>  $query
      * @param  array<string, mixed>|null  $accepts
      * @param  array<string, mixed>|null  $responds
+     * @param  list<array<string, list<string>>>|null  $security
      * @return array<string, mixed>
      */
     private static function operation(
@@ -268,6 +345,7 @@ final class OpenApiSpec
         bool $path = false,
         ?array $accepts = null,
         ?array $responds = null,
+        ?array $security = null,
     ): array {
         $parameters = $query;
 
@@ -285,6 +363,7 @@ final class OpenApiSpec
             'summary' => $summary,
             'description' => $description,
             'parameters' => $parameters,
+            'security' => $security,
             'requestBody' => $accepts === null ? null : [
                 'required' => true,
                 'content' => ['application/json' => ['schema' => $accepts]],

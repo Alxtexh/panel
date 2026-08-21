@@ -223,9 +223,9 @@ abstract class DashboardPage extends Page
     }
 
     /**
-     * The charts below them.
+     * The charts below them (includes MapWidget / CalendarWidget via unwrap).
      *
-     * @return list<ChartWidget>
+     * @return list<ChartWidget|\Alxtexh\Panel\Widgets\MapWidget|\Alxtexh\Panel\Widgets\CalendarWidget>
      */
     public static function charts(): array
     {
@@ -293,13 +293,30 @@ abstract class DashboardPage extends Page
          */
         $registered = app(PanelManager::class)->currentPanel()?->getWidgets() ?? [];
 
+        $unwrapChart = static function (mixed $w): ?ChartWidget {
+            if ($w instanceof ChartWidget) {
+                return $w;
+            }
+
+            if ($w instanceof \Alxtexh\Panel\Widgets\MapWidget || $w instanceof \Alxtexh\Panel\Widgets\CalendarWidget) {
+                return $w->toChartWidget();
+            }
+
+            return null;
+        };
+
         $stats = array_values(array_filter(
             [...static::stats(), ...array_filter($registered, static fn ($w): bool => $w instanceof StatWidget)],
             static fn (StatWidget $w): bool => $w->visibleTo($user),
         ));
 
+        $chartSources = array_values(array_filter(array_map(
+            $unwrapChart,
+            [...static::charts(), ...$registered],
+        )));
+
         $charts = array_values(array_filter(
-            [...static::charts(), ...array_filter($registered, static fn ($c): bool => $c instanceof ChartWidget)],
+            $chartSources,
             static fn (ChartWidget $c): bool => $c->visibleTo($user),
         ));
 

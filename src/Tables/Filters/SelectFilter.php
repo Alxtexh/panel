@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tables\Filters;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
+use InvalidArgumentException;
 
 /**
  * Single-choice equality filter backed by an allowlist.
@@ -18,7 +21,9 @@ use Illuminate\Database\Query\Builder;
  */
 final class SelectFilter extends Filter implements HasOptions
 {
-    /** @var list<string>|Closure(): list<string> */
+    /**
+     * @var list<string|array{value: string, label: string}>|Closure(): list<string|array{value: string, label: string}>
+     */
     private array|Closure $options = [];
 
     /**
@@ -34,11 +39,13 @@ final class SelectFilter extends Filter implements HasOptions
      * resource definition, so this cannot outlive a request or leak a tenant's
      * options into another's (S9).
      *
-     * @var list<string>|null
+     * @var list<string|array{value: string, label: string}>|null
      */
     private ?array $resolved = null;
 
-    /** @param list<string>|Closure(): list<string> $options */
+    /**
+     * @param  list<string|array{value: string, label: string}>|Closure(): list<string|array{value: string, label: string}>  $options
+     */
     public function options(array|Closure $options): static
     {
         $this->options = $options;
@@ -46,19 +53,77 @@ final class SelectFilter extends Filter implements HasOptions
         return $this;
     }
 
-    /** @return list<string> */
+    /**
+     * Options from a related Eloquent model (BelongsTo-style FK filter).
+     *
+     * Filament-shaped. Values are primary keys (as strings); labels are
+     * `$titleAttribute`. Works with keyset lists: the filter only adds a
+     * WHERE on the declared column.
+     *
+     *     SelectFilter::make('article_id')
+     *         ->relationship(Article::class, 'title');
+     *
+     * @param  class-string<Model>  $model
+     * @param  Closure(EloquentBuilder): void|null  $modifyQuery
+     */
+    public function relationship(string $model, string $titleAttribute, ?Closure $modifyQuery = null): static
+    {
+        if (! is_subclass_of($model, Model::class)) {
+            throw new InvalidArgumentException("[{$model}] is not an Eloquent model.");
+        }
+
+        return $this->options(function () use ($model, $titleAttribute, $modifyQuery): array {
+            /** @var Model $blank */
+            $blank = new $model;
+            $keyName = $blank->getKeyName();
+
+            $query = $model::query()->orderBy($titleAttribute);
+
+            if ($modifyQuery !== null) {
+                $modifyQuery($query);
+            }
+
+            return $query
+                ->get([$keyName, $titleAttribute])
+                ->map(static fn (Model $row): array => [
+                    'value' => (string) $row->getKey(),
+                    'label' => (string) $row->getAttribute($titleAttribute),
+                ])
+                ->all();
+        });
+    }
+
+    /** @return list<string|array{value: string, label: string}> */
     public function resolvedOptions(): array
     {
         return $this->resolved ??= ($this->options instanceof Closure ? ($this->options)() : $this->options);
     }
 
+    /** @return list<string> */
+    public function allowedValues(): array
+    {
+        $values = [];
+
+        foreach ($this->resolvedOptions() as $option) {
+            $values[] = is_array($option)
+                ? (string) ($option['value'] ?? '')
+                : (string) $option;
+        }
+
+        return array_values(array_filter($values, static fn (string $v): bool => $v !== ''));
+    }
+
     public function normalise(mixed $raw): ?string
     {
+        if (is_int($raw) || is_float($raw)) {
+            $raw = (string) $raw;
+        }
+
         if (! is_string($raw)) {
             return null;
         }
 
-        return in_array($raw, $this->resolvedOptions(), true) ? $raw : null;
+        return in_array($raw, $this->allowedValues(), true) ? $raw : null;
     }
 
     public function apply(Builder $query, mixed $value): void
@@ -69,6 +134,17 @@ final class SelectFilter extends Filter implements HasOptions
     protected function schemaType(): string
     {
         return 'select';
+    }
+
+    protected function displayValue(mixed $value): string
+    {
+        foreach ($this->resolvedOptions() as $option) {
+            if (is_array($option) && (string) ($option['value'] ?? '') === (string) $value) {
+                return (string) ($option['label'] ?? $value);
+            }
+        }
+
+        return parent::displayValue($value);
     }
 
     public function toArray(): array

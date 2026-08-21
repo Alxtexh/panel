@@ -750,7 +750,7 @@ final class Table
      * This is the only place the option closures are invoked, and it happens
      * while assembling the data payload - never while building the schema.
      *
-     * @return array<string, list<string>>
+     * @return array<string, list<string|array{value: string, label: string}>>
      */
     public function resolveFilterOptions(): array
     {

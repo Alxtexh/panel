@@ -33,6 +33,8 @@ import {
     StatListChart,
     CatalogGrid,
     LineItems,
+    PkCalendar,
+    PkMap,
 } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 import { router } from '@inertiajs/vue3'
@@ -69,6 +71,17 @@ const lines = computed(() => multiSeries(props.chart, props.data))
     />
 
     <LineItems v-else-if="chart.type === 'items'" :items="data.items ?? []" />
+
+    <PkMap
+        v-else-if="chart.type === 'map'"
+        :markers="(data as any).markers ?? []"
+        :center="(data as any).center ?? null"
+        :zoom="(data as any).zoom ?? 12"
+        :height="280"
+        :pickable="false"
+    />
+
+    <PkCalendar v-else-if="chart.type === 'calendar'" :events="(data as any).events ?? []" />
 
     <PieChart
         v-else-if="chart.type === 'pie' || chart.type === 'doughnut'"
