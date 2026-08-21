@@ -40,7 +40,7 @@ export { default as PkPageHeader } from './components/primitives/PkPageHeader.vu
 export { default as PkAlertError } from './components/primitives/PkAlertError.vue';
 export { default as PkPasswordInput } from './components/primitives/PkPasswordInput.vue';
 export { cn, toUrl } from './lib/cn';
-export { CATALOGUE_GRID, CATALOGUE_GRID_TIGHT, CATALOGUE_GRID_TILES, } from './lib/catalogueGrid';
+export { CATALOGUE_CONTAINER, CATALOGUE_GRID, CATALOGUE_GRID_TIGHT, CATALOGUE_GRID_TILES, } from './lib/catalogueGrid';
 export { FORM_MEASURE, PAGE_SHELL, PAGE_SHELL_COMPACT, PAGE_SHELL_STACK, } from './lib/pageShell';
 export { FOCUS_RING, FOCUS_RING_SOFT, FOCUS_RING_WITHIN } from './lib/focusRing';
 export { packWidgetColumns } from './lib/packWidgetColumns';
