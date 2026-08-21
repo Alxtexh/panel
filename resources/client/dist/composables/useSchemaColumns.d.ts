@@ -17,7 +17,7 @@ import type { TableColumn } from '../components/DataTable/types';
 export interface SchemaColumn {
     key: string;
     label: string;
-    type: 'text' | 'badge' | 'date' | 'datetime' | 'icon' | 'image' | 'toggle' | 'select' | 'colour' | 'checkbox' | 'money' | 'code' | 'keyvalue' | 'tags';
+    type: 'text' | 'badge' | 'date' | 'datetime' | 'icon' | 'image' | 'toggle' | 'select' | 'colour' | 'checkbox' | 'money' | 'code' | 'keyvalue' | 'tags' | 'rating';
     sortable?: boolean;
     sortKey?: string;
     copyable?: boolean;
@@ -54,6 +54,7 @@ export interface SchemaColumn {
     falseLabel?: string | null;
     limit?: number | null;
     separator?: string;
+    max?: number;
 }
 /**
  * Semantic intent to badge variant. The only place the mapping exists.

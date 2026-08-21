@@ -348,6 +348,30 @@ return [
         'index_nudge_rows' => (int) env('PANEL_SEARCH_INDEX_NUDGE_ROWS', 10_000),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Environment colour banner
+    |--------------------------------------------------------------------------
+    |
+    | Null / unset: show outside production. true: always. false: never.
+    | Per-panel: Panel::environmentBanner(true|false).
+    */
+    'environment_banner' => [
+        'enabled' => env('PANEL_ENVIRONMENT_BANNER'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Record presence (who's viewing)
+    |--------------------------------------------------------------------------
+    |
+    | Off by default. Set PANEL_PRESENCE=true or Panel::presence(). Needs Echo
+    | and a presence channel (see Presence::registerChannel()).
+    */
+    'presence' => [
+        'enabled' => env('PANEL_PRESENCE', false),
+    ],
+
     'auth' => [
         /*
         | SIGNING IN TO A GENERATED PANEL - only read by panels made with

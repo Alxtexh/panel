@@ -7,6 +7,7 @@ import type { BreadcrumbItem } from '../../types'
 import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
+import PanelQuickCreate from './PanelQuickCreate.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import PanelLockButton from './PanelLockButton.vue'
 
@@ -91,6 +92,7 @@ const trail = computed<BreadcrumbItem[]>(() =>
 
         <div class="flex items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
             <div class="flex items-center gap-2">
+                <PanelQuickCreate />
                 <PanelLockButton />
                 <PanelCommandPalette />
             </div>

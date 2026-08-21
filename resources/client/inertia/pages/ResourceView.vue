@@ -20,7 +20,7 @@ defineOptions({ inheritAttrs: false })
  * colours from the schema's intent map, dates by column type - so a value never
  * looks one way in the list and another here.
  */
-import { Head, Link, router } from '@inertiajs/vue3'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, ref, toRef } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
@@ -55,6 +55,7 @@ import {
 } from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
 import AuditTimeline from '../components/AuditTimeline.vue'
+import RecordPresence from '../components/RecordPresence.vue'
 import RenderHook from '../components/RenderHook.vue'
 import { formatMoney } from '../lib/money'
 
@@ -111,6 +112,17 @@ const schemaColumns = toRef(() => props.schema.table.columns)
 const { byKey, badgeVariant } = useSchemaColumns(schemaColumns)
 
 const title = computed(() => String(props.record.name ?? `#${props.record.id}`))
+
+const page = usePage()
+
+const presenceTenantId = computed(() => {
+    const workspaces = (page.props as any).workspaces as { current?: { id?: string | number } } | null
+    if (workspaces?.current?.id != null) {
+        return workspaces.current.id
+    }
+
+    return (page.props as any).auth?.user?.tenant_id ?? null
+})
 
 /**
  * Optional status chip beside the page title. Prefer a badge column named
@@ -563,6 +575,11 @@ function destroy() {
                 </Badge>
             </template>
             <template #actions>
+                <RecordPresence
+                    :resource="schema.key"
+                    :record-id="record.id"
+                    :tenant-id="presenceTenantId"
+                />
                 <!-- Primary last (DESIGN_RULES rule 2): Edit is the action this
                      page exists for, so it takes the outside edge. -->
                 <Button v-if="can.delete" variant="outline" size="sm" @click="destroy"
