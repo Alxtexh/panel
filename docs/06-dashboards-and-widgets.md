@@ -185,6 +185,18 @@ UI transport. The namespace is optional
 when the directory is under `app_path()`. An empty dashboard stays the install
 default.
 
+## User-customizable layout (opt-in)
+
+Off by default. Enable per portal:
+
+```php
+Panel::make('admin')->userDashboards();
+```
+
+Operators can drag chart widgets into a new order. The order persists on
+`users.appearance.dashboardLayout.chartOrder` via the existing appearance
+endpoint. When the flag is off, the dashboard never reads that key.
+
 ## First-run setup guide
 
 The empty canvas still needs a path through kit chrome. `DashboardPage` shares

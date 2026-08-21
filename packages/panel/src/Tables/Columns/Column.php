@@ -43,6 +43,21 @@ abstract class Column implements Renderable
 
     protected bool $locked = false;
 
+    /**
+     * Pin this column to the left while the table scrolls horizontally.
+     *
+     * Presentation only. Off by default so unused tables pay nothing. Prefer
+     * `Table::stickyFirstColumn()` when the first data column should stick;
+     * set this when a later column (or an explicit key) must pin instead.
+     */
+    protected bool $sticky = false;
+
+    /** Preferred width in pixels; the client may resize when resizable. */
+    protected ?int $width = null;
+
+    /** Whether the operator may drag-resize this column. Off by default. */
+    protected bool $resizable = false;
+
     protected ?string $sortKey = null;
 
     protected ?string $databaseColumn = null;
@@ -128,6 +143,30 @@ abstract class Column implements Renderable
     public function locked(bool $locked = true): static
     {
         $this->locked = $locked;
+
+        return $this;
+    }
+
+    /** Pin this column while the table scrolls horizontally. */
+    public function sticky(bool $sticky = true): static
+    {
+        $this->sticky = $sticky;
+
+        return $this;
+    }
+
+    /** Preferred width in pixels (client may still resize when allowed). */
+    public function width(int $width): static
+    {
+        $this->width = max(48, $width);
+
+        return $this;
+    }
+
+    /** Allow the operator to drag-resize this column. */
+    public function resizable(bool $resizable = true): static
+    {
+        $this->resizable = $resizable;
 
         return $this;
     }
@@ -328,6 +367,9 @@ abstract class Column implements Renderable
             'sortKey' => $this->sortKey,
             'copyable' => $this->copyable,
             'locked' => $this->locked,
+            'sticky' => $this->sticky,
+            'width' => $this->width,
+            'resizable' => $this->resizable,
             'align' => $this->align === 'left' ? null : $this->align,
             'muted' => $this->muted,
             'prefix' => $this->prefix,

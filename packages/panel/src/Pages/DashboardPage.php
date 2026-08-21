@@ -366,6 +366,8 @@ abstract class DashboardPage extends Page
                     ->all(),
             ),
             'prefix' => rtrim((string) app(PanelManager::class)->panel(static::panel())?->getPath(), '/'),
+            'userDashboards' => (bool) (app(PanelManager::class)->panel(static::panel())?->hasUserDashboards()),
+            'dashboardLayout' => static::dashboardLayoutFor($user),
         ];
 
         $shortcuts = static::shortcuts();
@@ -570,6 +572,37 @@ abstract class DashboardPage extends Page
         }
 
         return array_values(array_unique($keys));
+    }
+
+    /**
+     * Per-user chart order when `Panel::userDashboards()` is on.
+     *
+     * @return array{chartOrder: list<string>}|null
+     */
+    private static function dashboardLayoutFor(mixed $user): ?array
+    {
+        $panel = app(PanelManager::class)->panel(static::panel());
+
+        if ($panel === null || ! $panel->hasUserDashboards() || $user === null) {
+            return null;
+        }
+
+        $appearance = is_array($user->appearance ?? null) ? $user->appearance : [];
+        $layout = $appearance['dashboardLayout'] ?? null;
+
+        if (! is_array($layout)) {
+            return ['chartOrder' => []];
+        }
+
+        $order = [];
+
+        foreach ($layout['chartOrder'] ?? [] as $key) {
+            if (is_string($key) && preg_match('/^[a-z0-9_-]+$/i', $key) === 1) {
+                $order[] = $key;
+            }
+        }
+
+        return ['chartOrder' => array_values(array_unique($order))];
     }
 
     /**

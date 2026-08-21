@@ -546,6 +546,23 @@ abstract class Resource
         return [];
     }
 
+    /**
+     * Opt-in Kanban board. Null (default) means no board route and no move API.
+     *
+     *     public static function board(): ?Board
+     *     {
+     *         return Board::make('status')->columns([
+     *             'open' => 'Open',
+     *             'doing' => 'In progress',
+     *             'done' => 'Done',
+     *         ])->title('name');
+     *     }
+     */
+    public static function board(): ?Board
+    {
+        return null;
+    }
+
     /** Fluent per-resource overrides for page vs modal CRUD. */
     public static function configure(): ResourceConfigurator
     {
@@ -896,6 +913,9 @@ abstract class Resource
                         'store' => $prefix.'/'.static::key(),
                         'update' => $prefix.'/'.static::key().'/{id}',
                         'destroy' => $prefix.'/'.static::key().'/{id}',
+                        'board' => static::board() !== null
+                            ? $prefix.'/'.static::key().'/board'
+                            : null,
                     ],
                     'table' => $table->toSchema(),
                     'form' => static::formDefinition()->toSchema(),
@@ -914,6 +934,7 @@ abstract class Resource
                         static fn (Lens $lens): array => $lens->toSchema(),
                         static::resolvedLenses(),
                     ),
+                    'board' => static::board()?->toSchema(),
                 ];
             },
             static::customFieldsFingerprint(),

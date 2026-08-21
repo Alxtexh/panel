@@ -77,6 +77,15 @@ final class Panel
     /** See `widgets()`. Concatenated with whatever the dashboard page declares. */
     private array $widgets = [];
 
+    /**
+     * Per-user drag-and-drop widget layout on dashboards. Off by default.
+     *
+     * When on, `DashboardPage` ships the acting user's saved order and the
+     * packaged `PanelDashboard` offers rearrange + persist into
+     * `users.appearance.dashboardLayout`.
+     */
+    private bool $userDashboards = false;
+
     /** Default create/edit/view presentation for resources that do not override. */
     private string $resourceForms = ResourceConfigurator::MODE_PAGE;
 
@@ -416,6 +425,24 @@ final class Panel
         $this->widgets = [...$this->widgets, ...$normalised];
 
         return $this;
+    }
+
+    /**
+     * Let each operator rearrange dashboard widgets and persist the layout.
+     *
+     * OFF BY DEFAULT. Zero client cost when unused: the packaged dashboard
+     * skips drag handles and never reads `appearance.dashboardLayout`.
+     */
+    public function userDashboards(bool $enabled = true): self
+    {
+        $this->userDashboards = $enabled;
+
+        return $this;
+    }
+
+    public function hasUserDashboards(): bool
+    {
+        return $this->userDashboards;
     }
 
     /**

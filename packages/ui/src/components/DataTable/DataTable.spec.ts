@@ -268,4 +268,46 @@ describe('DataTable empty states', () => {
         expect(rows[1].classes()).toContain('bg-muted/20')
         expect(rows[0].classes()).toContain('hover:bg-muted/50')
     })
+
+    it('pins the first data column when stickyFirst is set', () => {
+        const wrapper = mount(DataTable, {
+            props: {
+                columns: [
+                    { key: 'name', label: 'Name' },
+                    { key: 'city', label: 'City' },
+                ],
+                rows: [{ id: 1, name: 'Amina', city: 'Nairobi' }],
+                stickyFirst: true,
+                selectable: true,
+                selected: new Set(),
+            },
+        })
+
+        const firstDataHeader = wrapper.findAll('thead tr').at(-1)!.findAll('th')[1]
+
+        expect(firstDataHeader.classes()).toContain('sticky')
+        expect(wrapper.find('[aria-label="Resize Name"]').exists()).toBe(false)
+    })
+
+    it('emits resize while dragging a column handle', async () => {
+        const wrapper = mount(DataTable, {
+            props: {
+                columns: [
+                    { key: 'name', label: 'Name', width: 160 },
+                    { key: 'city', label: 'City' },
+                ],
+                rows: [{ id: 1, name: 'Amina', city: 'Nairobi' }],
+                resizable: true,
+            },
+        })
+
+        const handle = wrapper.get('[aria-label="Resize Name"]')
+
+        await handle.trigger('pointerdown', { clientX: 100, pointerId: 1 })
+        await handle.trigger('pointermove', { clientX: 140, pointerId: 1 })
+
+        expect(wrapper.emitted('resize')?.length).toBeGreaterThan(0)
+        expect(wrapper.emitted('resize')![0][0]).toBe('name')
+        expect(wrapper.emitted('resize')![0][1]).toBe(200)
+    })
 })

@@ -30,11 +30,19 @@ type __VLS_Props = {
     groupBy?: GroupSchema | null;
     /** Applied-filter chips from the server. */
     indicators?: FilterIndicator[];
+    /**
+     * Index layout modes the operator may toggle. Empty means table only
+     * (no control). Opt-in via `Table::layouts(['table', 'cards'])`.
+     */
+    layouts?: Array<'table' | 'cards'>;
+    /** Current layout mode. */
+    layout?: 'table' | 'cards';
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     clear: () => any;
     "clear-filters": () => any;
     group: (key: string | null) => any;
+    layout: (mode: "table" | "cards") => any;
     "update:search": (value: string) => any;
     "apply-filters": (filters: Record<string, unknown>) => any;
     "apply-columns": (hidden: string[]) => any;
@@ -44,6 +52,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     onClear?: (() => any) | undefined;
     "onClear-filters"?: (() => any) | undefined;
     onGroup?: ((key: string | null) => any) | undefined;
+    onLayout?: ((mode: "table" | "cards") => any) | undefined;
     "onUpdate:search"?: ((value: string) => any) | undefined;
     "onApply-filters"?: ((filters: Record<string, unknown>) => any) | undefined;
     "onApply-columns"?: ((hidden: string[]) => any) | undefined;
@@ -57,5 +66,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     reorderable: boolean;
     groups: GroupSchema[];
     indicators: FilterIndicator[];
+    layouts: Array<"table" | "cards">;
+    layout: "table" | "cards";
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

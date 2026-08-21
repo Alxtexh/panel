@@ -47,11 +47,9 @@ Wired into `make release-check` with client mirror sync and package Pest.
 
 ## Suggested next (not in this tag)
 
-- Kanban board page
-- User-customizable dashboards
-- Table chrome Pro (sticky columns / resize / grid toggle) deferred from v1.0.93
 - Barcode / log-tail **widgets** (field/page exist today)
 - Kit-only public landing for installers (no ISP demo)
+- Workflow UI / comments (still deferred)
 
 ## Landed since v1.0.88
 
@@ -61,3 +59,6 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.0.90 | Environment banner, Quick Create, RatingField / RatingColumn |
 | v1.0.91 | PhoneField, IconPickerField, TreeSelectField |
 | v1.0.92 | Record presence (who's viewing), opt-in |
+| v1.0.95 | Table chrome Pro: sticky first column, resize, table/cards layouts |
+| v1.0.96 | Kanban via `Resource::board()`, `ResourceKanban`, board-move |
+| v1.0.97 | `Panel::userDashboards()` DnD chart layout into appearance JSON |

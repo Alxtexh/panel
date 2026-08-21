@@ -116,6 +116,18 @@ const props = withDefaults(
          * lists stay calm; hover still applies either way.
          */
         striped?: boolean
+        /**
+         * Pin the first visible data column (and the checkbox column when
+         * selectable). Off by default: zero cost when unused.
+         */
+        stickyFirst?: boolean
+        /**
+         * Offer drag-resize handles on resizable columns. Widths come from
+         * `columnWidths` (and each column's schema `width` as a fallback).
+         */
+        resizable?: boolean
+        /** Operator-chosen widths in pixels, keyed by column key. */
+        columnWidths?: Record<string, number>
     }>(),
     {
         rowKey: 'id',
@@ -130,6 +142,9 @@ const props = withDefaults(
         framed: true,
         striped: false,
         collapsedGroupsByDefault: false,
+        stickyFirst: false,
+        resizable: false,
+        columnWidths: () => ({}),
     },
 )
 
@@ -337,6 +352,8 @@ const emit = defineEmits<{
     (e: 'row-contextmenu', row: Record<string, unknown>, event: MouseEvent): void
     /** A plain click on the row body, already filtered for stray targets. */
     (e: 'row-click', row: Record<string, unknown>): void
+    /** Column drag-resize finished (or stepped) with a new pixel width. */
+    (e: 'resize', key: string, width: number): void
 }>()
 
 /**
@@ -382,6 +399,110 @@ const copied = ref<string | null>(null)
 const instanceId = useId()
 
 const visibleColumns = computed(() => props.columns.filter((c) => !props.hidden?.has(c.key)))
+
+/** Checkbox column width when selectable, used for sticky left offsets. */
+const CHECKBOX_STICKY_WIDTH = 40
+
+const stickyDataKey = computed(() => {
+    const explicit = visibleColumns.value.find((col) => col.sticky)
+
+    if (explicit) {
+        return explicit.key
+    }
+
+    if (props.stickyFirst && visibleColumns.value.length > 0) {
+        return visibleColumns.value[0].key
+    }
+
+    return null
+})
+
+function isStickyDataColumn(col: TableColumn): boolean {
+    return stickyDataKey.value === col.key
+}
+
+function stickyDataLeft(): string {
+    if (props.selectable && !props.reordering) {
+        return `${CHECKBOX_STICKY_WIDTH}px`
+    }
+
+    return '0'
+}
+
+function columnWidthPx(col: TableColumn): number | undefined {
+    const override = props.columnWidths?.[col.key]
+
+    if (typeof override === 'number') {
+        return override
+    }
+
+    return col.width
+}
+
+function columnStyle(col: TableColumn): Record<string, string> | undefined {
+    const width = columnWidthPx(col)
+    const sticky = isStickyDataColumn(col)
+    const style: Record<string, string> = {}
+
+    if (width !== undefined) {
+        style.width = `${width}px`
+        style.minWidth = `${width}px`
+        style.maxWidth = `${width}px`
+    }
+
+    if (sticky) {
+        style.left = stickyDataLeft()
+    }
+
+    return Object.keys(style).length ? style : undefined
+}
+
+function columnCanResize(col: TableColumn): boolean {
+    if (!props.resizable) {
+        return false
+    }
+
+    return col.resizable !== false
+}
+
+function onResizeStart(col: TableColumn, event: PointerEvent) {
+    if (!columnCanResize(col)) {
+        return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const startX = event.clientX
+    const startWidth = columnWidthPx(col) ?? 160
+    const target = event.currentTarget as HTMLElement
+
+    try {
+        target.setPointerCapture(event.pointerId)
+    } catch {
+        // jsdom and some browsers lack pointer capture; listeners still work.
+    }
+
+    function onMove(moveEvent: PointerEvent) {
+        const next = startWidth + (moveEvent.clientX - startX)
+        emit('resize', col.key, Math.min(1200, Math.max(48, next)))
+    }
+
+    function onUp(upEvent: PointerEvent) {
+        try {
+            target.releasePointerCapture(upEvent.pointerId)
+        } catch {
+            // ignore
+        }
+        target.removeEventListener('pointermove', onMove)
+        target.removeEventListener('pointerup', onUp)
+        target.removeEventListener('pointercancel', onUp)
+    }
+
+    target.addEventListener('pointermove', onMove)
+    target.addEventListener('pointerup', onUp)
+    target.addEventListener('pointercancel', onUp)
+}
 
 const hasColumnGroups = computed(() => visibleColumns.value.some((c) => !!c.group))
 
@@ -605,7 +726,9 @@ function summaryValue(key: string): string {
                          heading over a column of grips is noise. -->
                     <th v-if="reordering" class="w-8 border-b px-2 py-2.5" />
 
-                    <th v-if="selectable && !reordering" class="w-10 border-b px-3 py-2.5">
+                    <th v-if="selectable && !reordering" class="w-10 border-b px-3 py-2.5"
+                        :class="stickyDataKey ? 'bg-muted/50 sticky left-0 z-[11]' : ''"
+                    >
                         <input
                             :id="`${instanceId}-page`"
                             type="checkbox"
@@ -621,7 +744,13 @@ function summaryValue(key: string): string {
                     <th
                         v-for="col in visibleColumns"
                         :key="col.key"
-                        class="text-muted-foreground border-b px-3 py-2.5 text-left font-medium whitespace-nowrap"
+                        class="text-muted-foreground relative border-b px-3 py-2.5 text-left font-medium whitespace-nowrap"
+                        :class="
+                            isStickyDataColumn(col)
+                                ? 'bg-muted/50 sticky z-[11] shadow-[8px_0_8px_-8px_rgb(0_0_0/0.25)]'
+                                : ''
+                        "
+                        :style="columnStyle(col)"
                     >
                         <button
                             v-if="col.sortable"
@@ -635,6 +764,14 @@ function summaryValue(key: string): string {
                             <span v-else class="text-xs opacity-40">↕</span>
                         </button>
                         <span v-else>{{ col.label }}</span>
+                        <span
+                            v-if="columnCanResize(col)"
+                            class="hover:bg-primary/40 absolute top-0 right-0 z-[12] h-full w-1.5 cursor-col-resize"
+                            role="separator"
+                            aria-orientation="vertical"
+                            :aria-label="`Resize ${col.label}`"
+                            @pointerdown="onResizeStart(col, $event)"
+                        />
                     </th>
 
                     <!-- Frozen actions column. The shadow is not decoration:
@@ -769,7 +906,11 @@ function summaryValue(key: string): string {
                             </span>
                         </td>
 
-                        <td v-if="selectable && !reordering" class="px-3 py-2">
+                        <td
+                            v-if="selectable && !reordering"
+                            class="px-3 py-2"
+                            :class="stickyDataKey ? 'bg-background sticky left-0 z-[1] group-hover:bg-muted/50' : ''"
+                        >
                             <input
                                 :id="`${instanceId}-row-${rowId(row) ?? index}`"
                                 type="checkbox"
@@ -790,7 +931,13 @@ function summaryValue(key: string): string {
                             v-for="col in visibleColumns"
                             :key="col.key"
                             class="px-3 py-2 whitespace-nowrap"
-                            :class="col.cellClass"
+                            :class="[
+                                col.cellClass,
+                                isStickyDataColumn(col)
+                                    ? 'bg-background sticky z-[1] shadow-[8px_0_8px_-8px_rgb(0_0_0/0.25)] group-hover:bg-muted/50'
+                                    : '',
+                            ]"
+                            :style="columnStyle(col)"
                         >
                             <slot
                                 :name="`cell:${col.key}`"

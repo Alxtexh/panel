@@ -29,12 +29,12 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     rows: Record<string, unknown>[];
     emptyTitle: string;
     searchPlaceholder: string;
+    cards: CatalogItem[];
     embedded: boolean;
     facets: CatalogFacet[];
     cardsTitle: string;
     cardsDescription: string | null;
     tableTitle: string;
     tableDescription: string | null;
-    cards: CatalogItem[];
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

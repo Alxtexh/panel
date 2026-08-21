@@ -42,6 +42,9 @@ export interface SchemaColumn {
     muted?: boolean
     mono?: boolean
     align?: 'right' | 'center'
+    sticky?: boolean
+    width?: number
+    resizable?: boolean
     transform?: 'upper' | 'lower'
     prefix?: string
     suffix?: string
@@ -190,6 +193,9 @@ export function useSchemaColumns(schemaColumns: Ref<SchemaColumn[]>) {
             sortable: c.sortable,
             sortKey: c.sortKey,
             locked: c.locked,
+            sticky: c.sticky,
+            width: c.width,
+            resizable: c.resizable,
             copyable: c.copyable,
             cellClass: cellClassFor(c),
             group: c.group,

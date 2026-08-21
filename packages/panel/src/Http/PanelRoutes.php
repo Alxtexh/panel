@@ -1226,6 +1226,16 @@ final class PanelRoutes
         Route::get('{resource}/create', [ResourceController::class, 'create'])
             ->whereIn('resource', $keys)->name('create');
 
+        /*
+         * Kanban board. Opt-in via Resource::board(). Registered before
+         * `{resource}/{id}` so `board` is never captured as an id.
+         */
+        Route::get('{resource}/board', [ResourceController::class, 'board'])
+            ->whereIn('resource', $keys)->name('board');
+
+        Route::post('{resource}/board-move', [RecordController::class, 'boardMove'])
+            ->whereIn('resource', $keys)->name('board.move');
+
         Route::get('{resource}/forms/create', [ResourceController::class, 'modalCreate'])
             ->whereIn('resource', $keys)->name('forms.create');
 

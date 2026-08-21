@@ -61,6 +61,9 @@ final class AppearanceController extends Controller
             'radius' => ['sometimes', 'numeric', 'in:'.implode(',', self::RADII)],
             'contentLayout' => ['sometimes', 'string', 'in:'.implode(',', self::CONTENT_LAYOUTS)],
             'menuStyle' => ['sometimes', 'string', 'in:'.implode(',', self::MENU_STYLES)],
+            'dashboardLayout' => ['sometimes', 'array'],
+            'dashboardLayout.chartOrder' => ['sometimes', 'array', 'max:100'],
+            'dashboardLayout.chartOrder.*' => ['string', 'max:64', 'regex:/^[a-z0-9_-]+$/i'],
         ]);
 
         $user = $request->user();
@@ -68,6 +71,20 @@ final class AppearanceController extends Controller
         abort_if($user === null, 403);
 
         $current = is_array($user->appearance ?? null) ? $user->appearance : [];
+
+        if (isset($validated['dashboardLayout'])) {
+            $layout = $validated['dashboardLayout'];
+            $order = [];
+
+            foreach ($layout['chartOrder'] ?? [] as $key) {
+                if (is_string($key) && preg_match('/^[a-z0-9_-]+$/i', $key) === 1) {
+                    $order[] = $key;
+                }
+            }
+
+            $validated['dashboardLayout'] = ['chartOrder' => array_values(array_unique($order))];
+        }
+
         $user->appearance = [...$current, ...$validated];
         $user->save();
 

@@ -29,6 +29,7 @@
  */
 
 export { default as ResourceIndex } from './pages/ResourceIndex.vue'
+export { default as ResourceKanban } from './pages/ResourceKanban.vue'
 export { default as ResourceForm } from './pages/ResourceForm.vue'
 export { default as ResourceView } from './pages/ResourceView.vue'
 export { default as ResourceAttach } from './pages/ResourceAttach.vue'
@@ -209,6 +210,7 @@ export { useTranslations } from './composables/useTranslations'
  */
 export const PANEL_PAGES = {
     ResourceIndex: () => import('./pages/ResourceIndex.vue'),
+    ResourceKanban: () => import('./pages/ResourceKanban.vue'),
     ResourceForm: () => import('./pages/ResourceForm.vue'),
     ResourceView: () => import('./pages/ResourceView.vue'),
     ResourceAttach: () => import('./pages/ResourceAttach.vue'),

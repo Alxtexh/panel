@@ -15,6 +15,12 @@ export interface TableColumn {
     sortKey?: string
     /** Excluded from the column-visibility menu; always rendered. */
     locked?: boolean
+    /** Pin while the table scrolls horizontally. */
+    sticky?: boolean
+    /** Preferred width in pixels. */
+    width?: number
+    /** Whether the operator may drag-resize this column. */
+    resizable?: boolean
     /** Renders an inline copy button revealed on row hover. */
     copyable?: boolean
     /** Extra classes for the cell. */

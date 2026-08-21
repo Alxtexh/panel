@@ -57,6 +57,13 @@ const props = withDefaults(
         groupBy?: GroupSchema | null
         /** Applied-filter chips from the server. */
         indicators?: FilterIndicator[]
+        /**
+         * Index layout modes the operator may toggle. Empty means table only
+         * (no control). Opt-in via `Table::layouts(['table', 'cards'])`.
+         */
+        layouts?: Array<'table' | 'cards'>
+        /** Current layout mode. */
+        layout?: 'table' | 'cards'
     }>(),
     {
         searchPlaceholder: 'Search…',
@@ -66,6 +73,8 @@ const props = withDefaults(
         groups: () => [],
         groupBy: null,
         indicators: () => [],
+        layouts: () => [],
+        layout: 'table',
     },
 )
 
@@ -79,6 +88,7 @@ const emit = defineEmits<{
     (e: 'group', key: string | null): void
     (e: 'clear-filter', key: string): void
     (e: 'clear-filters'): void
+    (e: 'layout', mode: 'table' | 'cards'): void
 }>()
 
 const mobileDrawerOpen = ref(false)
@@ -847,6 +857,54 @@ function clearEverything() {
                 </div>
             </template>
         </PkDropdown>
+
+        <!-- Layout: table vs cards. Opt-in only when the table declared layouts. -->
+        <div
+            v-if="layouts.length > 1"
+            class="border-input inline-flex shrink-0 overflow-hidden rounded-md border"
+            role="group"
+            aria-label="Index layout"
+        >
+            <button
+                v-for="mode in layouts"
+                :key="mode"
+                type="button"
+                class="hover:bg-accent inline-flex size-9 items-center justify-center transition-colors"
+                :class="layout === mode ? 'bg-accent text-foreground' : 'text-muted-foreground'"
+                :aria-pressed="layout === mode"
+                :aria-label="mode === 'cards' ? 'Card layout' : 'Table layout'"
+                :title="mode === 'cards' ? 'Cards' : 'Table'"
+                @click="emit('layout', mode)"
+            >
+                <svg
+                    v-if="mode === 'table'"
+                    viewBox="0 0 24 24"
+                    class="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M3 5h18M3 12h18M3 19h18" />
+                </svg>
+                <svg
+                    v-else
+                    viewBox="0 0 24 24"
+                    class="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+            </button>
+        </div>
 
         <!-- Reorder: a MODE, so an icon with a pressed state (rule 3). -->
         <button

@@ -90,6 +90,18 @@ type __VLS_Props = {
      * lists stay calm; hover still applies either way.
      */
     striped?: boolean;
+    /**
+     * Pin the first visible data column (and the checkbox column when
+     * selectable). Off by default: zero cost when unused.
+     */
+    stickyFirst?: boolean;
+    /**
+     * Offer drag-resize handles on resizable columns. Widths come from
+     * `columnWidths` (and each column's schema `width` as a fallback).
+     */
+    resizable?: boolean;
+    /** Operator-chosen widths in pixels, keyed by column key. */
+    columnWidths?: Record<string, number>;
 };
 declare var __VLS_14: `cell:${string}`, __VLS_15: {
     row: Record<string, any>;
@@ -114,6 +126,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     "toggle-page": (select: boolean) => any;
     "row-click": (row: Record<string, unknown>) => any;
     "row-contextmenu": (row: Record<string, unknown>, event: MouseEvent) => any;
+    resize: (key: string, width: number) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onSort?: ((key: string) => any) | undefined;
     onReorder?: ((ids: (string | number)[]) => any) | undefined;
@@ -121,6 +134,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     "onToggle-page"?: ((select: boolean) => any) | undefined;
     "onRow-click"?: ((row: Record<string, unknown>) => any) | undefined;
     "onRow-contextmenu"?: ((row: Record<string, unknown>, event: MouseEvent) => any) | undefined;
+    onResize?: ((key: string, width: number) => any) | undefined;
 }>, {
     collapsedGroupsByDefault: boolean;
     rowKey: string;
@@ -141,6 +155,9 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     summaryValues: Record<string, number | null> | null;
     framed: boolean;
     striped: boolean;
+    stickyFirst: boolean;
+    resizable: boolean;
+    columnWidths: Record<string, number>;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;

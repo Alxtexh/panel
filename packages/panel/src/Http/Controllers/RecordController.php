@@ -585,6 +585,50 @@ final class RecordController extends Controller
         ]);
     }
 
+    /**
+     * Move one card on an opt-in Kanban board.
+     *
+     * THE BOARD DECLARATION IS THE ALLOWLIST. Only `Resource::board()` column
+     * values are accepted, so this is not a general attribute writer.
+     */
+    public function boardMove(Request $request, string $resource): JsonResponse
+    {
+        $class = $this->resolve($resource);
+        $board = $class::board();
+
+        if ($board === null) {
+            throw new NotFoundHttpException("[{$resource}] has no board.");
+        }
+
+        $validated = $request->validate([
+            'id' => ['required', 'integer'],
+            'column' => ['required', 'string', 'max:64'],
+        ]);
+
+        $allowed = $board->allowedValues();
+
+        if ($allowed === [] || ! in_array($validated['column'], $allowed, true)) {
+            throw ValidationException::withMessages([
+                'column' => 'That board column is not declared on this resource.',
+            ]);
+        }
+
+        $record = $this->findScoped($class, (string) $validated['id']);
+
+        abort_unless($class::can('update', $record), 403);
+
+        $record->forceFill([$board->column() => $validated['column']]);
+        $record->save();
+
+        return response()->json([
+            'ok' => true,
+            'id' => $record->getKey(),
+            'column' => $board->column(),
+            'value' => $validated['column'],
+            'updated_at' => $record->updated_at?->toIso8601String(),
+        ]);
+    }
+
     public function destroy(Request $request, string $resource, string $id): RedirectResponse
     {
         $class = $this->resolve($resource);

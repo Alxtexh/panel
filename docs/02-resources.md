@@ -158,8 +158,53 @@ public static function headerWidgets(): array
 }
 ```
 
-They render as one joined strip, the same shape a dashboard uses — see
+They render as one joined strip, the same shape a dashboard uses. See
 [Dashboards and widgets](06-dashboards-and-widgets.md).
+
+## Kanban board (opt-in)
+
+Declare `board()` on a resource. Until you do, there is no `/board` route and
+no move endpoint.
+
+```php
+use Alxtexh\Panel\Resources\Board;
+
+public static function board(): ?Board
+{
+    return Board::make('status')
+        ->columns([
+            'open' => 'Open',
+            'doing' => 'In progress',
+            'done' => 'Done',
+        ])
+        ->title('name')
+        ->description('notes');
+}
+```
+
+That mounts `ResourceKanban` at `{resource}/board` and accepts
+`POST {resource}/board-move` with `{ id, column }` against the declared
+allowlist. Run `php artisan panel:update` so hosts get the Vite page stub.
+
+## Table chrome Pro (opt-in)
+
+Sticky first column, column resize, and a table/cards toggle stay off until
+you ask:
+
+```php
+public static function table(Table $table): Table
+{
+    return $table
+        ->stickyFirstColumn()
+        ->resizableColumns()
+        ->layouts(['table', 'cards'])
+        ->columns([/* … */]);
+}
+```
+
+Widths and layout may also ride in saved views (`ViewState` keys `widths`,
+`layout`). Local prefs mirror them under `alxtexhpanel.{key}.widths` /
+`.layout`.
 
 ## The public API
 
