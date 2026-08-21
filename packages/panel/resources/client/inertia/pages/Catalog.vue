@@ -6,7 +6,8 @@
  */
 import { computed } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
-import { CatalogBrowser } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL, CatalogBrowser } from '@alxtexh-enterprise/panel'
 import type { CatalogBrowserTab, CatalogItem } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
@@ -60,7 +61,7 @@ function openItem(key: string): void {
 <template>
     <Head :title="pageHeading ?? 'Catalog'" />
 
-    <div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+    <div :class="PAGE_SHELL">
         <CatalogBrowser
             :title="pageHeading ?? 'Catalog'"
             :description="pageDescription"

@@ -5,6 +5,7 @@
 import { computed, ref } from 'vue';
 import {
     CatalogTill,
+    PAGE_SHELL,
     PkButton,
     PkHeading,
     PkStatusBadge,
@@ -65,7 +66,7 @@ const discountRate = computed(() => (tenOff.value ? 0.1 : 0));
 <template>
     <Head :title="pageHeading ?? 'Till'" />
 
-    <div class="mx-auto flex w-full max-w-6xl flex-col gap-10 p-4 sm:p-6">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-10']">
         <PkHeading
             :title="pageHeading ?? 'Till'"
             :description="pageDescription ?? undefined"

@@ -131,7 +131,9 @@ describe('DirectoryPage', () => {
             props: { title: 'Shortcuts', sections, embedded: false },
         })
 
-        expect(wrapper.classes().join(' ')).toContain('max-w-5xl')
+        expect(wrapper.classes().join(' ')).toContain('w-full')
         expect(wrapper.classes().join(' ')).toContain('px-4')
+        expect(wrapper.classes().join(' ')).not.toContain('max-w-5xl')
+        expect(wrapper.classes().join(' ')).not.toContain('mx-auto')
     })
 })

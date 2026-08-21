@@ -6,6 +6,7 @@
  * control is a plain link. The page owns cart: emit, then visit a till.
  */
 import CatalogItemDetail from './CatalogItemDetail.vue'
+import { PAGE_SHELL } from '../../lib/pageShell'
 import type { CatalogItem } from './CatalogCard.vue'
 
 const props = withDefaults(
@@ -30,7 +31,7 @@ const emit = defineEmits<{
 <template>
     <div
         class="flex w-full flex-col gap-8"
-        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
+        :class="embedded ? '' : PAGE_SHELL"
     >
         <a
             :href="catalogHref"

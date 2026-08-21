@@ -5,6 +5,7 @@
  * No sample correspondence. A host that has none sees an empty list.
  */
 import { Head } from '@inertiajs/vue3'
+import { PAGE_SHELL } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -48,7 +49,7 @@ const props = withDefaults(
 <template>
     <Head :title="pageHeading ?? 'Mail'" />
 
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 sm:p-6">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-6']">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Mail' }}</h1>
             <p v-if="pageDescription" class="text-sm text-muted-foreground">

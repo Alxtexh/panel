@@ -28,8 +28,8 @@ defineOptions({ inheritAttrs: false })
  */
 import { Head, Link } from '@inertiajs/vue3'
 import { Globe, Terminal } from '@lucide/vue'
+import { CATALOGUE_GRID_TIGHT, PkSkeleton } from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
-import { PkSkeleton } from '@alxtexh-enterprise/panel'
 
 /*
  * NO LAYOUT IS NAMED HERE, and that is the difference between a page in an
@@ -145,7 +145,7 @@ const groups = computed(() => {
                 {{ group.name }}
             </h2>
 
-            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div :class="CATALOGUE_GRID_TIGHT">
                 <Link
                     v-for="resource in group.items"
                     :key="resource.key"

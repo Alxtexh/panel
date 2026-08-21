@@ -1,0 +1,22 @@
+import { describe, expect, it } from 'vitest'
+import {
+    FORM_MEASURE,
+    PAGE_SHELL,
+    PAGE_SHELL_COMPACT,
+    PAGE_SHELL_STACK,
+} from './pageShell'
+
+describe('pageShell', () => {
+    it('is full-bleed with padding and no centred max-width', () => {
+        for (const shell of [PAGE_SHELL, PAGE_SHELL_COMPACT, PAGE_SHELL_STACK]) {
+            expect(shell).toMatch(/\bw-full\b/)
+            expect(shell).not.toMatch(/max-w-/)
+            expect(shell).not.toMatch(/mx-auto/)
+        }
+    })
+
+    it('offers a left-aligned form measure without centering', () => {
+        expect(FORM_MEASURE).toBe('w-full max-w-5xl')
+        expect(FORM_MEASURE).not.toMatch(/mx-auto/)
+    })
+})

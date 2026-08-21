@@ -24,7 +24,12 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, ref, toRef } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
-import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
+import {
+    FORM_MEASURE,
+    PAGE_SHELL_COMPACT,
+    PkButton as Button,
+    buttonClasses,
+} from '@alxtexh-enterprise/panel'
 /*
  * THE SAME CELLS THE TABLE USES, not new ones.
  *
@@ -420,7 +425,7 @@ function destroy() {
 <template>
     <Head :title="title" />
 
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-3 sm:p-4">
+    <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4']">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">{{ title }}</h1>
@@ -444,111 +449,117 @@ function destroy() {
             </div>
         </div>
 
-        <!-- Layout tree: tabs and sections, same components the form uses. -->
-        <template v-if="hasLayout">
-            <InfoNode v-for="(node, i) in schema.infolist" :key="i" :node="node" :record="record" @action="runInfolistAction" />
-        </template>
+        <!--
+            Full-bleed shell; left-aligned FORM_MEASURE for the record body
+            (no mx-auto skinny centre column). Relation tables stay full width.
+        -->
+        <div :class="FORM_MEASURE">
+            <!-- Layout tree: tabs and sections, same components the form uses. -->
+            <template v-if="hasLayout">
+                <InfoNode v-for="(node, i) in schema.infolist" :key="i" :node="node" :record="record" @action="runInfolistAction" />
+            </template>
 
-        <!-- Fallback: a definition list. One record's attributes read better as
-             labelled pairs than as a table row turned on its side. -->
-        <dl v-else class="bg-card divide-y rounded-lg border">
-            <div
-                v-for="column in schema.table.columns"
-                :key="column.key"
-                class="grid grid-cols-1 gap-1 px-4 py-3 sm:grid-cols-3 sm:gap-4"
-            >
-                <dt class="text-muted-foreground text-sm font-medium">{{ column.label }}</dt>
-                <dd class="text-sm sm:col-span-2">
-                    <Badge
-                        v-if="column.type === 'badge'"
-                        :variant="badgeVariant(column.key, record[column.key]) as any"
-                        class="capitalize"
-                    >
-                        {{ record[column.key] }}
-                    </Badge>
-                    <IconCell
-                        v-else-if="column.type === 'icon'"
-                        :value="record[column.key]"
-                        :icons="(column as any).icons ?? {}"
-                        :colors="(column as any).colors ?? {}"
-                        :labels="(column as any).labels ?? {}"
-                        :default-icon="(column as any).defaultIcon ?? 'dot'"
-                    />
-                    <ColourCell
-                        v-else-if="column.type === 'colour'"
-                        :value="record[column.key]"
-                        :show-value="(column as any).showValue !== false"
-                    />
-                    <!--
-                        A CHECKBOX AND A TOGGLE READ THE SAME HERE. On a record
-                        page nothing is being switched - both are reporting a
-                        yes or a no, and a toggle control would invite a click
-                        that does nothing.
-                    -->
-                    <CheckboxCell
-                        v-else-if="column.type === 'checkbox' || column.type === 'toggle'"
-                        :value="record[column.key]"
-                        :true-label="(column as any).trueLabel"
-                        :false-label="(column as any).falseLabel"
-                    />
-                    <!--
-                        THE RECORD PAGE IS WHERE THESE TWO ACTUALLY LIVE. The
-                        list shows a truncated line and "3 entries" because a
-                        row is a scanning surface; here there is room, and
-                        somebody has already chosen this record.
-
-                        This is the half `CodeField` and `KeyValueField` never
-                        had: the package could accept a config blob or a map
-                        and then print the raw JSON back at the person who
-                        typed it into a two-column editor.
-                    -->
-                    <div v-else-if="column.type === 'code'" class="max-w-full">
-                        <p
-                            v-if="(column as any).language"
-                            class="text-muted-foreground mb-1 font-mono text-[10px] uppercase"
+            <!-- Fallback: a definition list. One record's attributes read better as
+                 labelled pairs than as a table row turned on its side. -->
+            <dl v-else class="bg-card divide-y rounded-lg border">
+                <div
+                    v-for="column in schema.table.columns"
+                    :key="column.key"
+                    class="grid grid-cols-1 gap-1 px-4 py-3 sm:grid-cols-3 sm:gap-4"
+                >
+                    <dt class="text-muted-foreground text-sm font-medium">{{ column.label }}</dt>
+                    <dd class="text-sm sm:col-span-2">
+                        <Badge
+                            v-if="column.type === 'badge'"
+                            :variant="badgeVariant(column.key, record[column.key]) as any"
+                            class="capitalize"
                         >
-                            {{ (column as any).language }}
-                        </p>
-                        <pre
-                            class="bg-muted/50 overflow-x-auto rounded-md border p-3 font-mono text-xs"
-                        ><code>{{ record[column.key] }}</code></pre>
-                    </div>
+                            {{ record[column.key] }}
+                        </Badge>
+                        <IconCell
+                            v-else-if="column.type === 'icon'"
+                            :value="record[column.key]"
+                            :icons="(column as any).icons ?? {}"
+                            :colors="(column as any).colors ?? {}"
+                            :labels="(column as any).labels ?? {}"
+                            :default-icon="(column as any).defaultIcon ?? 'dot'"
+                        />
+                        <ColourCell
+                            v-else-if="column.type === 'colour'"
+                            :value="record[column.key]"
+                            :show-value="(column as any).showValue !== false"
+                        />
+                        <!--
+                            A CHECKBOX AND A TOGGLE READ THE SAME HERE. On a record
+                            page nothing is being switched - both are reporting a
+                            yes or a no, and a toggle control would invite a click
+                            that does nothing.
+                        -->
+                        <CheckboxCell
+                            v-else-if="column.type === 'checkbox' || column.type === 'toggle'"
+                            :value="record[column.key]"
+                            :true-label="(column as any).trueLabel"
+                            :false-label="(column as any).falseLabel"
+                        />
+                        <!--
+                            THE RECORD PAGE IS WHERE THESE TWO ACTUALLY LIVE. The
+                            list shows a truncated line and "3 entries" because a
+                            row is a scanning surface; here there is room, and
+                            somebody has already chosen this record.
 
-                    <div v-else-if="column.type === 'keyvalue'">
-                        <dl
-                            v-if="
-                                record[column.key] &&
-                                typeof record[column.key] === 'object' &&
-                                Object.keys(record[column.key]).length
-                            "
-                            class="divide-y rounded-md border"
-                        >
-                            <div
-                                v-for="(v, k) in record[column.key]"
-                                :key="k"
-                                class="grid grid-cols-3 gap-2 px-3 py-2 text-sm"
+                            This is the half `CodeField` and `KeyValueField` never
+                            had: the package could accept a config blob or a map
+                            and then print the raw JSON back at the person who
+                            typed it into a two-column editor.
+                        -->
+                        <div v-else-if="column.type === 'code'" class="max-w-full">
+                            <p
+                                v-if="(column as any).language"
+                                class="text-muted-foreground mb-1 font-mono text-[10px] uppercase"
                             >
-                                <dt class="text-muted-foreground truncate font-medium">{{ k }}</dt>
-                                <dd class="col-span-2 break-words">{{ v }}</dd>
-                            </div>
-                        </dl>
-                        <span v-else class="text-muted-foreground">—</span>
-                    </div>
+                                {{ (column as any).language }}
+                            </p>
+                            <pre
+                                class="bg-muted/50 overflow-x-auto rounded-md border p-3 font-mono text-xs"
+                            ><code>{{ record[column.key] }}</code></pre>
+                        </div>
 
-                    <ImageCell
-                        v-else-if="column.type === 'image'"
-                        :src="record[column.key]"
-                        :fallback-text="record[(column as any).fallbackFrom ?? 'name']"
-                        :rounded="(column as any).rounded !== false"
-                        :size="(column as any).size ?? 'md'"
-                        :fallback="(column as any).fallback ?? 'initials'"
-                    />
-                    <span v-else :class="column.mono ? 'font-mono text-xs' : ''">{{
-                        render(column.key)
-                    }}</span>
-                </dd>
-            </div>
-        </dl>
+                        <div v-else-if="column.type === 'keyvalue'">
+                            <dl
+                                v-if="
+                                    record[column.key] &&
+                                    typeof record[column.key] === 'object' &&
+                                    Object.keys(record[column.key]).length
+                                "
+                                class="divide-y rounded-md border"
+                            >
+                                <div
+                                    v-for="(v, k) in record[column.key]"
+                                    :key="k"
+                                    class="grid grid-cols-3 gap-2 px-3 py-2 text-sm"
+                                >
+                                    <dt class="text-muted-foreground truncate font-medium">{{ k }}</dt>
+                                    <dd class="col-span-2 break-words">{{ v }}</dd>
+                                </div>
+                            </dl>
+                            <span v-else class="text-muted-foreground">—</span>
+                        </div>
+
+                        <ImageCell
+                            v-else-if="column.type === 'image'"
+                            :src="record[column.key]"
+                            :fallback-text="record[(column as any).fallbackFrom ?? 'name']"
+                            :rounded="(column as any).rounded !== false"
+                            :size="(column as any).size ?? 'md'"
+                            :fallback="(column as any).fallback ?? 'initials'"
+                        />
+                        <span v-else :class="column.mono ? 'font-mono text-xs' : ''">{{
+                            render(column.key)
+                        }}</span>
+                    </dd>
+                </div>
+            </dl>
+        </div>
 
         <!-- Related lists. -->
         <section v-if="relations.length" class="flex flex-col gap-3">

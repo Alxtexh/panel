@@ -5,6 +5,7 @@
  * DATA IS YOURS. Pass tabs (products, units, listings). Selecting a tile
  * emits `select`; the page visits the dedicated item route.
  */
+import { PAGE_SHELL } from '../../lib/pageShell'
 import { computed, ref, watch } from 'vue'
 import PkHeading from '../primitives/PkHeading.vue'
 import PkTextInput from '../primitives/PkTextInput.vue'
@@ -122,7 +123,7 @@ function applyFilters(next: CatalogFilters): void {
 <template>
     <div
         class="flex w-full flex-col gap-8"
-        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
+        :class="embedded ? '' : PAGE_SHELL"
     >
         <PkHeading :title="title" :description="description ?? undefined" />
 

@@ -52,6 +52,17 @@ export { default as PkPasswordInput } from './components/primitives/PkPasswordIn
 
 /* The class merger every moved shadcn component composes with. */
 export { cn, toUrl } from './lib/cn'
+export {
+    CATALOGUE_GRID,
+    CATALOGUE_GRID_TIGHT,
+    CATALOGUE_GRID_TILES,
+} from './lib/catalogueGrid'
+export {
+    FORM_MEASURE,
+    PAGE_SHELL,
+    PAGE_SHELL_COMPACT,
+    PAGE_SHELL_STACK,
+} from './lib/pageShell'
 export { packWidgetColumns } from './lib/packWidgetColumns'
 export type { WidgetColumnBand } from './lib/packWidgetColumns'
 export {

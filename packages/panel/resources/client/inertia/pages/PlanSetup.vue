@@ -4,7 +4,8 @@
  */
 import { computed } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
-import { PlanEditor, PlanGrid } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL, PlanEditor, PlanGrid } from '@alxtexh-enterprise/panel'
 import type { PlanLimitField, PlanModuleOption, PlanRecord } from '@alxtexh-enterprise/panel'
 
 defineOptions({
@@ -59,7 +60,7 @@ function destroy(id: string) {
 <template>
     <Head :title="pageHeading ?? 'Plans'" />
 
-    <div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+    <div :class="PAGE_SHELL">
         <PlanEditor
             v-if="mode === 'create' || mode === 'edit'"
             :plan="editing ?? undefined"

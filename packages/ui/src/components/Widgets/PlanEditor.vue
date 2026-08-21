@@ -5,6 +5,7 @@
  * Modules are tags. Numeric limits use -1 for Unlimited. Extra perks are a
  * free-form key/value repeater. The page persists; this emits `save`.
  */
+import { PAGE_SHELL } from '../../lib/pageShell'
 import { computed, reactive, watch } from 'vue'
 import PkButton from '../primitives/PkButton.vue'
 import PkFieldLabel from '../primitives/PkFieldLabel.vue'
@@ -184,7 +185,7 @@ const areaClass =
 <template>
     <form
         class="w-full space-y-6"
-        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
+        :class="embedded ? '' : PAGE_SHELL"
         data-slot="plan-editor"
         @submit.prevent="submit"
     >

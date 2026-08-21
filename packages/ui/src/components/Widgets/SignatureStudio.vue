@@ -7,6 +7,7 @@
  * transparent PNG/WebP (`assertTransparentImage`).
  */
 import { computed, onMounted, ref, watch } from 'vue'
+import { PAGE_SHELL } from '../../lib/pageShell'
 import PkButton from '../primitives/PkButton.vue'
 import PkHeading from '../primitives/PkHeading.vue'
 import PkSignaturePad from '../primitives/PkSignaturePad.vue'
@@ -172,7 +173,7 @@ const preview = computed(() => {
 <template>
     <div
         class="flex w-full flex-col gap-10"
-        :class="embedded ? '' : 'mx-auto max-w-6xl p-4 sm:p-6'"
+        :class="embedded ? '' : PAGE_SHELL"
     >
         <PkHeading :title="title" :description="description ?? undefined" />
 

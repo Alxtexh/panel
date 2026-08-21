@@ -5,6 +5,7 @@
  * A rental board, a locker list, a desk book. Status cells use PkStatusBadge.
  */
 import { computed, ref } from 'vue'
+import { PAGE_SHELL } from '../../lib/pageShell'
 import PkHeading from '../primitives/PkHeading.vue'
 import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 import DataTable from '../DataTable/DataTable.vue'
@@ -65,7 +66,7 @@ const visibleCards = computed(() =>
 <template>
     <div
         class="flex w-full flex-col gap-10"
-        :class="embedded ? '' : 'mx-auto max-w-6xl p-4 sm:p-6'"
+        :class="embedded ? '' : PAGE_SHELL"
     >
         <PkHeading :title="title" :description="description ?? undefined" />
 

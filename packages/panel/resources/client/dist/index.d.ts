@@ -38,6 +38,8 @@ export { default as PkHeading } from './components/primitives/PkHeading.vue';
 export { default as PkAlertError } from './components/primitives/PkAlertError.vue';
 export { default as PkPasswordInput } from './components/primitives/PkPasswordInput.vue';
 export { cn, toUrl } from './lib/cn';
+export { CATALOGUE_GRID, CATALOGUE_GRID_TIGHT, CATALOGUE_GRID_TILES, } from './lib/catalogueGrid';
+export { FORM_MEASURE, PAGE_SHELL, PAGE_SHELL_COMPACT, PAGE_SHELL_STACK, } from './lib/pageShell';
 export { packWidgetColumns } from './lib/packWidgetColumns';
 export type { WidgetColumnBand } from './lib/packWidgetColumns';
 export { TRANSPARENT_IMAGE_HELP, OPAQUE_IMAGE_ERROR, JPEG_IMAGE_ERROR, assertTransparentImage, imageHasTransparency, } from './lib/transparentImage';

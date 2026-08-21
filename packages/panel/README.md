@@ -31,6 +31,12 @@ php artisan panel:install
 php artisan make:panel-recipe Invoices
 ```
 
+**Page width:** kit admin pages fill the shell content area. Prefer
+`PAGE_SHELL` (or the stack/compact variants) from `@alxtexh-enterprise/panel`.
+Create/edit/view pages are full-bleed; use left-aligned `FORM_MEASURE` for
+fields when needed. Do not wrap new pages in `max-w-*` + `mx-auto` unless
+they are intentionally narrow (auth, onboarding, marketing).
+
 Optional installer flags:
 ```bash
 php artisan panel:install --no-auth

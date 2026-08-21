@@ -12,7 +12,12 @@ defineOptions({ inheritAttrs: false })
  * makes a new one. Detach is a row action on the nested index.
  */
 import { Head, Link, useForm } from '@inertiajs/vue3'
-import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
+import {
+    FORM_MEASURE,
+    PAGE_SHELL_COMPACT,
+    PkButton as Button,
+    buttonClasses,
+} from '@alxtexh-enterprise/panel'
 
 const props = defineProps<{
     schema: {
@@ -45,7 +50,7 @@ function submit() {
 <template>
     <Head :title="`Attach ${schema.labelPlural}`" />
 
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-3 pb-24 sm:p-4">
+    <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4 pb-24']">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0">
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
@@ -58,7 +63,10 @@ function submit() {
             </Link>
         </div>
 
-        <form class="bg-card flex flex-col gap-3 rounded-lg border p-4 sm:p-6" @submit.prevent="submit">
+        <form
+            :class="[FORM_MEASURE, 'bg-card flex flex-col gap-3 rounded-lg border p-4 sm:p-6']"
+            @submit.prevent="submit"
+        >
             <p v-if="options.length === 0" class="text-muted-foreground text-sm">
                 Nothing left to attach.
             </p>

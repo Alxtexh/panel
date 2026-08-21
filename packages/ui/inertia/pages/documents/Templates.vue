@@ -23,6 +23,7 @@ defineOptions({ inheritAttrs: false })
  */
 import { Head, Link } from '@inertiajs/vue3'
 import { computed } from 'vue'
+import { CATALOGUE_GRID, PAGE_SHELL } from '@alxtexh-enterprise/panel'
 
 const props = defineProps<{
     prefix: string
@@ -35,7 +36,7 @@ const base = computed(() => (props.prefix === '/' ? '' : props.prefix))
 <template>
     <Head title="Document templates" />
 
-    <div class="flex flex-col gap-4 p-4">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-4']">
         <header>
             <h1 class="text-xl font-semibold tracking-tight">Document templates</h1>
             <p class="text-muted-foreground text-sm">
@@ -43,7 +44,7 @@ const base = computed(() => (props.prefix === '/' ? '' : props.prefix))
             </p>
         </header>
 
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div :class="CATALOGUE_GRID">
             <Link
                 v-for="kind in kinds"
                 :key="kind.id"

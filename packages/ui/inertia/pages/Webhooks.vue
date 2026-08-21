@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /** Webhook endpoints shell. Props from WebhookEndpointsPage. */
 import { Head } from '@inertiajs/vue3'
+import { PAGE_SHELL_STACK } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -16,7 +17,7 @@ defineProps<{
 
 <template>
     <Head :title="pageHeading ?? 'Webhooks'" />
-    <div class="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
+    <div :class="PAGE_SHELL_STACK">
         <header>
             <h1 class="text-2xl font-semibold">{{ pageHeading ?? 'Webhooks' }}</h1>
             <p v-if="pageDescription" class="text-sm text-muted-foreground">{{ pageDescription }}</p>

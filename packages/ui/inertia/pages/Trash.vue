@@ -46,7 +46,7 @@ import { Head, router } from '@inertiajs/vue3'
 import { Check, RotateCcw, Settings2, Trash2, TriangleAlert } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
-import { PkModal, TablePagination, TableShell } from '@alxtexh-enterprise/panel'
+import { PAGE_SHELL, PkModal, TablePagination, TableShell } from '@alxtexh-enterprise/panel'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
 
 interface TrashedRecord {
@@ -365,7 +365,7 @@ function deletedOn(value: string): string {
 <template>
     <Head title="Trash" />
 
-    <div class="mx-auto flex w-full max-w-4xl flex-col gap-5 p-4 sm:p-6">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-5']">
         <header class="flex flex-wrap items-start justify-between gap-3">
             <div class="flex flex-col gap-1">
                 <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Trash</h1>

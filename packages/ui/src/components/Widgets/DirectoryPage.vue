@@ -10,6 +10,7 @@
  *
  * SEARCH IS CLIENT-SIDE on link titles. Sections with no remaining links hide.
  */
+import { PAGE_SHELL } from '../../lib/pageShell'
 import { computed, markRaw, ref } from 'vue'
 import type { Component } from 'vue'
 import { buttonClasses } from '../primitives/buttonClasses'
@@ -89,7 +90,7 @@ const visibleSections = computed(() => {
 <template>
     <div
         class="flex w-full flex-col gap-8"
-        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
+        :class="embedded ? '' : PAGE_SHELL"
     >
         <header>
             <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">{{ title }}</h1>

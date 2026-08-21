@@ -4,7 +4,8 @@
  */
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL_STACK, PkButton as Button } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -68,7 +69,7 @@ function roleLabel(roleId: string): string {
 <template>
     <Head :title="pageHeading ?? 'Invites'" />
 
-    <div class="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+    <div :class="PAGE_SHELL_STACK">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Invites' }}</h1>
             <p v-if="pageDescription" class="text-sm text-muted-foreground">

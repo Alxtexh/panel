@@ -8,6 +8,7 @@
  * keys leave this file.
  */
 import { computed } from 'vue'
+import { CATALOGUE_GRID } from '../../lib/catalogueGrid'
 import PkButton from '../primitives/PkButton.vue'
 import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 
@@ -47,7 +48,7 @@ const connectedCount = computed(
             processors.
         </p>
 
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div :class="CATALOGUE_GRID">
             <article
                 v-for="gateway in gateways"
                 :key="gateway.key"

@@ -39,7 +39,7 @@ defineOptions({ inheritAttrs: false })
  */
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import { PAGE_SHELL, PkButton as Button } from '@alxtexh-enterprise/panel'
 
 type Url = {
     loc: string
@@ -108,8 +108,7 @@ const stale = computed(() => props.exists && props.urls.length === 0)
 <template>
     <Head :title="pageHeading" />
 
-    <!-- `mx-auto w-full` centres the column - see `Environment.vue`. -->
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 sm:p-6">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-4']">
         <header>
             <h1 class="text-xl font-semibold tracking-tight">{{ pageHeading }}</h1>
             <p v-if="pageDescription" class="text-muted-foreground mt-1 text-sm">

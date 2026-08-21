@@ -4,7 +4,8 @@
  */
 import { computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
-import { SignatureStudio } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL, SignatureStudio } from '@alxtexh-enterprise/panel'
 import type { StudioDocument } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
@@ -40,7 +41,7 @@ const documents = computed<StudioDocument[]>(() => {
 <template>
     <Head :title="pageHeading ?? 'Signatures'" />
 
-    <div class="mx-auto w-full max-w-6xl p-4 sm:p-6">
+    <div :class="PAGE_SHELL">
         <SignatureStudio
             :title="pageHeading ?? 'Signatures'"
             :description="pageDescription"

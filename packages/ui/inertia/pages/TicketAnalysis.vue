@@ -16,6 +16,7 @@
 import { Head, Link } from '@inertiajs/vue3'
 import { computed, onMounted, ref } from 'vue'
 import {
+    PAGE_SHELL_COMPACT,
     ChartCard,
     LineChart,
     SegmentedBar,
@@ -126,7 +127,7 @@ const mix = computed(() => [
 <template>
     <Head title="Ticket analysis" />
 
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-3 sm:p-4">
+    <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4']">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Ticket analysis</h1>

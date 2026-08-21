@@ -11,6 +11,7 @@
  * The page owns the fake (or real) data.
  */
 import { computed, reactive, ref, watch } from 'vue'
+import { CATALOGUE_GRID_TILES } from '../../lib/catalogueGrid'
 import PkTextInput from '../primitives/PkTextInput.vue'
 import { iconPath } from '../primitives/icons'
 import CatalogCard, { type CatalogItem } from './CatalogCard.vue'
@@ -283,7 +284,7 @@ function goTo(next: number) {
             :class="
                 layout === 'list'
                     ? 'flex flex-col gap-3'
-                    : 'grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5'
+                    : CATALOGUE_GRID_TILES
             "
             :data-slot="layout === 'list' ? 'catalog-list' : 'catalog-grid'"
         >

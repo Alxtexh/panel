@@ -3,6 +3,7 @@
  * Index of PlanCards. Create is a page action; this only emits.
  */
 import PlanCard from './PlanCard.vue'
+import { PAGE_SHELL } from '../../lib/pageShell'
 import PkButton from '../primitives/PkButton.vue'
 import type { PlanRecord } from './planTypes'
 
@@ -27,7 +28,7 @@ const emit = defineEmits<{
 <template>
     <div
         class="w-full space-y-6"
-        :class="embedded ? '' : 'mx-auto max-w-5xl px-4 py-6 sm:px-6'"
+        :class="embedded ? '' : PAGE_SHELL"
         data-slot="plan-grid"
     >
         <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

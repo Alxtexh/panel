@@ -29,6 +29,7 @@ defineOptions({ inheritAttrs: false })
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { Bug, ChevronDown, Lightbulb, MessageSquare, Sparkles } from '@lucide/vue'
 import { computed, ref } from 'vue'
+import { PAGE_SHELL } from '@alxtexh-enterprise/panel'
 import SupportPageEditor, {
     type SupportProps,
 } from '../components/support/SupportPageEditor.vue'
@@ -136,7 +137,7 @@ const SECTIONS = [
         the viewport was, which is unreadable on a wide monitor and looked
         broken next to Help and About, which are the same shape of screen.
     -->
-    <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-6">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-6']">
         <SupportPageEditor :support="support">
         <header>
             <h1 class="text-2xl font-semibold tracking-tight">
