@@ -8,7 +8,7 @@ These pages are the catalogue: what ships, and how to switch each part on.
 
 | Page | What it covers |
 |---|---|
-| [1. Install](01-install.md) | Getting a working panel on a fresh or existing app |
+| [1. Install](01-install.md) | GitHub-only install: panelkit (dev) → Alxtexh/panel (Composer). panel-ui not required |
 | [2. Resources](02-resources.md) | Tables, forms, and the one class that declares both |
 | [3. Fields](03-fields.md) | All 24 form field types |
 | [4. Columns and filters](04-columns-and-filters.md) | All 12 column types, 6 filters |
@@ -17,7 +17,7 @@ These pages are the catalogue: what ships, and how to switch each part on.
 | [7. Pages and panels](07-pages-and-panels.md) | Custom pages, multiple portals, navigation |
 | [8. Authorisation and tenancy](08-authorisation-and-tenancy.md) | Policies, abilities, multi-tenancy |
 | [9. Authentication](09-authentication.md) | Sign-in, passkeys, 2FA, social, impersonation |
-| [10. Built-in screens](10-built-in-screens.md) | Operations, trash, documents, help — and why you may not see them |
+| [10. Built-in screens](10-built-in-screens.md) | Operations, trash, documents, help, and why you may not see them |
 | [11. Commands](11-commands.md) | Every artisan command |
 | [12. Going to production](12-production.md) | Queues, sockets, SSR, backups |
 | [13. Billing adapters](13-billing-adapters.md) | Provider-agnostic inbound webhooks: signature header + payload map |

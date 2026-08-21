@@ -42,6 +42,11 @@ class BillingPortalPage extends Page
         return $panel !== null && $panel->offersApp('billing-portal');
     }
 
+    public static function description(): ?string
+    {
+        return __('panel::billing.portal.host_extension');
+    }
+
     /**
      * @return array<string, mixed>|null
      */

@@ -14,7 +14,15 @@ return [
 
     'portal' => [
         'title' => 'Facturacion',
-        'empty' => 'Aun no hay datos de facturacion. Conecta el mapeo de tu pasarela en una subclase.',
+        'empty' => 'Aun no hay datos de facturacion. Sobrescribe BillingPortalPage en el host para mapear tu pasarela.',
+        'empty_hint' => 'Suscripcion, facturas y metodos de pago quedan vacios hasta que el host los rellene. Los enlaces de accion abajo quedan deshabilitados hasta que definas hrefs.',
+        'subscription' => 'Suscripcion',
+        'invoices' => 'Facturas',
+        'payment_methods' => 'Metodos de pago',
+        'actions' => 'Acciones de facturacion',
+        'no_invoices' => 'No hay facturas que mostrar.',
+        'no_methods' => 'No hay metodos de pago registrados.',
+        'host_extension' => 'Extension del host: subclasa BillingPortalPage y sobrescribe subscription(), invoices(), paymentMethods() y billingActions().',
     ],
 
     'status' => [

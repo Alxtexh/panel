@@ -7,7 +7,12 @@
  */
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { PkButton as Button, PkPageHeader } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL,
+    PkEmptyState,
+    PkPageHeader,
+    buttonClasses,
+} from '@alxtexh-enterprise/panel'
 
 interface BoardCard {
     id: number | string
@@ -22,25 +27,37 @@ interface BoardColumn {
     cards: BoardCard[]
 }
 
-const props = defineProps<{
-    schema: {
-        key: string
-        label: string
-        labelPlural: string
-        routes: { index: string; board?: string | null }
-    }
-    board: {
-        column: string
-        columns: { value: string; label: string }[]
-        title: string
-        description: string | null
-    }
-    columns: BoardColumn[]
-    can: { update: boolean }
-    moveUrl: string
-    indexUrl: string
-    breadcrumbs?: { title: string; href?: string | null }[]
-}>()
+const props = withDefaults(
+    defineProps<{
+        schema: {
+            key: string
+            label: string
+            labelPlural: string
+        }
+        board: {
+            column: string
+            columns: { value: string; label: string }[]
+            title: string
+            description: string | null
+        }
+        columns: BoardColumn[]
+        can: { update: boolean }
+        moveUrl: string
+        indexUrl: string
+        breadcrumbs?: { title: string; href?: string | null }[]
+        /** Server hard cap on cards loaded for the board. */
+        cardCap?: number
+        /** True when matching rows exceed cardCap. */
+        capped?: boolean
+        /** Matching row count before the cap (may equal cards shown). */
+        totalMatching?: number | null
+    }>(),
+    {
+        cardCap: 500,
+        capped: false,
+        totalMatching: null,
+    },
+)
 
 const columns = ref<BoardColumn[]>(
     props.columns.map((col) => ({
@@ -55,6 +72,14 @@ const busy = ref(false)
 const error = ref<string | null>(null)
 
 const totalCards = computed(() => columns.value.reduce((n, col) => n + col.cards.length, 0))
+
+const purpose = computed(() => {
+    const base = `${totalCards.value} cards across ${columns.value.length} columns`
+    if (props.capped) {
+        return `${base}. Showing first ${props.cardCap}.`
+    }
+    return base
+})
 
 function onDragStart(card: BoardCard, event: DragEvent) {
     if (!props.can.update || busy.value) {
@@ -171,22 +196,45 @@ function openRecord(card: BoardCard) {
 <template>
     <Head :title="`${schema.labelPlural} board`" />
 
-    <div class="flex min-h-0 flex-1 flex-col gap-4">
-        <PkPageHeader
-            :title="`${schema.labelPlural} board`"
-            :description="`${totalCards} cards across ${columns.length} columns`"
-            :breadcrumbs="breadcrumbs"
-        >
+    <div :class="[PAGE_SHELL, 'flex min-h-0 flex-1 flex-col gap-4']">
+        <PkPageHeader :title="`${schema.labelPlural} board`" :purpose="purpose">
             <template #actions>
-                <Button as-child variant="outline">
-                    <Link :href="indexUrl">Table view</Link>
-                </Button>
+                <Link :href="indexUrl" :class="buttonClasses({ variant: 'outline' })">
+                    Table view
+                </Link>
             </template>
         </PkPageHeader>
 
+        <p
+            v-if="capped"
+            class="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-foreground"
+            role="status"
+        >
+            Showing first {{ cardCap }} cards
+            <span v-if="totalMatching != null">
+                of {{ totalMatching }} matching
+            </span>
+            . Use the table view with filters to work beyond this cap.
+        </p>
+
         <p v-if="error" class="text-destructive text-sm" role="alert">{{ error }}</p>
 
-        <div class="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2">
+        <p v-if="busy" class="text-muted-foreground text-sm" aria-live="polite">
+            Saving move...
+        </p>
+
+        <PkEmptyState
+            v-if="totalCards === 0"
+            title="No cards on this board"
+            description="Records that match the board columns will appear here. Create one from the table view, or adjust filters."
+            icon="package"
+        >
+            <template #actions>
+                <Link :href="indexUrl" :class="buttonClasses()">Open table</Link>
+            </template>
+        </PkEmptyState>
+
+        <div v-else class="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2">
             <section
                 v-for="col in columns"
                 :key="col.value"

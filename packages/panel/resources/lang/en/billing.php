@@ -14,7 +14,15 @@ return [
 
     'portal' => [
         'title' => 'Billing',
-        'empty' => 'No billing data yet. Connect your billing gateway mapping on a subclass.',
+        'empty' => 'No billing data yet. Override BillingPortalPage on the host to map your gateway.',
+        'empty_hint' => 'Subscription, invoices, and payment methods stay empty until the host fills them. Action links below stay disabled until you set hrefs.',
+        'subscription' => 'Subscription',
+        'invoices' => 'Invoices',
+        'payment_methods' => 'Payment methods',
+        'actions' => 'Billing actions',
+        'no_invoices' => 'No invoices to show.',
+        'no_methods' => 'No payment methods on file.',
+        'host_extension' => 'Host extension: subclass BillingPortalPage and override subscription(), invoices(), paymentMethods(), and billingActions().',
     ],
 
     'status' => [

@@ -143,6 +143,7 @@ final class SaaSPagesTest extends TestCase
 
         $this->assertNull($data['subscription']);
         $this->assertSame([], $data['invoices']);
+        $this->assertSame([], $data['paymentMethods']);
         $this->assertSame([
             'pay_now' => ['label' => 'Pay now', 'href' => null],
             'update_method' => ['label' => 'Update payment method', 'href' => null],
@@ -151,7 +152,7 @@ final class SaaSPagesTest extends TestCase
         ], $data['billingActions']);
     }
 
-    public function test_media_library_serializes_empty_items(): void
+    public function test_media_library_serializes_empty_items_and_action_hrefs(): void
     {
         $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
         config(['panel.tenancy.resolver' => static fn (): int => $tenant->id]);
@@ -171,6 +172,35 @@ final class SaaSPagesTest extends TestCase
         $data = \Alxtexh\Panel\Pages\MediaLibraryPage::data($request);
 
         $this->assertSame([], $data['items']);
+        $this->assertSame('', $data['folder']);
+        $this->assertSame([], $data['folders']);
+        $this->assertStringEndsWith('/files/media-library/upload', $data['uploadHref']);
+        $this->assertStringEndsWith('/files/media-library/move', $data['moveHref']);
+        $this->assertStringEndsWith('/files/media-library/delete', $data['deleteHref']);
+    }
+
+    public function test_email_templates_serializes_empty_and_send_test_href(): void
+    {
+        $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
+        config(['panel.tenancy.resolver' => static fn (): int => $tenant->id]);
+
+        $user = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Operator',
+            'email' => 'operator@example.test',
+            'password' => 'password',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user);
+
+        $request = Request::create('/apps/email-templates');
+
+        $data = \Alxtexh\Panel\Pages\EmailTemplatePage::data($request);
+
+        $this->assertSame([], $data['templates']);
+        $this->assertNull($data['selected']);
+        $this->assertStringEndsWith('/apps/email-templates/send-test', $data['sendTestHref']);
     }
 
     public function test_webhooks_and_media_apps_opt_in(): void

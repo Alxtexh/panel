@@ -46,10 +46,10 @@ screens stay in the npm package and can be mirrored with
 | Invites | `InvitePage` | `Panel::apps(['invites'])` |
 | Feature flags | `FeatureFlagsPage` | `Panel::apps(['feature-flags'])` |
 | Webhooks | `WebhookEndpointsPage` | `Panel::webhooks()` or `apps(['webhooks'])` |
-| Billing portal | `BillingPortalPage` | `Panel::apps(['billing-portal'])` |
-| Email templates | `EmailTemplatePage` | `Panel::apps(['email-templates'])` |
+| Billing portal | `BillingPortalPage` | `Panel::apps(['billing-portal'])`. Empty canvas until the host overrides `subscription()` / `invoices()` / `paymentMethods()` / portal actions. Demo ISP billing stays in playground; installer defaults stay domain-neutral |
+| Email templates | `EmailTemplatePage` | `Panel::apps(['email-templates'])`. Packaged table + save / send-test actions. Host overrides `deliverTest()` to actually send mail |
 | Onboarding | `OnboardingPage` | `Panel::apps(['onboarding'])` |
-| Media library | `MediaLibraryPage` | `Panel::apps(['media-library'])` |
+| Media library | `MediaLibraryPage` | `Panel::apps(['media-library'])`. Tenant-scoped local disk uploads (upload / move / delete). Preview URLs are host-supplied when the disk is private |
 | Payment gateways | `PaymentSettingsPage` | `Panel::paymentSettings()` |
 
 The dashboard ships **empty** (`stats()` / `charts()` commented). Fill them, or

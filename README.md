@@ -6,12 +6,16 @@ developer experience, SPA transport.
 **[Full documentation →](docs/README.md)** for every field, column, filter, action,
 widget and command, and how to switch each part on.
 
-From GitHub panelkit (no Packagist or npm registry), add this to your application's
-`composer.json`:
+From GitHub only (no Packagist or npm registry). Develop in **panelkit**;
+installers consume **Alxtexh/panel**. Vue is vendored into that Composer package
+via `make sync-client` (`packages/ui` → `resources/client`). **panel-ui** is not
+on the consumer path (optional mirror / archive candidate).
+
+Add this to your application's `composer.json`:
 
 ```json
 "repositories": [
-    { "type": "vcs", "url": "https://github.com/Alxtexh/panelkit", "no-api": true }
+    { "type": "vcs", "url": "https://github.com/Alxtexh/panel", "no-api": true }
 ]
 ```
 

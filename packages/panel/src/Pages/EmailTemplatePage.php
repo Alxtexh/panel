@@ -43,6 +43,11 @@ class EmailTemplatePage extends Page
         return $panel !== null && $panel->offersApp('email-templates');
     }
 
+    public static function description(): ?string
+    {
+        return 'Subject and body templates with variables. Override deliverTest() to send mail.';
+    }
+
     public static function actions(): array
     {
         return [
@@ -66,6 +71,7 @@ class EmailTemplatePage extends Page
     {
         $tenantId = app(TenantContext::class)->currentKey();
         $key = $request->query('key');
+        $base = static::pageHref();
 
         $templates = $tenantId === null ? [] : PanelEmailTemplate::query()
             ->where('tenant_id', $tenantId)
@@ -99,6 +105,7 @@ class EmailTemplatePage extends Page
         return [
             'templates' => $templates,
             'selected' => $selected,
+            'sendTestHref' => $base.'/send-test',
         ];
     }
 
@@ -153,5 +160,21 @@ class EmailTemplatePage extends Page
     protected static function deliverTest(Request $request, string $key, string $to): void
     {
         // Host overrides wire Mail::to($to) with the template body.
+    }
+
+    protected static function pageHref(): string
+    {
+        $path = '/'.trim(static::navigationPath(), '/');
+        $prefix = app(PanelManager::class)->currentPanel()?->getPath() ?? '';
+
+        if ($prefix !== '' && $prefix !== '/') {
+            $path = rtrim($prefix, '/').$path;
+        }
+
+        if (! str_starts_with($path, '/')) {
+            $path = '/'.$path;
+        }
+
+        return $path;
     }
 }
