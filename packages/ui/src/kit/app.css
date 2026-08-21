@@ -113,6 +113,7 @@
     --sidebar: hsl(0 0% 98%);
     --pk-font-size: 16px;
     --pk-row-padding: 0.5rem;
+    --pk-form-gap: 1rem;
 }
 
 /*
@@ -184,6 +185,12 @@ body:has(.pk-shell) {
 .pk-row td {
     padding-top: var(--pk-row-padding);
     padding-bottom: var(--pk-row-padding);
+}
+
+.pk-form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pk-form-gap);
 }
 
 :root[data-sidebar='right'] [data-slot='sidebar-wrapper'] {

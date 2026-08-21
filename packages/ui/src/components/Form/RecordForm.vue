@@ -120,7 +120,7 @@ function uploadFor(key: string) {
 </script>
 
 <template>
-    <div class="flex flex-col gap-4">
+    <div class="pk-form-stack">
         <p
             v-if="conflict"
             class="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"

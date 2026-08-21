@@ -14,14 +14,17 @@
  * count §10 forbids everywhere else, and it does not become acceptable because
  * the list is nested.
  *
- * ONE CARD. TableShell owns the chrome (title band, actions, load-more band)
- * so a relation reads as the same object a resource index is, not a bolted-on
- * table under a loose button row.
+ * ONE CARD. TableShell owns the chrome (title band, toolbar, actions, load-more
+ * band) so a relation reads as the same object a resource index is, not a
+ * bolted-on table under a loose button row. Filters reuse TableToolbar when the
+ * relation table declares any.
  */
 import { computed, useSlots } from 'vue'
 import type { SchemaColumn } from '../../composables/useSchemaColumns'
 import PkEmptyState from '../primitives/PkEmptyState.vue'
 import TableShell from './TableShell.vue'
+import TableToolbar from './TableToolbar.vue'
+import type { FilterIndicator, FilterSchema } from './types'
 
 const props = withDefaults(
     defineProps<{
@@ -42,6 +45,11 @@ const props = withDefaults(
         indexHref?: string | null
         /** Prefix for a related row's dedicated view page. */
         recordBase?: string | null
+        /** Filter schema from the relation table (structure; options merged). */
+        filterSchema?: FilterSchema[]
+        filters?: Record<string, unknown>
+        search?: string
+        indicators?: FilterIndicator[]
     }>(),
     {
         loading: false,
@@ -53,15 +61,29 @@ const props = withDefaults(
         emptyText: 'Related records will show up here once they exist.',
         indexHref: null,
         recordBase: null,
+        filterSchema: () => [],
+        filters: () => ({}),
+        search: '',
+        indicators: () => [],
     },
 )
 
-const emit = defineEmits<{ (e: 'load', cursor: string | null): void }>()
+const emit = defineEmits<{
+    (e: 'load', cursor: string | null): void
+    (e: 'update:search', value: string): void
+    (e: 'apply-filters', filters: Record<string, unknown>): void
+    (e: 'clear-filters'): void
+    (e: 'clear-filter', key: string): void
+}>()
 
 const slots = useSlots()
 const visible = computed(() => props.columns.filter((c) => c.type !== 'image'))
 const hasActions = computed(() => Boolean(slots.actions))
 const hasTitleBand = computed(() => Boolean(props.title) || hasActions.value)
+const hasToolbar = computed(() => props.filterSchema.length > 0)
+const emptyColumns = computed(() =>
+    props.columns.map((column) => ({ key: column.key, label: column.label, locked: true })),
+)
 
 function format(column: SchemaColumn, value: unknown): string {
     if (value === null || value === undefined || value === '') {
@@ -96,6 +118,25 @@ function isEmpty(value: unknown): boolean {
             </div>
         </template>
 
+        <template v-if="hasToolbar" #toolbar>
+            <TableToolbar
+                :search="search"
+                search-placeholder="Search related…"
+                :filter-schema="filterSchema"
+                :filters="filters"
+                :columns="emptyColumns"
+                :hidden="new Set()"
+                :loading="loading"
+                :indicators="indicators"
+                @update:search="emit('update:search', $event)"
+                @apply-filters="emit('apply-filters', $event)"
+                @clear-filters="emit('clear-filters')"
+                @clear-filter="emit('clear-filter', $event)"
+                @clear="emit('clear-filters')"
+                @apply-columns="() => undefined"
+            />
+        </template>
+
         <div v-if="loading && rows.length === 0" class="text-muted-foreground px-4 py-10 text-center text-sm">
             Loading…
         </div>
@@ -107,6 +148,9 @@ function isEmpty(value: unknown): boolean {
             :title="emptyTitle"
             :description="emptyText"
         >
+            <template v-if="$slots.illustration" #illustration>
+                <slot name="illustration" />
+            </template>
             <template v-if="$slots['empty-actions']" #actions>
                 <slot name="empty-actions" />
             </template>
@@ -130,12 +174,12 @@ function isEmpty(value: unknown): boolean {
                     <tr
                         v-for="(row, i) in rows"
                         :key="row.id ?? i"
-                        class="hover:bg-muted/40 transition-colors"
+                        class="pk-row hover:bg-muted/40 transition-colors"
                     >
                         <td
                             v-for="column in visible"
                             :key="column.key"
-                            class="px-3 py-2.5 whitespace-nowrap"
+                            class="px-3 whitespace-nowrap"
                             :class="[
                                 column.mono ? 'font-mono text-xs' : '',
                                 column.muted ? 'text-muted-foreground' : '',

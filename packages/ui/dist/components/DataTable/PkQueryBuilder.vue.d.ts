@@ -29,7 +29,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     onApply?: ((value: QueryGroup | null) => any) | undefined;
 }>, {
     root: boolean;
-    depth: number;
     maxDepth: number;
+    depth: number;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

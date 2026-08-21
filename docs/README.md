@@ -21,6 +21,7 @@ These pages are the catalogue: what ships, and how to switch each part on.
 | [11. Commands](11-commands.md) | Every artisan command |
 | [12. Going to production](12-production.md) | Queues, sockets, SSR, backups |
 | [13. Billing adapters](13-billing-adapters.md) | Provider-agnostic inbound webhooks: signature header + payload map |
+| [14. Design layout](14-design-layout.md) | PAGE_SHELL, FORM_MEASURE, TableShell, catalogue grids (freeze) |
 | [Starter recipe](recipes/01-invoices.md) | Copyable Invoices resource after install. Not Nairobi Fibre |
 | [Tests](tests.md) | `InteractsWithPanels`: isolation, form-state, attach, import, toasts, billing |
 

@@ -5,8 +5,13 @@
  * Plain muted text in a table cell reads as a missing load, not an empty
  * catalogue. This is the shared shape for "nothing here yet" and the compact
  * "nothing matches these filters" case, so every list speaks the same language.
+ *
+ * `#illustration` replaces the default icon circle when a screen wants a
+ * custom drawing (SVG, photo, or kit art). Prefer the semantic `icon` prop for
+ * ordinary empties; use the slot when the empty state is itself a product beat.
  */
 import { iconPath } from './icons'
+import { useSlots } from 'vue'
 
 withDefaults(
     defineProps<{
@@ -25,6 +30,8 @@ withDefaults(
         compact: false,
     },
 )
+
+const slots = useSlots()
 </script>
 
 <template>
@@ -35,6 +42,14 @@ withDefaults(
         role="status"
     >
         <div
+            v-if="slots.illustration"
+            class="flex max-w-xs items-center justify-center"
+            aria-hidden="true"
+        >
+            <slot name="illustration" />
+        </div>
+        <div
+            v-else
             class="bg-muted text-muted-foreground flex items-center justify-center rounded-full"
             :class="compact ? 'size-10' : 'size-12'"
             aria-hidden="true"

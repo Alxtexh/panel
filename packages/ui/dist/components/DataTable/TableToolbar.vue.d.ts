@@ -54,8 +54,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     reordering: boolean;
     loading: boolean;
     searchPlaceholder: string;
-    groups: GroupSchema[];
     reorderable: boolean;
+    groups: GroupSchema[];
     indicators: FilterIndicator[];
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

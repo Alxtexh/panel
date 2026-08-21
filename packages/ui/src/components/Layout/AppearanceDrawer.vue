@@ -41,10 +41,10 @@ const themes: { value: Theme; label: string }[] = [
 ]
 
 /*
- * LABELLED "Table density" RATHER THAN "Density", because that is all it is.
- * `--pk-row-padding` is read by `.pk-row td` and nothing else, so on a
- * dashboard the control moves and the screen does not - which reads as broken
- * rather than as not applicable. Naming what it affects costs one word.
+ * LABELLED FOR WHAT IT CHANGES. Comfortable is the default. Compact tightens
+ * table rows and form stacks together; Spacious is the airy third option for
+ * hosts who want more breathing room. Both `--pk-row-padding` and
+ * `--pk-form-gap` follow this control.
  */
 const densities: { value: Density; label: string }[] = [
     { value: 'compact', label: 'Compact' },
@@ -278,7 +278,7 @@ function surfaceSwatch(hue: number, chroma: number): string {
                         v-for="group in [
                             { label: 'Color scheme', key: 'theme', options: themes },
                             { label: 'Card style', key: 'cardStyle', options: cardStyles },
-                            { label: 'Table density', key: 'density', options: densities },
+                            { label: 'Density', key: 'density', options: densities },
                             { label: 'Sidebar', key: 'sidebarSide', options: sides },
                             { label: 'Content layout', key: 'contentLayout', options: contentLayouts },
                             { label: 'Menu style', key: 'menuStyle', options: menuStyles },

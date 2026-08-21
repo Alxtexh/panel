@@ -72,7 +72,18 @@ const props = defineProps<{
             key: string
             label: string
             icon: string | null
-            table: { columns: SchemaColumn[] }
+            table: {
+                columns: SchemaColumn[]
+                filters?: {
+                    key: string
+                    label: string
+                    type: string
+                    options?: string[]
+                    trueLabel?: string
+                    falseLabel?: string
+                    presets?: Record<string, string>
+                }[]
+            }
             form?: { nodes?: unknown[] } | null
             canCreate?: boolean
             canEdit?: boolean
@@ -136,6 +147,10 @@ interface RelationState {
     loaded: boolean
     /** True once the ceiling below stopped the appending. */
     capped: boolean
+    search: string
+    filters: Record<string, unknown>
+    filterOptions: Record<string, string[]>
+    indicators: { key: string; label: string; removable?: boolean }[]
 }
 
 /**
@@ -165,28 +180,89 @@ function relationState(key: string): RelationState {
     if (!state.value[key]) {
         state.value = {
             ...state.value,
-            [key]: { rows: [], cursor: null, loading: false, loaded: false, capped: false },
+            [key]: {
+                rows: [],
+                cursor: null,
+                loading: false,
+                loaded: false,
+                capped: false,
+                search: '',
+                filters: {},
+                filterOptions: {},
+                indicators: [],
+            },
         }
     }
 
     return state.value[key]
 }
 
-async function loadRelation(key: string, cursor: string | null = null) {
+function relationFilterSchema(key: string) {
+    const relation = relations.value.find((item) => item.key === key)
+    const schema = relation?.table.filters ?? []
+    const options = relationState(key).filterOptions
+
+    return schema.map((filter) => ({
+        ...filter,
+        options: options[filter.key] ?? filter.options ?? [],
+    })) as any[]
+}
+
+function relationQuery(key: string, cursor: string | null = null): string {
+    const current = relationState(key)
+    const params = new URLSearchParams()
+
+    if (cursor) {
+        params.set('cursor', cursor)
+    }
+
+    if (current.search !== '') {
+        params.set('search', current.search)
+    }
+
+    for (const [filterKey, value] of Object.entries(current.filters)) {
+        if (value === null || value === undefined || value === '') {
+            continue
+        }
+
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                params.append(`${filterKey}[]`, String(item))
+            }
+            continue
+        }
+
+        if (typeof value === 'object') {
+            for (const [subKey, subValue] of Object.entries(value as Record<string, unknown>)) {
+                if (subValue === null || subValue === undefined || subValue === '') {
+                    continue
+                }
+                params.set(`${filterKey}[${subKey}]`, String(subValue))
+            }
+            continue
+        }
+
+        params.set(filterKey, String(value))
+    }
+
+    const encoded = params.toString()
+
+    return encoded === '' ? '' : `?${encoded}`
+}
+
+async function loadRelation(key: string, cursor: string | null = null, force = false) {
     const current = relationState(key)
 
     // Already have the first page and nothing more was asked for.
-    if (current.loaded && cursor === null) {
+    if (current.loaded && cursor === null && !force) {
         return
     }
 
     current.loading = true
 
     try {
-        const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''
-
         const response = await fetch(
-            `${props.schema.routes.index}/${props.record.id}/relations/${key}${query}`,
+            `${props.schema.routes.index}/${props.record.id}/relations/${key}${relationQuery(key, cursor)}`,
             {
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin',
@@ -215,6 +291,10 @@ async function loadRelation(key: string, cursor: string | null = null) {
         current.rows = appended.slice(0, MAX_RELATION_ROWS)
         current.capped = appended.length > MAX_RELATION_ROWS
         current.cursor = current.capped ? null : (data.nextCursor ?? null)
+        current.filters = data.filters ?? current.filters
+        current.search = typeof data.search === 'string' ? data.search : current.search
+        current.filterOptions = data.filterOptions ?? current.filterOptions
+        current.indicators = data.indicators ?? []
         current.loaded = true
     } catch {
         current.loaded = true
@@ -226,6 +306,37 @@ async function loadRelation(key: string, cursor: string | null = null) {
 function openRelation(key: string) {
     activeRelation.value = key
     loadRelation(key)
+}
+
+function reloadRelation(key: string) {
+    const current = relationState(key)
+    current.rows = []
+    current.cursor = null
+    current.capped = false
+    current.loaded = false
+    void loadRelation(key, null, true)
+}
+
+function setRelationSearch(key: string, value: string) {
+    relationState(key).search = value
+    reloadRelation(key)
+}
+
+function applyRelationFilters(key: string, next: Record<string, unknown>) {
+    relationState(key).filters = next
+    reloadRelation(key)
+}
+
+function clearRelationFilters(key: string) {
+    const current = relationState(key)
+    current.filters = Object.fromEntries(Object.keys(current.filters).map((filterKey) => [filterKey, null]))
+    current.search = ''
+    reloadRelation(key)
+}
+
+function clearRelationFilter(key: string, filterKey: string) {
+    relationState(key).filters = { ...relationState(key).filters, [filterKey]: null }
+    reloadRelation(key)
 }
 
 const creatingRelation = ref<string | null>(null)
@@ -626,11 +737,19 @@ function destroy() {
                     :loaded="relationState(relation.key).loaded"
                     :next-cursor="relationState(relation.key).cursor"
                     :capped="relationState(relation.key).capped"
+                    :filter-schema="relationFilterSchema(relation.key)"
+                    :filters="relationState(relation.key).filters"
+                    :search="relationState(relation.key).search"
+                    :indicators="relationState(relation.key).indicators"
                     :empty-title="`No ${relation.label.toLowerCase()} yet`"
                     :empty-text="`No ${relation.label.toLowerCase()} for this ${schema.label.toLowerCase()}.`"
                     :record-base="relationPages(relation)"
                     :index-href="relationPages(relation)"
                     @load="(cursor) => loadRelation(relation.key, cursor)"
+                    @update:search="(value) => setRelationSearch(relation.key, value)"
+                    @apply-filters="(next) => applyRelationFilters(relation.key, next)"
+                    @clear-filters="clearRelationFilters(relation.key)"
+                    @clear-filter="(filterKey) => clearRelationFilter(relation.key, filterKey)"
                 >
                     <template
                         v-if="relationPages(relation) || relation.canCreate"

@@ -274,6 +274,13 @@ const ROW_PADDING: Record<Density, string> = {
     spacious: '0.875rem',
 }
 
+/** Stack gap for form fields / sections, by density. */
+const FORM_GAP: Record<Density, string> = {
+    compact: '0.75rem',
+    comfortable: '1rem',
+    spacious: '1.5rem',
+}
+
 export function appearanceVars(next: Appearance): Record<string, string> {
     const accent = PRIMARY_COLORS[next.primary] ?? PRIMARY_COLORS.slate
     const tint = SURFACE_TINTS[next.surface] ?? SURFACE_TINTS.neutral
@@ -317,6 +324,7 @@ export function appearanceVars(next: Appearance): Record<string, string> {
          * plausible.
          */
         '--pk-row-padding': ROW_PADDING[next.density] ?? ROW_PADDING.comfortable,
+        '--pk-form-gap': FORM_GAP[next.density] ?? FORM_GAP.comfortable,
     }
 }
 

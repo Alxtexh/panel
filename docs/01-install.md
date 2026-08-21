@@ -74,7 +74,8 @@ full-bleed by default; wrap fields in left-aligned `FORM_MEASURE`
 settings, resources, or `make:panel-page` screens in `max-w-*` + `mx-auto`
 unless the screen is intentionally narrow (login, onboarding, marketing).
 Appearance `contentLayout: 'centered'` is the opt-in for hosts who want a
-reading measure; it is not the kit default.
+reading measure; it is not the kit default. See [14. Design layout](14-design-layout.md)
+for the freeze checklist (`PAGE_SHELL`, `FORM_MEASURE`, one-card `TableShell`).
 
 ## What we shipped recently
 
@@ -97,6 +98,10 @@ exists.
 a VCS repository and authenticates even for a public one, failing with
 `Could not authenticate against github.com`, which reads as the repository
 being private. With it, Composer clones and no credential is involved.
+
+On a **fresh Laravel 12** app that already locked `guzzlehttp/guzzle` 8.x,
+`composer require alxtexh-enterprise/panel` may need `-W` so Telegram's
+`^7.8` Guzzle constraint can resolve. Path and VCS installs both hit this.
 
 **There is no npm registry install for the kit.** The Vue screens ship *inside*
 the Composer package at `resources/client`. If you later customise Vue,

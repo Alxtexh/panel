@@ -195,14 +195,10 @@ final class PanelPages
     ];
 
     /**
-     * Opt-in merchandising / studio screens. NOT written on `panel:install`.
-     *
-     * Catalog, PlanSetup, Signatures are empty canvases the host subclasses
-     * when needed. Directory is default chrome (Settings, Users, Roles,
-     * Documents, Backups, Logs, Monitoring, Help) and lives in SCREENS.
-     * Shipping Catalog on every install made a fresh kit look like a POS demo.
-     * Call `PanelPages::writeOptional()` (or copy a stub) when you add one of
-     * those page classes; the npm package still exports the Vue components.
+     * Opt-in merchandising / studio screens. Routes stay OFF until the host
+     * calls `apps()` or subclasses the page base. `write()` / `panel:update`
+     * still emit the Vue stubs so enabling an app later cannot 500 on a missing
+     * Vite manifest entry. Call `writeOptional()` alone when you only need these.
      */
     public const OPTIONAL_SCREENS = [
         'Catalog',
@@ -257,14 +253,33 @@ final class PanelPages
         }
 
         return array_values(array_filter(
-            self::SCREENS,
+            [...self::SCREENS, ...self::OPTIONAL_SCREENS],
             static fn (string $screen): bool => ! file_exists($directory.'/'.$screen.'.vue'),
         ));
     }
 
     public static function write(bool $force = false): array
     {
-        return self::writeScreens(self::SCREENS, $force);
+        /*
+         * OPTIONAL SCREENS ARE WRITTEN TOO. Routes for Catalog / ApiKeys / etc.
+         * stay OFF until `apps()` or a page subclass opts in, but the Vue stub
+         * must exist beforehand: `app.blade.php` asks Vite for
+         * `resources/js/pages/{component}.vue`, and a missing file is a
+         * ViteException rather than an empty canvas. Stubs do not put screens
+         * in the sidebar; missing stubs put white pages on every enabled app.
+         */
+        $required = self::writeScreens(self::SCREENS, $force);
+        $optional = self::writeScreens(self::OPTIONAL_SCREENS, $force);
+
+        if ($required['directory'] === null) {
+            return $required;
+        }
+
+        return [
+            'written' => [...$required['written'], ...$optional['written']],
+            'skipped' => [...$required['skipped'], ...$optional['skipped']],
+            'directory' => $required['directory'],
+        ];
     }
 
     /**

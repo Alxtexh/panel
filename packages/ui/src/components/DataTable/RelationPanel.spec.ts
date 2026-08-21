@@ -60,4 +60,20 @@ describe('RelationPanel', () => {
 
         expect(wrapper.emitted('load')?.[0]).toEqual(['cursor-2'])
     })
+
+    it('mounts TableToolbar when the relation declares filters', () => {
+        const wrapper = mount(RelationPanel, {
+            props: {
+                title: 'Sessions',
+                columns,
+                rows: [{ id: 1, title: 'One', note: 'a' }],
+                loaded: true,
+                filterSchema: [{ key: 'status', label: 'Status', type: 'select', options: ['online'] }],
+                filters: { status: null },
+            },
+        })
+
+        expect(wrapper.find('input[type="search"], input[placeholder*="Search"]').exists()).toBe(true)
+        expect(wrapper.text()).toMatch(/Filters|Tools/)
+    })
 })
