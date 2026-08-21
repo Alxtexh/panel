@@ -182,6 +182,17 @@ final class Pages
             ['title' => 'Login', 'href' => '/screens/auth/card/login', 'icon' => 'lock', 'group' => 'Auth samples/Card'],
             ['title' => 'Register', 'href' => '/screens/auth/card/register', 'icon' => 'user-check', 'group' => 'Auth samples/Card'],
             ['title' => 'OTP', 'href' => '/screens/auth/card/otp', 'icon' => 'key', 'group' => 'Auth samples/Card'],
+
+            /*
+             * Sidebar design families (shadcn-vue block patterns, kit AppSidebar).
+             * Live shell previews rearrange nav chrome; nested groups sit beside
+             * Auth samples.
+             */
+            ['title' => 'Inset', 'href' => '/screens/sidebar/inset', 'icon' => 'panel-left', 'group' => 'Sidebar samples'],
+            ['title' => 'Edge', 'href' => '/screens/sidebar/sidebar', 'icon' => 'square', 'group' => 'Sidebar samples'],
+            ['title' => 'Floating', 'href' => '/screens/sidebar/floating', 'icon' => 'layers', 'group' => 'Sidebar samples'],
+            ['title' => 'Icon rail', 'href' => '/screens/sidebar/icon', 'icon' => 'panel-left-close', 'group' => 'Sidebar samples'],
+            ['title' => 'Site header', 'href' => '/screens/sidebar/header', 'icon' => 'app-window', 'group' => 'Sidebar samples'],
         ];
     }
 

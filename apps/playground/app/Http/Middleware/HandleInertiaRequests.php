@@ -346,7 +346,15 @@ class HandleInertiaRequests extends Middleware
             // visible translation keys - see Locale::messages().
             'messages' => Locale::messages(),
 
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'sidebarOpen' => (function () use ($request): bool {
+                if ($request->hasCookie('sidebar_state')) {
+                    return $request->cookie('sidebar_state') === 'true';
+                }
+
+                $panel = app(PanelManager::class)->currentPanel();
+
+                return $panel === null || $panel->getSidebarLayout() !== 'icon';
+            })(),
         ];
     }
 }

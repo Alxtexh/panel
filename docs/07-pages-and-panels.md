@@ -137,10 +137,40 @@ import { PanelShell } from '@alxtexh-enterprise/panel/inertia';
 
 Slots: `#topbar` for a heading or breadcrumbs, `#actions` for trailing controls,
 `#userMenu` to replace the account menu entirely. To replace the shell, stop
-importing it and write your own — the props are all on the page.
+importing it and write your own. The props are all on the page.
 
 Per-panel colours are applied as CSS variables, resolved per request, so a
 portal can wear the signed-in reseller's brand.
+
+## Sidebar design families
+
+Pick **one layout** on the panel. `AppSidebar` / `PanelShell` rearrange chrome
+from that knob. Prefer `sidebarLayout()`. `sidebarVariant()` is the same
+setter. You may also pass a shadcn-vue block id (`sidebar-08`, `sidebar-07`,
+…); it resolves to the PanelKit name. Default is `inset`, which preserves the
+rail panels already ship.
+
+```php
+Panel::make('admin')
+    ->sidebarLayout('floating')  // or 'inset' (default), 'sidebar', 'icon', 'header'
+    // ->sidebarLayout('sidebar-07')  // same as 'icon'
+```
+
+| PanelKit | shadcn-vue | Composition |
+| --- | --- | --- |
+| `inset` | sidebar-08 | Inset rail + secondary footer nav (default) |
+| `sidebar` | sidebar-01 | Edge-flush grouped rail (`edge` alias) |
+| `floating` | sidebar-04 | Floating card rail |
+| `icon` | sidebar-07 | Icon rail by default (`rail` alias) |
+| `header` | sidebar-16 | Sticky site header + inset rail + search |
+
+Deferred (not live chrome yet): sidebar-05 / sidebar-06 (dropdown accordion
+submenus), sidebar-11 (file tree), sidebar-12 (calendar), sidebar-13 (sidebar
+in a dialog). Patterns are reimplemented against kit tokens; do not run
+`npx shadcn-vue add` into the monorepo for these.
+
+Playground demos: **Sidebar samples** in the nav, at `/screens/sidebar/{layout}`
+(live shell, not screenshots). Auth samples stay under `/screens/auth/...`.
 
 ## Routes yield to yours
 

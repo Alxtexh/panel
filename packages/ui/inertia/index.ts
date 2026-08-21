@@ -135,6 +135,12 @@ export { default as AppLogo } from './components/shell/AppLogo.vue'
 export { default as AppLogoIcon } from './components/shell/AppLogoIcon.vue'
 export { default as AppShell } from './components/shell/AppShell.vue'
 export { default as AppContent } from './components/shell/AppContent.vue'
+export {
+    useSidebarLayout,
+    SIDEBAR_LAYOUTS,
+    type SidebarLayout,
+    type SidebarChrome,
+} from './composables/useSidebarLayout'
 export { AppPageFooter, useShellPageFooter } from '@alxtexh-enterprise/panel'
 export { default as SessionExpired } from './components/SessionExpired.vue'
 export { default as Toaster } from './components/Toaster.vue'

@@ -687,3 +687,30 @@ Route::get('/screens/auth/{family}/{screen?}', function (string $family, string 
         'familyLabel' => $families[$family],
     ]);
 })->middleware(['web'])->name('screens.auth.family');
+
+/*
+ | Sidebar design family gallery. Auth-gated so the packaged shell has a real
+ | nav payload. `forceSidebarLayout` wins inside AppSidebar / AppShell.
+ */
+Route::get('/screens/sidebar/{layout}', function (string $layout) {
+    $layouts = [
+        'inset' => 'Inset',
+        'sidebar' => 'Edge',
+        'floating' => 'Floating',
+        'icon' => 'Icon rail',
+        'header' => 'Site header',
+    ];
+
+    abort_unless(isset($layouts[$layout]), 404);
+
+    return Inertia::render('errors/SidebarFamilyPreview', [
+        'forceSidebarLayout' => $layout,
+        'layoutLabel' => $layouts[$layout],
+        'sidebarOpen' => $layout !== 'icon',
+    ]);
+})->middleware([
+    'web',
+    'auth',
+    UsePanel::class.':admin',
+    SharePanelProps::class,
+])->name('screens.sidebar.family');

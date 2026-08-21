@@ -72,6 +72,13 @@ release tag:
 If those disagree, ship the kit half first. Do not tag a demo that only looks
 right through the source alias.
 
+## Sidebar chrome families
+
+`Panel::sidebarLayout()` (alias `sidebarVariant()`) picks inset, edge-flush,
+floating, icon-rail, or site-header chrome. See
+[Pages and panels](07-pages-and-panels.md#sidebar-design-families) for the
+shadcn-vue mapping table. Default remains `inset`.
+
 ## Future (not in scope)
 
 Marketplace packaging and Livewire-based admin UIs are explicitly out of

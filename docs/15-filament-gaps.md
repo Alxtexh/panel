@@ -63,3 +63,5 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.0.96 | Kanban via `Resource::board()`, `ResourceKanban`, board-move |
 | v1.0.97 | `Panel::userDashboards()` DnD chart layout into appearance JSON |
 | v1.0.98 | Gate `dashboardLayout` writes; board via `toListQuery`; nested board URLs; board HTTP Pest |
+| v1.0.100 | Auth design families (`Panel::authFamily`) + Auth samples gallery |
+| v1.0.101 | Sidebar design families (`Panel::sidebarLayout`) + Sidebar samples gallery |
