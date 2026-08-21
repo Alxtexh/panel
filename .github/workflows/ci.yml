@@ -187,6 +187,13 @@ jobs:
         working-directory: packages/ui
         run: npm run build
 
+      # THE COMPOSER PACKAGE SHIPS A MIRROR OF packages/ui. Editing Vue under
+      # packages/ui without `make sync-client` leaves resources/client stale
+      # while the playground (Vite-aliased to source) still looks fine. Compare
+      # package.json + inertia (not dist bytes: Vite is not bit-identical).
+      - name: Client mirror sync
+        run: make check-client
+
       - name: Unit tests
         working-directory: packages/ui
         run: npm test

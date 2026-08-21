@@ -55,6 +55,7 @@ export { default as PkPasswordInput } from './components/primitives/PkPasswordIn
 /* The class merger every moved shadcn component composes with. */
 export { cn, toUrl } from './lib/cn'
 export {
+    CATALOGUE_CONTAINER,
     CATALOGUE_GRID,
     CATALOGUE_GRID_TIGHT,
     CATALOGUE_GRID_TILES,

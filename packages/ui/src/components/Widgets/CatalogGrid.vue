@@ -11,7 +11,7 @@
  * The page owns the fake (or real) data.
  */
 import { computed, reactive, ref, watch } from 'vue'
-import { CATALOGUE_GRID_TILES } from '../../lib/catalogueGrid'
+import { CATALOGUE_CONTAINER, CATALOGUE_GRID_TILES } from '../../lib/catalogueGrid'
 import PkTextInput from '../primitives/PkTextInput.vue'
 import { iconPath } from '../primitives/icons'
 import CatalogCard, { type CatalogItem } from './CatalogCard.vue'
@@ -153,7 +153,7 @@ function goTo(next: number) {
 </script>
 
 <template>
-    <div class="flex flex-col gap-4">
+    <div :class="['flex flex-col gap-4', CATALOGUE_CONTAINER]">
         <div v-if="showToolbar" data-slot="catalog-toolbar" class="flex flex-col gap-3">
             <div class="flex flex-wrap items-center gap-2 sm:flex-nowrap">
                 <div v-if="searchable" class="relative min-w-0 max-w-sm flex-1">

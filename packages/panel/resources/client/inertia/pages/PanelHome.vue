@@ -28,7 +28,11 @@ defineOptions({ inheritAttrs: false })
  */
 import { Head, Link } from '@inertiajs/vue3'
 import { Globe, Terminal } from '@lucide/vue'
-import { CATALOGUE_GRID_TIGHT, PkSkeleton } from '@alxtexh-enterprise/panel'
+import {
+    CATALOGUE_CONTAINER,
+    CATALOGUE_GRID_TIGHT,
+    PkSkeleton,
+} from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
 
 /*
@@ -81,7 +85,7 @@ const groups = computed(() => {
 <template>
     <Head :title="props.panel.name" />
 
-    <div class="flex flex-col gap-6 p-4 sm:p-6">
+    <div :class="['flex flex-col gap-6 p-4 sm:p-6', CATALOGUE_CONTAINER]">
         <div>
             <h1 class="text-xl font-semibold tracking-tight">{{ props.panel.name }}</h1>
             <p class="text-muted-foreground mt-1 text-sm">

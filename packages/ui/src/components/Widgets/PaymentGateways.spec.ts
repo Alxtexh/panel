@@ -39,7 +39,7 @@ describe('PaymentGateways', () => {
         expect(wrapper.text()).toContain('Connected')
         expect(wrapper.text()).toContain('Not connected')
         expect(wrapper.get('[data-slot="payment-gateways"] .grid').classes()).toEqual(
-            expect.arrayContaining(['grid-cols-1', 'sm:grid-cols-2', 'xl:grid-cols-3']),
+            expect.arrayContaining(['grid-cols-1', '@lg:grid-cols-2', '@3xl:grid-cols-3']),
         )
 
         await wrapper.get('button').trigger('click')

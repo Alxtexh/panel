@@ -88,6 +88,7 @@ it would do first.
 | `make split` | Build the standalone package branches |
 | `make ssr` | Build the SSR bundle and start the server |
 | `make sync-client` | Rebuild `packages/ui` and mirror it into the PHP package |
+| `make check-client` | Fail if `resources/client` is out of sync with `packages/ui` |
 | `make test-package` | The package's own Testbench suite |
 
 ## Agent APIs (v1.0.12 to v1.0.32)

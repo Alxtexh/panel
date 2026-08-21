@@ -71,6 +71,10 @@ sync-client: ## Build packages/ui (lib + kit SPA) and mirror it into packages/pa
 	@find packages/panel/resources/client -name '*.spec.ts' -delete
 	@echo "Mirrored packages/ui into packages/panel/resources/client. Commit both."
 
+.PHONY: check-client
+check-client: ## Fail if packages/panel/resources/client is out of sync with packages/ui
+	@scripts/check-client-sync.sh
+
 .PHONY: test-package
 test-package: ## Run packages/panel's own suite - Testbench, fixture models, no playground
 	@cd packages/panel && [ -d vendor ] || composer install --no-interaction --no-progress

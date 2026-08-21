@@ -183,7 +183,7 @@ function iconFor(entry: NavEntry): string {
                 </nav>
             </aside>
 
-            <div class="min-w-0 flex-1">
+            <div class="@container min-w-0 flex-1">
                 <section class="space-y-12">
                     <slot />
                 </section>

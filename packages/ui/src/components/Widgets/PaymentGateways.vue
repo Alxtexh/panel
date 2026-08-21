@@ -8,7 +8,7 @@
  * keys leave this file.
  */
 import { computed } from 'vue'
-import { CATALOGUE_GRID } from '../../lib/catalogueGrid'
+import { CATALOGUE_CONTAINER, CATALOGUE_GRID } from '../../lib/catalogueGrid'
 import PkButton from '../primitives/PkButton.vue'
 import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 
@@ -42,7 +42,10 @@ const connectedCount = computed(
 </script>
 
 <template>
-    <div class="flex flex-col gap-4" data-slot="payment-gateways">
+    <div
+        :class="['flex flex-col gap-4', CATALOGUE_CONTAINER]"
+        data-slot="payment-gateways"
+    >
         <p class="text-muted-foreground text-sm">
             {{ connectedCount }} of {{ gateways.length }} connected, showcase only, no live
             processors.
