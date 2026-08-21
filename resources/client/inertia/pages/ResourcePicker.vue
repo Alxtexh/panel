@@ -13,7 +13,8 @@ defineOptions({ inheritAttrs: false })
  */
 import { Head, Link, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
-import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL_COMPACT, PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
 
 const props = defineProps<{
@@ -59,7 +60,7 @@ function cell(row: Record<string, any>, column: SchemaColumn): string {
 <template>
     <Head :title="`Choose ${schema.label}`" />
 
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-3 pb-24 sm:p-4">
+    <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4 pb-24']">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0">
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">

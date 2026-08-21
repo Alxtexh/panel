@@ -18,6 +18,7 @@
  */
 import { Head, Link } from '@inertiajs/vue3'
 import { Search, X } from '@lucide/vue'
+import { PAGE_SHELL } from '@alxtexh-enterprise/panel'
 import { computed, ref } from 'vue'
 
 interface Entry {
@@ -51,7 +52,7 @@ const results = computed(() => {
 <template>
     <Head title="Settings" />
 
-    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 sm:p-6">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-6']">
         <header class="flex flex-col gap-4">
             <div>
                 <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Settings chrome: mobile dropdown, sidebar on md+, pair capped at max-w-5xl.
+ * Settings chrome: mobile dropdown, sidebar on md+. Full-bleed in the shell.
  *
  * NAV COMES FROM THE SERVER (`page.props.settingsNav`), the same list the
  * settings index uses. A portal that never routed payment gateways does not
@@ -9,6 +9,7 @@
 import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import {
+    PAGE_SHELL,
     PkDropdown,
     PkHeading,
     buttonClasses,
@@ -58,7 +59,7 @@ function iconFor(entry: NavEntry): string {
 </script>
 
 <template>
-    <div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+    <div :class="PAGE_SHELL">
         <Link
             :href="settingsIndex"
             class="text-muted-foreground hover:text-foreground mb-2 inline-block text-xs"

@@ -4,7 +4,8 @@
  *
  * Items, facets and taxRate come from TillPage. No jurisdiction is assumed.
  */
-import { CatalogTill } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL, CatalogTill } from '@alxtexh-enterprise/panel'
 import type { CatalogFacet, CatalogItem } from '@alxtexh-enterprise/panel'
 import { PanelWidgets } from '@alxtexh-enterprise/panel/inertia'
 import { Head, router } from '@inertiajs/vue3'
@@ -44,7 +45,7 @@ function openItem(key: string): void {
 <template>
     <Head :title="pageHeading ?? 'Till'" />
 
-    <div class="mx-auto flex w-full max-w-6xl flex-col gap-10 p-4 sm:p-6">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-10']">
         <header v-if="pageHeading" class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading }}</h1>
             <p v-if="pageDescription" class="text-sm text-muted-foreground">

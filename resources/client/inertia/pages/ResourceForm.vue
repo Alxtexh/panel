@@ -26,7 +26,15 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
-import { CreateOptionError, RecordForm, UnsavedBar, buttonClasses, fieldErrorsFromPayload } from '@alxtexh-enterprise/panel'
+import {
+    CreateOptionError,
+    FORM_MEASURE,
+    PAGE_SHELL_COMPACT,
+    RecordForm,
+    UnsavedBar,
+    buttonClasses,
+    fieldErrorsFromPayload,
+} from '@alxtexh-enterprise/panel'
 import type { FormField, UploadedFileValue } from '@alxtexh-enterprise/panel'
 import DefineFieldDialog from '../components/DefineFieldDialog.vue'
 
@@ -627,7 +635,7 @@ onBeforeUnmount(() => {
         trying to fill (the user hit this on the announcement toggles). The
         padding means fully scrolled content ends above the bar, always.
     -->
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-3 pb-24 sm:p-4 sm:pb-24">
+    <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4 pb-24']">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0">
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
@@ -669,46 +677,50 @@ onBeforeUnmount(() => {
         </div>
 
         <!--
+            Full-bleed PAGE_SHELL_COMPACT for the page; FORM_MEASURE keeps fields
+            at a comfortable left-aligned width (no mx-auto skinny centre column).
             No card here when the schema declares layout: Section and Tabs draw
             their own frame, and wrapping them puts a border around a border.
             The flat fallback has no frame of its own, so it still gets one.
         -->
-        <div :class="formSchema.nodes?.length ? '' : 'bg-card rounded-lg border p-4 sm:p-6'">
-            <RecordForm
-                :model-value="formValues"
-                :nodes="formSchema.nodes"
-                :fields="formFields"
-                :columns="formSchema.columns"
-                :errors="form.errors as any"
-                :options="liveOptions"
-                :processing="form.processing"
-                :search-options="searchOptions"
-                :upload="upload"
-                :discard="discardUpload"
-                :picker-base="schema.routes.index"
-                :return-url="typeof window === 'undefined' ? schema.routes.index : window.location.pathname"
-                :create-option="createOption"
-                @change="onFieldChange"
-                @affix-action="onAffixAction"
-            />
-        </div>
+        <div :class="FORM_MEASURE">
+            <div :class="formSchema.nodes?.length ? '' : 'bg-card rounded-lg border p-4 sm:p-6'">
+                <RecordForm
+                    :model-value="formValues"
+                    :nodes="formSchema.nodes"
+                    :fields="formFields"
+                    :columns="formSchema.columns"
+                    :errors="form.errors as any"
+                    :options="liveOptions"
+                    :processing="form.processing"
+                    :search-options="searchOptions"
+                    :upload="upload"
+                    :discard="discardUpload"
+                    :picker-base="schema.routes.index"
+                    :return-url="typeof window === 'undefined' ? schema.routes.index : window.location.pathname"
+                    :create-option="createOption"
+                    @change="onFieldChange"
+                    @affix-action="onAffixAction"
+                />
+            </div>
 
-        <!--
-            THE DOOR TO A NEW FIELD IS ON THE FORM, because that is where the
-            need arises - see DefineFieldDialog's own note, and Part D of the
-            plan. A ghost button, deliberately quiet: defining a field is an
-            occasional act, not part of filling this form in.
-        -->
-        <div v-if="customFieldSupport" class="flex justify-start">
-            <Button
-                variant="ghost"
-                size="sm"
-                class="text-muted-foreground"
-                :disabled="form.processing"
-                @click="definingField = true"
-            >
-                + Add a field to every {{ customFieldSupport.label.toLowerCase() }}
-            </Button>
+            <!--
+                THE DOOR TO A NEW FIELD IS ON THE FORM, because that is where the
+                need arises - see DefineFieldDialog's own note, and Part D of the
+                plan. A ghost button, deliberately quiet: defining a field is an
+                occasional act, not part of filling this form in.
+            -->
+            <div v-if="customFieldSupport" class="mt-4 flex justify-start">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    class="text-muted-foreground"
+                    :disabled="form.processing"
+                    @click="definingField = true"
+                >
+                    + Add a field to every {{ customFieldSupport.label.toLowerCase() }}
+                </Button>
+            </div>
         </div>
 
         <!--

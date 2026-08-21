@@ -7,7 +7,8 @@
  */
 import { computed, watch } from 'vue'
 import { Head, useForm } from '@inertiajs/vue3'
-import { SchemaNode } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL, SchemaNode } from '@alxtexh-enterprise/panel'
 import type { SchemaNode as SchemaNodeType } from '@alxtexh-enterprise/panel'
 import { PanelWidgets } from '@alxtexh-enterprise/panel/inertia'
 
@@ -77,7 +78,7 @@ function submitLayout() {
 <template>
     <Head :title="pageHeading ?? 'Page'" />
 
-    <div class="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-6">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-6']">
         <header v-if="pageHeading" class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading }}</h1>
             <p v-if="pageDescription" class="text-sm text-muted-foreground">

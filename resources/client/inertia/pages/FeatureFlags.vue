@@ -3,7 +3,8 @@
  * Tenant feature flags from TenantContext. Host persists via FeatureFlagsPage::toggle().
  */
 import { Head, router } from '@inertiajs/vue3'
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL_STACK, PkButton as Button } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -38,7 +39,7 @@ function toggle(name: string, enabled: boolean) {
 <template>
     <Head :title="pageHeading ?? 'Feature flags'" />
 
-    <div class="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6">
+    <div :class="PAGE_SHELL_STACK">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Feature flags' }}</h1>
             <p v-if="pageDescription" class="text-sm text-muted-foreground">

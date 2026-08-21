@@ -4,7 +4,8 @@
  *
  * Reuses kit `useLiveUpdates` when `live.driver` is not `none`.
  */
-import { useLiveUpdates } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL, useLiveUpdates } from '@alxtexh-enterprise/panel'
 import type { LiveConfig } from '@alxtexh-enterprise/panel'
 import { Head } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
@@ -73,7 +74,7 @@ const list = computed(() => rows.value as unknown as Conversation[])
 <template>
     <Head :title="pageHeading ?? 'Chat'" />
 
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 sm:p-6">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-6']">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Chat' }}</h1>
             <p v-if="pageDescription" class="text-sm text-muted-foreground">

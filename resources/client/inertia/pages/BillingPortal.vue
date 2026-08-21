@@ -2,6 +2,7 @@
 /** Billing portal shell. Props from BillingPortalPage. */
 import { Head } from '@inertiajs/vue3'
 import { useTranslations } from '../composables/useTranslations'
+import { PAGE_SHELL_STACK } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -18,7 +19,7 @@ const { t } = useTranslations()
 
 <template>
     <Head :title="pageHeading ?? t('billing.portal.title')" />
-    <div class="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
+    <div :class="PAGE_SHELL_STACK">
         <h1 class="text-2xl font-semibold">{{ pageHeading ?? t('billing.portal.title') }}</h1>
         <p v-if="!subscription && !invoices?.length" class="text-sm text-muted-foreground">
             {{ t('billing.portal.empty') }}

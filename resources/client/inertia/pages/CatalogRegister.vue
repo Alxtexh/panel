@@ -3,7 +3,8 @@
  * Inertia cards + table register (leases, lockers, desks).
  */
 import { Head, router } from '@inertiajs/vue3'
-import { CatalogRegister } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL, CatalogRegister } from '@alxtexh-enterprise/panel'
 import type { CatalogFacet, CatalogItem, TableColumn } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
@@ -55,7 +56,7 @@ const defaultFacets: CatalogFacet[] = [
 <template>
     <Head :title="pageHeading ?? 'Register'" />
 
-    <div class="mx-auto w-full max-w-6xl p-4 sm:p-6">
+    <div :class="PAGE_SHELL">
         <CatalogRegister
             :title="pageHeading ?? 'Register'"
             :description="pageDescription"

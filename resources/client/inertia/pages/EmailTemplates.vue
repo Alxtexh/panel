@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /** Email templates shell. Props from EmailTemplatePage. */
 import { Head } from '@inertiajs/vue3'
+import { PAGE_SHELL_STACK } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -13,7 +14,7 @@ defineProps<{
 
 <template>
     <Head :title="pageHeading ?? 'Email templates'" />
-    <div class="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
+    <div :class="PAGE_SHELL_STACK">
         <h1 class="text-2xl font-semibold">{{ pageHeading ?? 'Email templates' }}</h1>
         <p v-if="!templates?.length" class="text-sm text-muted-foreground">No templates yet.</p>
         <ul v-else class="divide-y rounded-md border text-sm">

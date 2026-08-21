@@ -379,9 +379,14 @@ final class MakePageCommand extends Command
          * Put AppPageFooter at the bottom of this file when the panel did not
          * call ->pageFooter(true). The shell already renders one if it did.
          *
+         * PAGE_SHELL_STACK fills the main content area. Do not wrap panel pages
+         * in max-w-* + mx-auto unless the screen is intentionally narrow
+         * (login, onboarding, marketing).
+         *
          * Props come from `{$name}Page::data()`.
          */
         import { Head } from '@inertiajs/vue3'
+        import { PAGE_SHELL_STACK } from '@alxtexh-enterprise/panel'
 
         defineProps<{
             pageHeading?: string
@@ -392,7 +397,7 @@ final class MakePageCommand extends Command
         <template>
             <Head :title="pageHeading ?? '{$name}'" />
 
-            <div class="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+            <div :class="PAGE_SHELL_STACK">
                 <header v-if="pageHeading">
                     <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading }}</h1>
                     <p v-if="pageDescription" class="mt-1 text-sm text-muted-foreground">

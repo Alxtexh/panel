@@ -20,12 +20,11 @@ const props = withDefaults(defineProps<Props>(), {
 const className = computed(() => props.class)
 
 /*
- * THE SAME `max-w-7xl mx-auto` THE `header` VARIANT BELOW ALREADY USES,
- * offered as a per-user choice for the `sidebar` variant too - a wide monitor
- * showing a form at full bleed is a line length nobody reads in one pass.
- * Only this inner wrapper narrows; `SidebarInset` itself keeps stretching to
- * fill the space beside the rail, or the background stops at the text instead
- * of the window edge.
+ * DEFAULT IS FULL WIDTH. Admin pages fill the main column with their own
+ * padding (`PAGE_SHELL`). Appearance `contentLayout: 'centered'` is the
+ * opt-in that wraps the page slot in `max-w-7xl mx-auto` for hosts who want
+ * a reading measure. Auth, onboarding, and marketing screens may still
+ * centre themselves; do not bake that into kit admin shells.
  *
  * CENTERING MUST NOT WRAP THE FOOTER. A max-w wrapper that includes the
  * copyright makes the bar sit in the first content cell on a dashboard.
@@ -66,7 +65,7 @@ const pageFooter = useShellPageFooter()
         v-else
         id="pk-main"
         tabindex="-1"
-        class="mx-auto w-full max-w-7xl flex-1 overflow-y-auto rounded-xl"
+        class="w-full flex-1 overflow-y-auto rounded-xl"
         :class="className"
     >
         <div data-slot="app-content-column" class="flex min-h-full w-full shrink-0 flex-col">
