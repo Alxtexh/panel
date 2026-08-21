@@ -10,12 +10,12 @@ type __VLS_Props = {
     description?: string;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    reset: () => any;
     close: () => any;
+    reset: () => any;
     apply: (filters: CatalogFilters) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
-    onReset?: (() => any) | undefined;
     onClose?: (() => any) | undefined;
+    onReset?: (() => any) | undefined;
     onApply?: ((filters: CatalogFilters) => any) | undefined;
 }>, {
     title: string;

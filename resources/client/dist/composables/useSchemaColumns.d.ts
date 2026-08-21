@@ -25,6 +25,9 @@ export interface SchemaColumn {
     muted?: boolean;
     mono?: boolean;
     align?: 'right' | 'center';
+    sticky?: boolean;
+    width?: number;
+    resizable?: boolean;
     transform?: 'upper' | 'lower';
     prefix?: string;
     suffix?: string;

@@ -9,11 +9,11 @@ type __VLS_Props = {
     generalError?: string | null;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    submit: (values: Record<string, unknown>) => any;
     close: () => any;
+    submit: (values: Record<string, unknown>) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
-    onSubmit?: ((values: Record<string, unknown>) => any) | undefined;
     onClose?: (() => any) | undefined;
+    onSubmit?: ((values: Record<string, unknown>) => any) | undefined;
 }>, {
     description: string;
     processing: boolean;

@@ -128,6 +128,9 @@ const props = withDefaults(
             defaults?: string[]
             storageKey?: string | null
         } | null
+        /** Opt-in via Panel::userDashboards(). */
+        userDashboards?: boolean
+        dashboardLayout?: { chartOrder: string[] } | null
     }>(),
     {
         announcements: () => [],
@@ -146,6 +149,8 @@ const props = withDefaults(
         prefix: '',
         tables: () => [],
         shortcuts: null,
+        userDashboards: false,
+        dashboardLayout: null,
     },
 )
 
@@ -594,9 +599,101 @@ function restoreAllHidden() {
     router.reload()
 }
 
-const visibleCharts = computed(() =>
-    props.charts.filter((chart) => !hiddenWidgets.hidden.value.has(chart.key)),
-)
+const visibleCharts = computed(() => {
+    const visible = props.charts.filter((chart) => !hiddenWidgets.hidden.value.has(chart.key))
+
+    if (!props.userDashboards) {
+        return visible
+    }
+
+    const order = props.dashboardLayout?.chartOrder ?? []
+
+    if (order.length === 0) {
+        return visible
+    }
+
+    const byKey = new Map(visible.map((chart) => [chart.key, chart]))
+    const ordered: typeof visible = []
+
+    for (const key of order) {
+        const chart = byKey.get(key)
+
+        if (chart) {
+            ordered.push(chart)
+            byKey.delete(key)
+        }
+    }
+
+    for (const chart of byKey.values()) {
+        ordered.push(chart)
+    }
+
+    return ordered
+})
+
+const chartDragKey = ref<string | null>(null)
+
+function onChartDragStart(key: string, event: DragEvent) {
+    if (!props.userDashboards) {
+        event.preventDefault()
+        return
+    }
+
+    chartDragKey.value = key
+    event.dataTransfer?.setData('text/plain', key)
+
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move'
+    }
+}
+
+function onChartDragEnd() {
+    chartDragKey.value = null
+}
+
+async function onChartDrop(targetKey: string, event: DragEvent) {
+    event.preventDefault()
+
+    const from = chartDragKey.value
+    chartDragKey.value = null
+
+    if (!props.userDashboards || !from || from === targetKey) {
+        return
+    }
+
+    const keys = visibleCharts.value.map((chart) => chart.key)
+    const fromIndex = keys.indexOf(from)
+    const toIndex = keys.indexOf(targetKey)
+
+    if (fromIndex < 0 || toIndex < 0) {
+        return
+    }
+
+    keys.splice(fromIndex, 1)
+    keys.splice(toIndex, 0, from)
+
+    const href = props.prefix ? `/${props.prefix}/settings/appearance` : '/settings/appearance'
+
+    try {
+        await fetch(href, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN':
+                    (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)
+                        ?.content ?? '',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ dashboardLayout: { chartOrder: keys } }),
+        })
+
+        router.reload({ only: ['dashboardLayout', 'charts'] })
+    } catch {
+        // Keep the previous order on failure.
+    }
+}
 
 /**
  * Independent column tracks from `lg` up. Below that, one stack in
@@ -901,17 +998,32 @@ const hiddenEntries = computed(() => {
                 it. Neighbours in the other track keep their own height.
             -->
             <template v-for="(band, bandIndex) in chartBands" :key="bandIndex">
-                <DashboardChartPane
+                <div
                     v-if="band.type === 'wide'"
-                    :chart="band.item"
-                    :series="series(band.item.key)"
-                    :periods="periodsFor(band.item)"
-                    :period="periods[band.item.key]"
-                    :comparison="comparison[periods[band.item.key]]"
-                    :body-height="bodyHeight(band.item)"
-                    @update:period="(value: string) => setPeriod(band.item.key, value)"
-                    @hide="hideWidget(band.item.key, band.item.label)"
-                />
+                    :draggable="userDashboards"
+                    :class="chartDragKey === band.item.key ? 'opacity-40' : ''"
+                    @dragstart="onChartDragStart(band.item.key, $event)"
+                    @dragend="onChartDragEnd"
+                    @dragover.prevent
+                    @drop="onChartDrop(band.item.key, $event)"
+                >
+                    <p
+                        v-if="userDashboards"
+                        class="text-muted-foreground mb-1 text-[10px] uppercase tracking-wide"
+                    >
+                        Drag to rearrange
+                    </p>
+                    <DashboardChartPane
+                        :chart="band.item"
+                        :series="series(band.item.key)"
+                        :periods="periodsFor(band.item)"
+                        :period="periods[band.item.key]"
+                        :comparison="comparison[periods[band.item.key]]"
+                        :body-height="bodyHeight(band.item)"
+                        @update:period="(value: string) => setPeriod(band.item.key, value)"
+                        @hide="hideWidget(band.item.key, band.item.label)"
+                    />
+                </div>
                 <div
                     v-else
                     class="flex flex-col items-start gap-3 lg:flex-row"
@@ -922,18 +1034,27 @@ const hiddenEntries = computed(() => {
                         :key="columnIndex"
                         class="flex w-full min-w-0 flex-1 flex-col gap-3"
                     >
-                        <DashboardChartPane
+                        <div
                             v-for="chart in column"
                             :key="chart.key"
-                            :chart="chart"
-                            :series="series(chart.key)"
-                            :periods="periodsFor(chart)"
-                            :period="periods[chart.key]"
-                            :comparison="comparison[periods[chart.key]]"
-                            :body-height="bodyHeight(chart)"
-                            @update:period="(value: string) => setPeriod(chart.key, value)"
-                            @hide="hideWidget(chart.key, chart.label)"
-                        />
+                            :draggable="userDashboards"
+                            :class="chartDragKey === chart.key ? 'opacity-40' : ''"
+                            @dragstart="onChartDragStart(chart.key, $event)"
+                            @dragend="onChartDragEnd"
+                            @dragover.prevent
+                            @drop="onChartDrop(chart.key, $event)"
+                        >
+                            <DashboardChartPane
+                                :chart="chart"
+                                :series="series(chart.key)"
+                                :periods="periodsFor(chart)"
+                                :period="periods[chart.key]"
+                                :comparison="comparison[periods[chart.key]]"
+                                :body-height="bodyHeight(chart)"
+                                @update:period="(value: string) => setPeriod(chart.key, value)"
+                                @hide="hideWidget(chart.key, chart.label)"
+                            />
+                        </div>
                     </div>
                 </div>
             </template>

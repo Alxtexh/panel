@@ -39,14 +39,14 @@ type __VLS_Slots = {} & {
     'empty-actions'?: (props: typeof __VLS_24) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
-    "clear-filters": () => any;
     load: (cursor: string | null) => any;
+    "clear-filters": () => any;
     "update:search": (value: string) => any;
     "apply-filters": (filters: Record<string, unknown>) => any;
     "clear-filter": (key: string) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
-    "onClear-filters"?: (() => any) | undefined;
     onLoad?: ((cursor: string | null) => any) | undefined;
+    "onClear-filters"?: (() => any) | undefined;
     "onUpdate:search"?: ((value: string) => any) | undefined;
     "onApply-filters"?: ((filters: Record<string, unknown>) => any) | undefined;
     "onClear-filter"?: ((key: string) => any) | undefined;

@@ -60,6 +60,27 @@ final class Table
 
     private bool $striped = false;
 
+    /**
+     * Pin the first visible data column (and the checkbox column when present)
+     * while scrolling horizontally. Off by default: zero cost when unused.
+     */
+    private bool $stickyFirstColumn = false;
+
+    /**
+     * Offer drag-resize handles on columns that did not opt out. Off by default.
+     */
+    private bool $resizableColumns = false;
+
+    /**
+     * Index presentation modes the operator may toggle between.
+     *
+     * Empty means table only (no toggle). Pass `['table', 'cards']` to offer a
+     * grid/card view of the same rows. First entry is the default.
+     *
+     * @var list<'table'|'cards'>
+     */
+    private array $layouts = [];
+
     /** @var list<Column|ColumnGroup> */
     private array $columns = [];
 
@@ -710,6 +731,51 @@ final class Table
         return $this;
     }
 
+    /**
+     * Pin the first visible data column while scrolling horizontally.
+     *
+     * When the table is selectable, the checkbox column pins with it so the
+     * first data cell stays aligned under its header.
+     */
+    public function stickyFirstColumn(bool $sticky = true): self
+    {
+        $this->stickyFirstColumn = $sticky;
+
+        return $this;
+    }
+
+    /**
+     * Enable drag-resize on columns (persisted client-side / saved views).
+     *
+     * A column may still call `->resizable(false)` to opt out of the handles.
+     */
+    public function resizableColumns(bool $resizable = true): self
+    {
+        $this->resizableColumns = $resizable;
+
+        return $this;
+    }
+
+    /**
+     * Offer table and/or card layouts on the resource index.
+     *
+     * Empty (default) keeps a table-only index with no toggle. Pass
+     * `['table', 'cards']` (or cards first) to opt in. Unknown values are
+     * dropped so a typo does not invent a mode the client cannot draw.
+     *
+     * @param  list<'table'|'cards'|string>  $layouts
+     */
+    public function layouts(array $layouts): self
+    {
+        $allowed = ['table', 'cards'];
+        $this->layouts = array_values(array_filter(
+            $layouts,
+            static fn (mixed $layout): bool => is_string($layout) && in_array($layout, $allowed, true),
+        ));
+
+        return $this;
+    }
+
     public function toSchema(): array
     {
         $columns = [];
@@ -773,6 +839,9 @@ final class Table
             'recordActions' => $this->recordActionSchema(),
             'rowClick' => $this->rowClick,
             'striped' => $this->striped,
+            'stickyFirstColumn' => $this->stickyFirstColumn,
+            'resizableColumns' => $this->resizableColumns,
+            'layouts' => $this->layouts,
             // Structure only: which column clusters the rows and what to call
             // it. The VALUES arrive with the rows, because they are data.
             /*

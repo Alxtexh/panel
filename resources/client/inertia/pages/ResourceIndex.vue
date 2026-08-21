@@ -53,6 +53,7 @@ import {
     PkModal,
     SchemaNode,
     useColumnVisibility,
+    useColumnWidths,
     useLiveUpdates,
     hasBadgeValue,
     useSchemaColumns,
@@ -120,6 +121,10 @@ interface ResourceSchema {
          * does not - see `Table::rowClick()`.
          */
         rowClick?: 'view' | null
+        striped?: boolean
+        stickyFirstColumn?: boolean
+        resizableColumns?: boolean
+        layouts?: Array<'table' | 'cards'>
         /** Structure only; per-row availability rides with the row. */
         recordActions?: {
             label?: string
@@ -248,11 +253,66 @@ const t = useListTable(props.schema.routes.index, props, {
 
 // Keyed by resource, so hiding a column on Clients does not hide it on Routers.
 const { hidden, setHidden } = useColumnVisibility(`alxtexhpanel.${props.schema.key}.columns`)
+const { widths, setWidth } = useColumnWidths(`alxtexhpanel.${props.schema.key}.widths`)
+
+const layoutStorageKey = `alxtexhpanel.${props.schema.key}.layout`
+const indexLayout = ref<'table' | 'cards'>(
+    (props.schema.table.layouts?.[0] as 'table' | 'cards' | undefined) ?? 'table',
+)
+
+function readStoredLayout(): 'table' | 'cards' | null {
+    if (typeof localStorage === 'undefined') {
+        return null
+    }
+
+    try {
+        const saved = localStorage.getItem(layoutStorageKey)
+
+        if (saved === 'table' || saved === 'cards') {
+            return saved
+        }
+    } catch {
+        // ignore
+    }
+
+    return null
+}
+
+function setIndexLayout(mode: 'table' | 'cards') {
+    const allowed = props.schema.table.layouts ?? []
+
+    if (!allowed.includes(mode)) {
+        return
+    }
+
+    indexLayout.value = mode
+
+    try {
+        localStorage.setItem(layoutStorageKey, mode)
+    } catch {
+        // ignore
+    }
+}
+
+if (typeof window !== 'undefined') {
+    const saved = readStoredLayout()
+
+    if (saved && (props.schema.table.layouts ?? []).includes(saved)) {
+        indexLayout.value = saved
+    }
+}
 
 /** The column panel stages its choices and applies them together. */
 function applyColumns(keys: string[]) {
     setHidden(new Set(keys))
 }
+
+function onColumnResize(key: string, width: number) {
+    setWidth(key, width)
+}
+
+const cardTitleKey = computed(() => columns.value[0]?.key ?? 'id')
+const cardDetailColumns = computed(() => columns.value.slice(1, 4))
 
 const schemaColumns = toRef(() => props.schema.table.columns)
 const { columns, byKey, badgeVariant } = useSchemaColumns(schemaColumns)
@@ -1302,6 +1362,8 @@ function badgeLabel(key: string, value: unknown): string {
                     :groups="schema.table.groups ?? []"
                     :group-by="groupBy ?? null"
                     :indicators="indicators ?? []"
+                    :layouts="schema.table.layouts ?? []"
+                    :layout="indexLayout"
                     @update:search="t.setSearch"
                     @apply-filters="t.applyFilters"
                     @apply-columns="applyColumns"
@@ -1310,6 +1372,7 @@ function badgeLabel(key: string, value: unknown): string {
                     @group="t.setGroup"
                     @clear-filter="t.setFilter($event, null)"
                     @clear-filters="t.resetFilters"
+                    @layout="setIndexLayout"
                 />
             </template>
 
@@ -1323,9 +1386,46 @@ function badgeLabel(key: string, value: unknown): string {
             read.
         -->
             <PkBoundary label="The table" class="flex min-h-0 shrink grow-0 flex-col">
+                <div
+                    v-if="indexLayout === 'cards' && (schema.table.layouts ?? []).includes('cards')"
+                    class="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3"
+                    data-slot="resource-cards"
+                >
+                    <button
+                        v-for="(row, index) in t.rows.value"
+                        :key="String(row[schema.table.rowKey ?? 'id'] ?? index)"
+                        type="button"
+                        class="border-border bg-card hover:bg-muted/40 flex flex-col gap-2 rounded-lg border p-4 text-left transition-colors"
+                        @click="schema.table.rowClick === 'view' ? onRowClick(row) : undefined"
+                    >
+                        <span class="text-foreground font-medium">
+                            {{ row[cardTitleKey] ?? 'Untitled' }}
+                        </span>
+                        <dl class="text-muted-foreground grid gap-1 text-xs">
+                            <div
+                                v-for="col in cardDetailColumns"
+                                :key="col.key"
+                                class="flex justify-between gap-2"
+                            >
+                                <dt class="shrink-0">{{ col.label }}</dt>
+                                <dd class="truncate text-right">{{ row[col.key] ?? 'None' }}</dd>
+                            </div>
+                        </dl>
+                    </button>
+                    <p
+                        v-if="t.rows.value.length === 0"
+                        class="text-muted-foreground col-span-full py-8 text-center text-sm"
+                    >
+                        {{ `No ${schema.labelPlural.toLowerCase()} yet` }}
+                    </p>
+                </div>
                 <DataTable
+                    v-else
                     :framed="false"
                     :striped="Boolean(schema.table.striped)"
+                    :sticky-first="Boolean(schema.table.stickyFirstColumn)"
+                    :resizable="Boolean(schema.table.resizableColumns)"
+                    :column-widths="widths"
                     :group-by="groupBy ?? schema.table.groupBy ?? null"
                     :collapsed-groups-by-default="schema.table.collapsedGroupsByDefault ?? false"
                     :reordering="reordering"
@@ -1333,6 +1433,7 @@ function badgeLabel(key: string, value: unknown): string {
                     @row-contextmenu="onRowContextMenu"
                     :row-clickable="schema.table.rowClick === 'view'"
                     @row-click="onRowClick"
+                    @resize="onColumnResize"
                     :columns="columns"
                     :rows="t.rows.value"
                     :row-key="schema.table.rowKey ?? 'id'"

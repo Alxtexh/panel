@@ -1045,6 +1045,120 @@ final class ResourceController extends Controller
     }
 
     /**
+     * Kanban board for a resource that opted in via `Resource::board()`.
+     *
+     * Cards are capped so a board cannot become a full-table dump. Move writes
+     * go through `RecordController::boardMove`, not this action.
+     */
+    public function board(Request $request, string $resource): Response
+    {
+        $class = app(PanelManager::class)->resource($resource);
+
+        if ($class === null) {
+            throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
+        }
+
+        if (! $class::isEnabled()) {
+            throw new NotFoundHttpException("Resource [{$resource}] is not enabled for this tenant.");
+        }
+
+        abort_unless($class::isAccessible(), 403);
+        abort_unless($class::can('viewAny'), 403);
+
+        $board = $class::board();
+
+        if ($board === null) {
+            throw new NotFoundHttpException("[{$resource}] has no board.");
+        }
+
+        $schema = $class::schema();
+        $boardSchema = $board->toSchema();
+        $column = $board->column();
+        $title = $boardSchema['title'];
+        $description = $boardSchema['description'];
+
+        $modelClass = $class::model();
+        $query = $modelClass::query();
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            NestedRelation::constrain($query, $class, $parent);
+        }
+
+        $keyName = (new $modelClass)->getKeyName();
+        $select = array_values(array_unique(array_filter([
+            $keyName,
+            $column,
+            $title,
+            $description,
+        ])));
+
+        $rows = $query
+            ->select($select)
+            ->orderBy($title)
+            ->limit(500)
+            ->get();
+
+        $buckets = [];
+
+        foreach ($boardSchema['columns'] as $col) {
+            $buckets[$col['value']] = [];
+        }
+
+        foreach ($rows as $row) {
+            $value = (string) ($row->{$column} ?? '');
+
+            if (! array_key_exists($value, $buckets)) {
+                continue;
+            }
+
+            $card = [
+                'id' => $row->getKey(),
+                'title' => (string) ($row->{$title} ?? ''),
+                'column' => $value,
+            ];
+
+            if ($description !== null) {
+                $card['description'] = $row->{$description} !== null
+                    ? (string) $row->{$description}
+                    : null;
+            }
+
+            $buckets[$value][] = $card;
+        }
+
+        $columns = [];
+
+        foreach ($boardSchema['columns'] as $col) {
+            $columns[] = [
+                'value' => $col['value'],
+                'label' => $col['label'],
+                'cards' => $buckets[$col['value']] ?? [],
+            ];
+        }
+
+        $prefix = rtrim('/'.trim(app(PanelManager::class)->panel($class::panel())?->getPath() ?? '', '/'), '/');
+
+        return Inertia::render('ResourceKanban', [
+            'schema' => $schema,
+            'board' => $boardSchema,
+            'columns' => $columns,
+            'can' => $class::permissions(),
+            'moveUrl' => $prefix.'/'.$class::key().'/board-move',
+            'indexUrl' => $schema['routes']['index'],
+            'breadcrumbs' => $parent === null
+                ? [
+                    ['title' => $schema['labelPlural'], 'href' => $schema['routes']['index']],
+                    ['title' => 'Board', 'href' => $schema['routes']['board']],
+                ]
+                : [
+                    ...NestedContext::breadcrumbs($class, $parent),
+                    ['title' => 'Board', 'href' => $schema['routes']['board']],
+                ],
+        ]);
+    }
+
+    /**
      * The acting user's views, newest first with the default pinned on top.
      *
      * Returns an empty list when the host application has no `saved_views`

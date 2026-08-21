@@ -33,7 +33,7 @@ namespace Alxtexh\Panel\Tables;
 final class ViewState
 {
     /** Keys a view may carry. Anything else is not table state. */
-    private const KEYS = ['search', 'sort', 'direction', 'perPage', 'tab', 'filters', 'hidden', 'group'];
+    private const KEYS = ['search', 'sort', 'direction', 'perPage', 'tab', 'filters', 'hidden', 'group', 'widths', 'layout'];
 
     /**
      * Reduce arbitrary input to state this table can honour.
@@ -164,6 +164,54 @@ final class ViewState
 
             if ($hidden !== []) {
                 $out['hidden'] = $hidden;
+            }
+        }
+
+        /*
+         * COLUMN WIDTHS, by declared key, clamped to a sane pixel range.
+         *
+         * Presentation only (like `hidden`). Dropped keys for removed columns
+         * so a view does not accumulate dead width entries forever.
+         */
+        if (isset($input['widths']) && is_array($input['widths'])) {
+            $keys = array_column($schema['columns'] ?? [], 'key');
+            $widths = [];
+
+            foreach ($input['widths'] as $key => $value) {
+                if (! is_string($key) || ! in_array($key, $keys, true)) {
+                    continue;
+                }
+
+                if (! is_numeric($value)) {
+                    continue;
+                }
+
+                $px = (int) $value;
+
+                if ($px < 48 || $px > 1200) {
+                    continue;
+                }
+
+                $widths[$key] = $px;
+            }
+
+            if ($widths !== []) {
+                $out['widths'] = $widths;
+            }
+        }
+
+        /*
+         * INDEX LAYOUT MODE, against the table's declared layouts only.
+         *
+         * A table that never offered `cards` must not honour a stale view that
+         * asks for it: the toggle would appear for nobody else and the mode
+         * would stick forever.
+         */
+        if (isset($input['layout']) && is_string($input['layout'])) {
+            $allowed = $schema['layouts'] ?? [];
+
+            if (in_array($input['layout'], $allowed, true)) {
+                $out['layout'] = $input['layout'];
             }
         }
 
