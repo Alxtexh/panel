@@ -22,7 +22,7 @@ npm registry account. Add the VCS repository to your application's `composer.jso
 
 ```json
 "repositories": [
-    { "type": "vcs", "url": "https://github.com/Alxtexh/panelkit", "no-api": true }
+    { "type": "vcs", "url": "https://github.com/Alxtexh/panel", "no-api": true }
 ]
 ```
 

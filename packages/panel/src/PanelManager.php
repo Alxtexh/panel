@@ -86,6 +86,7 @@ final class PanelManager
         Pages\FeatureFlagsPage::class,
         Pages\OnboardingPage::class,
         Pages\BillingPortalPage::class,
+        Pages\WebhookEndpointsPage::class,
     ];
 
     /** @var array<string, class-string<Pages\Page>> slug => class — first-registered wins; used as fallback when no panel context */
