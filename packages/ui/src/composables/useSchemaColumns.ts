@@ -34,6 +34,7 @@ export interface SchemaColumn {
         | 'code'
         | 'keyvalue'
         | 'tags'
+        | 'rating'
     sortable?: boolean
     sortKey?: string
     copyable?: boolean
@@ -91,6 +92,9 @@ export interface SchemaColumn {
     /* tags */
     limit?: number | null
     separator?: string
+
+    /* rating */
+    max?: number
 }
 
 /**

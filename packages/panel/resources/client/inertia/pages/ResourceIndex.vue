@@ -42,6 +42,7 @@ import {
     TagsCell,
     ColourCell,
     CheckboxCell,
+    RatingCell,
     PkBoundary,
     RecordActions,
     SelectionBar,
@@ -1404,6 +1405,11 @@ function badgeLabel(key: string, value: unknown): string {
                             :value="row[col.key]"
                             :limit="byKey[col.key].limit ?? null"
                             :separator="byKey[col.key].separator ?? ','"
+                        />
+                        <RatingCell
+                            v-else-if="byKey[col.key]?.type === 'rating'"
+                            :value="row[col.key]"
+                            :max="byKey[col.key].max ?? 5"
                         />
                         <ImageCell
                             v-else-if="byKey[col.key]?.type === 'image'"

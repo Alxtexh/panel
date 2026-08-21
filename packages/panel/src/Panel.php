@@ -264,6 +264,22 @@ final class Panel
     private ?bool $turnstile = null;
 
     /**
+     * Environment colour banner. Null inherits config / non-production default.
+     * FALSE hides. TRUE forces on (including production).
+     */
+    private ?bool $environmentBanner = null;
+
+    /**
+     * Header Quick Create menu. ON by default; empty when nothing is creatable.
+     */
+    private bool $quickCreate = true;
+
+    /**
+     * Record presence (who's viewing). OFF by default; opt in with ->presence().
+     */
+    private ?bool $presence = null;
+
+    /**
      * Challenge TOTP / recovery / email OTP after password when the user has
      * a second factor.
      *
@@ -971,6 +987,78 @@ final class Panel
         }
 
         return Turnstile::enabled();
+    }
+
+    /**
+     * Colour strip naming APP_ENV in the shell.
+     *
+     * Null (default) follows `panel.environment_banner` / non-production.
+     * `->environmentBanner(false)` never shows. `->environmentBanner(true)`
+     * forces the strip even in production.
+     */
+    public function environmentBanner(bool $enabled = true): self
+    {
+        $this->environmentBanner = $enabled;
+
+        return $this;
+    }
+
+    public function environmentBannerOverride(): ?bool
+    {
+        return $this->environmentBanner;
+    }
+
+    public function showsEnvironmentBanner(): bool
+    {
+        return $this->environmentBanner !== false;
+    }
+
+    /**
+     * Header Quick Create of creatable resources. `->quickCreate(false)` hides
+     * the menu even when the operator may create records.
+     */
+    public function quickCreate(bool $enabled = true): self
+    {
+        $this->quickCreate = $enabled;
+
+        return $this;
+    }
+
+    public function showsQuickCreate(): bool
+    {
+        return $this->quickCreate;
+    }
+
+    /**
+     * Who's viewing a record (Echo presence). Off by default.
+     *
+     *     Panel::make('admin')->presence();
+     */
+    public function presence(bool $enabled = true): self
+    {
+        $this->presence = $enabled;
+
+        return $this;
+    }
+
+    public function presenceOverride(): ?bool
+    {
+        return $this->presence;
+    }
+
+    public function hasPresence(): bool
+    {
+        if ($this->presence === false) {
+            return false;
+        }
+
+        if ($this->presence === true) {
+            return true;
+        }
+
+        $flag = config('panel.presence.enabled');
+
+        return $flag === true || $flag === 1 || $flag === '1' || $flag === 'true';
     }
 
     public function idleLockMinutes(): ?int

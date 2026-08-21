@@ -20,6 +20,7 @@ export { default as BulkActions } from './components/DataTable/BulkActions.vue'
 export { default as RelationPanel } from './components/DataTable/RelationPanel.vue'
 export { default as RelationCreateDialog } from './components/DataTable/RelationCreateDialog.vue'
 export { default as IconCell } from './components/DataTable/IconCell.vue'
+export { default as RatingCell } from './components/DataTable/RatingCell.vue'
 export { default as ImageCell } from './components/DataTable/ImageCell.vue'
 /*
  | ROADMAP 4.6. A colour you can SEE rather than a hex string you can read,

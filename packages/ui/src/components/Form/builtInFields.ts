@@ -12,6 +12,10 @@ import PkBarcode from './PkBarcode.vue'
 import PkQrCode from './PkQrCode.vue'
 import PkRadioGroup from './PkRadioGroup.vue'
 import PkSeoPreview from './PkSeoPreview.vue'
+import PkPhone from './PkPhone.vue'
+import PkIconPicker from './PkIconPicker.vue'
+import PkTreeSelect from './PkTreeSelect.vue'
+import PkRating from './PkRating.vue'
 import PkSlider from './PkSlider.vue'
 import PkSwatchPreview from './PkSwatchPreview.vue'
 import PkTagsInput from './PkTagsInput.vue'
@@ -42,6 +46,10 @@ export function registerBuiltInFieldControls(): void {
     registerFieldControl('tags', PkTagsInput)
     registerFieldControl('colour', PkColourPicker)
     registerFieldControl('slider', PkSlider)
+    registerFieldControl('rating', PkRating)
+    registerFieldControl('phone', PkPhone)
+    registerFieldControl('icon-picker', PkIconPicker)
+    registerFieldControl('tree-select', PkTreeSelect)
     registerFieldControl('visual-select', PkVisualSelect)
     /*
      * ROADMAP 4.5. Markdown stores the SOURCE (diffable, re-targetable)

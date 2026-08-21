@@ -47,6 +47,17 @@ Wired into `make release-check` with client mirror sync and package Pest.
 
 ## Suggested next (not in this tag)
 
+- Kanban board page
+- User-customizable dashboards
+- Table chrome Pro (sticky columns / resize / grid toggle) deferred from v1.0.93
 - Barcode / log-tail **widgets** (field/page exist today)
 - Kit-only public landing for installers (no ISP demo)
-- Reset or drop a diverged `panel/dev` remote branch if it keeps confusing consumers
+
+## Landed since v1.0.88
+
+| Tag | What |
+| --- | --- |
+| v1.0.89 | Full social provider catalogue on login (incl. Discord), icons, env stubs |
+| v1.0.90 | Environment banner, Quick Create, RatingField / RatingColumn |
+| v1.0.91 | PhoneField, IconPickerField, TreeSelectField |
+| v1.0.92 | Record presence (who's viewing), opt-in |

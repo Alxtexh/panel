@@ -18,7 +18,10 @@ use Alxtexh\Panel\Support\ModuleRegistry;
 use Alxtexh\Panel\Support\OperationsNav;
 use Alxtexh\Panel\Support\Locale;
 use Alxtexh\Panel\Support\PanelAccess;
+use Alxtexh\Panel\Support\EnvironmentBanner;
 use Alxtexh\Panel\Support\PanelNavigation;
+use Alxtexh\Panel\Support\PanelQuickCreate;
+use Alxtexh\Panel\Support\Presence;
 use Alxtexh\Panel\Support\PanelHome;
 use Alxtexh\Panel\Support\PanelIdleActivity;
 use Alxtexh\Panel\Support\Tenants;
@@ -120,6 +123,23 @@ final class SharePanelProps
              * current-panel filter are the two things worth getting right.
              */
             'panelNav' => static fn (): array => PanelNavigation::build(),
+
+            /*
+             * Environment colour strip. Null outside the configured cases so
+             * production pays nothing unless forced on.
+             */
+            'environmentBanner' => static fn (): ?array => EnvironmentBanner::for(),
+
+            /*
+             * Creatable resources for the header Quick Create menu. Empty when
+             * none, or when the panel opted out with ->quickCreate(false).
+             */
+            'quickCreate' => static fn (): array => PanelQuickCreate::build(),
+
+            /*
+             * Record presence. Null when off so the client mounts nothing.
+             */
+            'presence' => static fn (): ?array => Presence::shared(),
 
             /*
              * DECLARED PAGES, when the application has not already shared them.
