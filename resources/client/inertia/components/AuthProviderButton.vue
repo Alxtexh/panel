@@ -44,9 +44,10 @@ function onActivate(event: MouseEvent): void {
         :data-test="`social-${provider.key}`"
         :data-configured="provider.configured === false ? '0' : '1'"
         :title="provider.configured === false ? (provider.hint ?? 'Not configured') : undefined"
+        :aria-label="`Continue with ${provider.label}`"
         :aria-disabled="provider.configured === false ? 'true' : undefined"
         :class="[
-            'bg-background inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors',
+            'bg-background inline-flex h-9 items-center justify-center gap-2 rounded-md border px-2.5 text-sm font-medium transition-colors',
             provider.configured === false
                 ? 'cursor-not-allowed opacity-60'
                 : 'hover:bg-accent',
@@ -202,6 +203,6 @@ function onActivate(event: MouseEvent): void {
                 d="M3.2 0 1 3.8v16.4h5.6V24l3.8-3.8h4.5L23 12.1V0H3.2Zm17.4 11.1-3.4 3.4h-4.5l-3.2 3.2v-3.2H5.4V2.2h15.2v8.9ZM16.5 5.6h2.2v6.7h-2.2V5.6Zm-5.6 0H13v6.7h-2.1V5.6Z"
             />
         </svg>
-        Continue with {{ provider.label }}
+        {{ provider.label }}
     </a>
 </template>
