@@ -219,12 +219,12 @@ const badgeVariant = computed(() => {
     <!-- Section. -->
     <section
         v-else-if="node.component === 'section'"
-        :class="isRoot ? 'bg-card rounded-lg border' : ''"
+        :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
     >
         <header
             class="flex items-start justify-between gap-3"
             :class="[
-                isRoot ? 'px-4 py-3' : 'pb-2',
+                isRoot ? 'px-4 py-3.5 sm:px-5' : 'pb-2',
                 node.collapsible ? 'cursor-pointer select-none' : '',
             ]"
             @click="node.collapsible && (open = !open)"
@@ -240,7 +240,7 @@ const badgeVariant = computed(() => {
         <dl
             v-if="open"
             class="grid grid-cols-1 gap-4"
-            :class="[gridClass, isRoot ? 'border-t px-4 py-4' : '']"
+            :class="[gridClass, isRoot ? 'border-t px-4 py-4 sm:px-5 sm:py-5' : '']"
         >
             <InfoNode
                 v-for="(child, i) in node.children ?? []"
@@ -268,7 +268,7 @@ const badgeVariant = computed(() => {
     <!-- Tabs. -->
     <div
         v-else-if="node.component === 'tabs'"
-        :class="isRoot ? 'bg-card overflow-hidden rounded-lg border' : ''"
+        :class="isRoot ? 'bg-card overflow-hidden rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
     >
         <div
             class="bg-muted/30 flex gap-1 overflow-x-auto p-1"

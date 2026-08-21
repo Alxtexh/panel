@@ -361,20 +361,20 @@ function insertChip(token: string) {
     -->
     <template v-if="field.type === 'hidden'" />
 
-    <div v-else class="flex flex-col gap-1.5">
+    <div v-else class="flex flex-col gap-2">
         <!-- `sr-only`, never removed: the input keeps its accessible name
              when a container hides a visually redundant label (see
              FormField.labelHidden). -->
         <div class="flex items-center justify-between gap-2">
             <label
                 :for="`f-${field.key}`"
-                class="text-sm font-medium"
+                class="text-sm font-medium leading-none"
                 :class="{ 'sr-only': field.labelHidden }"
             >
                 {{ field.label }}
                 <span v-if="field.required" class="text-destructive" aria-hidden="true">*</span>
             </label>
-            <span v-if="field.hint" class="text-muted-foreground flex items-center gap-1 text-xs">
+            <span v-if="field.hint" class="text-muted-foreground flex items-center gap-1 text-xs leading-snug">
                 {{ field.hint }}
                 <button
                     v-if="field.hintAction"
@@ -879,10 +879,10 @@ function insertChip(token: string) {
             Browse
         </a>
 
-        <p v-if="error" class="text-destructive text-xs" role="alert">
+        <p v-if="error" class="text-destructive text-xs leading-snug" role="alert">
             {{ error }}
         </p>
-        <p v-else-if="field.help && field.type !== 'toggle'" class="text-muted-foreground text-xs">
+        <p v-else-if="field.help && field.type !== 'toggle'" class="text-muted-foreground text-xs leading-snug">
             {{ field.help }}
         </p>
     </div>

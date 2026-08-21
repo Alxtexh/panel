@@ -292,12 +292,12 @@ function uploadFor(key: string) {
     -->
     <section
         v-else-if="node.component === 'section' && conditionMet(node)"
-        :class="isRoot ? 'bg-card rounded-lg border' : ''"
+        :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
     >
         <header
             class="flex items-start justify-between gap-3"
             :class="[
-                isRoot ? 'px-4 py-3' : 'pb-2',
+                isRoot ? 'px-4 py-3.5 sm:px-5' : 'pb-2',
                 node.collapsible ? 'cursor-pointer select-none' : '',
             ]"
             @click="node.collapsible && (open = !open)"
@@ -325,7 +325,7 @@ function uploadFor(key: string) {
         <div
             v-if="open"
             class="grid grid-cols-1 gap-4"
-            :class="[gridClass, isRoot ? 'border-t px-4 py-4' : '']"
+            :class="[gridClass, isRoot ? 'border-t px-4 py-4 sm:px-5 sm:py-5' : '']"
         >
             <SchemaNode
                 v-for="(child, i) in node.children ?? []"
@@ -349,9 +349,9 @@ function uploadFor(key: string) {
     <!-- Card: titled shell for page layouts. -->
     <section
         v-else-if="node.component === 'card' && conditionMet(node)"
-        class="bg-card rounded-lg border"
+        class="bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10"
     >
-        <header class="border-b px-4 py-3">
+        <header class="border-b px-4 py-3.5 sm:px-5">
             <h3 class="text-sm font-semibold">{{ node.title }}</h3>
             <p v-if="node.description" class="text-muted-foreground mt-0.5 text-xs">
                 {{ node.description }}
@@ -513,7 +513,7 @@ function uploadFor(key: string) {
     </div>
 
     <!-- Tabs. -->
-    <div v-else-if="node.component === 'tabs'" :class="isRoot ? 'bg-card rounded-lg border' : ''">
+    <div v-else-if="node.component === 'tabs'" :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''">
         <div
             class="bg-muted/30 flex gap-1 overflow-x-auto p-1"
             :class="isRoot ? 'rounded-t-lg border-b' : 'rounded-md'"
@@ -586,7 +586,7 @@ function uploadFor(key: string) {
         destroy the inputs on the step you just left, so going back to fix a
         value would find it gone.
     -->
-    <div v-else-if="node.component === 'wizard'" :class="isRoot ? 'bg-card rounded-lg border' : ''">
+    <div v-else-if="node.component === 'wizard'" :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''">
         <PkStepIndicator
             class="p-4"
             :class="isRoot ? 'border-b' : ''"
