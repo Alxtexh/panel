@@ -132,6 +132,12 @@ final class Panel
      */
     private array $apps = [];
 
+    /**
+     * Absolute or app-relative OpenAPI URL for Scalar when `api-docs` is on.
+     * Null means serve the kit-generated document at `{page}/openapi.json`.
+     */
+    private ?string $openapiUrl = null;
+
     /** In-panel feedback dialog. Off by default. */
     private bool $feedback = false;
 
@@ -1481,7 +1487,7 @@ final class Panel
 
     /**
      * Opt this portal into empty kit apps: `mail`, `chat`, `api-keys`, `invites`,
-     * `feature-flags`.
+     * `feature-flags`, `api-docs`.
      *
      * Each is an empty canvas or thin wrapper. Fill hooks on a subclass, or live
      * with empty lists. `without(['mail'])` still drops a screen you enabled.
@@ -1503,6 +1509,32 @@ final class Panel
     public function webhooks(): self
     {
         return $this->apps(['webhooks']);
+    }
+
+    /**
+     * Built-in Scalar API docs (nav, page, OpenAPI). Shorthand for
+     * `->apps(['api-docs'])`.
+     *
+     * Pass `$openapiUrl` to point Scalar at an existing document instead of the
+     * kit-generated `{panel}/apps/api-docs/openapi.json`.
+     */
+    public function apiDocs(?string $openapiUrl = null): self
+    {
+        $this->apps(['api-docs']);
+
+        if (is_string($openapiUrl) && $openapiUrl !== '') {
+            $this->openapiUrl = $openapiUrl;
+        }
+
+        return $this;
+    }
+
+    /**
+     * OpenAPI URL for the Scalar screen, or null to use the generated route.
+     */
+    public function getOpenapiUrl(): ?string
+    {
+        return $this->openapiUrl;
     }
 
     public function offersApp(string $name): bool

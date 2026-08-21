@@ -226,6 +226,7 @@ export const PANEL_PAGES = {
     Onboarding: () => import('./pages/Onboarding.vue'),
     Changelog: () => import('./pages/Changelog.vue'),
     ApiKeys: () => import('./pages/ApiKeys.vue'),
+    ApiDocs: () => import('./pages/ApiDocs.vue'),
     BillingPortal: () => import('./pages/BillingPortal.vue'),
     EmailTemplates: () => import('./pages/EmailTemplates.vue'),
     FeatureFlags: () => import('./pages/FeatureFlags.vue'),

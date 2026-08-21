@@ -31,6 +31,7 @@ final class MakePageCommand extends Command
                             {--signatures : Empty SignatureStudioPage; writes optional Signatures screen}
                             {--device-preview : Empty DevicePreviewPage; Vue shims packaged DevicePreview}
                             {--api-keys : Empty ApiKeysPage; Vue shims packaged ApiKeys}
+                            {--api-docs : Empty ApiDocsPage; Vue shims packaged ApiDocs (Scalar)}
                             {--invites : Empty InvitePage; Vue shims packaged Invites}
                             {--feature-flags : Empty FeatureFlagsPage; Vue shims packaged FeatureFlags}
                             {--webhooks : Empty WebhookEndpointsPage; Vue shims packaged Webhooks}
@@ -55,6 +56,7 @@ final class MakePageCommand extends Command
         'signatures',
         'device-preview',
         'api-keys',
+        'api-docs',
         'invites',
         'feature-flags',
         'webhooks',
@@ -118,6 +120,7 @@ final class MakePageCommand extends Command
             'signatures' => $this->signaturesStub($class, $slug, $name, $panel),
             'device-preview' => $this->devicePreviewStub($class, $slug, $name, $panel),
             'api-keys' => $this->apiKeysStub($class, $slug, $name, $panel),
+            'api-docs' => $this->apiDocsStub($class, $slug, $name, $panel),
             'invites' => $this->invitesStub($class, $slug, $name, $panel),
             'feature-flags' => $this->featureFlagsStub($class, $slug, $name, $panel),
             'webhooks' => $this->webhooksStub($class, $slug, $name, $panel),
@@ -133,7 +136,7 @@ final class MakePageCommand extends Command
 
         $this->writeComponent($name, $variant);
 
-        if (in_array($variant, ['plan-setup', 'till', 'catalog', 'catalog-item', 'register', 'directory', 'signatures', 'device-preview', 'api-keys', 'invites', 'feature-flags', 'webhooks', 'billing-portal', 'email-templates', 'onboarding', 'media-library'], true)) {
+        if (in_array($variant, ['plan-setup', 'till', 'catalog', 'catalog-item', 'register', 'directory', 'signatures', 'device-preview', 'api-keys', 'api-docs', 'invites', 'feature-flags', 'webhooks', 'billing-portal', 'email-templates', 'onboarding', 'media-library'], true)) {
             $optional = PanelPages::writeOptional((bool) $this->option('force'));
 
             if ($optional['written'] !== []) {
@@ -187,6 +190,7 @@ final class MakePageCommand extends Command
             'till' => 'Till',
             'device-preview' => 'DevicePreview',
             'api-keys' => 'ApiKeys',
+            'api-docs' => 'ApiDocs',
             'invites' => 'Invites',
             'feature-flags' => 'FeatureFlags',
             default => null,
@@ -358,6 +362,7 @@ final class MakePageCommand extends Command
             'directory' => 'DirectoryPage',
             'signatures' => 'SignatureStudio',
             'api-keys' => 'ApiKeys',
+            'api-docs' => 'ApiDocs',
             'invites' => 'Invites',
             'webhooks' => 'Webhooks',
             'feature-flags' => 'FeatureFlags',
@@ -738,6 +743,11 @@ final class MakePageCommand extends Command
     private function apiKeysStub(string $class, string $slug, string $name, string $panel): string
     {
         return $this->extendsPageStub($class, $name, $panel, 'ApiKeysPage', 'API keys for the public API.');
+    }
+
+    private function apiDocsStub(string $class, string $slug, string $name, string $panel): string
+    {
+        return $this->extendsPageStub($class, $name, $panel, 'ApiDocsPage', 'Scalar API reference for this panel.');
     }
 
     private function invitesStub(string $class, string $slug, string $name, string $panel): string
