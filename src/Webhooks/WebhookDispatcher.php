@@ -52,6 +52,19 @@ final class WebhookDispatcher
     }
 
     /**
+     * Send a test delivery to one endpoint (bypasses event subscription filter).
+     */
+    public function ping(WebhookEndpoint $endpoint, int|string|null $tenantId = null): void
+    {
+        $tenantId ??= $endpoint->tenant_id;
+
+        $this->deliver($endpoint, 'webhook.ping', [
+            'message' => 'Panel webhook ping',
+            'sent_at' => now()->toIso8601String(),
+        ], $tenantId);
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      */
     private function deliver(WebhookEndpoint $endpoint, string $event, array $payload, int|string $tenantId): void

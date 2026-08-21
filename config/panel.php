@@ -288,6 +288,7 @@ return [
     */
     'webhooks' => [
         'events' => [
+            'webhook.ping',
             'billing.active',
             'billing.past_due',
             'billing.suspended',

@@ -64,6 +64,7 @@ class WebhookEndpointsPage extends Page
             'save' => 'manage_webhooks',
             'delete' => 'manage_webhooks',
             'retry' => 'manage_webhooks',
+            'ping' => 'manage_webhooks',
         ];
     }
 
@@ -73,6 +74,7 @@ class WebhookEndpointsPage extends Page
             'save' => 'save',
             'delete' => 'delete',
             'retry' => 'retry',
+            'ping' => 'ping',
         ];
     }
 
@@ -83,6 +85,7 @@ class WebhookEndpointsPage extends Page
     {
         $tenantId = app(TenantContext::class)->currentKey();
         $selected = $request->query('endpoint');
+        $base = static::pageHref();
 
         $endpoints = $tenantId === null ? [] : WebhookEndpoint::query()
             ->where('tenant_id', $tenantId)
@@ -120,6 +123,11 @@ class WebhookEndpointsPage extends Page
             'endpoints' => $endpoints,
             'selectedEndpointId' => is_numeric($selected) ? (int) $selected : null,
             'deliveries' => $deliveries,
+            'pageHref' => $base,
+            'saveHref' => $base.'/save',
+            'deleteHref' => $base.'/delete',
+            'retryHref' => $base.'/retry',
+            'pingHref' => $base.'/ping',
         ];
     }
 
@@ -222,5 +230,43 @@ class WebhookEndpointsPage extends Page
         Notification::make()->title('Delivery retried')->success()->send();
 
         return back();
+    }
+
+    public static function ping(Request $request): RedirectResponse
+    {
+        $tenantId = app(TenantContext::class)->currentKey();
+
+        abort_if($tenantId === null, 403);
+
+        $validated = $request->validate([
+            'id' => ['required', 'integer'],
+        ]);
+
+        $endpoint = WebhookEndpoint::query()
+            ->where('tenant_id', $tenantId)
+            ->whereKey($validated['id'])
+            ->firstOrFail();
+
+        app(WebhookDispatcher::class)->ping($endpoint, $tenantId);
+
+        Notification::make()->title('Ping sent')->success()->send();
+
+        return redirect(static::pageHref().'?endpoint='.$endpoint->id);
+    }
+
+    protected static function pageHref(): string
+    {
+        $path = '/'.trim(static::navigationPath(), '/');
+        $prefix = app(PanelManager::class)->currentPanel()?->getPath() ?? '';
+
+        if ($prefix !== '' && $prefix !== '/') {
+            $path = rtrim($prefix, '/').$path;
+        }
+
+        if (! str_starts_with($path, '/')) {
+            $path = '/'.$path;
+        }
+
+        return $path;
     }
 }
