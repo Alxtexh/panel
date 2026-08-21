@@ -57,6 +57,8 @@ final class Table
      */
     private ?string $rowClick = null;
 
+    private bool $striped = false;
+
     /** @var list<Column> */
     private array $columns = [];
 
@@ -668,6 +670,19 @@ final class Table
         return $this;
     }
 
+    /**
+     * Alternate row wash for dense ops tables.
+     *
+     * Off by default. Hover still applies either way; this only adds a quiet
+     * zebra for lists where scanning many similar rows is the job.
+     */
+    public function striped(bool $striped = true): self
+    {
+        $this->striped = $striped;
+
+        return $this;
+    }
+
     public function toSchema(): array
     {
         return [
@@ -701,6 +716,7 @@ final class Table
              */
             'recordActions' => $this->recordActionSchema(),
             'rowClick' => $this->rowClick,
+            'striped' => $this->striped,
             // Structure only: which column clusters the rows and what to call
             // it. The VALUES arrive with the rows, because they are data.
             /*

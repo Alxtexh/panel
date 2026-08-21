@@ -1094,7 +1094,7 @@ function badgeLabel(key: string, value: unknown): string {
 <template>
     <Head :title="schema.labelPlural" />
 
-    <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-3 p-3 sm:p-4">
+    <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-3 sm:p-4">
         <!--
             WIDGETS ABOVE THE LIST - what `Resource::headerWidgets()` declares.
             The open-ticket count above the ticket table, which previously meant
@@ -1141,7 +1141,7 @@ function badgeLabel(key: string, value: unknown): string {
             :base-url="schema.routes.index"
         />
 
-        <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-4">
             <PkPageHeader :title="schema.labelPlural" :purpose="schema.purpose">
                 <template #actions>
                     <!--
@@ -1323,6 +1323,7 @@ function badgeLabel(key: string, value: unknown): string {
             <PkBoundary label="The table" class="flex min-h-0 shrink grow-0 flex-col">
                 <DataTable
                     :framed="false"
+                    :striped="Boolean(schema.table.striped)"
                     :group-by="groupBy ?? schema.table.groupBy ?? null"
                     :collapsed-groups-by-default="schema.table.collapsedGroupsByDefault ?? false"
                     :reordering="reordering"

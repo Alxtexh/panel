@@ -550,17 +550,17 @@ defineExpose({ show })
                             v-model="term"
                             data-palette-input
                             type="text"
-                            class="h-12 flex-1 bg-transparent text-sm outline-none"
+                            class="h-10 flex-1 bg-transparent text-sm outline-none"
                             placeholder="Search screens and records…"
                         />
 
                         <span v-if="searching" class="text-muted-foreground text-xs">…</span>
                     </div>
 
-                    <div ref="listEl" class="max-h-80 overflow-y-auto p-1.5">
-                        <div v-for="group in groups" :key="group.label" class="mb-1">
+                    <div ref="listEl" class="max-h-80 overflow-y-auto p-1">
+                        <div v-for="group in groups" :key="group.label" class="mb-0.5">
                             <p
-                                class="text-muted-foreground px-2 pt-2 pb-1 text-xs font-medium tracking-wide uppercase"
+                                class="text-muted-foreground px-2 pt-1.5 pb-0.5 text-[11px] font-medium tracking-wide uppercase"
                             >
                                 {{ group.label }}
                             </p>
@@ -569,7 +569,7 @@ defineExpose({ show })
                                 v-for="item in group.items"
                                 :key="item.id"
                                 type="button"
-                                class="flex w-full items-center justify-between gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors"
+                                class="flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left text-sm transition-colors"
                                 :class="
                                     indexOf(item) === activeIndex
                                         ? 'bg-muted text-foreground'
