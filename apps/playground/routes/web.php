@@ -664,3 +664,26 @@ Route::get('/shell-preview', fn () => Inertia::render('errors/ShellPreview'))
  */
 Route::get('/login-preview', fn () => Inertia::render('errors/LoginPreview'))
     ->middleware(['web']);
+
+/*
+ | Auth design family gallery. Guest-safe so the samples match real sign-in
+ | screens. `forceAuthLayout` wins inside AuthLayout over the live panel family.
+ */
+Route::get('/screens/auth/{family}/{screen?}', function (string $family, string $screen = 'login') {
+    $families = [
+        'centered' => 'Centered',
+        'muted' => 'Muted',
+        'showcase' => 'Showcase',
+        'split' => 'Split',
+        'card' => 'Card',
+    ];
+
+    abort_unless(isset($families[$family]), 404);
+    abort_unless(in_array($screen, ['login', 'register', 'otp'], true), 404);
+
+    return Inertia::render('errors/AuthFamilyPreview', [
+        'forceAuthLayout' => $family,
+        'screen' => $screen,
+        'familyLabel' => $families[$family],
+    ]);
+})->middleware(['web'])->name('screens.auth.family');

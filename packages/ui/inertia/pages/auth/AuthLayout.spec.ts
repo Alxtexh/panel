@@ -25,6 +25,14 @@ import AuthLayout from './AuthLayout.vue'
 vi.mock('@alxtexh-enterprise/panel', () => ({
     // The theme toggle reaches for appearance storage; this file is about a heading.
     ThemeToggle: { template: '<div />' },
+    Card: {
+        template: '<div data-slot="card"><slot /></div>',
+    },
+    CardContent: {
+        template: '<div data-slot="card-content"><slot /></div>',
+    },
+    // Toaster (mounted by AuthLayout) merges class names through this helper.
+    cn: (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' '),
 }))
 
 const page = vi.hoisted(() => ({ props: {} as Record<string, unknown> }))
@@ -107,6 +115,39 @@ describe('AuthLayout', () => {
             const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme' } })
             // Centered layout has no .bg-muted image panel.
             expect(wrapper.find('.bg-muted').exists()).toBe(false)
+        })
+    })
+
+    describe('card family (login-04)', () => {
+        it('renders the inset card on a muted page', () => {
+            page.props = { name: 'Acme', panel: { brand: 'Acme', authLayout: 'card' } }
+            const wrapper = mount(AuthLayout, { props: { title: 'Log in', description: 'Welcome back' } })
+
+            expect(wrapper.find('[data-slot="card"]').exists()).toBe(true)
+            expect(wrapper.find('h1').text()).toBe('Log in')
+            // Page chrome is muted; the form column sits inside the card.
+            expect(wrapper.find('.bg-muted.flex.min-h-svh').exists()).toBe(true)
+        })
+
+        it('honours a layout prop over shared panel.authLayout', () => {
+            page.props = { name: 'Acme', panel: { brand: 'Acme', authLayout: 'centered' } }
+            const wrapper = mount(AuthLayout, {
+                props: { title: 'Log in', layout: 'card' },
+            })
+
+            expect(wrapper.find('[data-slot="card"]').exists()).toBe(true)
+        })
+
+        it('honours forceAuthLayout from page props for preview routes', () => {
+            page.props = {
+                name: 'Acme',
+                forceAuthLayout: 'muted',
+                panel: { brand: 'Acme', authLayout: 'centered' },
+            }
+            const wrapper = mount(AuthLayout, { props: { title: 'Log in' } })
+
+            expect(wrapper.find('.bg-muted.flex.min-h-svh').exists()).toBe(true)
+            expect(wrapper.find('[data-slot="card"]').exists()).toBe(false)
         })
     })
 })

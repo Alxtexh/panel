@@ -318,23 +318,47 @@ final class Panel
     private bool $emailVerification = false;
 
     /**
-     * Which auth-screen layout this panel uses: 'centered' (default), 'split', or 'showcase'.
+     * Auth design family for every packaged auth screen on this panel.
      *
-     * 'centered' — a card in the middle of a plain background, the existing style.
-     * 'split'    — branding panel on the left, form on the right. The choice
-     *              propagates to every auth screen this panel owns: login, register,
-     *              password request / reset, OTP, and lock screen all inherit it via
-     *              the shared `AuthLayout` wrapper, so selecting it once covers the
-     *              whole authentication flow.
-     * 'showcase' — form on the left, a preview panel on the right holding an
-     *              optional image and an optional testimonial (`authTestimonial()`).
-     *              The mirror of 'split': there the form is what a returning user
-     *              wants fastest and the image is decoration, so it gives way on a
-     *              narrow screen; here the preview is the pitch to somebody who has
-     *              not decided to sign up yet, which is a case this panel itself
-     *              never needs but a public-facing registration screen can.
+     * ONE KNOB COUPLES LOGIN, SIGNUP, AND OTP. Prefer `authFamily()`; `authLayout()`
+     * is the same setter kept for existing call sites. Unknown names fall back to
+     * `centered` so a typo never leaves a panel with a blank sign-in page.
+     *
+     * | Family     | shadcn-vue blocks (layout pattern)      | Composition                          |
+     * |------------|-----------------------------------------|--------------------------------------|
+     * | centered   | signup-05, otp-01, otp-05               | Form on plain background (default)   |
+     * | muted      | login-03, otp-03                        | Form on muted background             |
+     * | showcase   | login-02, signup-02, otp-02             | Form left, full-bleed cover right    |
+     * | split      | mirror of showcase                      | Cover left, form right               |
+     * | card       | login-04, signup-04, otp-04             | Muted page, inset form|image card    |
+     *
+     * Patterns are reimplemented in AuthLayout against kit tokens. Hosts do not
+     * run `npx shadcn-vue add` into the monorepo for these screens.
      */
     private string $authLayout = 'centered';
+
+    /** @var list<string> */
+    private const AUTH_FAMILIES = ['centered', 'muted', 'split', 'showcase', 'card'];
+
+    /**
+     * shadcn-vue block ids and short aliases that resolve to a PanelKit family.
+     * Picking a login block name selects the matching signup + OTP family too.
+     *
+     * @var array<string, string>
+     */
+    private const AUTH_FAMILY_ALIASES = [
+        'login-02' => 'showcase',
+        'signup-02' => 'showcase',
+        'otp-02' => 'showcase',
+        'login-03' => 'muted',
+        'otp-03' => 'muted',
+        'login-04' => 'card',
+        'signup-04' => 'card',
+        'otp-04' => 'card',
+        'signup-05' => 'centered',
+        'otp-01' => 'centered',
+        'otp-05' => 'centered',
+    ];
 
     /** @var array{quote: string, author: string, role: string|null}|null */
     private ?array $authTestimonial = null;
@@ -1340,18 +1364,51 @@ final class Panel
         return $this->loginComponent;
     }
 
-    /** @param 'centered'|'split'|'showcase' $layout */
+    /**
+     * Prefer `authFamily()`. Kept as an alias so existing panels keep compiling.
+     *
+     * @param  string  $layout  Family name or shadcn block alias (see AUTH_FAMILY_ALIASES).
+     */
     public function authLayout(string $layout): self
     {
-        $this->authLayout = $layout;
+        return $this->authFamily($layout);
+    }
+
+    /**
+     * Pick the auth design family for login, register, OTP, and related screens.
+     *
+     * Accepts a PanelKit family (`centered`, `muted`, `split`, `showcase`, `card`)
+     * or a shadcn-vue block id such as `login-04` / `signup-02` / `otp-02`. Block
+     * ids resolve to the matching family so choosing a login template auto-selects
+     * the coupled signup and OTP layouts.
+     */
+    public function authFamily(string $family): self
+    {
+        $resolved = self::AUTH_FAMILY_ALIASES[$family] ?? $family;
+
+        $this->authLayout = in_array($resolved, self::AUTH_FAMILIES, true)
+            ? $resolved
+            : 'centered';
 
         return $this;
     }
 
-    /** @return 'centered'|'split'|'showcase' */
+    /** @return 'centered'|'muted'|'split'|'showcase'|'card' */
     public function getAuthLayout(): string
     {
         return $this->authLayout;
+    }
+
+    /** @return 'centered'|'muted'|'split'|'showcase'|'card' */
+    public function getAuthFamily(): string
+    {
+        return $this->authLayout;
+    }
+
+    /** @return list<string> */
+    public static function authFamilies(): array
+    {
+        return self::AUTH_FAMILIES;
     }
 
     /**

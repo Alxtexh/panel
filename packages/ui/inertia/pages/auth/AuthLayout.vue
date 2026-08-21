@@ -6,12 +6,17 @@
  * that had nothing application-specific in it: a centred card, the product's
  * name, a theme toggle. Everything else about auth was Fortify's or the demo's.
  *
- * TWO LAYOUTS, ONE COMPONENT. `Panel::authLayout('split')` selects the
- * side-by-side design: branding panel on the left, form on the right. The
- * default is 'centered' - the existing card-in-the-middle style. Either way
- * the choice comes from `panel.authLayout` in the shared Inertia props and
- * propagates automatically to every auth screen - login, register, password
- * request/reset, OTP, lock - because they all render inside this wrapper.
+ * ONE FAMILY, EVERY SCREEN. `Panel::authFamily('card')` (or `authLayout`) picks
+ * the composition once. Login, register, password request/reset, OTP, and the
+ * two-factor challenge all render inside this wrapper, so choosing a family
+ * auto-couples signup and OTP to the same design as login.
+ *
+ * Families map to shadcn/vue auth blocks (reimplemented here, not pasted):
+ *   centered  - signup-05 / otp-01 / otp-05 (default)
+ *   muted     - login-03 / otp-03
+ *   showcase  - login-02 / signup-02 / otp-02 (form left, cover right)
+ *   split     - mirror of showcase (cover left, form right)
+ *   card      - login-04 / signup-04 / otp-04 (muted page, inset form|image card)
  *
  * THE PRODUCT'S NAME, NOT A FRAMEWORK BADGE. There is no tenant before sign-in
  * - the hostname might identify one, a shared sign-in screen does not - so
@@ -30,26 +35,37 @@
  */
 import { Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { ThemeToggle } from '@alxtexh-enterprise/panel'
+import { Card, CardContent, ThemeToggle } from '@alxtexh-enterprise/panel'
 import Toaster from '../../components/Toaster.vue'
 
-defineProps<{
+const props = defineProps<{
     title?: string
     description?: string
+    /**
+     * Force a family for preview routes. Wins over shared `panel.authLayout`
+     * and over `forceAuthLayout` from the page props.
+     */
+    layout?: string
 }>()
+
+export type AuthFamily = 'centered' | 'muted' | 'split' | 'showcase' | 'card'
+
+const AUTH_FAMILIES: AuthFamily[] = ['centered', 'muted', 'split', 'showcase', 'card']
+
+function resolveFamily(value: unknown): AuthFamily | null {
+    return typeof value === 'string' && (AUTH_FAMILIES as string[]).includes(value)
+        ? (value as AuthFamily)
+        : null
+}
 
 /**
  * THE PORTAL'S OWN BRAND FIRST, and it took a measurement to notice this was
  * missing. `SharePanelProps` has always shared `panel.brand` -
  * `Panel::brandName()` resolved per request - and this layout read only `name`,
  * so every portal's sign-in screen showed the bare application name. The
- * reference app's client portal offered "Alxtexhpanel" where it had declared
- * "Alxtexhpanel — Client", and its superadmin portal did the same. Five portals,
+ * reference app's client portal offered "Alxtexhpanel - Client" where it had
+ * declared that brand, and its superadmin portal did the same. Five portals,
  * five distinct brands, one heading.
- *
- * IT LOOKS CORRECT, WHICH IS WHY IT LASTED. A sign-in page showing the product's
- * name is not obviously wrong - it is only wrong next to the portal it belongs
- * to, and nobody opens two sign-in screens side by side.
  *
  * FALLING THROUGH IS THE INTERESTING PART, not the lookup. A tenant panel
  * resolves its brand from the signed-in tenant - the reference app's admin panel
@@ -62,28 +78,38 @@ defineProps<{
  * broken page rather than as an unset option.
  */
 const appName = computed(() => {
-    const props = usePage().props
-    const brand = props.panel && typeof props.panel === 'object'
-        ? (props.panel as Record<string, unknown>).brand
+    const pageProps = usePage().props
+    const brand = pageProps.panel && typeof pageProps.panel === 'object'
+        ? (pageProps.panel as Record<string, unknown>).brand
         : null
 
-    return String(brand || props.name || 'Panel')
+    return String(brand || pageProps.name || 'Panel')
 })
 
-const authLayout = computed((): 'centered' | 'split' | 'showcase' => {
-    const props = usePage().props
-    const layout = props.panel && typeof props.panel === 'object'
-        ? (props.panel as Record<string, unknown>).authLayout
+const authLayout = computed((): AuthFamily => {
+    const fromProp = resolveFamily(props.layout)
+    if (fromProp) {
+        return fromProp
+    }
+
+    const pageProps = usePage().props
+    const forced = resolveFamily(pageProps.forceAuthLayout)
+    if (forced) {
+        return forced
+    }
+
+    const shared = pageProps.panel && typeof pageProps.panel === 'object'
+        ? (pageProps.panel as Record<string, unknown>).authLayout
         : null
 
-    return layout === 'split' || layout === 'showcase' ? layout : 'centered'
+    return resolveFamily(shared) ?? 'centered'
 })
 
 /** `Panel::authTestimonial()`, or null when the panel declared none. */
 const testimonial = computed((): { quote: string; author: string; role: string | null } | null => {
-    const props = usePage().props
-    const value = props.panel && typeof props.panel === 'object'
-        ? (props.panel as Record<string, unknown>).authTestimonial
+    const pageProps = usePage().props
+    const value = pageProps.panel && typeof pageProps.panel === 'object'
+        ? (pageProps.panel as Record<string, unknown>).authTestimonial
         : null
 
     return value && typeof value === 'object' ? (value as { quote: string; author: string; role: string | null }) : null
@@ -97,7 +123,7 @@ const testimonial = computed((): { quote: string; author: string; role: string |
     -->
     <Toaster />
 
-    <!-- ===== CENTERED (default) ===== -->
+    <!-- ===== CENTERED (default / signup-05 / otp-01 / otp-05) ===== -->
     <div
         v-if="authLayout === 'centered'"
         class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10"
@@ -137,6 +163,93 @@ const testimonial = computed((): { quote: string; author: string; role: string |
         </div>
     </div>
 
+    <!-- ===== MUTED (login-03 / otp-03) ===== -->
+    <div
+        v-else-if="authLayout === 'muted'"
+        class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10"
+    >
+        <div class="absolute top-4 right-4">
+            <ThemeToggle />
+        </div>
+
+        <div class="flex w-full max-w-sm flex-col gap-6">
+            <Link href="/" class="flex items-center gap-2 self-center font-medium">
+                <span class="text-lg font-semibold tracking-tight">{{ appName }}</span>
+                <span class="sr-only">{{ title }}</span>
+            </Link>
+
+            <div class="flex flex-col gap-6">
+                <div class="space-y-2 text-center">
+                    <h1 class="text-xl font-medium">{{ title }}</h1>
+                    <p v-if="description" class="text-sm text-muted-foreground">
+                        {{ description }}
+                    </p>
+                </div>
+
+                <slot />
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CARD (login-04 / signup-04 / otp-04) ===== -->
+    <!--
+        MUTED PAGE, INSET CARD. The form and the image share one bordered
+        surface rather than splitting the viewport. Matches the shadcn-vue
+        login-04 / signup-04 / otp-04 composition without importing those
+        blocks as dependencies.
+    -->
+    <div
+        v-else-if="authLayout === 'card'"
+        class="relative flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10"
+    >
+        <div class="absolute top-4 right-4">
+            <ThemeToggle />
+        </div>
+
+        <div class="w-full max-w-sm md:max-w-4xl">
+            <Card class="overflow-hidden p-0">
+                <CardContent class="grid p-0 md:grid-cols-2">
+                    <div class="flex flex-col justify-center p-6 md:p-8">
+                        <div class="flex flex-col gap-6">
+                            <div class="flex flex-col items-center gap-2 text-center">
+                                <Link href="/" class="text-sm font-medium text-muted-foreground hover:text-foreground">
+                                    {{ appName }}
+                                </Link>
+                                <h1 class="text-2xl font-bold tracking-tight">{{ title }}</h1>
+                                <p v-if="description" class="text-balance text-sm text-muted-foreground">
+                                    {{ description }}
+                                </p>
+                            </div>
+
+                            <slot />
+                        </div>
+                    </div>
+
+                    <div class="bg-muted relative hidden min-h-[280px] md:block">
+                        <slot name="image">
+                            <div class="absolute inset-0 flex items-center justify-center text-muted-foreground/40">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="size-16"
+                                >
+                                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                                    <circle cx="9" cy="9" r="2" />
+                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                                </svg>
+                            </div>
+                        </slot>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+
     <!-- ===== SHOWCASE ===== -->
     <!--
         THE MIRROR OF SPLIT: form on the LEFT, a preview panel on the RIGHT.
@@ -160,7 +273,7 @@ const testimonial = computed((): { quote: string; author: string; role: string |
         v-else-if="authLayout === 'showcase'"
         class="relative flex min-h-svh flex-col justify-center lg:grid lg:grid-cols-2"
     >
-        <!-- Form panel — LEFT (first in DOM, so it lands in the first grid column with no order utility needed) -->
+        <!-- Form panel - LEFT (first in DOM, so it lands in the first grid column with no order utility needed) -->
         <div class="flex flex-col bg-background">
             <!-- Mobile: brand strip -->
             <div class="flex items-center justify-between border-b px-6 py-4 lg:hidden">
@@ -191,11 +304,11 @@ const testimonial = computed((): { quote: string; author: string; role: string |
             </div>
         </div>
 
-        <!-- Preview panel — RIGHT, hidden below lg -->
+        <!-- Preview panel - RIGHT, hidden below lg -->
         <div class="relative hidden flex-col bg-muted lg:flex">
-            <!-- Brand name — top left, same placement split uses -->
+            <!-- Brand name - top left, same placement split uses -->
             <div class="p-10">
-                <Link href="/" class="flex items-center gap-2 font-semibold text-foreground hover:opacity-80 transition-opacity">
+                <Link href="/" class="flex items-center gap-2 font-semibold text-foreground transition-opacity hover:opacity-80">
                     <span class="text-lg font-semibold tracking-tight">{{ appName }}</span>
                 </Link>
             </div>
@@ -237,15 +350,15 @@ const testimonial = computed((): { quote: string; author: string; role: string |
 
     <!-- ===== SPLIT ===== -->
     <!--
-        LEFT: muted/neutral image panel — full height, bg-muted, decorative.
-        RIGHT: form — vertically centred on bg-background.
+        LEFT: muted/neutral image panel - full height, bg-muted, decorative.
+        RIGHT: form - vertically centred on bg-background.
 
         ON MOBILE the image panel collapses away entirely so the form is the
         first (and only) thing a small screen sees. The brand name moves into
         the form header on mobile, where it was always going to land first.
 
         THE IMAGE SLOT lets an installation swap in a real photo or
-        illustration. Omitting it shows a tasteful SVG placeholder — enough
+        illustration. Omitting it shows a tasteful SVG placeholder - enough
         to signal that an image belongs here without committing to one that
         would date the product or tie it to an industry.
     -->
@@ -253,11 +366,11 @@ const testimonial = computed((): { quote: string; author: string; role: string |
         v-else
         class="relative flex min-h-svh flex-col justify-center lg:grid lg:grid-cols-2"
     >
-        <!-- Image panel — hidden below lg -->
-        <div class="relative hidden lg:flex flex-col bg-muted">
-            <!-- Brand name — top left -->
+        <!-- Image panel - hidden below lg -->
+        <div class="relative hidden flex-col bg-muted lg:flex">
+            <!-- Brand name - top left -->
             <div class="p-10">
-                <Link href="/" class="flex items-center gap-2 font-semibold text-foreground hover:opacity-80 transition-opacity">
+                <Link href="/" class="flex items-center gap-2 font-semibold text-foreground transition-opacity hover:opacity-80">
                     <span class="text-lg font-semibold tracking-tight">{{ appName }}</span>
                 </Link>
             </div>

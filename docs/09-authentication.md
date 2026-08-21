@@ -22,34 +22,42 @@ budget with an attacker behind the same NAT. The message is identical for a
 wrong password and an unknown address, or the form becomes an account-existence
 oracle.
 
-## Auth layout
+## Auth design families
 
-Three sign-in layouts are available. Set one on the panel:
+Pick **one family** on the panel. Login, register, password reset, email OTP,
+and the two-factor challenge all share it through `AuthLayout`. Choosing a
+login template therefore auto-selects the matching signup and OTP composition.
+
+Prefer `authFamily()`. `authLayout()` is the same setter, kept for existing
+call sites. You may also pass a shadcn-vue block id (`login-04`, `signup-02`,
+`otp-02`, …); it resolves to the coupled family.
 
 ```php
 Panel::make('admin')
-    ->authLayout('split')   // or 'centered' (default) or 'showcase'
+    ->authFamily('card')   // or 'centered' (default), 'muted', 'split', 'showcase'
+    // ->authFamily('login-04')  // same as 'card': couples signup-04 + otp-04
 ```
 
-| Layout | Description |
-|---|---|
-| `centered` | Form centred on a plain background. The default. |
-| `split` | Neutral left panel with a brand name and image slot; form on the right. |
-| `showcase` | Form on the left; a preview panel and an optional testimonial on the right. |
+| Family | shadcn-vue blocks (layout pattern) | Composition |
+|---|---|---|
+| `centered` | signup-05, otp-01, otp-05 | Form on a plain background. The default. |
+| `muted` | login-03, otp-03 | Form centred on a muted background. |
+| `showcase` | login-02, signup-02, otp-02 | Form on the left; full-bleed cover (and optional testimonial) on the right. |
+| `split` | mirror of showcase | Cover on the left; form on the right. |
+| `card` | login-04, signup-04, otp-04 | Muted page with an inset card: form \| image. |
 
-The layout applies to every auth screen on that panel — sign-in, register,
-forgot password, reset password, OTP, lock screen — so one call covers all of
-them.
+Patterns are reimplemented in kit `AuthLayout` against PanelKit tokens. Do not
+run `npx shadcn-vue add login-*` into the monorepo for these screens.
 
-Both `split` and `showcase` provide the same named `#image` slot for placing a
-logo, illustration, or screenshot. Without it a placeholder is shown.
+`split`, `showcase`, and `card` share the `#image` slot for a logo,
+illustration, or screenshot. Without it a placeholder is shown.
 
 `showcase` also accepts a testimonial, declared as text rather than a
 component - the renderer owns how it looks:
 
 ```php
 Panel::make('admin')
-    ->authLayout('showcase')
+    ->authFamily('showcase')
     ->authTestimonial(
         'Switching subscribers between plans used to mean a support ticket. Now it is a click.',
         'Amara Odhiambo',

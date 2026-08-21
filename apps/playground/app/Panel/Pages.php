@@ -161,6 +161,27 @@ final class Pages
             ['title' => 'Rate limited', 'href' => '/screens/error/429', 'icon' => 'gauge', 'group' => 'Screens/Errors'],
             ['title' => 'Server error', 'href' => '/screens/error/500', 'icon' => 'server-crash', 'group' => 'Screens/Errors'],
             ['title' => 'Maintenance', 'href' => '/screens/error/503', 'icon' => 'wrench', 'group' => 'Screens/Errors'],
+
+            /*
+             * Auth design families (shadcn-vue block patterns, kit AuthLayout).
+             * One family couples login + register + OTP. Nested groups keep the
+             * five compositions scannable without mixing them into Screens.
+             */
+            ['title' => 'Login', 'href' => '/screens/auth/centered/login', 'icon' => 'lock', 'group' => 'Auth samples/Centered'],
+            ['title' => 'Register', 'href' => '/screens/auth/centered/register', 'icon' => 'user-check', 'group' => 'Auth samples/Centered'],
+            ['title' => 'OTP', 'href' => '/screens/auth/centered/otp', 'icon' => 'key', 'group' => 'Auth samples/Centered'],
+            ['title' => 'Login', 'href' => '/screens/auth/muted/login', 'icon' => 'lock', 'group' => 'Auth samples/Muted'],
+            ['title' => 'Register', 'href' => '/screens/auth/muted/register', 'icon' => 'user-check', 'group' => 'Auth samples/Muted'],
+            ['title' => 'OTP', 'href' => '/screens/auth/muted/otp', 'icon' => 'key', 'group' => 'Auth samples/Muted'],
+            ['title' => 'Login', 'href' => '/screens/auth/showcase/login', 'icon' => 'lock', 'group' => 'Auth samples/Showcase'],
+            ['title' => 'Register', 'href' => '/screens/auth/showcase/register', 'icon' => 'user-check', 'group' => 'Auth samples/Showcase'],
+            ['title' => 'OTP', 'href' => '/screens/auth/showcase/otp', 'icon' => 'key', 'group' => 'Auth samples/Showcase'],
+            ['title' => 'Login', 'href' => '/screens/auth/split/login', 'icon' => 'lock', 'group' => 'Auth samples/Split'],
+            ['title' => 'Register', 'href' => '/screens/auth/split/register', 'icon' => 'user-check', 'group' => 'Auth samples/Split'],
+            ['title' => 'OTP', 'href' => '/screens/auth/split/otp', 'icon' => 'key', 'group' => 'Auth samples/Split'],
+            ['title' => 'Login', 'href' => '/screens/auth/card/login', 'icon' => 'lock', 'group' => 'Auth samples/Card'],
+            ['title' => 'Register', 'href' => '/screens/auth/card/register', 'icon' => 'user-check', 'group' => 'Auth samples/Card'],
+            ['title' => 'OTP', 'href' => '/screens/auth/card/otp', 'icon' => 'key', 'group' => 'Auth samples/Card'],
         ];
     }
 
@@ -233,6 +254,7 @@ final class Pages
              * it sits under `errors/`.
              */
             '/shell-preview' => 'A fixture for the packaged shell\'s browser test. Deliberately in no menu.',
+            '/login-preview' => 'A fixture for the packaged login browser test. Deliberately in no menu; Auth samples cover families.',
 
             '/dashboard' => 'The home screen: the first item in the sidebar and the target of the logo.',
             '/settings' => 'The searchable settings index. Reached from the account menu\'s Settings link.',

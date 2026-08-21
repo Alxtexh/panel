@@ -47,6 +47,13 @@ final class ResellerPanelProvider extends ServiceProvider
                 ->authMiddleware(['auth:web'])
                 ->brandName(fn (): string => config('app.name').' - Reseller')
                 /*
+                 | WORKED EXAMPLE FOR `authFamily('card')` (login-04 / signup-04 /
+                 | otp-04): muted page with an inset form|image card. Couples
+                 | login, register, and OTP together. Admin stays on the default
+                 | centered family; client uses showcase.
+                 */
+                ->authFamily('card')
+                /*
                  * NO OPERATIONS SCREENS IN THIS PORTAL.
                  *
                  * They ship with the package now and are offered by default,
