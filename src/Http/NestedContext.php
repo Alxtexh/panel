@@ -109,6 +109,9 @@ final class NestedContext
     {
         $base = self::base($class, $parent);
 
+        $hasBoard = ($schema['board'] ?? null) !== null
+            || ($schema['routes']['board'] ?? null) !== null;
+
         $schema['routes'] = [
             'index' => $base,
             'store' => $base,
@@ -118,6 +121,16 @@ final class NestedContext
             'update' => $base.'/{id}',
             'destroy' => $base.'/{id}',
         ];
+
+        /*
+         * Board URLs stay nested when the child declared `board()`. Leaving
+         * them flat would send ResourceKanban to `/comments/board-move` while
+         * the list lives under `/articles/5/comments`.
+         */
+        if ($hasBoard) {
+            $schema['routes']['board'] = $base.'/board';
+            $schema['routes']['boardMove'] = $base.'/board-move';
+        }
 
         if (NestedRelation::belongsToMany($class)) {
             $schema['routes']['attach'] = $base.'/attach';

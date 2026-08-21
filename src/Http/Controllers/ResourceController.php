@@ -1078,24 +1078,32 @@ final class ResourceController extends Controller
         $description = $boardSchema['description'];
 
         $modelClass = $class::model();
-        $query = $modelClass::query();
         $parent = NestedContext::parent($request, $class);
 
+        /*
+         * Same list path as index: table `constrain` / `query` (join) via
+         * `toListQuery()`, plus nested FK when under a parent. Tenant scopes
+         * still apply through Eloquent before `toBase()`.
+         */
+        $list = $class::definition()->toListQuery($modelClass);
+
         if ($parent !== null) {
-            NestedRelation::constrain($query, $class, $parent);
+            $list->constrain(static fn ($q) => NestedRelation::constrain($q, $class, $parent));
+            $schema = NestedContext::schema($schema, $class, $parent);
         }
 
+        $table = (new $modelClass)->getTable();
         $keyName = (new $modelClass)->getKeyName();
         $select = array_values(array_unique(array_filter([
-            $keyName,
-            $column,
-            $title,
-            $description,
+            "{$table}.{$keyName}",
+            "{$table}.{$column}",
+            "{$table}.{$title}",
+            $description !== null ? "{$table}.{$description}" : null,
         ])));
 
-        $rows = $query
+        $rows = $list->matching($request)
             ->select($select)
-            ->orderBy($title)
+            ->orderBy("{$table}.{$title}")
             ->limit(500)
             ->get();
 
@@ -1113,7 +1121,7 @@ final class ResourceController extends Controller
             }
 
             $card = [
-                'id' => $row->getKey(),
+                'id' => $row->{$keyName},
                 'title' => (string) ($row->{$title} ?? ''),
                 'column' => $value,
             ];
@@ -1137,23 +1145,25 @@ final class ResourceController extends Controller
             ];
         }
 
-        $prefix = rtrim('/'.trim(app(PanelManager::class)->panel($class::panel())?->getPath() ?? '', '/'), '/');
+        $indexUrl = (string) ($schema['routes']['index'] ?? $class::baseUrl());
+        $boardUrl = (string) ($schema['routes']['board'] ?? ($indexUrl.'/board'));
+        $moveUrl = (string) ($schema['routes']['boardMove'] ?? ($indexUrl.'/board-move'));
 
         return Inertia::render('ResourceKanban', [
             'schema' => $schema,
             'board' => $boardSchema,
             'columns' => $columns,
             'can' => $class::permissions(),
-            'moveUrl' => $prefix.'/'.$class::key().'/board-move',
-            'indexUrl' => $schema['routes']['index'],
+            'moveUrl' => $moveUrl,
+            'indexUrl' => $indexUrl,
             'breadcrumbs' => $parent === null
                 ? [
-                    ['title' => $schema['labelPlural'], 'href' => $schema['routes']['index']],
-                    ['title' => 'Board', 'href' => $schema['routes']['board']],
+                    ['title' => $schema['labelPlural'], 'href' => $indexUrl],
+                    ['title' => 'Board', 'href' => $boardUrl],
                 ]
                 : [
                     ...NestedContext::breadcrumbs($class, $parent),
-                    ['title' => 'Board', 'href' => $schema['routes']['board']],
+                    ['title' => 'Board', 'href' => $boardUrl],
                 ],
         ]);
     }

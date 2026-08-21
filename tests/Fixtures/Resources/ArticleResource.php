@@ -19,6 +19,7 @@ use Alxtexh\Panel\Infolists\ImageEntry;
 use Alxtexh\Panel\Infolists\KeyValueEntry;
 use Alxtexh\Panel\Infolists\RepeatableEntry;
 use Alxtexh\Panel\Infolists\TextEntry;
+use Alxtexh\Panel\Resources\Board;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\BadgeColumn;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
@@ -88,6 +89,20 @@ final class ArticleResource extends Resource
     public static function importable(): bool
     {
         return true;
+    }
+
+    /**
+     * Opt-in board for HTTP Pest coverage of /board and /board-move.
+     */
+    public static function board(): ?Board
+    {
+        return Board::make('status')
+            ->columns([
+                'draft' => 'Draft',
+                'published' => 'Published',
+                'archived' => 'Archived',
+            ])
+            ->title('title');
     }
 
     public static function infolist(): array

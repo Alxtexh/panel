@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Feature;
 
+use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,6 +42,39 @@ final class AppearanceRouteTest extends TestCase
 
         $this->assertSame('dark', $saved['theme']);
         $this->assertSame('compact', $saved['density']);
+    }
+
+    public function test_dashboard_layout_is_ignored_when_user_dashboards_are_off(): void
+    {
+        $this->actingAs($this->user)
+            ->putJson('/settings/appearance', [
+                'theme' => 'dark',
+                'dashboardLayout' => ['chartOrder' => ['a', 'b']],
+            ])
+            ->assertOk()
+            ->assertJsonPath('appearance.theme', 'dark')
+            ->assertJsonMissingPath('appearance.dashboardLayout');
+
+        $saved = $this->user->fresh()->appearance;
+
+        $this->assertSame('dark', $saved['theme']);
+        $this->assertArrayNotHasKey('dashboardLayout', $saved);
+    }
+
+    public function test_dashboard_layout_persists_when_user_dashboards_are_on(): void
+    {
+        app(PanelManager::class)->panel('admin')->userDashboards();
+
+        $this->actingAs($this->user)
+            ->putJson('/settings/appearance', [
+                'dashboardLayout' => ['chartOrder' => ['revenue', 'signups']],
+            ])
+            ->assertOk()
+            ->assertJsonPath('appearance.dashboardLayout.chartOrder', ['revenue', 'signups']);
+
+        $saved = $this->user->fresh()->appearance;
+
+        $this->assertSame(['revenue', 'signups'], $saved['dashboardLayout']['chartOrder']);
     }
 
     public function test_appearance_is_shared_on_panel_responses(): void

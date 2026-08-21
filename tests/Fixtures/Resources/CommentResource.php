@@ -8,6 +8,7 @@ use Alxtexh\Panel\Forms\Fields\SelectField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Infolists\TextEntry;
+use Alxtexh\Panel\Resources\Board;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
@@ -59,6 +60,20 @@ final class CommentResource extends Resource
         return [
             TextEntry::make('body'),
         ];
+    }
+
+    /**
+     * Nested board: same allowlist pattern under `/articles/{id}/comments/board`.
+     */
+    public static function board(): ?Board
+    {
+        return Board::make('status')
+            ->columns([
+                'open' => 'Open',
+                'doing' => 'In progress',
+                'done' => 'Done',
+            ])
+            ->title('body');
     }
 
     public static function table(Table $table): Table
