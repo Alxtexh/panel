@@ -277,7 +277,14 @@ const providers = computed(() => props.socialProviders ?? [])
                     <span class="bg-border h-px flex-1" />
                 </div>
 
-                <div class="grid gap-2" :class="providers.length > 1 ? 'sm:grid-cols-2' : ''">
+                <div
+                    class="grid gap-2"
+                    :class="
+                        providers.length > 1
+                            ? 'grid-cols-2 sm:grid-cols-3'
+                            : ''
+                    "
+                >
                     <!--
                         A LINK, NOT A FETCH. The provider redirect leaves the
                         application entirely, so this has to be a real
