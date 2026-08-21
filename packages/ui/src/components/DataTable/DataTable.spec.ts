@@ -237,4 +237,17 @@ describe('DataTable empty states', () => {
         expect(wrapper.text()).toContain('Nothing matches these filters')
         expect(wrapper.text()).toContain('Clear filters')
     })
+
+    it('shows skeleton rows while loading an empty table', () => {
+        const wrapper = mount(DataTable, {
+            props: {
+                columns,
+                rows: [],
+                loading: true,
+            },
+        })
+
+        expect(wrapper.find('[data-slot="table-skeleton"]').exists()).toBe(true)
+        expect(wrapper.find('[data-slot="empty-state"]').exists()).toBe(false)
+    })
 })

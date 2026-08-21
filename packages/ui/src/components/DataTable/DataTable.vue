@@ -18,6 +18,7 @@
  */
 import { computed, ref, useId, watch } from 'vue'
 import PkEmptyState from '../primitives/PkEmptyState.vue'
+import PkSkeleton from '../primitives/PkSkeleton.vue'
 import type { SortDirection, TableColumn } from './types'
 
 const props = withDefaults(
@@ -609,8 +610,39 @@ function summaryValue(key: string): string {
             </thead>
 
             <!-- Dimmed, never unmounted - scroll position and selection survive
-                 a reload (§10). -->
-            <tbody :class="loading ? 'opacity-50 transition-opacity' : 'transition-opacity'">
+                 a reload (§10). Skeletons stand in when there are no rows yet
+                 so an empty catalogue and a first load stay distinct. -->
+            <tbody
+                v-if="loading && rows.length === 0"
+                data-slot="table-skeleton"
+                class="transition-opacity"
+            >
+                <tr v-for="n in 6" :key="`skel-${n}`" class="border-b">
+                    <td
+                        v-if="reordering"
+                        class="w-8 px-2 py-2.5"
+                    >
+                        <PkSkeleton variant="circle" class="!size-4" />
+                    </td>
+                    <td v-if="selectable && !reordering" class="px-3 py-2.5">
+                        <PkSkeleton variant="circle" class="!size-4" />
+                    </td>
+                    <td
+                        v-for="col in visibleColumns"
+                        :key="col.key"
+                        class="px-3 py-2.5"
+                    >
+                        <PkSkeleton variant="text" />
+                    </td>
+                    <td v-if="$slots.actions" class="px-2 py-2.5">
+                        <PkSkeleton variant="circle" class="!size-4 ml-auto" />
+                    </td>
+                </tr>
+            </tbody>
+            <tbody
+                v-else
+                :class="loading ? 'opacity-50 transition-opacity' : 'transition-opacity'"
+            >
                 <template v-for="(row, index) in rows" :key="rowId(row) ?? `row-${index}`">
                     <!--
                         A heading whenever the value changes from the previous
@@ -784,9 +816,10 @@ function summaryValue(key: string): string {
         </table>
 
         <!-- "No results for your filter" and "no data at all" are different
-             problems with different fixes, so they are different states (§8). -->
+             problems with different fixes, so they are different states (§8).
+             Skip while the first load is still in flight: skeletons own that. -->
         <PkEmptyState
-            v-if="rows.length === 0 && filtered"
+            v-if="rows.length === 0 && !loading && filtered"
             compact
             icon="search"
             title="Nothing matches these filters"
@@ -797,7 +830,7 @@ function summaryValue(key: string): string {
             </template>
         </PkEmptyState>
         <PkEmptyState
-            v-else-if="rows.length === 0"
+            v-else-if="rows.length === 0 && !loading"
             :icon="emptyIcon"
             :title="emptyTitle"
             :description="emptyHint"

@@ -28,6 +28,9 @@
  * `pointer-events-none` on the positioning wrapper keeps the strip either side
  * of the bar clickable, so it does not become an invisible barrier across the
  * page.
+ *
+ * On desktop the bar left-aligns under FORM_MEASURE (max-w-5xl) rather than
+ * floating as a centred toast pill, so it reads as part of the form chrome.
  */
 withDefaults(
     defineProps<{
@@ -59,20 +62,20 @@ defineEmits<{ (e: 'save'): void; (e: 'cancel'): void; (e: 'discard'): void }>()
     <Teleport to="body">
         <Transition
             enter-active-class="transition duration-200 ease-out"
-            enter-from-class="translate-y-4 opacity-0"
+            enter-from-class="translate-y-3 opacity-0"
             leave-active-class="transition duration-150 ease-in"
-            leave-to-class="translate-y-4 opacity-0"
+            leave-to-class="translate-y-3 opacity-0"
         >
             <div
                 v-if="show"
-                class="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4"
+                class="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-4 sm:px-6"
                 role="status"
                 aria-live="polite"
             >
                 <div
-                    class="bg-popover pointer-events-auto flex w-full max-w-lg items-center gap-3 rounded-full border py-2 pr-2 pl-4 shadow-lg"
+                    class="pointer-events-auto flex w-full max-w-5xl items-center gap-3 rounded-xl border bg-card/95 py-2.5 pr-2.5 pl-4 shadow-md ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10"
                 >
-                    <span class="text-amber-500" aria-hidden="true">
+                    <span class="text-amber-600 dark:text-amber-400" aria-hidden="true">
                         <svg
                             viewBox="0 0 24 24"
                             class="size-4"
@@ -90,7 +93,7 @@ defineEmits<{ (e: 'save'): void; (e: 'cancel'): void; (e: 'discard'): void }>()
                     <button
                         v-if="discardLabel"
                         type="button"
-                        class="hover:bg-muted rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                        class="hover:bg-muted rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
                         :disabled="processing"
                         @click="$emit('discard')"
                     >
@@ -99,7 +102,7 @@ defineEmits<{ (e: 'save'): void; (e: 'cancel'): void; (e: 'discard'): void }>()
 
                     <button
                         type="button"
-                        class="bg-muted hover:bg-muted/70 rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                        class="bg-muted hover:bg-muted/70 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
                         :disabled="processing"
                         @click="$emit('cancel')"
                     >
@@ -108,7 +111,7 @@ defineEmits<{ (e: 'save'): void; (e: 'cancel'): void; (e: 'discard'): void }>()
 
                     <button
                         type="button"
-                        class="bg-primary text-primary-foreground rounded-full px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+                        class="bg-primary text-primary-foreground rounded-md px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
                         :disabled="processing"
                         @click="$emit('save')"
                     >

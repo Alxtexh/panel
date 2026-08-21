@@ -154,7 +154,7 @@ function iconFor(entry: NavEntry): string {
         </div>
 
         <div class="mt-6 flex flex-col md:flex-row md:gap-12">
-            <aside class="hidden w-52 shrink-0 md:block">
+            <aside class="sticky top-6 hidden w-60 shrink-0 self-start md:block">
                 <nav class="flex flex-col space-y-1" aria-label="Settings">
                     <Link
                         v-for="item in items"
@@ -163,7 +163,9 @@ function iconFor(entry: NavEntry): string {
                         :class="[
                             buttonClasses({ variant: 'ghost' }),
                             'w-full justify-start',
-                            { 'bg-muted': isCurrentOrParentUrl(item.href) },
+                            isCurrentOrParentUrl(item.href)
+                                ? 'bg-primary/10 text-foreground font-medium ring-1 ring-primary/15'
+                                : '',
                         ]"
                     >
                         <svg

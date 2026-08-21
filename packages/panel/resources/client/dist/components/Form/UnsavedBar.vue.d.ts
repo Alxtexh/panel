@@ -27,6 +27,9 @@
  * `pointer-events-none` on the positioning wrapper keeps the strip either side
  * of the bar clickable, so it does not become an invisible barrier across the
  * page.
+ *
+ * On desktop the bar left-aligns under FORM_MEASURE (max-w-5xl) rather than
+ * floating as a centred toast pill, so it reads as part of the form chrome.
  */
 type __VLS_Props = {
     show: boolean;
