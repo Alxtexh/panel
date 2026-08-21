@@ -48,4 +48,39 @@ final class SocialProvidersCatalogueTest extends TestCase
         $this->assertFalse(SocialProviders::isEnabled('google'));
         $this->assertSame([], SocialProviders::enabled());
     }
+
+    public function test_offered_lists_the_catalogue_without_credentials(): void
+    {
+        if (! SocialProviders::installed()) {
+            $this->markTestSkipped('laravel/socialite is not installed');
+        }
+
+        config([
+            'panel.auth.social.show_unconfigured' => true,
+            'services.google' => [],
+            'services.github' => [],
+        ]);
+
+        $offered = SocialProviders::offered();
+
+        $this->assertArrayHasKey('google', $offered);
+        $this->assertArrayHasKey('github', $offered);
+        $this->assertArrayHasKey('discord', $offered);
+        $this->assertArrayHasKey('twitch', $offered);
+        $this->assertArrayNotHasKey('linkedin-openid', $offered);
+        $this->assertArrayNotHasKey('twitter', $offered);
+        $this->assertFalse(SocialProviders::hasCredentials('google'));
+    }
+
+    public function test_credentials_hint_names_the_env_keys(): void
+    {
+        $this->assertSame(
+            'Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in .env',
+            SocialProviders::credentialsHint('github'),
+        );
+        $this->assertSame(
+            'Set LINKEDIN_OPENID_CLIENT_ID and LINKEDIN_OPENID_CLIENT_SECRET in .env',
+            SocialProviders::credentialsHint('linkedin-openid'),
+        );
+    }
 }

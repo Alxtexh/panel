@@ -128,7 +128,11 @@ final class SocialLoginController extends Controller
     /** Off to the provider. */
     public function redirect(Request $request, string $provider): SymfonyRedirect|RedirectResponse
     {
-        abort_unless(SocialProviders::installed() && SocialProviders::isEnabled($provider, $this->panel()), 404);
+        abort_unless(SocialProviders::installed() && SocialProviders::isOffered($provider, $this->panel()), 404);
+
+        if (! SocialProviders::isEnabled($provider, $this->panel())) {
+            return $this->back('login', SocialProviders::credentialsHint($provider));
+        }
 
         /*
          * WHY WE ARE GOING IS REMEMBERED HERE rather than inferred on the way

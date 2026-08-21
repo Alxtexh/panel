@@ -928,10 +928,12 @@ final class Panel
     /**
      * Social buttons on this portal's login.
      *
-     * CREDENTIALS ARE STILL THE SWITCH. `->socialite()` (or omitting it) offers
-     * every provider with a client id and secret. `->socialite(['google',
-     * 'github'])` offers only those, and only when both credentials exist.
-     * `->socialite(false)` offers none.
+     * `->socialite()` (or omitting it) lists the packaged catalogue on login.
+     * Credentials still gate the OAuth start; unconfigured buttons explain what
+     * to set in `.env`. `->socialite(['google', 'github'])` narrows the list.
+     * `->socialite(false)` offers none. Set
+     * `panel.auth.social.show_unconfigured` to false to hide providers without
+     * keys.
      *
      *     Panel::make('admin')->login()->socialite(['google', 'github']);
      *
@@ -945,7 +947,8 @@ final class Panel
     }
 
     /**
-     * Null means every configured provider. An empty list means none.
+     * Null means the full catalogue (or every configured provider when
+     * `show_unconfigured` is false). An empty list means none.
      *
      * @return list<string>|null
      */

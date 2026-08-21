@@ -239,28 +239,29 @@ final class PanelAuthController extends Controller
      * SHAPED AS A LIST, NOT A MAP, because a map's iteration order in JSON is
      * not something to rely on for buttons a person reads left to right.
      *
-     * @return list<array{key: string, label: string, url: string}>
+     * @return list<array{key: string, label: string, url: string, configured: bool, hint: string|null}>
      */
     private function socialProviders(Panel $panel): array
     {
         $out = [];
 
         /*
-         * THE CREDENTIALS DECIDE, and the URL is this panel's own route.
+         * THE CATALOGUE DECIDES WHAT IS LISTED; CREDENTIALS DECIDE WHAT WORKS.
          *
-         * The first version of this asked the application to declare a label
-         * AND a url per provider, which meant a fresh install had no buttons
-         * until somebody hand-wrote config that nothing validated - "optional"
-         * in a way indistinguishable from missing. `SocialProviders::enabled()`
-         * reads `services.{provider}.client_id`, which is where the credentials
-         * already are, and `PanelRoutes` registers the routes on exactly the
-         * same condition.
+         * `SocialProviders::offered()` lists every packaged provider when
+         * socialite is on, so a kit with only Google still shows GitHub and
+         * the rest. `configured` / `hint` tell the button what to do when keys
+         * are missing. Routes register on the same `offered()` condition.
          */
-        foreach (SocialProviders::enabled($panel) as $key => $label) {
+        foreach (SocialProviders::offered($panel) as $key => $label) {
+            $configured = SocialProviders::hasCredentials($key);
+
             $out[] = [
                 'key' => $key,
                 'label' => $label,
                 'url' => $this->url($panel, "auth/{$key}/redirect"),
+                'configured' => $configured,
+                'hint' => $configured ? null : SocialProviders::credentialsHint($key),
             ];
         }
 

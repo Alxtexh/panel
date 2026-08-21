@@ -4,22 +4,54 @@
  * people recognise; an unknown key still gets a usable button rather than a
  * blank.
  *
- * A LINK, NOT A FETCH. The provider redirect leaves the application, so this
- * has to be a real navigation.
+ * A LINK, NOT A FETCH, when the provider is configured. The provider redirect
+ * leaves the application, so that path has to be a real navigation.
  *
- * ICONS COVER THE PACKAGED LIST in SocialProviders::SUPPORTED. Credentials
- * remain the switch on the server: a key with no client id never reaches here.
+ * UNCONFIGURED PROVIDERS STAY VISIBLE. Hiding them made a kit with only Google
+ * look like the rest of the catalogue was missing. Clicking one shows what to
+ * set in `.env` instead of starting a broken OAuth flow.
+ *
+ * ICONS COVER THE PACKAGED LIST in SocialProviders::SUPPORTED.
  */
-defineProps<{
-    provider: { key: string; label: string; url: string }
+import { toast } from 'vue-sonner'
+
+const props = defineProps<{
+    provider: {
+        key: string
+        label: string
+        url: string
+        configured?: boolean
+        hint?: string | null
+    }
 }>()
+
+function onActivate(event: MouseEvent): void {
+    if (props.provider.configured !== false) {
+        return
+    }
+
+    event.preventDefault()
+    toast.message(
+        props.provider.hint
+            ?? `Set ${props.provider.key.toUpperCase()}_CLIENT_ID and SECRET in .env`,
+    )
+}
 </script>
 
 <template>
     <a
         :href="provider.url"
         :data-test="`social-${provider.key}`"
-        class="bg-background hover:bg-accent inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors"
+        :data-configured="provider.configured === false ? '0' : '1'"
+        :title="provider.configured === false ? (provider.hint ?? 'Not configured') : undefined"
+        :aria-disabled="provider.configured === false ? 'true' : undefined"
+        :class="[
+            'bg-background inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors',
+            provider.configured === false
+                ? 'cursor-not-allowed opacity-60'
+                : 'hover:bg-accent',
+        ]"
+        @click="onActivate"
     >
         <svg
             v-if="provider.key === 'google'"

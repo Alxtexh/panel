@@ -407,7 +407,7 @@ final class PanelRoutes
                 });
         }
 
-        if (Auth\SocialProviders::enabled($panel) !== []) {
+        if (Auth\SocialProviders::offered($panel) !== []) {
             Route::middleware([
                 Middleware\UsePanel::class.':'.$panel->id,
                 ...$panel->getGuestMiddleware(),
