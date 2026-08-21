@@ -115,37 +115,37 @@ final class SettingsIndex
         $candidates = [
             [
                 'key' => 'profile',
-                'route' => 'settings.profile',
+                'routes' => ['profile', 'settings.profile'],
                 'title' => 'Profile',
                 'description' => 'Your name and your email address.',
             ],
             [
                 'key' => 'security',
-                'route' => 'settings.security',
+                'routes' => ['security', 'settings.security'],
                 'title' => 'Security',
                 'description' => 'Password, two-factor authentication, passkeys and signed-in devices.',
             ],
             [
                 'key' => 'notifications',
-                'route' => 'settings.notifications',
+                'routes' => ['settings.notifications'],
                 'title' => 'Notifications',
                 'description' => 'Control toast notifications and digest delivery by category.',
             ],
             [
                 'key' => 'organisation',
-                'route' => 'pages.organisation',
+                'routes' => ['pages.organisation'],
                 'title' => 'Organisation',
                 'description' => 'The name and logo everyone in this organisation sees.',
             ],
             [
                 'key' => 'payments',
-                'route' => 'pages.payment-settings',
+                'routes' => ['pages.payment-settings'],
                 'title' => 'Payment gateways',
                 'description' => 'How this organisation takes money.',
             ],
             [
                 'key' => 'workspaces',
-                'route' => 'settings.workspaces',
+                'routes' => ['settings.workspaces'],
                 'title' => 'Workspaces',
                 'description' => 'The organisations you belong to; switch between them or start a new one.',
             ],
@@ -165,7 +165,7 @@ final class SettingsIndex
              */
             [
                 'key' => 'roles',
-                'route' => 'roles',
+                'routes' => ['roles'],
                 'title' => 'Roles',
                 'description' => 'The permission matrix, on its own.',
                 'ability' => 'manage_roles',
@@ -175,7 +175,15 @@ final class SettingsIndex
         $entries = [];
 
         foreach ($candidates as $candidate) {
-            $href = self::urlFor((string) $candidate['route']);
+            $href = null;
+
+            foreach ($candidate['routes'] as $routeSuffix) {
+                $href = self::urlFor((string) $routeSuffix);
+
+                if ($href !== null) {
+                    break;
+                }
+            }
 
             /*
              * NO ROUTE, NO ENTRY. A panel that dropped the screen with
@@ -191,7 +199,7 @@ final class SettingsIndex
                 continue;
             }
 
-            unset($candidate['route'], $candidate['ability']);
+            unset($candidate['routes'], $candidate['ability']);
 
             $entries[] = $candidate + ['href' => $href];
         }

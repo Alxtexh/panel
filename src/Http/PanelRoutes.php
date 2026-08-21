@@ -697,6 +697,11 @@ final class PanelRoutes
                 /*
                  * THE ACCOUNT'S OWN TWO SCREENS.
                  *
+                 * TOP-LEVEL URIs FIRST (Filament-style IA): `{panel}/profile` and
+                 * `{panel}/security`. The `settings/*` twins below stay so
+                 * bookmarks, starter kits and forms posting to `settings.*`
+                 * keep working.
+                 *
                  * NO ABILITY GATES THESE, and that is deliberate rather than an
                  * omission. Every other route in this group asks what the person
                  * may do to the application's data; these two are about their
@@ -705,24 +710,38 @@ final class PanelRoutes
                  * on a permission produces the install where the first thing a
                  * new user is told to do is the one thing they cannot reach.
                  *
-                 * THE PIECES WERE ALL PACKAGED AND THE SCREEN WAS NOT until
-                 * 0.8.1 - `ManagePasskeys` and `ManageTwoFactor` shipped in the
-                 * npm package with nothing in any installation mounting them.
-                 *
-                 * THEY YIELD TO AN APPLICATION THAT ALREADY OWNS THE URL, and
-                 * this is not politeness. Laravel's route collection is indexed
-                 * by method+URI: registering a second `GET settings/profile`
-                 * REPLACES the first and then rebuilds the name lookup from what
-                 * survives, so the application's own `profile.edit` stops
-                 * existing. Every `route('profile.edit')` in their codebase
-                 * throws, from a package they installed for its screens.
-                 *
-                 * That is not hypothetical - it is what happened to the
-                 * reference application the moment these routes were added, and
-                 * a Laravel starter kit ships exactly this URL. Skipping is the
-                 * safe direction: a consumer who wants the packaged screen can
-                 * delete their own route, and one who does not keeps working.
+                 * THEY YIELD TO AN APPLICATION THAT ALREADY OWNS THE URL. Laravel
+                 * indexes by method+URI: a second registration would evict the
+                 * host's route and break every `route('profile.edit')` call.
                  */
+                if (self::unclaimed('GET', $panel->getPath().'/profile')) {
+                    Route::get('profile', [Controllers\ProfileController::class, 'edit'])
+                        ->name('profile');
+                    Route::patch('profile', [Controllers\ProfileController::class, 'update'])
+                        ->name('profile.update');
+                    Route::delete('profile', [Controllers\ProfileController::class, 'destroy'])
+                        ->name('profile.destroy');
+                }
+
+                if (self::unclaimed('GET', $panel->getPath().'/security')) {
+                    Route::get('security', [Controllers\SecurityController::class, 'edit'])
+                        ->middleware('password.confirm')
+                        ->name('security');
+                    Route::put('security/password', [Controllers\SecurityController::class, 'update'])
+                        ->middleware('throttle:6,1')
+                        ->name('security.password');
+                    Route::post('security/email-two-factor', [Controllers\SecurityController::class, 'enableEmailTwoFactor'])
+                        ->middleware('throttle:6,1')
+                        ->name('security.email-two-factor');
+                    Route::delete('security/email-two-factor', [Controllers\SecurityController::class, 'disableEmailTwoFactor'])
+                        ->middleware('throttle:6,1')
+                        ->name('security.email-two-factor.destroy');
+                    Route::delete('security/devices/{id}', [Controllers\SecurityController::class, 'destroyDevice'])
+                        ->name('security.devices.destroy');
+                    Route::delete('security/devices', [Controllers\SecurityController::class, 'destroyOtherDevices'])
+                        ->name('security.devices.destroyOthers');
+                }
+
                 if (self::unclaimed('GET', $panel->getPath().'/settings/profile')) {
                     Route::get('settings/profile', [Controllers\ProfileController::class, 'edit'])
                         ->name('settings.profile');

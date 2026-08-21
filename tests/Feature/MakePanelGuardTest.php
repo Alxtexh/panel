@@ -115,6 +115,11 @@ final class MakePanelGuardTest extends TestCase
         }
 
         @unlink(app_path('Panel/Pages/DirectoryPage.php'));
+        @unlink(app_path('Models/Reseller.php'));
+
+        foreach (glob(database_path('migrations/*_create_resellers_table.php')) ?: [] as $migration) {
+            @unlink($migration);
+        }
 
         /*
          * `bootstrap/providers.php` IS APPENDED TO, so left alone it accumulates
@@ -151,6 +156,15 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
+        ],
+    ],
+
+    'passwords' => [
+        'users' => [
+            'provider' => 'users',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
         ],
     ],
 ];
@@ -244,6 +258,33 @@ PHP;
         $this->assertSame('App\Models\Reseller', $this->written()['providers']['resellers']['model'] ?? null);
     }
 
+    public function test_new_guard_writes_a_password_broker(): void
+    {
+        $this->artisan('make:panel', ['id' => 'reseller', '--guard' => 'resellers', '--new-guard' => true])
+            ->assertSuccessful();
+
+        $broker = $this->written()['passwords']['resellers'] ?? null;
+
+        $this->assertIsArray($broker);
+        $this->assertSame('resellers', $broker['provider'] ?? null);
+    }
+
+    public function test_new_guard_scaffolds_a_missing_model_and_migration(): void
+    {
+        $this->artisan('make:panel', [
+            'id' => 'reseller',
+            '--guard' => 'resellers',
+            '--new-guard' => true,
+            '--guard-model' => 'App\Models\Reseller',
+        ])->assertSuccessful();
+
+        $this->assertFileExists(app_path('Models/Reseller.php'));
+        $this->assertStringContainsString('class Reseller extends Authenticatable', (string) file_get_contents(app_path('Models/Reseller.php')));
+
+        $migrations = glob(database_path('migrations/*_create_resellers_table.php')) ?: [];
+        $this->assertNotEmpty($migrations);
+    }
+
     /**
      * RE-RUNNING MUST NOT APPEND A SECOND KEY. PHP keeps the LAST duplicate in
      * an array literal, so a second write would silently replace a guard
@@ -260,12 +301,12 @@ PHP;
 
         /*
          * TWO, NOT ONE: the key appears once under `guards` and once under
-         * `providers`, which is the matched pair a guard is made of. Before the
-         * duplicate check worked this was FOUR - both blocks written again on
-         * the second run.
+         * THREE: guard, provider, and password broker. Before the duplicate
+         * check worked this was SIX - every block written again on the second
+         * run.
          */
         $this->assertSame(
-            2,
+            3,
             substr_count((string) file_get_contents($this->config), "'resellers' => ["),
             'The blocks were written twice. PHP keeps the last duplicate, so a hand-edited guard would be replaced.'
         );

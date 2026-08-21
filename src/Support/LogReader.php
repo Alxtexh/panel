@@ -10,8 +10,9 @@ namespace Alxtexh\Panel\Support;
  * THE FILE LIST IS BUILT FROM A GLOB, NEVER FROM THE REQUEST. The obvious
  * implementation takes a filename parameter and opens it, which is a read-any-
  * file-on-the-server endpoint with a log viewer painted on: `?file=../../.env`
- * is the whole exploit. The client sends an INDEX into a list this class
- * produced, so the only files reachable are the ones it chose.
+ * is the whole exploit. The client sends a NAME matched against a list this
+ * class produced (optionally intersected with an allow-list), so the only files
+ * reachable are the ones it chose.
  *
  * IT READS FROM THE END. A log is gigabytes at the worst possible moment - the
  * incident you opened it for is the one that filled it - and the lines anybody
@@ -29,19 +30,37 @@ final class LogReader
     private const MAX_BYTES = 512 * 1024;
 
     /**
+     * @param  list<string>|null  $allowlist  Basename allow-list. Null keeps every `*.log` in the directory.
+     * @param  string|null  $directory  Absolute log directory. Null uses `storage/logs`.
+     */
+    public function __construct(
+        private readonly ?array $allowlist = null,
+        private readonly ?string $directory = null,
+    ) {}
+
+    /**
      * The readable log files, newest first.
      *
      * @return list<array{name: string, bytes: int, at: string}>
      */
     public function files(): array
     {
-        $paths = glob(storage_path('logs/*.log')) ?: [];
+        $dir = $this->directory ?? storage_path('logs');
+        $paths = is_dir($dir) ? (glob(rtrim($dir, '/').'/*.log') ?: []) : [];
 
         $files = array_map(static fn (string $path): array => [
             'name' => basename($path),
             'bytes' => filesize($path) ?: 0,
             'at' => date(DATE_ATOM, filemtime($path) ?: time()),
         ], $paths);
+
+        if ($this->allowlist !== null) {
+            $allowed = array_fill_keys($this->allowlist, true);
+            $files = array_values(array_filter(
+                $files,
+                static fn (array $file): bool => isset($allowed[$file['name']]),
+            ));
+        }
 
         usort($files, static fn (array $a, array $b): int => strcmp($b['at'], $a['at']));
 
@@ -69,7 +88,8 @@ final class LogReader
             return ['name' => null, 'lines' => [], 'truncated' => false];
         }
 
-        $path = storage_path('logs/'.$name);
+        $dir = $this->directory ?? storage_path('logs');
+        $path = rtrim($dir, '/').'/'.$name;
         $size = filesize($path) ?: 0;
         $offset = max(0, $size - self::MAX_BYTES);
 

@@ -361,8 +361,8 @@ final class SharePanelProps
 
                     'account' => $accountUrl = self::namedUrl(
                         $panel,
-                        ['settings.profile'],
-                        ['profile.edit', 'settings.profile'],
+                        ['profile', 'settings.profile'],
+                        ['profile.edit', 'profile', 'settings.profile'],
                     ),
                     /*
                      * SECURITY IS NOT A DROPDOWN ROW when Profile is present.
@@ -374,8 +374,8 @@ final class SharePanelProps
                         ? null
                         : self::namedUrl(
                             $panel,
-                            ['settings.security'],
-                            ['security.edit', 'settings.security'],
+                            ['security', 'settings.security'],
+                            ['security.edit', 'security', 'settings.security'],
                         ),
 
                     /*

@@ -63,9 +63,9 @@ final class RequireTwoFactorTest extends TestCase
         $this->assertAuthenticatedAs($this->user);
 
         $this->get('/second/reports')
-            ->assertRedirect('/second/settings/security');
+            ->assertRedirect('/second/security');
 
-        $this->post('/second/settings/security/email-two-factor')
+        $this->post('/second/security/email-two-factor')
             ->assertRedirect();
 
         $this->user->refresh();

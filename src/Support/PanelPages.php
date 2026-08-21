@@ -212,6 +212,7 @@ final class PanelPages
         'Chat',
         'ApiKeys',
         'ApiDocs',
+        'Logs',
         'Invites',
         'FeatureFlags',
         'Onboarding',
