@@ -168,7 +168,7 @@ async function confirmImport(): Promise<void> {
                         @change="chooseFile"
                     />
                 </label>
-                <p class="text-muted-foreground text-xs font-normal">
+                <p class="text-muted-foreground text-xs">
                     Up to 20 MB, and its first row must be a header.
                 </p>
             </div>

@@ -70,7 +70,7 @@ function submit() {
             :class="[FORM_MEASURE, 'bg-card flex flex-col gap-3 rounded-xl border p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10']"
             @submit.prevent="submit"
         >
-            <p v-if="options.length === 0" class="text-muted-foreground text-sm font-normal">
+            <p v-if="options.length === 0" class="text-muted-foreground text-sm">
                 Nothing left to attach.
             </p>
             <label

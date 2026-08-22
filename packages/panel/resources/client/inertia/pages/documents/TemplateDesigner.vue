@@ -202,16 +202,16 @@ function insert(token: string): void {
         <header class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h1 class="text-xl font-semibold tracking-tight">{{ kind.label }} template</h1>
-                <p class="text-muted-foreground text-sm font-normal">
+                <p class="text-muted-foreground text-sm">
                     {{ kind.description }} The preview on the right updates as you type.
                 </p>
             </div>
 
             <div class="flex items-center gap-2">
-                <span v-if="template.exists" class="text-muted-foreground text-xs font-normal">
+                <span v-if="template.exists" class="text-muted-foreground text-xs">
                     Version {{ template.version }}
                 </span>
-                <span v-else class="text-muted-foreground text-xs font-normal">
+                <span v-else class="text-muted-foreground text-xs">
                     Still on the shipped defaults
                 </span>
 
@@ -292,9 +292,9 @@ function insert(token: string): void {
                             {{ r.label }}
                         </option>
                     </select>
-                    <span v-else class="text-muted-foreground text-xs font-normal">Sample data</span>
+                    <span v-else class="text-muted-foreground text-xs">Sample data</span>
 
-                    <span v-if="previewing" class="text-muted-foreground text-xs font-normal">Updating…</span>
+                    <span v-if="previewing" class="text-muted-foreground text-xs">Updating…</span>
                 </div>
 
                 <div class="overflow-hidden rounded-lg border shadow-sm">
@@ -307,11 +307,11 @@ function insert(token: string): void {
                     back at you - and on a document about money that is a real
                     conversation to have to have.
                 -->
-                <p v-if="preview.sample" class="text-muted-foreground text-xs font-normal">
+                <p v-if="preview.sample" class="text-muted-foreground text-xs">
                     Sample data shown for layout only — the real values come from each record when
                     printed.
                 </p>
-                <p v-else class="text-muted-foreground text-xs font-normal">
+                <p v-else class="text-muted-foreground text-xs">
                     Real data from the selected record. Nothing here is saved to it.
                 </p>
             </aside>

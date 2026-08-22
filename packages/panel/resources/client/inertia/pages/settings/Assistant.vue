@@ -120,7 +120,7 @@ function remove() {
                     "
                 />
                 <AuthInputError :message="form.errors.key" />
-                <p class="text-xs text-muted-foreground font-normal">
+                <p class="text-xs text-muted-foreground">
                     Stored encrypted, and never shown again in full. Rotating it is pasting a new
                     one here.
                 </p>

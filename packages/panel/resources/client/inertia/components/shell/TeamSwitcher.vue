@@ -81,7 +81,7 @@ function shortcut(index: number): string | null {
                     align="start"
                     :side-offset="4"
                 >
-                    <DropdownMenuLabel class="text-muted-foreground text-xs font-normal">Workspaces</DropdownMenuLabel>
+                    <DropdownMenuLabel class="text-muted-foreground text-xs">Workspaces</DropdownMenuLabel>
 
                     <DropdownMenuItem
                         v-for="(workspace, index) in workspaces.available"

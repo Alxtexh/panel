@@ -229,7 +229,7 @@ const stale = computed(() => props.exists && props.urls.length === 0)
             </table>
         </div>
 
-        <p v-else class="text-muted-foreground text-sm font-normal">
+        <p v-else class="text-muted-foreground text-sm">
             Nothing is declared. A public landing page adds itself here automatically once
             <code class="font-mono text-xs">panel.landing.route</code> is on; add more with
             <code class="font-mono text-xs">Sitemap::add()</code> from your own service provider.

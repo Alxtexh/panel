@@ -96,7 +96,7 @@ function logout(): void {
                         <p class="text-sm font-medium text-foreground">
                             {{ plan?.name ?? t('billing.current_subscription') }}
                         </p>
-                        <p v-if="planMeta" class="text-sm text-muted-foreground font-normal">
+                        <p v-if="planMeta" class="text-sm text-muted-foreground">
                             {{ planMeta }}
                         </p>
                     </div>
@@ -108,7 +108,7 @@ function logout(): void {
                         <p class="text-sm font-medium text-foreground">
                             {{ statusLabel ?? t('billing.status.fallback') }}
                         </p>
-                        <p v-if="dueMessage || renewalMessage" class="text-sm text-muted-foreground font-normal">
+                        <p v-if="dueMessage || renewalMessage" class="text-sm text-muted-foreground">
                             {{ dueMessage ?? renewalMessage }}
                         </p>
                     </div>
@@ -137,7 +137,7 @@ function logout(): void {
                     </button>
                 </div>
 
-                <p v-if="supportEmail" class="text-sm text-muted-foreground font-normal">
+                <p v-if="supportEmail" class="text-sm text-muted-foreground">
                     {{ t('billing.need_help') }}
                     <a :href="`mailto:${supportEmail}`" class="font-medium text-foreground underline underline-offset-4">
                         {{ supportEmail }}

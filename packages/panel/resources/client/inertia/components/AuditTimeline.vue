@@ -144,11 +144,11 @@ function when(iso: string): string {
                 </button>
             </p>
 
-            <p v-else-if="loading && entries.length === 0" class="text-muted-foreground text-sm font-normal">
+            <p v-else-if="loading && entries.length === 0" class="text-muted-foreground text-sm">
                 Loading…
             </p>
 
-            <p v-else-if="entries.length === 0" class="text-muted-foreground text-sm font-normal">
+            <p v-else-if="entries.length === 0" class="text-muted-foreground text-sm">
                 {{ t('history.empty') }}
             </p>
 
@@ -175,7 +175,7 @@ function when(iso: string): string {
                             {{ eventLabel(entry.event) }}
                         </p>
 
-                        <p class="text-muted-foreground text-xs font-normal leading-snug">
+                        <p class="text-muted-foreground text-xs leading-snug">
                             <time :datetime="entry.at">{{ when(entry.at) }}</time>
                             <template v-if="entry.ip"> · from {{ entry.ip }}</template>
                         </p>

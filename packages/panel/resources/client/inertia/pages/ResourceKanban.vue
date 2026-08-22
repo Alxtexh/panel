@@ -219,7 +219,7 @@ function openRecord(card: BoardCard) {
 
         <p v-if="error" class="text-destructive text-sm" role="alert">{{ error }}</p>
 
-        <p v-if="busy" class="text-muted-foreground text-sm font-normal" aria-live="polite">
+        <p v-if="busy" class="text-muted-foreground text-sm" aria-live="polite">
             Saving move...
         </p>
 
@@ -245,7 +245,7 @@ function openRecord(card: BoardCard) {
             >
                 <header class="border-border flex items-center justify-between border-b px-3 py-2">
                     <h2 class="text-sm font-medium">{{ col.label }}</h2>
-                    <span class="text-muted-foreground text-xs font-normal">{{ col.cards.length }}</span>
+                    <span class="text-muted-foreground text-xs">{{ col.cards.length }}</span>
                 </header>
 
                 <ul class="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
