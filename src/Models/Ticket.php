@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 use Alxtexh\Panel\Audit\Auditable;
 use Alxtexh\Panel\Events\TicketOpened;
+use Alxtexh\Panel\Models\Concerns\HasStateTransitions;
 use Alxtexh\Panel\Models\Scopes\TenantScope;
 use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Support\TicketTables;
@@ -73,12 +74,20 @@ use Alxtexh\Panel\Support\TicketTables;
 final class Ticket extends Model
 {
     use Auditable;
+    use HasStateTransitions;
 
     public const OPEN = 'open';
 
     public const PENDING = 'pending';
 
     public const RESOLVED = 'resolved';
+
+    /** @var array<string, list<string>> */
+    protected array $transitions = [
+        self::OPEN => [self::PENDING, self::RESOLVED],
+        self::PENDING => [self::OPEN, self::RESOLVED],
+        self::RESOLVED => [self::OPEN],
+    ];
 
     protected $guarded = [];
 

@@ -6,7 +6,6 @@ namespace Alxtexh\Panel\Ticketing;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Alxtexh\Panel\Actions\ActionGroup;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Forms\Fields\SelectField;
 use Alxtexh\Panel\Forms\Fields\TextField;
@@ -19,6 +18,8 @@ use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Filters\SelectFilter;
 use Alxtexh\Panel\Tables\Table;
+use Alxtexh\Panel\Workflow\Transition;
+use Alxtexh\Panel\Workflow\Workflow;
 
 /**
  * THE QUEUE - the operator's end of a ticket, roadmap 6.3.
@@ -85,6 +86,40 @@ final class TicketResource extends Resource
     public static function importable(): bool
     {
         return false;
+    }
+
+    public static function workflow(): Workflow
+    {
+        return Workflow::make('status')
+            ->model(Ticket::class)
+            ->group('Status')
+            ->states([
+                Ticket::OPEN => ['label' => 'Open', 'color' => 'warning'],
+                Ticket::PENDING => ['label' => 'Waiting on the customer', 'color' => 'neutral'],
+                Ticket::RESOLVED => ['label' => 'Resolved', 'color' => 'success'],
+            ])
+            ->transitions([
+                Transition::make('resolve', 'Mark resolved')
+                    ->from([Ticket::OPEN, Ticket::PENDING])
+                    ->to(Ticket::RESOLVED)
+                    ->authorize('resolve')
+                    ->icon('check')
+                    ->color('success')
+                    ->confirm('Mark this ticket resolved? It stops accepting replies.'),
+
+                Transition::make('waiting', 'Waiting on customer')
+                    ->from([Ticket::OPEN])
+                    ->to(Ticket::PENDING)
+                    ->authorize('resolve')
+                    ->icon('clock'),
+
+                Transition::make('reopen', 'Reopen')
+                    ->from([Ticket::RESOLVED])
+                    ->to(Ticket::OPEN)
+                    ->authorize('resolve')
+                    ->icon('refresh')
+                    ->color('warning'),
+            ]);
     }
 
     public static function form(Form $form): Form
@@ -237,36 +272,6 @@ final class TicketResource extends Resource
                 RecordAction::make('edit', 'Edit')
                     ->icon('pencil')->authorize('update')
                     ->link(fn (array $row): string => self::baseUrl($row['id'].'/edit')),
-
-                ActionGroup::make('Status')->actions([
-                    /*
-                     * AUTHORISED AS `resolve`, NOT `update`, which is the whole
-                     * reason the policy has a method of that name. They are the
-                     * same permission today and they are not the same act, and
-                     * writing it as `update` here would erase the distinction
-                     * at the only place anybody reads it.
-                     */
-                    RecordAction::make('resolve', 'Mark resolved')
-                        ->icon('check')->color('success')
-                        ->authorize('resolve')
-                        ->mutate(['status' => Ticket::RESOLVED])
-                        ->confirm('Mark this ticket resolved? It stops accepting replies.')
-                        ->visible(fn (array $row): bool => ($row['status'] ?? null) !== Ticket::RESOLVED),
-
-                    RecordAction::make('waiting', 'Waiting on customer')
-                        ->icon('clock')
-                        ->authorize('resolve')
-                        ->mutate(['status' => Ticket::PENDING])
-                        ->visible(fn (array $row): bool => ($row['status'] ?? null) === Ticket::OPEN),
-
-                    // Reopening is an operator act too - which is what stops a
-                    // late reply from quietly reviving a closed ticket.
-                    RecordAction::make('reopen', 'Reopen')
-                        ->icon('refresh')->color('warning')
-                        ->authorize('resolve')
-                        ->mutate(['status' => Ticket::OPEN])
-                        ->visible(fn (array $row): bool => ($row['status'] ?? null) === Ticket::RESOLVED),
-                ]),
             ])
             /*
              * CLICKING A ROW OPENS THE TICKET, which is the only thing anybody
