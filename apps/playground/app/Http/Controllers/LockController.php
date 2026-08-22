@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\EnsurePanelIsUnlocked;
+use Alxtexh\Panel\Support\PanelIdleActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +16,6 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Alxtexh\Panel\Auth\PasskeyUnlock;
 use Alxtexh\Panel\Support\PanelHome;
-use Alxtexh\Panel\Support\PanelIdleActivity;
 
 /**
  * Locking and unlocking the panel.
@@ -59,7 +58,7 @@ final class LockController extends Controller
          * their screens - the point is to resume, not to restart.
          */
         $request->session()->put('url.intended', url()->previous());
-        $request->session()->put(EnsurePanelIsUnlocked::SESSION_KEY, now()->timestamp);
+        $request->session()->put(PanelIdleActivity::LOCKED_AT, now()->timestamp);
 
         return redirect()->route('screens.locked');
     }
@@ -87,7 +86,7 @@ final class LockController extends Controller
             ]);
         }
 
-        $request->session()->forget(EnsurePanelIsUnlocked::SESSION_KEY);
+        $request->session()->forget(PanelIdleActivity::LOCKED_AT);
 
         /*
          * Reset the idle clock, or the next request sees the timestamp that
@@ -124,7 +123,7 @@ final class LockController extends Controller
 
         PasskeyUnlock::verify($request, $user);
 
-        $request->session()->forget(EnsurePanelIsUnlocked::SESSION_KEY);
+        $request->session()->forget(PanelIdleActivity::LOCKED_AT);
         PanelIdleActivity::touch($request);
         $request->session()->regenerate();
 

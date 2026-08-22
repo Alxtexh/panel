@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Http\Middleware\EnsurePanelIsUnlocked;
+use Alxtexh\Panel\Support\PanelIdleActivity;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -202,6 +202,6 @@ final class LockScreenTest extends TestCase
     {
         $this->actingAs($this->user)->get('/dashboard')->assertOk();
 
-        $this->assertFalse(session()->has(EnsurePanelIsUnlocked::SESSION_KEY));
+        $this->assertFalse(session()->has(PanelIdleActivity::LOCKED_AT));
     }
 }

@@ -5,8 +5,11 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
  * Client idle timer for a panel that shared `panelIdleLock`.
  *
  * ACTIVITY EVENTS reset the clock: mousedown, keydown, touchstart, scroll,
- * click. A background tab uses visibilitychange so returning after the idle
- * window locks immediately rather than waiting for the next interval tick.
+ * click. Scroll listens on `document` in the capture phase because the inset
+ * scrolls inside AppContent, not on `window`, and scroll events do not bubble.
+ *
+ * A background tab uses visibilitychange so returning after the idle window
+ * locks immediately rather than waiting for the next interval tick.
  *
  * THE TIMER DOES NOT RUN on the lock screen or other auth pages. Locking the
  * lock screen is a loop, and a signed-out form has no session to protect.
@@ -47,8 +50,14 @@ export function usePanelIdleLock() {
         )
     }
 
+    function idleMs(): number {
+        const minutes = Number(config.value?.idleMinutes ?? 0)
+
+        return minutes > 0 ? minutes * 60_000 : 0
+    }
+
     function enabled(): boolean {
-        return config.value !== null && !isAuthPage()
+        return config.value !== null && idleMs() > 0 && !isAuthPage()
     }
 
     function resetActivity(): void {
@@ -80,9 +89,9 @@ export function usePanelIdleLock() {
             return
         }
 
-        const idleMs = config.value!.idleMinutes * 60_000
+        const idle = idleMs()
         const warnMs = Math.max(0, config.value!.warningSeconds) * 1000
-        const remaining = idleMs - elapsedMs()
+        const remaining = idle - elapsedMs()
 
         if (remaining <= 0) {
             lockNow()
@@ -107,7 +116,7 @@ export function usePanelIdleLock() {
         tick()
     }
 
-    const activityEvents = ['mousedown', 'keydown', 'touchstart', 'scroll', 'click'] as const
+    const windowActivityEvents = ['mousedown', 'keydown', 'touchstart', 'click'] as const
 
     function onActivity(): void {
         if (!enabled()) {
@@ -126,19 +135,21 @@ export function usePanelIdleLock() {
 
         resetActivity()
 
-        for (const event of activityEvents) {
+        for (const event of windowActivityEvents) {
             window.addEventListener(event, onActivity, { passive: true })
         }
 
+        document.addEventListener('scroll', onActivity, { passive: true, capture: true })
         document.addEventListener('visibilitychange', onVisibility)
         interval = setInterval(tick, 1000)
     }
 
     function stop(): void {
-        for (const event of activityEvents) {
+        for (const event of windowActivityEvents) {
             window.removeEventListener(event, onActivity)
         }
 
+        document.removeEventListener('scroll', onActivity, { capture: true })
         document.removeEventListener('visibilitychange', onVisibility)
 
         if (interval !== null) {

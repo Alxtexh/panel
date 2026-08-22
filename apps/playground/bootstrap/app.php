@@ -12,7 +12,7 @@ use Alxtexh\Panel\Http\Middleware\ScopeSessionToTenant;
 use Alxtexh\Panel\Http\Middleware\SetPanelLocale;
 use Alxtexh\Panel\Http\Middleware\SharePanelProps;
 use Alxtexh\Panel\Http\Middleware\VerifyTurnstile;
-use App\Http\Middleware\EnsurePanelIsUnlocked;
+use Alxtexh\Panel\Http\Middleware\EnsurePanelIsUnlocked;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;

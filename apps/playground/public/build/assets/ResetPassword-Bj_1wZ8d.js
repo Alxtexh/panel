@@ -1,1 +1,0 @@
-import{$n as e,On as t,k as n,mt as r,v as i,z as a}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{c as o}from"./inertia-CQ2Q9bAz.js";var s=n({inheritAttrs:!1,__name:`ResetPassword`,setup(n){return(n,s)=>(r(),i(t(o),e(a(n.$attrs)),null,16))}});export{s as default};
