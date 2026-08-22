@@ -50,6 +50,7 @@ Wired into `make release-check` with client mirror sync and package Pest.
 - Barcode / log-tail **widgets** (field/page exist today)
 - Kit-only public landing for installers (no ISP demo)
 - Workflow UI / comments (still deferred)
+- Visual workflow builder and dedicated workflow history timeline (see [16. Workflows](16-workflows.md); transitions and audit entries ship in v1.2.0)
 
 ## Landed since v1.0.88
 

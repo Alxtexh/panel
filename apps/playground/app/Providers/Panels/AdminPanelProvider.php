@@ -128,8 +128,7 @@ final class AdminPanelProvider extends ServiceProvider
                         'tenant_id' => $user->tenant_id,
                         'user_id' => $user->id,
                     ])->save();
-                })
-                ->passwordless(),
+                }),
         );
 
         /*

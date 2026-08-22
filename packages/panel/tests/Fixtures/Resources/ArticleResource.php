@@ -28,6 +28,8 @@ use Alxtexh\Panel\Tables\Filters\SelectFilter;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Table;
 use Alxtexh\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Workflow\Transition;
+use Alxtexh\Panel\Workflow\Workflow;
 use Alxtexh\Panel\Resources\RelationManager;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Comment;
@@ -203,6 +205,27 @@ final class ArticleResource extends Resource
                     ->keyColumn('tags.id')
                     ->alsoSelect(['tags.id'])),
         ];
+    }
+
+    public static function workflow(): Workflow
+    {
+        return Workflow::make('status')
+            ->model(Article::class)
+            ->states([
+                'draft' => ['label' => 'Draft', 'color' => 'neutral'],
+                'published' => ['label' => 'Published', 'color' => 'success'],
+                'archived' => ['label' => 'Archived', 'color' => 'warning'],
+            ])
+            ->transitions([
+                Transition::make('publish', 'Publish')
+                    ->from(['draft'])
+                    ->to('published')
+                    ->authorize('update'),
+                Transition::make('archive', 'Archive')
+                    ->from(['draft', 'published'])
+                    ->to('archived')
+                    ->authorize('update'),
+            ]);
     }
 
     public static function table(Table $table): Table

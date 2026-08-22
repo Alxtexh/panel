@@ -111,7 +111,17 @@ final class MagicLinkController extends Controller
             return false;
         }
 
-        return $panel === null || $panel->passwordlessActive();
+        if ($panel !== null) {
+            return $panel->passwordlessActive();
+        }
+
+        foreach (app(PanelManager::class)->panels() as $registered) {
+            if ($registered->hasPasswordless()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function resolvePanel(Request $request): ?Panel

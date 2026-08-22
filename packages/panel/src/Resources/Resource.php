@@ -29,6 +29,7 @@ use Alxtexh\Panel\Tables\Columns\Column;
 use Alxtexh\Panel\Tables\Columns\InlineWritableColumn;
 use Alxtexh\Panel\Tables\ListResult;
 use Alxtexh\Panel\Tables\Table;
+use Alxtexh\Panel\Workflow\Workflow;
 
 /**
  * A panel resource. One subclass per screen, and no Vue at all.
@@ -189,6 +190,18 @@ abstract class Resource
 
     /** Declarative definition. MUST NOT query. */
     abstract public static function table(Table $table): Table;
+
+    /**
+     * Optional workflow on a status column. Off by default.
+     *
+     * When declared, transition actions merge into the table record menu and
+     * the view page header. Pair the model with `HasStateTransitions` or let
+     * the workflow definition supply the transition map.
+     */
+    public static function workflow(): ?Workflow
+    {
+        return null;
+    }
 
     /** Optional write form. A resource without one is read-only. */
     public static function form(Form $form): Form
@@ -824,6 +837,12 @@ abstract class Resource
             ]);
         }
 
+        $workflow = static::workflow();
+
+        if ($workflow !== null) {
+            $table = $workflow->applyTo($table);
+        }
+
         $definitions = static::customFields();
 
         if ($definitions === []) {
@@ -941,6 +960,7 @@ abstract class Resource
                         static::resolvedLenses(),
                     ),
                     'board' => static::board()?->toSchema(),
+                    'workflow' => static::workflow()?->toSchema(),
                 ];
             },
             static::customFieldsFingerprint(),

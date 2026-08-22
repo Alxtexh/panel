@@ -42,6 +42,20 @@ endpoint with a nicer label.
 
 Group related actions with `ActionGroup`.
 
+## Workflow transitions
+
+Declare a workflow on the resource to generate transition actions from a status
+column. See [16. Workflows](16-workflows.md).
+
+```php
+RecordAction::make('publish', 'Publish')
+    ->authorize('update')
+    ->transitionTo('published', 'status', Article::class);
+```
+
+`transitionTo()` pairs with `HasStateTransitions` on the model so disallowed hops
+are refused at execution time and recorded in the audit trail.
+
 ## Infolist actions
 
 ```php

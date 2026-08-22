@@ -144,7 +144,8 @@ PANEL_MAGIC_LINK_LIFETIME=10
 PANEL_MAGIC_LINK_TABLE=magic_login_tokens
 ```
 
-Both the panel opt-in and `PANEL_MAGIC_LINK=true` must be set. Routes mount under
+Both the panel opt-in (`Panel::passwordless()` / `magicLink()`) and `PANEL_MAGIC_LINK=true`
+must be set. The installer does not enable either by default. Routes mount under
 the panel prefix (`/{panel}/magic-link`, `/{panel}/magic-link/consume`). The host
 owns the token table; `OneTimeCredential` stores hashed tokens keyed by tenant and
 email.

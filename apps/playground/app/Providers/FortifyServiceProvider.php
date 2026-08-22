@@ -16,6 +16,7 @@ use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 use Alxtexh\Panel\Auth\Passkeys;
 use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\PanelManager;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -101,9 +102,7 @@ class FortifyServiceProvider extends ServiceProvider
              * a consumer with passkeys mounted somewhere else would write.
              */
             'passkeys' => Passkeys::signInRoutes(),
-            'magicLinkUrl' => filter_var(config('panel.auth.magic_link', false), FILTER_VALIDATE_BOOLEAN)
-                ? url('/auth/magic-link')
-                : null,
+            'magicLinkUrl' => self::magicLinkUrlForLogin(),
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/ResetPassword', [
@@ -127,6 +126,21 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/TwoFactorChallenge'));
 
         Fortify::confirmPasswordView(fn () => Inertia::render('auth/ConfirmPassword'));
+    }
+
+    private static function magicLinkUrlForLogin(): ?string
+    {
+        if (! filter_var(config('panel.auth.magic_link', false), FILTER_VALIDATE_BOOLEAN)) {
+            return null;
+        }
+
+        foreach (app(PanelManager::class)->panels() as $panel) {
+            if ($panel->hasPasswordless()) {
+                return url('/auth/magic-link');
+            }
+        }
+
+        return null;
     }
 
     /**

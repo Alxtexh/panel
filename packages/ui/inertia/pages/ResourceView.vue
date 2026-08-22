@@ -98,6 +98,20 @@ const props = defineProps<{
     relationFormOptions?: Record<string, Record<string, { value: any; label: string }[]>>
     /** Markup contributed by plugins, at named positions - roadmap 4.4. */
     renderHooks?: { position: string; component: string; props: Record<string, unknown> }[]
+    /** Workflow transitions available on this record, when the resource declares one. */
+    workflow?: {
+        column: string
+        current: string
+        currentLabel: string
+        currentColor: string
+        actions: {
+            key: string
+            label: string
+            icon?: string
+            color?: string
+            confirm?: string
+        }[]
+    } | null
     breadcrumbs: { title: string; href: string }[]
 }>()
 
@@ -129,6 +143,16 @@ const presenceTenantId = computed(() => {
  * `status`; otherwise the first badge column on the table schema.
  */
 const statusColumn = computed(() => {
+    if (props.workflow?.current) {
+        return {
+            key: props.workflow.column.includes('.')
+                ? props.workflow.column.split('.').pop()!
+                : props.workflow.column,
+            type: 'badge' as const,
+            label: props.workflow.group ?? 'Status',
+        }
+    }
+
     const columns = props.schema.table.columns
     const named = columns.find((column) => column.key === 'status' && column.type === 'badge')
 
@@ -138,6 +162,45 @@ const statusColumn = computed(() => {
 
     return columns.find((column) => column.type === 'badge') ?? null
 })
+
+const statusLabel = computed(() => {
+    if (props.workflow?.currentLabel) {
+        return props.workflow.currentLabel
+    }
+
+    const column = statusColumn.value
+
+    if (!column) {
+        return ''
+    }
+
+    return String(props.record[column.key] ?? '')
+})
+
+const statusVariant = computed(() => {
+    if (props.workflow?.currentColor) {
+        const map: Record<string, string> = {
+            success: 'success',
+            warning: 'warning',
+            danger: 'destructive',
+            destructive: 'destructive',
+            info: 'info',
+            neutral: 'outline',
+        }
+
+        return map[props.workflow.currentColor] ?? 'outline'
+    }
+
+    const column = statusColumn.value
+
+    if (!column) {
+        return 'outline'
+    }
+
+    return badgeVariant(column.key, props.record[column.key])
+})
+
+const workflowRunning = ref<string | null>(null)
 
 /* ---------------------------------------------------------------------------
  * Related lists
@@ -517,6 +580,46 @@ function render(key: string): string {
     return [column?.prefix, text, column?.suffix].filter(Boolean).join(' ')
 }
 
+async function runWorkflowTransition(action: { key: string; label: string; confirm?: string }) {
+    if (action.confirm && !window.confirm(action.confirm)) {
+        return
+    }
+
+    workflowRunning.value = action.key
+
+    try {
+        const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
+        const token = match ? decodeURIComponent(match[1]) : ''
+
+        const response = await fetch(
+            `${props.schema.routes.index}/${props.record.id}/action`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': token,
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ action: action.key }),
+            },
+        )
+
+        if (!response.ok) {
+            const body = await response.json().catch(() => null)
+            toast.error(body?.message ?? 'That transition could not be completed.')
+
+            return
+        }
+
+        toast.success(`${action.label} done`)
+        router.reload()
+    } finally {
+        workflowRunning.value = null
+    }
+}
+
 async function runInfolistAction(action: { key: string; label?: string }) {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
     const token = match ? decodeURIComponent(match[1]) : ''
@@ -566,12 +669,9 @@ function destroy() {
 
     <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4']">
         <PkPageHeader :title="title" :purpose="schema.label">
-            <template v-if="statusColumn && record[statusColumn.key] != null" #status>
-                <Badge
-                    :variant="badgeVariant(statusColumn.key, record[statusColumn.key]) as any"
-                    class="capitalize"
-                >
-                    {{ record[statusColumn.key] }}
+            <template v-if="statusColumn && (workflow?.current || record[statusColumn.key] != null)" #status>
+                <Badge :variant="statusVariant as any">
+                    {{ statusLabel }}
                 </Badge>
             </template>
             <template #actions>
@@ -580,6 +680,16 @@ function destroy() {
                     :record-id="record.id"
                     :tenant-id="presenceTenantId"
                 />
+                <Button
+                    v-for="action in workflow?.actions ?? []"
+                    :key="action.key"
+                    variant="outline"
+                    size="sm"
+                    :disabled="workflowRunning === action.key"
+                    @click="runWorkflowTransition(action)"
+                >
+                    {{ action.label }}
+                </Button>
                 <!-- Primary last (DESIGN_RULES rule 2): Edit is the action this
                      page exists for, so it takes the outside edge. -->
                 <Button v-if="can.delete" variant="outline" size="sm" @click="destroy"

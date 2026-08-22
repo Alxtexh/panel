@@ -455,6 +455,7 @@ final class ResourceController extends Controller
                 : NestedContext::schema($class::schema(), $class, $parent),
             'record' => [...$row, 'id' => $record->getKey()],
             'can' => $class::permissions(),
+            'workflow' => self::workflowContext($class, $row, $record),
             'relationFormOptions' => $relationFormOptions,
 
             /*
@@ -1210,5 +1211,33 @@ final class ResourceController extends Controller
                 'isDefault' => (bool) $view->is_default,
             ])
             ->all();
+    }
+
+    /**
+     * @param  class-string<Resource>  $class
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>|null
+     */
+    private static function workflowContext(string $class, array $row, Model $record): ?array
+    {
+        $workflow = $class::workflow();
+
+        if ($workflow === null) {
+            return null;
+        }
+
+        $current = (string) ($row[$workflow->rowKey()] ?? '');
+        $state = $workflow->stateDefinition($current);
+
+        return [
+            ...$workflow->toSchema(),
+            'current' => $current,
+            'currentLabel' => $state['label'] ?? $current,
+            'currentColor' => $state['color'] ?? 'neutral',
+            'actions' => $workflow->actionsForRecord(
+                $row,
+                static fn (string $ability): bool => $class::can($ability, $record),
+            ),
+        ];
     }
 }
