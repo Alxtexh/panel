@@ -16,10 +16,11 @@ defineOptions({ inheritAttrs: false })
  * asking for another one.
  */
 import { Form, Head } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
 import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
+import { useOtpAutoSubmit, type OtpFormHandle } from '../../composables/useOtpAutoSubmit'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{
@@ -36,6 +37,13 @@ const props = defineProps<{
 }>()
 
 const code = ref('')
+const verifyForm = useTemplateRef<OtpFormHandle>('verifyForm')
+const { onOtpComplete, resetAutoSubmitGuard } = useOtpAutoSubmit(verifyForm)
+
+function onVerifyError(): void {
+    code.value = ''
+    resetAutoSubmitGuard()
+}
 </script>
 
 <template>
@@ -54,11 +62,12 @@ const code = ref('')
         </div>
 
         <Form
+            ref="verifyForm"
             :action="props.action"
             method="post"
             class="space-y-6"
             reset-on-error
-            @error="code = ''"
+            @error="onVerifyError"
             v-slot="{ errors, processing }"
         >
             <input type="hidden" name="code" :value="code" />
@@ -71,6 +80,7 @@ const code = ref('')
                         :length="props.length ?? 6"
                         :disabled="processing"
                         autofocus
+                        @complete="onOtpComplete"
                     />
                 </div>
 

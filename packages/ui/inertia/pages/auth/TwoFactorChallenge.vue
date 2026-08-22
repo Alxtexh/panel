@@ -24,11 +24,12 @@ defineOptions({ inheritAttrs: false })
  * a rendering of one input and the form posts `code` either way.
  */
 import { Form, Head } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
+import { useOtpAutoSubmit, type OtpFormHandle } from '../../composables/useOtpAutoSubmit'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{
@@ -46,6 +47,10 @@ const props = defineProps<{
 
 const recovery = ref(false)
 const code = ref('')
+const challengeForm = useTemplateRef<OtpFormHandle>('challengeForm')
+const { onOtpComplete, resetAutoSubmitGuard } = useOtpAutoSubmit(challengeForm, {
+    guard: () => !recovery.value,
+})
 const emailMode = computed(() => props.method === 'email')
 
 const content = computed(() => {
@@ -78,6 +83,12 @@ function toggle(clearErrors: () => void): void {
     recovery.value = !recovery.value
     clearErrors()
     code.value = ''
+    resetAutoSubmitGuard()
+}
+
+function onChallengeError(): void {
+    code.value = ''
+    resetAutoSubmitGuard()
 }
 </script>
 
@@ -94,11 +105,12 @@ function toggle(clearErrors: () => void): void {
             </p>
 
             <Form
+                ref="challengeForm"
                 :action="props.action"
                 method="post"
                 class="space-y-4"
                 reset-on-error
-                @error="code = ''"
+                @error="onChallengeError"
                 #default="{ errors, processing, clearErrors }"
             >
                 <template v-if="!recovery">
@@ -112,6 +124,7 @@ function toggle(clearErrors: () => void): void {
                                 :length="6"
                                 :disabled="processing"
                                 autofocus
+                                @complete="onOtpComplete"
                             />
                         </div>
 

@@ -16,7 +16,7 @@
  * transparent, so a blinking bar in the active box is the only feedback that
  * typing will land there.
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = withDefaults(
     defineProps<{
@@ -30,10 +30,14 @@ const props = withDefaults(
     { modelValue: '', length: 6, disabled: false, autofocus: false },
 )
 
-const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+const emit = defineEmits<{
+    (e: 'update:modelValue', value: string): void
+    (e: 'complete', value: string): void
+}>()
 
 const focused = ref(false)
 const field = ref<HTMLInputElement | null>(null)
+const lastCompleteValue = ref('')
 
 /*
  * AUTOFOCUS IS DONE BY HAND, because the attribute does nothing here.
@@ -57,13 +61,85 @@ const characters = computed(() =>
 /** The box that will receive the next keystroke, clamped to the last one. */
 const activeIndex = computed(() => Math.min(props.modelValue.length, props.length - 1))
 
-function onInput(event: Event): void {
-    const raw = (event.target as HTMLInputElement).value
-
-    // DIGITS ONLY AND NEVER LONGER THAN THE CODE. A pasted "123 456" should
-    // work, and a pasted paragraph should not fill the boxes with nonsense.
-    emit('update:modelValue', raw.replace(/\D/g, '').slice(0, props.length))
+function sanitize(raw: string): string {
+    return raw.replace(/\D/g, '').slice(0, props.length)
 }
+
+function emitComplete(value: string): void {
+    if (props.disabled || value.length !== props.length) {
+        return
+    }
+
+    if (lastCompleteValue.value === value) {
+        return
+    }
+
+    lastCompleteValue.value = value
+    emit('complete', value)
+}
+
+function applyValue(raw: string): void {
+    const next = sanitize(raw)
+
+    if (next !== props.modelValue) {
+        emit('update:modelValue', next)
+    }
+
+    emitComplete(next)
+}
+
+function onInput(event: Event): void {
+    applyValue((event.target as HTMLInputElement).value)
+}
+
+function onChange(event: Event): void {
+    applyValue((event.target as HTMLInputElement).value)
+}
+
+function syncFromDom(): void {
+    applyValue(field.value?.value ?? '')
+}
+
+function onAnimationStart(event: AnimationEvent): void {
+    if (event.animationName === 'pkOtpAutofillStart') {
+        syncFromDom()
+    }
+}
+
+watch(
+    () => props.modelValue,
+    (value) => {
+        if (value.length < props.length) {
+            lastCompleteValue.value = ''
+        } else {
+            emitComplete(value)
+        }
+    },
+)
+
+let autofillPoll: number | undefined
+
+onMounted(() => {
+    autofillPoll = window.setInterval(() => {
+        if (props.disabled || !field.value) {
+            return
+        }
+
+        const autofilled =
+            field.value.matches(':-webkit-autofill') ||
+            field.value.matches(':autofill')
+
+        if (autofilled || document.activeElement === field.value) {
+            syncFromDom()
+        }
+    }, 250)
+})
+
+onUnmounted(() => {
+    if (autofillPoll !== undefined) {
+        window.clearInterval(autofillPoll)
+    }
+})
 </script>
 
 <template>
@@ -77,8 +153,10 @@ function onInput(event: Event): void {
             inputmode="numeric"
             autocomplete="one-time-code"
             :maxlength="props.length"
-            class="absolute inset-0 z-10 w-full cursor-default bg-transparent text-transparent caret-transparent outline-none disabled:cursor-not-allowed"
+            class="pk-otp-input absolute inset-0 z-10 w-full cursor-default bg-transparent text-transparent caret-transparent outline-none disabled:cursor-not-allowed"
             @input="onInput"
+            @change="onChange"
+            @animationstart="onAnimationStart"
             @focus="focused = true"
             @blur="focused = false"
         />
@@ -101,3 +179,23 @@ function onInput(event: Event): void {
         </div>
     </div>
 </template>
+
+<style scoped>
+@keyframes pkOtpAutofillStart {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.pk-otp-input:-webkit-autofill {
+    animation-name: pkOtpAutofillStart;
+}
+
+.pk-otp-input:autofill {
+    animation-name: pkOtpAutofillStart;
+}
+</style>

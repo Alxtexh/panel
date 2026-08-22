@@ -33,6 +33,7 @@ import {
 } from '@alxtexh-enterprise/panel'
 import type { TwoFactorRoutes } from '../../composables/useTwoFactorAuth'
 import { useTwoFactorAuth } from '../../composables/useTwoFactorAuth'
+import { useOtpAutoSubmit, type OtpFormHandle } from '../../composables/useOtpAutoSubmit'
 import type { TwoFactorConfigContent } from '../../types'
 import AuthInputError from '../AuthInputError.vue'
 
@@ -62,6 +63,8 @@ const { qrCodeSvg, manualSetupKey, clearSetupData, fetchSetupData, errors } = us
 
 const showVerificationStep = ref(false)
 const code = ref<string>('')
+const confirmForm = useTemplateRef<OtpFormHandle>('confirmForm')
+const { onOtpComplete, resetAutoSubmitGuard } = useOtpAutoSubmit(confirmForm)
 
 const pinInputContainerRef = useTemplateRef('pinInputContainerRef')
 
@@ -233,12 +236,14 @@ watch(
 
                 <template v-else>
                     <Form
+                        ref="confirmForm"
                         :action="props.confirmUrl"
                         method="post"
                         error-bag="confirmTwoFactorAuthentication"
                         reset-on-error
                         v-slot="{ errors: formErrors, processing }"
-                        @finish="code = ''"
+                        @finish="() => { code = ''; resetAutoSubmitGuard() }"
+                        @error="resetAutoSubmitGuard"
                         @success="isOpen = false"
                     >
                         <input type="hidden" name="code" :value="code" />
@@ -252,6 +257,7 @@ watch(
                                     :length="6"
                                     :disabled="processing"
                                     autofocus
+                                    @complete="onOtpComplete"
                                 />
                                 <AuthInputError :message="formErrors?.code" />
                             </div>

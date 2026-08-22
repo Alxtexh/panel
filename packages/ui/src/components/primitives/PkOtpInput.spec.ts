@@ -59,4 +59,36 @@ describe('PkOtpInput', () => {
 
         expect(boxes.map((box) => box.text())).toEqual(['4', '2', '', ''])
     })
+
+    it('emits complete once when the code reaches full length', async () => {
+        const wrapper = mount(PkOtpInput, { props: { length: 6 } })
+
+        await wrapper.find('input').setValue('123456')
+        await wrapper.find('input').setValue('123456')
+
+        expect(wrapper.emitted('complete')).toEqual([['123456']])
+    })
+
+    it('emits complete after a pasted code and on change for autofill', async () => {
+        const wrapper = mount(PkOtpInput, { props: { length: 6 } })
+        const input = wrapper.find('input').element as HTMLInputElement
+
+        await wrapper.find('input').setValue('654321')
+        expect(wrapper.emitted('complete')).toEqual([['654321']])
+
+        input.value = '111111'
+        await input.dispatchEvent(new Event('change', { bubbles: true }))
+
+        expect(wrapper.emitted('complete')?.at(-1)).toEqual(['111111'])
+    })
+
+    it('does not emit complete while disabled', async () => {
+        const wrapper = mount(PkOtpInput, {
+            props: { length: 6, disabled: true },
+        })
+
+        await wrapper.find('input').setValue('123456')
+
+        expect(wrapper.emitted('complete')).toBeUndefined()
+    })
 })
