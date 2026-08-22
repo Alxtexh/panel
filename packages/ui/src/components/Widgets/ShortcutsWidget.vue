@@ -87,7 +87,7 @@ function add(entry: ShortcutItem) {
         </template>
 
         <div v-if="items.length === 0" class="flex flex-col items-start gap-2 py-1" data-slot="shortcuts-empty">
-            <p class="text-muted-foreground text-sm">No shortcuts yet.</p>
+            <p class="text-muted-foreground text-sm font-normal">No shortcuts yet.</p>
             <PkButton size="sm" variant="outline" @click="picking = true">Add shortcut</PkButton>
         </div>
 
@@ -185,7 +185,7 @@ function add(entry: ShortcutItem) {
                 </button>
             </li>
         </ul>
-        <p v-else class="text-muted-foreground text-sm">Every catalog shortcut is already on the card.</p>
+        <p v-else class="text-muted-foreground text-sm font-normal">Every catalog shortcut is already on the card.</p>
 
         <template #footer>
             <PkButton variant="outline" @click="picking = false">Cancel</PkButton>

@@ -60,7 +60,7 @@ defineProps<{
             </div>
 
             <!-- "No card required" belongs here, small, not as a third button. -->
-            <p v-if="note" class="text-xs text-muted-foreground">{{ note }}</p>
+            <p v-if="note" class="text-xs text-muted-foreground font-normal">{{ note }}</p>
         </div>
     </PkSection>
 </template>

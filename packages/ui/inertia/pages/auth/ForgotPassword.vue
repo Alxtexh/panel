@@ -72,7 +72,7 @@ const props = defineProps<{
             </Button>
         </Form>
 
-        <p class="text-center text-sm text-muted-foreground">
+        <p class="text-center text-sm text-muted-foreground font-normal">
             Or,
             <a :href="props.loginUrl" class="underline underline-offset-4"> return to log in </a>
         </p>

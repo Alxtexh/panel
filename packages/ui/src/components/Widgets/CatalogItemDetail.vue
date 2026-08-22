@@ -110,7 +110,7 @@ const showCart = computed(() => !isUnit.value && props.item.status !== 'out-of-s
 
                 <p class="text-2xl font-semibold tabular-nums">{{ item.price }}</p>
 
-                <p v-if="item.facts?.length" class="text-muted-foreground text-sm">
+                <p v-if="item.facts?.length" class="text-muted-foreground text-sm font-normal">
                     {{ item.facts.join(' · ') }}
                 </p>
 

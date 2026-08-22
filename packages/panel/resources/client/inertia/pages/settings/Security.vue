@@ -198,7 +198,7 @@ defineOptions({
             description="A one-time code is emailed after your password, as a second factor."
         />
 
-        <p class="text-muted-foreground text-sm">
+        <p class="text-muted-foreground text-sm font-normal">
             Turn this on if you would rather receive a code at your address than
             use an authenticator app. You can keep both.
         </p>
@@ -258,7 +258,7 @@ defineOptions({
                 >
                     <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium">{{ account.label }}</p>
-                        <p class="text-xs text-muted-foreground">
+                        <p class="text-xs text-muted-foreground font-normal">
                             {{ account.email ?? account.nickname ?? 'Connected' }}
                             <template v-if="account.lastUsedAt">
                                 · last used
@@ -326,7 +326,7 @@ defineOptions({
                             This device
                         </span>
                     </p>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-muted-foreground font-normal">
                         {{ device.ip ?? 'Unknown address' }}
                         <template v-if="device.lastActiveAt">
                             · last active

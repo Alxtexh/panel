@@ -169,7 +169,7 @@ const descriptionBudget = computed(() =>
             </span>
         </div>
 
-        <p class="text-muted-foreground text-xs">
+        <p class="text-muted-foreground text-xs font-normal">
             An approximation. Engines measure pixel width rather than characters, and may rewrite a
             title they judge unhelpful.
         </p>

@@ -48,7 +48,7 @@ function openItem(key: string): void {
     <div :class="[PAGE_SHELL, 'flex flex-col gap-10']">
         <header v-if="pageHeading" class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground">
+            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
                 {{ pageDescription }}
             </p>
         </header>

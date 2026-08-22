@@ -53,7 +53,7 @@ const lngKey = computed(() => props.field.lngKey ?? 'lng')
             pickable
             @update:model-value="(next) => emit('update:modelValue', next)"
         />
-        <p class="text-muted-foreground text-xs">
+        <p class="text-muted-foreground text-xs font-normal">
             Click the map to set
             {{ latKey }} / {{ lngKey }}
             <template v-if="value">

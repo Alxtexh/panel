@@ -331,7 +331,7 @@ const areaClass =
                         <PkFieldLabel :for="`plan-limit-${field.key}`">
                             {{ field.label }}
                         </PkFieldLabel>
-                        <p v-if="field.hint" class="text-muted-foreground text-xs">
+                        <p v-if="field.hint" class="text-muted-foreground text-xs font-normal">
                             {{ field.hint }}
                         </p>
                         <PkTextInput
@@ -348,7 +348,7 @@ const areaClass =
                                 )
                             "
                         />
-                        <p class="text-muted-foreground text-xs">Use -1 for Unlimited.</p>
+                        <p class="text-muted-foreground text-xs font-normal">Use -1 for Unlimited.</p>
                     </template>
                     <PkFieldLabel :for="`plan-overview-${field.key}`">Overview</PkFieldLabel>
                     <textarea

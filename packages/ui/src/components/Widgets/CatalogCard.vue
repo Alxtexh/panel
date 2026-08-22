@@ -216,7 +216,7 @@ function onCart(event: Event) {
             >
                 {{ item.price }}
             </p>
-            <p v-if="stockLabel" class="text-muted-foreground text-xs tabular-nums">
+            <p v-if="stockLabel" class="text-muted-foreground text-xs font-normal tabular-nums">
                 {{ stockLabel }}
             </p>
             </div>

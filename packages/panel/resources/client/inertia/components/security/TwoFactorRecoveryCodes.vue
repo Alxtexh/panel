@@ -113,7 +113,7 @@ onMounted(async () => {
                             {{ code }}
                         </div>
                     </div>
-                    <p class="text-muted-foreground text-xs select-none">
+                    <p class="text-muted-foreground text-xs font-normal select-none">
                         Each recovery code can be used once to access your account and will be
                         removed after use. If you need more, click
                         <span class="font-bold">Regenerate codes</span> above.

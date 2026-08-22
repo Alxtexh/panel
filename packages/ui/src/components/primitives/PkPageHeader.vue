@@ -25,7 +25,7 @@ defineProps<{
                     <slot name="status" />
                 </div>
             </div>
-            <p v-if="purpose" class="text-muted-foreground text-sm">{{ purpose }}</p>
+            <p v-if="purpose" class="text-muted-foreground text-sm font-normal">{{ purpose }}</p>
         </div>
 
         <div v-if="$slots.actions" class="flex shrink-0 flex-wrap items-center gap-2">

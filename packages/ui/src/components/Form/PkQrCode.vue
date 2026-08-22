@@ -87,6 +87,6 @@ watch(payload, () => {
             placeholder="QR payload"
             @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         />
-        <p v-else class="text-muted-foreground text-xs">From {{ field.from }}</p>
+        <p v-else class="text-muted-foreground text-xs font-normal">From {{ field.from }}</p>
     </div>
 </template>

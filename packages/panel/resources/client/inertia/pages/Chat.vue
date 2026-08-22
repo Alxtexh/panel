@@ -77,7 +77,7 @@ const list = computed(() => rows.value as unknown as Conversation[])
     <div :class="[PAGE_SHELL, 'flex flex-col gap-6']">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Chat' }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground">
+            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
                 {{ pageDescription }}
             </p>
         </header>
@@ -102,12 +102,12 @@ const list = computed(() => rows.value as unknown as Conversation[])
             </aside>
 
             <section class="min-h-64 rounded-md border p-4">
-                <p v-if="!thread" class="text-muted-foreground text-sm">
+                <p v-if="!thread" class="text-muted-foreground text-sm font-normal">
                     No thread open. Override ChatPage::thread() when a conversation is selected.
                 </p>
                 <div v-else class="space-y-3">
                     <p class="font-medium">{{ thread.name }}</p>
-                    <p v-if="thread.messages.length === 0" class="text-muted-foreground text-sm">
+                    <p v-if="thread.messages.length === 0" class="text-muted-foreground text-sm font-normal">
                         No messages.
                     </p>
                     <p

@@ -186,7 +186,7 @@ function apply() {
 
                 <div class="mt-1 grid grid-cols-2 gap-2">
                     <label class="flex flex-col gap-1">
-                        <span class="text-xs text-muted-foreground">From</span>
+                        <span class="text-xs text-muted-foreground font-normal">From</span>
                         <input
                             v-model="draft.from"
                             type="date"
@@ -194,7 +194,7 @@ function apply() {
                         />
                     </label>
                     <label class="flex flex-col gap-1">
-                        <span class="text-xs text-muted-foreground">To</span>
+                        <span class="text-xs text-muted-foreground font-normal">To</span>
                         <input
                             v-model="draft.to"
                             type="date"
@@ -204,10 +204,10 @@ function apply() {
                 </div>
 
                 <p v-if="invalid" class="text-xs text-destructive">Choose a start date as well.</p>
-                <p v-else-if="draft.from && !draft.to" class="text-xs text-muted-foreground">
+                <p v-else-if="draft.from && !draft.to" class="text-xs text-muted-foreground font-normal">
                     Leaving “To” empty means everything since that date.
                 </p>
-                <p v-else-if="draft.from" class="text-xs text-muted-foreground">
+                <p v-else-if="draft.from" class="text-xs text-muted-foreground font-normal">
                     While a range is set, the per-chart period buttons are hidden - every widget
                     covers the same window.
                 </p>
@@ -223,7 +223,7 @@ function apply() {
                     <button
                         v-if="chosen(dimension.key).length"
                         type="button"
-                        class="text-xs text-muted-foreground hover:underline"
+                        class="text-xs text-muted-foreground font-normal hover:underline"
                         @click="clear(dimension.key)"
                     >
                         Clear {{ chosen(dimension.key).length }}

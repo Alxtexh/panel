@@ -135,7 +135,7 @@ const cancel = () => {
 </script>
 
 <template>
-    <p v-if="!isSupported" class="text-muted-foreground text-sm">
+    <p v-if="!isSupported" class="text-muted-foreground text-sm font-normal">
         Passkeys are not supported in this browser.
     </p>
 
@@ -162,7 +162,7 @@ const cancel = () => {
                 class="border-input bg-background focus-visible:ring-ring h-9 w-full rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none"
             />
 
-            <p class="text-muted-foreground text-xs">
+            <p class="text-muted-foreground text-xs font-normal">
                 A name helps you identify this passkey later.
             </p>
         </div>

@@ -118,7 +118,7 @@ function onKeydown(event: KeyboardEvent) {
             />
         </div>
 
-        <p class="text-muted-foreground text-xs">
+        <p class="text-muted-foreground text-xs font-normal">
             {{ language === 'plain' ? 'Plain text' : language.toUpperCase() }}. Tab indents; press
             Escape first to move focus out.
         </p>

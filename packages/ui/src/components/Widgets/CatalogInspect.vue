@@ -111,14 +111,14 @@ const showCart = computed(
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="text-lg font-semibold tabular-nums">{{ item.price }}</p>
-                    <p v-if="typeof item.stock === 'number'" class="text-muted-foreground text-sm">
+                    <p v-if="typeof item.stock === 'number'" class="text-muted-foreground text-sm font-normal">
                         {{ item.stock }} in stock
                     </p>
                 </div>
                 <PkStatusBadge v-if="item.status" :status="item.status" :tone="item.tone" />
             </div>
 
-            <p v-if="item.facts?.length" class="text-muted-foreground text-sm">
+            <p v-if="item.facts?.length" class="text-muted-foreground text-sm font-normal">
                 {{ item.facts.join(' · ') }}
             </p>
 

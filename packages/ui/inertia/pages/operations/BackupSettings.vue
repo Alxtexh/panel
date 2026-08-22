@@ -257,7 +257,7 @@ const telegramHalfDone = computed(
                     Backups
                 </Link>
                 <h1 class="text-xl font-semibold">Backup settings</h1>
-                <p class="text-sm text-muted-foreground">
+                <p class="text-sm text-muted-foreground font-normal">
                     How often backups run, how long they are kept, where they go, and who is told.
                 </p>
             </div>
@@ -267,7 +267,7 @@ const telegramHalfDone = computed(
                 policy that quietly went from ninety days to seven is exactly
                 what somebody has to be able to account for later.
             -->
-            <p class="text-xs text-muted-foreground">
+            <p class="text-xs text-muted-foreground font-normal">
                 <template v-if="props.settingsChangedBy">
                     Last changed by {{ props.settingsChangedBy.by ?? 'somebody' }}<br />
                     {{ props.settingsChangedBy.at }}
@@ -288,7 +288,7 @@ const telegramHalfDone = computed(
                     </template>
 
                     <template #actions>
-                        <span class="text-xs text-muted-foreground">when it runs</span>
+                        <span class="text-xs text-muted-foreground font-normal">when it runs</span>
                     </template>
 
                     <div class="flex flex-col gap-3 p-4">
@@ -350,7 +350,7 @@ const telegramHalfDone = computed(
                                     </option>
                                 </select>
                                 <!-- The ceiling needs saying, or its absence reads as a bug. -->
-                                <span class="text-xs text-muted-foreground">
+                                <span class="text-xs text-muted-foreground font-normal">
                                     Stops at 28 so it fires in every month, February included.
                                 </span>
                             </label>
@@ -368,7 +368,7 @@ const telegramHalfDone = computed(
                     </template>
 
                     <template #actions>
-                        <span class="text-xs text-muted-foreground">how long copies live</span>
+                        <span class="text-xs text-muted-foreground font-normal">how long copies live</span>
                     </template>
 
                     <div class="flex flex-col gap-3 p-4">
@@ -384,7 +384,7 @@ const telegramHalfDone = computed(
                                         :disabled="!can.manage"
                                         class="w-24 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
                                     />
-                                    <span class="text-xs text-muted-foreground">days</span>
+                                    <span class="text-xs text-muted-foreground font-normal">days</span>
                                 </div>
 
                                 <!--
@@ -433,7 +433,7 @@ const telegramHalfDone = computed(
                                         :disabled="!can.manage"
                                         class="w-28 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
                                     />
-                                    <span class="text-xs text-muted-foreground">MB</span>
+                                    <span class="text-xs text-muted-foreground font-normal">MB</span>
                                 </div>
                             </label>
                         </div>
@@ -443,7 +443,7 @@ const telegramHalfDone = computed(
                             and saying so is what stops "1 day" reading as
                             "keep nothing".
                         -->
-                        <p class="text-xs text-muted-foreground">
+                        <p class="text-xs text-muted-foreground font-normal">
                             The most recent backup is never deleted, whatever these say.
                         </p>
                     </div>
@@ -459,11 +459,11 @@ const telegramHalfDone = computed(
                     </template>
 
                     <template #actions>
-                        <span class="text-xs text-muted-foreground">where copies are kept</span>
+                        <span class="text-xs text-muted-foreground font-normal">where copies are kept</span>
                     </template>
 
                     <div class="flex flex-col gap-3 p-4">
-                        <p class="text-xs text-muted-foreground">
+                        <p class="text-xs text-muted-foreground font-normal">
                             A copy that only exists on this machine is not a backup. Add an off-site
                             disk and every snapshot is written to both.
                         </p>
@@ -490,7 +490,7 @@ const telegramHalfDone = computed(
                                     -->
                                     <span
                                         v-if="disk === 'local'"
-                                        class="text-xs text-muted-foreground"
+                                        class="text-xs text-muted-foreground font-normal"
                                     >
                                         · always on
                                     </span>
@@ -505,7 +505,7 @@ const telegramHalfDone = computed(
                                 -->
                                 <button
                                     type="button"
-                                    class="text-xs text-muted-foreground underline hover:text-foreground disabled:opacity-50"
+                                    class="text-xs text-muted-foreground font-normal underline hover:text-foreground disabled:opacity-50"
                                     :disabled="testing !== null"
                                     @click="testDestination(disk)"
                                 >
@@ -530,7 +530,7 @@ const telegramHalfDone = computed(
                     </template>
 
                     <template #actions>
-                        <span class="text-xs text-muted-foreground">who is told, and how</span>
+                        <span class="text-xs text-muted-foreground font-normal">who is told, and how</span>
                     </template>
 
                     <div class="flex flex-col gap-4 p-4">
@@ -568,7 +568,7 @@ const telegramHalfDone = computed(
                                         "
                                         class="rounded-md border border-input bg-background px-3 py-1.5 font-mono text-xs"
                                     />
-                                    <span class="text-xs text-muted-foreground">
+                                    <span class="text-xs text-muted-foreground font-normal">
                                         {{
                                             props.settings.hasTelegramToken
                                                 ? 'Leave blank to keep the saved token.'
@@ -592,7 +592,7 @@ const telegramHalfDone = computed(
                                         :disabled="!can.manage"
                                         class="rounded-md border border-input bg-background px-3 py-1.5 font-mono text-xs"
                                     />
-                                    <span class="text-xs text-muted-foreground">
+                                    <span class="text-xs text-muted-foreground font-normal">
                                         The group or channel the bot posts to.
                                     </span>
                                 </label>
@@ -622,7 +622,7 @@ const telegramHalfDone = computed(
                                 >
                                     {{ testingTelegram ? 'Sending…' : 'Send a test message' }}
                                 </Button>
-                                <span class="text-xs text-muted-foreground">
+                                <span class="text-xs text-muted-foreground font-normal">
                                     Posts to the chat above, now — before you save.
                                 </span>
                             </div>
@@ -797,7 +797,7 @@ const telegramHalfDone = computed(
                     </Button>
                 </div>
 
-                <p v-if="!can.manage" class="text-xs text-muted-foreground">
+                <p v-if="!can.manage" class="text-xs text-muted-foreground font-normal">
                     You can read this policy but not change it.
                 </p>
             </aside>
@@ -810,7 +810,7 @@ const telegramHalfDone = computed(
             :busy="restoring"
             @close="pendingRestore = null"
         >
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-muted-foreground font-normal">
                 The current policy is replaced. This becomes a new entry in the history above, so
                 restoring the wrong version is one more restore away from fixed.
             </p>

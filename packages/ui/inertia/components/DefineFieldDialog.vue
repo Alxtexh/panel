@@ -187,7 +187,7 @@ function submit() {
                         :disabled="busy"
                         @input="keyTouched = true"
                     />
-                    <span class="text-muted-foreground text-xs">
+                    <span class="text-muted-foreground text-xs font-normal">
                         How the value is stored. Cannot change once records use it.
                     </span>
                     <span v-if="errors.key" class="text-destructive text-xs">{{ errors.key }}</span>

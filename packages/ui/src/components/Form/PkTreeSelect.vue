@@ -100,7 +100,7 @@ function pick(value: string | number) {
             <span :class="selectedLabel ? '' : 'text-muted-foreground'">
                 {{ selectedLabel ?? 'Select…' }}
             </span>
-            <span class="text-muted-foreground text-xs">▾</span>
+            <span class="text-muted-foreground text-xs font-normal">▾</span>
         </button>
 
         <div

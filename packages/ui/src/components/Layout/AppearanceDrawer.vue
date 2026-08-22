@@ -163,7 +163,7 @@ function surfaceSwatch(hue: number, chroma: number): string {
                     <h2 class="text-base font-semibold">Settings</h2>
                     <div class="flex items-center gap-2">
                         <button
-                            class="text-muted-foreground text-xs hover:underline"
+                            class="text-muted-foreground text-xs font-normal hover:underline"
                             @click="reset"
                         >
                             Reset
@@ -309,7 +309,7 @@ function surfaceSwatch(hue: number, chroma: number): string {
                     <section class="flex flex-col gap-2">
                         <div class="flex items-center justify-between">
                             <h3 class="text-sm font-semibold">Font size</h3>
-                            <span class="text-muted-foreground text-xs tabular-nums"
+                            <span class="text-muted-foreground text-xs font-normal tabular-nums"
                                 >{{ appearance.fontSize }}px</span
                             >
                         </div>

@@ -172,7 +172,7 @@ function apply(): void {
                 <option value="or">Match any</option>
             </select>
 
-            <span class="text-muted-foreground text-xs">of the following</span>
+            <span class="text-muted-foreground text-xs font-normal">of the following</span>
         </div>
 
         <div v-for="(rule, i) in group.rules" :key="i" class="flex items-start gap-2">

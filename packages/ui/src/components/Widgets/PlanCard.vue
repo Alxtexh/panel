@@ -70,9 +70,9 @@ const extras = computed(() => props.plan.extraPerks ?? [])
             <h3 class="text-sm font-semibold">{{ plan.name }}</h3>
             <p class="flex items-baseline gap-1">
                 <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ price }}</span>
-                <span class="text-muted-foreground text-sm">{{ cycleLabel(plan.days) }}</span>
+                <span class="text-muted-foreground text-sm font-normal">{{ cycleLabel(plan.days) }}</span>
             </p>
-            <p v-if="plan.shortDescription" class="text-muted-foreground text-sm text-pretty">
+            <p v-if="plan.shortDescription" class="text-muted-foreground text-sm font-normal text-pretty">
                 {{ plan.shortDescription }}
             </p>
             <p class="text-muted-foreground mt-1 text-xs">

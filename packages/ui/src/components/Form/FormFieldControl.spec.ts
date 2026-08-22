@@ -245,4 +245,23 @@ describe('FormFieldControl - affixes', () => {
 
         expect(wrapper.emitted('affix-action')).toEqual([['upper']])
     })
+
+    it('renders field help with normal weight muted copy', () => {
+        const wrapper = mount(FormFieldControl, {
+            props: {
+                field: {
+                    key: 'bio',
+                    label: 'Bio',
+                    type: 'textarea',
+                    help: 'A short public summary.',
+                } as FormField,
+                value: '',
+            },
+        })
+
+        const help = wrapper.find('p.text-xs')
+        expect(help.text()).toBe('A short public summary.')
+        expect(help.classes()).toContain('font-normal')
+        expect(help.classes()).toContain('text-muted-foreground')
+    })
 })

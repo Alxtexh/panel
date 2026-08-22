@@ -229,7 +229,7 @@ function reset(): void {
                         :model-value="rangeDraft(facet.key).min"
                         @update:model-value="setRange(facet.key, 'min', String($event))"
                     />
-                    <span class="text-muted-foreground text-xs">to</span>
+                    <span class="text-muted-foreground text-xs font-normal">to</span>
                     <PkTextInput
                         type="number"
                         class="h-8 w-24 px-2 text-xs"

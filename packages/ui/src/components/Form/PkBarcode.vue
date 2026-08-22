@@ -108,6 +108,6 @@ watch([payload, format], () => {
             placeholder="Barcode value"
             @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         />
-        <p v-else class="text-muted-foreground text-xs">From {{ field.from }} ({{ format }})</p>
+        <p v-else class="text-muted-foreground text-xs font-normal">From {{ field.from }} ({{ format }})</p>
     </div>
 </template>

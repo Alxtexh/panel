@@ -230,7 +230,7 @@ function onDrop(event: DragEvent) {
                 <span v-else>Uploading…</span>
             </span>
 
-            <span class="text-muted-foreground text-xs">{{ hint }}</span>
+            <span class="text-muted-foreground text-xs font-normal">{{ hint }}</span>
 
             <!-- Determinate, because "it is working" is not the question when
                  the file is large; "how much longer" is. -->
@@ -262,7 +262,7 @@ function onDrop(event: DragEvent) {
 
             <span class="min-w-0 flex-1">
                 <span class="block truncate text-sm font-medium">{{ modelValue.name }}</span>
-                <span class="text-muted-foreground text-xs">
+                <span class="text-muted-foreground text-xs font-normal">
                     {{ formatSize(modelValue.size) }}
                     <template v-if="modelValue.url">
                         ·

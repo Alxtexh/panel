@@ -78,7 +78,7 @@ function isChosen(option: Option): boolean {
 
         <!-- An empty option list is a real state - a tenant-scoped list that
              resolved to nothing - and saying so beats an invisible control. -->
-        <p v-if="options.length === 0" class="text-muted-foreground text-sm">
+        <p v-if="options.length === 0" class="text-muted-foreground text-sm font-normal">
             Nothing to choose from yet.
         </p>
     </div>

@@ -182,7 +182,7 @@ const preview = computed(() => {
 
             <div class="flex flex-col gap-3">
                 <p class="text-sm font-medium">Company logo / stamp</p>
-                <p class="text-muted-foreground text-xs">
+                <p class="text-muted-foreground text-xs font-normal">
                     {{ TRANSPARENT_IMAGE_HELP }}
                 </p>
                 <PkFileUpload

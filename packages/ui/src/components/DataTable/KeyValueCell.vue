@@ -25,7 +25,7 @@ const pairs = computed(() =>
 <template>
     <span v-if="pairs === null && value != null" class="font-mono text-xs">{{ value }}</span>
     <span v-else-if="!pairs || pairs.length === 0" class="text-muted-foreground">—</span>
-    <span v-else class="text-muted-foreground text-sm">
+    <span v-else class="text-muted-foreground text-sm font-normal">
         {{ pairs.length }} {{ pairs.length === 1 ? 'entry' : 'entries' }}
     </span>
 </template>

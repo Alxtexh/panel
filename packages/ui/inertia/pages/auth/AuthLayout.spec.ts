@@ -107,8 +107,9 @@ describe('AuthLayout', () => {
 
         it('shows the form description in split layout', () => {
             const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme', authLayout: 'split' } })
-            // Target the description p in the form panel (not inside the muted panel).
-            expect(wrapper.find('.bg-background p').text()).toBe('Enter your details')
+            const description = wrapper.find('.bg-background p')
+            expect(description.text()).toBe('Enter your details')
+            expect(description.classes()).toContain('font-normal')
         })
 
         it('falls back to centered when authLayout is absent', () => {

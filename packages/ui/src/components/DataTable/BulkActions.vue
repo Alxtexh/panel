@@ -263,7 +263,7 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
             case that most needs the real number rather than "every matching
             record".
         -->
-        <p class="text-muted-foreground text-sm">
+        <p class="text-muted-foreground text-sm font-normal">
             This will affect
             <span class="text-foreground font-medium tabular-nums">
                 <template v-if="!countKnown">…</template>
@@ -318,7 +318,7 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
         description="A download link appears once the file is ready."
         @close="exportPending = false"
     >
-        <p class="text-muted-foreground text-sm">
+        <p class="text-muted-foreground text-sm font-normal">
             This will export
             <span class="text-foreground font-medium tabular-nums">
                 <template v-if="!countKnown">…</template>

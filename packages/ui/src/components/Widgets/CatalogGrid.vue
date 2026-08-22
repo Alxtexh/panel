@@ -264,7 +264,7 @@ function goTo(next: number) {
                         :model-value="rangeDraft(facet.key).min"
                         @update:model-value="setRange(facet.key, 'min', String($event))"
                     />
-                    <span class="text-muted-foreground text-xs">to</span>
+                    <span class="text-muted-foreground text-xs font-normal">to</span>
                     <PkTextInput
                         type="number"
                         class="h-8 w-24 px-2 text-xs"
@@ -277,7 +277,7 @@ function goTo(next: number) {
             </div>
         </div>
 
-        <p v-if="items.length === 0" class="text-muted-foreground text-sm">No matching items.</p>
+        <p v-if="items.length === 0" class="text-muted-foreground text-sm font-normal">No matching items.</p>
 
         <div
             v-else
@@ -303,7 +303,7 @@ function goTo(next: number) {
             class="flex items-center justify-between gap-3"
             data-slot="catalog-pagination"
         >
-            <p class="text-muted-foreground text-xs tabular-nums">
+            <p class="text-muted-foreground text-xs font-normal tabular-nums">
                 Page {{ page }} of {{ pageCount }}
             </p>
             <div class="flex items-center gap-2">

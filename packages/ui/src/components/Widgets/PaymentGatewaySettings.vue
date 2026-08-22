@@ -157,7 +157,7 @@ function setMode(mode: 'test' | 'live'): void {
             @configure="configure"
             @toggle="toggle"
         />
-        <p v-else class="text-muted-foreground text-sm">
+        <p v-else class="text-muted-foreground text-sm font-normal">
             No gateways match “{{ query.trim() }}”.
         </p>
     </div>
@@ -191,7 +191,7 @@ function setMode(mode: 'test' | 'live'): void {
                 </PkStatusBadge>
             </div>
 
-            <p class="text-muted-foreground text-sm">{{ selected.caption }}</p>
+            <p class="text-muted-foreground text-sm font-normal">{{ selected.caption }}</p>
 
             <label class="flex flex-col gap-1 text-sm">
                 Display name
@@ -213,7 +213,7 @@ function setMode(mode: 'test' | 'live'): void {
 
             <div v-if="selected.connected" class="flex flex-col gap-2">
                 <p class="text-sm font-medium">Checkout</p>
-                <p class="text-muted-foreground text-xs">
+                <p class="text-muted-foreground text-xs font-normal">
                     Disabled gateways stay connected but are not offered at checkout.
                     Only one gateway can be the default tender.
                 </p>

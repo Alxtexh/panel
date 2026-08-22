@@ -197,7 +197,7 @@ const submit = () => form.put(window.location.pathname, { preserveScroll: true }
                             class="border-input bg-background focus-visible:ring-ring h-9 w-full rounded-md border px-3 font-mono text-sm focus-visible:ring-2 focus-visible:outline-none"
                         />
 
-                        <p v-if="entry.secret" class="text-muted-foreground text-xs">
+                        <p v-if="entry.secret" class="text-muted-foreground text-xs font-normal">
                             Never displayed. Leave blank to keep the current value.
                         </p>
                     </div>
@@ -212,7 +212,7 @@ const submit = () => form.put(window.location.pathname, { preserveScroll: true }
             </div>
         </form>
 
-        <p v-else-if="writable" class="text-muted-foreground text-sm">
+        <p v-else-if="writable" class="text-muted-foreground text-sm font-normal">
             No keys are declared as editable. Name them in
             <code>config/panel.php</code> under <code>env.editable</code>.
         </p>

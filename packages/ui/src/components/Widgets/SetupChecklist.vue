@@ -154,7 +154,7 @@ const ghostClass = buttonClasses({
                 <button
                     v-if="skipLabel"
                     type="button"
-                    class="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                    class="text-xs text-muted-foreground font-normal hover:text-foreground hover:underline"
                     @click="emit('skip')"
                 >
                     {{ skipLabel }}
@@ -162,7 +162,7 @@ const ghostClass = buttonClasses({
                 <a
                     v-if="reportHref"
                     :href="reportHref"
-                    class="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                    class="text-xs text-muted-foreground font-normal hover:text-foreground hover:underline"
                 >
                     Full report
                 </a>
@@ -179,7 +179,7 @@ const ghostClass = buttonClasses({
             />
             <div class="flex min-w-0 flex-col gap-0.5">
                 <p class="text-sm font-medium">{{ next.title }}</p>
-                <p v-if="next.detail" class="text-xs text-muted-foreground">{{ next.detail }}</p>
+                <p v-if="next.detail" class="text-xs text-muted-foreground font-normal">{{ next.detail }}</p>
                 <component
                     :is="resolvedLink"
                     v-if="next.href"
@@ -222,7 +222,7 @@ const ghostClass = buttonClasses({
                     >
                         {{ item.title }}
                     </p>
-                    <p v-if="!item.done && item.detail" class="text-xs text-muted-foreground">
+                    <p v-if="!item.done && item.detail" class="text-xs text-muted-foreground font-normal">
                         {{ item.detail }}
                     </p>
                 </div>

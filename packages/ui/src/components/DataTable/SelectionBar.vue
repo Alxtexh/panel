@@ -65,7 +65,7 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
                 <SheetContent side="bottom" class="max-h-[70vh] gap-0 overflow-hidden p-0">
                     <div class="border-b px-4 py-3">
                         <p class="text-sm font-semibold">Bulk actions</p>
-                        <p class="text-muted-foreground text-xs">
+                        <p class="text-muted-foreground text-xs font-normal">
                             {{ allMatching ? 'All matching records' : `${format(count)} selected` }}
                         </p>
                     </div>

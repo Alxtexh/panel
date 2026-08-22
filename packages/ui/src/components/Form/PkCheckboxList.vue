@@ -95,7 +95,7 @@ const gridStyle = computed(() =>
             {{ option.label }}
         </label>
 
-        <p v-if="options.length === 0" class="text-muted-foreground text-sm">
+        <p v-if="options.length === 0" class="text-muted-foreground text-sm font-normal">
             Nothing to choose from yet.
         </p>
     </div>

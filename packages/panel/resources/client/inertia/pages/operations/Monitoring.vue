@@ -374,7 +374,7 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
         <header class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h1 class="text-xl font-semibold">Monitoring</h1>
-                <p class="text-sm text-muted-foreground">
+                <p class="text-sm text-muted-foreground font-normal">
                     This host, measured from inside the application. Refreshes every
                     {{ REFRESH_MS / 1000 }} seconds while this tab is open.
                 </p>
@@ -452,13 +452,13 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                             :style="{ width: `${health.cpu.percent}%` }"
                         />
                     </div>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-muted-foreground font-normal">
                         {{ health.cpu.one }} / {{ health.cpu.five }} /
                         {{ health.cpu.fifteen }} across {{ health.cpu.cores }} core(s)
                     </p>
                 </template>
 
-                <p v-else class="text-sm text-muted-foreground">Not available on this platform.</p>
+                <p v-else class="text-sm text-muted-foreground font-normal">Not available on this platform.</p>
             </div>
 
             <!-- Memory -->
@@ -477,12 +477,12 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                             :style="{ width: `${health.memory.percent}%` }"
                         />
                     </div>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-muted-foreground font-normal">
                         {{ bytes(health.memory.used) }} of {{ bytes(health.memory.total) }} used
                     </p>
                 </template>
 
-                <p v-else class="text-sm text-muted-foreground">
+                <p v-else class="text-sm text-muted-foreground font-normal">
                     Host memory is not readable here.
                 </p>
 
@@ -512,7 +512,7 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                             :style="{ width: `${health.disk.percent}%` }"
                         />
                     </div>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-muted-foreground font-normal">
                         {{ bytes(health.disk.free) }} free of
                         {{ bytes(health.disk.total) }}
                     </p>
@@ -526,7 +526,7 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                     </p>
                 </template>
 
-                <p v-else class="text-sm text-muted-foreground">Not readable.</p>
+                <p v-else class="text-sm text-muted-foreground font-normal">Not readable.</p>
             </div>
 
             <!-- Database -->
@@ -541,14 +541,14 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                         {{ health.database.latency_ms
                         }}<span class="text-base font-normal">ms</span>
                     </p>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-muted-foreground font-normal">
                         {{ health.database.driver }} · {{ bytes(health.database.size) }} on disk
                     </p>
                 </template>
 
                 <template v-else>
                     <p class="text-sm font-medium text-destructive">Not answering</p>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-muted-foreground font-normal">
                         {{ health.database.error }}
                     </p>
                 </template>
@@ -565,7 +565,7 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                     <p class="text-2xl font-semibold tabular-nums">
                         {{ health.queue.pending }}
                     </p>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-muted-foreground font-normal">
                         waiting · {{ health.queue.reserved }} in flight
                         <template v-if="health.queue.oldest_seconds">
                             · oldest {{ duration(health.queue.oldest_seconds) }}
@@ -574,7 +574,7 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                 </template>
 
                 <template v-else>
-                    <p class="text-sm text-muted-foreground">
+                    <p class="text-sm text-muted-foreground font-normal">
                         Depth is not countable on the
                         <span class="font-mono">{{ health.queue.connection }}</span>
                         queue.
@@ -606,14 +606,14 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                     <p class="text-2xl font-semibold tabular-nums">
                         {{ health.cache.latency_ms }}<span class="text-base font-normal">ms</span>
                     </p>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-muted-foreground font-normal">
                         {{ health.cache.store }} · write and read back
                     </p>
                 </template>
 
                 <template v-else>
                     <p class="text-sm font-medium text-destructive">Not answering</p>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-muted-foreground font-normal">
                         {{ health.cache.store }} · {{ health.cache.error }}
                     </p>
                 </template>
@@ -685,7 +685,7 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
         <div class="rounded-lg border bg-card">
             <div class="flex items-baseline justify-between border-b px-4 py-2.5">
                 <p class="text-sm font-medium">Last 24 hours</p>
-                <p v-if="history.length" class="text-xs text-muted-foreground">
+                <p v-if="history.length" class="text-xs text-muted-foreground font-normal">
                     {{ history.length }} samples, every 5 minutes
                 </p>
             </div>

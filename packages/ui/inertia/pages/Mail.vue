@@ -52,7 +52,7 @@ const props = withDefaults(
     <div :class="[PAGE_SHELL, 'flex flex-col gap-6']">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Mail' }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground">
+            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
                 {{ pageDescription }}
             </p>
         </header>
@@ -65,7 +65,7 @@ const props = withDefaults(
                         {{ item.label }}
                     </span>
                 </nav>
-                <p v-if="categories.length" class="text-muted-foreground text-xs uppercase">
+                <p v-if="categories.length" class="text-muted-foreground text-xs font-normal uppercase">
                     Labels
                 </p>
                 <nav v-if="categories.length" class="flex flex-col gap-1">
@@ -74,13 +74,13 @@ const props = withDefaults(
             </aside>
 
             <section>
-                <p v-if="messages.rows.length === 0" class="text-muted-foreground text-sm">
+                <p v-if="messages.rows.length === 0" class="text-muted-foreground text-sm font-normal">
                     No threads. Override MailPage::threads() to load your store.
                 </p>
                 <ul v-else class="divide-y rounded-md border">
                     <li v-for="row in messages.rows" :key="String(row.id ?? row.subject)" class="px-3 py-2">
                         <p class="font-medium">{{ row.subject ?? 'Untitled' }}</p>
-                        <p class="text-muted-foreground text-xs">
+                        <p class="text-muted-foreground text-xs font-normal">
                             {{ row.from }}
                             <span v-if="row.preview"> · {{ row.preview }}</span>
                         </p>

@@ -26,6 +26,7 @@ import { fieldControl } from '../../composables/useFieldControls'
 import { CreateOptionError } from '../../lib/createOptionError'
 import { createOptionActionLabel, createOptionTitle } from '../../lib/createOptionTitle'
 import { FOCUS_RING, FOCUS_RING_WITHIN } from '../../lib/focusRing'
+import { MUTED_COPY_SNUG } from '../../lib/copyClasses'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import CreateOptionDialog from './CreateOptionDialog.vue'
 import { Checkbox } from '../shadcn/checkbox'
@@ -375,7 +376,7 @@ function insertChip(token: string) {
                 {{ field.label }}
                 <span v-if="field.required" class="text-destructive" aria-hidden="true">*</span>
             </label>
-            <span v-if="field.hint" class="text-muted-foreground flex items-center gap-1 text-xs leading-snug">
+            <span v-if="field.hint" :class="['flex items-center gap-1', MUTED_COPY_SNUG]">
                 {{ field.hint }}
                 <button
                     v-if="field.hintAction"
@@ -655,7 +656,7 @@ function insertChip(token: string) {
                 :disabled="field.disabled || processing"
                 @update:model-value="(checked: boolean) => emit('change', checked)"
             />
-            <span class="text-muted-foreground">{{ field.help ?? 'Enabled' }}</span>
+            <span :class="MUTED_COPY_SNUG">{{ field.help ?? 'Enabled' }}</span>
         </label>
 
         <label v-else-if="field.type === 'checkbox'" class="flex items-center gap-2 text-sm">
@@ -665,7 +666,7 @@ function insertChip(token: string) {
                 :disabled="field.disabled || processing"
                 @update:model-value="(checked) => emit('change', checked === true)"
             />
-            <span class="text-muted-foreground">{{ field.help ?? field.label }}</span>
+            <span :class="MUTED_COPY_SNUG">{{ field.help ?? field.label }}</span>
         </label>
 
         <textarea
@@ -890,7 +891,7 @@ function insertChip(token: string) {
         <p v-if="error" class="text-destructive text-xs leading-snug" role="alert">
             {{ error }}
         </p>
-        <p v-else-if="field.help && field.type !== 'toggle'" class="text-muted-foreground text-xs leading-snug">
+        <p v-else-if="field.help && field.type !== 'toggle'" :class="MUTED_COPY_SNUG">
             {{ field.help }}
         </p>
     </div>

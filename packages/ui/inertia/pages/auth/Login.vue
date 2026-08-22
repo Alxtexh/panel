@@ -246,7 +246,7 @@ const magicLinkAvailable = computed(() => Boolean(props.magicLinkUrl))
                 -->
                 <p
                     v-if="props.prefill"
-                    class="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs"
+                    class="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs font-normal"
                 >
                     Local development: filled in with the seeded account
                     <span class="font-medium">{{ props.prefill.email }}</span

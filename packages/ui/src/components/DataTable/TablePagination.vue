@@ -75,7 +75,7 @@ const pages = computed(() =>
 
 <template>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p class="text-muted-foreground text-xs tabular-nums">
+        <p class="text-muted-foreground text-xs font-normal tabular-nums">
             Showing {{ format(from) }}-{{ format(to) }}
             <template v-if="total !== undefined">of {{ format(total) }}</template>
         </p>

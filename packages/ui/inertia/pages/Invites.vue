@@ -72,16 +72,16 @@ function roleLabel(roleId: string): string {
     <div :class="PAGE_SHELL_STACK">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Invites' }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground">
+            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
                 {{ pageDescription }}
             </p>
-            <p class="text-xs text-muted-foreground">
+            <p class="text-xs text-muted-foreground font-normal">
                 Accept URL pattern: <code>{{ acceptUrlPattern }}</code> (host route).
             </p>
         </header>
 
         <div class="flex items-center justify-between gap-4">
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-muted-foreground font-normal">
                 Override InvitePage::pending() and ::send() to persist invites in your store.
             </p>
             <Button type="button" @click="showForm = !showForm">
@@ -129,7 +129,7 @@ function roleLabel(roleId: string): string {
         </form>
 
         <section>
-            <p v-if="pending.length === 0" class="text-sm text-muted-foreground">No pending invites.</p>
+            <p v-if="pending.length === 0" class="text-sm text-muted-foreground font-normal">No pending invites.</p>
             <ul v-else class="divide-y rounded-md border">
                 <li
                     v-for="row in pending"
@@ -138,7 +138,7 @@ function roleLabel(roleId: string): string {
                 >
                     <div>
                         <p class="font-medium">{{ row.email }}</p>
-                        <p class="text-xs text-muted-foreground">{{ roleLabel(row.role_id) }}</p>
+                        <p class="text-xs text-muted-foreground font-normal">{{ roleLabel(row.role_id) }}</p>
                     </div>
                     <Button type="button" variant="ghost" @click="revoke(row.id)">Revoke</Button>
                 </li>

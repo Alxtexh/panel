@@ -140,7 +140,7 @@ function onKeydown(event: KeyboardEvent) {
             v-if="available.length > 0 && !full && !disabled"
             class="flex flex-wrap items-center gap-1.5"
         >
-            <span class="text-muted-foreground text-xs">Suggestions:</span>
+            <span class="text-muted-foreground text-xs font-normal">Suggestions:</span>
             <button
                 v-for="suggestion in available"
                 :key="suggestion"
@@ -152,7 +152,7 @@ function onKeydown(event: KeyboardEvent) {
             </button>
         </div>
 
-        <p v-if="full" class="text-muted-foreground text-xs">
+        <p v-if="full" class="text-muted-foreground text-xs font-normal">
             That is the maximum of {{ field.max ?? 25 }} tags.
         </p>
     </div>

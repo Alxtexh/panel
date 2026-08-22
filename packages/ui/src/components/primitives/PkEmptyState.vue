@@ -73,7 +73,7 @@ const slots = useSlots()
             <p class="text-foreground font-medium" :class="compact ? 'text-sm' : 'text-base'">
                 {{ title }}
             </p>
-            <p v-if="description" class="text-sm">{{ description }}</p>
+            <p v-if="description" class="text-sm font-normal">{{ description }}</p>
         </div>
 
         <div v-if="$slots.actions" class="mt-1 flex flex-wrap items-center justify-center gap-2">

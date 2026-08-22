@@ -167,7 +167,7 @@ function setField(index: number, key: string, value: unknown) {
                 + {{ block.label }}
             </button>
 
-            <span v-if="full" class="text-muted-foreground text-xs">
+            <span v-if="full" class="text-muted-foreground text-xs font-normal">
                 {{ maxBlocks }} is the maximum here.
             </span>
         </div>

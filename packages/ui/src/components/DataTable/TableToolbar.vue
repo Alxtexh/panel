@@ -386,7 +386,7 @@ function clearEverything() {
                 <div class="flex max-h-[85vh] flex-col">
                     <div class="border-b px-4 py-3">
                         <p class="text-sm font-semibold">Table tools</p>
-                        <p class="text-muted-foreground text-xs">Filters, columns, and grouping</p>
+                        <p class="text-muted-foreground text-xs font-normal">Filters, columns, and grouping</p>
                     </div>
 
                     <div class="flex-1 overflow-y-auto px-4 py-3">

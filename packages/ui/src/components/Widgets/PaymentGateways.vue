@@ -46,7 +46,7 @@ const connectedCount = computed(
         :class="['flex flex-col gap-4', CATALOGUE_CONTAINER]"
         data-slot="payment-gateways"
     >
-        <p class="text-muted-foreground text-sm">
+        <p class="text-muted-foreground text-sm font-normal">
             {{ connectedCount }} of {{ gateways.length }} connected, showcase only, no live
             processors.
         </p>
@@ -97,7 +97,7 @@ const connectedCount = computed(
                     </div>
                 </div>
 
-                <p class="text-muted-foreground text-xs">
+                <p class="text-muted-foreground text-xs font-normal">
                     {{ gateway.methods.join(' · ') }}
                 </p>
 

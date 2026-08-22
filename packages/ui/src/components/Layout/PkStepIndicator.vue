@@ -142,7 +142,7 @@ function isFailed(i: number): boolean {
 
                 <span class="flex flex-col">
                     <span>{{ step.label }}</span>
-                    <span v-if="step.description" class="text-muted-foreground text-xs">
+                    <span v-if="step.description" class="text-muted-foreground text-xs font-normal">
                         {{ step.description }}
                     </span>
                 </span>
