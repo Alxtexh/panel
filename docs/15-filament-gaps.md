@@ -65,3 +65,11 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.0.98 | Gate `dashboardLayout` writes; board via `toListQuery`; nested board URLs; board HTTP Pest |
 | v1.0.100 | Auth design families (`Panel::authFamily`) + Auth samples gallery |
 | v1.0.101 | Sidebar design families (`Panel::sidebarLayout`) + Sidebar samples gallery |
+| v1.1.0 | Minor release: auth families + sidebar layout families (same work as v1.0.100 / v1.0.101; prefer this tag going forward) |
+
+## Versioning (from v1.1.0)
+
+Feature families and public API additions ship as **minor** releases (`1.1.0`, `1.2.0`, ...).
+Standards fixes and patches stay on the current minor (`1.1.x`).
+The historical tags `v1.0.100` and `v1.0.101` remain published; `v1.1.0` is the
+canonical minor that covers both auth and sidebar layout families.
