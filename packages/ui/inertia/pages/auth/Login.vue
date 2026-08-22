@@ -33,8 +33,8 @@ import { computed, ref } from 'vue'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
-import AuthProviderButton from '../../components/AuthProviderButton.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
+import SocialLoginButtons from '../../components/SocialLoginButtons.vue'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{
@@ -112,17 +112,6 @@ const PASSKEY_ROUTES = { options: '/passkeys/login/options', verify: '/passkeys/
 const passkeyRoutes = computed(() =>
     props.passkeys === undefined ? PASSKEY_ROUTES : props.passkeys,
 )
-
-/*
- * THE PASSKEY BUTTON SHIPS. It was a slot, on the reasoning that a WebAuthn
- * client belongs to whichever package the application chose - and the result
- * was a fresh install with no passkey at all, which is not "optional", it is
- * absent. `AuthPasskeyButton` uses the BROWSER's WebAuthn API against the
- * routes the server reports, so it needs no npm dependency and disappears where
- * those routes do not exist. The slot remains for an application that already
- * has its own.
- */
-const providers = computed(() => props.socialProviders ?? [])
 
 const magicLinkMode = ref(false)
 const magicLinkAvailable = computed(() => Boolean(props.magicLinkUrl))
@@ -313,34 +302,7 @@ const magicLinkAvailable = computed(() => Boolean(props.magicLinkUrl))
                 of alternatives, and an operator signing in to a work panel is
                 overwhelmingly using their password.
             -->
-            <div v-if="providers.length > 0" class="flex flex-col gap-3">
-                <div class="flex items-center gap-3">
-                    <span class="bg-border h-px flex-1" />
-                    <span class="text-muted-foreground text-xs">or continue with</span>
-                    <span class="bg-border h-px flex-1" />
-                </div>
-
-                <div
-                    class="grid gap-2"
-                    :class="
-                        providers.length > 1
-                            ? 'grid-cols-2 sm:grid-cols-3'
-                            : ''
-                    "
-                >
-                    <!--
-                        A LINK, NOT A FETCH. The provider redirect leaves the
-                        application entirely, so this has to be a real
-                        navigation; an XHR would be answered with an opaque
-                        redirect the page cannot follow.
-                    -->
-                    <AuthProviderButton
-                        v-for="provider in providers"
-                        :key="provider.key"
-                        :provider="provider"
-                    />
-                </div>
-            </div>
+            <SocialLoginButtons :providers="props.socialProviders" />
 
             <div v-if="props.registerUrl" class="text-muted-foreground text-center text-sm">
                 Don't have an account?

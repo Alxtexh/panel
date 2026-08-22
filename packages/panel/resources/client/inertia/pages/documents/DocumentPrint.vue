@@ -51,7 +51,7 @@ function print(): void {
     <div class="p-4">
         <!-- Screen-only chrome. `print:hidden` is what keeps it off paper. -->
         <div class="mb-4 flex items-center justify-between gap-2 print:hidden">
-            <p v-if="document.sample" class="text-muted-foreground text-sm">
+            <p v-if="document.sample" class="text-muted-foreground text-sm font-normal">
                 Sample data — no record was selected, so this is layout only.
             </p>
             <span v-else />

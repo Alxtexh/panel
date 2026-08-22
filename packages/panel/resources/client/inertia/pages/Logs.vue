@@ -125,7 +125,7 @@ watch(
     <div class="flex flex-col gap-4 p-4">
         <div>
             <h1 class="text-xl font-semibold">{{ pageHeading ?? 'Logs' }}</h1>
-            <p class="text-muted-foreground text-sm">
+            <p class="text-muted-foreground text-sm font-normal">
                 {{ pageDescription ?? 'The last part of each file. Reading only.' }}
             </p>
         </div>
@@ -167,7 +167,7 @@ watch(
                     @keyup.enter="runSearch"
                 />
 
-                <p class="text-muted-foreground text-xs">Auto-refresh every {{ pollSeconds }}s</p>
+                <p class="text-muted-foreground text-xs font-normal">Auto-refresh every {{ pollSeconds }}s</p>
             </div>
 
             <p v-if="liveTail.truncated" class="text-muted-foreground px-3 py-2 text-xs">

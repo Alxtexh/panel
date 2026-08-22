@@ -327,6 +327,7 @@ export const PANEL_PAGES = {
  | anywhere.
  */
 export { default as RenderHook } from './components/RenderHook.vue'
+export { default as SocialLoginButtons } from './components/SocialLoginButtons.vue'
 export { default as TicketThread } from './components/TicketThread.vue'
 export { default as AnnouncementBanners } from './components/AnnouncementBanners.vue'
 export { default as FeedbackDialog } from './components/FeedbackDialog.vue'

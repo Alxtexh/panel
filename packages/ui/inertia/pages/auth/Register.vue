@@ -25,6 +25,7 @@ import { Form, Head, Link } from '@inertiajs/vue3'
 import { PkButton as Button, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
+import SocialLoginButtons from '../../components/SocialLoginButtons.vue'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{
@@ -123,6 +124,8 @@ const props = defineProps<{
                     Create account
                 </Button>
             </div>
+
+            <SocialLoginButtons divider="or sign up with" />
 
             <div class="text-muted-foreground text-center text-sm">
                 Already have an account?

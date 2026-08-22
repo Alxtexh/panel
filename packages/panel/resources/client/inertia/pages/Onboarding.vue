@@ -42,7 +42,7 @@ function skipRemaining() {
             :link-component="InertiaLink"
             @skip="skipRemaining"
         />
-        <p v-if="!steps?.length" class="text-sm text-muted-foreground">
+        <p v-if="!steps?.length" class="text-sm text-muted-foreground font-normal">
             Override steps() on your page class, or open the dashboard setup guide.
         </p>
     </div>

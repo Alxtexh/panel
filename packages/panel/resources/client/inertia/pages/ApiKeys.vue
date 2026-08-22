@@ -93,7 +93,7 @@ function formatWhen(value?: string | null): string {
     <div :class="PAGE_SHELL_STACK">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'API keys' }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground">
+            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
                 {{ pageDescription }}
             </p>
         </header>
@@ -109,7 +109,7 @@ function formatWhen(value?: string | null): string {
         </section>
 
         <div class="flex items-center justify-between gap-4">
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-muted-foreground font-normal">
                 Tokens use the same ability names as the panel. Override ApiKeysPage to use your store.
             </p>
             <Button type="button" @click="showCreate = !showCreate">
@@ -160,7 +160,7 @@ function formatWhen(value?: string | null): string {
         </form>
 
         <section>
-            <p v-if="keys.length === 0" class="text-sm text-muted-foreground">No API keys yet.</p>
+            <p v-if="keys.length === 0" class="text-sm text-muted-foreground font-normal">No API keys yet.</p>
             <div v-else class="overflow-x-auto rounded-md border">
                 <table class="min-w-full text-sm">
                     <thead class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">

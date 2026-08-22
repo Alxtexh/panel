@@ -42,16 +42,16 @@ function toggle(name: string, enabled: boolean) {
     <div :class="PAGE_SHELL_STACK">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Feature flags' }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground">
+            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
                 {{ pageDescription }}
             </p>
-            <p class="text-xs text-muted-foreground">
+            <p class="text-xs text-muted-foreground font-normal">
                 Values come from <code>panel.tenancy.features</code> or the tenant record. Override
                 FeatureFlagsPage::toggle() to persist changes.
             </p>
         </header>
 
-        <p v-if="flags.length === 0" class="text-sm text-muted-foreground">
+        <p v-if="flags.length === 0" class="text-sm text-muted-foreground font-normal">
             No feature flags resolved. Set <code>panel.tenancy.features</code> or override
             FeatureFlagsPage::flags().
         </p>
@@ -64,7 +64,7 @@ function toggle(name: string, enabled: boolean) {
             >
                 <div>
                     <p class="font-medium">{{ flag.name }}</p>
-                    <p v-if="flag.description" class="text-sm text-muted-foreground">
+                    <p v-if="flag.description" class="text-sm text-muted-foreground font-normal">
                         {{ flag.description }}
                     </p>
                 </div>

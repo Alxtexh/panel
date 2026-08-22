@@ -195,7 +195,7 @@ function csrf(): string {
                 <Label for="org-name">Name</Label>
                 <Input id="org-name" v-model="form.name" required autocomplete="organization" />
                 <AuthInputError :message="form.errors.name" />
-                <p class="text-xs text-muted-foreground">
+                <p class="text-xs text-muted-foreground font-normal">
                     Shown in the sidebar and on every page of the panel.
                 </p>
             </div>
@@ -212,7 +212,7 @@ function csrf(): string {
                 />
 
                 <AuthInputError :message="form.errors.logo" />
-                <p class="text-xs text-muted-foreground">
+                <p class="text-xs text-muted-foreground font-normal">
                     A square mark reads best. When a logo is set it replaces the organisation name
                     in the sidebar, so the two never compete for the same space.
                 </p>

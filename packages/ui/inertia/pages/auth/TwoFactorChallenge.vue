@@ -29,6 +29,7 @@ import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-e
 import AuthField from '../../components/AuthField.vue'
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
+import SocialLoginButtons from '../../components/SocialLoginButtons.vue'
 import { useOtpAutoSubmit, type OtpFormHandle } from '../../composables/useOtpAutoSubmit'
 import AuthLayout from './AuthLayout.vue'
 
@@ -179,6 +180,8 @@ function onChallengeError(): void {
                     Send another code
                 </button>
             </Form>
+
+            <SocialLoginButtons divider="or sign in with" />
         </div>
     </AuthLayout>
 </template>

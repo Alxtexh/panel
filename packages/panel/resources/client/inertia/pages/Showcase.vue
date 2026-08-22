@@ -55,13 +55,13 @@ function cell(row: Record<string, unknown>, key: string): unknown {
     <div class="flex h-full min-h-0 flex-col gap-8 overflow-auto p-6">
         <header class="max-w-3xl space-y-2">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Kit showcase' }}</h1>
-            <p class="text-muted-foreground text-sm leading-relaxed">
+            <p class="text-muted-foreground text-sm font-normal leading-relaxed">
                 {{
                     pageDescription ??
                     'Fields, table columns, and widgets from the package. Domain-neutral sample data only.'
                 }}
             </p>
-            <p class="text-muted-foreground text-xs">
+            <p class="text-muted-foreground text-xs font-normal">
                 Enable with
                 <code class="rounded bg-muted px-1 py-0.5">Panel::kitShowcase()</code>
                 or
@@ -79,14 +79,14 @@ function cell(row: Record<string, unknown>, key: string): unknown {
                     class="border-border/80 rounded-lg border px-4 py-3"
                 >
                     <div class="text-sm font-medium">{{ field.label }}</div>
-                    <div class="text-muted-foreground mt-1 font-mono text-xs">{{ field.hint }}</div>
+                    <div class="text-muted-foreground mt-1 font-mono text-xs font-normal">{{ field.hint }}</div>
                 </li>
             </ul>
         </section>
 
         <section class="space-y-3">
             <h2 class="text-sm font-semibold tracking-wide uppercase">Table columns</h2>
-            <p class="text-muted-foreground text-sm">
+            <p class="text-muted-foreground text-sm font-normal">
                 Includes
                 <code class="rounded bg-muted px-1 py-0.5 text-xs">ColumnGroup</code>
                 (Contact) and
@@ -159,7 +159,7 @@ function cell(row: Record<string, unknown>, key: string): unknown {
                         <PkBadge variant="secondary">{{ widget.type }}</PkBadge>
                         <span class="text-sm font-medium">{{ widget.label }}</span>
                     </div>
-                    <div class="text-muted-foreground mt-2 font-mono text-xs">{{ widget.hint }}</div>
+                    <div class="text-muted-foreground mt-2 font-mono text-xs font-normal">{{ widget.hint }}</div>
                 </li>
             </ul>
         </section>

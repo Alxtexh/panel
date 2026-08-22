@@ -125,14 +125,14 @@ function send() {
     <section class="flex w-full flex-col gap-3 rounded-lg border bg-card p-4">
         <h2 class="text-sm font-semibold">Conversation</h2>
 
-        <p v-if="loading" class="text-sm text-muted-foreground">Loading the conversation…</p>
+        <p v-if="loading" class="text-sm text-muted-foreground font-normal">Loading the conversation…</p>
 
         <p v-else-if="failed" class="text-sm text-destructive">
             The conversation could not be loaded.
             <button type="button" class="underline" @click="load">Try again</button>
         </p>
 
-        <p v-else-if="replies.length === 0" class="text-sm text-muted-foreground">
+        <p v-else-if="replies.length === 0" class="text-sm text-muted-foreground font-normal">
             Nothing has been said yet.
         </p>
 

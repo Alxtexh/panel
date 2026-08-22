@@ -15,7 +15,7 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 use Alxtexh\Panel\Auth\Passkeys;
-use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Auth\SocialLoginPayload;
 use Alxtexh\Panel\PanelManager;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -60,23 +60,7 @@ class FortifyServiceProvider extends ServiceProvider
              * gate the OAuth start; unconfigured buttons stay visible and say
              * what to set in `.env`. See `SocialProviders::offered()`.
              */
-            'socialProviders' => (static function (): array {
-                $out = [];
-
-                foreach (SocialProviders::offered() as $key => $label) {
-                    $configured = SocialProviders::hasCredentials($key);
-
-                    $out[] = [
-                        'key' => $key,
-                        'label' => $label,
-                        'url' => "/auth/{$key}/redirect",
-                        'configured' => $configured,
-                        'hint' => $configured ? null : SocialProviders::credentialsHint($key),
-                    ];
-                }
-
-                return $out;
-            })(),
+            'socialProviders' => SocialLoginPayload::forPanel(app(PanelManager::class)->currentPanel()),
 
             /*
              * A SEEDED ACCOUNT, TYPED IN FOR YOU, on a local machine only.

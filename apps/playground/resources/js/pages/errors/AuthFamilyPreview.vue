@@ -66,9 +66,6 @@ const siblings = computed(() =>
             action="/login"
             forgot-url="/forgot-password"
             :register-url="`/screens/auth/${forceAuthLayout}/register`"
-            :social-providers="[
-                { key: 'google', label: 'Google', url: '/auth/google/redirect' },
-            ]"
         />
 
         <Register

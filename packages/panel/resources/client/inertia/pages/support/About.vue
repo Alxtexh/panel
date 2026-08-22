@@ -60,11 +60,11 @@ withDefaults(
                 {{ name ?? 'About' }}
             </h1>
 
-            <p v-if="tagline" class="text-muted-foreground text-sm">
+            <p v-if="tagline" class="text-muted-foreground text-sm font-normal">
                 {{ tagline }}
             </p>
 
-            <p v-if="version" class="text-muted-foreground text-xs">Version {{ version }}</p>
+            <p v-if="version" class="text-muted-foreground text-xs font-normal">Version {{ version }}</p>
         </header>
 
         <div v-if="description" class="bg-card rounded-lg border p-5 text-sm leading-relaxed">
