@@ -28,6 +28,7 @@ import PanelQuickCreate from './PanelQuickCreate.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import PanelLockButton from './PanelLockButton.vue'
 import TopNavUser from './TopNavUser.vue'
+import PanelEnvironmentBanner from './PanelEnvironmentBanner.vue'
 
 withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {
     breadcrumbs: () => [],
@@ -52,9 +53,10 @@ function groupIsActive(items: NavItem[]): boolean {
 <template>
     <header class="sticky top-0 z-30 border-b border-sidebar-border/70 bg-background">
         <div class="flex h-14 items-center gap-3 px-3 sm:px-4">
-            <Link :href="nav.primary[0].href" class="shrink-0">
+            <Link :href="nav.primary[0].href" class="flex shrink-0 items-center gap-2">
                 <AppLogo />
             </Link>
+            <PanelEnvironmentBanner />
 
             <nav class="pk-scroll flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
                 <Link

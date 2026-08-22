@@ -350,7 +350,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Environment colour banner
+    | Environment badge
     |--------------------------------------------------------------------------
     |
     | Null / unset: show outside production. true: always. false: never.

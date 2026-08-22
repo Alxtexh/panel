@@ -8,11 +8,11 @@ use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 
 /**
- * Colour strip naming the current APP_ENV.
+ * Compact badge naming the current APP_ENV.
  *
  * OPT-IN / ZERO COST WHEN OFF. Production installs see nothing unless
  * `PANEL_ENVIRONMENT_BANNER=true` (or `Panel::environmentBanner(true)`).
- * Non-production shows the strip by default so local and staging are obvious.
+ * Non-production shows the badge by default so local and staging are obvious.
  * `PANEL_ENVIRONMENT_BANNER=false` / `->environmentBanner(false)` hides it.
  */
 final class EnvironmentBanner

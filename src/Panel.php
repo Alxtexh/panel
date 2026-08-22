@@ -1087,11 +1087,11 @@ final class Panel
     }
 
     /**
-     * Colour strip naming APP_ENV in the shell.
+     * Environment badge in the shell top bar.
      *
      * Null (default) follows `panel.environment_banner` / non-production.
      * `->environmentBanner(false)` never shows. `->environmentBanner(true)`
-     * forces the strip even in production.
+     * forces the badge even in production.
      */
     public function environmentBanner(bool $enabled = true): self
     {
