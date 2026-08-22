@@ -74,6 +74,7 @@ export { default as DocumentTemplateDesigner } from './pages/documents/TemplateD
 export { default as DocumentPrint } from './pages/documents/DocumentPrint.vue'
 
 export { default as AuditTimeline } from './components/AuditTimeline.vue'
+export { default as CommentsSection } from './components/CommentsSection.vue'
 
 /*
  * WIDGETS, FOR ANY SCREEN THAT HOSTS THEM.

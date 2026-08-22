@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Http;
 
 use Alxtexh\Panel\Auth;
 use Alxtexh\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Http\Controllers\CommentController;
 use Alxtexh\Panel\Http\Controllers\BulkController;
 use Alxtexh\Panel\Http\Controllers\ImportController;
 use Alxtexh\Panel\Http\Controllers\RecordController;
@@ -1314,6 +1315,20 @@ final class PanelRoutes
             ->whereNumber('id')
             ->where('relation', '[a-z0-9_-]+')
             ->name('relation.store');
+
+        /*
+         * Record comments. Opt-in via Resource::comments(). Without it the
+         * controller 404s; the route exists so URLs are stable across resources.
+         */
+        Route::get('{resource}/{id}/record-comments', [CommentController::class, 'index'])
+            ->whereIn('resource', $keys)
+            ->whereNumber('id')
+            ->name('comments');
+
+        Route::post('{resource}/{id}/record-comments', [CommentController::class, 'store'])
+            ->whereIn('resource', $keys)
+            ->whereNumber('id')
+            ->name('comments.store');
 
         Route::get('{resource}/{id}/edit', [ResourceController::class, 'edit'])
             ->whereIn('resource', $keys)->whereNumber('id')->name('edit');

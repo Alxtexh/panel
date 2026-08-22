@@ -20,6 +20,7 @@ import { ref, useTemplateRef } from 'vue'
 import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
+import SocialLoginButtons from '../../components/SocialLoginButtons.vue'
 import { useOtpAutoSubmit, type OtpFormHandle } from '../../composables/useOtpAutoSubmit'
 import AuthLayout from './AuthLayout.vue'
 
@@ -99,6 +100,8 @@ function onVerifyError(): void {
                 Verify
             </Button>
         </Form>
+
+        <SocialLoginButtons divider="or sign in with" />
 
         <Form
             v-if="props.resendUrl"

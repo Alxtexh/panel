@@ -55,6 +55,7 @@ import {
 } from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
 import AuditTimeline from '../components/AuditTimeline.vue'
+import CommentsSection from '../components/CommentsSection.vue'
 import RecordPresence from '../components/RecordPresence.vue'
 import RenderHook from '../components/RenderHook.vue'
 import { formatMoney } from '../lib/money'
@@ -111,6 +112,12 @@ const props = defineProps<{
             color?: string
             confirm?: string
         }[]
+    } | null
+    /** Record comments when the resource opted in via `comments()`. */
+    comments?: {
+        label: string
+        url: string
+        canCreate: boolean
     } | null
     breadcrumbs: { title: string; href: string }[]
 }>()
@@ -936,6 +943,13 @@ function destroy() {
             :record-id="record.id"
             :resource="schema.key"
             :base-url="schema.routes.index"
+        />
+
+        <CommentsSection
+            v-if="comments"
+            :label="comments.label"
+            :url="comments.url"
+            :can-create="comments.canCreate"
         />
 
         <!--

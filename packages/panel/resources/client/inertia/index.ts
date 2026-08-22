@@ -74,6 +74,7 @@ export { default as DocumentTemplateDesigner } from './pages/documents/TemplateD
 export { default as DocumentPrint } from './pages/documents/DocumentPrint.vue'
 
 export { default as AuditTimeline } from './components/AuditTimeline.vue'
+export { default as CommentsSection } from './components/CommentsSection.vue'
 
 /*
  * WIDGETS, FOR ANY SCREEN THAT HOSTS THEM.
@@ -326,6 +327,7 @@ export const PANEL_PAGES = {
  | anywhere.
  */
 export { default as RenderHook } from './components/RenderHook.vue'
+export { default as SocialLoginButtons } from './components/SocialLoginButtons.vue'
 export { default as TicketThread } from './components/TicketThread.vue'
 export { default as AnnouncementBanners } from './components/AnnouncementBanners.vue'
 export { default as FeedbackDialog } from './components/FeedbackDialog.vue'

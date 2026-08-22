@@ -967,6 +967,14 @@ return [
         'departments' => [],
     ],
 
+    /*
+    | Resource comments (`Resource::comments()`). Table name is configurable for
+    | installations that already own a comments table under another name.
+    */
+    'comments' => [
+        'table' => env('PANEL_COMMENTS_TABLE', 'panel_comments'),
+    ],
+
     'tenancy' => [
         'mode' => env('PANEL_TENANCY_MODE', 'none'),
         'column' => 'tenant_id',
