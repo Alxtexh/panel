@@ -11,6 +11,11 @@ import PanelQuickCreate from './PanelQuickCreate.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import PanelLockButton from './PanelLockButton.vue'
 import PanelEnvironmentBanner from './PanelEnvironmentBanner.vue'
+import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
+import TopNavUser from './TopNavUser.vue'
+import { PkBoundary } from '@alxtexh-enterprise/panel'
+import { useSidebarLayout } from '../../composables/useSidebarLayout'
+import type { User } from '../../types'
 
 const props = withDefaults(
     defineProps<{
@@ -31,7 +36,11 @@ defineSlots<{
     topbar?(): unknown
     /** Trailing controls, between the bell and the appearance drawer. */
     actions?(): unknown
+    /** Account menu items when the layout family moves the user to the top bar. */
+    userMenu?(props: { user: User | null }): unknown
 }>()
+
+const { chrome } = useSidebarLayout()
 
 const page = usePage()
 
@@ -104,6 +113,15 @@ const trail = computed<BreadcrumbItem[]>(() =>
             <AssistantDrawer />
             <NotificationBell />
             <slot name="actions" />
+            <PkBoundary v-if="chrome.topNavUser" label="The account menu" silent>
+                <TopNavUser>
+                    <template #menu="{ user }">
+                        <slot name="userMenu" :user="user">
+                            <DefaultAccountMenuItems />
+                        </slot>
+                    </template>
+                </TopNavUser>
+            </PkBoundary>
             <!-- Appearance belongs where you can see what it changes. -->
             <AppearanceDrawer />
         </div>

@@ -22,6 +22,12 @@ export type SidebarChrome = {
     siteHeader: boolean
     /** Show a search affordance in the sidebar header (header family). */
     sidebarSearch: boolean
+    /** Account menu in the inset top bar instead of the sidebar footer. */
+    topNavUser: boolean
+    /** Hide the logo block in the rail; brand lives in the site header. */
+    hideSidebarBrand: boolean
+    /** Footer support links as a compact Help dropdown, not a labeled group. */
+    compactFooterSupport: boolean
 }
 
 const CHROME: Record<SidebarLayout, SidebarChrome> = {
@@ -31,6 +37,9 @@ const CHROME: Record<SidebarLayout, SidebarChrome> = {
         preferCollapsed: false,
         siteHeader: false,
         sidebarSearch: false,
+        topNavUser: false,
+        hideSidebarBrand: false,
+        compactFooterSupport: false,
     },
     sidebar: {
         variant: 'sidebar',
@@ -38,6 +47,9 @@ const CHROME: Record<SidebarLayout, SidebarChrome> = {
         preferCollapsed: false,
         siteHeader: false,
         sidebarSearch: false,
+        topNavUser: false,
+        hideSidebarBrand: false,
+        compactFooterSupport: false,
     },
     floating: {
         variant: 'floating',
@@ -45,6 +57,9 @@ const CHROME: Record<SidebarLayout, SidebarChrome> = {
         preferCollapsed: false,
         siteHeader: false,
         sidebarSearch: false,
+        topNavUser: false,
+        hideSidebarBrand: false,
+        compactFooterSupport: false,
     },
     icon: {
         variant: 'inset',
@@ -52,13 +67,19 @@ const CHROME: Record<SidebarLayout, SidebarChrome> = {
         preferCollapsed: true,
         siteHeader: false,
         sidebarSearch: false,
+        topNavUser: false,
+        hideSidebarBrand: false,
+        compactFooterSupport: false,
     },
     header: {
         variant: 'inset',
         collapsible: 'icon',
         preferCollapsed: false,
         siteHeader: true,
-        sidebarSearch: true,
+        sidebarSearch: false,
+        topNavUser: true,
+        hideSidebarBrand: true,
+        compactFooterSupport: true,
     },
 }
 
