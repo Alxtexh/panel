@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Alxtexh\Panel\Actions\Action;
 use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Comments\Comments;
 use Alxtexh\Panel\CustomFields\CustomField;
 use Alxtexh\Panel\CustomFields\CustomFieldFactory;
 use Alxtexh\Panel\Forms\Fields\Field;
@@ -579,6 +580,46 @@ abstract class Resource
         return null;
     }
 
+    /**
+     * Opt-in record comments. Null (default) means comment routes 404 and the
+     * view page ships no comments section. Zero client cost until declared.
+     *
+     *     public static function comments(): ?Comments
+     *     {
+     *         return Comments::make()->label('Discussion');
+     *     }
+     */
+    public static function comments(): ?Comments
+    {
+        return null;
+    }
+
+    public static function hasComments(): bool
+    {
+        return static::comments() !== null;
+    }
+
+    /**
+     * May the current user post a comment on this record?
+     *
+     * View uses `view`. Create uses `update` OR `comment` unless the resource
+     * configured `commentAbilityOnly()`.
+     */
+    public static function canComment(?Model $record = null): bool
+    {
+        $config = static::comments();
+
+        if ($config === null) {
+            return false;
+        }
+
+        if ($config->requiresCommentAbilityOnly()) {
+            return static::can('comment', $record);
+        }
+
+        return static::can('update', $record) || static::can('comment', $record);
+    }
+
     /** Fluent per-resource overrides for page vs modal CRUD. */
     public static function configure(): ResourceConfigurator
     {
@@ -940,6 +981,9 @@ abstract class Resource
                             : null,
                         'boardMove' => static::board() !== null
                             ? $prefix.'/'.static::key().'/board-move'
+                            : null,
+                        'comments' => static::hasComments()
+                            ? $prefix.'/'.static::key().'/{id}/record-comments'
                             : null,
                     ],
                     'table' => $table->toSchema(),

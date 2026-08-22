@@ -11,6 +11,7 @@ use Alxtexh\Panel\Forms\Fields\SelectField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Forms\Rules\ExistsInScope;
+use Alxtexh\Panel\Comments\Comments;
 use Alxtexh\Panel\Models\Ticket;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\BadgeColumn;
@@ -120,6 +121,11 @@ final class TicketResource extends Resource
                     ->icon('refresh')
                     ->color('warning'),
             ]);
+    }
+
+    public static function comments(): ?Comments
+    {
+        return Comments::make()->label('Internal notes');
     }
 
     public static function form(Form $form): Form

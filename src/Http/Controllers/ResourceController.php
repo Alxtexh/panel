@@ -456,6 +456,7 @@ final class ResourceController extends Controller
             'record' => [...$row, 'id' => $record->getKey()],
             'can' => $class::permissions(),
             'workflow' => self::workflowContext($class, $row, $record),
+            'comments' => self::commentsContext($class, $record, $request),
             'relationFormOptions' => $relationFormOptions,
 
             /*
@@ -1238,6 +1239,36 @@ final class ResourceController extends Controller
                 $row,
                 static fn (string $ability): bool => $class::can($ability, $record),
             ),
+        ];
+    }
+
+    /**
+     * @param  class-string<Resource>  $class
+     * @return array<string, mixed>|null
+     */
+    private static function commentsContext(string $class, Model $record, Request $request): ?array
+    {
+        $config = $class::comments();
+
+        if ($config === null) {
+            return null;
+        }
+
+        $panel = app(PanelManager::class)->panel($class::panel());
+        $prefix = rtrim('/'.trim($panel?->getPath() ?? '', '/'), '/');
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            $parentKey = $class::parentResource()::key();
+            $base = "{$prefix}/{$parentKey}/{$parent->getKey()}/{$class::key()}/{$record->getKey()}/record-comments";
+        } else {
+            $base = "{$prefix}/{$class::key()}/{$record->getKey()}/record-comments";
+        }
+
+        return [
+            ...$config->toSchema(),
+            'url' => $base,
+            'canCreate' => $class::canComment($record),
         ];
     }
 }

@@ -19,6 +19,7 @@ use Alxtexh\Panel\Infolists\ImageEntry;
 use Alxtexh\Panel\Infolists\KeyValueEntry;
 use Alxtexh\Panel\Infolists\RepeatableEntry;
 use Alxtexh\Panel\Infolists\TextEntry;
+use Alxtexh\Panel\Comments\Comments;
 use Alxtexh\Panel\Resources\Board;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\BadgeColumn;
@@ -105,6 +106,12 @@ final class ArticleResource extends Resource
                 'archived' => 'Archived',
             ])
             ->title('title');
+    }
+
+    /** Opt-in comments for Pest coverage of /comments routes. */
+    public static function comments(): ?Comments
+    {
+        return Comments::make();
     }
 
     public static function infolist(): array

@@ -402,6 +402,11 @@ final class PanelServiceProvider extends ServiceProvider
             Events\TicketOpened::class,
             Listeners\AnnounceNewTicket::class,
         );
+
+        $this->app['events']->listen(
+            Events\CommentCreated::class,
+            Listeners\SendCommentMentionNotifications::class,
+        );
     }
 
     /**

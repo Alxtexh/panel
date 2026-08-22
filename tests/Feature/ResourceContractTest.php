@@ -56,6 +56,11 @@ final class ResourceContractTest extends TestCase
         $this->assertFalse(PostResource::importable());
     }
 
+    public function test_a_resource_does_not_offer_comments_unless_it_opts_in(): void
+    {
+        $this->assertFalse(PostResource::hasComments());
+    }
+
     public function test_the_declared_table_reaches_the_schema(): void
     {
         $columns = PostResource::schema()['table']['columns'] ?? [];
