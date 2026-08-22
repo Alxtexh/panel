@@ -395,3 +395,4 @@ export { default as TwoFactorRecoveryCodes } from './components/security/TwoFact
 export { default as TwoFactorSetupModal } from './components/security/TwoFactorSetupModal.vue'
 export { useTwoFactorAuth } from './composables/useTwoFactorAuth'
 export type { TwoFactorRoutes, UseTwoFactorAuthReturn } from './composables/useTwoFactorAuth'
+export { useOtpAutoSubmit, type OtpFormHandle } from './composables/useOtpAutoSubmit'
