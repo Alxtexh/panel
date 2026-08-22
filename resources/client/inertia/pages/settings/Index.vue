@@ -56,7 +56,7 @@ const results = computed(() => {
         <header class="flex flex-col gap-4">
             <div>
                 <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
-                <p class="text-sm text-muted-foreground">
+                <p class="text-sm text-muted-foreground font-normal">
                     Your profile, your security, and the organisation everyone here sees.
                 </p>
             </div>
@@ -91,7 +91,7 @@ const results = computed(() => {
                     class="flex flex-col gap-0.5 rounded-lg border bg-card p-4 transition-colors hover:bg-accent"
                 >
                     <span class="text-sm font-medium">{{ entry.title }}</span>
-                    <span class="text-xs text-muted-foreground">{{ entry.description }}</span>
+                    <span class="text-xs text-muted-foreground font-normal">{{ entry.description }}</span>
                 </Link>
             </li>
         </ul>

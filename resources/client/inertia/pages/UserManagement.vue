@@ -525,7 +525,7 @@ function save(): void {
     <div class="flex flex-col gap-4 p-4 sm:p-6">
         <div>
             <h1 class="text-xl font-semibold tracking-tight">User management</h1>
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-muted-foreground font-normal">
                 Who is in this organisation, and what each role may do.
             </p>
         </div>
@@ -623,7 +623,7 @@ function save(): void {
                     @click="selectedId = role.id"
                 >
                     <span class="font-medium">{{ role.name }}</span>
-                    <span class="text-xs text-muted-foreground">
+                    <span class="text-xs text-muted-foreground font-normal">
                         {{ role.userCount }}
                         {{ role.userCount === 1 ? 'person' : 'people' }}
                         <!-- "first" rather than "default": it is the oldest role
@@ -691,7 +691,7 @@ function save(): void {
                             <button
                                 v-if="!locked"
                                 type="button"
-                                class="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                                class="text-xs text-muted-foreground font-normal underline-offset-2 hover:text-foreground hover:underline"
                                 @click="toggleGroup(abilities)"
                             >
                                 Toggle all
@@ -780,7 +780,7 @@ function save(): void {
                             The first role cannot be deleted.
                         </span>
 
-                        <span v-if="form.isDirty" class="text-sm text-muted-foreground">
+                        <span v-if="form.isDirty" class="text-sm text-muted-foreground font-normal">
                             Unsaved changes.
                         </span>
                         <Button

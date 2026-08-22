@@ -61,7 +61,7 @@ const handleDelete = () => {
                         {{ passkey.authenticator }}
                     </span>
                 </div>
-                <p class="text-muted-foreground text-sm">
+                <p class="text-muted-foreground text-sm font-normal">
                     Added {{ passkey.created_at_diff }}
                     <template v-if="passkey.last_used_at_diff">
                         <span class="text-muted-foreground/50 mx-1">/</span>

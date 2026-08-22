@@ -133,14 +133,14 @@ function submit() {
             {{ label }}
         </h2>
 
-        <p v-if="loading" class="text-muted-foreground text-sm">Loading comments…</p>
+        <p v-if="loading" class="text-muted-foreground text-sm font-normal">Loading comments…</p>
 
         <p v-else-if="failed" class="text-destructive text-sm">
             Comments could not be loaded. Refresh the page to try again.
         </p>
 
         <template v-else>
-            <p v-if="empty" class="text-muted-foreground text-sm">
+            <p v-if="empty" class="text-muted-foreground text-sm font-normal">
                 No comments yet. Be the first to leave a note.
             </p>
 
@@ -154,7 +154,7 @@ function submit() {
                         <span class="text-sm font-medium">{{ comment.author.name }}</span>
                         <time
                             v-if="comment.createdAt"
-                            class="text-muted-foreground text-xs"
+                            class="text-muted-foreground text-xs font-normal"
                             :datetime="comment.createdAt"
                         >
                             {{ formatTime(comment.createdAt) }}

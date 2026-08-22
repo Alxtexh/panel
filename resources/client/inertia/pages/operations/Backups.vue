@@ -382,7 +382,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h1 class="text-xl font-semibold">Backups</h1>
-                <p class="text-sm text-muted-foreground">
+                <p class="text-sm text-muted-foreground font-normal">
                     {{ props.schedule }}, kept for {{ props.settings.keepDays }} days.
                 </p>
             </div>
@@ -447,7 +447,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
         </div>
 
         <template v-if="tab === 'database'">
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-muted-foreground font-normal">
                 Read-only inspect of configured SQL connections: table names, row counts and
                 storage. Nothing here can change a row.
             </p>
@@ -463,11 +463,11 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                             {{ db.name }}
                             <span class="ml-1 font-normal text-muted-foreground">({{ db.driver }})</span>
                         </h2>
-                        <p class="text-xs text-muted-foreground">
+                        <p class="text-xs text-muted-foreground font-normal">
                             {{ db.database ?? 'unnamed database' }}
                         </p>
                     </div>
-                    <p v-if="db.available" class="text-xs text-muted-foreground">
+                    <p v-if="db.available" class="text-xs text-muted-foreground font-normal">
                         {{ db.tableCount }} tables · {{ db.rowCount.toLocaleString() }} rows
                         <template v-if="db.bytes !== null"> · {{ mb(db.bytes) }}</template>
                     </p>
@@ -498,7 +498,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                 </div>
             </div>
 
-            <p v-if="!(props.databases?.length)" class="text-sm text-muted-foreground">
+            <p v-if="!(props.databases?.length)" class="text-sm text-muted-foreground font-normal">
                 No SQL connections were available to inspect.
             </p>
         </template>
@@ -810,7 +810,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                 DOES. An operator who assumes uploaded files come back too will
                 not go looking for them.
             -->
-            <p class="text-xs text-muted-foreground">
+            <p class="text-xs text-muted-foreground font-normal">
                 Only the database is restored. Application files and uploaded documents are left
                 exactly as they are - download the snapshot if you need those.
             </p>

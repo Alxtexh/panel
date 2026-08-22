@@ -309,7 +309,7 @@ function runNoteAction(note: Note, action: NotificationAction, event: Event): vo
                     class="flex flex-col items-center gap-1 p-8 text-center"
                 >
                     <p class="text-sm font-medium">Nothing needs attention</p>
-                    <p class="text-muted-foreground text-xs">
+                    <p class="text-muted-foreground text-xs font-normal">
                         Alerts appear here while a condition is active, and clear themselves once it
                         is resolved.
                     </p>
@@ -373,7 +373,7 @@ function runNoteAction(note: Note, action: NotificationAction, event: Event): vo
                     class="flex flex-col items-center gap-1 p-8 text-center"
                 >
                     <p class="text-sm font-medium">No notifications</p>
-                    <p class="text-muted-foreground text-xs">
+                    <p class="text-muted-foreground text-xs font-normal">
                         Finished exports and background actions land here.
                     </p>
                 </div>

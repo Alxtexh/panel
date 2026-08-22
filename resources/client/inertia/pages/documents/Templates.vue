@@ -39,7 +39,7 @@ const base = computed(() => (props.prefix === '/' ? '' : props.prefix))
     <div :class="[PAGE_SHELL, CATALOGUE_CONTAINER, 'flex flex-col gap-4']">
         <header>
             <h1 class="text-xl font-semibold tracking-tight">Document templates</h1>
-            <p class="text-muted-foreground text-sm">
+            <p class="text-muted-foreground text-sm font-normal">
                 How the documents that leave this system look when they are printed.
             </p>
         </header>
@@ -52,7 +52,7 @@ const base = computed(() => (props.prefix === '/' ? '' : props.prefix))
                 class="bg-card hover:border-muted-foreground/40 flex flex-col gap-1 rounded-lg border p-4 transition-colors"
             >
                 <span class="font-medium">{{ kind.label }}</span>
-                <span class="text-muted-foreground text-sm">{{ kind.description }}</span>
+                <span class="text-muted-foreground text-sm font-normal">{{ kind.description }}</span>
                 <span class="text-muted-foreground mt-2 text-xs">
                     {{
                         kind.version === null
@@ -65,7 +65,7 @@ const base = computed(() => (props.prefix === '/' ? '' : props.prefix))
 
         <!-- An empty registry is a real state - an installation whose provider
              registered no kinds - and saying so beats an empty page. -->
-        <p v-if="kinds.length === 0" class="text-muted-foreground text-sm">
+        <p v-if="kinds.length === 0" class="text-muted-foreground text-sm font-normal">
             No document kinds are registered.
         </p>
     </div>

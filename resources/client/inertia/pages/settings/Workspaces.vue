@@ -139,7 +139,7 @@ function switchTo(workspace: Workspace) {
             </li>
         </ul>
 
-        <p v-if="canManageMembers" class="text-sm text-muted-foreground">
+        <p v-if="canManageMembers" class="text-sm text-muted-foreground font-normal">
             Who is in the current workspace, and what they may do, lives in
             <button
                 type="button"

@@ -171,7 +171,7 @@ const SECTIONS = [
             AN EMPTY CHANGELOG SAYS SO. A blank page is indistinguishable from
             one that failed to load, and this screen is reached deliberately.
         -->
-        <p v-if="!releases.length" class="text-muted-foreground text-sm">
+        <p v-if="!releases.length" class="text-muted-foreground text-sm font-normal">
             No release notes yet. Declare them in
             <code>config/panel.php</code> under <code>changelog</code>.
         </p>
@@ -202,7 +202,7 @@ const SECTIONS = [
                     {{ release.version }}
                 </span>
 
-                <span class="text-muted-foreground text-sm">{{ release.date }}</span>
+                <span class="text-muted-foreground text-sm font-normal">{{ release.date }}</span>
 
                 <ChevronDown
                     class="text-muted-foreground ml-auto size-4 shrink-0 transition-transform duration-200"

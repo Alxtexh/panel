@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
         >
             {{ member.name.slice(0, 1).toUpperCase() }}
         </span>
-        <span v-if="visible.length > 5" class="text-muted-foreground text-xs">
+        <span v-if="visible.length > 5" class="text-muted-foreground text-xs font-normal">
             +{{ visible.length - 5 }}
         </span>
     </div>
