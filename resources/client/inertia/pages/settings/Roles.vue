@@ -268,7 +268,7 @@ function save(): void {
     <div class="flex flex-col gap-4 p-4 sm:p-6">
         <div>
             <h1 class="text-xl font-semibold tracking-tight">Roles and permissions</h1>
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-muted-foreground font-normal">
                 What each role may do. Everyone is denied anything not ticked here.
             </p>
         </div>
@@ -290,7 +290,7 @@ function save(): void {
                     @click="selectedId = role.id"
                 >
                     <span class="font-medium">{{ role.name }}</span>
-                    <span class="text-xs text-muted-foreground">
+                    <span class="text-xs text-muted-foreground font-normal">
                         {{ role.userCount }}
                         {{ role.userCount === 1 ? 'person' : 'people' }}
                         <!-- "first" rather than "default": it is the oldest role
@@ -327,7 +327,7 @@ function save(): void {
                         fastest way to make a role work is to tick more.
                     -->
                     <label class="flex flex-col gap-1">
-                        <span class="text-xs text-muted-foreground">Start from</span>
+                        <span class="text-xs text-muted-foreground font-normal">Start from</span>
                         <select
                             v-model="newRole.template"
                             class="h-9 rounded-md border border-input bg-background px-2 text-sm"
@@ -339,7 +339,7 @@ function save(): void {
                         </select>
                     </label>
 
-                    <p v-if="chosenTemplate" class="text-xs text-muted-foreground">
+                    <p v-if="chosenTemplate" class="text-xs text-muted-foreground font-normal">
                         {{ chosenTemplate.description }}
                         <!-- The count is the honest summary: a template is a
                              starting point, and the matrix below is what it
@@ -396,7 +396,7 @@ function save(): void {
                             <button
                                 v-if="!locked"
                                 type="button"
-                                class="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                                class="text-xs text-muted-foreground font-normal underline-offset-2 hover:text-foreground hover:underline"
                                 @click="toggleGroup(abilities)"
                             >
                                 Toggle all
@@ -446,7 +446,7 @@ function save(): void {
                         v-if="!locked && templates.length"
                         class="flex flex-wrap items-center gap-2 rounded-lg border p-3 text-sm"
                     >
-                        <span class="text-xs text-muted-foreground"
+                        <span class="text-xs text-muted-foreground font-normal"
                             >Replace these with a template:</span
                         >
 
@@ -527,7 +527,7 @@ function save(): void {
                             The first role cannot be deleted.
                         </span>
 
-                        <span v-if="form.isDirty" class="text-sm text-muted-foreground">
+                        <span v-if="form.isDirty" class="text-sm text-muted-foreground font-normal">
                             Unsaved changes.
                         </span>
                         <Button

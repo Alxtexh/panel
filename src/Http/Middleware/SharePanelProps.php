@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Alxtexh\Panel\Auth\Impersonation;
+use Alxtexh\Panel\Auth\SocialLoginPayload;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\EditableContent;
 use Alxtexh\Panel\Support\SettingsIndex;
@@ -637,6 +638,19 @@ final class SharePanelProps
              * are wearing another account is the danger, and a warning with no
              * button is better than no warning.
              */
+            /*
+             * SOCIAL SIGN-IN PROVIDERS for auth screens and the landing page.
+             *
+             * Resolved once per request from `Panel::socialite()` and `.env`
+             * credentials. Empty when socialite is off, Socialite is missing,
+             * or no provider is offered. Auth pages read this through
+             * `SocialLoginButtons` rather than each controller rebuilding the
+             * list.
+             */
+            'socialProviders' => static function () use ($panels): array {
+                return SocialLoginPayload::forPanel($panels->currentPanel());
+            },
+
             'impersonating' => static function () use ($panels, $request): ?array {
                 /*
                  * NO SESSION MEANS NO IMPERSONATION, checked before asking.

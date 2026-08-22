@@ -152,7 +152,7 @@ const testimonial = computed((): { quote: string; author: string; role: string |
 
                     <div class="space-y-2 text-center">
                         <h1 class="text-xl font-medium">{{ title }}</h1>
-                        <p v-if="description" class="text-center text-sm text-muted-foreground">
+                        <p v-if="description" class="text-center text-sm font-normal text-muted-foreground">
                             {{ description }}
                         </p>
                     </div>
@@ -181,7 +181,7 @@ const testimonial = computed((): { quote: string; author: string; role: string |
             <div class="flex flex-col gap-6">
                 <div class="space-y-2 text-center">
                     <h1 class="text-xl font-medium">{{ title }}</h1>
-                    <p v-if="description" class="text-sm text-muted-foreground">
+                    <p v-if="description" class="text-sm font-normal text-muted-foreground">
                         {{ description }}
                     </p>
                 </div>
@@ -216,7 +216,7 @@ const testimonial = computed((): { quote: string; author: string; role: string |
                                     {{ appName }}
                                 </Link>
                                 <h1 class="text-2xl font-bold tracking-tight">{{ title }}</h1>
-                                <p v-if="description" class="text-balance text-sm text-muted-foreground">
+                                <p v-if="description" class="text-balance text-sm font-normal text-muted-foreground">
                                     {{ description }}
                                 </p>
                             </div>
@@ -293,7 +293,7 @@ const testimonial = computed((): { quote: string; author: string; role: string |
                     <div class="flex flex-col gap-8">
                         <div class="flex flex-col gap-1.5">
                             <h1 class="text-2xl font-bold tracking-tight">{{ title }}</h1>
-                            <p v-if="description" class="text-sm text-muted-foreground">
+                            <p v-if="description" class="text-sm font-normal text-muted-foreground">
                                 {{ description }}
                             </p>
                         </div>
@@ -425,7 +425,7 @@ const testimonial = computed((): { quote: string; author: string; role: string |
                     <div class="flex flex-col gap-8">
                         <div class="flex flex-col gap-1.5">
                             <h1 class="text-2xl font-bold tracking-tight">{{ title }}</h1>
-                            <p v-if="description" class="text-sm text-muted-foreground">
+                            <p v-if="description" class="text-sm font-normal text-muted-foreground">
                                 {{ description }}
                             </p>
                         </div>

@@ -90,7 +90,7 @@ const frameKey = computed(() => `${device.value.id}-${landscape.value}-${src.val
     <div class="flex flex-col gap-4 p-4">
         <header class="space-y-1">
             <h1 class="text-xl font-semibold">{{ pageHeading ?? 'Device preview' }}</h1>
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-muted-foreground font-normal">
                 {{ pageDescription ?? 'The panel itself, at real device sizes. Navigate inside it.' }}
             </p>
         </header>
@@ -123,7 +123,7 @@ const frameKey = computed(() => `${device.value.id}-${landscape.value}-${src.val
                 {{ landscape ? 'Portrait' : 'Landscape' }}
             </button>
 
-            <span class="text-xs text-muted-foreground tabular-nums">
+            <span class="text-xs text-muted-foreground font-normal tabular-nums">
                 {{ size.width }} × {{ size.height }}
                 <template v-if="scale < 1"> · shown at {{ Math.round(scale * 100) }}%</template>
             </span>

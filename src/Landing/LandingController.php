@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\InstallationState;
 use Alxtexh\Panel\Support\PanelHome;
 
@@ -146,6 +147,8 @@ final class LandingController extends Controller
             'tagline' => (string) config('panel.landing.tagline', ''),
             'footerLinks' => array_values((array) config('panel.landing.footer_links', [])),
             'dashboardHref' => PanelHome::urlFor(null),
+            'loginHref' => self::loginHref(),
+            'registerHref' => self::registerHref(),
 
             /*
              * THE SWITCHER ONLY WHERE PREVIEWS ARE ROUTED. Three links to
@@ -156,5 +159,33 @@ final class LandingController extends Controller
                 ? LandingPresets::names()
                 : [],
         ]);
+    }
+
+    private static function loginHref(): string
+    {
+        $panel = app(PanelManager::class)->currentPanel();
+
+        if ($panel !== null && $panel->hasLogin()) {
+            return '/'.trim(trim($panel->getPath(), '/').'/'.$panel->getLoginSlug(), '/');
+        }
+
+        return '/login';
+    }
+
+    private static function registerHref(): string
+    {
+        $panel = app(PanelManager::class)->currentPanel();
+
+        if ($panel !== null && $panel->hasRegistration()) {
+            return '/'.trim(trim($panel->getPath(), '/').'/'.$panel->getRegistrationSlug(), '/');
+        }
+
+        $configured = config('panel.auth.'.($panel?->id ?? config('panel.default', 'admin')).'.register');
+
+        if (is_string($configured) && $configured !== '') {
+            return $configured;
+        }
+
+        return '/register';
     }
 }

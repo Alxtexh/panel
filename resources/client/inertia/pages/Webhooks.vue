@@ -170,10 +170,10 @@ function statusLabel(row: DeliveryRow): string {
     <div :class="PAGE_SHELL_STACK">
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Webhooks' }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground">
+            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
                 {{ pageDescription }}
             </p>
-            <p class="text-xs text-muted-foreground">
+            <p class="text-xs text-muted-foreground font-normal">
                 Outbound HTTPS deliveries with
                 <code class="font-mono">X-Panel-Signature</code>
                 (HMAC-SHA256). Enable with
@@ -184,7 +184,7 @@ function statusLabel(row: DeliveryRow): string {
         </header>
 
         <div class="flex items-center justify-between gap-4">
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-muted-foreground font-normal">
                 {{ endpoints.length === 0 ? 'No endpoints yet.' : `${endpoints.length} endpoint${endpoints.length === 1 ? '' : 's'}` }}
             </p>
             <Button type="button" @click="showCreate ? cancelForm() : openCreate()">
@@ -310,7 +310,7 @@ function statusLabel(row: DeliveryRow): string {
         <section v-if="selectedEndpointId" class="space-y-3">
             <header class="space-y-1">
                 <h2 class="text-lg font-semibold tracking-tight">Delivery log</h2>
-                <p class="text-sm text-muted-foreground">
+                <p class="text-sm text-muted-foreground font-normal">
                     Recent deliveries for
                     <span class="font-mono text-xs">{{ selected?.url ?? `endpoint #${selectedEndpointId}` }}</span>
                     (last 50).

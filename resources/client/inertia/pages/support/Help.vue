@@ -224,7 +224,7 @@ onMounted(() => {
             class="flex flex-col items-center gap-3 rounded-lg border bg-card p-8 text-center"
         >
             <p class="text-sm font-medium">Nothing matched “{{ query }}”</p>
-            <p class="text-sm text-muted-foreground">Try a shorter word, or browse everything.</p>
+            <p class="text-sm text-muted-foreground font-normal">Try a shorter word, or browse everything.</p>
             <button
                 type="button"
                 class="rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
@@ -276,7 +276,7 @@ onMounted(() => {
                         <p
                             v-for="(p, i) in paragraphs(item.body)"
                             :key="i"
-                            class="text-sm text-muted-foreground"
+                            class="text-sm text-muted-foreground font-normal"
                         >
                             {{ p }}
                         </p>
@@ -296,7 +296,7 @@ onMounted(() => {
                 </span>
                 <div>
                     <h2 class="text-sm font-semibold">Still stuck?</h2>
-                    <p class="text-sm text-muted-foreground">
+                    <p class="text-sm text-muted-foreground font-normal">
                         The FAQ covers the questions people ask most often.
                     </p>
                 </div>

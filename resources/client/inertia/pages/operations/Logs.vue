@@ -83,7 +83,7 @@ watch(() => props.tail, toBottom)
     <div class="flex flex-col gap-4 p-4">
         <div>
             <h1 class="text-xl font-semibold">Logs</h1>
-            <p class="text-sm text-muted-foreground">The last part of each file. Reading only.</p>
+            <p class="text-sm text-muted-foreground font-normal">The last part of each file. Reading only.</p>
         </div>
 
         <!--

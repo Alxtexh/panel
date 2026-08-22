@@ -7,7 +7,7 @@ namespace Alxtexh\Panel\Http\Controllers;
 use Alxtexh\Panel\Auth\EmailTwoFactor;
 use Alxtexh\Panel\Auth\Mfa;
 use Alxtexh\Panel\Auth\Passkeys;
-use Alxtexh\Panel\Auth\SocialProviders;
+use Alxtexh\Panel\Auth\SocialLoginPayload;
 use Alxtexh\Panel\Auth\Turnstile;
 use Alxtexh\Panel\Auth\TwoFactor;
 use Alxtexh\Panel\Notifications\PanelVerifyEmail;
@@ -246,29 +246,7 @@ final class PanelAuthController extends Controller
      */
     private function socialProviders(Panel $panel): array
     {
-        $out = [];
-
-        /*
-         * THE CATALOGUE DECIDES WHAT IS LISTED; CREDENTIALS DECIDE WHAT WORKS.
-         *
-         * `SocialProviders::offered()` lists every packaged provider when
-         * socialite is on, so a kit with only Google still shows GitHub and
-         * the rest. `configured` / `hint` tell the button what to do when keys
-         * are missing. Routes register on the same `offered()` condition.
-         */
-        foreach (SocialProviders::offered($panel) as $key => $label) {
-            $configured = SocialProviders::hasCredentials($key);
-
-            $out[] = [
-                'key' => $key,
-                'label' => $label,
-                'url' => $this->url($panel, "auth/{$key}/redirect"),
-                'configured' => $configured,
-                'hint' => $configured ? null : SocialProviders::credentialsHint($key),
-            ];
-        }
-
-        return $out;
+        return SocialLoginPayload::forPanel($panel);
     }
 
     /**

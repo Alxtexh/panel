@@ -554,7 +554,7 @@ defineExpose({ show })
                             placeholder="Search screens and records…"
                         />
 
-                        <span v-if="searching" class="text-muted-foreground text-xs">…</span>
+                        <span v-if="searching" class="text-muted-foreground text-xs font-normal">…</span>
                     </div>
 
                     <div ref="listEl" class="max-h-80 overflow-y-auto p-1">
@@ -584,7 +584,7 @@ defineExpose({ show })
                                 <span class="flex shrink-0 items-center gap-2">
                                     <span
                                         v-if="item.subtitle"
-                                        class="text-muted-foreground text-xs"
+                                        class="text-muted-foreground text-xs font-normal"
                                     >
                                         {{ item.subtitle }}
                                     </span>
