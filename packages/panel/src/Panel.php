@@ -374,7 +374,7 @@ final class Panel
      * | sidebar   | sidebar-01                         | Edge-flush grouped rail             |
      * | floating  | sidebar-04                         | Floating card rail                  |
      * | icon      | sidebar-07                         | Collapses to icon rail by default   |
-     * | header    | sidebar-16                         | Sticky site header + inset rail     |
+     * | header    | sidebar-16                         | Sticky site header, nav rail, topbar user |
      *
      * Patterns are reimplemented in AppSidebar / PanelShell against kit tokens.
      * Hosts do not run `npx shadcn-vue add` into the monorepo for these.

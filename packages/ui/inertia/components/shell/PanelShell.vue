@@ -274,6 +274,9 @@ router.on('success', () => {
                     <template v-if="$slots.actions" #actions>
                         <slot name="actions" />
                     </template>
+                    <template v-if="$slots.userMenu" #userMenu="{ user }">
+                        <slot name="userMenu" :user="user" />
+                    </template>
                 </AppSidebarHeader>
 
                 <slot />

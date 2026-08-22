@@ -12,7 +12,8 @@
  *
  * SIDEBAR LAYOUT FAMILIES (`panel.sidebarLayout` / `forceSidebarLayout`):
  * - `icon` prefers collapsed (server shares sidebarOpen false when no cookie)
- * - `header` wraps the provider under a sticky site header (sidebar-16)
+ * - `header` wraps the provider under a sticky site header (sidebar-16) and
+ *   moves the account menu into the inset top bar
  */
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'

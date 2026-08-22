@@ -32,8 +32,18 @@ describe('useSidebarLayout', () => {
         const { chrome } = useSidebarLayout('header')
 
         expect(chrome.value.siteHeader).toBe(true)
-        expect(chrome.value.sidebarSearch).toBe(true)
+        expect(chrome.value.sidebarSearch).toBe(false)
+        expect(chrome.value.topNavUser).toBe(true)
+        expect(chrome.value.hideSidebarBrand).toBe(true)
+        expect(chrome.value.compactFooterSupport).toBe(true)
         expect(chrome.value.variant).toBe('inset')
+    })
+
+    it('keeps the account menu in the sidebar footer for inset', () => {
+        const { chrome } = useSidebarLayout('inset')
+
+        expect(chrome.value.topNavUser).toBe(false)
+        expect(chrome.value.compactFooterSupport).toBe(false)
     })
 
     it('maps icon family to collapsed rail defaults', () => {

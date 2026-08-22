@@ -87,11 +87,13 @@ Across every family the same primary nav and the same footer support links
 | `inset` (default) | Secondary group above user row, separator when expanded | `SidebarMenuButton` in footer |
 | `sidebar` / `floating` | Same footer stack, variant changes rail shape only | Same |
 | `icon` | Icons + tooltips when collapsed; labels when expanded | Avatar-only trigger when collapsed |
-| `header` | Same sidebar footer; sticky site header adds brand + search above the rail | Same |
+| `header` | Compact Help dropdown in the rail footer | Avatar in the inset top bar (`TopNavUser`) |
 
 The inset top bar (`AppSidebarHeader`) always keeps search, quick create,
 notifications, theme, and the rest. The `header` family adds a second sticky
-site header; it must not replace or hide the inset header row.
+site header with brand and search above the rail, moves the account menu into
+the inset top bar, and drops the labeled support group plus sidebar logo so the
+rail is primary navigation only. It must not replace or hide the inset header row.
 
 ## Future (not in scope)
 

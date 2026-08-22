@@ -41,7 +41,7 @@ const LAYOUT_META: Record<
     },
     header: {
         label: 'Site header',
-        blurb: 'Sticky site header above the rail, with search.',
+        blurb: 'Sticky site header, nav-only rail, account menu in the top bar.',
         shadcn: 'sidebar-16',
     },
 }

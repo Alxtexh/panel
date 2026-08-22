@@ -27,6 +27,7 @@ import NavFooter from './NavFooter.vue'
 import NavMain from './NavMain.vue'
 import NavUser from './NavUser.vue'
 import NestedNavGroups from './NestedNavGroups.vue'
+import SidebarSupportMenu from './SidebarSupportMenu.vue'
 import TeamSwitcher from './TeamSwitcher.vue'
 
 /**
@@ -556,8 +557,8 @@ watch(
         :side="appearance.sidebarSide === 'right' ? 'right' : 'left'"
     >
         <SidebarHeader>
-            <TeamSwitcher v-if="hasWorkspaces" />
-            <SidebarMenu v-else>
+            <TeamSwitcher v-if="hasWorkspaces && !sidebarChrome.hideSidebarBrand" />
+            <SidebarMenu v-else-if="!sidebarChrome.hideSidebarBrand">
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
                         <Link :href="'/'">
@@ -886,13 +887,16 @@ watch(
             </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter>
+        <SidebarFooter v-if="supportNavItems.length > 0 || !sidebarChrome.topNavUser">
             <!--
                 THE LINE BETWEEN THE RESOURCES AND THE REST. Without it, "About"
                 reads as one more entry in whatever group happens to render last.
                 Hidden in icon-rail mode where the footer is icons only.
             -->
-            <SidebarSeparator class="group-data-[collapsible=icon]:hidden" />
+            <SidebarSeparator
+                v-if="!sidebarChrome.compactFooterSupport"
+                class="group-data-[collapsible=icon]:hidden"
+            />
 
             <!--
                 Support pages live in the footer, not the main nav: they are
@@ -905,7 +909,14 @@ watch(
                 while occupying the one part of the sidebar that never scrolls
                 away.
             -->
-            <NavFooter :items="supportNavItems" />
+            <NavFooter
+                v-if="!sidebarChrome.compactFooterSupport && supportNavItems.length > 0"
+                :items="supportNavItems"
+            />
+            <SidebarSupportMenu
+                v-else-if="sidebarChrome.compactFooterSupport && supportNavItems.length > 0"
+                :items="supportNavItems"
+            />
 
             <!--
                 THE BOUNDARY THAT WOULD HAVE PREVENTED THE BLANK 404 PAGE.
@@ -920,7 +931,7 @@ watch(
                 page is more alarming than the absence, and the console still
                 gets the stack either way.
             -->
-            <PkBoundary label="The account menu" silent>
+            <PkBoundary v-if="!sidebarChrome.topNavUser" label="The account menu" silent>
                 <NavUser>
                     <template #menu="{ user }">
                         <!--
