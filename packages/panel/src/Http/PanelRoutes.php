@@ -404,6 +404,18 @@ final class PanelRoutes
                             ->middleware('throttle:6,1')
                             ->name('password.update');
                     }
+
+                    if ($panel->hasPasswordless()) {
+                        Route::post('magic-link', [Controllers\MagicLinkController::class, 'request'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware('throttle:5,1')
+                            ->name('magic-link.request');
+
+                        Route::get('magic-link/consume', [Controllers\MagicLinkController::class, 'consume'])
+                            ->defaults('panel', $panel->id)
+                            ->middleware('throttle:10,1')
+                            ->name('magic-link.consume');
+                    }
                 });
         }
 

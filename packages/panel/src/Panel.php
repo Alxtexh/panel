@@ -253,6 +253,15 @@ final class Panel
 
     private bool $passwordReset = true;
 
+    /**
+     * Passwordless sign-in by emailed link for this portal.
+     *
+     * OFF BY DEFAULT. A magic link makes the mailbox a complete account
+     * takeover path, so it is a decision an installation makes rather than a
+     * default it inherits. Requires `panel.auth.magic_link` / `PANEL_MAGIC_LINK`.
+     */
+    private bool $passwordless = false;
+
     /** See `loginComponent()` for why this is not `auth/Login`. */
     private string $loginComponent = 'panel/auth/Login';
 
@@ -1567,6 +1576,39 @@ final class Panel
     public function hasPasswordReset(): bool
     {
         return $this->passwordReset;
+    }
+
+    /**
+     * Email a one-time sign-in link on this portal's login screen.
+     *
+     *     Panel::make('admin')->login()->passwordless();
+     *
+     * Alias: `magicLink()`. Also set `PANEL_MAGIC_LINK=true` and migrate the
+     * `magic_login_tokens` table (see `panel.auth.magic_link_table`).
+     */
+    public function passwordless(bool $enabled = true): self
+    {
+        $this->passwordless = $enabled;
+
+        return $this;
+    }
+
+    /** Alias of `passwordless()`. */
+    public function magicLink(bool $enabled = true): self
+    {
+        return $this->passwordless($enabled);
+    }
+
+    public function hasPasswordless(): bool
+    {
+        return $this->passwordless;
+    }
+
+    /** Panel opt-in and config must both be on for magic link to run. */
+    public function passwordlessActive(): bool
+    {
+        return $this->passwordless
+            && filter_var(config('panel.auth.magic_link', false), FILTER_VALIDATE_BOOLEAN);
     }
 
     /**

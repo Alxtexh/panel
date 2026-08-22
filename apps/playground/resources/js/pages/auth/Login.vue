@@ -45,6 +45,7 @@ const props = defineProps<{
     /** Fortify's passkey routes, when `laravel/passkeys` registered them. */
     passkeys?: { options: string; verify: string } | null;
     turnstileSiteKey?: string | null;
+    magicLinkUrl?: string | null;
 }>();
 
 /**
@@ -80,5 +81,6 @@ const providers = computed((): SocialProvider[] => {
         :passkeys="passkeys"
         :social-providers="providers"
         :turnstile-site-key="turnstileSiteKey"
+        :magic-link-url="magicLinkUrl"
     />
 </template>

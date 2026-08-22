@@ -126,6 +126,37 @@ is resolved. The path is never replaced.
 | **Session lifetime** | — | Absolute ceiling, not just idle |
 | **One-time credentials** | — | Magic links, OTP |
 
+## Passwordless magic link
+
+Email a one-time sign-in link instead of typing a password. **Off by default**: a
+magic link makes the mailbox a complete account takeover path, so it is an
+explicit installation choice.
+
+```php
+Panel::make('admin')
+    ->login()
+    ->passwordless();   // alias: magicLink()
+```
+
+```env
+PANEL_MAGIC_LINK=true
+PANEL_MAGIC_LINK_LIFETIME=10
+PANEL_MAGIC_LINK_TABLE=magic_login_tokens
+```
+
+Both the panel opt-in and `PANEL_MAGIC_LINK=true` must be set. Routes mount under
+the panel prefix (`/{panel}/magic-link`, `/{panel}/magic-link/consume`). The host
+owns the token table; `OneTimeCredential` stores hashed tokens keyed by tenant and
+email.
+
+The login screen shows **Email me a sign-in link** when enabled. The request
+endpoint never reveals whether an address exists. A link works once and requires a
+valid signed URL plus an unredeemed stored token. Turnstile covers the request
+when keys are set.
+
+Fortify or Breeze hosts can keep app-level routes at `/auth/magic-link` pointing
+at `Alxtexh\Panel\Http\Controllers\MagicLinkController` (see the reference demo).
+
 ## Social sign-in
 
 Packaged provider keys (button when both `client_id` and `client_secret` are

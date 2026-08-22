@@ -29,7 +29,7 @@ defineOptions({ inheritAttrs: false })
  * the package's. The server sends `action`; nothing here guesses it.
  */
 import { Form, Head, Link } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
@@ -96,6 +96,8 @@ const props = defineProps<{
      * WebAuthn, so the default is safe rather than merely convenient.
      */
     passkeys?: { options: string; verify: string } | null
+    /** Where to POST an email-only magic link request, or null when off. */
+    magicLinkUrl?: string | null
 }>()
 
 /**
@@ -121,6 +123,9 @@ const passkeyRoutes = computed(() =>
  * has its own.
  */
 const providers = computed(() => props.socialProviders ?? [])
+
+const magicLinkMode = ref(false)
+const magicLinkAvailable = computed(() => Boolean(props.magicLinkUrl))
 </script>
 
 <template>
@@ -164,6 +169,44 @@ const providers = computed(() => props.socialProviders ?? [])
         </div>
 
         <Form
+            v-if="magicLinkMode && props.magicLinkUrl"
+            :action="props.magicLinkUrl"
+            method="post"
+            v-slot="{ errors, processing }"
+            class="flex flex-col gap-6"
+        >
+            <div class="grid gap-6">
+                <AuthField
+                    id="magic-email"
+                    name="email"
+                    type="email"
+                    label="Email address"
+                    autocomplete="email"
+                    placeholder="email@example.com"
+                    required
+                    autofocus
+                    :error="errors.email"
+                    :default-value="props.prefill?.email"
+                />
+
+                <AuthTurnstile :site-key="props.turnstileSiteKey" />
+
+                <Button type="submit" class="w-full" :disabled="processing">
+                    {{ processing ? 'Sending link…' : 'Email me a sign-in link' }}
+                </Button>
+            </div>
+
+            <button
+                type="button"
+                class="text-muted-foreground text-center text-sm underline-offset-4 hover:underline"
+                @click="magicLinkMode = false"
+            >
+                Sign in with password instead
+            </button>
+        </Form>
+
+        <Form
+            v-else
             :action="props.action"
             method="post"
             :reset-on-success="['password']"
@@ -305,6 +348,15 @@ const providers = computed(() => props.socialProviders ?? [])
                     Sign up
                 </Link>
             </div>
+
+            <button
+                v-if="magicLinkAvailable"
+                type="button"
+                class="text-muted-foreground text-center text-sm underline-offset-4 hover:underline"
+                @click="magicLinkMode = true"
+            >
+                Email me a sign-in link
+            </button>
         </Form>
     </AuthLayout>
 </template>

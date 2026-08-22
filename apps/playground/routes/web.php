@@ -11,7 +11,7 @@ use Alxtexh\Panel\Support\Blueprint;
 use App\Http\Controllers\ApiReferenceController;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuditController;
-use App\Http\Controllers\Auth\MagicLinkController;
+use Alxtexh\Panel\Http\Controllers\MagicLinkController;
 use App\Http\Controllers\Auth\OtpPasswordResetController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ImpersonationController;

@@ -101,6 +101,9 @@ class FortifyServiceProvider extends ServiceProvider
              * a consumer with passkeys mounted somewhere else would write.
              */
             'passkeys' => Passkeys::signInRoutes(),
+            'magicLinkUrl' => filter_var(config('panel.auth.magic_link', false), FILTER_VALIDATE_BOOLEAN)
+                ? url('/auth/magic-link')
+                : null,
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/ResetPassword', [

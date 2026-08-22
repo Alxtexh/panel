@@ -97,6 +97,9 @@ final class PanelAuthController extends Controller
              */
             'passkeys' => Passkeys::signInRoutes(),
             'registerUrl' => $this->registerUrl($panel),
+            'magicLinkUrl' => $panel->passwordlessActive()
+                ? $this->url($panel, 'magic-link')
+                : null,
         ]);
     }
 
