@@ -811,7 +811,7 @@ const hiddenEntries = computed(() => {
                 <button
                     v-if="filters.active"
                     type="button"
-                    class="text-xs text-muted-foreground font-normal hover:text-foreground hover:underline"
+                    class="text-xs text-muted-foreground hover:text-foreground hover:underline"
                     @click="resetFilters"
                 >
                     Clear
@@ -894,7 +894,7 @@ const hiddenEntries = computed(() => {
         </PkSlideover>
 
         <EmptyGrantsNotice v-if="emptyGrants" />
-        <p v-else-if="!hasAnything" class="text-sm text-muted-foreground font-normal">
+        <p v-else-if="!hasAnything" class="text-sm text-muted-foreground">
             This dashboard has no widgets yet. Declare them in <code>stats()</code> and
             <code>charts()</code> on the page class, or
             <code>discoverWidgets(app_path('Panel/Widgets'))</code>.

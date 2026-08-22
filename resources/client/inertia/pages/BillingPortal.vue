@@ -84,7 +84,7 @@ function cell(row: Record<string, unknown>, keys: string[]): string {
             <h2 class="text-sm font-medium">{{ t('billing.portal.subscription') }}</h2>
             <dl class="grid gap-3 sm:grid-cols-2 text-sm">
                 <div v-for="(value, key) in subscription" :key="String(key)">
-                    <dt class="text-muted-foreground text-xs font-normal uppercase tracking-wide">
+                    <dt class="text-muted-foreground text-xs uppercase tracking-wide">
                         {{ key }}
                     </dt>
                     <dd class="font-medium">{{ value == null || value === '' ? '-' : String(value) }}</dd>
@@ -138,7 +138,7 @@ function cell(row: Record<string, unknown>, keys: string[]): string {
             class="space-y-3"
         >
             <h2 class="text-sm font-medium">{{ t('billing.portal.payment_methods') }}</h2>
-            <p v-if="paymentMethods.length === 0" class="text-muted-foreground text-sm font-normal">
+            <p v-if="paymentMethods.length === 0" class="text-muted-foreground text-sm">
                 {{ t('billing.portal.no_methods') }}
             </p>
             <ul v-else class="grid gap-3 sm:grid-cols-2">

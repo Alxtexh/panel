@@ -308,7 +308,7 @@ router.on('success', () => {
         <template #footer>
             <button
                 type="button"
-                class="text-sm text-muted-foreground font-normal hover:text-foreground"
+                class="text-sm text-muted-foreground hover:text-foreground"
                 @click="showAllNav = false"
             >
                 Close

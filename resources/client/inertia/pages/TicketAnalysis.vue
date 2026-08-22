@@ -131,7 +131,7 @@ const mix = computed(() => [
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">Ticket analysis</h1>
-                <p class="text-sm text-muted-foreground font-normal">
+                <p class="text-sm text-muted-foreground">
                     Whether the desk is keeping up. The queue itself is where the work is.
                 </p>
             </div>

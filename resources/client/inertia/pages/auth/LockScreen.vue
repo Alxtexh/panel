@@ -86,7 +86,7 @@ const initials = computed(() =>
 
                 <div class="text-center">
                     <h1 class="text-xl font-medium">{{ user?.name ?? 'Locked' }}</h1>
-                    <p class="text-muted-foreground text-sm font-normal">
+                    <p class="text-muted-foreground text-sm">
                         Confirm it is you to pick up where you left off.
                     </p>
                 </div>

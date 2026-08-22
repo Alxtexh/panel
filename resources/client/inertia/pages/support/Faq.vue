@@ -72,7 +72,7 @@ function toggle(id: string) {
             <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
                 Frequently asked questions
             </h1>
-            <p class="text-sm text-muted-foreground font-normal">The things people ask in the first week.</p>
+            <p class="text-sm text-muted-foreground">The things people ask in the first week.</p>
         </header>
 
         <section v-for="group in sections" :key="group.title" class="flex flex-col gap-2">

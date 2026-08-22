@@ -183,7 +183,7 @@ function remove(id: number) {
             :class="[FORM_MEASURE, 'space-y-3 rounded-xl border bg-card p-4']"
             @submit.prevent="submitUpload"
         >
-            <p class="text-sm text-muted-foreground font-normal">
+            <p class="text-sm text-muted-foreground">
                 Uploading into <span class="font-medium text-foreground">{{ folderLabel }}</span>.
                 Files stay on the panel uploads disk (private by default).
             </p>
@@ -271,7 +271,7 @@ function remove(id: number) {
                                                 Open
                                             </a>
                                         </p>
-                                        <p v-else class="text-muted-foreground text-xs font-normal">
+                                        <p v-else class="text-muted-foreground text-xs">
                                             Preview URL not exposed (private disk).
                                         </p>
                                     </div>

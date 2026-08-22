@@ -234,7 +234,7 @@ function submitTest() {
 
                     <p
                         v-if="(selected?.variables ?? form.variables).length"
-                        class="text-muted-foreground text-xs font-normal"
+                        class="text-muted-foreground text-xs"
                     >
                         Variables:
                         <span class="font-mono">
@@ -273,7 +273,7 @@ function submitTest() {
                     @submit.prevent="submitTest"
                 >
                     <p class="text-sm font-medium">Send test</p>
-                    <p class="text-muted-foreground text-xs font-normal">
+                    <p class="text-muted-foreground text-xs">
                         Posts to send-test. Packaged deliverTest() is a no-op until the host
                         wires Mail.
                     </p>
@@ -297,7 +297,7 @@ function submitTest() {
 
                 <p
                     v-if="!showCreate && !selected && templates.length > 0"
-                    class="text-muted-foreground text-sm font-normal"
+                    class="text-muted-foreground text-sm"
                 >
                     Select a template from the list, or create a new one.
                 </p>

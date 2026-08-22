@@ -32,7 +32,7 @@ const visible = computed(() => providers.value.length > 0)
     <div v-if="visible" class="flex flex-col gap-3" data-test="social-login-buttons">
         <div v-if="divider" class="flex items-center gap-3">
             <span class="bg-border h-px flex-1" />
-            <span class="text-xs font-normal text-muted-foreground">{{ divider }}</span>
+            <span class="text-muted-foreground text-xs">{{ divider }}</span>
             <span class="bg-border h-px flex-1" />
         </div>
 

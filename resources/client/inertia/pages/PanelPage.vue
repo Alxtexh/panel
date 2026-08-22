@@ -81,7 +81,7 @@ function submitLayout() {
     <div :class="[PAGE_SHELL, 'flex flex-col gap-6']">
         <header v-if="pageHeading" class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
+            <p v-if="pageDescription" class="text-sm text-muted-foreground">
                 {{ pageDescription }}
             </p>
         </header>

@@ -369,7 +369,7 @@ function deletedOn(value: string): string {
         <header class="flex flex-wrap items-start justify-between gap-3">
             <div class="flex flex-col gap-1">
                 <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Trash</h1>
-                <p class="text-muted-foreground text-sm font-normal">
+                <p class="text-muted-foreground text-sm">
                     Deleted records are kept for {{ retentionDays }} days and then removed
                     permanently. Until then they can be restored from here.
                 </p>
@@ -393,7 +393,7 @@ function deletedOn(value: string): string {
         >
             <Trash2 class="text-muted-foreground size-6" />
             <p class="text-sm font-medium">The trash is empty</p>
-            <p class="text-muted-foreground text-sm font-normal">
+            <p class="text-muted-foreground text-sm">
                 Anything you delete will wait here for {{ retentionDays }} days.
             </p>
         </div>
@@ -591,7 +591,7 @@ function deletedOn(value: string): string {
         @close="configuring = false"
     >
         <div class="flex flex-col gap-4">
-            <p class="text-muted-foreground text-sm font-normal">
+            <p class="text-muted-foreground text-sm">
                 After this many days a deleted record is removed permanently by the nightly sweep.
                 Between {{ retentionRange.min }} and {{ retentionRange.max }} days: shorter and "I
                 deleted it on Friday" is unrecoverable by Monday; longer and the panel is keeping
@@ -616,7 +616,7 @@ function deletedOn(value: string): string {
                         :min="retentionRange.min"
                         :max="retentionRange.max"
                     />
-                    <span class="text-muted-foreground text-sm font-normal">days</span>
+                    <span class="text-muted-foreground text-sm">days</span>
                 </div>
             </div>
 

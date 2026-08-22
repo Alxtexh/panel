@@ -481,7 +481,7 @@ function ask(question: string) {
                             @click="openConversation(item.id)"
                         >
                             <span class="truncate text-sm">{{ item.title }}</span>
-                            <span v-if="item.at" class="text-xs text-muted-foreground font-normal">
+                            <span v-if="item.at" class="text-xs text-muted-foreground">
                                 {{ item.at }}
                             </span>
                         </button>
@@ -506,7 +506,7 @@ function ask(question: string) {
                                     <Sparkles class="size-5" />
                                 </span>
                                 <p class="text-sm font-medium">What would you like to know?</p>
-                                <p class="text-xs text-muted-foreground font-normal">
+                                <p class="text-xs text-muted-foreground">
                                     It can look records up and cite the help centre.
                                 </p>
                             </div>
@@ -520,7 +520,7 @@ function ask(question: string) {
                                     @click="ask(s.text)"
                                 >
                                     <span class="text-sm">{{ s.text }}</span>
-                                    <span class="text-xs text-muted-foreground font-normal">{{ s.hint }}</span>
+                                    <span class="text-xs text-muted-foreground">{{ s.hint }}</span>
                                 </button>
                             </div>
 

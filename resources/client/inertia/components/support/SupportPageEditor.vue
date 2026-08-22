@@ -175,7 +175,7 @@ const fieldClass =
                 <p class="text-sm font-medium">
                     {{ addLabel[support.kind] }}
                 </p>
-                <p class="text-muted-foreground text-sm font-normal">
+                <p class="text-muted-foreground text-sm">
                     Built-in copy stays as shipped. You can add items of your own, and remove those additions later.
                 </p>
             </div>
@@ -329,7 +329,7 @@ const fieldClass =
                                 :value="link.href"
                                 @input="links(entry)[li].href = ($event.target as HTMLInputElement).value"
                             />
-                            <button type="button" class="text-sm text-muted-foreground font-normal" @click="removeLink(entry, li)">
+                            <button type="button" class="text-sm text-muted-foreground" @click="removeLink(entry, li)">
                                 Remove
                             </button>
                         </div>
