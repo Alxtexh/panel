@@ -392,6 +392,18 @@ return [
             'send_decay_seconds' => 60,
         ],
 
+        /*
+        | PASSWORDLESS MAGIC LINK.
+        |
+        | OFF BY DEFAULT. Set `PANEL_MAGIC_LINK=true` and call
+        | `Panel::make('admin')->login()->passwordless()` on the portal that
+        | should offer "Email me a link". The host owns the token table; see
+        | `magic_link_table`. Lifetime is in minutes.
+        */
+        'magic_link' => env('PANEL_MAGIC_LINK', false),
+        'magic_link_lifetime' => (int) env('PANEL_MAGIC_LINK_LIFETIME', 10),
+        'magic_link_table' => env('PANEL_MAGIC_LINK_TABLE', 'magic_login_tokens'),
+
         'session' => [
             /*
             | AN ABSOLUTE CEILING, IN HOURS, MEASURED FROM SIGN-IN.
