@@ -151,6 +151,10 @@ final class MakePanelCommand extends Command
         $this->newLine();
         $this->components->warn('It has no resources yet, so it has no routes yet. Add one:');
         $this->line("  php artisan make:panel-resource Tenant --panel={$id} --generate");
+        $this->newLine();
+        $this->line('  Pick a sidebar chrome family on the provider with ->sidebarLayout():');
+        $this->line("    inset (default), sidebar, floating, icon, header");
+        $this->line('  Playground demos: /screens/sidebar/{layout}');
 
         return self::SUCCESS;
     }
@@ -612,6 +616,13 @@ final class {$studly}PanelProvider extends ServiceProvider
                 )
 {$discoverPages}
                 ->brandName(fn (): string => config('app.name'))
+
+                /*
+                 * SIDEBAR CHROME. Pick one layout when you scaffold the portal
+                 * so each system looks distinct: inset (default), sidebar,
+                 * floating, icon, header. Playground: /screens/sidebar/{layout}
+                 */
+                // ->sidebarLayout('floating')
 
                 /*
                  * PAGE COPYRIGHT FOOTER. Off by default: the kit is an empty

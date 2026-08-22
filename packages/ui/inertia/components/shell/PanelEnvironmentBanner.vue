@@ -1,11 +1,13 @@
 <script setup lang="ts">
 /**
- * Environment colour strip. Absent when SharePanelProps sends null.
+ * Compact environment badge. Absent when SharePanelProps sends null.
  *
- * Lives with the impersonation banner: spans the main column, not the sidebar.
+ * Renders inline in the top bar (AppSidebarHeader / AppTopNav), not as a
+ * full-width strip that steals vertical space from the shell.
  */
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
+import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
 
 const page = usePage()
 
@@ -14,30 +16,31 @@ const banner = computed(
         (page.props as any).environmentBanner as { label: string; tone: string } | null | undefined,
 )
 
-const toneClass = computed(() => {
+const variant = computed(() => {
     switch (banner.value?.tone) {
         case 'local':
-            return 'bg-emerald-600 text-white'
+            return 'success'
         case 'testing':
-            return 'bg-sky-600 text-white'
+            return 'info'
         case 'staging':
-            return 'bg-amber-500 text-amber-950'
+            return 'warning'
         case 'production':
-            return 'bg-rose-700 text-white'
+            return 'destructive'
         default:
-            return 'bg-violet-600 text-white'
+            return 'outline'
     }
 })
 </script>
 
 <template>
-    <div
+    <Badge
         v-if="banner"
-        class="flex items-center justify-center px-4 py-1 text-center text-xs font-semibold tracking-wide uppercase"
-        :class="toneClass"
+        :variant="variant as any"
+        class="text-[10px] uppercase tracking-wide"
         data-environment-banner
         data-test="environment-banner"
+        :title="`Environment: ${banner.label}`"
     >
         {{ banner.label }}
-    </div>
+    </Badge>
 </template>

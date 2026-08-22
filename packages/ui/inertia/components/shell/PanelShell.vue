@@ -50,7 +50,6 @@ import AppSidebar from './AppSidebar.vue'
 import AppSidebarHeader from './AppSidebarHeader.vue'
 import AppTopNav from './AppTopNav.vue'
 import PanelIdleLockGuard from './PanelIdleLockGuard.vue'
-import PanelEnvironmentBanner from './PanelEnvironmentBanner.vue'
 import PanelImpersonationBanner from './PanelImpersonationBanner.vue'
 import EmptyGrantsNotice from '../EmptyGrantsNotice.vue'
 import RenderHook from '../RenderHook.vue'
@@ -225,7 +224,6 @@ router.on('success', () => {
     <div class="flex min-h-0 flex-1 flex-col overflow-hidden pb-14 sm:pb-0">
         <!-- Top navigation, by preference: no rail, no provider. -->
         <div v-if="horizontal" class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-sidebar">
-            <PanelEnvironmentBanner />
             <PanelImpersonationBanner />
             <div v-if="(page.props as any).panelEmptyGrants" class="px-4 pt-3">
                 <EmptyGrantsNotice compact />
@@ -264,7 +262,6 @@ router.on('success', () => {
             </AppSidebar>
 
             <AppContent variant="sidebar" class="min-h-0 overflow-x-hidden overflow-y-auto">
-                <PanelEnvironmentBanner />
                 <PanelImpersonationBanner />
                 <div v-if="(page.props as any).panelEmptyGrants" class="px-4 pt-3">
                     <EmptyGrantsNotice compact />

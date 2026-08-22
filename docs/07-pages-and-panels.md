@@ -142,19 +142,47 @@ importing it and write your own. The props are all on the page.
 Per-panel colours are applied as CSS variables, resolved per request, so a
 portal can wear the signed-in reseller's brand.
 
+## Environment badge
+
+Non-production installs show a compact **badge** in the top bar (local, staging,
+etc.). It does not consume a full-width strip. Opt in or out per panel:
+
+```php
+Panel::make('admin')
+    ->environmentBanner(false);  // hide everywhere
+// ->environmentBanner(true);   // force even in production
+```
+
+Global default: `PANEL_ENVIRONMENT_BANNER` in `config/panel.php` (null = show
+outside production only).
+
 ## Sidebar design families
 
-Pick **one layout** on the panel. `AppSidebar` / `PanelShell` rearrange chrome
-from that knob. Prefer `sidebarLayout()`. `sidebarVariant()` is the same
-setter. You may also pass a shadcn-vue block id (`sidebar-08`, `sidebar-07`,
-…); it resolves to the PanelKit name. Default is `inset`, which preserves the
-rail panels already ship.
+Set **one layout when you register the panel** so each system looks visually
+distinct. This is the admin's design choice at bootstrap, not a runtime toggle:
+
+```php
+$panels->registerPanel(
+    Panel::make('reseller')
+        ->path('reseller')
+        ->sidebarLayout('floating')  // inset (default), sidebar, icon, header
+        // ->environmentBanner(false)
+        ->discoverResources(...)
+);
+```
+
+Shorter form when chaining on `Panel::make()`:
 
 ```php
 Panel::make('admin')
     ->sidebarLayout('floating')  // or 'inset' (default), 'sidebar', 'icon', 'header'
     // ->sidebarLayout('sidebar-07')  // same as 'icon'
 ```
+
+`AppSidebar` / `PanelShell` rearrange chrome from `sidebarLayout()`. Prefer
+`sidebarLayout()`. `sidebarVariant()` is the same setter. You may also pass a
+shadcn-vue block id (`sidebar-08`, `sidebar-07`, …); it resolves to the PanelKit
+name. Default is `inset`, which preserves the rail panels already ship.
 
 | PanelKit | shadcn-vue | Composition |
 | --- | --- | --- |
