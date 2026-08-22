@@ -2,9 +2,10 @@
 import { usePage } from '@inertiajs/vue3'
 import { ChevronsUpDown } from '@lucide/vue'
 import { computed } from 'vue'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, useAppearance } from '@alxtexh-enterprise/panel'
 import {
     SidebarMenu,
+    SidebarMenuButton,
     SidebarMenuItem,
     useSidebar,
 } from '@alxtexh-enterprise/panel'
@@ -31,6 +32,25 @@ type SharedAuth = { user?: User | null }
 
 const user = computed(() => (page.props.auth as SharedAuth | undefined)?.user ?? null)
 const { isMobile, state } = useSidebar()
+const { appearance } = useAppearance()
+
+const showDetails = computed(() => isMobile.value || state.value !== 'collapsed')
+
+/**
+ * Opens away from the rail in icon mode, same rule as `TeamSwitcher` and the
+ * group flyouts in `AppSidebar`.
+ */
+const menuSide = computed<'left' | 'right' | 'bottom'>(() => {
+    if (isMobile.value) {
+        return 'bottom'
+    }
+
+    if (state.value !== 'collapsed') {
+        return 'bottom'
+    }
+
+    return appearance.value.sidebarSide === 'right' ? 'left' : 'right'
+})
 </script>
 
 <template>
@@ -38,9 +58,15 @@ const { isMobile, state } = useSidebar()
         <SidebarMenuItem>
             <DropdownMenu>
                 <DropdownMenuTrigger as-child>
-                    <button
-                        type="button"
-                        class="flex w-full cursor-pointer items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"
+                    <!--
+                        Same trigger shape as `TeamSwitcher`: `SidebarMenuButton`
+                        size lg so icon-rail collapse, tooltips, and chevron hiding
+                        follow the shadcn sidebar blocks rather than a one-off
+                        button with hand-rolled group-data classes.
+                    -->
+                    <SidebarMenuButton
+                        size="lg"
+                        class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         data-test="sidebar-menu-button"
                         aria-label="Account menu"
                         title="Account menu"
@@ -52,18 +78,13 @@ const { isMobile, state } = useSidebar()
                             non-null here would move a real runtime error into
                             a place the checker stops looking.
                         -->
-                        <UserInfo v-if="user" :user="user" />
-                        <span
-                            class="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent group-data-[collapsible=icon]:hidden"
-                            aria-hidden="true"
-                        >
-                            <ChevronsUpDown class="size-4" />
-                        </span>
-                    </button>
+                        <UserInfo v-if="user" :user="user" :show-name="showDetails" />
+                        <ChevronsUpDown class="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
+                    </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                     class="w-(--reka-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                    :side="isMobile ? 'bottom' : state === 'collapsed' ? 'left' : 'bottom'"
+                    :side="menuSide"
                     align="end"
                     :side-offset="4"
                 >

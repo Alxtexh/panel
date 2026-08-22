@@ -38,7 +38,11 @@ final class SidebarFamilyPreviewTest extends TestCase
                 ->assertOk()
                 ->assertInertia(fn ($page) => $page
                     ->component('errors/SidebarFamilyPreview')
-                    ->where('forceSidebarLayout', $layout));
+                    ->where('forceSidebarLayout', $layout)
+                    ->where('sidebarOpen', $layout !== 'icon')
+                    ->has('panel.help')
+                    ->has('panel.faq')
+                    ->has('panel.about'));
         }
     }
 

@@ -79,6 +79,20 @@ floating, icon-rail, or site-header chrome. See
 [Pages and panels](07-pages-and-panels.md#sidebar-design-families) for the
 shadcn-vue mapping table. Default remains `inset`.
 
+Across every family the same primary nav and the same footer support links
+(Help, FAQ, What's new, About) render from `AppSidebar`. Only chrome moves:
+
+| Family | Footer support nav | Account menu |
+| --- | --- | --- |
+| `inset` (default) | Secondary group above user row, separator when expanded | `SidebarMenuButton` in footer |
+| `sidebar` / `floating` | Same footer stack, variant changes rail shape only | Same |
+| `icon` | Icons + tooltips when collapsed; labels when expanded | Avatar-only trigger when collapsed |
+| `header` | Same sidebar footer; sticky site header adds brand + search above the rail | Same |
+
+The inset top bar (`AppSidebarHeader`) always keeps search, quick create,
+notifications, theme, and the rest. The `header` family adds a second sticky
+site header; it must not replace or hide the inset header row.
+
 ## Future (not in scope)
 
 Marketplace packaging and Livewire-based admin UIs are explicitly out of

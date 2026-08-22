@@ -886,16 +886,14 @@ watch(
             </SidebarGroup>
         </SidebarContent>
 
-        <!--
-            THE LINE BETWEEN THE RESOURCES AND THE REST. Without it, "About"
-            reads as one more entry in whatever group happens to render last -
-            Screens, Settings, whatever a portal has - rather than as the
-            start of a different kind of list: read once and rarely, not
-            navigated to and from all day.
-        -->
-        <SidebarSeparator class="my-2" />
-
         <SidebarFooter>
+            <!--
+                THE LINE BETWEEN THE RESOURCES AND THE REST. Without it, "About"
+                reads as one more entry in whatever group happens to render last.
+                Hidden in icon-rail mode where the footer is icons only.
+            -->
+            <SidebarSeparator class="group-data-[collapsible=icon]:hidden" />
+
             <!--
                 Support pages live in the footer, not the main nav: they are
                 read once and then rarely, so they should not compete for

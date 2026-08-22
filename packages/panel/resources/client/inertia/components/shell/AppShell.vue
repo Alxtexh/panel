@@ -50,13 +50,18 @@ const isOpen = computed(() => {
     <div v-if="variant === 'header'" class="flex min-h-screen w-full flex-col">
         <slot />
     </div>
+    <!--
+        Site-header family (sidebar-16): do not stack `h-svh` here. The shell
+        already lives inside `pk-shell`; a second viewport height clips the inset
+        header row and can hide topbar controls.
+    -->
     <div
         v-else-if="chrome.siteHeader"
-        class="flex h-svh w-full flex-col overflow-hidden"
+        class="flex min-h-0 w-full flex-1 flex-col overflow-hidden"
         style="--header-height: 3.5rem"
     >
         <SidebarSiteHeader />
-        <SidebarProvider class="h-full min-h-0 flex-1" :default-open="isOpen">
+        <SidebarProvider class="!h-full min-h-0 flex-1" :default-open="isOpen">
             <slot />
         </SidebarProvider>
     </div>
