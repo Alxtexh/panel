@@ -264,4 +264,24 @@ describe('FormFieldControl - affixes', () => {
         expect(help.classes()).toContain('font-normal')
         expect(help.classes()).toContain('text-muted-foreground')
     })
+
+    it('renders text inputs with muted normal weight placeholders', () => {
+        const wrapper = mount(FormFieldControl, {
+            props: {
+                field: {
+                    key: 'name',
+                    label: 'Name',
+                    type: 'text',
+                    placeholder: 'Full name',
+                } as FormField,
+                value: '',
+            },
+        })
+
+        const input = wrapper.get('input')
+        expect(input.classes()).toContain('placeholder:font-normal')
+        expect(input.classes()).toContain('placeholder:text-muted-foreground')
+        expect(input.classes()).toContain('font-normal')
+        expect(input.classes()).toContain('text-foreground')
+    })
 })

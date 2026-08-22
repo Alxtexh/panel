@@ -70,6 +70,7 @@ export {
 } from './lib/pageShell'
 export { FOCUS_RING, FOCUS_RING_SOFT, FOCUS_RING_WITHIN } from './lib/focusRing'
 export { MUTED_COPY, MUTED_COPY_SNUG, MUTED_COPY_XS } from './lib/copyClasses'
+export { INPUT_COPY, INPUT_PLACEHOLDER, INPUT_TEXT } from './lib/inputClasses'
 export { packWidgetColumns } from './lib/packWidgetColumns'
 export type { WidgetColumnBand } from './lib/packWidgetColumns'
 export {

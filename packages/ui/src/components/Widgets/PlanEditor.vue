@@ -6,6 +6,7 @@
  * free-form key/value repeater. The page persists; this emits `save`.
  */
 import { PAGE_SHELL } from '../../lib/pageShell'
+import { INPUT_COPY } from '../../lib/inputClasses'
 import { computed, reactive, watch } from 'vue'
 import PkButton from '../primitives/PkButton.vue'
 import PkFieldLabel from '../primitives/PkFieldLabel.vue'
@@ -176,10 +177,10 @@ function submit() {
 }
 
 const inputClass =
-    'file:text-foreground placeholder:text-muted-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
+    `file:text-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] ${INPUT_COPY}`
 
 const areaClass =
-    'placeholder:text-muted-foreground dark:bg-input/30 border-input min-h-20 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
+    `dark:bg-input/30 border-input min-h-20 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] ${INPUT_COPY}`
 </script>
 
 <template>

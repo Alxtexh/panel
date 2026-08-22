@@ -34,7 +34,7 @@ defineOptions({ inheritAttrs: false })
  */
 import { Form, Head, Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { PkButton as Button, ThemeToggle } from '@alxtexh-enterprise/panel'
+import { PkButton as Button, ThemeToggle, MUTED_COPY } from '@alxtexh-enterprise/panel'
 import AuthField from '../../components/AuthField.vue'
 import AuthPasskeyButton from '../../components/AuthPasskeyButton.vue'
 
@@ -86,7 +86,7 @@ const initials = computed(() =>
 
                 <div class="text-center">
                     <h1 class="text-xl font-medium">{{ user?.name ?? 'Locked' }}</h1>
-                    <p class="text-muted-foreground text-sm font-normal">
+                    <p :class="MUTED_COPY">
                         Confirm it is you to pick up where you left off.
                     </p>
                 </div>

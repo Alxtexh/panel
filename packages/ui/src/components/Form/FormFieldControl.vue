@@ -27,6 +27,7 @@ import { CreateOptionError } from '../../lib/createOptionError'
 import { createOptionActionLabel, createOptionTitle } from '../../lib/createOptionTitle'
 import { FOCUS_RING, FOCUS_RING_WITHIN } from '../../lib/focusRing'
 import { MUTED_COPY_SNUG } from '../../lib/copyClasses'
+import { INPUT_COPY } from '../../lib/inputClasses'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import CreateOptionDialog from './CreateOptionDialog.vue'
 import { Checkbox } from '../shadcn/checkbox'
@@ -314,10 +315,10 @@ function affixAction(action: FormField['suffixAction']): void {
 }
 
 const inputClass =
-    `border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50 ${FOCUS_RING}`
+    `border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50 ${INPUT_COPY} ${FOCUS_RING}`
 
 const affixedInputClass =
-    'bg-background h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-sm focus-visible:ring-0 focus-visible:outline-none disabled:opacity-50'
+    `bg-background h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-sm focus-visible:ring-0 focus-visible:outline-none disabled:opacity-50 ${INPUT_COPY}`
 
 /* ------------------------------------------------------------------- chips */
 
@@ -677,7 +678,7 @@ function insertChip(token: string) {
             :placeholder="field.placeholder"
             :disabled="field.disabled || processing"
             :aria-invalid="!!error"
-            :class="['border-input bg-background rounded-md border px-3 py-2 text-sm disabled:opacity-50', FOCUS_RING]"
+            :class="['border-input bg-background rounded-md border px-3 py-2 text-sm disabled:opacity-50', INPUT_COPY, FOCUS_RING]"
             @input="emit('change', ($event.target as HTMLTextAreaElement).value)"
         />
 
@@ -710,7 +711,7 @@ function insertChip(token: string) {
                 :placeholder="field.placeholder"
                 :disabled="field.disabled || processing"
                 :aria-invalid="!!error"
-                class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm focus-visible:outline-none"
+                :class="['min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm focus-visible:outline-none', INPUT_COPY]"
                 @input="emit('change', ($event.target as HTMLTextAreaElement).value)"
             />
             <span
