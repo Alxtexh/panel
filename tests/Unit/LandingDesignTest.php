@@ -16,7 +16,7 @@ final class LandingDesignTest extends TestCase
     public function test_landings_lists_every_shipped_design(): void
     {
         $this->assertSame(
-            ['aurora', 'editorial', 'console', 'marketing', 'shadcn'],
+            ['aurora', 'editorial', 'console'],
             Panel::landings(),
         );
         $this->assertSame(Panel::landings(), Panel::landingDesigns());
@@ -39,20 +39,17 @@ final class LandingDesignTest extends TestCase
     {
         config(['panel.landing.route' => false, 'panel.landing.design' => 'aurora']);
 
-        $panel = Panel::make('ops')->landing('shadcn');
+        $panel = Panel::make('ops')->landing('editorial');
 
         $this->assertTrue($panel->hasLandingRoute());
-        $this->assertSame('shadcn', $panel->getLandingDesign());
+        $this->assertSame('editorial', $panel->getLandingDesign());
         $this->assertTrue(config('panel.landing.route'));
-        $this->assertSame('shadcn', config('panel.landing.design'));
+        $this->assertSame('editorial', config('panel.landing.design'));
     }
 
     public function test_landing_aliases_resolve_to_shipped_designs(): void
     {
         $this->assertSame('aurora', Panel::make('a')->landing('composed')->getLandingDesign());
-        $this->assertSame('marketing', Panel::make('b')->landing('vue-marketing')->getLandingDesign());
-        $this->assertSame('marketing', Panel::make('c')->landing('vue-js')->getLandingDesign());
-        $this->assertSame('shadcn', Panel::make('d')->landing('shadcn-vue')->getLandingDesign());
     }
 
     public function test_landing_false_turns_the_route_off(): void
@@ -73,9 +70,18 @@ final class LandingDesignTest extends TestCase
         $this->assertSame('aurora', LandingPresets::resolve('not-a-real-design'));
     }
 
-    public function test_marketing_and_shadcn_presets_are_non_empty_and_open_with_hero(): void
+    public function test_removed_marketing_aliases_fall_back_to_aurora(): void
     {
-        foreach (['marketing', 'shadcn'] as $design) {
+        $this->assertSame('aurora', LandingPresets::resolve('marketing'));
+        $this->assertSame('aurora', LandingPresets::resolve('shadcn'));
+        $this->assertSame('aurora', LandingPresets::resolve('vue-js'));
+        $this->assertSame('aurora', LandingPresets::resolve('vue-marketing'));
+        $this->assertSame('aurora', LandingPresets::resolve('shadcn-vue'));
+    }
+
+    public function test_each_shipped_preset_is_non_empty_and_opens_with_hero(): void
+    {
+        foreach (LandingPresets::names() as $design) {
             $sections = LandingPresets::get($design);
 
             $this->assertNotEmpty($sections, "{$design} must ship a real landing.");

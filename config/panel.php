@@ -1037,12 +1037,11 @@ return [
     |   yourself.
     |
     | design
-    |   Which shipped composition seeds the page: aurora, editorial, console,
-    |   marketing or shadcn. Aliases: composed→aurora, vue-marketing→marketing,
-    |   shadcn-vue→shadcn. They differ in composition and copy, not only in
+    |   Which shipped composition seeds the page: aurora, editorial or console.
+    |   Alias: composed→aurora. They differ in composition and copy, not only in
     |   colour. Once an editor has saved an arrangement in the panel, that is
     |   what renders and this is only the fallback - see Landing\LandingPageResource.
-    |   Or pick via Panel::make('admin')->landing('shadcn').
+    |   Or pick via Panel::make('admin')->landing('editorial').
     |
     | brand, tagline, footer_links
     |   THE CHROME, which is the application's rather than the package's. The

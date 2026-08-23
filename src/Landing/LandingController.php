@@ -19,35 +19,19 @@ use Alxtexh\Panel\Support\PanelHome;
  * ALXTEXHPANEL SHIPS SEVERAL LANDING DESIGNS, not one, because a landing page is
  * the single screen whose job is to sound like the company behind it - and a
  * framework that ships one template makes every deployment sound like the
- * same company. Five voices ship: aurora, editorial, console, marketing and
- * shadcn. Marketing and shadcn are the ported source templates from the offered
- * GitHub repos (vue-js-landing-page, shadcn-vue-landing-page), not inspired-only
- * rewrites.
+ * same company. Three voices ship: aurora, editorial and console. Each is a
+ * composition of kit sections, not a forked Vue template.
  *
  * THE DESIGN IS CONFIGURATION, not a fork. An installation picks one in
  * `config('panel.landing')`; the `?design=` parameter exists so the
- * reference app can demonstrate all five without a redeploy, and is
+ * reference app can demonstrate all three without a redeploy, and is
  * validated against the known set rather than passed through - an
  * unvalidated component name in a render call is a way to ask the server to
  * mount any page in the bundle.
  */
 final class LandingController extends Controller
 {
-    /**
-     * Aurora / editorial / console stay on the section composer.
-     * Marketing and shadcn render the ported source templates
-     * (`landing/VueJs`, `landing/ShadcnVue`).
-     */
     private const PAGE = 'landing/Composed';
-
-    private static function pageFor(string $design): string
-    {
-        return match ($design) {
-            'marketing' => 'landing/VueJs',
-            'shadcn' => 'landing/ShadcnVue',
-            default => self::PAGE,
-        };
-    }
 
     /**
      * Is a landing page wanted at all?
@@ -111,8 +95,7 @@ final class LandingController extends Controller
         /*
          * THE ROUTE SEGMENT, NOT A QUERY PARAMETER - see the preview route.
          * `/` carries no design at all and always renders what the
-         * installation configured. Aliases (`composed`, `vue-marketing`,
-         * `shadcn-vue`) resolve to shipped preset names.
+         * installation configured. Alias `composed` resolves to aurora.
          */
         $requested = (string) ($request->route('design') ?? $configured);
         $design = LandingPresets::resolve($requested);
@@ -134,7 +117,7 @@ final class LandingController extends Controller
             ? $stored
             : LandingPresets::get($design);
 
-        return Inertia::render(self::pageFor($design), [
+        return Inertia::render(self::PAGE, [
             'sections' => $sections,
             // The switcher names the design it is showing, so the demo explains
             // itself rather than needing the query string read back.
