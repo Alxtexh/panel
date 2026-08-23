@@ -1,10 +1,6 @@
 <script setup lang="ts">
-/**
- * Ported from leoMirandaa/shadcn-vue-landing-page (MIT).
- * Step images imported so Vite ships them with the kit.
- */
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Badge } from "./ui/badge";
 import roboto from "../assets/roboto.png";
 import runner from "../assets/runner.png";
 import pacheco from "../assets/pacheco.png";

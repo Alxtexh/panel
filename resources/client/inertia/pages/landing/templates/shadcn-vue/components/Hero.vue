@@ -1,16 +1,11 @@
 <script setup lang="ts">
-/**
- * Ported from leoMirandaa/shadcn-vue-landing-page (MIT).
- * Hero images are Vite-imported so the kit ships them with the page.
- */
 import { useColorMode } from "@vueuse/core";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+const mode = useColorMode();
+
+import { Badge } from "./ui/badge";
 import { ArrowRight } from "@lucide/vue";
 import heroLight from "../assets/hero-image-light.jpg";
 import heroDark from "../assets/hero-image-dark.jpg";
-
-const mode = useColorMode();
 </script>
 
 <template>
@@ -48,24 +43,27 @@ const mode = useColorMode();
         </p>
 
         <div class="space-y-4 md:space-y-0 md:space-x-4">
-          <Button class="w-5/6 md:w-1/4 font-bold group/arrow">
+          <!--
+            Native button: reka-ui Primitive was dropping bg-primary in this
+            host (Badge still paints orange). Classes match source Button default.
+          -->
+          <a
+            href="/register"
+            class="inline-flex h-10 w-5/6 md:w-1/4 items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 group/arrow"
+          >
             Get Started
             <ArrowRight
               class="size-5 ml-2 group-hover/arrow:translate-x-1 transition-transform"
             />
-          </Button>
+          </a>
 
-          <Button
-            as-child
-            variant="secondary"
-            class="w-5/6 md:w-1/4 font-bold"
+          <a
+            href="https://github.com/leoMirandaa/shadcn-vue-landing-page.git"
+            target="_blank"
+            class="inline-flex h-10 w-5/6 md:w-1/4 items-center justify-center whitespace-nowrap rounded-md bg-secondary px-4 py-2 text-sm font-bold text-secondary-foreground ring-offset-background transition-colors hover:bg-secondary/80"
           >
-            <a
-              href="https://github.com/leoMirandaa/shadcn-vue-landing-page.git"
-              target="_blank"
-              >Github respository</a
-            >
-          </Button>
+            Github respository
+          </a>
         </div>
       </div>
 

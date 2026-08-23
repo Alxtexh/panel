@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ChevronsDown } from "@lucide/vue";
-import Separator from "../ui/separator/Separator.vue";
+import Separator from "./ui/separator/Separator.vue";
 </script>
 
 <template>
