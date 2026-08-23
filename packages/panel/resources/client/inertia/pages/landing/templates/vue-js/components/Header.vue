@@ -1,8 +1,4 @@
 <script setup>
-/**
- * Ported from younusaliakash/vue-js-landing-page.
- * brand / login / register are Inertia props; layout and classes stay from source.
- */
 import { themeColor, siteName } from "../data/items";
 
 const props = defineProps({
@@ -10,7 +6,6 @@ const props = defineProps({
   loginHref: { type: String, default: "/login" },
   registerHref: { type: String, default: "/register" },
 });
-
 const logoName = props.brand || siteName;
 </script>
 <template>

@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
-} from "../ui/card";
+} from "./ui/card";
 
 import LinkedInIcon from "../icons/LinkedInIcon.vue";
 import GithubIcon from "../icons/GithubIcon.vue";

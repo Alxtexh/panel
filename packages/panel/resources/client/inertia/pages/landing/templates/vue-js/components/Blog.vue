@@ -1,4 +1,7 @@
 <script setup>
+import person1 from "../assets/images/person_1.jpg";
+import person2 from "../assets/images/person_2.jpg";
+import person3 from "../assets/images/person_3.jpg";
 const heading = "Our News";
 const subHeading = "Far from the countries Vokalia and Consonantia";
 const blogItems = [
@@ -7,21 +10,21 @@ const blogItems = [
     name: "James",
     date: "Jun 14, 2020",
     category: "Digital Service",
-    photo: "images/person_1.jpg",
+    photo: person1,
   },
   {
     title: "Far far away behind the word mountains far from the countries",
     name: "James",
     date: "Jun 14, 2020",
     category: "Digital Service",
-    photo: "images/person_2.jpg",
+    photo: person2,
   },
   {
     title: "Far far away behind the word mountains far from the countries",
     name: "James",
     date: "Jun 14, 2020",
     category: "Digital Service",
-    photo: "images/person_3.jpg",
+    photo: person3,
   },
 ];
 </script>

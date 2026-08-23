@@ -1,4 +1,2 @@
-Source template: https://github.com/leoMirandaa/shadcn-vue-landing-page
-Copyright (c) 2024 Leopoldo Miranda (MIT License). See LICENSE in this folder.
-Integrated into PanelKit as the built-in `shadcn` / `shadcn-vue` landing variant.
-Section SFCs and UI primitives are ported from that repo; imports adapted for reka-ui and @lucide/vue.
+Ported from https://github.com/leoMirandaa/shadcn-vue-landing-page (MIT).
+Vue SFCs, shadcn-vue UI primitives, icons, and public images copied for visual fidelity.

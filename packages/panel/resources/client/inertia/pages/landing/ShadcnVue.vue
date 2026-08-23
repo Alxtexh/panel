@@ -4,7 +4,7 @@
  *
  * Ported from https://github.com/leoMirandaa/shadcn-vue-landing-page (MIT).
  * Section SFCs and UI primitives are the source templates; imports adapted
- * for reka-ui, @lucide/vue, and PanelKit's cn(). Orange theme scoped here.
+ * for reka-ui, @lucide/vue, Vite asset URLs, and PanelKit's hsl() tokens.
  */
 defineOptions({ inheritAttrs: false })
 
@@ -13,15 +13,15 @@ import './templates/shadcn-vue/theme.css'
 
 import Navbar from './templates/shadcn-vue/components/Navbar.vue'
 import Hero from './templates/shadcn-vue/components/Hero.vue'
+import Sponsors from './templates/shadcn-vue/components/Sponsors.vue'
 import Benefits from './templates/shadcn-vue/components/Benefits.vue'
 import Features from './templates/shadcn-vue/components/Features.vue'
 import Services from './templates/shadcn-vue/components/Services.vue'
 import HowItWorks from './templates/shadcn-vue/components/HowItWorks.vue'
-import Sponsors from './templates/shadcn-vue/components/Sponsors.vue'
 import Testimonials from './templates/shadcn-vue/components/Testimonials.vue'
 import Team from './templates/shadcn-vue/components/Team.vue'
-import Pricing from './templates/shadcn-vue/components/Pricing.vue'
 import Community from './templates/shadcn-vue/components/Community.vue'
+import Pricing from './templates/shadcn-vue/components/Pricing.vue'
 import Contact from './templates/shadcn-vue/components/Contact.vue'
 import FAQ from './templates/shadcn-vue/components/FAQ.vue'
 import Footer from './templates/shadcn-vue/components/Footer.vue'
@@ -57,7 +57,7 @@ withDefaults(
 <template>
     <Head :title="title ?? brand" />
 
-    <div class="pk-shadcn-vue-template min-h-screen">
+    <div class="pk-shadcn-vue-template min-h-screen bg-background text-foreground">
         <nav
             v-if="previews.length"
             class="sticky top-0 z-50 flex flex-wrap items-center justify-center gap-1 border-b bg-background/95 px-3 py-2 text-sm backdrop-blur"

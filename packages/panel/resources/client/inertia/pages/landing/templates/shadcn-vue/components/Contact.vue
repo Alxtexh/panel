@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive } from "vue";
-import { Button } from "../ui/button";
-import { Card, CardHeader, CardContent, CardFooter } from "../ui/card";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
+import { Button } from "./ui/button";
+import { Card, CardHeader, CardContent, CardFooter } from "./ui/card";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
 import {
   Select,
   SelectContent,
@@ -11,9 +11,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Textarea } from "../ui/textarea";
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+} from "./ui/select";
+import { Textarea } from "./ui/textarea";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 import { AlertCircle, Building2, Phone, Mail, Clock } from "@lucide/vue";
 

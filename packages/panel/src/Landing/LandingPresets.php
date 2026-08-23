@@ -242,7 +242,8 @@ final class LandingPresets
     }
 
     /**
-     * Marketing composition inspired by younusaliakash/vue-js-landing-page.
+     * Marketing preset seeds for the ported younusaliakash/vue-js-landing-page
+     * template (rendered by landing/VueJs, not Composed kit sections).
      *
      * Reimplemented as kit sections (no Bootstrap/jQuery/owl vendor). Hero is
      * brand-first and full-bleed; services, advantages, blog and contact map
@@ -344,10 +345,9 @@ final class LandingPresets
     }
 
     /**
-     * Product landing inspired by leoMirandaa/shadcn-vue-landing-page.
-     *
-     * Patterns reimplemented on PanelKit tokens (no shadcn-vue add, no purple
-     * gradient hero). Sponsors, benefits, how-it-works, team, community, FAQ.
+     * Shadcn preset seeds for the ported leoMirandaa/shadcn-vue-landing-page
+     * template (rendered by landing/ShadcnVue with copied SFCs and UI).
+     * Sponsors, benefits, how-it-works, team, community, FAQ.
      */
     private static function shadcn(): array
     {

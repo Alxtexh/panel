@@ -3,13 +3,19 @@
  * Built-in `marketing` / `vue-js` landing.
  *
  * Ported from https://github.com/younusaliakash/vue-js-landing-page
- * (Colorlib-style Vue 3 landing). Section SFCs and CSS are the source
- * templates, adapted only for Inertia brand/auth props and Vite assets.
+ * (Colorlib SoftLand Vue 3). Section SFCs and CSS are the source templates;
+ * adapted only for Inertia brand/auth props, Vite assets, and AOS init.
  */
 defineOptions({ inheritAttrs: false })
 
 import { Head, Link } from '@inertiajs/vue3'
+import { onMounted, onBeforeUnmount } from 'vue'
+
 import './templates/vue-js/styles/bootstrap.min.css'
+import './templates/vue-js/styles/owl.carousel.min.css'
+import './templates/vue-js/styles/owl.theme.default.min.css'
+import './templates/vue-js/styles/jquery.fancybox.min.css'
+import './templates/vue-js/styles/aos.css'
 import './templates/vue-js/fonts/icomoon/style.css'
 import './templates/vue-js/fonts/flaticon/font/flaticon.css'
 import './templates/vue-js/styles/style.css'
@@ -27,7 +33,7 @@ import Blog from './templates/vue-js/components/Blog.vue'
 import Contact from './templates/vue-js/components/Contact.vue'
 import Footer from './templates/vue-js/components/Footer.vue'
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         design?: string
         brand?: string
@@ -53,6 +59,32 @@ withDefaults(
         title: undefined,
     },
 )
+
+let fontLink: HTMLLinkElement | null = null
+
+onMounted(async () => {
+    fontLink = document.createElement('link')
+    fontLink.rel = 'stylesheet'
+    fontLink.href =
+        'https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap'
+    document.head.appendChild(fontLink)
+
+    // Reveal [data-aos] nodes (source uses aos.css which starts them at opacity:0).
+    document.querySelectorAll('[data-aos]').forEach((el) => {
+        el.classList.add('aos-animate')
+    })
+
+    try {
+        const AOS = (await import('aos')).default
+        AOS.init({ duration: 800, once: true })
+    } catch {
+        // aos package optional; aos-animate class above is enough for fidelity.
+    }
+})
+
+onBeforeUnmount(() => {
+    fontLink?.remove()
+})
 </script>
 
 <template>
@@ -61,7 +93,7 @@ withDefaults(
     <div class="pk-vue-js-template">
         <nav
             v-if="previews.length"
-            class="sticky top-0 z-50 flex flex-wrap items-center justify-center gap-1 border-b bg-white/95 px-3 py-2 text-sm shadow-sm"
+            class="sticky top-0 z-[100] flex flex-wrap items-center justify-center gap-1 border-b bg-white/95 px-3 py-2 text-sm shadow-sm"
         >
             <span class="mr-2 text-xs uppercase tracking-wide text-slate-500">Landing samples</span>
             <Link
@@ -75,8 +107,18 @@ withDefaults(
             </Link>
         </nav>
 
-        <!-- Same section order as source App.vue -->
-        <Header :brand="brand" :login-href="loginHref" :register-href="registerHref" />
+        <!-- Source index.html chrome -->
+        <div class="lines-wrap">
+            <div class="lines-inner">
+                <div class="lines" />
+            </div>
+        </div>
+
+        <Header
+            :brand="brand"
+            :login-href="loginHref"
+            :register-href="registerHref"
+        />
         <Hero />
         <Service1 />
         <Service2 />

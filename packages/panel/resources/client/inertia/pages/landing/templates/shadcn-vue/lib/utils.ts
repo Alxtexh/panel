@@ -1,5 +1,6 @@
-/**
- * Ported from leoMirandaa/shadcn-vue-landing-page (MIT).
- * Same cn() helper as the rest of PanelKit.
- */
-export { cn } from '../../../../../../src/lib/cn'
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}

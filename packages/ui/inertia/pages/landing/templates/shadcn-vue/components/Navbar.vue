@@ -12,7 +12,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from "../ui/navigation-menu";
+} from "./ui/navigation-menu";
 import {
   Sheet,
   SheetContent,
@@ -20,10 +20,10 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../ui/sheet";
+} from "./ui/sheet";
 
-import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
+import { Button } from "./ui/button";
+import { Separator } from "./ui/separator";
 
 import { ChevronsDown, Menu } from "@lucide/vue";
 import GithubIcon from "../icons/GithubIcon.vue";
