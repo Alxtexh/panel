@@ -127,8 +127,8 @@ final class SharePanelProps
             'panelNav' => static fn (): array => PanelNavigation::build(),
 
             /*
-             * Environment colour strip. Null outside the configured cases so
-             * production pays nothing unless forced on.
+             * Environment badge prop. Always null: chrome no longer renders it.
+             * Key kept so older host code reading the prop does not break.
              */
             'environmentBanner' => static fn (): ?array => EnvironmentBanner::for(),
 

@@ -11,27 +11,11 @@ use Alxtexh\Panel\Tests\TestCase;
 
 final class EnvironmentBannerAndRatingTest extends TestCase
 {
-    public function test_environment_banner_shows_outside_production_by_default(): void
+    public function test_environment_banner_is_always_null(): void
     {
-        config(['panel.environment_banner.enabled' => null]);
+        config(['panel.environment_banner.enabled' => true]);
         $previous = $this->app['env'];
         $this->app['env'] = 'local';
-
-        try {
-            $banner = EnvironmentBanner::for();
-            $this->assertNotNull($banner);
-            $this->assertSame('local', $banner['label']);
-            $this->assertSame('local', $banner['tone']);
-        } finally {
-            $this->app['env'] = $previous;
-        }
-    }
-
-    public function test_environment_banner_hides_in_production_by_default(): void
-    {
-        config(['panel.environment_banner.enabled' => null]);
-        $previous = $this->app['env'];
-        $this->app['env'] = 'production';
 
         try {
             $this->assertNull(EnvironmentBanner::for());
@@ -40,11 +24,11 @@ final class EnvironmentBannerAndRatingTest extends TestCase
         }
     }
 
-    public function test_environment_banner_false_hides_everywhere(): void
+    public function test_environment_banner_stays_null_in_production(): void
     {
-        config(['panel.environment_banner.enabled' => false]);
+        config(['panel.environment_banner.enabled' => null]);
         $previous = $this->app['env'];
-        $this->app['env'] = 'local';
+        $this->app['env'] = 'production';
 
         try {
             $this->assertNull(EnvironmentBanner::for());

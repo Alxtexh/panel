@@ -1112,11 +1112,13 @@ final class Panel
     }
 
     /**
-     * Environment badge in the shell top bar.
+     * Environment badge API (no-op).
      *
-     * Null (default) follows `panel.environment_banner` / non-production.
-     * `->environmentBanner(false)` never shows. `->environmentBanner(true)`
-     * forces the badge even in production.
+     * The shell no longer renders an environment badge. This setter is kept so
+     * host `->environmentBanner(...)` calls keep compiling; it does not affect
+     * shared props or chrome. Prefer removing the call from panel registration.
+     *
+     * @deprecated Permanently off; always a no-op.
      */
     public function environmentBanner(bool $enabled = true): self
     {
@@ -1125,14 +1127,16 @@ final class Panel
         return $this;
     }
 
+    /** @deprecated Permanently off; value is ignored. */
     public function environmentBannerOverride(): ?bool
     {
         return $this->environmentBanner;
     }
 
+    /** @deprecated Permanently off; always false for shared props. */
     public function showsEnvironmentBanner(): bool
     {
-        return $this->environmentBanner !== false;
+        return false;
     }
 
     /**
