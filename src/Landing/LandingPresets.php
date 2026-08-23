@@ -7,15 +7,10 @@ namespace Alxtexh\Panel\Landing;
 /**
  * The shipped landing pages, as BLOCKS rather than as files.
  *
- * THEY ARE THE PACKAGE'S NOW. All five lived as compositions that used to be
- * either hand-written Vue or external demos, so `composer require` gave you a
- * component that draws landing sections and nothing that used it - no designs,
- * no route, no editor for the marketing voices.
- *
- * THIS IS WHAT CHANGED. Aurora, Editorial, Console, Marketing and Shadcn are
- * ORDERED LISTS OF SECTIONS drawn from one library - so the difference between
- * them is composition and copy. Marketing and Shadcn reimplement patterns from
- * public Vue landings against kit tokens; hosts never clone those repos.
+ * Aurora, Editorial and Console are ordered lists of sections from one library.
+ * Marketing and Shadcn are the real Vue templates ported from the offered repos
+ * (vue-js-landing-page and shadcn-vue-landing-page); their presets still seed
+ * the editor, but public previews render the ported SFCs.
  *
  * A PRESET IS A STARTING POINT, NOT A TEMPLATE. It seeds the editable page; once
  * an installation has saved its own arrangement, that is what renders and these
@@ -33,8 +28,8 @@ final class LandingPresets
      * Resolve a host-facing alias to a shipped preset name.
      *
      * `composed` keeps the historical "default composed landing" wording.
-     * `vue-marketing` / `vue-js` name the Colorlib-inspired marketing page.
-     * `shadcn-vue` names the shadcn-vue landing reimplementation.
+     * `vue-marketing` / `vue-js` name the ported vue-js-landing-page template.
+     * `shadcn-vue` names the ported shadcn-vue-landing-page template.
      */
     public static function resolve(string $name): string
     {

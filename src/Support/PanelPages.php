@@ -53,6 +53,8 @@ final class PanelPages
          * the section library and nothing that drew a page with it.
          */
         'landing/Composed',
+        'landing/VueJs',
+        'landing/ShadcnVue',
 
         /*
          * THE SIGN-IN SCREENS, mirrored even in an application that has not run

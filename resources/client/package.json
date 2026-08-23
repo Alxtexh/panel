@@ -1,6 +1,6 @@
 {
     "name": "@alxtexh-enterprise/panel",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "description": "The client half: the Vue rendering layer and the Inertia screens. Import from \".\" for components that name no transport, \"./inertia\" for the screens.",
     "type": "module",
     "license": "MIT",
@@ -59,9 +59,12 @@
     "dependencies": {
         "@lucide/vue": "^1.17.0",
         "@scalar/api-reference": "^1.66.1",
+        "@selemondev/vue3-marquee": "^0.0.8",
         "@vueuse/core": "^12.8.2",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
+        "embla-carousel": "^8.6.0",
+        "embla-carousel-vue": "^8.6.0",
         "jsbarcode": "^3.12.3",
         "leaflet": "^1.9.4",
         "qrcode": "^1.5.4",
