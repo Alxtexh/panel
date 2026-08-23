@@ -67,7 +67,9 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.0.100 | Auth design families (`Panel::authFamily`) + Auth samples gallery |
 | v1.0.101 | Sidebar design families (`Panel::sidebarLayout`) + Sidebar samples gallery |
 | v1.1.0 | Minor release: auth families + sidebar layout families (same work as v1.0.100 / v1.0.101; prefer this tag going forward) |
-| v1.3.0 | Full dashboard DnD (`dashboardLayout.widgets`); remaining sidebar families; visual workflow board + history |
+| v1.2.5 | Visual workflow board and status history |
+| v1.3.0 | Remaining sidebar families: accordion, file-tree, calendar, dialog |
+| v1.3.2 | Full dashboard DnD: `dashboardLayout.widgets` (order, span, hidden) for stats, charts, tables |
 
 ## Versioning (from v1.1.0)
 

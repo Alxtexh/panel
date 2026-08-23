@@ -193,11 +193,24 @@ Off by default. Enable per portal:
 Panel::make('admin')->userDashboards();
 ```
 
-Operators can drag chart widgets into a new order. The order persists on
-`users.appearance.dashboardLayout.chartOrder` via the existing appearance
-endpoint (chart order only, not full dashboard layout). When the flag is off,
-the dashboard never reads that key and the appearance endpoint ignores
-`dashboardLayout` writes.
+Operators can drag **stat**, **chart**, and **table** widgets into a new order,
+widen or narrow a tile (span 1 or 2), and hide widgets. The layout persists on
+`users.appearance.dashboardLayout.widgets` via the existing appearance
+endpoint:
+
+```json
+{
+  "widgets": [
+    { "id": "stat:people", "span": 1, "hidden": false },
+    { "id": "chart:sessions", "span": 2, "hidden": false },
+    { "id": "table:recent", "span": 2, "hidden": true }
+  ]
+}
+```
+
+Legacy `chartOrder` (v1.0.97) still reads and folds into `chart:{key}` entries.
+When the flag is off, the dashboard never reads that key and the appearance
+endpoint ignores `dashboardLayout` writes.
 
 ## First-run setup guide
 

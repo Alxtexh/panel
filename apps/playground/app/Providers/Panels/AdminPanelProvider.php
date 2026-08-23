@@ -120,6 +120,11 @@ final class AdminPanelProvider extends ServiceProvider
                 ->paymentSettings(static fn (): array => KitDemo::gateways())
                 ->apps(['api-keys', 'webhooks'])
                 ->apiDocs()
+                /*
+                 * Full dashboard DnD: operators rearrange stats, charts, and
+                 * table widgets; order/span/visibility persist in appearance.
+                 */
+                ->userDashboards()
                 ->feedback(function (array $validated, $user): void {
                     $feedback = new Feedback($validated);
                     $feedback->user_agent = $validated['user_agent'] ?? null;

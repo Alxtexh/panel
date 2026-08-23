@@ -49,7 +49,12 @@ final class AppearanceRouteTest extends TestCase
         $this->actingAs($this->user)
             ->putJson('/settings/appearance', [
                 'theme' => 'dark',
-                'dashboardLayout' => ['chartOrder' => ['a', 'b']],
+                'dashboardLayout' => [
+                    'widgets' => [
+                        ['id' => 'chart:a', 'span' => 2],
+                        ['id' => 'stat:b'],
+                    ],
+                ],
             ])
             ->assertOk()
             ->assertJsonPath('appearance.theme', 'dark')
@@ -67,14 +72,39 @@ final class AppearanceRouteTest extends TestCase
 
         $this->actingAs($this->user)
             ->putJson('/settings/appearance', [
-                'dashboardLayout' => ['chartOrder' => ['revenue', 'signups']],
+                'dashboardLayout' => [
+                    'widgets' => [
+                        ['id' => 'stat:people', 'span' => 1],
+                        ['id' => 'chart:revenue', 'span' => 2, 'hidden' => true],
+                        ['kind' => 'table', 'key' => 'recent', 'span' => 2],
+                    ],
+                ],
             ])
             ->assertOk()
-            ->assertJsonPath('appearance.dashboardLayout.chartOrder', ['revenue', 'signups']);
+            ->assertJsonPath('appearance.dashboardLayout.widgets.0.id', 'stat:people')
+            ->assertJsonPath('appearance.dashboardLayout.widgets.1.id', 'chart:revenue')
+            ->assertJsonPath('appearance.dashboardLayout.widgets.1.span', 2)
+            ->assertJsonPath('appearance.dashboardLayout.widgets.1.hidden', true)
+            ->assertJsonPath('appearance.dashboardLayout.widgets.2.id', 'table:recent');
 
         $saved = $this->user->fresh()->appearance;
 
-        $this->assertSame(['revenue', 'signups'], $saved['dashboardLayout']['chartOrder']);
+        $this->assertSame('stat:people', $saved['dashboardLayout']['widgets'][0]['id']);
+        $this->assertSame(2, $saved['dashboardLayout']['widgets'][1]['span']);
+        $this->assertTrue($saved['dashboardLayout']['widgets'][1]['hidden']);
+    }
+
+    public function test_legacy_chart_order_still_persists_as_widgets(): void
+    {
+        app(PanelManager::class)->panel('admin')->userDashboards();
+
+        $this->actingAs($this->user)
+            ->putJson('/settings/appearance', [
+                'dashboardLayout' => ['chartOrder' => ['revenue', 'signups']],
+            ])
+            ->assertOk()
+            ->assertJsonPath('appearance.dashboardLayout.widgets.0.id', 'chart:revenue')
+            ->assertJsonPath('appearance.dashboardLayout.widgets.1.id', 'chart:signups');
     }
 
     public function test_appearance_is_shared_on_panel_responses(): void

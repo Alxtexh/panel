@@ -6,10 +6,14 @@ namespace App\Panel\Pages;
 
 use Alxtexh\Panel\Pages\DashboardPage as AlxtexhpanelDashboard;
 use Alxtexh\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Widgets\TableWidget;
+use App\Demo\Panel\Resources\ClientResource;
+use App\Demo\Panel\Resources\RouterResource;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Panel\DashboardExtras;
+use App\Panel\Resources\PlanResource;
 
 /**
  * The dashboard a copy of this application starts with.
@@ -104,6 +108,32 @@ final class DashboardPage extends AlxtexhpanelDashboard
     public static function charts(): array
     {
         return DashboardExtras::allCharts();
+    }
+
+    /**
+     * Capped lists so full dashboard DnD has table widgets to rearrange.
+     *
+     * @return list<TableWidget>
+     */
+    public static function tables(): array
+    {
+        return [
+            TableWidget::make('recent_clients', 'Recent clients')
+                ->resource(ClientResource::class)
+                ->description('Newest subscribers')
+                ->limit(5)
+                ->span(2),
+
+            TableWidget::make('recent_routers', 'Routers')
+                ->resource(RouterResource::class)
+                ->description('Network edge')
+                ->limit(5),
+
+            TableWidget::make('plans_list', 'Plans')
+                ->resource(PlanResource::class)
+                ->description('Catalogue')
+                ->limit(5),
+        ];
     }
 
     /**

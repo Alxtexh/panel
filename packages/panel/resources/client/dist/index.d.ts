@@ -49,6 +49,8 @@ export { MUTED_COPY, MUTED_COPY_SNUG, MUTED_COPY_XS } from './lib/copyClasses';
 export { INPUT_COPY, INPUT_PLACEHOLDER, INPUT_TEXT } from './lib/inputClasses';
 export { packWidgetColumns } from './lib/packWidgetColumns';
 export type { WidgetColumnBand } from './lib/packWidgetColumns';
+export { mergeLayoutItems, parseWidgetId, toPersistedLayout, widgetId, } from './lib/dashboardLayout';
+export type { DashboardLayout, DashboardLayoutEntry, DashboardWidgetKind, LayoutItem, } from './lib/dashboardLayout';
 export { TRANSPARENT_IMAGE_HELP, OPAQUE_IMAGE_ERROR, JPEG_IMAGE_ERROR, assertTransparentImage, imageHasTransparency, } from './lib/transparentImage';
 export * from './components/shadcn/sidebar';
 export * from './components/shadcn/sheet';

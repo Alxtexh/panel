@@ -29,15 +29,25 @@ import {
     DASHBOARD_HIDE_KEY,
     DASHBOARD_HIDDEN_STORAGE_KEY,
     DashboardShortcuts,
+    PAGE_SHELL,
     PkBoundary,
     PkSlideover,
     SetupChecklist,
+    StatCard,
     StatStrip,
     iconPath,
+    mergeLayoutItems,
     packWidgetColumns,
+    toPersistedLayout,
     useColumnVisibility,
 } from '@alxtexh-enterprise/panel'
-import type { DashboardHide, SetupChecklistItem, StatSegment } from '@alxtexh-enterprise/panel'
+import type {
+    DashboardHide,
+    DashboardLayout,
+    LayoutItem,
+    SetupChecklistItem,
+    StatSegment,
+} from '@alxtexh-enterprise/panel'
 import DashboardChartPane from '../components/widgets/DashboardChartPane.vue'
 import DashboardTablePane from '../components/widgets/DashboardTablePane.vue'
 import type { TableWidgetDecl } from '../components/widgets/DashboardTablePane.vue'
@@ -130,7 +140,7 @@ const props = withDefaults(
         } | null
         /** Opt-in via Panel::userDashboards(). */
         userDashboards?: boolean
-        dashboardLayout?: { chartOrder: string[] } | null
+        dashboardLayout?: DashboardLayout | null
     }>(),
     {
         announcements: () => [],
@@ -542,6 +552,14 @@ function hideWidget(id: string, label?: string) {
 
     hiddenWidgets.hide(id)
     writeHiddenCookie(hiddenWidgets.hidden.value)
+
+    if (props.userDashboards) {
+        const layoutId = id.includes(':') ? id : `chart:${id}`
+        const next = layoutItems.value.map((item) =>
+            item.id === layoutId || item.key === id ? { ...item, hidden: true } : item,
+        )
+        void persistLayout(next)
+    }
 }
 
 const dashboardHide: DashboardHide = {
@@ -599,80 +617,56 @@ function restoreAllHidden() {
     router.reload()
 }
 
-const visibleCharts = computed(() => {
-    const visible = props.charts.filter((chart) => !hiddenWidgets.hidden.value.has(chart.key))
+const visibleCharts = computed(() =>
+    props.charts.filter((chart) => !hiddenWidgets.hidden.value.has(chart.key)),
+)
 
+type AnyLayoutItem = LayoutItem<Widget | Chart | TableWidgetDecl>
+
+const layoutItems = computed((): AnyLayoutItem[] => {
     if (!props.userDashboards) {
-        return visible
+        return []
     }
 
-    const order = props.dashboardLayout?.chartOrder ?? []
+    return mergeLayoutItems(props.widgets, props.charts, props.tables, props.dashboardLayout).map(
+        (item) => {
+            const cookieHidden =
+                hiddenWidgets.hidden.value.has(item.key)
+                || hiddenWidgets.hidden.value.has(item.id)
 
-    if (order.length === 0) {
-        return visible
-    }
-
-    const byKey = new Map(visible.map((chart) => [chart.key, chart]))
-    const ordered: typeof visible = []
-
-    for (const key of order) {
-        const chart = byKey.get(key)
-
-        if (chart) {
-            ordered.push(chart)
-            byKey.delete(key)
-        }
-    }
-
-    for (const chart of byKey.values()) {
-        ordered.push(chart)
-    }
-
-    return ordered
+            return {
+                ...item,
+                hidden: item.hidden || cookieHidden,
+            }
+        },
+    )
 })
 
-const chartDragKey = ref<string | null>(null)
+const visibleLayoutItems = computed(() => layoutItems.value.filter((item) => !item.hidden))
 
-function onChartDragStart(key: string, event: DragEvent) {
+const widgetDragId = ref<string | null>(null)
+
+function onWidgetDragStart(id: string, event: DragEvent) {
     if (!props.userDashboards) {
         event.preventDefault()
         return
     }
 
-    chartDragKey.value = key
-    event.dataTransfer?.setData('text/plain', key)
+    widgetDragId.value = id
+    event.dataTransfer?.setData('text/plain', id)
 
     if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = 'move'
     }
 }
 
-function onChartDragEnd() {
-    chartDragKey.value = null
+function onWidgetDragEnd() {
+    widgetDragId.value = null
 }
 
-async function onChartDrop(targetKey: string, event: DragEvent) {
-    event.preventDefault()
-
-    const from = chartDragKey.value
-    chartDragKey.value = null
-
-    if (!props.userDashboards || !from || from === targetKey) {
-        return
-    }
-
-    const keys = visibleCharts.value.map((chart) => chart.key)
-    const fromIndex = keys.indexOf(from)
-    const toIndex = keys.indexOf(targetKey)
-
-    if (fromIndex < 0 || toIndex < 0) {
-        return
-    }
-
-    keys.splice(fromIndex, 1)
-    keys.splice(toIndex, 0, from)
-
+async function persistLayout(items: readonly { id: string; span: number; hidden: boolean }[]) {
     const href = props.prefix ? `/${props.prefix}/settings/appearance` : '/settings/appearance'
+    const body = toPersistedLayout(items)
 
     try {
         await fetch(href, {
@@ -686,48 +680,112 @@ async function onChartDrop(targetKey: string, event: DragEvent) {
                         ?.content ?? '',
             },
             credentials: 'same-origin',
-            body: JSON.stringify({ dashboardLayout: { chartOrder: keys } }),
+            body: JSON.stringify({ dashboardLayout: body }),
         })
 
-        router.reload({ only: ['dashboardLayout', 'charts'] })
+        router.reload({ only: ['dashboardLayout', 'widgets', 'charts', 'tables'] })
     } catch {
-        // Keep the previous order on failure.
+        // Keep the previous layout on failure.
     }
 }
 
-/**
- * Independent column tracks from `lg` up. Below that, one stack in
- * declaration order. Round-robin assignment (not a shared CSS-grid row)
- * is what lets a collapsed card give its space to the widget under it.
- */
+async function onWidgetDrop(targetId: string, event: DragEvent) {
+    event.preventDefault()
+
+    const from = widgetDragId.value
+    widgetDragId.value = null
+
+    if (!props.userDashboards || !from || from === targetId) {
+        return
+    }
+
+    const items = [...layoutItems.value]
+    const fromIndex = items.findIndex((item) => item.id === from)
+    const toIndex = items.findIndex((item) => item.id === targetId)
+
+    if (fromIndex < 0 || toIndex < 0) {
+        return
+    }
+
+    const [moved] = items.splice(fromIndex, 1)
+    items.splice(toIndex, 0, moved)
+
+    await persistLayout(items)
+}
+
+async function toggleWidgetSpan(id: string) {
+    if (!props.userDashboards) {
+        return
+    }
+
+    const items = layoutItems.value.map((item) =>
+        item.id === id ? { ...item, span: item.span >= 2 ? 1 : 2 } : item,
+    )
+
+    await persistLayout(items)
+}
+
 const wideLayout = useMediaQuery('(min-width: 1024px)')
 const chartBands = computed(() =>
     packWidgetColumns(visibleCharts.value, wideLayout.value ? 2 : 1),
 )
+const layoutBands = computed(() =>
+    packWidgetColumns(visibleLayoutItems.value, wideLayout.value ? 2 : 1),
+)
 
 const hiddenEntries = computed(() => {
     const entries: { id: string; label: string }[] = []
+    const seen = new Set<string>()
+
+    const push = (id: string, label: string) => {
+        if (seen.has(id)) {
+            return
+        }
+
+        seen.add(id)
+        entries.push({ id, label })
+    }
+
+    if (props.userDashboards) {
+        for (const item of layoutItems.value) {
+            if (item.hidden) {
+                const label =
+                    'label' in item.source && typeof item.source.label === 'string'
+                        ? item.source.label
+                        : item.key
+                push(item.id, label)
+            }
+        }
+    }
 
     for (const chart of props.charts) {
         if (hiddenWidgets.hidden.value.has(chart.key)) {
-            entries.push({ id: chart.key, label: chart.label })
+            push(chart.key, chart.label)
         }
     }
 
     for (const [id, label] of Object.entries(extraLabels.value)) {
-        if (hiddenWidgets.hidden.value.has(id) && !entries.some((entry) => entry.id === id)) {
-            entries.push({ id, label })
+        if (hiddenWidgets.hidden.value.has(id)) {
+            push(id, label)
         }
     }
 
     return entries
 })
+
+function layoutLabel(item: AnyLayoutItem): string {
+    if ('label' in item.source && typeof item.source.label === 'string') {
+        return item.source.label
+    }
+
+    return item.key
+}
 </script>
 
 <template>
     <Head :title="heading" />
 
-    <div class="flex w-full min-w-0 flex-col gap-4 p-3 sm:p-4">
+    <div :class="[PAGE_SHELL, 'flex flex-col gap-4']">
         <!--
             ABOVE EVERYTHING, because a notice below the fold is a notice nobody
             read - which is exactly what the dedicated Announcements page turned
@@ -957,11 +1015,10 @@ const hiddenEntries = computed(() => {
         </PkBoundary>
 
         <!--
-            ONE `Deferred` FOR THE WHOLE ROW. Per-card deferral is right for
-            tiles that land independently and wrong for a joined strip: the
-            divider grid would reflow as each cell arrived.
+            Classic path (userDashboards off): one StatStrip for the whole row.
+            Custom layout path: stats, charts, and tables share one DnD grid.
         -->
-        <PkBoundary v-if="widgets.length" label="Statistics">
+        <PkBoundary v-if="!userDashboards && widgets.length" label="Statistics">
             <Deferred :data="statKeys">
                 <template #fallback>
                     <StatStrip
@@ -971,7 +1028,6 @@ const hiddenEntries = computed(() => {
                         loading
                     />
                 </template>
-
                 <template #default>
                     <StatStrip :segments="statSegments" :columns="statColumns" :maskable="false" />
                 </template>
@@ -979,7 +1035,118 @@ const hiddenEntries = computed(() => {
         </PkBoundary>
 
         <div
-            v-if="visibleCharts.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0"
+            v-if="userDashboards && (visibleLayoutItems.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0)"
+            class="flex flex-col gap-3"
+            data-slot="dashboard-layout"
+        >
+            <slot name="before-charts">
+                <DashboardShortcuts
+                    v-if="shortcuts?.catalog?.length"
+                    :catalog="shortcuts.catalog"
+                    :defaults="shortcuts.defaults ?? []"
+                    :storage-key="shortcuts.storageKey ?? 'panel.dashboard.shortcuts'"
+                />
+            </slot>
+            <p v-if="visibleLayoutItems.length" class="text-muted-foreground text-[10px] uppercase tracking-wide">
+                Drag widgets to rearrange. Use Widen / Narrow for column span.
+            </p>
+            <template v-for="(band, bandIndex) in layoutBands" :key="`layout-${bandIndex}`">
+                <div
+                    v-if="band.type === 'wide'"
+                    :draggable="true"
+                    :class="widgetDragId === band.item.id ? 'opacity-40' : ''"
+                    @dragstart="onWidgetDragStart(band.item.id, $event)"
+                    @dragend="onWidgetDragEnd"
+                    @dragover.prevent
+                    @drop="onWidgetDrop(band.item.id, $event)"
+                >
+                    <div class="mb-1 flex items-center justify-between gap-2">
+                        <span class="text-muted-foreground text-[10px] uppercase tracking-wide">{{ layoutLabel(band.item) }}</span>
+                        <button type="button" class="text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wide" @click.stop="toggleWidgetSpan(band.item.id)">Narrow</button>
+                    </div>
+                    <template v-if="band.item.kind === 'stat'">
+                        <PkBoundary :label="layoutLabel(band.item)" fill>
+                            <Deferred :data="`stat_${band.item.key}`">
+                                <template #fallback><StatCard :label="layoutLabel(band.item)" loading /></template>
+                                <template #default>
+                                    <StatCard
+                                        :label="layoutLabel(band.item)"
+                                        :description="(band.item.source as Widget).description"
+                                        :value="stat(band.item.key)?.value"
+                                        :trend="stat(band.item.key)?.trend"
+                                        :sparkline="stat(band.item.key)?.sparkline"
+                                        :error="stat(band.item.key)?.error"
+                                    />
+                                </template>
+                            </Deferred>
+                        </PkBoundary>
+                    </template>
+                    <DashboardChartPane
+                        v-else-if="band.item.kind === 'chart'"
+                        :chart="band.item.source as Chart"
+                        :series="series(band.item.key)"
+                        :periods="periodsFor(band.item.source as Chart)"
+                        :period="periods[band.item.key]"
+                        :comparison="comparison[periods[band.item.key]]"
+                        :body-height="bodyHeight(band.item.source as Chart)"
+                        @update:period="(value: string) => setPeriod(band.item.key, value)"
+                        @hide="hideWidget(band.item.id, layoutLabel(band.item))"
+                    />
+                    <DashboardTablePane v-else :table="band.item.source as TableWidgetDecl" :data-key="`table_${band.item.key}`" />
+                </div>
+                <div v-else class="flex flex-col items-start gap-3 lg:flex-row" data-slot="dashboard-widget-columns">
+                    <div v-for="(column, columnIndex) in band.columns" :key="columnIndex" class="flex w-full min-w-0 flex-1 flex-col gap-3">
+                        <div
+                            v-for="item in column"
+                            :key="item.id"
+                            :draggable="true"
+                            :class="widgetDragId === item.id ? 'opacity-40' : ''"
+                            @dragstart="onWidgetDragStart(item.id, $event)"
+                            @dragend="onWidgetDragEnd"
+                            @dragover.prevent
+                            @drop="onWidgetDrop(item.id, $event)"
+                        >
+                            <div class="mb-1 flex items-center justify-between gap-2">
+                                <span class="text-muted-foreground text-[10px] uppercase tracking-wide">Drag</span>
+                                <button type="button" class="text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wide" @click.stop="toggleWidgetSpan(item.id)">Widen</button>
+                            </div>
+                            <template v-if="item.kind === 'stat'">
+                                <PkBoundary :label="layoutLabel(item)" fill>
+                                    <Deferred :data="`stat_${item.key}`">
+                                        <template #fallback><StatCard :label="layoutLabel(item)" loading /></template>
+                                        <template #default>
+                                            <StatCard
+                                                :label="layoutLabel(item)"
+                                                :description="(item.source as Widget).description"
+                                                :value="stat(item.key)?.value"
+                                                :trend="stat(item.key)?.trend"
+                                                :sparkline="stat(item.key)?.sparkline"
+                                                :error="stat(item.key)?.error"
+                                            />
+                                        </template>
+                                    </Deferred>
+                                </PkBoundary>
+                            </template>
+                            <DashboardChartPane
+                                v-else-if="item.kind === 'chart'"
+                                :chart="item.source as Chart"
+                                :series="series(item.key)"
+                                :periods="periodsFor(item.source as Chart)"
+                                :period="periods[item.key]"
+                                :comparison="comparison[periods[item.key]]"
+                                :body-height="bodyHeight(item.source as Chart)"
+                                @update:period="(value: string) => setPeriod(item.key, value)"
+                                @hide="hideWidget(item.id, layoutLabel(item))"
+                            />
+                            <DashboardTablePane v-else :table="item.source as TableWidgetDecl" :data-key="`table_${item.key}`" />
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div
+            v-if="!userDashboards && (visibleCharts.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0)"
             class="flex flex-col gap-3"
             data-slot="dashboard-charts"
         >
@@ -991,28 +1158,8 @@ const hiddenEntries = computed(() => {
                     :storage-key="shortcuts.storageKey ?? 'panel.dashboard.shortcuts'"
                 />
             </slot>
-
-            <!--
-                COLUMN TRACKS, NOT A SHARED-ROW GRID. Each track is a flex
-                column so a collapsed header frees space for the widget below
-                it. Neighbours in the other track keep their own height.
-            -->
             <template v-for="(band, bandIndex) in chartBands" :key="bandIndex">
-                <div
-                    v-if="band.type === 'wide'"
-                    :draggable="userDashboards"
-                    :class="chartDragKey === band.item.key ? 'opacity-40' : ''"
-                    @dragstart="onChartDragStart(band.item.key, $event)"
-                    @dragend="onChartDragEnd"
-                    @dragover.prevent
-                    @drop="onChartDrop(band.item.key, $event)"
-                >
-                    <p
-                        v-if="userDashboards"
-                        class="text-muted-foreground mb-1 text-[10px] uppercase tracking-wide"
-                    >
-                        Drag to rearrange
-                    </p>
+                <div v-if="band.type === 'wide'" class="w-full">
                     <DashboardChartPane
                         :chart="band.item"
                         :series="series(band.item.key)"
@@ -1024,26 +1171,9 @@ const hiddenEntries = computed(() => {
                         @hide="hideWidget(band.item.key, band.item.label)"
                     />
                 </div>
-                <div
-                    v-else
-                    class="flex flex-col items-start gap-3 lg:flex-row"
-                    data-slot="dashboard-widget-columns"
-                >
-                    <div
-                        v-for="(column, columnIndex) in band.columns"
-                        :key="columnIndex"
-                        class="flex w-full min-w-0 flex-1 flex-col gap-3"
-                    >
-                        <div
-                            v-for="chart in column"
-                            :key="chart.key"
-                            :draggable="userDashboards"
-                            :class="chartDragKey === chart.key ? 'opacity-40' : ''"
-                            @dragstart="onChartDragStart(chart.key, $event)"
-                            @dragend="onChartDragEnd"
-                            @dragover.prevent
-                            @drop="onChartDrop(chart.key, $event)"
-                        >
+                <div v-else class="flex flex-col items-start gap-3 lg:flex-row" data-slot="dashboard-widget-columns">
+                    <div v-for="(column, columnIndex) in band.columns" :key="columnIndex" class="flex w-full min-w-0 flex-1 flex-col gap-3">
+                        <div v-for="chart in column" :key="chart.key">
                             <DashboardChartPane
                                 :chart="chart"
                                 :series="series(chart.key)"
@@ -1060,13 +1190,8 @@ const hiddenEntries = computed(() => {
             </template>
         </div>
 
-        <div v-if="tables.length" class="flex flex-col gap-3" data-slot="dashboard-tables">
-            <DashboardTablePane
-                v-for="table in tables"
-                :key="table.key"
-                :table="table"
-                :data-key="`table_${table.key}`"
-            />
+        <div v-if="!userDashboards && tables.length" class="flex flex-col gap-3" data-slot="dashboard-tables">
+            <DashboardTablePane v-for="table in tables" :key="table.key" :table="table" :data-key="`table_${table.key}`" />
         </div>
     </div>
 </template>

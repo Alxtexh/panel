@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use Alxtexh\Panel\Alerts\Announcement;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\Ability;
+use Alxtexh\Panel\Support\DashboardLayout;
 use Alxtexh\Panel\Support\OnboardingSteps;
 use Alxtexh\Panel\Support\SetupChecklist;
 use Alxtexh\Panel\Support\TenantContext;
@@ -575,9 +576,9 @@ abstract class DashboardPage extends Page
     }
 
     /**
-     * Per-user chart order when `Panel::userDashboards()` is on.
+     * Per-user widget layout when `Panel::userDashboards()` is on.
      *
-     * @return array{chartOrder: list<string>}|null
+     * @return array{widgets: list<array{id: string, span: int, hidden: bool}>}|null
      */
     private static function dashboardLayoutFor(mixed $user): ?array
     {
@@ -588,21 +589,8 @@ abstract class DashboardPage extends Page
         }
 
         $appearance = is_array($user->appearance ?? null) ? $user->appearance : [];
-        $layout = $appearance['dashboardLayout'] ?? null;
 
-        if (! is_array($layout)) {
-            return ['chartOrder' => []];
-        }
-
-        $order = [];
-
-        foreach ($layout['chartOrder'] ?? [] as $key) {
-            if (is_string($key) && preg_match('/^[a-z0-9_-]+$/i', $key) === 1) {
-                $order[] = $key;
-            }
-        }
-
-        return ['chartOrder' => array_values(array_unique($order))];
+        return DashboardLayout::normalize($appearance['dashboardLayout'] ?? null);
     }
 
     /**
