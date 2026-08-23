@@ -29,6 +29,7 @@ final class PanelPages
     public const SCREENS = [
         'ResourceIndex',
         'ResourceKanban',
+        'ResourceWorkflow',
         'ResourceForm',
         'ResourceView',
         'ResourceAttach',

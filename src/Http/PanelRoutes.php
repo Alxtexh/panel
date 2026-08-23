@@ -1249,6 +1249,13 @@ final class PanelRoutes
         Route::post('{resource}/board-move', [RecordController::class, 'boardMove'])
             ->whereIn('resource', $keys)->name('board.move');
 
+        /*
+         * Visual workflow diagram. Opt-in via Resource::workflow(). Same
+         * ordering rule as board: a fixed segment must not be captured as an id.
+         */
+        Route::get('{resource}/workflow', [ResourceController::class, 'workflow'])
+            ->whereIn('resource', $keys)->name('workflow');
+
         Route::get('{resource}/forms/create', [ResourceController::class, 'modalCreate'])
             ->whereIn('resource', $keys)->name('forms.create');
 

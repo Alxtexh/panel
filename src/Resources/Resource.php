@@ -982,6 +982,9 @@ abstract class Resource
                         'boardMove' => static::board() !== null
                             ? $prefix.'/'.static::key().'/board-move'
                             : null,
+                        'workflow' => static::workflow() !== null
+                            ? $prefix.'/'.static::key().'/workflow'
+                            : null,
                         'comments' => static::hasComments()
                             ? $prefix.'/'.static::key().'/{id}/record-comments'
                             : null,

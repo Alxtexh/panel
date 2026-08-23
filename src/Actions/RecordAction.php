@@ -450,6 +450,10 @@ final class RecordAction
 
         $this->assertTransitionAllowed($record);
 
+        $from = $this->transitionState !== null
+            ? $record->getAttribute($this->transitionColumn)
+            : null;
+
         // forceFill, because the attributes come from the DEFINITION rather
         // than from a request - the mass-assignment guard is protecting against
         // input, and there is none here.
@@ -457,7 +461,9 @@ final class RecordAction
 
         if ($this->transitionState !== null) {
             app(AuditRecorder::class)->record($record, 'state_transition', [
-                $this->transitionColumn => $this->transitionState,
+                'column' => $this->transitionColumn,
+                'from' => $from,
+                'to' => $this->transitionState,
             ]);
         }
 
@@ -554,11 +560,17 @@ final class RecordAction
 
         $this->assertTransitionAllowed($record);
 
+        $from = $this->transitionState !== null
+            ? $record->getAttribute($this->transitionColumn)
+            : null;
+
         $record->forceFill($this->mutate)->save();
 
         if ($this->transitionState !== null) {
             app(AuditRecorder::class)->record($record, 'state_transition', [
-                $this->transitionColumn => $this->transitionState,
+                'column' => $this->transitionColumn,
+                'from' => $from,
+                'to' => $this->transitionState,
             ]);
         }
 
