@@ -29,8 +29,6 @@ final class LandingPageTest extends TestCase
             'aurora' => ['aurora'],
             'editorial' => ['editorial'],
             'console' => ['console'],
-            'marketing' => ['marketing'],
-            'shadcn' => ['shadcn'],
         ];
     }
 
@@ -45,13 +43,7 @@ final class LandingPageTest extends TestCase
     {
         $page = $this->get("/preview/{$design}")->assertOk()->viewData('page');
 
-        $component = match ($design) {
-            'marketing' => 'landing/VueJs',
-            'shadcn' => 'landing/ShadcnVue',
-            default => 'landing/Composed',
-        };
-
-        $this->assertSame($component, $page['component']);
+        $this->assertSame('landing/Composed', $page['component']);
         $this->assertNotEmpty($page['props']['sections'], "The {$design} design rendered no sections.");
         $this->assertSame('hero', $page['props']['sections'][0]['type'], 'A landing page must open with a hero.');
         $this->assertSame($design, $page['props']['design']);
@@ -67,8 +59,7 @@ final class LandingPageTest extends TestCase
 
         $this->assertNotSame($shape('aurora'), $shape('editorial'));
         $this->assertNotSame($shape('aurora'), $shape('console'));
-        $this->assertNotSame($shape('aurora'), $shape('marketing'));
-        $this->assertNotSame($shape('marketing'), $shape('shadcn'));
+        $this->assertNotSame($shape('editorial'), $shape('console'));
     }
 
     /** Every section a preset names must be one the renderer knows. */
@@ -92,10 +83,10 @@ final class LandingPageTest extends TestCase
 
     public function test_landing_variant_route_renders_the_same_as_preview(): void
     {
-        $preview = $this->get('/preview/shadcn')->assertOk()->viewData('page');
-        $landing = $this->get('/landing/shadcn')->assertOk()->viewData('page');
+        $preview = $this->get('/preview/console')->assertOk()->viewData('page');
+        $landing = $this->get('/landing/console')->assertOk()->viewData('page');
 
-        $this->assertSame('landing/ShadcnVue', $preview['component']);
+        $this->assertSame('landing/Composed', $preview['component']);
         $this->assertSame($preview['component'], $landing['component']);
         $this->assertSame(
             array_column($preview['props']['sections'], 'type'),
@@ -103,13 +94,24 @@ final class LandingPageTest extends TestCase
         );
     }
 
-    public function test_vue_marketing_alias_resolves_to_marketing(): void
+    public function test_composed_alias_resolves_to_aurora(): void
     {
-        $page = $this->get('/preview/vue-marketing')->assertOk()->viewData('page');
+        $page = $this->get('/preview/composed')->assertOk()->viewData('page');
 
-        $this->assertSame('marketing', $page['props']['design']);
-        $this->assertSame('landing/VueJs', $page['component']);
+        $this->assertSame('aurora', $page['props']['design']);
+        $this->assertSame('landing/Composed', $page['component']);
         $this->assertSame('hero', $page['props']['sections'][0]['type']);
+    }
+
+    public function test_removed_marketing_and_shadcn_previews_are_not_routed(): void
+    {
+        $this->get('/preview/marketing')->assertNotFound();
+        $this->get('/preview/shadcn')->assertNotFound();
+        $this->get('/preview/vue-js')->assertNotFound();
+        $this->get('/preview/vue-marketing')->assertNotFound();
+        $this->get('/preview/shadcn-vue')->assertNotFound();
+        $this->get('/landing/marketing')->assertNotFound();
+        $this->get('/landing/shadcn')->assertNotFound();
     }
 
     /** The configured design is what an installation shows without a parameter. */

@@ -201,9 +201,6 @@ final class PanelRoutes
             $designs = implode('|', [
                 ...Landing\LandingPresets::names(),
                 'composed',
-                'vue-marketing',
-                'vue-js',
-                'shadcn-vue',
             ]);
 
             Route::get('preview/{design}', Landing\LandingController::class)

@@ -1,0 +1,76 @@
+{
+    "name": "alxtexh-enterprise/panel",
+    "description": "Schema-driven admin panel framework for Laravel. Filament's developer experience, SPA transport.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "inertia",
+        "vue",
+        "admin-panel",
+        "dashboard",
+        "multi-tenancy"
+    ],
+    "homepage": "https://github.com/Alxtexh/panelkit",
+    "authors": [
+        {
+            "name": "Alxtexh",
+            "homepage": "https://github.com/Alxtexh"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/Alxtexh/panelkit/issues",
+        "source": "https://github.com/Alxtexh/panelkit"
+    },
+    "require": {
+        "php": "^8.4",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/routing": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "inertiajs/inertia-laravel": "^2.0|^3.0",
+        "laravel-notification-channels/telegram": "^7.0",
+        "spatie/laravel-permission": "^8.3"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^3.0|^4.0",
+        "stancl/tenancy": "^3.10"
+    },
+    "suggest": {
+        "laravel/ai": "Needed only for ProviderEmbedder - model-backed retrieval. The default embedder is local and needs nothing.",
+        "stancl/tenancy": "Needed only for `database` tenancy mode - dedicated database per tenant. The default `column` mode needs nothing."
+    },
+    "autoload": {
+        "psr-4": {
+            "Alxtexh\\Panel\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Alxtexh\\Panel\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Alxtexh\\Panel\\PanelServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": [
+            "@php vendor/bin/pest --no-coverage"
+        ]
+    }
+}

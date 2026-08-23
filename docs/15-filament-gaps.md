@@ -80,6 +80,8 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.4.0 | Built-in public landings (parallel track; kit landing variants) |
 | v1.4.1 | Media library signed preview/download URLs; `BarcodeWidget` / `LogTailWidget`; developer apps chrome (API keys + webhooks toward TableShell) |
 | v1.4.2 | Replace inspired marketing/shadcn landings with ported SFCs from the offered GitHub templates |
+| v1.4.3 | Verbatim vue-js / shadcn-vue landing ports |
+| v1.4.4 | Remove ported vue-js / shadcn-vue landings; keep aurora, editorial, console |
 
 ## Versioning (from v1.1.0)
 
@@ -89,5 +91,6 @@ The historical tags `v1.0.100` and `v1.0.101` remain published; `v1.1.0` is the
 canonical minor that covers both auth and the first sidebar layout families.
 `v1.3.0` adds accordion / file-tree / calendar / dialog.
 `v1.4.0` is landings (parallel). `v1.4.1` is media signed URLs, barcode/log-tail
-widgets, and developer chrome. `v1.4.2` ports the real vue-js and shadcn-vue
-landing templates into the kit.
+widgets, and developer chrome. `v1.4.2` / `v1.4.3` briefly shipped ported
+vue-js and shadcn-vue templates; `v1.4.4` removes those ports and keeps the
+original aurora / editorial / console compositions.

@@ -288,11 +288,3 @@ body:has(.pk-shell) {
         animation: none;
     }
 }
-
-.pk-marketing .pk-hero-brand {
-    letter-spacing: -0.03em;
-}
-
-.pk-shadcn .pk-hero-brand {
-    letter-spacing: -0.04em;
-}

@@ -353,7 +353,7 @@ final class Panel
      *
      * @var list<string>
      */
-    private const LANDING_DESIGNS = ['aurora', 'editorial', 'console', 'marketing', 'shadcn'];
+    private const LANDING_DESIGNS = ['aurora', 'editorial', 'console'];
 
     /**
      * Host-facing aliases that resolve to a shipped landing design.
@@ -362,9 +362,6 @@ final class Panel
      */
     private const LANDING_ALIASES = [
         'composed' => 'aurora',
-        'vue-marketing' => 'marketing',
-        'vue-js' => 'marketing',
-        'shadcn-vue' => 'shadcn',
     ];
 
     /**
@@ -373,7 +370,7 @@ final class Panel
      */
     private ?bool $landingRoute = null;
 
-    /** Landing design set via `landing('shadcn')`, when any. */
+    /** Landing design set via `landing('editorial')`, when any. */
     private ?string $landingDesign = null;
 
     /**
@@ -1523,8 +1520,7 @@ final class Panel
      *
      * ```php
      * Panel::make('admin')->landing(true);           // route on, keep config design
-     * Panel::make('admin')->landing('shadcn');       // route on + design
-     * Panel::make('admin')->landing('vue-marketing'); // alias → marketing
+     * Panel::make('admin')->landing('editorial');    // route on + design
      * Panel::make('admin')->landing('composed');     // alias → aurora
      * Panel::make('admin')->landing(false);          // do not claim /
      * ```
