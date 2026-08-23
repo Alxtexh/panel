@@ -165,7 +165,7 @@ distinct. This is the admin's design choice at bootstrap, not a runtime toggle:
 $panels->registerPanel(
     Panel::make('reseller')
         ->path('reseller')
-        ->sidebarLayout('floating')  // inset (default), sidebar, icon, header
+        ->sidebarLayout('floating')  // inset (default), sidebar, icon, header, accordion, …
         // ->environmentBanner(false)
         ->discoverResources(...)
 );
@@ -175,8 +175,9 @@ Shorter form when chaining on `Panel::make()`:
 
 ```php
 Panel::make('admin')
-    ->sidebarLayout('floating')  // or 'inset' (default), 'sidebar', 'icon', 'header'
+    ->sidebarLayout('floating')  // or 'inset' (default), 'sidebar', 'icon', 'header', …
     // ->sidebarLayout('sidebar-07')  // same as 'icon'
+    // ->sidebarLayout('sidebar-05')  // same as 'accordion'
 ```
 
 `AppSidebar` / `PanelShell` rearrange chrome from `sidebarLayout()`. Prefer
@@ -191,11 +192,13 @@ name. Default is `inset`, which preserves the rail panels already ship.
 | `floating` | sidebar-04 | Floating card rail |
 | `icon` | sidebar-07 | Icon rail by default (`rail` alias) |
 | `header` | sidebar-16 | Sticky site header, nav-only rail, user in top bar |
+| `accordion` | sidebar-05 / sidebar-06 | Plus/Minus collapsible groups (`dropdown` alias) |
+| `file-tree` | sidebar-11 | Nested folder / file tree (`tree` alias) |
+| `calendar` | sidebar-12 | Mini calendar chrome, user in rail header |
+| `dialog` | sidebar-13 | Overlay / offcanvas dialog-style rail |
 
-Deferred (not live chrome yet): sidebar-05 / sidebar-06 (dropdown accordion
-submenus), sidebar-11 (file tree), sidebar-12 (calendar), sidebar-13 (sidebar
-in a dialog). Patterns are reimplemented against kit tokens; do not run
-`npx shadcn-vue add` into the monorepo for these.
+Patterns are reimplemented against kit tokens; do not run `npx shadcn-vue add`
+into the monorepo for these.
 
 Playground demos: **Sidebar samples** in the nav, at `/screens/sidebar/{layout}`
 (live shell, not screenshots). Auth samples stay under `/screens/auth/...`.

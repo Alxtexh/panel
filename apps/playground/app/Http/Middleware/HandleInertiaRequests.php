@@ -353,7 +353,14 @@ class HandleInertiaRequests extends Middleware
 
                 $panel = app(PanelManager::class)->currentPanel();
 
-                return $panel === null || $panel->getSidebarLayout() !== 'icon';
+                if ($panel === null) {
+                    return true;
+                }
+
+                $layout = $panel->getSidebarLayout();
+
+                // icon + dialog prefer closed on first paint (no cookie yet).
+                return $layout !== 'icon' && $layout !== 'dialog';
             })(),
         ];
     }

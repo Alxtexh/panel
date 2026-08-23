@@ -11,9 +11,10 @@
  * on every single page load.
  *
  * SIDEBAR LAYOUT FAMILIES (`panel.sidebarLayout` / `forceSidebarLayout`):
- * - `icon` prefers collapsed (server shares sidebarOpen false when no cookie)
+ * - `icon` / `dialog` prefer collapsed (server shares sidebarOpen false when no cookie)
  * - `header` wraps the provider under a sticky site header (sidebar-16) and
  *   moves the account menu into the inset top bar
+ * - `dialog` uses offcanvas on every breakpoint (sidebar-13 overlay pattern)
  */
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
@@ -35,11 +36,17 @@ const { chrome } = useSidebarLayout()
 const cookieOpen = computed(() => page.props.sidebarOpen as boolean | undefined)
 
 /**
- * Gallery force for `icon` always starts collapsed so the sample is honest
- * even when the browser still holds an expanded cookie from elsewhere.
+ * Gallery force for `icon` / `dialog` always starts closed so the sample is
+ * honest even when the browser still holds an expanded cookie from elsewhere.
  */
 const isOpen = computed(() => {
-    if (page.props.forceSidebarLayout === 'icon') {
+    const forced = page.props.forceSidebarLayout
+
+    if (forced === 'icon' || forced === 'dialog') {
+        return false
+    }
+
+    if (chrome.value.preferCollapsed && cookieOpen.value === undefined) {
         return false
     }
 

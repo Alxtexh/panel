@@ -699,6 +699,10 @@ Route::get('/screens/sidebar/{layout}', function (string $layout) {
         'floating' => 'Floating',
         'icon' => 'Icon rail',
         'header' => 'Site header',
+        'accordion' => 'Accordion',
+        'file-tree' => 'File tree',
+        'calendar' => 'Calendar',
+        'dialog' => 'Dialog',
     ];
 
     abort_unless(isset($layouts[$layout]), 404);
@@ -706,7 +710,7 @@ Route::get('/screens/sidebar/{layout}', function (string $layout) {
     return Inertia::render('errors/SidebarFamilyPreview', [
         'forceSidebarLayout' => $layout,
         'layoutLabel' => $layouts[$layout],
-        'sidebarOpen' => $layout !== 'icon',
+        'sidebarOpen' => ! in_array($layout, ['icon', 'dialog'], true),
     ]);
 })->middleware([
     'web',

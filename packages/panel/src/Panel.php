@@ -377,25 +377,35 @@ final class Panel
      * the same setter. Unknown names fall back to `inset` so a typo never
      * blanks the rail. Default `inset` preserves the chrome panels already ship.
      *
-     * | Family    | shadcn-vue blocks (layout pattern) | Composition                         |
-     * |-----------|------------------------------------|-------------------------------------|
-     * | inset     | sidebar-08                         | Inset rail + secondary footer nav   |
-     * | sidebar   | sidebar-01                         | Edge-flush grouped rail             |
-     * | floating  | sidebar-04                         | Floating card rail                  |
-     * | icon      | sidebar-07                         | Collapses to icon rail by default   |
-     * | header    | sidebar-16                         | Sticky site header, nav rail, topbar user |
+     * | Family     | shadcn-vue blocks (layout pattern) | Composition                              |
+     * |------------|------------------------------------|------------------------------------------|
+     * | inset      | sidebar-08                         | Inset rail + secondary footer nav        |
+     * | sidebar    | sidebar-01                         | Edge-flush grouped rail                  |
+     * | floating   | sidebar-04                         | Floating card rail                       |
+     * | icon       | sidebar-07                         | Collapses to icon rail by default        |
+     * | header     | sidebar-16                         | Sticky site header, nav rail, topbar user|
+     * | accordion  | sidebar-05 / sidebar-06             | Plus/Minus collapsible nav groups        |
+     * | file-tree  | sidebar-11                         | Nested folder / file tree rail           |
+     * | calendar   | sidebar-12                         | Mini calendar chrome, user in rail header|
+     * | dialog     | sidebar-13                         | Overlay / offcanvas dialog-style rail    |
      *
      * Patterns are reimplemented in AppSidebar / PanelShell against kit tokens.
      * Hosts do not run `npx shadcn-vue add` into the monorepo for these.
-     *
-     * Deferred block ids (honest mapping, not shipped as live chrome):
-     * sidebar-05 / sidebar-06 (dropdown accordion submenus), sidebar-11 (file
-     * tree), sidebar-12 (calendar), sidebar-13 (sidebar in a dialog).
      */
     private string $sidebarLayout = 'inset';
 
     /** @var list<string> */
-    private const SIDEBAR_LAYOUTS = ['inset', 'sidebar', 'floating', 'icon', 'header'];
+    private const SIDEBAR_LAYOUTS = [
+        'inset',
+        'sidebar',
+        'floating',
+        'icon',
+        'header',
+        'accordion',
+        'file-tree',
+        'calendar',
+        'dialog',
+    ];
 
     /**
      * shadcn-vue block ids and short aliases that resolve to a PanelKit layout.
@@ -405,11 +415,18 @@ final class Panel
     private const SIDEBAR_LAYOUT_ALIASES = [
         'sidebar-01' => 'sidebar',
         'sidebar-04' => 'floating',
+        'sidebar-05' => 'accordion',
+        'sidebar-06' => 'accordion',
         'sidebar-07' => 'icon',
         'sidebar-08' => 'inset',
+        'sidebar-11' => 'file-tree',
+        'sidebar-12' => 'calendar',
+        'sidebar-13' => 'dialog',
         'sidebar-16' => 'header',
         'edge' => 'sidebar',
         'rail' => 'icon',
+        'tree' => 'file-tree',
+        'dropdown' => 'accordion',
     ];
 
     /**
@@ -1495,9 +1512,10 @@ final class Panel
     /**
      * Pick the sidebar chrome family for AppSidebar / PanelShell.
      *
-     * Accepts a PanelKit name (`inset`, `sidebar`, `floating`, `icon`, `header`)
-     * or a shadcn-vue block id such as `sidebar-08` / `sidebar-07`. Unknown names
-     * fall back to `inset` (the historical default).
+     * Accepts a PanelKit name (`inset`, `sidebar`, `floating`, `icon`, `header`,
+     * `accordion`, `file-tree`, `calendar`, `dialog`) or a shadcn-vue block id
+     * such as `sidebar-08` / `sidebar-05`. Unknown names fall back to `inset`
+     * (the historical default).
      */
     public function sidebarLayout(string $layout): self
     {
@@ -1510,13 +1528,13 @@ final class Panel
         return $this;
     }
 
-    /** @return 'inset'|'sidebar'|'floating'|'icon'|'header' */
+    /** @return 'inset'|'sidebar'|'floating'|'icon'|'header'|'accordion'|'file-tree'|'calendar'|'dialog' */
     public function getSidebarLayout(): string
     {
         return $this->sidebarLayout;
     }
 
-    /** @return 'inset'|'sidebar'|'floating'|'icon'|'header' */
+    /** @return 'inset'|'sidebar'|'floating'|'icon'|'header'|'accordion'|'file-tree'|'calendar'|'dialog' */
     public function getSidebarVariant(): string
     {
         return $this->sidebarLayout;

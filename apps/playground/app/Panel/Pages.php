@@ -193,6 +193,10 @@ final class Pages
             ['title' => 'Floating', 'href' => '/screens/sidebar/floating', 'icon' => 'layers', 'group' => 'Sidebar samples'],
             ['title' => 'Icon rail', 'href' => '/screens/sidebar/icon', 'icon' => 'panel-left-close', 'group' => 'Sidebar samples'],
             ['title' => 'Site header', 'href' => '/screens/sidebar/header', 'icon' => 'app-window', 'group' => 'Sidebar samples'],
+            ['title' => 'Accordion', 'href' => '/screens/sidebar/accordion', 'icon' => 'chevrons-up-down', 'group' => 'Sidebar samples'],
+            ['title' => 'File tree', 'href' => '/screens/sidebar/file-tree', 'icon' => 'folder-tree', 'group' => 'Sidebar samples'],
+            ['title' => 'Calendar', 'href' => '/screens/sidebar/calendar', 'icon' => 'calendar', 'group' => 'Sidebar samples'],
+            ['title' => 'Dialog', 'href' => '/screens/sidebar/dialog', 'icon' => 'app-window-mac', 'group' => 'Sidebar samples'],
         ];
     }
 

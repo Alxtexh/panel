@@ -11,9 +11,28 @@ import { Head, Link } from '@inertiajs/vue3'
 import { PAGE_SHELL } from '@alxtexh-enterprise/panel'
 import { PanelShell } from '@alxtexh-enterprise/panel/inertia'
 
-type SidebarLayout = 'inset' | 'sidebar' | 'floating' | 'icon' | 'header'
+type SidebarLayout =
+    | 'inset'
+    | 'sidebar'
+    | 'floating'
+    | 'icon'
+    | 'header'
+    | 'accordion'
+    | 'file-tree'
+    | 'calendar'
+    | 'dialog'
 
-const LAYOUTS: SidebarLayout[] = ['inset', 'sidebar', 'floating', 'icon', 'header']
+const LAYOUTS: SidebarLayout[] = [
+    'inset',
+    'sidebar',
+    'floating',
+    'icon',
+    'header',
+    'accordion',
+    'file-tree',
+    'calendar',
+    'dialog',
+]
 
 const LAYOUT_META: Record<
     SidebarLayout,
@@ -43,6 +62,26 @@ const LAYOUT_META: Record<
         label: 'Site header',
         blurb: 'Sticky site header, nav-only rail, account menu in the top bar.',
         shadcn: 'sidebar-16',
+    },
+    accordion: {
+        label: 'Accordion',
+        blurb: 'Plus/Minus collapsible nav groups (dropdown accordion sections).',
+        shadcn: 'sidebar-05 / sidebar-06',
+    },
+    'file-tree': {
+        label: 'File tree',
+        blurb: 'Nested folder and file tree navigation.',
+        shadcn: 'sidebar-11',
+    },
+    calendar: {
+        label: 'Calendar',
+        blurb: 'Mini calendar chrome with account menu in the rail header.',
+        shadcn: 'sidebar-12',
+    },
+    dialog: {
+        label: 'Dialog',
+        blurb: 'Overlay / offcanvas dialog-style sidebar (starts closed).',
+        shadcn: 'sidebar-13',
     },
 }
 
@@ -103,7 +142,14 @@ const meta = computed(() => LAYOUT_META[props.forceSidebarLayout])
                             >Panel::sidebarLayout('{{ forceSidebarLayout }}')</code
                         >.
                     </p>
-                    <p class="mt-4 text-sm text-muted-foreground">
+                    <p
+                        v-if="forceSidebarLayout === 'dialog'"
+                        class="mt-4 text-sm text-muted-foreground"
+                    >
+                        Use the sidebar trigger in the top bar to open the overlay rail. This
+                        family starts closed on purpose.
+                    </p>
+                    <p v-else class="mt-4 text-sm text-muted-foreground">
                         Collapse the rail, switch families above, and confirm the chrome
                         rearranges. This is not a screenshot.
                     </p>

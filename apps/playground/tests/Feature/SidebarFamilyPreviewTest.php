@@ -19,6 +19,19 @@ final class SidebarFamilyPreviewTest extends TestCase
 
     private User $admin;
 
+    /** @var list<string> */
+    private const LAYOUTS = [
+        'inset',
+        'sidebar',
+        'floating',
+        'icon',
+        'header',
+        'accordion',
+        'file-tree',
+        'calendar',
+        'dialog',
+    ];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,14 +45,14 @@ final class SidebarFamilyPreviewTest extends TestCase
 
     public function test_each_layout_preview_renders_for_signed_in_users(): void
     {
-        foreach (['inset', 'sidebar', 'floating', 'icon', 'header'] as $layout) {
+        foreach (self::LAYOUTS as $layout) {
             $this->actingAs($this->admin)
                 ->get("/screens/sidebar/{$layout}")
                 ->assertOk()
                 ->assertInertia(fn ($page) => $page
                     ->component('errors/SidebarFamilyPreview')
                     ->where('forceSidebarLayout', $layout)
-                    ->where('sidebarOpen', $layout !== 'icon')
+                    ->where('sidebarOpen', ! in_array($layout, ['icon', 'dialog'], true))
                     ->has('panel.help')
                     ->has('panel.faq')
                     ->has('panel.about'));
@@ -69,13 +82,17 @@ final class SidebarFamilyPreviewTest extends TestCase
         $this->assertSame('Inset', $byHref['/screens/sidebar/inset']['title'] ?? null);
         $this->assertSame('Icon rail', $byHref['/screens/sidebar/icon']['title'] ?? null);
         $this->assertSame('Site header', $byHref['/screens/sidebar/header']['title'] ?? null);
+        $this->assertSame('Accordion', $byHref['/screens/sidebar/accordion']['title'] ?? null);
+        $this->assertSame('File tree', $byHref['/screens/sidebar/file-tree']['title'] ?? null);
+        $this->assertSame('Calendar', $byHref['/screens/sidebar/calendar']['title'] ?? null);
+        $this->assertSame('Dialog', $byHref['/screens/sidebar/dialog']['title'] ?? null);
     }
 
     public function test_pages_registry_lists_every_layout(): void
     {
         $hrefs = collect(Pages::all())->pluck('href')->all();
 
-        foreach (['inset', 'sidebar', 'floating', 'icon', 'header'] as $layout) {
+        foreach (self::LAYOUTS as $layout) {
             $this->assertContains(
                 "/screens/sidebar/{$layout}",
                 $hrefs,

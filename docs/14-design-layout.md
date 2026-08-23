@@ -75,9 +75,9 @@ right through the source alias.
 ## Sidebar chrome families
 
 `Panel::sidebarLayout()` (alias `sidebarVariant()`) picks inset, edge-flush,
-floating, icon-rail, or site-header chrome. See
-[Pages and panels](07-pages-and-panels.md#sidebar-design-families) for the
-shadcn-vue mapping table. Default remains `inset`.
+floating, icon-rail, site-header, accordion, file-tree, calendar, or dialog
+chrome. See [Pages and panels](07-pages-and-panels.md#sidebar-design-families)
+for the shadcn-vue mapping table. Default remains `inset`.
 
 Across every family the same primary nav and the same footer support links
 (Help, FAQ, What's new, About) render from `AppSidebar`. Only chrome moves:
@@ -88,6 +88,10 @@ Across every family the same primary nav and the same footer support links
 | `sidebar` / `floating` | Same footer stack, variant changes rail shape only | Same |
 | `icon` | Icons + tooltips when collapsed; labels when expanded | Avatar-only trigger when collapsed |
 | `header` | Compact Help dropdown in the rail footer | Avatar in the inset top bar (`TopNavUser`) |
+| `accordion` | Same footer stack as inset; Plus/Minus group triggers + search | Footer |
+| `file-tree` | Same footer stack; folder / file tree for groups | Footer |
+| `calendar` | Compact Help dropdown | Rail header (`headerUser`), brand hidden |
+| `dialog` | Same footer stack inside the overlay sheet | Footer; rail starts closed (offcanvas) |
 
 The inset top bar (`AppSidebarHeader`) always keeps search, quick create,
 notifications, theme, and the rest. The `header` family adds a second sticky
