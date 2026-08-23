@@ -15,6 +15,9 @@ return array_replace_recursive(
             'activity' => 'Aktivitaet',
             'logout' => 'Abmelden',
         ],
+        'nav' => [
+            'system' => 'System',
+        ],
     ],
 );
 

@@ -187,7 +187,8 @@ final class OnboardingGuideTest extends TestCase
         $this->assertStringNotContainsString('Send feedback', $menu);
         $this->assertStringNotContainsString('panel?.security', $menu);
         $this->assertStringContainsString('Profile', $menu);
-        $this->assertStringContainsString('Settings', $menu);
+        $this->assertStringContainsString('settingsInSidebar', $menu);
+        $this->assertStringContainsString('chrome.account.settings', $menu);
 
         $this->assertStringNotContainsString('FeedbackDialog', $shell);
 

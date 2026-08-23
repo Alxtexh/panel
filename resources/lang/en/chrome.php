@@ -13,4 +13,8 @@ return [
         'activity' => 'Activity',
         'logout' => 'Log out',
     ],
+
+    'nav' => [
+        'system' => 'System',
+    ],
 ];
