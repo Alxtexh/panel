@@ -49,7 +49,7 @@ screens stay in the npm package and can be mirrored with
 | Billing portal | `BillingPortalPage` | `Panel::apps(['billing-portal'])`. Empty canvas until the host overrides `subscription()` / `invoices()` / `paymentMethods()` / portal actions. Demo ISP billing stays in playground; installer defaults stay domain-neutral |
 | Email templates | `EmailTemplatePage` | `Panel::apps(['email-templates'])`. Packaged table + save / send-test actions. Host overrides `deliverTest()` to actually send mail |
 | Onboarding | `OnboardingPage` | `Panel::apps(['onboarding'])` |
-| Media library | `MediaLibraryPage` | `Panel::apps(['media-library'])`. Tenant-scoped local disk uploads (upload / move / delete). Preview URLs are host-supplied when the disk is private |
+| Media library | `MediaLibraryPage` | `Panel::apps(['media-library'])`. Tenant-scoped local disk uploads (upload / move / delete). Preview and download use temporary signed URLs (or disk `temporaryUrl`) when the disk is private; override `resolveItemUrl()` for a host CDN |
 | Payment gateways | `PaymentSettingsPage` | `Panel::paymentSettings()` |
 
 The dashboard ships **empty** (`stats()` / `charts()` commented). Fill them, or

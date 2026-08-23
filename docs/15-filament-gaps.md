@@ -1,8 +1,10 @@
 # Filament recompare (post v1.0.87)
 
 Short gap notes after Scalar API docs, maps, developer toolkit surfaces,
-barcode/log-tail, kit showcase, ColumnGroup/TagsColumn, and outbound webhooks.
-This is not a Livewire parity checklist. PanelKit stays Vue + Inertia.
+barcode/log-tail widgets, kit showcase, ColumnGroup/TagsColumn, outbound
+webhooks, workflows, comments, dashboard DnD, sidebar families, conditional
+social, and passwordless magic link. This is not a Livewire parity checklist.
+PanelKit stays Vue + Inertia.
 
 ## Where we match or beat Filament today
 
@@ -13,7 +15,12 @@ This is not a Livewire parity checklist. PanelKit stays Vue + Inertia.
 | CRUD IA | Dedicated create/edit/view pages, nested resources, attach pages |
 | Tables | Keyset lists, filters, ColumnGroup, TagsColumn, relation filters in TableShell |
 | Forms | Schema fields including MapField, BarcodeField, relationship selects, createOption |
-| Built-in apps | Scalar `apiDocs()`, outbound `webhooks()` (CRUD + ping + delivery log), `logTail()`, `kitShowcase()` |
+| Built-in apps | Scalar `apiDocs()`, outbound `webhooks()` (CRUD + ping + delivery log), `logTail()`, `kitShowcase()`, media library with signed preview/download URLs |
+| Workflows | Resource states, transitions, visual board, status history ([16. Workflows](16-workflows.md)) |
+| Comments | Opt-in record threads + @mentions ([17. Comments](17-comments.md)) |
+| Dashboards | Deferred widgets, Echo/poll, user DnD layout (`Panel::userDashboards()`), map/calendar/barcode/log-tail cards |
+| Auth | Auth families, conditional `socialite()`, opt-in `passwordless()` / magic link |
+| Sidebar | Layout families via `Panel::sidebarLayout` (incl. accordion, file-tree, calendar, dialog) |
 | Ops / doctor | Backups, logs, monitoring, search-index doctor, deny-by-default abilities |
 | Design freeze | `PAGE_SHELL` / `FORM_MEASURE`; `make check-page-shell` blocks congested `mx-auto` + `max-w-*` |
 
@@ -47,10 +54,9 @@ Wired into `make release-check` with client mirror sync and package Pest.
 
 ## Suggested next (not in this tag)
 
-- Barcode / log-tail **widgets** (field/page exist today)
-- Kit-only public landing for installers (no ISP demo)
-- Workflow UI / comments (still deferred)
-- Visual workflow builder and dedicated workflow history timeline (see [16. Workflows](16-workflows.md); transitions and audit entries ship in v1.2.0)
+- Slide-over / dense modal polish for secondary actions (create/edit stay dedicated pages)
+- More specialty infolist / field entries as hosts ask for them
+- Plugin marketplace is out of scope; keep documenting `PanelPlugin` instead
 
 ## Landed since v1.0.88
 
@@ -67,9 +73,12 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.0.100 | Auth design families (`Panel::authFamily`) + Auth samples gallery |
 | v1.0.101 | Sidebar design families (`Panel::sidebarLayout`) + Sidebar samples gallery |
 | v1.1.0 | Minor release: auth families + sidebar layout families (same work as v1.0.100 / v1.0.101; prefer this tag going forward) |
+| v1.2.0 | Resource workflows: states, transitions, audit entries |
 | v1.2.5 | Visual workflow board and status history |
 | v1.3.0 | Remaining sidebar families: accordion, file-tree, calendar, dialog |
 | v1.3.2 | Full dashboard DnD: `dashboardLayout.widgets` (order, span, hidden) for stats, charts, tables |
+| v1.4.0 | Built-in public landings (parallel track; kit landing variants) |
+| v1.4.1 | Media library signed preview/download URLs; `BarcodeWidget` / `LogTailWidget`; developer apps chrome (API keys + webhooks toward TableShell) |
 
 ## Versioning (from v1.1.0)
 
@@ -78,3 +87,5 @@ Standards fixes and patches stay on the current minor (`1.1.x`, `1.2.x`).
 The historical tags `v1.0.100` and `v1.0.101` remain published; `v1.1.0` is the
 canonical minor that covers both auth and the first sidebar layout families.
 `v1.3.0` adds accordion / file-tree / calendar / dialog.
+`v1.4.0` is landings (parallel). `v1.4.1` is media signed URLs, barcode/log-tail
+widgets, and developer chrome.

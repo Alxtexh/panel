@@ -45,7 +45,7 @@ useWidgetPoll(
                     :periods="periods"
                     :period="period"
                     :body-height="bodyHeight"
-                    :fit-body="chart.type === 'table'"
+                    :fit-body="chart.type === 'table' || chart.type === 'barcode' || chart.type === 'logtail'"
                     hideable
                     loading
                     @hide="$emit('hide')"
@@ -61,7 +61,7 @@ useWidgetPoll(
                     :period="period"
                     :error="series.error"
                     :body-height="bodyHeight"
-                    :fit-body="chart.type === 'table'"
+                    :fit-body="chart.type === 'table' || chart.type === 'barcode' || chart.type === 'logtail'"
                     hideable
                     @update:period="$emit('update:period', $event)"
                     @hide="$emit('hide')"

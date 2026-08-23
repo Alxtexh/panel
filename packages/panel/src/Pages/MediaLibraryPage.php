@@ -7,25 +7,33 @@ namespace Alxtexh\Panel\Pages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use InvalidArgumentException;
 use Alxtexh\Panel\Files\FileStore;
 use Alxtexh\Panel\Media\PanelMediaItem;
 use Alxtexh\Panel\Notifications\Notification;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\TenantContext;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Media library on local disk. OFF until `apps(['media-library'])`.
  *
  * Tenant-scoped paths under `{tenant}/media/`. Host may swap disk via Laravel
- * config; no S3 driver in core.
+ * config. Preview and download URLs use disk temporary URLs when the driver
+ * supports them, otherwise kit signed routes. Override `resolveItemUrl()` to
+ * supply a host URL (or return an empty string to hide links).
  */
 class MediaLibraryPage extends Page
 {
     protected static string $icon = 'folder';
 
     protected static ?string $group = 'Files';
+
+    /** Minutes a generated preview/download URL remains valid. */
+    protected static int $urlTtlMinutes = 30;
 
     public static function uri(): string
     {
@@ -55,6 +63,8 @@ class MediaLibraryPage extends Page
             'upload' => 'manage_media_library',
             'move' => 'manage_media_library',
             'delete' => 'manage_media_library',
+            'preview' => 'view_media_library',
+            'download' => 'view_media_library',
         ];
     }
 
@@ -64,12 +74,22 @@ class MediaLibraryPage extends Page
             'upload' => 'upload',
             'move' => 'move',
             'delete' => 'delete',
+            'preview' => 'preview',
+            'download' => 'download',
+        ];
+    }
+
+    public static function actionMethods(): array
+    {
+        return [
+            'preview' => 'get',
+            'download' => 'get',
         ];
     }
 
     public static function description(): ?string
     {
-        return 'Tenant-scoped files on local disk. Preview URLs are host-supplied when the disk is private.';
+        return 'Tenant-scoped files. Preview and download use temporary signed URLs on private disks.';
     }
 
     /**
@@ -109,6 +129,8 @@ class MediaLibraryPage extends Page
             ->map(static function (PanelMediaItem $row): array {
                 $mime = $row->mime;
                 $isImage = is_string($mime) && str_starts_with($mime, 'image/');
+                $preview = static::itemUrl($row, 'inline');
+                $download = static::itemUrl($row, 'attachment');
 
                 return [
                     'id' => $row->id,
@@ -117,11 +139,8 @@ class MediaLibraryPage extends Page
                     'mime' => $mime,
                     'size' => $row->size,
                     'folder' => $row->folder,
-                    /*
-                     * Private uploads have no public URL by design. Hosts that
-                     * serve media through a signed route can override data().
-                     */
-                    'url' => null,
+                    'url' => $preview !== '' ? $preview : null,
+                    'download_url' => $download !== '' ? $download : null,
                     'is_image' => $isImage,
                 ];
             })
@@ -135,6 +154,115 @@ class MediaLibraryPage extends Page
             'moveHref' => $base.'/move',
             'deleteHref' => $base.'/delete',
         ];
+    }
+
+    /**
+     * Host hook: return a URL string to use as-is, `''` to hide the link, or
+     * `null` to fall through to kit temporary / signed URL generation.
+     */
+    protected static function resolveItemUrl(PanelMediaItem $row, string $disposition): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Preview (`inline`) or download (`attachment`) URL for one media row.
+     */
+    public static function itemUrl(PanelMediaItem $row, string $disposition = 'inline'): ?string
+    {
+        $custom = static::resolveItemUrl($row, $disposition);
+
+        if ($custom !== null) {
+            return $custom === '' ? null : $custom;
+        }
+
+        $path = $row->path;
+
+        if (! is_string($path) || $path === '' || ! FileStore::belongsToCurrentTenant($path)) {
+            return null;
+        }
+
+        $disk = Storage::disk(FileStore::disk());
+
+        if (! $disk->exists($path)) {
+            return null;
+        }
+
+        $expires = now()->addMinutes(max(1, static::$urlTtlMinutes));
+
+        try {
+            if (method_exists($disk, 'providesTemporaryUrls') && $disk->providesTemporaryUrls()) {
+                $options = [];
+
+                if ($disposition === 'attachment') {
+                    $options['ResponseContentDisposition'] = 'attachment; filename="'.addslashes($row->name).'"';
+                }
+
+                return $disk->temporaryUrl($path, $expires, $options);
+            }
+        } catch (\Throwable) {
+            // Fall through to kit signed routes.
+        }
+
+        $action = $disposition === 'attachment' ? 'download' : 'preview';
+        $routeName = static::actionRouteName($action);
+
+        if ($routeName !== null && Route::has($routeName)) {
+            try {
+                return URL::temporarySignedRoute($routeName, $expires, ['id' => $row->id]);
+            } catch (\Throwable) {
+                // Fall through to an auth-gated relative URL.
+            }
+        }
+
+        return static::pageHref().'/'.$action.'?id='.$row->id;
+    }
+
+    public static function preview(Request $request): StreamedResponse
+    {
+        return static::stream($request, disposition: 'inline');
+    }
+
+    public static function download(Request $request): StreamedResponse
+    {
+        return static::stream($request, disposition: 'attachment');
+    }
+
+    private static function stream(Request $request, string $disposition): StreamedResponse
+    {
+        if ($request->query->has('signature') && ! $request->hasValidSignature()) {
+            abort(403);
+        }
+
+        $tenantId = app(TenantContext::class)->currentKey();
+        abort_if($tenantId === null, 403);
+
+        $id = (int) $request->query('id', 0);
+        abort_if($id < 1, 404);
+
+        $item = PanelMediaItem::query()
+            ->where('tenant_id', $tenantId)
+            ->whereKey($id)
+            ->firstOrFail();
+
+        abort_unless(FileStore::belongsToCurrentTenant($item->path), 404);
+
+        $disk = Storage::disk(FileStore::disk());
+        abort_unless($disk->exists($item->path), 404);
+
+        $headers = [
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, max-age=60',
+        ];
+
+        if ($disposition === 'attachment') {
+            return $disk->download($item->path, $item->name, $headers);
+        }
+
+        return $disk->response($item->path, $item->name, [
+            ...$headers,
+            'Content-Disposition' => 'inline; filename="'.$item->name.'"',
+        ]);
     }
 
     public static function upload(Request $request): RedirectResponse
@@ -220,6 +348,18 @@ class MediaLibraryPage extends Page
         Notification::make()->title('File deleted')->success()->send();
 
         return back();
+    }
+
+    protected static function actionRouteName(string $action): ?string
+    {
+        $panel = app(PanelManager::class)->currentPanel()
+            ?? app(PanelManager::class)->panel(static::panel());
+
+        if ($panel === null) {
+            return null;
+        }
+
+        return $panel->getRouteName().'.pages.'.static::slug().'.'.$action;
     }
 
     protected static function pageHref(): string

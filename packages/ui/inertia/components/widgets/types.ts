@@ -64,6 +64,16 @@ export interface WidgetItem {
     } | null
 }
 
+export interface BarcodeRow {
+    key: string
+    value: string
+    label?: string | null
+    format?: string
+    height?: number
+    width?: number
+    displayValue?: boolean
+}
+
 export interface Series {
     points: { label: string; value: number }[]
     series: Dataset[] | null
@@ -71,6 +81,10 @@ export interface Series {
     lines: Dataset[] | null
     rows: StatListRow[] | null
     items: WidgetItem[] | null
+    barcodes?: BarcodeRow[] | null
+    file?: string | null
+    logLines?: string[] | null
+    truncated?: boolean | null
     total: number | null
     trend: {
         direction: 'up' | 'down' | 'flat' | 'new'
@@ -104,6 +118,10 @@ export interface Chart {
         | 'table'
         | 'catalog'
         | 'items'
+        | 'map'
+        | 'calendar'
+        | 'barcode'
+        | 'logtail'
     span: number
     periods: { value: string; label: string }[] | null
     thresholds: { max: number; color: string }[] | null
@@ -160,6 +178,10 @@ export function emptySeries(): Series {
         lines: null,
         rows: null,
         items: null,
+        barcodes: null,
+        file: null,
+        logLines: null,
+        truncated: null,
         total: null,
         trend: null,
         error: false,

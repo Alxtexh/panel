@@ -145,6 +145,8 @@ screen the kit already ships.
 | `CalendarWidget::make('bookings', 'Bookings')->events(...)` | Month schedule card |
 | `QrCodeField::make('ticket')->from('public_url')` | QR preview field |
 | `BarcodeField::make('sku')->format('CODE128')` | Barcode preview (JsBarcode; also `EAN13`). `->from('ean')` reads a sibling |
+| `BarcodeWidget::make('sku', 'SKU')->value(...)` | Dashboard barcode card (Chart type `barcode`) |
+| `LogTailWidget::make('errors', 'Errors')->file('laravel.log')` | Dashboard log-tail card (Chart type `logtail`) |
 | `DiffField::make('patch')->original('before')->modified('after')` | Side-by-side text diff |
 | `SelectFilter::make('author_id')->relationship(User::class, 'name')` | Related-model table filter |
 | `ApiKeysPage` / `--api-keys` | Wraps `ApiToken`. Override `keys()`, `issue()`, `revoke()`. Opt in with `Panel::apps(['api-keys'])` |
@@ -160,7 +162,7 @@ screen the kit already ships.
 | `OnboardingPage` / `--onboarding` | Dedicated get-started page (`apps(['onboarding'])`). Same step list as the dashboard guide |
 | `Panel::onboardingSteps()` | Replace or wrap default first-run steps. Each step needs `key`, `label`, `done`, and `href` to a real route |
 | Dashboard first-run guide | Ordered chrome steps on `/dashboard` until skip or every step is done. Persist: cookie `panel_onboarding_done` and `users.appearance.onboardingDone`. Replay from What's new |
-| `MediaLibraryPage` / `--media-library` | Tenant-scoped uploads on local disk. Packaged migration. Override disk via Laravel config |
+| `MediaLibraryPage` / `--media-library` | Tenant-scoped uploads on local disk. Packaged migration. Preview/download use temporary signed URLs when private; override `resolveItemUrl()` or disk via Laravel config |
 | `PUT {panel}/settings/appearance` | Persist appearance on the user (`appearance` JSON column) |
 | `Panel::feedback($persist)` + `FeedbackDialog` | In-panel reports. CTA lives on What's new only, not the account menu or shell |
 | Account menu | Profile (account area) and Settings (hub). Security is a settings tab, not a third dropdown row |

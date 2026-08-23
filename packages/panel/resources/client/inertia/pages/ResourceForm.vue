@@ -631,7 +631,7 @@ onBeforeUnmount(() => {
 
     <!--
         `pb-24` CLEARS THE FLOATING SAVE BAR. The bar is fixed to the bottom
-        of the viewport, so without reserved space it sits ON the last section
+        of the main content column (`#pk-main`), so without reserved space it sits ON the last section
         of a scrolled-to-bottom form - covering the exact fields somebody is
         trying to fill (the user hit this on the announcement toggles). The
         padding means fully scrolled content ends above the bar, always.

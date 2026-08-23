@@ -44,7 +44,7 @@ final class WidgetSet
      * `$prefix` NAMESPACES THE PROPS so a screen can host more than one set -
      * a header row and a footer row - without their deferred props colliding.
      *
-     * @param  list<StatWidget|ChartWidget|TableWidget|MapWidget|CalendarWidget>  $widgets
+     * @param  list<StatWidget|ChartWidget|TableWidget|MapWidget|CalendarWidget|BarcodeWidget|LogTailWidget>  $widgets
      * @return array<string, mixed>
      */
     public static function props(array $widgets, ?Authenticatable $user, string $prefix = 'header'): array
@@ -52,7 +52,10 @@ final class WidgetSet
         $normalised = [];
 
         foreach ($widgets as $widget) {
-            if ($widget instanceof MapWidget || $widget instanceof CalendarWidget) {
+            if ($widget instanceof MapWidget
+                || $widget instanceof CalendarWidget
+                || $widget instanceof BarcodeWidget
+                || $widget instanceof LogTailWidget) {
                 $normalised[] = $widget->toChartWidget();
 
                 continue;

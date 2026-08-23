@@ -5,7 +5,12 @@
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import {
-    PAGE_SHELL_STACK, PkButton as Button } from '@alxtexh-enterprise/panel'
+    PAGE_SHELL_STACK,
+    PkButton as Button,
+    PkEmptyState,
+    PkPageHeader,
+    TableShell,
+} from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -91,12 +96,19 @@ function formatWhen(value?: string | null): string {
     <Head :title="pageHeading ?? 'API keys'" />
 
     <div :class="PAGE_SHELL_STACK">
-        <header class="space-y-1">
-            <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'API keys' }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
-                {{ pageDescription }}
-            </p>
-        </header>
+        <PkPageHeader
+            :title="pageHeading ?? 'API keys'"
+            :purpose="
+                pageDescription ??
+                'Tokens use the same ability names as the panel. Override ApiKeysPage to use your store.'
+            "
+        >
+            <template #actions>
+                <Button type="button" @click="showCreate = !showCreate">
+                    {{ showCreate ? 'Cancel' : 'Create key' }}
+                </Button>
+            </template>
+        </PkPageHeader>
 
         <section
             v-if="revealed"
@@ -107,15 +119,6 @@ function formatWhen(value?: string | null): string {
                 {{ revealed }}
             </code>
         </section>
-
-        <div class="flex items-center justify-between gap-4">
-            <p class="text-sm text-muted-foreground font-normal">
-                Tokens use the same ability names as the panel. Override ApiKeysPage to use your store.
-            </p>
-            <Button type="button" @click="showCreate = !showCreate">
-                {{ showCreate ? 'Cancel' : 'Create key' }}
-            </Button>
-        </div>
 
         <form
             v-if="showCreate"
@@ -159,9 +162,25 @@ function formatWhen(value?: string | null): string {
             <Button type="submit" :disabled="form.processing">Issue key</Button>
         </form>
 
-        <section>
-            <p v-if="keys.length === 0" class="text-sm text-muted-foreground font-normal">No API keys yet.</p>
-            <div v-else class="overflow-x-auto rounded-md border">
+        <PkEmptyState
+            v-if="keys.length === 0 && !showCreate"
+            title="No API keys yet"
+            description="Create a key for an integration. The plaintext secret is shown once."
+            icon="key"
+        >
+            <template #actions>
+                <Button type="button" @click="showCreate = true">Create key</Button>
+            </template>
+        </PkEmptyState>
+
+        <TableShell v-else-if="keys.length > 0">
+            <template #title>
+                <p class="text-sm font-medium">
+                    {{ keys.length }} {{ keys.length === 1 ? 'key' : 'keys' }}
+                </p>
+            </template>
+
+            <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
                         <tr>
@@ -189,6 +208,6 @@ function formatWhen(value?: string | null): string {
                     </tbody>
                 </table>
             </div>
-        </section>
+        </TableShell>
     </div>
 </template>

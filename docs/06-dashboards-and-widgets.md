@@ -6,7 +6,7 @@
 namespace App\Panel\Pages;
 
 use Alxtexh\Panel\Pages\DashboardPage;
-use Alxtexh\Panel\Widgets\{StatWidget, ChartWidget, MapWidget, CalendarWidget, Trend, Period};
+use Alxtexh\Panel\Widgets\{StatWidget, ChartWidget, MapWidget, CalendarWidget, BarcodeWidget, LogTailWidget, Trend, Period};
 
 final class Dashboard extends DashboardPage
 {
@@ -43,6 +43,14 @@ final class Dashboard extends DashboardPage
                 ->events(fn (): array => [
                     ['date' => '2026-08-21', 'label' => 'Install'],
                 ]),
+
+            BarcodeWidget::make('sku', 'SKU')
+                ->format('CODE128')
+                ->value(fn (): string => (string) Product::query()->value('sku')),
+
+            LogTailWidget::make('errors', 'Errors')
+                ->file('laravel.log')
+                ->lines(40),
         ];
     }
 }
@@ -68,7 +76,8 @@ would all arrive hidden, so masking is off for `stats()`.
 
 `line`, `area`, `steppedLine`, `multiAxis`, `bar`, `horizontalBar`,
 `stackedBar`, `combo`, `pie`, `doughnut`, `polarArea`, `radar`, `rankedBar`,
-`heatmap`, `segments`, `scatter`, `bubble`.
+`heatmap`, `segments`, `scatter`, `bubble`, `map`, `calendar`, `barcode`,
+`logtail`.
 
 ## Every value is deferred
 
