@@ -1,37 +1,14 @@
 import { usePage } from '@inertiajs/vue3'
 import {
-    Activity,
-    Archive,
-    BookOpen,
-    FileQuestion,
-    Gauge,
     HelpCircle,
     Info,
-    KeyRound,
     LayoutGrid,
-    Lock,
-    Mail,
     MessageCircleQuestion,
-    MessagesSquare,
-    Package,
-    Receipt,
-    CreditCard,
-    House,
-    FileText,
-    Router as RouterIcon,
-    ShoppingBag,
-    ServerCrash,
-    ShieldAlert,
-    SlidersHorizontal,
-    Smartphone,
     Sparkles,
-    TimerOff,
-    Trash2,
-    Users,
-    Wrench,
 } from '@lucide/vue'
 import { computed } from 'vue'
 import type { NavItem } from '../types'
+import { resolvePanelIcon } from './panelIcons'
 
 /**
  * The navigation model, shared by the vertical sidebar and the horizontal bar.
@@ -56,40 +33,6 @@ import type { NavItem } from '../types'
  * (Backups, Logs, Monitoring) are an exception: they also arrive in
  * `panelPages` under the Operations group when the panel offers them.
  */
-
-const ICONS: Record<string, typeof LayoutGrid> = {
-    // Resource icons.
-    users: Users,
-    router: RouterIcon,
-    package: Package,
-    activity: Activity,
-    archive: Archive,
-    sliders: SlidersHorizontal,
-    'layout-grid': LayoutGrid,
-    'shopping-bag': ShoppingBag,
-    receipt: Receipt,
-    'credit-card': CreditCard,
-    home: House,
-    'file-text': FileText,
-    // Page icons.
-    'book-open': BookOpen,
-    chat: MessagesSquare,
-    faq: MessageCircleQuestion,
-    'file-question': FileQuestion,
-    gauge: Gauge,
-    help: HelpCircle,
-    info: Info,
-    key: KeyRound,
-    lock: Lock,
-    mail: Mail,
-    sparkles: Sparkles,
-    'server-crash': ServerCrash,
-    'shield-alert': ShieldAlert,
-    smartphone: Smartphone,
-    'timer-off': TimerOff,
-    trash: Trash2,
-    wrench: Wrench,
-}
 
 interface NavPayload {
     title: string
@@ -164,7 +107,7 @@ export function usePanelNav() {
             const entry: NavItem = {
                 title: item.title,
                 href: item.href,
-                icon: ICONS[item.icon] ?? Package,
+                icon: resolvePanelIcon(item.icon),
             }
 
             // Ungrouped resources stay at the top level rather than landing in a
