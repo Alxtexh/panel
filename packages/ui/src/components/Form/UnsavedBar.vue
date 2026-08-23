@@ -2,36 +2,26 @@
 /**
  * The floating "Unsaved changes" bar.
  *
- * WHY THIS EXISTS ALONGSIDE THE BROWSER GUARDS. `beforeunload` and the
- * navigation confirm are both REACTIVE - they only speak up once the user is
- * already leaving, and by then the question ("save or lose it?") is being asked
- * at the worst possible moment. A persistent bar makes the state visible while
- * there is still nothing at stake, so the interruption is rarely reached at all.
+ * PINNED TO THE MAIN CONTENT COLUMN (`#pk-main`), not the viewport. Teleporting
+ * to `body` with `fixed inset-x-0` spanned the full screen, painted over the
+ * sidebar, and read as a too-long strip. The shell scrollport is a fixed
+ * containing block (`transform` on `#pk-main`), so `fixed inset-x-0` here only
+ * covers the pane to the right of the rail. Inner chrome stays on FORM_MEASURE
+ * (max-w-5xl), left-aligned like the fields, with PAGE_SHELL_COMPACT padding.
  *
- * IT DOES NOT FETCH (§4 rule 2): it emits `save` and `cancel`, and the page owns
- * both. It also does not decide when it is shown - dirtiness belongs to the
- * form, not to a bar that draws it.
+ * Outside a panel shell (tests, rare host pages) Teleport is disabled and the
+ * bar sticks at the bottom of its in-tree parent instead.
  *
- * THE SECONDARY ACTION IS CANCEL, NOT RESET, and the difference is what somebody
- * actually wants. "Reset" clears the form and leaves you sitting on it - which
- * on a CREATE page means staring at the empty fields you just emptied, and on an
- * edit page is a thing people ask for perhaps once. What somebody who has
- * decided against a form wants is to be somewhere else.
+ * IT DOES NOT FETCH: it emits `save` and `cancel`, and the page owns both.
+ * Dirtiness belongs to the form, not to a bar that draws it.
  *
- * It also stops the bar contradicting the form: the buttons at the foot of the
- * page are already Cancel and Save, and a floating bar offering Reset and Save
- * gave two different answers to "how do I get out of this".
- *
- * FIXED TO THE VIEWPORT, not to the end of the form. A long form scrolls the
- * save button off screen exactly when someone has made the most changes; the
- * whole point is that the controls stay reachable from wherever they are.
  * `pointer-events-none` on the positioning wrapper keeps the strip either side
  * of the bar clickable, so it does not become an invisible barrier across the
  * page.
- *
- * On desktop the bar left-aligns under FORM_MEASURE (max-w-5xl) rather than
- * floating as a centred toast pill, so it reads as part of the form chrome.
  */
+import { computed, onMounted, ref } from 'vue'
+import { FORM_MEASURE } from '../../lib/pageShell'
+
 withDefaults(
     defineProps<{
         show: boolean
@@ -39,12 +29,6 @@ withDefaults(
         message?: string
         saveLabel?: string
         cancelLabel?: string
-        /*
-         * OPT-IN, AND ABSENT MEANS ABSENT. Discard reverts in place; Cancel
-         * leaves the page. They are different acts and a bar that offers both
-         * unasked would put three buttons on every dirty form in every
-         * consuming application. Set this to get the control.
-         */
         discardLabel?: string
     }>(),
     {
@@ -56,10 +40,25 @@ withDefaults(
 )
 
 defineEmits<{ (e: 'save'): void; (e: 'cancel'): void; (e: 'discard'): void }>()
+
+const shellReady = ref(false)
+
+onMounted(() => {
+    shellReady.value = Boolean(document.getElementById('pk-main'))
+})
+
+const teleportTo = computed(() => (shellReady.value ? '#pk-main' : 'body'))
+const teleportDisabled = computed(() => !shellReady.value)
+
+const frameClass = computed(() =>
+    shellReady.value
+        ? 'pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 pb-3 sm:px-4 sm:pb-4'
+        : 'pointer-events-none sticky bottom-0 z-30 px-3 pb-3 sm:px-4 sm:pb-4',
+)
 </script>
 
 <template>
-    <Teleport to="body">
+    <Teleport :to="teleportTo" :disabled="teleportDisabled">
         <Transition
             enter-active-class="transition duration-200 ease-out"
             enter-from-class="translate-y-3 opacity-0"
@@ -68,12 +67,16 @@ defineEmits<{ (e: 'save'): void; (e: 'cancel'): void; (e: 'discard'): void }>()
         >
             <div
                 v-if="show"
-                class="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-4 sm:px-6"
+                :class="frameClass"
                 role="status"
                 aria-live="polite"
+                data-slot="unsaved-bar"
             >
                 <div
-                    class="pointer-events-auto flex w-full max-w-5xl items-center gap-3 rounded-xl border bg-card/95 py-2.5 pr-2.5 pl-4 shadow-md ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10"
+                    :class="[
+                        FORM_MEASURE,
+                        'pointer-events-auto flex items-center gap-3 rounded-xl border bg-card/95 py-2.5 pr-2.5 pl-4 shadow-md ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10',
+                    ]"
                 >
                     <span class="text-amber-600 dark:text-amber-400" aria-hidden="true">
                         <svg
