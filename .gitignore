@@ -129,3 +129,7 @@ apps/playground/public/hot.dusk-stashed
 # Local vendor research clones (not part of the release)
 temp/
 vendor/research/
+
+# Local vendor / research trees (never ship)
+erpgosaas/
+tmp/
