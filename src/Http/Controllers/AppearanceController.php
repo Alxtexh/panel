@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Http\Controllers;
 
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\DashboardLayout;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -20,8 +21,9 @@ use Illuminate\Routing\Controller;
  * migration adds it when `users` exists). Hosts that persist another way
  * keep their own route; this one yields when the URI is already claimed.
  *
- * `dashboardLayout` (chart order only) is accepted only when the current
- * panel enabled `Panel::userDashboards()`. Otherwise the key is ignored.
+ * `dashboardLayout` (widget order, spans, visibility) is accepted only when
+ * the current panel enabled `Panel::userDashboards()`. Otherwise the key is
+ * ignored on write.
  */
 final class AppearanceController extends Controller
 {
@@ -66,8 +68,16 @@ final class AppearanceController extends Controller
             'contentLayout' => ['sometimes', 'string', 'in:'.implode(',', self::CONTENT_LAYOUTS)],
             'menuStyle' => ['sometimes', 'string', 'in:'.implode(',', self::MENU_STYLES)],
             'dashboardLayout' => ['sometimes', 'array'],
-            'dashboardLayout.chartOrder' => ['sometimes', 'array', 'max:100'],
-            'dashboardLayout.chartOrder.*' => ['string', 'max:64', 'regex:/^[a-z0-9_-]+$/i'],
+            'dashboardLayout.widgets' => ['sometimes', 'array', 'max:'.DashboardLayout::MAX_WIDGETS],
+            'dashboardLayout.widgets.*.id' => ['sometimes', 'string', 'max:80', 'regex:'.DashboardLayout::ID_PATTERN],
+            'dashboardLayout.widgets.*.kind' => ['sometimes', 'string', 'in:'.implode(',', DashboardLayout::KINDS)],
+            'dashboardLayout.widgets.*.type' => ['sometimes', 'string', 'in:'.implode(',', DashboardLayout::KINDS)],
+            'dashboardLayout.widgets.*.key' => ['sometimes', 'string', 'max:64', 'regex:'.DashboardLayout::KEY_PATTERN],
+            'dashboardLayout.widgets.*.span' => ['sometimes', 'integer', 'between:1,2'],
+            'dashboardLayout.widgets.*.hidden' => ['sometimes', 'boolean'],
+            // Legacy v1.0.97 field; still accepted and folded into widgets.
+            'dashboardLayout.chartOrder' => ['sometimes', 'array', 'max:'.DashboardLayout::MAX_WIDGETS],
+            'dashboardLayout.chartOrder.*' => ['string', 'max:64', 'regex:'.DashboardLayout::KEY_PATTERN],
         ]);
 
         $user = $request->user();
@@ -82,16 +92,7 @@ final class AppearanceController extends Controller
             if ($panel === null || ! $panel->hasUserDashboards()) {
                 unset($validated['dashboardLayout']);
             } else {
-                $layout = $validated['dashboardLayout'];
-                $order = [];
-
-                foreach ($layout['chartOrder'] ?? [] as $key) {
-                    if (is_string($key) && preg_match('/^[a-z0-9_-]+$/i', $key) === 1) {
-                        $order[] = $key;
-                    }
-                }
-
-                $validated['dashboardLayout'] = ['chartOrder' => array_values(array_unique($order))];
+                $validated['dashboardLayout'] = DashboardLayout::normalize($validated['dashboardLayout']);
             }
         }
 
