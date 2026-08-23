@@ -56,4 +56,25 @@ final class KitAssetsTest extends TestCase
             $doctor,
         );
     }
+
+    public function test_doctor_checks_inertia_layout_wiring(): void
+    {
+        $doctor = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Commands/DoctorCommand.php'
+        );
+
+        $this->assertStringContainsString('checkInertiaLayoutWiring', $doctor);
+        $this->assertStringContainsString('layout: (name) =>', $doctor);
+        $this->assertStringContainsString('assigns layout with ??= in resolve', $doctor);
+    }
+
+    public function test_published_kit_app_js_wires_default_layout(): void
+    {
+        $js = (string) file_get_contents(
+            dirname(__DIR__, 2).'/resources/client/dist/kit/app.js'
+        );
+
+        $this->assertStringContainsString('PanelLayout', $js);
+        $this->assertStringNotContainsString('page.default.layout', $js);
+    }
 }
