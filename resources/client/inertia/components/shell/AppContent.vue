@@ -48,11 +48,21 @@ const pageFooter = useShellPageFooter()
         column resolve to the first screen. `mt-auto` then pinned the copyright
         to that screen while dashboard widgets overflowed over it.
 
+        `transform-gpu` makes `#pk-main` the containing block for `position:
+        fixed` descendants (UnsavedBar teleports here). Without it, fixed bars
+        use the viewport and paint over the sidebar.
+
         Do not put `flex-1` or `h-full` on the page slot. Short pages still pin
         the footer with `mt-auto` because the column is at least as tall as the
         scrollport and the page is only as tall as its content.
     -->
-    <SidebarInset v-if="props.variant === 'sidebar'" id="pk-main" tabindex="-1" :class="className">
+    <SidebarInset
+        v-if="props.variant === 'sidebar'"
+        id="pk-main"
+        tabindex="-1"
+        class="transform-gpu"
+        :class="className"
+    >
         <div data-slot="app-content-column" class="flex min-h-full w-full shrink-0 flex-col">
             <div v-if="centered" class="mx-auto w-full max-w-7xl">
                 <slot />
@@ -65,7 +75,7 @@ const pageFooter = useShellPageFooter()
         v-else
         id="pk-main"
         tabindex="-1"
-        class="w-full flex-1 overflow-y-auto rounded-xl"
+        class="w-full flex-1 transform-gpu overflow-y-auto rounded-xl"
         :class="className"
     >
         <div data-slot="app-content-column" class="flex min-h-full w-full shrink-0 flex-col">
