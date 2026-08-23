@@ -20,10 +20,24 @@ final class EmptyCoreInstallTest extends TestCase
 
         $this->assertStringContainsString("from '@alxtexh-enterprise/panel/inertia'", $stub);
         $this->assertStringContainsString('SettingsLayout', $stub);
+        $this->assertStringContainsString('layout: (name) =>', $stub);
         $this->assertStringContainsString("name === 'settings/Index'", $stub);
         $this->assertStringContainsString("name.startsWith('settings/')", $stub);
         $this->assertStringContainsString('[PanelLayout, SettingsLayout]', $stub);
+        $this->assertStringContainsString('return PanelLayout', $stub);
+        $this->assertStringNotContainsString('page.default.layout ??=', $stub);
         $this->assertStringNotContainsString('—', $stub);
+    }
+
+    public function test_install_panel_layout_stub_forwards_breadcrumbs(): void
+    {
+        $stub = (string) file_get_contents(
+            dirname(__DIR__, 2).'/resources/stubs/PanelLayout.vue.stub'
+        );
+
+        $this->assertStringContainsString('breadcrumbs', $stub);
+        $this->assertStringContainsString(':breadcrumbs="breadcrumbs"', $stub);
+        $this->assertStringContainsString('PanelShell', $stub);
     }
 
     public function test_install_dashboard_is_an_empty_canvas(): void

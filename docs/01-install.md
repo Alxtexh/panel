@@ -163,8 +163,8 @@ when the users table has no `tenant_id`.
 | Publishes kit lang (`panel-lang`) | `lang/vendor/panel/{en,es,fr}` - overlay with `__('panel::...')` |
 | Publishes kit assets | `public/vendor/panel/{app.css,app.js}` from package `dist/kit`. First visit has CSS without npm |
 | Writes `resources/views/app.blade.php` | Root view. Loads kit dist unless a Vite manifest exists |
-| Writes `resources/js/app.ts` | Inertia bootstrap with `PanelLayout` + nested `SettingsLayout` for settings pages |
-| Writes `resources/js/layouts/PanelLayout.vue` | A layout you are meant to replace |
+| Writes `resources/js/app.ts` | Inertia bootstrap with `layout: (name) => …` so `PanelLayout` (and nested `SettingsLayout` for settings) still wraps pages that only set breadcrumb layout props. Do not strip that callback |
+| Writes `resources/js/layouts/PanelLayout.vue` | A layout you are meant to replace; forwards breadcrumbs into `PanelShell` |
 | Merges `resources/css/app.css` | Points Tailwind at the package. Without this you get a working panel with no styling |
 | Wires `vite.config.js` | Adds the Vue plugin if the app has none |
 | Appends `SharePanelProps` to `web` | App-owned routes keep the shell (account menu, footer). This is not optional |

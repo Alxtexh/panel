@@ -112,6 +112,7 @@ final class DoctorCommand extends Command
             $this->checkVendoredCopy();
             $this->checkDiscovery($panels);
             $this->checkPageFiles();
+            $this->checkInertiaLayoutWiring();
             $this->checkStylesheet();
             $this->checkClientHalf();
             $this->checkSignInRoute();
@@ -1134,6 +1135,54 @@ final class DoctorCommand extends Command
             .'components, so those screens render blank rather than failing. Run '
             .'`php artisan panel:update` to write them, then rebuild.',
         );
+    }
+
+
+    private function checkInertiaLayoutWiring(): void
+    {
+        $path = resource_path('js/app.ts');
+
+        if (! is_file($path)) {
+            return;
+        }
+
+        $source = (string) file_get_contents($path);
+
+        if (! str_contains($source, 'PanelLayout')) {
+            $this->problem(
+                'resources/js/app.ts does not reference PanelLayout',
+                'The panel shell is applied in this file. Restoring the install stub '
+                .'(createInertiaApp layout callback that returns PanelLayout) brings the '
+                .'sidebar back. Do not set layout: null on panel pages.',
+                'Copy the layout callback from vendor/alxtexh-enterprise/panel/resources/stubs/app.ts.stub',
+            );
+
+            return;
+        }
+
+        $hasLayoutCallback = preg_match('/\blayout\s*:\s*(?:\(|function\b)/', $source) === 1;
+        $hasResolveAssign = str_contains($source, 'page.default.layout');
+
+        if (! $hasLayoutCallback && ! $hasResolveAssign) {
+            $this->problem(
+                'resources/js/app.ts never applies PanelLayout',
+                'Neither a createInertiaApp({ layout: (name) => … }) callback nor a '
+                .'resolve-time page.default.layout assignment is present, so screens '
+                .'render without the shell. Prefer the layout callback from the install stub.',
+                'Restore the layout callback from the panel app.ts.stub',
+            );
+
+            return;
+        }
+
+        if (! $hasLayoutCallback && str_contains($source, '??=')) {
+            $this->note(
+                'resources/js/app.ts assigns layout with ??= in resolve',
+                'Pages that set defineOptions({ layout: { breadcrumbs } }) already have a '
+                .'layout value, so ??= skips PanelLayout and the shell disappears. Switch to '
+                .'createInertiaApp({ layout: (name) => … }) like the current install stub.',
+            );
+        }
     }
 
     /**

@@ -45,6 +45,16 @@ visible in a single file, and the mistakes that return HTTP 200.
    indistinguishable from one nobody wrote. Resources place themselves;
    anything else goes in `App\Panel\Pages` or the coverage test fails.
 
+9. **Do not rewrite `resources/js/app.ts` layout wiring.** The shell
+   comes from `createInertiaApp({ layout: (name) => … })` returning
+   `PanelLayout` (settings nest `SettingsLayout`). Packaged screens
+   may set `defineOptions({ layout: { breadcrumbs } })` as layout
+   PROPS; without the bootstrap callback those props leave a naked
+   page (HTTP 200, no sidebar). Forbidden: removing the callback,
+   `layout: null` on a panel page, or hand-rolling controllers /
+   bare `Inertia::render`. Use `make:panel-resource` /
+   `make:panel-page` instead.
+
 ## Kit conventions
 
 Dedicated pages only: create, edit, view, attach and detach are routes,
