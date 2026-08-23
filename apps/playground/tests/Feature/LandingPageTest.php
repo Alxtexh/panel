@@ -45,7 +45,13 @@ final class LandingPageTest extends TestCase
     {
         $page = $this->get("/preview/{$design}")->assertOk()->viewData('page');
 
-        $this->assertSame('landing/Composed', $page['component']);
+        $component = match ($design) {
+            'marketing' => 'landing/VueJs',
+            'shadcn' => 'landing/ShadcnVue',
+            default => 'landing/Composed',
+        };
+
+        $this->assertSame($component, $page['component']);
         $this->assertNotEmpty($page['props']['sections'], "The {$design} design rendered no sections.");
         $this->assertSame('hero', $page['props']['sections'][0]['type'], 'A landing page must open with a hero.');
         $this->assertSame($design, $page['props']['design']);
@@ -89,6 +95,7 @@ final class LandingPageTest extends TestCase
         $preview = $this->get('/preview/shadcn')->assertOk()->viewData('page');
         $landing = $this->get('/landing/shadcn')->assertOk()->viewData('page');
 
+        $this->assertSame('landing/ShadcnVue', $preview['component']);
         $this->assertSame($preview['component'], $landing['component']);
         $this->assertSame(
             array_column($preview['props']['sections'], 'type'),
@@ -101,6 +108,7 @@ final class LandingPageTest extends TestCase
         $page = $this->get('/preview/vue-marketing')->assertOk()->viewData('page');
 
         $this->assertSame('marketing', $page['props']['design']);
+        $this->assertSame('landing/VueJs', $page['component']);
         $this->assertSame('hero', $page['props']['sections'][0]['type']);
     }
 

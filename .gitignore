@@ -125,3 +125,6 @@ apps/playground/public/hot.dusk-stashed
 # Composer recreates the link from `composer.json`, so there is nothing here
 # worth carrying. Same reasoning for the UI package under `node_modules`, which
 # is ignored wholesale already.
+
+# Local vendor research clones (not part of the release)
+temp/

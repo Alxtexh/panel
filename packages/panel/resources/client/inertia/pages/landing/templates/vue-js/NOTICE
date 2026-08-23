@@ -1,0 +1,3 @@
+Source template: https://github.com/younusaliakash/vue-js-landing-page
+Integrated into PanelKit as the built-in `marketing` / `vue-js` landing variant.
+Vue SFCs and Colorlib-style assets below are adapted only for Inertia props and asset URLs.

@@ -3,13 +3,13 @@
 Alxtexhpanel ships **five** public landing designs as built-in kit offerings
 (not optional plugins), the same posture as [auth families](09-authentication.md).
 
-| Design | Voice | Inspiration (reimplemented, not vendored) |
+| Design | Voice | Source |
 |---|---|---|
 | `aurora` | Modern SaaS, proof-heavy (default) | Original kit composition |
 | `editorial` | Quiet typographic magazine | Original kit composition |
 | `console` | Developer-tool terminal | Original kit composition |
-| `marketing` | Classic marketing site | [vue-js-landing-page](https://github.com/younusaliakash/vue-js-landing-page) |
-| `shadcn` | Product landing on kit tokens | [shadcn-vue-landing-page](https://github.com/leoMirandaa/shadcn-vue-landing-page) |
+| `marketing` | Classic marketing site | Ported SFCs from [vue-js-landing-page](https://github.com/younusaliakash/vue-js-landing-page) |
+| `shadcn` | Product landing (orange shadcn theme) | Ported SFCs from [shadcn-vue-landing-page](https://github.com/leoMirandaa/shadcn-vue-landing-page) (MIT) |
 
 Aliases: `composed` → `aurora`, `vue-marketing` / `vue-js` → `marketing`,
 `shadcn-vue` → `shadcn`.
@@ -64,40 +64,45 @@ PANEL_LANDING_PREVIEWS=true
 
 With `route` and `previews` on:
 
-| URL | What you see |
-|---|---|
-| `/` | Configured design (default `aurora`) |
-| `/preview/{design}` | Shipped preset for that name |
-| `/landing/{design}` | Same as preview (alias route) |
+| URL | What you see | Source intent |
+|---|---|---|
+| `/` | Configured design (default `aurora`) | Kit aurora |
+| `/preview/marketing` | Ported Colorlib-style Vue landing | [vue-js-landing-page](https://github.com/younusaliakash/vue-js-landing-page) |
+| `/preview/vue-js` | Same as marketing (alias) | same |
+| `/preview/shadcn` | Ported shadcn-vue orange landing | [shadcn-vue-landing-page](https://github.com/leoMirandaa/shadcn-vue-landing-page) |
+| `/preview/shadcn-vue` | Same as shadcn (alias) | same |
+| `/preview/{design}` | Shipped preset / template for that name | |
+| `/landing/{design}` | Same as preview (alias route) | |
 
 Sidebar: **Landing samples** lists all five. Editor: **Landing page** under
 Configuration.
 
-## What ships in each marketing design
+## What ships
 
-**marketing:** hero (brand-first, full-bleed), features, showcase, advantages,
-pricing, testimonials, stats, articles, contact, CTA.
+**aurora / editorial / console:** section composer (`landing/Composed`) with
+kit `Pk*` section components.
 
-**shadcn:** hero, logos (sponsors), benefits, bento features, steps, testimonials,
-team, community CTA, pricing, contact, FAQ, closing CTA.
+**marketing (`landing/VueJs`):** actual SFCs from vue-js-landing-page
+(Header, Hero, Service1/2, Feature, Pricing, Advantage, Testimonial, About,
+Blog, Contact, Footer) plus that repo's Bootstrap/style CSS and images.
+Inertia only wires brand / sign-in / register hrefs.
 
-Section types in the library: `hero`, `logos`, `features`, `bento`, `showcase`,
-`steps`, `stats`, `testimonials`, `team`, `articles`, `contact`, `pricing`,
-`faq`, `cta`.
+**shadcn (`landing/ShadcnVue`):** actual SFCs from shadcn-vue-landing-page
+(Navbar through FAQ/Footer) plus ported UI primitives. Imports adapted for
+`reka-ui` and `@lucide/vue`. MIT attribution in
+`packages/ui/inertia/pages/landing/templates/shadcn-vue/NOTICE`.
 
-## Deferred from the source repos
+Research clones (not committed as remotes) live under
+`temp/vendor-research/` while integrating.
 
-Intentionally **not** vendored or required of consumers:
+## Attribution
 
-- Bootstrap, jQuery, Owl Carousel, Fancybox, AOS from vue-js-landing-page
-- Cloning either GitHub repo at install time
-- `npx shadcn-vue add` / vendored shadcn-vue UI primitives
-- Magenta-to-primary gradient hero (adapted to kit teal/slate tokens)
-- Live contact form POST (display + mailto only; hosts wire their own endpoint)
-- Real blog CMS / YouTube embeds / stock headshots (initials until you replace them)
-- Landing-only theme toggle (kit appearance already covers light/dark)
+- shadcn-vue-landing-page: MIT, Copyright (c) 2024 Leopoldo Miranda
+- vue-js-landing-page: see upstream README; Colorlib-style assets retained
 
 ## Edit after picking
 
-Saved sections in the Landing page editor beat the preset. Clearing every block
-falls back to the configured design rather than serving a blank site.
+Saved sections in the Landing page editor beat the preset for
+aurora / editorial / console. Marketing and shadcn public routes always render
+the ported templates (editor presets remain available for hosts that compose
+sections themselves).

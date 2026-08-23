@@ -20,12 +20,13 @@ use Alxtexh\Panel\Support\PanelHome;
  * the single screen whose job is to sound like the company behind it - and a
  * framework that ships one template makes every deployment sound like the
  * same company. Five voices ship: aurora, editorial, console, marketing and
- * shadcn. Marketing and shadcn reimplement public Vue landing patterns on kit
- * tokens; they are not optional plugins.
+ * shadcn. Marketing and shadcn are the ported source templates from the offered
+ * GitHub repos (vue-js-landing-page, shadcn-vue-landing-page), not inspired-only
+ * rewrites.
  *
  * THE DESIGN IS CONFIGURATION, not a fork. An installation picks one in
  * `config('panel.landing')`; the `?design=` parameter exists so the
- * reference app can demonstrate all three without a redeploy, and is
+ * reference app can demonstrate all five without a redeploy, and is
  * validated against the known set rather than passed through - an
  * unvalidated component name in a render call is a way to ask the server to
  * mount any page in the bundle.
@@ -33,13 +34,20 @@ use Alxtexh\Panel\Support\PanelHome;
 final class LandingController extends Controller
 {
     /**
-     * ONE COMPONENT, MANY COMPOSITIONS.
-     *
-     * There were three page components here, one per design. A design is now a
-     * named list of SECTIONS - see `LandingPresets` - so the component is the
-     * same for all of them and adding a fourth costs no file at all.
+     * Aurora / editorial / console stay on the section composer.
+     * Marketing and shadcn render the ported source templates
+     * (`landing/VueJs`, `landing/ShadcnVue`).
      */
     private const PAGE = 'landing/Composed';
+
+    private static function pageFor(string $design): string
+    {
+        return match ($design) {
+            'marketing' => 'landing/VueJs',
+            'shadcn' => 'landing/ShadcnVue',
+            default => self::PAGE,
+        };
+    }
 
     /**
      * Is a landing page wanted at all?
@@ -126,7 +134,7 @@ final class LandingController extends Controller
             ? $stored
             : LandingPresets::get($design);
 
-        return Inertia::render(self::PAGE, [
+        return Inertia::render(self::pageFor($design), [
             'sections' => $sections,
             // The switcher names the design it is showing, so the demo explains
             // itself rather than needing the query string read back.

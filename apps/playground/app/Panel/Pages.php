@@ -186,8 +186,8 @@ final class Pages
             ['title' => 'Aurora', 'href' => '/preview/aurora', 'icon' => 'home', 'group' => 'Landing samples'],
             ['title' => 'Editorial', 'href' => '/preview/editorial', 'icon' => 'home', 'group' => 'Landing samples'],
             ['title' => 'Console', 'href' => '/preview/console', 'icon' => 'home', 'group' => 'Landing samples'],
-            ['title' => 'Marketing', 'href' => '/preview/marketing', 'icon' => 'home', 'group' => 'Landing samples'],
-            ['title' => 'Shadcn', 'href' => '/preview/shadcn', 'icon' => 'home', 'group' => 'Landing samples'],
+            ['title' => 'Vue JS (marketing)', 'href' => '/preview/marketing', 'icon' => 'home', 'group' => 'Landing samples'],
+            ['title' => 'Shadcn Vue', 'href' => '/preview/shadcn', 'icon' => 'home', 'group' => 'Landing samples'],
 
             /*
              * Sidebar design families (shadcn-vue block patterns, kit AppSidebar).

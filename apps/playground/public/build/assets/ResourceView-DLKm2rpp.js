@@ -1,0 +1,1 @@
+import{$n as e,k as t,mt as n,v as r,z as i}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{t as a}from"./ResourceView-DZn1UHhQ.js";var o=t({inheritAttrs:!1,__name:`ResourceView`,setup(t){return(t,o)=>(n(),r(a,e(i(t.$attrs)),null,16))}});export{o as default};
