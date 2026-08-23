@@ -55,6 +55,7 @@ import {
 } from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
 import AuditTimeline from '../components/AuditTimeline.vue'
+import WorkflowHistory from '../components/WorkflowHistory.vue'
 import CommentsSection from '../components/CommentsSection.vue'
 import RecordPresence from '../components/RecordPresence.vue'
 import RenderHook from '../components/RenderHook.vue'
@@ -105,6 +106,16 @@ const props = defineProps<{
         current: string
         currentLabel: string
         currentColor: string
+        diagramUrl?: string | null
+        states?: Record<string, { label: string; color: string }>
+        history?: {
+            id: number | string
+            actor: string | null
+            at: string | null
+            column: string | null
+            from: string | null
+            to: string | null
+        }[]
         actions: {
             key: string
             label: string
@@ -687,6 +698,13 @@ function destroy() {
                     :record-id="record.id"
                     :tenant-id="presenceTenantId"
                 />
+                <Link
+                    v-if="workflow?.diagramUrl"
+                    :href="workflow.diagramUrl"
+                    :class="buttonClasses({ variant: 'outline', size: 'sm' })"
+                >
+                    Workflow
+                </Link>
                 <Button
                     v-for="action in workflow?.actions ?? []"
                     :key="action.key"
@@ -957,6 +975,12 @@ function destroy() {
             page and the most likely to be long, so it sits below the record
             rather than competing with it.
         -->
+        <WorkflowHistory
+            v-if="workflow"
+            :entries="workflow.history ?? []"
+            :states="workflow.states"
+        />
+
         <AuditTimeline :resource="schema.key" :record-id="record.id" />
 
         <div>

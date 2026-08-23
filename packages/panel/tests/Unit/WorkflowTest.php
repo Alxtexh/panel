@@ -31,6 +31,10 @@ final class WorkflowTest extends TestCase
             'published' => [],
         ], $workflow->transitionsMap());
 
+        $graph = $workflow->toGraph();
+        $this->assertSame(['draft', 'published'], array_column($graph['nodes'], 'id'));
+        $this->assertSame(['publish__draft'], array_column($graph['edges'], 'id'));
+
         $actions = $workflow->recordActions();
         $this->assertCount(1, $actions);
         $this->assertSame('publish', $actions[0]->getActions()[0]->key);

@@ -249,7 +249,102 @@ final class Workflow
                 static fn (Transition $transition): array => $transition->toSchema(),
                 $this->transitions,
             ),
+            'graph' => $this->toGraph(),
         ];
+    }
+
+    /**
+     * Read-only graph for the visual workflow board: nodes are states, edges
+     * are declared transitions. Layout is a simple left-to-right rank so the
+     * client can draw without a graph library.
+     *
+     * @return array{nodes: list<array<string, mixed>>, edges: list<array<string, mixed>>}
+     */
+    public function toGraph(): array
+    {
+        $definitions = $this->states;
+
+        foreach ($this->transitions as $transition) {
+            foreach ([...$transition->sources(), $transition->destination()] as $value) {
+                if ($value === '' || isset($definitions[$value])) {
+                    continue;
+                }
+
+                $definitions[$value] = [
+                    'label' => str($value)->headline()->value(),
+                    'color' => 'neutral',
+                ];
+            }
+        }
+
+        $rank = $this->stateRanks(array_keys($definitions));
+        $nodes = [];
+
+        foreach ($definitions as $value => $definition) {
+            $nodes[] = [
+                'id' => (string) $value,
+                'label' => $definition['label'],
+                'color' => $definition['color'],
+                'rank' => $rank[(string) $value] ?? 0,
+            ];
+        }
+
+        $edges = [];
+
+        foreach ($this->transitions as $transition) {
+            $schema = $transition->toSchema();
+            $sources = $transition->sources();
+
+            if ($sources === []) {
+                $sources = array_map(static fn (mixed $key): string => (string) $key, array_keys($definitions));
+            }
+
+            foreach ($sources as $from) {
+                $edges[] = [
+                    'id' => $transition->key.'__'.$from,
+                    'key' => $transition->key,
+                    'label' => $transition->label,
+                    'from' => $from,
+                    'to' => $transition->destination(),
+                    'icon' => $schema['icon'] ?? null,
+                    'color' => $schema['color'] ?? null,
+                ];
+            }
+        }
+
+        return [
+            'nodes' => $nodes,
+            'edges' => $edges,
+        ];
+    }
+
+    /**
+     * @param  list<string|int>  $states
+     * @return array<string, int>
+     */
+    private function stateRanks(array $states): array
+    {
+        $rank = [];
+        $index = 0;
+
+        foreach ($states as $state) {
+            $rank[(string) $state] = $index++;
+        }
+
+        // Prefer a topological bump: a destination ranks after its sources.
+        foreach ($this->transitions as $transition) {
+            $to = $transition->destination();
+            $toRank = $rank[$to] ?? $index++;
+
+            foreach ($transition->sources() as $from) {
+                $fromRank = $rank[$from] ?? 0;
+                $toRank = max($toRank, $fromRank + 1);
+            }
+
+            $rank[$to] = $toRank;
+        }
+
+        return $rank;
     }
 
     /** @return list<string> */

@@ -25,6 +25,7 @@ use Alxtexh\Panel\Http\NestedRelation;
 use Alxtexh\Panel\Live\LiveConfig;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Workflow\WorkflowHistory;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -1182,6 +1183,60 @@ final class ResourceController extends Controller
     }
 
     /**
+     * Read-only visual board for a resource that declared `Resource::workflow()`.
+     *
+     * Nodes and edges come from the PHP definition. Editing the graph is not
+     * part of this slice; the diagram explains the code-defined machine.
+     */
+    public function workflow(Request $request, string $resource): Response
+    {
+        $class = app(PanelManager::class)->resource($resource);
+
+        if ($class === null) {
+            throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
+        }
+
+        if (! $class::isEnabled()) {
+            throw new NotFoundHttpException("Resource [{$resource}] is not enabled for this tenant.");
+        }
+
+        abort_unless($class::isAccessible(), 403);
+        abort_unless($class::can('viewAny'), 403);
+
+        $workflow = $class::workflow();
+
+        if ($workflow === null) {
+            throw new NotFoundHttpException("[{$resource}] has no workflow.");
+        }
+
+        $schema = $class::schema();
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            $schema = NestedContext::schema($schema, $class, $parent);
+        }
+
+        $indexUrl = (string) ($schema['routes']['index'] ?? $class::baseUrl());
+        $workflowUrl = (string) ($schema['routes']['workflow'] ?? ($indexUrl.'/workflow'));
+
+        return Inertia::render('ResourceWorkflow', [
+            'schema' => $schema,
+            'workflow' => $workflow->toSchema(),
+            'graph' => $workflow->toGraph(),
+            'indexUrl' => $indexUrl,
+            'breadcrumbs' => $parent === null
+                ? [
+                    ['title' => $schema['labelPlural'], 'href' => $indexUrl],
+                    ['title' => 'Workflow', 'href' => $workflowUrl],
+                ]
+                : [
+                    ...NestedContext::breadcrumbs($class, $parent),
+                    ['title' => 'Workflow', 'href' => $workflowUrl],
+                ],
+        ]);
+    }
+
+    /**
      * The acting user's views, newest first with the default pinned on top.
      *
      * Returns an empty list when the host application has no `saved_views`
@@ -1229,12 +1284,16 @@ final class ResourceController extends Controller
 
         $current = (string) ($row[$workflow->rowKey()] ?? '');
         $state = $workflow->stateDefinition($current);
+        $schema = $class::schema();
+        $diagramUrl = (string) ($schema['routes']['workflow'] ?? ($class::baseUrl().'/workflow'));
 
         return [
             ...$workflow->toSchema(),
             'current' => $current,
             'currentLabel' => $state['label'] ?? $current,
             'currentColor' => $state['color'] ?? 'neutral',
+            'diagramUrl' => $diagramUrl,
+            'history' => WorkflowHistory::for($record),
             'actions' => $workflow->actionsForRecord(
                 $row,
                 static fn (string $ability): bool => $class::can($ability, $record),
