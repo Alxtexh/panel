@@ -488,6 +488,18 @@ final class PanelManager
         $pages = [];
 
         /*
+         * SETTINGS HUB FIRST so it seeds the Settings group ahead of
+         * Environment/Sitemap (and any host pages that reuse that group name).
+         * The client walks panelPages in order and does not re-sort by `sort`,
+         * so appending the hub last put it under those rows and made the group
+         * look like it only held tooling pages. Hosts opt out with
+         * `->sidebarSettings(false)`.
+         */
+        foreach (Support\SettingsNav::pages($panel) as $entry) {
+            $pages[] = $entry;
+        }
+
+        /*
          * THE BIN IS NO LONGER IN THIS LIST, and the reason is what the list is
          * FOR. `panelPages` becomes the sidebar - the column of things this
          * panel administers. A bin of records deleted from those screens is
@@ -536,15 +548,6 @@ final class PanelManager
          * every other entry in this list.
          */
         foreach (Support\OperationsNav::pages($panel, request()->user()) as $entry) {
-            $pages[] = $entry;
-        }
-
-        /*
-         * SETTINGS IN THE SIDEBAR by default. The hub used to live only under
-         * the avatar; every install now gets a System group entry. Hosts opt
-         * out with `->sidebarSettings(false)`.
-         */
-        foreach (Support\SettingsNav::pages($panel) as $entry) {
             $pages[] = $entry;
         }
 

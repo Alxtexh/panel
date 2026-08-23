@@ -18,6 +18,11 @@ use Alxtexh\Panel\Panel;
  * DEFAULT ON. Advanced hosts that want the old placement call
  * `->sidebarSettings(false)` and the packaged account menu puts Settings
  * back under the avatar.
+ *
+ * GROUP NAME IS `Settings`, same string Environment and Sitemap already
+ * use. Putting the hub in a separate System group made the playground look
+ * like Settings was missing: the rail already had a Settings button for
+ * those pages, and the hub hid one click deeper under System.
  */
 final class SettingsNav
 {
@@ -45,20 +50,31 @@ final class SettingsNav
             return [];
         }
 
+        /*
+         * Prefer the path over the absolute `route()` URL so a mismatched
+         * APP_URL (demo on :8899 while .env still says :8000) cannot send
+         * the sidebar link to the wrong host. Other panelPages entries are
+         * already path-shaped via Page::navigationEntry.
+         */
+        $path = parse_url($href, PHP_URL_PATH);
+
+        if (! is_string($path) || $path === '') {
+            return [];
+        }
+
         return [[
             'key' => 'settings',
             'title' => __('panel::directory.links.settings'),
-            'href' => $href,
+            'href' => $path,
             'icon' => 'settings',
             /*
-             * A named System group, not an ungrouped primary row. Ungrouped
-             * items sit under Dashboard and compete with everyday resources;
-             * System sits with Operations near the bottom of the rail, where
-             * chrome belongs. One item is intentional: the hub opens the
-             * settings sub-nav, so the rail does not list every settings tab.
+             * Joins the Settings group Environment/Sitemap already declare,
+             * sort first so the hub is the first row when that group opens.
+             * One hub row is intentional: it opens the settings sub-nav, so
+             * the rail does not list every settings tab.
              */
-            'group' => __('panel::chrome.nav.system'),
-            'sort' => 10,
+            'group' => 'Settings',
+            'sort' => 0,
         ]];
     }
 }

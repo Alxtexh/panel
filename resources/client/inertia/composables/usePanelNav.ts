@@ -31,7 +31,7 @@ import { resolvePanelIcon } from './panelIcons'
  * Declared pages carry no ability, because the guarded screens are reached from
  * the account menu instead and are deliberately not repeated here. Operations
  * (Backups, Logs, Monitoring) arrive in `panelPages` under the Operations group
- * when the panel offers them. Settings arrives under the System group by
+ * when the panel offers them. Settings arrives under the Settings group by
  * default (`Panel::sidebarSettings()`); opt out with `->sidebarSettings(false)`.
  */
 

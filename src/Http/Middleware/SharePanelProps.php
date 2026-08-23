@@ -455,7 +455,7 @@ final class SharePanelProps
                         ? route($panel->getRouteName().'settings.index')
                         : null,
                     /*
-                     * WHEN TRUE, Settings lives in the System sidebar group and
+                     * WHEN TRUE, Settings lives in the Settings sidebar group and
                      * the account menu omits the duplicate row. Default on;
                      * `->sidebarSettings(false)` flips this and restores the
                      * avatar entry.
