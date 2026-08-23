@@ -22,7 +22,17 @@ final class SidebarLayoutTest extends TestCase
 
     public function test_sidebar_layout_accepts_panelkit_names(): void
     {
-        foreach (['inset', 'sidebar', 'floating', 'icon', 'header'] as $layout) {
+        foreach ([
+            'inset',
+            'sidebar',
+            'floating',
+            'icon',
+            'header',
+            'accordion',
+            'file-tree',
+            'calendar',
+            'dialog',
+        ] as $layout) {
             $panel = Panel::make('ops')->sidebarLayout($layout);
 
             $this->assertSame($layout, $panel->getSidebarLayout());
@@ -34,15 +44,22 @@ final class SidebarLayoutTest extends TestCase
     {
         $this->assertSame('sidebar', Panel::make('a')->sidebarLayout('sidebar-01')->getSidebarLayout());
         $this->assertSame('floating', Panel::make('b')->sidebarLayout('sidebar-04')->getSidebarLayout());
-        $this->assertSame('icon', Panel::make('c')->sidebarLayout('sidebar-07')->getSidebarLayout());
-        $this->assertSame('inset', Panel::make('d')->sidebarLayout('sidebar-08')->getSidebarLayout());
-        $this->assertSame('header', Panel::make('e')->sidebarLayout('sidebar-16')->getSidebarLayout());
+        $this->assertSame('accordion', Panel::make('c')->sidebarLayout('sidebar-05')->getSidebarLayout());
+        $this->assertSame('accordion', Panel::make('d')->sidebarLayout('sidebar-06')->getSidebarLayout());
+        $this->assertSame('icon', Panel::make('e')->sidebarLayout('sidebar-07')->getSidebarLayout());
+        $this->assertSame('inset', Panel::make('f')->sidebarLayout('sidebar-08')->getSidebarLayout());
+        $this->assertSame('file-tree', Panel::make('g')->sidebarLayout('sidebar-11')->getSidebarLayout());
+        $this->assertSame('calendar', Panel::make('h')->sidebarLayout('sidebar-12')->getSidebarLayout());
+        $this->assertSame('dialog', Panel::make('i')->sidebarLayout('sidebar-13')->getSidebarLayout());
+        $this->assertSame('header', Panel::make('j')->sidebarLayout('sidebar-16')->getSidebarLayout());
     }
 
     public function test_short_aliases_resolve(): void
     {
         $this->assertSame('sidebar', Panel::make('a')->sidebarLayout('edge')->getSidebarLayout());
         $this->assertSame('icon', Panel::make('b')->sidebarLayout('rail')->getSidebarLayout());
+        $this->assertSame('file-tree', Panel::make('c')->sidebarLayout('tree')->getSidebarLayout());
+        $this->assertSame('accordion', Panel::make('d')->sidebarLayout('dropdown')->getSidebarLayout());
     }
 
     public function test_sidebar_variant_alias_delegates_to_sidebar_layout(): void
@@ -62,7 +79,17 @@ final class SidebarLayoutTest extends TestCase
     public function test_sidebar_layouts_lists_every_supported_name(): void
     {
         $this->assertSame(
-            ['inset', 'sidebar', 'floating', 'icon', 'header'],
+            [
+                'inset',
+                'sidebar',
+                'floating',
+                'icon',
+                'header',
+                'accordion',
+                'file-tree',
+                'calendar',
+                'dialog',
+            ],
             Panel::sidebarLayouts(),
         );
     }

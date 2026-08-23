@@ -1,6 +1,21 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
-import { ChevronLeft, ChevronRight, HelpCircle, Info, LayoutGrid, MessageCircleQuestion, Search, Sparkles } from '@lucide/vue'
+import {
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    File,
+    Folder,
+    FolderOpen,
+    HelpCircle,
+    Info,
+    LayoutGrid,
+    MessageCircleQuestion,
+    Minus,
+    Plus,
+    Search,
+    Sparkles,
+} from '@lucide/vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { PkBoundary, PkDropdown, useAppearance } from '@alxtexh-enterprise/panel'
 import {
@@ -11,7 +26,11 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
     SidebarGroup,
+    SidebarGroupLabel,
     SidebarSeparator,
     useSidebar,
 } from '@alxtexh-enterprise/panel'
@@ -27,6 +46,7 @@ import NavFooter from './NavFooter.vue'
 import NavMain from './NavMain.vue'
 import NavUser from './NavUser.vue'
 import NestedNavGroups from './NestedNavGroups.vue'
+import SidebarMiniCalendar from './SidebarMiniCalendar.vue'
 import SidebarSupportMenu from './SidebarSupportMenu.vue'
 import TeamSwitcher from './TeamSwitcher.vue'
 
@@ -582,9 +602,29 @@ watch(
                 <Search class="size-4 shrink-0" />
                 <span class="truncate">Search…</span>
             </button>
+
+            <!--
+                calendar family (sidebar-12): account menu sits in the rail
+                header the way the shadcn block places NavUser.
+            -->
+            <PkBoundary v-if="sidebarChrome.headerUser" label="The account menu" silent>
+                <NavUser>
+                    <template #menu="{ user }">
+                        <slot name="userMenu" :user="user">
+                            <DefaultAccountMenuItems />
+                        </slot>
+                    </template>
+                </NavUser>
+            </PkBoundary>
         </SidebarHeader>
 
         <SidebarContent>
+            <SidebarMiniCalendar v-if="sidebarChrome.calendarChrome && !isCollapsed" />
+            <SidebarSeparator
+                v-if="sidebarChrome.calendarChrome && !isCollapsed"
+                class="mx-0"
+            />
+
             <!--
                 HIDDEN WHILE DRILLED IN. The top-level list and a focused
                 group's own items would otherwise both be on screen at once,
@@ -594,7 +634,13 @@ watch(
             <NavMain
                 v-if="!(isDrilldown && focusedGroup)"
                 :items="navGroups.ungrouped"
-                label="Platform"
+                :label="
+                    sidebarChrome.calendarChrome
+                        ? undefined
+                        : sidebarChrome.treeNav
+                          ? 'Files'
+                          : 'Platform'
+                "
                 @navigate="closeOnMobile"
             />
 
@@ -807,87 +853,270 @@ watch(
                 v-else
                 :key="group.name"
                 class="px-2 py-0"
+                :class="sidebarChrome.accordionNav || sidebarChrome.treeNav ? 'gap-0' : ''"
             >
                 <!--
-                    A STATIC GROUP IS RENDERED EXACTLY LIKE "Platform" -
-                    THE SAME `NavMain` CALL, because it is the same thing: a
-                    heading over a flat list of items that each carry their
-                    own icon. Building a second, hand-rolled version of that
-                    presentation is how "Platform" ended up looking different
-                    from every other static section in the sidebar - one used
-                    `SidebarGroupLabel` and full-weight `SidebarMenuButton`
-                    rows with icons, the other used a bare `<p>` and indented,
-                    icon-less links. Two implementations of one idea drift the
-                    first time either is touched; calling `NavMain` with
-                    `label` instead of `nested` is what keeps them one.
+                    calendar family: collapsible labeled sections with check
+                    marks on leaves (sidebar-12 Calendars chrome).
                 -->
-                <NavMain
-                    v-if="!group.collapsible"
-                    :items="group.items"
-                    :label="group.name"
-                    @navigate="closeOnMobile"
-                />
-
-                <!--
-                    A COLLAPSIBLE GROUP IS A ROW WITH CHILDREN, NOT A SECTION -
-                    it is the same shape as a plain nav item plus a disclosure,
-                    so it carries the same weight as `SidebarMenuButton`
-                    rather than the section heading's muted small-caps style.
-                    Styling it as a faint label buried the one piece of
-                    information that matters here, which is that it is
-                    clickable and has more underneath it.
-
-                    THE ICON IS THE FIRST CHILD'S, because a group is a string
-                    on a resource rather than an object that could declare one.
-                    A group with NO direct items of its own - everything it has
-                    lives one level down, in `groups` - borrows the first
-                    nested group's first item instead.
-                -->
-                <template v-else>
+                <template v-if="sidebarChrome.calendarChrome">
                     <button
                         type="button"
-                        class="flex w-full items-center gap-2 rounded-md p-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        class="group/label flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         :aria-expanded="!collapsed.has(group.name)"
-                        @click="toggleGroup(group.name, group.collapsible)"
+                        @click="toggleGroup(group.name, true)"
                     >
-                        <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
-                        <span class="flex-1 text-left">{{ group.name }}</span>
-                        <svg
-                            viewBox="0 0 24 24"
+                        <span class="flex-1 text-left font-medium">{{ group.name }}</span>
+                        <ChevronRight
                             class="size-3.5 shrink-0 transition-transform"
-                            :class="collapsed.has(group.name) ? '-rotate-90' : ''"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                        >
-                            <path d="m6 9 6 6 6-6" />
-                        </svg>
+                            :class="collapsed.has(group.name) ? '' : 'rotate-90'"
+                            aria-hidden="true"
+                        />
                     </button>
-
-                    <NavMain
-                        v-if="group.items.length && !collapsed.has(group.name)"
-                        :items="group.items"
-                        nested
-                        @navigate="closeOnMobile"
-                    />
+                    <SidebarMenu v-if="!collapsed.has(group.name)" class="gap-0.5 px-2">
+                        <SidebarMenuItem v-for="item in group.items" :key="item.title">
+                            <SidebarMenuButton as-child :is-active="isCurrentUrl(item.href)">
+                                <Link :href="item.href" @click="closeOnMobile">
+                                    <Check
+                                        class="size-3.5 shrink-0"
+                                        :class="isCurrentUrl(item.href) ? 'opacity-100' : 'opacity-0'"
+                                        aria-hidden="true"
+                                    />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <template v-for="sub in group.groups" :key="sub.name">
+                            <SidebarGroupLabel class="mt-1">{{ sub.name }}</SidebarGroupLabel>
+                            <SidebarMenuItem v-for="item in sub.items" :key="item.title">
+                                <SidebarMenuButton as-child :is-active="isCurrentUrl(item.href)">
+                                    <Link :href="item.href" @click="closeOnMobile">
+                                        <Check
+                                            class="size-3.5 shrink-0"
+                                            :class="isCurrentUrl(item.href) ? 'opacity-100' : 'opacity-0'"
+                                            aria-hidden="true"
+                                        />
+                                        <span>{{ item.title }}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </template>
+                    </SidebarMenu>
                 </template>
 
                 <!--
-                    SUB-GROUPS: a static group's are always open, same as it
-                    is; a collapsible group's follow its own expanded state.
+                    file-tree family: folders and files with indent (sidebar-11).
+                    Static and collapsible groups both render as folders.
                 -->
-                <NestedNavGroups
-                    v-if="!group.collapsible || !collapsed.has(group.name)"
-                    :groups="group.groups"
-                    :parent-name="group.name"
-                    :collapsed="collapsed"
-                    @toggle="toggleGroup"
-                    @navigate="closeOnMobile"
-                />
+                <template v-else-if="sidebarChrome.treeNav">
+                    <button
+                        type="button"
+                        class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sidebar-accent"
+                        :class="groupContainsActive(group) ? 'bg-sidebar-accent/60 font-medium' : 'text-sidebar-foreground'"
+                        :aria-expanded="!group.collapsible || !collapsed.has(group.name)"
+                        @click="group.collapsible && toggleGroup(group.name, group.collapsible)"
+                    >
+                        <component
+                            :is="
+                                !group.collapsible || !collapsed.has(group.name) ? FolderOpen : Folder
+                            "
+                            class="size-4 shrink-0 text-amber-600 dark:text-amber-400"
+                            aria-hidden="true"
+                        />
+                        <span class="flex-1 truncate text-left">{{ group.name }}</span>
+                        <ChevronRight
+                            v-if="group.collapsible"
+                            class="size-3.5 shrink-0 transition-transform"
+                            :class="collapsed.has(group.name) ? '' : 'rotate-90'"
+                            aria-hidden="true"
+                        />
+                    </button>
+                    <div
+                        v-if="!group.collapsible || !collapsed.has(group.name)"
+                        class="ml-3 border-l border-sidebar-border pl-2"
+                    >
+                        <Link
+                            v-for="item in group.items"
+                            :key="item.title"
+                            :href="item.href"
+                            class="flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-colors"
+                            :class="
+                                isCurrentUrl(item.href)
+                                    ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground'
+                                    : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground'
+                            "
+                            @click="closeOnMobile"
+                        >
+                            <File class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+                            <span class="truncate">{{ item.title }}</span>
+                        </Link>
+                        <div v-for="sub in group.groups" :key="sub.name" class="mt-0.5">
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-2 rounded-md px-2 py-1 text-sm text-sidebar-foreground hover:bg-sidebar-accent"
+                                :aria-expanded="!collapsed.has(`${group.name}/${sub.name}`)"
+                                @click="toggleGroup(`${group.name}/${sub.name}`, sub.collapsible)"
+                            >
+                                <component
+                                    :is="
+                                        collapsed.has(`${group.name}/${sub.name}`) ? Folder : FolderOpen
+                                    "
+                                    class="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+                                    aria-hidden="true"
+                                />
+                                <span class="flex-1 truncate text-left">{{ sub.name }}</span>
+                            </button>
+                            <div
+                                v-if="!collapsed.has(`${group.name}/${sub.name}`)"
+                                class="ml-3 border-l border-sidebar-border pl-2"
+                            >
+                                <Link
+                                    v-for="item in sub.items"
+                                    :key="item.title"
+                                    :href="item.href"
+                                    class="flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-colors"
+                                    :class="
+                                        isCurrentUrl(item.href)
+                                            ? 'bg-sidebar-accent font-medium'
+                                            : 'text-muted-foreground hover:bg-sidebar-accent/50'
+                                    "
+                                    @click="closeOnMobile"
+                                >
+                                    <File class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+                                    <span class="truncate">{{ item.title }}</span>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!--
+                    accordion family (sidebar-05 / sidebar-06): Plus/Minus triggers
+                    and SidebarMenuSub children.
+                -->
+                <template v-else-if="sidebarChrome.accordionNav">
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <button
+                                type="button"
+                                class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex w-full items-center gap-2 rounded-md p-2 text-left text-sm"
+                                :aria-expanded="!collapsed.has(group.name)"
+                                @click="toggleGroup(group.name, true)"
+                            >
+                                <span class="flex-1 truncate">{{ group.name }}</span>
+                                <Plus
+                                    v-if="collapsed.has(group.name)"
+                                    class="size-4 shrink-0"
+                                    aria-hidden="true"
+                                />
+                                <Minus v-else class="size-4 shrink-0" aria-hidden="true" />
+                            </button>
+                            <SidebarMenuSub v-if="!collapsed.has(group.name)">
+                                <SidebarMenuSubItem v-for="item in group.items" :key="item.title">
+                                    <SidebarMenuSubButton as-child :is-active="isCurrentUrl(item.href)">
+                                        <Link :href="item.href" @click="closeOnMobile">
+                                            {{ item.title }}
+                                        </Link>
+                                    </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <template v-for="sub in group.groups" :key="sub.name">
+                                    <SidebarMenuSubItem>
+                                        <button
+                                            type="button"
+                                            class="text-sidebar-foreground flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent"
+                                            :aria-expanded="!collapsed.has(`${group.name}/${sub.name}`)"
+                                            @click="toggleGroup(`${group.name}/${sub.name}`, true)"
+                                        >
+                                            <span class="flex-1 truncate text-left">{{ sub.name }}</span>
+                                            <Plus
+                                                v-if="collapsed.has(`${group.name}/${sub.name}`)"
+                                                class="size-3.5 shrink-0"
+                                            />
+                                            <Minus v-else class="size-3.5 shrink-0" />
+                                        </button>
+                                    </SidebarMenuSubItem>
+                                    <template v-if="!collapsed.has(`${group.name}/${sub.name}`)">
+                                        <SidebarMenuSubItem
+                                            v-for="item in sub.items"
+                                            :key="item.title"
+                                        >
+                                            <SidebarMenuSubButton
+                                                as-child
+                                                :is-active="isCurrentUrl(item.href)"
+                                                class="pl-6"
+                                            >
+                                                <Link :href="item.href" @click="closeOnMobile">
+                                                    {{ item.title }}
+                                                </Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                    </template>
+                                </template>
+                            </SidebarMenuSub>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </template>
+
+                <!-- Default inset / edge / floating / icon / header group chrome. -->
+                <template v-else>
+                    <NavMain
+                        v-if="!group.collapsible"
+                        :items="group.items"
+                        :label="group.name"
+                        @navigate="closeOnMobile"
+                    />
+
+                    <template v-else>
+                        <button
+                            type="button"
+                            class="flex w-full items-center gap-2 rounded-md p-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            :aria-expanded="!collapsed.has(group.name)"
+                            @click="toggleGroup(group.name, group.collapsible)"
+                        >
+                            <component
+                                :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                                class="size-4 shrink-0"
+                                aria-hidden="true"
+                            />
+                            <span class="flex-1 text-left">{{ group.name }}</span>
+                            <svg
+                                viewBox="0 0 24 24"
+                                class="size-3.5 shrink-0 transition-transform"
+                                :class="collapsed.has(group.name) ? '-rotate-90' : ''"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                            >
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </button>
+
+                        <NavMain
+                            v-if="group.items.length && !collapsed.has(group.name)"
+                            :items="group.items"
+                            nested
+                            @navigate="closeOnMobile"
+                        />
+                    </template>
+
+                    <NestedNavGroups
+                        v-if="!group.collapsible || !collapsed.has(group.name)"
+                        :groups="group.groups"
+                        :parent-name="group.name"
+                        :collapsed="collapsed"
+                        @toggle="toggleGroup"
+                        @navigate="closeOnMobile"
+                    />
+                </template>
             </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter v-if="supportNavItems.length > 0 || !sidebarChrome.topNavUser">
+        <SidebarFooter
+            v-if="
+                supportNavItems.length > 0 ||
+                (!sidebarChrome.topNavUser && !sidebarChrome.headerUser)
+            "
+        >
             <!--
                 THE LINE BETWEEN THE RESOURCES AND THE REST. Without it, "About"
                 reads as one more entry in whatever group happens to render last.
@@ -931,7 +1160,11 @@ watch(
                 page is more alarming than the absence, and the console still
                 gets the stack either way.
             -->
-            <PkBoundary v-if="!sidebarChrome.topNavUser" label="The account menu" silent>
+            <PkBoundary
+                v-if="!sidebarChrome.topNavUser && !sidebarChrome.headerUser"
+                label="The account menu"
+                silent
+            >
                 <NavUser>
                     <template #menu="{ user }">
                         <!--

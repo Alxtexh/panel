@@ -153,7 +153,8 @@ final class MakePanelCommand extends Command
         $this->line("  php artisan make:panel-resource Tenant --panel={$id} --generate");
         $this->newLine();
         $this->line('  Pick a sidebar chrome family on the provider with ->sidebarLayout():');
-        $this->line("    inset (default), sidebar, floating, icon, header");
+        $this->line('    inset (default), sidebar, floating, icon, header,');
+        $this->line('    accordion, file-tree, calendar, dialog');
         $this->line('  Playground demos: /screens/sidebar/{layout}');
 
         return self::SUCCESS;
