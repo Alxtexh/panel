@@ -539,6 +539,15 @@ final class PanelManager
             $pages[] = $entry;
         }
 
+        /*
+         * SETTINGS IN THE SIDEBAR by default. The hub used to live only under
+         * the avatar; every install now gets a System group entry. Hosts opt
+         * out with `->sidebarSettings(false)`.
+         */
+        foreach (Support\SettingsNav::pages($panel) as $entry) {
+            $pages[] = $entry;
+        }
+
         return $pages;
     }
 

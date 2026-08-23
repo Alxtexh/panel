@@ -65,10 +65,18 @@ can show it again.
 **Send feedback** is on **What's new** only (`/help` footer, `/whats-new`). It
 is not in the account dropdown or a global shell button.
 
-The account menu is **Profile** (settings/profile) and **Settings** (the hub),
-then unique items such as User management, operations, Trash, and Log out.
-Security is a tab beside Profile inside the settings layout, not a third menu
-row.
+The account menu is **Profile** (settings/profile) and **Log out**, plus unique
+items such as User management, operations, and Trash. **Settings** (the hub) is
+primary in the **System** sidebar group on every install. Security is a tab
+beside Profile inside the settings layout, not a third menu row.
+
+Opt the rail out and put Settings back under the avatar:
+
+```php
+Panel::make('admin')->sidebarSettings(false);
+```
+
+Default is on; hosts do not register anything for Settings to appear.
 
 ## SaaS access states
 
@@ -149,8 +157,10 @@ The keys `without()` accepts: `operations`, `trash`, `documents`, `roles`,
 ## The account menu
 
 `DefaultAccountMenuItems` is rendered by `AppSidebar` and `AppTopNav`, so every
-panel gets it without wiring. To add your own entries, declare them on the
-panel rather than editing the component:
+panel gets it without wiring. Settings is **not** duplicated here when the
+System sidebar entry is on (the default). Profile, Log out, User management,
+operations, and Trash stay under the avatar. To add your own entries, declare
+them on the panel rather than editing the component:
 
 ```php
 Panel::make('admin')->userMenuItems([

@@ -13,4 +13,8 @@ return [
         'activity' => 'Actividad',
         'logout' => 'Cerrar sesion',
     ],
+
+    'nav' => [
+        'system' => 'Sistema',
+    ],
 ];

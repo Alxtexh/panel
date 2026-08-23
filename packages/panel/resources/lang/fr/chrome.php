@@ -13,4 +13,8 @@ return [
         'activity' => 'Activite',
         'logout' => 'Se deconnecter',
     ],
+
+    'nav' => [
+        'system' => 'Systeme',
+    ],
 ];

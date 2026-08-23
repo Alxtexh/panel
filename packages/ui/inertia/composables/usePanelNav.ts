@@ -30,8 +30,9 @@ import { resolvePanelIcon } from './panelIcons'
  * never reaches the client at all - the client never decides who sees what.
  * Declared pages carry no ability, because the guarded screens are reached from
  * the account menu instead and are deliberately not repeated here. Operations
- * (Backups, Logs, Monitoring) are an exception: they also arrive in
- * `panelPages` under the Operations group when the panel offers them.
+ * (Backups, Logs, Monitoring) arrive in `panelPages` under the Operations group
+ * when the panel offers them. Settings arrives under the System group by
+ * default (`Panel::sidebarSettings()`); opt out with `->sidebarSettings(false)`.
  */
 
 interface NavPayload {

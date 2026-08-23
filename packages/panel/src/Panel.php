@@ -182,6 +182,13 @@ final class Panel
      */
     private bool $pageFooter = false;
 
+    /**
+     * Settings hub in the sidebar (System group). Default on so every install
+     * finds Settings without opening the account menu. `->sidebarSettings(false)`
+     * keeps the hub under the avatar only.
+     */
+    private bool $sidebarSettings = true;
+
     /** @var Closure|null */
     private mixed $paymentGatewaysResolver = null;
 
@@ -1188,6 +1195,24 @@ final class Panel
     public function showsQuickCreate(): bool
     {
         return $this->quickCreate;
+    }
+
+    /**
+     * Put Settings in the sidebar (System group). Default on for every install.
+     *
+     * `->sidebarSettings(false)` keeps the hub reachable but only under the
+     * account menu, for hosts that want a quieter rail.
+     */
+    public function sidebarSettings(bool $enabled = true): self
+    {
+        $this->sidebarSettings = $enabled;
+
+        return $this;
+    }
+
+    public function hasSidebarSettings(): bool
+    {
+        return $this->sidebarSettings;
     }
 
     /**

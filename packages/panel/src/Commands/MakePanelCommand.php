@@ -505,7 +505,9 @@ PHP;
                 /*
                  * THIS IS THE INSTALLATION ADMIN. Backups, Logs and Monitoring
                  * stay mounted so they appear in the Operations nav group.
-                 * Extra portals from make:panel still drop them.
+                 * Settings is already in the System sidebar group by default
+                 * (`->sidebarSettings(false)` puts it back under the avatar).
+                 * Extra portals from make:panel still drop operations.
                  */
                 ->without([
                     'assistant-settings',

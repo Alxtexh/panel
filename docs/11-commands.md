@@ -165,7 +165,7 @@ screen the kit already ships.
 | `MediaLibraryPage` / `--media-library` | Tenant-scoped uploads on local disk. Packaged migration. Preview/download use temporary signed URLs when private; override `resolveItemUrl()` or disk via Laravel config |
 | `PUT {panel}/settings/appearance` | Persist appearance on the user (`appearance` JSON column) |
 | `Panel::feedback($persist)` + `FeedbackDialog` | In-panel reports. CTA lives on What's new only, not the account menu or shell |
-| Account menu | Profile (account area) and Settings (hub). Security is a settings tab, not a third dropdown row |
+| Account menu | Profile (account area) and Log out. Settings is in the System sidebar group by default; `->sidebarSettings(false)` restores it under the avatar. Security is a settings tab, not a third dropdown row |
 | `TicketAnalysis` | Packaged screen; `TicketingPlugin` mounts it |
 | `TableWidget` / `ChartWidget` `->live()` / `->poll('10s')` | Echo/Reverb when `window.Echo` exists; otherwise reload that deferred prop. Pauses while the tab is hidden |
 | `Notification::make()->title('Saved')->success()->send()` | Inertia toast. `bell()` also writes the topbar. `actions([Action::make('view')->url($url)])` adds buttons |

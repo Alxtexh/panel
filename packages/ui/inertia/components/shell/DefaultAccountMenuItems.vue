@@ -11,6 +11,10 @@
  * screen, so the same menu renders in the demo and in a portal `make:panel`
  * created this morning.
  *
+ * SETTINGS BELONGS IN THE SIDEBAR by default (System group). When
+ * `panel.settingsInSidebar` is true, this menu omits Settings so the rail is
+ * the primary path. `->sidebarSettings(false)` restores the row here.
+ *
  * EVERY ITEM DECLARES WHAT IT NEEDS - a url that exists, an ability where one
  * guards the screen - and hides itself when either is absent. Nothing is gated
  * on "is this the default panel": a portal without operations shares null urls
@@ -58,6 +62,8 @@ const panel = computed(
                   help?: string | null
                   logout?: string | null
                   settings?: string | null
+                  /** When true, Settings is a sidebar item; omit the duplicate row here. */
+                  settingsInSidebar?: boolean
                   userManagement?: string | null
                   activity?: string | null
                   operations?: {
@@ -99,10 +105,10 @@ const trash = computed(
 )
 
 /**
- * Profile and Settings stay in this menu. Security is a sibling tab inside
- * the settings layout, not a third dropdown row. Help stays in the sidebar
- * footer. The lock padlock is in the header immediately before search, not
- * here.
+ * Profile stays in this menu. Settings is primary in the sidebar when
+ * `settingsInSidebar` is true. Security is a sibling tab inside the settings
+ * layout, not a third dropdown row. Help stays in the sidebar footer. The lock
+ * padlock is in the header immediately before search, not here.
  */
 const handleLogout = () => {
     router.flushAll()
@@ -131,7 +137,7 @@ const handleLogout = () => {
             </Link>
         </DropdownMenuItem>
 
-        <DropdownMenuItem v-if="panel?.settings" as-child>
+        <DropdownMenuItem v-if="panel?.settings && !panel?.settingsInSidebar" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.settings" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
                 {{ t('chrome.account.settings') }}
@@ -139,9 +145,9 @@ const handleLogout = () => {
         </DropdownMenuItem>
 
         <!--
-            Directly below Settings, because it is the same kind of thing -
-            configuration - and only shown to somebody who can actually open
-            it. A link that always 403s advertises a page and then refuses it.
+            Directly below Settings / Profile, because it is the same kind of
+            thing - configuration - and only shown to somebody who can actually
+            open it. A link that always 403s advertises a page and then refuses it.
         -->
         <DropdownMenuItem v-if="panel?.userManagement && can.manageRoles" as-child>
             <Link class="block w-full cursor-pointer" :href="panel.userManagement" prefetch>

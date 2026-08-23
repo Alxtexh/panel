@@ -454,6 +454,14 @@ final class SharePanelProps
                     'settings' => Route::has($panel->getRouteName().'settings.index')
                         ? route($panel->getRouteName().'settings.index')
                         : null,
+                    /*
+                     * WHEN TRUE, Settings lives in the System sidebar group and
+                     * the account menu omits the duplicate row. Default on;
+                     * `->sidebarSettings(false)` flips this and restores the
+                     * avatar entry.
+                     */
+                    'settingsInSidebar' => $panel->hasSidebarSettings()
+                        && Route::has($panel->getRouteName().'settings.index'),
                     'userManagement' => Route::has($panel->getRouteName().'pages.user-management')
                         ? route($panel->getRouteName().'pages.user-management', ['tab' => 'users'])
                         : null,

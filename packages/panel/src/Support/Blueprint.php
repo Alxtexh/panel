@@ -354,9 +354,10 @@ final class Blueprint
         `/{parent}/{id}/{child}`; BelongsToMany attach is
         `/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas plus
         a Directory of chrome links (Settings, Users, Roles, Documents, Backups,
-        Logs, Monitoring, Help). Operations appear in an Operations nav group
-        when the panel offers them. Catalog is not in core. Do not resurrect
-        dashboard sample widgets. `Notification::make()->title('Saved')->success()->send()`
+        Logs, Monitoring, Help). Settings appears in a System sidebar group by
+        default (`->sidebarSettings(false)` opts out). Operations appear in an
+        Operations nav group when the panel offers them. Catalog is not in core.
+        Do not resurrect dashboard sample widgets. `Notification::make()->title('Saved')->success()->send()`
         is the toast. Infolist entries live on the dedicated view page.
         `InteractsWithPanels` is the test trait (assertFormState, assertNestedAttach,
         assertPanelToast, assertEmptyGrantsHint, assertBillingSuspendedRedirect,
