@@ -65,13 +65,35 @@ the header.
 - Successful transitions are recorded in the audit trail as `state_transition`
   events when the action uses `transitionTo()`.
 
+## Visual board
+
+When a resource declares `workflow()`, the package mounts a read-only diagram at
+`/{resource}/workflow` (for example `/tickets/workflow`). Nodes are states;
+edges are transitions from the PHP definition. The record view links to this
+board when a workflow is present.
+
+The schema includes `routes.workflow` and a `graph` payload (`nodes` + `edges`)
+so custom UIs can draw the same machine without a second round trip.
+
+## Status history
+
+The record view includes a **Status history** strip that lists recent
+`state_transition` audit entries for that record (actor, from, to, time). It is
+opt-in with the workflow: resources without `workflow()` do not query or render
+it. Entries still also appear in the general audit drawer.
+
 ## Demo
 
 The packaged `TicketResource` declares a workflow for open, pending, and
-resolved tickets. See `packages/panel/src/Ticketing/TicketResource.php`.
+resolved tickets. Open a ticket in the playground, use the transition buttons,
+then open **Workflow** for the diagram and scroll to **Status history**.
+
+- Diagram: `/tickets/workflow`
+- Record: `/tickets/{id}`
+
+See `packages/panel/src/Ticketing/TicketResource.php`.
 
 ## Deferred
 
-- Visual workflow builder
-- Dedicated workflow history timeline (audit entries are written today; a
-  separate timeline UI is not shipped yet)
+- Drag-and-drop editing that writes the graph back to the database (the
+  definition stays in PHP for this version)
