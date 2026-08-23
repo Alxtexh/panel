@@ -32,7 +32,7 @@ export type SidebarChrome = {
     siteHeader: boolean
     /** Show a search affordance in the sidebar header (header / accordion). */
     sidebarSearch: boolean
-    /** Account menu in the inset top bar instead of the sidebar footer. */
+    /** Account menu in the sticky site header (header family) or inset top bar. */
     topNavUser: boolean
     /** Account menu in the sidebar header (calendar family, sidebar-12). */
     headerUser: boolean

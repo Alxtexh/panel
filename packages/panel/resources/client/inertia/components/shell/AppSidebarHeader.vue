@@ -102,10 +102,15 @@ const trail = computed<BreadcrumbItem[]>(() =>
         </div>
 
         <div class="flex items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
+            <!--
+                Site-header family: search, lock, and account menu live on
+                SidebarSiteHeader. Repeating them here stacked a second chrome
+                row that looked like a nested fake header.
+            -->
             <div class="flex items-center gap-2">
                 <PanelQuickCreate />
-                <PanelLockButton />
-                <PanelCommandPalette />
+                <PanelLockButton v-if="!chrome.siteHeader" />
+                <PanelCommandPalette v-if="!chrome.siteHeader" />
             </div>
             <!-- Beside search, because a question about a record is the same
                  kind of interruption as looking one up - and it opens over the
@@ -113,7 +118,7 @@ const trail = computed<BreadcrumbItem[]>(() =>
             <AssistantDrawer />
             <NotificationBell />
             <slot name="actions" />
-            <PkBoundary v-if="chrome.topNavUser" label="The account menu" silent>
+            <PkBoundary v-if="chrome.topNavUser && !chrome.siteHeader" label="The account menu" silent>
                 <TopNavUser>
                     <template #menu="{ user }">
                         <slot name="userMenu" :user="user">

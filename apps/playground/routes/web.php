@@ -690,7 +690,9 @@ Route::get('/screens/auth/{family}/{screen?}', function (string $family, string 
 
 /*
  | Sidebar design family gallery. Auth-gated so the packaged shell has a real
- | nav payload. `forceSidebarLayout` wins inside AppSidebar / AppShell.
+ | nav payload. Sets request attribute `forceSidebarLayout` so SharePanelProps
+ | shares matching `panel.sidebarLayout`, and page prop `forceSidebarLayout` so
+ | AppShell / AppSidebar rearrange the LIVE AppLayout chrome (not a nested mock).
  */
 Route::get('/screens/sidebar/{layout}', function (string $layout) {
     $layouts = [
@@ -707,7 +709,9 @@ Route::get('/screens/sidebar/{layout}', function (string $layout) {
 
     abort_unless(isset($layouts[$layout]), 404);
 
-    return Inertia::render('errors/SidebarFamilyPreview', [
+    request()->attributes->set('forceSidebarLayout', $layout);
+
+    return Inertia::render('screens/SidebarFamilyPreview', [
         'forceSidebarLayout' => $layout,
         'layoutLabel' => $layouts[$layout],
         'sidebarOpen' => ! in_array($layout, ['icon', 'dialog'], true),

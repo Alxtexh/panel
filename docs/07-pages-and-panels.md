@@ -191,7 +191,7 @@ name. Default is `inset`, which preserves the rail panels already ship.
 | `sidebar` | sidebar-01 | Edge-flush grouped rail (`edge` alias) |
 | `floating` | sidebar-04 | Floating card rail |
 | `icon` | sidebar-07 | Icon rail by default (`rail` alias) |
-| `header` | sidebar-16 | Sticky site header, nav-only rail, user in top bar |
+| `header` | sidebar-16 | Sticky site header (brand, search, lock, user), nav-only rail |
 | `accordion` | sidebar-05 / sidebar-06 | Plus/Minus collapsible groups (`dropdown` alias) |
 | `file-tree` | sidebar-11 | Nested folder / file tree (`tree` alias) |
 | `calendar` | sidebar-12 | Mini calendar chrome, user in rail header |

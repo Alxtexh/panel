@@ -13,7 +13,7 @@
  * SIDEBAR LAYOUT FAMILIES (`panel.sidebarLayout` / `forceSidebarLayout`):
  * - `icon` / `dialog` prefer collapsed (server shares sidebarOpen false when no cookie)
  * - `header` wraps the provider under a sticky site header (sidebar-16) and
- *   moves the account menu into the inset top bar
+ *   puts the account menu on that site header (not a nested inset-only avatar)
  * - `dialog` uses offcanvas on every breakpoint (sidebar-13 overlay pattern)
  */
 import { usePage } from '@inertiajs/vue3'

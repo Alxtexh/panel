@@ -50,13 +50,31 @@ final class SidebarFamilyPreviewTest extends TestCase
                 ->get("/screens/sidebar/{$layout}")
                 ->assertOk()
                 ->assertInertia(fn ($page) => $page
-                    ->component('errors/SidebarFamilyPreview')
+                    ->component('screens/SidebarFamilyPreview')
                     ->where('forceSidebarLayout', $layout)
                     ->where('sidebarOpen', ! in_array($layout, ['icon', 'dialog'], true))
+                    ->where('panel.sidebarLayout', $layout)
                     ->has('panel.help')
                     ->has('panel.faq')
                     ->has('panel.about'));
         }
+    }
+
+    public function test_preview_applies_sidebar_layout_to_shared_panel_props(): void
+    {
+        $this->actingAs($this->admin)
+            ->get('/screens/sidebar/header')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('forceSidebarLayout', 'header')
+                ->where('panel.sidebarLayout', 'header'));
+
+        $this->actingAs($this->admin)
+            ->get('/screens/sidebar/accordion')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('forceSidebarLayout', 'accordion')
+                ->where('panel.sidebarLayout', 'accordion'));
     }
 
     public function test_unknown_layout_is_not_found(): void

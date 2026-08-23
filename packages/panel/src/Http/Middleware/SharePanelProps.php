@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Alxtexh\Panel\Auth\Impersonation;
 use Alxtexh\Panel\Auth\SocialLoginPayload;
+use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\EditableContent;
 use Alxtexh\Panel\Support\SettingsIndex;
@@ -300,7 +301,12 @@ final class SharePanelProps
                     'pageFooter' => $panel->hasPageFooter(),
                     'authLayout' => $panel->getAuthLayout(),
                     'authTestimonial' => $panel->getAuthTestimonial(),
-                    'sidebarLayout' => $panel->getSidebarLayout(),
+                    /*
+                     * Gallery / preview routes may set request attribute
+                     * `forceSidebarLayout` so the shared panel payload matches
+                     * the live shell without mutating the registered Panel.
+                     */
+                    'sidebarLayout' => self::previewSidebarLayout($panel),
 
                     /*
                      * THE PANEL'S OWN PALETTE, resolved per request because a
@@ -696,6 +702,25 @@ final class SharePanelProps
         ]);
 
         return $next($request);
+    }
+
+    /**
+     * Sidebar layout for shared `panel` props.
+     *
+     * Preview routes set `forceSidebarLayout` on the request so the shared
+     * payload matches `forceSidebarLayout` page props without calling
+     * `Panel::sidebarLayout()` on the registered singleton (which would stick
+     * for the rest of the worker).
+     */
+    private static function previewSidebarLayout(Panel $panel): string
+    {
+        $forced = request()->attributes->get('forceSidebarLayout');
+
+        if (is_string($forced) && in_array($forced, Panel::sidebarLayouts(), true)) {
+            return $forced;
+        }
+
+        return $panel->getSidebarLayout();
     }
 
     /**

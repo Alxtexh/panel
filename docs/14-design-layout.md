@@ -87,17 +87,18 @@ Across every family the same primary nav and the same footer support links
 | `inset` (default) | Secondary group above user row, separator when expanded | `SidebarMenuButton` in footer |
 | `sidebar` / `floating` | Same footer stack, variant changes rail shape only | Same |
 | `icon` | Icons + tooltips when collapsed; labels when expanded | Avatar-only trigger when collapsed |
-| `header` | Compact Help dropdown in the rail footer | Avatar in the inset top bar (`TopNavUser`) |
+| `header` | Compact Help dropdown in the rail footer | Avatar on the sticky site header (`TopNavUser`) |
 | `accordion` | Same footer stack as inset; Plus/Minus group triggers + search | Footer |
 | `file-tree` | Same footer stack; folder / file tree for groups | Footer |
 | `calendar` | Compact Help dropdown | Rail header (`headerUser`), brand hidden |
 | `dialog` | Same footer stack inside the overlay sheet | Footer; rail starts closed (offcanvas) |
 
-The inset top bar (`AppSidebarHeader`) always keeps search, quick create,
-notifications, theme, and the rest. The `header` family adds a second sticky
-site header with brand and search above the rail, moves the account menu into
-the inset top bar, and drops the labeled support group plus sidebar logo so the
-rail is primary navigation only. It must not replace or hide the inset header row.
+The inset top bar (`AppSidebarHeader`) keeps breadcrumbs, quick create,
+notifications, theme, and the rest. The `header` family adds a sticky site
+header with brand, search, lock, and the account menu above the rail, and drops
+the labeled support group plus sidebar logo so the rail is primary navigation
+only. It must not replace or hide the inset header row, and it must not leave
+the avatar only on a nested inset bar while the site header looks empty.
 
 ## Future (not in scope)
 

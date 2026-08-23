@@ -2,15 +2,28 @@
 /**
  * Full-width sticky chrome for the `header` sidebar layout (sidebar-16 pattern).
  *
- * Sits ABOVE the rail + inset row. The inset column still has AppSidebarHeader
- * for breadcrumbs and tools; this bar is brand + search only.
+ * Sits ABOVE the rail + inset row. Brand, search, lock, and the account menu
+ * live here so the site header is the real top chrome. The inset
+ * AppSidebarHeader keeps breadcrumbs and the remaining tools without a second
+ * avatar or a second search field.
  */
 import { Link, usePage } from '@inertiajs/vue3'
 import { Search } from '@lucide/vue'
 import { computed } from 'vue'
+import { PkBoundary } from '@alxtexh-enterprise/panel'
 import AppLogo from './AppLogo.vue'
+import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
+import PanelLockButton from './PanelLockButton.vue'
+import TopNavUser from './TopNavUser.vue'
+import { useSidebarLayout } from '../../composables/useSidebarLayout'
+import type { User } from '../../types'
+
+defineSlots<{
+    userMenu?(props: { user: User | null }): unknown
+}>()
 
 const page = usePage()
+const { chrome } = useSidebarLayout()
 
 const brand = computed(
     () => (page.props.panel as { brandName?: string } | undefined)?.brandName ?? 'Panel',
@@ -51,5 +64,18 @@ function openPalette(): void {
                 Ctrl K
             </kbd>
         </button>
+
+        <div class="flex shrink-0 items-center gap-1">
+            <PanelLockButton />
+            <PkBoundary v-if="chrome.topNavUser" label="The account menu" silent>
+                <TopNavUser>
+                    <template #menu="{ user }">
+                        <slot name="userMenu" :user="user">
+                            <DefaultAccountMenuItems />
+                        </slot>
+                    </template>
+                </TopNavUser>
+            </PkBoundary>
+        </div>
     </header>
 </template>
