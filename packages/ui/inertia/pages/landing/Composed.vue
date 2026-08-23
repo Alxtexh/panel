@@ -30,6 +30,8 @@ import {
     PkConsoleBackdrop,
     PkEditorialBackdrop,
     PkLandingSections,
+    PkMarketingBackdrop,
+    PkShadcnBackdrop,
 } from '@alxtexh-enterprise/panel'
 import type { LandingSection } from '@alxtexh-enterprise/panel'
 import LandingFooter from './LandingFooter.vue'
@@ -101,11 +103,15 @@ const socialProviders = useSocialProviders()
         :class="{
             'pk-editorial': design === 'editorial',
             'pk-console': design === 'console',
+            'pk-marketing': design === 'marketing',
+            'pk-shadcn': design === 'shadcn',
         }"
     >
         <PkAuroraBackdrop v-if="design === 'aurora'" />
         <PkEditorialBackdrop v-else-if="design === 'editorial'" />
         <PkConsoleBackdrop v-else-if="design === 'console'" />
+        <PkMarketingBackdrop v-else-if="design === 'marketing'" />
+        <PkShadcnBackdrop v-else-if="design === 'shadcn'" />
 
         <div class="relative z-10 flex flex-1 flex-col">
             <LandingNav

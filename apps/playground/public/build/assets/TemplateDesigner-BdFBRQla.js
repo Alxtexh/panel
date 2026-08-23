@@ -1,0 +1,1 @@
+import{$n as e,k as t,mt as n,v as r,z as i}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{D as a}from"./inertia-lKahHYJ1.js";import{t as o}from"./AppLayout-C96x7GCh.js";var s=t({layout:o,inheritAttrs:!1,__name:`TemplateDesigner`,setup(t){return(t,o)=>(n(),r(a,e(i(t.$attrs)),null,16))}});export{s as default};

@@ -15,7 +15,9 @@
  * dropping a section somebody just authored is its own kind of lie.
  */
 import { computed } from 'vue'
+import PkArticles from './PkArticles.vue'
 import PkBento from './PkBento.vue'
+import PkContact from './PkContact.vue'
 import PkCta from './PkCta.vue'
 import PkFaq from './PkFaq.vue'
 import PkFeatureGrid from './PkFeatureGrid.vue'
@@ -25,6 +27,7 @@ import PkPricing from './PkPricing.vue'
 import PkShowcase from './PkShowcase.vue'
 import PkStats from './PkStats.vue'
 import PkSteps from './PkSteps.vue'
+import PkTeam from './PkTeam.vue'
 import PkTestimonials from './PkTestimonials.vue'
 import type { LandingSection } from './types'
 
@@ -45,6 +48,9 @@ const REGISTRY: Record<string, unknown> = {
     steps: PkSteps,
     stats: PkStats,
     testimonials: PkTestimonials,
+    team: PkTeam,
+    articles: PkArticles,
+    contact: PkContact,
     pricing: PkPricing,
     faq: PkFaq,
     cta: PkCta,

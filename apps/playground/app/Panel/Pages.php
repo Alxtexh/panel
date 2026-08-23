@@ -183,6 +183,12 @@ final class Pages
             ['title' => 'Register', 'href' => '/screens/auth/card/register', 'icon' => 'user-check', 'group' => 'Auth samples/Card'],
             ['title' => 'OTP', 'href' => '/screens/auth/card/otp', 'icon' => 'key', 'group' => 'Auth samples/Card'],
 
+            ['title' => 'Aurora', 'href' => '/preview/aurora', 'icon' => 'home', 'group' => 'Landing samples'],
+            ['title' => 'Editorial', 'href' => '/preview/editorial', 'icon' => 'home', 'group' => 'Landing samples'],
+            ['title' => 'Console', 'href' => '/preview/console', 'icon' => 'home', 'group' => 'Landing samples'],
+            ['title' => 'Marketing', 'href' => '/preview/marketing', 'icon' => 'home', 'group' => 'Landing samples'],
+            ['title' => 'Shadcn', 'href' => '/preview/shadcn', 'icon' => 'home', 'group' => 'Landing samples'],
+
             /*
              * Sidebar design families (shadcn-vue block patterns, kit AppSidebar).
              * Live shell previews rearrange nav chrome; nested groups sit beside

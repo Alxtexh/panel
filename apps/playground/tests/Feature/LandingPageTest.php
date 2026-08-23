@@ -23,13 +23,14 @@ final class LandingPageTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @return list<array{string, string}> */
     public static function designs(): array
     {
         return [
-            'aurora' => ['aurora', 'landing/AuroraLanding'],
-            'editorial' => ['editorial', 'landing/EditorialLanding'],
-            'console' => ['console', 'landing/ConsoleLanding'],
+            'aurora' => ['aurora'],
+            'editorial' => ['editorial'],
+            'console' => ['console'],
+            'marketing' => ['marketing'],
+            'shadcn' => ['shadcn'],
         ];
     }
 
@@ -40,13 +41,14 @@ final class LandingPageTest extends TestCase
      * once before.
      */
     #[DataProvider('designs')]
-    public function test_each_shipped_design_renders_to_a_guest(string $design, string $component): void
+    public function test_each_shipped_design_renders_to_a_guest(string $design): void
     {
         $page = $this->get("/preview/{$design}")->assertOk()->viewData('page');
 
         $this->assertSame('landing/Composed', $page['component']);
         $this->assertNotEmpty($page['props']['sections'], "The {$design} design rendered no sections.");
         $this->assertSame('hero', $page['props']['sections'][0]['type'], 'A landing page must open with a hero.');
+        $this->assertSame($design, $page['props']['design']);
     }
 
     /** The designs are genuinely different arrangements, not one page thrice. */
@@ -59,12 +61,17 @@ final class LandingPageTest extends TestCase
 
         $this->assertNotSame($shape('aurora'), $shape('editorial'));
         $this->assertNotSame($shape('aurora'), $shape('console'));
+        $this->assertNotSame($shape('aurora'), $shape('marketing'));
+        $this->assertNotSame($shape('marketing'), $shape('shadcn'));
     }
 
     /** Every section a preset names must be one the renderer knows. */
     public function test_no_preset_names_a_section_the_client_cannot_draw(): void
     {
-        $known = ['hero', 'logos', 'features', 'bento', 'showcase', 'steps', 'stats', 'testimonials', 'pricing', 'faq', 'cta'];
+        $known = [
+            'hero', 'logos', 'features', 'bento', 'showcase', 'steps', 'stats',
+            'testimonials', 'team', 'articles', 'contact', 'pricing', 'faq', 'cta',
+        ];
 
         foreach (LandingPresets::names() as $design) {
             foreach (LandingPresets::get($design) as $section) {
@@ -75,6 +82,26 @@ final class LandingPageTest extends TestCase
                 );
             }
         }
+    }
+
+    public function test_landing_variant_route_renders_the_same_as_preview(): void
+    {
+        $preview = $this->get('/preview/shadcn')->assertOk()->viewData('page');
+        $landing = $this->get('/landing/shadcn')->assertOk()->viewData('page');
+
+        $this->assertSame($preview['component'], $landing['component']);
+        $this->assertSame(
+            array_column($preview['props']['sections'], 'type'),
+            array_column($landing['props']['sections'], 'type'),
+        );
+    }
+
+    public function test_vue_marketing_alias_resolves_to_marketing(): void
+    {
+        $page = $this->get('/preview/vue-marketing')->assertOk()->viewData('page');
+
+        $this->assertSame('marketing', $page['props']['design']);
+        $this->assertSame('hero', $page['props']['sections'][0]['type']);
     }
 
     /** The configured design is what an installation shows without a parameter. */

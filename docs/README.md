@@ -25,6 +25,7 @@ These pages are the catalogue: what ships, and how to switch each part on.
 | [15. Filament gaps](15-filament-gaps.md) | Post-1.0.87 recompare: Scalar, maps, toolkit, webhooks, freeze CI |
 | [16. Workflows](16-workflows.md) | Resource states, transitions, view and index actions |
 | [17. Comments](17-comments.md) | Opt-in record threads, @mentions, bell notifications |
+| [18. Public landing](18-landing.md) | Five built-in landing designs, Panel::landing(), demos |
 | [Starter recipe](recipes/01-invoices.md) | Copyable Invoices resource after install. Not Nairobi Fibre |
 | [Tests](tests.md) | `InteractsWithPanels`: isolation, form-state, attach, import, toasts, billing |
 

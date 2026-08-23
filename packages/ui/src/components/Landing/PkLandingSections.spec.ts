@@ -46,6 +46,55 @@ describe('PkLandingSections', () => {
     it('renders nothing at all rather than failing when there are no sections', () => {
         expect(mount(PkLandingSections, { props: {} }).text()).toBe('')
     })
+
+    it('draws team, articles and contact sections used by marketing landings', () => {
+        const wrapper = mount(PkLandingSections, {
+            props: {
+                sections: [
+                    {
+                        type: 'team',
+                        data: { title: 'Crew', items: [{ name: 'Ada', role: 'CEO' }] },
+                    },
+                    {
+                        type: 'articles',
+                        data: { title: 'Notes', items: [{ title: 'Ship it', meta: 'Guide' }] },
+                    },
+                    {
+                        type: 'contact',
+                        data: { title: 'Reach us', email: 'hello@example.com', label: 'Email' },
+                    },
+                ],
+            },
+        })
+
+        expect(wrapper.text()).toContain('Ada')
+        expect(wrapper.text()).toContain('Ship it')
+        expect(wrapper.text()).toContain('hello@example.com')
+    })
+
+    it('exposes every registry key the PHP presets may name', () => {
+        const wrapper = mount(PkLandingSections, { props: { sections: [] } })
+        const known = (wrapper.vm as { known: string[] }).known
+
+        expect(known).toEqual(
+            expect.arrayContaining([
+                'hero',
+                'logos',
+                'features',
+                'bento',
+                'showcase',
+                'steps',
+                'stats',
+                'testimonials',
+                'team',
+                'articles',
+                'contact',
+                'pricing',
+                'faq',
+                'cta',
+            ]),
+        )
+    })
 })
 
 /**

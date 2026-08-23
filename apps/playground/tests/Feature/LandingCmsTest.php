@@ -31,7 +31,10 @@ final class LandingCmsTest extends TestCase
     /** Every block the editor offers must be one the renderer can draw. */
     public function test_every_editable_block_is_a_section_the_page_can_render(): void
     {
-        $known = ['hero', 'logos', 'features', 'bento', 'showcase', 'steps', 'stats', 'testimonials', 'pricing', 'faq', 'cta'];
+        $known = [
+            'hero', 'logos', 'features', 'bento', 'showcase', 'steps', 'stats',
+            'testimonials', 'team', 'articles', 'contact', 'pricing', 'faq', 'cta',
+        ];
 
         $field = collect(LandingPageResource::formDefinition()->fields())
             ->first(static fn ($f): bool => $f->key === 'sections');
