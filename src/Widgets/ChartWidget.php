@@ -64,6 +64,8 @@ final class ChartWidget
         'scatter', 'bubble',
         // Developer toolkit: Leaflet map card and month schedule (v1.0.76+).
         'map', 'calendar',
+        // Barcode strip and log tail (field/page already existed; widgets in v1.4.1+).
+        'barcode', 'logtail',
     ];
 
     private string $type = 'line';
@@ -289,6 +291,10 @@ final class ChartWidget
             'lines' => null,
             'rows' => null,
             'items' => null,
+            'barcodes' => null,
+            'file' => null,
+            'logLines' => null,
+            'truncated' => null,
             'markers' => null,
             'center' => null,
             'zoom' => null,
@@ -319,6 +325,10 @@ final class ChartWidget
                     'lines' => null,
                     'rows' => array_values($resolved['rows']),
                     'items' => null,
+                    'barcodes' => null,
+                    'file' => null,
+                    'logLines' => null,
+                    'truncated' => null,
                     'total' => null,
                     'trend' => null,
                     'error' => false,
@@ -338,6 +348,10 @@ final class ChartWidget
                     'lines' => null,
                     'rows' => null,
                     'items' => array_values($resolved['items']),
+                    'barcodes' => null,
+                    'file' => null,
+                    'logLines' => null,
+                    'truncated' => null,
                     'total' => null,
                     'trend' => null,
                     'error' => false,
@@ -353,10 +367,50 @@ final class ChartWidget
                     'lines' => null,
                     'rows' => null,
                     'items' => null,
+                    'barcodes' => null,
+                    'file' => null,
+                    'logLines' => null,
+                    'truncated' => null,
                     'markers' => isset($resolved['markers']) ? array_values((array) $resolved['markers']) : null,
                     'center' => $resolved['center'] ?? null,
                     'zoom' => $resolved['zoom'] ?? null,
                     'events' => isset($resolved['events']) ? array_values((array) $resolved['events']) : null,
+                    'total' => null,
+                    'trend' => null,
+                    'error' => false,
+                ];
+            }
+
+            if (array_key_exists('barcodes', $resolved)) {
+                return [
+                    'points' => [],
+                    'series' => null,
+                    'bars' => null,
+                    'lines' => null,
+                    'rows' => null,
+                    'items' => null,
+                    'barcodes' => array_values((array) $resolved['barcodes']),
+                    'file' => null,
+                    'logLines' => null,
+                    'truncated' => null,
+                    'total' => null,
+                    'trend' => null,
+                    'error' => false,
+                ];
+            }
+
+            if (array_key_exists('lines', $resolved) && ($this->type === 'logtail' || array_key_exists('file', $resolved))) {
+                return [
+                    'points' => [],
+                    'series' => null,
+                    'bars' => null,
+                    'lines' => null,
+                    'rows' => null,
+                    'items' => null,
+                    'barcodes' => null,
+                    'file' => isset($resolved['file']) ? (string) $resolved['file'] : null,
+                    'logLines' => array_values((array) $resolved['lines']),
+                    'truncated' => (bool) ($resolved['truncated'] ?? false),
                     'total' => null,
                     'trend' => null,
                     'error' => false,
@@ -390,6 +444,10 @@ final class ChartWidget
                 'lines' => $lines,
                 'rows' => null,
                 'items' => null,
+                'barcodes' => null,
+                'file' => null,
+                'logLines' => null,
+                'truncated' => null,
                 'total' => $total,
                 'trend' => $this->trend !== null ? ($this->trend)($period, $now)->toArray() : null,
                 'error' => false,

@@ -299,7 +299,10 @@ abstract class DashboardPage extends Page
                 return $w;
             }
 
-            if ($w instanceof \Alxtexh\Panel\Widgets\MapWidget || $w instanceof \Alxtexh\Panel\Widgets\CalendarWidget) {
+            if ($w instanceof \Alxtexh\Panel\Widgets\MapWidget
+                || $w instanceof \Alxtexh\Panel\Widgets\CalendarWidget
+                || $w instanceof \Alxtexh\Panel\Widgets\BarcodeWidget
+                || $w instanceof \Alxtexh\Panel\Widgets\LogTailWidget) {
                 return $w->toChartWidget();
             }
 

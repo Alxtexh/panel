@@ -24,6 +24,7 @@ interface MediaItem {
     size?: number | null
     folder?: string
     url?: string | null
+    download_url?: string | null
     is_image?: boolean
 }
 
@@ -147,7 +148,7 @@ function remove(id: number) {
             :title="pageHeading ?? 'Media library'"
             :purpose="
                 pageDescription ??
-                'Tenant-scoped files on local disk. Upload, move, and delete when you hold manage_media_library.'
+                'Tenant-scoped files. Preview and download use temporary signed URLs when the disk is private.'
             "
         >
             <template #actions>
@@ -207,7 +208,7 @@ function remove(id: number) {
         <PkEmptyState
             v-if="items.length === 0"
             title="No files in this folder"
-            description="Upload a file, or switch folders above. Hosts can subclass MediaLibraryPage for a different disk or preview URLs."
+            description="Upload a file, or switch folders above. Preview links are temporary signed URLs (or disk temporary URLs). Override MediaLibraryPage::resolveItemUrl() for a host CDN."
             icon="package"
         >
             <template #actions>
@@ -259,10 +260,11 @@ function remove(id: number) {
                                     <div class="min-w-0">
                                         <p class="truncate font-medium">{{ row.name }}</p>
                                         <p
-                                            v-if="row.url"
+                                            v-if="row.url || row.download_url"
                                             class="text-muted-foreground truncate text-xs"
                                         >
                                             <a
+                                                v-if="row.url"
                                                 :href="row.url"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
@@ -270,9 +272,17 @@ function remove(id: number) {
                                             >
                                                 Open
                                             </a>
+                                            <span v-if="row.url && row.download_url"> · </span>
+                                            <a
+                                                v-if="row.download_url"
+                                                :href="row.download_url"
+                                                class="underline-offset-2 hover:underline"
+                                            >
+                                                Download
+                                            </a>
                                         </p>
                                         <p v-else class="text-muted-foreground text-xs font-normal">
-                                            Preview URL not exposed (private disk).
+                                            Preview URL unavailable for this file.
                                         </p>
                                     </div>
                                 </div>

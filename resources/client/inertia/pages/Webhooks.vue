@@ -7,7 +7,12 @@
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import {
-    PAGE_SHELL_STACK, PkButton as Button } from '@alxtexh-enterprise/panel'
+    PAGE_SHELL_STACK,
+    PkButton as Button,
+    PkEmptyState,
+    PkPageHeader,
+    TableShell,
+} from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -168,29 +173,19 @@ function statusLabel(row: DeliveryRow): string {
     <Head :title="pageHeading ?? 'Webhooks'" />
 
     <div :class="PAGE_SHELL_STACK">
-        <header class="space-y-1">
-            <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Webhooks' }}</h1>
-            <p v-if="pageDescription" class="text-sm text-muted-foreground font-normal">
-                {{ pageDescription }}
-            </p>
-            <p class="text-xs text-muted-foreground font-normal">
-                Outbound HTTPS deliveries with
-                <code class="font-mono">X-Panel-Signature</code>
-                (HMAC-SHA256). Enable with
-                <code class="font-mono">Panel::webhooks()</code>
-                and dispatch via
-                <code class="font-mono">WebhookDispatcher</code>.
-            </p>
-        </header>
-
-        <div class="flex items-center justify-between gap-4">
-            <p class="text-sm text-muted-foreground font-normal">
-                {{ endpoints.length === 0 ? 'No endpoints yet.' : `${endpoints.length} endpoint${endpoints.length === 1 ? '' : 's'}` }}
-            </p>
-            <Button type="button" @click="showCreate ? cancelForm() : openCreate()">
-                {{ showCreate ? 'Cancel' : 'Add endpoint' }}
-            </Button>
-        </div>
+        <PkPageHeader
+            :title="pageHeading ?? 'Webhooks'"
+            :purpose="
+                pageDescription ??
+                'Outbound HTTPS deliveries with X-Panel-Signature (HMAC-SHA256). Enable with Panel::webhooks().'
+            "
+        >
+            <template #actions>
+                <Button type="button" @click="showCreate ? cancelForm() : openCreate()">
+                    {{ showCreate ? 'Cancel' : 'Add endpoint' }}
+                </Button>
+            </template>
+        </PkPageHeader>
 
         <form
             v-if="showCreate"
@@ -263,49 +258,65 @@ function statusLabel(row: DeliveryRow): string {
             </Button>
         </form>
 
-        <p
+        <PkEmptyState
             v-if="endpoints.length === 0 && !showCreate"
-            class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
+            title="No webhook endpoints yet"
+            description="Add a URL, pick events, then send a ping to verify delivery."
+            icon="link"
         >
-            No webhook endpoints yet. Add a URL, pick events, then send a ping to verify delivery.
-        </p>
+            <template #actions>
+                <Button type="button" @click="openCreate">Add endpoint</Button>
+            </template>
+        </PkEmptyState>
 
-        <ul v-else-if="endpoints.length > 0" class="divide-y rounded-md border">
-            <li
-                v-for="row in endpoints"
-                :key="row.id"
-                class="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between"
-                :class="selectedEndpointId === row.id ? 'bg-muted/40' : ''"
-            >
-                <button
-                    type="button"
-                    class="min-w-0 flex-1 text-left"
-                    @click="selectEndpoint(row.id)"
+        <TableShell v-else-if="endpoints.length > 0">
+            <template #title>
+                <p class="text-sm font-medium">
+                    {{ endpoints.length }}
+                    {{ endpoints.length === 1 ? 'endpoint' : 'endpoints' }}
+                </p>
+            </template>
+
+            <ul class="divide-y">
+                <li
+                    v-for="row in endpoints"
+                    :key="row.id"
+                    class="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between"
+                    :class="selectedEndpointId === row.id ? 'bg-muted/40' : ''"
                 >
-                    <p class="truncate font-medium">{{ row.url }}</p>
-                    <p class="mt-0.5 font-mono text-xs text-muted-foreground">
-                        {{ row.events.join(', ') || 'No events' }}
-                    </p>
-                    <p class="mt-1 text-xs" :class="row.enabled ? 'text-muted-foreground' : 'text-amber-600 dark:text-amber-500'">
-                        {{ row.enabled ? 'Enabled' : 'Disabled' }}
-                    </p>
-                </button>
-                <div class="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" size="sm" @click="selectEndpoint(row.id)">
-                        Deliveries
-                    </Button>
-                    <Button type="button" variant="outline" size="sm" @click="sendPing(row.id)">
-                        Send ping
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" @click="openEdit(row)">
-                        Edit
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" @click="remove(row.id)">
-                        Delete
-                    </Button>
-                </div>
-            </li>
-        </ul>
+                    <button
+                        type="button"
+                        class="min-w-0 flex-1 text-left"
+                        @click="selectEndpoint(row.id)"
+                    >
+                        <p class="truncate font-medium">{{ row.url }}</p>
+                        <p class="mt-0.5 font-mono text-xs text-muted-foreground">
+                            {{ row.events.join(', ') || 'No events' }}
+                        </p>
+                        <p
+                            class="mt-1 text-xs"
+                            :class="row.enabled ? 'text-muted-foreground' : 'text-amber-600 dark:text-amber-500'"
+                        >
+                            {{ row.enabled ? 'Enabled' : 'Disabled' }}
+                        </p>
+                    </button>
+                    <div class="flex flex-wrap gap-2">
+                        <Button type="button" variant="outline" size="sm" @click="selectEndpoint(row.id)">
+                            Deliveries
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" @click="sendPing(row.id)">
+                            Send ping
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" @click="openEdit(row)">
+                            Edit
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" @click="remove(row.id)">
+                            Delete
+                        </Button>
+                    </div>
+                </li>
+            </ul>
+        </TableShell>
 
         <section v-if="selectedEndpointId" class="space-y-3">
             <header class="space-y-1">
@@ -317,55 +328,59 @@ function statusLabel(row: DeliveryRow): string {
                 </p>
             </header>
 
-            <p
+            <PkEmptyState
                 v-if="deliveries.length === 0"
-                class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
-            >
-                No deliveries yet. Use Send ping to post a
-                <code class="font-mono">webhook.ping</code>
-                test.
-            </p>
+                title="No deliveries yet"
+                description="Use Send ping to post a webhook.ping test."
+                icon="activity"
+            />
 
-            <div v-else class="overflow-x-auto rounded-md border">
-                <table class="min-w-full text-sm">
-                    <thead class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
-                        <tr>
-                            <th class="px-3 py-2">Event</th>
-                            <th class="px-3 py-2">Status</th>
-                            <th class="px-3 py-2">Delivered</th>
-                            <th class="px-3 py-2" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="row in deliveries"
-                            :key="row.id"
-                            class="border-b last:border-0"
-                        >
-                            <td class="px-3 py-2 font-mono text-xs">{{ row.event }}</td>
-                            <td
-                                class="px-3 py-2 text-xs"
-                                :class="row.error ? 'text-destructive' : 'text-muted-foreground'"
+            <TableShell v-else>
+                <template #title>
+                    <p class="text-sm font-medium">{{ deliveries.length }} deliveries</p>
+                </template>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
+                            <tr>
+                                <th class="px-3 py-2">Event</th>
+                                <th class="px-3 py-2">Status</th>
+                                <th class="px-3 py-2">Delivered</th>
+                                <th class="px-3 py-2" />
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="row in deliveries"
+                                :key="row.id"
+                                class="border-b last:border-0"
                             >
-                                {{ statusLabel(row) }}
-                            </td>
-                            <td class="px-3 py-2 text-muted-foreground">
-                                {{ formatWhen(row.delivered_at) }}
-                            </td>
-                            <td class="px-3 py-2 text-right">
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    @click="retryDelivery(row.id)"
+                                <td class="px-3 py-2 font-mono text-xs">{{ row.event }}</td>
+                                <td
+                                    class="px-3 py-2 text-xs"
+                                    :class="row.error ? 'text-destructive' : 'text-muted-foreground'"
                                 >
-                                    Retry
-                                </Button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                                    {{ statusLabel(row) }}
+                                </td>
+                                <td class="px-3 py-2 text-muted-foreground">
+                                    {{ formatWhen(row.delivered_at) }}
+                                </td>
+                                <td class="px-3 py-2 text-right">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        @click="retryDelivery(row.id)"
+                                    >
+                                        Retry
+                                    </Button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </TableShell>
         </section>
     </div>
 </template>

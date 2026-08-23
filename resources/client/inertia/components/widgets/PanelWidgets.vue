@@ -97,6 +97,14 @@ function bodyHeight(chart: Chart): number {
         return 120
     }
 
+    if (chart.type === 'barcode') {
+        return 120
+    }
+
+    if (chart.type === 'logtail') {
+        return 220
+    }
+
     return 220
 }
 

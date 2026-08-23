@@ -33,6 +33,7 @@ import {
     StatListChart,
     CatalogGrid,
     LineItems,
+    PkBarcode,
     PkCalendar,
     PkMap,
 } from '@alxtexh-enterprise/panel'
@@ -57,6 +58,9 @@ function openCatalogItem(key: string): void {
 }
 
 const lines = computed(() => multiSeries(props.chart, props.data))
+
+const barcodes = computed(() => props.data.barcodes ?? [])
+const logLines = computed(() => props.data.logLines ?? [])
 </script>
 
 <template>
@@ -82,6 +86,50 @@ const lines = computed(() => multiSeries(props.chart, props.data))
     />
 
     <PkCalendar v-else-if="chart.type === 'calendar'" :events="(data as any).events ?? []" />
+
+    <div
+        v-else-if="chart.type === 'barcode'"
+        class="flex flex-col gap-3"
+        data-slot="barcode-widget"
+    >
+        <p v-if="barcodes.length === 0" class="text-muted-foreground text-sm font-normal">
+            No barcode value.
+        </p>
+        <div
+            v-for="row in barcodes"
+            :key="row.key"
+            class="flex flex-col gap-1"
+        >
+            <p v-if="row.label" class="text-muted-foreground text-xs font-normal">{{ row.label }}</p>
+            <PkBarcode
+                :field="{
+                    key: row.key,
+                    format: row.format ?? 'CODE128',
+                    height: row.height ?? 64,
+                    width: row.width ?? 2,
+                    displayValue: row.displayValue !== false,
+                    from: null,
+                }"
+                :model-value="row.value"
+                disabled
+            />
+        </div>
+    </div>
+
+    <div
+        v-else-if="chart.type === 'logtail'"
+        class="bg-muted/40 max-h-64 overflow-auto rounded-md border p-2 font-mono text-[11px] leading-relaxed"
+        data-slot="logtail-widget"
+    >
+        <p v-if="data.file" class="text-muted-foreground mb-2 text-[10px] uppercase tracking-wide">
+            {{ data.file }}
+            <span v-if="data.truncated"> (truncated)</span>
+        </p>
+        <p v-if="logLines.length === 0" class="text-muted-foreground font-sans text-sm">
+            No log lines.
+        </p>
+        <pre v-else class="whitespace-pre-wrap break-all">{{ logLines.join('\n') }}</pre>
+    </div>
 
     <PieChart
         v-else-if="chart.type === 'pie' || chart.type === 'doughnut'"
