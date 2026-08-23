@@ -13,8 +13,14 @@
  *              That glob is the reason a packaged screen still needs a
  *              one-line file here: Vite cannot see into node_modules.
  *
- *   `setup`    mounts Vue and installs the layout, so a screen that declares
- *              none still gets the panel chrome.
+ *   `layout`   chooses the shell for that name. Packaged screens often set
+ *              `defineOptions({ layout: { breadcrumbs } })` - layout PROPS,
+ *              not a replacement shell. Inertia only wraps those props in
+ *              PanelLayout when THIS callback exists. Dropping it leaves a
+ *              naked page (HTTP 200, no sidebar). Do not rewrite this to
+ *              `layout: null` or remove the callback.
+ *
+ *   `setup`    mounts Vue.
  *
  *   `progress` the loading bar. Off by default in Inertia; a panel without one
  *              looks frozen on any request slower than instant.
@@ -87,40 +93,49 @@ createInertiaApp({
             )
         }
 
-        /*
-         * THE LAYOUT IS APPLIED HERE unless the screen chose its own.
-         *
-         * AUTH LIVES AT `panel/auth/*`, NOT `auth/*`. The package deliberately
-         * moved off `auth/Login` so it would not collide with Breeze/Jetstream.
-         * Matching only `auth/` therefore wrapped every packaged sign-in in the
-         * panel shell - sidebar, search, notifications - around a form nobody
-         * can use yet. That is the "install looks broken / design changed"
-         * failure on a fresh app.
-         *
-         * Landing and error pages also draw their own chrome: a guest has no
-         * panel to be inside, and an unmatched URL never starts a session.
-         *
-         * SETTINGS NEST SettingsLayout beside PanelLayout (playground pattern,
-         * kit-owned). Index is the exception: it IS the nav list, so wrapping
-         * it would draw the same links twice.
-         */
-        const standalone =
+        return page
+    },
+
+    /*
+     * THE LAYOUT IS CHOSEN HERE, not by mutating page.default.layout in resolve.
+     *
+     * AUTH LIVES AT `panel/auth/*`, NOT `auth/*`. The package deliberately
+     * moved off `auth/Login` so it would not collide with Breeze/Jetstream.
+     * Matching only `auth/` therefore wrapped every packaged sign-in in the
+     * panel shell - sidebar, search, notifications - around a form nobody
+     * can use yet. That is the "install looks broken / design changed"
+     * failure on a fresh app.
+     *
+     * Landing and error pages also draw their own chrome: a guest has no
+     * panel to be inside, and an unmatched URL never starts a session.
+     *
+     * SETTINGS NEST SettingsLayout beside PanelLayout (playground pattern,
+     * kit-owned). Index is the exception: it IS the nav list, so wrapping
+     * it would draw the same links twice.
+     *
+     * Returning null opts OUT of the shell for that name only. Returning
+     * PanelLayout (or a nest) is what keeps breadcrumb-only
+     * `defineOptions({ layout: { breadcrumbs } })` wrapped in chrome.
+     */
+    layout: (name) => {
+        if (
             name.startsWith('panel/auth/') ||
             name.startsWith('auth/') ||
             name.startsWith('landing/') ||
             name.startsWith('errors/')
-
-        if (standalone) {
-            page.default.layout ??= undefined
-        } else if (name === 'settings/Index') {
-            page.default.layout ??= PanelLayout
-        } else if (name.startsWith('settings/')) {
-            page.default.layout ??= [PanelLayout, SettingsLayout]
-        } else {
-            page.default.layout ??= PanelLayout
+        ) {
+            return null
         }
 
-        return page
+        if (name === 'settings/Index') {
+            return PanelLayout
+        }
+
+        if (name.startsWith('settings/')) {
+            return [PanelLayout, SettingsLayout]
+        }
+
+        return PanelLayout
     },
 
     setup({ el, App, props, plugin }) {

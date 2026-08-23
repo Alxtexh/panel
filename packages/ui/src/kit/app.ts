@@ -4,6 +4,12 @@
  *
  * Hosts who customise Vue still publish app.ts and run Vite. This file is the
  * default path: kit pages, kit layout, kit CSS.
+ *
+ * `layout: (name) => …` MUST stay. Packaged screens set
+ * `defineOptions({ layout: { breadcrumbs } })` as layout PROPS; Inertia only
+ * wraps those in PanelLayout when this callback exists. Mutating
+ * `page.default.layout ??= PanelLayout` in resolve does not: a breadcrumbs
+ * object is already set, so `??=` never assigns the shell.
  */
 import { createInertiaApp } from '@inertiajs/vue3'
 import { createApp, h, type DefineComponent } from 'vue'
@@ -58,23 +64,28 @@ createInertiaApp({
             )
         }
 
-        const standalone =
+        return page
+    },
+
+    layout: (name) => {
+        if (
             name.startsWith('panel/auth/') ||
             name.startsWith('auth/') ||
             name.startsWith('landing/') ||
             name.startsWith('errors/')
-
-        if (standalone) {
-            page.default.layout ??= undefined
-        } else if (name === 'settings/Index') {
-            page.default.layout ??= PanelLayout
-        } else if (name.startsWith('settings/')) {
-            page.default.layout ??= [PanelLayout, SettingsLayout]
-        } else {
-            page.default.layout ??= PanelLayout
+        ) {
+            return null
         }
 
-        return page
+        if (name === 'settings/Index') {
+            return PanelLayout
+        }
+
+        if (name.startsWith('settings/')) {
+            return [PanelLayout, SettingsLayout]
+        }
+
+        return PanelLayout
     },
 
     setup({ el, App, props, plugin }) {

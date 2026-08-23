@@ -22,15 +22,28 @@
  * filtered by ability and by panel; the brand and palette; the signed-in
  * person; and where sign-out posts. There is nothing to wire up.
  *
+ * BREADCRUMBS ARRIVE AS LAYOUT PROPS when a page uses
+ * `defineOptions({ layout: { breadcrumbs } })`. Forward them here; the
+ * shell falls back to server `page.props.breadcrumbs` when the list is empty.
+ *
  * TO REPLACE IT ENTIRELY, stop importing `PanelShell` and write your own
  * markup here. Every screen goes through this file, so nothing else changes -
  * `usePage().props.panelNav` is the same array the shell reads.
  */
 import { PanelShell } from '@alxtexh-enterprise/panel/inertia'
+
+withDefaults(
+    defineProps<{
+        breadcrumbs?: { title: string; href?: string | null }[]
+    }>(),
+    {
+        breadcrumbs: () => [],
+    },
+)
 </script>
 
 <template>
-    <PanelShell>
+    <PanelShell :breadcrumbs="breadcrumbs">
         <!--
             Two slots, when you want them:
 
