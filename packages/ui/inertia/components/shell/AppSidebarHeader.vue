@@ -10,7 +10,6 @@ import PanelCommandPalette from './PanelCommandPalette.vue'
 import PanelQuickCreate from './PanelQuickCreate.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import PanelLockButton from './PanelLockButton.vue'
-import PanelEnvironmentBanner from './PanelEnvironmentBanner.vue'
 import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
 import TopNavUser from './TopNavUser.vue'
 import { PkBoundary } from '@alxtexh-enterprise/panel'
@@ -91,7 +90,6 @@ const trail = computed<BreadcrumbItem[]>(() =>
     >
         <div class="flex min-w-0 items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
             <SidebarTrigger :class="mirrored ? '-mr-1' : '-ml-1'" />
-            <PanelEnvironmentBanner />
             <slot name="topbar">
                 <!-- Breadcrumbs are the first thing to give up on a phone; the
                      search trigger earns that space more. -->

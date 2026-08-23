@@ -350,11 +350,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Environment badge
+    | Environment badge (permanently off)
     |--------------------------------------------------------------------------
     |
-    | Null / unset: show outside production. true: always. false: never.
-    | Per-panel: Panel::environmentBanner(true|false).
+    | Kept for config/env compatibility. The shell no longer renders a badge;
+    | PANEL_ENVIRONMENT_BANNER and Panel::environmentBanner() are no-ops.
     */
     'environment_banner' => [
         'enabled' => env('PANEL_ENVIRONMENT_BANNER'),

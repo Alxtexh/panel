@@ -144,17 +144,11 @@ portal can wear the signed-in reseller's brand.
 
 ## Environment badge
 
-Non-production installs show a compact **badge** in the top bar (local, staging,
-etc.). It does not consume a full-width strip. Opt in or out per panel:
-
-```php
-Panel::make('admin')
-    ->environmentBanner(false);  // hide everywhere
-// ->environmentBanner(true);   // force even in production
-```
-
-Global default: `PANEL_ENVIRONMENT_BANNER` in `config/panel.php` (null = show
-outside production only).
+Removed from chrome. The top bar no longer shows a LOCAL / staging badge (it
+congested the header next to breadcrumbs). `Panel::environmentBanner()` and
+`PANEL_ENVIRONMENT_BANNER` remain as no-ops so existing host registration does
+not break; shared `environmentBanner` is always `null`. Do not restore a
+full-width strip.
 
 ## Sidebar design families
 
@@ -166,7 +160,6 @@ $panels->registerPanel(
     Panel::make('reseller')
         ->path('reseller')
         ->sidebarLayout('floating')  // inset (default), sidebar, icon, header, accordion, …
-        // ->environmentBanner(false)
         ->discoverResources(...)
 );
 ```
