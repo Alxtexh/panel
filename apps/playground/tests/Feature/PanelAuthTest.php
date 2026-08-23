@@ -352,7 +352,7 @@ final class PanelAuthTest extends TestCase
      * widget with no site key and a "Sign up" link to a route nobody registered.
      * Absent is the default; present is opt-in.
      */
-    public function test_a_plain_installation_still_lists_social_buttons_without_keys(): void
+    public function test_a_plain_installation_hides_social_when_no_keys(): void
     {
         // No credentials anywhere is what a fresh application looks like.
         config(['services.google' => [], 'services.github' => []]);
@@ -362,18 +362,16 @@ final class PanelAuthTest extends TestCase
             ->assertInertia(
                 fn ($page) => $page
                     ->where('turnstileSiteKey', null)
-                    ->has('socialProviders')
-                    ->where('socialProviders.0.key', 'google')
-                    ->where('socialProviders.0.configured', false)
+                    ->where('socialProviders', [])
                     ->where('registerUrl', null),
             );
     }
 
     /**
-     * THE CATALOGUE IS LISTED; CREDENTIALS MARK WHICH BUTTONS WORK.
+     * ONLY CONFIGURED PROVIDERS APPEAR; CREDENTIALS ARE THE SWITCH.
      *
-     * `SocialProviders::offered()` shows every packaged provider when socialite
-     * is on. `configured` is true only when both client id and secret exist.
+     * `SocialProviders::offered()` lists providers with both client id and
+     * secret when socialite is on (unless `show_unconfigured` is opted in).
      */
     public function test_a_provider_with_credentials_is_marked_configured_at_this_panels_url(): void
     {
@@ -386,6 +384,7 @@ final class PanelAuthTest extends TestCase
             ->assertOk()
             ->assertInertia(
                 fn ($page) => $page
+                    ->has('socialProviders', 1)
                     ->where('socialProviders.0.key', 'google')
                     ->where('socialProviders.0.label', 'Google')
                     ->where('socialProviders.0.configured', true)
@@ -395,18 +394,16 @@ final class PanelAuthTest extends TestCase
                      * redirect` would hand a reseller portal's sign-in to the
                      * admin panel.
                      */
-                    ->where('socialProviders.0.url', '/authfixture/auth/google/redirect')
-                    ->where('socialProviders.1.key', 'github')
-                    ->where('socialProviders.1.configured', false),
+                    ->where('socialProviders.0.url', '/authfixture/auth/google/redirect'),
             );
     }
 
     /**
-     * HALF A CONFIGURATION IS NOT CONFIGURED. The button stays visible so the
-     * catalogue does not look incomplete; clicking it explains the missing
-     * secret instead of starting a broken OAuth flow.
+     * HALF A CONFIGURATION IS NOT CONFIGURED. By default the button is hidden;
+     * with `show_unconfigured` opted in it stays visible and explains the
+     * missing secret instead of starting a broken OAuth flow.
      */
-    public function test_a_provider_missing_its_secret_stays_listed_as_unconfigured(): void
+    public function test_a_provider_missing_its_secret_is_hidden_by_default(): void
     {
         config([
             'services.google' => ['client_id' => 'id', 'client_secret' => null],
@@ -415,9 +412,7 @@ final class PanelAuthTest extends TestCase
 
         $this->get('/authfixture/login')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->where('socialProviders.0.key', 'google')
-                ->where('socialProviders.0.configured', false));
+            ->assertInertia(fn ($page) => $page->where('socialProviders', []));
     }
 
     /**

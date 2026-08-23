@@ -487,15 +487,16 @@ final class Blueprint
 
         ### Social sign-in and Turnstile
 
-        Credentials gate the OAuth exchange, not the button list. With
-        socialite on, the login screen shows the packaged catalogue (Google,
-        GitHub, GitLab, Bitbucket, Facebook, LinkedIn, Microsoft, Apple, X,
-        Discord, Slack, Twitch). Unconfigured buttons stay visible and say
-        what to set in `.env`. `->socialite(['google', 'github'])` narrows
-        the list. Without `laravel/socialite` the buttons stay hidden.
-        Microsoft, Apple and Discord need a community Socialite driver.
-        Set `panel.auth.social.show_unconfigured` to false to hide providers
-        that lack keys.
+        Credentials gate the button list and the OAuth exchange. With
+        socialite on, login shows only providers that have both a client id
+        and a secret (Google, GitHub, GitLab, Bitbucket, Facebook, LinkedIn,
+        Microsoft, Apple, X, Discord, Slack, Twitch when configured). When
+        none are configured, the whole social block (including the divider)
+        is hidden. `->socialite(['google', 'github'])` narrows the list.
+        Without `laravel/socialite` the buttons stay hidden. Microsoft, Apple
+        and Discord need a community Socialite driver. Set
+        `PANEL_SOCIAL_SHOW_UNCONFIGURED=true` only for a kit showcase that
+        wants the full catalogue with muted unconfigured buttons.
 
         Set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for the widget above
         submit. Missing keys: no widget, login works. `->turnstile(false)` opts

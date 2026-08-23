@@ -428,11 +428,13 @@ return [
         /*
         | SOCIAL SIGN-IN.
         |
-        | When `->socialite()` is on, the login UI lists the packaged catalogue.
-        | Credentials in `config/services.php` still gate the OAuth exchange:
-        | a button without keys stays visible and explains what to set in `.env`.
-        | Set `show_unconfigured` to false to hide providers that lack both a
-        | client id and a secret (the older credentials-are-the-switch behaviour).
+        | When `->socialite()` is on, the login UI lists providers that have both
+        | a client id and a secret in `config/services.php`. Unconfigured
+        | providers stay hidden (and the whole social block, including the
+        | "or continue with" divider, is omitted when the list is empty).
+        | Set `PANEL_SOCIAL_SHOW_UNCONFIGURED=true` only when you want the
+        | full packaged catalogue (muted buttons that explain missing `.env`
+        | keys) for a kit showcase or demo.
         |
         | `providers` extends the packaged list for anything Socialite can drive
         | that this package does not name. `verifies_email` is a claim that a
@@ -444,7 +446,7 @@ return [
         'social' => [
             'table' => 'connected_accounts',
             'settings_url' => '/settings/security',
-            'show_unconfigured' => env('PANEL_SOCIAL_SHOW_UNCONFIGURED', true),
+            'show_unconfigured' => env('PANEL_SOCIAL_SHOW_UNCONFIGURED', false),
             'providers' => [],
             'verifies_email' => [],
         ],

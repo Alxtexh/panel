@@ -266,13 +266,13 @@ final class SocialLoginTest extends TestCase
     /* ------------------------------------------------------------ screens */
 
     /**
-     * The sign-in screen lists the packaged catalogue; credentials mark which
-     * buttons can start OAuth.
+     * The sign-in screen lists configured providers only (Google and GitHub
+     * from `phpunit.xml`). Clearing a secret hides that button by default.
      *
      * Google and GitHub are configured at boot in `phpunit.xml` because
      * `PanelRoutes` decides whether social routes exist during boot.
      */
-    public function test_the_login_screen_lists_all_provider_keys(): void
+    public function test_the_login_screen_lists_configured_provider_keys(): void
     {
         $props = $this->get(route('login'))
             ->assertOk()
@@ -284,14 +284,9 @@ final class SocialLoginTest extends TestCase
         $keys = array_column($props, 'key');
         $byKey = collect($props)->keyBy('key');
 
-        foreach ([
-            'google', 'github', 'gitlab', 'bitbucket', 'facebook',
-            'linkedin', 'microsoft', 'apple', 'x',
-            'discord', 'slack', 'twitch',
-        ] as $key) {
-            $this->assertContains($key, $keys, "missing provider key {$key}");
-        }
-
+        $this->assertContains('google', $keys);
+        $this->assertContains('github', $keys);
+        $this->assertNotContains('discord', $keys);
         $this->assertTrue($byKey['google']['configured']);
         $this->assertTrue($byKey['github']['configured']);
 
@@ -302,11 +297,26 @@ final class SocialLoginTest extends TestCase
             ->viewData('page')['props']['socialProviders'])->keyBy('key');
 
         $this->assertTrue($after['google']['configured']);
-        $this->assertFalse($after['github']['configured']);
-        $this->assertSame(
-            'Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in .env',
-            $after['github']['hint'],
-        );
+        $this->assertArrayNotHasKey('github', $after);
+    }
+
+    public function test_show_unconfigured_lists_the_full_catalogue(): void
+    {
+        config(['panel.auth.social.show_unconfigured' => true]);
+
+        $props = $this->get(route('login'))
+            ->assertOk()
+            ->viewData('page')['props']['socialProviders'];
+
+        $keys = array_column($props, 'key');
+
+        foreach ([
+            'google', 'github', 'gitlab', 'bitbucket', 'facebook',
+            'linkedin', 'microsoft', 'apple', 'x',
+            'discord', 'slack', 'twitch',
+        ] as $key) {
+            $this->assertContains($key, $keys, "missing provider key {$key}");
+        }
     }
 
     /** And the security screen lists what is attached, so it can be removed. */

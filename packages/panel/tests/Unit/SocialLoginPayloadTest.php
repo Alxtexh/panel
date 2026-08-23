@@ -34,6 +34,28 @@ final class SocialLoginPayloadTest extends TestCase
         );
     }
 
+    public function test_defaults_to_hiding_unconfigured_providers(): void
+    {
+        if (! SocialProviders::installed()) {
+            $this->markTestSkipped('laravel/socialite is not installed');
+        }
+
+        config([
+            'services.google' => [],
+            'services.github.client_id' => 'id',
+            'services.github.client_secret' => 'secret',
+        ]);
+
+        $this->assertFalse(SocialProviders::showUnconfigured());
+
+        $panel = app(PanelManager::class)->panel('second');
+        $providers = SocialLoginPayload::forPanel($panel);
+
+        $this->assertCount(1, $providers);
+        $this->assertSame('github', $providers[0]['key']);
+        $this->assertTrue($providers[0]['configured']);
+    }
+
     public function test_lists_unconfigured_providers_when_show_unconfigured_is_true(): void
     {
         if (! SocialProviders::installed()) {

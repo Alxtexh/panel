@@ -213,9 +213,15 @@ Extra providers (beyond the packaged list) go in `config/panel.php` under
 `auth.social.providers`, with matching `services.{key}` credentials and a
 Socialite driver.
 
-**Credentials are the switch.** A provider with none is not offered and its
-routes are not registered. `laravel/socialite` is a composer suggest: without
-the package there are no buttons and no 500.
+**Credentials are the switch (default).** A provider without both a client id
+and a secret is not listed, and when the list is empty the whole social block
+(including the "or continue with" divider) is hidden. Routes for unconfigured
+providers are not registered either. `laravel/socialite` is a composer suggest:
+without the package there are no buttons and no 500.
+
+Set `PANEL_SOCIAL_SHOW_UNCONFIGURED=true` only when you want the full packaged
+catalogue with muted buttons that explain missing `.env` keys (kit showcase /
+demo). That is opt-in; the package default is hide unconfigured.
 
 ```php
 Panel::make('admin')
