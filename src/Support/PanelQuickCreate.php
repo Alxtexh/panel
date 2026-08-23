@@ -12,7 +12,7 @@ use Alxtexh\Panel\PanelManager;
  * EMPTY WHEN NOTHING IS CREATABLE, so the menu costs nothing on a read-only
  * portal. Abilities are checked here; the client never decides who may create.
  *
- * @return list<array{key: string, title: string, href: string, icon: string}>
+ * @return list<array{key: string, title: string, href: string, icon: string, group: string|null}>
  */
 final class PanelQuickCreate
 {
@@ -39,8 +39,13 @@ final class PanelQuickCreate
                 'title' => $class::label(),
                 'href' => $prefix.'/'.$class::key().'/create',
                 'icon' => $class::icon(),
+                'group' => $class::group(),
             ])
-            ->sortBy('title')
+            ->sortBy([
+                // Ungrouped first (null sorts before named groups), then title.
+                static fn (array $item): string => $item['group'] ?? '',
+                static fn (array $item): string => $item['title'],
+            ])
             ->values()
             ->all();
     }
