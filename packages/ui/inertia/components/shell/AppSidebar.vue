@@ -691,6 +691,8 @@ watch(
                                     v-for="item in group.items"
                                     :key="item.title"
                                     :href="item.href"
+                                    prefetch="hover"
+                                    cache-for="30s"
                                     class="group/flyout relative flex items-center py-1.5 pl-4 text-sm transition-colors hover:text-foreground"
                                     :class="
                                         isCurrentUrl(item.href)
@@ -732,6 +734,8 @@ watch(
                                         v-for="item in sub.items"
                                         :key="item.title"
                                         :href="item.href"
+                                        prefetch="hover"
+                                        cache-for="30s"
                                         class="group/flyout relative flex items-center py-1.5 pl-4 text-sm transition-colors hover:text-foreground"
                                         :class="
                                             isCurrentUrl(item.href)
@@ -876,7 +880,7 @@ watch(
                     <SidebarMenu v-if="!collapsed.has(group.name)" class="gap-0.5 px-2">
                         <SidebarMenuItem v-for="item in group.items" :key="item.title">
                             <SidebarMenuButton as-child :is-active="isCurrentUrl(item.href)">
-                                <Link :href="item.href" @click="closeOnMobile">
+                                <Link :href="item.href" prefetch="hover" cache-for="30s" @click="closeOnMobile">
                                     <Check
                                         class="size-3.5 shrink-0"
                                         :class="isCurrentUrl(item.href) ? 'opacity-100' : 'opacity-0'"
@@ -890,7 +894,7 @@ watch(
                             <SidebarGroupLabel class="mt-1">{{ sub.name }}</SidebarGroupLabel>
                             <SidebarMenuItem v-for="item in sub.items" :key="item.title">
                                 <SidebarMenuButton as-child :is-active="isCurrentUrl(item.href)">
-                                    <Link :href="item.href" @click="closeOnMobile">
+                                    <Link :href="item.href" prefetch="hover" cache-for="30s" @click="closeOnMobile">
                                         <Check
                                             class="size-3.5 shrink-0"
                                             :class="isCurrentUrl(item.href) ? 'opacity-100' : 'opacity-0'"
@@ -939,6 +943,8 @@ watch(
                             v-for="item in group.items"
                             :key="item.title"
                             :href="item.href"
+                            prefetch="hover"
+                            cache-for="30s"
                             class="flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-colors"
                             :class="
                                 isCurrentUrl(item.href)
@@ -974,6 +980,8 @@ watch(
                                     v-for="item in sub.items"
                                     :key="item.title"
                                     :href="item.href"
+                                    prefetch="hover"
+                                    cache-for="30s"
                                     class="flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-colors"
                                     :class="
                                         isCurrentUrl(item.href)
@@ -1014,7 +1022,7 @@ watch(
                             <SidebarMenuSub v-if="!collapsed.has(group.name)">
                                 <SidebarMenuSubItem v-for="item in group.items" :key="item.title">
                                     <SidebarMenuSubButton as-child :is-active="isCurrentUrl(item.href)">
-                                        <Link :href="item.href" @click="closeOnMobile">
+                                        <Link :href="item.href" prefetch="hover" cache-for="30s" @click="closeOnMobile">
                                             {{ item.title }}
                                         </Link>
                                     </SidebarMenuSubButton>
@@ -1045,7 +1053,7 @@ watch(
                                                 :is-active="isCurrentUrl(item.href)"
                                                 class="pl-6"
                                             >
-                                                <Link :href="item.href" @click="closeOnMobile">
+                                                <Link :href="item.href" prefetch="hover" cache-for="30s" @click="closeOnMobile">
                                                     {{ item.title }}
                                                 </Link>
                                             </SidebarMenuSubButton>

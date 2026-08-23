@@ -52,7 +52,12 @@ function groupIsActive(items: NavItem[]): boolean {
 <template>
     <header class="sticky top-0 z-30 border-b border-sidebar-border/70 bg-background">
         <div class="flex h-14 items-center gap-3 px-3 sm:px-4">
-            <Link :href="nav.primary[0].href" class="flex shrink-0 items-center gap-2">
+            <Link
+                :href="nav.primary[0].href"
+                prefetch="hover"
+                cache-for="30s"
+                class="flex shrink-0 items-center gap-2"
+            >
                 <AppLogo />
             </Link>
 
@@ -61,6 +66,8 @@ function groupIsActive(items: NavItem[]): boolean {
                     v-for="item in nav.primary"
                     :key="item.title"
                     :href="item.href"
+                    prefetch="hover"
+                    cache-for="30s"
                     class="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-accent"
                     :class="
                         isCurrentUrl(item.href)
@@ -106,6 +113,8 @@ function groupIsActive(items: NavItem[]): boolean {
                             v-for="item in group.items"
                             :key="item.title"
                             :href="item.href"
+                            prefetch="hover"
+                            cache-for="30s"
                             class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
                             :class="isCurrentUrl(item.href) ? 'font-medium text-foreground' : ''"
                             @click="close()"
@@ -139,6 +148,8 @@ function groupIsActive(items: NavItem[]): boolean {
                             v-for="item in supportItems"
                             :key="item.title"
                             :href="item.href"
+                            prefetch="hover"
+                            cache-for="30s"
                             class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
                             @click="close()"
                         >

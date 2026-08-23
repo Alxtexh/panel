@@ -6,14 +6,10 @@ use App\Panel\Pages;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
-use Alxtexh\Panel\Auth\Impersonation;
 use Alxtexh\Panel\Auth\Turnstile;
 use Alxtexh\Panel\Http\Controllers\OrganisationController;
 use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Support\PanelNavigation;
-use Alxtexh\Panel\Support\Locale;
 use Alxtexh\Panel\Support\TenantContext;
-use Alxtexh\Panel\Trash\TrashBin;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -39,83 +35,20 @@ class HandleInertiaRequests extends Middleware
     /**
      * Define the props that are shared by default.
      *
+     * App-only props live here. Shell chrome (`panelNav`, `messages`,
+     * `notificationCount`, `auth`, impersonation, trash, locale) comes from
+     * the package `SharePanelProps` middleware, including `Inertia::once` for
+     * stable keys so page-to-page visits do not rebuild the sidebar every hop.
+     *
      * @see https://inertiajs.com/shared-data
      *
      * @return array<string, mixed>
      */
-    /**
-     * Who is really driving, when it is not the account on screen.
-     *
-     * Null in the ordinary case, so the banner costs one key and no query for
-     * every request that is not an impersonation.
-     *
-     * `stopUrl` IS PART OF THE SHAPE the packaged banner reads. It renders the
-     * warning either way and hides only the button when the key is null - so a
-     * missing URL would have been a banner nobody could act on, which is the
-     * kind of half-working that looks fine in a screenshot.
-     *
-     * @return array{name: string, since: string|null, stopUrl: string}|null
-     */
-    private function impersonationBanner(): ?array
-    {
-        $impersonation = app(Impersonation::class);
-
-        if (! $impersonation->isActive()) {
-            return null;
-        }
-
-        return [
-            'name' => $impersonation->impersonator()?->name ?? 'Somebody',
-            'since' => session(Impersonation::STARTED_KEY),
-            'stopUrl' => route('impersonate.stop'),
-        ];
-    }
-
     public function share(Request $request): array
     {
         return [
-            /*
-             * The unread badge, shared with every page.
-             *
-             * Shipping the count with the payload is what lets the bell render
-             * correctly on load WITHOUT a request - the alternative is every
-             * page firing an XHR just to decide whether to draw a dot.
-             *
-             * One indexed count, and only for an authenticated user.
-             */
-            'notificationCount' => fn (): int => $request->user()?->unreadNotifications()->count() ?? 0,
-
-            /*
-             * The account's saved appearance, or null for a guest.
-             *
-             * Shipped with every page so a second browser adopts the same theme
-             * on its FIRST load rather than after the user notices and fixes it
-             * by hand. The client treats this as authoritative and keeps
-             * localStorage as a pre-paint cache.
-             */
-            'appearance' => fn (): ?array => $request->user()?->appearance,
-
             ...parent::share($request),
 
-            /*
-             | Navigation is built ONCE and shipped with the initial payload.
-             |
-             | antipatterns S3.0: the system being replaced rebuilt its sidebar,
-             | nav tree and badge counts server-side on EVERY page load, with a
-             | permission check per item - identical work, thrown away and redone
-             | each navigation. Here the shell mounts once per session and never
-             | re-renders, so this is paid once.
-             |
-             | It comes from the resource registry rather than a literal list, so
-             | a generated resource appears in the sidebar untouched.
-             |
-             | A plain closure, NOT Inertia::optional - the sidebar has to be in
-             | the initial payload or the shell renders empty. Table interactions
-             | use partial reloads whose `only:` list excludes it, so filtering
-             | and paging never recompute it. A full navigation does, which costs
-             | a few authorization checks and no queries at all - the old system
-             | recomputed a nav tree AND ten cached badge counts here.
-             */
             /*
              | Per-tenant branding, applied as runtime CSS custom properties.
              |
@@ -150,127 +83,15 @@ class HandleInertiaRequests extends Middleware
             ),
 
             /*
-             | THIS PANEL'S RESOURCES, not every registered one.
-             |
-             | It was the whole registry, which was the same list while one
-             | portal existed. With three, the platform portal's Tenants and the
-             | reseller's Plans appeared in the operator's sidebar - ungrouped,
-             | at the top level, linking to paths this portal does not even
-             | route. Nothing failed; the menu simply started advertising other
-             | people's screens.
+             | App demo pages merged with the package list. `Inertia::once` so
+             | SharePanelProps keeps this host share without re-paying it on
+             | every navigation. Ability filtering stays on the package side
+             | for package pages; these demo entries need none.
              */
-            /*
-             | THE SIDEBAR IS THE PACKAGE'S NOW.
-             |
-             | This was a ninety-five line closure that `PanelNavigation` says,
-             | in its own docblock, was PROMOTED OUT OF THIS FILE - and the
-             | closure was never deleted, so the promotion added a second
-             | implementation instead of moving one. Both ran: this one built
-             | the sidebar on `/apps/mail`, the packaged one built it on every
-             | generated portal, and the parts that are easy to get wrong - the
-             | panel prefix, the cluster collapse, the ability filter - were
-             | maintained twice.
-             |
-             | THE PACKAGED ONE IS A SUPERSET. It also merges `declared()` -
-             | entries a panel registers that are not resources, such as a link
-             | to a report or a status page - which this copy had no notion of,
-             | so those entries silently never appeared in this application.
-             */
-            'panelNav' => static fn (): array => PanelNavigation::build(),
-            /*
-             | The screens that are NOT resources - backups, logs, the app
-             | screens, the error previews.
-             |
-             | DECLARED ON THE SERVER, IN `App\Panel\Pages`, and shared here for
-             | the same reason resources are: so that something can CHECK it.
-             | These used to be a hardcoded array inside `usePanelNav.ts`, where
-             | forgetting an entry was silent - and it happened, repeatedly, to
-             | the point where finished screens were reachable from nothing.
-             | `NavigationCoverageTest` now renders every authenticated screen
-             | and fails on any that this list and the resource registry between
-             | them do not account for.
-             |
-             | NO PERMISSION FILTER, because nothing in the list needs one: what
-             | is guarded - backups, logs, user management - is reached from the
-             | account menu, which does its own checking. A filter here would be
-             | a code path with no caller, and the first page that needs it can
-             | bring one back along with the test that proves it works.
-             */
-            /*
-             | THE TRASH ENTRY COMES FROM THE PACKAGE, not from `Pages`, because
-             | the bin is a panel feature rather than an application screen:
-             | `make:panel` routes it, so a generated portal must link it without
-             | anybody editing this application. Null when nothing in the current
-             | portal soft-deletes - a bin that can never fill would advertise a
-             | recovery the panel does not offer.
-             */
-            'panelPages' => fn (): array => [
-                /*
-                 | SCOPED TO THE CURRENT PORTAL. Every page in that list is
-                 | routed at the ROOT, so a generated portal was showing Mail,
-                 | the API reference and the error previews - links out of the
-                 | portal with no way back. The resources were scoped from the
-                 | start; the pages were not, and nothing failed because every
-                 | one of those links resolves.
-                 */
+            'panelPages' => Inertia::once(static fn (): array => [
                 ...Pages::forPanel(),
-                /*
-                 | ONE CALL FOR EVERYTHING THE PANEL ITSELF PROVIDES - the trash
-                 | screen today, a plugin's screens the moment one is installed.
-                 | Asking for each separately would mean every new panel-provided
-                 | page needs a line in every application that installed this
-                 | package, which is the disappearing-page failure again.
-                 */
                 ...app(PanelManager::class)->panelPages(),
-            ],
-
-            /*
-             | WHERE "HOME" IS, for the panel serving this request.
-             |
-             | The sidebar's first entry was a hardcoded `/dashboard`, which is
-             | the operator application's screen - so the first thing in a
-             | generated portal's navigation took you out of it.
-             */
-            'panelHome' => fn (): array => [
-                'href' => rtrim('/'.trim(
-                    (string) app(PanelManager::class)->currentPanel()?->getPath(),
-                    '/',
-                ), '/') ?: '/dashboard',
-                /*
-                 | Whether this is the application's own portal. The support
-                 | links - help, FAQ, what's new, about - are its screens, and a
-                 | generated portal linking them is a portal you leave by
-                 | clicking Help.
-                 */
-                'isDefault' => (app(PanelManager::class)->currentPanel()?->id
-                    ?? config('panel.default', 'admin')) === config('panel.default', 'admin'),
-            ],
-
-            /*
-             | THIS PORTAL'S BIN, or null where it has none.
-             |
-             | It used to be one of `panelPages` and therefore in the sidebar,
-             | under a heading called Platform of which it was the only member.
-             | It belongs with the backups and the logs - screens about the
-             | INSTALLATION rather than about the subscribers and routers the
-             | sidebar lists - so it moved into the account menu.
-             |
-             | STILL ASKED OF THE PACKAGE. Whether a portal has a bin depends on
-             | which of its resources soft-delete, and where it lives depends on
-             | the portal's path. Neither is a question this application should
-             | answer, per portal, to draw a menu.
-             */
-            'panelTrash' => fn (): ?array => app(TrashBin::class)->navigationEntry(),
-
-            'name' => config('app.name'),
-            /*
-             | The impersonation banner's data.
-             |
-             | SHARED RATHER THAN FETCHED, because it must be on screen on EVERY
-             | page from the first paint. A banner that arrives after a request
-             | is a banner somebody has already acted without seeing.
-             */
-            'impersonating' => $this->impersonationBanner(),
+            ]),
 
             /*
              | The Turnstile site key, or null when the feature is off.
@@ -287,40 +108,14 @@ class HandleInertiaRequests extends Middleware
                 ? Turnstile::siteKey()
                 : null,
 
+            /*
+             * Panel-level abilities for the playground account menu. Merged by
+             * SharePanelProps into `auth.can` (host keys survive).
+             */
             'auth' => [
                 'user' => $request->user(),
-
-                /*
-                 * Panel-level abilities, shared so navigation can hide what it
-                 * would only 403 on.
-                 *
-                 * PRESENTATION ONLY. Every one of these is re-checked at the
-                 * endpoint - hiding a link is a courtesy, never a guard, and a
-                 * client that ignores it gets a 403 rather than a mutation.
-                 */
-                /*
-                 * `$request->user()` IS NOT NECESSARILY AN OPERATOR, and this
-                 * line assumed it was for as long as every panel ran on `web`.
-                 *
-                 * `UsePanel` makes the current panel's guard the default one,
-                 * so on a panel declared with `->guard('customers')` this
-                 * returns a `Customer` - a model with no roles, no abilities
-                 * and no `hasPermission()`. The call then throws
-                 * BadMethodCallException from inside Inertia's `share()`, which
-                 * runs on EVERY request: the entire portal answered 500, on
-                 * every URL, including its own sign-in redirect.
-                 *
-                 * Found the first time a panel in this application was mounted
-                 * on a second guard. Nothing was wrong with the guard; the
-                 * assumption was here, in the consuming application, where a
-                 * consumer's own middleware would make exactly the same one.
-                 *
-                 * `$operator` is null for anybody who cannot answer the
-                 * question, and null answers it as "no".
-                 */
                 'can' => (function () use ($request): array {
                     $user = $request->user();
-
                     $operator = $user !== null && method_exists($user, 'hasPermission') ? $user : null;
 
                     return [
@@ -330,21 +125,6 @@ class HandleInertiaRequests extends Middleware
                     ];
                 })(),
             ],
-            /*
-             * LANGUAGE AND DIRECTION TRAVEL TOGETHER, because they are one fact.
-             * `dir` is applied to <html>, so every logical CSS property in the
-             * panel mirrors from a single attribute rather than from a hundred
-             * conditional classes.
-             */
-            'locale' => [
-                'current' => app()->getLocale(),
-                'direction' => Locale::direction(),
-                'available' => Locale::available(),
-            ],
-
-            // The whole string set, inline. A few kilobytes against a frame of
-            // visible translation keys - see Locale::messages().
-            'messages' => Locale::messages(),
 
             'sidebarOpen' => (function () use ($request): bool {
                 if ($request->hasCookie('sidebar_state')) {

@@ -46,10 +46,18 @@ use Symfony\Component\HttpFoundation\Response;
  * ability check per resource. On a panel with thirty resources that is the
  * difference between a filter change costing one query and costing thirty.
  *
+ * STABLE CHROME IS ALSO `Inertia::once`. Nav, i18n, settings index and the
+ * panel chrome object change only when the person, tenant, panel or locale
+ * changes. Marking them once means a page-to-page visit does not re-resolve or
+ * re-send those kilobytes; the client keeps the first payload and the server
+ * skips the work. Volatile keys (toast, notification count, auth, impersonation)
+ * stay ordinary closures so they stay fresh every hop.
+ *
  * IT DOES NOT REPLACE AN APPLICATION'S OWN MIDDLEWARE. Inertia merges shared
  * data, and an application sharing `panelNav` itself wins - the reference app
  * still does, because its sidebar carries screens the package knows nothing
- * about. This is the floor, not the ceiling.
+ * about. This is the floor, not the ceiling. Hosts that share chrome themselves
+ * should prefer `Inertia::once` too, or they reintroduce the per-click cost.
  */
 final class SharePanelProps
 {
@@ -89,6 +97,19 @@ final class SharePanelProps
          */
         $sharedAuth = Inertia::getShared('auth');
 
+        /*
+         * `chrome()` needs the current panel. On the web-group pass that runs
+         * before `UsePanel`, the panel is still null and chrome stays a plain
+         * closure. The route-middleware pass after `UsePanel` re-shares with
+         * `Inertia::once`, which is what page-to-page visits keep.
+         */
+        $chrome = static fn (callable $resolve, string $name) => self::chrome(
+            $resolve,
+            $request,
+            $panels,
+            $name,
+        );
+
         Inertia::share([
             /*
              * APP NAME FOR AUTH SCREENS. Stock Breeze shares this from
@@ -100,12 +121,12 @@ final class SharePanelProps
             'name' => static fn (): string => (string) config('app.name', 'Panel'),
 
             /*
-             * KIT STRINGS for Vue `t()`. A few kilobytes, sent once, so the
-             * first paint is not a flash of raw keys. Hosts overlay
-             * `lang/{locale}/panel.php`. See `Locale::messages()`.
+             * KIT STRINGS for Vue `t()`. A few kilobytes on first paint so keys
+             * never flash. Hosts overlay `lang/{locale}/panel.php`. Once-keyed
+             * by locale so a language switch still refreshes the bag.
              */
-            'messages' => static fn (): array => Locale::messages(),
-            'locale' => static fn (): array => Locale::shared(),
+            'messages' => $chrome(static fn (): array => Locale::messages(), 'messages'),
+            'locale' => $chrome(static fn (): array => Locale::shared(), 'locale'),
 
             /*
              * FLASH TOAST. Controllers already `->with('toast', ...)` and
@@ -124,32 +145,33 @@ final class SharePanelProps
              * THE SIDEBAR. See `PanelNavigation` for why the prefix and the
              * current-panel filter are the two things worth getting right.
              */
-            'panelNav' => static fn (): array => PanelNavigation::build(),
+            'panelNav' => $chrome(static fn (): array => PanelNavigation::build(), 'panelNav'),
 
             /*
              * Environment badge prop. Always null: chrome no longer renders it.
              * Key kept so older host code reading the prop does not break.
              */
-            'environmentBanner' => static fn (): ?array => EnvironmentBanner::for(),
+            'environmentBanner' => $chrome(static fn (): ?array => EnvironmentBanner::for(), 'environmentBanner'),
 
             /*
              * Creatable resources for the header Quick Create menu. Empty when
              * none, or when the panel opted out with ->quickCreate(false).
              */
-            'quickCreate' => static fn (): array => PanelQuickCreate::build(),
+            'quickCreate' => $chrome(static fn (): array => PanelQuickCreate::build(), 'quickCreate'),
 
             /*
              * Record presence. Null when off so the client mounts nothing.
              */
-            'presence' => static fn (): ?array => Presence::shared(),
+            'presence' => $chrome(static fn (): ?array => Presence::shared(), 'presence'),
 
             /*
              * DECLARED PAGES, when the application has not already shared them.
              * The command palette and the shell both read this list. Playground
-             * merges extra entries first; that share wins.
+             * merges extra entries first; that share wins. Prefer `Inertia::once`
+             * in the host share so page-to-page visits stay cheap.
              */
             'panelPages' => Inertia::getShared('panelPages')
-                ?? static fn (): array => app(PanelManager::class)->panelPages(),
+                ?? $chrome(static fn (): array => app(PanelManager::class)->panelPages(), 'panelPages'),
 
             /*
              * Account appearance, so a second browser adopts the theme on
@@ -168,10 +190,10 @@ final class SharePanelProps
              * Shell-only render hooks (`shell.*`). Resource-scoped hooks stay
              * on the page that asked for them.
              */
-            'shellHooks' => static fn (): array => array_values(array_filter(
+            'shellHooks' => $chrome(static fn (): array => array_values(array_filter(
                 app(PanelManager::class)->renderHooks(null),
                 static fn (array $hook): bool => str_starts_with((string) ($hook['position'] ?? ''), 'shell.'),
-            )),
+            )), 'shellHooks'),
 
             'panelEmptyGrants' => static function () use ($panels): bool {
                 $panel = $panels->currentPanel();
@@ -194,7 +216,7 @@ final class SharePanelProps
              * warning modal and header padlock read this; `->idleLock(false)`
              * shares null and they stay unmounted.
              */
-            'panelIdleLock' => static function () use ($panels): ?array {
+            'panelIdleLock' => $chrome(static function () use ($panels): ?array {
                 $panel = $panels->currentPanel();
 
                 if ($panel === null || ! $panel->hasIdleLock()) {
@@ -212,7 +234,7 @@ final class SharePanelProps
                     'warningSeconds' => $panel->idleLockWarningSeconds(),
                     'lockUrl' => $lockUrl,
                 ];
-            },
+            }, 'panelIdleLock'),
 
             /*
              * GROUPS THAT ARE SECTIONS, NOT DROPDOWNS.
@@ -226,10 +248,10 @@ final class SharePanelProps
              * resources earns a toggle - and the demo declares one so anybody
              * building on it can see both presentations exist.
              */
-            'panelStaticGroups' => static fn (): array => array_values(array_filter(array_map(
+            'panelStaticGroups' => $chrome(static fn (): array => array_values(array_filter(array_map(
                 'trim',
                 (array) config('panel.navigation.static_groups', []),
-            ), static fn (string $name): bool => $name !== '')),
+            ), static fn (string $name): bool => $name !== '')), 'panelStaticGroups'),
 
             /*
              * THE BIN, for the packaged account menu. The reference app shares
@@ -241,7 +263,7 @@ final class SharePanelProps
             'panelTrash' => Inertia::getShared('panelTrash')
                 ?? static fn (): ?array => app(TrashBin::class)->navigationEntry(),
 
-            'panel' => static function () use ($panels): ?array {
+            'panel' => $chrome(static function () use ($panels): ?array {
                 $panel = $panels->currentPanel();
 
                 if ($panel === null) {
@@ -494,14 +516,14 @@ final class SharePanelProps
                     'modules' => ModuleRegistry::all(),
                     'grantedModules' => ModuleRegistry::granted(),
                 ];
-            },
+            }, 'panel'),
 
             /*
              * THE SETTINGS SIDEBAR, the same rows as `/settings`. Shared so
              * SettingsLayout does not hardcode Payment gateways on a portal
              * that never opted in.
              */
-            'settingsNav' => static fn (): array => SettingsIndex::entries($request),
+            'settingsNav' => $chrome(static fn (): array => SettingsIndex::entries($request), 'settingsNav'),
 
             /*
              * THE SIGNED-IN PERSON, resolved through the PANEL'S GUARD rather
@@ -661,9 +683,9 @@ final class SharePanelProps
              * `SocialLoginButtons` rather than each controller rebuilding the
              * list.
              */
-            'socialProviders' => static function () use ($panels): array {
+            'socialProviders' => $chrome(static function () use ($panels): array {
                 return SocialLoginPayload::forPanel($panels->currentPanel());
-            },
+            }, 'socialProviders'),
 
             'impersonating' => static function () use ($panels, $request): ?array {
                 /*
@@ -710,6 +732,38 @@ final class SharePanelProps
         ]);
 
         return $next($request);
+    }
+
+    /**
+     * Stable chrome: resolve once per person / tenant / panel / locale.
+     *
+     * When `UsePanel` has not run yet the panel is null and we return a plain
+     * closure so auth and other early shares still work. After the panel is
+     * known, `Inertia::once` skips resolve and wire on later visits while the
+     * client still holds the first payload.
+     *
+     * @param  callable(): mixed  $resolve
+     */
+    private static function chrome(callable $resolve, Request $request, PanelManager $panels, string $name): mixed
+    {
+        $panel = $panels->currentPanel();
+
+        if ($panel === null) {
+            return $resolve;
+        }
+
+        $guard = $panel->getGuard();
+        $user = $guard === null ? $request->user() : $request->user($guard);
+        $tenant = Tenants::current($request);
+        $tenantKey = $tenant === null ? 'central' : (string) $tenant->getKey();
+
+        return Inertia::once($resolve)->as(implode(':', [
+            $name,
+            $panel->id,
+            (string) ($user?->getAuthIdentifier() ?? 'guest'),
+            $tenantKey,
+            app()->getLocale(),
+        ]));
     }
 
     /**

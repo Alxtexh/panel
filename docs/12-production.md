@@ -81,8 +81,8 @@ and the doctor nudge when catalogues grow past ~10k searchable rows.
 ## SSR
 
 Off by default, deliberately. The starter kit ships it on with nothing serving
-it, so every request pays a failed connection to port 13714 before falling back
-— a page that works and is quietly slower.
+it, so every request pays a failed connection to port 13714 before falling back:
+a page that works and is quietly slower.
 
 It does render: `/login` with SSR on returns `data-server-rendered`, a `<form>`
 and three `<input>`s; with it off, none of them.
@@ -107,8 +107,35 @@ npm run build
 
 The published `resources/css/app.css` points Tailwind at the package. **Without
 that line every utility used only inside the package is purged** and you get a
-correct table with no styling at all — which reads as "the design did not come
+correct table with no styling at all, which reads as "the design did not come
 with it".
+
+### Navigation feel (Inertia hops)
+
+Page-to-page clicks feel slow when every hop rebuilds and re-sends the shell
+(nav, i18n bag, settings index, panel chrome). The kit marks those as
+`Inertia::once`, so later visits skip the work while the client keeps the first
+payload. Hosts that still share `panelNav` / `messages` / `panelPages` in
+`HandleInertiaRequests` should use `Inertia::once` too, or drop those keys and
+let `SharePanelProps` own them.
+
+For a fair demo or production check:
+
+1. Prefer `npm run build` + `php artisan serve` over `composer run dev` (Vite
+   HMR). Dev mode ships many unbundled modules and makes every hop look worse
+   than production.
+2. Set `APP_DEBUG=false` when measuring. Debug tooling adds work on every
+   request that is not present in production.
+3. Run a queue worker when `QUEUE_CONNECTION` is not `sync` (`database`,
+   `redis`, …). Bulk actions, exports and digests otherwise sit pending and
+   operators retry, which feels like a slow UI.
+4. Hover prefetch is on shell nav links (`prefetch="hover"` + `cache-for="30s"`).
+   Keep that pattern on custom chrome Links.
+
+```bash
+php artisan panel:journey --tenant=<slug> --runs=3
+php artisan panel:benchmark --tenant=<slug> --runs=3
+```
 
 ## Databases
 
