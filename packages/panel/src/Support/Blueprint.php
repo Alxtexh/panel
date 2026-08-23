@@ -354,7 +354,7 @@ final class Blueprint
         `/{parent}/{id}/{child}`; BelongsToMany attach is
         `/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas plus
         a Directory of chrome links (Settings, Users, Roles, Documents, Backups,
-        Logs, Monitoring, Help). Settings appears in a System sidebar group by
+        Logs, Monitoring, Help). Settings appears in a Settings sidebar group by
         default (`->sidebarSettings(false)` opts out). Operations appear in an
         Operations nav group when the panel offers them. Catalog is not in core.
         Do not resurrect dashboard sample widgets. `Notification::make()->title('Saved')->success()->send()`

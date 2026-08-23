@@ -11,7 +11,7 @@
  * screen, so the same menu renders in the demo and in a portal `make:panel`
  * created this morning.
  *
- * SETTINGS BELONGS IN THE SIDEBAR by default (System group). When
+ * SETTINGS BELONGS IN THE SIDEBAR by default (Settings group). When
  * `panel.settingsInSidebar` is true, this menu omits Settings so the rail is
  * the primary path. `->sidebarSettings(false)` restores the row here.
  *

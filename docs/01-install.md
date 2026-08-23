@@ -135,7 +135,7 @@ A fresh install is **chrome plus an empty canvas**, not the Nairobi Fibre ISP
 demo. After sign-in you should see:
 
 - the dashboard (no sample revenue or orders)
-- Settings in the **System** sidebar group (primary path; opt out with `->sidebarSettings(false)`)
+- Settings in the **Settings** sidebar group (primary path; opt out with `->sidebarSettings(false)`)
 - the user menu (Profile, Log out; Settings only when the sidebar opt-out is on)
 - a **Get started** card with kit chrome steps
 - Directory in the sidebar once you hold Administrator

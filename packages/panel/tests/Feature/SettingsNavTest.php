@@ -47,15 +47,15 @@ final class SettingsNavTest extends TestCase
         ];
     }
 
-    public function test_fresh_panel_shares_settings_in_the_system_nav_group(): void
+    public function test_fresh_panel_shares_settings_in_the_settings_nav_group(): void
     {
         $shared = $this->shared();
         $byKey = collect($shared['panelPages'])->keyBy('key');
 
         $this->assertTrue($byKey->has('settings'), 'Settings missing from panelPages.');
         $this->assertSame('Settings', $byKey['settings']['title'] ?? null);
-        $this->assertSame('System', $byKey['settings']['group'] ?? null);
-        $this->assertStringContainsString('/settings', (string) $byKey['settings']['href']);
+        $this->assertSame('Settings', $byKey['settings']['group'] ?? null);
+        $this->assertSame('/settings', (string) $byKey['settings']['href']);
 
         $this->assertTrue($shared['panel']['settingsInSidebar'] ?? false);
         $this->assertNotEmpty($shared['panel']['settings'] ?? null);

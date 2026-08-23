@@ -183,7 +183,7 @@ final class Panel
     private bool $pageFooter = false;
 
     /**
-     * Settings hub in the sidebar (System group). Default on so every install
+     * Settings hub in the sidebar (Settings group). Default on so every install
      * finds Settings without opening the account menu. `->sidebarSettings(false)`
      * keeps the hub under the avatar only.
      */
@@ -1198,7 +1198,7 @@ final class Panel
     }
 
     /**
-     * Put Settings in the sidebar (System group). Default on for every install.
+     * Put Settings in the sidebar (Settings group). Default on for every install.
      *
      * `->sidebarSettings(false)` keeps the hub reachable but only under the
      * account menu, for hosts that want a quieter rail.
