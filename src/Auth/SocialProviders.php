@@ -18,11 +18,11 @@ use Laravel\Socialite\Facades\Socialite;
  * fourth provider through Socialite gets a button without editing the package.
  * It still has to say whether that provider verifies addresses - see below.
  *
- * WHEN SOCIALITE IS ON, THE LOGIN UI SHOWS THE FULL CATALOGUE. Credentials still
- * gate the OAuth exchange (`enabled()` / `hasCredentials()`), but hiding every
- * unconfigured button made a kit with only Google look broken: people thought
- * the other providers were missing from the product. Unconfigured buttons stay
- * visible and explain what to set in `.env` when clicked.
+ * WHEN SOCIALITE IS ON, THE LOGIN UI LISTS CONFIGURED PROVIDERS ONLY. Credentials
+ * gate both the button list and the OAuth exchange (`enabled()` /
+ * `hasCredentials()`). Set `panel.auth.social.show_unconfigured` to true to
+ * show the full packaged catalogue with muted buttons that explain missing
+ * `.env` keys (kit showcase / demo).
  *
  * SOCIALITE IS A SOFT DEPENDENCY. `class_exists` here is what keeps a missing
  * `laravel/socialite` from turning a configured client id into a 500: no class,
@@ -88,13 +88,13 @@ final class SocialProviders
     /**
      * Whether the login UI lists providers that lack client id / secret.
      *
-     * DEFAULT TRUE so a demo or kit with only Google still shows the rest of
-     * the catalogue. Set `panel.auth.social.show_unconfigured` to false to
-     * restore the old "credentials are the switch" behaviour.
+     * DEFAULT FALSE so only providers with real credentials appear. Set
+     * `PANEL_SOCIAL_SHOW_UNCONFIGURED=true` (or the config key) when a demo
+     * needs the full catalogue with muted unconfigured buttons.
      */
     public static function showUnconfigured(): bool
     {
-        return (bool) config('panel.auth.social.show_unconfigured', true);
+        return (bool) config('panel.auth.social.show_unconfigured', false);
     }
 
     /**
@@ -124,9 +124,9 @@ final class SocialProviders
     /**
      * Providers listed on the login UI for this panel (or the app-wide door).
      *
-     * WITH `show_unconfigured` ON (the default), this is the packaged catalogue
-     * (plus config extras), narrowed by `->socialite([...])` when set. WITH IT
-     * OFF, this matches `enabled()`: credentials only.
+     * WITH `show_unconfigured` OFF (the default), this matches `enabled()`:
+     * credentials only. WITH IT ON, this is the packaged catalogue (plus
+     * config extras), narrowed by `->socialite([...])` when set.
      *
      * @return array<string, string>
      */

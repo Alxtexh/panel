@@ -1048,12 +1048,11 @@ final class Panel
     /**
      * Social buttons on this portal's login.
      *
-     * `->socialite()` (or omitting it) lists the packaged catalogue on login.
-     * Credentials still gate the OAuth start; unconfigured buttons explain what
-     * to set in `.env`. `->socialite(['google', 'github'])` narrows the list.
-     * `->socialite(false)` offers none. Set
-     * `panel.auth.social.show_unconfigured` to false to hide providers without
-     * keys.
+     * `->socialite()` (or omitting it) lists providers that have credentials.
+     * Unconfigured providers stay hidden unless
+     * `panel.auth.social.show_unconfigured` is true (kit showcase).
+     * `->socialite(['google', 'github'])` narrows the list.
+     * `->socialite(false)` offers none.
      *
      *     Panel::make('admin')->login()->socialite(['google', 'github']);
      *
@@ -1067,8 +1066,8 @@ final class Panel
     }
 
     /**
-     * Null means the full catalogue (or every configured provider when
-     * `show_unconfigured` is false). An empty list means none.
+     * Null means every configured provider (or the full catalogue when
+     * `show_unconfigured` is true). An empty list means none.
      *
      * @return list<string>|null
      */

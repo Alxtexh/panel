@@ -22,14 +22,27 @@ final class SharePanelSocialPropsTest extends TestCase
             $this->markTestSkipped('laravel/socialite is not installed');
         }
 
-        config(['services.google' => [], 'services.github' => []]);
+        config([
+            'services.google.client_id' => 'id',
+            'services.google.client_secret' => 'secret',
+            'services.github' => [],
+        ]);
 
         $this->get('/second/register')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->has('socialProviders')
+                ->has('socialProviders', 1)
                 ->where('socialProviders.0.key', 'google')
-                ->where('socialProviders.0.configured', false));
+                ->where('socialProviders.0.configured', true));
+    }
+
+    public function test_shared_social_providers_are_empty_when_none_are_configured(): void
+    {
+        config(['services.google' => [], 'services.github' => []]);
+
+        $this->get('/second/register')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('socialProviders', []));
     }
 
     public function test_shared_social_providers_are_empty_when_socialite_is_off(): void
