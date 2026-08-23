@@ -19,9 +19,9 @@ use Alxtexh\Panel\Support\PanelHome;
  * ALXTEXHPANEL SHIPS SEVERAL LANDING DESIGNS, not one, because a landing page is
  * the single screen whose job is to sound like the company behind it - and a
  * framework that ships one template makes every deployment sound like the
- * same company. Three voices ship: a modern gradient SaaS page, a quiet
- * typographic one, and a developer-tool console page that shows a real
- * resource class instead of describing one.
+ * same company. Five voices ship: aurora, editorial, console, marketing and
+ * shadcn. Marketing and shadcn reimplement public Vue landing patterns on kit
+ * tokens; they are not optional plugins.
  *
  * THE DESIGN IS CONFIGURATION, not a fork. An installation picks one in
  * `config('panel.landing')`; the `?design=` parameter exists so the
@@ -90,7 +90,7 @@ final class LandingController extends Controller
          * symptom is somebody saying the demo does not open.
          *
          * `?design=` STILL WINS, because this reference app exists to show all
-         * three designs and whoever is demonstrating them is signed in. An
+         * shipped designs and whoever is demonstrating them is signed in. An
          * explicit request for a named design is a request to see that page;
          * the bare address is not.
          */
@@ -98,20 +98,16 @@ final class LandingController extends Controller
             return redirect(PanelHome::urlFor(null));
         }
 
-        $configured = (string) config('panel.landing.design', 'aurora');
+        $configured = LandingPresets::resolve((string) config('panel.landing.design', 'aurora'));
 
         /*
          * THE ROUTE SEGMENT, NOT A QUERY PARAMETER - see the preview route.
          * `/` carries no design at all and always renders what the
-         * installation configured.
+         * installation configured. Aliases (`composed`, `vue-marketing`,
+         * `shadcn-vue`) resolve to shipped preset names.
          */
         $requested = (string) ($request->route('design') ?? $configured);
-
-        // Unknown names fall back rather than 404: this is the front door,
-        // and a typo in a shared link should show the product, not an error.
-        $design = in_array($requested, LandingPresets::names(), true)
-            ? $requested
-            : (in_array($configured, LandingPresets::names(), true) ? $configured : 'aurora');
+        $design = LandingPresets::resolve($requested);
 
         /*
          * WHAT WAS EDITED BEATS WHAT SHIPPED, except on a preview - `/preview`

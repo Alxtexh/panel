@@ -185,6 +185,11 @@ final class LandingPageResource extends SingularResource
                 ->schema([
                     BuilderField::make('sections')->label('')
                         ->block('hero', 'Hero', [
+                            TextField::make('brand')->help('Hero-level brand signal for marketing landings.'),
+                            SelectField::make('variant')->label('Layout')->options([
+                                'centered' => 'Centered band',
+                                'bleed' => 'Full-bleed first viewport',
+                            ]),
                             TextField::make('eyebrow')->help('A small line above the headline.'),
                             TextField::make('title')->required(),
                             TextareaField::make('body')->rows(2),
@@ -258,6 +263,37 @@ final class LandingPageResource extends SingularResource
                                     TextField::make('avatar')->label('Avatar URL'),
                                 ]),
                         ])
+                        ->block('team', 'Team', [
+                            TextField::make('title'),
+                            TextareaField::make('body')->rows(2),
+                            BuilderField::make('items')->label('People')
+                                ->block('person', 'Person', [
+                                    TextField::make('name')->required(),
+                                    TextField::make('role'),
+                                    TextareaField::make('bio')->rows(2),
+                                    TextField::make('avatar')->label('Avatar URL'),
+                                ]),
+                        ])
+                        ->block('articles', 'Articles', [
+                            TextField::make('title'),
+                            TextareaField::make('body')->rows(2),
+                            BuilderField::make('items')->label('Cards')
+                                ->block('article', 'Article', [
+                                    TextField::make('meta')->help('e.g. Guide, News'),
+                                    TextField::make('title')->required(),
+                                    TextareaField::make('body')->rows(2),
+                                    TextField::make('href')->label('Link'),
+                                ]),
+                        ])
+                        ->block('contact', 'Contact', [
+                            TextField::make('title'),
+                            TextareaField::make('body')->rows(2),
+                            TextField::make('email'),
+                            TextField::make('phone'),
+                            TextareaField::make('address')->rows(2),
+                            TextField::make('label')->label('Button'),
+                            TextField::make('href')->label('Button link'),
+                        ])
                         ->block('pricing', 'Pricing', [
                             TextField::make('title'),
                             TextareaField::make('body')->rows(2),
@@ -296,7 +332,7 @@ final class LandingPageResource extends SingularResource
             Section::make('Start from a shipped design')
                 ->description(
                     'Choosing one replaces the sections above the next time you save. '
-                    .'The three differ in composition and in copy, not only in colour.'
+                    .'The five designs differ in composition and in copy, not only in colour.'
                 )
                 ->schema([
                     SelectField::make('preset')->label('Copy a design in')

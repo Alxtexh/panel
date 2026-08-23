@@ -198,9 +198,23 @@ final class PanelRoutes
             ->name('panel.landing');
 
         if (config('panel.landing.previews', false) === true) {
+            $designs = implode('|', [
+                ...Landing\LandingPresets::names(),
+                'composed',
+                'vue-marketing',
+                'vue-js',
+                'shadcn-vue',
+            ]);
+
             Route::get('preview/{design}', Landing\LandingController::class)
                 ->middleware('web')
+                ->where('design', $designs)
                 ->name('panel.landing.preview');
+
+            Route::get('landing/{design}', Landing\LandingController::class)
+                ->middleware('web')
+                ->where('design', $designs)
+                ->name('panel.landing.variant');
         }
     }
 
