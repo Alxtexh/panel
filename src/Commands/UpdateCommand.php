@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Alxtexh\Panel\Support\ConfigDrift;
+use Alxtexh\Panel\Support\CriticalStylesheetBlocks;
 use Alxtexh\Panel\Support\PanelPages;
 use Alxtexh\Panel\Support\SemanticStatusTokens;
 
@@ -53,6 +54,7 @@ final class UpdateCommand extends Command
             $this->reconcilePages(),
             $this->repointStylesheet(),
             $this->ensureSemanticStatusTokens(),
+            $this->ensureCriticalStylesheetBlocks(),
             $this->reportPendingMigrations(),
             $this->reportUninstalledPlugins(),
             $this->refreshBlueprint(),
@@ -238,6 +240,31 @@ final class UpdateCommand extends Command
         );
 
         return 'Run your build (npm run build), or re-publish kit assets, so bg-success / bg-warning / bg-info exist.';
+    }
+
+    /**
+     * Register form gap utilities and landing typography when absent.
+     */
+    private function ensureCriticalStylesheetBlocks(): ?string
+    {
+        $target = resource_path('css/app.css');
+
+        if (! file_exists($target)) {
+            return null;
+        }
+
+        if (! CriticalStylesheetBlocks::ensureInFile($target)) {
+            $this->components->task('  form gap and landing typography already present', fn () => true);
+
+            return null;
+        }
+
+        $this->components->task(
+            '  added form gap and landing typography blocks to resources/css/app.css',
+            fn () => true,
+        );
+
+        return 'Run your build (npm run build), or re-publish kit assets, so pk-form-stack and landing typography exist.';
     }
 
     /**

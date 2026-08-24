@@ -51,6 +51,7 @@ import {
     TableTabs,
     TableToolbar,
     PkModal,
+    PkSlideover,
     SchemaNode,
     useColumnVisibility,
     useColumnWidths,
@@ -1629,7 +1630,46 @@ function badgeLabel(key: string, value: unknown): string {
             behaviour, like a searchable select. A parallel set of controls for
             dialogs would be the same components again, drifting.
         -->
+        <PkSlideover
+            v-if="actionForm?.action.slideOver"
+            :open="!!actionForm"
+            :title="actionForm?.action.label ?? ''"
+            :description="actionForm?.action.confirmation ?? undefined"
+            size="lg"
+            :busy="Boolean(actionForm?.processing)"
+            @close="actionForm = null"
+        >
+            <form class="flex flex-col gap-4" @submit.prevent="submitActionForm">
+                <SchemaNode
+                    v-for="(node, index) in actionForm?.action.form?.nodes ?? []"
+                    :key="index"
+                    :node="node as any"
+                    :values="actionForm!.values"
+                    :errors="actionForm!.errors"
+                    :processing="actionForm!.processing"
+                    :search-options="searchActionOptions"
+                    @update="(key: string, value: any) => (actionForm!.values[key] = value)"
+                />
+            </form>
+
+            <template #footer>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    :disabled="actionForm?.processing"
+                    @click="actionForm = null"
+                >
+                    Cancel
+                </Button>
+
+                <Button size="sm" :disabled="actionForm?.processing" @click="submitActionForm">
+                    {{ actionForm?.processing ? 'Working…' : actionForm?.action.label }}
+                </Button>
+            </template>
+        </PkSlideover>
+
         <PkModal
+            v-else-if="actionForm"
             :open="!!actionForm"
             :title="actionForm?.action.label ?? ''"
             :description="actionForm?.action.confirmation ?? undefined"

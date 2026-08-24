@@ -311,9 +311,11 @@ final class Blueprint
         - Keep `resources/css/app.css` status tokens (`--success`, `--warning`, `--info`
           and their `--color-*` `@theme` mappings). Without them, badge variants
           `bg-success` / `bg-warning` / `bg-info` never compile. `panel:update` patches hosts that are missing them.
+        - Keep `--pk-form-gap`, `.pk-form-stack`, and landing typography (`.pk-editorial`, `.pk-console`) in sync with the kit stub.
 
         **Do not**
         - Set `layout: null` on a panel page, or delete the `app.ts` layout callback.
+        - Assign `page.default.layout ??= PanelLayout` in resolve. Packaged pages already set layout props; use the `createInertiaApp({ layout: … })` callback instead. `panel:doctor` fails on this pattern.
         - Hand-roll a controller and `Inertia::render` for a panel screen.
         - Strip `PanelShell` from `resources/js/layouts/PanelLayout.vue`.
         - Invent Filament / Livewire verbs: no `Filament\…`, `Forms\Components\…`,
