@@ -25,8 +25,12 @@
  *   `progress` the loading bar. Off by default in Inertia; a panel without one
  *              looks frozen on any request slower than instant.
  */
-import { createInertiaApp } from '@inertiajs/vue3'
-import { initializeAppearance, setAppearancePersister } from '@alxtexh-enterprise/panel'
+import { createInertiaApp, router } from '@inertiajs/vue3'
+import {
+    bootstrapAppearance,
+    setAppearancePersister,
+    syncAppearanceFromInertiaPage,
+} from '@alxtexh-enterprise/panel'
 import { SettingsLayout } from '@alxtexh-enterprise/panel/inertia'
 import { createApp, h } from 'vue'
 import type { DefineComponent } from 'vue'
@@ -34,11 +38,15 @@ import PanelLayout from './layouts/PanelLayout.vue'
 import '../css/app.css'
 
 /*
- * LIGHT OR DARK, BEFORE THE FIRST SCREEN. Reads the same cookie the root view
- * does, so the class the server rendered and the one the client would choose
- * agree - which is what stops the theme flickering on a full page load.
+ * LIGHT OR DARK, BEFORE THE FIRST SCREEN. Reads the account appearance the
+ * server embedded (`window.__panelAppearance` or the initial Inertia payload)
+ * so a second browser adopts the same theme on first load.
  */
-initializeAppearance()
+bootstrapAppearance()
+
+router.on('success', (event) => {
+    syncAppearanceFromInertiaPage(event.detail.page)
+})
 
 /*
  * Persist a preference change to the packaged route. Fire-and-forget: the
