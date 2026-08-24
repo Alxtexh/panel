@@ -66,12 +66,13 @@ final class SignedInDevicesTest extends TestCase
 
     public function test_a_session_is_described_in_terms_somebody_recognises(): void
     {
-        $this->makeSession($this->me, 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1');
+        $id = $this->makeSession($this->me, 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1');
 
-        $devices = Devices::forUser($this->request());
+        $device = collect(Devices::forUser($this->request()))->firstWhere('id', $id);
 
-        $this->assertSame('Safari', $devices[0]['browser']);
-        $this->assertSame('iPhone', $devices[0]['platform']);
+        $this->assertNotNull($device);
+        $this->assertSame('Safari', $device['browser']);
+        $this->assertSame('iPhone', $device['platform']);
     }
 
     /**
@@ -82,32 +83,51 @@ final class SignedInDevicesTest extends TestCase
      */
     public function test_chrome_is_not_reported_as_safari(): void
     {
-        $this->makeSession($this->me, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        $id = $this->makeSession($this->me, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        $devices = Devices::forUser($this->request());
+        $device = collect(Devices::forUser($this->request()))->firstWhere('id', $id);
 
-        $this->assertSame('Chrome', $devices[0]['browser']);
-        $this->assertSame('Windows', $devices[0]['platform']);
+        $this->assertNotNull($device);
+        $this->assertSame('Chrome', $device['browser']);
+        $this->assertSame('Windows', $device['platform']);
     }
 
     /** An agent nothing matches says so rather than guessing. */
     public function test_an_unrecognised_agent_is_admitted_rather_than_guessed(): void
     {
-        $this->makeSession($this->me, 'curl/8.4.0');
+        $id = $this->makeSession($this->me, 'curl/8.4.0');
 
-        $devices = Devices::forUser($this->request());
+        $device = collect(Devices::forUser($this->request()))->firstWhere('id', $id);
 
-        $this->assertSame('Unknown browser', $devices[0]['browser']);
-        $this->assertSame('Unknown device', $devices[0]['platform']);
+        $this->assertNotNull($device);
+        $this->assertSame('Unknown browser', $device['browser']);
+        $this->assertSame('Unknown device', $device['platform']);
     }
 
     /** A colleague's sessions are not this person's business. */
     public function test_only_my_own_sessions_are_listed(): void
     {
-        $this->makeSession($this->me, 'Chrome/120');
+        $mine = $this->makeSession($this->me, 'Chrome/120');
         $this->makeSession($this->colleague, 'Chrome/120');
 
-        $this->assertCount(1, Devices::forUser($this->request()));
+        $ids = array_column(Devices::forUser($this->request()), 'id');
+
+        $this->assertContains($mine, $ids);
+        $this->assertTrue(collect(Devices::forUser($this->request()))->contains(
+            fn (array $d): bool => $d['current'] === true,
+        ));
+        $this->assertCount(1, array_filter(
+            $ids,
+            fn (string $id): bool => $id !== $this->request()->session()->getId() && ! str_starts_with($id, 'current'),
+        ));
+    }
+
+    public function test_current_device_is_always_listed_even_without_a_session_row(): void
+    {
+        $devices = Devices::forUser($this->request());
+
+        $this->assertNotEmpty($devices);
+        $this->assertTrue(collect($devices)->contains(fn (array $d): bool => $d['current'] === true));
     }
 
     /* ------------------------------------------------------------ signing out */

@@ -114,18 +114,31 @@ final class AccountScreensTest extends TestCase
     }
 
     /**
-     * DEVICES REPORT NOTHING RATHER THAN THROWING on a driver that keeps no
-     * server-side record.
+     * WITHOUT THE DATABASE SESSION DRIVER the screen still shows this device.
      *
-     * The panel OFFERS this; it does not require the database session driver.
-     * An installation on the default driver should get a security screen without
-     * the section, not a 500 on the one page somebody opens when worried.
+     * Other browsers cannot be listed or revoked on array/file/cookie/redis.
+     * An empty list would read as "signed in nowhere" while the person is
+     * looking at Security, which is the lie this path must not tell.
      */
-    public function test_devices_are_empty_without_the_database_session_driver(): void
+    public function test_current_device_is_present_without_the_database_session_driver(): void
     {
         config(['session.driver' => 'array']);
 
         $this->assertFalse(Devices::available());
-        $this->assertSame([], Devices::forUser(request()));
+
+        $tenant = Tenant::create(['name' => 'Devices', 'slug' => 'devices']);
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $this->actingAs($user);
+
+        $request = request();
+        if (! $request->hasSession()) {
+            $request->setLaravelSession(app('session.store'));
+        }
+        $request->setUserResolver(static fn () => auth()->user());
+
+        $devices = Devices::forUser($request);
+
+        $this->assertCount(1, $devices);
+        $this->assertTrue($devices[0]['current']);
     }
 }

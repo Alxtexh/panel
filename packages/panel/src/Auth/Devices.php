@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * The devices signed in to an account, and how to sign them out.
@@ -29,23 +30,40 @@ use Illuminate\Support\Facades\DB;
  * until something looks; deleting it means the very next request has no session
  * at all.
  *
- * ON ANY OTHER DRIVER IT REPORTS NOTHING, rather than throwing. A cookie or file
- * driver keeps no server-side record, so there is genuinely nothing to list -
- * the panel OFFERS this, it does not require it, and an installation on the
- * default driver should get a screen without the section rather than a 500.
+ * THE CURRENT DEVICE IS ALWAYS LISTED when somebody is authenticated. Cookie,
+ * file, array and redis drivers keep no (or no queryable) server-side roster of
+ * other browsers, so there is nothing else to show - but pretending the person
+ * is signed in nowhere while they are looking at the security screen is a lie.
+ * Other devices appear only when `SESSION_DRIVER=database` and the `sessions`
+ * table exists.
  */
 final class Devices
 {
     /** How many to list. Beyond this it is a log, not a thing you scan. */
     private const LIMIT = 50;
 
+    /**
+     * Whether other devices can be enumerated and revoked.
+     *
+     * Needs the database session driver AND the sessions table. Redis is fine
+     * for multi-worker session storage, but it is not a listable roster.
+     */
     public static function available(): bool
     {
-        return config('session.driver') === 'database';
+        if (config('session.driver') !== 'database') {
+            return false;
+        }
+
+        $table = (string) config('session.table', 'sessions');
+
+        return Schema::hasTable($table);
     }
 
     /**
-     * The acting user's sessions, newest activity first.
+     * The acting user's sessions, current device first when mixed with others.
+     *
+     * Always includes the current device while authenticated. Other rows come
+     * from the sessions table only when {@see available()} is true.
      *
      * @return list<array<string, mixed>>
      */
@@ -53,20 +71,27 @@ final class Devices
     {
         $user = $request->user();
 
-        if ($user === null || ! self::available()) {
+        if ($user === null) {
             return [];
         }
 
-        $current = $request->hasSession() ? $request->session()->getId() : null;
+        $current = self::currentDevice($request);
 
-        return DB::table('sessions')
+        if (! self::available()) {
+            return [$current];
+        }
+
+        $table = (string) config('session.table', 'sessions');
+        $currentId = $request->hasSession() ? $request->session()->getId() : null;
+
+        $rows = DB::table($table)
             ->where('user_id', $user->getAuthIdentifier())
             ->orderByDesc('last_activity')
             ->limit(self::LIMIT)
             ->get(['id', 'ip_address', 'user_agent', 'last_activity'])
             ->map(static fn (object $row): array => [
                 'id' => $row->id,
-                'current' => $row->id === $current,
+                'current' => $currentId !== null && $row->id === $currentId,
                 'ip' => $row->ip_address,
                 ...self::describe((string) $row->user_agent),
                 'lastActiveAt' => $row->last_activity
@@ -74,6 +99,25 @@ final class Devices
                     : null,
             ])
             ->all();
+
+        $hasCurrent = false;
+
+        foreach ($rows as $row) {
+            if ($row['current'] === true) {
+                $hasCurrent = true;
+                break;
+            }
+        }
+
+        if (! $hasCurrent) {
+            array_unshift($rows, $current);
+
+            if (count($rows) > self::LIMIT) {
+                $rows = array_slice($rows, 0, self::LIMIT);
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -83,6 +127,9 @@ final class Devices
      * nothing. Session ids are opaque and unguessable, but "hard to guess" is
      * not an authorization check - without the constraint this would sign out
      * any account whose session id ever reached a log.
+     *
+     * THE CURRENT SESSION CANNOT BE REVOKED HERE. Signing yourself out from a
+     * security page reads as a mistake; the account menu already has Log out.
      */
     public static function forget(Request $request, string $id): bool
     {
@@ -92,7 +139,11 @@ final class Devices
             return false;
         }
 
-        return DB::table('sessions')
+        if ($request->hasSession() && hash_equals($request->session()->getId(), $id)) {
+            return false;
+        }
+
+        return DB::table((string) config('session.table', 'sessions'))
             ->where('user_id', $user->getAuthIdentifier())
             ->where('id', $id)
             ->delete() > 0;
@@ -114,10 +165,31 @@ final class Devices
             return 0;
         }
 
-        return DB::table('sessions')
+        return DB::table((string) config('session.table', 'sessions'))
             ->where('user_id', $user->getAuthIdentifier())
             ->where('id', '!=', $request->session()->getId())
             ->delete();
+    }
+
+    /**
+     * This browser, described from the live request rather than a store row.
+     *
+     * Used when the session driver cannot list other devices, and when the
+     * database roster has not yet written (or has lost) this session's row.
+     *
+     * @return array<string, mixed>
+     */
+    private static function currentDevice(Request $request): array
+    {
+        $id = $request->hasSession() ? $request->session()->getId() : 'current';
+
+        return [
+            'id' => $id,
+            'current' => true,
+            'ip' => $request->ip(),
+            ...self::describe((string) $request->userAgent()),
+            'lastActiveAt' => now()->toIso8601String(),
+        ];
     }
 
     /**

@@ -119,7 +119,7 @@ is resolved. The path is never replaced.
 | **Passkeys** | `laravel/passkeys` or Fortify | Sign-in and enrolment |
 | **Two-factor** | Fortify | TOTP with recovery codes |
 | **Social sign-in** | `laravel/socialite` | Per provider credentials |
-| **Devices** | `database` session driver | List and revoke sessions |
+| **Devices** | Current device always; other devices need `SESSION_DRIVER=database` + `sessions` table | List and revoke other sessions |
 | **Impersonation** | `impersonate_users` | Audited, cannot reach upward |
 | **Turnstile** | A site key | Bot check on sign-in |
 | **Password policy** | — | Reuse history, maximum age |

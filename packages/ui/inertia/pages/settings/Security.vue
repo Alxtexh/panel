@@ -57,6 +57,11 @@ type Props = {
     connectedAccounts?: ConnectedAccountRow[]
     passwordRules: string
     devices: Device[]
+    /**
+     * True only when SESSION_DRIVER=database and the sessions table exists.
+     * File, cookie, array and redis cannot list or revoke other browsers.
+     */
+    canListOtherDevices?: boolean
     /*
      * WHAT THE SECURITY CARDS NEED, spelled out rather than imported. They are
      * `.vue` files, and a `Props` type exported from one is not reachable
@@ -86,6 +91,10 @@ const unconnected = computed(() =>
         ([key]) => !(props.connectedAccounts ?? []).some((a) => a.provider === key),
     ),
 )
+
+const otherDevices = computed(() => (props.devices ?? []).filter((d) => !d.current))
+
+const canListOtherDevices = computed(() => props.canListOtherDevices === true)
 
 function disconnect(id: number) {
     router.delete(at(`/connected-accounts/${id}`), { preserveScroll: true })
@@ -288,17 +297,10 @@ defineOptions({
 
         <Heading
             title="Signed-in devices"
-            description="Every browser currently signed in to this account. Sign out anything you do not recognise."
+            description="This browser, plus every other session we can see for this account. Sign out anything you do not recognise."
         />
 
-        <div
-            v-if="devices.length === 0"
-            class="rounded-lg border border-dashed p-6 text-sm text-muted-foreground"
-        >
-            No other devices are signed in.
-        </div>
-
-        <ul v-else class="divide-y rounded-lg border">
+        <ul v-if="devices.length > 0" class="divide-y rounded-lg border">
             <li v-for="device in devices" :key="device.id" class="flex items-center gap-3 p-3">
                 <span class="shrink-0 text-muted-foreground">
                     <svg
@@ -341,7 +343,7 @@ defineOptions({
                     menu already has Log out for when it is not.
                 -->
                 <Button
-                    v-if="!device.current"
+                    v-if="!device.current && canListOtherDevices"
                     variant="ghost"
                     size="sm"
                     @click="signOut(device.id)"
@@ -351,7 +353,30 @@ defineOptions({
             </li>
         </ul>
 
-        <Button v-if="devices.length > 1" variant="outline" size="sm" @click="signOutOthers">
+        <div
+            v-if="!canListOtherDevices"
+            class="rounded-lg border border-dashed p-6 text-sm text-muted-foreground"
+        >
+            Other signed-in devices cannot be listed with the current session
+            driver. Set
+            <code class="text-xs">SESSION_DRIVER=database</code>
+            and run the sessions migration to list and revoke them. This device
+            still appears above.
+        </div>
+
+        <div
+            v-else-if="otherDevices.length === 0"
+            class="rounded-lg border border-dashed p-6 text-sm text-muted-foreground"
+        >
+            No other devices are signed in.
+        </div>
+
+        <Button
+            v-if="canListOtherDevices && otherDevices.length > 0"
+            variant="outline"
+            size="sm"
+            @click="signOutOthers"
+        >
             Sign out every other device
         </Button>
     </div>
