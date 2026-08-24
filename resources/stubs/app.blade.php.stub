@@ -13,6 +13,10 @@
     required: the packaged screens are given the URLs they need as props, so a
     route helper missing on the client is not a screen that breaks. Add one if
     your own pages want it.
+
+    Appearance FOUC: keep `@include('panel::appearance-prepaint')` in <head>
+    BEFORE any stylesheet or kit/Vite script. That include embeds the account
+    JSON and applies CSS variables synchronously. See docs/01-install.md.
 --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -20,75 +24,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {{--
-            APPEARANCE, APPLIED BEFORE THE FIRST PAINT.
-
-            The account's saved theme is embedded for the pre-paint script and
-            for `bootstrapAppearance()` in app.ts. localStorage alone cannot
-            carry a preference across browsers; the server value is the source
-            of truth once somebody is signed in.
-        --}}
-        <script>
-            window.__panelAppearance = @json(auth()->user()?->appearance);
-        </script>
-
-        <script>
-            (function () {
-                try {
-                    var server = window.__panelAppearance;
-                    var raw = localStorage.getItem('alxtexhpanel.appearance.vars');
-
-                    if (raw) {
-                        var cached = JSON.parse(raw);
-                        var root = document.documentElement;
-                        var stale = server && server.theme && cached.theme && server.theme !== cached.theme;
-
-                        if (stale) {
-                            root.classList.toggle('dark', server.theme === 'dark');
-
-                            if (server.fontSize) {
-                                root.style.setProperty('--pk-font-size', server.fontSize + 'px');
-                            }
-
-                            return;
-                        }
-
-                        if (cached.dark) root.classList.add('dark');
-                        else root.classList.remove('dark');
-
-                        for (var name in cached.vars) {
-                            root.style.setProperty(name, cached.vars[name]);
-                        }
-
-                        return;
-                    }
-
-                    if (server && server.theme) {
-                        document.documentElement.classList.toggle('dark', server.theme === 'dark');
-
-                        if (server.fontSize) {
-                            document.documentElement.style.setProperty('--pk-font-size', server.fontSize + 'px');
-                        }
-
-                        return;
-                    }
-                } catch (e) {
-                    // Fall through to light below.
-                }
-
-                document.documentElement.classList.remove('dark');
-            })();
-        </script>
-
-        <style>
-            html {
-                background-color: oklch(1 0 0);
-            }
-
-            html.dark {
-                background-color: oklch(0.145 0 0);
-            }
-        </style>
+        @include('panel::appearance-prepaint')
 
         <title inertia>{{ config('app.name', 'Panel') }}</title>
 

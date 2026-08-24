@@ -125,6 +125,8 @@ export declare const FONT_SIZE_MIN = 12;
 export declare const FONT_SIZE_MAX = 20;
 /** A fixed set of stops, not a slider - a radius is a brand decision, not a dial somebody sweeps. */
 export declare const RADIUS_OPTIONS: readonly [0, 0.25, 0.5, 0.75, 1];
+/** Vitest helper: module state survives between cases in the same file. */
+export declare function resetAppearanceBootstrapForTests(): void;
 export declare function isDark(next: Appearance): boolean;
 export declare function appearanceVars(next: Appearance): Record<string, string>;
 /**
