@@ -51,7 +51,14 @@ function submit() {
 </script>
 
 <template>
-    <PkModal :open="open" :title="title" :description="description" :busy="processing" @close="emit('close')">
+    <PkModal
+        :open="open"
+        :title="title"
+        :description="description"
+        size="form"
+        :busy="processing"
+        @close="emit('close')"
+    >
         <form class="flex flex-col gap-4" @submit.prevent="submit">
             <p v-if="generalError" class="text-destructive text-sm" role="alert">
                 {{ generalError }}

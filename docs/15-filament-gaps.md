@@ -32,7 +32,7 @@ PanelKit stays Vue + Inertia.
 | In-place form feel | Livewire mutates without full Inertia visits; we keep dedicated pages on purpose |
 | Infolist / field breadth | Filament still has more specialty entries; we add when a host needs them |
 | Docs / training data | Agents still invent Filament verbs; keep `panel:blueprint` and these docs honest |
-| Slide-overs / dense modals | Optional polish; not a default create/edit path |
+| Slide-overs / dense modals | Polished for **secondary** actions; create/edit/view stay pages by default |
 
 ## Intentional non-goals
 
@@ -54,10 +54,9 @@ Wired into `make release-check` with client mirror sync and package Pest.
 
 ## Suggested next (not in this tag)
 
-- Slide-over / dense modal polish for secondary actions (create/edit stay dedicated pages)
 - More specialty infolist / field entries as hosts ask for them
 - Plugin marketplace is out of scope; keep documenting `PanelPlugin` instead
-
+- Intentional PanelKit marketing landing (not ported templates)
 ## Landed since v1.0.88
 
 | Tag | What |
@@ -84,6 +83,7 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.4.4 | Remove ported vue-js / shadcn-vue landings; keep aurora, editorial, console |
 | v1.4.15 | Wider create/edit/view `FORM_MEASURE` (`max-w-7xl`, Filament default) |
 | v1.4.16 | Row action menu icons: `resolveActionIcon` defaults for recharge / impersonate / delete |
+| v1.4.17 | Slide-over / dense modal polish for secondary actions; overlay design-freeze tokens; page-first CRUD unchanged |
 
 ## Versioning (from v1.1.0)
 

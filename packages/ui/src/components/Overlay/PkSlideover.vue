@@ -1,12 +1,17 @@
 <script setup lang="ts">
 /**
- * A panel that slides in from an edge - filters, notifications, details.
+ * A panel that slides in from an edge - filters, notifications, details,
+ * secondary action forms, and opt-in CRUD modals.
  *
  * WHY A SLIDEOVER RATHER THAN A DIALOG for these: a modal dialog is a question
  * that must be answered before anything else can happen. A filter panel and a
  * notification list are neither - they are secondary surfaces you consult
  * beside the page, and forcing them into a centred modal makes the page they
  * describe disappear behind them.
+ *
+ * CREATE / EDIT / VIEW stay dedicated pages by default. Use this for secondary
+ * flows only, or when a resource opts in via createUsing/editUsing/viewUsing
+ * ('modal').
  *
  * IT OWNS NO STATE. `open` comes in, `close` goes out. A component that decides
  * for itself when it is open cannot be driven from a keyboard shortcut, a route
@@ -19,7 +24,13 @@
  * THE BODY SCROLLS, NOT THE PANEL. Header and footer stay put, so the primary
  * action in a long filter form is never scrolled out of reach.
  */
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import {
+    OVERLAY_FORM_MEASURE,
+    SLIDEOVER_BODY,
+    SLIDEOVER_WIDTH,
+    type SlideoverSize,
+} from '../../lib/pageShell'
 
 const props = withDefaults(
     defineProps<{
@@ -27,10 +38,26 @@ const props = withDefaults(
         title: string
         description?: string | null
         side?: 'left' | 'right'
-        /** A Tailwind width class; forms want more room than a list. */
-        width?: string
+        /**
+         * Width preset. Prefer this over a raw Tailwind `width` string so
+         * mobile stays `w-full` and design-freeze sizes stay shared.
+         */
+        size?: SlideoverSize
+        /** Escape hatch; wins over `size` when set. */
+        width?: string | null
+        /** When true, Escape and backdrop clicks do not close (saving). */
+        busy?: boolean
+        /** Apply SLIDEOVER_BODY padding around the default slot. */
+        padded?: boolean
     }>(),
-    { description: null, side: 'right', width: 'w-96' },
+    {
+        description: null,
+        side: 'right',
+        size: 'sm',
+        width: null,
+        busy: false,
+        padded: true,
+    },
 )
 
 const emit = defineEmits<{ (e: 'close'): void }>()
@@ -40,12 +67,42 @@ const panel = ref<HTMLElement | null>(null)
 let restoreFocusTo: HTMLElement | null = null
 let previousOverflow = ''
 
+/**
+ * Tracks whether a press STARTED on the backdrop.
+ *
+ * A plain @click closes the panel when a drag that began inside (selecting
+ * text) happens to end outside it, discarding what was typed.
+ */
+const pressStartedOnBackdrop = ref(false)
+
+const panelWidth = computed(() => props.width ?? SLIDEOVER_WIDTH[props.size])
+
+const bodyClass = computed(() =>
+    [OVERLAY_FORM_MEASURE, props.padded ? SLIDEOVER_BODY : ''].filter(Boolean).join(' '),
+)
+
+function onBackdropDown(e: PointerEvent) {
+    pressStartedOnBackdrop.value = e.target === e.currentTarget
+}
+
+function onBackdropUp(e: PointerEvent) {
+    if (pressStartedOnBackdrop.value && e.target === e.currentTarget && !props.busy) {
+        emit('close')
+    }
+
+    pressStartedOnBackdrop.value = false
+}
+
 function onKeydown(e: KeyboardEvent) {
     if (!props.open) {
         return
     }
 
     if (e.key === 'Escape') {
+        if (props.busy) {
+            return
+        }
+
         e.stopPropagation()
         emit('close')
 
@@ -100,6 +157,7 @@ watch(
         document.removeEventListener('keydown', onKeydown)
         // Focus goes back where it came from, or the trigger appears to vanish.
         restoreFocusTo?.focus?.()
+        restoreFocusTo = null
     },
 )
 
@@ -117,7 +175,12 @@ onBeforeUnmount(() => {
             leave-active-class="transition duration-100 ease-in"
             leave-to-class="opacity-0"
         >
-            <div v-if="open" class="fixed inset-0 z-50 bg-black/30" @click="emit('close')" />
+            <div
+                v-if="open"
+                class="fixed inset-0 z-50 bg-black/30 backdrop-blur-[1px]"
+                @pointerdown="onBackdropDown"
+                @pointerup="onBackdropUp"
+            />
         </Transition>
 
         <Transition
@@ -129,13 +192,16 @@ onBeforeUnmount(() => {
             <aside
                 v-if="open"
                 ref="panel"
-                class="bg-background fixed top-0 z-50 flex h-full max-w-full flex-col shadow-2xl"
-                :class="[width, side === 'left' ? 'left-0 border-r' : 'right-0 border-l']"
+                class="bg-background fixed inset-y-0 z-50 flex h-dvh max-h-dvh max-w-full flex-col shadow-2xl"
+                :class="[panelWidth, side === 'left' ? 'left-0 border-r' : 'right-0 border-l']"
                 role="dialog"
                 aria-modal="true"
+                :aria-busy="busy ? 'true' : undefined"
                 :aria-label="title"
             >
-                <header class="flex items-start justify-between gap-3 border-b px-4 py-3">
+                <header
+                    class="bg-background flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3"
+                >
                     <div class="min-w-0">
                         <h2 class="text-base font-semibold">{{ title }}</h2>
                         <p v-if="description" class="text-muted-foreground mt-0.5 text-xs">
@@ -147,8 +213,9 @@ onBeforeUnmount(() => {
                         <slot name="header-actions" />
                         <button
                             type="button"
-                            class="text-muted-foreground hover:text-foreground"
+                            class="text-muted-foreground hover:text-foreground disabled:opacity-50"
                             aria-label="Close"
+                            :disabled="busy"
                             @click="emit('close')"
                         >
                             <svg
@@ -165,13 +232,15 @@ onBeforeUnmount(() => {
                 </header>
 
                 <!-- Only this scrolls. -->
-                <div class="min-h-0 flex-1 overflow-y-auto">
-                    <slot />
+                <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                    <div :class="bodyClass">
+                        <slot />
+                    </div>
                 </div>
 
                 <footer
                     v-if="$slots.footer"
-                    class="flex items-center justify-end gap-2 border-t px-4 py-3"
+                    class="bg-muted/30 flex shrink-0 items-center justify-end gap-2 border-t px-4 py-3"
                 >
                     <slot name="footer" />
                 </footer>

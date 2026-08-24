@@ -166,10 +166,10 @@ function setMode(mode: 'test' | 'live'): void {
         :open="selected !== null"
         :title="selected?.label ?? 'Gateway'"
         description="Showcase fields only. Values are not sent anywhere."
-        width="w-[28rem]"
+        size="md"
         @close="selectedKey = null"
     >
-        <div v-if="selected" class="flex flex-col gap-4 p-4">
+        <div v-if="selected" class="flex flex-col gap-4">
             <div class="flex flex-wrap items-center gap-2">
                 <PkStatusBadge :status="selected.connected ? 'connected' : 'disconnected'">
                     {{ selected.connected ? 'Connected' : 'Not connected' }}

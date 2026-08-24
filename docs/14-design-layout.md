@@ -10,7 +10,11 @@ congested, centred content column as a regression, not a taste choice.
 | `PAGE_SHELL` | Full-bleed content padding inside the main pane (`w-full min-w-0` + horizontal padding). Default for list, view, settings, and `make:panel-page` screens. |
 | `PAGE_SHELL_STACK` | Same as `PAGE_SHELL` with vertical rhythm between sections. |
 | `PAGE_SHELL_COMPACT` | Tighter padding for dense chrome (record view). |
-| `FORM_MEASURE` | Optional **left-aligned** field column (`w-full max-w-7xl`, Filament-default content width). No `mx-auto`. Use inside a shell for create/edit/view forms. |
+| `FORM_MEASURE` | Optional **left-aligned** field column (`w-full max-w-7xl`, Filament-default content width). No `mx-auto`. Use inside a shell for create/edit/view **pages**. |
+| `OVERLAY_FORM_MEASURE` | Field column inside `PkSlideover` / dense `PkModal` (`w-full min-w-0`). Do not put page `FORM_MEASURE` (`max-w-7xl`) inside an overlay. |
+| `SLIDEOVER_BODY` | Default body padding for `PkSlideover` when `padded` is true. |
+| `SLIDEOVER_WIDTH` | Shared `sm` / `md` / `lg` / `xl` width presets (`w-full` + `max-w-*`) for mobile-first slide-overs. |
+| `MODAL_PANEL` / `MODAL_PANEL_FORM` | Dense centred modal shell sizes (`confirm` vs `form`). |
 | `CATALOGUE_CONTAINER` | `@container min-w-0` ancestor for catalogue / settings card grids. Column counts come from container queries, not viewport guesses. |
 
 Import them from `@alxtexh-enterprise/panel` (`pageShell.ts`, `catalogueGrid.ts`).
@@ -27,6 +31,20 @@ patterns as the resource index.
 - Wrapping admin pages in `mx-auto` + `max-w-*` (skinny centred column).
 - Inset hero cards or multi-card chrome for ordinary CRUD.
 - Inventing a second page width system beside `PAGE_SHELL` / `FORM_MEASURE`.
+- Using page `FORM_MEASURE` inside slide-overs or dense modals (use `OVERLAY_FORM_MEASURE`).
+- Making create / edit / view default to modals (pages stay default; overlays are secondary).
+
+## Slide-overs and dense modals (secondary only)
+
+| Surface | Component | Notes |
+| --- | --- | --- |
+| Filters, notifications, inspect drawers | `PkSlideover` | Sticky header/footer, body scrolls, focus trap, `busy` blocks dismiss |
+| Confirmations (delete, bulk) | `PkModal` `size="confirm"` | Short copy, sticky actions |
+| Record action forms, createOption, import | `PkModal` `size="form"` | Dense field stack, not a page |
+| Opt-in CRUD modal | `ResourceCrudModal` via `createUsing` / `editUsing` / `viewUsing('modal')` | Slide-over `size="xl"`; default remains `page` |
+
+Create, edit, and view stay dedicated pages unless a resource opts into modal
+presentation. See [Actions](05-actions.md) and [Resources](02-resources.md).
 
 ## Allowed narrow centres
 

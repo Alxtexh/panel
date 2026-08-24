@@ -3,6 +3,11 @@ type __VLS_Props = {
     title: string;
     description?: string;
     busy?: boolean;
+    /**
+     * `confirm` keeps max-w-lg. `form` widens slightly for field stacks
+     * without becoming a page.
+     */
+    size?: 'confirm' | 'form';
 };
 declare var __VLS_9: {}, __VLS_11: {};
 type __VLS_Slots = {} & {
@@ -15,6 +20,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onClose?: (() => any) | undefined;
 }>, {
+    size: "confirm" | "form";
     busy: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;

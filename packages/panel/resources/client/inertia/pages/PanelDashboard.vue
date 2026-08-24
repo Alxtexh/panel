@@ -922,10 +922,10 @@ function layoutLabel(item: AnyLayoutItem): string {
             :open="hiddenOpen"
             title="Hidden widgets"
             description="Restore cards you hid from this dashboard"
-            width="w-[22rem]"
+            size="sm"
             @close="hiddenOpen = false"
         >
-            <div class="flex flex-col gap-1 p-4">
+            <div class="flex flex-col gap-1">
                 <label
                     v-for="entry in hiddenEntries"
                     :key="entry.id"

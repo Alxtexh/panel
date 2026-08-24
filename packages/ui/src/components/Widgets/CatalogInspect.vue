@@ -85,10 +85,10 @@ const showCart = computed(
         :open="open"
         :title="item?.label ?? 'Item'"
         :description="item?.caption ?? item?.sku ?? null"
-        width="w-[28rem]"
+        size="md"
         @close="emit('close')"
     >
-        <div v-if="item" class="flex flex-col gap-5 p-4">
+        <div v-if="item" class="flex flex-col gap-5">
             <div class="bg-muted aspect-[4/3] overflow-hidden rounded-lg">
                 <img
                     v-if="item.image"

@@ -1,7 +1,7 @@
 # 2. Resources
 
 A resource is one class describing one model's screens. Put it anywhere under a
-discovered directory — `app/Panel/Resources` by default — and it becomes a list,
+discovered directory (`app/Panel/Resources` by default) and it becomes a list,
 a form, a view screen, routes, ability names and an API endpoint.
 
 ```bash
@@ -33,13 +33,28 @@ final class InvoiceResource extends Resource
 routes and the abilities `view_any_invoices`, `create_invoices` and the rest all
 follow from it existing.
 
+## Create / edit / view: pages first
+
+Dedicated create, edit, and view pages are the default. Slide-overs and dense
+modals are for **secondary** work (record action forms, filters, confirmations).
+Opt into a CRUD slide-over per operation when you need it:
+
+```php
+InvoiceResource::configure()
+    ->createUsing('modal') // default remains 'page'
+    ->editUsing('page')
+    ->viewUsing('page');
+```
+
+See [Actions](05-actions.md) and [Design layout](14-design-layout.md).
+
 ## Why the list stays fast
 
 Three decisions, each of which only matters once the table is big.
 
 **Keyset pagination, not `OFFSET`.** `OFFSET 100000` makes the database walk
 100,000 rows it then discards. The panel seeks instead, so the first page costs
-the same on 250,000 rows as on 200 — measured at 0.44 ms against 0.48 ms.
+the same on 250,000 rows as on 200, measured at 0.44 ms against 0.48 ms.
 
 **The count is deferred.** `COUNT(*)` over 250,000 rows takes ~17 ms, and nobody
 should wait for a number they are not reading yet. Rows arrive first.
@@ -52,7 +67,7 @@ $table
     ->columns([
         TextColumn::make('customer_name')->from('customers.name'),
     ])
-    ->keyColumn('invoices.id')      // qualified — see below
+    ->keyColumn('invoices.id')      // qualified: see below
     ->alsoSelect(['invoices.id']);
 ```
 

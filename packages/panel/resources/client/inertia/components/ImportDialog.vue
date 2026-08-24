@@ -148,6 +148,7 @@ async function confirmImport(): Promise<void> {
         :open="open"
         :title="`Import ${resourceLabel}`"
         description="From a CSV file, mapped column by column."
+        size="form"
         :busy="busy"
         @close="emit('close')"
     >

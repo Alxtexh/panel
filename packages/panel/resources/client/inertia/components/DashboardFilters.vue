@@ -165,10 +165,10 @@ function apply() {
         :open="open"
         title="Filter dashboard"
         description="Applies to every widget on this page"
-        width="w-[22rem]"
+        size="sm"
         @close="emit('close')"
     >
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <section class="flex flex-col gap-2">
                 <h3 class="text-sm font-semibold">Date range</h3>
 

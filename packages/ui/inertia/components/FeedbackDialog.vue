@@ -75,6 +75,7 @@ function submit(): void {
         :open="open"
         title="Send feedback"
         description="Requests and reports go to the team maintaining this panel."
+        size="form"
         :busy="form.processing"
         @close="open = false"
     >

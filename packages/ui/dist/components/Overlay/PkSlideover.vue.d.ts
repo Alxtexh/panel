@@ -1,10 +1,20 @@
+import { type SlideoverSize } from '../../lib/pageShell';
 type __VLS_Props = {
     open: boolean;
     title: string;
     description?: string | null;
     side?: 'left' | 'right';
-    /** A Tailwind width class; forms want more room than a list. */
-    width?: string;
+    /**
+     * Width preset. Prefer this over a raw Tailwind `width` string so
+     * mobile stays `w-full` and design-freeze sizes stay shared.
+     */
+    size?: SlideoverSize;
+    /** Escape hatch; wins over `size` when set. */
+    width?: string | null;
+    /** When true, Escape and backdrop clicks do not close (saving). */
+    busy?: boolean;
+    /** Apply SLIDEOVER_BODY padding around the default slot. */
+    padded?: boolean;
 };
 declare var __VLS_13: {}, __VLS_15: {}, __VLS_17: {};
 type __VLS_Slots = {} & {
@@ -20,8 +30,11 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     onClose?: (() => any) | undefined;
 }>, {
     description: string | null;
-    width: string;
+    width: string | null;
+    size: SlideoverSize;
+    busy: boolean;
     side: "left" | "right";
+    padded: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;

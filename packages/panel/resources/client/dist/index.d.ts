@@ -43,7 +43,8 @@ export { default as PkAlertError } from './components/primitives/PkAlertError.vu
 export { default as PkPasswordInput } from './components/primitives/PkPasswordInput.vue';
 export { cn, toUrl } from './lib/cn';
 export { CATALOGUE_CONTAINER, CATALOGUE_GRID, CATALOGUE_GRID_TIGHT, CATALOGUE_GRID_TILES, } from './lib/catalogueGrid';
-export { FORM_MEASURE, PAGE_SHELL, PAGE_SHELL_COMPACT, PAGE_SHELL_STACK, } from './lib/pageShell';
+export { FORM_MEASURE, MODAL_PANEL, MODAL_PANEL_FORM, OVERLAY_FORM_MEASURE, PAGE_SHELL, PAGE_SHELL_COMPACT, PAGE_SHELL_STACK, SLIDEOVER_BODY, SLIDEOVER_WIDTH, } from './lib/pageShell';
+export type { SlideoverSize } from './lib/pageShell';
 export { FOCUS_RING, FOCUS_RING_SOFT, FOCUS_RING_WITHIN } from './lib/focusRing';
 export { MUTED_COPY, MUTED_COPY_SNUG, MUTED_COPY_XS } from './lib/copyClasses';
 export { INPUT_COPY, INPUT_PLACEHOLDER, INPUT_TEXT } from './lib/inputClasses';

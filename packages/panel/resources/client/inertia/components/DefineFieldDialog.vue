@@ -131,6 +131,7 @@ function submit() {
         :open="open"
         title="Add a field"
         :description="`A new field on the ${label.toLowerCase()} form.`"
+        size="form"
         :busy="busy"
         @close="emit('close')"
     >

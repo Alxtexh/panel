@@ -1633,6 +1633,8 @@ function badgeLabel(key: string, value: unknown): string {
             :open="!!actionForm"
             :title="actionForm?.action.label ?? ''"
             :description="actionForm?.action.confirmation ?? undefined"
+            size="form"
+            :busy="Boolean(actionForm?.processing)"
             @close="actionForm = null"
         >
             <form class="flex flex-col gap-4" @submit.prevent="submitActionForm">

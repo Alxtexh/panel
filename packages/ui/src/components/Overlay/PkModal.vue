@@ -1,6 +1,11 @@
 <script setup lang="ts">
 /**
- * Modal dialog. Opens as pure local state - no network request (antipatterns §3.0.3).
+ * Dense centred modal. Opens as pure local state - no network request
+ * (antipatterns §3.0.3).
+ *
+ * Use for confirmations and short secondary action forms. Long secondary
+ * forms and filters belong in PkSlideover. Create / edit / view stay
+ * dedicated pages by default; this is not the CRUD default.
  *
  * Focus is trapped and restored, Escape closes, and the backdrop closes on a
  * click that both started AND ended outside the panel. That last detail matters:
@@ -10,7 +15,8 @@
  * HEADER AND FOOTER STAY PUT. Long action / bulk wizards scroll the body only,
  * so Cancel and the primary action never leave the viewport while the form grows.
  */
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { MODAL_PANEL, MODAL_PANEL_FORM, OVERLAY_FORM_MEASURE } from '../../lib/pageShell'
 
 const props = withDefaults(
     defineProps<{
@@ -18,8 +24,13 @@ const props = withDefaults(
         title: string
         description?: string
         busy?: boolean
+        /**
+         * `confirm` keeps max-w-lg. `form` widens slightly for field stacks
+         * without becoming a page.
+         */
+        size?: 'confirm' | 'form'
     }>(),
-    { busy: false },
+    { busy: false, size: 'confirm' },
 )
 
 const emit = defineEmits<{ (e: 'close'): void }>()
@@ -33,6 +44,8 @@ let restoreFocusTo: HTMLElement | null = null
  * (selecting text) happens to end outside it, discarding what was typed.
  */
 const pressStartedOnBackdrop = ref(false)
+
+const panelClass = computed(() => (props.size === 'form' ? MODAL_PANEL_FORM : MODAL_PANEL))
 
 function onBackdropDown(e: PointerEvent) {
     pressStartedOnBackdrop.value = e.target === e.currentTarget
@@ -123,8 +136,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                     ref="panel"
                     role="dialog"
                     aria-modal="true"
+                    :aria-busy="busy ? 'true' : undefined"
                     :aria-label="title"
-                    class="bg-popover text-popover-foreground flex w-full max-w-lg max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl"
+                    :class="panelClass"
                 >
                     <div class="bg-popover sticky top-0 z-10 shrink-0 border-b px-5 py-4">
                         <h2 class="text-base font-semibold">{{ title }}</h2>
@@ -133,11 +147,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                         </p>
                     </div>
 
-                    <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                    <div :class="['min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4', OVERLAY_FORM_MEASURE]">
                         <slot />
                     </div>
 
                     <div
+                        v-if="$slots.footer"
                         class="bg-muted/30 sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-2 border-t px-5 py-3"
                     >
                         <slot name="footer" />

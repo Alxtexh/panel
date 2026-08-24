@@ -1,5 +1,31 @@
 # 5. Actions
 
+## Presentation: pages first, overlays for secondary work
+
+Create, edit, and view are **dedicated pages** by default. Do not open full CRUD
+in a modal unless the resource opts in:
+
+```php
+ArticleResource::configure()
+    ->createUsing('modal') // or 'page' (default)
+    ->editUsing('page')
+    ->viewUsing('page');
+```
+
+Use slide-overs and dense modals for **secondary** flows only:
+
+| Flow | UI |
+| --- | --- |
+| Record action with `->form([...])` | Dense `PkModal` (`size="form"`), sticky footer |
+| Confirm-only actions / delete | Dense `PkModal` (`size="confirm"`) |
+| Dashboard / catalogue filters | `PkSlideover` |
+| Notifications, inspect drawers | `PkSlideover` |
+| Opt-in CRUD modal | `PkSlideover` via `ResourceCrudModal` |
+
+Page `FORM_MEASURE` (`max-w-7xl`) is for dedicated create/edit/view pages.
+Overlays use `OVERLAY_FORM_MEASURE` inside the panel. See
+[Design layout](14-design-layout.md).
+
 ## Record actions
 
 One declared action against one record:
@@ -20,12 +46,12 @@ $table->actions([
 Every action passes three gates:
 
 1. **The key must be declared on this table.** The request names a key, and only
-   a key the table declared resolves — the endpoint cannot be talked into
+   a key the table declared resolves: the endpoint cannot be talked into
    calling a method the resource did not offer.
 2. **The ability is the action's own, checked against this record.**
    `ReplicateAction` asks for `create`, not `update`: it produces a new row, and
    somebody who may edit but not add must not add one through a menu item.
-3. **`visible()` is re-evaluated on the server.** Hiding is not enforcement — a
+3. **`visible()` is re-evaluated on the server.** Hiding is not enforcement: a
    client that skips the UI and posts the key still has to satisfy it.
 
 An action may collect input first:
@@ -92,7 +118,7 @@ request and becomes a job, with progress reported back:
 'bulk' => ['queue_threshold' => 250],
 ```
 
-The action may override it — cost is a property of what the action *does*, not
+The action may override it: cost is a property of what the action *does*, not
 of how many rows were ticked: two hundred rows through a handler that sends a
 message is slower than a thousand through a column update.
 
@@ -106,7 +132,7 @@ would apply the action to a different set than the one that was ticked.
 ## Export
 
 Any list exports to CSV, respecting the current filters, the tenant scope and
-the per-resource `viewAny` ability — re-checked inside the worker, not only at
+the per-resource `viewAny` ability, re-checked inside the worker, not only at
 dispatch. The finished file is owner-checked with a constant-time comparison
 and pruned by `panel:prune-exports`.
 

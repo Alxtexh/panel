@@ -1,12 +1,16 @@
 <script setup lang="ts">
 /**
- * Create, edit or view a record in a slide-over when the resource opts into modal presentation.
+ * Create, edit or view a record in a slide-over when the resource opts into modal
+ * presentation via createUsing / editUsing / viewUsing('modal').
+ *
+ * Default CRUD remains dedicated pages. This surface is opt-in only.
  */
 import { useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import {
     InfoNode,
+    OVERLAY_FORM_MEASURE,
     PkButton as Button,
     PkSlideover,
     RecordForm,
@@ -44,6 +48,7 @@ const form = useForm<Record<string, any>>({})
 
 const formValues = computed(() => ({ ...form.data() }))
 const formFields = computed(() => formSchema.value.fields ?? [])
+const busy = computed(() => loading.value || form.processing)
 
 const title = computed(() => {
     if (props.mode === 'create') {
@@ -143,7 +148,7 @@ function formatCell(column: any, row: Record<string, any>): string {
     const value = row[column.key]
 
     if (value === null || value === undefined || value === '') {
-        return '—'
+        return '-'
     }
 
     if (column.type === 'money') {
@@ -158,12 +163,18 @@ function formatCell(column: any, row: Record<string, any>): string {
     <PkSlideover
         :open="open"
         :title="title"
-        width="w-full max-w-2xl"
+        size="xl"
+        :busy="busy"
         @close="emit('close')"
     >
-        <div v-if="loading" class="text-muted-foreground p-4 text-sm">Loading…</div>
+        <div v-if="loading" class="text-muted-foreground text-sm">Loading…</div>
 
-        <form v-else-if="mode !== 'view'" class="flex flex-col gap-4" @submit.prevent="submit">
+        <form
+            v-else-if="mode !== 'view'"
+            id="pk-crud-modal-form"
+            :class="[OVERLAY_FORM_MEASURE, 'flex flex-col gap-4']"
+            @submit.prevent="submit"
+        >
             <div :class="formSchema.nodes?.length ? '' : 'bg-card rounded-lg border p-4 sm:p-6'">
                 <RecordForm
                     :model-value="formValues"
@@ -176,16 +187,9 @@ function formatCell(column: any, row: Record<string, any>): string {
                     @change="onFieldChange"
                 />
             </div>
-
-            <div class="flex justify-end gap-2 border-t pt-4">
-                <Button variant="ghost" size="sm" type="button" @click="emit('close')">Cancel</Button>
-                <Button size="sm" type="submit" :disabled="form.processing">
-                    {{ form.processing ? 'Saving…' : 'Save' }}
-                </Button>
-            </div>
         </form>
 
-        <div v-else-if="viewRecord" class="space-y-4">
+        <div v-else-if="viewRecord" :class="[OVERLAY_FORM_MEASURE, 'space-y-4']">
             <template v-if="hasLayout">
                 <InfoNode
                     v-for="(node, index) in schema.infolist ?? []"
@@ -205,10 +209,18 @@ function formatCell(column: any, row: Record<string, any>): string {
                     <dd class="sm:col-span-2 text-sm">{{ formatCell(column, viewRecord) }}</dd>
                 </div>
             </dl>
-
-            <div class="flex justify-end gap-2 border-t pt-4">
-                <Button variant="ghost" size="sm" type="button" @click="emit('close')">Close</Button>
-            </div>
         </div>
+
+        <template #footer>
+            <template v-if="mode !== 'view'">
+                <Button variant="ghost" size="sm" type="button" :disabled="busy" @click="emit('close')">
+                    Cancel
+                </Button>
+                <Button size="sm" type="submit" form="pk-crud-modal-form" :disabled="busy">
+                    {{ form.processing ? 'Saving…' : 'Save' }}
+                </Button>
+            </template>
+            <Button v-else variant="ghost" size="sm" type="button" @click="emit('close')">Close</Button>
+        </template>
     </PkSlideover>
 </template>

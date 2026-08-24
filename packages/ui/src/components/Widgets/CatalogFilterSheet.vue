@@ -175,10 +175,10 @@ function reset(): void {
                 ? 'Category and stock for this list'
                 : 'Search, categories and ranges for this list')
         "
-        width="w-[22rem]"
+        size="sm"
         @close="emit('close')"
     >
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <label v-if="!hideSearch" class="flex flex-col gap-1.5">
                 <span class="text-sm font-semibold">Search</span>
                 <PkTextInput

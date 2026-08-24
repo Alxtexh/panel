@@ -52,7 +52,7 @@ function submit() {
 </script>
 
 <template>
-    <PkModal :open="open" :title="title" :busy="processing" @close="emit('close')">
+    <PkModal :open="open" :title="title" size="form" :busy="processing" @close="emit('close')">
         <form class="flex flex-col gap-4" @submit.prevent="submit">
             <SchemaNode
                 v-for="(node, index) in form?.nodes ?? []"
