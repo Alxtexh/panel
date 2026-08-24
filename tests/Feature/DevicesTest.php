@@ -14,12 +14,10 @@ use Illuminate\Support\Facades\DB;
 /**
  * Where an account is signed in, and signing those places out.
  *
- * IT ANSWERS HONESTLY WHEN IT CANNOT ANSWER. Sessions are only listable on a
- * driver that keeps a server-side record, so on `array` or `cookie` there is
- * nothing to enumerate - and the right response is an empty list rather than
- * an exception. A security screen that 500s is worse than one that offers
- * less, and "you are signed in nowhere" is at least not a lie about somebody
- * else's sessions.
+ * THE CURRENT DEVICE IS ALWAYS LISTED while authenticated. Other browsers are
+ * only enumerable on the database session driver (with a sessions table). On
+ * `array`, `cookie`, `file` or `redis` the honest answer is "this device, and
+ * we cannot see the rest" - never an empty list that reads as signed in nowhere.
  *
  * EVERY LOOKUP IS SCOPED TO THE ACTING USER. The id in a sign-out request comes
  * from the browser, so an unscoped `delete where id = ?` is "sign out any
@@ -77,9 +75,8 @@ final class DevicesTest extends TestCase
      * `actingAs` sets the AUTH user; it does not attach a user resolver to the
      * bare container request, which only the middleware stack does. `Devices`
      * reads `$request->user()`, so without this every lookup sees null and
-     * returns an empty list - which is indistinguishable from the driver
-     * keeping no record, and would have made four of the tests below pass for
-     * the wrong reason.
+     * returns an empty list - which is indistinguishable from a guest, and would
+     * have made several of the tests below pass for the wrong reason.
      */
     private function request()
     {
@@ -94,20 +91,37 @@ final class DevicesTest extends TestCase
         return $request;
     }
 
-    public function test_a_driver_that_keeps_no_record_lists_nothing_rather_than_failing(): void
+    public function test_the_current_device_is_always_present_without_the_database_session_driver(): void
     {
         config(['session.driver' => 'array']);
 
         $this->assertFalse(Devices::available());
-        $this->assertSame([], Devices::forUser($this->request()));
+
+        $devices = Devices::forUser($this->request());
+
+        $this->assertCount(1, $devices);
+        $this->assertTrue($devices[0]['current']);
     }
 
-    public function test_it_lists_the_acting_users_sessions(): void
+    public function test_the_current_device_is_always_present_with_the_database_session_driver(): void
+    {
+        $devices = Devices::forUser($this->request());
+
+        $this->assertNotEmpty($devices);
+        $this->assertTrue(collect($devices)->contains(fn (array $d): bool => $d['current'] === true));
+    }
+
+    public function test_it_lists_other_sessions_when_session_records_exist(): void
     {
         $this->sessionRow($this->user, 'mine-one');
         $this->sessionRow($this->user, 'mine-two');
 
-        $this->assertCount(2, Devices::forUser($this->request()));
+        $devices = Devices::forUser($this->request());
+        $ids = array_column($devices, 'id');
+
+        $this->assertContains('mine-one', $ids);
+        $this->assertContains('mine-two', $ids);
+        $this->assertTrue(collect($devices)->contains(fn (array $d): bool => $d['current'] === true));
     }
 
     /**
@@ -124,7 +138,8 @@ final class DevicesTest extends TestCase
 
         $ids = array_column(Devices::forUser($this->request()), 'id');
 
-        $this->assertSame(['mine'], $ids);
+        $this->assertContains('mine', $ids);
+        $this->assertNotContains('theirs', $ids);
     }
 
     /**
@@ -137,8 +152,9 @@ final class DevicesTest extends TestCase
     {
         $this->sessionRow($this->user, 'mine', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1');
 
-        $device = Devices::forUser($this->request())[0];
+        $device = collect(Devices::forUser($this->request()))->firstWhere('id', 'mine');
 
+        $this->assertNotNull($device);
         $this->assertSame('Safari', $device['browser']);
         $this->assertSame('iPhone', $device['platform']);
     }
@@ -154,8 +170,9 @@ final class DevicesTest extends TestCase
     {
         $this->sessionRow($this->user, 'mine', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        $device = Devices::forUser($this->request())[0];
+        $device = collect(Devices::forUser($this->request()))->firstWhere('id', 'mine');
 
+        $this->assertNotNull($device);
         $this->assertSame('Chrome', $device['browser']);
         $this->assertSame('Windows', $device['platform']);
     }
@@ -166,6 +183,17 @@ final class DevicesTest extends TestCase
 
         $this->assertTrue(Devices::forget($this->request(), 'mine'));
         $this->assertSame(0, DB::table('sessions')->where('id', 'mine')->count());
+    }
+
+    public function test_the_current_session_cannot_be_signed_out_via_forget(): void
+    {
+        $request = $this->request();
+        $currentId = $request->session()->getId();
+
+        $this->sessionRow($this->user, $currentId);
+
+        $this->assertFalse(Devices::forget($request, $currentId));
+        $this->assertSame(1, DB::table('sessions')->where('id', $currentId)->count());
     }
 
     /**
@@ -207,3 +235,4 @@ final class DevicesTest extends TestCase
         $this->assertFalse(Devices::forget($this->request(), 'no-such-session'));
     }
 }
+

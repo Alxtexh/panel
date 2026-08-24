@@ -39,10 +39,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * tabs means half of it gets audited.
  *
  * EVERY SECTION IS OPTIONAL AND SAYS SO HONESTLY. Two-factor needs Fortify,
- * passkeys need it too, connected accounts need a configured provider, and the
- * device list needs the database session driver. Each is asked rather than
- * assumed, and an absent one removes its section rather than failing the render:
- * a security screen that 500s is worse than one that offers less.
+ * passkeys need it too, connected accounts need a configured provider, and
+ * listing other devices needs the database session driver. Each is asked rather
+ * than assumed. The current device is always shown while authenticated; an
+ * absent listing capability gets an honest note rather than a 500 or a lie.
  */
 final class SecurityController
 {
@@ -60,10 +60,11 @@ final class SecurityController
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
 
             /*
-             * The devices signed in to this account. Empty on any session driver
-             * that keeps no server-side record - see Devices.
+             * Current device is always present while authenticated. Other
+             * devices need the database session driver - see Devices.
              */
             'devices' => Devices::forUser($request),
+            'canListOtherDevices' => Devices::available(),
 
             /*
              * WHICH PROVIDERS COULD BE ATTACHED, and which already are. Both are
