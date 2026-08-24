@@ -7,10 +7,10 @@
         {{--
             APPEARANCE BEFORE FIRST PAINT.
 
-            `@include('panel::appearance-prepaint')` embeds window.__panelAppearance
-            and applies oklch CSS variables on <html> via a blocking script, so
-            app.css hsl defaults never flash before the admin-saved theme.
-            Must stay above @vite / stylesheets.
+            `@include('panel::appearance-prepaint')` embeds window.__panelAppearance,
+            #pk-appearance critical CSS, and applies oklch variables on <html>
+            via a blocking script, so app.css hsl defaults never flash before
+            the admin-saved theme. Must stay above @vite / stylesheets.
         --}}
         @include('panel::appearance-prepaint')
 

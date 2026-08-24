@@ -168,16 +168,6 @@ when the users table has no `tenant_id`.
 | Publishes kit lang (`panel-lang`) | `lang/vendor/panel/{en,es,fr}` - overlay with `__('panel::...')` |
 | Publishes kit assets | `public/vendor/panel/{app.css,app.js}` from package `dist/kit`. First visit has CSS without npm |
 | Writes `resources/views/app.blade.php` | Root view. Loads kit dist unless a Vite manifest exists. Head includes `@include('panel::appearance-prepaint')` **before** CSS/JS so the account theme cannot flash |
-
-### Updating an existing `app.blade.php` (FOUC fix)
-
-If you installed before v1.4.12, replace the old `__panelAppearance` + localStorage-only head scripts with the package include, **above** `@vite` / `vendor/panel` stylesheets:
-
-```blade
-@include('panel::appearance-prepaint')
-```
-
-That include (1) embeds `window.__panelAppearance` from `auth()->user()?->appearance`, (2) embeds PHP-computed CSS variables matching the client palette, and (3) runs a blocking script that `setProperty`s them on `<html>` before first paint. Do not move it below stylesheets.
 | Writes `resources/js/app.ts` | Inertia bootstrap with `layout: (name) => …` so `PanelLayout` (and nested `SettingsLayout` for settings) still wraps pages that only set breadcrumb layout props. Do not strip that callback |
 | Writes `resources/js/layouts/PanelLayout.vue` | A layout you are meant to replace; forwards breadcrumbs into `PanelShell` |
 | Merges `resources/css/app.css` | Points Tailwind at the package. Without this you get a working panel with no styling |
@@ -189,6 +179,25 @@ That include (1) embeds `window.__panelAppearance` from `auth()->user()?->appear
 | Syncs permissions + first user | Administrator with `grants_all`. `--no-user` to skip |
 | Creates `app/Panel/` | Where your resources live |
 | Writes `AGENTS.md` | Conventions. **AI: read this first.** Day 0 is at the top. `panel:blueprint --file=CLAUDE.md` for Claude Code |
+
+### Appearance FOUC contract (v1.4.12+, hardened in v1.4.13)
+
+Keep `@include('panel::appearance-prepaint')` **above** every stylesheet and Vite/kit script forever. That include:
+
+1. Embeds `window.__panelAppearance` from `auth()->user()?->appearance` (account is the source of truth).
+2. Embeds PHP-computed CSS variables matching the client palette (`AppearancePrepaint`).
+3. Emits `<style id="pk-appearance">` critical `:root` tokens for first paint.
+4. Runs a blocking script that `setProperty`s those tokens on `<html>` (inline styles beat later `app.css` `:root` rules) and rewrites `#pk-appearance`.
+
+Live admin edits call the same client apply path (`applyAppearance` / `appearancePayload`): DOM vars, `#pk-appearance`, `window.__panelAppearance`, and localStorage update immediately; PUT `{panel}/settings/appearance` persists in the background. Inertia navigations sync only when the server appearance **differs** from what is already applied, so page-to-page visits do not remount-flash after a drawer tweak.
+
+If you installed before v1.4.12, replace the old `__panelAppearance` + localStorage-only head scripts with:
+
+```blade
+@include('panel::appearance-prepaint')
+```
+
+Do not move the include below stylesheets.
 
 Non-interactive first user:
 

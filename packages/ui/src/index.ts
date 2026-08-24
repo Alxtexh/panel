@@ -310,6 +310,8 @@ export {
     readServerAppearance,
     applyAppearance,
     appearanceVars,
+    appearancePayload,
+    APPEARANCE_STYLE_ID,
     readAppearance,
     isDark,
     setAppearancePersister,
@@ -348,6 +350,7 @@ export { ICON_PATHS, iconPath } from './components/primitives/icons'
 export type { UploadedFileValue } from './components/Form/PkFileUpload.vue'
 export type {
     Appearance,
+    AppearancePayload,
     Theme,
     Density,
     SidebarSide,

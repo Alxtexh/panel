@@ -125,10 +125,31 @@ export declare const FONT_SIZE_MIN = 12;
 export declare const FONT_SIZE_MAX = 20;
 /** A fixed set of stops, not a slider - a radius is a brand decision, not a dial somebody sweeps. */
 export declare const RADIUS_OPTIONS: readonly [0, 0.25, 0.5, 0.75, 1];
+/** DOM node id for the critical CSS sheet Blade and live edits share. */
+export declare const APPEARANCE_STYLE_ID = "pk-appearance";
+/**
+ * Same shape PHP `AppearancePrepaint::payload()` embeds for the head script.
+ * Live edits and first paint both flow through this so the paths cannot diverge
+ * on field names.
+ */
+export interface AppearancePayload {
+    dark: boolean;
+    theme: Theme;
+    vars: Record<string, string>;
+    sidebar: SidebarSide;
+    contentLayout: ContentLayout;
+}
 /** Vitest helper: module state survives between cases in the same file. */
 export declare function resetAppearanceBootstrapForTests(): void;
 export declare function isDark(next: Appearance): boolean;
 export declare function appearanceVars(next: Appearance): Record<string, string>;
+/**
+ * Token payload matching PHP `AppearancePrepaint::payload()`.
+ *
+ * Keep the oklch tables in AppearancePrepaint.php in lockstep with
+ * PRIMARY_COLORS / SURFACE_TINTS / appearanceVars above.
+ */
+export declare function appearancePayload(next: Appearance): AppearancePayload;
 /**
  * Read the stored preference, migrating anything an older version wrote.
  *
@@ -181,7 +202,14 @@ export declare function setAppearancePersister(fn: ((patch: Partial<Appearance>)
  * them.
  */
 export declare function setTenantVars(vars: Record<string, string>): void;
-/** Apply a preference to the document, and cache it for the next first paint. */
+/**
+ * Apply a preference to the document.
+ *
+ * Same path live drawer edits and post-login sync use: CSS vars on <html>,
+ * rewrite `#pk-appearance`, refresh `window.__panelAppearance`, and cache the
+ * payload for the next guest first paint. Inline setProperty beats later
+ * app.css `:root` rules; the style node is the shared sheet Blade started.
+ */
 export declare function applyAppearance(next: Appearance): void;
 export declare function useAppearance(): {
     appearance: import("vue").ComputedRef<{

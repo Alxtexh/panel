@@ -103,6 +103,38 @@ final class AppearancePrepaint
     }
 
     /**
+     * Critical CSS for `<style id="pk-appearance">`.
+     *
+     * Same tokens as `payload()` / the client `appearanceVars()`. Inline
+     * `setProperty` still wins over later app.css `:root` rules; this sheet
+     * keeps a single DOM node the client can rewrite on live edits, and gives
+     * a correct first paint when JS is delayed.
+     *
+     * @param  array{
+     *     dark?: bool,
+     *     theme?: string,
+     *     vars: array<string, string>,
+     *     sidebar?: string,
+     *     contentLayout?: string
+     * }  $payload
+     */
+    public static function cssFromPayload(array $payload): string
+    {
+        $vars = $payload['vars'] ?? [];
+        $parts = [];
+
+        foreach ($vars as $name => $value) {
+            if (! is_string($name) || ! is_string($value)) {
+                continue;
+            }
+
+            $parts[] = $name.': '.$value.';';
+        }
+
+        return ':root { '.implode(' ', $parts).' }';
+    }
+
+    /**
      * @param  AppearanceArray|null  $appearance
      * @return AppearanceArray
      */

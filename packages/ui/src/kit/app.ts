@@ -15,6 +15,7 @@ import { createInertiaApp, router } from '@inertiajs/vue3'
 import { createApp, h, type DefineComponent } from 'vue'
 import {
     bootstrapAppearance,
+    initializeAppearance,
     setAppearancePersister,
     syncAppearanceFromInertiaPage,
 } from '../index'
@@ -51,9 +52,22 @@ setAppearancePersister((patch) => {
         },
         credentials: 'same-origin',
         body: JSON.stringify(patch),
-    }).catch(() => {
-        // Offline, or a guest. The preference still applies in this browser.
     })
+        .then(async (response) => {
+            if (!response.ok) {
+                return
+            }
+
+            const data = (await response.json()) as { appearance?: Record<string, unknown> }
+
+            if (data.appearance && typeof data.appearance === 'object') {
+                // Align account snapshot without remount flash (fingerprint skip).
+                initializeAppearance(data.appearance)
+            }
+        })
+        .catch(() => {
+            // Offline, or a guest. The preference still applies in this browser.
+        })
 })
 
 createInertiaApp({

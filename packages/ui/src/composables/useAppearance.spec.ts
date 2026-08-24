@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+    APPEARANCE_STYLE_ID,
     applyAppearance,
+    appearancePayload,
     bootstrapAppearance,
     initializeAppearance,
     readServerAppearance,
@@ -22,6 +24,7 @@ describe('useAppearance server hydration', () => {
         ;(window as unknown as { __panelAppearanceApplied?: boolean }).__panelAppearanceApplied =
             false
         document.getElementById('app')?.remove()
+        document.getElementById(APPEARANCE_STYLE_ID)?.remove()
     })
 
     afterEach(() => {
@@ -154,5 +157,80 @@ describe('useAppearance server hydration', () => {
         })
 
         expect(document.documentElement.classList.contains('dark')).toBe(true)
+    })
+
+    it('applyAppearance rewrites pk-appearance and __panelAppearance', () => {
+        applyAppearance({
+            theme: 'dark',
+            density: 'comfortable',
+            fontSize: 16,
+            sidebarSide: 'left',
+            cardStyle: 'transparent',
+            radius: 0.5,
+            contentLayout: 'full',
+            menuStyle: 'collapsible',
+            primary: 'rose',
+            primaryChosen: true,
+            surface: 'neutral',
+        })
+
+        const style = document.getElementById(APPEARANCE_STYLE_ID)
+
+        expect(style?.textContent).toContain('--primary: oklch(0.62 0.22 15)')
+        expect(
+            (window as unknown as { __panelAppearance?: { primary?: string } }).__panelAppearance
+                ?.primary,
+        ).toBe('rose')
+        expect(
+            appearancePayload({
+                theme: 'dark',
+                density: 'comfortable',
+                fontSize: 16,
+                sidebarSide: 'left',
+                cardStyle: 'transparent',
+                radius: 0.5,
+                contentLayout: 'full',
+                menuStyle: 'collapsible',
+                primary: 'rose',
+                surface: 'neutral',
+            }).vars['--primary'],
+        ).toBe('oklch(0.62 0.22 15)')
+    })
+
+    it('live apply updates the DOM immediately and Inertia sync does not double-apply', () => {
+        applyAppearance({
+            theme: 'dark',
+            density: 'comfortable',
+            fontSize: 16,
+            sidebarSide: 'left',
+            cardStyle: 'transparent',
+            radius: 0.5,
+            contentLayout: 'full',
+            menuStyle: 'collapsible',
+            primary: 'emerald',
+            primaryChosen: true,
+            surface: 'neutral',
+        })
+
+        expect(document.documentElement.classList.contains('dark')).toBe(true)
+        expect(document.documentElement.style.getPropertyValue('--primary')).toContain('oklch')
+        expect(
+            (window as unknown as { __panelAppearance?: { primary?: string } }).__panelAppearance
+                ?.primary,
+        ).toBe('emerald')
+
+        const setProperty = vi.spyOn(CSSStyleDeclaration.prototype, 'setProperty')
+
+        syncAppearanceFromInertiaPage({
+            props: {
+                appearance: {
+                    theme: 'dark',
+                    primary: 'emerald',
+                    primaryChosen: true,
+                },
+            },
+        })
+
+        expect(setProperty).not.toHaveBeenCalled()
     })
 })

@@ -252,6 +252,22 @@ let appearanceBootstrapped = false
 /** Where the COMPUTED custom properties are cached for the pre-paint script. */
 const VARS_KEY = 'alxtexhpanel.appearance.vars'
 
+/** DOM node id for the critical CSS sheet Blade and live edits share. */
+export const APPEARANCE_STYLE_ID = 'pk-appearance'
+
+/**
+ * Same shape PHP `AppearancePrepaint::payload()` embeds for the head script.
+ * Live edits and first paint both flow through this so the paths cannot diverge
+ * on field names.
+ */
+export interface AppearancePayload {
+    dark: boolean
+    theme: Theme
+    vars: Record<string, string>
+    sidebar: SidebarSide
+    contentLayout: ContentLayout
+}
+
 type PanelAppearanceWindow = Window & {
     __panelAppearance?: Partial<Appearance> | null
     __panelAppearanceApplied?: boolean
@@ -265,15 +281,69 @@ function panelAppearanceWindow(): PanelAppearanceWindow | null {
     return window as PanelAppearanceWindow
 }
 
+/** Last applied preference fingerprint; used to skip no-op Inertia re-applies. */
+let appliedFingerprint: string | null = null
+
+function appearanceFingerprint(next: Appearance): string {
+    return JSON.stringify({
+        theme: next.theme,
+        density: next.density,
+        fontSize: next.fontSize,
+        sidebarSide: next.sidebarSide,
+        cardStyle: next.cardStyle,
+        radius: next.radius,
+        contentLayout: next.contentLayout,
+        menuStyle: next.menuStyle,
+        primary: next.primary,
+        primaryChosen: !!next.primaryChosen,
+        surface: next.surface,
+    })
+}
+
+function writeInlineAppearance(next: Appearance): void {
+    const win = panelAppearanceWindow()
+
+    if (!win) {
+        return
+    }
+
+    win.__panelAppearance = { ...next }
+}
+
+function writeAppearanceStyle(vars: Record<string, string>): void {
+    if (typeof document === 'undefined') {
+        return
+    }
+
+    let style = document.getElementById(APPEARANCE_STYLE_ID) as HTMLStyleElement | null
+
+    if (!style) {
+        style = document.createElement('style')
+        style.id = APPEARANCE_STYLE_ID
+        document.head.appendChild(style)
+    }
+
+    const body = Object.entries(vars)
+        .map(([name, value]) => `${name}: ${value};`)
+        .join(' ')
+
+    style.textContent = `:root { ${body} }`
+}
+
 /** Vitest helper: module state survives between cases in the same file. */
 export function resetAppearanceBootstrapForTests(): void {
     appearanceBootstrapped = false
+    appliedFingerprint = null
     state.value = { ...DEFAULTS }
 
     const win = panelAppearanceWindow()
 
     if (win) {
         win.__panelAppearanceApplied = false
+    }
+
+    if (typeof document !== 'undefined') {
+        document.getElementById(APPEARANCE_STYLE_ID)?.remove()
     }
 }
 
@@ -353,6 +423,22 @@ export function appearanceVars(next: Appearance): Record<string, string> {
          */
         '--pk-row-padding': ROW_PADDING[next.density] ?? ROW_PADDING.comfortable,
         '--pk-form-gap': FORM_GAP[next.density] ?? FORM_GAP.comfortable,
+    }
+}
+
+/**
+ * Token payload matching PHP `AppearancePrepaint::payload()`.
+ *
+ * Keep the oklch tables in AppearancePrepaint.php in lockstep with
+ * PRIMARY_COLORS / SURFACE_TINTS / appearanceVars above.
+ */
+export function appearancePayload(next: Appearance): AppearancePayload {
+    return {
+        dark: isDark(next),
+        theme: next.theme,
+        vars: appearanceVars(next),
+        sidebar: next.sidebarSide,
+        contentLayout: next.contentLayout,
     }
 }
 
@@ -483,12 +569,15 @@ export function initializeAppearance(fromServer?: Partial<Appearance> | null): v
         : ({ ...DEFAULTS, ...local } as Appearance)
 
     const isFirstBoot = !appearanceBootstrapped
+    const fingerprint = appearanceFingerprint(merged)
 
     state.value = merged
     appearanceBootstrapped = true
 
     // Write the reconciled value back so the pre-paint script agrees next time.
     if (fromServer) {
+        writeInlineAppearance(merged)
+
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
         } catch {
@@ -500,26 +589,24 @@ export function initializeAppearance(fromServer?: Partial<Appearance> | null): v
     const prepaintDone = win?.__panelAppearanceApplied === true
 
     /*
-     * First boot for a signed-in account: Blade already applied
-     * AppearancePrepaint from the same users.appearance JSON. Skipping the
-     * DOM write avoids a second paint. Guests still call applyAppearance so a
-     * localStorage preference can correct empty/default prepaint. Later Inertia
-     * navigations (login) always apply.
+     * Skip a DOM write when nothing changed:
+     *  - First boot after Blade prepaint already painted the account theme.
+     *  - Later Inertia visits whose shared appearance matches what is applied
+     *    (avoids a remount flash after an admin live-edit).
+     * Guests still call applyAppearance on first boot so a localStorage
+     * preference can correct empty/default prepaint.
      */
-    if (isFirstBoot && prepaintDone && fromServer) {
-        try {
-            const vars = appearanceVars(merged)
+    if (appliedFingerprint === fingerprint) {
+        return
+    }
 
-            localStorage.setItem(
-                VARS_KEY,
-                JSON.stringify({
-                    dark: isDark(merged),
-                    theme: merged.theme,
-                    vars,
-                    sidebar: merged.sidebarSide,
-                    contentLayout: merged.contentLayout,
-                }),
-            )
+    if (isFirstBoot && prepaintDone && fromServer) {
+        appliedFingerprint = fingerprint
+
+        try {
+            const payload = appearancePayload(merged)
+
+            localStorage.setItem(VARS_KEY, JSON.stringify(payload))
         } catch {
             // Private mode.
         }
@@ -629,23 +716,48 @@ export function setTenantVars(vars: Record<string, string>): void {
     }
 }
 
-/** Apply a preference to the document, and cache it for the next first paint. */
+/**
+ * Apply a preference to the document.
+ *
+ * Same path live drawer edits and post-login sync use: CSS vars on <html>,
+ * rewrite `#pk-appearance`, refresh `window.__panelAppearance`, and cache the
+ * payload for the next guest first paint. Inline setProperty beats later
+ * app.css `:root` rules; the style node is the shared sheet Blade started.
+ */
 export function applyAppearance(next: Appearance): void {
     if (typeof document === 'undefined') {
         return
     }
 
     const root = document.documentElement
-    const vars = { ...appearanceVars(next), ...(next.primaryChosen ? {} : tenantVars) }
+    const baseVars = appearanceVars(next)
+    const vars = { ...baseVars, ...(next.primaryChosen ? {} : tenantVars) }
+    const payload: AppearancePayload = {
+        dark: isDark(next),
+        theme: next.theme,
+        vars,
+        sidebar: next.sidebarSide,
+        contentLayout: next.contentLayout,
+    }
 
-    root.classList.toggle('dark', isDark(next))
+    root.classList.toggle('dark', payload.dark)
 
     for (const [property, value] of Object.entries(vars)) {
         root.style.setProperty(property, value)
     }
 
-    root.dataset.sidebar = next.sidebarSide
-    root.dataset.contentLayout = next.contentLayout
+    root.dataset.sidebar = payload.sidebar
+    root.dataset.contentLayout = payload.contentLayout
+
+    writeAppearanceStyle(baseVars)
+    writeInlineAppearance(next)
+    appliedFingerprint = appearanceFingerprint(next)
+
+    const win = panelAppearanceWindow()
+
+    if (win) {
+        win.__panelAppearanceApplied = true
+    }
 
     try {
         // Cached so the pre-paint script can replay it without knowing the
@@ -654,16 +766,7 @@ export function applyAppearance(next: Appearance): void {
         // script can tell whether this browser's cache still agrees with the
         // account - without it, a theme changed elsewhere would be replayed
         // from a stale cache on every first paint.
-        localStorage.setItem(
-            VARS_KEY,
-            JSON.stringify({
-                dark: isDark(next),
-                theme: next.theme,
-                vars,
-                sidebar: next.sidebarSide,
-                contentLayout: next.contentLayout,
-            }),
-        )
+        localStorage.setItem(VARS_KEY, JSON.stringify(payload))
     } catch {
         // Private mode. Only the flash-prevention is lost.
     }
@@ -692,6 +795,8 @@ export function useAppearance() {
             // session; only persistence is lost, which is not worth failing on.
         }
 
+        // Instant: DOM + __panelAppearance + #pk-appearance before the PUT.
+        // Inertia sync later skips when the fingerprint still matches.
         apply(state.value)
 
         // Local first, account second: the change is visible immediately and

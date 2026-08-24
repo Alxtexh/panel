@@ -91,6 +91,7 @@ final class AppearanceTest extends TestCase
             ->assertSee('"primary":"rose"', false)
             ->assertSee('window.__panelAppearanceServerVars', false)
             ->assertSee('oklch(0.62 0.22 15)', false)
+            ->assertSee('id="pk-appearance"', false)
             ->assertSee('__panelAppearanceApplied', false);
 
         $html = $response->getContent();
