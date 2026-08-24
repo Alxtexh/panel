@@ -7,10 +7,14 @@ alwaysApply: true
 
 Read `AGENTS.md` first (Day 0). If it is missing, run `php artisan panel:blueprint`.
 
+PanelKit is Vue + Inertia, not Livewire Filament. Use PanelKit APIs only.
+
 - Keep the `layout` callback in `resources/js/app.ts`. Do not set `layout: null` on panel pages.
 - Add screens with `make:panel-resource` / `make:panel-page`, not a hand-rolled controller.
+- Page-first CRUD: create / edit / view stay dedicated routes, not Livewire modals.
 - Keep `SharePanelProps` on the web middleware group.
 - Keep `PanelShell` in `resources/js/layouts/PanelLayout.vue`.
+- Forbidden: inventing `Filament\…`, `Forms\Components\…`, `CreateAction`, `EditAction`, `Tables\Actions\…`.
 - Run `php artisan panel:doctor` before you call it done.
 
 Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`.

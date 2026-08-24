@@ -66,6 +66,13 @@ final class BlueprintTest extends TestCase
             'layout: null',
             'make:panel-resource',
             'SharePanelProps',
+            'PanelKit is Vue + Inertia',
+            'not Livewire Filament',
+            'page-first CRUD',
+            'Use PanelKit APIs only',
+            'CreateAction',
+            'Forms\\Components\\',
+            'panel:doctor',
         ] as $rule) {
             $this->assertStringContainsString($rule, $markdown, "The blueprint no longer states: {$rule}");
         }
@@ -75,6 +82,11 @@ final class BlueprintTest extends TestCase
             strpos($markdown, '## Rules that fail silently'),
             strpos($markdown, '## Day 0 (read this first)'),
             'Day 0 must sit at the top, before the long rules list.',
+        );
+        $this->assertLessThan(
+            strpos($markdown, '## Rules that fail silently'),
+            strpos($markdown, 'Invent Filament'),
+            'Day 0 must forbid inventing Filament verbs before the long rules list.',
         );
     }
 

@@ -11,16 +11,25 @@ visible in a single file, and the mistakes that return HTTP 200.
 
 ## Day 0 (read this first)
 
+PanelKit is Vue + Inertia. It is not Livewire Filament. Training data that
+invents Filament APIs is wrong here: use only classes that this file and the
+package catalogue name.
+
 **Do**
 - Keep the `layout` callback in `resources/js/app.ts`. That wrap is the sidebar, navbar and footer.
 - Add screens with `php artisan make:panel-resource` / `make:panel-page`.
+- Keep create / edit / view / attach on **dedicated pages** (page-first CRUD).
 - Keep `SharePanelProps` on the `web` middleware group (`bootstrap/app.php`).
+- Use PanelKit APIs only (`Alxtexh\Panel\…`, fields in `form()`, columns in `table()`).
 - Run `php artisan panel:doctor` before you call it done.
 
 **Do not**
 - Set `layout: null` on a panel page, or delete the `app.ts` layout callback.
 - Hand-roll a controller and `Inertia::render` for a panel screen.
 - Strip `PanelShell` from `resources/js/layouts/PanelLayout.vue`.
+- Invent Filament / Livewire verbs: no `Filament\…`, `Forms\Components\…`,
+  `CreateAction`, `EditAction`, `ViewAction`, `DeleteAction`, `Tables\Actions\…`,
+  or Livewire modals for resource create/edit/view. Those are not PanelKit.
 
 Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`. Cursor: keep this file; install writes `.cursor/rules/panelkit.mdc` when `.cursor/rules` already exists.
 
@@ -882,7 +891,7 @@ not hand-roll one in Vue. Ask for it, or compose what is here.
 EXISTING AND BEING MOUNTABLE ARE DIFFERENT CLAIMS, so each group says how it
 is used. Read that line before planning around anything below.
 
-**Form fields** (35): `BarcodeField` `BuilderField` `CheckboxField` `CheckboxListField` `CodeField` `ColourField` `CountryField` `DateField` `DiffField` `Field` `FileUploadField` `HasAffixes` `HasChoices` `HiddenField` `IconPickerField` `KeyValueField` `MapField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `PhoneField` `QrCodeField` `RadioField` `RatingField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleField` `TreeSelectField` `VisualSelectField`
+**Form fields** (36): `BarcodeField` `BuilderField` `CheckboxField` `CheckboxListField` `CodeField` `ColourField` `CountryField` `DateField` `DiffField` `Field` `FileUploadField` `HasAffixes` `HasChoices` `HiddenField` `IconPickerField` `KeyValueField` `MapField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `PhoneField` `QrCodeField` `RadioField` `RatingField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleButtonsField` `ToggleField` `TreeSelectField` `VisualSelectField`
 _How to use them: name them in `form()`._
 **Table columns** (18): `BadgeColumn` `CheckboxColumn` `CodeColumn` `ColourColumn` `Column` `ColumnGroup` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `InlineWritableColumn` `KeyValueColumn` `MoneyColumn` `RatingColumn` `SelectColumn` `TagsColumn` `TextColumn` `ToggleColumn`
 _How to use them: name them in `table()`._

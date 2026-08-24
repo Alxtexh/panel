@@ -21,6 +21,7 @@ use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Support\BackupStatus;
 use Alxtexh\Panel\Support\Contrast;
 use Alxtexh\Panel\Support\Discovery;
+use Alxtexh\Panel\Support\AppearancePrepaintWiring;
 use Alxtexh\Panel\Support\InertiaLayoutWiring;
 use Alxtexh\Panel\Support\KitAssets;
 use Alxtexh\Panel\Support\PanelLayoutShell;
@@ -116,8 +117,11 @@ final class DoctorCommand extends Command
             $this->checkDiscovery($panels);
             $this->checkPageFiles();
             $this->checkInertiaLayoutWiring();
+            $this->checkAppearancePrepaintWiring();
             $this->checkSharePanelPropsWiring();
             $this->checkPanelLayoutShell();
+            $this->checkDevicesSessionDriver();
+            $this->checkQueueWorkerTip();
             $this->checkStylesheet();
             $this->checkClientHalf();
             $this->checkSignInRoute();
@@ -407,7 +411,8 @@ final class DoctorCommand extends Command
             .' run inside the web request on `sync` - including "select all matching", which can be '
             .'the whole table. The response still returns a progress token, so a run that the web '
             .'server timed out halfway through reports as pending and then as done, with a partial '
-            .'write and nothing saying so. Set QUEUE_CONNECTION to database or redis and run a worker.',
+            .'write and nothing saying so. Set QUEUE_CONNECTION=database or QUEUE_CONNECTION=redis, '
+            .'then supervise `php artisan queue:work` (or queue:listen).',
         );
     }
 
@@ -420,7 +425,9 @@ final class DoctorCommand extends Command
                 'A session limit is set but the session store cannot support it',
                 'panel.security.max_sessions is '.$limit.' and session.driver is ['
                 .config('session.driver').']. There is no server-side record of who is signed in, '
-                .'so nothing is counted and nothing is ended - the limit is believed and absent.',
+                .'so nothing is counted and nothing is ended - the limit is believed and absent. '
+                .'Signed-in devices (other browsers / revoke) also need SESSION_DRIVER=database.',
+                'Set SESSION_DRIVER=database, migrate the sessions table, then run php artisan config:cache.',
             );
         }
     }
@@ -1164,6 +1171,72 @@ final class DoctorCommand extends Command
                 $finding['suggested'] ?? null,
             );
         }
+    }
+
+    private function checkAppearancePrepaintWiring(): void
+    {
+        $path = resource_path('views/app.blade.php');
+
+        if (! is_file($path)) {
+            return;
+        }
+
+        foreach (AppearancePrepaintWiring::inspect((string) file_get_contents($path)) as $finding) {
+            $this->problem(
+                $finding['title'],
+                $finding['detail'],
+                $finding['suggested'] ?? null,
+            );
+        }
+    }
+
+    /**
+     * Security "devices" needs a listable session store.
+     *
+     * THE CURRENT DEVICE ALWAYS SHOWS. Other browsers and revoke need
+     * SESSION_DRIVER=database and the sessions table. Redis is fine for
+     * multi-worker auth cookies, but it is not a roster you can enumerate.
+     */
+    private function checkDevicesSessionDriver(): void
+    {
+        if (app()->environment('testing')) {
+            return;
+        }
+
+        $driver = (string) config('session.driver', '');
+
+        if ($driver === 'database') {
+            return;
+        }
+
+        $this->note(
+            'Signed-in devices list other browsers only with SESSION_DRIVER=database',
+            "session.driver is [{$driver}]. Security still shows the current device. "
+            .'Other devices and revoke need SESSION_DRIVER=database and a sessions table. '
+            .'Redis stores sessions but is not a listable roster.',
+        );
+    }
+
+    /**
+     * Cheap tip when a real queue is configured but nothing says to run a worker.
+     */
+    private function checkQueueWorkerTip(): void
+    {
+        if (app()->environment('testing')) {
+            return;
+        }
+
+        $queue = (string) config('queue.default', 'sync');
+
+        if ($queue === 'sync') {
+            return;
+        }
+
+        $this->note(
+            "Queue connection is [{$queue}]; run a worker",
+            'Bulk actions, exports, and digests land on that connection. '
+            .'Supervise `php artisan queue:work` (or queue:listen) or jobs sit forever.',
+        );
     }
 
     /**

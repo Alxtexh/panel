@@ -22,7 +22,7 @@ These pages are the catalogue: what ships, and how to switch each part on.
 | [12. Going to production](12-production.md) | Queues, sockets, SSR, backups |
 | [13. Billing adapters](13-billing-adapters.md) | Provider-agnostic inbound webhooks: signature header + payload map |
 | [14. Design layout](14-design-layout.md) | PAGE_SHELL, FORM_MEASURE, TableShell, catalogue grids (freeze) |
-| [15. Filament gaps](15-filament-gaps.md) | Post-1.0.87 recompare: Scalar, maps, toolkit, webhooks, freeze CI |
+| [15. Filament gaps](15-filament-gaps.md) | Honest gaps + agent Day-0; doctor host checks; no plugin track |
 | [16. Workflows](16-workflows.md) | Resource states, transitions, view and index actions |
 | [17. Comments](17-comments.md) | Opt-in record threads, @mentions, bell notifications |
 | [18. Public landing](18-landing.md) | Five built-in landing designs, Panel::landing(), demos |

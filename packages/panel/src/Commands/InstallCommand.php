@@ -98,17 +98,19 @@ final class InstallCommand extends Command
         $this->components->info('Done. First visit uses published kit CSS/JS (no npm).');
         $this->line('  public/vendor/panel/{app.css,app.js} is the default path.');
         $this->line('  npm install && npm run build is optional, only if you customise Vue.');
+        $this->line('  Keep @include(\'panel::appearance-prepaint\') in app.blade.php <head> above CSS.');
         $this->line('  The screens are Vue and come from `resources/client` inside this');
         $this->line('  Composer package (`file:vendor/alxtexh-enterprise/panel/resources/client`).');
         $this->newLine();
         $this->components->info('Then:');
         $this->line('  1. php artisan serve   (a real terminal, not a Cursor agent shell)');
         $this->line('  2. Visit /login. First paint is dashboard + user menu + Get started,');
-        $this->line('     not a vertical demo. Create/edit stay dedicated pages.');
+        $this->line('     not a vertical demo. Create/edit stay dedicated pages (not Livewire).');
         $this->line('  3. Open the Get started card, or write the official starter:');
         $this->line('     php artisan make:panel-recipe Invoices');
         $this->line('  4. Review the generated policy - the panel DENIES any ability whose');
         $this->line('     model has no policy, so an unreviewed stub is a real grant.');
+        $this->line('  5. php artisan panel:doctor   (queues, shell, appearance-prepaint, pages)');
         $this->newLine();
         $this->line('  After install, run `php artisan panel:setup` for a checklist of mail,');
         $this->line('  MFA, tenancy, and Turnstile settings.');
@@ -116,8 +118,10 @@ final class InstallCommand extends Command
         $this->line('  Without a first user (`--no-user`) the sidebar is empty: that is');
         $this->line('  deny-by-default, not a broken install. Run panel:make-user.');
         $this->newLine();
-        $this->line('  AI: read AGENTS.md first (Day 0 do/don\'t). Re-run `panel:blueprint`');
-        $this->line('  after adding resources. Claude Code: `panel:blueprint --file=CLAUDE.md`.');
+        $this->line('  AI: read AGENTS.md Day 0 first. Use PanelKit APIs only; do not invent');
+        $this->line('  Filament/Livewire verbs (CreateAction, Forms\\Components\\…, etc.).');
+        $this->line('  Re-run `panel:blueprint` after adding resources.');
+        $this->line('  Claude Code: `panel:blueprint --file=CLAUDE.md`.');
 
         return self::SUCCESS;
     }
