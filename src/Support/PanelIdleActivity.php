@@ -176,11 +176,43 @@ final class PanelIdleActivity
         return $request->hasSession() && $request->session()->has(self::LOCKED_AT);
     }
 
+    /**
+     * True when a path is a panel lock screen.
+     *
+     * Auth middleware can write the lock URL into `url.intended` when a session
+     * expires while the tab sits on `/screens/locked`. Honouring that after
+     * sign-in looks like a second password prompt. Callers that consume
+     * `url.intended` must discard these paths.
+     */
     public static function isLockScreenPath(string $path): bool
     {
         $path = '/'.trim($path, '/');
 
         return str_contains($path, '/screens/locked') || str_ends_with($path, 'screens/locked');
+    }
+
+    /**
+     * Pull `url.intended`, but never return a lock-screen URL.
+     *
+     * Used by login responses that still call Laravel's intended helper shape
+     * (social, magic link). Password and shared login use their own panel-aware
+     * destination(), which also rejects lock paths.
+     */
+    public static function intendedWithoutLock(Request $request, string $default): string
+    {
+        if (! $request->hasSession()) {
+            return $default;
+        }
+
+        $intended = $request->session()->pull('url.intended');
+
+        if (! is_string($intended) || $intended === '') {
+            return $default;
+        }
+
+        $path = '/'.ltrim((string) parse_url($intended, PHP_URL_PATH), '/');
+
+        return self::isLockScreenPath($path) ? $default : $intended;
     }
 
     public static function deny(Request $request, Panel $panel): Response

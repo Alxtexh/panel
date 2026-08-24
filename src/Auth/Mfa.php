@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Auth;
 
 use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\Support\PanelIdleActivity;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,6 +78,13 @@ final class Mfa
     {
         TwoFactor::forget($request);
         EmailTwoFactor::forget($request);
+
+        /*
+         * BEFORE regenerate. Session regenerate keeps the bag, so a stale
+         * panel.locked_at from an earlier idle lock would survive sign-in and
+         * send the user straight back to the lock screen.
+         */
+        PanelIdleActivity::clearLock($request);
 
         \Illuminate\Support\Facades\Auth::guard($panel->getGuard())->login($user, $remember);
         $request->session()->regenerate();

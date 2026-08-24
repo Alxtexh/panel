@@ -123,14 +123,25 @@ final class IdleLockTest extends TestCase
     {
         $this->withSession([
             'url.intended' => url('/second/screens/locked'),
+            PanelIdleActivity::LOCKED_AT => time(),
         ])
             ->post('/second/login', [
                 'email' => $this->user->email,
                 'password' => 'correct-horse',
             ])
             ->assertRedirect('/second')
-            ->assertRedirectContains('/second')
             ->assertSessionMissing('url.intended');
+
+        $this->assertFalse(session()->has(PanelIdleActivity::LOCKED_AT));
+        $this->get('/second/screens/locked')->assertRedirect('/second');
+    }
+
+    public function test_logout_clears_the_lock_flag(): void
+    {
+        $this->actingAs($this->user)
+            ->withSession([PanelIdleActivity::LOCKED_AT => time()])
+            ->post('/second/logout')
+            ->assertRedirect();
 
         $this->assertFalse(session()->has(PanelIdleActivity::LOCKED_AT));
     }
