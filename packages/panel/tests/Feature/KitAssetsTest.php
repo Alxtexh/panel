@@ -62,10 +62,15 @@ final class KitAssetsTest extends TestCase
         $doctor = (string) file_get_contents(
             dirname(__DIR__, 2).'/src/Commands/DoctorCommand.php'
         );
+        $wiring = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Support/InertiaLayoutWiring.php'
+        );
 
         $this->assertStringContainsString('checkInertiaLayoutWiring', $doctor);
-        $this->assertStringContainsString('layout: (name) =>', $doctor);
-        $this->assertStringContainsString('assigns layout with ??= in resolve', $doctor);
+        $this->assertStringContainsString('checkSharePanelPropsWiring', $doctor);
+        $this->assertStringContainsString('checkPanelLayoutShell', $doctor);
+        $this->assertStringContainsString('layout: (name) =>', $wiring);
+        $this->assertStringContainsString('assigns layout with ??= in resolve', $wiring);
     }
 
     public function test_published_kit_app_js_wires_default_layout(): void

@@ -62,9 +62,20 @@ final class BlueprintTest extends TestCase
             'null tenant is a deny',
             'Never use `window.confirm`',
             'Every screen needs a way in',
+            'Do not rewrite `resources/js/app.ts` layout wiring',
+            'layout: null',
+            'make:panel-resource',
+            'SharePanelProps',
         ] as $rule) {
             $this->assertStringContainsString($rule, $markdown, "The blueprint no longer states: {$rule}");
         }
+
+        $this->assertStringContainsString('## Day 0 (read this first)', $markdown);
+        $this->assertLessThan(
+            strpos($markdown, '## Rules that fail silently'),
+            strpos($markdown, '## Day 0 (read this first)'),
+            'Day 0 must sit at the top, before the long rules list.',
+        );
     }
 
     /**
@@ -189,6 +200,7 @@ final class BlueprintTest extends TestCase
 
         $this->assertFileExists($path);
         $this->assertStringContainsString('Rules that fail silently', (string) file_get_contents($path));
+        $this->assertStringContainsString('Day 0 (read this first)', (string) file_get_contents($path));
 
         @unlink($path);
     }

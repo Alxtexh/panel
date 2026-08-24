@@ -236,6 +236,7 @@ final class BlueprintCatalogueTest extends TestCase
             (string) $install,
             'panel:install does not write AGENTS.md, so a fresh install has no guide.',
         );
+        $this->assertStringContainsString('writeCursorRule', (string) $install);
 
         $this->assertStringNotContainsString('Routers online', (string) $install);
         $this->assertStringNotContainsString('Total clients', (string) $install);

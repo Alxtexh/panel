@@ -102,6 +102,7 @@ final class CommandsTest extends TestCase
         $markdown = Blueprint::markdown();
 
         $this->assertStringContainsString('Kit conventions', $markdown);
+        $this->assertStringContainsString('Day 0 (read this first)', $markdown);
         $this->assertStringContainsString('never Livewire', $markdown);
         $this->assertStringContainsString('SelectField::relationship()', $markdown);
         $this->assertStringContainsString('/{parent}/{id}/{child}/attach', $markdown);

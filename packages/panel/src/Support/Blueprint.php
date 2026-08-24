@@ -39,6 +39,7 @@ final class Blueprint
     {
         return implode("\n\n", array_filter([
             self::heading(),
+            self::dayZero(),
             self::rules(),
             self::shape(),
             self::recipes(),
@@ -285,6 +286,29 @@ final class Blueprint
 
         Read this before adding a screen. It describes the conventions that are not
         visible in a single file, and the mistakes that return HTTP 200.
+        MD;
+    }
+
+    /**
+     * One screen, because a long guide is skipped on a fresh clone.
+     */
+    private static function dayZero(): string
+    {
+        return <<<'MD'
+        ## Day 0 (read this first)
+
+        **Do**
+        - Keep the `layout` callback in `resources/js/app.ts`. That wrap is the sidebar, navbar and footer.
+        - Add screens with `php artisan make:panel-resource` / `make:panel-page`.
+        - Keep `SharePanelProps` on the `web` middleware group (`bootstrap/app.php`).
+        - Run `php artisan panel:doctor` before you call it done.
+
+        **Do not**
+        - Set `layout: null` on a panel page, or delete the `app.ts` layout callback.
+        - Hand-roll a controller and `Inertia::render` for a panel screen.
+        - Strip `PanelShell` from `resources/js/layouts/PanelLayout.vue`.
+
+        Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`. Cursor: keep this file; install writes `.cursor/rules/panelkit.mdc` when `.cursor/rules` already exists.
         MD;
     }
 

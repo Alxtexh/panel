@@ -29,6 +29,8 @@ php artisan make:panel-recipe Invoices
 
 `panel:install` does not run `composer install`. Run it after `composer require`.
 
+**AI: read `AGENTS.md` first** (Day 0 do/don't). Install writes it. Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`.
+
 First visit is **chrome plus an empty canvas**: dashboard, user menu, Get started.
 Not Nairobi Fibre, not sample orders. After install, next is that card or the
 starter recipe (one Invoice resource, kit Vue, empty table). Create and edit

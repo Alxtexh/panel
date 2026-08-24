@@ -53,6 +53,10 @@ php artisan panel:install
 `composer require`, and it will publish config, scaffold panel plumbing, and
 write front-end wiring based on the version Composer already installed.
 
+**AI: read `AGENTS.md` first.** Install writes that file (Day 0 do/don't at the
+top). Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`. Cursor: if
+`.cursor/rules` already exists, install also writes `panelkit.mdc`.
+
 Optional flags:
 
 ```bash
@@ -174,7 +178,7 @@ when the users table has no `tenant_id`.
 | Scaffolds sign-in | Default. `--no-auth` to skip |
 | Syncs permissions + first user | Administrator with `grants_all`. `--no-user` to skip |
 | Creates `app/Panel/` | Where your resources live |
-| Writes `AGENTS.md` | Conventions, regenerate with `panel:blueprint` |
+| Writes `AGENTS.md` | Conventions. **AI: read this first.** Day 0 is at the top. `panel:blueprint --file=CLAUDE.md` for Claude Code |
 
 Non-interactive first user:
 

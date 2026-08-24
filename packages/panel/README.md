@@ -37,6 +37,8 @@ php artisan panel:install
 php artisan make:panel-recipe Invoices
 ```
 
+**AI: read `AGENTS.md` first** (Day 0 do/don't). Install writes it. Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`.
+
 **Page width:** kit admin pages fill the shell content area. Prefer
 `PAGE_SHELL` (or the stack/compact variants) from `@alxtexh-enterprise/panel`.
 Create/edit/view pages are full-bleed; use left-aligned `FORM_MEASURE` for

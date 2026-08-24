@@ -24,7 +24,7 @@
 |---|---|
 | **`panel:doctor`** | **Find configuration that is silently wrong** |
 | `panel:search-index` | Print (or `--apply`) search DDL for large catalogues |
-| `panel:blueprint` | Regenerate `AGENTS.md` from the running application |
+| `panel:blueprint` | Regenerate `AGENTS.md` from the running application. `--file=CLAUDE.md` for Claude Code |
 | `panel:benchmark` | Time every list surface, warm, as a median |
 
 `panel:doctor` is the one to run first on a new installation. Every check exists

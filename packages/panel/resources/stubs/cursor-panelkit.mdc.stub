@@ -1,0 +1,16 @@
+---
+description: PanelKit conventions. Read AGENTS.md before adding a panel screen.
+alwaysApply: true
+---
+
+# PanelKit
+
+Read `AGENTS.md` first (Day 0). If it is missing, run `php artisan panel:blueprint`.
+
+- Keep the `layout` callback in `resources/js/app.ts`. Do not set `layout: null` on panel pages.
+- Add screens with `make:panel-resource` / `make:panel-page`, not a hand-rolled controller.
+- Keep `SharePanelProps` on the web middleware group.
+- Keep `PanelShell` in `resources/js/layouts/PanelLayout.vue`.
+- Run `php artisan panel:doctor` before you call it done.
+
+Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`.
