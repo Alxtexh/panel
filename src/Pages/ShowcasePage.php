@@ -76,6 +76,7 @@ class ShowcasePage extends Page
                 'fields' => [
                     ['label' => 'Text', 'type' => 'text', 'hint' => 'TextField::make()'],
                     ['label' => 'Select', 'type' => 'select', 'hint' => 'SelectField::make()->options()'],
+                    ['label' => 'Toggle buttons', 'type' => 'toggle-buttons', 'hint' => 'ToggleButtonsField::make()->options()'],
                     ['label' => 'Toggle', 'type' => 'toggle', 'hint' => 'ToggleField::make()'],
                     ['label' => 'Date', 'type' => 'date', 'hint' => 'DateField::make()'],
                     ['label' => 'Map', 'type' => 'map', 'hint' => 'MapField::make()->latLng()'],

@@ -58,6 +58,21 @@ final class MorphToSelectTest extends TestCase
         ]);
     }
 
+    public function test_type_select_toggle_buttons_flag_is_on_schema(): void
+    {
+        $field = SelectField::make('notable')
+            ->morphTo([
+                Article::class => 'title',
+                Tag::class => 'name',
+            ])
+            ->typeSelectToggleButtons();
+
+        $schema = $field->toSchema();
+
+        $this->assertSame('toggle-buttons', $schema['morphTypeSelect'] ?? null);
+        $this->assertCount(2, $schema['morphTo'] ?? []);
+    }
+
     public function test_the_form_schema_ships_morph_types(): void
     {
         $props = $this->get("/articles/{$this->article->getKey()}/comments/create")
