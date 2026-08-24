@@ -9,6 +9,7 @@ use Alxtexh\Panel\Mail\AuthPlainMail;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\PanelIdleActivity;
 use Alxtexh\Panel\Support\TenantContext;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
@@ -98,11 +99,12 @@ final class MagicLinkController extends Controller
                 ->withErrors(['email' => 'That link is no longer valid.']);
         }
 
+        PanelIdleActivity::clearLock($request);
         Auth::guard($this->guard($panel))->login($user);
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->homeUrl($panel));
+        return redirect(PanelIdleActivity::intendedWithoutLock($request, $this->homeUrl($panel)));
     }
 
     private function enabled(?Panel $panel): bool

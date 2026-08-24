@@ -147,7 +147,6 @@ final class SharedAuthController extends Controller
             }
 
             Mfa::complete($request, $panel, $user, $request->boolean('remember'));
-            PanelIdleActivity::clearLock($request);
 
             return redirect($this->destination($request, $panel));
         }
@@ -257,7 +256,6 @@ final class SharedAuthController extends Controller
 
         $remember = TwoFactor::remember($request);
         Mfa::complete($request, $panel, $user, $remember);
-        PanelIdleActivity::clearLock($request);
 
         return redirect($this->destination($request, $panel));
     }

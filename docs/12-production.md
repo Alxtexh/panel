@@ -153,4 +153,4 @@ php artisan panel:benchmark --runs=3
 
 And the negative journey: sign in as somebody from another organisation and walk
 the same pages. Every hop must fail. A positive journey passes just as happily
-with no isolation at all — a negative journey that passes is a finding.
+with no isolation at all. A negative journey that passes is a finding.

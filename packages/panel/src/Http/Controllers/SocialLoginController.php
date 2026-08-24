@@ -10,6 +10,7 @@ use Alxtexh\Panel\Models\ConnectedAccount;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\PanelIdleActivity;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -295,11 +296,12 @@ final class SocialLoginController extends Controller
             return Mfa::begin($request, $panel, $user, false);
         }
 
+        PanelIdleActivity::clearLock($request);
         Auth::guard($this->guard())->login($user);
         $request->session()->regenerate();
         $request->session()->put('auth.password_confirmed_at', time());
 
-        return redirect()->intended($this->home());
+        return redirect(PanelIdleActivity::intendedWithoutLock($request, $this->home()));
     }
 
     private function panel(): ?Panel

@@ -326,7 +326,6 @@ final class PanelAuthController extends Controller
         }
 
         Mfa::complete($request, $panel, $user, $request->boolean('remember'));
-        PanelIdleActivity::clearLock($request);
 
         return redirect($this->destination($request, $panel));
     }
@@ -433,7 +432,6 @@ final class PanelAuthController extends Controller
 
         $remember = TwoFactor::remember($request);
         Mfa::complete($request, $panel, $user, $remember);
-        PanelIdleActivity::clearLock($request);
 
         return redirect($this->destination($request, $panel));
     }
@@ -525,6 +523,7 @@ final class PanelAuthController extends Controller
 
         Auth::guard($panel->getGuard())->logout();
 
+        PanelIdleActivity::clearLock($request);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
