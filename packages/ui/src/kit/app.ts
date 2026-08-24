@@ -11,14 +11,22 @@
  * `page.default.layout ??= PanelLayout` in resolve does not: a breadcrumbs
  * object is already set, so `??=` never assigns the shell.
  */
-import { createInertiaApp } from '@inertiajs/vue3'
+import { createInertiaApp, router } from '@inertiajs/vue3'
 import { createApp, h, type DefineComponent } from 'vue'
-import { initializeAppearance, setAppearancePersister } from '../index'
+import {
+    bootstrapAppearance,
+    setAppearancePersister,
+    syncAppearanceFromInertiaPage,
+} from '../index'
 import { SettingsLayout } from '../../inertia'
 import PanelLayout from './PanelLayout.vue'
 import './app.css'
 
-initializeAppearance()
+bootstrapAppearance()
+
+router.on('success', (event) => {
+    syncAppearanceFromInertiaPage(event.detail.page)
+})
 
 setAppearancePersister((patch) => {
     let prefix = ''

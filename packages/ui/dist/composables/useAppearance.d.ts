@@ -7,9 +7,11 @@
  * per-tenant branding uses - and an operator staring at a table for eight hours
  * has opinions a developer cannot pre-empt.
  *
- * Stored in localStorage rather than on the server. It is a display preference,
- * not data: a round trip to change font size would be absurd, and it has to
- * apply before first paint or the page visibly reflows.
+ * THE ACCOUNT IS THE SOURCE OF TRUTH once somebody is signed in. Values persist
+ * on PUT `{panel}/settings/appearance` (`users.appearance` JSON). localStorage
+ * is a per-browser cache so the theme can apply before Vue boots; a second
+ * browser adopts the saved theme from `window.__panelAppearance` or the Inertia
+ * `appearance` shared prop on first load and after login.
  */
 /**
  * Light or dark, and nothing else.
@@ -144,7 +146,24 @@ export declare function readAppearance(): Appearance;
  *
  * It also fights nothing: this is now the ONLY writer of the theme class.
  */
+/**
+ * Read the account appearance the server embedded before the bundle runs.
+ *
+ * `window.__panelAppearance` is set in the root Blade view. Inertia's initial
+ * `data-page` payload is the fallback when the inline script is absent.
+ */
+export declare function readServerAppearance(): Partial<Appearance> | null;
 export declare function initializeAppearance(fromServer?: Partial<Appearance> | null): void;
+/** Boot appearance from the server inline script or the initial Inertia payload. */
+export declare function bootstrapAppearance(): void;
+/**
+ * Reconcile after an Inertia navigation (sign-in, portal switch).
+ *
+ * When `appearance` is null the visitor signed out: keep the local guest theme.
+ */
+export declare function syncAppearanceFromInertiaPage(page: {
+    props?: Record<string, unknown>;
+}): void;
 export declare function setAppearancePersister(fn: ((patch: Partial<Appearance>) => void) | null): void;
 /**
  * IT RECORDS AND DOES NOT RE-APPLY, which is not a detail.

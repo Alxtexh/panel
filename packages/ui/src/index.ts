@@ -305,6 +305,9 @@ export type { LiveConfig, LiveUpdateOptions } from './composables/useLiveUpdates
 export {
     useAppearance,
     initializeAppearance,
+    bootstrapAppearance,
+    syncAppearanceFromInertiaPage,
+    readServerAppearance,
     applyAppearance,
     appearanceVars,
     readAppearance,

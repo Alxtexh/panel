@@ -9,9 +9,11 @@ import { computed, onMounted, ref } from 'vue'
  * per-tenant branding uses - and an operator staring at a table for eight hours
  * has opinions a developer cannot pre-empt.
  *
- * Stored in localStorage rather than on the server. It is a display preference,
- * not data: a round trip to change font size would be absurd, and it has to
- * apply before first paint or the page visibly reflows.
+ * THE ACCOUNT IS THE SOURCE OF TRUTH once somebody is signed in. Values persist
+ * on PUT `{panel}/settings/appearance` (`users.appearance` JSON). localStorage
+ * is a per-browser cache so the theme can apply before Vue boots; a second
+ * browser adopts the saved theme from `window.__panelAppearance` or the Inertia
+ * `appearance` shared prop on first load and after login.
  */
 /**
  * Light or dark, and nothing else.
@@ -244,7 +246,8 @@ const DEFAULTS: Appearance = {
  * current theme - the control showing one thing and the page rendering another.
  */
 const state = ref<Appearance>({ ...DEFAULTS })
-let initialised = false
+/** Set once `initializeAppearance()` or `bootstrapAppearance()` has run. */
+let appearanceBootstrapped = false
 
 /** Where the COMPUTED custom properties are cached for the pre-paint script. */
 const VARS_KEY = 'alxtexhpanel.appearance.vars'
@@ -399,6 +402,42 @@ export function readAppearance(): Appearance {
  *
  * It also fights nothing: this is now the ONLY writer of the theme class.
  */
+/**
+ * Read the account appearance the server embedded before the bundle runs.
+ *
+ * `window.__panelAppearance` is set in the root Blade view. Inertia's initial
+ * `data-page` payload is the fallback when the inline script is absent.
+ */
+export function readServerAppearance(): Partial<Appearance> | null {
+    if (typeof window === 'undefined') {
+        return null
+    }
+
+    const fromInline = (
+        window as unknown as { __panelAppearance?: Partial<Appearance> | null }
+    ).__panelAppearance
+
+    if (fromInline && typeof fromInline === 'object') {
+        return fromInline
+    }
+
+    try {
+        const raw = document.getElementById('app')?.dataset.page
+
+        if (!raw) {
+            return null
+        }
+
+        const appearance = JSON.parse(raw)?.props?.appearance
+
+        return appearance && typeof appearance === 'object'
+            ? (appearance as Partial<Appearance>)
+            : null
+    } catch {
+        return null
+    }
+}
+
 export function initializeAppearance(fromServer?: Partial<Appearance> | null): void {
     /*
      * THE SERVER VALUE WINS when there is one.
@@ -414,10 +453,13 @@ export function initializeAppearance(fromServer?: Partial<Appearance> | null): v
      * person who set it last time.
      */
     const local = readAppearance()
-    const merged = fromServer ? ({ ...local, ...fromServer } as Appearance) : local
+    const merged = fromServer
+        ? ({ ...DEFAULTS, ...local, ...fromServer } as Appearance)
+        : ({ ...DEFAULTS, ...local } as Appearance)
 
     state.value = merged
     applyAppearance(merged)
+    appearanceBootstrapped = true
 
     // Write the reconciled value back so the pre-paint script agrees next time.
     if (fromServer) {
@@ -427,6 +469,32 @@ export function initializeAppearance(fromServer?: Partial<Appearance> | null): v
             // Private mode. The theme still applies this session.
         }
     }
+}
+
+/** Boot appearance from the server inline script or the initial Inertia payload. */
+export function bootstrapAppearance(): void {
+    initializeAppearance(readServerAppearance())
+}
+
+/**
+ * Reconcile after an Inertia navigation (sign-in, portal switch).
+ *
+ * When `appearance` is null the visitor signed out: keep the local guest theme.
+ */
+export function syncAppearanceFromInertiaPage(page: {
+    props?: Record<string, unknown>
+}): void {
+    const appearance = page?.props?.appearance
+
+    if (appearance === null || appearance === undefined) {
+        return
+    }
+
+    if (typeof appearance !== 'object') {
+        return
+    }
+
+    initializeAppearance(appearance as Partial<Appearance>)
 }
 
 /**
@@ -582,11 +650,11 @@ export function useAppearance() {
      * changed it while this one was open.
      */
     onMounted(() => {
-        if (initialised) {
+        if (appearanceBootstrapped) {
             return
         }
 
-        initialised = true
+        appearanceBootstrapped = true
 
         state.value = readAppearance()
         applyAppearance(state.value)

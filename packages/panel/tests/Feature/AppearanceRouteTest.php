@@ -118,6 +118,33 @@ final class AppearanceRouteTest extends TestCase
             ->assertInertia(fn ($page) => $page->where('appearance.theme', 'dark'));
     }
 
+    /**
+     * THE CROSS-BROWSER CASE. A fresh session has no localStorage, so the saved
+     * account appearance must arrive through shared Inertia props on first load.
+     */
+    public function test_appearance_survives_a_fresh_session(): void
+    {
+        $this->actingAs($this->user)
+            ->putJson('/settings/appearance', [
+                'theme' => 'dark',
+                'primary' => 'rose',
+                'density' => 'compact',
+                'fontSize' => 18,
+            ])
+            ->assertOk();
+
+        $this->flushSession();
+
+        $this->actingAs($this->user->fresh())
+            ->get('/posts')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('appearance.theme', 'dark')
+                ->where('appearance.primary', 'rose')
+                ->where('appearance.density', 'compact')
+                ->where('appearance.fontSize', 18));
+    }
+
     public function test_panel_pages_are_shared_when_not_overridden(): void
     {
         $this->actingAs($this->user)

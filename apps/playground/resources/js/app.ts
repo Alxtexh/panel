@@ -6,8 +6,9 @@
 import './echo';
 
 import {
-    initializeAppearance,
+    bootstrapAppearance,
     setAppearancePersister,
+    syncAppearanceFromInertiaPage,
 } from '@alxtexh-enterprise/panel';
 import {
     registerRenderHookComponent,
@@ -108,7 +109,14 @@ function applyDirection(page: { props: Record<string, any> }): void {
     document.documentElement.setAttribute('lang', locale.current ?? 'en');
 }
 
-router.on('success', (event: any) => applyDirection(event.detail.page));
+function applyAppearanceFromPage(page: { props: Record<string, any> }): void {
+    syncAppearanceFromInertiaPage(page);
+}
+
+router.on('success', (event: any) => {
+    applyDirection(event.detail.page);
+    applyAppearanceFromPage(event.detail.page);
+});
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -255,16 +263,7 @@ if (typeof window !== 'undefined') {
      * unthemed - and made signing out and back in look like the settings had
      * been lost. This runs before the first page renders, authenticated or not.
      */
-    initializeAppearance(
-        // The account's saved value, rendered into the page by the server. It
-        // wins over this browser's copy, which is what makes a second browser
-        // adopt the same theme on its first load.
-        (
-            window as unknown as {
-                __panelAppearance?: Record<string, unknown> | null;
-            }
-        ).__panelAppearance ?? null,
-    );
+    bootstrapAppearance();
 
     // This will listen for flash toast data from the server...
     initializeFlashToast();
