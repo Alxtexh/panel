@@ -176,6 +176,13 @@ final class PanelIdleActivity
         return $request->hasSession() && $request->session()->has(self::LOCKED_AT);
     }
 
+    public static function isLockScreenPath(string $path): bool
+    {
+        $path = '/'.trim($path, '/');
+
+        return str_contains($path, '/screens/locked') || str_ends_with($path, 'screens/locked');
+    }
+
     public static function deny(Request $request, Panel $panel): Response
     {
         $url = self::lockScreenUrl($panel);

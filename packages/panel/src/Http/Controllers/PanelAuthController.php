@@ -14,6 +14,7 @@ use Alxtexh\Panel\Notifications\PanelVerifyEmail;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\PanelIdleActivity;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\RedirectResponse;
@@ -325,6 +326,7 @@ final class PanelAuthController extends Controller
         }
 
         Mfa::complete($request, $panel, $user, $request->boolean('remember'));
+        PanelIdleActivity::clearLock($request);
 
         return redirect($this->destination($request, $panel));
     }
@@ -431,6 +433,7 @@ final class PanelAuthController extends Controller
 
         $remember = TwoFactor::remember($request);
         Mfa::complete($request, $panel, $user, $remember);
+        PanelIdleActivity::clearLock($request);
 
         return redirect($this->destination($request, $panel));
     }
@@ -469,6 +472,10 @@ final class PanelAuthController extends Controller
         }
 
         $path = '/'.ltrim((string) parse_url($intended, PHP_URL_PATH), '/');
+
+        if (PanelIdleActivity::isLockScreenPath($path)) {
+            return $this->panelHome($panel);
+        }
 
         return $this->panelOwning($path)?->id === $panel->id
             ? $intended

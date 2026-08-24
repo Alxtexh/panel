@@ -11,6 +11,7 @@ use Alxtexh\Panel\Auth\TwoFactor;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\PanelHome;
+use Alxtexh\Panel\Support\PanelIdleActivity;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -146,6 +147,7 @@ final class SharedAuthController extends Controller
             }
 
             Mfa::complete($request, $panel, $user, $request->boolean('remember'));
+            PanelIdleActivity::clearLock($request);
 
             return redirect($this->destination($request, $panel));
         }
@@ -255,6 +257,7 @@ final class SharedAuthController extends Controller
 
         $remember = TwoFactor::remember($request);
         Mfa::complete($request, $panel, $user, $remember);
+        PanelIdleActivity::clearLock($request);
 
         return redirect($this->destination($request, $panel));
     }
@@ -277,6 +280,11 @@ final class SharedAuthController extends Controller
         }
 
         $path = '/'.ltrim((string) parse_url($intended, PHP_URL_PATH), '/');
+
+        if (PanelIdleActivity::isLockScreenPath($path)) {
+            return PanelHome::urlFor($panel);
+        }
+
         $prefix = '/'.trim($panel->getPath(), '/');
 
         $belongs = $prefix === '/'
