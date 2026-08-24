@@ -89,6 +89,7 @@ final class IdleLockTest extends TestCase
     public function test_the_lock_screen_offers_no_passkey_when_the_user_has_none(): void
     {
         $props = $this->actingAs($this->user)
+            ->withSession([PanelIdleActivity::LOCKED_AT => time()])
             ->get('/second/screens/locked')
             ->assertOk()
             ->viewData('page')['props'];
@@ -103,8 +104,35 @@ final class IdleLockTest extends TestCase
         $this->assertFalse(\Alxtexh\Panel\Auth\Passkeys::tableExists());
 
         $this->actingAs($this->user)
+            ->withSession([PanelIdleActivity::LOCKED_AT => time()])
             ->get('/second/screens/locked')
             ->assertOk();
+    }
+
+    public function test_the_lock_screen_redirects_home_when_not_locked(): void
+    {
+        $this->actingAs($this->user)
+            ->get('/second/screens/locked')
+            ->assertRedirect('/second');
+    }
+
+    /**
+     * After auth, url.intended must not send the user back to the lock screen.
+     */
+    public function test_login_does_not_redirect_to_the_lock_screen_from_url_intended(): void
+    {
+        $this->withSession([
+            'url.intended' => url('/second/screens/locked'),
+        ])
+            ->post('/second/login', [
+                'email' => $this->user->email,
+                'password' => 'correct-horse',
+            ])
+            ->assertRedirect('/second')
+            ->assertRedirectContains('/second')
+            ->assertSessionMissing('url.intended');
+
+        $this->assertFalse(session()->has(PanelIdleActivity::LOCKED_AT));
     }
 
     public function test_locking_redirects_to_the_lock_screen(): void

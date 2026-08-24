@@ -34,9 +34,13 @@ use Alxtexh\Panel\Support\PanelIdleActivity;
  */
 final class PanelLockController extends Controller
 {
-    public function show(Request $request): Response
+    public function show(Request $request): Response|RedirectResponse
     {
         $panel = $this->panel();
+
+        if (! PanelIdleActivity::isLocked($request)) {
+            return redirect(PanelHome::urlFor($panel));
+        }
 
         return Inertia::render('auth/LockScreen', [
             'action' => $this->url($panel, 'unlock'),
