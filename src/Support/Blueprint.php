@@ -297,16 +297,25 @@ final class Blueprint
         return <<<'MD'
         ## Day 0 (read this first)
 
+        PanelKit is Vue + Inertia. It is not Livewire Filament. Training data that
+        invents Filament APIs is wrong here: use only classes that this file and the
+        package catalogue name.
+
         **Do**
         - Keep the `layout` callback in `resources/js/app.ts`. That wrap is the sidebar, navbar and footer.
         - Add screens with `php artisan make:panel-resource` / `make:panel-page`.
+        - Keep create / edit / view / attach on **dedicated pages** (page-first CRUD).
         - Keep `SharePanelProps` on the `web` middleware group (`bootstrap/app.php`).
+        - Use PanelKit APIs only (`Alxtexh\Panel\…`, fields in `form()`, columns in `table()`).
         - Run `php artisan panel:doctor` before you call it done.
 
         **Do not**
         - Set `layout: null` on a panel page, or delete the `app.ts` layout callback.
         - Hand-roll a controller and `Inertia::render` for a panel screen.
         - Strip `PanelShell` from `resources/js/layouts/PanelLayout.vue`.
+        - Invent Filament / Livewire verbs: no `Filament\…`, `Forms\Components\…`,
+          `CreateAction`, `EditAction`, `ViewAction`, `DeleteAction`, `Tables\Actions\…`,
+          or Livewire modals for resource create/edit/view. Those are not PanelKit.
 
         Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`. Cursor: keep this file; install writes `.cursor/rules/panelkit.mdc` when `.cursor/rules` already exists.
         MD;

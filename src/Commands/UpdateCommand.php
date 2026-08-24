@@ -59,7 +59,7 @@ final class UpdateCommand extends Command
         $this->newLine();
 
         if ($needsAttention === []) {
-            $this->components->info('Up to date. Nothing needed changing.');
+            $this->components->info('Up to date. Page files, blueprint, and schema cache are current.');
         } else {
             $this->components->warn('Finish the update:');
 
@@ -67,6 +67,10 @@ final class UpdateCommand extends Command
                 $this->line('  - '.$line);
             }
         }
+
+        $this->newLine();
+        $this->line('  Next: keep app.ts layout, keep appearance-prepaint above CSS,');
+        $this->line('  use PanelKit APIs only (no Filament Livewire verbs), then trust doctor.');
 
         /*
          * DOCTOR LAST, AND ITS EXIT CODE IS THIS COMMAND'S. An upgrade is
@@ -76,7 +80,7 @@ final class UpdateCommand extends Command
          * is one somebody has to look at.
          */
         $this->newLine();
-        $this->components->info('Running panel:doctor');
+        $this->components->info('Running panel:doctor (exit code is this command\'s)');
 
         return Artisan::call('panel:doctor', [], $this->output) === self::SUCCESS
             ? self::SUCCESS
