@@ -264,7 +264,8 @@ function runNoteAction(note: Note, action: NotificationAction, event: Event): vo
         :open="open"
         :side="side"
         title="Alerts &amp; notifications"
-        width="w-[24rem]"
+        size="md"
+        :padded="false"
         @close="open = false"
     >
         <div class="flex flex-col">
