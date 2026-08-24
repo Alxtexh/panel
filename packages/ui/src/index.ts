@@ -313,6 +313,7 @@ export {
     readAppearance,
     isDark,
     setAppearancePersister,
+    resetAppearanceBootstrapForTests,
 } from './composables/useAppearance'
 export { useTenantTheme } from './composables/useTenantTheme'
 export { useSchemaColumns, BADGE_VARIANTS, hasBadgeValue } from './composables/useSchemaColumns'

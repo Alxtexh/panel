@@ -167,7 +167,17 @@ when the users table has no `tenant_id`.
 | Publishes `config/panel.php` | Every option, commented. Tenancy default `none` |
 | Publishes kit lang (`panel-lang`) | `lang/vendor/panel/{en,es,fr}` - overlay with `__('panel::...')` |
 | Publishes kit assets | `public/vendor/panel/{app.css,app.js}` from package `dist/kit`. First visit has CSS without npm |
-| Writes `resources/views/app.blade.php` | Root view. Loads kit dist unless a Vite manifest exists |
+| Writes `resources/views/app.blade.php` | Root view. Loads kit dist unless a Vite manifest exists. Head includes `@include('panel::appearance-prepaint')` **before** CSS/JS so the account theme cannot flash |
+
+### Updating an existing `app.blade.php` (FOUC fix)
+
+If you installed before v1.4.12, replace the old `__panelAppearance` + localStorage-only head scripts with the package include, **above** `@vite` / `vendor/panel` stylesheets:
+
+```blade
+@include('panel::appearance-prepaint')
+```
+
+That include (1) embeds `window.__panelAppearance` from `auth()->user()?->appearance`, (2) embeds PHP-computed CSS variables matching the client palette, and (3) runs a blocking script that `setProperty`s them on `<html>` before first paint. Do not move it below stylesheets.
 | Writes `resources/js/app.ts` | Inertia bootstrap with `layout: (name) => …` so `PanelLayout` (and nested `SettingsLayout` for settings) still wraps pages that only set breadcrumb layout props. Do not strip that callback |
 | Writes `resources/js/layouts/PanelLayout.vue` | A layout you are meant to replace; forwards breadcrumbs into `PanelShell` |
 | Merges `resources/css/app.css` | Points Tailwind at the package. Without this you get a working panel with no styling |

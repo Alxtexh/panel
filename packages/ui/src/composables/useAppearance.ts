@@ -252,6 +252,31 @@ let appearanceBootstrapped = false
 /** Where the COMPUTED custom properties are cached for the pre-paint script. */
 const VARS_KEY = 'alxtexhpanel.appearance.vars'
 
+type PanelAppearanceWindow = Window & {
+    __panelAppearance?: Partial<Appearance> | null
+    __panelAppearanceApplied?: boolean
+}
+
+function panelAppearanceWindow(): PanelAppearanceWindow | null {
+    if (typeof window === 'undefined') {
+        return null
+    }
+
+    return window as PanelAppearanceWindow
+}
+
+/** Vitest helper: module state survives between cases in the same file. */
+export function resetAppearanceBootstrapForTests(): void {
+    appearanceBootstrapped = false
+    state.value = { ...DEFAULTS }
+
+    const win = panelAppearanceWindow()
+
+    if (win) {
+        win.__panelAppearanceApplied = false
+    }
+}
+
 export function isDark(next: Appearance): boolean {
     /*
      * ONE COMPARISON, with no `matchMedia` anywhere in it. While `system`
@@ -409,13 +434,13 @@ export function readAppearance(): Appearance {
  * `data-page` payload is the fallback when the inline script is absent.
  */
 export function readServerAppearance(): Partial<Appearance> | null {
-    if (typeof window === 'undefined') {
+    const win = panelAppearanceWindow()
+
+    if (!win) {
         return null
     }
 
-    const fromInline = (
-        window as unknown as { __panelAppearance?: Partial<Appearance> | null }
-    ).__panelAppearance
+    const fromInline = win.__panelAppearance
 
     if (fromInline && typeof fromInline === 'object') {
         return fromInline
@@ -457,8 +482,9 @@ export function initializeAppearance(fromServer?: Partial<Appearance> | null): v
         ? ({ ...DEFAULTS, ...local, ...fromServer } as Appearance)
         : ({ ...DEFAULTS, ...local } as Appearance)
 
+    const isFirstBoot = !appearanceBootstrapped
+
     state.value = merged
-    applyAppearance(merged)
     appearanceBootstrapped = true
 
     // Write the reconciled value back so the pre-paint script agrees next time.
@@ -469,6 +495,39 @@ export function initializeAppearance(fromServer?: Partial<Appearance> | null): v
             // Private mode. The theme still applies this session.
         }
     }
+
+    const win = panelAppearanceWindow()
+    const prepaintDone = win?.__panelAppearanceApplied === true
+
+    /*
+     * First boot for a signed-in account: Blade already applied
+     * AppearancePrepaint from the same users.appearance JSON. Skipping the
+     * DOM write avoids a second paint. Guests still call applyAppearance so a
+     * localStorage preference can correct empty/default prepaint. Later Inertia
+     * navigations (login) always apply.
+     */
+    if (isFirstBoot && prepaintDone && fromServer) {
+        try {
+            const vars = appearanceVars(merged)
+
+            localStorage.setItem(
+                VARS_KEY,
+                JSON.stringify({
+                    dark: isDark(merged),
+                    theme: merged.theme,
+                    vars,
+                    sidebar: merged.sidebarSide,
+                    contentLayout: merged.contentLayout,
+                }),
+            )
+        } catch {
+            // Private mode.
+        }
+
+        return
+    }
+
+    applyAppearance(merged)
 }
 
 /** Boot appearance from the server inline script or the initial Inertia payload. */
@@ -597,7 +656,13 @@ export function applyAppearance(next: Appearance): void {
         // from a stale cache on every first paint.
         localStorage.setItem(
             VARS_KEY,
-            JSON.stringify({ dark: isDark(next), theme: next.theme, vars }),
+            JSON.stringify({
+                dark: isDark(next),
+                theme: next.theme,
+                vars,
+                sidebar: next.sidebarSide,
+                contentLayout: next.contentLayout,
+            }),
         )
     } catch {
         // Private mode. Only the flash-prevention is lost.
@@ -650,7 +715,9 @@ export function useAppearance() {
      * changed it while this one was open.
      */
     onMounted(() => {
-        if (appearanceBootstrapped) {
+        if (appearanceBootstrapped || panelAppearanceWindow()?.__panelAppearanceApplied) {
+            appearanceBootstrapped = true
+
             return
         }
 

@@ -81,13 +81,30 @@ final class AppearanceTest extends TestCase
     /** And it is rendered into the document, for the pre-paint script. */
     public function test_the_saved_appearance_is_available_before_the_bundle_runs(): void
     {
-        $this->storeAppearance(['theme' => 'dark']);
+        $this->storeAppearance(['theme' => 'dark', 'primary' => 'rose']);
 
-        $this->actingAs($this->user)
+        $response = $this->actingAs($this->user)
             ->get('/dashboard')
             ->assertOk()
             ->assertSee('window.__panelAppearance', false)
-            ->assertSee('"theme":"dark"', false);
+            ->assertSee('"theme":"dark"', false)
+            ->assertSee('"primary":"rose"', false)
+            ->assertSee('window.__panelAppearanceServerVars', false)
+            ->assertSee('oklch(0.62 0.22 15)', false)
+            ->assertSee('__panelAppearanceApplied', false);
+
+        $html = $response->getContent();
+        $jsonPos = strpos($html, 'window.__panelAppearance =');
+        $varsPos = strpos($html, 'window.__panelAppearanceServerVars =');
+        $vitePos = strpos($html, '@vite') !== false
+            ? strpos($html, 'resources/css/app.css')
+            : strpos($html, 'build/assets');
+
+        $this->assertNotFalse($jsonPos);
+        $this->assertNotFalse($varsPos);
+        $this->assertLessThan($varsPos, $jsonPos);
+        $this->assertNotFalse($vitePos);
+        $this->assertLessThan($vitePos, $varsPos, 'Server vars must be inlined before CSS/JS assets.');
     }
 
     /**
@@ -187,7 +204,10 @@ final class AppearanceTest extends TestCase
         // `matchMedia` was how the pre-paint script asked the operating system.
         // Its absence is the mechanism, not just the outcome.
         $this->assertStringNotContainsString('matchMedia', $response->getContent());
-        $response->assertSee("var appearance = 'light'", false);
+        $response->assertSee('window.__panelAppearance = null', false);
+        $response->assertSee('window.__panelAppearanceDefaultVars', false);
+        $response->assertSee('"theme":"light"', false);
+        $response->assertSee('oklch(0.32 0.02 260)', false);
     }
 
     /**
