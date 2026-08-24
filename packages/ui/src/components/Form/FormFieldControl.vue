@@ -36,6 +36,7 @@ import PkFileUpload from './PkFileUpload.vue'
 import type { UploadedFileValue } from './PkFileUpload.vue'
 import PkKeyValue from './PkKeyValue.vue'
 import PkRichEditor from './PkRichEditor.vue'
+import PkToggleButtons from './PkToggleButtons.vue'
 import type { FormField } from './types'
 
 /**
@@ -506,7 +507,16 @@ function insertChip(token: string) {
         />
 
         <div v-else-if="morphTypes.length" class="flex flex-col gap-2">
+            <PkToggleButtons
+                v-if="field.morphTypeSelect === 'toggle-buttons'"
+                :field="{ key: `${field.key}-type`, grouped: true, inline: true }"
+                :model-value="morphValue.type ?? null"
+                :options="morphTypes.map((opt) => ({ value: opt.value, label: opt.label }))"
+                :disabled="field.disabled || processing"
+                @update:model-value="(next) => setMorphType(next == null ? '' : String(next))"
+            />
             <select
+                v-else
                 :id="`f-${field.key}-type`"
                 :value="morphValue.type ?? ''"
                 :disabled="field.disabled || processing"

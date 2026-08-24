@@ -19,6 +19,7 @@ import PkRating from './PkRating.vue'
 import PkSlider from './PkSlider.vue'
 import PkSwatchPreview from './PkSwatchPreview.vue'
 import PkTagsInput from './PkTagsInput.vue'
+import PkToggleButtons from './PkToggleButtons.vue'
 import PkVisualSelect from './PkVisualSelect.vue'
 
 /**
@@ -42,6 +43,7 @@ import PkVisualSelect from './PkVisualSelect.vue'
  */
 export function registerBuiltInFieldControls(): void {
     registerFieldControl('radio', PkRadioGroup)
+    registerFieldControl('toggle-buttons', PkToggleButtons)
     registerFieldControl('checkboxlist', PkCheckboxList)
     registerFieldControl('tags', PkTagsInput)
     registerFieldControl('colour', PkColourPicker)

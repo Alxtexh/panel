@@ -28,9 +28,9 @@ PanelKit stays Vue + Inertia.
 
 | Gap | Notes |
 | --- | --- |
-| Ecosystem / plugins | Large marketplace; we stay GitHub-only kit + `PanelPlugin` |
+| Ecosystem / plugins | Filament has a marketplace; PanelKit hosts build features in-app. No plugin docs track. |
 | In-place form feel | Livewire mutates without full Inertia visits; we keep dedicated pages on purpose |
-| Infolist / field breadth | Filament still has more specialty entries; we add when a host needs them |
+| Infolist / field breadth | Filament still has more specialty entries; ToggleButtons + morph type toggles landed in v1.4.18 |
 | Docs / training data | Agents still invent Filament verbs; keep `panel:blueprint` and these docs honest |
 | Slide-overs / dense modals | Polished for **secondary** actions; create/edit/view stay pages by default |
 
@@ -40,6 +40,8 @@ PanelKit stays Vue + Inertia.
 - Packagist / npm registry for consumers (Composer VCS + bundled kit assets)
 - ISP / Nairobi Fibre domain inside the package
 - Auto-granting abilities (deny-by-default stays)
+- Plugin marketplace or a host docs track for third-party PanelPlugin packages
+  (build resources, pages, and fields in the application)
 
 ## Design freeze enforcement
 
@@ -55,7 +57,6 @@ Wired into `make release-check` with client mirror sync and package Pest.
 ## Suggested next (not in this tag)
 
 - More specialty infolist / field entries as hosts ask for them
-- Plugin marketplace is out of scope; keep documenting `PanelPlugin` instead
 - Intentional PanelKit marketing landing (not ported templates)
 ## Landed since v1.0.88
 
@@ -84,6 +85,7 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.4.15 | Wider create/edit/view `FORM_MEASURE` (`max-w-7xl`, Filament default) |
 | v1.4.16 | Row action menu icons: `resolveActionIcon` defaults for recharge / impersonate / delete |
 | v1.4.17 | Slide-over / dense modal polish for secondary actions; overlay design-freeze tokens; page-first CRUD unchanged |
+| v1.4.18 | `ToggleButtonsField`; morph `SelectField::typeSelectToggleButtons()`; docs for morphTo / tableSelect unchanged |
 
 ## Versioning (from v1.1.0)
 

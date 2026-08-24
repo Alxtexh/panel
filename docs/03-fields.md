@@ -29,6 +29,7 @@ mass assignment is bounded by what you wrote rather than by `$fillable`.
 | `SelectField` | One of a list; `searchable()` or `relationship()` for long lists |
 | `MultiSelectField` | Several of a list |
 | `RadioField` | One of a few, all visible |
+| `ToggleButtonsField` | One or several choices as buttons (colours, icons) |
 | `CheckboxField` | A single boolean tickbox |
 | `CheckboxListField` | Several of a list, all visible |
 | `ToggleField` | A boolean as a switch |
@@ -114,6 +115,50 @@ SelectField::make('notable')
         Article::class => 'title',
         Tag::class => 'name',
     ]);
+```
+
+Draw the type picker as toggle buttons (short type lists):
+
+```php
+SelectField::make('notable')
+    ->morphTo([
+        Article::class => 'title',
+        Tag::class => 'name',
+    ])
+    ->typeSelectToggleButtons();
+```
+
+### ToggleButtonsField
+
+Status / yes-no / short enums as buttons. Colours and icons are semantic names
+the client resolves (same tones as badges).
+
+```php
+use Alxtexh\Panel\Forms\Fields\ToggleButtonsField;
+
+ToggleButtonsField::make('status')
+    ->options([
+        'draft' => 'Draft',
+        'scheduled' => 'Scheduled',
+        'published' => 'Published',
+    ])
+    ->colors([
+        'draft' => 'warning',
+        'scheduled' => 'info',
+        'published' => 'success',
+    ])
+    ->icons([
+        'draft' => 'pencil',
+        'scheduled' => 'clock',
+        'published' => 'check',
+    ])
+    ->grouped();
+
+ToggleButtonsField::make('accepted')->boolean();
+
+ToggleButtonsField::make('channels')
+    ->multiple()
+    ->options(['email' => 'Email', 'sms' => 'SMS']);
 ```
 
 ### SelectField::tableSelect()

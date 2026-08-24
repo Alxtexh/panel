@@ -69,6 +69,9 @@ final class SelectField extends Field
 
     private ?string $createOptionButtonLabel = null;
 
+    /** Morph type chrome: select (default) or toggle-buttons. */
+    private bool $morphTypeSelectToggleButtons = false;
+
     /**
      * Above this, rendering every option inline stops being reasonable.
      *
@@ -246,6 +249,19 @@ final class SelectField extends Field
     public function createOptionActionLabel(string $label): static
     {
         $this->createOptionButtonLabel = $label;
+
+        return $this;
+    }
+
+    /**
+     * Draw the MorphTo type picker as toggle buttons instead of a select.
+     *
+     * Requires a short type list; pairs with ToggleButtonsField chrome on the
+     * client. Filament's typeSelectToggleButtons() without Livewire.
+     */
+    public function typeSelectToggleButtons(bool $condition = true): static
+    {
+        $this->morphTypeSelectToggleButtons = $condition;
 
         return $this;
     }
@@ -516,7 +532,10 @@ final class SelectField extends Field
         return [
             ...parent::toSchema(),
             'searchable' => $this->searchable,
-            ...($morphTo === [] ? [] : ['morphTo' => $morphTo]),
+            ...($morphTo === [] ? [] : [
+                'morphTo' => $morphTo,
+                ...($this->morphTypeSelectToggleButtons ? ['morphTypeSelect' => 'toggle-buttons'] : []),
+            ]),
             ...($this->pickerResource !== null ? ['tableSelect' => true] : []),
             ...($this->canCreateOption() ? [
                 'createOption' => $this->createOptionSchema(),

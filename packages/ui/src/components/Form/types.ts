@@ -88,6 +88,10 @@ export interface FormField {
      */
     morphTo?: { value: string; label: string; titleAttribute?: string }[]
     /**
+     * Morph type picker chrome: `select` (default) or `toggle-buttons`.
+     */
+    morphTypeSelect?: 'select' | 'toggle-buttons'
+    /**
      * Dedicated ListQuery picker page, not a modal.
      */
     tableSelect?: boolean

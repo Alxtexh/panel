@@ -10,7 +10,7 @@ These pages are the catalogue: what ships, and how to switch each part on.
 |---|---|
 | [1. Install](01-install.md) | GitHub-only install: panelkit (dev) → Alxtexh/panel (Composer). panel-ui not required |
 | [2. Resources](02-resources.md) | Tables, forms, and the one class that declares both |
-| [3. Fields](03-fields.md) | All 24 form field types |
+| [3. Fields](03-fields.md) | Form field types (incl. ToggleButtons, morphTo, tableSelect) |
 | [4. Columns and filters](04-columns-and-filters.md) | All 12 column types, 6 filters |
 | [5. Actions](05-actions.md) | Record actions, bulk actions, exports, imports |
 | [6. Dashboards and widgets](06-dashboards-and-widgets.md) | Stats, 17 chart types, filters, strips |
