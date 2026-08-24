@@ -15,6 +15,7 @@ PanelKit is Vue + Inertia, not Livewire Filament. Use PanelKit APIs only.
 - Keep `SharePanelProps` on the web middleware group.
 - Keep `PanelShell` in `resources/js/layouts/PanelLayout.vue`.
 - Forbidden: inventing `Filament\…`, `Forms\Components\…`, `CreateAction`, `EditAction`, `Tables\Actions\…`.
+- Keep status colour tokens in `resources/css/app.css` (`--success`, `--warning`, `--info` and `@theme` `--color-*`). Without them badge utilities never compile. Run `panel:update` if doctor reports them missing.
 - Run `php artisan panel:doctor` before you call it done.
 
 Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`.

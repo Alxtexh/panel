@@ -308,6 +308,9 @@ final class Blueprint
         - Keep `SharePanelProps` on the `web` middleware group (`bootstrap/app.php`).
         - Use PanelKit APIs only (`Alxtexh\Panel\…`, fields in `form()`, columns in `table()`).
         - Run `php artisan panel:doctor` before you call it done.
+        - Keep `resources/css/app.css` status tokens (`--success`, `--warning`, `--info`
+          and their `--color-*` `@theme` mappings). Without them, badge variants
+          `bg-success` / `bg-warning` / `bg-info` never compile. `panel:update` patches hosts that are missing them.
 
         **Do not**
         - Set `layout: null` on a panel page, or delete the `app.ts` layout callback.
