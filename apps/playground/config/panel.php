@@ -67,8 +67,9 @@ return [
     |---------------------------------------------------------------------------
     |
     | Which of the shipped public landing pages this installation shows at `/`
-    | - `aurora` (modern SaaS), `editorial` (quiet and typographic) or
-    | `console` (developer tool, shows real code). Part G.9.
+    | - `aurora` (modern SaaS), `editorial` (quiet and typographic),
+    | `console` (developer tool, shows real code) or `studio` (brand-first
+    | workshop, precise and warm). Part G.9.
     */
     /*
      | THE THREE TABLES THIS APPLICATION'S OWN MIGRATION gave a `custom` column

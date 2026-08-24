@@ -23,6 +23,7 @@ final class CriticalStylesheetBlocks
         '.pk-form-stack',
         '.pk-editorial {',
         '.pk-console',
+        '.pk-studio',
     ];
 
     /**
@@ -97,7 +98,7 @@ final class CriticalStylesheetBlocks
  * Added by panel:update / panel:install - form gap and landing typography.
  *
  * RecordForm uses `.pk-form-stack` with `--pk-form-gap`. Landing wrappers use
- * `.pk-editorial` and `.pk-console` for per-design typography.
+ * `.pk-editorial`, `.pk-console` and `.pk-studio` for per-design typography.
  */
 :root {
     --pk-form-gap: 1rem;
@@ -159,6 +160,24 @@ final class CriticalStylesheetBlocks
         animation: none;
     }
 }
+
+.pk-studio {
+    --pk-heading-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --pk-studio-weight: 650;
+}
+
+.pk-studio h1,
+.pk-studio h2,
+.pk-studio h3 {
+    font-family: var(--pk-heading-family);
+    font-weight: var(--pk-studio-weight);
+    letter-spacing: -0.025em;
+}
+
+.pk-studio main section:first-of-type h1 {
+    font-weight: 750;
+    letter-spacing: -0.035em;
+}
 CSS;
     }
 
@@ -175,7 +194,7 @@ CSS;
             'level' => 'problem',
             'title' => 'resources/css/app.css is missing form gap or landing typography blocks',
             'detail' => 'RecordForm expects `.pk-form-stack` and `--pk-form-gap`. Public landings '
-                .'expect `.pk-editorial` and `.pk-console` typography rules. Without them forms '
+                .'expect `.pk-editorial`, `.pk-console` and `.pk-studio` typography rules. Without them forms '
                 .'and landing pages look like a broken near-neighbour of the kit.',
             'suggested' => 'Run `php artisan panel:update` (patches app.css), then rebuild '
                 .'(npm run build, or rely on public/vendor/panel after install republish).',

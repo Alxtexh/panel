@@ -29,6 +29,7 @@ import {
     PkAuroraBackdrop,
     PkConsoleBackdrop,
     PkEditorialBackdrop,
+    PkStudioBackdrop,
     PkLandingSections,
 } from '@alxtexh-enterprise/panel'
 import type { LandingSection } from '@alxtexh-enterprise/panel'
@@ -101,11 +102,13 @@ const socialProviders = useSocialProviders()
         :class="{
             'pk-editorial': design === 'editorial',
             'pk-console': design === 'console',
+            'pk-studio': design === 'studio',
         }"
     >
         <PkAuroraBackdrop v-if="design === 'aurora'" />
         <PkEditorialBackdrop v-else-if="design === 'editorial'" />
         <PkConsoleBackdrop v-else-if="design === 'console'" />
+        <PkStudioBackdrop v-else-if="design === 'studio'" />
 
         <div class="relative z-10 flex flex-1 flex-col">
             <LandingNav

@@ -11,11 +11,11 @@ use Tests\TestCase;
  */
 final class DocsHonestyTest extends TestCase
 {
-    public function test_readme_lists_three_landing_designs(): void
+    public function test_readme_lists_four_landing_designs(): void
     {
         $readme = (string) file_get_contents(dirname(base_path(), 2).'/docs/README.md');
 
-        $this->assertStringContainsString('Three built-in landing designs', $readme);
+        $this->assertStringContainsString('Four built-in landing designs', $readme);
         $this->assertStringNotContainsString('Five built-in landing designs', $readme);
     }
 
@@ -28,11 +28,13 @@ final class DocsHonestyTest extends TestCase
         }
     }
 
-    public function test_workflows_doc_states_board_is_read_only(): void
+    public function test_workflows_doc_states_board_is_editable_with_honest_limits(): void
     {
         $workflows = (string) file_get_contents(dirname(base_path(), 2).'/docs/16-workflows.md');
 
-        $this->assertStringContainsString('read-only', $workflows);
-        $this->assertStringContainsString('not editable in the UI', $workflows);
+        $this->assertStringContainsString('Edit workflow', $workflows);
+        $this->assertStringContainsString('panel_workflow_overrides', $workflows);
+        $this->assertStringContainsString('No freeform drag-and-drop canvas', $workflows);
+        $this->assertStringNotContainsString('not editable in the UI', $workflows);
     }
 }

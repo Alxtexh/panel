@@ -95,6 +95,27 @@ const isBlank = computed(() => {
     return v === null || v === undefined || v === ''
 })
 
+const moneyDisplay = computed(() => {
+    if (isBlank.value) {
+        return 'None'
+    }
+
+    const raw = Number(value.value)
+    if (Number.isNaN(raw)) {
+        return 'None'
+    }
+
+    const divisor = props.node.divideBy ?? 100
+    const amount = raw / divisor
+    const currency = props.node.currency ?? 'USD'
+
+    try {
+        return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount)
+    } catch {
+        return `${currency} ${amount.toFixed(2)}`
+    }
+})
+
 const display = computed(() => {
     if (isBlank.value) {
         return 'None'
@@ -104,6 +125,10 @@ const display = computed(() => {
 
     if (props.node.type === 'date' || props.node.type === 'datetime') {
         return new Date(String(v)).toLocaleDateString(undefined, dateFormats[props.node.type])
+    }
+
+    if (props.node.type === 'money') {
+        return moneyDisplay.value
     }
 
     let text = String(v)
@@ -213,6 +238,12 @@ const badgeVariant = computed(() => {
                     >None</span
                 >
             </div>
+            <span
+                v-else-if="node.type === 'money'"
+                :class="isBlank ? 'text-muted-foreground font-normal' : ''"
+            >
+                {{ moneyDisplay }}
+            </span>
             <a
                 v-else-if="node.url && !isBlank"
                 :href="node.url"

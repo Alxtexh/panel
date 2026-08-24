@@ -1267,6 +1267,9 @@ final class PanelRoutes
         Route::get('{resource}/workflow', [ResourceController::class, 'workflow'])
             ->whereIn('resource', $keys)->name('workflow');
 
+        Route::put('{resource}/workflow', [ResourceController::class, 'updateWorkflow'])
+            ->whereIn('resource', $keys)->name('workflow.update');
+
         Route::get('{resource}/forms/create', [ResourceController::class, 'modalCreate'])
             ->whereIn('resource', $keys)->name('forms.create');
 

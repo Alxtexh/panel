@@ -435,6 +435,24 @@ body:has(.pk-shell) {
     }
 }
 
+.pk-studio {
+    --pk-heading-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --pk-studio-weight: 650;
+}
+
+.pk-studio h1,
+.pk-studio h2,
+.pk-studio h3 {
+    font-family: var(--pk-heading-family);
+    font-weight: var(--pk-studio-weight);
+    letter-spacing: -0.025em;
+}
+
+.pk-studio main section:first-of-type h1 {
+    font-weight: 750;
+    letter-spacing: -0.035em;
+}
+
 /* Added by panel:install - Tailwind does not scan node_modules. */
 @source '../../node_modules/@alxtexh-enterprise/panel/dist/**/*.js';
 @source '../../node_modules/@alxtexh-enterprise/panel/inertia/**/*.{vue,ts}';

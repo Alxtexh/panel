@@ -1,6 +1,6 @@
 # 18. Public landing pages
 
-Alxtexhpanel ships **three** public landing designs as built-in kit offerings
+Alxtexhpanel ships **four** public landing designs as built-in kit offerings
 (not optional plugins), the same posture as [auth families](09-authentication.md).
 
 | Design | Voice | Source |
@@ -8,6 +8,7 @@ Alxtexhpanel ships **three** public landing designs as built-in kit offerings
 | `aurora` | Modern SaaS, proof-heavy (default) | Original kit composition |
 | `editorial` | Quiet typographic magazine | Original kit composition |
 | `console` | Developer-tool terminal | Original kit composition |
+| `studio` | Brand-first workshop, precise and warm | Original kit composition |
 
 Alias: `composed` → `aurora`.
 
@@ -31,7 +32,7 @@ Panel::make('admin')
     // ->landing(false);             // do not claim /
 ```
 
-`Panel::landings()` (alias `Panel::landingDesigns()`) returns the three names.
+`Panel::landings()` (alias `Panel::landingDesigns()`) returns the four names.
 
 ### Config
 
@@ -39,7 +40,7 @@ Panel::make('admin')
 // config/panel.php
 'landing' => [
     'route' => true,
-    'design' => env('PANEL_LANDING', 'aurora'), // aurora|editorial|console
+    'design' => env('PANEL_LANDING', 'aurora'), // aurora|editorial|console|studio
     'brand' => env('PANEL_LANDING_BRAND', config('app.name')),
     'tagline' => 'Built with Laravel, Inertia and Vue.',
     'footer_links' => [
@@ -69,18 +70,19 @@ With `route` and `previews` on:
 | `/preview/aurora` | Kit aurora composition |
 | `/preview/editorial` | Kit editorial composition |
 | `/preview/console` | Kit console composition |
+| `/preview/studio` | Kit studio composition |
 | `/preview/composed` | Same as aurora (alias) |
 | `/landing/{design}` | Same as preview (alias route) |
 
-Sidebar: **Landing samples** lists aurora, editorial and console. Editor:
+Sidebar: **Landing samples** lists aurora, editorial, console and studio. Editor:
 **Landing page** under Configuration.
 
 ## What ships
 
-All three designs use the section composer (`landing/Composed`) with kit `Pk*`
+All four designs use the section composer (`landing/Composed`) with kit `Pk*`
 section components and design-specific backdrops.
 
 ## Edit after picking
 
 Saved sections in the Landing page editor beat the preset for
-aurora / editorial / console.
+aurora / editorial / console / studio.

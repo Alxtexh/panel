@@ -104,10 +104,18 @@ php artisan panel:permissions sync
 A fresh install is an empty canvas. Confirm tenancy settings match your
 production schema, and do not rely on the repo's demo data layout.
 
-## Panel plugins
+## Host-owned plugins (modular registration)
 
-Plugins extend a panel with resources, routable Page classes, widgets, sidebar
-entries, and render hooks. Register them explicitly (no auto-discovery):
+Plugins let you organise resources, routable Page classes, widgets, sidebar
+entries, and render hooks into a reusable unit. They are for first-party,
+host-owned packages: code you write and maintain yourself. There is no
+marketplace, no third-party plugin track, and no auto-discovery.
+
+Most features should be built directly in the application. Reach for a plugin
+only when you need the same screens in more than one project, or when a clean
+boundary helps a large codebase.
+
+Register explicitly (no auto-discovery):
 
 ```php
 // config/panel.php
@@ -124,7 +132,7 @@ Panel::make('admin')->plugins([
 ]);
 ```
 
-Scaffold a plugin:
+Optionally scaffold a host-owned plugin:
 
 ```bash
 php artisan make:panel-plugin Acme/Billing

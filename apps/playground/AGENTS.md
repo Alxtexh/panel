@@ -879,11 +879,13 @@ keyset chunks. Values are validated BEFORE the job is queued, so a
 select-all-matching run that is going to fail on `plan_id` fails in the
 response the operator is reading rather than in a worker's log.
 
-### Ship it as a package
+### Optionally, ship it as a host-owned package
 
-Implement `PanelPlugin`, call `PanelManager::plugin(new YourPlugin)` from your
-service provider, and register resources, pages and routes through the
-`PluginContext`. A plugin can only add; it never receives the `Panel`.
+When a feature belongs in more than one project, implement `PanelPlugin`
+and register resources, pages and routes through the `PluginContext`. A
+plugin can only add; it never receives the `Panel`. This is for your own
+first-party packages, not a third-party marketplace. Build features
+in-app first; extract a plugin only when reuse across projects justifies it.
 
 ## What you can build with
 
@@ -1032,7 +1034,7 @@ too quiet.
 - `php artisan make:panel-importer` - Create an empty panel importer the resource can name from importable()
 - `php artisan make:panel-module` - Create a plan-gated panel module (Module::make snippet plus a $module screen)
 - `php artisan make:panel-page` - Create a panel page (a screen that is not a resource)
-- `php artisan make:panel-plugin` - Scaffold a Panel plugin class and README
+- `php artisan make:panel-plugin` - Scaffold a host-owned Panel plugin class and README
 - `php artisan make:panel-recipe` - Write the official starter recipe: one resource, kit Vue, empty table
 - `php artisan make:panel-relation-manager` - Create nested relation pages (dedicated list/create/edit, not a modal)
 - `php artisan make:panel-resource` - Create a panel resource

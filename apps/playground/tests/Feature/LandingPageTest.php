@@ -29,6 +29,7 @@ final class LandingPageTest extends TestCase
             'aurora' => ['aurora'],
             'editorial' => ['editorial'],
             'console' => ['console'],
+            'studio' => ['studio'],
         ];
     }
 
@@ -59,7 +60,10 @@ final class LandingPageTest extends TestCase
 
         $this->assertNotSame($shape('aurora'), $shape('editorial'));
         $this->assertNotSame($shape('aurora'), $shape('console'));
+        $this->assertNotSame($shape('aurora'), $shape('studio'));
         $this->assertNotSame($shape('editorial'), $shape('console'));
+        $this->assertNotSame($shape('editorial'), $shape('studio'));
+        $this->assertNotSame($shape('console'), $shape('studio'));
     }
 
     /** Every section a preset names must be one the renderer knows. */
@@ -166,7 +170,7 @@ final class LandingPageTest extends TestCase
 
     /**
      * BUT AN EXPLICIT DESIGN REQUEST STILL WINS. This reference app exists to
-     * demonstrate all three designs and whoever is demonstrating them is
+     * demonstrate all four designs and whoever is demonstrating them is
      * signed in; redirecting them would make the feature unviewable by the
      * only people who ever look at it.
      */

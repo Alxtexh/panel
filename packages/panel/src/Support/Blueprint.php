@@ -1217,11 +1217,13 @@ final class Blueprint
         select-all-matching run that is going to fail on `plan_id` fails in the
         response the operator is reading rather than in a worker's log.
 
-        ### Ship it as a package
+        ### Optionally, ship it as a host-owned package
 
-        Implement `PanelPlugin`, call `PanelManager::plugin(new YourPlugin)` from your
-        service provider, and register resources, pages and routes through the
-        `PluginContext`. A plugin can only add; it never receives the `Panel`.
+        When a feature belongs in more than one project, implement `PanelPlugin`
+        and register resources, pages and routes through the `PluginContext`. A
+        plugin can only add; it never receives the `Panel`. This is for your own
+        first-party packages, not a third-party marketplace. Build features
+        in-app first; extract a plugin only when reuse across projects justifies it.
         MD;
     }
 

@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('accent')->nullable();
             $table->text('snippet')->nullable();
             $table->json('extras')->nullable();
+            $table->unsignedInteger('price')->nullable();
             // Where custom-field values land - one JSON column rather than a
             // migration per definition. See `Resource::customFields()`.
             $table->json('custom')->nullable();

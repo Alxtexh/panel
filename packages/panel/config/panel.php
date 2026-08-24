@@ -605,22 +605,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Plugins
+    | Plugins (host-owned, first-party only)
     |--------------------------------------------------------------------------
     |
     | Classes implementing `Plugins\PanelPlugin`, installed into every panel
-    | that accepts them.
+    | that accepts them. Plugins are for your own first-party packages, not a
+    | third-party marketplace. Build features in-app first; extract a plugin
+    | only when the same screens belong in more than one project.
     |
     | EXPLICIT ONLY. PanelKit does not scan directories or call marketplace
     | hooks at boot. Name plugins here or on `Panel::plugins()`; nothing else
     | loads. Config classes are constructed lazily when their panel is first
     | used and `appliesTo()` passes.
     |
-    | USUALLY EMPTY, AND THAT IS FINE. A published plugin registers itself from
-    | its own service provider - `PanelManager::plugin(new BillingPlugin)` - so
-    | `composer require` is enough and nothing here needs editing. This list is
-    | for the other two cases: a plugin whose package does not register itself,
-    | and one an installation wants to add without touching a panel provider.
+    | USUALLY EMPTY, AND THAT IS FINE. A host-owned plugin can register itself
+    | from its own service provider - `PanelManager::plugin(new BillingPlugin)`.
+    | This list is for plugins that do not self-register from a provider, or
+    | ones an installation wants to add without touching a panel provider.
     |
     | A PLUGIN CAN ONLY ADD. It never receives the `Panel` itself, so installing
     | a package can never change the guard, the tenancy context or the
@@ -1037,10 +1038,10 @@ return [
     |   yourself.
     |
     | design
-    |   Which shipped composition seeds the page: aurora, editorial or console.
-    |   Alias: composed→aurora. They differ in composition and copy, not only in
-    |   colour. Once an editor has saved an arrangement in the panel, that is
-    |   what renders and this is only the fallback - see Landing\LandingPageResource.
+    |   Which shipped composition seeds the page: aurora, editorial, console or
+    |   studio. Alias: composed→aurora. They differ in composition and copy, not
+    |   only in colour. Once an editor has saved an arrangement in the panel, that
+    |   is what renders and this is only the fallback - see Landing\LandingPageResource.
     |   Or pick via Panel::make('admin')->landing('editorial').
     |
     | brand, tagline, footer_links

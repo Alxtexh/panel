@@ -137,7 +137,7 @@ the avatar only on a nested inset bar while the site header looks empty.
 
 ## Future (not in scope)
 
-Marketplace packaging and Livewire-based admin UIs are explicitly out of
-scope for this kit. Showcase stays kit-only Inertia + Vue; third-party
-examples belong as plugins that register through `PanelPlugin`, not as a
-second UI runtime inside core.
+Marketplace packaging, third-party plugin distribution, and Livewire-based
+admin UIs are explicitly out of scope for this kit. Showcase stays kit-only
+Inertia + Vue. Host-owned plugins register through `PanelPlugin` for modular
+code reuse across your own projects, not as a second UI runtime inside core.

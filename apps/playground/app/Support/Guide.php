@@ -651,12 +651,12 @@ final class Guide
             ],
 
             'plugins' => [
-                'title' => 'Plugins',
-                'summary' => 'A package that installs resources, routes and pages into a panel.',
+                'title' => 'Host-owned plugins',
+                'summary' => 'A first-party package that registers resources, routes and pages into a panel.',
                 'body' => [
-                    'A plugin implements `PanelPlugin` - an id, which panels it applies to, and a `register()` that adds things. A published package registers itself from its own service provider, so `composer require` is the whole installation; an application can also name one in `panel.plugins` or in a specific panel.',
+                    'A plugin implements `PanelPlugin` - an id, which panels it applies to, and a `register()` that adds things. Plugins are for host-owned, first-party packages: code you write and maintain. There is no marketplace and no third-party plugin track. Build features in-app first; extract a plugin only when the same screens belong in more than one project. Register explicitly in `panel.plugins` or on a specific panel.',
                     'A PLUGIN CAN ONLY ADD. It never receives the `Panel` itself, because an API that handed it over is one where installing a package can change the guard, the tenancy context or the middleware - a billing plugin able to turn off tenant scoping as a side effect of being installed.',
-                    'ROUTES GO INSIDE THE PANEL\'S GROUP, so a plugin route carries the portal\'s prefix, middleware, guard and route-name prefix without asking. A package registering routes from its own provider would get none of that, and an unauthenticated route into a tenant\'s records is not something anybody spots reviewing a package they did not write.',
+                    'ROUTES GO INSIDE THE PANEL\'S GROUP, so a plugin route carries the portal\'s prefix, middleware, guard and route-name prefix without asking. Registration from a service provider would get none of that, and an unauthenticated route into a tenant\'s records is not something that surfaces in a code review.',
                     'A plugin\'s resource lands in the panel that ACCEPTED it, not the one its class names - a package cannot know what an installation called its portals.',
                 ],
                 'blocks' => [

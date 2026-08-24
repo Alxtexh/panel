@@ -225,6 +225,7 @@ export { default as PkCta } from './components/Landing/PkCta.vue';
 export { default as PkAuroraBackdrop } from './components/Landing/PkAuroraBackdrop.vue';
 export { default as PkEditorialBackdrop } from './components/Landing/PkEditorialBackdrop.vue';
 export { default as PkConsoleBackdrop } from './components/Landing/PkConsoleBackdrop.vue';
+export { default as PkStudioBackdrop } from './components/Landing/PkStudioBackdrop.vue';
 export { default as PkReveal } from './components/Landing/PkReveal.vue';
 export { default as PkCountUp } from './components/Landing/PkCountUp.vue';
 export { default as PkBento } from './components/Landing/PkBento.vue';

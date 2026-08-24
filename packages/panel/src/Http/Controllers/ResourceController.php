@@ -26,6 +26,7 @@ use Alxtexh\Panel\Live\LiveConfig;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Workflow\WorkflowHistory;
+use Alxtexh\Panel\Workflow\WorkflowOverride;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -1183,10 +1184,11 @@ final class ResourceController extends Controller
     }
 
     /**
-     * Read-only visual board for a resource that declared `Resource::workflow()`.
+     * Visual board for a resource that declared `Resource::workflow()`.
      *
-     * Nodes and edges come from the PHP definition. Editing the graph is not
-     * part of this slice; the diagram explains the code-defined machine.
+     * Shows the resolved workflow (DB override when present, PHP default
+     * otherwise). When the user has `update` permission the page renders an
+     * editor form alongside the diagram.
      */
     public function workflow(Request $request, string $resource): Response
     {
@@ -1203,7 +1205,7 @@ final class ResourceController extends Controller
         abort_unless($class::isAccessible(), 403);
         abort_unless($class::can('viewAny'), 403);
 
-        $workflow = $class::workflow();
+        $workflow = $class::resolvedWorkflow();
 
         if ($workflow === null) {
             throw new NotFoundHttpException("[{$resource}] has no workflow.");
@@ -1224,6 +1226,8 @@ final class ResourceController extends Controller
             'workflow' => $workflow->toSchema(),
             'graph' => $workflow->toGraph(),
             'indexUrl' => $indexUrl,
+            'canEdit' => $class::can('update'),
+            'saveUrl' => $workflowUrl,
             'breadcrumbs' => $parent === null
                 ? [
                     ['title' => $schema['labelPlural'], 'href' => $indexUrl],
@@ -1234,6 +1238,91 @@ final class ResourceController extends Controller
                     ['title' => 'Workflow', 'href' => $workflowUrl],
                 ],
         ]);
+    }
+
+    /**
+     * Persist workflow state/transition edits to the database.
+     *
+     * Validates that every transition references declared states, then
+     * upserts a WorkflowOverride row. The PHP definition supplies column and
+     * model; only states/transitions/group come from the request.
+     */
+    public function updateWorkflow(Request $request, string $resource): RedirectResponse
+    {
+        $class = app(PanelManager::class)->resource($resource);
+
+        if ($class === null) {
+            throw new NotFoundHttpException("No panel resource registered for [{$resource}].");
+        }
+
+        if (! $class::isEnabled()) {
+            throw new NotFoundHttpException("Resource [{$resource}] is not enabled for this tenant.");
+        }
+
+        abort_unless($class::isAccessible(), 403);
+        abort_unless($class::can('update'), 403);
+
+        $base = $class::workflow();
+
+        if ($base === null) {
+            throw new NotFoundHttpException("[{$resource}] has no workflow.");
+        }
+
+        $validated = $request->validate([
+            'group_label' => ['nullable', 'string', 'max:64'],
+            'states' => ['required', 'array', 'min:1'],
+            'states.*.label' => ['required', 'string', 'max:64'],
+            'states.*.color' => ['required', 'string', 'max:32'],
+            'transitions' => ['present', 'array'],
+            'transitions.*.key' => ['required', 'string', 'max:64'],
+            'transitions.*.label' => ['required', 'string', 'max:128'],
+            'transitions.*.to' => ['required', 'string', 'max:64'],
+            'transitions.*.from' => ['present', 'array'],
+            'transitions.*.from.*' => ['string', 'max:64'],
+            'transitions.*.ability' => ['nullable', 'string', 'max:64'],
+            'transitions.*.icon' => ['nullable', 'string', 'max:64'],
+            'transitions.*.color' => ['nullable', 'string', 'max:32'],
+            'transitions.*.confirm' => ['nullable', 'string', 'max:256'],
+        ]);
+
+        $stateKeys = array_keys($validated['states']);
+
+        foreach ($validated['transitions'] as $index => $t) {
+            if (! in_array($t['to'], $stateKeys, true)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "transitions.{$index}.to" => "Transition target \"{$t['to']}\" is not a declared state.",
+                ]);
+            }
+
+            foreach ($t['from'] as $fromIndex => $from) {
+                if (! in_array($from, $stateKeys, true)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        "transitions.{$index}.from.{$fromIndex}" => "Transition source \"{$from}\" is not a declared state.",
+                    ]);
+                }
+            }
+        }
+
+        WorkflowOverride::query()->updateOrCreate(
+            ['resource_key' => $class::key()],
+            [
+                'column' => $base->column(),
+                'group_label' => $validated['group_label'] ?? $base->groupLabel(),
+                'states' => $validated['states'],
+                'transitions' => array_map(static fn (array $t): array => [
+                    'key' => $t['key'],
+                    'label' => $t['label'],
+                    'to' => $t['to'],
+                    'from' => $t['from'],
+                    'ability' => $t['ability'] ?? 'update',
+                    'icon' => $t['icon'] ?? null,
+                    'color' => $t['color'] ?? null,
+                    'confirm' => $t['confirm'] ?? null,
+                ], $validated['transitions']),
+            ],
+        );
+
+        return redirect()->back()->with('success', 'Workflow saved.');
     }
 
     /**
@@ -1276,7 +1365,7 @@ final class ResourceController extends Controller
      */
     private static function workflowContext(string $class, array $row, Model $record): ?array
     {
-        $workflow = $class::workflow();
+        $workflow = $class::resolvedWorkflow();
 
         if ($workflow === null) {
             return null;

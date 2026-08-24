@@ -31,6 +31,7 @@ use Alxtexh\Panel\Tables\Columns\InlineWritableColumn;
 use Alxtexh\Panel\Tables\ListResult;
 use Alxtexh\Panel\Tables\Table;
 use Alxtexh\Panel\Workflow\Workflow;
+use Alxtexh\Panel\Workflow\WorkflowOverride;
 
 /**
  * A panel resource. One subclass per screen, and no Vue at all.
@@ -202,6 +203,39 @@ abstract class Resource
     public static function workflow(): ?Workflow
     {
         return null;
+    }
+
+    /**
+     * The effective workflow: DB override when present, PHP default otherwise.
+     *
+     * Column and model always come from the PHP definition (they reference
+     * code artifacts that cannot be invented from the UI). States and
+     * transitions come from the DB when an override exists.
+     */
+    public static function resolvedWorkflow(): ?Workflow
+    {
+        $base = static::workflow();
+
+        if ($base === null) {
+            return null;
+        }
+
+        try {
+            $override = WorkflowOverride::forResource(static::key());
+        } catch (\Throwable) {
+            return $base;
+        }
+
+        if ($override === null) {
+            return $base;
+        }
+
+        return Workflow::fromStored([
+            'column' => $base->column(),
+            'group_label' => $override->group_label ?? $base->groupLabel(),
+            'states' => $override->states,
+            'transitions' => $override->transitions,
+        ], $base->getModel());
     }
 
     /** Optional write form. A resource without one is read-only. */
@@ -878,7 +912,7 @@ abstract class Resource
             ]);
         }
 
-        $workflow = static::workflow();
+        $workflow = static::resolvedWorkflow();
 
         if ($workflow !== null) {
             $table = $workflow->applyTo($table);

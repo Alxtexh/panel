@@ -28,9 +28,9 @@ PanelKit stays Vue + Inertia.
 
 | Gap | Notes |
 | --- | --- |
-| Ecosystem / plugins | Filament has a marketplace; PanelKit hosts build features in-app. No plugin docs track. |
+| Ecosystem / plugins | Filament has a marketplace; PanelKit supports host-owned `PanelPlugin` for modular registration but has no marketplace and no third-party plugin track. Build features in-app first. |
 | In-place form feel | Livewire mutates without full Inertia visits; we keep dedicated pages on purpose |
-| Infolist / field breadth | Filament still has more specialty entries; ToggleButtons + morph type toggles landed in v1.4.18 |
+| Infolist / field breadth | Filament still has more specialty entries; BadgeEntry, DateTimeEntry, MoneyEntry landed; ToggleButtons + morph type toggles landed in v1.4.18 |
 | Docs / training data | Agents invent Filament verbs; Day 0 forbids them - use `panel:blueprint` + `panel:doctor` |
 | Slide-overs / dense modals | Polished for **secondary** actions; create/edit/view stay pages by default |
 | Host reliability | Doctor checks shell, appearance-prepaint, queues tip, SESSION_DRIVER for devices |
@@ -41,8 +41,9 @@ PanelKit stays Vue + Inertia.
 - Packagist / npm registry for consumers (Composer VCS + bundled kit assets)
 - ISP / Nairobi Fibre domain inside the package
 - Auto-granting abilities (deny-by-default stays)
-- Plugin marketplace or a host docs track for third-party PanelPlugin packages
-  (build resources, pages, and fields in the application)
+- Plugin marketplace or third-party plugin distribution (host-owned
+  `PanelPlugin` is supported for modular first-party registration; build
+  resources, pages, and fields in the application first)
 
 ## Design freeze enforcement
 
@@ -57,7 +58,7 @@ Wired into `make release-check` with client mirror sync and package Pest.
 
 ## Suggested next (not in this tag)
 
-- More specialty infolist / field entries as hosts ask for them
+- More specialty infolist / field entries as hosts ask (Badge, DateTime, Money shipped)
 - Intentional PanelKit marketing landing (not ported templates)
 
 ## Agent honesty (read before inventing APIs)
