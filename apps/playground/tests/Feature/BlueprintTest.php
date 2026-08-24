@@ -73,6 +73,8 @@ final class BlueprintTest extends TestCase
             'CreateAction',
             'Forms\\Components\\',
             'panel:doctor',
+            'page.default.layout ??=',
+            '--pk-form-gap',
         ] as $rule) {
             $this->assertStringContainsString($rule, $markdown, "The blueprint no longer states: {$rule}");
         }

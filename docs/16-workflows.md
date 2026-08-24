@@ -68,9 +68,7 @@ the header.
 ## Visual board
 
 When a resource declares `workflow()`, the package mounts a read-only diagram at
-`/{resource}/workflow` (for example `/tickets/workflow`). Nodes are states;
-edges are transitions from the PHP definition. The record view links to this
-board when a workflow is present.
+`/{resource}/workflow` (for example `/tickets/workflow`). The board is not editable in the UI: you cannot drag nodes or edges to change the machine. Nodes are states; edges are transitions from the PHP definition. The record view links to this board when a workflow is present.
 
 The schema includes `routes.workflow` and a `graph` payload (`nodes` + `edges`)
 so custom UIs can draw the same machine without a second round trip.

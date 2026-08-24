@@ -45,6 +45,7 @@ export interface RecordActionItem {
      * about the dialog - it emits `run` exactly as before.
      */
     form?: { nodes: unknown[] }
+    slideOver?: boolean
     url?: string
     /** Filament's palette: primary | gray | success | warning | danger | info. */
     color?: string

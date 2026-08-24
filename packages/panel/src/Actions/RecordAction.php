@@ -102,6 +102,8 @@ final class RecordAction
 
     private ?string $color = null;
 
+    private bool $slideOver = false;
+
     private ?Closure $visible = null;
 
     private ?string $transitionState = null;
@@ -171,6 +173,19 @@ final class RecordAction
     public function confirm(string $message): self
     {
         $this->confirmation = $message;
+
+        return $this;
+    }
+
+    /**
+     * Present a form action in PkSlideover instead of the default dense PkModal.
+     *
+     * Page-first CRUD stays on dedicated routes; this is for secondary flows
+     * that need more horizontal room than a centred modal.
+     */
+    public function slideOver(bool $slideOver = true): self
+    {
+        $this->slideOver = $slideOver;
 
         return $this;
     }
@@ -502,6 +517,7 @@ final class RecordAction
                 : $this->form?->toSchema(),
             'removesRow' => $this->removesRow,
             'color' => $this->color,
+            'slideOver' => $this->slideOver ? true : null,
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
     }
 

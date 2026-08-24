@@ -22,6 +22,7 @@ use Alxtexh\Panel\Support\BackupStatus;
 use Alxtexh\Panel\Support\Contrast;
 use Alxtexh\Panel\Support\Discovery;
 use Alxtexh\Panel\Support\AppearancePrepaintWiring;
+use Alxtexh\Panel\Support\CriticalStylesheetBlocks;
 use Alxtexh\Panel\Support\SemanticStatusTokens;
 use Alxtexh\Panel\Support\InertiaLayoutWiring;
 use Alxtexh\Panel\Support\KitAssets;
@@ -1496,6 +1497,16 @@ final class DoctorCommand extends Command
         }
 
         foreach (SemanticStatusTokens::inspect($css) as $finding) {
+            if (($finding['level'] ?? '') === 'problem') {
+                $this->problem(
+                    $finding['title'],
+                    $finding['detail'],
+                    $finding['suggested'] ?? null,
+                );
+            }
+        }
+
+        foreach (CriticalStylesheetBlocks::inspect($css) as $finding) {
             if (($finding['level'] ?? '') === 'problem') {
                 $this->problem(
                     $finding['title'],

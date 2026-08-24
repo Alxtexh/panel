@@ -47,13 +47,15 @@ final class InertiaLayoutWiring
             ]];
         }
 
-        if (! $hasLayoutCallback && str_contains($source, '??=')) {
+        if (! $hasLayoutCallback && str_contains($source, 'page.default.layout') && str_contains($source, '??=')) {
             return [[
-                'level' => 'note',
+                'level' => 'problem',
                 'title' => 'resources/js/app.ts assigns layout with ??= in resolve',
                 'detail' => 'Pages that set defineOptions({ layout: { breadcrumbs } }) already have a '
-                    .'layout value, so ??= skips PanelLayout and the shell disappears. Switch to '
-                    .'createInertiaApp({ layout: (name) => … }) like the current install stub.',
+                    .'layout value, so ??= skips PanelLayout and the shell disappears while routes '
+                    .'still return 200. Switch to createInertiaApp({ layout: (name) => … }) like '
+                    .'the current install stub.',
+                'suggested' => 'Copy the layout callback from vendor/alxtexh-enterprise/panel/resources/stubs/app.ts.stub',
             ]];
         }
 

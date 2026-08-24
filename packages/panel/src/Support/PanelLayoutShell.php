@@ -16,6 +16,18 @@ final class PanelLayoutShell
 {
     public static function usesPanelShell(string $source): bool
     {
-        return str_contains($source, 'PanelShell');
+        if (! self::importsPanelShell($source)) {
+            return false;
+        }
+
+        return preg_match('#<PanelShell[\s>/]#', $source) === 1;
+    }
+
+    private static function importsPanelShell(string $source): bool
+    {
+        return preg_match(
+            '/import\s*\{[^}]*\bPanelShell\b[^}]*\}\s*from\s*[\'"]@alxtexh-enterprise\/panel\/inertia[\'"]/',
+            $source,
+        ) === 1;
     }
 }

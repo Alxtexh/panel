@@ -16,7 +16,7 @@ Use slide-overs and dense modals for **secondary** flows only:
 
 | Flow | UI |
 | --- | --- |
-| Record action with `->form([...])` | Dense `PkModal` (`size="form"`), sticky footer |
+| Record action with `->form([...])` | Dense `PkModal` (`size="form"`) by default; `->slideOver()` uses `PkSlideover` |
 | Confirm-only actions / delete | Dense `PkModal` (`size="confirm"`) |
 | Dashboard / catalogue filters | `PkSlideover` |
 | Notifications, inspect drawers | `PkSlideover` |
@@ -65,6 +65,15 @@ RecordAction::make('refund', 'Refund')
 The form's declaration is the authority: rules come from the declared fields and
 everything else is discarded, so an action form is not a mass-assignment
 endpoint with a nicer label.
+
+Use `->slideOver()` when the form needs more horizontal room than a centred modal:
+
+```php
+RecordAction::make('assign', 'Assign')
+    ->form([SelectField::make('owner_id')->required()])
+    ->slideOver()
+    ->handle(fn (Task $task, array $data) => $task->update($data));
+```
 
 Group related actions with `ActionGroup`.
 

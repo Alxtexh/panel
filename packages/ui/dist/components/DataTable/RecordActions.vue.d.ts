@@ -16,6 +16,7 @@ export interface RecordActionItem {
     form?: {
         nodes: unknown[];
     };
+    slideOver?: boolean;
     url?: string;
     /** Filament's palette: primary | gray | success | warning | danger | info. */
     color?: string;

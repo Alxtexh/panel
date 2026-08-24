@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use Alxtexh\Panel\Support\PanelLayoutShell;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,7 +25,7 @@ final class PanelShellSmokeTest extends TestCase
     {
         $source = (string) file_get_contents(resource_path('js/layouts/PanelLayout.vue'));
 
-        $this->assertStringContainsString('PanelShell', $source);
+        $this->assertTrue(PanelLayoutShell::usesPanelShell($source));
     }
 
     public function test_app_ts_keeps_the_layout_callback(): void

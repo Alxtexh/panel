@@ -50,6 +50,10 @@ mass assignment is bounded by what you wrote rather than by `$fillable`.
 | `RepeaterField` | A repeating group of fields |
 | `BuilderField` | Repeating groups of *different* shapes |
 | `VisualSelectField` | A choice made by picture rather than label |
+| `PhoneField` | Phone numbers with optional country code |
+| `IconPickerField` | Pick an icon name from the kit catalogue |
+| `TreeSelectField` | Hierarchical choice from nested options |
+| `RatingField` | Star rating (numeric value) |
 | `HiddenField` | A value submitted but not shown |
 
 ## What every field can do

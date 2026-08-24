@@ -89,9 +89,13 @@ test-package: ## Run packages/panel's own suite - Testbench, fixture models, no 
 #   1. make sync-client   (rebuild packages/ui dist + mirror into resources/client)
 #   2. rebuild playground assets if you changed Vue hosts see
 #   3. make release-check (this target)
+.PHONY: check-css-parity
+check-css-parity: ## Fail when stub, kit, and playground CSS drift on critical blocks
+	@scripts/check-css-parity.sh
+
 .PHONY: release-check
-release-check: check-client check-page-shell test-package ## Pre-tag: mirror sync + page-shell freeze + Pest
-	@echo "release-check ok: client mirror matches packages/ui; page-shell freeze ok; package tests passed."
+release-check: check-client check-css-parity check-page-shell test-package ## Pre-tag: mirror sync + CSS parity + page-shell freeze + Pest
+	@echo "release-check ok: client mirror matches packages/ui; CSS parity ok; page-shell freeze ok; package tests passed."
 	@echo "Remember: demo UI must match the published kit (sync-client before tag)."
 
 .PHONY: split
