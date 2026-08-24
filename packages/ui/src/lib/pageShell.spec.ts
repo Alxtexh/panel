@@ -16,7 +16,7 @@ describe('pageShell', () => {
     })
 
     it('offers a left-aligned form measure without centering', () => {
-        expect(FORM_MEASURE).toBe('w-full max-w-5xl')
+        expect(FORM_MEASURE).toBe('w-full max-w-7xl')
         expect(FORM_MEASURE).not.toMatch(/mx-auto/)
     })
 })

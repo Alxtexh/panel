@@ -7,7 +7,7 @@
  * sidebar, and read as a too-long strip. The shell scrollport is a fixed
  * containing block (`transform` on `#pk-main`), so `fixed inset-x-0` here only
  * covers the pane to the right of the rail. Inner chrome stays on FORM_MEASURE
- * (max-w-5xl), left-aligned like the fields, with PAGE_SHELL_COMPACT padding.
+ * (max-w-7xl), left-aligned like the fields, with PAGE_SHELL_COMPACT padding.
  *
  * Outside a panel shell (tests, rare host pages) Teleport is disabled and the
  * bar sticks at the bottom of its in-tree parent instead.

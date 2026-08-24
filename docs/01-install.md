@@ -90,7 +90,7 @@ Panel pages fill the main content area with normal padding
 (`PAGE_SHELL` / `PAGE_SHELL_STACK` / `PAGE_SHELL_COMPACT` from
 `@alxtexh-enterprise/panel`). Create, edit, and view resource pages are
 full-bleed by default; wrap fields in left-aligned `FORM_MEASURE`
-(`max-w-5xl`, no `mx-auto`) when a reading measure helps. Do **not** wrap
+(`max-w-7xl`, no `mx-auto`) when a reading measure helps. Do **not** wrap
 settings, resources, or `make:panel-page` screens in `max-w-*` + `mx-auto`
 unless the screen is intentionally narrow (login, onboarding, marketing).
 Appearance `contentLayout: 'centered'` is the opt-in for hosts who want a

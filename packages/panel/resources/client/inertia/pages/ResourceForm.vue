@@ -674,11 +674,12 @@ onBeforeUnmount(() => {
         </PkPageHeader>
 
         <!--
-            Full-bleed PAGE_SHELL_COMPACT for the page; FORM_MEASURE keeps fields
-            at a comfortable left-aligned width (no mx-auto skinny centre column).
-            No card here when the schema declares layout: Section and Tabs draw
-            their own frame, and wrapping them puts a border around a border.
-            The flat fallback has no frame of its own, so it still gets one.
+            Full-bleed PAGE_SHELL_COMPACT for the page; FORM_MEASURE (max-w-7xl,
+            Filament-default content width) keeps fields left-aligned without an
+            mx-auto skinny centre column. No card here when the schema declares
+            layout: Section and Tabs draw their own frame, and wrapping them puts
+            a border around a border. The flat fallback has no frame of its own,
+            so it still gets one.
         -->
         <div :class="FORM_MEASURE">
             <div :class="formSchema.nodes?.length ? '' : 'bg-card rounded-xl border p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10'">

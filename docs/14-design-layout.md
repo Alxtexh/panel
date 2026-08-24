@@ -10,7 +10,7 @@ congested, centred content column as a regression, not a taste choice.
 | `PAGE_SHELL` | Full-bleed content padding inside the main pane (`w-full min-w-0` + horizontal padding). Default for list, view, settings, and `make:panel-page` screens. |
 | `PAGE_SHELL_STACK` | Same as `PAGE_SHELL` with vertical rhythm between sections. |
 | `PAGE_SHELL_COMPACT` | Tighter padding for dense chrome (record view). |
-| `FORM_MEASURE` | Optional **left-aligned** field column (`w-full max-w-5xl`). No `mx-auto`. Use inside a shell when a reading measure helps create/edit forms. |
+| `FORM_MEASURE` | Optional **left-aligned** field column (`w-full max-w-7xl`, Filament-default content width). No `mx-auto`. Use inside a shell for create/edit/view forms. |
 | `CATALOGUE_CONTAINER` | `@container min-w-0` ancestor for catalogue / settings card grids. Column counts come from container queries, not viewport guesses. |
 
 Import them from `@alxtexh-enterprise/panel` (`pageShell.ts`, `catalogueGrid.ts`).

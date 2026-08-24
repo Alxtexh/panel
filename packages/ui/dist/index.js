@@ -6192,7 +6192,7 @@ const Du = { class: "flex items-center justify-between border-b px-4 py-3" }, Eu
       ], 10, Dc)
     ]));
   }
-}), Fa = "@container min-w-0", Ec = "grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3", N5 = "grid grid-cols-1 gap-2 @lg:grid-cols-2 @3xl:grid-cols-3", Ic = "grid grid-cols-1 gap-4 @lg:grid-cols-2 @lg:gap-5 @3xl:grid-cols-3", Ge = "w-full min-w-0 px-4 py-6 sm:px-6", R5 = "w-full min-w-0 p-3 sm:p-4", U5 = "w-full min-w-0 space-y-6 px-4 py-6 sm:px-6", Fc = "w-full max-w-5xl";
+}), Fa = "@container min-w-0", Ec = "grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3", N5 = "grid grid-cols-1 gap-2 @lg:grid-cols-2 @3xl:grid-cols-3", Ic = "grid grid-cols-1 gap-4 @lg:grid-cols-2 @lg:gap-5 @3xl:grid-cols-3", Ge = "w-full min-w-0 px-4 py-6 sm:px-6", R5 = "w-full min-w-0 p-3 sm:p-4", U5 = "w-full min-w-0 space-y-6 px-4 py-6 sm:px-6", Fc = "w-full max-w-7xl";
 function H5(e, l) {
   const a = Math.max(1, Math.floor(l));
   if (e.length === 0)

@@ -82,6 +82,7 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.4.2 | Replace inspired marketing/shadcn landings with ported SFCs from the offered GitHub templates |
 | v1.4.3 | Verbatim vue-js / shadcn-vue landing ports |
 | v1.4.4 | Remove ported vue-js / shadcn-vue landings; keep aurora, editorial, console |
+| v1.4.15 | Wider create/edit/view `FORM_MEASURE` (`max-w-7xl`, Filament default) |
 
 ## Versioning (from v1.1.0)
 

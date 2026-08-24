@@ -21,7 +21,7 @@ describe('UnsavedBar', () => {
         expect(frame!.className).toContain('fixed')
         expect(frame!.className).not.toContain('sticky')
         const chrome = frame!.firstElementChild as HTMLElement
-        expect(chrome.className).toContain('max-w-5xl')
+        expect(chrome.className).toContain('max-w-7xl')
         expect(chrome.className).toContain(FORM_MEASURE.split(' ')[0])
         wrapper.unmount(); shell.remove()
     })

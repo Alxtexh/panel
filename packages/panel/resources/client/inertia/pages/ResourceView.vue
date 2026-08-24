@@ -732,8 +732,9 @@ function destroy() {
         </PkPageHeader>
 
         <!--
-            Full-bleed shell; left-aligned FORM_MEASURE for the record body
-            (no mx-auto skinny centre column). Relation tables stay full width.
+            Full-bleed shell; left-aligned FORM_MEASURE (max-w-7xl) for the
+            record body (no mx-auto skinny centre column). Relation tables stay
+            full width below.
         -->
         <div :class="FORM_MEASURE">
             <!-- Layout tree: tabs and sections, same components the form uses. -->
