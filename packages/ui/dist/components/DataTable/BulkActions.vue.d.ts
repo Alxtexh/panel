@@ -27,11 +27,11 @@ type __VLS_Props = {
     canExport?: boolean;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
-    run: (key: string) => any;
     export: () => any;
+    run: (key: string) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
-    onRun?: ((key: string) => any) | undefined;
     onExport?: (() => any) | undefined;
+    onRun?: ((key: string) => any) | undefined;
 }>, {
     busy: boolean;
     canExport: boolean;

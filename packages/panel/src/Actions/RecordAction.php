@@ -480,7 +480,13 @@ final class RecordAction
         return array_filter([
             'key' => $this->key,
             'label' => $this->label,
-            'icon' => $this->icon,
+            /*
+             * DEFAULT WHEN THE HOST OMITTED `->icon()`. The client also resolves
+             * by key and label, but shipping the name here means every consumer
+             * of the schema (exports, docs, a second client) sees the same glyph
+             * without reimplementing the lookup.
+             */
+            'icon' => $this->icon ?? self::defaultIconFor($this->key, $this->label, $this->destructive),
             'destructive' => $this->destructive,
             'confirmation' => $this->confirmation,
             'link' => $this->isLink(),
@@ -497,6 +503,66 @@ final class RecordAction
             'removesRow' => $this->removesRow,
             'color' => $this->color,
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
+    }
+
+    /**
+     * Semantic icon name for a common key or label when none was declared.
+     *
+     * Returns null when nothing matches - the client then picks a hollow
+     * circle rather than inventing a meaning the server did not intend.
+     */
+    public static function defaultIconFor(string $key, string $label = '', bool $destructive = false): ?string
+    {
+        $defaults = [
+            'delete' => 'trash',
+            'destroy' => 'trash',
+            'force-delete' => 'trash',
+            'force_delete' => 'trash',
+            'impersonate' => 'log-in',
+            'login-as' => 'log-in',
+            'log-in-as' => 'log-in',
+            'login_as' => 'log-in',
+            'recharge' => 'coins',
+            'recharge-credits' => 'coins',
+            'recharge_credits' => 'coins',
+            'credits' => 'coins',
+            'view' => 'eye',
+            'edit' => 'pencil',
+            'restore' => 'undo',
+            'replicate' => 'copy',
+            'duplicate' => 'copy',
+            'export' => 'download',
+            'download' => 'download',
+            'suspend' => 'ban',
+            'activate' => 'play',
+            'ban' => 'ban',
+        ];
+
+        if (isset($defaults[$key])) {
+            return $defaults[$key];
+        }
+
+        $normalized = str_replace('_', '-', $key);
+
+        if (isset($defaults[$normalized])) {
+            return $defaults[$normalized];
+        }
+
+        $text = strtolower($label);
+
+        if ($text !== '' && preg_match('/\b(delete|remove|destroy|trash)\b/', $text) === 1) {
+            return 'trash';
+        }
+
+        if ($text !== '' && preg_match('/\b(log\s*in|impersonat|sign\s*in\s+as)\b/', $text) === 1) {
+            return 'log-in';
+        }
+
+        if ($text !== '' && preg_match('/\b(recharge|credit|wallet|top\s*up|topup)\b/', $text) === 1) {
+            return 'coins';
+        }
+
+        return $destructive ? 'trash' : null;
     }
 
     /**

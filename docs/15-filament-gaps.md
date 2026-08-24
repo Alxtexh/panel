@@ -83,6 +83,7 @@ Wired into `make release-check` with client mirror sync and package Pest.
 | v1.4.3 | Verbatim vue-js / shadcn-vue landing ports |
 | v1.4.4 | Remove ported vue-js / shadcn-vue landings; keep aurora, editorial, console |
 | v1.4.15 | Wider create/edit/view `FORM_MEASURE` (`max-w-7xl`, Filament default) |
+| v1.4.16 | Row action menu icons: `resolveActionIcon` defaults for recharge / impersonate / delete |
 
 ## Versioning (from v1.1.0)
 

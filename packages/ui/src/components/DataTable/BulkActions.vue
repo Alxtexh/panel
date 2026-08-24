@@ -41,7 +41,7 @@
  */
 import { computed, ref } from 'vue'
 import PkModal from '../Overlay/PkModal.vue'
-import { iconPath } from '../primitives/icons'
+import { iconPath, resolveActionIcon } from '../primitives/icons'
 import PkDropdown from '../primitives/PkDropdown.vue'
 
 export interface BulkActionSchema {
@@ -185,9 +185,9 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
                         stroke-linejoin="round"
                         aria-hidden="true"
                     >
-                        <path :d="iconPath(action.icon)" />
+                        <path :d="resolveActionIcon(action)" />
                     </svg>
-                    {{ action.label }}
+                    <span class="min-w-0 flex-1 truncate">{{ action.label }}</span>
                 </button>
 
                 <!--
@@ -240,9 +240,9 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
                             stroke-linejoin="round"
                             aria-hidden="true"
                         >
-                            <path :d="iconPath(action.icon ?? 'trash')" />
+                            <path :d="resolveActionIcon({ ...action, destructive: true })" />
                         </svg>
-                        {{ action.label }}
+                        <span class="min-w-0 flex-1 truncate">{{ action.label }}</span>
                     </button>
                 </div>
             </div>

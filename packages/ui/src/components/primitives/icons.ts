@@ -116,6 +116,89 @@ export const ICON_PATHS: Record<string, string> = {
     // fields a resource has, and sliders read as "adjust these settings".
     sliders: 'M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M12 2v4 M6 10v4 M14 18v4',
     menu: 'M4 6h16M4 12h16M4 18h16',
+
+    /*
+     * ROW-MENU VOCABULARY that hosts declare without always shipping a path.
+     *
+     * `log-in` / `impersonate` and `coins` / `wallet` / `recharge` are the
+     * names that turned into the fallback `dot` on Users row menus: a coloured
+     * speck beside "Recharge Credits" and "Log in as user", while Delete
+     * looked finished because the destructive branch hard-coded `trash`.
+     */
+    'log-in': 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3',
+    wallet: 'M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3V5a2 2 0 0 1 2-2',
+    coins: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8 M12 18V6',
+    'credit-card': 'M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z M2 10h20',
+    // Hollow ring: used when a coloured action still has no semantic glyph, so
+    // the tone paints a readable mark instead of a one-pixel speck.
+    circle: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z',
+    info: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z M12 16v-4 M12 8h.01',
+}
+
+/**
+ * Host / Filament-shaped names that map onto a path we already ship.
+ *
+ * KEPT SEPARATE FROM ICON_PATHS so the registry stays one glyph per concept,
+ * while callers can keep saying `impersonate` or `currency-dollar`.
+ */
+export const ICON_ALIASES: Record<string, string> = {
+    login: 'log-in',
+    'login-as': 'log-in',
+    'log-in-as': 'log-in',
+    impersonate: 'log-in',
+    'user-check': 'user-check',
+    recharge: 'coins',
+    credits: 'coins',
+    'recharge-credits': 'coins',
+    'currency-dollar': 'coins',
+    'currency-euro': 'coins',
+    banknotes: 'wallet',
+    'heroicon-o-currency-dollar': 'coins',
+    'heroicon-m-currency-dollar': 'coins',
+    'heroicon-o-wallet': 'wallet',
+    'heroicon-o-arrow-left-on-rectangle': 'log-in',
+    'arrow-left-on-rectangle': 'log-in',
+    'arrow-right-on-rectangle': 'log-in',
+}
+
+/** Defaults when the host names an action but omits `->icon()`. */
+export const ACTION_KEY_ICONS: Record<string, string> = {
+    delete: 'trash',
+    __delete: 'trash',
+    destroy: 'trash',
+    'force-delete': 'trash',
+    forceDelete: 'trash',
+    force_delete: 'trash',
+    impersonate: 'log-in',
+    'login-as': 'log-in',
+    'log-in-as': 'log-in',
+    'log-in-as-user': 'log-in',
+    login_as: 'log-in',
+    loginAs: 'log-in',
+    recharge: 'coins',
+    'recharge-credits': 'coins',
+    recharge_credits: 'coins',
+    credits: 'coins',
+    view: 'eye',
+    edit: 'pencil',
+    restore: 'undo',
+    replicate: 'copy',
+    duplicate: 'copy',
+    export: 'download',
+    download: 'download',
+    suspend: 'ban',
+    activate: 'play',
+    ban: 'ban',
+}
+
+/** Last resort when an action declares a colour but still has no glyph. */
+const COLOR_FALLBACK_ICONS: Record<string, string> = {
+    success: 'coins',
+    danger: 'trash',
+    warning: 'alert',
+    primary: 'activity',
+    info: 'info',
+    gray: 'circle',
 }
 
 /** The path for a name, or the fallback dot when the name is unknown. */
@@ -124,5 +207,114 @@ export function iconPath(name: string | null | undefined): string {
         return ICON_PATHS.dot
     }
 
-    return ICON_PATHS[name] ?? ICON_PATHS.dot
+    const resolved = ICON_ALIASES[name] ?? name
+
+    return ICON_PATHS[resolved] ?? ICON_PATHS.dot
+}
+
+/**
+ * Path for a row / bulk menu action: declared icon, then key, then label,
+ * then colour, never a naked coloured speck.
+ *
+ * THE FALLBACK `dot` IS DELIBERATE FOR UNKNOWN NAMES in `iconPath()`, so a
+ * missing glyph is obvious in chrome that expected one. Row menus are the
+ * opposite case: hosts often set `->color('success')` and forget `->icon()`,
+ * and the tone paints that same microscopic path green. Delete looked fine
+ * only because its branch hard-coded `trash`. This resolver is what makes
+ * "Recharge Credits" and "Log in as user" match that finished look when the
+ * host omits (or misspells) the icon.
+ */
+export function resolveActionIcon(action: {
+    key?: string | null
+    label?: string | null
+    icon?: string | null
+    color?: string | null
+    destructive?: boolean
+}): string {
+    if (action.icon) {
+        const fromDeclared = iconPath(action.icon)
+
+        if (fromDeclared !== ICON_PATHS.dot || action.icon === 'dot') {
+            return fromDeclared
+        }
+    }
+
+    const key = (action.key ?? '').trim()
+
+    if (key) {
+        const fromKey = ACTION_KEY_ICONS[key] ?? ACTION_KEY_ICONS[key.replace(/_/g, '-')]
+
+        if (fromKey) {
+            return iconPath(fromKey)
+        }
+    }
+
+    const fromLabel = iconFromActionLabel(action.label)
+
+    if (fromLabel) {
+        return iconPath(fromLabel)
+    }
+
+    if (action.destructive) {
+        return iconPath('trash')
+    }
+
+    const color = action.color ?? ''
+
+    if (color && COLOR_FALLBACK_ICONS[color]) {
+        return iconPath(COLOR_FALLBACK_ICONS[color])
+    }
+
+    // Coloured or not: a hollow circle reads as a mark; the speck does not.
+    return iconPath('circle')
+}
+
+function iconFromActionLabel(label: string | null | undefined): string | null {
+    if (!label) {
+        return null
+    }
+
+    const text = label.toLowerCase()
+
+    if (/\b(delete|remove|destroy|trash)\b/.test(text)) {
+        return 'trash'
+    }
+
+    if (/\b(log\s*in|impersonat|sign\s*in\s+as)\b/.test(text)) {
+        return 'log-in'
+    }
+
+    if (/\b(recharge|credit|wallet|top\s*up|topup)\b/.test(text)) {
+        return 'coins'
+    }
+
+    if (/\b(edit|update)\b/.test(text)) {
+        return 'pencil'
+    }
+
+    if (/\b(view|open|show)\b/.test(text)) {
+        return 'eye'
+    }
+
+    if (/\b(restore|undo)\b/.test(text)) {
+        return 'undo'
+    }
+
+    if (/\b(copy|replicate|duplicate)\b/.test(text)) {
+        return 'copy'
+    }
+
+    if (/\b(export|download)\b/.test(text)) {
+        return 'download'
+    }
+
+    if (/\b(suspend|ban|block)\b/.test(text)) {
+        return 'ban'
+    }
+
+    if (/\b(activate|resume|enable)\b/.test(text)) {
+        return 'play'
+    }
+
+    return null
 }

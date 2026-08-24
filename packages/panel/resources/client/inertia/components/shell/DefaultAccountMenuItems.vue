@@ -44,6 +44,7 @@ import {
     DropdownMenuSeparator,
 } from '@alxtexh-enterprise/panel'
 import type { User } from '../../types'
+import { resolvePanelIcon } from '../../composables/panelIcons'
 import { useTranslations } from '../../composables/useTranslations'
 import UserInfo from './UserInfo.vue'
 
@@ -131,15 +132,15 @@ const handleLogout = () => {
             feedback is not an item here; it lives on What's new.
         -->
         <DropdownMenuItem v-if="panel?.account" as-child>
-            <Link class="block w-full cursor-pointer" :href="panel.account" prefetch>
-                <UserRound class="mr-2 h-4 w-4" />
+            <Link class="flex w-full cursor-pointer items-center gap-2" :href="panel.account" prefetch>
+                <UserRound class="size-4 shrink-0" />
                 {{ t('chrome.account.profile') }}
             </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem v-if="panel?.settings && !panel?.settingsInSidebar" as-child>
-            <Link class="block w-full cursor-pointer" :href="panel.settings" prefetch>
-                <Settings class="mr-2 h-4 w-4" />
+            <Link class="flex w-full cursor-pointer items-center gap-2" :href="panel.settings" prefetch>
+                <Settings class="size-4 shrink-0" />
                 {{ t('chrome.account.settings') }}
             </Link>
         </DropdownMenuItem>
@@ -150,8 +151,12 @@ const handleLogout = () => {
             open it. A link that always 403s advertises a page and then refuses it.
         -->
         <DropdownMenuItem v-if="panel?.userManagement && can.manageRoles" as-child>
-            <Link class="block w-full cursor-pointer" :href="panel.userManagement" prefetch>
-                <UsersRound class="mr-2 h-4 w-4" />
+            <Link
+                class="flex w-full cursor-pointer items-center gap-2"
+                :href="panel.userManagement"
+                prefetch
+            >
+                <UsersRound class="size-4 shrink-0" />
                 {{ t('chrome.account.users') }}
             </Link>
         </DropdownMenuItem>
@@ -162,22 +167,34 @@ const handleLogout = () => {
             than to the organisation whose records fill the sidebar.
         -->
         <DropdownMenuItem v-if="operations.backups && can.viewOperations" as-child>
-            <Link class="block w-full cursor-pointer" :href="operations.backups" prefetch>
-                <DatabaseBackup class="mr-2 h-4 w-4" />
+            <Link
+                class="flex w-full cursor-pointer items-center gap-2"
+                :href="operations.backups"
+                prefetch
+            >
+                <DatabaseBackup class="size-4 shrink-0" />
                 {{ t('chrome.account.backups') }}
             </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem v-if="operations.logs && can.viewOperations" as-child>
-            <Link class="block w-full cursor-pointer" :href="operations.logs" prefetch>
-                <ScrollText class="mr-2 h-4 w-4" />
+            <Link
+                class="flex w-full cursor-pointer items-center gap-2"
+                :href="operations.logs"
+                prefetch
+            >
+                <ScrollText class="size-4 shrink-0" />
                 {{ t('chrome.account.logs') }}
             </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem v-if="operations.monitoring && can.viewOperations" as-child>
-            <Link class="block w-full cursor-pointer" :href="operations.monitoring" prefetch>
-                <Server class="mr-2 h-4 w-4" />
+            <Link
+                class="flex w-full cursor-pointer items-center gap-2"
+                :href="operations.monitoring"
+                prefetch
+            >
+                <Server class="size-4 shrink-0" />
                 {{ t('chrome.account.monitoring') }}
             </Link>
         </DropdownMenuItem>
@@ -187,8 +204,8 @@ const handleLogout = () => {
             logs above it, and a different kind from anything in the sidebar.
         -->
         <DropdownMenuItem v-if="panel?.activity && can.viewOperations" as-child>
-            <Link class="block w-full cursor-pointer" :href="panel.activity" prefetch>
-                <Activity class="mr-2 h-4 w-4" />
+            <Link class="flex w-full cursor-pointer items-center gap-2" :href="panel.activity" prefetch>
+                <Activity class="size-4 shrink-0" />
                 {{ t('chrome.account.activity') }}
             </Link>
         </DropdownMenuItem>
@@ -199,8 +216,8 @@ const handleLogout = () => {
             and nothing else - so it is never gated on which portal this is.
         -->
         <DropdownMenuItem v-if="trash" as-child>
-            <Link class="block w-full cursor-pointer" :href="trash.href" prefetch>
-                <Trash2 class="mr-2 h-4 w-4" />
+            <Link class="flex w-full cursor-pointer items-center gap-2" :href="trash.href" prefetch>
+                <Trash2 class="size-4 shrink-0" />
                 {{ trash.title }}
             </Link>
         </DropdownMenuItem>
@@ -238,15 +255,28 @@ const handleLogout = () => {
                 <DropdownMenuItem v-if="panel?.menuItems" as-child>
                 <a
                     v-if="/^https?:\/\//.test(item.href)"
-                    class="block w-full cursor-pointer"
+                    class="flex w-full cursor-pointer items-center gap-2"
                     :href="item.href"
                     target="_blank"
                     rel="noopener noreferrer"
-                    >{{ item.label }}</a
                 >
-                <Link v-else class="block w-full cursor-pointer" :href="item.href">{{
-                    item.label
-                    }}</Link>
+                    <component
+                        :is="resolvePanelIcon(item.icon)"
+                        class="size-4 shrink-0"
+                    />
+                    <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+                </a>
+                <Link
+                    v-else
+                    class="flex w-full cursor-pointer items-center gap-2"
+                    :href="item.href"
+                >
+                    <component
+                        :is="resolvePanelIcon(item.icon)"
+                        class="size-4 shrink-0"
+                    />
+                    <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+                </Link>
                 </DropdownMenuItem>
             </template>
         </DropdownMenuGroup>
@@ -262,14 +292,14 @@ const handleLogout = () => {
     -->
     <DropdownMenuItem v-if="panel?.logout" as-child>
         <Link
-            class="block w-full cursor-pointer"
+            class="flex w-full cursor-pointer items-center gap-2"
             :href="panel.logout"
             method="post"
             as="button"
             data-test="logout-button"
             @click="handleLogout"
         >
-            <LogOut class="mr-2 h-4 w-4" />
+            <LogOut class="size-4 shrink-0" />
             {{ t('chrome.account.logout') }}
         </Link>
     </DropdownMenuItem>

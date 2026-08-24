@@ -195,7 +195,7 @@ export type { MultiSelectOption } from './components/primitives/PkMultiSelect.vu
 export type { BottomNavItem } from './components/Layout/PkBottomNav.vue';
 export type { Step as StepIndicatorStep } from './components/Layout/PkStepIndicator.vue';
 export type { RecordActionGroup, RecordActionItem } from './components/DataTable/RecordActions.vue';
-export { ICON_PATHS, iconPath } from './components/primitives/icons';
+export { ACTION_KEY_ICONS, ICON_ALIASES, ICON_PATHS, iconPath, resolveActionIcon, } from './components/primitives/icons';
 export type { UploadedFileValue } from './components/Form/PkFileUpload.vue';
 export type { Appearance, AppearancePayload, Theme, Density, SidebarSide, CardStyle, } from './composables/useAppearance';
 export type { SchemaColumn } from './composables/useSchemaColumns';

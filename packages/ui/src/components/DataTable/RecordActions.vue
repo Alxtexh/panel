@@ -26,7 +26,7 @@
  * the one place where making something harder to reach is the feature.
  */
 import { computed, ref } from 'vue'
-import { iconPath } from '../primitives/icons'
+import { iconPath, resolveActionIcon } from '../primitives/icons'
 import PkDropdown from '../primitives/PkDropdown.vue'
 
 export interface RecordActionItem {
@@ -225,9 +225,9 @@ defineExpose({ openContextMenu })
                                 stroke-linejoin="round"
                                 aria-hidden="true"
                             >
-                                <path :d="iconPath(action.icon)" />
+                                <path :d="resolveActionIcon(action)" />
                             </svg>
-                            {{ action.label }}
+                            <span class="min-w-0 flex-1 truncate">{{ action.label }}</span>
                         </a>
 
                         <button
@@ -251,9 +251,9 @@ defineExpose({ openContextMenu })
                                 aria-hidden="true"
                                 :class="busy === action.key && 'animate-pulse'"
                             >
-                                <path :d="iconPath(action.icon)" />
+                                <path :d="resolveActionIcon(action)" />
                             </svg>
-                            {{ action.label }}
+                            <span class="min-w-0 flex-1 truncate">{{ action.label }}</span>
                         </button>
                     </template>
 
@@ -279,9 +279,9 @@ defineExpose({ openContextMenu })
                                 stroke-linejoin="round"
                                 aria-hidden="true"
                             >
-                                <path :d="iconPath(action.icon ?? 'trash')" />
+                                <path :d="resolveActionIcon({ ...action, destructive: true })" />
                             </svg>
-                            {{ action.label }}
+                            <span class="min-w-0 flex-1 truncate">{{ action.label }}</span>
                         </button>
                     </div>
                 </div>
