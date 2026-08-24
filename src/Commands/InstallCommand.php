@@ -79,6 +79,7 @@ final class InstallCommand extends Command
         $this->checkTenancy();
         $this->checkAuthScaffolding();
         $this->writeBlueprint();
+        $this->writeCursorRule();
 
         /*
          * AFTER every check that might load App\Models\User. Wiring the
@@ -115,9 +116,8 @@ final class InstallCommand extends Command
         $this->line('  Without a first user (`--no-user`) the sidebar is empty: that is');
         $this->line('  deny-by-default, not a broken install. Run panel:make-user.');
         $this->newLine();
-        $this->line('  AGENTS.md now holds the conventions and the full list of fields,');
-        $this->line('  columns, filters and actions available. Re-run `panel:blueprint`');
-        $this->line('  after adding resources - it is generated, so it stays true.');
+        $this->line('  AI: read AGENTS.md first (Day 0 do/don\'t). Re-run `panel:blueprint`');
+        $this->line('  after adding resources. Claude Code: `panel:blueprint --file=CLAUDE.md`.');
 
         return self::SUCCESS;
     }
@@ -744,6 +744,38 @@ final class InstallCommand extends Command
                 '  AGENTS.md was not written ('.$e->getMessage().'). Run `php artisan panel:blueprint`.'
             );
         }
+    }
+
+    /**
+     * A Cursor rule only when the host already uses Cursor.
+     *
+     * Creating `.cursor/` on every Laravel install would be noise for people
+     * who never open that editor. If the directory is already there, a short
+     * always-on rule pointing at AGENTS.md is the Day-0 card in the place
+     * Cursor actually reads.
+     */
+    private function writeCursorRule(): void
+    {
+        $dir = base_path('.cursor/rules');
+
+        if (! is_dir($dir)) {
+            return;
+        }
+
+        $path = $dir.'/panelkit.mdc';
+
+        if (is_file($path)) {
+            return;
+        }
+
+        $stub = dirname(__DIR__, 2).'/resources/stubs/cursor-panelkit.mdc.stub';
+
+        if (! is_file($stub)) {
+            return;
+        }
+
+        file_put_contents($path, file_get_contents($stub));
+        $this->components->task('  wrote .cursor/rules/panelkit.mdc', fn () => true);
     }
 
     /**

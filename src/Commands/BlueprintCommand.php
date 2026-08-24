@@ -11,7 +11,7 @@ use Alxtexh\Panel\Support\Blueprint;
  * Writes the instructions an AI agent needs into the application.
  *
  * WHY A FILE AND NOT A PROMPT. Agents read a file in the repository -
- * `AGENTS.md`, `CLAUDE.md`, whatever the tool looks for - on every session,
+ * `AGENTS.md`, `CLAUDE.md` (`--file=CLAUDE.md`), whatever the tool looks for - on every session,
  * without anybody remembering to paste anything. A prompt somebody has to
  * remember is guidance that is present on the day it was written and absent
  * every day after.
@@ -29,7 +29,7 @@ use Alxtexh\Panel\Support\Blueprint;
 final class BlueprintCommand extends Command
 {
     protected $signature = 'panel:blueprint
-                            {--file= : Where to write it (default AGENTS.md)}
+                            {--file= : Where to write it (default AGENTS.md; pass CLAUDE.md for Claude Code)}
                             {--print : Write it to output instead of a file}';
 
     protected $description = 'Write the panel conventions an AI agent should follow into the project';

@@ -21,9 +21,12 @@ use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Support\BackupStatus;
 use Alxtexh\Panel\Support\Contrast;
 use Alxtexh\Panel\Support\Discovery;
+use Alxtexh\Panel\Support\InertiaLayoutWiring;
 use Alxtexh\Panel\Support\KitAssets;
+use Alxtexh\Panel\Support\PanelLayoutShell;
 use Alxtexh\Panel\Support\PanelPages;
 use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\WebSharePanelProps;
 use Alxtexh\Panel\Support\TicketTables;
 use Alxtexh\Panel\Support\VendoredCopy;
 use Alxtexh\Panel\Ticketing\TicketingPlugin;
@@ -113,6 +116,8 @@ final class DoctorCommand extends Command
             $this->checkDiscovery($panels);
             $this->checkPageFiles();
             $this->checkInertiaLayoutWiring();
+            $this->checkSharePanelPropsWiring();
+            $this->checkPanelLayoutShell();
             $this->checkStylesheet();
             $this->checkClientHalf();
             $this->checkSignInRoute();
@@ -1146,43 +1151,81 @@ final class DoctorCommand extends Command
             return;
         }
 
-        $source = (string) file_get_contents($path);
+        foreach (InertiaLayoutWiring::inspect((string) file_get_contents($path)) as $finding) {
+            if (($finding['level'] ?? '') === 'note') {
+                $this->note($finding['title'], $finding['detail']);
 
-        if (! str_contains($source, 'PanelLayout')) {
+                continue;
+            }
+
             $this->problem(
-                'resources/js/app.ts does not reference PanelLayout',
-                'The panel shell is applied in this file. Restoring the install stub '
-                .'(createInertiaApp layout callback that returns PanelLayout) brings the '
-                .'sidebar back. Do not set layout: null on panel pages.',
-                'Copy the layout callback from vendor/alxtexh-enterprise/panel/resources/stubs/app.ts.stub',
+                $finding['title'],
+                $finding['detail'],
+                $finding['suggested'] ?? null,
             );
+        }
+    }
 
+    /**
+     * SharePanelProps on the web group, in the file install writes.
+     *
+     * THE PACKAGE ALSO REGISTERS THIS AT BOOT, so deleting the line from
+     * bootstrap/app.php does not always drop the shell today. Doctor still
+     * names it: that file is what a person or agent sees, and the next edit
+     * that "cleans unused middleware" is how the wiring disappears for real.
+     */
+    private function checkSharePanelPropsWiring(): void
+    {
+        $files = array_values(array_filter([
+            base_path('bootstrap/app.php'),
+            base_path('app/Http/Kernel.php'),
+        ], 'is_file'));
+
+        if ($files === []) {
             return;
         }
 
-        $hasLayoutCallback = preg_match('/\blayout\s*:\s*(?:\(|function\b)/', $source) === 1;
-        $hasResolveAssign = str_contains($source, 'page.default.layout');
+        foreach ($files as $file) {
+            if (WebSharePanelProps::present((string) file_get_contents($file))) {
+                return;
+            }
+        }
 
-        if (! $hasLayoutCallback && ! $hasResolveAssign) {
-            $this->problem(
-                'resources/js/app.ts never applies PanelLayout',
-                'Neither a createInertiaApp({ layout: (name) => … }) callback nor a '
-                .'resolve-time page.default.layout assignment is present, so screens '
-                .'render without the shell. Prefer the layout callback from the install stub.',
-                'Restore the layout callback from the panel app.ts.stub',
-            );
+        $this->problem(
+            'SharePanelProps is not in bootstrap/app.php',
+            'panel:install puts SharePanelProps on the web middleware group so app-owned '
+            .'routes keep the account menu, footer and padlock. Restore the class even if '
+            .'the package also registers it at boot: the file is what the next edit reads.',
+            'Keep `SharePanelProps::class` in the web append list in bootstrap/app.php',
+        );
+    }
 
+    /**
+     * PanelLayout.vue must still mount PanelShell.
+     *
+     * Replacing the published wrapper with a hand-rolled chrome is the other
+     * way to ship a 200 with no sidebar. Auth screens use AuthLayout on purpose
+     * and are not this file.
+     */
+    private function checkPanelLayoutShell(): void
+    {
+        $path = resource_path('js/layouts/PanelLayout.vue');
+
+        if (! is_file($path)) {
             return;
         }
 
-        if (! $hasLayoutCallback && str_contains($source, '??=')) {
-            $this->note(
-                'resources/js/app.ts assigns layout with ??= in resolve',
-                'Pages that set defineOptions({ layout: { breadcrumbs } }) already have a '
-                .'layout value, so ??= skips PanelLayout and the shell disappears. Switch to '
-                .'createInertiaApp({ layout: (name) => … }) like the current install stub.',
-            );
+        if (PanelLayoutShell::usesPanelShell((string) file_get_contents($path))) {
+            return;
         }
+
+        $this->problem(
+            'PanelLayout.vue no longer uses PanelShell',
+            'The published layout is a thin wrapper around PanelShell. Dropping that '
+            .'import leaves every panel page without sidebar, navbar and footer while '
+            .'routes still return 200.',
+            'Restore `import { PanelShell } from \'@alxtexh-enterprise/panel/inertia\'` and wrap the slot.',
+        );
     }
 
     /**
