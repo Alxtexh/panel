@@ -19,12 +19,12 @@ use Alxtexh\Panel\Support\PanelHome;
  * ALXTEXHPANEL SHIPS SEVERAL LANDING DESIGNS, not one, because a landing page is
  * the single screen whose job is to sound like the company behind it - and a
  * framework that ships one template makes every deployment sound like the
- * same company. Three voices ship: aurora, editorial and console. Each is a
- * composition of kit sections, not a forked Vue template.
+ * same company. Four voices ship: aurora, editorial, console and studio. Each
+ * is a composition of kit sections, not a forked Vue template.
  *
  * THE DESIGN IS CONFIGURATION, not a fork. An installation picks one in
  * `config('panel.landing')`; the `?design=` parameter exists so the
- * reference app can demonstrate all three without a redeploy, and is
+ * reference app can demonstrate all four without a redeploy, and is
  * validated against the known set rather than passed through - an
  * unvalidated component name in a render call is a way to ask the server to
  * mount any page in the bundle.

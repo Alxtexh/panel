@@ -35,6 +35,57 @@ final class Workflow
         return new self($column);
     }
 
+    /**
+     * Rebuild a Workflow from a stored DB override.
+     *
+     * Column and model come from the PHP base definition (they reference code
+     * artifacts). States and transitions come from the DB row.
+     *
+     * @param  array{column: string, group_label?: string, states: array<string, array{label: string, color: string}>, transitions: list<array{key: string, label: string, to: string, from?: list<string>, ability?: string, icon?: string|null, color?: string|null, confirm?: string|null}>}  $stored
+     * @param  class-string|null  $model
+     */
+    public static function fromStored(array $stored, ?string $model = null): self
+    {
+        $workflow = new self($stored['column']);
+        $workflow->model = $model;
+        $workflow->groupLabel = $stored['group_label'] ?? 'Status';
+
+        $workflow->states($stored['states']);
+
+        $transitions = [];
+
+        foreach ($stored['transitions'] as $t) {
+            $transition = Transition::make($t['key'], $t['label'])
+                ->to($t['to']);
+
+            if (! empty($t['from'])) {
+                $transition->from($t['from']);
+            }
+
+            if (isset($t['ability']) && $t['ability'] !== '') {
+                $transition->authorize($t['ability']);
+            }
+
+            if (isset($t['icon']) && $t['icon'] !== null) {
+                $transition->icon($t['icon']);
+            }
+
+            if (isset($t['color']) && $t['color'] !== null) {
+                $transition->color($t['color']);
+            }
+
+            if (isset($t['confirm']) && $t['confirm'] !== null) {
+                $transition->confirm($t['confirm']);
+            }
+
+            $transitions[] = $transition;
+        }
+
+        $workflow->transitions($transitions);
+
+        return $workflow;
+    }
+
     /** @param class-string $model */
     public function model(string $model): self
     {
@@ -89,6 +140,29 @@ final class Workflow
     public function column(): string
     {
         return $this->column;
+    }
+
+    /** @return class-string|null */
+    public function getModel(): ?string
+    {
+        return $this->model;
+    }
+
+    public function groupLabel(): string
+    {
+        return $this->groupLabel;
+    }
+
+    /** @return array<string, array{label: string, color: string}> */
+    public function getStates(): array
+    {
+        return $this->states;
+    }
+
+    /** @return list<Transition> */
+    public function getTransitions(): array
+    {
+        return $this->transitions;
     }
 
     public function rowKey(): string

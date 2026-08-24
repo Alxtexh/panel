@@ -360,7 +360,7 @@ final class Panel
      *
      * @var list<string>
      */
-    private const LANDING_DESIGNS = ['aurora', 'editorial', 'console'];
+    private const LANDING_DESIGNS = ['aurora', 'editorial', 'console', 'studio'];
 
     /**
      * Host-facing aliases that resolve to a shipped landing design.

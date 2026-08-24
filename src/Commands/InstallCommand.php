@@ -8,6 +8,7 @@ use Alxtexh\Panel\Support\KitAssets;
 use Alxtexh\Panel\Support\PanelPages;
 use Alxtexh\Panel\Support\SemanticStatusTokens;
 use Alxtexh\Panel\Support\CriticalStylesheetBlocks;
+use Alxtexh\Panel\Support\ThemeChromeTokens;
 use Alxtexh\Panel\Support\UserRoles;
 use Alxtexh\Panel\Support\WebSharePanelProps;
 use Composer\Autoload\ClassLoader;
@@ -394,6 +395,15 @@ final class InstallCommand extends Command
                 $this->components->twoColumnDetail(
                     'Added critical CSS blocks',
                     $relative.' (form gap, landing typography)',
+                );
+
+                return;
+            }
+
+            if (ThemeChromeTokens::ensureInFile($target)) {
+                $this->components->twoColumnDetail(
+                    'Added chrome tokens',
+                    $relative.' (sidebar, popover, chart, radius, soft shell)',
                 );
 
                 return;

@@ -52,6 +52,9 @@ final class InfolistTest extends TestCase
         $this->assertContains('color', $types);
         $this->assertContains('code', $types);
         $this->assertContains('repeatable', $types);
+        $this->assertContains('badge', $types);
+        $this->assertContains('datetime', $types);
+        $this->assertContains('money', $types);
         $this->assertSame('title', $entries[0]['key'] ?? null);
         $this->assertSame('https://example.test/articles', $entries[0]['url'] ?? null);
         $this->assertSame('copy', $entries[0]['action']['key'] ?? null);
@@ -134,5 +137,51 @@ final class InfolistTest extends TestCase
 
         $this->postJson("/articles/{$article->getKey()}/infolist-action", ['action' => 'nuke'])
             ->assertNotFound();
+    }
+
+    public function test_badge_entry_schema_includes_colors_and_default(): void
+    {
+        $entry = \Alxtexh\Panel\Infolists\BadgeEntry::make('status')
+            ->colors(['draft' => 'neutral', 'published' => 'success'])
+            ->defaultColor('warning');
+
+        $schema = $entry->toSchema();
+
+        $this->assertSame('badge', $schema['type']);
+        $this->assertSame(['draft' => 'neutral', 'published' => 'success'], $schema['colors']);
+        $this->assertSame('warning', $schema['defaultColor']);
+    }
+
+    public function test_datetime_entry_defaults_to_datetime_type(): void
+    {
+        $entry = \Alxtexh\Panel\Infolists\DateTimeEntry::make('created_at');
+        $this->assertSame('datetime', $entry->toSchema()['type']);
+
+        $entry->date();
+        $this->assertSame('date', $entry->toSchema()['type']);
+
+        $entry->dateTime();
+        $this->assertSame('datetime', $entry->toSchema()['type']);
+    }
+
+    public function test_money_entry_schema_includes_currency_and_divisor(): void
+    {
+        $entry = \Alxtexh\Panel\Infolists\MoneyEntry::make('price')
+            ->currency('EUR')
+            ->divideBy(1);
+
+        $schema = $entry->toSchema();
+
+        $this->assertSame('money', $schema['type']);
+        $this->assertSame('EUR', $schema['currency']);
+        $this->assertSame(1, $schema['divideBy']);
+    }
+
+    public function test_money_entry_defaults_to_usd_and_100_divisor(): void
+    {
+        $schema = \Alxtexh\Panel\Infolists\MoneyEntry::make('amount')->toSchema();
+
+        $this->assertSame('USD', $schema['currency']);
+        $this->assertSame(100, $schema['divideBy']);
     }
 }

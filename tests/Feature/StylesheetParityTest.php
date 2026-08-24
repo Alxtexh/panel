@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Tests\Feature;
 
 use Alxtexh\Panel\Support\CriticalStylesheetBlocks;
 use Alxtexh\Panel\Support\SemanticStatusTokens;
+use Alxtexh\Panel\Support\ThemeChromeTokens;
 use Alxtexh\Panel\Tests\TestCase;
 
 /**
@@ -33,6 +34,11 @@ final class StylesheetParityTest extends TestCase
             $this->assertTrue(
                 SemanticStatusTokens::isComplete($css),
                 "{$path} is missing semantic status tokens",
+            );
+
+            $this->assertTrue(
+                ThemeChromeTokens::isComplete($css),
+                "{$path} is missing theme chrome tokens",
             );
         }
     }

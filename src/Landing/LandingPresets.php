@@ -18,7 +18,7 @@ final class LandingPresets
     /** @return list<string> */
     public static function names(): array
     {
-        return ['aurora', 'editorial', 'console'];
+        return ['aurora', 'editorial', 'console', 'studio'];
     }
 
     /**
@@ -45,6 +45,7 @@ final class LandingPresets
         return match (self::resolve($name)) {
             'editorial' => self::editorial(),
             'console' => self::console(),
+            'studio' => self::studio(),
             default => self::aurora(),
         };
     }
@@ -228,6 +229,45 @@ final class LandingPresets
             $by('pricing'),
             $by('faq'),
             $by('cta'),
+        ]));
+    }
+
+    /** The brand-first workshop page: precise, warm graphite, operator product. */
+    private static function studio(): array
+    {
+        $aurora = self::aurora();
+        $by = static fn (string $type): array => collect($aurora)->firstWhere('type', $type) ?? [];
+
+        return array_values(array_filter([
+            ['type' => 'hero', 'data' => [
+                'eyebrow' => 'Precision tooling for operators',
+                'title' => 'The workshop where panels are made',
+                'body' => 'A studio for building operator screens. Declare the schema in PHP, and the interface assembles itself: tables, forms, navigation and permissions from one source of truth.',
+                'primaryLabel' => 'Open the studio',
+                'primaryHref' => '/register',
+                'secondaryLabel' => 'See how it works',
+                'secondaryHref' => '/about',
+            ]],
+            ['type' => 'steps', 'data' => [
+                'title' => 'From blank file to running screen',
+                'items' => [
+                    ['title' => 'Describe the record', 'body' => 'One PHP class names the table columns, the form fields and the access rules.'],
+                    ['title' => 'Let the framework build', 'body' => 'Routes, navigation, search, export and the API endpoint arrive with no wiring.'],
+                    ['title' => 'Ship to your operators', 'body' => 'Every screen is tenant-scoped, permission-gated and fast at scale from the start.'],
+                ],
+            ]],
+            self::featureGrid(),
+            $by('showcase'),
+            $by('stats'),
+            $by('testimonials'),
+            $by('pricing'),
+            $by('faq'),
+            ['type' => 'cta', 'data' => [
+                'title' => 'Open the workshop',
+                'body' => 'Install the package, point it at a model, and visit the screen it made.',
+                'label' => 'Get started',
+                'href' => '/register',
+            ]],
         ]));
     }
 }

@@ -7,16 +7,13 @@ namespace Alxtexh\Panel\Plugins;
 use Alxtexh\Panel\Panel;
 
 /**
- * Something a separate package can install into a panel.
+ * Modular registration for host-owned panel packages.
  *
- * WHAT WAS MISSING. Everything a plugin would want to add already existed -
- * resources are discovered, routes are registered per panel, pages are declared,
- * field types have a registry - but every one of those doors opened only from
- * INSIDE the application. A third-party package could ship a resource class and
- * had no way to get it registered, no way to add a route inside the panel's
- * group, and no way to put a link in the navigation. So "install this package
- * and you get a billing screen" was impossible; the best anybody could do was a
- * README telling people which four files to edit.
+ * A plugin groups resources, routes, pages and render hooks into a reusable
+ * unit that can be shared across your own projects. This is for first-party,
+ * host-owned code. There is no marketplace and no third-party plugin track.
+ * Build features directly in the application first; extract a plugin only
+ * when the same screens belong in more than one project.
  *
  * A PLUGIN IS A THING THAT REGISTERS THINGS, and deliberately nothing more. It
  * does not get the `Panel` to mutate: a plugin that could change the guard, the

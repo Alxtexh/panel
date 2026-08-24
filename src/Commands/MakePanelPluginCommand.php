@@ -12,8 +12,12 @@ use Alxtexh\Panel\Plugins\RenderHooks;
 /**
  * php artisan make:panel-plugin Vendor/Name
  *
- * Scaffolds a first-party plugin class and a README beside it. Plugins are
- * loaded explicitly from config or Panel::plugins(), not by scanning.
+ * Scaffolds a host-owned plugin class and a README beside it. This is for
+ * first-party, modular registration of resources, pages and routes you
+ * maintain yourself. There is no marketplace and no third-party plugin
+ * track. Build features in-app first; extract a plugin only when you need
+ * the same screens in more than one project. Plugins are loaded explicitly
+ * from config or Panel::plugins(), not by scanning.
  */
 final class MakePanelPluginCommand extends Command
 {
@@ -21,7 +25,7 @@ final class MakePanelPluginCommand extends Command
                             {name : Vendor/Name, e.g. Acme/Billing}
                             {--force : Overwrite existing files}';
 
-    protected $description = 'Scaffold a Panel plugin class and README';
+    protected $description = 'Scaffold a host-owned Panel plugin class and README';
 
     public function handle(): int
     {
@@ -98,11 +102,12 @@ final class MakePanelPluginCommand extends Command
         use Alxtexh\\Panel\\Widgets\\StatWidget;
 
         /**
-         * Skeleton plugin for {$id}.
+         * Host-owned plugin for {$id}.
          *
-         * Override the register* hooks below. Helpers such as resources(),
-         * pageClasses(), widgets(), menuItem(), and render() are available
-         * while register() runs on the Plugin base class.
+         * This is a first-party plugin scaffold for modular registration. There
+         * is no marketplace. Override the register* hooks below. Helpers such as
+         * resources(), pageClasses(), widgets(), menuItem(), and render() are
+         * available while register() runs on the Plugin base class.
          */
         final class {$class} extends Plugin
         {
@@ -177,7 +182,13 @@ final class MakePanelPluginCommand extends Command
         return <<<MD
         # {$vendor} {$name} plugin
 
-        First-party Panel plugin scaffold for `{$id}`.
+        Host-owned Panel plugin scaffold for `{$id}`.
+
+        This is a first-party plugin for modular registration of resources,
+        pages and routes you maintain yourself. There is no marketplace and no
+        third-party plugin track. Build features in the application first;
+        extract a plugin only when you need the same screens in more than one
+        project.
 
         ## Install
 
@@ -214,7 +225,7 @@ final class MakePanelPluginCommand extends Command
         - PanelKit ships the contract on `Alxtexh\\Panel\\Plugins\\Plugin::CONTRACT_VERSION`
         - Override `panelIds()` when the plugin targets specific panels only
 
-        ## MVP limits
+        ## Scope
 
         - No marketplace packaging or auto-scanning
         - Vue/Inertia components must live in the host application

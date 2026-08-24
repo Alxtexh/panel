@@ -12,11 +12,14 @@ use Alxtexh\Panel\Forms\Fields\CheckboxField;
 use Alxtexh\Panel\Forms\Fields\FileUploadField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Infolists\BadgeEntry;
 use Alxtexh\Panel\Infolists\CodeEntry;
 use Alxtexh\Panel\Infolists\ColorEntry;
+use Alxtexh\Panel\Infolists\DateTimeEntry;
 use Alxtexh\Panel\Infolists\IconEntry;
 use Alxtexh\Panel\Infolists\ImageEntry;
 use Alxtexh\Panel\Infolists\KeyValueEntry;
+use Alxtexh\Panel\Infolists\MoneyEntry;
 use Alxtexh\Panel\Infolists\RepeatableEntry;
 use Alxtexh\Panel\Infolists\TextEntry;
 use Alxtexh\Panel\Comments\Comments;
@@ -149,6 +152,15 @@ final class ArticleResource extends Resource
                 TextEntry::make('label'),
                 TextEntry::make('url'),
             ]),
+            BadgeEntry::make('status')
+                ->colors([
+                    'draft' => 'neutral',
+                    'published' => 'success',
+                    'archived' => 'warning',
+                ])
+                ->defaultColor('neutral'),
+            DateTimeEntry::make('created_at'),
+            MoneyEntry::make('price')->currency('USD')->divideBy(100),
         ];
     }
 

@@ -10,6 +10,7 @@ use Alxtexh\Panel\Support\ConfigDrift;
 use Alxtexh\Panel\Support\CriticalStylesheetBlocks;
 use Alxtexh\Panel\Support\PanelPages;
 use Alxtexh\Panel\Support\SemanticStatusTokens;
+use Alxtexh\Panel\Support\ThemeChromeTokens;
 
 /**
  * What to run after `composer update alxtexh-enterprise/panel`.
@@ -55,6 +56,7 @@ final class UpdateCommand extends Command
             $this->repointStylesheet(),
             $this->ensureSemanticStatusTokens(),
             $this->ensureCriticalStylesheetBlocks(),
+            $this->ensureThemeChromeTokens(),
             $this->reportPendingMigrations(),
             $this->reportUninstalledPlugins(),
             $this->refreshBlueprint(),
@@ -265,6 +267,31 @@ final class UpdateCommand extends Command
         );
 
         return 'Run your build (npm run build), or re-publish kit assets, so pk-form-stack and landing typography exist.';
+    }
+
+    /**
+     * Register sidebar / popover / chart / radius / soft shell when absent.
+     */
+    private function ensureThemeChromeTokens(): ?string
+    {
+        $target = resource_path('css/app.css');
+
+        if (! file_exists($target)) {
+            return null;
+        }
+
+        if (! ThemeChromeTokens::ensureInFile($target)) {
+            $this->components->task('  chrome tokens already present', fn () => true);
+
+            return null;
+        }
+
+        $this->components->task(
+            '  added sidebar / popover / chart / radius / soft-shell tokens to resources/css/app.css',
+            fn () => true,
+        );
+
+        return 'Run your build (npm run build), or re-publish kit assets, so sidebar, popover, and chart utilities exist.';
     }
 
     /**

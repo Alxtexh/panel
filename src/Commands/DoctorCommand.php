@@ -24,6 +24,7 @@ use Alxtexh\Panel\Support\Discovery;
 use Alxtexh\Panel\Support\AppearancePrepaintWiring;
 use Alxtexh\Panel\Support\CriticalStylesheetBlocks;
 use Alxtexh\Panel\Support\SemanticStatusTokens;
+use Alxtexh\Panel\Support\ThemeChromeTokens;
 use Alxtexh\Panel\Support\InertiaLayoutWiring;
 use Alxtexh\Panel\Support\KitAssets;
 use Alxtexh\Panel\Support\PanelLayoutShell;
@@ -1515,6 +1516,16 @@ final class DoctorCommand extends Command
                 );
             }
         }
+
+        foreach (ThemeChromeTokens::inspect($css) as $finding) {
+            if (($finding['level'] ?? '') === 'problem') {
+                $this->problem(
+                    $finding['title'],
+                    $finding['detail'],
+                    $finding['suggested'] ?? null,
+                );
+            }
+        }
     }
 
     /**
@@ -2012,9 +2023,9 @@ final class DoctorCommand extends Command
             }
 
             $this->problem(
-                "Plugin [{$id}] targets contract {$version}",
+                "Host plugin [{$id}] has a contract mismatch",
                 get_class($plugin)." reports plugin contract {$version}, but this PanelKit release expects {$expected}.",
-                'Upgrade the plugin package or pin PanelKit to a matching release.',
+                'Update the plugin class to match the current contract version, or pin PanelKit to a compatible release.',
             );
         }
     }
