@@ -53,6 +53,18 @@
     --color-primary-foreground: var(--primary-foreground);
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
+    /*
+     * FIXED STATUS COLOURS, NOT DERIVED FROM `--primary`. Badges and toggles
+     * ask for bg-success / bg-warning / bg-info; without these @theme entries
+     * Tailwind never emits the utilities and those variants render as plain text.
+     * appearanceVars() and tenant brand must not overwrite them.
+     */
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
     --color-sidebar: var(--sidebar-background);
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar-primary: var(--sidebar-primary);
@@ -93,6 +105,12 @@
     --accent-foreground: hsl(0 0% 9%);
     --destructive: hsl(0 84.2% 60.2%);
     --destructive-foreground: hsl(0 0% 98%);
+    --success: hsl(142 71% 40%);
+    --success-foreground: hsl(0 0% 98%);
+    --warning: hsl(38 92% 46%);
+    --warning-foreground: hsl(0 0% 9%);
+    --info: hsl(199 89% 45%);
+    --info-foreground: hsl(0 0% 98%);
     --border: hsl(0 0% 92.8%);
     --input: hsl(0 0% 89.8%);
     --ring: hsl(0 0% 3.9%);
@@ -139,6 +157,12 @@
     --accent-foreground: hsl(0 0% 98%);
     --destructive: hsl(0 84% 60%);
     --destructive-foreground: hsl(0 0% 98%);
+    --success: hsl(142 65% 50%);
+    --success-foreground: hsl(0 0% 9%);
+    --warning: hsl(38 92% 58%);
+    --warning-foreground: hsl(0 0% 9%);
+    --info: hsl(199 89% 58%);
+    --info-foreground: hsl(0 0% 9%);
     --border: hsl(0 0% 14.9%);
     --input: hsl(0 0% 14.9%);
     --ring: hsl(0 0% 83.1%);

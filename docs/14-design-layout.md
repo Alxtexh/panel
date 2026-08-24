@@ -77,6 +77,23 @@ Scans `packages/ui/inertia` layouts and pages. Allow-listed: auth, onboarding,
 landing, print, errors, support reading pages, and `BillingSuspended`. Everything
 else that pairs `mx-auto` with `max-w-*` fails the gate.
 
+## Status colour tokens
+
+`PkBadge` variants `success` / `warning` / `info` need matching CSS variables in
+the host stylesheet (`resources/css/app.css`), the same way `destructive`
+already does:
+
+| `@theme` | `:root` / `.dark` |
+| --- | --- |
+| `--color-success` | `--success`, `--success-foreground` |
+| `--color-warning` | `--warning`, `--warning-foreground` |
+| `--color-info` | `--info`, `--info-foreground` |
+
+Without the `@theme` registrations, Tailwind v4 never emits `bg-success` (and
+friends), so schema-driven badges render as plain text. Values match the
+playground palette and must stay fixed (not tenant-branded). Fresh installs get
+them from the published stub; older hosts: `php artisan panel:update`.
+
 ## Demo UI must match the published kit
 
 The playground Vite-aliases `packages/ui` source. A polished demo can therefore

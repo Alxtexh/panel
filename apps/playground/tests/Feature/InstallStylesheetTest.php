@@ -119,6 +119,8 @@ final class InstallStylesheetTest extends TestCase
         $this->assertStringContainsString('@alxtexh-enterprise/panel', $css);
         $this->assertStringContainsString('@alxtexh-enterprise/panel/inertia', $css);
         $this->assertStringContainsString('--background', $css);
+        $this->assertStringContainsString('--success', $css);
+        $this->assertStringContainsString('--color-success', $css);
     }
 
     /**
@@ -155,6 +157,7 @@ final class InstallStylesheetTest extends TestCase
         // Stock Laravel defines no tokens, so these arrive too - without them
         // `bg-background` resolves to nothing and the panel is unreadable.
         $this->assertStringContainsString('--background', $css);
+        $this->assertStringContainsString('--success', $css);
         $this->assertStringContainsString('.dark', $css);
     }
 
@@ -215,7 +218,8 @@ final class InstallStylesheetTest extends TestCase
                     '/\b(?:bg|text|border|ring|fill|stroke|divide|placeholder|outline|caret|accent|decoration|from|to|via)-'
                     .'(background|foreground|card|card-foreground|popover|popover-foreground|primary|primary-foreground'
                     .'|secondary|secondary-foreground|muted|muted-foreground|accent|accent-foreground'
-                    .'|destructive|destructive-foreground|border|input|ring)\b/',
+                    .'|destructive|destructive-foreground|success|success-foreground|warning|warning-foreground'
+                    .'|info|info-foreground|border|input|ring)\b/',
                     (string) file_get_contents($file->getPathname()),
                     $matches,
                 );
@@ -264,7 +268,25 @@ final class InstallStylesheetTest extends TestCase
         $this->merge();
 
         $this->artisan('panel:doctor')
-            ->doesntExpectOutputToContain('does not point Tailwind at the packaged components');
+            ->doesntExpectOutputToContain('does not point Tailwind at the packaged components')
+            ->doesntExpectOutputToContain('missing success / warning / info');
+    }
+
+    /**
+     * Status badge utilities need dedicated tokens, not only `--destructive`.
+     */
+    public function test_doctor_reports_missing_status_colour_tokens(): void
+    {
+        File::put(
+            $this->path,
+            "@import 'tailwindcss';\n"
+            ."@source '../../node_modules/@alxtexh-enterprise/panel/dist/**/*.js';\n"
+            .":root { --background: #fff; --destructive: red; }\n",
+        );
+
+        $this->artisan('panel:doctor')
+            ->expectsOutputToContain('missing success / warning / info')
+            ->assertFailed();
     }
 
     /**

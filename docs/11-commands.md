@@ -16,7 +16,7 @@
 | `panel:make-user` | Create an account and grant it a role |
 | `panel:permissions` | `list`, `sync`, `sync --prune`, `grant --email=` |
 | `panel:api-token` | Issue a token for the public API |
-| `panel:update` | Migrate published files across package versions |
+| `panel:update` | Migrate published files across package versions (pages, `@source` paths, status colour tokens in `app.css`) |
 
 ## Checking
 

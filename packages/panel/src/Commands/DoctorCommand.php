@@ -22,6 +22,7 @@ use Alxtexh\Panel\Support\BackupStatus;
 use Alxtexh\Panel\Support\Contrast;
 use Alxtexh\Panel\Support\Discovery;
 use Alxtexh\Panel\Support\AppearancePrepaintWiring;
+use Alxtexh\Panel\Support\SemanticStatusTokens;
 use Alxtexh\Panel\Support\InertiaLayoutWiring;
 use Alxtexh\Panel\Support\KitAssets;
 use Alxtexh\Panel\Support\PanelLayoutShell;
@@ -1490,6 +1491,18 @@ final class DoctorCommand extends Command
                 .'`border-border`. Without `--background` and the rest those resolve to nothing '
                 .'and the panel renders unreadable. Re-run `php artisan panel:install`.',
             );
+
+            return;
+        }
+
+        foreach (SemanticStatusTokens::inspect($css) as $finding) {
+            if (($finding['level'] ?? '') === 'problem') {
+                $this->problem(
+                    $finding['title'],
+                    $finding['detail'],
+                    $finding['suggested'] ?? null,
+                );
+            }
         }
     }
 

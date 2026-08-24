@@ -207,6 +207,22 @@ php artisan panel:install --name="Ada" --email=ada@example.com --password=secret
 
 Add `--force` to overwrite the published config and page files.
 
+## Upgrading an existing host
+
+```bash
+composer update alxtexh-enterprise/panel
+php artisan panel:update
+```
+
+`panel:update` reconciles page files, repoints stylesheet `@source` lines when
+the package was renamed, and (from v1.4.20) appends missing status colour
+tokens (`--success`, `--warning`, `--info` and their `@theme` `--color-*`
+mappings) so `bg-success` / `bg-warning` / `bg-info` badges compile. Rebuild
+Vite assets if you customise Vue (`npm run build`); kit-only hosts get the
+tokens from republished `public/vendor/panel` after install/update when the
+package kit CSS is current. `panel:doctor` fails when those tokens are still
+missing from `resources/css/app.css`.
+
 ## What is next after install
 
 `panel:install` already publishes kit CSS/JS to `public/vendor/panel`. Next:

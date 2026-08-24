@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Alxtexh\Panel\Support\ConfigDrift;
 use Alxtexh\Panel\Support\PanelPages;
+use Alxtexh\Panel\Support\SemanticStatusTokens;
 
 /**
  * What to run after `composer update alxtexh-enterprise/panel`.
@@ -51,6 +52,7 @@ final class UpdateCommand extends Command
             $this->invalidateSchemaCache(),
             $this->reconcilePages(),
             $this->repointStylesheet(),
+            $this->ensureSemanticStatusTokens(),
             $this->reportPendingMigrations(),
             $this->reportUninstalledPlugins(),
             $this->refreshBlueprint(),
@@ -206,6 +208,36 @@ final class UpdateCommand extends Command
         );
 
         return 'Run your build (npm run build) - the stylesheet now scans the merged package.';
+    }
+
+    /**
+     * Register success / warning / info so badge utilities compile.
+     *
+     * Hosts that installed before these tokens existed still only have
+     * `--destructive`. PkBadge asks for `bg-success` etc; without `@theme`
+     * `--color-success` Tailwind emits nothing and status badges look like
+     * plain text. Append is idempotent via SemanticStatusTokens.
+     */
+    private function ensureSemanticStatusTokens(): ?string
+    {
+        $target = resource_path('css/app.css');
+
+        if (! file_exists($target)) {
+            return null;
+        }
+
+        if (! SemanticStatusTokens::ensureInFile($target)) {
+            $this->components->task('  status colour tokens already present', fn () => true);
+
+            return null;
+        }
+
+        $this->components->task(
+            '  added success / warning / info colour tokens to resources/css/app.css',
+            fn () => true,
+        );
+
+        return 'Run your build (npm run build), or re-publish kit assets, so bg-success / bg-warning / bg-info exist.';
     }
 
     /**

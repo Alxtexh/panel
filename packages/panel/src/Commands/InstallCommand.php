@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Commands;
 
 use Alxtexh\Panel\Support\KitAssets;
 use Alxtexh\Panel\Support\PanelPages;
+use Alxtexh\Panel\Support\SemanticStatusTokens;
 use Alxtexh\Panel\Support\UserRoles;
 use Alxtexh\Panel\Support\WebSharePanelProps;
 use Composer\Autoload\ClassLoader;
@@ -379,6 +380,15 @@ final class InstallCommand extends Command
         $current = (string) file_get_contents($target);
 
         if (str_contains($current, '@alxtexh-enterprise/panel')) {
+            if (SemanticStatusTokens::ensureInFile($target)) {
+                $this->components->twoColumnDetail(
+                    'Added status tokens',
+                    $relative.' (success / warning / info)',
+                );
+
+                return;
+            }
+
             $this->components->twoColumnDetail('Already wired', $relative);
 
             return;
