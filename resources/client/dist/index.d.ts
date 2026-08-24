@@ -176,7 +176,7 @@ export { DASHBOARD_HIDE_KEY, DASHBOARD_HIDDEN_STORAGE_KEY, } from './composables
 export type { DashboardHide } from './composables/dashboardHide';
 export { useLiveUpdates } from './composables/useLiveUpdates';
 export type { LiveConfig, LiveUpdateOptions } from './composables/useLiveUpdates';
-export { useAppearance, initializeAppearance, bootstrapAppearance, syncAppearanceFromInertiaPage, readServerAppearance, applyAppearance, appearanceVars, readAppearance, isDark, setAppearancePersister, resetAppearanceBootstrapForTests, } from './composables/useAppearance';
+export { useAppearance, initializeAppearance, bootstrapAppearance, syncAppearanceFromInertiaPage, readServerAppearance, applyAppearance, appearanceVars, appearancePayload, APPEARANCE_STYLE_ID, readAppearance, isDark, setAppearancePersister, resetAppearanceBootstrapForTests, } from './composables/useAppearance';
 export { useTenantTheme } from './composables/useTenantTheme';
 export { useSchemaColumns, BADGE_VARIANTS, hasBadgeValue } from './composables/useSchemaColumns';
 export type { FilterSchema, FilterIndicator, GroupSchema, SortDirection, TableColumn } from './components/DataTable/types';
@@ -197,7 +197,7 @@ export type { Step as StepIndicatorStep } from './components/Layout/PkStepIndica
 export type { RecordActionGroup, RecordActionItem } from './components/DataTable/RecordActions.vue';
 export { ICON_PATHS, iconPath } from './components/primitives/icons';
 export type { UploadedFileValue } from './components/Form/PkFileUpload.vue';
-export type { Appearance, Theme, Density, SidebarSide, CardStyle, } from './composables/useAppearance';
+export type { Appearance, AppearancePayload, Theme, Density, SidebarSide, CardStyle, } from './composables/useAppearance';
 export type { SchemaColumn } from './composables/useSchemaColumns';
 export type { FormField, FieldAffixAction } from './components/Form/types';
 export { registerFieldControl, fieldControl, hasFieldControl, registeredFieldTypes, resetFieldControls, } from './composables/useFieldControls';

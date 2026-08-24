@@ -33,6 +33,18 @@ final class AppearancePrepaintTest extends TestCase
         $this->assertSame('16px', $payload['vars']['--pk-font-size']);
     }
 
+    public function test_css_from_payload_emits_root_custom_properties(): void
+    {
+        $css = AppearancePrepaint::cssFromPayload(AppearancePrepaint::payload([
+            'theme' => 'dark',
+            'primary' => 'rose',
+        ]));
+
+        $this->assertStringStartsWith(':root {', $css);
+        $this->assertStringContainsString('--primary: oklch(0.62 0.22 15);', $css);
+        $this->assertStringContainsString('--pk-font-size: 16px;', $css);
+    }
+
     public function test_appearance_prepaint_view_embeds_payload_before_assets_in_stub(): void
     {
         $stub = (string) file_get_contents(
@@ -54,14 +66,18 @@ final class AppearancePrepaintTest extends TestCase
         $this->assertStringContainsString('window.__panelAppearance =', $view);
         $this->assertStringContainsString('window.__panelAppearanceServerVars =', $view);
         $this->assertStringContainsString('window.__panelAppearanceDefaultVars =', $view);
+        $this->assertStringContainsString('id="pk-appearance"', $view);
         $this->assertStringContainsString('__panelAppearanceApplied', $view);
         $this->assertStringContainsString('style.setProperty', $view);
 
         $jsonPos = strpos($view, 'window.__panelAppearance =');
-        $applyPos = strpos($view, '__panelAppearanceApplied');
+        $stylePos = strpos($view, '<style id="pk-appearance">');
+        $applyPos = strpos($view, 'window.__panelAppearanceApplied = true');
 
         $this->assertNotFalse($jsonPos);
+        $this->assertNotFalse($stylePos);
         $this->assertNotFalse($applyPos);
-        $this->assertLessThan($applyPos, $jsonPos, 'Account JSON must precede the apply script.');
+        $this->assertLessThan($stylePos, $jsonPos, 'Account JSON must precede critical CSS.');
+        $this->assertLessThan($applyPos, $stylePos, 'Critical CSS must precede the apply script.');
     }
 }

@@ -28,6 +28,7 @@
 import { createInertiaApp, router } from '@inertiajs/vue3'
 import {
     bootstrapAppearance,
+    initializeAppearance,
     setAppearancePersister,
     syncAppearanceFromInertiaPage,
 } from '@alxtexh-enterprise/panel'
@@ -51,7 +52,7 @@ router.on('success', (event) => {
 /*
  * Persist a preference change to the packaged route. Fire-and-forget: the
  * change is already applied locally. Guests and offline browsers keep the
- * local copy.
+ * local copy. On success, reconcile the account snapshot without remount flash.
  */
 setAppearancePersister((patch) => {
     let prefix = ''
@@ -76,9 +77,21 @@ setAppearancePersister((patch) => {
         },
         credentials: 'same-origin',
         body: JSON.stringify(patch),
-    }).catch(() => {
-        // Offline, or a guest. The preference still applies in this browser.
     })
+        .then(async (response) => {
+            if (!response.ok) {
+                return
+            }
+
+            const data = (await response.json()) as { appearance?: Record<string, unknown> }
+
+            if (data.appearance && typeof data.appearance === 'object') {
+                initializeAppearance(data.appearance)
+            }
+        })
+        .catch(() => {
+            // Offline, or a guest. The preference still applies in this browser.
+        })
 })
 
 createInertiaApp({

@@ -5,11 +5,16 @@
 
         @include('panel::appearance-prepaint')
 
-    Order matters: `__panelAppearance` JSON, then PHP-computed CSS vars as
-    JSON, then a synchronous script that writes them onto <html> via
-    style.setProperty (inline styles beat later :root rules in app.css).
-    Without this, the stylesheet's hsl defaults paint first and the Vue
-    bundle swaps to the account theme afterwards (FOUC).
+    Long-term contract (v1.4.13+):
+      1. Account JSON on window.__panelAppearance (users.appearance).
+      2. PHP-computed token payload (same oklch tables as the client).
+      3. Critical style#pk-appearance :root vars for first paint.
+      4. Synchronous script: dark class, dataset, setProperty (beats later
+         app.css :root), and rewrite #pk-appearance. Guests may replay a
+         localStorage cache; signed-in accounts never do (cross-browser).
+
+    Live admin edits use the same payload shape via applyAppearance() and
+    update __panelAppearance + #pk-appearance + localStorage without a reload.
 --}}
 @php
     $panelAppearance = auth()->user()?->appearance;
@@ -17,15 +22,29 @@
         ? \Alxtexh\Panel\Support\AppearancePrepaint::payload($panelAppearance)
         : null;
     $panelAppearanceDefaults = \Alxtexh\Panel\Support\AppearancePrepaint::defaults();
+    $panelAppearanceCss = \Alxtexh\Panel\Support\AppearancePrepaint::cssFromPayload(
+        $panelAppearancePayload ?? $panelAppearanceDefaults
+    );
 @endphp
 <script>
     window.__panelAppearance = @json($panelAppearance);
     window.__panelAppearanceServerVars = @json($panelAppearancePayload);
     window.__panelAppearanceDefaultVars = @json($panelAppearanceDefaults);
 </script>
+<style id="pk-appearance">{!! $panelAppearanceCss !!}</style>
 <script>
     (function () {
         var root = document.documentElement;
+
+        function cssText(vars) {
+            var css = ':root { ';
+            for (var name in vars) {
+                if (Object.prototype.hasOwnProperty.call(vars, name)) {
+                    css += name + ': ' + vars[name] + '; ';
+                }
+            }
+            return css + '}';
+        }
 
         function apply(payload) {
             if (!payload || !payload.vars) {
@@ -46,6 +65,12 @@
 
             if (payload.contentLayout) {
                 root.dataset.contentLayout = payload.contentLayout;
+            }
+
+            var style = document.getElementById('pk-appearance');
+
+            if (style) {
+                style.textContent = cssText(payload.vars);
             }
 
             window.__panelAppearanceApplied = true;
