@@ -15,6 +15,11 @@ export interface BulkActionSchema {
     form?: {
         nodes: unknown[];
     } | null;
+    /**
+     * When true, ResourceIndex opens the bulk form in PkSlideover instead of
+     * the dense PkModal. Opt-in via BulkAction::slideOver().
+     */
+    slideOver?: boolean;
 }
 type __VLS_Props = {
     actions: BulkActionSchema[];

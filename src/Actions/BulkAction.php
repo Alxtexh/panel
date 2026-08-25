@@ -61,6 +61,15 @@ final class BulkAction
      */
     private ?Form $form = null;
 
+    /**
+     * Present a form action in PkSlideover instead of the default dense PkModal.
+     *
+     * Same opt-in as RecordAction::slideOver(). Page-first CRUD stays on
+     * dedicated routes; this is for secondary bulk forms that need more
+     * horizontal room than a centred modal.
+     */
+    private bool $slideOver = false;
+
     private int $chunkSize = 1000;
 
     /** Null defers to `panel.bulk.queue_threshold` - see `queueThreshold()`. */
@@ -173,6 +182,19 @@ final class BulkAction
         return $this->form;
     }
 
+    /**
+     * Present a form action in PkSlideover instead of the default dense PkModal.
+     *
+     * Page-first CRUD stays on dedicated routes; this is for secondary bulk
+     * flows that need more horizontal room than a centred modal.
+     */
+    public function slideOver(bool $slideOver = true): self
+    {
+        $this->slideOver = $slideOver;
+
+        return $this;
+    }
+
     /** @param Closure(mixed, array<string, mixed>): mixed $handle */
     public function handle(Closure $handle): self
     {
@@ -272,7 +294,7 @@ final class BulkAction
      */
     public function toArray(): array
     {
-        return [
+        $payload = [
             'key' => $this->key,
             'label' => $this->label,
             'icon' => $this->icon,
@@ -290,5 +312,11 @@ final class BulkAction
              */
             'form' => $this->form?->toSchema(),
         ];
+
+        if ($this->slideOver) {
+            $payload['slideOver'] = true;
+        }
+
+        return $payload;
     }
 }

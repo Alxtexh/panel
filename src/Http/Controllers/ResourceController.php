@@ -1221,10 +1221,20 @@ final class ResourceController extends Controller
         $indexUrl = (string) ($schema['routes']['index'] ?? $class::baseUrl());
         $workflowUrl = (string) ($schema['routes']['workflow'] ?? ($indexUrl.'/workflow'));
 
+        $positions = [];
+
+        try {
+            $override = WorkflowOverride::forResource($class::key());
+            $positions = is_array($override?->positions) ? $override->positions : [];
+        } catch (\Throwable) {
+            $positions = [];
+        }
+
         return Inertia::render('ResourceWorkflow', [
             'schema' => $schema,
             'workflow' => $workflow->toSchema(),
             'graph' => $workflow->toGraph(),
+            'positions' => $positions,
             'indexUrl' => $indexUrl,
             'canEdit' => $class::can('update'),
             'saveUrl' => $workflowUrl,
@@ -1245,7 +1255,10 @@ final class ResourceController extends Controller
      *
      * Validates that every transition references declared states, then
      * upserts a WorkflowOverride row. The PHP definition supplies column and
-     * model; only states/transitions/group come from the request.
+     * model; only states/transitions/group/positions come from the request.
+     *
+     * Positions are optional canvas layout metadata. When the key is absent the
+     * existing positions are kept so a form-only save cannot wipe a layout.
      */
     public function updateWorkflow(Request $request, string $resource): RedirectResponse
     {
@@ -1283,6 +1296,9 @@ final class ResourceController extends Controller
             'transitions.*.icon' => ['nullable', 'string', 'max:64'],
             'transitions.*.color' => ['nullable', 'string', 'max:32'],
             'transitions.*.confirm' => ['nullable', 'string', 'max:256'],
+            'positions' => ['nullable', 'array'],
+            'positions.*.x' => ['required_with:positions', 'numeric'],
+            'positions.*.y' => ['required_with:positions', 'numeric'],
         ]);
 
         $stateKeys = array_keys($validated['states']);
@@ -1303,23 +1319,46 @@ final class ResourceController extends Controller
             }
         }
 
+        $positions = null;
+
+        if (array_key_exists('positions', $validated)) {
+            $positions = [];
+
+            foreach ($validated['positions'] ?? [] as $key => $point) {
+                if (! in_array((string) $key, $stateKeys, true)) {
+                    continue;
+                }
+
+                $positions[(string) $key] = [
+                    'x' => (float) $point['x'],
+                    'y' => (float) $point['y'],
+                ];
+            }
+        }
+
+        $attributes = [
+            'column' => $base->column(),
+            'group_label' => $validated['group_label'] ?? $base->groupLabel(),
+            'states' => $validated['states'],
+            'transitions' => array_map(static fn (array $t): array => [
+                'key' => $t['key'],
+                'label' => $t['label'],
+                'to' => $t['to'],
+                'from' => $t['from'],
+                'ability' => $t['ability'] ?? 'update',
+                'icon' => $t['icon'] ?? null,
+                'color' => $t['color'] ?? null,
+                'confirm' => $t['confirm'] ?? null,
+            ], $validated['transitions']),
+        ];
+
+        if ($positions !== null) {
+            $attributes['positions'] = $positions;
+        }
+
         WorkflowOverride::query()->updateOrCreate(
             ['resource_key' => $class::key()],
-            [
-                'column' => $base->column(),
-                'group_label' => $validated['group_label'] ?? $base->groupLabel(),
-                'states' => $validated['states'],
-                'transitions' => array_map(static fn (array $t): array => [
-                    'key' => $t['key'],
-                    'label' => $t['label'],
-                    'to' => $t['to'],
-                    'from' => $t['from'],
-                    'ability' => $t['ability'] ?? 'update',
-                    'icon' => $t['icon'] ?? null,
-                    'color' => $t['color'] ?? null,
-                    'confirm' => $t['confirm'] ?? null,
-                ], $validated['transitions']),
-            ],
+            $attributes,
         );
 
         return redirect()->back()->with('success', 'Workflow saved.');
