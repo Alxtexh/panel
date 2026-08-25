@@ -1,12 +1,14 @@
 <script setup lang="ts">
 /**
- * Workflow board with form editor and persistent node repositioning.
+ * Workflow board with form editor, node repositioning, and edge DnD.
  *
- * States and transitions are still edited via the form panel. Nodes on the
- * canvas can be dragged when the user has update permission; positions PUT to
- * the same workflow endpoint and land in panel_workflow_overrides.positions.
+ * Canvas (when not in the form editor):
+ * - Drag state nodes to rearrange; Save layout persists positions.
+ * - Drag from a node's out-handle to another node to create a transition.
+ * - Drag an existing edge endpoint onto another node to reconnect source or target.
  *
- * Edge create/reconnect by drag is not shipped: transitions stay form-based.
+ * The form editor remains the fallback for add/remove/rename, ability, icon,
+ * colour, and confirm. Edge auto-routing (avoid overlaps) is not shipped.
  */
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
@@ -56,10 +58,32 @@ interface NodePosition {
     y: number
 }
 
+type EdgeDrag =
+    | {
+          mode: 'create'
+          fromId: string
+          x: number
+          y: number
+      }
+    | {
+          mode: 'reconnect-source'
+          edgeKey: string
+          oldFrom: string
+          x: number
+          y: number
+      }
+    | {
+          mode: 'reconnect-target'
+          edgeKey: string
+          x: number
+          y: number
+      }
+
 const NODE_WIDTH = 200
 const NODE_HEIGHT = 96
 const RANK_GAP_X = 260
 const RANK_GAP_Y = 140
+const HANDLE = 12
 
 const props = defineProps<{
     schema: {
@@ -95,6 +119,7 @@ const COLOR_OPTIONS = [
 ]
 
 const editing = ref(false)
+const canvasEl = ref<HTMLElement | null>(null)
 
 function buildStates(): Array<{ key: string; label: string; color: string }> {
     return Object.entries(props.workflow.states).map(([key, s]) => ({
@@ -109,7 +134,7 @@ function buildTransitions(): TransitionEntry[] {
         key: (t.key as string) ?? '',
         label: (t.label as string) ?? '',
         to: (t.to as string) ?? '',
-        from: (t.from as string[]) ?? [],
+        from: [...((t.from as string[]) ?? [])],
         ability: (t.ability as string) ?? 'update',
         icon: (t.icon as string | null) ?? null,
         color: (t.color as string | null) ?? null,
@@ -157,11 +182,15 @@ function seedPositions(): Record<string, NodePosition> {
 
 const editStates = ref(buildStates())
 const editTransitions = ref(buildTransitions())
+const boardTransitions = ref(buildTransitions())
 const editGroupLabel = ref(props.workflow.group ?? 'Status')
 const saving = ref(false)
 const saveError = ref('')
 const layoutDirty = ref(false)
+const edgesDirty = ref(false)
 const nodePositions = reactive<Record<string, NodePosition>>(seedPositions())
+
+const canvasDirty = computed(() => layoutDirty.value || edgesDirty.value)
 
 watch(
     () => [props.graph.nodes, props.positions] as const,
@@ -176,12 +205,27 @@ watch(
     { deep: true },
 )
 
+watch(
+    () => props.workflow.transitions,
+    () => {
+        if (!edgesDirty.value && !editing.value) {
+            boardTransitions.value = buildTransitions()
+        }
+    },
+    { deep: true },
+)
+
 function startEditing() {
     editStates.value = buildStates()
-    editTransitions.value = buildTransitions()
+    editTransitions.value = boardTransitions.value.map((t) => ({
+        ...t,
+        from: [...t.from],
+    }))
     editGroupLabel.value = props.workflow.group ?? 'Status'
     editing.value = true
     saveError.value = ''
+    edgeDrag.value = null
+    drag.value = null
 }
 
 function cancelEditing() {
@@ -248,32 +292,27 @@ function currentStatesPayload(): Record<string, { label: string; color: string }
     )
 }
 
+function serializeTransitions(list: TransitionEntry[]) {
+    return list
+        .filter((t) => t.key && t.label && t.to)
+        .map((t) => ({
+            key: t.key,
+            label: t.label,
+            to: t.to,
+            from: t.from,
+            ability: t.ability || 'update',
+            icon: t.icon || null,
+            color: t.color || null,
+            confirm: t.confirm || null,
+        }))
+}
+
 function currentTransitionsPayload() {
     if (editing.value) {
-        return editTransitions.value
-            .filter((t) => t.key && t.label && t.to)
-            .map((t) => ({
-                key: t.key,
-                label: t.label,
-                to: t.to,
-                from: t.from,
-                ability: t.ability || 'update',
-                icon: t.icon || null,
-                color: t.color || null,
-                confirm: t.confirm || null,
-            }))
+        return serializeTransitions(editTransitions.value)
     }
 
-    return (props.workflow.transitions ?? []).map((t: Record<string, unknown>) => ({
-        key: (t.key as string) ?? '',
-        label: (t.label as string) ?? '',
-        to: (t.to as string) ?? '',
-        from: (t.from as string[]) ?? [],
-        ability: ((t.ability as string) ?? 'update') || 'update',
-        icon: (t.icon as string | null) ?? null,
-        color: (t.color as string | null) ?? null,
-        confirm: (t.confirm as string | null) ?? null,
-    }))
+    return serializeTransitions(boardTransitions.value)
 }
 
 function positionsPayload(): Record<string, NodePosition> {
@@ -309,7 +348,11 @@ function putWorkflow(closeEditor: boolean) {
             onSuccess: () => {
                 saving.value = false
                 layoutDirty.value = false
-                if (closeEditor) editing.value = false
+                edgesDirty.value = false
+                if (closeEditor) {
+                    editing.value = false
+                    boardTransitions.value = buildTransitions()
+                }
             },
             onError: (errors) => {
                 saving.value = false
@@ -336,8 +379,53 @@ const drag = ref<{
     originY: number
 } | null>(null)
 
+const edgeDrag = ref<EdgeDrag | null>(null)
+const hoverDropId = ref<string | null>(null)
+
+function canvasPoint(clientX: number, clientY: number): { x: number; y: number } {
+    const rect = canvasEl.value?.getBoundingClientRect()
+    if (!rect) return { x: clientX, y: clientY }
+
+    return { x: clientX - rect.left, y: clientY - rect.top }
+}
+
+function teardownEdgeListeners() {
+    window.removeEventListener('pointermove', onEdgePointerMove)
+    window.removeEventListener('pointerup', onEdgePointerUp)
+    window.removeEventListener('pointercancel', onEdgePointerUp)
+}
+
+function onEdgePointerMove(event: PointerEvent) {
+    if (!edgeDrag.value) return
+    const point = canvasPoint(event.clientX, event.clientY)
+    edgeDrag.value = { ...edgeDrag.value, x: point.x, y: point.y }
+}
+
+function onEdgePointerUp(event: PointerEvent) {
+    if (!edgeDrag.value) return
+
+    let dropId = hoverDropId.value
+    if (!dropId && typeof document.elementFromPoint === 'function') {
+        const el = document.elementFromPoint(event.clientX, event.clientY)
+        const node = el?.closest?.('[data-node-id]') as HTMLElement | null
+        dropId = node?.getAttribute('data-node-id') ?? null
+    }
+
+    finishEdgeDrag(dropId)
+    teardownEdgeListeners()
+}
+
+function beginEdgeDrag(next: EdgeDrag) {
+    edgeDrag.value = next
+    drag.value = null
+    hoverDropId.value = null
+    window.addEventListener('pointermove', onEdgePointerMove)
+    window.addEventListener('pointerup', onEdgePointerUp)
+    window.addEventListener('pointercancel', onEdgePointerUp)
+}
+
 function onPointerDown(event: PointerEvent, id: string) {
-    if (!props.canEdit || editing.value) return
+    if (!props.canEdit || editing.value || edgeDrag.value) return
     if (event.button !== 0) return
 
     const point = nodePositions[id] ?? { x: 0, y: 0 }
@@ -359,6 +447,7 @@ function onPointerDown(event: PointerEvent, id: string) {
 }
 
 function onPointerMove(event: PointerEvent) {
+    if (edgeDrag.value) return
     if (!drag.value) return
 
     const nextX = Math.max(0, drag.value.originX + (event.clientX - drag.value.startX))
@@ -368,7 +457,13 @@ function onPointerMove(event: PointerEvent) {
 }
 
 function onPointerUp(event: PointerEvent) {
+    if (edgeDrag.value) return
     if (!drag.value) return
+    releaseCapture(event)
+    drag.value = null
+}
+
+function releaseCapture(event: PointerEvent) {
     const target = event.currentTarget as HTMLElement
 
     try {
@@ -378,12 +473,151 @@ function onPointerUp(event: PointerEvent) {
     } catch {
         // ignore
     }
+}
 
-    drag.value = null
+function onSourceHandleDown(event: PointerEvent, fromId: string) {
+    if (!props.canEdit || editing.value) return
+    if (event.button !== 0) return
+
+    event.stopPropagation()
+    event.preventDefault()
+
+    const point = canvasPoint(event.clientX, event.clientY)
+    beginEdgeDrag({ mode: 'create', fromId, x: point.x, y: point.y })
+}
+
+function onReconnectSourceDown(event: PointerEvent, edge: GraphEdge) {
+    if (!props.canEdit || editing.value) return
+    if (event.button !== 0) return
+
+    event.stopPropagation()
+    event.preventDefault()
+
+    const point = canvasPoint(event.clientX, event.clientY)
+    beginEdgeDrag({
+        mode: 'reconnect-source',
+        edgeKey: edge.key,
+        oldFrom: edge.from,
+        x: point.x,
+        y: point.y,
+    })
+}
+
+function onReconnectTargetDown(event: PointerEvent, edge: GraphEdge) {
+    if (!props.canEdit || editing.value) return
+    if (event.button !== 0) return
+
+    event.stopPropagation()
+    event.preventDefault()
+
+    const point = canvasPoint(event.clientX, event.clientY)
+    beginEdgeDrag({
+        mode: 'reconnect-target',
+        edgeKey: edge.key,
+        x: point.x,
+        y: point.y,
+    })
+}
+
+function onNodePointerEnter(nodeId: string) {
+    if (edgeDrag.value) hoverDropId.value = nodeId
+}
+
+function onNodePointerLeave(nodeId: string) {
+    if (hoverDropId.value === nodeId) hoverDropId.value = null
+}
+
+function onNodeDrop(event: PointerEvent, nodeId: string) {
+    if (edgeDrag.value) {
+        event.stopPropagation()
+        finishEdgeDrag(nodeId)
+        teardownEdgeListeners()
+        return
+    }
+
+    onPointerUp(event)
+}
+
+function nodeLabel(id: string): string {
+    return props.graph.nodes.find((n) => n.id === id)?.label ?? id
+}
+
+function finishEdgeDrag(dropNodeId: string | null) {
+    const current = edgeDrag.value
+    edgeDrag.value = null
+    hoverDropId.value = null
+    if (!current || !dropNodeId) return
+
+    if (current.mode === 'create') {
+        if (dropNodeId === current.fromId) return
+        createTransition(current.fromId, dropNodeId)
+        return
+    }
+
+    if (current.mode === 'reconnect-source') {
+        if (dropNodeId === current.oldFrom) return
+        reconnectSource(current.edgeKey, current.oldFrom, dropNodeId)
+        return
+    }
+
+    reconnectTarget(current.edgeKey, dropNodeId)
+}
+
+function createTransition(fromId: string, toId: string) {
+    const duplicate = boardTransitions.value.some(
+        (t) => t.to === toId && t.from.includes(fromId) && t.from.length === 1,
+    )
+    if (duplicate) return
+
+    boardTransitions.value.push({
+        key: `t_${Date.now()}`,
+        label: `${nodeLabel(fromId)} to ${nodeLabel(toId)}`,
+        to: toId,
+        from: [fromId],
+        ability: 'update',
+        icon: null,
+        color: null,
+        confirm: null,
+    })
+    edgesDirty.value = true
+}
+
+function reconnectSource(edgeKey: string, oldFrom: string, newFrom: string) {
+    const transition = boardTransitions.value.find((t) => t.key === edgeKey)
+    if (!transition) return
+    if (newFrom === transition.to) return
+
+    if (transition.from.length === 0) {
+        // Empty from means "any state" on the server graph. Reconnecting one
+        // visual edge collapses that to an explicit list with the new source.
+        transition.from = [newFrom]
+    } else {
+        const idx = transition.from.indexOf(oldFrom)
+        if (idx < 0) return
+        if (transition.from.includes(newFrom)) {
+            transition.from.splice(idx, 1)
+        } else {
+            transition.from[idx] = newFrom
+        }
+    }
+
+    edgesDirty.value = true
+}
+
+function reconnectTarget(edgeKey: string, newTo: string) {
+    const transition = boardTransitions.value.find((t) => t.key === edgeKey)
+    if (!transition) return
+    if (transition.from.includes(newTo) && transition.from.length === 1) return
+
+    transition.to = newTo
+    edgesDirty.value = true
 }
 
 onBeforeUnmount(() => {
     drag.value = null
+    edgeDrag.value = null
+    hoverDropId.value = null
+    teardownEdgeListeners()
 })
 
 const canvasSize = computed(() => {
@@ -395,31 +629,98 @@ const canvasSize = computed(() => {
         maxY = Math.max(maxY, point.y + NODE_HEIGHT + 48)
     }
 
+    if (edgeDrag.value) {
+        maxX = Math.max(maxX, edgeDrag.value.x + 24)
+        maxY = Math.max(maxY, edgeDrag.value.y + 24)
+    }
+
     return { width: maxX, height: maxY }
 })
 
+const displayEdges = computed((): GraphEdge[] => {
+    const stateKeys = props.graph.nodes.map((n) => n.id)
+    const edges: GraphEdge[] = []
+
+    for (const t of boardTransitions.value) {
+        if (!t.key || !t.to || !t.label) continue
+        const froms = t.from.length > 0 ? t.from : stateKeys
+        for (const from of froms) {
+            if (!stateKeys.includes(from) || !stateKeys.includes(t.to)) continue
+            edges.push({
+                id: `${t.key}__${from}`,
+                key: t.key,
+                label: t.label,
+                from,
+                to: t.to,
+                icon: t.icon,
+                color: t.color,
+            })
+        }
+    }
+
+    return edges
+})
+
+function bezierPath(x1: number, y1: number, x2: number, y2: number): string {
+    const mid = (x1 + x2) / 2
+    return `M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`
+}
+
 const edgePaths = computed(() => {
-    return props.graph.edges.map((edge) => {
+    return displayEdges.value.map((edge) => {
         const from = nodePositions[edge.from] ?? { x: 0, y: 0 }
         const to = nodePositions[edge.to] ?? { x: 0, y: 0 }
         const x1 = from.x + NODE_WIDTH
         const y1 = from.y + NODE_HEIGHT / 2
         const x2 = to.x
         const y2 = to.y + NODE_HEIGHT / 2
-        const mid = (x1 + x2) / 2
 
         return {
             ...edge,
-            d: `M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`,
-            labelX: mid,
+            x1,
+            y1,
+            x2,
+            y2,
+            d: bezierPath(x1, y1, x2, y2),
+            labelX: (x1 + x2) / 2,
             labelY: (y1 + y2) / 2 - 8,
         }
     })
 })
 
+const previewPath = computed(() => {
+    if (!edgeDrag.value) return null
+
+    let x1 = edgeDrag.value.x
+    let y1 = edgeDrag.value.y
+
+    if (edgeDrag.value.mode === 'create') {
+        const from = nodePositions[edgeDrag.value.fromId] ?? { x: 0, y: 0 }
+        x1 = from.x + NODE_WIDTH
+        y1 = from.y + NODE_HEIGHT / 2
+    } else if (edgeDrag.value.mode === 'reconnect-source') {
+        const transition = boardTransitions.value.find((t) => t.key === edgeDrag.value!.edgeKey)
+        const toId = transition?.to
+        const to = toId ? (nodePositions[toId] ?? { x: 0, y: 0 }) : { x: 0, y: 0 }
+        return {
+            d: bezierPath(edgeDrag.value.x, edgeDrag.value.y, to.x, to.y + NODE_HEIGHT / 2),
+        }
+    } else {
+        const transition = boardTransitions.value.find((t) => t.key === edgeDrag.value!.edgeKey)
+        const fromId = transition?.from[0]
+        const from = fromId ? (nodePositions[fromId] ?? { x: 0, y: 0 }) : { x: 0, y: 0 }
+        x1 = from.x + NODE_WIDTH
+        y1 = from.y + NODE_HEIGHT / 2
+    }
+
+    return {
+        d: bezierPath(x1, y1, edgeDrag.value.x, edgeDrag.value.y),
+    }
+})
+
 const purpose = computed(
     () =>
-        `${props.graph.nodes.length} states, ${props.graph.edges.length} transitions on ${props.workflow.column}`,
+        `${props.graph.nodes.length} states, ${displayEdges.value.length} transitions on ${props.workflow.column}`,
 )
 
 function colorClass(color: string): string {
@@ -444,7 +745,7 @@ function colorClass(color: string): string {
         <PkPageHeader :title="`${schema.labelPlural} workflow`" :purpose="purpose">
             <template #actions>
                 <button
-                    v-if="canEdit && layoutDirty && !editing"
+                    v-if="canEdit && canvasDirty && !editing"
                     :class="buttonClasses()"
                     type="button"
                     data-testid="save-layout"
@@ -455,7 +756,7 @@ function colorClass(color: string): string {
                 </button>
                 <button
                     v-if="canEdit && !editing"
-                    :class="buttonClasses(layoutDirty ? { variant: 'outline' } : {})"
+                    :class="buttonClasses(canvasDirty ? { variant: 'outline' } : {})"
                     type="button"
                     data-testid="edit-workflow"
                     @click="startEditing"
@@ -660,13 +961,14 @@ function colorClass(color: string): string {
 
         <p v-if="!editing" class="text-muted-foreground text-sm font-normal">
             <template v-if="canEdit">
-                Drag states to rearrange the board, then Save layout. Use Edit workflow to
-                add, remove, or rename states and transitions. Layout and definition both
-                persist to the database.
+                Drag states to rearrange. Drag from a node's right handle to another
+                state to create a transition, or drag an edge endpoint to reconnect.
+                Save layout persists positions and canvas edge edits. Use Edit workflow
+                for labels, abilities, and multi-source transitions.
             </template>
             <template v-else>
                 Read-only diagram of the workflow definition. You need update permission to
-                move nodes or edit states and transitions.
+                move nodes, drag edges, or edit states and transitions.
             </template>
         </p>
 
@@ -688,7 +990,9 @@ function colorClass(color: string): string {
             class="border-border bg-muted/10 relative min-h-0 flex-1 overflow-auto rounded-lg border"
         >
             <div
+                ref="canvasEl"
                 class="relative"
+                data-testid="workflow-canvas"
                 :style="{ width: `${canvasSize.width}px`, height: `${canvasSize.height}px` }"
             >
                 <svg
@@ -718,6 +1022,13 @@ function colorClass(color: string): string {
                         stroke-width="1.5"
                         marker-end="url(#workflow-arrow)"
                     />
+                    <path
+                        v-if="previewPath"
+                        :d="previewPath.d"
+                        class="stroke-primary fill-none"
+                        stroke-width="1.5"
+                        stroke-dasharray="4 3"
+                    />
                     <text
                         v-for="edge in edgePaths"
                         :key="`${edge.id}-label`"
@@ -730,6 +1041,39 @@ function colorClass(color: string): string {
                     </text>
                 </svg>
 
+                <template v-if="canEdit">
+                    <button
+                        v-for="edge in edgePaths"
+                        :key="`${edge.id}-src`"
+                        type="button"
+                        class="border-border bg-background hover:border-primary absolute z-20 rounded-full border shadow-sm"
+                        :style="{
+                            width: `${HANDLE}px`,
+                            height: `${HANDLE}px`,
+                            left: `${edge.x1 - HANDLE / 2}px`,
+                            top: `${edge.y1 - HANDLE / 2}px`,
+                        }"
+                        :data-testid="`edge-source-${edge.id}`"
+                        :title="`Reconnect source of ${edge.label}`"
+                        @pointerdown="onReconnectSourceDown($event, edge)"
+                    />
+                    <button
+                        v-for="edge in edgePaths"
+                        :key="`${edge.id}-tgt`"
+                        type="button"
+                        class="border-border bg-background hover:border-primary absolute z-20 rounded-full border shadow-sm"
+                        :style="{
+                            width: `${HANDLE}px`,
+                            height: `${HANDLE}px`,
+                            left: `${edge.x2 - HANDLE / 2}px`,
+                            top: `${edge.y2 - HANDLE / 2}px`,
+                        }"
+                        :data-testid="`edge-target-${edge.id}`"
+                        :title="`Reconnect target of ${edge.label}`"
+                        @pointerdown="onReconnectTargetDown($event, edge)"
+                    />
+                </template>
+
                 <article
                     v-for="node in graph.nodes"
                     :key="node.id"
@@ -738,6 +1082,7 @@ function colorClass(color: string): string {
                         colorClass(node.color),
                         canEdit ? 'cursor-grab active:cursor-grabbing' : '',
                         drag?.id === node.id ? 'ring-primary z-10 ring-2' : '',
+                        edgeDrag ? 'z-10' : '',
                     ]"
                     :style="{
                         width: `${NODE_WIDTH}px`,
@@ -747,11 +1092,23 @@ function colorClass(color: string): string {
                     :data-node-id="node.id"
                     @pointerdown="onPointerDown($event, node.id)"
                     @pointermove="onPointerMove"
-                    @pointerup="onPointerUp"
+                    @pointerup="onNodeDrop($event, node.id)"
                     @pointercancel="onPointerUp"
+                    @pointerenter="onNodePointerEnter(node.id)"
+                    @pointerleave="onNodePointerLeave(node.id)"
                 >
                     <h2 class="text-sm font-medium">{{ node.label }}</h2>
                     <p class="text-muted-foreground mt-0.5 font-mono text-[11px]">{{ node.id }}</p>
+
+                    <button
+                        v-if="canEdit"
+                        type="button"
+                        class="border-border bg-background hover:border-primary absolute top-1/2 -right-1.5 z-20 -translate-y-1/2 rounded-full border shadow-sm"
+                        :style="{ width: `${HANDLE}px`, height: `${HANDLE}px` }"
+                        :data-testid="`out-handle-${node.id}`"
+                        :title="`Drag to create a transition from ${node.label}`"
+                        @pointerdown="onSourceHandleDown($event, node.id)"
+                    />
                 </article>
             </div>
         </div>

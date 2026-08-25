@@ -261,7 +261,8 @@ abstract class Resource
      *
      * A labelled value on a dedicated view page (`TextEntry`, `IconEntry`,
      * `ImageEntry`, `KeyValueEntry`, `ColorEntry`, `CodeEntry`,
-     * `RepeatableEntry`). Empty means the view falls back to table columns.
+     * `RepeatableEntry`, `BadgeEntry`, `DateTimeEntry`, `MoneyEntry`,
+     * `ViewEntry`). Empty means the view falls back to table columns.
      *
      * @return list<Component|\Alxtexh\Panel\Schema\Renderable>
      */

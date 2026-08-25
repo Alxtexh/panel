@@ -22,6 +22,7 @@ use Alxtexh\Panel\Infolists\KeyValueEntry;
 use Alxtexh\Panel\Infolists\MoneyEntry;
 use Alxtexh\Panel\Infolists\RepeatableEntry;
 use Alxtexh\Panel\Infolists\TextEntry;
+use Alxtexh\Panel\Infolists\ViewEntry;
 use Alxtexh\Panel\Comments\Comments;
 use Alxtexh\Panel\Resources\Board;
 use Alxtexh\Panel\Resources\Resource;
@@ -161,6 +162,7 @@ final class ArticleResource extends Resource
                 ->defaultColor('neutral'),
             DateTimeEntry::make('created_at'),
             MoneyEntry::make('price')->currency('USD')->divideBy(100),
+            ViewEntry::make('title')->label('Title preview')->view('article-title-preview'),
         ];
     }
 

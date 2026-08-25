@@ -204,6 +204,7 @@ export type { SchemaColumn } from './composables/useSchemaColumns';
 export type { FormField, FieldAffixAction } from './components/Form/types';
 export { registerFieldControl, fieldControl, hasFieldControl, registeredFieldTypes, resetFieldControls, } from './composables/useFieldControls';
 export { registerOptionPreview, optionPreview, hasOptionPreview, registeredOptionPreviews, resetOptionPreviews, } from './composables/useOptionPreviews';
+export { registerEntryView, entryView, hasEntryView, registeredEntryViews, resetEntryViews, } from './composables/useEntryViews';
 import { registerBuiltInFieldControls } from './components/Form/builtInFields';
 export { registerBuiltInFieldControls };
 export declare const version = "0.0.1";

@@ -387,4 +387,43 @@ final class ResourceWorkflowTest extends TestCase
         $this->assertArrayHasKey('open', $override->positions);
         $this->assertArrayNotHasKey('ghost', $override->positions);
     }
+
+    public function test_put_workflow_persists_a_canvas_created_transition(): void
+    {
+        $this->putJson('/articles/workflow', [
+            'group_label' => 'Status',
+            'states' => [
+                'open' => ['label' => 'Open', 'color' => 'info'],
+                'closed' => ['label' => 'Closed', 'color' => 'success'],
+            ],
+            'transitions' => [
+                [
+                    'key' => 't_canvas_1',
+                    'label' => 'Open to Closed',
+                    'to' => 'closed',
+                    'from' => ['open'],
+                    'ability' => 'update',
+                ],
+            ],
+            'positions' => [
+                'open' => ['x' => 40, 'y' => 80],
+                'closed' => ['x' => 320, 'y' => 80],
+            ],
+        ])->assertRedirect();
+
+        $override = WorkflowOverride::forResource('articles');
+        $this->assertNotNull($override);
+        $this->assertCount(1, $override->transitions);
+        $this->assertSame('t_canvas_1', $override->transitions[0]['key']);
+        $this->assertSame('closed', $override->transitions[0]['to']);
+        $this->assertSame(['open'], $override->transitions[0]['from']);
+
+        $this->get('/articles/workflow')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('ResourceWorkflow')
+                ->where('graph.edges.0.key', 't_canvas_1')
+                ->where('graph.edges.0.from', 'open')
+                ->where('graph.edges.0.to', 'closed'));
+    }
 }
