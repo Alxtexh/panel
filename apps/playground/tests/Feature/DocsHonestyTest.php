@@ -37,9 +37,12 @@ final class DocsHonestyTest extends TestCase
         $this->assertStringContainsString('Save layout', $workflows);
         $this->assertStringContainsString('Drag-to-create transitions', $workflows);
         $this->assertStringContainsString('Drag-to-reconnect existing edge', $workflows);
-        $this->assertStringContainsString('Auto-routing that avoids node overlap', $workflows);
+        $this->assertStringContainsString('Light auto-routing', $workflows);
+        $this->assertStringContainsString('Delete a selected edge or state on the canvas', $workflows);
+        $this->assertStringContainsString('Undo the last canvas change before save', $workflows);
         $this->assertStringNotContainsString('edge create/reconnect by drag is not shipped', $workflows);
         $this->assertStringNotContainsString('not editable in the UI', $workflows);
         $this->assertStringNotContainsString('No freeform drag-and-drop canvas', $workflows);
+        $this->assertStringNotContainsString('Deleting a transition by canvas gesture', $workflows);
     }
 }

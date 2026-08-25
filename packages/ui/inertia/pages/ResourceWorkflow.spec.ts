@@ -184,4 +184,102 @@ describe('ResourceWorkflow', () => {
         expect(payload.transitions[0].to).toBe('pending')
         expect(payload.transitions[0].from).toEqual(['open'])
     })
+
+    it('deletes a selected edge from the canvas', async () => {
+        put.mockClear()
+        const wrapper = mount(ResourceWorkflow, { props: baseProps })
+
+        await wrapper.get('[data-testid="edge-hit-resolve__open"]').trigger('click')
+        expect(wrapper.find('[data-testid="delete-edge"]').exists()).toBe(true)
+
+        await wrapper.get('[data-testid="delete-edge"]').trigger('click')
+        expect(wrapper.text()).toContain('Save layout')
+        expect(wrapper.text()).not.toContain('Mark resolved')
+
+        await wrapper.get('[data-testid="save-layout"]').trigger('click')
+        const [, payload] = put.mock.calls[0]
+        expect(payload.transitions).toHaveLength(0)
+    })
+
+    it('undoes a canvas edge delete', async () => {
+        const wrapper = mount(ResourceWorkflow, { props: baseProps })
+
+        await wrapper.get('[data-testid="edge-hit-resolve__open"]').trigger('click')
+        await wrapper.get('[data-testid="delete-edge"]').trigger('click')
+        expect(wrapper.text()).not.toContain('Mark resolved')
+
+        await wrapper.get('[data-testid="undo-canvas"]').trigger('click')
+        expect(wrapper.text()).toContain('Mark resolved')
+    })
+
+    it('deletes a selected state from the canvas and keeps at least one', async () => {
+        put.mockClear()
+        const wrapper = mount(ResourceWorkflow, { props: baseProps })
+
+        await wrapper.get('[data-node-id="resolved"]').trigger('click')
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }))
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.find('[data-node-id="resolved"]').exists()).toBe(false)
+        expect(wrapper.find('[data-node-id="open"]').exists()).toBe(true)
+        expect(wrapper.text()).toContain('1 states')
+
+        await wrapper.get('[data-testid="save-layout"]').trigger('click')
+        const [, payload] = put.mock.calls[0]
+        expect(payload.states).toEqual({ open: { label: 'Open', color: 'warning' } })
+        expect(payload.transitions).toHaveLength(0)
+    })
+
+    it('fans parallel edges between the same pair', () => {
+        const wrapper = mount(ResourceWorkflow, {
+            props: {
+                ...baseProps,
+                workflow: {
+                    ...baseProps.workflow,
+                    transitions: [
+                        {
+                            key: 'a',
+                            label: 'Path A',
+                            to: 'resolved',
+                            from: ['open'],
+                            ability: 'update',
+                        },
+                        {
+                            key: 'b',
+                            label: 'Path B',
+                            to: 'resolved',
+                            from: ['open'],
+                            ability: 'update',
+                        },
+                    ],
+                },
+                graph: {
+                    ...baseProps.graph,
+                    edges: [
+                        {
+                            id: 'a__open',
+                            key: 'a',
+                            label: 'Path A',
+                            from: 'open',
+                            to: 'resolved',
+                        },
+                        {
+                            id: 'b__open',
+                            key: 'b',
+                            label: 'Path B',
+                            from: 'open',
+                            to: 'resolved',
+                        },
+                    ],
+                },
+            },
+        })
+
+        const paths = wrapper.findAll('path').filter((p) => p.attributes('d')?.startsWith('M '))
+        const routed = paths.filter((p) => (p.attributes('d') ?? '').includes('C'))
+        expect(routed.length).toBeGreaterThanOrEqual(2)
+        const d1 = routed[0].attributes('d')
+        const d2 = routed[1].attributes('d')
+        expect(d1).not.toBe(d2)
+    })
 })

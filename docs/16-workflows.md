@@ -114,14 +114,21 @@ Users with `update` permission can also edit transitions on the canvas:
   one source among a multi-`from` list updates only that entry.
 - Empty `from` (any-state) edges: reconnecting a source collapses the
   transition to an explicit single-source `from` list.
+- Click an edge (or its endpoints), then press Delete/Backspace or use the
+  Delete control to remove that visual edge. Multi-source transitions drop
+  only that source; a single-source transition is removed entirely.
+- Click a state, then Delete/Backspace to hide it from the board (at least
+  one state must remain). Save layout persists the remaining states.
+- Undo (button or Ctrl/Cmd+Z) restores the last canvas change before save.
 
-"Save layout" PUTs the current definition (including canvas-created or
-reconnected transitions) plus `positions`. The form editor remains the
-fallback for renaming, abilities, icons, colours, confirm copy, and
-multi-source checklists.
+"Save layout" PUTs the current definition (including canvas-created,
+reconnected, or deleted transitions) plus `positions`. The form editor
+remains the fallback for renaming, abilities, icons, colours, confirm copy,
+and multi-source checklists.
 
-Edge auto-routing that avoids node overlap is not shipped; curves stay
-simple cubics between node midpoints.
+Light edge auto-routing fans parallel edges between the same pair and bows
+curves when the chord would cross another state box. Full orthogonal
+avoidance is not shipped.
 
 ### PHP default vs. DB override
 
@@ -184,6 +191,9 @@ Validation enforces:
 - Drag state nodes on the canvas and persist `{ x, y }` via PUT.
 - Drag-to-create transitions from a node's out-handle to another state.
 - Drag-to-reconnect existing edge source or target endpoints.
+- Delete a selected edge or state on the canvas (Delete/Backspace or Delete control).
+- Undo the last canvas change before save (Undo button or Ctrl/Cmd+Z).
+- Light auto-routing: parallel fan-out and bow around crossed state boxes.
 - Form editor for add/remove/rename states and transitions (ability, icon,
   colour, confirm, multi-source).
 - SVG edges drawn between current node positions.
@@ -191,9 +201,8 @@ Validation enforces:
 
 **Does not (yet)**
 
-- Auto-routing that avoids node overlap; edges are simple cubic curves.
-- Collaborative live cursors or undo history for the canvas.
-- Deleting a transition by canvas gesture (use Edit workflow).
+- Full orthogonal edge routing or collision-free pathfinding.
+- Collaborative live cursors or multi-step undo history across saves.
 
 ### Limitations
 
