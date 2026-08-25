@@ -30,7 +30,7 @@ PanelKit stays Vue + Inertia.
 | --- | --- |
 | Ecosystem / plugins | Filament has a marketplace; PanelKit supports host-owned `PanelPlugin` for modular registration but has no marketplace and no third-party plugin track. Build features in-app first. |
 | In-place form feel | Livewire mutates without full Inertia visits; we keep dedicated pages on purpose |
-| Infolist / field breadth | Filament still has more specialty entries; BadgeEntry, DateTimeEntry, MoneyEntry landed; ToggleButtons + morph type toggles landed in v1.4.18 |
+| Infolist / field breadth | Filament still has more specialty entries; BadgeEntry, DateTimeEntry, MoneyEntry, ViewEntry landed; ToggleButtons + morph type toggles landed in v1.4.18 |
 | Docs / training data | Agents invent Filament verbs; Day 0 forbids them - use `panel:blueprint` + `panel:doctor` |
 | Slide-overs / dense modals | Polished for **secondary** actions; create/edit/view stay pages by default |
 | Host reliability | Doctor checks shell, appearance-prepaint, queues tip, SESSION_DRIVER for devices |
@@ -58,7 +58,7 @@ Wired into `make release-check` with client mirror sync and package Pest.
 
 ## Suggested next (not in this tag)
 
-- More specialty infolist / field entries as hosts ask (Badge, DateTime, Money shipped)
+- More specialty infolist / field entries as hosts ask (Badge, DateTime, Money, ViewEntry shipped)
 - Intentional PanelKit marketing landing (not ported templates)
 
 ## Agent honesty (read before inventing APIs)
@@ -101,6 +101,8 @@ Filament often invent `Filament\…`, `Forms\Components\…`, `CreateAction`,
 | v1.4.17 | Slide-over / dense modal polish for secondary actions; overlay design-freeze tokens; page-first CRUD unchanged |
 | v1.4.18 | `ToggleButtonsField`; morph `SelectField::typeSelectToggleButtons()`; docs for morphTo / tableSelect unchanged |
 | v1.4.19 | Agent Day-0 honesty (forbidden Filament verbs); doctor appearance-prepaint + devices SESSION_DRIVER + queue tip; clearer install/update; Logs page stub |
+| v1.4.23 | Workflow node DnD positions; `BulkAction::slideOver()` |
+| v1.4.24 | Workflow edge DnD (create + reconnect); `ViewEntry` + `registerEntryView` |
 
 ## Versioning (from v1.1.0)
 

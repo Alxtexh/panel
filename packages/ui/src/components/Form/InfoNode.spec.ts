@@ -130,4 +130,46 @@ describe('InfoNode - dedicated view entries', () => {
         expect(wrapper.find('section').classes()).toContain('rounded-xl')
         expect(wrapper.find('dl').classes().join(' ')).toMatch(/sm:grid-cols-2/)
     })
+
+    it('renders a registered ViewEntry component', async () => {
+        const { registerEntryView, resetEntryViews } = await import('../../composables/useEntryViews')
+        const { defineComponent } = await import('vue')
+
+        resetEntryViews()
+        registerEntryView(
+            'invoice-summary',
+            defineComponent({
+                name: 'InvoiceSummary',
+                props: ['node', 'record', 'value'],
+                template: '<div data-testid="custom-view">{{ value }} summary</div>',
+            }),
+        )
+
+        const node: InfoNodeType = {
+            component: 'entry',
+            key: 'title',
+            label: 'Preview',
+            type: 'view',
+            view: 'invoice-summary',
+        }
+
+        const wrapper = mount(InfoNode, { props: { node, record } })
+
+        expect(wrapper.get('[data-testid="custom-view"]').text()).toContain('Headline summary')
+        resetEntryViews()
+    })
+
+    it('reports a missing ViewEntry registration', () => {
+        const node: InfoNodeType = {
+            component: 'entry',
+            key: 'title',
+            label: 'Preview',
+            type: 'view',
+            view: 'missing-view',
+        }
+
+        const text = mount(InfoNode, { props: { node, record } }).text()
+
+        expect(text).toContain('No entry view for [missing-view]')
+    })
 })

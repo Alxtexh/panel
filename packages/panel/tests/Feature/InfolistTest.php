@@ -55,6 +55,7 @@ final class InfolistTest extends TestCase
         $this->assertContains('badge', $types);
         $this->assertContains('datetime', $types);
         $this->assertContains('money', $types);
+        $this->assertContains('view', $types);
         $this->assertSame('title', $entries[0]['key'] ?? null);
         $this->assertSame('https://example.test/articles', $entries[0]['url'] ?? null);
         $this->assertSame('copy', $entries[0]['action']['key'] ?? null);
@@ -65,6 +66,8 @@ final class InfolistTest extends TestCase
         $this->assertSame('accent', $entries[4]['key'] ?? null);
         $this->assertSame('json', $entries[5]['language'] ?? null);
         $this->assertSame('label', $entries[6]['entries'][0]['key'] ?? null);
+        $viewEntry = collect($entries)->firstWhere('type', 'view');
+        $this->assertSame('article-title-preview', $viewEntry['view'] ?? null);
         $this->assertSame('published', $page['props']['record']['status'] ?? null);
     }
 
@@ -183,5 +186,20 @@ final class InfolistTest extends TestCase
 
         $this->assertSame('USD', $schema['currency']);
         $this->assertSame(100, $schema['divideBy']);
+    }
+
+    public function test_view_entry_schema_includes_named_view(): void
+    {
+        $entry = \Alxtexh\Panel\Infolists\ViewEntry::make('preview')
+            ->label('Preview')
+            ->view('invoice-summary');
+
+        $schema = $entry->toSchema();
+
+        $this->assertSame('view', $schema['type']);
+        $this->assertSame('preview', $schema['key']);
+        $this->assertSame('Preview', $schema['label']);
+        $this->assertSame('invoice-summary', $schema['view']);
+        $this->assertSame('entry', $schema['component']);
     }
 }

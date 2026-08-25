@@ -100,8 +100,28 @@ marks the layout dirty; "Save layout" PUTs the current definition plus
 }
 ```
 
-Without saved positions the board uses an automatic rank-based layout. Dragging
-does not invent transitions: edge create/reconnect by drag is not shipped.
+Without saved positions the board uses an automatic rank-based layout.
+
+### Dragging edges (create and reconnect)
+
+Users with `update` permission can also edit transitions on the canvas:
+
+- Drag from a state's **right handle** onto another state to create a
+  transition (`from: [source]`, `to: target`, auto key and label).
+- Drag an existing edge's **source** or **target** endpoint onto another
+  state to reconnect that end. Reconnecting a target changes `to` for the
+  whole transition key (all visual edges that share the key). Reconnecting
+  one source among a multi-`from` list updates only that entry.
+- Empty `from` (any-state) edges: reconnecting a source collapses the
+  transition to an explicit single-source `from` list.
+
+"Save layout" PUTs the current definition (including canvas-created or
+reconnected transitions) plus `positions`. The form editor remains the
+fallback for renaming, abilities, icons, colours, confirm copy, and
+multi-source checklists.
+
+Edge auto-routing that avoids node overlap is not shipped; curves stay
+simple cubics between node midpoints.
 
 ### PHP default vs. DB override
 
@@ -162,15 +182,18 @@ Validation enforces:
 **Works**
 
 - Drag state nodes on the canvas and persist `{ x, y }` via PUT.
-- Form editor for add/remove/rename states and transitions.
+- Drag-to-create transitions from a node's out-handle to another state.
+- Drag-to-reconnect existing edge source or target endpoints.
+- Form editor for add/remove/rename states and transitions (ability, icon,
+  colour, confirm, multi-source).
 - SVG edges drawn between current node positions.
 - Same auth and validation path for layout saves and definition saves.
 
 **Does not (yet)**
 
-- Drag-to-create or drag-to-reconnect transitions. Edit edges in the form.
 - Auto-routing that avoids node overlap; edges are simple cubic curves.
 - Collaborative live cursors or undo history for the canvas.
+- Deleting a transition by canvas gesture (use Edit workflow).
 
 ### Limitations
 

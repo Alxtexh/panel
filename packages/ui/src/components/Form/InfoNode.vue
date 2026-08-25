@@ -21,6 +21,7 @@ import IconCell from '../DataTable/IconCell.vue'
 import ImageCell from '../DataTable/ImageCell.vue'
 import ColourCell from '../DataTable/ColourCell.vue'
 import { BADGE_VARIANTS, hasBadgeValue } from '../../composables/useSchemaColumns'
+import { entryView, registeredEntryViews } from '../../composables/useEntryViews'
 import { iconPath } from '../primitives/icons'
 
 export interface InfoNode {
@@ -150,6 +151,22 @@ const badgeVariant = computed(() => {
 
     return BADGE_VARIANTS[intent] ?? 'outline'
 })
+
+const registeredView = computed(() => {
+    const name = typeof props.node.view === 'string' ? props.node.view : ''
+    return name ? entryView(name) : undefined
+})
+
+const missingViewMessage = computed(() => {
+    const name = typeof props.node.view === 'string' ? props.node.view : ''
+    if (!name) {
+        return 'ViewEntry has no view name.'
+    }
+    const registered = registeredEntryViews()
+    const list = registered.length > 0 ? registered.join(', ') : '(none)'
+
+    return `No entry view for [${name}]; registered: ${list}`
+})
 </script>
 
 <template>
@@ -244,6 +261,20 @@ const badgeVariant = computed(() => {
             >
                 {{ moneyDisplay }}
             </span>
+            <component
+                :is="registeredView"
+                v-else-if="node.type === 'view' && registeredView"
+                :node="node"
+                :record="record"
+                :value="value"
+            />
+            <p
+                v-else-if="node.type === 'view'"
+                class="text-destructive text-xs font-normal"
+                data-testid="missing-entry-view"
+            >
+                {{ missingViewMessage }}
+            </p>
             <a
                 v-else-if="node.url && !isBlank"
                 :href="node.url"

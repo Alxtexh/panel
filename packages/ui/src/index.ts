@@ -401,6 +401,14 @@ export {
     resetOptionPreviews,
 } from './composables/useOptionPreviews'
 
+export {
+    registerEntryView,
+    entryView,
+    hasEntryView,
+    registeredEntryViews,
+    resetEntryViews,
+} from './composables/useEntryViews'
+
 import { registerBuiltInFieldControls } from './components/Form/builtInFields'
 
 export { registerBuiltInFieldControls }

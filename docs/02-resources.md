@@ -137,6 +137,7 @@ use Alxtexh\Panel\Infolists\KeyValueEntry;
 use Alxtexh\Panel\Infolists\MoneyEntry;
 use Alxtexh\Panel\Infolists\RepeatableEntry;
 use Alxtexh\Panel\Infolists\TextEntry;
+use Alxtexh\Panel\Infolists\ViewEntry;
 
 public static function infolist(): array
 {
@@ -157,6 +158,7 @@ public static function infolist(): array
         DateTimeEntry::make('created_at'),
         DateTimeEntry::make('published_at')->date(),
         MoneyEntry::make('price')->currency('USD')->divideBy(100),
+        ViewEntry::make('preview')->view('invoice-summary'),
         TextEntry::make('email')->action(
             Action::make('copy')->handle(fn ($record) => $record->touch()),
         ),
@@ -164,7 +166,20 @@ public static function infolist(): array
 }
 ```
 
-Empty `infolist()` still falls back to table columns on the view page.
+`ViewEntry` names a host-registered Vue view. In the application entry
+(for example `resources/js/app.ts`):
+
+```ts
+import { registerEntryView } from '@alxtexh-enterprise/panel'
+import InvoiceSummary from './infolists/InvoiceSummary.vue'
+
+registerEntryView('invoice-summary', InvoiceSummary)
+```
+
+The Vue component receives `node`, `record`, and `value` (`record[key]`).
+A missing registration shows a diagnostic on the view page rather than
+rendering blank. Empty `infolist()` still falls back to table columns on the
+view page.
 
 Click POSTs `{ action }` to `{resource}/{id}/infolist-action`. `Entry::url()` remains a plain link. The view page stays a dedicated page.
 

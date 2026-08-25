@@ -103,4 +103,85 @@ describe('ResourceWorkflow', () => {
         expect(payload.states.open.label).toBe('Open')
         expect(payload.transitions).toHaveLength(1)
     })
+
+    it('creates a transition by dragging from an out-handle to another node', async () => {
+        put.mockClear()
+        const wrapper = mount(ResourceWorkflow, {
+            props: {
+                ...baseProps,
+                workflow: {
+                    ...baseProps.workflow,
+                    transitions: [],
+                },
+                graph: {
+                    ...baseProps.graph,
+                    edges: [],
+                },
+            },
+        })
+
+        const handle = wrapper.get('[data-testid="out-handle-open"]')
+        await handle.trigger('pointerdown', { button: 0, clientX: 240, clientY: 128 })
+
+        const resolved = wrapper.get('[data-node-id="resolved"]')
+        await resolved.trigger('pointerenter')
+        await resolved.trigger('pointerup', { button: 0, clientX: 400, clientY: 128 })
+
+        expect(wrapper.text()).toContain('Save layout')
+        expect(wrapper.text()).toContain('Open to Resolved')
+
+        await wrapper.get('[data-testid="save-layout"]').trigger('click')
+
+        expect(put).toHaveBeenCalled()
+        const [, payload] = put.mock.calls[0]
+        expect(payload.transitions).toHaveLength(1)
+        expect(payload.transitions[0].to).toBe('resolved')
+        expect(payload.transitions[0].from).toEqual(['open'])
+        expect(payload.transitions[0].label).toBe('Open to Resolved')
+        expect(payload.positions.open).toEqual({ x: 40, y: 80 })
+    })
+
+    it('reconnects an edge target by dragging the target handle', async () => {
+        put.mockClear()
+        const wrapper = mount(ResourceWorkflow, {
+            props: {
+                ...baseProps,
+                workflow: {
+                    ...baseProps.workflow,
+                    states: {
+                        open: { label: 'Open', color: 'warning' },
+                        pending: { label: 'Pending', color: 'info' },
+                        resolved: { label: 'Resolved', color: 'success' },
+                    },
+                },
+                graph: {
+                    nodes: [
+                        { id: 'open', label: 'Open', color: 'warning', rank: 0 },
+                        { id: 'pending', label: 'Pending', color: 'info', rank: 1 },
+                        { id: 'resolved', label: 'Resolved', color: 'success', rank: 2 },
+                    ],
+                    edges: baseProps.graph.edges,
+                },
+                positions: {
+                    open: { x: 40, y: 80 },
+                    pending: { x: 320, y: 200 },
+                    resolved: { x: 320, y: 80 },
+                },
+            },
+        })
+
+        const target = wrapper.get('[data-testid="edge-target-resolve__open"]')
+        await target.trigger('pointerdown', { button: 0, clientX: 320, clientY: 128 })
+
+        const pending = wrapper.get('[data-node-id="pending"]')
+        await pending.trigger('pointerenter')
+        await pending.trigger('pointerup', { button: 0, clientX: 320, clientY: 248 })
+
+        await wrapper.get('[data-testid="save-layout"]').trigger('click')
+
+        const [, payload] = put.mock.calls[0]
+        expect(payload.transitions[0].key).toBe('resolve')
+        expect(payload.transitions[0].to).toBe('pending')
+        expect(payload.transitions[0].from).toEqual(['open'])
+    })
 })
