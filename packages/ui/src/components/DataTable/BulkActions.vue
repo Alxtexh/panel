@@ -60,6 +60,12 @@ export interface BulkActionSchema {
      * form action and a plain one look identical from here.
      */
     form?: { nodes: unknown[] } | null
+
+    /**
+     * When true, ResourceIndex opens the bulk form in PkSlideover instead of
+     * the dense PkModal. Opt-in via BulkAction::slideOver().
+     */
+    slideOver?: boolean
 }
 
 const props = withDefaults(

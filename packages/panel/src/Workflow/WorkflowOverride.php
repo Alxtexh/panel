@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * A persisted workflow definition that overlays the PHP default.
  *
- * One row per resource key. States and transitions are stored as JSON and
- * rebuilt into a Workflow instance at runtime via `Workflow::fromStored()`.
+ * One row per resource key. States, transitions, and optional canvas
+ * positions are stored as JSON. States/transitions rebuild into a Workflow
+ * via `Workflow::fromStored()`; positions are board-only layout metadata.
  */
 final class WorkflowOverride extends Model
 {
@@ -24,6 +25,7 @@ final class WorkflowOverride extends Model
         return [
             'states' => 'array',
             'transitions' => 'array',
+            'positions' => 'array',
         ];
     }
 

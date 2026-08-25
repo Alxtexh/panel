@@ -17,6 +17,7 @@ Use slide-overs and dense modals for **secondary** flows only:
 | Flow | UI |
 | --- | --- |
 | Record action with `->form([...])` | Dense `PkModal` (`size="form"`) by default; `->slideOver()` uses `PkSlideover` |
+| Bulk action with `->form([...])` | Dense `PkModal` (`size="form"`) by default; `->slideOver()` uses `PkSlideover` |
 | Confirm-only actions / delete | Dense `PkModal` (`size="confirm"`) |
 | Dashboard / catalogue filters | `PkSlideover` |
 | Notifications, inspect drawers | `PkSlideover` |
@@ -118,6 +119,23 @@ $table->bulkActions([
         ->handle(fn ($query) => $query->update(['paid_at' => now()])),
 ]);
 ```
+
+A bulk action may collect input once before the selection is touched, the same
+way a record action does:
+
+```php
+BulkAction::make('assign', 'Assign')
+    ->form(fn (Form $form): Form => $form->schema([
+        SelectField::make('owner_id')->required(),
+    ]))
+    ->slideOver()
+    ->handle(fn ($records, array $data) => $records->each->update($data));
+```
+
+`->slideOver()` is opt-in and mirrors `RecordAction::slideOver()`: the index
+opens `PkSlideover` instead of the dense centred modal. Page-first CRUD stays
+the default; use slide-over for secondary bulk forms that need more horizontal
+room.
 
 **Queueing is automatic.** Past a row count the action stops running in the web
 request and becomes a job, with progress reported back:

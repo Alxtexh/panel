@@ -34,7 +34,9 @@ final class DocsHonestyTest extends TestCase
 
         $this->assertStringContainsString('Edit workflow', $workflows);
         $this->assertStringContainsString('panel_workflow_overrides', $workflows);
-        $this->assertStringContainsString('No freeform drag-and-drop canvas', $workflows);
+        $this->assertStringContainsString('Save layout', $workflows);
+        $this->assertStringContainsString('Drag-to-create or drag-to-reconnect transitions', $workflows);
         $this->assertStringNotContainsString('not editable in the UI', $workflows);
+        $this->assertStringNotContainsString('No freeform drag-and-drop canvas', $workflows);
     }
 }

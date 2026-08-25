@@ -32,6 +32,7 @@ return new class extends Migration
             $blueprint->string('group_label', 64)->default('Status');
             $blueprint->json('states');
             $blueprint->json('transitions');
+            $blueprint->json('positions')->nullable();
             $blueprint->timestamps();
         });
     }

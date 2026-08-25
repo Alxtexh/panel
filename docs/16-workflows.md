@@ -82,7 +82,26 @@ Clicking it opens a form editor where you can:
 
 Click "Save workflow" to persist the changes. Edits are stored in the
 `panel_workflow_overrides` database table and take effect immediately. The
-diagram reloads to reflect the saved definition.
+diagram reloads to reflect the saved definition. The same save also stores the
+current canvas node positions.
+
+### Dragging nodes (layout)
+
+Users with `update` permission can drag state nodes on the board. Moving a node
+marks the layout dirty; "Save layout" PUTs the current definition plus
+`positions` to the same endpoint. Positions are JSON keyed by state id:
+
+```json
+{
+    "positions": {
+        "draft": { "x": 40, "y": 80 },
+        "published": { "x": 320, "y": 80 }
+    }
+}
+```
+
+Without saved positions the board uses an automatic rank-based layout. Dragging
+does not invent transitions: edge create/reconnect by drag is not shipped.
 
 ### PHP default vs. DB override
 
@@ -96,6 +115,8 @@ saves changes from the board, those changes are stored in the database and
   code artifacts that cannot be invented from the UI).
 - `HasStateTransitions::stateTransitions()` also checks for a DB override, so
   runtime transition guards match the board the admin saved.
+- Canvas `positions` are board-only metadata; they do not affect transition
+  rules.
 
 To reset a resource back to its PHP definition, delete its row from the
 `panel_workflow_overrides` table.
@@ -119,7 +140,11 @@ To reset a resource back to its PHP definition, delete its row from the
             "from": ["draft"],
             "ability": "update"
         }
-    ]
+    ],
+    "positions": {
+        "draft": { "x": 40, "y": 80 },
+        "published": { "x": 320, "y": 80 }
+    }
 }
 ```
 
@@ -127,18 +152,35 @@ Validation enforces:
 
 - At least one state.
 - Every transition `to` and `from` must reference a declared state key.
+- Position keys that are not declared states are dropped.
 - Requires `update` ability (not `viewAny` alone).
+- When `positions` is omitted, an existing layout is preserved so a form-only
+  client cannot wipe coordinates by accident.
+
+### What works / what does not
+
+**Works**
+
+- Drag state nodes on the canvas and persist `{ x, y }` via PUT.
+- Form editor for add/remove/rename states and transitions.
+- SVG edges drawn between current node positions.
+- Same auth and validation path for layout saves and definition saves.
+
+**Does not (yet)**
+
+- Drag-to-create or drag-to-reconnect transitions. Edit edges in the form.
+- Auto-routing that avoids node overlap; edges are simple cubic curves.
+- Collaborative live cursors or undo history for the canvas.
 
 ### Limitations
 
-- No freeform drag-and-drop canvas. The editor is form-based: add/remove
-  states and transitions, then save. Visual DnD is deferred.
 - State keys are freeform strings. Renaming a key does not migrate existing
   records in the status column.
 - The `column` and `model` cannot be changed from the UI.
 
 The schema includes `routes.workflow` and a `graph` payload (`nodes` + `edges`)
-so custom UIs can draw the same machine without a second round trip.
+so custom UIs can draw the same machine without a second round trip. The
+workflow page also receives a `positions` prop from the override row.
 
 ## Status history
 

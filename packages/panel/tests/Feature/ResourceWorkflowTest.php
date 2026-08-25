@@ -299,4 +299,92 @@ final class ResourceWorkflowTest extends TestCase
         $this->assertCount(3, $override->states);
         $this->assertCount(2, $override->transitions);
     }
+
+    public function test_put_workflow_persists_node_positions(): void
+    {
+        $this->putJson('/articles/workflow', [
+            'group_label' => 'Status',
+            'states' => [
+                'open' => ['label' => 'Open', 'color' => 'info'],
+                'closed' => ['label' => 'Closed', 'color' => 'success'],
+            ],
+            'transitions' => [
+                [
+                    'key' => 'close',
+                    'label' => 'Close',
+                    'to' => 'closed',
+                    'from' => ['open'],
+                    'ability' => 'update',
+                ],
+            ],
+            'positions' => [
+                'open' => ['x' => 40, 'y' => 80],
+                'closed' => ['x' => 320, 'y' => 120],
+            ],
+        ])->assertRedirect();
+
+        $override = WorkflowOverride::forResource('articles');
+        $this->assertNotNull($override);
+        $this->assertSame(40.0, (float) $override->positions['open']['x']);
+        $this->assertSame(80.0, (float) $override->positions['open']['y']);
+        $this->assertSame(320.0, (float) $override->positions['closed']['x']);
+        $this->assertSame(120.0, (float) $override->positions['closed']['y']);
+
+        $this->get('/articles/workflow')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('ResourceWorkflow')
+                ->where('positions.open.x', 40)
+                ->where('positions.closed.y', 120));
+    }
+
+    public function test_put_workflow_without_positions_preserves_existing_layout(): void
+    {
+        WorkflowOverride::create([
+            'resource_key' => 'articles',
+            'column' => 'status',
+            'group_label' => 'Status',
+            'states' => [
+                'open' => ['label' => 'Open', 'color' => 'info'],
+                'closed' => ['label' => 'Closed', 'color' => 'success'],
+            ],
+            'transitions' => [],
+            'positions' => [
+                'open' => ['x' => 10, 'y' => 20],
+                'closed' => ['x' => 30, 'y' => 40],
+            ],
+        ]);
+
+        $this->putJson('/articles/workflow', [
+            'group_label' => 'Phase',
+            'states' => [
+                'open' => ['label' => 'Open', 'color' => 'info'],
+                'closed' => ['label' => 'Closed', 'color' => 'success'],
+            ],
+            'transitions' => [],
+        ])->assertRedirect();
+
+        $override = WorkflowOverride::forResource('articles');
+        $this->assertSame('Phase', $override->group_label);
+        $this->assertSame(10.0, (float) $override->positions['open']['x']);
+        $this->assertSame(40.0, (float) $override->positions['closed']['y']);
+    }
+
+    public function test_put_workflow_drops_positions_for_unknown_states(): void
+    {
+        $this->putJson('/articles/workflow', [
+            'states' => [
+                'open' => ['label' => 'Open', 'color' => 'info'],
+            ],
+            'transitions' => [],
+            'positions' => [
+                'open' => ['x' => 5, 'y' => 6],
+                'ghost' => ['x' => 99, 'y' => 99],
+            ],
+        ])->assertRedirect();
+
+        $override = WorkflowOverride::forResource('articles');
+        $this->assertArrayHasKey('open', $override->positions);
+        $this->assertArrayNotHasKey('ghost', $override->positions);
+    }
 }

@@ -1,17 +1,15 @@
 <script setup lang="ts">
 /**
- * Workflow board with an inline form editor for states and transitions.
+ * Workflow board with form editor and persistent node repositioning.
  *
- * When the user has update permission, the page shows editable fields for
- * state labels/colors and transition sources/targets, plus a Save button
- * that PUTs to the server. The diagram section stays read-only and refreshes
- * after save via Inertia reload.
+ * States and transitions are still edited via the form panel. Nodes on the
+ * canvas can be dragged when the user has update permission; positions PUT to
+ * the same workflow endpoint and land in panel_workflow_overrides.positions.
  *
- * Drag-to-edit is not shipped in this slice. The form editor is the
- * persistence surface; the diagram visualises the result.
+ * Edge create/reconnect by drag is not shipped: transitions stay form-based.
  */
 import { Head, Link, router } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import {
     PAGE_SHELL,
     PkEmptyState,
@@ -53,6 +51,16 @@ interface TransitionEntry {
     confirm: string | null
 }
 
+interface NodePosition {
+    x: number
+    y: number
+}
+
+const NODE_WIDTH = 200
+const NODE_HEIGHT = 96
+const RANK_GAP_X = 260
+const RANK_GAP_Y = 140
+
 const props = defineProps<{
     schema: {
         key: string
@@ -69,6 +77,8 @@ const props = defineProps<{
         nodes: GraphNode[]
         edges: GraphEdge[]
     }
+    /** Persisted canvas layout keyed by state id. Empty means auto-layout. */
+    positions?: Record<string, NodePosition>
     indexUrl: string
     canEdit?: boolean
     saveUrl?: string
@@ -107,11 +117,64 @@ function buildTransitions(): TransitionEntry[] {
     }))
 }
 
+function defaultPositions(): Record<string, NodePosition> {
+    const byRank = new Map<number, GraphNode[]>()
+
+    for (const node of props.graph.nodes) {
+        const list = byRank.get(node.rank) ?? []
+        list.push(node)
+        byRank.set(node.rank, list)
+    }
+
+    const next: Record<string, NodePosition> = {}
+
+    for (const [rank, nodes] of [...byRank.entries()].sort((a, b) => a[0] - b[0])) {
+        nodes.forEach((node, index) => {
+            next[node.id] = {
+                x: 24 + rank * RANK_GAP_X,
+                y: 24 + index * RANK_GAP_Y,
+            }
+        })
+    }
+
+    return next
+}
+
+function seedPositions(): Record<string, NodePosition> {
+    const defaults = defaultPositions()
+    const saved = props.positions ?? {}
+    const merged: Record<string, NodePosition> = { ...defaults }
+
+    for (const node of props.graph.nodes) {
+        const point = saved[node.id]
+        if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) {
+            merged[node.id] = { x: point.x, y: point.y }
+        }
+    }
+
+    return merged
+}
+
 const editStates = ref(buildStates())
 const editTransitions = ref(buildTransitions())
 const editGroupLabel = ref(props.workflow.group ?? 'Status')
 const saving = ref(false)
 const saveError = ref('')
+const layoutDirty = ref(false)
+const nodePositions = reactive<Record<string, NodePosition>>(seedPositions())
+
+watch(
+    () => [props.graph.nodes, props.positions] as const,
+    () => {
+        const seeded = seedPositions()
+        for (const key of Object.keys(nodePositions)) {
+            if (!(key in seeded)) delete nodePositions[key]
+        }
+        Object.assign(nodePositions, seeded)
+        layoutDirty.value = false
+    },
+    { deep: true },
+)
 
 function startEditing() {
     editStates.value = buildStates()
@@ -139,6 +202,7 @@ function removeState(index: number) {
             t.from = t.from.filter((f) => f !== removed.key)
             if (t.to === removed.key) t.to = ''
         }
+        delete nodePositions[removed.key]
     }
 }
 
@@ -169,43 +233,83 @@ function toggleFrom(tIdx: number, stateKey: string) {
     }
 }
 
-function save() {
+function currentStatesPayload(): Record<string, { label: string; color: string }> {
+    if (editing.value) {
+        const statesPayload: Record<string, { label: string; color: string }> = {}
+        for (const s of editStates.value) {
+            if (!s.key || !s.label) continue
+            statesPayload[s.key] = { label: s.label, color: s.color }
+        }
+        return statesPayload
+    }
+
+    return Object.fromEntries(
+        Object.entries(props.workflow.states).map(([key, s]) => [key, { label: s.label, color: s.color }]),
+    )
+}
+
+function currentTransitionsPayload() {
+    if (editing.value) {
+        return editTransitions.value
+            .filter((t) => t.key && t.label && t.to)
+            .map((t) => ({
+                key: t.key,
+                label: t.label,
+                to: t.to,
+                from: t.from,
+                ability: t.ability || 'update',
+                icon: t.icon || null,
+                color: t.color || null,
+                confirm: t.confirm || null,
+            }))
+    }
+
+    return (props.workflow.transitions ?? []).map((t: Record<string, unknown>) => ({
+        key: (t.key as string) ?? '',
+        label: (t.label as string) ?? '',
+        to: (t.to as string) ?? '',
+        from: (t.from as string[]) ?? [],
+        ability: ((t.ability as string) ?? 'update') || 'update',
+        icon: (t.icon as string | null) ?? null,
+        color: (t.color as string | null) ?? null,
+        confirm: (t.confirm as string | null) ?? null,
+    }))
+}
+
+function positionsPayload(): Record<string, NodePosition> {
+    const states = currentStatesPayload()
+    const out: Record<string, NodePosition> = {}
+
+    for (const key of Object.keys(states)) {
+        const point = nodePositions[key]
+        if (point) {
+            out[key] = { x: Math.round(point.x), y: Math.round(point.y) }
+        }
+    }
+
+    return out
+}
+
+function putWorkflow(closeEditor: boolean) {
     if (!props.saveUrl) return
 
     saving.value = true
     saveError.value = ''
 
-    const statesPayload: Record<string, { label: string; color: string }> = {}
-    for (const s of editStates.value) {
-        if (!s.key || !s.label) continue
-        statesPayload[s.key] = { label: s.label, color: s.color }
-    }
-
-    const transitionsPayload = editTransitions.value
-        .filter((t) => t.key && t.label && t.to)
-        .map((t) => ({
-            key: t.key,
-            label: t.label,
-            to: t.to,
-            from: t.from,
-            ability: t.ability || 'update',
-            icon: t.icon || null,
-            color: t.color || null,
-            confirm: t.confirm || null,
-        }))
-
     router.put(
         props.saveUrl,
         {
-            group_label: editGroupLabel.value,
-            states: statesPayload,
-            transitions: transitionsPayload,
+            group_label: editing.value ? editGroupLabel.value : (props.workflow.group ?? 'Status'),
+            states: currentStatesPayload(),
+            transitions: currentTransitionsPayload(),
+            positions: positionsPayload(),
         },
         {
             preserveScroll: true,
             onSuccess: () => {
                 saving.value = false
-                editing.value = false
+                layoutDirty.value = false
+                if (closeEditor) editing.value = false
             },
             onError: (errors) => {
                 saving.value = false
@@ -216,30 +320,101 @@ function save() {
     )
 }
 
-const ranks = computed(() => {
-    const map = new Map<number, GraphNode[]>()
+function save() {
+    putWorkflow(true)
+}
 
-    for (const node of props.graph.nodes) {
-        const list = map.get(node.rank) ?? []
-        list.push(node)
-        map.set(node.rank, list)
+function saveLayout() {
+    putWorkflow(false)
+}
+
+const drag = ref<{
+    id: string
+    startX: number
+    startY: number
+    originX: number
+    originY: number
+} | null>(null)
+
+function onPointerDown(event: PointerEvent, id: string) {
+    if (!props.canEdit || editing.value) return
+    if (event.button !== 0) return
+
+    const point = nodePositions[id] ?? { x: 0, y: 0 }
+    const target = event.currentTarget as HTMLElement
+
+    try {
+        target.setPointerCapture?.(event.pointerId)
+    } catch {
+        // jsdom and some browsers refuse capture; drag still works via move.
     }
 
-    return [...map.entries()]
-        .sort((a, b) => a[0] - b[0])
-        .map(([rank, nodes]) => ({ rank, nodes }))
+    drag.value = {
+        id,
+        startX: event.clientX,
+        startY: event.clientY,
+        originX: point.x,
+        originY: point.y,
+    }
+}
+
+function onPointerMove(event: PointerEvent) {
+    if (!drag.value) return
+
+    const nextX = Math.max(0, drag.value.originX + (event.clientX - drag.value.startX))
+    const nextY = Math.max(0, drag.value.originY + (event.clientY - drag.value.startY))
+    nodePositions[drag.value.id] = { x: nextX, y: nextY }
+    layoutDirty.value = true
+}
+
+function onPointerUp(event: PointerEvent) {
+    if (!drag.value) return
+    const target = event.currentTarget as HTMLElement
+
+    try {
+        if (target.hasPointerCapture?.(event.pointerId)) {
+            target.releasePointerCapture(event.pointerId)
+        }
+    } catch {
+        // ignore
+    }
+
+    drag.value = null
+}
+
+onBeforeUnmount(() => {
+    drag.value = null
 })
 
-const outgoing = computed(() => {
-    const map = new Map<string, GraphEdge[]>()
+const canvasSize = computed(() => {
+    let maxX = 480
+    let maxY = 280
 
-    for (const edge of props.graph.edges) {
-        const list = map.get(edge.from) ?? []
-        list.push(edge)
-        map.set(edge.from, list)
+    for (const point of Object.values(nodePositions)) {
+        maxX = Math.max(maxX, point.x + NODE_WIDTH + 48)
+        maxY = Math.max(maxY, point.y + NODE_HEIGHT + 48)
     }
 
-    return map
+    return { width: maxX, height: maxY }
+})
+
+const edgePaths = computed(() => {
+    return props.graph.edges.map((edge) => {
+        const from = nodePositions[edge.from] ?? { x: 0, y: 0 }
+        const to = nodePositions[edge.to] ?? { x: 0, y: 0 }
+        const x1 = from.x + NODE_WIDTH
+        const y1 = from.y + NODE_HEIGHT / 2
+        const x2 = to.x
+        const y2 = to.y + NODE_HEIGHT / 2
+        const mid = (x1 + x2) / 2
+
+        return {
+            ...edge,
+            d: `M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`,
+            labelX: mid,
+            labelY: (y1 + y2) / 2 - 8,
+        }
+    })
 })
 
 const purpose = computed(
@@ -260,7 +435,6 @@ function colorClass(color: string): string {
 
     return map[color] ?? map.neutral
 }
-
 </script>
 
 <template>
@@ -270,9 +444,20 @@ function colorClass(color: string): string {
         <PkPageHeader :title="`${schema.labelPlural} workflow`" :purpose="purpose">
             <template #actions>
                 <button
-                    v-if="canEdit && !editing"
+                    v-if="canEdit && layoutDirty && !editing"
                     :class="buttonClasses()"
                     type="button"
+                    data-testid="save-layout"
+                    :disabled="saving"
+                    @click="saveLayout"
+                >
+                    {{ saving ? 'Saving...' : 'Save layout' }}
+                </button>
+                <button
+                    v-if="canEdit && !editing"
+                    :class="buttonClasses(layoutDirty ? { variant: 'outline' } : {})"
+                    type="button"
+                    data-testid="edit-workflow"
                     @click="startEditing"
                 >
                     Edit workflow
@@ -287,13 +472,12 @@ function colorClass(color: string): string {
         <div v-if="editing" class="bg-card border-border rounded-lg border p-4 shadow-sm">
             <h3 class="mb-3 text-sm font-semibold">Edit workflow definition</h3>
             <p class="text-muted-foreground mb-4 text-xs">
-                Edit states and transitions below, then save. The diagram will reload
-                with your changes. Column and model stay fixed from the PHP definition.
+                Edit states and transitions below, then save. Node positions on the board are
+                kept with this save. Column and model stay fixed from the PHP definition.
             </p>
 
             <PkAlertError v-if="saveError" class="mb-4">{{ saveError }}</PkAlertError>
 
-            <!-- Group label -->
             <div class="mb-4">
                 <label class="text-foreground mb-1 block text-xs font-medium">Group label</label>
                 <input
@@ -304,7 +488,6 @@ function colorClass(color: string): string {
                 />
             </div>
 
-            <!-- States -->
             <div class="mb-4">
                 <div class="mb-2 flex items-center justify-between">
                     <h4 class="text-xs font-semibold">States</h4>
@@ -368,7 +551,6 @@ function colorClass(color: string): string {
                 </div>
             </div>
 
-            <!-- Transitions -->
             <div class="mb-4">
                 <div class="mb-2 flex items-center justify-between">
                     <h4 class="text-xs font-semibold">Transitions</h4>
@@ -456,7 +638,6 @@ function colorClass(color: string): string {
                 </div>
             </div>
 
-            <!-- Actions -->
             <div class="flex items-center gap-2 border-t pt-3">
                 <button
                     :class="buttonClasses()"
@@ -477,17 +658,19 @@ function colorClass(color: string): string {
             </div>
         </div>
 
-        <!-- Info text -->
         <p v-if="!editing" class="text-muted-foreground text-sm font-normal">
             <template v-if="canEdit">
-                Click "Edit workflow" to add, remove, or rename states and transitions.
-                Changes persist to the database and override the PHP default.
+                Drag states to rearrange the board, then Save layout. Use Edit workflow to
+                add, remove, or rename states and transitions. Layout and definition both
+                persist to the database.
             </template>
             <template v-else>
                 Read-only diagram of the workflow definition. You need update permission to
-                edit states and transitions.
+                move nodes or edit states and transitions.
             </template>
         </p>
+
+        <PkAlertError v-if="saveError && !editing" class="mb-0">{{ saveError }}</PkAlertError>
 
         <PkEmptyState
             v-if="graph.nodes.length === 0 && !editing"
@@ -500,43 +683,77 @@ function colorClass(color: string): string {
             </template>
         </PkEmptyState>
 
-        <div v-else-if="!editing" class="flex min-h-0 flex-1 gap-4 overflow-x-auto pb-2">
-            <section
-                v-for="column in ranks"
-                :key="column.rank"
-                class="bg-muted/20 border-border flex w-64 shrink-0 flex-col gap-3 rounded-lg border p-3"
+        <div
+            v-else-if="!editing"
+            class="border-border bg-muted/10 relative min-h-0 flex-1 overflow-auto rounded-lg border"
+        >
+            <div
+                class="relative"
+                :style="{ width: `${canvasSize.width}px`, height: `${canvasSize.height}px` }"
             >
-                <header class="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                    Step {{ column.rank + 1 }}
-                </header>
+                <svg
+                    class="pointer-events-none absolute inset-0"
+                    :width="canvasSize.width"
+                    :height="canvasSize.height"
+                    aria-hidden="true"
+                >
+                    <defs>
+                        <marker
+                            id="workflow-arrow"
+                            markerWidth="8"
+                            markerHeight="8"
+                            refX="6"
+                            refY="3"
+                            orient="auto"
+                            markerUnits="strokeWidth"
+                        >
+                            <path d="M0,0 L6,3 L0,6 Z" class="fill-muted-foreground" />
+                        </marker>
+                    </defs>
+                    <path
+                        v-for="edge in edgePaths"
+                        :key="edge.id"
+                        :d="edge.d"
+                        class="stroke-muted-foreground/50 fill-none"
+                        stroke-width="1.5"
+                        marker-end="url(#workflow-arrow)"
+                    />
+                    <text
+                        v-for="edge in edgePaths"
+                        :key="`${edge.id}-label`"
+                        :x="edge.labelX"
+                        :y="edge.labelY"
+                        text-anchor="middle"
+                        class="fill-muted-foreground text-[10px]"
+                    >
+                        {{ edge.label }}
+                    </text>
+                </svg>
 
                 <article
-                    v-for="node in column.nodes"
+                    v-for="node in graph.nodes"
                     :key="node.id"
-                    class="rounded-md border p-3 shadow-sm"
-                    :class="colorClass(node.color)"
+                    class="absolute rounded-md border p-3 shadow-sm select-none"
+                    :class="[
+                        colorClass(node.color),
+                        canEdit ? 'cursor-grab active:cursor-grabbing' : '',
+                        drag?.id === node.id ? 'ring-primary z-10 ring-2' : '',
+                    ]"
+                    :style="{
+                        width: `${NODE_WIDTH}px`,
+                        left: `${nodePositions[node.id]?.x ?? 0}px`,
+                        top: `${nodePositions[node.id]?.y ?? 0}px`,
+                    }"
+                    :data-node-id="node.id"
+                    @pointerdown="onPointerDown($event, node.id)"
+                    @pointermove="onPointerMove"
+                    @pointerup="onPointerUp"
+                    @pointercancel="onPointerUp"
                 >
                     <h2 class="text-sm font-medium">{{ node.label }}</h2>
                     <p class="text-muted-foreground mt-0.5 font-mono text-[11px]">{{ node.id }}</p>
-
-                    <ul
-                        v-if="(outgoing.get(node.id) ?? []).length > 0"
-                        class="mt-3 flex flex-col gap-1.5 border-t border-current/10 pt-2"
-                    >
-                        <li
-                            v-for="edge in outgoing.get(node.id) ?? []"
-                            :key="edge.id"
-                            class="text-xs leading-snug"
-                        >
-                            <span class="font-medium">{{ edge.label }}</span>
-                            <span class="opacity-70"> > </span>
-                            <span>{{ workflow.states[edge.to]?.label ?? edge.to }}</span>
-                        </li>
-                    </ul>
-
-                    <p v-else class="text-muted-foreground mt-3 text-xs">Terminal state</p>
                 </article>
-            </section>
+            </div>
         </div>
     </div>
 </template>
