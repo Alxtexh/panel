@@ -33,6 +33,7 @@ use Throwable;
 final class StatWidget
 {
     use CanPoll;
+    use HasLayout;
 
     private ?Closure $value = null;
 
@@ -46,8 +47,6 @@ final class StatWidget
 
     /** @var list<class-string> */
     private array $invalidatedBy = [];
-
-    private int $span = 1;
 
     private ?string $ability = null;
 
@@ -97,13 +96,6 @@ final class StatWidget
     public function sparkline(Closure $sparkline): self
     {
         $this->sparkline = $sparkline;
-
-        return $this;
-    }
-
-    public function span(int $span): self
-    {
-        $this->span = $span;
 
         return $this;
     }
@@ -178,7 +170,7 @@ final class StatWidget
             'key' => $this->key,
             'label' => $this->label,
             'description' => $this->description,
-            'span' => $this->span,
+            ...$this->layoutToArray(),
             ...$this->refreshToArray(),
         ];
     }

@@ -147,6 +147,42 @@ final class NotificationTest extends TestCase
         $this->assertNull(session('toast'));
     }
 
+    public function test_duration_persistent_and_icon_color_serialize_onto_the_toast(): void
+    {
+        Notification::make()
+            ->title('Building')
+            ->info()
+            ->duration(8000)
+            ->iconColor('warning')
+            ->send();
+
+        $toast = session('toast');
+
+        $this->assertSame(8000, $toast['duration']);
+        $this->assertArrayNotHasKey('persistent', $toast);
+        $this->assertSame('warning', $toast['iconColor']);
+    }
+
+    public function test_persistent_is_omitted_by_default_and_present_when_set(): void
+    {
+        Notification::make()->title('Plain')->success()->send();
+
+        $this->assertArrayNotHasKey('persistent', session('toast'));
+        $this->assertArrayNotHasKey('duration', session('toast'));
+        $this->assertArrayNotHasKey('iconColor', session('toast'));
+
+        Notification::make()->title('Act now')->warning()->persistent()->send();
+
+        $this->assertTrue(session('toast')['persistent']);
+    }
+
+    public function test_icon_color_rejects_an_unknown_value(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Notification::make()->title('Nope')->iconColor('rainbow');
+    }
+
     public function test_danger_maps_to_an_error_toast(): void
     {
         Notification::make()->title('Nope')->danger()->send();

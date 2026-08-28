@@ -99,6 +99,31 @@ BelongsToMany: set `$relationship` to the parent model's method. Attach is a
 dedicated page at `/{parent}/{id}/{child}/attach`. Detach is a row action on
 the nested index. Not a modal, not Livewire.
 
+`pivotColumns()` declares extra fields that live on the pivot table itself,
+not on the related model:
+
+```php
+final class TagResource extends Resource
+{
+    protected static ?string $parent = ArticleResource::class;
+    protected static ?string $relationship = 'tags';
+
+    public static function pivotColumns(): array
+    {
+        return [TextField::make('note')];
+    }
+}
+```
+
+The attach page collects them once and applies the same values to every id in
+that submission - not a separate form per selected row. `Edit pivot` is then
+an auto-registered row action next to `Detach` for changing them afterwards,
+via `updateExistingPivot()`, without detaching and reattaching. Declaring
+`pivotColumns()` does not put the values on the nested list as columns - that
+needs the list query to join the pivot table, which it does not do today; add
+`->withPivot('note')` on the relationship and read the value the resource's
+own way until that join exists.
+
 ## Relation managers
 
 The tab on the parent view page is a summary. It links to the nested pages
@@ -119,6 +144,14 @@ public static function relations(): array
 
 `php artisan make:panel-relation-manager Invoice Line` writes the nested
 resource and a factory that returns that `RelationManager`.
+
+`->readOnly()` turns off inline create and the edit affordance on THIS tab -
+scoped to what a relation manager actually owns, the summary tab on the
+parent page. It does not lock the nested resource's own dedicated pages;
+`LineResource`'s `attach`/`detach`/edit routes still resolve against that
+resource's own `create`/`update` abilities, independently of any tab that
+happens to link to them. A relation genuinely meant to be read-only
+everywhere gates that on the nested resource itself, not here.
 
 ## Infolists
 

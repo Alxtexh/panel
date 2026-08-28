@@ -289,6 +289,29 @@ adds sidebar navigation from the Page class. `registerMenuItems()` with
 `menuItem()` adds a sidebar link only: pair it with `PluginContext::routes()`
 for custom controllers, or prefer `pageClasses()` for full pages.
 
+`PluginContext::render($position, $component, $props, $resources)` puts a
+component at a named position on a screen the panel already owns, so a
+plugin can add one sentence to an existing screen without forking it. Every
+position, from `Alxtexh\Panel\Plugins\RenderHooks`:
+
+| Constant | Position | Where |
+| --- | --- | --- |
+| `LIST_BEFORE_HEADER` | `list.before-header` | Above the page title on a resource list |
+| `LIST_BEFORE_TABLE` | `list.before-table` | Between the list header and the table |
+| `LIST_AFTER_TABLE` | `list.after-table` | Below the table |
+| `FORM_BEFORE` | `form.before` | Above a record's create/edit form |
+| `FORM_AFTER` | `form.after` | Below the form, above the save bar |
+| `VIEW_BEFORE` | `view.before` | Above a record's read-only detail |
+| `VIEW_AFTER` | `view.after` | Below the detail - where `TicketingPlugin` mounts a conversation |
+| `DASHBOARD_BEFORE` | `dashboard.before` | Top of the dashboard, above the widgets |
+| `DASHBOARD_AFTER` | `dashboard.after` | Bottom of the dashboard |
+| `SHELL_FEEDBACK` | `shell.feedback` | Panel-wide chrome, not tied to one screen |
+
+`$resources` limits a hook to named resource keys; `null` means every screen
+that mounts that position. An unresolved position or component name renders
+nothing, silently - markup a plugin's own package never shipped must not
+become an error on somebody else's screen.
+
 Vue/Inertia components referenced by render hooks or Page classes live in the
 **host application**, not inside the plugin package.
 

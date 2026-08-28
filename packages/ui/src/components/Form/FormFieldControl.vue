@@ -454,6 +454,7 @@ function insertChip(token: string) {
             :item-label="field.itemLabel ?? 'Item'"
             :min-items="field.minItems ?? null"
             :max-items="field.maxItems ?? null"
+            :collapsible="field.collapsible ?? false"
             :disabled="field.disabled || processing"
             :errors="errors"
             :child-options="childOptions"

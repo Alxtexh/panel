@@ -21,6 +21,14 @@
  * ERRORS ARE ADDRESSED BY PATH. Laravel validates children at
  * `contacts.0.phone`, so that is exactly the key looked up here - no
  * re-derivation, no guessing which row a message belongs to.
+ *
+ * DRAG IS ADDITIVE, NOT A REPLACEMENT for the up/down buttons below - see
+ * their own note. A grip handle beside the ordinal gives a long list a
+ * faster way to reorder without taking away the one that works from a
+ * keyboard or a field inside a page that scrolls under a drag. Same
+ * mechanism `PanelDashboard.vue` already uses for widget reordering:
+ * native HTML5 drag events on the handle alone, never the row, so
+ * clicking into an input never starts a drag by accident.
  */
 import { computed, ref, watch } from 'vue'
 import FormFieldControl from './FormFieldControl.vue'
@@ -41,6 +49,7 @@ const props = withDefaults(
         itemLabel?: string
         minItems?: number | null
         maxItems?: number | null
+        collapsible?: boolean
         disabled?: boolean
         /** Validation errors for the whole form, keyed by dotted path. */
         errors?: Record<string, string>
@@ -53,6 +62,7 @@ const props = withDefaults(
         itemLabel: 'Item',
         minItems: null,
         maxItems: null,
+        collapsible: false,
         disabled: false,
         errors: () => ({}),
         childOptions: () => ({}),
@@ -195,6 +205,118 @@ function setChild(uid: number, key: string, value: unknown) {
 function errorFor(index: number, childKey: string): string | undefined {
     return props.errors[`${props.fieldKey}.${index}.${childKey}`]
 }
+
+/**
+ * Which rows are folded, by uid - UI-only, never published. Collapsing a
+ * row changes nothing about its data, so it has no business round-tripping
+ * through `update:modelValue` or surviving a page reload.
+ */
+const collapsedUids = ref<Set<number>>(new Set())
+
+function isCollapsed(uid: number): boolean {
+    return props.collapsible && collapsedUids.value.has(uid)
+}
+
+function toggleCollapsed(uid: number) {
+    const next = new Set(collapsedUids.value)
+
+    if (next.has(uid)) {
+        next.delete(uid)
+    } else {
+        next.add(uid)
+    }
+
+    collapsedUids.value = next
+}
+
+const allCollapsed = computed(
+    () => rows.value.length > 0 && rows.value.every((r) => collapsedUids.value.has(r.uid)),
+)
+
+function toggleAllCollapsed() {
+    collapsedUids.value = allCollapsed.value ? new Set() : new Set(rows.value.map((r) => r.uid))
+}
+
+/**
+ * The line a folded row shows in place of its fields - the ordinal plus
+ * whatever the FIRST child holds, when that is short plain text. Anything
+ * else (an array, an object, something long) is left out rather than
+ * summarised badly; the ordinal alone is still enough to find the row
+ * again by expanding it.
+ */
+function summaryFor(row: KeyedRow): string {
+    const first = props.children[0]
+
+    if (!first) {
+        return ''
+    }
+
+    const value = row.data[first.key]
+
+    if (typeof value !== 'string' && typeof value !== 'number') {
+        return ''
+    }
+
+    const text = String(value).trim()
+
+    if (text === '' || text.length > 60) {
+        return ''
+    }
+
+    return text
+}
+
+/** The row currently being dragged, or null - see the class note on why
+ * this lives on the handle alone rather than the whole row. */
+const dragUid = ref<number | null>(null)
+
+function onHandleDragStart(uid: number, event: DragEvent) {
+    if (props.disabled) {
+        event.preventDefault()
+        return
+    }
+
+    dragUid.value = uid
+    event.dataTransfer?.setData('text/plain', String(uid))
+
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move'
+    }
+}
+
+function onHandleDragEnd() {
+    dragUid.value = null
+}
+
+function onRowDrop(targetUid: number, event: DragEvent) {
+    event.preventDefault()
+
+    const from = dragUid.value
+    dragUid.value = null
+
+    /*
+     * `=== null`, NOT a truthiness check - `nextUid` starts at 0, so the
+     * very first row's own uid is `0`, and `!from` would treat dragging
+     * THAT row as if nothing were being dragged at all.
+     */
+    if (props.disabled || from === null || from === targetUid) {
+        return
+    }
+
+    const next = [...rows.value]
+    const fromIndex = next.findIndex((r) => r.uid === from)
+    const toIndex = next.findIndex((r) => r.uid === targetUid)
+
+    if (fromIndex < 0 || toIndex < 0) {
+        return
+    }
+
+    const [moved] = next.splice(fromIndex, 1)
+    next.splice(toIndex, 0, moved)
+
+    rows.value = next
+    publish()
+}
 </script>
 
 <template>
@@ -204,8 +326,45 @@ function errorFor(index: number, childKey: string): string | undefined {
         with its own heading and control strip made three short entries taller
         than the rest of the form put together.
     -->
+    <div v-if="collapsible && rows.length > 1" class="flex justify-end">
+        <button
+            type="button"
+            class="text-muted-foreground hover:text-foreground text-xs font-medium"
+            @click="toggleAllCollapsed"
+        >
+            {{ allCollapsed ? 'Expand all' : 'Collapse all' }}
+        </button>
+    </div>
+
     <div class="flex flex-col gap-2">
-        <div v-for="(row, index) in rows" :key="row.uid" class="flex items-start gap-2">
+        <div
+            v-for="(row, index) in rows"
+            :key="row.uid"
+            class="flex items-start gap-2"
+            :class="dragUid === row.uid ? 'opacity-40' : ''"
+            @dragover.prevent
+            @drop="onRowDrop(row.uid, $event)"
+        >
+            <button
+                v-if="!disabled"
+                type="button"
+                class="text-muted-foreground/60 hover:text-muted-foreground flex size-6 shrink-0 cursor-grab items-center justify-center active:cursor-grabbing"
+                :class="singleChild ? 'mt-1.5' : 'mt-0.5'"
+                draggable="true"
+                :aria-label="`Drag to reorder ${itemLabel} ${index + 1}`"
+                @dragstart="onHandleDragStart(row.uid, $event)"
+                @dragend="onHandleDragEnd"
+            >
+                <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="9" cy="6" r="1.4" />
+                    <circle cx="15" cy="6" r="1.4" />
+                    <circle cx="9" cy="12" r="1.4" />
+                    <circle cx="15" cy="12" r="1.4" />
+                    <circle cx="9" cy="18" r="1.4" />
+                    <circle cx="15" cy="18" r="1.4" />
+                </svg>
+            </button>
+
             <span
                 class="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium tabular-nums"
                 :class="singleChild ? 'mt-1.5' : 'mt-0.5'"
@@ -214,7 +373,19 @@ function errorFor(index: number, childKey: string): string | undefined {
                 {{ index + 1 }}
             </span>
 
-            <div class="min-w-0 flex-1">
+            <button
+                v-if="isCollapsed(row.uid)"
+                type="button"
+                class="hover:bg-accent min-w-0 flex-1 rounded-md px-2 py-1.5 text-left text-sm transition-colors"
+                @click="toggleCollapsed(row.uid)"
+            >
+                <span class="font-medium">{{ itemLabel }} {{ index + 1 }}</span>
+                <span v-if="summaryFor(row)" class="text-muted-foreground ml-2 truncate">
+                    {{ summaryFor(row) }}
+                </span>
+            </button>
+
+            <div v-else class="min-w-0 flex-1">
                 <FormFieldControl
                     v-if="singleChild"
                     :field="{
@@ -242,6 +413,28 @@ function errorFor(index: number, childKey: string): string | undefined {
             </div>
 
             <div class="flex shrink-0 items-center gap-0.5" :class="singleChild ? 'mt-1' : 'mt-0'">
+                <button
+                    v-if="collapsible"
+                    type="button"
+                    class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors"
+                    :aria-label="isCollapsed(row.uid) ? `Expand ${itemLabel} ${index + 1}` : `Collapse ${itemLabel} ${index + 1}`"
+                    @click="toggleCollapsed(row.uid)"
+                >
+                    <svg
+                        class="size-3.5 transition-transform"
+                        :class="isCollapsed(row.uid) ? '' : 'rotate-180'"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </button>
+
                 <button
                     type="button"
                     class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"

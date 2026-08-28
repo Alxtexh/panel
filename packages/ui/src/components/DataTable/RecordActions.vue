@@ -49,6 +49,11 @@ export interface RecordActionItem {
     url?: string
     /** Filament's palette: primary | gray | success | warning | danger | info. */
     color?: string
+    /**
+     * Runs this action while ITS ROW'S MENU IS OPEN - see `RecordAction::keyBindings()`.
+     * `mod` matches Cmd on a Mac and Ctrl elsewhere. Examples: `mod+d`, `shift+e`, `e`.
+     */
+    keyBindings?: string[]
 }
 
 export interface RecordActionGroup {
@@ -117,6 +122,49 @@ function run(action: RecordActionItem) {
     emit('run', action)
 }
 
+/**
+ * Runs the action a binding names - `run()` for an ordinary action, a
+ * same-tab navigation for a link one, matching what its rendered `<a>`
+ * would have done. `run()` itself is never wired to a link action's click
+ * (see the template), so a key binding must not route through it either.
+ */
+function trigger(action: RecordActionItem) {
+    if (props.busy === action.key) {
+        return
+    }
+
+    if (action.link) {
+        if (action.url) {
+            window.location.assign(action.url)
+        }
+
+        return
+    }
+
+    run(action)
+}
+
+/**
+ * `mod` matches Cmd on a Mac and Ctrl elsewhere - one binding works on both
+ * without a resource declaring it twice. Examples: `mod+d`, `shift+e`, `e`.
+ */
+function matchesBinding(event: KeyboardEvent, binding: string): boolean {
+    const parts = binding.toLowerCase().split('+').map((part) => part.trim())
+    const key = parts.at(-1)
+
+    if (!key || event.key.toLowerCase() !== key) {
+        return false
+    }
+
+    const hasMod = event.ctrlKey || event.metaKey
+
+    return (
+        hasMod === parts.includes('mod')
+        && event.shiftKey === parts.includes('shift')
+        && event.altKey === parts.includes('alt')
+    )
+}
+
 function openContextMenu(event: MouseEvent) {
     if (isEmpty.value) {
         return
@@ -127,7 +175,7 @@ function openContextMenu(event: MouseEvent) {
 }
 
 /**
- * Arrow keys move between menu items.
+ * Arrow keys move between menu items; a bound key runs its action directly.
  *
  * Tab alone is not enough for a menu: it walks the whole document, so pressing
  * it past the last item drops focus into the page behind an open overlay. This
@@ -135,6 +183,17 @@ function openContextMenu(event: MouseEvent) {
  * native menu does and what a screen-reader user expects from `role="menu"`.
  */
 function onMenuKeydown(event: KeyboardEvent) {
+    const bound = flat.value.find((action) =>
+        (action.keyBindings ?? []).some((binding) => matchesBinding(event, binding)),
+    )
+
+    if (bound) {
+        event.preventDefault()
+        trigger(bound)
+
+        return
+    }
+
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
         return
     }

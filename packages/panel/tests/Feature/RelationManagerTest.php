@@ -269,6 +269,68 @@ final class RelationManagerTest extends TestCase
         ]);
     }
 
+    public function test_read_only_suppresses_the_form_and_every_write_signal(): void
+    {
+        $manager = \Alxtexh\Panel\Resources\RelationManager::make('comments', 'Comments')
+            ->related(Comment::class, 'comments.article_id')
+            ->table(fn (\Alxtexh\Panel\Tables\Table $table): \Alxtexh\Panel\Tables\Table => $table
+                ->columns([
+                    \Alxtexh\Panel\Tables\Columns\TextColumn::make('body')->from('comments.body'),
+                ])
+                ->keyColumn('comments.id'))
+            ->form(fn (\Alxtexh\Panel\Forms\Form $form): \Alxtexh\Panel\Forms\Form => $form->schema([
+                \Alxtexh\Panel\Forms\Fields\TextField::make('body')->required(),
+            ]))
+            ->readOnly();
+
+        $this->assertFalse($manager->hasForm());
+        $this->assertFalse($manager->canInlineCreate(\Alxtexh\Panel\Tests\Fixtures\Resources\ArticleResource::class, $this->article));
+
+        $schema = $manager->toSchema();
+
+        $this->assertTrue($schema['readOnly']);
+        $this->assertNull($schema['form']);
+        $this->assertFalse($schema['canCreate']);
+        $this->assertFalse($schema['inlineCreate']);
+    }
+
+    public function test_read_only_still_serves_rows(): void
+    {
+        $this->comment('Still readable');
+
+        $response = $this->relation()->assertOk();
+
+        $bodies = array_column($response->json('records') ?? $response->json('data') ?? [], 'body');
+
+        $this->assertSame(['Still readable'], $bodies);
+    }
+
+    public function test_a_read_only_nested_resource_relation_disables_create_and_edit(): void
+    {
+        $relations = $this->get("/articles/{$this->article->getKey()}")
+            ->assertOk()
+            ->viewData('page')['props']['schema']['relations'] ?? [];
+
+        $comments = collect($relations)->firstWhere('key', 'comments');
+
+        // The fixture declares comments read-write - proves the default path
+        // (asserted in test_a_linked_nested_resource_exposes_dedicated_pages)
+        // stays true, so the read-only variant below is a real contrast and
+        // not just what every relation already returns.
+        $this->assertTrue($comments['canCreate']);
+
+        $readOnly = \Alxtexh\Panel\Resources\RelationManager::make('comments', 'Comments')
+            ->resource(\Alxtexh\Panel\Tests\Fixtures\Resources\CommentResource::class)
+            ->readOnly()
+            ->toSchema();
+
+        $this->assertTrue($readOnly['readOnly']);
+        $this->assertFalse($readOnly['canCreate']);
+        $this->assertFalse($readOnly['canEdit']);
+        $this->assertFalse($readOnly['inlineCreate']);
+        $this->assertSame('comments', $readOnly['pages']['resource'] ?? null);
+    }
+
     public function test_inline_create_refuses_an_undeclared_relation(): void
     {
         $this->postJson("/articles/{$this->article->getKey()}/relations/somethingElse", [

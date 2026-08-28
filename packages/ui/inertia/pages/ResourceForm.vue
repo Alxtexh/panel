@@ -38,6 +38,7 @@ import {
 } from '@alxtexh-enterprise/panel'
 import type { FormField, UploadedFileValue } from '@alxtexh-enterprise/panel'
 import DefineFieldDialog from '../components/DefineFieldDialog.vue'
+import RenderHook from '../components/RenderHook.vue'
 
 const props = defineProps<{
     schema: {
@@ -79,6 +80,7 @@ const props = defineProps<{
         types: string[]
         endpoint: string
     } | null
+    renderHooks?: { position: string; component: string; props: Record<string, unknown> }[]
 }>()
 
 const isEdit = computed(() => props.record !== null)
@@ -682,6 +684,19 @@ onBeforeUnmount(() => {
             so it still gets one.
         -->
         <div :class="FORM_MEASURE">
+            <!--
+                ANYTHING A PLUGIN ADDS ABOVE THIS FORM goes here - a trial
+                banner, a compliance notice - the same "add a sentence to an
+                existing screen without forking it" this mechanism exists for
+                on the list and record pages.
+            -->
+            <RenderHook
+                position="form.before"
+                :hooks="renderHooks"
+                :resource="schema.key"
+                :record-id="record?.id"
+            />
+
             <div :class="formSchema.nodes?.length ? '' : 'bg-card rounded-xl border p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10'">
                 <RecordForm
                     :model-value="formValues"
@@ -719,6 +734,14 @@ onBeforeUnmount(() => {
                     + Add a field to every {{ customFieldSupport.label.toLowerCase() }}
                 </Button>
             </div>
+
+            <!-- Below the form, above the floating save bar. -->
+            <RenderHook
+                position="form.after"
+                :hooks="renderHooks"
+                :resource="schema.key"
+                :record-id="record?.id"
+            />
         </div>
 
         <!--

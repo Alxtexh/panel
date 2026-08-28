@@ -16,7 +16,8 @@
  * so Cancel and the primary action never leave the viewport while the form grows.
  */
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { MODAL_PANEL, MODAL_PANEL_FORM, OVERLAY_FORM_MEASURE } from '../../lib/pageShell'
+import { MODAL_WIDTH, OVERLAY_FORM_MEASURE } from '../../lib/pageShell'
+import type { ModalSize } from '../../lib/pageShell'
 
 const props = withDefaults(
     defineProps<{
@@ -25,10 +26,14 @@ const props = withDefaults(
         description?: string
         busy?: boolean
         /**
-         * `confirm` keeps max-w-lg. `form` widens slightly for field stacks
-         * without becoming a page.
+         * `confirm` and `form` are the two sizes this dialog has always had -
+         * kept as their own names rather than folded into `md`/`lg` so every
+         * existing caller keeps reading the same either way. `sm`, `lg` and
+         * `xl` are new: a `RecordAction::modalWidth()` that needs narrower
+         * than a confirmation or wider than a field stack no longer has to
+         * pick the nearest of two sizes that were not sized for it.
          */
-        size?: 'confirm' | 'form'
+        size?: ModalSize
     }>(),
     { busy: false, size: 'confirm' },
 )
@@ -45,7 +50,7 @@ let restoreFocusTo: HTMLElement | null = null
  */
 const pressStartedOnBackdrop = ref(false)
 
-const panelClass = computed(() => (props.size === 'form' ? MODAL_PANEL_FORM : MODAL_PANEL))
+const panelClass = computed(() => MODAL_WIDTH[props.size] ?? MODAL_WIDTH.confirm)
 
 function onBackdropDown(e: PointerEvent) {
     pressStartedOnBackdrop.value = e.target === e.currentTarget

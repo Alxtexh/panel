@@ -56,6 +56,22 @@ final class Dashboard extends DashboardPage
 }
 ```
 
+## Layout: span and sort
+
+`->span(2)` is a bare int - that many columns at every breakpoint. Pass a map
+instead for a widget that should take less room on a phone than a desktop:
+
+```php
+ChartWidget::make('revenue', 'Revenue')
+    ->span(['default' => 1, 'sm' => 2, 'lg' => 3])
+```
+
+`->sort(10)` places a widget explicitly instead of relying on where it sits in
+the `stats()`/`charts()` array. Lower runs first; two widgets that never call
+it both default to `0` and keep declaration order (`WidgetSet::props()` sorts
+with a stable sort). Reordering one widget is then a one-line change to that
+widget, not a diff touching every widget around it in the array literal.
+
 ## Stats render as one joined strip
 
 Four separate cards say "four things". One card divided by hairlines says "four

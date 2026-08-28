@@ -17,6 +17,7 @@ import {
     PAGE_SHELL_COMPACT,
     PkButton as Button,
     PkPageHeader,
+    SchemaNode,
     buttonClasses,
 } from '@alxtexh-enterprise/panel'
 
@@ -28,10 +29,16 @@ const props = defineProps<{
         routes: { index: string; attach?: string }
     }
     options: { value: string | number; label: string }[]
+    // Extra pivot-table columns, collected once and applied to every id in
+    // this submission - not one form per selected row.
+    pivotForm?: { nodes?: unknown[] } | null
     breadcrumbs: { title: string; href: string }[]
 }>()
 
-const form = useForm<{ ids: Array<string | number> }>({ ids: [] })
+const form = useForm<{ ids: Array<string | number>; pivot: Record<string, unknown> }>({
+    ids: [],
+    pivot: {},
+})
 
 function toggle(id: string | number) {
     if (form.ids.map(String).includes(String(id))) {
@@ -86,6 +93,21 @@ function submit() {
                 />
                 {{ option.label }}
             </label>
+
+            <div v-if="pivotForm?.nodes?.length" class="flex flex-col gap-4 border-t pt-4">
+                <p class="text-muted-foreground text-sm font-normal">
+                    Applied to every record attached below.
+                </p>
+                <SchemaNode
+                    v-for="(node, index) in pivotForm.nodes"
+                    :key="index"
+                    :node="node as any"
+                    :values="form.pivot"
+                    :errors="form.errors"
+                    :processing="form.processing"
+                    @change="(key: string, value: unknown) => (form.pivot[key] = value)"
+                />
+            </div>
 
             <div class="flex justify-end gap-2 pt-2">
                 <Button type="submit" :disabled="form.processing || form.ids.length === 0">

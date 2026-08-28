@@ -135,6 +135,33 @@ and is shown continuing rather than restarted.
 `reorderable()` adds drag-and-drop that writes a position column; the write is
 scoped to the tenant and to the nested parent, like every other write.
 
+## Status tabs
+
+```php
+$table->tabs('status', ['draft', 'published', 'archived']);
+```
+
+Every declared tab's count comes from **one grouped aggregate query**, not one
+`COUNT` per tab — a five-tab table costs one query before it renders a row,
+not five. `all` is implicit, always first, and is the sum of the rest rather
+than a second query.
+
+A tab that needs more than `column = value` — a date range, a second column, a
+join — gets a query modifier via the optional third argument, which receives
+the `Tabs` instance to configure:
+
+```php
+$table->tabs('status', ['draft', 'published', 'overdue'], function (Tabs $tabs): void {
+    $tabs->modifyQuery('overdue', function (Builder $query): void {
+        $query->where('status', 'published')->where('due_at', '<', now());
+    });
+});
+```
+
+The cost of a modified tab is real but stays local to that one tab: it gets
+its own dedicated `count()` query, while every other declared tab, modified or
+not, still shares the single grouped aggregate.
+
 ## Filter chips
 
 Applied filters appear as chips under the toolbar, with a clear control per

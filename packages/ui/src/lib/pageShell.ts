@@ -62,10 +62,38 @@ export const SLIDEOVER_WIDTH = {
 
 export type SlideoverSize = keyof typeof SLIDEOVER_WIDTH
 
-/** Dense centred modal panel (confirmations, short action forms). */
-export const MODAL_PANEL =
-    'bg-popover text-popover-foreground flex w-full max-w-lg max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl'
+/**
+ * Preset widths for PkModal `size` - the dense-modal twin of
+ * `SLIDEOVER_WIDTH` above, for the same reason: `RecordAction::modalWidth()`
+ * needs somewhere to land that is not one of two sizes picked for
+ * confirmations and ordinary action forms specifically.
+ */
+const MODAL_BASE =
+    'bg-popover text-popover-foreground flex w-full max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl'
 
-/** Wider dense modal when an action form needs more room than confirm copy. */
-export const MODAL_PANEL_FORM =
-    'bg-popover text-popover-foreground flex w-full max-w-xl max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl'
+export const MODAL_WIDTH = {
+    /** Short confirmations with no fields (~24rem). */
+    sm: `${MODAL_BASE} max-w-md`,
+    /** The long-standing default: confirmations and short copy (~32rem). */
+    confirm: `${MODAL_BASE} max-w-lg`,
+    /** Wider than confirm when an action form needs more room than confirm copy (~36rem). */
+    form: `${MODAL_BASE} max-w-xl`,
+    /** A field stack too wide for `form` without becoming a page (~42rem). */
+    lg: `${MODAL_BASE} max-w-2xl`,
+    /** The widest dense modal offers - past this, use PkSlideover instead (~56rem). */
+    xl: `${MODAL_BASE} max-w-4xl`,
+} as const
+
+export type ModalSize = keyof typeof MODAL_WIDTH
+
+/**
+ * @deprecated Use `MODAL_WIDTH.confirm`. Kept so an existing import of this
+ * exact constant keeps working; `PkModal` itself reads `MODAL_WIDTH` now.
+ */
+export const MODAL_PANEL = MODAL_WIDTH.confirm
+
+/**
+ * @deprecated Use `MODAL_WIDTH.form`. Kept so an existing import of this
+ * exact constant keeps working; `PkModal` itself reads `MODAL_WIDTH` now.
+ */
+export const MODAL_PANEL_FORM = MODAL_WIDTH.form

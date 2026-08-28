@@ -56,6 +56,7 @@ import { useWidgetPoll, useWidgetChannels, canUseEcho } from '../composables/use
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
 import EmptyGrantsNotice from '../components/EmptyGrantsNotice.vue'
+import RenderHook from '../components/RenderHook.vue'
 import type { Announcement } from '../types'
 
 interface Widget {
@@ -518,6 +519,20 @@ const extraStrips = computed(
 )
 
 /**
+ * Same reasoning as `extraStrips` above: read off page props rather than
+ * `defineProps`, since `PageController::show()` sends this to every custom
+ * page - the dashboard included - not only this one.
+ */
+const renderHooks = computed(
+    () =>
+        ((page.props as Record<string, any>).renderHooks ?? []) as {
+            position: string
+            component: string
+            props: Record<string, unknown>
+        }[],
+)
+
+/**
  * THE RESOLVED SEGMENTS COME FROM PAGE PROPS, NOT THE `<Deferred>` SLOT.
  *
  * `<Deferred>` gates WHEN its slot renders; it does not hand the value in.
@@ -794,6 +809,8 @@ function layoutLabel(item: AnyLayoutItem): string {
     <Head :title="heading" />
 
     <div :class="[PAGE_SHELL, 'flex flex-col gap-4']">
+        <RenderHook position="dashboard.before" :hooks="renderHooks" />
+
         <!--
             ABOVE EVERYTHING, because a notice below the fold is a notice nobody
             read - which is exactly what the dedicated Announcements page turned
@@ -1201,5 +1218,7 @@ function layoutLabel(item: AnyLayoutItem): string {
         <div v-if="!userDashboards && tables.length" class="flex flex-col gap-3" data-slot="dashboard-tables">
             <DashboardTablePane v-for="table in tables" :key="table.key" :table="table" :data-key="`table_${table.key}`" />
         </div>
+
+        <RenderHook position="dashboard.after" :hooks="renderHooks" />
     </div>
 </template>

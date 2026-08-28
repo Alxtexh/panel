@@ -13,7 +13,43 @@ export type WidgetColumnBand<T> =
     | { type: 'wide'; item: T }
     | { type: 'columns'; columns: T[][] }
 
-export function packWidgetColumns<T extends { span?: number }>(
+type ResponsiveSpan = number | Record<string, number>
+
+/**
+ * One number for the wide/not-wide decision this packer makes.
+ *
+ * `span()` on the PHP side accepts a bare int OR a per-breakpoint map
+ * (`{default: 1, sm: 2, lg: 3}`) - see `Widgets\HasLayout`. This packer only
+ * ever chooses between ONE column and TWO (`wideLayout` in `PanelWidgets.vue`
+ * gates that above it), so a responsive declaration is collapsed to the value
+ * that governs at the wider of those two tracks: `lg`, falling back to
+ * `default`, falling back to the largest declared breakpoint - a widget
+ * declared wide at ANY breakpoint should still get its own full-width band
+ * rather than silently losing that once two columns are in play.
+ */
+function effectiveSpan(span: ResponsiveSpan | undefined): number {
+    if (span === undefined) {
+        return 1
+    }
+
+    if (typeof span === 'number') {
+        return span
+    }
+
+    if (span.lg !== undefined) {
+        return span.lg
+    }
+
+    if (span.default !== undefined) {
+        return span.default
+    }
+
+    const values = Object.values(span)
+
+    return values.length > 0 ? Math.max(...values) : 1
+}
+
+export function packWidgetColumns<T extends { span?: ResponsiveSpan }>(
     items: readonly T[],
     columnCount: number,
 ): WidgetColumnBand<T>[] {
@@ -46,7 +82,7 @@ export function packWidgetColumns<T extends { span?: number }>(
     }
 
     for (const item of items) {
-        if ((item.span ?? 1) >= 2) {
+        if (effectiveSpan(item.span) >= 2) {
             flush()
             bands.push({ type: 'wide', item })
         } else {

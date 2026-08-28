@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Panels;
 
+use App\Models\Plan;
 use Illuminate\Support\ServiceProvider;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
@@ -107,6 +108,36 @@ final class ClientPanelProvider extends ServiceProvider
                     'Amara Odhiambo',
                     'Head of Operations',
                 )
+
+                /*
+                 * `PlanCatalogPage`, at `/client/account/plans` - "choose a
+                 * plan", not the read-only comparison table
+                 * `Client\Resources\PlanResource` already offers.
+                 *
+                 * THIS CLOSURE IS A SHOWCASE, LIKE `PaymentGatewaySettings` -
+                 * no live processor is wired into the demo. It flashes a
+                 * message naming the plan and sends the browser back to this
+                 * same screen, which is enough to prove the whole round trip
+                 * (validate the id, run the resolver, follow the redirect)
+                 * without pretending a fake checkout succeeded at a vendor
+                 * that was never called. A host replaces this with a closure
+                 * that creates a real Stripe/Paddle/etc checkout session and
+                 * returns ITS url instead.
+                 */
+                ->planCatalog(function (Panel $panel, mixed $user, mixed $request, string $planId): string {
+                    $plan = Plan::query()->find($planId);
+
+                    session()->flash(
+                        'success',
+                        $plan !== null
+                            ? "Demo checkout: selected \"{$plan->name}\". Wire Panel::planCatalog() to a real processor to replace this message with an actual redirect."
+                            : 'Demo checkout: that plan could not be found.',
+                    );
+
+                    $prefix = trim((string) $panel->getPath(), '/');
+
+                    return ($prefix !== '' ? '/'.$prefix : '').'/account/plans';
+                })
 
                 /*
                  * DISCOVERY BELONGS TO THE PANEL, not to a shared config list.

@@ -66,6 +66,7 @@ export {
     FORM_MEASURE,
     MODAL_PANEL,
     MODAL_PANEL_FORM,
+    MODAL_WIDTH,
     OVERLAY_FORM_MEASURE,
     PAGE_SHELL,
     PAGE_SHELL_COMPACT,
@@ -73,7 +74,7 @@ export {
     SLIDEOVER_BODY,
     SLIDEOVER_WIDTH,
 } from './lib/pageShell'
-export type { SlideoverSize } from './lib/pageShell'
+export type { ModalSize, SlideoverSize } from './lib/pageShell'
 export { FOCUS_RING, FOCUS_RING_SOFT, FOCUS_RING_WITHIN } from './lib/focusRing'
 export { MUTED_COPY, MUTED_COPY_SNUG, MUTED_COPY_XS } from './lib/copyClasses'
 export { INPUT_COPY, INPUT_PLACEHOLDER, INPUT_TEXT } from './lib/inputClasses'
@@ -203,6 +204,8 @@ export { default as CatalogCard } from './components/Widgets/CatalogCard.vue'
 export { default as PlanCard } from './components/Widgets/PlanCard.vue'
 export { default as PlanGrid } from './components/Widgets/PlanGrid.vue'
 export { default as PlanEditor } from './components/Widgets/PlanEditor.vue'
+export { default as PlanPurchaseCard } from './components/Widgets/PlanPurchaseCard.vue'
+export type { PurchasablePlan } from './components/Widgets/PlanPurchaseCard.vue'
 export {
     cycleLabel,
     formatPerkValue,

@@ -41,6 +41,8 @@ final class RepeaterField extends Field
 
     private ?string $itemLabel = null;
 
+    private bool $collapsible = false;
+
     public function type(): string
     {
         return 'repeater';
@@ -89,6 +91,20 @@ final class RepeaterField extends Field
     public function itemLabel(string $label): self
     {
         $this->itemLabel = $label;
+
+        return $this;
+    }
+
+    /**
+     * Let a row fold down to one line - its ordinal, and the first child's
+     * value if it has one - showing only the field being worked on rather
+     * than every row's full set of inputs at once. Off by default: a
+     * repeater short enough to not need this is the common case, and a
+     * fold state nobody asked for is one more thing to notice is there.
+     */
+    public function collapsible(bool $collapsible = true): self
+    {
+        $this->collapsible = $collapsible;
 
         return $this;
     }
@@ -191,6 +207,7 @@ final class RepeaterField extends Field
             'itemLabel' => $this->itemLabel ?? 'Item',
             'minItems' => $this->minItems,
             'maxItems' => $this->maxItems,
+            'collapsible' => $this->collapsible,
             'children' => array_map(static fn (Field $f): array => $f->toSchema(), $this->children),
         ];
     }

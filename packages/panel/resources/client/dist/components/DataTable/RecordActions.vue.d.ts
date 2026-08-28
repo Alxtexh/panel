@@ -20,6 +20,11 @@ export interface RecordActionItem {
     url?: string;
     /** Filament's palette: primary | gray | success | warning | danger | info. */
     color?: string;
+    /**
+     * Runs this action while ITS ROW'S MENU IS OPEN - see `RecordAction::keyBindings()`.
+     * `mod` matches Cmd on a Mac and Ctrl elsewhere. Examples: `mod+d`, `shift+e`, `e`.
+     */
+    keyBindings?: string[];
 }
 export interface RecordActionGroup {
     label?: string;

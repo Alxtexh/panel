@@ -441,7 +441,11 @@ function uploadFor(key: string) {
     </div>
 
     <!-- Grid: layout with no heading, so it never draws a frame. -->
-    <div v-else-if="node.component === 'grid'" class="grid grid-cols-1 gap-4" :class="gridClass">
+    <div
+        v-else-if="node.component === 'grid' && conditionMet(node)"
+        class="grid grid-cols-1 gap-4"
+        :class="gridClass"
+    >
         <SchemaNode
             v-for="(child, i) in node.children ?? []"
             :key="i"
@@ -463,7 +467,11 @@ function uploadFor(key: string) {
         Flex: a row of things that are NOT the same size. A grid would give the
         short one an equal column and leave it floating in whitespace.
     -->
-    <div v-else-if="node.component === 'flex'" class="flex" :class="flexClass">
+    <div
+        v-else-if="node.component === 'flex' && conditionMet(node)"
+        class="flex"
+        :class="flexClass"
+    >
         <SchemaNode
             v-for="(child, i) in node.children ?? []"
             :key="i"
@@ -489,7 +497,10 @@ function uploadFor(key: string) {
         as "Billing address, Line 1" - which is the whole reason this element
         exists. The visual grouping is the smaller half of what it does.
     -->
-    <fieldset v-else-if="node.component === 'fieldset'" class="flex flex-col gap-3">
+    <fieldset
+        v-else-if="node.component === 'fieldset' && conditionMet(node)"
+        class="flex flex-col gap-3"
+    >
         <legend class="text-sm font-medium">{{ node.label }}</legend>
 
         <p v-if="node.description" class="text-muted-foreground -mt-2 text-sm">
@@ -523,7 +534,7 @@ function uploadFor(key: string) {
         wrong for text that has been on the page since it loaded.
     -->
     <div
-        v-else-if="node.component === 'callout'"
+        v-else-if="node.component === 'callout' && conditionMet(node)"
         role="note"
         class="rounded-lg border px-4 py-3 text-sm"
         :class="calloutClass"
@@ -533,7 +544,10 @@ function uploadFor(key: string) {
     </div>
 
     <!-- Tabs. -->
-    <div v-else-if="node.component === 'tabs'" :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''">
+    <div
+        v-else-if="node.component === 'tabs' && conditionMet(node)"
+        :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
+    >
         <div
             class="bg-muted/30 flex gap-1 overflow-x-auto p-1"
             :class="isRoot ? 'rounded-t-lg border-b' : 'rounded-md'"
@@ -606,7 +620,10 @@ function uploadFor(key: string) {
         destroy the inputs on the step you just left, so going back to fix a
         value would find it gone.
     -->
-    <div v-else-if="node.component === 'wizard'" :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''">
+    <div
+        v-else-if="node.component === 'wizard' && conditionMet(node)"
+        :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
+    >
         <PkStepIndicator
             class="p-4"
             :class="isRoot ? 'border-b' : ''"

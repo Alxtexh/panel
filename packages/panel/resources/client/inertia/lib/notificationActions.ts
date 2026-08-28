@@ -1,6 +1,7 @@
 import { h, type VNode } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { toast } from 'vue-sonner'
+import { CircleCheckIcon, InfoIcon, OctagonXIcon, TriangleAlertIcon } from '@lucide/vue'
 
 /**
  * Buttons on an Inertia flash toast or a bell row.
@@ -22,6 +23,38 @@ export type FlashToast = {
     message?: string
     body?: string
     actions?: NotificationAction[]
+    /** Milliseconds. Ignored once `persistent` is set. */
+    duration?: number
+    /** Stays until dismissed by hand, instead of sonner's default auto-hide. */
+    persistent?: boolean
+    /** Recolours the icon independently of `type` - see `Notification::iconColor()`. */
+    iconColor?: string
+}
+
+/** Same palette `RecordActions.vue` uses for a `RecordAction`'s `color`. */
+const ICON_TONES: Record<string, string> = {
+    primary: 'text-primary',
+    gray: 'text-foreground',
+    success: 'text-emerald-600 dark:text-emerald-400',
+    warning: 'text-amber-600 dark:text-amber-500',
+    danger: 'text-destructive',
+    info: 'text-sky-600 dark:text-sky-400',
+}
+
+function iconComponentForType(type: string) {
+    if (type === 'success') {
+        return CircleCheckIcon
+    }
+
+    if (type === 'error') {
+        return OctagonXIcon
+    }
+
+    if (type === 'warning') {
+        return TriangleAlertIcon
+    }
+
+    return InfoIcon
 }
 
 export function notificationActionIsPost(action: NotificationAction): boolean {
@@ -118,10 +151,28 @@ export function showFlashToast(data: FlashToast | null | undefined): void {
                 ? toast.warning
                 : toast.info
 
+    const options: { description?: VNode; duration?: number; icon?: VNode } = {}
+
     const description = flashToastDescription(data)
 
     if (description) {
-        fn(data.message, { description })
+        options.description = description
+    }
+
+    if (data.persistent) {
+        options.duration = Number.POSITIVE_INFINITY
+    } else if (typeof data.duration === 'number') {
+        options.duration = data.duration
+    }
+
+    if (data.iconColor) {
+        const Icon = iconComponentForType(type)
+
+        options.icon = h(Icon, { class: ['size-4', ICON_TONES[data.iconColor] ?? ''] })
+    }
+
+    if (Object.keys(options).length > 0) {
+        fn(data.message, options)
 
         return
     }

@@ -205,6 +205,7 @@ final class PanelPages
     public const OPTIONAL_SCREENS = [
         'Catalog',
         'PlanSetup',
+        'PlanCatalog',
         'CatalogItem',
         'CatalogRegister',
         'Signatures',

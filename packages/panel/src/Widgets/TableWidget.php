@@ -26,6 +26,7 @@ use Throwable;
 final class TableWidget
 {
     use CanPoll;
+    use HasLayout;
 
     /** @var class-string<Resource>|null */
     private ?string $resource = null;
@@ -35,8 +36,6 @@ final class TableWidget
     private ?string $label = null;
 
     private ?string $description = null;
-
-    private int $span = 1;
 
     private ?string $ability = null;
 
@@ -89,13 +88,6 @@ final class TableWidget
         return $this;
     }
 
-    public function span(int $span): self
-    {
-        $this->span = $span;
-
-        return $this;
-    }
-
     public function ability(?string $ability): self
     {
         $this->ability = $ability;
@@ -135,9 +127,9 @@ final class TableWidget
             'key' => $this->key,
             'label' => $this->label ?? ($class !== null ? $class::pluralLabel() : $this->key),
             'description' => $this->description,
-            'span' => $this->span,
             'limit' => $this->limit,
             'href' => $href,
+            ...$this->layoutToArray(),
             ...$this->refreshToArray(),
         ];
     }

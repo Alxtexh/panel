@@ -105,4 +105,94 @@ describe('PkRepeater - rows, not cards', () => {
 
         expect(wrapper.text()).toContain('No steps yet.')
     })
+
+    it('reorders rows by dragging the handle, the same splice `move` uses', async () => {
+        const wrapper = mountSingle([{ text: 'First.' }, { text: 'Second.' }, { text: 'Third.' }])
+
+        const handles = wrapper.findAll('[aria-label^="Drag to reorder"]')
+        expect(handles).toHaveLength(3)
+
+        await handles[0]!.trigger('dragstart')
+
+        const rows = wrapper.findAll('.flex.items-start.gap-2')
+        await rows[2]!.trigger('drop')
+
+        const emitted = wrapper.emitted('update:modelValue')
+        expect(emitted?.at(-1)?.[0]).toEqual([{ text: 'Second.' }, { text: 'Third.' }, { text: 'First.' }])
+    })
+
+    it('does not emit a drop onto the same row that started the drag', async () => {
+        const wrapper = mountSingle([{ text: 'First.' }, { text: 'Second.' }])
+
+        const handles = wrapper.findAll('[aria-label^="Drag to reorder"]')
+        await handles[0]!.trigger('dragstart')
+
+        const rows = wrapper.findAll('.flex.items-start.gap-2')
+        await rows[0]!.trigger('drop')
+
+        expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    })
+})
+
+describe('PkRepeater - collapsible', () => {
+    function mountCollapsible(value: Record<string, unknown>[] | null) {
+        return mount(PkRepeater, {
+            props: {
+                modelValue: value,
+                children: [instruction],
+                fieldKey: 'steps',
+                itemLabel: 'Step',
+                collapsible: true,
+            },
+        })
+    }
+
+    it('shows every field expanded by default even when collapsible', () => {
+        const wrapper = mountCollapsible([{ text: 'Connect.' }])
+
+        expect(wrapper.find('input, textarea').exists()).toBe(true)
+    })
+
+    it('folds a row to its summary line on click and keeps the data intact', async () => {
+        const wrapper = mountCollapsible([{ text: 'Connect the router.' }])
+
+        await wrapper.find('[aria-label="Collapse Step 1"]').trigger('click')
+
+        expect(wrapper.find('input, textarea').exists()).toBe(false)
+        expect(wrapper.text()).toContain('Step 1')
+        expect(wrapper.text()).toContain('Connect the router.')
+
+        // Collapsing is presentation only - nothing was emitted.
+        expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    })
+
+    it('expands again from the summary row', async () => {
+        const wrapper = mountCollapsible([{ text: 'Connect.' }])
+
+        await wrapper.find('[aria-label="Collapse Step 1"]').trigger('click')
+        await wrapper.find('button.hover\\:bg-accent.min-w-0').trigger('click')
+
+        expect(wrapper.find('input, textarea').exists()).toBe(true)
+    })
+
+    it('collapse-all and expand-all toggle every row at once', async () => {
+        const wrapper = mountCollapsible([{ text: 'One.' }, { text: 'Two.' }])
+
+        const toggle = () => wrapper.find('button.text-xs.font-medium')
+
+        expect(toggle().text()).toBe('Collapse all')
+        await toggle().trigger('click')
+
+        expect(wrapper.find('input, textarea').exists()).toBe(false)
+        expect(toggle().text()).toBe('Expand all')
+
+        await toggle().trigger('click')
+        expect(wrapper.find('input, textarea').exists()).toBe(true)
+    })
+
+    it('is not offered at all when the field did not opt in', () => {
+        const wrapper = mountSingle([{ text: 'One.' }])
+
+        expect(wrapper.find('[aria-label="Collapse Step 1"]').exists()).toBe(false)
+    })
 })

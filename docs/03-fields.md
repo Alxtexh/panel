@@ -243,13 +243,26 @@ RepeaterField::make('lines')
     ])
     ->minItems(1)
     ->maxItems(50)
-    ->itemLabel('description');
+    ->itemLabel('description')
+    ->collapsible();
 
 BuilderField::make('content')
     ->block('paragraph', [RichEditorField::make('body')])
     ->block('image', [FileUploadField::make('file')->image()])
     ->maxBlocks(20);
 ```
+
+Every row has a drag handle for reordering, alongside the up/down buttons -
+not instead of them. The buttons stay because they work from a keyboard and a
+row inside a scrolling page is a poor drag target on its own; the handle is
+there for whoever would rather drag a long list into order.
+
+`->collapsible()` lets a row fold to one line - its ordinal, and the first
+field's value if it is short plain text - so working through the second row
+does not mean staring at every other row's full set of inputs too. Off by
+default. Folding a row changes nothing about its data: nothing is submitted,
+saved, or validated differently, and reloading the page starts every row
+expanded again.
 
 ### SelectField with many options
 
@@ -277,6 +290,33 @@ $form->schema([
     ]),
 ]);
 ```
+
+Every layout node - `Section`, `Card`, `Fieldset`, `Tabs`, and the rest -
+takes the same `visibleWhen()` a field does, to show or hide the WHOLE group:
+
+```php
+Section::make('Enterprise fields')
+    ->visibleWhen('plan', 'enterprise')
+    ->schema([TextField::make('account_manager')]);
+```
+
+For a condition a `[field, value]` pair cannot express - two fields, a
+range - use `visible()` with a closure instead:
+
+```php
+Section::make('Enterprise discount')
+    ->visible(fn (array $values): bool => ($values['plan'] ?? null) === 'enterprise'
+        && ($values['seats'] ?? 0) >= 50)
+    ->schema([TextField::make('discount_code')]);
+```
+
+The tradeoff is the same one `Field::hidden(Closure)` already has:
+`visibleWhen()` is a hint the browser re-evaluates on every keystroke, no
+round trip; `visible(Closure)` cannot travel to the client at all, so it is
+resolved on the server and only updates after a `live()` field's round-trip.
+Either way, `Form::sanitize()` omits every field inside an unmet group from
+the write payload entirely - a crafted request cannot resurrect a hidden
+group by including its keys.
 
 ## Custom fields, per tenant
 

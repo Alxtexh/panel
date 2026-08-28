@@ -35,13 +35,6 @@ final class Card extends Component
         return $this;
     }
 
-    public function visibleWhen(string $field, mixed $value): self
-    {
-        $this->visibleWhen = [$field, $value];
-
-        return $this;
-    }
-
     public function component(): string
     {
         return 'card';
@@ -54,10 +47,6 @@ final class Card extends Component
             'title' => $this->title,
             'description' => $this->description,
             'columns' => $this->columns,
-            'visibleWhen' => $this->visibleWhen === null ? null : [
-                'field' => $this->visibleWhen[0],
-                'value' => $this->visibleWhen[1],
-            ],
         ];
     }
 }

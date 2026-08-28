@@ -300,6 +300,7 @@ return [
     */
     'discover_pages' => [
         app_path('Panel/Pages') => 'App\\Panel\\Pages',
+        app_path('Panel/Client/Pages') => 'App\\Panel\\Client\\Pages',
         app_path('Panel/Disposable/Pages') => 'App\\Panel\\Disposable\\Pages',
     ],
 

@@ -22,6 +22,8 @@ return new class extends Migration
         Schema::create('article_tag', function (Blueprint $table): void {
             $table->foreignId('article_id')->constrained()->cascadeOnDelete();
             $table->foreignId('tag_id')->constrained()->cascadeOnDelete();
+            // Pivot column, for RelationManager pivot read/write coverage.
+            $table->string('note')->nullable();
             $table->primary(['article_id', 'tag_id']);
         });
     }

@@ -145,10 +145,25 @@ final class Form
             ];
         }
 
-        $patch = static function (array $node) use (&$patch, $flags): array {
+        /*
+         * SAME IDEA, FOR LAYOUT NODES WHOSE CONDITION IS A CLOSURE - see
+         * `Component::visible()`. A node has no `key`, so `conditionId` (set
+         * at serialization time, looked up here by the same id) is what
+         * finds it again rather than a field name.
+         */
+        $conditionFlags = [];
+
+        foreach (Component::collectConditionalNodes($this->nodes) as $id => $node) {
+            $conditionFlags[$id] = ! $node->isVisible($values);
+        }
+
+        $patch = static function (array $node) use (&$patch, $flags, $conditionFlags): array {
             if (($node['component'] ?? null) === 'field' && isset($flags[$node['key'] ?? ''])) {
                 $node['hidden'] = $flags[$node['key']]['hidden'] ? true : null;
                 $node['disabled'] = $flags[$node['key']]['disabled'] ? true : null;
+                $node = array_filter($node, static fn (mixed $v): bool => $v !== null);
+            } elseif (isset($node['conditionId'], $conditionFlags[$node['conditionId']])) {
+                $node['hidden'] = $conditionFlags[$node['conditionId']] ? true : null;
                 $node = array_filter($node, static fn (mixed $v): bool => $v !== null);
             }
 

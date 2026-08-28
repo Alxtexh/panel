@@ -16,6 +16,8 @@ export type WidgetColumnBand<T> = {
     type: 'columns';
     columns: T[][];
 };
+type ResponsiveSpan = number | Record<string, number>;
 export declare function packWidgetColumns<T extends {
-    span?: number;
+    span?: ResponsiveSpan;
 }>(items: readonly T[], columnCount: number): WidgetColumnBand<T>[];
+export {};

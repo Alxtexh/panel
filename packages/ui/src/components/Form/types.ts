@@ -121,6 +121,7 @@ export interface FormField {
     itemLabel?: string
     minItems?: number | null
     maxItems?: number | null
+    collapsible?: boolean
 
     /**
      * Builder blocks - roadmap 4.5. Each is a named set of fields, and the

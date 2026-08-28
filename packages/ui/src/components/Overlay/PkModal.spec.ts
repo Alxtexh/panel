@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import { MODAL_PANEL, MODAL_PANEL_FORM, OVERLAY_FORM_MEASURE } from '../../lib/pageShell'
+import { MODAL_PANEL, MODAL_PANEL_FORM, MODAL_WIDTH, OVERLAY_FORM_MEASURE } from '../../lib/pageShell'
 import PkModal from './PkModal.vue'
 
 describe('PkModal', () => {
@@ -61,6 +61,40 @@ describe('PkModal', () => {
             MODAL_PANEL_FORM.split(' ').find((c) => c.startsWith('max-w-'))!,
         )
         expect(panel.className).not.toContain('max-w-7xl')
+
+        wrapper.unmount()
+    })
+
+    /**
+     * `sm`/`lg`/`xl` are new - `RecordAction::modalWidth()` needed somewhere
+     * to land other than the two sizes `confirm`/`form` were sized for.
+     */
+    it.each(['sm', 'lg', 'xl'] as const)('supports the new %s size', (size) => {
+        const wrapper = mount(PkModal, {
+            props: { open: true, title: 'Wide action', size },
+            slots: { default: '<p>Body</p>' },
+            attachTo: document.body,
+        })
+
+        const panel = document.body.querySelector('[role="dialog"]') as HTMLElement
+
+        expect(panel.className).toContain(MODAL_WIDTH[size].split(' ').find((c) => c.startsWith('max-w-'))!)
+
+        wrapper.unmount()
+    })
+
+    it('falls back to the confirm width for an unrecognised size', () => {
+        const wrapper = mount(PkModal, {
+            props: { open: true, title: 'X', size: 'not-a-real-size' as never },
+            slots: { default: '<p>Body</p>' },
+            attachTo: document.body,
+        })
+
+        const panel = document.body.querySelector('[role="dialog"]') as HTMLElement
+
+        expect(panel.className).toContain(
+            MODAL_PANEL.split(' ').find((c) => c.startsWith('max-w-'))!,
+        )
 
         wrapper.unmount()
     })

@@ -69,6 +69,93 @@ describe('SchemaNode - conditional sections', () => {
     })
 })
 
+/**
+ * `conditionMet()` used to run on `field`, `section`, `card`, `columns` and
+ * `column` only - the other six node kinds (`fieldset`, `tabs`, `grid`,
+ * `flex`, `wizard`, `callout`) rendered regardless of `hidden` or
+ * `visibleWhen`, which is what made a closure-based `Section::visible()`
+ * work for a section and silently do nothing for a same-shaped
+ * `Fieldset::visible()`. One test per newly-wired kind, not exhaustive
+ * per-condition-shape coverage - `conditionMet()` itself is already covered
+ * above.
+ */
+describe('SchemaNode - conditions now apply to every layout kind', () => {
+    it('hides a fieldset whose condition is unmet', () => {
+        const node: SchemaNodeType = {
+            component: 'fieldset',
+            label: 'Billing',
+            hidden: true,
+            children: [],
+        }
+
+        const wrapper = mount(SchemaNode, { props: { node, values: {} } })
+
+        expect(wrapper.find('fieldset').exists()).toBe(false)
+    })
+
+    it('hides a tabs node whose condition is unmet', () => {
+        const node: SchemaNodeType = {
+            component: 'tabs',
+            hidden: true,
+            children: [{ component: 'tab', label: 'General', children: [] }],
+        }
+
+        const wrapper = mount(SchemaNode, { props: { node, values: {} } })
+
+        expect(wrapper.text()).not.toContain('General')
+    })
+
+    it('hides a grid whose condition is unmet', () => {
+        const node: SchemaNodeType = {
+            component: 'grid',
+            hidden: true,
+            children: [{ component: 'field', key: 'x', label: 'X', type: 'text' }],
+        }
+
+        const wrapper = mount(SchemaNode, { props: { node, values: {} } })
+
+        expect(wrapper.find('input').exists()).toBe(false)
+    })
+
+    it('hides a flex row whose condition is unmet', () => {
+        const node: SchemaNodeType = {
+            component: 'flex',
+            hidden: true,
+            children: [{ component: 'field', key: 'x', label: 'X', type: 'text' }],
+        }
+
+        const wrapper = mount(SchemaNode, { props: { node, values: {} } })
+
+        expect(wrapper.find('input').exists()).toBe(false)
+    })
+
+    it('hides a callout whose condition is unmet', () => {
+        const node: SchemaNodeType = {
+            component: 'callout',
+            title: 'Heads up',
+            body: 'This should not render.',
+            hidden: true,
+        }
+
+        const wrapper = mount(SchemaNode, { props: { node, values: {} } })
+
+        expect(wrapper.text()).not.toContain('Heads up')
+    })
+
+    it('still renders each of them once the condition is met', () => {
+        for (const node of [
+            { component: 'fieldset', label: 'Billing', hidden: false, children: [] },
+            { component: 'grid', hidden: false, children: [] },
+            { component: 'flex', hidden: false, children: [] },
+            { component: 'callout', title: 'Fine', body: 'All good.', hidden: false },
+        ] as SchemaNodeType[]) {
+            const wrapper = mount(SchemaNode, { props: { node, values: {} } })
+
+            expect(wrapper.html()).not.toBe('<!---->')
+        }
+    })
+})
+
 describe('SchemaNode - wizard', () => {
     const wizard: SchemaNodeType = {
         component: 'wizard',

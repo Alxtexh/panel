@@ -386,6 +386,7 @@ final class ResourceController extends Controller
                 ? $this->trail($class, 'New')
                 : [...NestedContext::breadcrumbs($class, $parent), ['title' => 'New', 'href' => '#']],
             'customFieldSupport' => $this->customFieldSupport($class),
+            'renderHooks' => app(PanelManager::class)->renderHooks($class::key()),
         ]);
     }
 
@@ -403,9 +404,12 @@ final class ResourceController extends Controller
         abort_if($parent === null || ! NestedRelation::belongsToMany($class), 404);
         abort_unless($class::can('update'), 403);
 
+        $pivotColumns = $class::pivotColumns();
+
         return Inertia::render('ResourceAttach', [
             'schema' => NestedContext::schema($class::schema(), $class, $parent),
             'options' => NestedRelation::attachableOptions($parent, $class),
+            'pivotForm' => $pivotColumns === [] ? null : Form::make()->schema($pivotColumns)->toSchema(),
             'breadcrumbs' => [
                 ...NestedContext::breadcrumbs($class, $parent),
                 ['title' => 'Attach', 'href' => '#'],
@@ -616,6 +620,7 @@ final class ResourceController extends Controller
                 ? $this->trail($class, 'Edit')
                 : [...NestedContext::breadcrumbs($class, $parent), ['title' => 'Edit', 'href' => '#']],
             'customFieldSupport' => $this->customFieldSupport($class),
+            'renderHooks' => app(PanelManager::class)->renderHooks($class::key()),
         ]);
     }
 

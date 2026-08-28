@@ -48,9 +48,17 @@ final class CalendarWidget
         return $this;
     }
 
-    public function span(int $span): self
+    /** @param int|array<string, int> $span */
+    public function span(int|array $span): self
     {
         $this->chart->span($span);
+
+        return $this;
+    }
+
+    public function sort(int $sort): self
+    {
+        $this->chart->sort($sort);
 
         return $this;
     }

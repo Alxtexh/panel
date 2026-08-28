@@ -719,6 +719,25 @@ abstract class Resource
     }
 
     /**
+     * Extra columns on the pivot table itself - a role, an `expires_at` - for a
+     * BelongsToMany nested resource. Empty for every other kind of resource.
+     *
+     * Collected once at attach time (the same values applied to every id in
+     * that submission, not per-row) and editable afterwards through an
+     * auto-registered "Edit pivot" row action next to "Detach". Declaring
+     * these does not make them appear as columns on the nested list - showing
+     * a pivot value there needs the list query to join the pivot table, which
+     * this does not do; the fields exist to be written; the resource can wire
+     * up its own display until that read-side join exists.
+     *
+     * @return list<Field>
+     */
+    public static function pivotColumns(): array
+    {
+        return [];
+    }
+
+    /**
      * An infolist entry action by key, or null.
      *
      * The infolist-action endpoint resolves through this, the same way table
@@ -909,6 +928,28 @@ abstract class Resource
                         abort_if($parent === null, 404);
 
                         NestedRelation::of($parent, $resource)->detach($record->getKey());
+                    }),
+            ]);
+        }
+
+        if (
+            NestedRelation::belongsToMany(static::class)
+            && static::pivotColumns() !== []
+            && $table->recordAction('edit-pivot') === null
+        ) {
+            $resource = static::class;
+
+            $table->recordActions([
+                ...$table->getRecordActions(),
+                RecordAction::make('edit-pivot', 'Edit pivot')
+                    ->authorize('update')
+                    ->form(static fn (Form $form): Form => $form->schema($resource::pivotColumns()))
+                    ->handle(static function (Model $record, array $data) use ($resource): void {
+                        $parent = NestedContext::parent(request(), $resource);
+
+                        abort_if($parent === null, 404);
+
+                        NestedRelation::of($parent, $resource)->updateExistingPivot($record->getKey(), $data);
                     }),
             ]);
         }

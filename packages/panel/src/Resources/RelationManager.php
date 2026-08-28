@@ -59,6 +59,8 @@ final class RelationManager
 
     private string $updateAbility = 'update';
 
+    private bool $readOnly = false;
+
     /**
      * Nested child resource that owns the dedicated list/create/edit pages.
      *
@@ -200,9 +202,26 @@ final class RelationManager
         return $this;
     }
 
+    /**
+     * No inline create, no edit affordance, on THIS tab.
+     *
+     * Scoped to what a relation manager actually owns: the summary tab on the
+     * parent record page. It does not lock the nested resource's own
+     * dedicated pages - `TagResource::table()`'s `attach`/`detach` route to
+     * that resource's own `update`/`create` abilities, resolved independently
+     * of any tab that happens to link to them. A relation genuinely meant to
+     * be read-only everywhere gates that on the nested resource itself.
+     */
+    public function readOnly(bool $readOnly = true): self
+    {
+        $this->readOnly = $readOnly;
+
+        return $this;
+    }
+
     public function hasForm(): bool
     {
-        return $this->form !== null || $this->resource !== null;
+        return ! $this->readOnly && ($this->form !== null || $this->resource !== null);
     }
 
     public function formDefinition(): ?Form
@@ -225,6 +244,10 @@ final class RelationManager
      */
     public function canInlineCreate(string $parentResourceClass, Model $parent): bool
     {
+        if ($this->readOnly) {
+            return false;
+        }
+
         $form = $this->formDefinition();
 
         if ($form === null || $form->fields() === []) {
@@ -411,7 +434,10 @@ final class RelationManager
     {
         $formSchema = null;
 
-        if ($this->form !== null) {
+        if ($this->readOnly) {
+            // Nothing this tab could submit the form TO - store() is gated
+            // on canInlineCreate(), which is false here regardless.
+        } elseif ($this->form !== null) {
             $formSchema = ($this->form)(Form::make())->toSchema();
         } elseif ($this->resource !== null) {
             $formSchema = $this->resource::formDefinition()->toSchema();
@@ -427,8 +453,8 @@ final class RelationManager
 
         if ($this->resource !== null) {
             $permissions = $this->resource::permissions();
-            $canCreate = (bool) ($permissions['create'] ?? false);
-            $canEdit = (bool) ($permissions['update'] ?? false);
+            $canCreate = ! $this->readOnly && (bool) ($permissions['create'] ?? false);
+            $canEdit = ! $this->readOnly && (bool) ($permissions['update'] ?? false);
             $pages = ['resource' => $this->resource::key()];
             if (NestedRelation::belongsToMany($this->resource)) {
                 $pages['attach'] = true;
@@ -440,6 +466,7 @@ final class RelationManager
             'key' => $this->key,
             'label' => $this->label,
             'icon' => $this->icon,
+            'readOnly' => $this->readOnly,
             'table' => $this->definition()->toSchema(),
             'form' => $formSchema,
             /*

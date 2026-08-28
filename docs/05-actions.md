@@ -76,6 +76,39 @@ RecordAction::make('assign', 'Assign')
     ->handle(fn (Task $task, array $data) => $task->update($data));
 ```
 
+`->modalWidth()` picks a wider or narrower dense modal than the default -
+`sm`, `confirm` (default), `form`, `lg`, or `xl`. Ignored once `slideOver()`
+is on, which has its own size. `->submitLabel()` and `->cancelLabel()`
+replace the two footer buttons' text, which otherwise read the action's own
+label and a bare "Cancel":
+
+```php
+RecordAction::make('delete-account', 'Delete account')
+    ->destructive()
+    ->modalWidth('sm')
+    ->confirm('Every record this account owns is deleted with it.')
+    ->submitLabel('Yes, delete everything')
+    ->cancelLabel('Keep the account')
+    ->handle(fn (Account $account) => $account->delete());
+```
+
+`->keyBindings(['mod+d'])` runs the action with one keystroke while its row's
+menu is open - `mod` matches Cmd on a Mac and Ctrl elsewhere, so one binding
+covers both without declaring it twice:
+
+```php
+RecordAction::make('duplicate', 'Duplicate')
+    ->authorize('create')
+    ->keyBindings(['mod+d'])
+    ->handle(fn (Invoice $invoice) => $invoice->replicate()->save());
+```
+
+Scoped to the open menu, not the whole screen: a list shows many rows at
+once, so a global binding has no single record to act on. The menu is
+already the one place a single row is unambiguously in focus - it opens on
+one row and closes before another can - so this is the same idea the menu's
+arrow-key navigation already uses, one keystroke instead of arrow-then-Enter.
+
 Group related actions with `ActionGroup`.
 
 By default a successful action reloads the current list in place. `->redirect()`
@@ -233,3 +266,21 @@ This flashes the existing Inertia toast (`{ type, message }`, optional
 There is no Livewire toast stack. URL actions are hrefs on the toast and the
 bell. `method('post')` POSTs that href with the same CSRF the infolist uses.
 `assertPanelToast('Saved')` checks the flash.
+
+`->duration(8000)` (milliseconds) overrides how long the toast stays before
+sonner auto-hides it. `->persistent()` keeps it until dismissed by hand
+instead - for something the operator must act on, not glance past - and wins
+over an explicit `duration()` if both are set. `->iconColor('danger')`
+recolours the icon independently of `type` (`primary`, `gray`, `success`,
+`warning`, `danger`, `info` - the same palette `RecordAction::color()` uses),
+for a toast whose type should stay accurate for the database bell row while
+its icon reads more urgently than that type normally would:
+
+```php
+Notification::make()
+    ->title('Payment retry scheduled')
+    ->warning()
+    ->iconColor('danger')
+    ->persistent()
+    ->send();
+```

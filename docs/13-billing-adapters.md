@@ -1,8 +1,10 @@
-# 13. Billing webhook adapters
+# 13. Billing adapters
 
-PanelKit does not ship a payment processor. The inbound contract is the same
-for any gateway: verify a signature header, map the payload to a billing
-status, persist through `BillingStateStore`.
+PanelKit does not ship a payment processor. Both directions of the story stay
+adapter-shaped: **inbound**, a webhook tells you billing state changed (verify
+a signature, map the payload, persist through `BillingStateStore` - this
+page); **outbound**, a customer picks a plan and you need to send them to a
+checkout (a closure creates the session, this page's last section).
 
 There is no plugin marketplace. Copy the recipe. Change the header name and
 the secret source.
@@ -76,3 +78,73 @@ $this->assertBillingAllows($this->operator, '/account/suspended');
 ```
 
 See [Tests](tests.md) and [Built-in screens](10-built-in-screens.md).
+
+## Outbound: a customer chooses a plan
+
+`PlanSetupPage` is the admin/superadmin side: an operator edits the
+catalogue. `PlanCatalogPage` is the other half - a customer browses it and
+buys, on the `client` panel (or wherever your customers sign in). Both are
+opt-in subclasses over the same idea: this class owns nothing about your
+plans or your processor, it owns the screen.
+
+```php
+use App\Models\Plan;
+use Alxtexh\Panel\Panel;
+
+Panel::make('client')
+    ->planCatalog(function (Panel $panel, ?Authenticatable $user, Request $request, string $planId) {
+        // Create a real checkout session with whatever you use - Stripe,
+        // Paddle, Chargebee - and return ITS url. This is the purchase-side
+        // equivalent of billingWebhookMapper() above: PanelKit stays out of
+        // the vendor, the shape is a closure.
+        $session = Stripe::checkout()->sessions()->create([
+            'customer' => $user->stripe_id,
+            'line_items' => [['price' => Plan::find($planId)->stripe_price_id, 'quantity' => 1]],
+            'mode' => 'subscription',
+            'success_url' => url('/client/account/billing'),
+        ]);
+
+        return $session->url;
+    });
+```
+
+```php
+namespace App\Panel\Client\Pages;
+
+use App\Models\Plan;
+use Alxtexh\Panel\Pages\PlanCatalogPage as BasePlanCatalogPage;
+
+final class PlanCatalogPage extends BasePlanCatalogPage
+{
+    protected static string $panel = 'client';
+
+    public static function plans(Request $request): array
+    {
+        return Plan::query()->where('is_active', true)->get()
+            ->map(fn (Plan $plan) => [
+                'id' => (string) $plan->id,
+                'name' => $plan->name,
+                'price' => $plan->price_cents / 100,
+                'priceFormatted' => 'KES '.number_format($plan->price_cents / 100, 2),
+                'current' => $plan->id === $request->user()->plan_id,
+            ])
+            ->all();
+    }
+}
+```
+
+The card's button never collects a card number - clicking it POSTs the
+chosen plan's id to the page's `checkout` action, which validates it, runs
+the closure above, and redirects the browser to whatever URL it returned
+(`Inertia::location()`, so this works whether the visit came in as a normal
+page load or an Inertia XHR). This is also how production SaaS billing
+overwhelmingly works: Stripe Checkout, Paddle's overlay and Chargebee's
+hosted page are all "redirect to a session URL", not a card form embedded in
+somebody else's app.
+
+Mark the caller's own plan `current: true` yourself, same reasoning as
+`BillingPortalPage::subscription()` being a host hook: this class has no
+subscription model of its own to compare against. A plan with `annualPrice`
+set gets a monthly/annual toggle, same interaction as the public `PkPricing`
+landing component - hidden entirely when no plan has one, since a switch
+that changes nothing is a dead control.
