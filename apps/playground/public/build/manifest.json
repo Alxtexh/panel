@@ -2094,7 +2094,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-IMxIdwnb.css",
+    "file": "assets/app-CKt7bYwG.css",
     "name": "app",
     "names": [
       "app.css"
@@ -2103,7 +2103,7 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-DqY4w9bJ.js",
+    "file": "assets/app-CYW3AJWO.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -2149,7 +2149,6 @@
       "resources/js/pages/Onboarding.vue",
       "resources/js/pages/PanelDashboard.vue",
       "resources/js/pages/PanelHome.vue",
-      "resources/js/pages/PlanCatalog.vue",
       "resources/js/pages/PlanSetup.vue",
       "resources/js/pages/ResourceAttach.vue",
       "resources/js/pages/ResourceForm.vue",
@@ -2161,6 +2160,8 @@
       "resources/js/pages/Showcase.vue",
       "resources/js/pages/Signatures.vue",
       "resources/js/pages/Sitemap.vue",
+      "resources/js/pages/Subscription.vue",
+      "resources/js/pages/SubscriptionConfirmed.vue",
       "resources/js/pages/TicketAnalysis.vue",
       "resources/js/pages/Till.vue",
       "resources/js/pages/Trash.vue",
@@ -2562,20 +2563,6 @@
       "_PanelHome-DfAA2Jh3.js"
     ]
   },
-  "resources/js/pages/PlanCatalog.vue": {
-    "file": "assets/PlanCatalog-BgVronii.js",
-    "name": "PlanCatalog",
-    "src": "resources/js/pages/PlanCatalog.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_FormFieldControl-NHomjA2c.js",
-      "_src-D7hRJWKh.js",
-      "_PkPageHeader-DWoSS6es.js",
-      "_dist-BolYny5m.js",
-      "_useTranslations-CbR-9iym.js"
-    ]
-  },
   "resources/js/pages/PlanSetup.vue": {
     "file": "assets/PlanSetup-CTq3IwDF.js",
     "name": "PlanSetup",
@@ -2686,6 +2673,33 @@
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
       "_Sitemap-2z92TOJq.js"
+    ]
+  },
+  "resources/js/pages/Subscription.vue": {
+    "file": "assets/Subscription-BG6zLAa4.js",
+    "name": "Subscription",
+    "src": "resources/js/pages/Subscription.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_runtime-core.esm-bundler-BKdLzFmX.js",
+      "_FormFieldControl-NHomjA2c.js",
+      "_src-D7hRJWKh.js",
+      "_PkPageHeader-DWoSS6es.js",
+      "_dist-BolYny5m.js",
+      "_useTranslations-CbR-9iym.js"
+    ]
+  },
+  "resources/js/pages/SubscriptionConfirmed.vue": {
+    "file": "assets/SubscriptionConfirmed-FyTmRl2M.js",
+    "name": "SubscriptionConfirmed",
+    "src": "resources/js/pages/SubscriptionConfirmed.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_runtime-core.esm-bundler-BKdLzFmX.js",
+      "_FormFieldControl-NHomjA2c.js",
+      "_src-D7hRJWKh.js",
+      "_PkPageHeader-DWoSS6es.js",
+      "_dist-BolYny5m.js"
     ]
   },
   "resources/js/pages/TicketAnalysis.vue": {

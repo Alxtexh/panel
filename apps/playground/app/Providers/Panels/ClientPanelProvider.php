@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Panels;
 
+use App\Models\Customer;
 use App\Models\Plan;
 use Illuminate\Support\ServiceProvider;
 use Alxtexh\Panel\Panel;
@@ -110,33 +111,33 @@ final class ClientPanelProvider extends ServiceProvider
                 )
 
                 /*
-                 * `PlanCatalogPage`, at `/client/account/plans` - "choose a
-                 * plan", not the read-only comparison table
+                 * `PlanCatalogPage`, at `/client/account/subscription` -
+                 * "choose a plan", not the read-only comparison table
                  * `Client\Resources\PlanResource` already offers.
                  *
                  * THIS CLOSURE IS A SHOWCASE, LIKE `PaymentGatewaySettings` -
-                 * no live processor is wired into the demo. It flashes a
-                 * message naming the plan and sends the browser back to this
-                 * same screen, which is enough to prove the whole round trip
-                 * (validate the id, run the resolver, follow the redirect)
-                 * without pretending a fake checkout succeeded at a vendor
-                 * that was never called. A host replaces this with a closure
-                 * that creates a real Stripe/Paddle/etc checkout session and
-                 * returns ITS url instead.
+                 * no live processor is wired into the demo. It applies the
+                 * change directly (a real "no processor yet" flow might
+                 * instead queue it for manual billing) and sends the browser
+                 * to a DEDICATED CONFIRMATION PAGE this app owns
+                 * (`SubscriptionConfirmedPage`) rather than an external
+                 * checkout - the other of the two endings
+                 * `PlanCatalogPage::checkout()`'s docblock describes. A host
+                 * with a real processor replaces this closure with one that
+                 * creates a Stripe/Paddle/etc checkout session and returns
+                 * ITS url instead.
                  */
                 ->planCatalog(function (Panel $panel, mixed $user, mixed $request, string $planId): string {
                     $plan = Plan::query()->find($planId);
 
-                    session()->flash(
-                        'success',
-                        $plan !== null
-                            ? "Demo checkout: selected \"{$plan->name}\". Wire Panel::planCatalog() to a real processor to replace this message with an actual redirect."
-                            : 'Demo checkout: that plan could not be found.',
-                    );
+                    if ($plan !== null && $user instanceof Customer) {
+                        $user->update(['plan_id' => $plan->getKey()]);
+                    }
 
                     $prefix = trim((string) $panel->getPath(), '/');
+                    $query = $plan !== null ? '?plan='.$plan->getKey() : '';
 
-                    return ($prefix !== '' ? '/'.$prefix : '').'/account/plans';
+                    return ($prefix !== '' ? '/'.$prefix : '').'/subscription-confirmed'.$query;
                 })
 
                 /*

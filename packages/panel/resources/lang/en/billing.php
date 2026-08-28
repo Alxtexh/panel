@@ -25,12 +25,14 @@ return [
         'host_extension' => 'Host extension: subclass BillingPortalPage and override subscription(), invoices(), paymentMethods(), and billingActions().',
     ],
 
-    'catalog' => [
-        'label' => 'Plans',
-        'title' => 'Choose a plan',
+    'subscription' => [
+        'label' => 'Subscription',
+        'title' => 'Subscription',
         'empty' => 'No plans are available right now.',
         'monthly' => 'Monthly',
         'annual' => 'Annual',
+        'current_plan' => 'Current plan',
+        'no_active' => 'You do not have an active subscription yet.',
     ],
 
     'status' => [

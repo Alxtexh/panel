@@ -82,10 +82,14 @@ See [Tests](tests.md) and [Built-in screens](10-built-in-screens.md).
 ## Outbound: a customer chooses a plan
 
 `PlanSetupPage` is the admin/superadmin side: an operator edits the
-catalogue. `PlanCatalogPage` is the other half - a customer browses it and
-buys, on the `client` panel (or wherever your customers sign in). Both are
-opt-in subclasses over the same idea: this class owns nothing about your
-plans or your processor, it owns the screen.
+catalogue. `PlanCatalogPage` is the other half - ONE page, not two, shaped
+after how production Filament billing plugins actually do it
+(`tomatophp/filament-subscriptions`'s single "Billing" page, "like [Laravel]
+Spark"; `ihor-k/subkit`'s dashboard-plus-pricing pairing): the customer's
+current subscription status at the top, the plan picker below, on the
+`client` panel (or wherever your customers sign in). Both pages are opt-in
+subclasses over the same idea: this class owns nothing about your plans or
+your processor, it owns the screen.
 
 ```php
 use App\Models\Plan;
@@ -101,12 +105,20 @@ Panel::make('client')
             'customer' => $user->stripe_id,
             'line_items' => [['price' => Plan::find($planId)->stripe_price_id, 'quantity' => 1]],
             'mode' => 'subscription',
-            'success_url' => url('/client/account/billing'),
+            'success_url' => url('/client/account/subscription'),
         ]);
 
         return $session->url;
     });
 ```
+
+**No live processor yet?** Return the URL of a page you own instead - a
+"request received" screen, a manual-invoice confirmation, whatever fits.
+`checkout()` does not care which kind of URL comes back, only that
+something did. The choosing itself still opens a confirm modal first either
+way (`Change subscription` - name, price, a "Continue to payment" button),
+matching Filament's own two-step split: a modal confirms WHICH plan, an
+off-site (or host-owned) page collects payment.
 
 ```php
 namespace App\Panel\Client\Pages;
@@ -145,6 +157,26 @@ somebody else's app.
 Mark the caller's own plan `current: true` yourself, same reasoning as
 `BillingPortalPage::subscription()` being a host hook: this class has no
 subscription model of its own to compare against. A plan with `annualPrice`
-set gets a monthly/annual toggle, same interaction as the public `PkPricing`
-landing component - hidden entirely when no plan has one, since a switch
-that changes nothing is a dead control.
+set gets a monthly/annual toggle with a "Save X%" badge, same interaction as
+the public `PkPricing` landing component - hidden entirely when no plan has
+one, since a switch that changes nothing is a dead control.
+
+`subscription()` fills the status summary at the top of the page - null by
+default, deliberately not wired to `BillingStateStore` automatically. That
+store answers "is this TENANT's own subscription to the platform current" -
+what `EnforceSubscriptionGate`/`BillingPortalPage` gate on - a different
+question from "which plan is one of your customers on", which is what this
+class is generic enough to sell instead (an ISP selling internet plans to
+its own subscribers, say). Override it with whichever question your
+catalogue is actually answering:
+
+```php
+public static function subscription(Request $request): ?array
+{
+    // The platform subscription itself:
+    return BillingStateStore::forCurrentContext($panel);
+
+    // Or your own product, sold to your own customers:
+    return $request->user()->plan_id !== null ? ['status' => 'active'] : null;
+}
+```

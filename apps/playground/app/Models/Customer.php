@@ -37,7 +37,7 @@ final class Customer extends Authenticatable
     /** @use HasFactory<CustomerFactory> */
     use HasFactory;
 
-    protected $fillable = ['tenant_id', 'name', 'email', 'password'];
+    protected $fillable = ['tenant_id', 'plan_id', 'name', 'email', 'password'];
 
     /** @var list<string> */
     protected $hidden = ['password', 'remember_token'];
@@ -52,5 +52,11 @@ final class Customer extends Authenticatable
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /** Which internet plan this customer is subscribed to, if any. */
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
     }
 }

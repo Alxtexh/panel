@@ -54,18 +54,29 @@ final class PlanCatalogPageTest extends TestCase
 
     public function test_data_exposes_plans_and_a_checkout_href(): void
     {
-        $data = FixturePlanCatalogPage::data(Request::create('/account/plans'));
+        $data = FixturePlanCatalogPage::data(Request::create('/account/subscription'));
 
         $this->assertCount(2, $data['plans']);
         $this->assertSame('starter', $data['plans'][0]['id']);
-        $this->assertStringEndsWith('/account/plans/checkout', $data['checkoutHref']);
+        $this->assertStringEndsWith('/account/subscription/checkout', $data['checkoutHref']);
+    }
+
+    /**
+     * NULL BY DEFAULT, deliberately - see the class docblock for why
+     * auto-wiring `BillingStateStore` would be a category error for a host
+     * whose catalogue is not the platform subscription itself.
+     */
+    public function test_subscription_is_null_by_default(): void
+    {
+        $this->assertNull(FixturePlanCatalogPage::subscription(Request::create('/account/subscription')));
+        $this->assertNull(FixturePlanCatalogPage::data(Request::create('/account/subscription'))['subscription']);
     }
 
     public function test_checkout_requires_a_plan_id(): void
     {
         $this->expectException(ValidationException::class);
 
-        FixturePlanCatalogPage::checkout(Request::create('/account/plans/checkout', 'POST', []));
+        FixturePlanCatalogPage::checkout(Request::create('/account/subscription/checkout', 'POST', []));
     }
 
     /**
@@ -90,7 +101,7 @@ final class PlanCatalogPageTest extends TestCase
         );
 
         $response = FixturePlanCatalogPage::checkout(
-            Request::create('/account/plans/checkout', 'POST', ['plan_id' => 'pro']),
+            Request::create('/account/subscription/checkout', 'POST', ['plan_id' => 'pro']),
         );
 
         $this->assertSame('pro', $received);
@@ -110,7 +121,7 @@ final class PlanCatalogPageTest extends TestCase
             static fn (): string => '/checkout/session/xyz',
         );
 
-        $request = Request::create('/account/plans/checkout', 'POST', ['plan_id' => 'pro']);
+        $request = Request::create('/account/subscription/checkout', 'POST', ['plan_id' => 'pro']);
         $request->headers->set('X-Inertia', 'true');
         app()->instance('request', $request);
 
@@ -135,7 +146,7 @@ final class PlanCatalogPageTest extends TestCase
         $this->expectException(NotFoundHttpException::class);
 
         SecondPlanCatalogPage::checkout(
-            Request::create('/account/plans/checkout', 'POST', ['plan_id' => 'x']),
+            Request::create('/account/subscription/checkout', 'POST', ['plan_id' => 'x']),
         );
     }
 }
