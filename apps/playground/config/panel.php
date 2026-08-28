@@ -302,6 +302,10 @@ return [
         app_path('Panel/Pages') => 'App\\Panel\\Pages',
         app_path('Panel/Client/Pages') => 'App\\Panel\\Client\\Pages',
         app_path('Panel/Disposable/Pages') => 'App\\Panel\\Disposable\\Pages',
+        // 100% demo content - deleting app/Demo leaves this pointed at a
+        // directory that no longer exists, which discoverPages() already
+        // no-ops on rather than erroring.
+        app_path('Demo/Panel/Pages') => 'App\\Demo\\Panel\\Pages',
     ],
 
     /*

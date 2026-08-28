@@ -224,6 +224,7 @@ final class PanelPages
         'Webhooks',
         'EmailTemplates',
         'MediaLibrary',
+        'PanelPage',
     ];
 
     /**

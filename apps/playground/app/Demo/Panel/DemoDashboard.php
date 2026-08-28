@@ -159,16 +159,36 @@ final class DemoDashboard
                 ->type('doughnut')
                 ->data(fn (): array => self::groupedCount('plan_type', $filters))
                 ->ability(self::COMMERCIAL),
+        ];
+    }
 
-            /*
-             | THE FULL CHART GALLERY.
-             |
-             | Every renderer the panel ships is represented, on real data, so a
-             | panel author can see what each one looks like against their own
-             | numbers before choosing. A gallery drawn from placeholder data
-             | teaches nothing - the reason to pick a polar area over a pie is
-             | how the actual distribution reads.
-             */
+    /**
+     * EVERY RENDERER THE PANEL SHIPS, on real data - a reference gallery, not
+     * the dashboard. This used to sit inline in `charts()`, appended straight
+     * onto the actual day-to-day dashboard: seven glanceable widgets followed
+     * by thirteen more whose job is showing what a chart TYPE looks like, not
+     * telling an ISP operator anything they check daily. Several of these
+     * intentionally render the SAME underlying numbers a different way
+     * (`plan_status`/`plan_status_grouped`/`plan_radar` are all
+     * `crossTab('plan_type', 'status')`; `status`/`status_pie` in `charts()`
+     * are both `groupedCount('status')`) - exactly right for "compare how a
+     * stacked bar reads against a radar", exactly wrong for a screen someone
+     * opens every morning to see whether renewals are piling up.
+     *
+     * Hosted on its own page (`App\Demo\Panel\Pages\ChartGalleryPage`) rather than
+     * folded back onto the dashboard, the same reasoning `ShowcasePage`
+     * already states for fields and columns: a panel author picking a chart
+     * type wants to see every option against their own numbers before
+     * choosing, in one place built for that, not mixed into the screen an
+     * operator actually works from.
+     *
+     * @return list<ChartWidget>
+     */
+    public static function galleryCharts(): array
+    {
+        $filters = DashboardPage::filters();
+
+        return [
             ChartWidget::make('sessions_bars', 'Sessions by day')
                 ->type('bar')
                 ->description('Vertical bars')

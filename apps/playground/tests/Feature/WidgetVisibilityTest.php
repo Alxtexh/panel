@@ -69,7 +69,7 @@ final class WidgetVisibilityTest extends TestCase
 
         $this->assertNotContains('clients_new', $dashboard['stats'], 'Sign-up figures leaked.');
         $this->assertNotContains('signups', $dashboard['charts']);
-        $this->assertNotContains('renewals', $dashboard['charts']);
+        $this->assertNotContains('customer_summary', $dashboard['charts']);
         $this->assertNotContains('plan_type', $dashboard['charts']);
     }
 
@@ -82,7 +82,7 @@ final class WidgetVisibilityTest extends TestCase
 
         $this->assertContains('sessions_live', $dashboard['stats']);
         $this->assertContains('routers_online', $dashboard['stats']);
-        $this->assertContains('routers_load', $dashboard['charts']);
+        $this->assertContains('system_status', $dashboard['charts']);
     }
 
     public function test_the_reverse_split_holds_too(): void
@@ -93,7 +93,7 @@ final class WidgetVisibilityTest extends TestCase
 
         $this->assertContains('clients_new', $dashboard['stats']);
         $this->assertNotContains('sessions_live', $dashboard['stats'], 'Network figures leaked.');
-        $this->assertNotContains('routers_load', $dashboard['charts']);
+        $this->assertNotContains('system_status', $dashboard['charts']);
     }
 
     /**
@@ -118,7 +118,7 @@ final class WidgetVisibilityTest extends TestCase
             $this->assertContains($key, $dashboard['stats']);
         }
 
-        foreach (['signups', 'routers_load', 'renewals'] as $key) {
+        foreach (['signups', 'system_status', 'customer_summary'] as $key) {
             $this->assertContains($key, $dashboard['charts']);
         }
     }
@@ -154,7 +154,7 @@ final class WidgetVisibilityTest extends TestCase
 
         $props = $this->dashboardFor($user)['props'];
 
-        foreach (['stat_clients_new', 'chart_signups', 'chart_renewals'] as $key) {
+        foreach (['stat_clients_new', 'chart_signups', 'chart_customer_summary'] as $key) {
             $this->assertArrayNotHasKey($key, $props, "{$key} was registered for somebody who may not see it.");
         }
     }
