@@ -94,6 +94,14 @@ final class RecordAction
 
     private ?Closure $link = null;
 
+    /**
+     * Where to navigate after a successful run, or null to stay and reload
+     * the list in place (the default for every action until this exists).
+     *
+     * @var (Closure(Model, array<string, mixed>): string)|string|null
+     */
+    private Closure|string|null $redirectTo = null;
+
     /** Whether the row disappears from the current list after this runs. */
     private bool $removesRow = false;
 
@@ -382,6 +390,42 @@ final class RecordAction
         $this->visible = $visible;
 
         return $this;
+    }
+
+    /**
+     * Navigate here after `run()`/`executeWithData()` succeeds, instead of
+     * reloading the list in place.
+     *
+     * THE CLOSURE'S SECOND ARGUMENT IS WHAT `handle()` RETURNED, not the form
+     * input. `$record` is unchanged from before the run - a closure does not
+     * rebind the caller's variable, so a `handle()` that creates a NEW row
+     * (replicate, "convert to invoice") cannot hand back the new one through
+     * `$record` at all. It hands it back the same way it already reports
+     * anything to the client: by returning an array. `replicate` returns
+     * `['id' => $copy->getKey()]`, and the redirect closure reads that -
+     * `fn (Model $record, array $result): string => "/products/{$result['id']}/edit"`.
+     * A plain string is the common case: "resend invoice" always returns to
+     * the same list, "start onboarding" always goes to a fixed wizard route.
+     *
+     * @param  (Closure(Model, array<string, mixed>): string)|string  $url
+     */
+    public function redirect(Closure|string $url): self
+    {
+        $this->redirectTo = $url;
+
+        return $this;
+    }
+
+    /** @param  array<string, mixed>  $result  Whatever `run()`/`executeWithData()` returned. */
+    public function resolveRedirect(Model $record, array $result = []): ?string
+    {
+        if ($this->redirectTo === null) {
+            return null;
+        }
+
+        return is_string($this->redirectTo)
+            ? $this->redirectTo
+            : ($this->redirectTo)($record, $result);
     }
 
     public function isLink(): bool

@@ -382,7 +382,7 @@ function ask(question: string) {
         >
             <aside
                 v-if="open"
-                class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-background shadow-2xl sm:inset-y-2 sm:right-2 sm:rounded-xl sm:border"
+                class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-background text-foreground shadow-2xl sm:inset-y-2 sm:right-2 sm:rounded-xl sm:border"
                 role="dialog"
                 aria-label="Assistant"
             >

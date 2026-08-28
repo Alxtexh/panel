@@ -51,7 +51,7 @@ function reload() {
             <div class="absolute inset-0 bg-background/80 backdrop-blur-sm"></div>
 
             <div
-                class="relative w-full max-w-sm rounded-xl border bg-card p-6 text-center shadow-lg"
+                class="relative w-full max-w-sm rounded-xl border bg-card text-card-foreground p-6 text-center shadow-lg"
             >
                 <div
                     class="mx-auto flex size-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400"

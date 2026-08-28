@@ -25,10 +25,12 @@
  */
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
+import { isDark, useAppearance } from '@alxtexh-enterprise/panel'
 
 withDefaults(defineProps<{ showName?: boolean }>(), { showName: false })
 
 const page = usePage()
+const { appearance } = useAppearance()
 
 /**
  * The tenant's name, falling back to the product's only outside a tenant.
@@ -46,7 +48,19 @@ const name = computed(() => {
     return panel?.brand ?? (page.props.panelBrand as string | null) ?? (page.props.name as string | null) ?? 'Panel'
 })
 
-const logo = computed(() => (page.props.panelLogo as string | null) ?? null)
+const logoLight = computed(() => (page.props.panelLogo as string | null) ?? null)
+
+/**
+ * `page.props.panelLogoDark`, an ordinary sibling of `panelLogo` - this
+ * package fetches neither; an application shares both however it stores
+ * logos (a DB column, a config value, a disk path) the same way the
+ * playground shares `panelLogo` from `OrganisationController::logoUrl()`.
+ * Falls back to the light mark so a host that only ever set `panelLogo`
+ * keeps rendering exactly what it did before this existed.
+ */
+const logoDark = computed(() => (page.props.panelLogoDark as string | null) ?? null)
+
+const logo = computed(() => (isDark(appearance.value) ? (logoDark.value ?? logoLight.value) : logoLight.value))
 
 /**
  * Initials, for the collapsed rail where a name does not fit.

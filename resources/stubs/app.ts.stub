@@ -32,11 +32,19 @@ import {
     setAppearancePersister,
     syncAppearanceFromInertiaPage,
 } from '@alxtexh-enterprise/panel'
-import { SettingsLayout } from '@alxtexh-enterprise/panel/inertia'
+import { SettingsLayout, watchForSessionExpiry } from '@alxtexh-enterprise/panel/inertia'
 import { createApp, h } from 'vue'
 import type { DefineComponent } from 'vue'
 import PanelLayout from './layouts/PanelLayout.vue'
 import '../css/app.css'
+
+/*
+ * PanelShell always renders <SessionExpired />, but nothing opens it without
+ * this: it wraps `window.fetch` so a stray 419 (a stale session, not just a
+ * failed navigation) shows the packaged dialog instead of falling through to
+ * Inertia's own bare error page. Call it once, before the first request.
+ */
+watchForSessionExpiry()
 
 /*
  * LIGHT OR DARK, BEFORE THE FIRST SCREEN. Reads the account appearance the

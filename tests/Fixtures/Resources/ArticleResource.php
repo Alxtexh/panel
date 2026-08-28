@@ -31,6 +31,7 @@ use Alxtexh\Panel\Tables\Columns\DateColumn;
 use Alxtexh\Panel\Tables\Columns\SelectColumn;
 use Alxtexh\Panel\Tables\Filters\SelectFilter;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Columns\TextInputColumn;
 use Alxtexh\Panel\Tables\Table;
 use Alxtexh\Panel\Widgets\StatWidget;
 use Alxtexh\Panel\Workflow\Transition;
@@ -268,6 +269,14 @@ final class ArticleResource extends Resource
                     ->options(['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived'])
                     ->sortable()
                     ->searchable(),
+                /*
+                 * A SECOND EDITABLE COLUMN, of the free-text kind - so the
+                 * inline-cell endpoint's per-column `castValue()` dispatch is
+                 * exercised for `TextInputColumn` too, not only `SelectColumn`.
+                 */
+                TextInputColumn::make('slug')
+                    ->from('articles.slug')
+                    ->rules(['nullable', 'max:20', 'alpha_dash']),
                 /*
                  * A DISPLAY BADGE next to the writable select, so the cell
                  * endpoint can be asserted to refuse a pill that was never

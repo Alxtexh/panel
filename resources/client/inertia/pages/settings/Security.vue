@@ -80,6 +80,23 @@ const props = defineProps<Props>()
 
 const page = usePage()
 
+/**
+ * `Panel::groupedSecurityCards()`. Bordered cards instead of one flat list.
+ *
+ * READ FROM `panel.*`, NOT A PROP - `SecurityController` renders this page
+ * directly under a fixed name, so there is no template position a host could
+ * pass a prop into without forking the whole file. `panel.*` is the shared
+ * route every panel-wide toggle already takes (`authTestimonial`,
+ * `authImage`), and `ManageTwoFactor` / `ManagePasskeys` already draw their
+ * own `space-y-6` - this only adds the card around them, once, here.
+ */
+const grouped = computed(
+    () => (page.props.panel as { groupedSecurityCards?: boolean } | undefined)?.groupedSecurityCards === true,
+)
+
+const sectionClass = computed(() => (grouped.value ? 'space-y-6 rounded-lg border p-6' : 'space-y-6'))
+const wrapClass = computed(() => (grouped.value ? 'rounded-lg border p-6' : ''))
+
 /** The panel's prefix, so these URLs work wherever it is mounted. */
 const base = computed(() => (page.props.panel as { path?: string } | undefined)?.path ?? '')
 
@@ -129,7 +146,7 @@ defineOptions({
 
     <h1 class="sr-only">Security settings</h1>
 
-    <div class="space-y-6">
+    <div :class="sectionClass">
         <Heading
             variant="small"
             title="Update password"
@@ -194,13 +211,15 @@ defineOptions({
         </Form>
     </div>
 
-    <ManageTwoFactor
-        :canManageTwoFactor="canManageTwoFactor"
-        :requiresConfirmation="requiresConfirmation"
-        :twoFactorEnabled="twoFactorEnabled"
-    />
+    <div v-if="canManageTwoFactor" :class="wrapClass">
+        <ManageTwoFactor
+            :canManageTwoFactor="canManageTwoFactor"
+            :requiresConfirmation="requiresConfirmation"
+            :twoFactorEnabled="twoFactorEnabled"
+        />
+    </div>
 
-    <div v-if="canManageEmailTwoFactor" class="space-y-6">
+    <div v-if="canManageEmailTwoFactor" :class="sectionClass">
         <Heading
             variant="small"
             title="Email codes"
@@ -235,7 +254,9 @@ defineOptions({
         </Form>
     </div>
 
-    <ManagePasskeys :canManagePasskeys="canManagePasskeys" :passkeys="passkeys" />
+    <div v-if="canManagePasskeys" :class="wrapClass">
+        <ManagePasskeys :canManagePasskeys="canManagePasskeys" :passkeys="passkeys" />
+    </div>
 
     <!--
         Signed-in devices.
@@ -244,7 +265,7 @@ defineOptions({
         worry as "who has my password", so it belongs beside the controls
         somebody reaches for next.
     -->
-    <div class="space-y-6">
+    <div :class="sectionClass">
         <!--
             CONNECTED ACCOUNTS SIT BESIDE THE DEVICE LIST, for the same reason
             that list is here: "what else can get into my account" is one worry,

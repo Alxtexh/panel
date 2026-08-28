@@ -82,6 +82,11 @@ const loading = ref(false)
 const alerts = ref<Alert[]>([])
 const notifications = ref<Note[]>([])
 
+/** Whether another page exists past what is currently loaded. */
+const hasMore = ref(false)
+const loadingMore = ref(false)
+const notificationsPage = ref(1)
+
 /**
  * Whether this person may write an announcement.
  *
@@ -138,6 +143,7 @@ async function send(url: string, method: string): Promise<void> {
 
 async function load(): Promise<void> {
     loading.value = true
+    notificationsPage.value = 1
 
     try {
         const response = await fetch(base.value, {
@@ -154,6 +160,7 @@ async function load(): Promise<void> {
         alerts.value = data.alerts ?? []
         notifications.value = data.notifications ?? []
         unread.value = data.unread ?? 0
+        hasMore.value = data.hasMore === true
         canAnnounce.value = data.canAnnounce === true
 
         // Open on whichever tab has something to say. Landing on an empty
@@ -165,9 +172,45 @@ async function load(): Promise<void> {
         // which would be worse: an alert list is a claim about NOW.
         alerts.value = []
         notifications.value = []
+        hasMore.value = false
         canAnnounce.value = false
     } finally {
         loading.value = false
+    }
+}
+
+/**
+ * The next page, APPENDED rather than replacing what is already shown - a
+ * "Load more" click that reset the scroll position back to the top would
+ * lose the reader's place for the sake of ten more rows.
+ */
+async function loadMore(): Promise<void> {
+    if (loadingMore.value || !hasMore.value) {
+        return
+    }
+
+    loadingMore.value = true
+
+    try {
+        const response = await fetch(`${base.value}?page=${notificationsPage.value + 1}`, {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+
+        if (!response.ok) {
+            throw new Error(String(response.status))
+        }
+
+        const data = await response.json()
+
+        notifications.value = [...notifications.value, ...(data.notifications ?? [])]
+        hasMore.value = data.hasMore === true
+        notificationsPage.value += 1
+    } catch {
+        // Leaves what is already on screen alone; the button simply stays put
+        // to try again, rather than the inbox losing rows it had shown.
+    } finally {
+        loadingMore.value = false
     }
 }
 
@@ -207,6 +250,40 @@ async function remove(note: Note): Promise<void> {
     }
 
     await send(`${base.value}/${note.id}`, 'DELETE')
+}
+
+/** The undo for `markRead` - set aside a note read by accident. */
+async function markUnread(note: Note, event: Event): Promise<void> {
+    event.stopPropagation()
+
+    if (!note.read) {
+        return
+    }
+
+    note.read = false
+    unread.value += 1
+
+    await send(`${base.value}/${note.id}/unread`, 'POST')
+}
+
+/**
+ * Empties the inbox in one request. Confirmed, unlike every other write on
+ * this panel - those undo in one click each; this one cannot.
+ */
+async function clearAll(): Promise<void> {
+    if (notifications.value.length === 0) {
+        return
+    }
+
+    if (!window.confirm('Delete every notification? This cannot be undone.')) {
+        return
+    }
+
+    notifications.value = []
+    unread.value = 0
+    hasMore.value = false
+
+    await send(`${base.value}/clear`, 'DELETE')
 }
 
 function follow(href: string | null): void {
@@ -443,6 +520,24 @@ function runNoteAction(note: Note, action: NotificationAction, event: Event): vo
                         </div>
 
                         <button
+                            v-if="note.read"
+                            type="button"
+                            class="text-muted-foreground hover:text-foreground shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                            :aria-label="`Mark ${note.title} as unread`"
+                            @click="markUnread(note, $event)"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                class="size-4"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" />
+                            </svg>
+                        </button>
+
+                        <button
                             type="button"
                             class="text-muted-foreground hover:text-destructive shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
                             :aria-label="`Delete ${note.title}`"
@@ -460,18 +555,42 @@ function runNoteAction(note: Note, action: NotificationAction, event: Event): vo
                         </button>
                     </li>
                 </ul>
+
+                <div v-if="hasMore" class="flex justify-center border-t p-3">
+                    <button
+                        type="button"
+                        class="text-muted-foreground hover:text-foreground text-xs font-medium disabled:opacity-50"
+                        data-load-more
+                        :disabled="loadingMore"
+                        @click="loadMore"
+                    >
+                        {{ loadingMore ? 'Loading…' : 'Load more' }}
+                    </button>
+                </div>
             </template>
         </div>
 
-        <template v-if="tab === 'inbox' && unread > 0" #footer>
-            <button
-                type="button"
-                class="bg-background hover:bg-accent rounded-md border px-3 py-1.5 text-sm"
-                data-mark-all-read
-                @click="markAllRead"
-            >
-                Mark all as read
-            </button>
+        <template v-if="tab === 'inbox' && notifications.length > 0" #footer>
+            <div class="flex items-center justify-between gap-2">
+                <button
+                    v-if="unread > 0"
+                    type="button"
+                    class="bg-background hover:bg-accent rounded-md border px-3 py-1.5 text-sm"
+                    data-mark-all-read
+                    @click="markAllRead"
+                >
+                    Mark all as read
+                </button>
+
+                <button
+                    type="button"
+                    class="text-muted-foreground hover:text-destructive ml-auto px-2 py-1.5 text-sm"
+                    data-clear-all
+                    @click="clearAll"
+                >
+                    Clear all
+                </button>
+            </div>
         </template>
     </PkSlideover>
 </template>

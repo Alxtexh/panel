@@ -194,6 +194,7 @@ final class RecordController extends Controller
         return response()->json(array_filter([
             'ok' => true,
             'values' => $updates,
+            'redirect' => $action->resolveRedirect($record, $updates ?? []),
         ], static fn (mixed $v): bool => $v !== null));
     }
 
@@ -323,6 +324,7 @@ final class RecordController extends Controller
             return response()->json(array_filter([
                 'ok' => true,
                 'values' => $updates,
+                'redirect' => $action->resolveRedirect($record, $updates ?? []),
             ], static fn (mixed $v): bool => $v !== null));
         }
 

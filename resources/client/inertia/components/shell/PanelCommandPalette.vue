@@ -530,7 +530,7 @@ defineExpose({ show })
                 @click.self="hide"
             >
                 <div
-                    class="bg-popover w-full max-w-xl overflow-hidden rounded-xl border shadow-2xl"
+                    class="bg-popover text-popover-foreground w-full max-w-xl overflow-hidden rounded-xl border shadow-2xl"
                 >
                     <div class="flex items-center gap-2 border-b px-3">
                         <svg
