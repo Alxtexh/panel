@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tables;
 
+use Closure;
 use Illuminate\Database\Query\Builder;
 
 /**
@@ -30,6 +31,9 @@ use Illuminate\Database\Query\Builder;
  */
 final class Tabs
 {
+    /** @var array<string, Closure(Builder): void> */
+    private array $queryModifiers = [];
+
     /**
      * @param  string  $column  Qualified column to group by, e.g. `clients.status`.
      * @param  list<string>  $values  Tab values, in display order. `all` is implicit and always first.
@@ -43,6 +47,27 @@ final class Tabs
     public static function make(string $column, array $values): self
     {
         return new self($column, $values);
+    }
+
+    /**
+     * Replace the plain `$column = $value` match for one tab with anything
+     * a closure can express - a date range, a second column, a join.
+     *
+     * THE COST IS REAL AND STAYS LOCAL TO THIS ONE TAB. `counts()`'s whole
+     * design is one grouped aggregate for every declared value - the rule
+     * stated on the class is that N tabs must never cost N queries. A
+     * closure is a black box no aggregate can group by, so a modified tab's
+     * count is its own dedicated query; every OTHER tab, modified or not,
+     * still shares the single grouped one. Reach for this for the tab that
+     * needs it, not as the default way to declare one.
+     *
+     * @param  Closure(Builder): void  $modifier
+     */
+    public function modifyQuery(string $value, Closure $modifier): self
+    {
+        $this->queryModifiers[$value] = $modifier;
+
+        return $this;
     }
 
     /**
@@ -62,6 +87,12 @@ final class Tabs
 
     public function apply(Builder $query, string $value): void
     {
+        if (isset($this->queryModifiers[$value])) {
+            ($this->queryModifiers[$value])($query);
+
+            return;
+        }
+
         $query->where($this->column, $value);
     }
 
@@ -75,6 +106,18 @@ final class Tabs
      */
     public function counts(Builder $base): array
     {
+        /*
+         * PARTITIONED BY WHETHER A TAB HAS ITS OWN QUERY MODIFIER. The
+         * grouped aggregate below counts by `$this->column` alone, which is
+         * exactly wrong for a modified tab - its closure may filter on a
+         * different column, a range, a join, none of which a GROUP BY on
+         * one column can answer. Restricting the aggregate to the PLAIN
+         * values also keeps a modified tab's rows from being counted twice:
+         * once under whatever `$this->column` value they happen to hold,
+         * and again under their own dedicated query below.
+         */
+        $plainValues = array_values(array_diff($this->values, array_keys($this->queryModifiers)));
+
         // Strip the sort: ORDER BY on a grouped aggregate is wasted work, and on
         // strict engines it is an error when the column is not in the GROUP BY.
         $query = clone $base;
@@ -82,7 +125,8 @@ final class Tabs
         $query->limit = null;
         $query->offset = null;
 
-        $rows = $query
+        $rows = $plainValues === [] ? collect() : $query
+            ->whereIn($this->column, $plainValues)
             ->select($this->column)
             ->selectRaw('COUNT(*) as aggregate')
             ->groupBy($this->column)
@@ -102,11 +146,42 @@ final class Tabs
             $total += $count;
         }
 
-        // Declared values absent from the result set have a real count of zero.
-        // Leaving them out would render a tab with no number, which reads as
-        // "still loading" rather than "none".
-        foreach ($this->values as $value) {
+        // Declared plain values absent from the result set have a real
+        // count of zero. Leaving them out would render a tab with no
+        // number, which reads as "still loading" rather than "none".
+        foreach ($plainValues as $value) {
             $counts[$value] ??= 0;
+        }
+
+        // Each modified tab's own query - the cost the class note describes.
+        foreach ($this->queryModifiers as $value => $modifier) {
+            $modified = clone $base;
+            $modified->orders = null;
+            $modified->limit = null;
+            $modified->offset = null;
+
+            $modifier($modified);
+
+            $counts[$value] = $modified->count();
+        }
+
+        /*
+         * A modified tab's closure is a black box: it may match rows a plain
+         * tab already counted (an "overdue" tab built from `status =
+         * published` plus a date check overlaps the `published` tab), so
+         * summing every tab's count would over-report `all`. One more
+         * COUNT(*) on the untouched base is the only way to keep `all`
+         * meaning "everything in view" once any tab can do that - paid only
+         * when a modifier is actually declared, so the plain-tabs-only path
+         * still costs exactly the one grouped query above.
+         */
+        if ($this->queryModifiers !== []) {
+            $untouched = clone $base;
+            $untouched->orders = null;
+            $untouched->limit = null;
+            $untouched->offset = null;
+
+            $total = $untouched->count();
         }
 
         return ['all' => $total] + $counts;

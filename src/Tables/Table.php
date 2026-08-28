@@ -561,10 +561,24 @@ final class Table
         return null;
     }
 
-    /** @param list<string> $values */
-    public function tabs(string $column, array $values): self
+    /**
+     * @param  list<string>  $values
+     * @param  (Closure(Tabs): void)|null  $configure  For `Tabs::modifyQuery()` -
+     *                                                 the fluent chain here
+     *                                                 returns the TABLE, not
+     *                                                 the `Tabs` object, so this
+     *                                                 is the way to reach it
+     *                                                 without a second method
+     *                                                 that builds one outside
+     *                                                 this call.
+     */
+    public function tabs(string $column, array $values, ?Closure $configure = null): self
     {
         $this->tabs = Tabs::make($column, $values);
+
+        if ($configure !== null) {
+            $configure($this->tabs);
+        }
 
         return $this;
     }
@@ -971,7 +985,7 @@ final class Table
         }
 
         if ($this->tabs !== null) {
-            $query->tabs($this->tabs->column, $this->tabs->values);
+            $query->tabs($this->tabs);
         }
 
         return $query;

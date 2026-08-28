@@ -196,6 +196,16 @@ final class Panel
     private mixed $paymentGatewaysResolver = null;
 
     /**
+     * Turns a chosen plan into a checkout-session URL to redirect to.
+     * Pairs with `planCatalog()`. Null means the app `plan-checkout` was
+     * never enabled, or was enabled with no resolver - either 404s on
+     * `PlanCatalogPage::checkout()` rather than guessing a processor.
+     *
+     * @var Closure|null
+     */
+    private mixed $planCheckoutResolver = null;
+
+    /**
      * Optional GitHub `owner/repo` (or repo URL) used by What's new "sync from
      * GitHub releases". Null means the button is not offered.
      */
@@ -2008,6 +2018,33 @@ final class Panel
     public function paymentGatewaysResolver(): ?Closure
     {
         return $this->paymentGatewaysResolver;
+    }
+
+    /**
+     * Opt this portal into `PlanCatalogPage` - a customer browses the plan
+     * catalogue and picks one. Default off.
+     *
+     * `$createCheckoutSession` receives `panel`, `user`, `request`, `planId`
+     * (matched by name via `app()->call()`, the same convention every other
+     * billing hook here uses) and must return the URL to redirect the
+     * browser to - a Stripe Checkout Session, a Paddle transaction link,
+     * whatever the host's processor issues. PanelKit ships no payment
+     * processor (see docs/13-billing-adapters.md): this is the purchase-side
+     * equivalent of `billingWebhookMapper()`, which already takes the same
+     * "the vendor is yours, the shape is a closure" posture for the inbound
+     * half of the same story.
+     */
+    public function planCatalog(Closure $createCheckoutSession): self
+    {
+        $this->apps(['plan-checkout']);
+        $this->planCheckoutResolver = $createCheckoutSession;
+
+        return $this;
+    }
+
+    public function planCheckoutResolver(): ?Closure
+    {
+        return $this->planCheckoutResolver;
     }
 
     /**

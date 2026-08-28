@@ -7,6 +7,7 @@ type __VLS_Props = {
     itemLabel?: string;
     minItems?: number | null;
     maxItems?: number | null;
+    collapsible?: boolean;
     disabled?: boolean;
     /** Validation errors for the whole form, keyed by dotted path. */
     errors?: Record<string, string>;
@@ -32,5 +33,6 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     itemLabel: string;
     minItems: number | null;
     maxItems: number | null;
+    collapsible: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

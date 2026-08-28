@@ -20,6 +20,7 @@ use Alxtexh\Panel\CustomFields\CustomField;
 use Alxtexh\Panel\CustomFields\CustomFieldFactory;
 use Alxtexh\Panel\Http\NestedContext;
 use Alxtexh\Panel\Http\NestedRelation;
+use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Http\Requests\RecordFormRequest;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
@@ -386,10 +387,40 @@ final class RecordController extends Controller
             'ids.*' => ['required'],
         ]);
 
-        NestedRelation::attach($class, $parent, $validated['ids']);
+        $pivot = $this->attachPivotInput($request, $class);
+
+        NestedRelation::attach($class, $parent, $validated['ids'], $pivot);
 
         return redirect(NestedContext::base($class, $parent))
             ->with('success', $class::pluralLabel().' attached.');
+    }
+
+    /**
+     * Pivot-column values for an attach submission, validated and reduced to
+     * `pivotColumns()`'s own keys - the same allow-list posture
+     * `actionInput()` takes with a record action's form. Empty when the
+     * resource declares no pivot columns, so the request body's `pivot` key
+     * is never even read in the common case.
+     *
+     * @param  class-string<Resource>  $class
+     * @return array<string, mixed>
+     */
+    private function attachPivotInput(Request $request, string $class): array
+    {
+        $fields = $class::pivotColumns();
+
+        if ($fields === []) {
+            return [];
+        }
+
+        $form = Form::make()->schema($fields);
+
+        $validated = validator(
+            (array) $request->input('pivot', []),
+            $form->rules(),
+        )->validate();
+
+        return $form->sanitize($validated);
     }
 
     /**

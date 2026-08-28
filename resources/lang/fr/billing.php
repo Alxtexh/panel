@@ -25,6 +25,14 @@ return [
         'host_extension' => 'Extension hote : sous-classez BillingPortalPage et surchargez subscription(), invoices(), paymentMethods() et billingActions().',
     ],
 
+    'catalog' => [
+        'label' => 'Offres',
+        'title' => 'Choisissez une offre',
+        'empty' => 'Aucune offre disponible pour le moment.',
+        'monthly' => 'Mensuel',
+        'annual' => 'Annuel',
+    ],
+
     'status' => [
         'active' => 'Actif',
         'past_due' => 'Impaye',

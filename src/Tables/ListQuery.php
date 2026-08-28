@@ -342,11 +342,14 @@ final class ListQuery
     /**
      * Status tabs with counts from ONE grouped query (addendum C1).
      *
-     * @param  list<string>  $values
+     * Takes the already-built `Tabs` object rather than rebuilding one from
+     * `$column`/`$values` - `Table::tabs()`'s optional configure closure
+     * (`Tabs::modifyQuery()`) runs against the caller's instance, and a
+     * fresh `Tabs::make()` here would silently drop every modifier it set.
      */
-    public function tabs(string $column, array $values): self
+    public function tabs(Tabs $tabs): self
     {
-        $this->tabs = Tabs::make($column, $values);
+        $this->tabs = $tabs;
 
         return $this;
     }

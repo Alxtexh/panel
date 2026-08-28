@@ -34,6 +34,7 @@ use Throwable;
 final class ChartWidget
 {
     use CanPoll;
+    use HasLayout;
 
     /*
      * `segments` is a single proportional bar rather than a plot - a limit or a
@@ -79,8 +80,6 @@ final class ChartWidget
     private ?string $icon = null;
 
     private bool $periodSelector = false;
-
-    private int $span = 1;
 
     private ?string $ability = null;
 
@@ -174,13 +173,6 @@ final class ChartWidget
         return $this;
     }
 
-    public function span(int $span): self
-    {
-        $this->span = $span;
-
-        return $this;
-    }
-
     /**
      * Colour bars by their own value - a ranked "worst first" chart.
      *
@@ -261,10 +253,10 @@ final class ChartWidget
             'type' => $this->type,
             'description' => $this->description,
             'icon' => $this->icon,
-            'span' => $this->span,
             'periods' => $this->periodSelector ? Period::options() : null,
             'thresholds' => $this->thresholds === [] ? null : $this->thresholds,
             'maxValue' => $this->maxValue,
+            ...$this->layoutToArray(),
             ...$this->refreshToArray(),
         ];
     }

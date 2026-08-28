@@ -57,6 +57,14 @@ final class Notification
     /** @var list<Action> */
     private array $actions = [];
 
+    public const COLORS = ['primary', 'gray', 'success', 'warning', 'danger', 'info'];
+
+    private ?int $duration = null;
+
+    private bool $persistent = false;
+
+    private ?string $iconColor = null;
+
     public static function make(): self
     {
         return new self;
@@ -136,6 +144,41 @@ final class Notification
     private function status(string $type): self
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    /** How long the toast stays, in milliseconds. Ignored once `persistent()` is on. */
+    public function duration(int $milliseconds): self
+    {
+        $this->duration = $milliseconds;
+
+        return $this;
+    }
+
+    /** Stays until dismissed by hand - for something the operator must act on, not glance past. */
+    public function persistent(bool $persistent = true): self
+    {
+        $this->persistent = $persistent;
+
+        return $this;
+    }
+
+    /**
+     * Recolour the toast icon independently of `type` - a `warning()` toast
+     * that should still read as urgent as a `danger()` one, without actually
+     * being one (the severity `type` drives is more than colour: it is what
+     * `toDatabase()`'s bell row records too).
+     */
+    public function iconColor(string $color): self
+    {
+        if (! in_array($color, self::COLORS, true)) {
+            throw new InvalidArgumentException(
+                "Unknown notification icon colour [{$color}]. One of: ".implode(', ', self::COLORS).'.'
+            );
+        }
+
+        $this->iconColor = $color;
 
         return $this;
     }
@@ -313,7 +356,7 @@ final class Notification
     }
 
     /**
-     * @return array{type: string, message: string, body: string, actions?: list<array<string, mixed>>}
+     * @return array{type: string, message: string, body: string, actions?: list<array<string, mixed>>, duration?: int, persistent?: bool, iconColor?: string}
      */
     public function toArray(): array
     {
@@ -327,6 +370,18 @@ final class Notification
 
         if ($actions !== []) {
             $payload['actions'] = $actions;
+        }
+
+        if ($this->duration !== null) {
+            $payload['duration'] = $this->duration;
+        }
+
+        if ($this->persistent) {
+            $payload['persistent'] = true;
+        }
+
+        if ($this->iconColor !== null) {
+            $payload['iconColor'] = $this->iconColor;
         }
 
         return $payload;

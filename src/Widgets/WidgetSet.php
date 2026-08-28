@@ -69,6 +69,16 @@ final class WidgetSet
             static fn (StatWidget|ChartWidget|TableWidget $w): bool => $w->visibleTo($user),
         ));
 
+        /*
+         * STABLE, BY DECLARED sort(). Declaration order was previously the
+         * only order there was, which meant moving a widget earlier meant
+         * reordering the array literal it sat in - a diff touching every
+         * widget around it for a change to one. `usort` in PHP 8+ is
+         * guaranteed stable, so two widgets that never called sort() (both
+         * default to 0) keep the order they were declared in.
+         */
+        usort($visible, static fn ($a, $b): int => $a->sortOrder() <=> $b->sortOrder());
+
         if ($visible === []) {
             /*
              * NO KEYS AT ALL when nothing is visible, rather than empty arrays.

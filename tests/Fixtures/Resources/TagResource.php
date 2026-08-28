@@ -37,6 +37,13 @@ final class TagResource extends Resource
         ]);
     }
 
+    public static function pivotColumns(): array
+    {
+        return [
+            TextField::make('note'),
+        ];
+    }
+
     public static function infolist(): array
     {
         return [

@@ -1689,11 +1689,15 @@ function badgeLabel(key: string, value: unknown): string {
                     :disabled="actionForm?.processing"
                     @click="actionForm = null"
                 >
-                    Cancel
+                    {{ actionForm?.action.cancelLabel ?? 'Cancel' }}
                 </Button>
 
                 <Button size="sm" :disabled="actionForm?.processing" @click="submitActionForm">
-                    {{ actionForm?.processing ? 'Working…' : actionForm?.action.label }}
+                    {{
+                        actionForm?.processing
+                            ? 'Working…'
+                            : (actionForm?.action.submitLabel ?? actionForm?.action.label)
+                    }}
                 </Button>
             </template>
         </PkSlideover>
@@ -1703,7 +1707,7 @@ function badgeLabel(key: string, value: unknown): string {
             :open="!!actionForm"
             :title="actionForm?.action.label ?? ''"
             :description="actionForm?.action.confirmation ?? undefined"
-            size="form"
+            :size="actionForm?.action.modalWidth ?? 'form'"
             :busy="Boolean(actionForm?.processing)"
             @close="actionForm = null"
         >
@@ -1727,11 +1731,15 @@ function badgeLabel(key: string, value: unknown): string {
                     :disabled="actionForm?.processing"
                     @click="actionForm = null"
                 >
-                    Cancel
+                    {{ actionForm?.action.cancelLabel ?? 'Cancel' }}
                 </Button>
 
                 <Button size="sm" :disabled="actionForm?.processing" @click="submitActionForm">
-                    {{ actionForm?.processing ? 'Working…' : actionForm?.action.label }}
+                    {{
+                        actionForm?.processing
+                            ? 'Working…'
+                            : (actionForm?.action.submitLabel ?? actionForm?.action.label)
+                    }}
                 </Button>
             </template>
         </PkModal>

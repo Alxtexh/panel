@@ -181,8 +181,9 @@ final class NestedRelation
     /**
      * @param  resourceClass  $class
      * @param  list<int|string>  $ids
+     * @param  array<string, mixed>  $pivot  Extra pivot-column values, the same for every id in this call.
      */
-    public static function attach(string $class, Model $parent, array $ids): void
+    public static function attach(string $class, Model $parent, array $ids, array $pivot = []): void
     {
         $ids = array_values(array_unique(array_map(static fn (mixed $id): string => (string) $id, $ids)));
 
@@ -208,6 +209,6 @@ final class NestedRelation
 
         abort_if($already !== [], 404, 'One or more records are already attached.');
 
-        self::of($parent, $class)->attach($ids);
+        self::of($parent, $class)->attach($ids, $pivot);
     }
 }

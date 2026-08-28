@@ -40,7 +40,26 @@ export declare const SLIDEOVER_WIDTH: {
     readonly xl: "w-full max-w-2xl";
 };
 export type SlideoverSize = keyof typeof SLIDEOVER_WIDTH;
-/** Dense centred modal panel (confirmations, short action forms). */
-export declare const MODAL_PANEL = "bg-popover text-popover-foreground flex w-full max-w-lg max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl";
-/** Wider dense modal when an action form needs more room than confirm copy. */
-export declare const MODAL_PANEL_FORM = "bg-popover text-popover-foreground flex w-full max-w-xl max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl";
+export declare const MODAL_WIDTH: {
+    /** Short confirmations with no fields (~24rem). */
+    readonly sm: "bg-popover text-popover-foreground flex w-full max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl max-w-md";
+    /** The long-standing default: confirmations and short copy (~32rem). */
+    readonly confirm: "bg-popover text-popover-foreground flex w-full max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl max-w-lg";
+    /** Wider than confirm when an action form needs more room than confirm copy (~36rem). */
+    readonly form: "bg-popover text-popover-foreground flex w-full max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl max-w-xl";
+    /** A field stack too wide for `form` without becoming a page (~42rem). */
+    readonly lg: "bg-popover text-popover-foreground flex w-full max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl max-w-2xl";
+    /** The widest dense modal offers - past this, use PkSlideover instead (~56rem). */
+    readonly xl: "bg-popover text-popover-foreground flex w-full max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl max-w-4xl";
+};
+export type ModalSize = keyof typeof MODAL_WIDTH;
+/**
+ * @deprecated Use `MODAL_WIDTH.confirm`. Kept so an existing import of this
+ * exact constant keeps working; `PkModal` itself reads `MODAL_WIDTH` now.
+ */
+export declare const MODAL_PANEL: "bg-popover text-popover-foreground flex w-full max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl max-w-lg";
+/**
+ * @deprecated Use `MODAL_WIDTH.form`. Kept so an existing import of this
+ * exact constant keeps working; `PkModal` itself reads `MODAL_WIDTH` now.
+ */
+export declare const MODAL_PANEL_FORM: "bg-popover text-popover-foreground flex w-full max-h-[min(85vh,720px)] flex-col overflow-hidden rounded-xl border shadow-2xl max-w-xl";

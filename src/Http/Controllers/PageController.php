@@ -57,6 +57,15 @@ final class PageController extends Controller
                  * byte-identical to before.
                  */
                 ...Widgets\WidgetSet::props($class::headerWidgets(), $request->user()),
+
+                /*
+                 * A custom page is not a resource, so hooks here are the
+                 * unscoped ("everywhere") ones - `dashboard.before/after` for
+                 * `DashboardPage`, and any position a plugin registered with
+                 * no resource list. Inert data on a page that mounts no
+                 * `RenderHook` for a position it doesn't use.
+                 */
+                'renderHooks' => app(PanelManager::class)->renderHooks(null),
             ],
         );
 

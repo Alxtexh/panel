@@ -112,6 +112,15 @@ final class RecordAction
 
     private bool $slideOver = false;
 
+    private ?string $modalWidth = null;
+
+    private ?string $submitLabel = null;
+
+    private ?string $cancelLabel = null;
+
+    /** @var list<string> */
+    private array $keyBindings = [];
+
     private ?Closure $visible = null;
 
     private ?string $transitionState = null;
@@ -194,6 +203,60 @@ final class RecordAction
     public function slideOver(bool $slideOver = true): self
     {
         $this->slideOver = $slideOver;
+
+        return $this;
+    }
+
+    /**
+     * How wide the dense modal opens - `sm`, `confirm` (default), `form`,
+     * `lg`, or `xl`. Ignored once `slideOver()` is on; a slide-over has its
+     * own `size` and the two are not the same scale.
+     *
+     * THE DEFAULT STAYS `confirm` EVEN FOR A FORM ACTION. A resource author
+     * who declared `->form([...])` and never called this keeps getting
+     * exactly the width they always got - this is additive, not a change
+     * to what an existing action renders at.
+     */
+    public function modalWidth(string $width): self
+    {
+        $this->modalWidth = $width;
+
+        return $this;
+    }
+
+    /** Replace the primary button's text - defaults to the action's own label. */
+    public function submitLabel(string $label): self
+    {
+        $this->submitLabel = $label;
+
+        return $this;
+    }
+
+    /** Replace "Cancel" - a destructive action might prefer "Never mind", say. */
+    public function cancelLabel(string $label): self
+    {
+        $this->cancelLabel = $label;
+
+        return $this;
+    }
+
+    /**
+     * Keyboard shortcuts that run this action while its row's menu is open.
+     *
+     * SCOPED TO THE OPEN MENU, NOT THE WHOLE SCREEN. A list shows many rows
+     * at once, so a global binding has no single record to act on - "d" would
+     * have to mean something the moment it is pressed, and there is no
+     * correct row to pick among the fifty visible. The menu is already the
+     * one place a single row IS unambiguously in focus: it opens on one row,
+     * closes before another can, and already accepts arrow keys to move
+     * between its own items (`RecordActions.vue`'s `onMenuKeydown`) - this is
+     * the same idea, one keystroke instead of arrow-then-Enter.
+     *
+     * @param  list<string>  $bindings  e.g. `['mod+d']`, `['shift+e']`, `['e']`.
+     */
+    public function keyBindings(array $bindings): self
+    {
+        $this->keyBindings = array_values($bindings);
 
         return $this;
     }
@@ -562,6 +625,10 @@ final class RecordAction
             'removesRow' => $this->removesRow,
             'color' => $this->color,
             'slideOver' => $this->slideOver ? true : null,
+            'modalWidth' => $this->modalWidth,
+            'submitLabel' => $this->submitLabel,
+            'cancelLabel' => $this->cancelLabel,
+            'keyBindings' => $this->keyBindings === [] ? null : $this->keyBindings,
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
     }
 

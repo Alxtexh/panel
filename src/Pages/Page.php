@@ -343,13 +343,29 @@ abstract class Page
     /**
      * The navigation entry, in the shape the sidebar already consumes.
      *
+     * `$prefix` IS FORCED ABSOLUTE HERE, the same way `PanelManager::clusterNavFor()`
+     * already builds a resource's cluster links (`rtrim('/'.trim($p, '/'), '/')`,
+     * not `rtrim($p, '/')`). `Panel::getPath()` returns the raw path a host
+     * declared - `'client'`, not `'/client'` - so without forcing the slash
+     * this produced a HREF WITH NO LEADING `/` on every panel whose path is
+     * non-empty. On the `admin` panel (`path('')`) that bug is invisible: an
+     * empty prefix plus the leading `/` this method already inserts before
+     * `navigationPath()` happens to make an absolute path anyway, by
+     * coincidence rather than by the code being correct. A relative href
+     * only shows the bug when the browser resolves it against the CURRENT
+     * page's URL, which is exactly what a click from the same page does -
+     * `/client/account/plans` clicked while already on `/client/account/plans`
+     * resolved to `/client/account/client/account/plans`.
+     *
      * @return array{title: string, href: string, icon: string, group: string|null, sort: int|null}
      */
     public static function navigationEntry(string $prefix = ''): array
     {
+        $absolutePrefix = rtrim('/'.trim($prefix, '/'), '/');
+
         return [
             'title' => static::label(),
-            'href' => rtrim($prefix, '/').'/'.static::navigationPath(),
+            'href' => $absolutePrefix.'/'.static::navigationPath(),
             'icon' => static::icon(),
             'group' => static::group(),
             'sort' => static::sort(),
