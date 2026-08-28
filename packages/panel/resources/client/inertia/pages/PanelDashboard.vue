@@ -669,8 +669,16 @@ const visibleLayoutItems = computed(() => layoutItems.value.filter((item) => !it
 
 const widgetDragId = ref<string | null>(null)
 
+/**
+ * Rearranging the dashboard is a MODE (DESIGN_RULES rule 3), toggled by one
+ * icon button rather than a permanent "Drag widgets..." instruction and a
+ * text label on every single card. Drag only activates, and Widen/Narrow
+ * only render, while this is on.
+ */
+const rearrangingLayout = ref(false)
+
 function onWidgetDragStart(id: string, event: DragEvent) {
-    if (!props.userDashboards) {
+    if (!props.userDashboards || !rearrangingLayout.value) {
         event.preventDefault()
         return
     }
@@ -1072,22 +1080,58 @@ function layoutLabel(item: AnyLayoutItem): string {
                     :storage-key="shortcuts.storageKey ?? 'panel.dashboard.shortcuts'"
                 />
             </slot>
-            <p v-if="visibleLayoutItems.length" class="text-muted-foreground text-[10px] uppercase tracking-wide">
-                Drag widgets to rearrange. Use Widen / Narrow for column span.
-            </p>
+            <div v-if="visibleLayoutItems.length" class="flex items-center justify-end">
+                <!-- Rearrange: a MODE, so an icon with a pressed state (DESIGN_RULES rule 3). -->
+                <button
+                    type="button"
+                    class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-8 shrink-0 items-center justify-center rounded-md border transition-colors"
+                    :class="rearrangingLayout ? 'border-primary text-primary' : ''"
+                    :aria-pressed="rearrangingLayout"
+                    :aria-label="rearrangingLayout ? 'Done rearranging' : 'Rearrange widgets'"
+                    :title="rearrangingLayout ? 'Done rearranging' : 'Rearrange widgets'"
+                    @click="rearrangingLayout = !rearrangingLayout"
+                >
+                    <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 16 4 4 4-4M7 20V4m14 4-4-4-4 4m4-4v16" />
+                    </svg>
+                </button>
+            </div>
             <template v-for="(band, bandIndex) in layoutBands" :key="`layout-${bandIndex}`">
                 <div
                     v-if="band.type === 'wide'"
-                    :draggable="true"
+                    :draggable="rearrangingLayout"
                     :class="widgetDragId === band.item.id ? 'opacity-40' : ''"
                     @dragstart="onWidgetDragStart(band.item.id, $event)"
                     @dragend="onWidgetDragEnd"
                     @dragover.prevent
                     @drop="onWidgetDrop(band.item.id, $event)"
                 >
-                    <div class="mb-1 flex items-center justify-between gap-2">
-                        <span class="text-muted-foreground text-[10px] uppercase tracking-wide">{{ layoutLabel(band.item) }}</span>
-                        <button type="button" class="text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wide" @click.stop="toggleWidgetSpan(band.item.id)">Narrow</button>
+                    <div v-if="rearrangingLayout" class="mb-1 flex items-center justify-between gap-2">
+                        <svg viewBox="0 0 24 24" class="text-muted-foreground size-3.5 cursor-grab" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <title>Drag to reorder</title>
+                            <circle cx="9" cy="6" r="1" /><circle cx="15" cy="6" r="1" />
+                            <circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" />
+                            <circle cx="9" cy="18" r="1" /><circle cx="15" cy="18" r="1" />
+                        </svg>
+                        <button
+                            type="button"
+                            class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-6 shrink-0 items-center justify-center rounded border transition-colors"
+                            :aria-label="band.item.span >= 2 ? 'Narrow' : 'Widen'"
+                            title="Column span"
+                            @click.stop="toggleWidgetSpan(band.item.id)"
+                        >
+                            <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 12h18" />
+                                <template v-if="band.item.span >= 2">
+                                    <path d="M6 8l4 4-4 4" />
+                                    <path d="M18 8l-4 4 4 4" />
+                                </template>
+                                <template v-else>
+                                    <path d="M7 8 3 12l4 4" />
+                                    <path d="M17 8l4 4-4 4" />
+                                </template>
+                            </svg>
+                        </button>
                     </div>
                     <template v-if="band.item.kind === 'stat'">
                         <PkBoundary :label="layoutLabel(band.item)" fill>
@@ -1124,16 +1168,33 @@ function layoutLabel(item: AnyLayoutItem): string {
                         <div
                             v-for="item in column"
                             :key="item.id"
-                            :draggable="true"
+                            :draggable="rearrangingLayout"
                             :class="widgetDragId === item.id ? 'opacity-40' : ''"
                             @dragstart="onWidgetDragStart(item.id, $event)"
                             @dragend="onWidgetDragEnd"
                             @dragover.prevent
                             @drop="onWidgetDrop(item.id, $event)"
                         >
-                            <div class="mb-1 flex items-center justify-between gap-2">
-                                <span class="text-muted-foreground text-[10px] uppercase tracking-wide">Drag</span>
-                                <button type="button" class="text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wide" @click.stop="toggleWidgetSpan(item.id)">Widen</button>
+                            <div v-if="rearrangingLayout" class="mb-1 flex items-center justify-between gap-2">
+                                <svg viewBox="0 0 24 24" class="text-muted-foreground size-3.5 cursor-grab" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <title>Drag to reorder</title>
+                                    <circle cx="9" cy="6" r="1" /><circle cx="15" cy="6" r="1" />
+                                    <circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" />
+                                    <circle cx="9" cy="18" r="1" /><circle cx="15" cy="18" r="1" />
+                                </svg>
+                                <button
+                                    type="button"
+                                    class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-6 shrink-0 items-center justify-center rounded border transition-colors"
+                                    aria-label="Widen"
+                                    title="Column span"
+                                    @click.stop="toggleWidgetSpan(item.id)"
+                                >
+                                    <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 12h18" />
+                                        <path d="M7 8 3 12l4 4" />
+                                        <path d="M17 8l4 4-4 4" />
+                                    </svg>
+                                </button>
                             </div>
                             <template v-if="item.kind === 'stat'">
                                 <PkBoundary :label="layoutLabel(item)" fill>

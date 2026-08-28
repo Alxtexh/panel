@@ -36,7 +36,7 @@
       "runtimeExecutable": "bash",
       "runtimeArgs": [
         "-lc",
-        "cd /tmp/tmp.EWt7PB1rVm/fresh-app && exec php artisan serve --host=127.0.0.1 --port=8124"
+        "cd temp/panelkit-fresh && exec php artisan serve --host=127.0.0.1 --port=8124"
       ],
       "port": 8124,
       "autoPort": false

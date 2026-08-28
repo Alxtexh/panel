@@ -827,14 +827,14 @@
     "file": "assets/AppLayout-Ds1aFT64.css",
     "src": "_AppLayout-Ds1aFT64.css"
   },
-  "_AppLayout-Dv-83C7N.js": {
-    "file": "assets/AppLayout-Dv-83C7N.js",
+  "_AppLayout-gs_eQnLC.js": {
+    "file": "assets/AppLayout-gs_eQnLC.js",
     "name": "AppLayout",
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
       "_FormFieldControl-NHomjA2c.js",
       "_src-D7hRJWKh.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_dist-BolYny5m.js",
       "_createLucideIcon-Blw318aL.js",
       "_triangle-alert-CuZJnQvx.js",
@@ -1140,8 +1140,8 @@
       "_SetupChecklist-DxKQhXiN.js"
     ]
   },
-  "_PanelDashboard-B9ArfCxF.js": {
-    "file": "assets/PanelDashboard-B9ArfCxF.js",
+  "_PanelDashboard-BSzPMYgO.js": {
+    "file": "assets/PanelDashboard-BSzPMYgO.js",
     "name": "PanelDashboard",
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
@@ -1688,8 +1688,8 @@
       "_createLucideIcon-DD5RgTL8.js"
     ]
   },
-  "_inertia-Cun6C6Vi.js": {
-    "file": "assets/inertia-Cun6C6Vi.js",
+  "_inertia-BFyDfw51.js": {
+    "file": "assets/inertia-BFyDfw51.js",
     "name": "inertia",
     "imports": [
       "_rolldown-runtime-QTnfLwEv.js",
@@ -1718,7 +1718,7 @@
       "_ResourceView-BVljiwX1.js",
       "_ResourceIndex-DfFcqyVT.js",
       "_DashboardTablePane-BOu-7bK-.js",
-      "_PanelDashboard-B9ArfCxF.js",
+      "_PanelDashboard-BSzPMYgO.js",
       "_PkBoundary-D_JUTwAE.js",
       "_dist-BolYny5m.js",
       "_lib-CkSxeahy.js",
@@ -1766,11 +1766,11 @@
       "_Trash-DhGOZQAR.js",
       "_PanelHome-DfAA2Jh3.js",
       "_TicketAnalysis-TtK5az51.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_Mail-DgO1m8kv.js",
       "_Chat-CA1hiHpf.js",
       "_Composed-DcrLt-eB.js",
-      "_PanelDashboard-B9ArfCxF.js",
+      "_PanelDashboard-BSzPMYgO.js",
       "_Onboarding-Cc95aaa1.js",
       "_Changelog-xe8wRd5E.js",
       "resources/js/pages/ApiKeys.vue",
@@ -2103,7 +2103,7 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-DDYfK2ah.js",
+    "file": "assets/app-BHmWnlTO.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -2111,11 +2111,11 @@
       "_rolldown-runtime-QTnfLwEv.js",
       "_runtime-core.esm-bundler-BKdLzFmX.js",
       "_src-D7hRJWKh.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_preload-helper-B8Bd9_ga.js",
       "_dist-BolYny5m.js",
       "_RenderHook-B_xqhyw-.js",
-      "_AppLayout-Dv-83C7N.js",
+      "_AppLayout-gs_eQnLC.js",
       "_lib-DwssPiOR.js"
     ],
     "dynamicImports": [
@@ -2339,7 +2339,7 @@
     ]
   },
   "resources/js/pages/DevicePreview.vue": {
-    "file": "assets/DevicePreview-u4rtDHIc.js",
+    "file": "assets/DevicePreview-68SBouDG.js",
     "name": "DevicePreview",
     "src": "resources/js/pages/DevicePreview.vue",
     "isDynamicEntry": true,
@@ -2347,7 +2347,7 @@
       "_runtime-core.esm-bundler-BKdLzFmX.js",
       "_src-D7hRJWKh.js",
       "_dist-BolYny5m.js",
-      "_AppLayout-Dv-83C7N.js"
+      "_AppLayout-gs_eQnLC.js"
     ]
   },
   "resources/js/pages/Directory.vue": {
@@ -2411,14 +2411,14 @@
     ]
   },
   "resources/js/pages/Invoice.vue": {
-    "file": "assets/Invoice-D7mPiZq6.js",
+    "file": "assets/Invoice-DZh34j55.js",
     "name": "Invoice",
     "src": "resources/js/pages/Invoice.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
       "_dist-BolYny5m.js",
-      "_AppLayout-Dv-83C7N.js"
+      "_AppLayout-gs_eQnLC.js"
     ],
     "css": [
       "assets/Invoice-X3VMVbBf.css"
@@ -2485,7 +2485,7 @@
     ]
   },
   "resources/js/pages/KitTill.vue": {
-    "file": "assets/KitTill-_oRzYbRG.js",
+    "file": "assets/KitTill-BxLfAQrc.js",
     "name": "KitTill",
     "src": "resources/js/pages/KitTill.vue",
     "isDynamicEntry": true,
@@ -2493,7 +2493,7 @@
       "_runtime-core.esm-bundler-BKdLzFmX.js",
       "_FormFieldControl-NHomjA2c.js",
       "_src-D7hRJWKh.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_ResourceIndex-DfFcqyVT.js",
       "_dist-BolYny5m.js"
     ]
@@ -2545,13 +2545,13 @@
     ]
   },
   "resources/js/pages/PanelDashboard.vue": {
-    "file": "assets/PanelDashboard-Cj-3fwYa.js",
+    "file": "assets/PanelDashboard-BWRWzYdx.js",
     "name": "PanelDashboard",
     "src": "resources/js/pages/PanelDashboard.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_PanelDashboard-B9ArfCxF.js"
+      "_PanelDashboard-BSzPMYgO.js"
     ]
   },
   "resources/js/pages/PanelHome.vue": {
@@ -2565,13 +2565,13 @@
     ]
   },
   "resources/js/pages/PanelPage.vue": {
-    "file": "assets/PanelPage-C1BsDTLw.js",
+    "file": "assets/PanelPage-o-N8P6tu.js",
     "name": "PanelPage",
     "src": "resources/js/pages/PanelPage.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/PlanSetup.vue": {
@@ -2724,13 +2724,13 @@
     ]
   },
   "resources/js/pages/Till.vue": {
-    "file": "assets/Till-CFuvmjss.js",
+    "file": "assets/Till-nm0VfQqX.js",
     "name": "Till",
     "src": "resources/js/pages/Till.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/Trash.vue": {
@@ -2813,191 +2813,191 @@
     ]
   },
   "resources/js/pages/auth/ConfirmPassword.vue": {
-    "file": "assets/ConfirmPassword-D0xfRBsN.js",
+    "file": "assets/ConfirmPassword-DGzkBCOP.js",
     "name": "ConfirmPassword",
     "src": "resources/js/pages/auth/ConfirmPassword.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_wayfinder-Dp7PqxvV.js",
       "_confirm-Culw9Q-x.js"
     ]
   },
   "resources/js/pages/auth/ForgotPassword.vue": {
-    "file": "assets/ForgotPassword-C64PZrUR.js",
+    "file": "assets/ForgotPassword-Cw0rCXfj.js",
     "name": "ForgotPassword",
     "src": "resources/js/pages/auth/ForgotPassword.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_routes-BNMCeLEE.js",
       "_password-DgzV_d5q.js"
     ]
   },
   "resources/js/pages/auth/LockScreen.vue": {
-    "file": "assets/LockScreen-CS9duB50.js",
+    "file": "assets/LockScreen-CIufMIVN.js",
     "name": "LockScreen",
     "src": "resources/js/pages/auth/LockScreen.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/auth/Login.vue": {
-    "file": "assets/Login-DFv8FsXQ.js",
+    "file": "assets/Login-DgFpsY06.js",
     "name": "Login",
     "src": "resources/js/pages/auth/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_wayfinder-Dp7PqxvV.js",
       "_routes-BNMCeLEE.js",
       "_password-DgzV_d5q.js"
     ]
   },
   "resources/js/pages/auth/Register.vue": {
-    "file": "assets/Register-ukXuXtil.js",
+    "file": "assets/Register-D0UXEHwU.js",
     "name": "Register",
     "src": "resources/js/pages/auth/Register.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_wayfinder-Dp7PqxvV.js",
       "_routes-BNMCeLEE.js"
     ]
   },
   "resources/js/pages/auth/RenewPassword.vue": {
-    "file": "assets/RenewPassword-tIVqSCl2.js",
+    "file": "assets/RenewPassword-CrKmQmOj.js",
     "name": "RenewPassword",
     "src": "resources/js/pages/auth/RenewPassword.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_routes-BNMCeLEE.js"
     ]
   },
   "resources/js/pages/auth/ResetPassword.vue": {
-    "file": "assets/ResetPassword-BL8txcDz.js",
+    "file": "assets/ResetPassword-DtiGOOKD.js",
     "name": "ResetPassword",
     "src": "resources/js/pages/auth/ResetPassword.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_password-DgzV_d5q.js"
     ]
   },
   "resources/js/pages/auth/TwoFactorChallenge.vue": {
-    "file": "assets/TwoFactorChallenge-DCBTIfUh.js",
+    "file": "assets/TwoFactorChallenge-B-NKMiWu.js",
     "name": "TwoFactorChallenge",
     "src": "resources/js/pages/auth/TwoFactorChallenge.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_wayfinder-Dp7PqxvV.js"
     ]
   },
   "resources/js/pages/auth/VerifyEmail.vue": {
-    "file": "assets/VerifyEmail--0Isb0Hy.js",
+    "file": "assets/VerifyEmail-BnpN-QEo.js",
     "name": "VerifyEmail",
     "src": "resources/js/pages/auth/VerifyEmail.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_wayfinder-Dp7PqxvV.js",
       "_routes-BNMCeLEE.js"
     ]
   },
   "resources/js/pages/auth/VerifyOtp.vue": {
-    "file": "assets/VerifyOtp-CpT3wzg2.js",
+    "file": "assets/VerifyOtp-BcGcvlKV.js",
     "name": "VerifyOtp",
     "src": "resources/js/pages/auth/VerifyOtp.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/documents/DocumentPrint.vue": {
-    "file": "assets/DocumentPrint-IVdhPJNd.js",
+    "file": "assets/DocumentPrint-CXs96Y8C.js",
     "name": "DocumentPrint",
     "src": "resources/js/pages/documents/DocumentPrint.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
-      "_AppLayout-Dv-83C7N.js"
+      "_inertia-BFyDfw51.js",
+      "_AppLayout-gs_eQnLC.js"
     ]
   },
   "resources/js/pages/documents/TemplateDesigner.vue": {
-    "file": "assets/TemplateDesigner-Ba4HX-IH.js",
+    "file": "assets/TemplateDesigner-BGPgUnly.js",
     "name": "TemplateDesigner",
     "src": "resources/js/pages/documents/TemplateDesigner.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
-      "_AppLayout-Dv-83C7N.js"
+      "_inertia-BFyDfw51.js",
+      "_AppLayout-gs_eQnLC.js"
     ]
   },
   "resources/js/pages/documents/Templates.vue": {
-    "file": "assets/Templates-UzNWPIL4.js",
+    "file": "assets/Templates-XTObPKhT.js",
     "name": "Templates",
     "src": "resources/js/pages/documents/Templates.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
-      "_AppLayout-Dv-83C7N.js"
+      "_inertia-BFyDfw51.js",
+      "_AppLayout-gs_eQnLC.js"
     ]
   },
   "resources/js/pages/errors/AuthFamilyPreview.vue": {
-    "file": "assets/AuthFamilyPreview-DJkl9jSI.js",
+    "file": "assets/AuthFamilyPreview-e5VVApWQ.js",
     "name": "AuthFamilyPreview",
     "src": "resources/js/pages/errors/AuthFamilyPreview.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
+      "_inertia-BFyDfw51.js",
       "_dist-BolYny5m.js"
     ]
   },
   "resources/js/pages/errors/Error.vue": {
-    "file": "assets/Error-C5TMUj1g.js",
+    "file": "assets/Error-BNZQfV5N.js",
     "name": "Error",
     "src": "resources/js/pages/errors/Error.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/errors/LoginPreview.vue": {
-    "file": "assets/LoginPreview-BLyq0mOS.js",
+    "file": "assets/LoginPreview-BlP0VI09.js",
     "name": "LoginPreview",
     "src": "resources/js/pages/errors/LoginPreview.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/errors/ShellPreview.vue": {
-    "file": "assets/ShellPreview-c5mIbK14.js",
+    "file": "assets/ShellPreview-CQr_DdHH.js",
     "name": "ShellPreview",
     "src": "resources/js/pages/errors/ShellPreview.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/landing/Composed.vue": {
@@ -3051,63 +3051,63 @@
     ]
   },
   "resources/js/pages/panel/auth/ForgotPassword.vue": {
-    "file": "assets/ForgotPassword-C7Znmk61.js",
+    "file": "assets/ForgotPassword-ZT03jobI.js",
     "name": "ForgotPassword",
     "src": "resources/js/pages/panel/auth/ForgotPassword.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/panel/auth/Login.vue": {
-    "file": "assets/Login-M0azLYob.js",
+    "file": "assets/Login-DzdEpf2c.js",
     "name": "Login",
     "src": "resources/js/pages/panel/auth/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/panel/auth/Register.vue": {
-    "file": "assets/Register-Qd9Qg0k8.js",
+    "file": "assets/Register-tYUrskzo.js",
     "name": "Register",
     "src": "resources/js/pages/panel/auth/Register.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/panel/auth/ResetPassword.vue": {
-    "file": "assets/ResetPassword-DCzsf-Yz.js",
+    "file": "assets/ResetPassword-BZWcoJcp.js",
     "name": "ResetPassword",
     "src": "resources/js/pages/panel/auth/ResetPassword.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/panel/auth/TwoFactorChallenge.vue": {
-    "file": "assets/TwoFactorChallenge-hYMjh73C.js",
+    "file": "assets/TwoFactorChallenge-B0_Vc__s.js",
     "name": "TwoFactorChallenge",
     "src": "resources/js/pages/panel/auth/TwoFactorChallenge.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/panel/auth/VerifyEmail.vue": {
-    "file": "assets/VerifyEmail-BtUVwizq.js",
+    "file": "assets/VerifyEmail-Dm0lj2Ex.js",
     "name": "VerifyEmail",
     "src": "resources/js/pages/panel/auth/VerifyEmail.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js"
+      "_inertia-BFyDfw51.js"
     ]
   },
   "resources/js/pages/screens/SidebarFamilyPreview.vue": {
@@ -3188,14 +3188,14 @@
     ]
   },
   "resources/js/pages/settings/Roles.vue": {
-    "file": "assets/Roles-C3xSoPz3.js",
+    "file": "assets/Roles-BLAJyo2N.js",
     "name": "Roles",
     "src": "resources/js/pages/settings/Roles.vue",
     "isDynamicEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-BKdLzFmX.js",
-      "_inertia-Cun6C6Vi.js",
-      "_AppLayout-Dv-83C7N.js"
+      "_inertia-BFyDfw51.js",
+      "_AppLayout-gs_eQnLC.js"
     ]
   },
   "resources/js/pages/settings/Security.vue": {
@@ -3229,7 +3229,7 @@
     ]
   },
   "resources/js/pages/support/BuildGuide.vue": {
-    "file": "assets/BuildGuide-CpUv3Apl.js",
+    "file": "assets/BuildGuide-CwKvgdjG.js",
     "name": "BuildGuide",
     "src": "resources/js/pages/support/BuildGuide.vue",
     "isDynamicEntry": true,
@@ -3237,7 +3237,7 @@
       "_runtime-core.esm-bundler-BKdLzFmX.js",
       "_runtime-dom.esm-bundler-C7vCU_EZ.js",
       "_dist-BolYny5m.js",
-      "_AppLayout-Dv-83C7N.js",
+      "_AppLayout-gs_eQnLC.js",
       "_createLucideIcon-Blw318aL.js",
       "_arrow-left-CHJJA5K-.js",
       "_search-v51hzFrx.js",
