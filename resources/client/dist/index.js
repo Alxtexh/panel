@@ -1,7 +1,7 @@
 import './ui.css';
 import { defineComponent as O, useSlots as qt, openBlock as t, createElementBlock as n, normalizeClass as P, unref as k, renderSlot as K, createElementVNode as o, toDisplayString as c, createCommentVNode as $, computed as x, normalizeStyle as se, Fragment as z, renderList as j, ref as U, watch as me, useId as rn, withModifiers as he, createTextVNode as R, createVNode as E, createStaticVNode as Mt, createBlock as D, createSlots as rt, withCtx as L, nextTick as De, onBeforeUnmount as ke, Teleport as ut, Transition as Ye, onMounted as ve, withDirectives as pe, vModelText as Ae, resolveDynamicComponent as Me, resolveComponent as Gt, vModelSelect as Ge, vModelDynamic as dn, mergeProps as re, normalizeProps as Oe, guardReactiveProps as Fe, defineAsyncComponent as ua, inject as yt, vShow as Ue, withKeys as Tt, onUnmounted as un, isRef as cn, useTemplateRef as fn, onErrorCaptured as mn, provide as Et, markRaw as Sa, reactive as it, useModel as ct, mergeModels as Ie, shallowRef as pn, watchEffect as vn } from "vue";
 import { useForwardPropsEmits as be, DialogRoot as Ma, DialogOverlay as Wt, DialogPortal as Zt, DialogContent as Jt, DialogClose as Qe, CheckboxRoot as gn, CheckboxIndicator as hn, SwitchRoot as bn, SwitchThumb as yn, DialogDescription as Ba, DialogTitle as _a, DialogTrigger as Aa, createContext as xn, Primitive as et, TooltipRoot as kn, TooltipPortal as $n, TooltipContent as wn, TooltipArrow as Cn, TooltipProvider as Pa, TooltipTrigger as Sn, Separator as Mn, DropdownMenuRoot as Bn, DropdownMenuCheckboxItem as _n, DropdownMenuItemIndicator as za, DropdownMenuPortal as An, DropdownMenuContent as Pn, DropdownMenuGroup as zn, useForwardProps as Le, DropdownMenuItem as On, DropdownMenuLabel as Ln, DropdownMenuRadioGroup as Vn, DropdownMenuRadioItem as jn, DropdownMenuSeparator as Dn, DropdownMenuSub as Tn, DropdownMenuSubContent as En, DropdownMenuSubTrigger as In, DropdownMenuTrigger as Fn, AvatarRoot as Nn, AvatarFallback as Rn, AvatarImage as Un, NavigationMenuViewport as Hn, NavigationMenuRoot as Kn, NavigationMenuContent as qn, NavigationMenuIndicator as Gn, NavigationMenuItem as Wn, NavigationMenuLink as Zn, NavigationMenuList as Jn, NavigationMenuTrigger as Yn, Label as Xn } from "reka-ui";
-import { DropdownMenuPortal as k6 } from "reka-ui";
+import { DropdownMenuPortal as y6 } from "reka-ui";
 import { X as Yt, Check as Oa, AlertCircle as Qn, EyeOff as el, Eye as tl, PanelLeftOpen as al, PanelLeftClose as nl, Circle as ll, ChevronRight as La, MoreHorizontal as ol, ChevronDown as sl, Loader2Icon as rl } from "@lucide/vue";
 import { reactiveOmit as fe, useVModel as Va, useMediaQuery as il, useEventListener as dl, defaultDocument as ul } from "@vueuse/core";
 import { clsx as cl } from "clsx";
@@ -821,7 +821,7 @@ const gl = {
   for (const [r, s] of l)
     a[r] = s;
   return a;
-}, uo = /* @__PURE__ */ Bt(io, [["__scopeId", "data-v-c0f7d40f"]]), qe = "w-full min-w-0 px-4 py-6 sm:px-6", i3 = "w-full min-w-0 p-3 sm:p-4", d3 = "w-full min-w-0 space-y-6 px-4 py-6 sm:px-6", co = "w-full max-w-7xl", fo = "px-4 py-4", Da = "w-full min-w-0", mo = {
+}, uo = /* @__PURE__ */ Bt(io, [["__scopeId", "data-v-c0f7d40f"]]), qe = "w-full min-w-0 px-4 py-6 sm:px-6", s3 = "w-full min-w-0 p-3 sm:p-4", r3 = "w-full min-w-0 space-y-6 px-4 py-6 sm:px-6", co = "w-full max-w-7xl", fo = "px-4 py-4", Da = "w-full min-w-0", mo = {
   /** Filters, short lists (~24rem). */
   sm: "w-full max-w-sm",
   /** Notifications, inspect (~28rem). */
@@ -841,7 +841,7 @@ const gl = {
   lg: `${nt} max-w-2xl`,
   /** The widest dense modal offers - past this, use PkSlideover instead (~56rem). */
   xl: `${nt} max-w-4xl`
-}, u3 = xt.confirm, c3 = xt.form, po = ["aria-busy", "aria-label"], vo = { class: "bg-popover sticky top-0 z-10 shrink-0 border-b px-5 py-4" }, go = { class: "text-base font-semibold" }, ho = {
+}, i3 = xt.confirm, d3 = xt.form, po = ["aria-busy", "aria-label"], vo = { class: "bg-popover sticky top-0 z-10 shrink-0 border-b px-5 py-4" }, go = { class: "text-base font-semibold" }, ho = {
   key: 0,
   class: "text-muted-foreground mt-0.5 text-sm"
 }, bo = {
@@ -1091,7 +1091,7 @@ const gl = {
 }, To = ["disabled"], Eo = { class: "text-muted-foreground text-sm font-normal" }, Io = { class: "text-foreground font-medium tabular-nums" }, Fo = {
   key: 0,
   class: "text-destructive mt-1 text-xs"
-}, No = ["disabled"], f3 = /* @__PURE__ */ O({
+}, No = ["disabled"], u3 = /* @__PURE__ */ O({
   __name: "BulkActions",
   props: {
     actions: {},
@@ -1314,7 +1314,7 @@ const gl = {
       ])) : $("", !0)
     ]));
   }
-}), Se = "outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]", ma = "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]", m3 = "outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]", Go = ["aria-expanded"], Wo = ["aria-label", "onClick"], Zo = {
+}), Se = "outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]", ma = "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]", c3 = "outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]", Go = ["aria-expanded"], Wo = ["aria-label", "onClick"], Zo = {
   key: 0,
   class: "text-muted-foreground flex-1 text-sm"
 }, Jo = { class: "ml-auto flex shrink-0 items-center gap-1" }, Yo = {
@@ -1832,7 +1832,7 @@ const de = /* @__PURE__ */ O({
 function ae(...e) {
   return fl(cl(e));
 }
-function p3(e) {
+function f3(e) {
   return typeof e == "string" ? e : e?.url ?? "";
 }
 const hs = /* @__PURE__ */ O({
@@ -2703,7 +2703,7 @@ const hs = /* @__PURE__ */ O({
 }, jr = ["disabled"], Dr = {
   key: 1,
   class: "text-muted-foreground text-center text-xs"
-}, Tr = ["href"], v3 = /* @__PURE__ */ O({
+}, Tr = ["href"], m3 = /* @__PURE__ */ O({
   __name: "RelationPanel",
   props: {
     columns: {},
@@ -2970,13 +2970,13 @@ function xe(e, l) {
 function qr(e) {
   return ft.get(e);
 }
-function g3(e) {
+function p3(e) {
   return ft.has(e);
 }
-function h3() {
+function v3() {
   return [...ft.keys()].sort();
 }
-function b3() {
+function g3() {
   ft.clear();
 }
 class Gr extends Error {
@@ -2985,7 +2985,7 @@ class Gr extends Error {
     super(l), this.name = "CreateOptionError", this.fieldErrors = a;
   }
 }
-function y3(e) {
+function h3(e) {
   if (!e || typeof e != "object")
     return {};
   const l = {};
@@ -3007,7 +3007,7 @@ function Zr(e) {
   const l = e.label.replace(/\s*id$/i, "").trim();
   return l !== "" ? `Create ${l.toLowerCase()}` : "Create new";
 }
-const x3 = "text-sm text-muted-foreground font-normal", k3 = "text-xs text-muted-foreground font-normal", ht = "text-xs text-muted-foreground font-normal leading-snug", Jr = "text-foreground font-normal", Yr = "placeholder:text-muted-foreground placeholder:font-normal", Re = `${Jr} ${Yr}`, Xr = {
+const b3 = "text-sm text-muted-foreground font-normal", y3 = "text-xs text-muted-foreground font-normal", ht = "text-xs text-muted-foreground font-normal leading-snug", Jr = "text-foreground font-normal", Yr = "placeholder:text-muted-foreground placeholder:font-normal", Re = `${Jr} ${Yr}`, Xr = {
   key: 0,
   class: "text-destructive text-sm",
   role: "alert"
@@ -4686,7 +4686,7 @@ const x3 = "text-sm text-muted-foreground font-normal", k3 = "text-xs text-muted
       ], 2)) : $("", !0);
     };
   }
-}), $3 = /* @__PURE__ */ O({
+}), x3 = /* @__PURE__ */ O({
   __name: "RelationCreateDialog",
   props: {
     open: { type: Boolean },
@@ -4805,7 +4805,7 @@ const x3 = "text-sm text-muted-foreground font-normal", k3 = "text-xs text-muted
       o("span", nu, c(f.value), 1)
     ], 8, eu));
   }
-}), ou = ["aria-label"], su = ["fill"], w3 = /* @__PURE__ */ O({
+}), ou = ["aria-label"], su = ["fill"], k3 = /* @__PURE__ */ O({
   __name: "RatingCell",
   props: {
     value: {},
@@ -4916,7 +4916,7 @@ const x3 = "text-sm text-muted-foreground font-normal", k3 = "text-xs text-muted
       e.showValue ? (t(), n("span", fu, c(r.value), 1)) : (t(), n("span", mu, c(r.value), 1))
     ]));
   }
-}), vu = { class: "inline-flex items-center" }, gu = ["checked", "aria-label"], hu = { class: "sr-only" }, C3 = /* @__PURE__ */ O({
+}), vu = { class: "inline-flex items-center" }, gu = ["checked", "aria-label"], hu = { class: "sr-only" }, $3 = /* @__PURE__ */ O({
   __name: "CheckboxCell",
   props: {
     value: {},
@@ -4948,7 +4948,7 @@ const x3 = "text-sm text-muted-foreground font-normal", k3 = "text-xs text-muted
 }, yu = {
   key: 1,
   class: "block max-w-[28rem] truncate font-mono text-xs"
-}, S3 = /* @__PURE__ */ O({
+}, w3 = /* @__PURE__ */ O({
   __name: "CodeCell",
   props: {
     value: {}
@@ -4968,7 +4968,7 @@ const x3 = "text-sm text-muted-foreground font-normal", k3 = "text-xs text-muted
 }, $u = {
   key: 2,
   class: "text-muted-foreground text-sm font-normal"
-}, M3 = /* @__PURE__ */ O({
+}, C3 = /* @__PURE__ */ O({
   __name: "KeyValueCell",
   props: {
     value: {}
@@ -5011,7 +5011,7 @@ const x3 = "text-sm text-muted-foreground font-normal", k3 = "text-xs text-muted
 }, Mu = {
   key: 1,
   class: "inline-flex flex-wrap items-center gap-1"
-}, B3 = /* @__PURE__ */ O({
+}, S3 = /* @__PURE__ */ O({
   __name: "TagsCell",
   props: {
     value: {},
@@ -5060,7 +5060,7 @@ const x3 = "text-sm text-muted-foreground font-normal", k3 = "text-xs text-muted
       })) : $("", !0)
     ]));
   }
-}), Bu = ["aria-checked", "aria-label", "title", "disabled"], _u = ["value", "placeholder", "disabled"], Au = ["value", "disabled"], Pu = ["value"], _3 = /* @__PURE__ */ O({
+}), Bu = ["aria-checked", "aria-label", "title", "disabled"], _u = ["value", "placeholder", "disabled"], Au = ["value", "disabled"], Pu = ["value"], M3 = /* @__PURE__ */ O({
   __name: "EditableCell",
   props: {
     type: {},
@@ -5152,7 +5152,7 @@ function Ou(e) {
   const l = [];
   return e.type === "toggle" || e.type === "select" || e.type === "image" ? (e.align === "right" && l.push("text-right"), e.align === "center" && l.push("text-center"), l.join(" ")) : (e.key === "name" && l.push("font-medium"), e.mono && l.push("font-mono text-xs"), e.muted && l.push("text-muted-foreground"), e.transform === "upper" && l.push("uppercase"), e.transform === "lower" && l.push("lowercase"), e.align === "right" && l.push("text-right"), e.align === "center" && l.push("text-center"), l.join(" "));
 }
-function A3(e) {
+function B3(e) {
   const l = x(
     () => e.value.map((s) => ({
       key: s.key,
@@ -5200,7 +5200,7 @@ const Lu = ["disabled", "aria-label", "aria-busy"], Vu = {
   key: 1,
   class: "size-4 shrink-0",
   "aria-hidden": "true"
-}, P3 = /* @__PURE__ */ O({
+}, _3 = /* @__PURE__ */ O({
   __name: "BadgeResolver",
   props: {
     value: {},
@@ -5331,7 +5331,7 @@ const Lu = ["disabled", "aria-label", "aria-busy"], Vu = {
   "stroke-linecap": "round",
   "stroke-linejoin": "round",
   "aria-hidden": "true"
-}, tc = ["d"], ac = { class: "min-w-0 flex-1 truncate" }, z3 = /* @__PURE__ */ O({
+}, tc = ["d"], ac = { class: "min-w-0 flex-1 truncate" }, A3 = /* @__PURE__ */ O({
   __name: "RecordActions",
   props: {
     groups: {},
@@ -5626,7 +5626,7 @@ function lc(e) {
   const a = Object.entries(e).map(([r, s]) => `${r}: ${s};`).join(" ");
   l.textContent = `:root { ${a} }`;
 }
-function O3() {
+function P3() {
   Je = !1, wt = null, je.value = { ..._e };
   const e = tt();
   e && (e.__panelAppearanceApplied = !1), typeof document < "u" && document.getElementById(Rt)?.remove();
@@ -5744,15 +5744,15 @@ function Ha(e) {
     Ut(a);
   }
 }
-function L3() {
+function z3() {
   Ha(sc());
 }
-function V3(e) {
+function O3(e) {
   const l = e?.props?.appearance;
   l != null && typeof l == "object" && Ha(l);
 }
 let Ka = null;
-function j3(e) {
+function L3(e) {
   Ka = e;
 }
 let qa = {};
@@ -5959,7 +5959,7 @@ const ic = ["aria-busy", "aria-label"], dc = { class: "bg-background flex shrink
   fill: "none",
   stroke: "currentColor",
   "stroke-width": "3.5"
-}, Sc = { class: "flex flex-col gap-2" }, Mc = { class: "bg-muted/50 flex gap-0.5 rounded-md p-0.5" }, Bc = ["aria-pressed", "aria-label", "onClick"], _c = { class: "text-sm font-semibold" }, Ac = { class: "bg-muted/50 flex gap-0.5 rounded-md p-0.5" }, Pc = ["onClick"], zc = { class: "flex flex-col gap-2" }, Oc = { class: "flex items-center justify-between" }, Lc = { class: "text-muted-foreground text-xs font-normal tabular-nums" }, Vc = { class: "flex items-center gap-2" }, jc = ["disabled"], Dc = ["min", "max", "value"], Tc = ["disabled"], D3 = /* @__PURE__ */ O({
+}, Sc = { class: "flex flex-col gap-2" }, Mc = { class: "bg-muted/50 flex gap-0.5 rounded-md p-0.5" }, Bc = ["aria-pressed", "aria-label", "onClick"], _c = { class: "text-sm font-semibold" }, Ac = { class: "bg-muted/50 flex gap-0.5 rounded-md p-0.5" }, Pc = ["onClick"], zc = { class: "flex flex-col gap-2" }, Oc = { class: "flex items-center justify-between" }, Lc = { class: "text-muted-foreground text-xs font-normal tabular-nums" }, Vc = { class: "flex items-center gap-2" }, jc = ["disabled"], Dc = ["min", "max", "value"], Tc = ["disabled"], V3 = /* @__PURE__ */ O({
   __name: "AppearanceDrawer",
   setup(e) {
     const { appearance: l, set: a, reset: r, PRIMARY_COLORS: s, SURFACE_TINTS: i, RADIUS_OPTIONS: d } = Ga(), u = U(!1), f = x(() => l.value.sidebarSide === "right"), g = x(() => f.value ? "left" : "right"), p = [
@@ -6169,7 +6169,7 @@ const ic = ["aria-busy", "aria-label"], dc = { class: "bg-background flex shrink
   "stroke-width": "2.5",
   "stroke-linecap": "round",
   "aria-hidden": "true"
-}, qc = ["d"], Gc = { class: "w-full truncate text-center" }, Lt = 5, T3 = /* @__PURE__ */ O({
+}, qc = ["d"], Gc = { class: "w-full truncate text-center" }, Lt = 5, j3 = /* @__PURE__ */ O({
   __name: "PkBottomNav",
   props: {
     items: {},
@@ -6258,7 +6258,7 @@ const ic = ["aria-busy", "aria-label"], dc = { class: "bg-background flex shrink
       K(l.$slots, "default")
     ], 10, Zc));
   }
-}), E3 = /* @__PURE__ */ O({
+}), D3 = /* @__PURE__ */ O({
   __name: "PkSpinner",
   props: {
     class: {}
@@ -6373,7 +6373,7 @@ const ic = ["aria-busy", "aria-label"], dc = { class: "bg-background flex shrink
       ], 8, Xc))), 128))
     ]));
   }
-}), I3 = /* @__PURE__ */ Bt(ef, [["__scopeId", "data-v-560616ac"]]), tf = {
+}), T3 = /* @__PURE__ */ Bt(ef, [["__scopeId", "data-v-560616ac"]]), tf = {
   key: 0,
   class: "text-muted-foreground text-sm font-normal"
 }, Te = /* @__PURE__ */ O({
@@ -6407,7 +6407,7 @@ const ic = ["aria-busy", "aria-label"], dc = { class: "bg-background flex shrink
 }, df = {
   key: 0,
   class: "flex shrink-0 flex-wrap items-center gap-2"
-}, F3 = /* @__PURE__ */ O({
+}, E3 = /* @__PURE__ */ O({
   __name: "PkPageHeader",
   props: {
     title: {},
@@ -6486,7 +6486,7 @@ const ic = ["aria-busy", "aria-label"], dc = { class: "bg-background flex shrink
       variant: "default"
     }
   }
-), pf = { class: "list-inside list-disc text-sm" }, N3 = /* @__PURE__ */ O({
+), pf = { class: "list-inside list-disc text-sm" }, I3 = /* @__PURE__ */ O({
   __name: "PkAlertError",
   props: {
     errors: {},
@@ -6544,7 +6544,7 @@ const ic = ["aria-busy", "aria-label"], dc = { class: "bg-background flex shrink
       [Ae, k(s)]
     ]);
   }
-}), vf = { class: "relative" }, gf = ["aria-label"], R3 = /* @__PURE__ */ O({
+}), vf = { class: "relative" }, gf = ["aria-label"], F3 = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "PkPasswordInput",
   props: {
@@ -6583,7 +6583,7 @@ const ic = ["aria-busy", "aria-label"], dc = { class: "bg-background flex shrink
       ], 10, gf)
     ]));
   }
-}), Za = "@container min-w-0", hf = "grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3", U3 = "grid grid-cols-1 gap-2 @lg:grid-cols-2 @3xl:grid-cols-3", bf = "grid grid-cols-1 gap-4 @lg:grid-cols-2 @lg:gap-5 @3xl:grid-cols-3";
+}), Za = "@container min-w-0", hf = "grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3", N3 = "grid grid-cols-1 gap-2 @lg:grid-cols-2 @3xl:grid-cols-3", bf = "grid grid-cols-1 gap-4 @lg:grid-cols-2 @lg:gap-5 @3xl:grid-cols-3";
 function yf(e) {
   if (e === void 0)
     return 1;
@@ -6596,7 +6596,7 @@ function yf(e) {
   const l = Object.values(e);
   return l.length > 0 ? Math.max(...l) : 1;
 }
-function H3(e, l) {
+function R3(e, l) {
   const a = Math.max(1, Math.floor(l));
   if (e.length === 0)
     return [];
@@ -6619,7 +6619,7 @@ function H3(e, l) {
 function ga(e, l) {
   return `${e}:${l}`;
 }
-function K3(e) {
+function U3(e) {
   const l = /^(stat|chart|table):([a-z0-9_-]+)$/i.exec(e);
   return l ? {
     kind: l[1].toLowerCase(),
@@ -6629,7 +6629,7 @@ function K3(e) {
 function Ht(e, l = 1) {
   return (e ?? l) >= 2 ? 2 : 1;
 }
-function q3(e, l, a, r) {
+function H3(e, l, a, r) {
   const s = [
     { kind: "stat", items: e },
     { kind: "chart", items: l },
@@ -6667,7 +6667,7 @@ function q3(e, l, a, r) {
     }
   return d;
 }
-function G3(e) {
+function K3(e) {
   return {
     widgets: e.map((l) => ({
       id: l.id.toLowerCase(),
@@ -6717,7 +6717,7 @@ async function Mf(e) {
   if (!await Cf(e))
     throw new Error(xf);
 }
-const W3 = /* @__PURE__ */ O({
+const q3 = /* @__PURE__ */ O({
   __name: "SheetClose",
   props: {
     asChild: { type: Boolean },
@@ -6751,7 +6751,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), Z3 = /* @__PURE__ */ O({
+}), G3 = /* @__PURE__ */ O({
   __name: "SheetFooter",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -6798,7 +6798,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), J3 = /* @__PURE__ */ O({
+}), W3 = /* @__PURE__ */ O({
   __name: "SheetTrigger",
   props: {
     asChild: { type: Boolean },
@@ -6816,7 +6816,7 @@ const W3 = /* @__PURE__ */ O({
 }), ha = "sidebar_state", Pf = 3600 * 24 * 7, zf = "16rem", Of = "18rem", Lf = "3rem", Vf = "b", [At, jf] = xn("Sidebar"), Df = { class: "flex h-full w-full flex-col" }, Tf = ["data-state", "data-collapsible", "data-variant", "data-side"], Ef = {
   "data-sidebar": "sidebar",
   class: "bg-sidebar group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm"
-}, Y3 = /* @__PURE__ */ O({
+}, Z3 = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "Sidebar",
   props: {
@@ -6913,7 +6913,7 @@ const W3 = /* @__PURE__ */ O({
       ], 16)
     ], 8, Tf));
   }
-}), X3 = /* @__PURE__ */ O({
+}), J3 = /* @__PURE__ */ O({
   __name: "SidebarContent",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -6933,7 +6933,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), Q3 = /* @__PURE__ */ O({
+}), Y3 = /* @__PURE__ */ O({
   __name: "SidebarFooter",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -6948,7 +6948,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), eC = /* @__PURE__ */ O({
+}), X3 = /* @__PURE__ */ O({
   __name: "SidebarGroup",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -6963,7 +6963,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), tC = /* @__PURE__ */ O({
+}), Q3 = /* @__PURE__ */ O({
   __name: "SidebarGroupAction",
   props: {
     asChild: { type: Boolean },
@@ -6992,7 +6992,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 8, ["as", "as-child", "class"]));
   }
-}), aC = /* @__PURE__ */ O({
+}), eC = /* @__PURE__ */ O({
   __name: "SidebarGroupContent",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7007,7 +7007,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), nC = /* @__PURE__ */ O({
+}), tC = /* @__PURE__ */ O({
   __name: "SidebarGroupLabel",
   props: {
     asChild: { type: Boolean },
@@ -7037,7 +7037,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 8, ["as", "as-child", "class"]));
   }
-}), lC = /* @__PURE__ */ O({
+}), aC = /* @__PURE__ */ O({
   __name: "SidebarHeader",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7052,7 +7052,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), oC = /* @__PURE__ */ O({
+}), nC = /* @__PURE__ */ O({
   __name: "SidebarInput",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7070,7 +7070,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 8, ["class"]));
   }
-}), sC = /* @__PURE__ */ O({
+}), lC = /* @__PURE__ */ O({
   __name: "SidebarInset",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7095,7 +7095,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), rC = /* @__PURE__ */ O({
+}), oC = /* @__PURE__ */ O({
   __name: "SidebarMenu",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7110,7 +7110,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), iC = /* @__PURE__ */ O({
+}), sC = /* @__PURE__ */ O({
   __name: "SidebarMenuAction",
   props: {
     asChild: { type: Boolean },
@@ -7144,7 +7144,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 8, ["class", "as", "as-child"]));
   }
-}), dC = /* @__PURE__ */ O({
+}), rC = /* @__PURE__ */ O({
   __name: "SidebarMenuBadge",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7233,7 +7233,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }));
   }
-}), uC = /* @__PURE__ */ O({
+}), iC = /* @__PURE__ */ O({
   __name: "TooltipProvider",
   props: {
     delayDuration: { default: 0 },
@@ -7296,7 +7296,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["data-size", "data-active", "class", "as", "as-child"]));
   }
-}), cC = /* @__PURE__ */ O({
+}), dC = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "SidebarMenuButton",
   props: {
@@ -7344,7 +7344,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16));
   }
-}), fC = /* @__PURE__ */ O({
+}), uC = /* @__PURE__ */ O({
   __name: "SidebarMenuItem",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7359,7 +7359,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), ya = "animate-pulse rounded-md bg-primary/10", mC = /* @__PURE__ */ O({
+}), ya = "animate-pulse rounded-md bg-primary/10", cC = /* @__PURE__ */ O({
   __name: "SidebarMenuSkeleton",
   props: {
     showIcon: { type: Boolean },
@@ -7384,7 +7384,7 @@ const W3 = /* @__PURE__ */ O({
       }, null, 6)
     ], 2));
   }
-}), pC = /* @__PURE__ */ O({
+}), fC = /* @__PURE__ */ O({
   __name: "SidebarMenuSub",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7405,7 +7405,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), vC = /* @__PURE__ */ O({
+}), mC = /* @__PURE__ */ O({
   __name: "SidebarMenuSubButton",
   props: {
     asChild: { type: Boolean },
@@ -7440,7 +7440,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 8, ["as", "as-child", "data-size", "data-active", "class"]));
   }
-}), gC = /* @__PURE__ */ O({
+}), pC = /* @__PURE__ */ O({
   __name: "SidebarMenuSubItem",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7455,7 +7455,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), hC = /* @__PURE__ */ O({
+}), vC = /* @__PURE__ */ O({
   __name: "SidebarProvider",
   props: {
     defaultOpen: { type: Boolean, default: !ul?.cookie.includes(`${ha}=false`) },
@@ -7510,7 +7510,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }));
   }
-}), bC = /* @__PURE__ */ O({
+}), gC = /* @__PURE__ */ O({
   __name: "SidebarRail",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7558,7 +7558,7 @@ const W3 = /* @__PURE__ */ O({
       )
     }), null, 16, ["class"]));
   }
-}), yC = /* @__PURE__ */ O({
+}), hC = /* @__PURE__ */ O({
   __name: "SidebarSeparator",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7576,7 +7576,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 8, ["class"]));
   }
-}), xC = /* @__PURE__ */ O({
+}), bC = /* @__PURE__ */ O({
   __name: "SidebarTrigger",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7617,7 +7617,7 @@ const W3 = /* @__PURE__ */ O({
       size: "default"
     }
   }
-), kC = /* @__PURE__ */ O({
+), yC = /* @__PURE__ */ O({
   __name: "DropdownMenu",
   props: {
     defaultOpen: { type: Boolean },
@@ -7635,7 +7635,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16));
   }
-}), Hf = { class: "pointer-events-none absolute left-2 flex size-3.5 items-center justify-center" }, $C = /* @__PURE__ */ O({
+}), Hf = { class: "pointer-events-none absolute left-2 flex size-3.5 items-center justify-center" }, xC = /* @__PURE__ */ O({
   __name: "DropdownMenuCheckboxItem",
   props: {
     modelValue: { type: [Boolean, String] },
@@ -7670,7 +7670,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), wC = /* @__PURE__ */ O({
+}), kC = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "DropdownMenuContent",
   props: {
@@ -7719,7 +7719,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }));
   }
-}), CC = /* @__PURE__ */ O({
+}), $C = /* @__PURE__ */ O({
   __name: "DropdownMenuGroup",
   props: {
     asChild: { type: Boolean },
@@ -7734,7 +7734,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16));
   }
-}), SC = /* @__PURE__ */ O({
+}), wC = /* @__PURE__ */ O({
   __name: "DropdownMenuItem",
   props: {
     disabled: { type: Boolean },
@@ -7763,7 +7763,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["data-inset", "data-variant", "class"]));
   }
-}), MC = /* @__PURE__ */ O({
+}), CC = /* @__PURE__ */ O({
   __name: "DropdownMenuLabel",
   props: {
     asChild: { type: Boolean },
@@ -7785,7 +7785,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["data-inset", "class"]));
   }
-}), BC = /* @__PURE__ */ O({
+}), SC = /* @__PURE__ */ O({
   __name: "DropdownMenuRadioGroup",
   props: {
     modelValue: {},
@@ -7802,7 +7802,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16));
   }
-}), Kf = { class: "pointer-events-none absolute left-2 flex size-3.5 items-center justify-center" }, _C = /* @__PURE__ */ O({
+}), Kf = { class: "pointer-events-none absolute left-2 flex size-3.5 items-center justify-center" }, MC = /* @__PURE__ */ O({
   __name: "DropdownMenuRadioItem",
   props: {
     value: {},
@@ -7837,7 +7837,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), AC = /* @__PURE__ */ O({
+}), BC = /* @__PURE__ */ O({
   __name: "DropdownMenuSeparator",
   props: {
     asChild: { type: Boolean },
@@ -7850,7 +7850,7 @@ const W3 = /* @__PURE__ */ O({
       class: k(ae)("bg-border -mx-1 my-1 h-px", l.class)
     }), null, 16, ["class"]));
   }
-}), PC = /* @__PURE__ */ O({
+}), _C = /* @__PURE__ */ O({
   __name: "DropdownMenuShortcut",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7864,7 +7864,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), zC = /* @__PURE__ */ O({
+}), AC = /* @__PURE__ */ O({
   __name: "DropdownMenuSub",
   props: {
     defaultOpen: { type: Boolean },
@@ -7880,7 +7880,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16));
   }
-}), OC = /* @__PURE__ */ O({
+}), PC = /* @__PURE__ */ O({
   __name: "DropdownMenuSubContent",
   props: {
     forceMount: { type: Boolean },
@@ -7921,7 +7921,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), LC = /* @__PURE__ */ O({
+}), zC = /* @__PURE__ */ O({
   __name: "DropdownMenuSubTrigger",
   props: {
     disabled: { type: Boolean },
@@ -7947,7 +7947,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["data-inset", "class"]));
   }
-}), VC = /* @__PURE__ */ O({
+}), OC = /* @__PURE__ */ O({
   __name: "DropdownMenuTrigger",
   props: {
     disabled: { type: Boolean },
@@ -7963,7 +7963,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16));
   }
-}), jC = /* @__PURE__ */ O({
+}), LC = /* @__PURE__ */ O({
   __name: "Avatar",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -7980,7 +7980,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 8, ["class"]));
   }
-}), DC = /* @__PURE__ */ O({
+}), VC = /* @__PURE__ */ O({
   __name: "AvatarFallback",
   props: {
     delayMs: {},
@@ -7999,7 +7999,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), TC = /* @__PURE__ */ O({
+}), jC = /* @__PURE__ */ O({
   __name: "AvatarImage",
   props: {
     src: {},
@@ -8017,7 +8017,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16));
   }
-}), EC = /* @__PURE__ */ O({
+}), DC = /* @__PURE__ */ O({
   __name: "Breadcrumb",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8032,7 +8032,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), IC = /* @__PURE__ */ O({
+}), TC = /* @__PURE__ */ O({
   __name: "BreadcrumbEllipsis",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8051,7 +8051,7 @@ const W3 = /* @__PURE__ */ O({
       r[0] || (r[0] = o("span", { class: "sr-only" }, "More", -1))
     ], 2));
   }
-}), FC = /* @__PURE__ */ O({
+}), EC = /* @__PURE__ */ O({
   __name: "BreadcrumbItem",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8065,7 +8065,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), NC = /* @__PURE__ */ O({
+}), IC = /* @__PURE__ */ O({
   __name: "BreadcrumbLink",
   props: {
     asChild: { type: Boolean },
@@ -8086,7 +8086,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 8, ["as", "as-child", "class"]));
   }
-}), RC = /* @__PURE__ */ O({
+}), FC = /* @__PURE__ */ O({
   __name: "BreadcrumbList",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8105,7 +8105,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), UC = /* @__PURE__ */ O({
+}), NC = /* @__PURE__ */ O({
   __name: "BreadcrumbPage",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8122,7 +8122,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), HC = /* @__PURE__ */ O({
+}), RC = /* @__PURE__ */ O({
   __name: "BreadcrumbSeparator",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8160,7 +8160,7 @@ const W3 = /* @__PURE__ */ O({
       }), null, 16, ["class"])
     ]));
   }
-}), KC = /* @__PURE__ */ O({
+}), UC = /* @__PURE__ */ O({
   __name: "NavigationMenu",
   props: {
     modelValue: {},
@@ -8197,7 +8197,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["data-viewport", "class"]));
   }
-}), qC = /* @__PURE__ */ O({
+}), HC = /* @__PURE__ */ O({
   __name: "NavigationMenuContent",
   props: {
     forceMount: { type: Boolean },
@@ -8222,7 +8222,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), GC = /* @__PURE__ */ O({
+}), KC = /* @__PURE__ */ O({
   __name: "NavigationMenuIndicator",
   props: {
     forceMount: { type: Boolean },
@@ -8244,7 +8244,7 @@ const W3 = /* @__PURE__ */ O({
       _: 1
     }, 16, ["class"]));
   }
-}), WC = /* @__PURE__ */ O({
+}), qC = /* @__PURE__ */ O({
   __name: "NavigationMenuItem",
   props: {
     value: {},
@@ -8263,7 +8263,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), ZC = /* @__PURE__ */ O({
+}), GC = /* @__PURE__ */ O({
   __name: "NavigationMenuLink",
   props: {
     active: { type: Boolean },
@@ -8286,7 +8286,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), JC = /* @__PURE__ */ O({
+}), WC = /* @__PURE__ */ O({
   __name: "NavigationMenuList",
   props: {
     asChild: { type: Boolean },
@@ -8304,7 +8304,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), YC = /* @__PURE__ */ O({
+}), ZC = /* @__PURE__ */ O({
   __name: "NavigationMenuTrigger",
   props: {
     disabled: { type: Boolean },
@@ -8329,7 +8329,7 @@ const W3 = /* @__PURE__ */ O({
   }
 }), Wf = Xt(
   "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=open]:hover:bg-accent data-[state=open]:text-accent-foreground data-[state=open]:focus:bg-accent data-[state=open]:bg-accent/50 focus-visible:ring-ring/50 outline-none transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1"
-), XC = /* @__PURE__ */ O({
+), JC = /* @__PURE__ */ O({
   __name: "Dialog",
   props: {
     open: { type: Boolean },
@@ -8347,7 +8347,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16));
   }
-}), QC = /* @__PURE__ */ O({
+}), YC = /* @__PURE__ */ O({
   __name: "DialogClose",
   props: {
     asChild: { type: Boolean },
@@ -8384,7 +8384,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), e8 = /* @__PURE__ */ O({
+}), XC = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "DialogContent",
   props: {
@@ -8427,7 +8427,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }));
   }
-}), t8 = /* @__PURE__ */ O({
+}), QC = /* @__PURE__ */ O({
   __name: "DialogDescription",
   props: {
     asChild: { type: Boolean },
@@ -8445,7 +8445,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), a8 = /* @__PURE__ */ O({
+}), e8 = /* @__PURE__ */ O({
   __name: "DialogFooter",
   props: {
     class: { type: [Boolean, null, String, Object, Array] },
@@ -8474,7 +8474,7 @@ const W3 = /* @__PURE__ */ O({
       })) : $("", !0)
     ], 2));
   }
-}), n8 = /* @__PURE__ */ O({
+}), t8 = /* @__PURE__ */ O({
   __name: "DialogHeader",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8488,7 +8488,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), l8 = /* @__PURE__ */ O({
+}), a8 = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "DialogScrollContent",
   props: {
@@ -8535,7 +8535,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }));
   }
-}), o8 = /* @__PURE__ */ O({
+}), n8 = /* @__PURE__ */ O({
   __name: "DialogTitle",
   props: {
     asChild: { type: Boolean },
@@ -8553,7 +8553,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), s8 = /* @__PURE__ */ O({
+}), l8 = /* @__PURE__ */ O({
   __name: "DialogTrigger",
   props: {
     asChild: { type: Boolean },
@@ -8568,7 +8568,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16));
   }
-}), r8 = /* @__PURE__ */ O({
+}), o8 = /* @__PURE__ */ O({
   __name: "Label",
   props: {
     for: {},
@@ -8590,7 +8590,7 @@ const W3 = /* @__PURE__ */ O({
       _: 3
     }, 16, ["class"]));
   }
-}), i8 = /* @__PURE__ */ O({
+}), s8 = /* @__PURE__ */ O({
   __name: "Spinner",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8603,7 +8603,7 @@ const W3 = /* @__PURE__ */ O({
       class: P(k(ae)("size-4 animate-spin", l.class))
     }, null, 8, ["class"]));
   }
-}), d8 = /* @__PURE__ */ O({
+}), r8 = /* @__PURE__ */ O({
   __name: "Card",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8622,7 +8622,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), u8 = /* @__PURE__ */ O({
+}), i8 = /* @__PURE__ */ O({
   __name: "CardAction",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8636,7 +8636,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), c8 = /* @__PURE__ */ O({
+}), d8 = /* @__PURE__ */ O({
   __name: "CardContent",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8650,7 +8650,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), f8 = /* @__PURE__ */ O({
+}), u8 = /* @__PURE__ */ O({
   __name: "CardDescription",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8664,7 +8664,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), m8 = /* @__PURE__ */ O({
+}), c8 = /* @__PURE__ */ O({
   __name: "CardFooter",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8678,7 +8678,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), p8 = /* @__PURE__ */ O({
+}), f8 = /* @__PURE__ */ O({
   __name: "CardHeader",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8697,7 +8697,7 @@ const W3 = /* @__PURE__ */ O({
       K(a.$slots, "default")
     ], 2));
   }
-}), v8 = /* @__PURE__ */ O({
+}), m8 = /* @__PURE__ */ O({
   __name: "CardTitle",
   props: {
     class: { type: [Boolean, null, String, Object, Array] }
@@ -8717,7 +8717,7 @@ const W3 = /* @__PURE__ */ O({
 }, Yf = { class: "flex items-start gap-3" }, Xf = { class: "min-w-0 flex-1" }, Qf = { class: "text-foreground text-sm font-medium" }, em = {
   key: 0,
   class: "text-muted-foreground mt-0.5 truncate text-xs"
-}, g8 = /* @__PURE__ */ O({
+}, p8 = /* @__PURE__ */ O({
   __name: "PkBoundary",
   props: {
     label: { default: "This section" },
@@ -8790,7 +8790,7 @@ const W3 = /* @__PURE__ */ O({
 }, rm = {
   key: 1,
   class: "flex items-center gap-2 border-t px-4 py-3"
-}, h8 = /* @__PURE__ */ O({
+}, v8 = /* @__PURE__ */ O({
   __name: "PkCard",
   props: {
     title: {},
@@ -8821,7 +8821,7 @@ const W3 = /* @__PURE__ */ O({
     ]));
   }
 }), Ya = /* @__PURE__ */ Symbol("pkPageFooterFromShell");
-function b8() {
+function g8() {
   const e = ja(), l = x(() => e.props.panel?.pageFooter === !0);
   return Et(Ya, l), l;
 }
@@ -8833,7 +8833,7 @@ const im = {
   key: 0,
   class: "flex flex-wrap gap-x-4 gap-y-1",
   "aria-label": "Footer"
-}, y8 = /* @__PURE__ */ O({
+}, h8 = /* @__PURE__ */ O({
   __name: "AppPageFooter",
   props: {
     host: { type: Boolean }
@@ -8865,7 +8865,7 @@ const im = {
   key: 0,
   class: "absolute top-0 left-1/2 z-10 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-neutral-800 dark:bg-neutral-700",
   "aria-hidden": "true"
-}, x8 = /* @__PURE__ */ O({
+}, b8 = /* @__PURE__ */ O({
   __name: "PkDeviceFrame",
   props: {
     width: { default: 390 },
@@ -8918,7 +8918,7 @@ const im = {
 }, $m = ["aria-label", "onClick"], wm = ["disabled", "aria-label", "onClick"], Cm = ["disabled", "aria-label", "onClick"], Sm = ["disabled", "title", "aria-label", "onClick"], Mm = {
   key: 0,
   class: "text-muted-foreground rounded-md border border-dashed px-3 py-4 text-xs"
-}, Bm = ["disabled"], k8 = /* @__PURE__ */ O({
+}, Bm = ["disabled"], y8 = /* @__PURE__ */ O({
   __name: "PkRepeater",
   props: {
     modelValue: {},
@@ -9347,7 +9347,7 @@ const im = {
 }), Rm = { class: "space-y-3" }, Um = { class: "flex items-center justify-between gap-2 border-b px-3 py-2" }, Hm = { class: "text-sm font-medium" }, Km = { class: "flex items-center gap-1" }, qm = ["disabled", "onClick"], Gm = ["disabled", "onClick"], Wm = ["disabled", "onClick"], Zm = { class: "space-y-3 p-3" }, Jm = { class: "flex flex-wrap items-center gap-2" }, Ym = ["disabled", "onClick"], Xm = {
   key: 0,
   class: "text-muted-foreground text-xs font-normal"
-}, $8 = /* @__PURE__ */ O({
+}, x8 = /* @__PURE__ */ O({
   __name: "PkBuilder",
   props: {
     modelValue: { default: null },
@@ -10055,7 +10055,7 @@ const vp = { class: "flex flex-col gap-2" }, gp = { class: "flex items-center ga
 }), Hp = { class: "flex flex-col gap-3" }, Kp = { class: "flex items-center justify-between gap-2" }, qp = { class: "text-sm font-medium" }, Gp = { class: "text-muted-foreground grid grid-cols-7 gap-1 text-center text-[10px] uppercase" }, Wp = { class: "grid grid-cols-7 gap-1" }, Zp = {
   key: 0,
   class: "text-muted-foreground mb-1 text-[10px]"
-}, Jp = ["title"], w8 = /* @__PURE__ */ O({
+}, Jp = ["title"], k8 = /* @__PURE__ */ O({
   __name: "PkCalendar",
   props: {
     events: {}
@@ -10179,13 +10179,13 @@ function jt(e, l) {
 function nv(e) {
   return mt.get(e);
 }
-function C8(e) {
+function $8(e) {
   return mt.has(e);
 }
 function lv() {
   return [...mt.keys()].sort();
 }
-function S8() {
+function w8() {
   mt.clear();
 }
 const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
@@ -10575,7 +10575,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }, Yv = {
   key: 1,
   d: "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"
-}, M8 = /* @__PURE__ */ O({
+}, C8 = /* @__PURE__ */ O({
   __name: "ThemeToggle",
   setup(e) {
     const { appearance: l, set: a } = Ga(), r = x(() => l.value.theme === "dark");
@@ -10607,7 +10607,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }, dg = { class: "text-muted-foreground mb-1 text-[11px] capitalize" }, ug = { class: "text-muted-foreground min-w-0 flex-1 truncate text-[11px]" }, cg = { class: "text-xs font-semibold tabular-nums" }, fg = {
   key: 1,
   class: "mt-2 flex flex-wrap items-center gap-4"
-}, mg = { class: "text-muted-foreground" }, ka = 5.6, B8 = /* @__PURE__ */ O({
+}, mg = { class: "text-muted-foreground" }, ka = 5.6, S8 = /* @__PURE__ */ O({
   __name: "BarChart",
   props: {
     data: {},
@@ -11211,7 +11211,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }), Fg = {
   key: 1,
   class: "relative flex flex-wrap items-center gap-4 sm:flex-nowrap"
-}, Ng = ["width", "height", "viewBox", "aria-label"], Rg = ["d", "fill", "fill-opacity", "onMouseenter"], Ug = ["x", "y"], Hg = ["x", "y"], Kg = { class: "flex min-w-0 flex-1 flex-col gap-0.5" }, qg = ["onMouseenter"], Gg = { class: "min-w-0 flex-1 truncate capitalize" }, Wg = { class: "tabular-nums font-medium" }, Zg = { class: "text-muted-foreground w-9 text-right tabular-nums" }, _8 = /* @__PURE__ */ O({
+}, Ng = ["width", "height", "viewBox", "aria-label"], Rg = ["d", "fill", "fill-opacity", "onMouseenter"], Ug = ["x", "y"], Hg = ["x", "y"], Kg = { class: "flex min-w-0 flex-1 flex-col gap-0.5" }, qg = ["onMouseenter"], Gg = { class: "min-w-0 flex-1 truncate capitalize" }, Wg = { class: "tabular-nums font-medium" }, Zg = { class: "text-muted-foreground w-9 text-right tabular-nums" }, M8 = /* @__PURE__ */ O({
   __name: "PieChart",
   props: {
     data: {},
@@ -11350,7 +11350,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }), Jg = ["width", "height", "viewBox", "aria-label"], Yg = { class: "text-border" }, Xg = ["x1", "x2", "y1", "y2", "stroke-dasharray"], Qg = { class: "fill-muted-foreground text-[10px]" }, eh = ["x", "y"], th = ["x", "y"], ah = ["cx", "cy", "r", "fill", "fill-opacity", "stroke", "opacity", "onMouseenter"], nh = {
   key: 1,
   class: "mt-2 flex flex-wrap gap-3"
-}, A8 = /* @__PURE__ */ O({
+}, B8 = /* @__PURE__ */ O({
   __name: "ScatterChart",
   props: {
     data: {},
@@ -11495,7 +11495,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }, oh = ["width", "height", "viewBox"], sh = ["points"], rh = ["x1", "y1", "x2", "y2"], ih = ["points", "fill", "stroke"], dh = ["cx", "cy", "fill", "onMouseenter"], uh = ["x", "y", "text-anchor"], ch = {
   key: 0,
   class: "flex min-w-0 flex-col gap-1.5"
-}, fh = { class: "truncate" }, P8 = /* @__PURE__ */ O({
+}, fh = { class: "truncate" }, _8 = /* @__PURE__ */ O({
   __name: "RadarChart",
   props: {
     series: {},
@@ -11650,7 +11650,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }, ph = ["width", "height", "viewBox"], vh = ["cx", "cy", "r"], gh = ["d", "fill", "fill-opacity", "onMouseenter"], hh = {
   key: 0,
   class: "flex min-w-0 flex-col gap-1.5"
-}, bh = { class: "min-w-0 flex-1 truncate capitalize" }, yh = { class: "font-medium tabular-nums" }, z8 = /* @__PURE__ */ O({
+}, bh = { class: "min-w-0 flex-1 truncate capitalize" }, yh = { class: "font-medium tabular-nums" }, A8 = /* @__PURE__ */ O({
   __name: "PolarAreaChart",
   props: {
     data: {},
@@ -11748,7 +11748,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }, Ph = { class: "text-muted-foreground mb-1 text-[11px] capitalize" }, zh = { class: "text-muted-foreground min-w-0 flex-1 truncate text-[11px]" }, Oh = { class: "text-xs font-semibold tabular-nums" }, Lh = {
   key: 1,
   class: "mt-2 flex flex-wrap items-center gap-4"
-}, Vh = { class: "text-muted-foreground" }, O8 = /* @__PURE__ */ O({
+}, Vh = { class: "text-muted-foreground" }, P8 = /* @__PURE__ */ O({
   __name: "ComboChart",
   props: {
     bars: {},
@@ -11997,7 +11997,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }, Eh = ["width", "height"], Ih = ["x", "y"], Fh = ["x", "y", "width", "height", "fill", "fill-opacity", "onMouseenter"], Nh = ["x", "y"], Rh = {
   key: 1,
   class: "bg-popover pointer-events-none absolute top-0 right-0 z-10 rounded-lg border px-2.5 py-1.5 shadow-lg"
-}, Uh = { class: "text-[11px] font-medium capitalize" }, Hh = { class: "text-muted-foreground text-[11px] capitalize" }, Kh = { class: "text-sm font-semibold tabular-nums" }, qh = { class: "text-muted-foreground text-xs font-normal" }, L8 = /* @__PURE__ */ O({
+}, Uh = { class: "text-[11px] font-medium capitalize" }, Hh = { class: "text-muted-foreground text-[11px] capitalize" }, Kh = { class: "text-sm font-semibold tabular-nums" }, qh = { class: "text-muted-foreground text-xs font-normal" }, z8 = /* @__PURE__ */ O({
   __name: "HeatmapChart",
   props: {
     series: {},
@@ -12620,7 +12620,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
   key: 1,
   class: "text-muted-foreground py-8 text-center text-sm",
   "data-slot": "directory-empty"
-}, V8 = /* @__PURE__ */ O({
+}, O8 = /* @__PURE__ */ O({
   __name: "DirectoryPage",
   props: {
     title: {},
@@ -12717,7 +12717,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
   key: 0,
   class: "-mb-px",
   "aria-hidden": "true"
-}, j8 = /* @__PURE__ */ O({
+}, L8 = /* @__PURE__ */ O({
   __name: "StatCard",
   props: {
     label: {},
@@ -12816,7 +12816,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }), f1 = { class: "relative flex flex-col gap-2" }, m1 = ["aria-label"], p1 = ["onMouseenter"], v1 = {
   key: 0,
   class: "flex flex-wrap gap-x-6 gap-y-1"
-}, g1 = { class: "text-muted-foreground flex items-center gap-1.5 text-xs" }, h1 = { class: "truncate" }, b1 = { class: "text-sm font-semibold tabular-nums" }, D8 = /* @__PURE__ */ O({
+}, g1 = { class: "text-muted-foreground flex items-center gap-1.5 text-xs" }, h1 = { class: "truncate" }, b1 = { class: "text-sm font-semibold tabular-nums" }, V8 = /* @__PURE__ */ O({
   __name: "SegmentedBar",
   props: {
     segments: {},
@@ -12896,7 +12896,7 @@ const ov = ["name", "value", "checked", "disabled", "onChange"], sv = {
 }, x1 = ["data-heading"], k1 = {
   key: 1,
   class: "flex items-center justify-between gap-3 text-sm"
-}, $1 = { class: "text-muted-foreground truncate" }, w1 = ["aria-label"], T8 = /* @__PURE__ */ O({
+}, $1 = { class: "text-muted-foreground truncate" }, w1 = ["aria-label"], j8 = /* @__PURE__ */ O({
   __name: "StatListChart",
   props: {
     rows: {}
@@ -13335,7 +13335,7 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
 }, Sy = {
   key: 1,
   class: "grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
-}, E8 = /* @__PURE__ */ O({
+}, D8 = /* @__PURE__ */ O({
   __name: "PlanGrid",
   props: {
     plans: {},
@@ -13391,7 +13391,7 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
   stroke: "currentColor",
   "stroke-width": "2",
   "aria-hidden": "true"
-}, Wy = ["d"], I8 = /* @__PURE__ */ O({
+}, Wy = ["d"], T8 = /* @__PURE__ */ O({
   __name: "PlanEditor",
   props: {
     plan: { default: null },
@@ -13788,25 +13788,22 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
       ])
     ], 34));
   }
-}), Zy = ["data-current", "data-recommended"], Jy = { class: "flex flex-col gap-1" }, Yy = {
+}), Zy = ["data-current", "data-recommended"], Jy = {
   key: 0,
-  class: "mb-1 flex flex-wrap gap-2 text-xs font-medium"
-}, Xy = {
+  class: "bg-primary text-primary-foreground absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold shadow-sm"
+}, Yy = {
+  key: 1,
+  class: "bg-primary/10 text-primary absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold"
+}, Xy = { class: "text-sm font-semibold" }, Qy = { class: "flex items-baseline gap-1" }, ex = { class: "text-4xl font-bold tracking-tight tabular-nums" }, tx = { class: "text-muted-foreground text-sm font-normal" }, ax = {
   key: 0,
-  class: "text-primary"
-}, Qy = {
-  key: 1,
-  class: "text-muted-foreground"
-}, ex = { class: "text-sm font-semibold" }, tx = { class: "flex items-baseline gap-1" }, ax = { class: "text-3xl font-semibold tracking-tight tabular-nums" }, nx = { class: "text-muted-foreground text-sm font-normal" }, lx = {
-  key: 1,
   class: "text-muted-foreground text-sm font-normal text-pretty"
-}, ox = {
-  key: 0,
+}, nx = {
+  key: 2,
   class: "flex flex-1 flex-col gap-2 text-sm"
-}, sx = {
+}, lx = {
   class: "text-success mt-0.5 shrink-0",
   "aria-hidden": "true"
-}, rx = {
+}, ox = {
   class: "size-4",
   viewBox: "0 0 24 24",
   fill: "none",
@@ -13814,10 +13811,13 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
   "stroke-width": "2.5",
   "stroke-linecap": "round",
   "stroke-linejoin": "round"
-}, ix = ["d"], dx = { class: "text-muted-foreground" }, ux = {
-  key: 1,
+}, sx = ["d"], rx = { class: "text-muted-foreground" }, ix = {
+  key: 3,
   class: "flex-1"
-}, cx = { class: "mt-auto pt-2" }, F8 = /* @__PURE__ */ O({
+}, dx = {
+  key: 4,
+  class: "mt-auto pt-2"
+}, E8 = /* @__PURE__ */ O({
   __name: "PlanPurchaseCard",
   props: {
     plan: {},
@@ -13828,51 +13828,42 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
   setup(e, { emit: l }) {
     const a = e, r = l, s = x(() => a.annual && a.plan.annualPrice !== void 0 ? a.plan.annualPriceFormatted ?? String(a.plan.annualPrice) : a.plan.priceFormatted ?? String(a.plan.price)), i = x(() => a.annual && a.plan.annualPrice !== void 0 ? "year" : a.plan.interval ?? "month"), d = x(() => !!a.plan.recommended && !a.plan.current);
     return (u, f) => (t(), n("article", {
-      class: P(["bg-card text-card-foreground flex flex-col gap-4 rounded-lg border p-6", d.value ? "border-primary shadow-sm" : ""]),
+      class: P([
+        "bg-card text-card-foreground relative flex flex-col gap-4 rounded-xl border p-6 transition-shadow",
+        d.value ? "border-primary shadow-lg ring-1 ring-primary/20" : e.plan.current ? "border-primary/40" : ""
+      ]),
       "data-slot": "plan-purchase-card",
       "data-current": e.plan.current ? "true" : void 0,
       "data-recommended": e.plan.recommended ? "true" : void 0
     }, [
-      o("header", Jy, [
-        e.plan.current || e.plan.recommended ? (t(), n("p", Yy, [
-          e.plan.current ? (t(), n("span", Xy, "Current plan")) : e.plan.recommended ? (t(), n("span", Qy, "Recommended")) : $("", !0)
-        ])) : $("", !0),
-        o("h3", ex, c(e.plan.name), 1),
-        o("p", tx, [
-          o("span", ax, c(s.value), 1),
-          o("span", nx, "/ " + c(i.value), 1)
+      d.value ? (t(), n("span", Jy, " Most popular ")) : e.plan.current ? (t(), n("span", Yy, " Current plan ")) : $("", !0),
+      o("header", {
+        class: P(["flex flex-col gap-1", d.value || e.plan.current ? "pt-2" : ""])
+      }, [
+        o("h3", Xy, c(e.plan.name), 1),
+        o("p", Qy, [
+          o("span", ex, c(s.value), 1),
+          o("span", tx, "/ " + c(i.value), 1)
         ]),
-        e.plan.description ? (t(), n("p", lx, c(e.plan.description), 1)) : $("", !0)
-      ]),
-      e.plan.features?.length ? (t(), n("ul", ox, [
+        e.plan.description ? (t(), n("p", ax, c(e.plan.description), 1)) : $("", !0)
+      ], 2),
+      e.plan.features?.length ? (t(), n("ul", nx, [
         (t(!0), n(z, null, j(e.plan.features, (g, p) => (t(), n("li", {
           key: p,
           class: "flex items-start gap-2"
         }, [
-          o("span", sx, [
-            (t(), n("svg", rx, [
+          o("span", lx, [
+            (t(), n("svg", ox, [
               o("path", {
                 d: k(ce)("check")
-              }, null, 8, ix)
+              }, null, 8, sx)
             ]))
           ]),
-          o("span", dx, c(g), 1)
+          o("span", rx, c(g), 1)
         ]))), 128))
-      ])) : (t(), n("div", ux)),
-      o("footer", cx, [
-        e.plan.current ? (t(), D(de, {
-          key: 0,
-          class: "w-full",
-          variant: "outline",
-          size: "sm",
-          disabled: ""
-        }, {
-          default: L(() => [...f[1] || (f[1] = [
-            R(" Current plan ", -1)
-          ])]),
-          _: 1
-        })) : (t(), D(de, {
-          key: 1,
+      ])) : (t(), n("div", ix)),
+      e.plan.current ? $("", !0) : (t(), n("footer", dx, [
+        E(de, {
           class: "w-full",
           variant: d.value ? "default" : "outline",
           size: "sm",
@@ -13883,18 +13874,18 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
             R(c(e.processing ? "Redirecting…" : "Choose plan"), 1)
           ]),
           _: 1
-        }, 8, ["variant", "disabled"]))
-      ])
+        }, 8, ["variant", "disabled"])
+      ]))
     ], 10, Zy));
   }
-}), fx = {
+}), ux = {
   key: 0,
   "data-slot": "catalog-toolbar",
   class: "flex flex-col gap-3"
-}, mx = { class: "flex flex-wrap items-center gap-2 sm:flex-nowrap" }, px = {
+}, cx = { class: "flex flex-wrap items-center gap-2 sm:flex-nowrap" }, fx = {
   key: 0,
   class: "relative min-w-0 max-w-sm flex-1"
-}, vx = {
+}, mx = {
   class: "text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2",
   viewBox: "0 0 24 24",
   fill: "none",
@@ -13902,26 +13893,26 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
   "stroke-width": "2",
   "stroke-linecap": "round",
   "aria-hidden": "true"
-}, gx = ["d"], hx = {
+}, px = ["d"], vx = {
   key: 1,
   class: "ml-auto inline-flex shrink-0 rounded-md border",
   "data-slot": "catalog-layout",
   role: "group",
   "aria-label": "Layout"
-}, bx = ["aria-pressed"], yx = ["aria-pressed"], xx = {
+}, gx = ["aria-pressed"], hx = ["aria-pressed"], bx = {
   key: 0,
   class: "flex flex-col gap-2"
-}, kx = ["aria-label"], $x = {
+}, yx = ["aria-label"], xx = {
   key: 0,
   class: "text-muted-foreground mr-1 text-xs font-medium"
-}, wx = ["aria-pressed", "onClick"], Cx = ["aria-label"], Sx = { class: "text-muted-foreground mr-1 text-xs font-medium" }, Mx = {
+}, kx = ["aria-pressed", "onClick"], $x = ["aria-label"], wx = { class: "text-muted-foreground mr-1 text-xs font-medium" }, Cx = {
   key: 1,
   class: "text-muted-foreground text-sm font-normal"
-}, Bx = ["data-slot"], _x = {
+}, Sx = ["data-slot"], Mx = {
   key: 3,
   class: "flex items-center justify-between gap-3",
   "data-slot": "catalog-pagination"
-}, Ax = { class: "text-muted-foreground text-xs font-normal tabular-nums" }, Px = { class: "flex items-center gap-2" }, zx = ["disabled"], Ox = ["disabled"], sa = /* @__PURE__ */ O({
+}, Bx = { class: "text-muted-foreground text-xs font-normal tabular-nums" }, _x = { class: "flex items-center gap-2" }, Ax = ["disabled"], Px = ["disabled"], sa = /* @__PURE__ */ O({
   __name: "CatalogGrid",
   props: /* @__PURE__ */ Ie({
     items: {},
@@ -13996,13 +13987,13 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
     return (T, te) => (t(), n("div", {
       class: P(["flex flex-col gap-4", k(Za)])
     }, [
-      m.value ? (t(), n("div", fx, [
-        o("div", mx, [
-          e.searchable ? (t(), n("div", px, [
-            (t(), n("svg", vx, [
+      m.value ? (t(), n("div", ux, [
+        o("div", cx, [
+          e.searchable ? (t(), n("div", fx, [
+            (t(), n("svg", mx, [
               o("path", {
                 d: k(ce)("search")
-              }, null, 8, gx)
+              }, null, 8, px)
             ])),
             E($e, {
               modelValue: s.value,
@@ -14016,7 +14007,7 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
             }, null, 8, ["modelValue", "placeholder", "aria-label", "autofocus"])
           ])) : $("", !0),
           K(T.$slots, "toolbar"),
-          e.layoutToggle ? (t(), n("div", hx, [
+          e.layoutToggle ? (t(), n("div", vx, [
             o("button", {
               type: "button",
               class: P([
@@ -14026,7 +14017,7 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
               "aria-pressed": i.value === "grid" ? "true" : "false",
               "aria-label": "Grid",
               onClick: te[1] || (te[1] = (H) => i.value = "grid")
-            }, " Tiles ", 10, bx),
+            }, " Tiles ", 10, gx),
             o("button", {
               type: "button",
               class: P([
@@ -14036,16 +14027,16 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
               "aria-pressed": i.value === "list" ? "true" : "false",
               "aria-label": "List",
               onClick: te[2] || (te[2] = (H) => i.value = "list")
-            }, " List ", 10, yx)
+            }, " List ", 10, hx)
           ])) : $("", !0)
         ]),
-        M.value.length || _.value.length ? (t(), n("div", xx, [
+        M.value.length || _.value.length ? (t(), n("div", bx, [
           (t(!0), n(z, null, j(M.value, (H) => (t(), n("div", {
             key: H.key,
             class: "flex flex-wrap items-center gap-1.5",
             "aria-label": H.label ?? H.key
           }, [
-            H.label ? (t(), n("span", $x, c(H.label), 1)) : $("", !0),
+            H.label ? (t(), n("span", xx, c(H.label), 1)) : $("", !0),
             (t(!0), n(z, null, j(H.options ?? [], (Z) => (t(), n("button", {
               key: Z.value,
               type: "button",
@@ -14055,15 +14046,15 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
               ]),
               "aria-pressed": d[H.key] === Z.value ? "true" : "false",
               onClick: (N) => w(H.key, Z.value)
-            }, c(Z.label), 11, wx))), 128))
-          ], 8, kx))), 128)),
+            }, c(Z.label), 11, kx))), 128))
+          ], 8, yx))), 128)),
           (t(!0), n(z, null, j(_.value, (H) => (t(), n("div", {
             key: H.key,
             class: "flex flex-wrap items-center gap-1.5",
             "aria-label": H.label ?? H.key,
             "data-slot": "catalog-range"
           }, [
-            o("span", Sx, c(H.label ?? H.key), 1),
+            o("span", wx, c(H.label ?? H.key), 1),
             E($e, {
               type: "number",
               class: "h-8 w-24 px-2 text-xs",
@@ -14081,10 +14072,10 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
               "model-value": y(H.key).max,
               "onUpdate:modelValue": (Z) => C(H.key, "max", String(Z))
             }, null, 8, ["aria-label", "model-value", "onUpdate:modelValue"])
-          ], 8, Cx))), 128))
+          ], 8, $x))), 128))
         ])) : $("", !0)
       ])) : $("", !0),
-      e.items.length === 0 ? (t(), n("p", Mx, "No matching items.")) : (t(), n("div", {
+      e.items.length === 0 ? (t(), n("p", Cx, "No matching items.")) : (t(), n("div", {
         key: 2,
         class: P(
           i.value === "list" ? "flex flex-col gap-3" : k(bf)
@@ -14098,22 +14089,22 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
           onSelect: te[3] || (te[3] = (Z) => r("select", Z)),
           onCart: te[4] || (te[4] = (Z) => r("cart", Z))
         }, null, 8, ["item", "layout"]))), 128))
-      ], 10, Bx)),
-      e.pageSize && b.value > 1 ? (t(), n("div", _x, [
-        o("p", Ax, " Page " + c(v.value) + " of " + c(b.value), 1),
-        o("div", Px, [
+      ], 10, Sx)),
+      e.pageSize && b.value > 1 ? (t(), n("div", Mx, [
+        o("p", Bx, " Page " + c(v.value) + " of " + c(b.value), 1),
+        o("div", _x, [
           o("button", {
             type: "button",
             class: "rounded-md border bg-background px-2.5 py-1 text-xs font-medium disabled:opacity-40",
             disabled: v.value <= 1,
             onClick: te[5] || (te[5] = (H) => I(v.value - 1))
-          }, " Previous ", 8, zx),
+          }, " Previous ", 8, Ax),
           o("button", {
             type: "button",
             class: "rounded-md border bg-background px-2.5 py-1 text-xs font-medium disabled:opacity-40",
             disabled: v.value >= b.value,
             onClick: te[6] || (te[6] = (H) => I(v.value + 1))
-          }, " Next ", 8, Ox)
+          }, " Next ", 8, Px)
         ])
       ])) : $("", !0)
     ], 2));
@@ -14122,7 +14113,7 @@ const Y1 = ["data-featured", "data-recommended"], X1 = { class: "flex flex-col g
 function Ee() {
   return { query: "", selected: {}, ranges: {} };
 }
-function Lx(e, l) {
+function zx(e, l) {
   const a = e.metrics?.[l];
   if (typeof a == "number" && Number.isFinite(a))
     return a;
@@ -14132,7 +14123,7 @@ function Lx(e, l) {
   const s = Number(r);
   return Number.isFinite(s) ? s : null;
 }
-function Vx(e, l) {
+function Ox(e, l) {
   return !l || l.min === null && l.max === null ? !0 : !(e === null || l.min !== null && e < l.min || l.max !== null && e > l.max);
 }
 function ra(e, l) {
@@ -14149,11 +14140,11 @@ function ra(e, l) {
     if (s && (e.facets?.[r] ?? null) !== s)
       return !1;
   for (const [r, s] of Object.entries(l.ranges ?? {}))
-    if (!Vx(Lx(e, r), s))
+    if (!Ox(zx(e, r), s))
       return !1;
   return !0;
 }
-function jx(e, l) {
+function Lx(e, l) {
   const a = l.trim().toLowerCase();
   return a === "" ? null : e.find((r) => {
     const s = (r.sku ?? "").trim().toLowerCase(), i = r.key.trim().toLowerCase();
@@ -14165,10 +14156,10 @@ function St(e) {
     (l) => l.min !== null || l.max !== null
   );
 }
-const Dx = { class: "flex flex-col gap-6" }, Tx = {
+const Vx = { class: "flex flex-col gap-6" }, jx = {
   key: 0,
   class: "flex flex-col gap-1.5"
-}, Ex = { class: "text-sm font-semibold" }, Ix = { class: "flex flex-wrap items-center gap-1.5" }, Fx = ["aria-pressed", "onClick"], Nx = { class: "text-sm font-semibold" }, Rx = { class: "flex flex-wrap items-center gap-1.5" }, Ux = { key: 0 }, an = /* @__PURE__ */ O({
+}, Dx = { class: "text-sm font-semibold" }, Tx = { class: "flex flex-wrap items-center gap-1.5" }, Ex = ["aria-pressed", "onClick"], Ix = { class: "text-sm font-semibold" }, Fx = { class: "flex flex-wrap items-center gap-1.5" }, Nx = { key: 0 }, an = /* @__PURE__ */ O({
   __name: "CatalogFilterSheet",
   props: {
     open: { type: Boolean },
@@ -14285,14 +14276,14 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
         }, {
           default: L(() => [
             A[6] || (A[6] = R(" Apply", -1)),
-            C.value ? (t(), n("span", Ux, " (" + c(C.value) + ")", 1)) : $("", !0)
+            C.value ? (t(), n("span", Nx, " (" + c(C.value) + ")", 1)) : $("", !0)
           ]),
           _: 1
         })
       ]),
       default: L(() => [
-        o("div", Dx, [
-          e.hideSearch ? $("", !0) : (t(), n("label", Tx, [
+        o("div", Vx, [
+          e.hideSearch ? $("", !0) : (t(), n("label", jx, [
             A[3] || (A[3] = o("span", { class: "text-sm font-semibold" }, "Search", -1)),
             E($e, {
               modelValue: s.value,
@@ -14306,8 +14297,8 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             key: I.key,
             class: "flex flex-col gap-2"
           }, [
-            o("h3", Ex, c(I.label ?? I.key), 1),
-            o("div", Ix, [
+            o("h3", Dx, c(I.label ?? I.key), 1),
+            o("div", Tx, [
               (t(!0), n(z, null, j(I.options ?? [], (T) => (t(), n("button", {
                 key: T.value,
                 type: "button",
@@ -14317,15 +14308,15 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
                 ]),
                 "aria-pressed": i[I.key] === T.value ? "true" : "false",
                 onClick: (te) => S(I.key, T.value)
-              }, c(T.label), 11, Fx))), 128))
+              }, c(T.label), 11, Ex))), 128))
             ])
           ]))), 128)),
           (t(!0), n(z, null, j(f.value, (I) => (t(), n("section", {
             key: I.key,
             class: "flex flex-col gap-2"
           }, [
-            o("h3", Nx, c(I.label ?? I.key), 1),
-            o("div", Rx, [
+            o("h3", Ix, c(I.label ?? I.key), 1),
+            o("div", Fx, [
               E($e, {
                 type: "number",
                 class: "h-8 w-24 px-2 text-xs",
@@ -14350,7 +14341,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       _: 1
     }, 8, ["open", "title", "description"]));
   }
-}), Hx = ["aria-disabled"], Kx = ["disabled"], qx = {
+}), Rx = ["aria-disabled"], Ux = ["disabled"], Hx = {
   class: "size-3.5",
   viewBox: "0 0 24 24",
   fill: "none",
@@ -14358,10 +14349,10 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
   "stroke-width": "2",
   "stroke-linecap": "round",
   "aria-hidden": "true"
-}, Gx = ["d"], Wx = {
+}, Kx = ["d"], qx = {
   class: "min-w-6 px-1 text-center text-sm tabular-nums",
   "aria-live": "polite"
-}, Zx = ["disabled"], Jx = {
+}, Gx = ["disabled"], Wx = {
   class: "size-3.5",
   viewBox: "0 0 24 24",
   fill: "none",
@@ -14369,7 +14360,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
   "stroke-width": "2",
   "stroke-linecap": "round",
   "aria-hidden": "true"
-}, Yx = ["d"], Xx = /* @__PURE__ */ O({
+}, Zx = ["d"], Jx = /* @__PURE__ */ O({
   __name: "PkQtyStepper",
   props: /* @__PURE__ */ Ie({
     min: { default: 1 },
@@ -14401,13 +14392,13 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
         "aria-label": "Decrease quantity",
         onClick: f[0] || (f[0] = (g) => d(-1))
       }, [
-        (t(), n("svg", qx, [
+        (t(), n("svg", Hx, [
           o("path", {
             d: k(ce)("minus")
-          }, null, 8, Gx)
+          }, null, 8, Kx)
         ]))
-      ], 8, Kx),
-      o("span", Wx, c(a.value), 1),
+      ], 8, Ux),
+      o("span", qx, c(a.value), 1),
       o("button", {
         type: "button",
         class: "hover:bg-muted inline-flex size-8 items-center justify-center disabled:opacity-40",
@@ -14415,24 +14406,24 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
         "aria-label": "Increase quantity",
         onClick: f[1] || (f[1] = (g) => d(1))
       }, [
-        (t(), n("svg", Jx, [
+        (t(), n("svg", Wx, [
           o("path", {
             d: k(ce)("plus")
-          }, null, 8, Yx)
+          }, null, 8, Zx)
         ]))
-      ], 8, Zx)
-    ], 8, Hx));
+      ], 8, Gx)
+    ], 8, Rx));
   }
-}), Qx = { class: "divide-border flex flex-col divide-y" }, e0 = { class: "min-w-0" }, t0 = { class: "truncate text-sm font-medium" }, a0 = {
+}), Yx = { class: "divide-border flex flex-col divide-y" }, Xx = { class: "min-w-0" }, Qx = { class: "truncate text-sm font-medium" }, e0 = {
   key: 0,
   class: "text-muted-foreground mt-0.5 truncate text-xs"
-}, n0 = { class: "flex shrink-0 items-center gap-2 text-sm" }, l0 = {
+}, t0 = { class: "flex shrink-0 items-center gap-2 text-sm" }, a0 = {
   key: 1,
   class: "text-muted-foreground tabular-nums"
-}, o0 = {
+}, n0 = {
   key: 2,
   class: "font-medium tabular-nums"
-}, s0 = ["aria-label", "onClick"], r0 = {
+}, l0 = ["aria-label", "onClick"], o0 = {
   class: "size-4",
   viewBox: "0 0 24 24",
   fill: "none",
@@ -14440,7 +14431,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
   "stroke-width": "2",
   "stroke-linecap": "round",
   "aria-hidden": "true"
-}, i0 = ["d"], d0 = /* @__PURE__ */ O({
+}, s0 = ["d"], r0 = /* @__PURE__ */ O({
   __name: "LineItems",
   props: {
     items: {},
@@ -14456,22 +14447,22 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       const d = Number(i);
       return Number.isFinite(d) && d > 0 ? d : 1;
     }
-    return (s, i) => (t(), n("div", Qx, [
+    return (s, i) => (t(), n("div", Yx, [
       (t(!0), n(z, null, j(e.items, (d) => (t(), n("div", {
         key: d.key,
         class: "flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
       }, [
-        o("div", e0, [
-          o("p", t0, c(d.label), 1),
-          d.detail ? (t(), n("p", a0, c(d.detail), 1)) : $("", !0)
+        o("div", Xx, [
+          o("p", Qx, c(d.label), 1),
+          d.detail ? (t(), n("p", e0, c(d.detail), 1)) : $("", !0)
         ]),
-        o("div", n0, [
-          e.editable ? (t(), D(Xx, {
+        o("div", t0, [
+          e.editable ? (t(), D(Jx, {
             key: 0,
             "model-value": r(d),
             "onUpdate:modelValue": (u) => a("qty", d.key, u)
-          }, null, 8, ["model-value", "onUpdate:modelValue"])) : d.qty !== null && d.qty !== void 0 && d.qty !== "" ? (t(), n("span", l0, " ×" + c(d.qty), 1)) : $("", !0),
-          d.amount ? (t(), n("span", o0, c(d.amount), 1)) : $("", !0),
+          }, null, 8, ["model-value", "onUpdate:modelValue"])) : d.qty !== null && d.qty !== void 0 && d.qty !== "" ? (t(), n("span", a0, " ×" + c(d.qty), 1)) : $("", !0),
+          d.amount ? (t(), n("span", n0, c(d.amount), 1)) : $("", !0),
           d.status ? (t(), D(we, {
             key: 3,
             status: d.status,
@@ -14484,46 +14475,46 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             "aria-label": `Remove ${d.label}`,
             onClick: (u) => a("remove", d.key)
           }, [
-            (t(), n("svg", r0, [
+            (t(), n("svg", o0, [
               o("path", {
                 d: k(ce)("trash")
-              }, null, 8, i0)
+              }, null, 8, s0)
             ]))
-          ], 8, s0)) : $("", !0)
+          ], 8, l0)) : $("", !0)
         ])
       ]))), 128))
     ]));
   }
-}), u0 = {
+}), i0 = {
   "data-slot": "cart-panel",
   class: "bg-card flex flex-col overflow-hidden rounded-lg border"
-}, c0 = { class: "border-b px-4 py-3" }, f0 = { class: "text-sm font-medium" }, m0 = { class: "flex-1 px-4 py-3" }, p0 = {
+}, d0 = { class: "border-b px-4 py-3" }, u0 = { class: "text-sm font-medium" }, c0 = { class: "flex-1 px-4 py-3" }, f0 = {
   key: 0,
   class: "text-muted-foreground py-8 text-center text-sm",
   "data-slot": "cart-empty"
-}, v0 = { class: "text-foreground block font-medium" }, g0 = { class: "mt-1 block" }, h0 = {
+}, m0 = { class: "text-foreground block font-medium" }, p0 = { class: "mt-1 block" }, v0 = {
   key: 0,
   class: "flex flex-col gap-2 border-t px-4 py-3"
-}, b0 = {
+}, g0 = {
   key: 0,
   class: "flex items-center justify-between text-sm"
-}, y0 = { class: "tabular-nums" }, x0 = {
+}, h0 = { class: "tabular-nums" }, b0 = {
   key: 1,
   class: "flex items-center justify-between text-sm",
   "data-slot": "cart-discount"
-}, k0 = { class: "text-muted-foreground" }, $0 = {
+}, y0 = { class: "text-muted-foreground" }, x0 = {
   key: 0,
   class: "tabular-nums"
-}, w0 = {
+}, k0 = {
   key: 2,
   class: "flex items-center justify-between text-sm"
-}, C0 = { class: "text-muted-foreground" }, S0 = { class: "tabular-nums" }, M0 = {
+}, $0 = { class: "text-muted-foreground" }, w0 = { class: "tabular-nums" }, C0 = {
   key: 3,
   class: "flex items-center justify-between text-sm font-semibold"
-}, B0 = { class: "tabular-nums" }, _0 = {
+}, S0 = { class: "tabular-nums" }, M0 = {
   key: 4,
   class: "pt-1"
-}, A0 = /* @__PURE__ */ O({
+}, B0 = /* @__PURE__ */ O({
   __name: "CartPanel",
   props: {
     items: {},
@@ -14540,15 +14531,15 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
   emits: ["qty", "remove"],
   setup(e, { emit: l }) {
     const a = l;
-    return (r, s) => (t(), n("aside", u0, [
-      o("header", c0, [
-        o("h2", f0, c(e.title), 1)
+    return (r, s) => (t(), n("aside", i0, [
+      o("header", d0, [
+        o("h2", u0, c(e.title), 1)
       ]),
-      o("div", m0, [
-        e.items.length === 0 ? (t(), n("p", p0, [
-          o("span", v0, c(e.emptyTitle), 1),
-          o("span", g0, c(e.emptyDescription), 1)
-        ])) : (t(), D(d0, {
+      o("div", c0, [
+        e.items.length === 0 ? (t(), n("p", f0, [
+          o("span", m0, c(e.emptyTitle), 1),
+          o("span", p0, c(e.emptyDescription), 1)
+        ])) : (t(), D(r0, {
           key: 1,
           items: e.items,
           editable: "",
@@ -14556,37 +14547,37 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           onRemove: s[1] || (s[1] = (i) => a("remove", i))
         }, null, 8, ["items"]))
       ]),
-      e.items.length > 0 ? (t(), n("footer", h0, [
-        e.subtotal ? (t(), n("div", b0, [
+      e.items.length > 0 ? (t(), n("footer", v0, [
+        e.subtotal ? (t(), n("div", g0, [
           s[2] || (s[2] = o("span", { class: "text-muted-foreground" }, "Subtotal", -1)),
-          o("span", y0, c(e.subtotal), 1)
+          o("span", h0, c(e.subtotal), 1)
         ])) : $("", !0),
-        e.discount || r.$slots.discount ? (t(), n("div", x0, [
-          o("span", k0, c(e.discountLabel), 1),
-          e.discount ? (t(), n("span", $0, c(e.discount), 1)) : $("", !0),
+        e.discount || r.$slots.discount ? (t(), n("div", b0, [
+          o("span", y0, c(e.discountLabel), 1),
+          e.discount ? (t(), n("span", x0, c(e.discount), 1)) : $("", !0),
           K(r.$slots, "discount")
         ])) : $("", !0),
-        e.tax ? (t(), n("div", w0, [
-          o("span", C0, c(e.taxLabel), 1),
-          o("span", S0, c(e.tax), 1)
+        e.tax ? (t(), n("div", k0, [
+          o("span", $0, c(e.taxLabel), 1),
+          o("span", w0, c(e.tax), 1)
         ])) : $("", !0),
-        e.total ? (t(), n("div", M0, [
+        e.total ? (t(), n("div", C0, [
           s[3] || (s[3] = o("span", null, "Total", -1)),
-          o("span", B0, c(e.total), 1)
+          o("span", S0, c(e.total), 1)
         ])) : $("", !0),
-        r.$slots.pay ? (t(), n("div", _0, [
+        r.$slots.pay ? (t(), n("div", M0, [
           K(r.$slots, "pay")
         ])) : $("", !0)
       ])) : $("", !0)
     ]));
   }
-}), P0 = {
+}), _0 = {
   "data-slot": "catalog-till",
   class: "grid w-full items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]"
-}, z0 = { class: "flex flex-col gap-4" }, O0 = { class: "flex flex-wrap items-start justify-between gap-3" }, L0 = { class: "flex items-center gap-2" }, V0 = {
+}, A0 = { class: "flex flex-col gap-4" }, P0 = { class: "flex flex-wrap items-start justify-between gap-3" }, z0 = { class: "flex items-center gap-2" }, O0 = {
   key: 0,
   class: "bg-primary text-primary-foreground ml-0.5 rounded-full px-1.5 text-[10px] font-semibold"
-}, N8 = /* @__PURE__ */ O({
+}, I8 = /* @__PURE__ */ O({
   __name: "CatalogTill",
   props: /* @__PURE__ */ Ie({
     items: {},
@@ -14634,7 +14625,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       };
     }
     function y(H) {
-      const Z = jx(a.items, H);
+      const Z = Lx(a.items, H);
       Z && C(Z.key);
     }
     function C(H) {
@@ -14693,15 +14684,15 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       u.value = !0, r("pay", d.value);
     }
     return (H, Z) => (t(), n(z, null, [
-      o("div", P0, [
-        o("section", z0, [
-          o("div", O0, [
+      o("div", _0, [
+        o("section", A0, [
+          o("div", P0, [
             E(Te, {
               variant: "small",
               title: e.shelfTitle,
               description: e.shelfDescription ?? void 0
             }, null, 8, ["title", "description"]),
-            o("div", L0, [
+            o("div", z0, [
               k(St)(s.value) ? (t(), n("button", {
                 key: 0,
                 type: "button",
@@ -14727,7 +14718,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
                   o("path", { d: "M3 5h18M6 12h12M10 19h4" })
                 ], -1)),
                 Z[6] || (Z[6] = R(" Filters ", -1)),
-                k(St)(s.value) ? (t(), n("span", V0, " on ")) : $("", !0)
+                k(St)(s.value) ? (t(), n("span", O0, " on ")) : $("", !0)
               ])) : $("", !0)
             ])
           ]),
@@ -14742,7 +14733,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             onScan: y
           }, null, 8, ["search-placeholder", "items"])
         ]),
-        E(A0, {
+        E(B0, {
           class: "lg:sticky lg:top-4",
           title: e.cartTitle,
           items: d.value,
@@ -14788,19 +14779,19 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       }, null, 8, ["open", "facets", "applied"])
     ], 64));
   }
-}), j0 = {
+}), L0 = {
   key: 0,
   class: "flex flex-col gap-5"
-}, D0 = { class: "bg-muted aspect-[4/3] overflow-hidden rounded-lg" }, T0 = ["src", "alt"], E0 = {
+}, V0 = { class: "bg-muted aspect-[4/3] overflow-hidden rounded-lg" }, j0 = ["src", "alt"], D0 = {
   key: 0,
   class: "flex gap-2 overflow-x-auto"
-}, I0 = ["src"], F0 = { class: "flex items-start justify-between gap-3" }, N0 = { class: "text-lg font-semibold tabular-nums" }, R0 = {
+}, T0 = ["src"], E0 = { class: "flex items-start justify-between gap-3" }, I0 = { class: "text-lg font-semibold tabular-nums" }, F0 = {
   key: 0,
   class: "text-muted-foreground text-sm font-normal"
-}, U0 = {
+}, N0 = {
   key: 1,
   class: "text-muted-foreground text-sm font-normal"
-}, H0 = { class: "grid grid-cols-2 gap-3" }, K0 = { class: "flex flex-col gap-2" }, q0 = { class: "text-xs font-semibold tracking-wide text-muted-foreground uppercase" }, R8 = /* @__PURE__ */ O({
+}, R0 = { class: "grid grid-cols-2 gap-3" }, U0 = { class: "flex flex-col gap-2" }, H0 = { class: "text-xs font-semibold tracking-wide text-muted-foreground uppercase" }, F8 = /* @__PURE__ */ O({
   __name: "CatalogInspect",
   props: {
     open: { type: Boolean },
@@ -14844,27 +14835,27 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       onClose: h[1] || (h[1] = (w) => r("close"))
     }, rt({
       default: L(() => [
-        e.item ? (t(), n("div", j0, [
-          o("div", D0, [
+        e.item ? (t(), n("div", L0, [
+          o("div", V0, [
             e.item.image ? (t(), n("img", {
               key: 0,
               src: e.item.image,
               alt: e.item.label,
               class: "size-full object-cover"
-            }, null, 8, T0)) : $("", !0)
+            }, null, 8, j0)) : $("", !0)
           ]),
-          e.item.images?.length ? (t(), n("div", E0, [
+          e.item.images?.length ? (t(), n("div", D0, [
             (t(!0), n(z, null, j(e.item.images, (w, y) => (t(), n("img", {
               key: y,
               src: w,
               alt: "",
               class: "size-16 shrink-0 rounded-md object-cover"
-            }, null, 8, I0))), 128))
+            }, null, 8, T0))), 128))
           ])) : $("", !0),
-          o("div", F0, [
+          o("div", E0, [
             o("div", null, [
-              o("p", N0, c(e.item.price), 1),
-              typeof e.item.stock == "number" ? (t(), n("p", R0, c(e.item.stock) + " in stock ", 1)) : $("", !0)
+              o("p", I0, c(e.item.price), 1),
+              typeof e.item.stock == "number" ? (t(), n("p", F0, c(e.item.stock) + " in stock ", 1)) : $("", !0)
             ]),
             e.item.status ? (t(), D(we, {
               key: 0,
@@ -14872,8 +14863,8 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               tone: e.item.tone
             }, null, 8, ["status", "tone"])) : $("", !0)
           ]),
-          e.item.facts?.length ? (t(), n("p", U0, c(e.item.facts.join(" · ")), 1)) : $("", !0),
-          o("div", H0, [
+          e.item.facts?.length ? (t(), n("p", N0, c(e.item.facts.join(" · ")), 1)) : $("", !0),
+          o("div", R0, [
             E(Ct, {
               label: d.value ? "Occupancy" : "Stock",
               value: d.value ? `${e.item.progress?.value ?? 0}%` : String(e.item.stock ?? e.item.progress?.value ?? 0),
@@ -14885,8 +14876,8 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               series: u.value
             }, null, 8, ["value", "series"])
           ]),
-          o("div", K0, [
-            o("p", q0, c(d.value ? "Occupancy, last 6 months" : "Stock movement, last 6 months"), 1),
+          o("div", U0, [
+            o("p", H0, c(d.value ? "Occupancy, last 6 months" : "Stock movement, last 6 months"), 1),
             E(Pt, {
               data: d.value ? f.value : u.value,
               height: 72,
@@ -14910,16 +14901,16 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       } : void 0
     ]), 1032, ["open", "title", "description"]));
   }
-}), G0 = { class: "flex flex-col gap-10" }, W0 = { class: "grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]" }, Z0 = { class: "flex flex-col gap-3" }, J0 = { class: "bg-muted aspect-[4/3] overflow-hidden rounded-lg border" }, Y0 = ["src", "alt"], X0 = {
+}), K0 = { class: "flex flex-col gap-10" }, q0 = { class: "grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]" }, G0 = { class: "flex flex-col gap-3" }, W0 = { class: "bg-muted aspect-[4/3] overflow-hidden rounded-lg border" }, Z0 = ["src", "alt"], J0 = {
   key: 0,
   class: "flex gap-2 overflow-x-auto"
-}, Q0 = ["aria-label", "aria-pressed", "onClick"], ek = ["src"], tk = { class: "flex flex-col gap-5" }, ak = { class: "flex flex-wrap items-start justify-between gap-3" }, nk = { class: "min-w-0" }, lk = { class: "text-2xl font-semibold tracking-tight" }, ok = { class: "text-muted-foreground mt-1 text-sm" }, sk = { class: "text-2xl font-semibold tabular-nums" }, rk = {
+}, Y0 = ["aria-label", "aria-pressed", "onClick"], X0 = ["src"], Q0 = { class: "flex flex-col gap-5" }, ek = { class: "flex flex-wrap items-start justify-between gap-3" }, tk = { class: "min-w-0" }, ak = { class: "text-2xl font-semibold tracking-tight" }, nk = { class: "text-muted-foreground mt-1 text-sm" }, lk = { class: "text-2xl font-semibold tabular-nums" }, ok = {
   key: 0,
   class: "text-muted-foreground text-sm font-normal"
-}, ik = { class: "grid grid-cols-2 gap-3 text-sm" }, dk = {
+}, sk = { class: "grid grid-cols-2 gap-3 text-sm" }, rk = {
   key: 0,
   class: "rounded-lg border p-3"
-}, uk = { class: "mt-1 font-medium" }, ck = { class: "rounded-lg border p-3" }, fk = { class: "text-muted-foreground text-xs font-medium tracking-wide uppercase" }, mk = { class: "mt-1 font-medium" }, pk = { class: "flex flex-col gap-4" }, vk = { class: "grid gap-4 sm:grid-cols-2" }, gk = { class: "bg-card rounded-lg border p-4" }, hk = { class: "mb-3 text-sm font-medium" }, bk = /* @__PURE__ */ O({
+}, ik = { class: "mt-1 font-medium" }, dk = { class: "rounded-lg border p-3" }, uk = { class: "text-muted-foreground text-xs font-medium tracking-wide uppercase" }, ck = { class: "mt-1 font-medium" }, fk = { class: "flex flex-col gap-4" }, mk = { class: "grid gap-4 sm:grid-cols-2" }, pk = { class: "bg-card rounded-lg border p-4" }, vk = { class: "mb-3 text-sm font-medium" }, gk = /* @__PURE__ */ O({
   __name: "CatalogItemDetail",
   props: {
     item: {}
@@ -14951,18 +14942,18 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       const y = a.item.progress?.value ?? (a.item.status === "occupied" ? 80 : 20);
       return i(Number(y) || 20, s(a.item.key) % 5 + 1);
     }), h = x(() => d.value ? p.value : g.value), w = x(() => !d.value && a.item.status !== "out-of-stock");
-    return (y, C) => (t(), n("div", G0, [
-      o("div", W0, [
-        o("div", Z0, [
-          o("div", J0, [
+    return (y, C) => (t(), n("div", K0, [
+      o("div", q0, [
+        o("div", G0, [
+          o("div", W0, [
             u.value[f.value] ? (t(), n("img", {
               key: 0,
               src: u.value[f.value],
               alt: e.item.label,
               class: "size-full object-cover"
-            }, null, 8, Y0)) : $("", !0)
+            }, null, 8, Z0)) : $("", !0)
           ]),
-          u.value.length > 1 ? (t(), n("div", X0, [
+          u.value.length > 1 ? (t(), n("div", J0, [
             (t(!0), n(z, null, j(u.value, (S, M) => (t(), n("button", {
               key: S,
               type: "button",
@@ -14975,15 +14966,15 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
                 src: S,
                 alt: "",
                 class: "size-full object-cover"
-              }, null, 8, ek)
-            ], 10, Q0))), 128))
+              }, null, 8, X0)
+            ], 10, Y0))), 128))
           ])) : $("", !0)
         ]),
-        o("div", tk, [
-          o("div", ak, [
-            o("div", nk, [
-              o("h1", lk, c(e.item.label), 1),
-              o("p", ok, c(e.item.caption ?? e.item.sku), 1)
+        o("div", Q0, [
+          o("div", ek, [
+            o("div", tk, [
+              o("h1", ak, c(e.item.label), 1),
+              o("p", nk, c(e.item.caption ?? e.item.sku), 1)
             ]),
             e.item.status ? (t(), D(we, {
               key: 0,
@@ -14991,16 +14982,16 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               tone: e.item.tone
             }, null, 8, ["status", "tone"])) : $("", !0)
           ]),
-          o("p", sk, c(e.item.price), 1),
-          e.item.facts?.length ? (t(), n("p", rk, c(e.item.facts.join(" · ")), 1)) : $("", !0),
-          o("dl", ik, [
-            e.item.sku ? (t(), n("div", dk, [
+          o("p", lk, c(e.item.price), 1),
+          e.item.facts?.length ? (t(), n("p", ok, c(e.item.facts.join(" · ")), 1)) : $("", !0),
+          o("dl", sk, [
+            e.item.sku ? (t(), n("div", rk, [
               C[1] || (C[1] = o("dt", { class: "text-muted-foreground text-xs font-medium tracking-wide uppercase" }, " SKU ", -1)),
-              o("dd", uk, c(e.item.sku), 1)
+              o("dd", ik, c(e.item.sku), 1)
             ])) : $("", !0),
-            o("div", ck, [
-              o("dt", fk, c(d.value ? "Occupancy" : "Stock"), 1),
-              o("dd", mk, c(d.value ? `${e.item.progress?.value ?? 0}%` : `${e.item.stock ?? e.item.progress?.value ?? 0} in stock`), 1)
+            o("div", dk, [
+              o("dt", uk, c(d.value ? "Occupancy" : "Stock"), 1),
+              o("dd", ck, c(d.value ? `${e.item.progress?.value ?? 0}%` : `${e.item.stock ?? e.item.progress?.value ?? 0} in stock`), 1)
             ])
           ]),
           w.value ? (t(), n("button", {
@@ -15011,9 +15002,9 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           }, " Add to cart ")) : $("", !0)
         ])
       ]),
-      o("section", pk, [
+      o("section", fk, [
         C[2] || (C[2] = o("h2", { class: "text-sm font-semibold tracking-wide text-muted-foreground uppercase" }, " Analytics ", -1)),
-        o("div", vk, [
+        o("div", mk, [
           E(Ct, {
             label: d.value ? "Occupancy" : "Stock",
             value: d.value ? `${e.item.progress?.value ?? 0}%` : String(e.item.stock ?? e.item.progress?.value ?? 0),
@@ -15025,8 +15016,8 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             series: g.value
           }, null, 8, ["value", "series"])
         ]),
-        o("div", gk, [
-          o("p", hk, c(d.value ? "Occupancy, last 6 months" : "Stock movement, last 6 months"), 1),
+        o("div", pk, [
+          o("p", vk, c(d.value ? "Occupancy, last 6 months" : "Stock movement, last 6 months"), 1),
           E(jg, {
             data: h.value,
             type: "area",
@@ -15036,7 +15027,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       ])
     ]));
   }
-}), yk = ["href"], U8 = /* @__PURE__ */ O({
+}), hk = ["href"], N8 = /* @__PURE__ */ O({
   __name: "CatalogItemView",
   props: {
     item: {},
@@ -15067,29 +15058,29 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           o("path", { d: "m15 18-6-6 6-6" })
         ], -1)),
         R(" " + c(e.backLabel), 1)
-      ], 8, yk),
-      E(bk, {
+      ], 8, hk),
+      E(gk, {
         item: e.item,
         onCart: s[0] || (s[0] = (i) => a("cart", i))
       }, null, 8, ["item"])
     ], 2));
   }
-}), xk = {
+}), bk = {
   key: 0,
   class: "inline-flex w-fit rounded-md border",
   role: "tablist",
   "aria-label": "Catalog section"
-}, kk = ["aria-selected", "onClick"], $k = {
+}, yk = ["aria-selected", "onClick"], xk = {
   class: "flex flex-wrap items-center gap-2 sm:flex-nowrap",
   "data-slot": "catalog-page-toolbar"
-}, wk = {
+}, kk = {
   key: 0,
   class: "bg-primary text-primary-foreground ml-0.5 rounded-full px-1.5 text-[10px] font-semibold"
-}, Ck = {
+}, $k = {
   class: "ml-auto inline-flex shrink-0 rounded-md border",
   role: "group",
   "aria-label": "Layout"
-}, Sk = ["aria-pressed"], Mk = ["aria-pressed"], H8 = /* @__PURE__ */ O({
+}, wk = ["aria-pressed"], Ck = ["aria-pressed"], R8 = /* @__PURE__ */ O({
   __name: "CatalogBrowser",
   props: /* @__PURE__ */ Ie({
     title: { default: "Catalog" },
@@ -15144,7 +15135,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           title: e.title,
           description: e.description ?? void 0
         }, null, 8, ["title", "description"]),
-        e.tabs.length > 1 ? (t(), n("div", xk, [
+        e.tabs.length > 1 ? (t(), n("div", bk, [
           (t(!0), n(z, null, j(e.tabs, (_) => (t(), n("button", {
             key: _.key,
             type: "button",
@@ -15155,9 +15146,9 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             role: "tab",
             "aria-selected": s.value === _.key ? "true" : "false",
             onClick: (m) => s.value = _.key
-          }, c(_.label), 11, kk))), 128))
+          }, c(_.label), 11, yk))), 128))
         ])) : $("", !0),
-        o("div", $k, [
+        o("div", xk, [
           E($e, {
             class: "min-w-0 w-full flex-1 sm:max-w-xs",
             "model-value": p.value.query,
@@ -15188,9 +15179,9 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               o("path", { d: "M3 5h18M6 12h12M10 19h4" })
             ], -1)),
             M[9] || (M[9] = R(" Filters ", -1)),
-            k(St)(p.value) ? (t(), n("span", wk, " on ")) : $("", !0)
+            k(St)(p.value) ? (t(), n("span", kk, " on ")) : $("", !0)
           ])) : $("", !0),
-          o("div", Ck, [
+          o("div", $k, [
             o("button", {
               type: "button",
               class: P([
@@ -15200,7 +15191,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               "aria-pressed": i.value === "grid" ? "true" : "false",
               "aria-label": "Grid",
               onClick: M[2] || (M[2] = (_) => i.value = "grid")
-            }, " Tiles ", 10, Sk),
+            }, " Tiles ", 10, wk),
             o("button", {
               type: "button",
               class: P([
@@ -15210,7 +15201,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               "aria-pressed": i.value === "list" ? "true" : "false",
               "aria-label": "List",
               onClick: M[3] || (M[3] = (_) => i.value = "list")
-            }, " List ", 10, Mk)
+            }, " List ", 10, Ck)
           ])
         ]),
         E(sa, {
@@ -15234,7 +15225,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       }, null, 8, ["open", "title", "search-placeholder", "facets", "applied"])
     ], 64));
   }
-}), Bk = { class: "flex flex-col gap-4" }, _k = { class: "flex flex-col gap-4" }, K8 = /* @__PURE__ */ O({
+}), Sk = { class: "flex flex-col gap-4" }, Mk = { class: "flex flex-col gap-4" }, U8 = /* @__PURE__ */ O({
   __name: "CatalogRegister",
   props: {
     title: { default: "Register" },
@@ -15263,7 +15254,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
         title: e.title,
         description: e.description ?? void 0
       }, null, 8, ["title", "description"]),
-      o("section", Bk, [
+      o("section", Sk, [
         E(Te, {
           variant: "small",
           title: e.cardsTitle,
@@ -15280,7 +15271,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           onCart: u[2] || (u[2] = (f) => r("cart", f))
         }, null, 8, ["search-placeholder", "facets", "items"])
       ]),
-      o("section", _k, [
+      o("section", Mk, [
         E(Te, {
           variant: "small",
           title: e.tableTitle,
@@ -15306,10 +15297,10 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       ])
     ], 2));
   }
-}), Ak = {
+}), Bk = {
   class: "flex flex-col gap-2",
   "data-slot": "signature-pad"
-}, Pk = { class: "text-sm font-medium" }, zk = ["width", "height", "aria-label"], Ok = { class: "flex items-center gap-2" }, Lk = /* @__PURE__ */ O({
+}, _k = { class: "text-sm font-medium" }, Ak = ["width", "height", "aria-label"], Pk = { class: "flex items-center gap-2" }, zk = /* @__PURE__ */ O({
   __name: "PkSignaturePad",
   props: {
     width: { default: 480 },
@@ -15360,8 +15351,8 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
     }
     return ve(C), ke(() => {
       i.value = !1;
-    }), (S, M) => (t(), n("div", Ak, [
-      o("p", Pk, c(e.label), 1),
+    }), (S, M) => (t(), n("div", Bk, [
+      o("p", _k, c(e.label), 1),
       o("canvas", {
         ref_key: "canvas",
         ref: s,
@@ -15373,8 +15364,8 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
         onPointermove: he(p, ["prevent"]),
         onPointerup: he(h, ["prevent"]),
         onPointerleave: he(h, ["prevent"])
-      }, null, 42, zk),
-      o("div", Ok, [
+      }, null, 42, Ak),
+      o("div", Pk, [
         E(de, {
           variant: "outline",
           size: "sm",
@@ -15399,19 +15390,19 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       ])
     ]));
   }
-}), Vk = { class: "grid gap-8 lg:grid-cols-2" }, jk = { class: "flex flex-col gap-3" }, Dk = { class: "text-muted-foreground text-xs font-normal" }, Tk = {
+}), Ok = { class: "grid gap-8 lg:grid-cols-2" }, Lk = { class: "flex flex-col gap-3" }, Vk = { class: "text-muted-foreground text-xs font-normal" }, jk = {
   key: 0,
   class: "flex flex-col gap-3"
-}, Ek = { class: "flex flex-wrap gap-3" }, Ik = ["onClick"], Fk = ["src", "alt"], Nk = {
+}, Dk = { class: "flex flex-wrap gap-3" }, Tk = ["onClick"], Ek = ["src", "alt"], Ik = {
   key: 1,
   class: "flex flex-col gap-3"
-}, Rk = { class: "flex flex-wrap gap-3" }, Uk = ["onClick"], Hk = ["src", "alt"], Kk = {
+}, Fk = { class: "flex flex-wrap gap-3" }, Nk = ["onClick"], Rk = ["src", "alt"], Uk = {
   key: 2,
   class: "flex flex-col gap-4"
-}, qk = { class: "flex flex-wrap items-center gap-2" }, Gk = { class: "mx-auto w-full max-w-3xl overflow-hidden rounded-lg border shadow-sm" }, Wk = { class: "flex items-end justify-between gap-6 bg-white px-8 pb-8 text-black" }, Zk = { class: "flex flex-col gap-2" }, Jk = ["src"], Yk = {
+}, Hk = { class: "flex flex-wrap items-center gap-2" }, Kk = { class: "mx-auto w-full max-w-3xl overflow-hidden rounded-lg border shadow-sm" }, qk = { class: "flex items-end justify-between gap-6 bg-white px-8 pb-8 text-black" }, Gk = { class: "flex flex-col gap-2" }, Wk = ["src"], Zk = {
   key: 1,
   class: "text-sm text-neutral-400"
-}, Xk = ["src"], q8 = /* @__PURE__ */ O({
+}, Jk = ["src"], H8 = /* @__PURE__ */ O({
   __name: "SignatureStudio",
   props: {
     title: { default: "Signatures" },
@@ -15493,14 +15484,14 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
         title: e.title,
         description: e.description ?? void 0
       }, null, 8, ["title", "description"]),
-      o("section", Vk, [
-        E(Lk, {
+      o("section", Ok, [
+        E(zk, {
           label: "Draw a signature",
           onSave: g
         }),
-        o("div", jk, [
+        o("div", Lk, [
           M[2] || (M[2] = o("p", { class: "text-sm font-medium" }, "Company logo / stamp", -1)),
-          o("p", Dk, c(k(Ja)), 1),
+          o("p", Vk, c(k(Ja)), 1),
           E(Ta, {
             modelValue: d.value,
             "onUpdate:modelValue": M[0] || (M[0] = (_) => d.value = _),
@@ -15522,12 +15513,12 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           }, 8, ["disabled"])
         ])
       ]),
-      a.value.length ? (t(), n("section", Tk, [
+      a.value.length ? (t(), n("section", jk, [
         E(Te, {
           variant: "small",
           title: "Saved signatures"
         }),
-        o("div", Ek, [
+        o("div", Dk, [
           (t(!0), n(z, null, j(a.value, (_) => (t(), n("button", {
             key: _.id,
             type: "button",
@@ -15538,16 +15529,16 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               src: _.dataUrl,
               alt: _.name,
               class: "h-12 w-40 bg-white object-contain"
-            }, null, 8, Fk)
-          ], 10, Ik))), 128))
+            }, null, 8, Ek)
+          ], 10, Tk))), 128))
         ])
       ])) : $("", !0),
-      r.value.length ? (t(), n("section", Nk, [
+      r.value.length ? (t(), n("section", Ik, [
         E(Te, {
           variant: "small",
           title: "Saved stamps"
         }),
-        o("div", Rk, [
+        o("div", Fk, [
           (t(!0), n(z, null, j(r.value, (_) => (t(), n("button", {
             key: _.id,
             type: "button",
@@ -15558,12 +15549,12 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               src: _.dataUrl,
               alt: _.name,
               class: "size-16 bg-[repeating-conic-gradient(#e5e5e5_0%_25%,transparent_0%_50%)] bg-[length:12px_12px] object-contain"
-            }, null, 8, Hk)
-          ], 10, Uk))), 128))
+            }, null, 8, Rk)
+          ], 10, Nk))), 128))
         ])
       ])) : $("", !0),
-      e.documents.length ? (t(), n("section", Kk, [
-        o("div", qk, [
+      e.documents.length ? (t(), n("section", Uk, [
+        o("div", Hk, [
           (t(!0), n(z, null, j(e.documents, (_) => (t(), D(de, {
             key: _.key,
             size: "sm",
@@ -15576,36 +15567,36 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             _: 2
           }, 1032, ["variant", "onClick"]))), 128))
         ]),
-        o("div", Gk, [
+        o("div", Kk, [
           E(Wv, {
             document: C.value
           }, null, 8, ["document"]),
-          o("div", Wk, [
-            o("div", Zk, [
+          o("div", qk, [
+            o("div", Gk, [
               M[3] || (M[3] = o("p", { class: "text-xs tracking-wider text-neutral-500 uppercase" }, "Signed", -1)),
               w.value ? (t(), n("img", {
                 key: 0,
                 src: w.value,
                 alt: "Signature",
                 class: "h-16 w-48 object-contain"
-              }, null, 8, Jk)) : (t(), n("p", Yk, "Draw and save a signature"))
+              }, null, 8, Wk)) : (t(), n("p", Zk, "Draw and save a signature"))
             ]),
             y.value ? (t(), n("img", {
               key: 0,
               src: y.value,
               alt: "Stamp",
               class: "h-20 w-20 object-contain"
-            }, null, 8, Xk)) : $("", !0)
+            }, null, 8, Jk)) : $("", !0)
           ])
         ])
       ])) : $("", !0)
     ], 2));
   }
-}), G8 = "panel.dashboard.hiddenWidgets", Qk = /* @__PURE__ */ Symbol("dashboardHide"), e2 = {
+}), K8 = "panel.dashboard.hiddenWidgets", Yk = /* @__PURE__ */ Symbol("dashboardHide"), Xk = {
   key: 0,
   class: "w-full",
   "data-slot": "dashboard-shortcuts"
-}, W8 = /* @__PURE__ */ O({
+}, q8 = /* @__PURE__ */ O({
   __name: "DashboardShortcuts",
   props: {
     catalog: {},
@@ -15613,7 +15604,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
     storageKey: { default: "panel.dashboard.shortcuts" }
   },
   setup(e) {
-    const l = e, a = yt(Qk, null), r = U(
+    const l = e, a = yt(Yk, null), r = U(
       l.catalog.filter((d) => l.defaults.includes(d.id))
     ), s = U(!1);
     ve(() => {
@@ -15644,7 +15635,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       { deep: !0 }
     );
     const i = x(() => a?.hidden.value.has("shortcuts") ?? !1);
-    return (d, u) => i.value ? $("", !0) : (t(), n("div", e2, [
+    return (d, u) => i.value ? $("", !0) : (t(), n("div", Xk, [
       E(Tb, {
         items: r.value,
         catalog: e.catalog,
@@ -15654,7 +15645,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       }, null, 8, ["items", "catalog"])
     ]));
   }
-}), t2 = { class: "flex flex-col gap-3" }, a2 = ["data-slot"], n2 = ["aria-pressed", "aria-label", "title"], l2 = {
+}), Qk = { class: "flex flex-col gap-3" }, e2 = ["data-slot"], t2 = ["aria-pressed", "aria-label", "title"], a2 = {
   class: "size-4",
   viewBox: "0 0 24 24",
   fill: "none",
@@ -15663,13 +15654,13 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
   "stroke-linecap": "round",
   "stroke-linejoin": "round",
   "aria-hidden": "true"
-}, o2 = { class: "text-muted-foreground text-[11px] font-semibold tracking-wider uppercase" }, s2 = { class: "flex h-8 items-center" }, r2 = ["aria-label", "title", "onClick"], i2 = ["aria-label", "title", "onClick"], d2 = {
+}, n2 = { class: "text-muted-foreground text-[11px] font-semibold tracking-wider uppercase" }, l2 = { class: "flex h-8 items-center" }, o2 = ["aria-label", "title", "onClick"], s2 = ["aria-label", "title", "onClick"], r2 = {
   key: 3,
   class: "truncate text-2xl font-semibold tabular-nums"
-}, u2 = {
+}, i2 = {
   key: 1,
   class: "text-muted-foreground truncate text-xs"
-}, Z8 = /* @__PURE__ */ O({
+}, G8 = /* @__PURE__ */ O({
   __name: "StatStrip",
   props: {
     segments: {},
@@ -15723,7 +15714,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
     function _(m) {
       return typeof m == "number" ? new Intl.NumberFormat().format(m) : m;
     }
-    return (m, v) => (t(), n("div", t2, [
+    return (m, v) => (t(), n("div", Qk, [
       (t(!0), n(z, null, j(C.value, (b) => (t(), n("div", {
         key: b.key,
         class: P(["relative shrink-0", b.joined ? "bg-border overflow-hidden rounded-xl border" : ""]),
@@ -15738,7 +15729,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           title: f.value ? "Show all values" : "Hide all values",
           onClick: S
         }, [
-          (t(), n("svg", l2, [
+          (t(), n("svg", a2, [
             f.value ? (t(), n(z, { key: 0 }, [
               v[0] || (v[0] = o("path", { d: "M10.7 6.2A9 9 0 0 1 12 6c5 0 9 4.5 9 6a12 12 0 0 1-2.2 3" }, null, -1)),
               v[1] || (v[1] = o("path", { d: "M6.6 6.9A13 13 0 0 0 3 12c0 1.5 4 6 9 6a9 9 0 0 0 3.7-.8" }, null, -1)),
@@ -15753,7 +15744,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               }, null, -1))
             ], 64))
           ]))
-        ], 8, n2)) : $("", !0),
+        ], 8, t2)) : $("", !0),
         o("div", {
           class: P(["grid", [b.joined ? "gap-px" : "gap-3", h.value]])
         }, [
@@ -15761,8 +15752,8 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             key: A.key,
             class: P(["bg-card flex flex-col gap-2 p-4", b.joined ? "" : "overflow-hidden rounded-xl border"])
           }, [
-            o("p", o2, c(A.label), 1),
-            o("div", s2, [
+            o("p", n2, c(A.label), 1),
+            o("div", l2, [
               e.loading ? (t(), D(ze, {
                 key: 0,
                 variant: "number"
@@ -15778,14 +15769,14 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
                   key: I,
                   class: "bg-muted-foreground/70 size-1.5 rounded-full"
                 })), 64))
-              ], 8, r2)) : d(A) ? (t(), n("button", {
+              ], 8, o2)) : d(A) ? (t(), n("button", {
                 key: 2,
                 type: "button",
                 class: "hover:bg-muted/60 -mx-1 truncate rounded px-1 text-2xl font-semibold tabular-nums transition-colors",
                 "aria-label": `${A.label}, ${_(A.value)}. Hide it.`,
                 title: `Hide ${A.label}`,
                 onClick: (I) => M(A)
-              }, c(_(A.value)), 9, i2)) : (t(), n("span", d2, c(_(A.value)), 1)),
+              }, c(_(A.value)), 9, s2)) : (t(), n("span", r2, c(_(A.value)), 1)),
               A.trend && !e.loading && !u(A) ? (t(), D(tn, {
                 key: 4,
                 direction: A.trend.direction,
@@ -15799,28 +15790,28 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               data: A.sparkline,
               height: 24
             }, null, 8, ["data"])) : $("", !0),
-            A.caption || A.comparison && A.trend ? (t(), n("p", u2, c(A.caption ?? A.comparison), 1)) : $("", !0)
+            A.caption || A.comparison && A.trend ? (t(), n("p", i2, c(A.caption ?? A.comparison), 1)) : $("", !0)
           ], 2))), 128))
         ], 2)
-      ], 10, a2))), 128))
+      ], 10, e2))), 128))
     ]));
   }
-}), c2 = ["aria-label"], f2 = ["aria-valuenow", "aria-label"], m2 = { class: "flex min-h-9 items-center gap-2 px-3 py-1.5 sm:gap-3" }, p2 = { class: "text-muted-foreground shrink-0 text-xs tabular-nums" }, v2 = ["title"], g2 = { class: "font-medium" }, h2 = {
+}), d2 = ["aria-label"], u2 = ["aria-valuenow", "aria-label"], c2 = { class: "flex min-h-9 items-center gap-2 px-3 py-1.5 sm:gap-3" }, f2 = { class: "text-muted-foreground shrink-0 text-xs tabular-nums" }, m2 = ["title"], p2 = { class: "font-medium" }, v2 = {
   key: 0,
   class: "text-muted-foreground hidden sm:inline"
-}, b2 = {
+}, g2 = {
   key: 1,
   class: "flex flex-col gap-3 rounded-lg border bg-card p-4"
-}, y2 = { class: "flex items-center justify-between gap-2" }, x2 = { class: "text-sm font-semibold" }, k2 = { class: "flex items-center gap-3" }, $2 = ["href"], w2 = {
+}, h2 = { class: "flex items-center justify-between gap-2" }, b2 = { class: "text-sm font-semibold" }, y2 = { class: "flex items-center gap-3" }, x2 = ["href"], k2 = {
   key: 0,
   class: "flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-3"
-}, C2 = { class: "flex min-w-0 flex-col gap-0.5" }, S2 = { class: "text-sm font-medium" }, M2 = {
+}, $2 = { class: "flex min-w-0 flex-col gap-0.5" }, w2 = { class: "text-sm font-medium" }, C2 = {
   key: 0,
   class: "text-xs text-muted-foreground font-normal"
-}, B2 = {
+}, S2 = {
   key: 1,
   class: "flex flex-col gap-2"
-}, _2 = {
+}, M2 = {
   key: 0,
   viewBox: "0 0 24 24",
   class: "size-3.5",
@@ -15829,10 +15820,10 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
   "stroke-width": "3",
   "stroke-linecap": "round",
   "stroke-linejoin": "round"
-}, A2 = { class: "flex min-w-0 flex-1 flex-col gap-0.5" }, P2 = {
+}, B2 = { class: "flex min-w-0 flex-1 flex-col gap-0.5" }, _2 = {
   key: 0,
   class: "text-xs text-muted-foreground font-normal"
-}, J8 = /* @__PURE__ */ O({
+}, W8 = /* @__PURE__ */ O({
   __name: "SetupChecklist",
   props: {
     items: {},
@@ -15884,16 +15875,16 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           class: "h-full bg-amber-500 transition-[width] duration-300 ease-out",
           style: se({ width: `${g.value}%` })
         }, null, 4)
-      ], 8, f2),
-      o("div", m2, [
-        o("span", p2, " Step " + c(f.value) + " of " + c(d.value), 1),
+      ], 8, u2),
+      o("div", c2, [
+        o("span", f2, " Step " + c(f.value) + " of " + c(d.value), 1),
         o("p", {
           class: "min-w-0 flex-1 truncate text-sm",
           title: s.value?.detail || void 0
         }, [
-          o("span", g2, c(s.value ? s.value.title : e.heading), 1),
-          s.value?.detail ? (t(), n("span", h2, c(": " + s.value.detail), 1)) : $("", !0)
-        ], 8, v2),
+          o("span", p2, c(s.value ? s.value.title : e.heading), 1),
+          s.value?.detail ? (t(), n("span", v2, c(": " + s.value.detail), 1)) : $("", !0)
+        ], 8, m2),
         s.value?.href ? (t(), D(Me(p.value), {
           key: 0,
           href: s.value.href,
@@ -15911,10 +15902,10 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           onClick: S[0] || (S[0] = (M) => r("skip"))
         }, c(e.skipLabel), 1)) : $("", !0)
       ])
-    ], 8, c2)) : e.items.length ? (t(), n("section", b2, [
-      o("div", y2, [
-        o("h2", x2, c(e.heading), 1),
-        o("div", k2, [
+    ], 8, d2)) : e.items.length ? (t(), n("section", g2, [
+      o("div", h2, [
+        o("h2", b2, c(e.heading), 1),
+        o("div", y2, [
           e.skipLabel ? (t(), n("button", {
             key: 0,
             type: "button",
@@ -15925,17 +15916,17 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             key: 1,
             href: e.reportHref,
             class: "text-xs text-muted-foreground font-normal hover:text-foreground hover:underline"
-          }, " Full report ", 8, $2)) : $("", !0)
+          }, " Full report ", 8, x2)) : $("", !0)
         ])
       ]),
-      s.value ? (t(), n("div", w2, [
+      s.value ? (t(), n("div", k2, [
         S[2] || (S[2] = o("span", {
           class: "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-amber-500",
           "aria-hidden": "true"
         }, null, -1)),
-        o("div", C2, [
-          o("p", S2, c(s.value.title), 1),
-          s.value.detail ? (t(), n("p", M2, c(s.value.detail), 1)) : $("", !0),
+        o("div", $2, [
+          o("p", w2, c(s.value.title), 1),
+          s.value.detail ? (t(), n("p", C2, c(s.value.detail), 1)) : $("", !0),
           s.value.href ? (t(), D(Me(p.value), {
             key: 1,
             href: s.value.href,
@@ -15948,7 +15939,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           }, 8, ["href", "class"])) : $("", !0)
         ])
       ])) : $("", !0),
-      i.value.length ? (t(), n("ul", B2, [
+      i.value.length ? (t(), n("ul", S2, [
         (t(!0), n(z, null, j(i.value, (M) => (t(), n("li", {
           key: M.key,
           class: "flex items-start gap-3"
@@ -15960,15 +15951,15 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             ]),
             "aria-hidden": "true"
           }, [
-            M.done ? (t(), n("svg", _2, [...S[3] || (S[3] = [
+            M.done ? (t(), n("svg", M2, [...S[3] || (S[3] = [
               o("path", { d: "M20 6 9 17l-5-5" }, null, -1)
             ])])) : $("", !0)
           ], 2),
-          o("div", A2, [
+          o("div", B2, [
             o("p", {
               class: P(["text-sm", M.done ? "text-muted-foreground line-through" : "font-medium"])
             }, c(M.title), 3),
-            !M.done && M.detail ? (t(), n("p", P2, c(M.detail), 1)) : $("", !0)
+            !M.done && M.detail ? (t(), n("p", _2, c(M.detail), 1)) : $("", !0)
           ]),
           !M.done && M.href ? (t(), D(Me(p.value), {
             key: 0,
@@ -15984,10 +15975,10 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       ])) : $("", !0)
     ])) : $("", !0);
   }
-}), z2 = {
+}), A2 = {
   class: "flex flex-wrap items-center gap-3 text-sm",
   role: "status"
-}, O2 = { class: "hidden items-center gap-2 md:flex" }, L2 = { class: "md:hidden" }, V2 = { class: "border-b px-4 py-3" }, j2 = { class: "text-muted-foreground text-xs font-normal" }, D2 = { class: "flex flex-col gap-2 overflow-y-auto p-4" }, T2 = { class: "font-medium tabular-nums" }, E2 = { class: "ml-auto flex items-center gap-3" }, Y8 = /* @__PURE__ */ O({
+}, P2 = { class: "hidden items-center gap-2 md:flex" }, z2 = { class: "md:hidden" }, O2 = { class: "border-b px-4 py-3" }, L2 = { class: "text-muted-foreground text-xs font-normal" }, V2 = { class: "flex flex-col gap-2 overflow-y-auto p-4" }, j2 = { class: "font-medium tabular-nums" }, D2 = { class: "ml-auto flex items-center gap-3" }, Z8 = /* @__PURE__ */ O({
   __name: "SelectionBar",
   props: {
     count: {},
@@ -15997,11 +15988,11 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
   emits: ["select-all-matching", "clear"],
   setup(e, { emit: l }) {
     const a = l, r = U(!1), s = (i) => new Intl.NumberFormat().format(i);
-    return (i, d) => (t(), n("div", z2, [
-      o("div", O2, [
+    return (i, d) => (t(), n("div", A2, [
+      o("div", P2, [
         K(i.$slots, "actions")
       ]),
-      o("div", L2, [
+      o("div", z2, [
         o("button", {
           type: "button",
           dusk: "mobile-bulk-actions",
@@ -16018,11 +16009,11 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
               class: "max-h-[70vh] gap-0 overflow-hidden p-0"
             }, {
               default: L(() => [
-                o("div", V2, [
+                o("div", O2, [
                   d[4] || (d[4] = o("p", { class: "text-sm font-semibold" }, "Bulk actions", -1)),
-                  o("p", j2, c(e.allMatching ? "All matching records" : `${s(e.count)} selected`), 1)
+                  o("p", L2, c(e.allMatching ? "All matching records" : `${s(e.count)} selected`), 1)
                 ]),
-                o("div", D2, [
+                o("div", V2, [
                   K(i.$slots, "actions")
                 ])
               ]),
@@ -16032,14 +16023,14 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           _: 3
         }, 8, ["open"])
       ]),
-      o("span", T2, [
+      o("span", j2, [
         e.allMatching ? (t(), n(z, { key: 0 }, [
           R(" All " + c(e.total !== void 0 ? s(e.total) : "") + " records selected ", 1)
         ], 64)) : (t(), n(z, { key: 1 }, [
           R(c(s(e.count)) + " records selected", 1)
         ], 64))
       ]),
-      o("div", E2, [
+      o("div", D2, [
         !e.allMatching && e.total !== void 0 && e.total > e.count ? (t(), n("button", {
           key: 0,
           type: "button",
@@ -16054,19 +16045,19 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       ])
     ]));
   }
-}), I2 = { class: "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" }, F2 = { class: "text-muted-foreground text-xs font-normal tabular-nums" }, N2 = {
+}), T2 = { class: "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" }, E2 = { class: "text-muted-foreground text-xs font-normal tabular-nums" }, I2 = {
   key: 0,
   class: "text-muted-foreground flex items-center gap-2 text-xs"
-}, R2 = ["value"], U2 = ["value"], H2 = {
+}, F2 = ["value"], N2 = ["value"], R2 = {
   class: "flex items-center gap-1",
   "aria-label": "Pagination"
-}, K2 = ["disabled"], q2 = ["disabled"], G2 = {
+}, U2 = ["disabled"], H2 = ["disabled"], K2 = {
   class: "bg-primary/10 text-primary inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2.5 text-sm font-medium tabular-nums",
   "aria-current": "page"
-}, W2 = {
+}, q2 = {
   key: 0,
   class: "text-muted-foreground px-1 text-xs tabular-nums"
-}, Z2 = ["disabled"], X8 = /* @__PURE__ */ O({
+}, G2 = ["disabled"], J8 = /* @__PURE__ */ O({
   __name: "TablePagination",
   props: {
     page: {},
@@ -16083,14 +16074,14 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
     const a = e, r = l, s = (f) => new Intl.NumberFormat().format(f), i = x(() => a.rowsOnPage === 0 ? 0 : (a.page - 1) * a.perPage + 1), d = x(() => (a.page - 1) * a.perPage + a.rowsOnPage), u = x(
       () => a.total === void 0 ? null : Math.max(1, Math.ceil(a.total / a.perPage))
     );
-    return (f, g) => (t(), n("div", I2, [
-      o("p", F2, [
+    return (f, g) => (t(), n("div", T2, [
+      o("p", E2, [
         R(" Showing " + c(s(i.value)) + "-" + c(s(d.value)) + " ", 1),
         e.total !== void 0 ? (t(), n(z, { key: 0 }, [
           R("of " + c(s(e.total)), 1)
         ], 64)) : $("", !0)
       ]),
-      e.perPageOptions.length > 1 ? (t(), n("label", N2, [
+      e.perPageOptions.length > 1 ? (t(), n("label", I2, [
         g[4] || (g[4] = o("span", null, "Per page", -1)),
         o("select", {
           value: e.perPage,
@@ -16100,10 +16091,10 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           (t(!0), n(z, null, j(e.perPageOptions, (p) => (t(), n("option", {
             key: p,
             value: p
-          }, c(p), 9, U2))), 128))
-        ], 40, R2)
+          }, c(p), 9, N2))), 128))
+        ], 40, F2)
       ])) : $("", !0),
-      o("nav", H2, [
+      o("nav", R2, [
         o("button", {
           type: "button",
           class: "text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-8 items-center justify-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-30",
@@ -16124,7 +16115,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           }, [
             o("path", { d: "m17 18-6-6 6-6M11 18l-6-6 6-6" })
           ], -1)
-        ])], 8, K2),
+        ])], 8, U2),
         o("button", {
           type: "button",
           class: "text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-8 items-center justify-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-30",
@@ -16145,9 +16136,9 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           }, [
             o("path", { d: "m15 18-6-6 6-6" })
           ], -1)
-        ])], 8, q2),
-        o("span", G2, c(e.page), 1),
-        u.value !== null ? (t(), n("span", W2, " of " + c(s(u.value)), 1)) : $("", !0),
+        ])], 8, H2),
+        o("span", K2, c(e.page), 1),
+        u.value !== null ? (t(), n("span", q2, " of " + c(s(u.value)), 1)) : $("", !0),
         o("button", {
           type: "button",
           class: "text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-8 items-center justify-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-30",
@@ -16168,11 +16159,11 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
           }, [
             o("path", { d: "m9 18 6-6-6-6" })
           ], -1)
-        ])], 8, Z2)
+        ])], 8, G2)
       ])
     ]));
   }
-}), J2 = { class: "pk-tabs bg-muted/40 flex w-fit max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-lg p-1" }, Y2 = ["aria-current"], X2 = ["title"], Q2 = ["aria-current", "onClick"], e$ = ["title"], t$ = /* @__PURE__ */ O({
+}), W2 = { class: "pk-tabs bg-muted/40 flex w-fit max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-lg p-1" }, Z2 = ["aria-current"], J2 = ["title"], Y2 = ["aria-current", "onClick"], X2 = ["title"], Q2 = /* @__PURE__ */ O({
   __name: "TableTabs",
   props: {
     tabs: {},
@@ -16185,7 +16176,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
     function r(s) {
       return s >= 1e6 ? (s / 1e6).toFixed(s % 1e6 === 0 ? 0 : 1) + "M" : s >= 1e4 ? Math.round(s / 1e3) + "k" : new Intl.NumberFormat().format(s);
     }
-    return (s, i) => (t(), n("div", J2, [
+    return (s, i) => (t(), n("div", W2, [
       o("button", {
         type: "button",
         class: P([
@@ -16203,12 +16194,12 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             e.active === null ? "bg-primary text-primary-foreground" : "bg-muted-foreground/15"
           ]),
           title: new Intl.NumberFormat().format(e.counts.all ?? 0)
-        }, c(r(e.counts.all ?? 0)), 11, X2)) : (t(), D(ze, {
+        }, c(r(e.counts.all ?? 0)), 11, J2)) : (t(), D(ze, {
           key: 1,
           variant: "badge",
           label: "Counting"
         }))
-      ], 10, Y2),
+      ], 10, Z2),
       (t(!0), n(z, null, j(e.tabs, (d) => (t(), n("button", {
         key: d,
         type: "button",
@@ -16227,21 +16218,21 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
             e.active === d ? "bg-primary text-primary-foreground" : "bg-muted-foreground/15"
           ]),
           title: new Intl.NumberFormat().format(e.counts[d] ?? 0)
-        }, c(r(e.counts[d] ?? 0)), 11, e$)) : (t(), D(ze, {
+        }, c(r(e.counts[d] ?? 0)), 11, X2)) : (t(), D(ze, {
           key: 1,
           variant: "badge",
           label: "Counting"
         }))
-      ], 10, Q2))), 128))
+      ], 10, Y2))), 128))
     ]));
   }
-}), Q8 = /* @__PURE__ */ Bt(t$, [["__scopeId", "data-v-3967c945"]]), a$ = {
+}), Y8 = /* @__PURE__ */ Bt(Q2, [["__scopeId", "data-v-3967c945"]]), e$ = {
   key: 0,
   class: "text-muted-foreground text-sm font-normal"
-}, n$ = { class: "grid gap-2" }, l$ = {
+}, t$ = { class: "grid gap-2" }, a$ = {
   key: 0,
   class: "text-destructive text-sm"
-}, o$ = { class: "flex gap-2" }, e6 = /* @__PURE__ */ O({
+}, n$ = { class: "flex gap-2" }, X8 = /* @__PURE__ */ O({
   __name: "PkPasskeyRegister",
   emits: ["success"],
   setup(e, { emit: l }) {
@@ -16283,7 +16274,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       class: "border-border bg-muted/50 space-y-4 rounded-lg border p-4",
       onSubmit: p
     }, [
-      o("div", n$, [
+      o("div", t$, [
         y[3] || (y[3] = o("label", {
           for: "pk-passkey-name",
           class: "text-sm font-medium"
@@ -16300,8 +16291,8 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
         ]),
         y[4] || (y[4] = o("p", { class: "text-muted-foreground text-xs font-normal" }, " A name helps you identify this passkey later. ", -1))
       ]),
-      f.value ? (t(), n("p", l$, c(f.value), 1)) : $("", !0),
-      o("div", o$, [
+      f.value ? (t(), n("p", a$, c(f.value), 1)) : $("", !0),
+      o("div", n$, [
         E(de, {
           type: "submit",
           disabled: u.value || !s.value.trim()
@@ -16331,13 +16322,13 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
         R(" Add passkey ", -1)
       ])]),
       _: 1
-    })) : (t(), n("p", a$, " Passkeys are not supported in this browser. "));
+    })) : (t(), n("p", e$, " Passkeys are not supported in this browser. "));
   }
-}), s$ = { class: "pk-form-stack" }, r$ = {
+}), l$ = { class: "pk-form-stack" }, o$ = {
   key: 0,
   class: "border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm",
   role: "alert"
-}, t6 = /* @__PURE__ */ O({
+}, Q8 = /* @__PURE__ */ O({
   __name: "RecordForm",
   props: {
     nodes: { default: () => [] },
@@ -16374,8 +16365,8 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       if (a.upload)
         return (g, p) => a.upload(f, g, p);
     }
-    return (f, g) => (t(), n("div", s$, [
-      d.value ? (t(), n("p", r$, c(d.value), 1)) : $("", !0),
+    return (f, g) => (t(), n("div", l$, [
+      d.value ? (t(), n("p", o$, c(d.value), 1)) : $("", !0),
       s.value ? (t(!0), n(z, { key: 1 }, j(e.nodes, (p, h) => (t(), D(Ia, {
         key: h,
         node: p,
@@ -16411,7 +16402,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
       ], 2))
     ]));
   }
-}), i$ = { class: "min-w-0 flex-1 truncate text-sm font-medium" }, d$ = ["disabled"], u$ = ["disabled"], c$ = ["disabled"], a6 = /* @__PURE__ */ O({
+}), s$ = { class: "min-w-0 flex-1 truncate text-sm font-medium" }, r$ = ["disabled"], i$ = ["disabled"], d$ = ["disabled"], e6 = /* @__PURE__ */ O({
   __name: "UnsavedBar",
   props: {
     show: { type: Boolean },
@@ -16473,26 +16464,26 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
                   o("path", { d: "M12 8v4M12 16h.01" })
                 ])
               ], -1)),
-              o("span", i$, c(e.message), 1),
+              o("span", s$, c(e.message), 1),
               e.discardLabel ? (t(), n("button", {
                 key: 0,
                 type: "button",
                 class: "hover:bg-muted rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50",
                 disabled: e.processing,
                 onClick: d[0] || (d[0] = (u) => i.$emit("discard"))
-              }, c(e.discardLabel), 9, d$)) : $("", !0),
+              }, c(e.discardLabel), 9, r$)) : $("", !0),
               o("button", {
                 type: "button",
                 class: "bg-muted hover:bg-muted/70 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50",
                 disabled: e.processing,
                 onClick: d[1] || (d[1] = (u) => i.$emit("cancel"))
-              }, c(e.cancelLabel), 9, u$),
+              }, c(e.cancelLabel), 9, i$),
               o("button", {
                 type: "button",
                 class: "bg-primary text-primary-foreground rounded-md px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50",
                 disabled: e.processing,
                 onClick: d[2] || (d[2] = (u) => i.$emit("save"))
-              }, c(e.processing ? "Saving…" : e.saveLabel), 9, c$)
+              }, c(e.processing ? "Saving…" : e.saveLabel), 9, d$)
             ], 2)
           ], 2)) : $("", !0)
         ]),
@@ -16501,7 +16492,7 @@ const Dx = { class: "flex flex-col gap-6" }, Tx = {
     ], 8, ["to", "disabled"]));
   }
 });
-function n6(e, l = {}) {
+function t6(e, l = {}) {
   const { warnOnUnload: a = !0 } = l, r = U(Dt(e.value)), s = x(() => Dt(e.value) !== r.value);
   function i() {
     r.value = Dt(e.value);
@@ -16524,57 +16515,57 @@ function Dt(e) {
   ));
 }
 const vt = /* @__PURE__ */ new Map();
-function l6(e, l) {
+function a6(e, l) {
   vt.set(e, l);
 }
-function f$(e) {
+function u$(e) {
   return vt.get(e);
 }
-function o6(e) {
+function n6(e) {
   return vt.has(e);
 }
-function m$() {
+function c$() {
   return [...vt.keys()].sort();
 }
-function s6() {
+function l6() {
   vt.clear();
 }
-const p$ = {
+const f$ = {
   key: 0,
   class: "flex flex-col gap-1"
-}, v$ = { class: "text-muted-foreground text-[11px] font-medium tracking-wide uppercase" }, g$ = { class: "text-foreground text-sm font-medium" }, h$ = {
+}, m$ = { class: "text-muted-foreground text-[11px] font-medium tracking-wide uppercase" }, p$ = { class: "text-foreground text-sm font-medium" }, v$ = {
   key: 1,
   class: "text-muted-foreground font-normal"
-}, b$ = {
+}, g$ = {
   key: 5,
   class: "max-w-full font-normal"
-}, y$ = {
+}, h$ = {
   key: 0,
   class: "text-muted-foreground mb-1 font-mono text-[10px] uppercase"
-}, x$ = { class: "bg-muted/50 overflow-x-auto rounded-md border p-3 font-mono text-xs font-normal" }, k$ = {
+}, b$ = { class: "bg-muted/50 overflow-x-auto rounded-md border p-3 font-mono text-xs font-normal" }, y$ = {
   key: 6,
   class: "font-normal"
-}, $$ = {
+}, x$ = {
   key: 0,
   class: "divide-y rounded-md border"
-}, w$ = { class: "text-muted-foreground truncate font-medium" }, C$ = { class: "text-foreground col-span-2 break-words" }, S$ = {
+}, k$ = { class: "text-muted-foreground truncate font-medium" }, $$ = { class: "text-foreground col-span-2 break-words" }, w$ = {
   key: 1,
   class: "text-muted-foreground font-normal"
-}, M$ = {
+}, C$ = {
   key: 7,
   class: "flex flex-col gap-3 font-normal"
-}, B$ = {
+}, S$ = {
   key: 0,
   class: "text-muted-foreground font-normal"
-}, _$ = {
+}, M$ = {
   key: 10,
   class: "text-destructive text-xs font-normal",
   "data-testid": "missing-entry-view"
-}, A$ = ["href"], P$ = { class: "flex min-w-0 items-start gap-2.5" }, z$ = {
+}, B$ = ["href"], _$ = { class: "flex min-w-0 items-start gap-2.5" }, A$ = {
   key: 0,
   class: "bg-muted text-muted-foreground mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md",
   "aria-hidden": "true"
-}, O$ = {
+}, P$ = {
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
@@ -16582,10 +16573,10 @@ const p$ = {
   "stroke-linecap": "round",
   "stroke-linejoin": "round",
   class: "size-3.5"
-}, L$ = ["d"], V$ = { class: "min-w-0" }, j$ = { class: "flex flex-wrap items-center gap-2" }, D$ = { class: "text-sm font-semibold" }, T$ = {
+}, z$ = ["d"], O$ = { class: "min-w-0" }, L$ = { class: "flex flex-wrap items-center gap-2" }, V$ = { class: "text-sm font-semibold" }, j$ = {
   key: 0,
   class: "text-muted-foreground mt-0.5 text-xs"
-}, E$ = ["onClick"], r6 = /* @__PURE__ */ O({
+}, D$ = ["onClick"], o6 = /* @__PURE__ */ O({
   __name: "InfoNode",
   props: {
     node: {},
@@ -16636,19 +16627,19 @@ const p$ = {
       return aa[_] ?? "outline";
     }), C = x(() => {
       const M = typeof a.node.view == "string" ? a.node.view : "";
-      return M ? f$(M) : void 0;
+      return M ? u$(M) : void 0;
     }), S = x(() => {
       const M = typeof a.node.view == "string" ? a.node.view : "";
       if (!M)
         return "ViewEntry has no view name.";
-      const _ = m$(), m = _.length > 0 ? _.join(", ") : "(none)";
+      const _ = c$(), m = _.length > 0 ? _.join(", ") : "(none)";
       return `No entry view for [${M}]; registered: ${m}`;
     });
     return (M, _) => {
       const m = Gt("InfoNode", !0);
-      return e.node.component === "entry" ? (t(), n("div", p$, [
-        o("dt", v$, c(e.node.label), 1),
-        o("dd", g$, [
+      return e.node.component === "entry" ? (t(), n("div", f$, [
+        o("dt", m$, c(e.node.label), 1),
+        o("dd", p$, [
           e.node.type === "badge" && k(zu)(g.value) ? (t(), D(Ke, {
             key: 0,
             variant: y.value,
@@ -16658,7 +16649,7 @@ const p$ = {
               R(c(g.value), 1)
             ]),
             _: 1
-          }, 8, ["variant"])) : e.node.type === "badge" ? (t(), n("span", h$, "None")) : e.node.type === "icon" ? (t(), D(lu, {
+          }, 8, ["variant"])) : e.node.type === "badge" ? (t(), n("span", v$, "None")) : e.node.type === "icon" ? (t(), D(lu, {
             key: 2,
             value: g.value,
             icons: e.node.icons,
@@ -16676,22 +16667,22 @@ const p$ = {
             key: 4,
             value: typeof g.value == "string" ? g.value : null,
             "show-value": e.node.showValue !== !1
-          }, null, 8, ["value", "show-value"])) : e.node.type === "code" ? (t(), n("div", b$, [
-            e.node.language ? (t(), n("p", y$, c(e.node.language), 1)) : $("", !0),
-            o("pre", x$, [
+          }, null, 8, ["value", "show-value"])) : e.node.type === "code" ? (t(), n("div", g$, [
+            e.node.language ? (t(), n("p", h$, c(e.node.language), 1)) : $("", !0),
+            o("pre", b$, [
               o("code", null, c(g.value ?? ""), 1)
             ])
-          ])) : e.node.type === "keyvalue" ? (t(), n("div", k$, [
-            g.value && typeof g.value == "object" && !Array.isArray(g.value) && Object.keys(g.value).length ? (t(), n("dl", $$, [
+          ])) : e.node.type === "keyvalue" ? (t(), n("div", y$, [
+            g.value && typeof g.value == "object" && !Array.isArray(g.value) && Object.keys(g.value).length ? (t(), n("dl", x$, [
               (t(!0), n(z, null, j(g.value, (v, b) => (t(), n("div", {
                 key: b,
                 class: "grid grid-cols-3 gap-2 px-3 py-2 text-sm"
               }, [
-                o("dt", w$, c(b), 1),
-                o("dd", C$, c(v), 1)
+                o("dt", k$, c(b), 1),
+                o("dd", $$, c(v), 1)
               ]))), 128))
-            ])) : (t(), n("span", S$, "None"))
-          ])) : e.node.type === "repeatable" ? (t(), n("div", M$, [
+            ])) : (t(), n("span", w$, "None"))
+          ])) : e.node.type === "repeatable" ? (t(), n("div", C$, [
             (t(!0), n(z, null, j(Array.isArray(g.value) ? g.value : [], (v, b) => (t(), n("div", {
               key: b,
               class: "rounded-md border p-3"
@@ -16704,7 +16695,7 @@ const p$ = {
                 onAction: _[0] || (_[0] = (T) => r("action", T))
               }, null, 8, ["node", "record", "depth"]))), 128))
             ]))), 128)),
-            !Array.isArray(g.value) || g.value.length === 0 ? (t(), n("span", B$, "None")) : $("", !0)
+            !Array.isArray(g.value) || g.value.length === 0 ? (t(), n("span", S$, "None")) : $("", !0)
           ])) : e.node.type === "money" ? (t(), n("span", {
             key: 8,
             class: P(p.value ? "text-muted-foreground font-normal" : "")
@@ -16713,11 +16704,11 @@ const p$ = {
             node: e.node,
             record: e.record,
             value: g.value
-          }, null, 8, ["node", "record", "value"])) : e.node.type === "view" ? (t(), n("p", _$, c(S.value), 1)) : e.node.url && !p.value ? (t(), n("a", {
+          }, null, 8, ["node", "record", "value"])) : e.node.type === "view" ? (t(), n("p", M$, c(S.value), 1)) : e.node.url && !p.value ? (t(), n("a", {
             key: 11,
             href: e.node.url,
             class: "text-foreground font-medium underline-offset-2 hover:underline"
-          }, c(w.value), 9, A$)) : (t(), n("span", {
+          }, c(w.value), 9, B$)) : (t(), n("span", {
             key: 12,
             class: P([
               p.value || e.node.muted ? "text-muted-foreground font-normal" : "",
@@ -16742,24 +16733,24 @@ const p$ = {
           ]]),
           onClick: _[2] || (_[2] = (v) => e.node.collapsible && (s.value = !s.value))
         }, [
-          o("div", P$, [
-            e.node.icon ? (t(), n("div", z$, [
-              (t(), n("svg", O$, [
+          o("div", _$, [
+            e.node.icon ? (t(), n("div", A$, [
+              (t(), n("svg", P$, [
                 o("path", {
                   d: k(ce)(e.node.icon)
-                }, null, 8, L$)
+                }, null, 8, z$)
               ]))
             ])) : $("", !0),
-            o("div", V$, [
-              o("div", j$, [
-                o("h3", D$, c(e.node.label), 1),
+            o("div", O$, [
+              o("div", L$, [
+                o("h3", V$, c(e.node.label), 1),
                 e.node.status ? (t(), D(we, {
                   key: 0,
                   status: e.node.status,
                   class: "capitalize"
                 }, null, 8, ["status"])) : $("", !0)
               ]),
-              e.node.description ? (t(), n("p", T$, c(e.node.description), 1)) : $("", !0)
+              e.node.description ? (t(), n("p", j$, c(e.node.description), 1)) : $("", !0)
             ])
           ])
         ], 2),
@@ -16801,7 +16792,7 @@ const p$ = {
               i.value === b ? "bg-background text-foreground font-medium shadow-sm" : "text-muted-foreground hover:text-foreground"
             ]),
             onClick: (A) => i.value = b
-          }, c(v.label), 11, E$))), 128))
+          }, c(v.label), 11, D$))), 128))
         ], 2),
         (t(!0), n(z, null, j(e.node.children ?? [], (v, b) => pe((t(), n("div", {
           key: b,
@@ -16820,7 +16811,7 @@ const p$ = {
       ], 2)) : $("", !0);
     };
   }
-}), I$ = { class: "text-muted-foreground text-sm font-normal" }, F$ = { class: "flex items-start gap-3" }, N$ = { class: "min-w-0 flex-1" }, R$ = { class: "flex flex-wrap items-center gap-2" }, U$ = { class: "truncate text-sm font-medium" }, H$ = { class: "text-muted-foreground mt-0.5 text-xs" }, K$ = { class: "text-muted-foreground text-xs font-normal" }, q$ = { class: "mt-auto flex items-center gap-2" }, G$ = /* @__PURE__ */ O({
+}), T$ = { class: "text-muted-foreground text-sm font-normal" }, E$ = { class: "flex items-start gap-3" }, I$ = { class: "min-w-0 flex-1" }, F$ = { class: "flex flex-wrap items-center gap-2" }, N$ = { class: "truncate text-sm font-medium" }, R$ = { class: "text-muted-foreground mt-0.5 text-xs" }, U$ = { class: "text-muted-foreground text-xs font-normal" }, H$ = { class: "mt-auto flex items-center gap-2" }, K$ = /* @__PURE__ */ O({
   __name: "PaymentGateways",
   props: {
     gateways: {}
@@ -16834,7 +16825,7 @@ const p$ = {
       class: P(["flex flex-col gap-4", k(Za)]),
       "data-slot": "payment-gateways"
     }, [
-      o("p", I$, c(s.value) + " of " + c(e.gateways.length) + " connected, showcase only, no live processors. ", 1),
+      o("p", T$, c(s.value) + " of " + c(e.gateways.length) + " connected, showcase only, no live processors. ", 1),
       o("div", {
         class: P(k(hf))
       }, [
@@ -16842,15 +16833,15 @@ const p$ = {
           key: u.key,
           class: "bg-background flex flex-col gap-4 rounded-lg border p-4"
         }, [
-          o("div", F$, [
+          o("div", E$, [
             o("span", {
               class: "flex size-11 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-white",
               style: se({ background: u.color }),
               "aria-hidden": "true"
             }, c(u.mark), 5),
-            o("div", N$, [
-              o("div", R$, [
-                o("h3", U$, c(u.label), 1),
+            o("div", I$, [
+              o("div", F$, [
+                o("h3", N$, c(u.label), 1),
                 E(we, {
                   status: u.connected ? "connected" : "disconnected"
                 }, {
@@ -16895,11 +16886,11 @@ const p$ = {
                   _: 2
                 }, 1032, ["status"])) : $("", !0)
               ]),
-              o("p", H$, c(u.caption), 1)
+              o("p", R$, c(u.caption), 1)
             ])
           ]),
-          o("p", K$, c(u.methods.join(" · ")), 1),
-          o("div", q$, [
+          o("p", U$, c(u.methods.join(" · ")), 1),
+          o("div", H$, [
             E(de, {
               size: "sm",
               variant: "outline",
@@ -16925,26 +16916,26 @@ const p$ = {
       ], 2)
     ], 2));
   }
-}), W$ = { class: "flex flex-col gap-6" }, Z$ = { class: "relative" }, J$ = {
+}), q$ = { class: "flex flex-col gap-6" }, G$ = { class: "relative" }, W$ = {
   class: "text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2",
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
   "stroke-width": "2",
   "aria-hidden": "true"
-}, Y$ = ["d"], X$ = {
+}, Z$ = ["d"], J$ = {
   key: 1,
   class: "text-muted-foreground text-sm font-normal"
-}, Q$ = {
+}, Y$ = {
   key: 0,
   class: "flex flex-col gap-4"
-}, ew = { class: "flex flex-wrap items-center gap-2" }, tw = { class: "text-muted-foreground text-sm font-normal" }, aw = { class: "flex flex-col gap-1 text-sm" }, nw = ["value"], lw = {
+}, X$ = { class: "flex flex-wrap items-center gap-2" }, Q$ = { class: "text-muted-foreground text-sm font-normal" }, ew = { class: "flex flex-col gap-1 text-sm" }, tw = ["value"], aw = {
   key: 0,
   class: "flex flex-col gap-2"
-}, ow = { class: "flex flex-wrap items-center gap-2" }, sw = {
+}, nw = { class: "flex flex-wrap items-center gap-2" }, lw = {
   key: 1,
   class: "flex items-center gap-2"
-}, i6 = /* @__PURE__ */ O({
+}, s6 = /* @__PURE__ */ O({
   __name: "PaymentGatewaySettings",
   props: /* @__PURE__ */ Ie({
     title: { default: "Payment gateways" },
@@ -17001,17 +16992,17 @@ const p$ = {
       !C || !l.value.find((M) => M.key === C)?.connected || u(C, { mode: y });
     }
     return (y, C) => (t(), n(z, null, [
-      o("div", W$, [
+      o("div", q$, [
         E(Te, {
           variant: e.headingVariant,
           title: e.title,
           description: e.description ?? void 0
         }, null, 8, ["variant", "title", "description"]),
-        o("div", Z$, [
-          (t(), n("svg", J$, [
+        o("div", G$, [
+          (t(), n("svg", W$, [
             o("path", {
               d: k(ce)("search")
-            }, null, 8, Y$)
+            }, null, 8, Z$)
           ])),
           E($e, {
             modelValue: r.value,
@@ -17022,12 +17013,12 @@ const p$ = {
             "aria-label": "Search payment gateways"
           }, null, 8, ["modelValue"])
         ]),
-        i.value.length > 0 ? (t(), D(G$, {
+        i.value.length > 0 ? (t(), D(K$, {
           key: 0,
           gateways: i.value,
           onConfigure: f,
           onToggle: g
-        }, null, 8, ["gateways"])) : (t(), n("p", X$, " No gateways match “" + c(r.value.trim()) + "”. ", 1))
+        }, null, 8, ["gateways"])) : (t(), n("p", J$, " No gateways match “" + c(r.value.trim()) + "”. ", 1))
       ]),
       E(_t, {
         open: s.value !== null,
@@ -17059,8 +17050,8 @@ const p$ = {
           })) : $("", !0)
         ]),
         default: L(() => [
-          s.value ? (t(), n("div", Q$, [
-            o("div", ew, [
+          s.value ? (t(), n("div", Y$, [
+            o("div", X$, [
               E(we, {
                 status: s.value.connected ? "connected" : "disconnected"
               }, {
@@ -17105,14 +17096,14 @@ const p$ = {
                 _: 1
               }, 8, ["status"])) : $("", !0)
             ]),
-            o("p", tw, c(s.value.caption), 1),
-            o("label", aw, [
+            o("p", Q$, c(s.value.caption), 1),
+            o("label", ew, [
               C[12] || (C[12] = R(" Display name ", -1)),
               o("input", {
                 class: "border-input h-9 rounded-md border bg-transparent px-3 text-sm",
                 value: s.value.label,
                 readonly: ""
-              }, null, 8, nw)
+              }, null, 8, tw)
             ]),
             C[20] || (C[20] = o("label", { class: "flex flex-col gap-1 text-sm" }, [
               R(" Merchant / till (placeholder) "),
@@ -17122,10 +17113,10 @@ const p$ = {
                 autocomplete: "off"
               })
             ], -1)),
-            s.value.connected ? (t(), n("div", lw, [
+            s.value.connected ? (t(), n("div", aw, [
               C[16] || (C[16] = o("p", { class: "text-sm font-medium" }, "Checkout", -1)),
               C[17] || (C[17] = o("p", { class: "text-muted-foreground text-xs font-normal" }, " Disabled gateways stay connected but are not offered at checkout. Only one gateway can be the default tender. ", -1)),
-              o("div", ow, [
+              o("div", nw, [
                 E(de, {
                   size: "sm",
                   variant: s.value.enabled !== !1 ? "default" : "outline",
@@ -17159,7 +17150,7 @@ const p$ = {
                 }, 8, ["variant", "disabled"])
               ])
             ])) : $("", !0),
-            s.value.connected ? (t(), n("div", sw, [
+            s.value.connected ? (t(), n("div", lw, [
               E(de, {
                 size: "sm",
                 variant: s.value.mode === "test" ? "default" : "outline",
@@ -17199,7 +17190,7 @@ function wa(e) {
   }
   return /* @__PURE__ */ new Set();
 }
-function d6(e) {
+function r6(e) {
   const l = U(wa(e));
   ve(() => {
     l.value = wa(e);
@@ -17248,7 +17239,7 @@ function Ca(e) {
     return {};
   }
 }
-function u6(e) {
+function i6(e) {
   const l = U(Ca(e));
   ve(() => {
     l.value = Ca(e);
@@ -17277,7 +17268,7 @@ function u6(e) {
   }
   return { widths: l, setWidth: a, setWidths: r, reset: s };
 }
-function c6(e) {
+function d6(e) {
   const { config: l, rows: a, rowKey: r = "id", fetchChanges: s, onResync: i, onInsert: d } = e, u = U(
     l.driver === "none" ? "off" : "connecting"
   ), f = U(/* @__PURE__ */ new Set());
@@ -17364,18 +17355,18 @@ function c6(e) {
     document.removeEventListener("visibilitychange", H), te();
   }), { status: u, recentlyChanged: f, applyPatch: S, flush: M, pollOnce: _ };
 }
-const rw = /^[a-z0-9-]+$/, iw = /^[a-zA-Z0-9\s.,()%#/-]+$/;
-function f6(e) {
+const ow = /^[a-z0-9-]+$/, sw = /^[a-zA-Z0-9\s.,()%#/-]+$/;
+function u6(e) {
   vn(() => {
     if (typeof document > "u")
       return;
     const l = {};
     for (const [a, r] of Object.entries(e.value ?? {}))
-      !rw.test(a) || typeof r != "string" || !iw.test(r) || (l[`--${a}`] = r);
+      !ow.test(a) || typeof r != "string" || !sw.test(r) || (l[`--${a}`] = r);
     rc(l);
   });
 }
-const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
+const rw = { class: "flex items-center gap-0.5" }, iw = /* @__PURE__ */ O({
   __name: "PkColourModePreview",
   props: {
     value: {},
@@ -17383,7 +17374,7 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
     selected: { type: Boolean }
   },
   setup(e) {
-    return (l, a) => (t(), n("span", dw, [
+    return (l, a) => (t(), n("span", rw, [
       String(e.value) === "mono" ? (t(), n(z, { key: 0 }, [
         a[0] || (a[0] = o("span", { class: "size-3 rounded-[2px] border border-neutral-400 bg-black" }, null, -1)),
         a[1] || (a[1] = o("span", { class: "size-3 rounded-[2px] border border-neutral-400 bg-neutral-500" }, null, -1)),
@@ -17395,7 +17386,7 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
       ], 64))
     ]));
   }
-}), cw = /* @__PURE__ */ O({
+}), dw = /* @__PURE__ */ O({
   __name: "PkVoucherCodeBoxPreview",
   props: {
     value: {},
@@ -17409,7 +17400,7 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
       compact: ""
     }, null, 8, ["style"]));
   }
-}), fw = { class: "flex flex-col gap-2" }, mw = { class: "bg-card rounded-lg border p-4" }, pw = { class: "text-muted-foreground truncate text-xs" }, vw = { class: "flex flex-wrap gap-x-4 gap-y-1 text-xs" }, gw = /* @__PURE__ */ O({
+}), uw = { class: "flex flex-col gap-2" }, cw = { class: "bg-card rounded-lg border p-4" }, fw = { class: "text-muted-foreground truncate text-xs" }, mw = { class: "flex flex-wrap gap-x-4 gap-y-1 text-xs" }, pw = /* @__PURE__ */ O({
   __name: "PkSeoPreview",
   props: {
     field: {},
@@ -17443,9 +17434,9 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
     ), y = x(
       () => h(i.value.length, r.value.descriptionMin, r.value.descriptionMax)
     );
-    return (C, S) => (t(), n("div", fw, [
-      o("div", mw, [
-        o("p", pw, c(u.value), 1),
+    return (C, S) => (t(), n("div", uw, [
+      o("div", cw, [
+        o("p", fw, c(u.value), 1),
         o("p", {
           class: P(["mt-1 truncate text-lg leading-snug text-[#1a0dab] dark:text-[#8ab4f8]", g.value === "" ? "text-muted-foreground italic" : ""])
         }, c(g.value || "Untitled page"), 3),
@@ -17453,7 +17444,7 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
           class: P(["text-muted-foreground mt-1 line-clamp-2 text-sm", p.value === "" ? "italic" : ""])
         }, c(p.value || "No description. The engine writes its own from the page text, which is usually a mid-sentence fragment."), 3)
       ]),
-      o("div", vw, [
+      o("div", mw, [
         o("span", {
           class: P(w.value.tone)
         }, " Title " + c(s.value.length) + "/" + c(r.value.titleMax) + " · " + c(w.value.note), 3),
@@ -17464,7 +17455,7 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
       S[0] || (S[0] = o("p", { class: "text-muted-foreground text-xs font-normal" }, " An approximation. Engines measure pixel width rather than characters, and may rewrite a title they judge unhelpful. ", -1))
     ]));
   }
-}), hw = ["value", "placeholder", "disabled"], bw = /* @__PURE__ */ O({
+}), vw = ["value", "placeholder", "disabled"], gw = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "PkPhone",
   props: {
@@ -17489,13 +17480,13 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
       disabled: e.disabled,
       "data-test": "phone-field",
       onInput: i
-    }, null, 42, hw));
+    }, null, 42, vw));
   }
-}), yw = {
+}), hw = {
   class: "flex flex-wrap gap-1.5",
   role: "listbox",
   "data-test": "icon-picker-field"
-}, xw = ["aria-selected", "disabled", "title", "onClick"], kw = /* @__PURE__ */ O({
+}, bw = ["aria-selected", "disabled", "title", "onClick"], yw = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "PkIconPicker",
   props: {
@@ -17509,7 +17500,7 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
     function d(u) {
       a.disabled || r("update:modelValue", u === i.value ? null : u);
     }
-    return (u, f) => (t(), n("div", yw, [
+    return (u, f) => (t(), n("div", hw, [
       (t(!0), n(z, null, j(s.value, (g) => (t(), n("button", {
         key: g,
         type: "button",
@@ -17519,16 +17510,16 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
         disabled: e.disabled,
         title: g,
         onClick: (p) => d(g)
-      }, c(g), 11, xw))), 128))
+      }, c(g), 11, bw))), 128))
     ]));
   }
-}), $w = {
+}), xw = {
   class: "relative",
   "data-test": "tree-select-field"
-}, ww = ["disabled"], Cw = {
+}, kw = ["disabled"], $w = {
   key: 0,
   class: "bg-popover absolute z-40 mt-1 max-h-64 w-full overflow-auto rounded-md border p-1 shadow-md"
-}, Sw = ["onClick"], Mw = ["onClick"], Bw = /* @__PURE__ */ O({
+}, ww = ["onClick"], Cw = ["onClick"], Sw = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "PkTreeSelect",
   props: {
@@ -17561,7 +17552,7 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
     function p(h) {
       a.disabled || (r("update:modelValue", h), i.value = !1);
     }
-    return (h, w) => (t(), n("div", $w, [
+    return (h, w) => (t(), n("div", xw, [
       o("button", {
         type: "button",
         class: P(["border-input bg-background flex h-10 w-full items-center justify-between rounded-md border px-3 text-left text-sm disabled:opacity-50", k(Se)]),
@@ -17572,8 +17563,8 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
           class: P(g.value ? "" : "text-muted-foreground")
         }, c(g.value ?? "Select…"), 3),
         w[2] || (w[2] = o("span", { class: "text-muted-foreground text-xs font-normal" }, "▾", -1))
-      ], 10, ww),
-      i.value ? (t(), n("div", Cw, [
+      ], 10, kw),
+      i.value ? (t(), n("div", $w, [
         e.field.searchable ? pe((t(), n("input", {
           key: 0,
           "onUpdate:modelValue": w[1] || (w[1] = (y) => s.value = y),
@@ -17590,22 +17581,22 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
             type: "button",
             class: P(["hover:bg-accent flex w-full rounded px-2 py-1.5 text-left text-sm font-medium", e.modelValue === y.value ? "bg-accent" : ""]),
             onClick: (C) => p(y.value)
-          }, c(y.label), 11, Sw),
+          }, c(y.label), 11, ww),
           (t(!0), n(z, null, j(y.children ?? [], (C) => (t(), n("button", {
             key: String(C.value),
             type: "button",
             class: P(["hover:bg-accent text-muted-foreground flex w-full rounded py-1.5 pr-2 pl-6 text-left text-sm", e.modelValue === C.value ? "bg-accent text-foreground" : ""]),
             onClick: (S) => p(C.value)
-          }, c(C.label), 11, Mw))), 128))
+          }, c(C.label), 11, Cw))), 128))
         ], 64))), 128))
       ])) : $("", !0)
     ]));
   }
-}), _w = ["aria-label"], Aw = ["disabled", "aria-label", "aria-pressed", "onClick"], Pw = {
+}), Mw = ["aria-label"], Bw = ["disabled", "aria-label", "aria-pressed", "onClick"], _w = {
   class: "size-5",
   viewBox: "0 0 24 24",
   "aria-hidden": "true"
-}, zw = { key: 0 }, Ow = ["id"], Lw = ["fill"], Vw = ["disabled"], jw = /* @__PURE__ */ O({
+}, Aw = { key: 0 }, Pw = ["id"], zw = ["fill"], Ow = ["disabled"], Lw = /* @__PURE__ */ O({
   inheritAttrs: !1,
   __name: "PkRating",
   props: {
@@ -17640,8 +17631,8 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
         "aria-pressed": d.value >= h,
         onClick: (w) => u(h)
       }, [
-        (t(), n("svg", Pw, [
-          f(h) === "half" ? (t(), n("defs", zw, [
+        (t(), n("svg", _w, [
+          f(h) === "half" ? (t(), n("defs", Aw, [
             o("linearGradient", {
               id: `half-${e.field.key}-${h}`,
               x1: "0",
@@ -17658,7 +17649,7 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
                 "stop-color": "transparent",
                 "stop-opacity": "1"
               }, null, -1)
-            ])], 8, Ow)
+            ])], 8, Pw)
           ])) : $("", !0),
           o("path", {
             d: "m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L7 14.2l-5-4.9 6.9-1L12 2Z",
@@ -17666,21 +17657,21 @@ const dw = { class: "flex items-center gap-0.5" }, uw = /* @__PURE__ */ O({
             stroke: "currentColor",
             "stroke-width": "1.5",
             "stroke-linejoin": "round"
-          }, null, 8, Lw)
+          }, null, 8, zw)
         ]))
-      ], 8, Aw))), 128)),
+      ], 8, Bw))), 128)),
       d.value > 0 ? (t(), n("button", {
         key: 0,
         type: "button",
         class: "text-muted-foreground ml-1 text-xs hover:text-foreground disabled:opacity-50",
         disabled: e.disabled,
         onClick: p[0] || (p[0] = (h) => u(0))
-      }, " Clear ", 8, Vw)) : $("", !0)
-    ], 8, _w));
+      }, " Clear ", 8, Ow)) : $("", !0)
+    ], 8, Mw));
   }
 });
-function Dw() {
-  xe("radio", tp), xe("toggle-buttons", Ea), xe("checkboxlist", lp), xe("tags", cp), xe("colour", wp), xe("slider", av), xe("rating", jw), xe("phone", bw), xe("icon-picker", kw), xe("tree-select", Bw), xe("visual-select", vv), xe("markdown", Vm), xe("code", Nm), xe("map", _p), xe("qrcode", Lp), xe("barcode", Fp), xe("diff", Up), xe("seo-preview", gw), jt("swatch", hv), jt("voucher-code-box", cw), jt("document-colour-mode", uw);
+function Vw() {
+  xe("radio", tp), xe("toggle-buttons", Ea), xe("checkboxlist", lp), xe("tags", cp), xe("colour", wp), xe("slider", av), xe("rating", Lw), xe("phone", gw), xe("icon-picker", yw), xe("tree-select", Sw), xe("visual-select", vv), xe("markdown", Vm), xe("code", Nm), xe("map", _p), xe("qrcode", Lp), xe("barcode", Fp), xe("diff", Up), xe("seo-preview", pw), jt("swatch", hv), jt("voucher-code-box", dw), jt("document-colour-mode", iw);
 }
 function nn() {
   const e = U(null), l = U(!1);
@@ -17701,7 +17692,7 @@ function nn() {
     ), a.observe(e.value);
   }), ke(() => a?.disconnect()), { el: e, shown: l };
 }
-const Tw = /* @__PURE__ */ O({
+const jw = /* @__PURE__ */ O({
   __name: "PkReveal",
   props: {
     delay: { default: 0 }
@@ -17717,7 +17708,7 @@ const Tw = /* @__PURE__ */ O({
       K(r.$slots, "default")
     ], 6));
   }
-}), Ew = ["id"], Be = /* @__PURE__ */ O({
+}), Dw = ["id"], Be = /* @__PURE__ */ O({
   __name: "PkSection",
   props: {
     muted: { type: Boolean, default: !1 },
@@ -17732,22 +17723,22 @@ const Tw = /* @__PURE__ */ O({
       o("div", {
         class: P(["mx-auto w-full", e.narrow ? "max-w-3xl" : "max-w-6xl"])
       }, [
-        E(Tw, null, {
+        E(jw, null, {
           default: L(() => [
             K(l.$slots, "default")
           ]),
           _: 3
         })
       ], 2)
-    ], 10, Ew));
+    ], 10, Dw));
   }
-}), Iw = {
+}), Tw = {
   key: 0,
   class: "text-xs font-semibold tracking-widest text-primary uppercase"
-}, Fw = {
+}, Ew = {
   key: 1,
   class: "text-2xl font-semibold tracking-tight text-balance sm:text-3xl"
-}, Nw = {
+}, Iw = {
   key: 2,
   class: "max-w-2xl text-pretty text-muted-foreground"
 }, Ve = /* @__PURE__ */ O({
@@ -17763,18 +17754,18 @@ const Tw = /* @__PURE__ */ O({
       key: 0,
       class: P(["flex flex-col gap-3", e.centred ? "items-center text-center" : ""])
     }, [
-      e.eyebrow ? (t(), n("p", Iw, c(e.eyebrow), 1)) : $("", !0),
-      e.title ? (t(), n("h2", Fw, c(e.title), 1)) : $("", !0),
-      e.body ? (t(), n("p", Nw, c(e.body), 1)) : $("", !0)
+      e.eyebrow ? (t(), n("p", Tw, c(e.eyebrow), 1)) : $("", !0),
+      e.title ? (t(), n("h2", Ew, c(e.title), 1)) : $("", !0),
+      e.body ? (t(), n("p", Iw, c(e.body), 1)) : $("", !0)
     ], 2)) : $("", !0);
   }
-}), Rw = { class: "flex flex-col gap-10" }, Uw = { class: "grid gap-4 md:grid-cols-3" }, Hw = {
+}), Fw = { class: "flex flex-col gap-10" }, Nw = { class: "grid gap-4 md:grid-cols-3" }, Rw = {
   key: 0,
   class: "text-xs font-medium text-muted-foreground"
-}, Kw = { class: "text-sm font-semibold text-balance" }, qw = {
+}, Uw = { class: "text-sm font-semibold text-balance" }, Hw = {
   key: 1,
   class: "text-pretty text-sm text-muted-foreground"
-}, Gw = /* @__PURE__ */ O({
+}, Kw = /* @__PURE__ */ O({
   __name: "PkArticles",
   props: {
     title: {},
@@ -17784,21 +17775,21 @@ const Tw = /* @__PURE__ */ O({
   setup(e) {
     return (l, a) => (t(), D(Be, null, {
       default: L(() => [
-        o("div", Rw, [
+        o("div", Fw, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          o("ul", Uw, [
+          o("ul", Nw, [
             (t(!0), n(z, null, j(e.items ?? [], (r, s) => (t(), n("li", { key: s }, [
               (t(), D(Me(r.href ? "a" : "div"), {
                 href: r.href || void 0,
                 class: "flex h-full flex-col gap-3 rounded-lg border bg-card p-5 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg motion-reduce:transform-none motion-reduce:transition-none"
               }, {
                 default: L(() => [
-                  r.meta ? (t(), n("p", Hw, c(r.meta), 1)) : $("", !0),
-                  o("h3", Kw, c(r.title), 1),
-                  r.body ? (t(), n("p", qw, c(r.body), 1)) : $("", !0)
+                  r.meta ? (t(), n("p", Rw, c(r.meta), 1)) : $("", !0),
+                  o("h3", Uw, c(r.title), 1),
+                  r.body ? (t(), n("p", Hw, c(r.body), 1)) : $("", !0)
                 ]),
                 _: 2
               }, 1032, ["href"]))
@@ -17810,7 +17801,7 @@ const Tw = /* @__PURE__ */ O({
     }));
   }
 });
-function Ww() {
+function qw() {
   const e = U(null);
   let l = null;
   function a(s) {
@@ -17828,16 +17819,16 @@ function Ww() {
     l?.removeEventListener("pointermove", a), l?.removeEventListener("pointerleave", r);
   }), { el: e };
 }
-const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
+const Gw = { class: "pk-tilt-inner relative h-full" }, Ww = /* @__PURE__ */ O({
   __name: "PkTiltCard",
   setup(e) {
-    const { el: l } = Ww();
+    const { el: l } = qw();
     return (a, r) => (t(), n("div", {
       ref_key: "el",
       ref: l,
       class: "pk-tilt group/tilt"
     }, [
-      o("div", Zw, [
+      o("div", Gw, [
         r[0] || (r[0] = o("span", {
           class: "pk-tilt-glow pointer-events-none absolute inset-0 rounded-lg",
           "aria-hidden": "true"
@@ -17846,7 +17837,7 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
       ])
     ], 512));
   }
-}), Yw = { class: "flex flex-col gap-10" }, Xw = { class: "grid auto-rows-[minmax(11rem,auto)] gap-4 sm:grid-cols-3" }, Qw = { class: "text-base font-semibold" }, e4 = { class: "text-sm text-pretty text-muted-foreground" }, t4 = /* @__PURE__ */ O({
+}), Zw = { class: "flex flex-col gap-10" }, Jw = { class: "grid auto-rows-[minmax(11rem,auto)] gap-4 sm:grid-cols-3" }, Yw = { class: "text-base font-semibold" }, Xw = { class: "text-sm text-pretty text-muted-foreground" }, Qw = /* @__PURE__ */ O({
   __name: "PkBento",
   props: {
     title: {},
@@ -17863,13 +17854,13 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
     }
     return (a, r) => (t(), D(Be, null, {
       default: L(() => [
-        o("div", Yw, [
+        o("div", Zw, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          o("div", Xw, [
-            (t(!0), n(z, null, j(e.items ?? [], (s, i) => (t(), D(Jw, {
+          o("div", Jw, [
+            (t(!0), n(z, null, j(e.items ?? [], (s, i) => (t(), D(Ww, {
               key: i,
               class: P(l(s.span))
             }, {
@@ -17880,8 +17871,8 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
                     s.accent ? "bg-primary/5 border-primary/30 dark:bg-primary/10" : "bg-card"
                   ])
                 }, [
-                  o("h3", Qw, c(s.title), 1),
-                  o("p", e4, c(s.body), 1)
+                  o("h3", Yw, c(s.title), 1),
+                  o("p", Xw, c(s.body), 1)
                 ], 2)
               ]),
               _: 2
@@ -17892,16 +17883,16 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
       _: 1
     }));
   }
-}), a4 = { class: "grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center" }, n4 = { class: "flex flex-col gap-4 rounded-xl border bg-card p-6 sm:p-8" }, l4 = { class: "grid gap-4 text-sm" }, o4 = {
+}), e4 = { class: "grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center" }, t4 = { class: "flex flex-col gap-4 rounded-xl border bg-card p-6 sm:p-8" }, a4 = { class: "grid gap-4 text-sm" }, n4 = {
   key: 0,
   class: "grid gap-1"
-}, s4 = ["href"], r4 = {
+}, l4 = ["href"], o4 = {
   key: 1,
   class: "grid gap-1"
-}, i4 = ["href"], d4 = {
+}, s4 = ["href"], r4 = {
   key: 2,
   class: "grid gap-1"
-}, u4 = { class: "text-pretty text-muted-foreground" }, c4 = ["href"], f4 = /* @__PURE__ */ O({
+}, i4 = { class: "text-pretty text-muted-foreground" }, d4 = ["href"], u4 = /* @__PURE__ */ O({
   __name: "PkContact",
   props: {
     title: {},
@@ -17915,51 +17906,51 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
   setup(e) {
     return (l, a) => (t(), D(Be, { muted: "" }, {
       default: L(() => [
-        o("div", a4, [
+        o("div", e4, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          o("div", n4, [
-            o("dl", l4, [
-              e.email ? (t(), n("div", o4, [
+          o("div", t4, [
+            o("dl", a4, [
+              e.email ? (t(), n("div", n4, [
                 a[0] || (a[0] = o("dt", { class: "text-xs font-medium uppercase tracking-wide text-muted-foreground" }, " Email ", -1)),
                 o("dd", null, [
                   o("a", {
                     href: `mailto:${e.email}`,
                     class: "font-medium text-foreground underline-offset-4 hover:underline"
-                  }, c(e.email), 9, s4)
+                  }, c(e.email), 9, l4)
                 ])
               ])) : $("", !0),
-              e.phone ? (t(), n("div", r4, [
+              e.phone ? (t(), n("div", o4, [
                 a[1] || (a[1] = o("dt", { class: "text-xs font-medium uppercase tracking-wide text-muted-foreground" }, " Phone ", -1)),
                 o("dd", null, [
                   o("a", {
                     href: `tel:${e.phone.replace(/\s+/g, "")}`,
                     class: "font-medium text-foreground underline-offset-4 hover:underline"
-                  }, c(e.phone), 9, i4)
+                  }, c(e.phone), 9, s4)
                 ])
               ])) : $("", !0),
-              e.address ? (t(), n("div", d4, [
+              e.address ? (t(), n("div", r4, [
                 a[2] || (a[2] = o("dt", { class: "text-xs font-medium uppercase tracking-wide text-muted-foreground" }, " Address ", -1)),
-                o("dd", u4, c(e.address), 1)
+                o("dd", i4, c(e.address), 1)
               ])) : $("", !0)
             ]),
             e.label ? (t(), n("a", {
               key: 0,
               href: e.href ?? (e.email ? `mailto:${e.email}` : "#"),
               class: "inline-flex h-11 w-fit items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            }, c(e.label), 9, c4)) : $("", !0)
+            }, c(e.label), 9, d4)) : $("", !0)
           ])
         ])
       ]),
       _: 1
     }));
   }
-}), m4 = { class: "flex flex-col items-center gap-5 rounded-xl border bg-card px-6 py-12 text-center" }, p4 = { class: "max-w-2xl text-2xl font-semibold tracking-tight text-balance sm:text-3xl" }, v4 = {
+}), c4 = { class: "flex flex-col items-center gap-5 rounded-xl border bg-card px-6 py-12 text-center" }, f4 = { class: "max-w-2xl text-2xl font-semibold tracking-tight text-balance sm:text-3xl" }, m4 = {
   key: 0,
   class: "max-w-xl text-pretty text-muted-foreground"
-}, g4 = ["href"], h4 = /* @__PURE__ */ O({
+}, p4 = ["href"], v4 = /* @__PURE__ */ O({
   __name: "PkCta",
   props: {
     title: {},
@@ -17970,20 +17961,20 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
   setup(e) {
     return (l, a) => (t(), D(Be, null, {
       default: L(() => [
-        o("div", m4, [
-          o("h2", p4, c(e.title), 1),
-          e.body ? (t(), n("p", v4, c(e.body), 1)) : $("", !0),
+        o("div", c4, [
+          o("h2", f4, c(e.title), 1),
+          e.body ? (t(), n("p", m4, c(e.body), 1)) : $("", !0),
           e.label ? (t(), n("a", {
             key: 1,
             href: e.href ?? "#",
             class: "inline-flex h-11 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-          }, c(e.label), 9, g4)) : $("", !0)
+          }, c(e.label), 9, p4)) : $("", !0)
         ])
       ]),
       _: 1
     }));
   }
-}), b4 = { class: "flex flex-col gap-8" }, y4 = { class: "divide-y rounded-lg border" }, x4 = { class: "flex cursor-pointer items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-accent/50" }, k4 = { class: "px-4 pb-4 text-sm text-pretty text-muted-foreground" }, $4 = /* @__PURE__ */ O({
+}), g4 = { class: "flex flex-col gap-8" }, h4 = { class: "divide-y rounded-lg border" }, b4 = { class: "flex cursor-pointer items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-accent/50" }, y4 = { class: "px-4 pb-4 text-sm text-pretty text-muted-foreground" }, x4 = /* @__PURE__ */ O({
   __name: "PkFaq",
   props: {
     title: {},
@@ -17993,24 +17984,24 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
   setup(e) {
     return (l, a) => (t(), D(Be, { narrow: "" }, {
       default: L(() => [
-        o("div", b4, [
+        o("div", g4, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          o("div", y4, [
+          o("div", h4, [
             (t(!0), n(z, null, j(e.items ?? [], (r, s) => (t(), n("details", {
               key: s,
               class: "group"
             }, [
-              o("summary", x4, [
+              o("summary", b4, [
                 R(c(r.question) + " ", 1),
                 a[0] || (a[0] = o("span", {
                   class: "text-muted-foreground transition-transform group-open:rotate-45",
                   "aria-hidden": "true"
                 }, " + ", -1))
               ]),
-              o("p", k4, c(r.answer), 1)
+              o("p", y4, c(r.answer), 1)
             ]))), 128))
           ])
         ])
@@ -18018,7 +18009,7 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
       _: 1
     }));
   }
-}), w4 = { class: "flex flex-col gap-10" }, C4 = { class: "grid gap-6 md:grid-cols-2 lg:grid-cols-3" }, S4 = { class: "text-sm font-semibold" }, M4 = { class: "text-sm text-pretty text-muted-foreground" }, B4 = /* @__PURE__ */ O({
+}), k4 = { class: "flex flex-col gap-10" }, $4 = { class: "grid gap-6 md:grid-cols-2 lg:grid-cols-3" }, w4 = { class: "text-sm font-semibold" }, C4 = { class: "text-sm text-pretty text-muted-foreground" }, S4 = /* @__PURE__ */ O({
   __name: "PkFeatureGrid",
   props: {
     title: {},
@@ -18028,18 +18019,18 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
   setup(e) {
     return (l, a) => (t(), D(Be, null, {
       default: L(() => [
-        o("div", w4, [
+        o("div", k4, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          o("ul", C4, [
+          o("ul", $4, [
             (t(!0), n(z, null, j(e.items ?? [], (r, s) => (t(), n("li", {
               key: s,
               class: "flex flex-col gap-2 rounded-lg border bg-card p-5 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg motion-reduce:transform-none motion-reduce:transition-none"
             }, [
-              o("h3", S4, c(r.title), 1),
-              o("p", M4, c(r.body), 1)
+              o("h3", w4, c(r.title), 1),
+              o("p", C4, c(r.body), 1)
             ]))), 128))
           ])
         ])
@@ -18047,22 +18038,22 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
       _: 1
     }));
   }
-}), _4 = {
+}), M4 = {
   key: 0,
   class: "pk-hero-brand text-4xl font-semibold tracking-tight text-balance sm:text-5xl md:text-6xl"
-}, A4 = {
+}, B4 = {
   key: 1,
   class: "rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground"
-}, P4 = {
+}, _4 = {
   key: 2,
   class: "max-w-2xl text-lg text-pretty text-muted-foreground"
-}, z4 = {
+}, A4 = {
   key: 3,
   class: "flex flex-wrap items-center justify-center gap-3"
-}, O4 = ["href"], L4 = ["href"], V4 = {
+}, P4 = ["href"], z4 = ["href"], O4 = {
   key: 4,
   class: "text-xs font-normal text-muted-foreground"
-}, j4 = /* @__PURE__ */ O({
+}, L4 = /* @__PURE__ */ O({
   __name: "PkHero",
   props: {
     brand: {},
@@ -18082,37 +18073,37 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
         o("div", {
           class: P(["flex flex-col items-center gap-6 text-center", e.variant === "bleed" ? "min-h-[70vh] justify-center py-8 sm:py-12" : ""])
         }, [
-          e.brand ? (t(), n("p", _4, c(e.brand), 1)) : $("", !0),
-          e.eyebrow ? (t(), n("p", A4, c(e.eyebrow), 1)) : $("", !0),
+          e.brand ? (t(), n("p", M4, c(e.brand), 1)) : $("", !0),
+          e.eyebrow ? (t(), n("p", B4, c(e.eyebrow), 1)) : $("", !0),
           o("h1", {
             class: P([
               "max-w-3xl font-semibold tracking-tight text-balance",
               e.brand ? "text-2xl sm:text-3xl md:text-4xl" : "text-4xl sm:text-5xl"
             ])
           }, c(e.title), 3),
-          e.body ? (t(), n("p", P4, c(e.body), 1)) : $("", !0),
-          e.primaryLabel || e.secondaryLabel ? (t(), n("div", z4, [
+          e.body ? (t(), n("p", _4, c(e.body), 1)) : $("", !0),
+          e.primaryLabel || e.secondaryLabel ? (t(), n("div", A4, [
             e.secondaryLabel ? (t(), n("a", {
               key: 0,
               href: e.secondaryHref ?? "#",
               class: "inline-flex h-11 items-center rounded-md border bg-background px-5 text-sm font-medium transition-colors hover:bg-accent"
-            }, c(e.secondaryLabel), 9, O4)) : $("", !0),
+            }, c(e.secondaryLabel), 9, P4)) : $("", !0),
             e.primaryLabel ? (t(), n("a", {
               key: 1,
               href: e.primaryHref ?? "#",
               class: "inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            }, c(e.primaryLabel), 9, L4)) : $("", !0)
+            }, c(e.primaryLabel), 9, z4)) : $("", !0)
           ])) : $("", !0),
-          e.note ? (t(), n("p", V4, c(e.note), 1)) : $("", !0)
+          e.note ? (t(), n("p", O4, c(e.note), 1)) : $("", !0)
         ], 2)
       ]),
       _: 1
     }));
   }
-}), D4 = { class: "flex flex-col items-center gap-6" }, T4 = {
+}), V4 = { class: "flex flex-col items-center gap-6" }, j4 = {
   key: 0,
   class: "text-xs font-medium tracking-widest text-muted-foreground uppercase"
-}, E4 = { class: "flex flex-wrap items-center justify-center gap-x-10 gap-y-4" }, I4 = /* @__PURE__ */ O({
+}, D4 = { class: "flex flex-wrap items-center justify-center gap-x-10 gap-y-4" }, T4 = /* @__PURE__ */ O({
   __name: "PkLogoCloud",
   props: {
     title: {},
@@ -18121,9 +18112,9 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
   setup(e) {
     return (l, a) => (t(), D(Be, { muted: "" }, {
       default: L(() => [
-        o("div", D4, [
-          e.title ? (t(), n("p", T4, c(e.title), 1)) : $("", !0),
-          o("ul", E4, [
+        o("div", V4, [
+          e.title ? (t(), n("p", j4, c(e.title), 1)) : $("", !0),
+          o("ul", D4, [
             (t(!0), n(z, null, j(e.items ?? [], (r, s) => (t(), n("li", {
               key: s,
               class: "text-lg font-semibold text-muted-foreground/70"
@@ -18134,22 +18125,22 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
       _: 1
     }));
   }
-}), F4 = { class: "flex flex-col gap-10" }, N4 = {
+}), E4 = { class: "flex flex-col gap-10" }, I4 = {
   key: 0,
   class: "flex items-center justify-center gap-3"
-}, R4 = {
+}, F4 = {
   class: "inline-flex rounded-md border bg-background p-1",
   role: "group"
-}, U4 = ["aria-pressed"], H4 = ["aria-pressed"], K4 = {
+}, N4 = ["aria-pressed"], R4 = ["aria-pressed"], U4 = {
   key: 0,
   class: "text-xs text-muted-foreground font-normal"
-}, q4 = { class: "grid gap-4 md:grid-cols-3" }, G4 = { class: "flex flex-col gap-1" }, W4 = { class: "text-sm font-semibold" }, Z4 = { class: "flex items-baseline gap-1" }, J4 = { class: "text-3xl font-semibold tracking-tight" }, Y4 = {
+}, H4 = { class: "grid gap-4 md:grid-cols-3" }, K4 = { class: "flex flex-col gap-1" }, q4 = { class: "text-sm font-semibold" }, G4 = { class: "flex items-baseline gap-1" }, W4 = { class: "text-3xl font-semibold tracking-tight" }, Z4 = {
   key: 0,
   class: "text-sm text-muted-foreground font-normal"
-}, X4 = {
+}, J4 = {
   key: 0,
   class: "text-sm text-pretty text-muted-foreground"
-}, Q4 = { class: "flex flex-col gap-2 text-sm" }, e5 = { class: "text-muted-foreground" }, t5 = ["href"], a5 = /* @__PURE__ */ O({
+}, Y4 = { class: "flex flex-col gap-2 text-sm" }, X4 = { class: "text-muted-foreground" }, Q4 = ["href"], e5 = /* @__PURE__ */ O({
   __name: "PkPricing",
   props: {
     title: {},
@@ -18164,13 +18155,13 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
     }
     return (i, d) => (t(), D(Be, { muted: "" }, {
       default: L(() => [
-        o("div", F4, [
+        o("div", E4, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          r.value ? (t(), n("div", N4, [
-            o("div", R4, [
+          r.value ? (t(), n("div", I4, [
+            o("div", F4, [
               o("button", {
                 type: "button",
                 class: P([
@@ -18179,7 +18170,7 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
                 ]),
                 "aria-pressed": !a.value,
                 onClick: d[0] || (d[0] = (u) => a.value = !1)
-              }, " Monthly ", 10, U4),
+              }, " Monthly ", 10, N4),
               o("button", {
                 type: "button",
                 class: P([
@@ -18188,24 +18179,24 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
                 ]),
                 "aria-pressed": a.value,
                 onClick: d[1] || (d[1] = (u) => a.value = !0)
-              }, " Annual ", 10, H4)
+              }, " Annual ", 10, R4)
             ]),
-            e.annualNote ? (t(), n("p", K4, c(e.annualNote), 1)) : $("", !0)
+            e.annualNote ? (t(), n("p", U4, c(e.annualNote), 1)) : $("", !0)
           ])) : $("", !0),
-          o("ul", q4, [
+          o("ul", H4, [
             (t(!0), n(z, null, j(e.items ?? [], (u, f) => (t(), n("li", {
               key: f,
               class: P(["flex flex-col gap-4 rounded-lg border bg-card p-6", u.featured ? "border-primary shadow-sm" : ""])
             }, [
-              o("div", G4, [
-                o("h3", W4, c(u.name), 1),
-                o("p", Z4, [
-                  o("span", J4, c(s(u)), 1),
-                  u.period ? (t(), n("span", Y4, c(u.period), 1)) : $("", !0)
+              o("div", K4, [
+                o("h3", q4, c(u.name), 1),
+                o("p", G4, [
+                  o("span", W4, c(s(u)), 1),
+                  u.period ? (t(), n("span", Z4, c(u.period), 1)) : $("", !0)
                 ]),
-                u.body ? (t(), n("p", X4, c(u.body), 1)) : $("", !0)
+                u.body ? (t(), n("p", J4, c(u.body), 1)) : $("", !0)
               ]),
-              o("ul", Q4, [
+              o("ul", Y4, [
                 (t(!0), n(z, null, j(u.features ?? [], (g, p) => (t(), n("li", {
                   key: p,
                   class: "flex items-start gap-2"
@@ -18214,7 +18205,7 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
                     class: "mt-0.5 text-success",
                     "aria-hidden": "true"
                   }, "✓", -1)),
-                  o("span", e5, c(g.title), 1)
+                  o("span", X4, c(g.title), 1)
                 ]))), 128))
               ]),
               u.label ? (t(), n("a", {
@@ -18224,7 +18215,7 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
                   "mt-auto inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors",
                   u.featured ? "bg-primary text-primary-foreground hover:opacity-90" : "border bg-background hover:bg-accent"
                 ])
-              }, c(u.label), 11, t5)) : $("", !0)
+              }, c(u.label), 11, Q4)) : $("", !0)
             ], 2))), 128))
           ])
         ])
@@ -18233,7 +18224,7 @@ const Zw = { class: "pk-tilt-inner relative h-full" }, Jw = /* @__PURE__ */ O({
     }));
   }
 });
-function n5() {
+function t5() {
   const e = U(null);
   let l = null, a = null, r = !1, s = !1;
   function i() {
@@ -18260,10 +18251,10 @@ function n5() {
     a?.disconnect(), window.removeEventListener("scroll", d), window.removeEventListener("resize", d);
   }), { el: e };
 }
-const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "sticky top-[12vh] flex flex-col items-center gap-8" }, s5 = { class: "flex max-w-2xl flex-col items-center gap-3 text-center" }, r5 = { class: "text-2xl font-semibold tracking-tight text-balance sm:text-3xl" }, i5 = {
+const a5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, n5 = { class: "sticky top-[12vh] flex flex-col items-center gap-8" }, l5 = { class: "flex max-w-2xl flex-col items-center gap-3 text-center" }, o5 = { class: "text-2xl font-semibold tracking-tight text-balance sm:text-3xl" }, s5 = {
   key: 0,
   class: "text-pretty text-muted-foreground"
-}, d5 = { class: "pk-showcase-stage w-full [perspective:1400px]" }, u5 = { class: "pk-showcase-frame overflow-hidden rounded-xl border bg-card shadow-2xl" }, c5 = { class: "flex items-center gap-2 border-b bg-muted/40 px-4 py-2.5" }, f5 = { class: "ml-3 truncate text-xs text-muted-foreground" }, m5 = { class: "flex" }, p5 = { class: "hidden w-40 shrink-0 flex-col gap-2 border-r p-4 sm:flex" }, v5 = { class: "min-w-0 flex-1 p-4" }, g5 = { class: "flex flex-col divide-y rounded-md border" }, h5 = /* @__PURE__ */ O({
+}, r5 = { class: "pk-showcase-stage w-full [perspective:1400px]" }, i5 = { class: "pk-showcase-frame overflow-hidden rounded-xl border bg-card shadow-2xl" }, d5 = { class: "flex items-center gap-2 border-b bg-muted/40 px-4 py-2.5" }, u5 = { class: "ml-3 truncate text-xs text-muted-foreground" }, c5 = { class: "flex" }, f5 = { class: "hidden w-40 shrink-0 flex-col gap-2 border-r p-4 sm:flex" }, m5 = { class: "min-w-0 flex-1 p-4" }, p5 = { class: "flex flex-col divide-y rounded-md border" }, v5 = /* @__PURE__ */ O({
   __name: "PkShowcase",
   props: {
     title: {},
@@ -18272,41 +18263,41 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
     caption: {}
   },
   setup(e) {
-    const { el: l } = n5();
+    const { el: l } = t5();
     return (a, r) => (t(), n("section", {
       ref_key: "el",
       ref: l,
       class: "pk-showcase relative w-full px-4 sm:px-6"
     }, [
-      o("div", l5, [
-        o("div", o5, [
-          o("div", s5, [
-            o("h2", r5, c(e.title), 1),
-            e.body ? (t(), n("p", i5, c(e.body), 1)) : $("", !0)
+      o("div", a5, [
+        o("div", n5, [
+          o("div", l5, [
+            o("h2", o5, c(e.title), 1),
+            e.body ? (t(), n("p", s5, c(e.body), 1)) : $("", !0)
           ]),
-          o("div", d5, [
-            o("div", u5, [
-              o("div", c5, [
+          o("div", r5, [
+            o("div", i5, [
+              o("div", d5, [
                 r[0] || (r[0] = o("span", { class: "size-2.5 rounded-full bg-red-400/70" }, null, -1)),
                 r[1] || (r[1] = o("span", { class: "size-2.5 rounded-full bg-amber-400/70" }, null, -1)),
                 r[2] || (r[2] = o("span", { class: "size-2.5 rounded-full bg-emerald-400/70" }, null, -1)),
-                o("span", f5, c(e.caption ?? "yourpanel.example / records"), 1)
+                o("span", u5, c(e.caption ?? "yourpanel.example / records"), 1)
               ]),
-              o("div", m5, [
-                o("div", p5, [
+              o("div", c5, [
+                o("div", f5, [
                   (t(), n(z, null, j(6, (s) => o("span", {
                     key: s,
                     class: "h-2.5 rounded bg-foreground/10",
                     style: se({ width: `${55 + s * 13 % 40}%` })
                   }, null, 4)), 64))
                 ]),
-                o("div", v5, [
+                o("div", m5, [
                   r[4] || (r[4] = o("div", { class: "mb-3 flex gap-2" }, [
                     o("span", { class: "h-7 w-28 rounded-md bg-foreground/[0.07]" }),
                     o("span", { class: "h-7 w-20 rounded-md bg-foreground/[0.07]" }),
                     o("span", { class: "ml-auto h-7 w-24 rounded-md bg-primary/25" })
                   ], -1)),
-                  o("div", g5, [
+                  o("div", p5, [
                     (t(!0), n(z, null, j(e.rows, (s) => (t(), n("div", {
                       key: s,
                       class: "pk-showcase-row flex items-center gap-3 px-3 py-2.5",
@@ -18326,7 +18317,7 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
       ])
     ], 512));
   }
-}), b5 = /* @__PURE__ */ O({
+}), g5 = /* @__PURE__ */ O({
   __name: "PkCountUp",
   props: {
     to: {},
@@ -18354,7 +18345,7 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
       ref: a
     }, c(e.prefix ?? "") + c(s.value.toFixed(e.decimals)) + c(e.suffix ?? ""), 513));
   }
-}), y5 = { class: "flex flex-col gap-10" }, x5 = { class: "grid gap-8 sm:grid-cols-2 lg:grid-cols-4" }, k5 = { class: "order-2 text-sm text-muted-foreground" }, $5 = { class: "order-1 text-3xl font-semibold tracking-tight sm:text-4xl" }, w5 = /* @__PURE__ */ O({
+}), h5 = { class: "flex flex-col gap-10" }, b5 = { class: "grid gap-8 sm:grid-cols-2 lg:grid-cols-4" }, y5 = { class: "order-2 text-sm text-muted-foreground" }, x5 = { class: "order-1 text-3xl font-semibold tracking-tight sm:text-4xl" }, k5 = /* @__PURE__ */ O({
   __name: "PkStats",
   props: {
     title: {},
@@ -18371,19 +18362,19 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
     }
     return (a, r) => (t(), D(Be, { muted: "" }, {
       default: L(() => [
-        o("div", y5, [
+        o("div", h5, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          o("dl", x5, [
+          o("dl", b5, [
             (t(!0), n(z, null, j(e.items ?? [], (s, i) => (t(), n("div", {
               key: i,
               class: "flex flex-col items-center gap-1 text-center"
             }, [
-              o("dt", k5, c(s.label), 1),
-              o("dd", $5, [
-                l(s.value) ? (t(), D(b5, {
+              o("dt", y5, c(s.label), 1),
+              o("dd", x5, [
+                l(s.value) ? (t(), D(g5, {
                   key: 0,
                   to: l(s.value).number,
                   prefix: l(s.value).prefix,
@@ -18400,7 +18391,7 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
       _: 1
     }));
   }
-}), C5 = { class: "flex flex-col gap-10" }, S5 = { class: "grid gap-6 md:grid-cols-3" }, M5 = { class: "flex size-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary" }, B5 = { class: "text-sm font-semibold" }, _5 = { class: "text-sm text-pretty text-muted-foreground" }, A5 = /* @__PURE__ */ O({
+}), $5 = { class: "flex flex-col gap-10" }, w5 = { class: "grid gap-6 md:grid-cols-3" }, C5 = { class: "flex size-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary" }, S5 = { class: "text-sm font-semibold" }, M5 = { class: "text-sm text-pretty text-muted-foreground" }, B5 = /* @__PURE__ */ O({
   __name: "PkSteps",
   props: {
     title: {},
@@ -18410,19 +18401,19 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
   setup(e) {
     return (l, a) => (t(), D(Be, null, {
       default: L(() => [
-        o("div", C5, [
+        o("div", $5, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          o("ol", S5, [
+          o("ol", w5, [
             (t(!0), n(z, null, j(e.items ?? [], (r, s) => (t(), n("li", {
               key: s,
               class: "flex flex-col gap-2"
             }, [
-              o("span", M5, c(s + 1), 1),
-              o("h3", B5, c(r.title), 1),
-              o("p", _5, c(r.body), 1)
+              o("span", C5, c(s + 1), 1),
+              o("h3", S5, c(r.title), 1),
+              o("p", M5, c(r.body), 1)
             ]))), 128))
           ])
         ])
@@ -18430,17 +18421,17 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
       _: 1
     }));
   }
-}), P5 = { class: "flex flex-col gap-10" }, z5 = { class: "grid gap-4 sm:grid-cols-2 lg:grid-cols-4" }, O5 = ["src"], L5 = {
+}), _5 = { class: "flex flex-col gap-10" }, A5 = { class: "grid gap-4 sm:grid-cols-2 lg:grid-cols-4" }, P5 = ["src"], z5 = {
   key: 1,
   class: "mx-auto flex size-16 items-center justify-center rounded-full bg-muted text-lg font-semibold",
   "aria-hidden": "true"
-}, V5 = { class: "min-w-0" }, j5 = { class: "truncate text-sm font-semibold" }, D5 = {
+}, O5 = { class: "min-w-0" }, L5 = { class: "truncate text-sm font-semibold" }, V5 = {
   key: 0,
   class: "truncate text-xs text-muted-foreground"
-}, T5 = {
+}, j5 = {
   key: 2,
   class: "text-pretty text-xs text-muted-foreground"
-}, E5 = /* @__PURE__ */ O({
+}, D5 = /* @__PURE__ */ O({
   __name: "PkTeam",
   props: {
     title: {},
@@ -18450,12 +18441,12 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
   setup(e) {
     return (l, a) => (t(), D(Be, null, {
       default: L(() => [
-        o("div", P5, [
+        o("div", _5, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          o("ul", z5, [
+          o("ul", A5, [
             (t(!0), n(z, null, j(e.items ?? [], (r, s) => (t(), n("li", {
               key: s,
               class: "flex flex-col gap-3 rounded-lg border bg-card p-5 text-center transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg motion-reduce:transform-none motion-reduce:transition-none"
@@ -18465,12 +18456,12 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
                 src: r.avatar,
                 alt: "",
                 class: "mx-auto size-16 rounded-full object-cover"
-              }, null, 8, O5)) : (t(), n("span", L5, c((r.name ?? "?").slice(0, 1)), 1)),
-              o("div", V5, [
-                o("h3", j5, c(r.name), 1),
-                r.role ? (t(), n("p", D5, c(r.role), 1)) : $("", !0)
+              }, null, 8, P5)) : (t(), n("span", z5, c((r.name ?? "?").slice(0, 1)), 1)),
+              o("div", O5, [
+                o("h3", L5, c(r.name), 1),
+                r.role ? (t(), n("p", V5, c(r.role), 1)) : $("", !0)
               ]),
-              r.bio ? (t(), n("p", T5, c(r.bio), 1)) : $("", !0)
+              r.bio ? (t(), n("p", j5, c(r.bio), 1)) : $("", !0)
             ]))), 128))
           ])
         ])
@@ -18478,14 +18469,14 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
       _: 1
     }));
   }
-}), I5 = { class: "flex flex-col gap-10" }, F5 = { class: "grid gap-4 md:grid-cols-2 lg:grid-cols-3" }, N5 = { class: "text-pretty text-sm leading-relaxed" }, R5 = { class: "mt-auto flex items-center gap-3" }, U5 = ["src"], H5 = {
+}), T5 = { class: "flex flex-col gap-10" }, E5 = { class: "grid gap-4 md:grid-cols-2 lg:grid-cols-3" }, I5 = { class: "text-pretty text-sm leading-relaxed" }, F5 = { class: "mt-auto flex items-center gap-3" }, N5 = ["src"], R5 = {
   key: 1,
   class: "flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium",
   "aria-hidden": "true"
-}, K5 = { class: "min-w-0" }, q5 = { class: "block truncate text-sm font-medium" }, G5 = {
+}, U5 = { class: "min-w-0" }, H5 = { class: "block truncate text-sm font-medium" }, K5 = {
   key: 0,
   class: "block truncate text-xs text-muted-foreground"
-}, W5 = /* @__PURE__ */ O({
+}, q5 = /* @__PURE__ */ O({
   __name: "PkTestimonials",
   props: {
     title: {},
@@ -18495,27 +18486,27 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
   setup(e) {
     return (l, a) => (t(), D(Be, null, {
       default: L(() => [
-        o("div", I5, [
+        o("div", T5, [
           E(Ve, {
             title: e.title,
             body: e.body
           }, null, 8, ["title", "body"]),
-          o("ul", F5, [
+          o("ul", E5, [
             (t(!0), n(z, null, j(e.items ?? [], (r, s) => (t(), n("li", {
               key: s,
               class: "flex flex-col gap-4 rounded-lg border bg-card p-5 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg motion-reduce:transform-none motion-reduce:transition-none"
             }, [
-              o("blockquote", N5, " “" + c(r.quote) + "” ", 1),
-              o("figcaption", R5, [
+              o("blockquote", I5, " “" + c(r.quote) + "” ", 1),
+              o("figcaption", F5, [
                 r.avatar ? (t(), n("img", {
                   key: 0,
                   src: r.avatar,
                   alt: "",
                   class: "size-9 shrink-0 rounded-full object-cover"
-                }, null, 8, U5)) : (t(), n("span", H5, c((r.name ?? "?").slice(0, 1)), 1)),
-                o("span", K5, [
-                  o("span", q5, c(r.name), 1),
-                  r.role ? (t(), n("span", G5, c(r.role), 1)) : $("", !0)
+                }, null, 8, N5)) : (t(), n("span", R5, c((r.name ?? "?").slice(0, 1)), 1)),
+                o("span", U5, [
+                  o("span", H5, c(r.name), 1),
+                  r.role ? (t(), n("span", K5, c(r.role), 1)) : $("", !0)
                 ])
               ])
             ]))), 128))
@@ -18525,7 +18516,7 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
       _: 1
     }));
   }
-}), m6 = /* @__PURE__ */ O({
+}), c6 = /* @__PURE__ */ O({
   __name: "PkLandingSections",
   props: {
     sections: {},
@@ -18533,20 +18524,20 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
   },
   setup(e, { expose: l }) {
     const a = e, r = {
-      hero: j4,
-      logos: I4,
-      features: B4,
-      bento: t4,
-      showcase: h5,
-      steps: A5,
-      stats: w5,
-      testimonials: W5,
-      team: E5,
-      articles: Gw,
-      contact: f4,
-      pricing: a5,
-      faq: $4,
-      cta: h4
+      hero: L4,
+      logos: T4,
+      features: S4,
+      bento: Qw,
+      showcase: v5,
+      steps: B5,
+      stats: k5,
+      testimonials: q5,
+      team: D5,
+      articles: Kw,
+      contact: u4,
+      pricing: e5,
+      faq: x4,
+      cta: v4
     }, s = x(
       () => (a.sections ?? []).map((i, d) => ({
         key: `${i.type}-${d}`,
@@ -18559,16 +18550,16 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
       key: u.key
     }, { ref_for: !0 }, u.data), null, 16))), 128));
   }
-}), Z5 = {
+}), G5 = {
   class: "pointer-events-none absolute inset-0 z-0 overflow-hidden",
   "aria-hidden": "true"
-}, p6 = /* @__PURE__ */ O({
+}, f6 = /* @__PURE__ */ O({
   __name: "PkAuroraBackdrop",
   props: {
     intensity: { default: "full" }
   },
   setup(e) {
-    return (l, a) => (t(), n("div", Z5, [
+    return (l, a) => (t(), n("div", G5, [
       o("div", {
         class: P([
           "pk-blob absolute -top-32 -left-24 size-[38rem] rounded-full blur-3xl",
@@ -18597,23 +18588,23 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
       }, null, -1))
     ]));
   }
-}), J5 = {
+}), W5 = {
   class: "pointer-events-none absolute inset-0 z-0 overflow-hidden",
   "aria-hidden": "true"
-}, v6 = /* @__PURE__ */ O({
+}, m6 = /* @__PURE__ */ O({
   __name: "PkEditorialBackdrop",
   setup(e) {
-    return (l, a) => (t(), n("div", J5, [...a[0] || (a[0] = [
+    return (l, a) => (t(), n("div", W5, [...a[0] || (a[0] = [
       Mt('<div class="pk-wash absolute inset-0"></div><div class="absolute inset-y-0 left-1/2 hidden w-full max-w-3xl -translate-x-1/2 lg:block"><div class="absolute inset-y-0 left-0 w-px bg-foreground/[0.06]"></div><div class="absolute inset-y-0 right-0 w-px bg-foreground/[0.06]"></div></div><div class="absolute inset-0 opacity-[0.035] dark:opacity-[0.05]" style="background-image:url(&quot;data:image/svg+xml;utf8,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; width=&#39;160&#39; height=&#39;160&#39;&gt;&lt;filter id=&#39;n&#39;&gt;&lt;feTurbulence type=&#39;fractalNoise&#39; baseFrequency=&#39;0.85&#39; numOctaves=&#39;3&#39;/&gt;&lt;/filter&gt;&lt;rect width=&#39;160&#39; height=&#39;160&#39; filter=&#39;url(%23n)&#39;/&gt;&lt;/svg&gt;&quot;);"></div>', 3)
     ])]));
   }
-}), Y5 = {
+}), Z5 = {
   class: "pointer-events-none absolute inset-0 z-0 overflow-hidden",
   "aria-hidden": "true"
-}, g6 = /* @__PURE__ */ O({
+}, p6 = /* @__PURE__ */ O({
   __name: "PkConsoleBackdrop",
   setup(e) {
-    return (l, a) => (t(), n("div", Y5, [...a[0] || (a[0] = [
+    return (l, a) => (t(), n("div", Z5, [...a[0] || (a[0] = [
       o("div", {
         class: "absolute inset-0 opacity-[0.18] dark:opacity-[0.14]",
         style: { "background-image": "radial-gradient(currentColor 1px, transparent 1px)", "background-size": "22px 22px", "mask-image": "radial-gradient(ellipse 90% 70% at 50% 0%, black, transparent 80%)" }
@@ -18629,13 +18620,13 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
       o("div", { class: "pk-scanlines absolute inset-0" }, null, -1)
     ])]));
   }
-}), X5 = {
+}), J5 = {
   class: "pointer-events-none absolute inset-0 z-0 overflow-hidden",
   "aria-hidden": "true"
-}, h6 = /* @__PURE__ */ O({
+}, v6 = /* @__PURE__ */ O({
   __name: "PkStudioBackdrop",
   setup(e) {
-    return (l, a) => (t(), n("div", X5, [...a[0] || (a[0] = [
+    return (l, a) => (t(), n("div", J5, [...a[0] || (a[0] = [
       o("div", {
         class: "pk-studio-grid absolute inset-0",
         style: { "background-image": `linear-gradient(to right, var(--pk-studio-grid-major) 1px, transparent 1px),
@@ -18661,98 +18652,98 @@ const l5 = { class: "mx-auto h-[190vh] w-full max-w-6xl" }, o5 = { class: "stick
     ])]));
   }
 });
-Dw();
-const b6 = "0.0.1";
+Vw();
+const g6 = "0.0.1";
 export {
   ca as ACTION_KEY_ICONS,
   Rt as APPEARANCE_STYLE_ID,
-  V8 as AdminDirectory,
+  O8 as AdminDirectory,
   uf as Alert,
   cf as AlertDescription,
   ff as AlertTitle,
-  y8 as AppPageFooter,
-  D3 as AppearanceDrawer,
-  jC as Avatar,
-  DC as AvatarFallback,
-  TC as AvatarImage,
+  h8 as AppPageFooter,
+  V3 as AppearanceDrawer,
+  LC as Avatar,
+  VC as AvatarFallback,
+  jC as AvatarImage,
   aa as BADGE_VARIANTS,
-  P3 as BadgeResolver,
-  B8 as BarChart,
-  EC as Breadcrumb,
-  IC as BreadcrumbEllipsis,
-  FC as BreadcrumbItem,
-  NC as BreadcrumbLink,
-  RC as BreadcrumbList,
-  UC as BreadcrumbPage,
-  HC as BreadcrumbSeparator,
-  f3 as BulkActions,
+  _3 as BadgeResolver,
+  S8 as BarChart,
+  DC as Breadcrumb,
+  TC as BreadcrumbEllipsis,
+  EC as BreadcrumbItem,
+  IC as BreadcrumbLink,
+  FC as BreadcrumbList,
+  NC as BreadcrumbPage,
+  RC as BreadcrumbSeparator,
+  u3 as BulkActions,
   Za as CATALOGUE_CONTAINER,
   hf as CATALOGUE_GRID,
-  U3 as CATALOGUE_GRID_TIGHT,
+  N3 as CATALOGUE_GRID_TIGHT,
   bf as CATALOGUE_GRID_TILES,
-  d8 as Card,
-  u8 as CardAction,
-  c8 as CardContent,
-  f8 as CardDescription,
-  m8 as CardFooter,
-  p8 as CardHeader,
-  v8 as CardTitle,
-  A0 as CartPanel,
-  H8 as CatalogBrowser,
+  r8 as Card,
+  i8 as CardAction,
+  d8 as CardContent,
+  u8 as CardDescription,
+  c8 as CardFooter,
+  f8 as CardHeader,
+  m8 as CardTitle,
+  B0 as CartPanel,
+  R8 as CatalogBrowser,
   G1 as CatalogCard,
   an as CatalogFilterSheet,
   sa as CatalogGrid,
-  R8 as CatalogInspect,
-  bk as CatalogItemDetail,
-  U8 as CatalogItemView,
-  K8 as CatalogRegister,
-  N8 as CatalogTill,
+  F8 as CatalogInspect,
+  gk as CatalogItemDetail,
+  N8 as CatalogItemView,
+  U8 as CatalogRegister,
+  I8 as CatalogTill,
   bb as ChartCard,
   pt as ChartTooltip,
   ei as Checkbox,
-  C3 as CheckboxCell,
-  S3 as CodeCell,
+  $3 as CheckboxCell,
+  w3 as CodeCell,
   pu as ColourCell,
-  O8 as ComboChart,
+  P8 as ComboChart,
   Qr as CreateOptionDialog,
   Gr as CreateOptionError,
-  G8 as DASHBOARD_HIDDEN_STORAGE_KEY,
-  Qk as DASHBOARD_HIDE_KEY,
-  W8 as DashboardShortcuts,
+  K8 as DASHBOARD_HIDDEN_STORAGE_KEY,
+  Yk as DASHBOARD_HIDE_KEY,
+  q8 as DashboardShortcuts,
   uo as DataTable,
-  XC as Dialog,
-  QC as DialogClose,
-  e8 as DialogContent,
-  t8 as DialogDescription,
-  a8 as DialogFooter,
-  n8 as DialogHeader,
+  JC as Dialog,
+  YC as DialogClose,
+  XC as DialogContent,
+  QC as DialogDescription,
+  e8 as DialogFooter,
+  t8 as DialogHeader,
   Zf as DialogOverlay,
-  l8 as DialogScrollContent,
-  o8 as DialogTitle,
-  s8 as DialogTrigger,
-  V8 as DirectoryPage,
-  kC as DropdownMenu,
-  $C as DropdownMenuCheckboxItem,
-  wC as DropdownMenuContent,
-  CC as DropdownMenuGroup,
-  SC as DropdownMenuItem,
-  MC as DropdownMenuLabel,
-  k6 as DropdownMenuPortal,
-  BC as DropdownMenuRadioGroup,
-  _C as DropdownMenuRadioItem,
-  AC as DropdownMenuSeparator,
-  PC as DropdownMenuShortcut,
-  zC as DropdownMenuSub,
-  OC as DropdownMenuSubContent,
-  LC as DropdownMenuSubTrigger,
-  VC as DropdownMenuTrigger,
-  _3 as EditableCell,
+  a8 as DialogScrollContent,
+  n8 as DialogTitle,
+  l8 as DialogTrigger,
+  O8 as DirectoryPage,
+  yC as DropdownMenu,
+  xC as DropdownMenuCheckboxItem,
+  kC as DropdownMenuContent,
+  $C as DropdownMenuGroup,
+  wC as DropdownMenuItem,
+  CC as DropdownMenuLabel,
+  y6 as DropdownMenuPortal,
+  SC as DropdownMenuRadioGroup,
+  MC as DropdownMenuRadioItem,
+  BC as DropdownMenuSeparator,
+  _C as DropdownMenuShortcut,
+  AC as DropdownMenuSub,
+  PC as DropdownMenuSubContent,
+  zC as DropdownMenuSubTrigger,
+  OC as DropdownMenuTrigger,
+  M3 as EditableCell,
   Se as FOCUS_RING,
-  m3 as FOCUS_RING_SOFT,
+  c3 as FOCUS_RING_SOFT,
   ma as FOCUS_RING_WITHIN,
   co as FORM_MEASURE,
   Xe as FormFieldControl,
-  L8 as HeatmapChart,
+  z8 as HeatmapChart,
   pl as ICON_ALIASES,
   bt as ICON_PATHS,
   Re as INPUT_COPY,
@@ -18760,187 +18751,187 @@ export {
   Jr as INPUT_TEXT,
   lu as IconCell,
   du as ImageCell,
-  r6 as InfoNode,
+  o6 as InfoNode,
   kf as JPEG_IMAGE_ERROR,
-  M3 as KeyValueCell,
-  r8 as Label,
+  C3 as KeyValueCell,
+  o8 as Label,
   jg as LineChart,
-  d0 as LineItems,
-  u3 as MODAL_PANEL,
-  c3 as MODAL_PANEL_FORM,
+  r0 as LineItems,
+  i3 as MODAL_PANEL,
+  d3 as MODAL_PANEL_FORM,
   xt as MODAL_WIDTH,
-  x3 as MUTED_COPY,
+  b3 as MUTED_COPY,
   ht as MUTED_COPY_SNUG,
-  k3 as MUTED_COPY_XS,
+  y3 as MUTED_COPY_XS,
   Ct as MiniStatCard,
-  KC as NavigationMenu,
-  qC as NavigationMenuContent,
-  GC as NavigationMenuIndicator,
-  WC as NavigationMenuItem,
-  ZC as NavigationMenuLink,
-  JC as NavigationMenuList,
-  YC as NavigationMenuTrigger,
+  UC as NavigationMenu,
+  HC as NavigationMenuContent,
+  KC as NavigationMenuIndicator,
+  qC as NavigationMenuItem,
+  GC as NavigationMenuLink,
+  WC as NavigationMenuList,
+  ZC as NavigationMenuTrigger,
   Gf as NavigationMenuViewport,
   xf as OPAQUE_IMAGE_ERROR,
   Da as OVERLAY_FORM_MEASURE,
   qe as PAGE_SHELL,
-  i3 as PAGE_SHELL_COMPACT,
-  d3 as PAGE_SHELL_STACK,
-  i6 as PaymentGatewaySettings,
-  G$ as PaymentGateways,
-  _8 as PieChart,
-  N3 as PkAlertError,
-  Gw as PkArticles,
-  p6 as PkAuroraBackdrop,
+  s3 as PAGE_SHELL_COMPACT,
+  r3 as PAGE_SHELL_STACK,
+  s6 as PaymentGatewaySettings,
+  K$ as PaymentGateways,
+  M8 as PieChart,
+  I3 as PkAlertError,
+  Kw as PkArticles,
+  f6 as PkAuroraBackdrop,
   Ke as PkBadge,
   Fp as PkBarcode,
-  t4 as PkBento,
-  T3 as PkBottomNav,
-  g8 as PkBoundary,
-  $8 as PkBuilder,
+  Qw as PkBento,
+  j3 as PkBottomNav,
+  p8 as PkBoundary,
+  x8 as PkBuilder,
   de as PkButton,
-  w8 as PkCalendar,
-  h8 as PkCard,
+  k8 as PkCalendar,
+  v8 as PkCard,
   lp as PkCheckboxList,
   en as PkCodeBox,
   Nm as PkCodeInput,
   wp as PkColourPicker,
-  g6 as PkConsoleBackdrop,
-  f4 as PkContact,
-  b5 as PkCountUp,
-  h4 as PkCta,
-  x8 as PkDeviceFrame,
+  p6 as PkConsoleBackdrop,
+  u4 as PkContact,
+  g5 as PkCountUp,
+  v4 as PkCta,
+  b8 as PkDeviceFrame,
   Up as PkDiff,
   Wv as PkDocument,
   Ze as PkDropdown,
-  v6 as PkEditorialBackdrop,
+  m6 as PkEditorialBackdrop,
   It as PkEmptyState,
-  $4 as PkFaq,
-  B4 as PkFeatureGrid,
+  x4 as PkFaq,
+  S4 as PkFeatureGrid,
   Pe as PkFieldLabel,
   Ta as PkFileUpload,
   Te as PkHeading,
-  j4 as PkHero,
+  L4 as PkHero,
   _i as PkKeyValue,
-  m6 as PkLandingSections,
-  I4 as PkLogoCloud,
+  c6 as PkLandingSections,
+  T4 as PkLogoCloud,
   Sp as PkMap,
   _p as PkMapField,
   Vm as PkMarkdownInput,
   dt as PkModal,
   Qt as PkMultiSelect,
-  I3 as PkOtpInput,
-  F3 as PkPageHeader,
-  e6 as PkPasskeyRegister,
-  R3 as PkPasswordInput,
-  a5 as PkPricing,
+  T3 as PkOtpInput,
+  E3 as PkPageHeader,
+  X8 as PkPasskeyRegister,
+  F3 as PkPasswordInput,
+  e5 as PkPricing,
   Lp as PkQrCode,
-  Xx as PkQtyStepper,
+  Jx as PkQtyStepper,
   gs as PkQueryBuilder,
   tp as PkRadioGroup,
-  k8 as PkRepeater,
-  Tw as PkReveal,
+  y8 as PkRepeater,
+  jw as PkReveal,
   Ei as PkRichEditor,
   Be as PkSection,
   Ve as PkSectionHeading,
-  h5 as PkShowcase,
-  Lk as PkSignaturePad,
+  v5 as PkShowcase,
+  zk as PkSignaturePad,
   ze as PkSkeleton,
   _t as PkSlideover,
   av as PkSlider,
-  E3 as PkSpinner,
-  w5 as PkStats,
+  D3 as PkSpinner,
+  k5 as PkStats,
   we as PkStatusBadge,
   Kr as PkStepIndicator,
-  A5 as PkSteps,
-  h6 as PkStudioBackdrop,
+  B5 as PkSteps,
+  v6 as PkStudioBackdrop,
   hv as PkSwatchPreview,
   cp as PkTagsInput,
-  E5 as PkTeam,
-  W5 as PkTestimonials,
+  D5 as PkTeam,
+  q5 as PkTestimonials,
   $e as PkTextInput,
-  Jw as PkTiltCard,
+  Ww as PkTiltCard,
   Ea as PkToggleButtons,
   vv as PkVisualSelect,
   xy as PlanCard,
-  I8 as PlanEditor,
-  E8 as PlanGrid,
-  F8 as PlanPurchaseCard,
-  z8 as PolarAreaChart,
-  P8 as RadarChart,
-  w3 as RatingCell,
-  z3 as RecordActions,
-  t6 as RecordForm,
-  $3 as RelationCreateDialog,
-  v3 as RelationPanel,
+  T8 as PlanEditor,
+  D8 as PlanGrid,
+  E8 as PlanPurchaseCard,
+  A8 as PolarAreaChart,
+  _8 as RadarChart,
+  k3 as RatingCell,
+  A3 as RecordActions,
+  Q8 as RecordForm,
+  x3 as RelationCreateDialog,
+  m3 as RelationPanel,
   fo as SLIDEOVER_BODY,
   mo as SLIDEOVER_WIDTH,
   C1 as STATUS_TONES,
-  A8 as ScatterChart,
+  B8 as ScatterChart,
   Ia as SchemaNode,
-  D8 as SegmentedBar,
-  Y8 as SelectionBar,
+  V8 as SegmentedBar,
+  Z8 as SelectionBar,
   Rf as Separator,
-  J8 as SetupChecklist,
+  W8 as SetupChecklist,
   Wa as ShadcnInput,
   ea as Sheet,
-  W3 as SheetClose,
+  q3 as SheetClose,
   ta as SheetContent,
   Bf as SheetDescription,
-  Z3 as SheetFooter,
+  G3 as SheetFooter,
   _f as SheetHeader,
   Af as SheetTitle,
-  J3 as SheetTrigger,
+  W3 as SheetTrigger,
   Tb as ShortcutsWidget,
-  Y3 as Sidebar,
-  X3 as SidebarContent,
-  Q3 as SidebarFooter,
-  eC as SidebarGroup,
-  tC as SidebarGroupAction,
-  aC as SidebarGroupContent,
-  nC as SidebarGroupLabel,
-  lC as SidebarHeader,
-  oC as SidebarInput,
-  sC as SidebarInset,
-  rC as SidebarMenu,
-  iC as SidebarMenuAction,
-  dC as SidebarMenuBadge,
-  cC as SidebarMenuButton,
-  fC as SidebarMenuItem,
-  mC as SidebarMenuSkeleton,
-  pC as SidebarMenuSub,
-  vC as SidebarMenuSubButton,
-  gC as SidebarMenuSubItem,
-  hC as SidebarProvider,
-  bC as SidebarRail,
-  yC as SidebarSeparator,
-  xC as SidebarTrigger,
-  q8 as SignatureStudio,
+  Z3 as Sidebar,
+  J3 as SidebarContent,
+  Y3 as SidebarFooter,
+  X3 as SidebarGroup,
+  Q3 as SidebarGroupAction,
+  eC as SidebarGroupContent,
+  tC as SidebarGroupLabel,
+  aC as SidebarHeader,
+  nC as SidebarInput,
+  lC as SidebarInset,
+  oC as SidebarMenu,
+  sC as SidebarMenuAction,
+  rC as SidebarMenuBadge,
+  dC as SidebarMenuButton,
+  uC as SidebarMenuItem,
+  cC as SidebarMenuSkeleton,
+  fC as SidebarMenuSub,
+  mC as SidebarMenuSubButton,
+  pC as SidebarMenuSubItem,
+  vC as SidebarProvider,
+  gC as SidebarRail,
+  hC as SidebarSeparator,
+  bC as SidebarTrigger,
+  H8 as SignatureStudio,
   Pt as Sparkline,
-  i8 as Spinner,
-  j8 as StatCard,
-  T8 as StatListChart,
-  Z8 as StatStrip,
+  s8 as Spinner,
+  L8 as StatCard,
+  j8 as StatListChart,
+  G8 as StatStrip,
   We as Switch,
   Ja as TRANSPARENT_IMAGE_HELP,
-  X8 as TablePagination,
+  J8 as TablePagination,
   qo as TableShell,
-  Q8 as TableTabs,
+  Y8 as TableTabs,
   wr as TableToolbar,
-  B3 as TagsCell,
-  M8 as ThemeToggle,
+  S3 as TagsCell,
+  C8 as ThemeToggle,
   If as Tooltip,
   Ff as TooltipContent,
-  uC as TooltipProvider,
+  iC as TooltipProvider,
   Nf as TooltipTrigger,
   tn as TrendBadge,
-  a6 as UnsavedBar,
+  e6 as UnsavedBar,
   mf as alertVariants,
   oc as appearancePayload,
   Ua as appearanceVars,
   Ut as applyAppearance,
   Mf as assertTransparentImage,
-  L3 as bootstrapAppearance,
+  z3 as bootstrapAppearance,
   st as buttonClasses,
   St as catalogFiltersActive,
   ae as cn,
@@ -18948,60 +18939,60 @@ export {
   Wr as createOptionTitle,
   W1 as cycleLabel,
   Ee as emptyCatalogFilters,
-  f$ as entryView,
+  u$ as entryView,
   qr as fieldControl,
-  y3 as fieldErrorsFromPayload,
-  jx as findExactSku,
+  h3 as fieldErrorsFromPayload,
+  Lx as findExactSku,
   Z1 as formatPerkValue,
   zu as hasBadgeValue,
-  o6 as hasEntryView,
-  g3 as hasFieldControl,
-  C8 as hasOptionPreview,
+  n6 as hasEntryView,
+  p3 as hasFieldControl,
+  $8 as hasOptionPreview,
   ce as iconPath,
   Cf as imageHasTransparency,
   Ha as initializeAppearance,
   la as isDark,
   ra as matchCatalogItem,
-  q3 as mergeLayoutItems,
+  H3 as mergeLayoutItems,
   Wf as navigationMenuTriggerStyle,
   nv as optionPreview,
-  H3 as packWidgetColumns,
-  K3 as parseWidgetId,
+  R3 as packWidgetColumns,
+  U3 as parseWidgetId,
   J1 as perkGranted,
   oa as readAppearance,
   sc as readServerAppearance,
-  Dw as registerBuiltInFieldControls,
-  l6 as registerEntryView,
+  Vw as registerBuiltInFieldControls,
+  a6 as registerEntryView,
   xe as registerFieldControl,
   jt as registerOptionPreview,
-  m$ as registeredEntryViews,
-  h3 as registeredFieldTypes,
+  c$ as registeredEntryViews,
+  v3 as registeredFieldTypes,
   lv as registeredOptionPreviews,
-  O3 as resetAppearanceBootstrapForTests,
-  s6 as resetEntryViews,
-  b3 as resetFieldControls,
-  S8 as resetOptionPreviews,
+  P3 as resetAppearanceBootstrapForTests,
+  l6 as resetEntryViews,
+  g3 as resetFieldControls,
+  w8 as resetOptionPreviews,
   ot as resolveActionIcon,
-  j3 as setAppearancePersister,
+  L3 as setAppearancePersister,
   Uf as sidebarMenuButtonVariants,
   _1 as statusBadgeVariant,
   B1 as statusTone,
-  V3 as syncAppearanceFromInertiaPage,
-  G3 as toPersistedLayout,
-  p3 as toUrl,
+  O3 as syncAppearanceFromInertiaPage,
+  K3 as toPersistedLayout,
+  f3 as toUrl,
   Ga as useAppearance,
-  d6 as useColumnVisibility,
-  u6 as useColumnWidths,
-  c6 as useLiveUpdates,
-  Ww as usePointer,
+  r6 as useColumnVisibility,
+  i6 as useColumnWidths,
+  d6 as useLiveUpdates,
+  qw as usePointer,
   nn as useReveal,
-  A3 as useSchemaColumns,
-  n5 as useScrollProgress,
-  b8 as useShellPageFooter,
+  B3 as useSchemaColumns,
+  t5 as useScrollProgress,
+  g8 as useShellPageFooter,
   At as useSidebar,
-  f6 as useTenantTheme,
-  n6 as useUnsavedChanges,
-  b6 as version,
+  u6 as useTenantTheme,
+  t6 as useUnsavedChanges,
+  g6 as version,
   ga as widgetId
 };
 //# sourceMappingURL=index.js.map

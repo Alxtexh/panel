@@ -354,8 +354,10 @@ abstract class Page
      * coincidence rather than by the code being correct. A relative href
      * only shows the bug when the browser resolves it against the CURRENT
      * page's URL, which is exactly what a click from the same page does -
-     * `/client/account/plans` clicked while already on `/client/account/plans`
-     * resolved to `/client/account/client/account/plans`.
+     * found on `PlanCatalogPage`'s sidebar entry, clicked while already on
+     * that page: `client/account/subscription` (no leading slash) resolved
+     * relative to `/client/account/subscription`, landing on
+     * `/client/account/client/account/subscription`.
      *
      * @return array{title: string, href: string, icon: string, group: string|null, sort: int|null}
      */

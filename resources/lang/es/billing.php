@@ -25,12 +25,14 @@ return [
         'host_extension' => 'Extension del host: subclasa BillingPortalPage y sobrescribe subscription(), invoices(), paymentMethods() y billingActions().',
     ],
 
-    'catalog' => [
-        'label' => 'Planes',
-        'title' => 'Elige un plan',
+    'subscription' => [
+        'label' => 'Suscripcion',
+        'title' => 'Suscripcion',
         'empty' => 'No hay planes disponibles en este momento.',
         'monthly' => 'Mensual',
         'annual' => 'Anual',
+        'current_plan' => 'Plan actual',
+        'no_active' => 'Aun no tienes una suscripcion activa.',
     ],
 
     'status' => [

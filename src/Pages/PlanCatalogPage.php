@@ -10,19 +10,26 @@ use Symfony\Component\HttpFoundation\Response;
 use Alxtexh\Panel\PanelManager;
 
 /**
- * Browse plans and choose one - the customer-facing counterpart to
- * `PlanSetupPage`. That page EDITS the catalogue; this one SELLS from it.
+ * ONE subscription page - status at the top, the plan picker below - not two
+ * separate screens. This is the customer-facing counterpart to
+ * `PlanSetupPage` (that page EDITS the catalogue; this one SELLS from it),
+ * shaped after how production Filament billing plugins actually do it
+ * (`tomatophp/filament-subscriptions`' single "Billing" page, "like [Laravel]
+ * Spark"; `ihor-k/subkit`'s pricing table + subscription dashboard pairing):
+ * one screen shows what you have and what you could have instead, so
+ * changing plans is not a hunt across two unrelated menu entries.
  *
- * THE CARD'S BUTTON REDIRECTS, IT NEVER COLLECTS A CARD NUMBER. PanelKit
+ * THE CARD'S BUTTON OPENS A CONFIRM MODAL, IT NEVER COLLECTS A CARD NUMBER
+ * ITSELF. Filament's own convention is the same two-step split: a "Change
+ * Subscription" modal confirms WHICH plan, then Stripe Checkout (hosted,
+ * off-site) collects payment. `checkout()` calls the host's
+ * `Panel::planCatalog()` closure, which creates a checkout session with
+ * whatever Stripe/Paddle/Chargebee/etc the host actually uses and returns
+ * the URL to send the browser to - or, for a host with no live processor
+ * yet, the URL of their own dedicated confirmation page. Either way PanelKit
  * ships no payment processor (docs/13-billing-adapters.md) - the same
  * posture the billing WEBHOOK adapter already takes for the inbound half of
- * this story. `checkout()` calls the host's `Panel::planCatalog()` closure,
- * which creates a checkout session with whatever Stripe/Paddle/Chargebee/etc
- * the host actually uses and returns the URL to send the browser to. This
- * also happens to be how production SaaS billing overwhelmingly works in
- * practice: Stripe Checkout, Paddle's overlay and Chargebee's hosted page
- * are all "redirect to a session URL", never a card form embedded in
- * somebody else's app.
+ * this story.
  *
  * OPT-IN, LIKE `BillingPortalPage`: `isEnabled()` checks
  * `offersApp('plan-checkout')`, set by `Panel::planCatalog()`.
@@ -30,28 +37,37 @@ use Alxtexh\Panel\PanelManager;
  * OPT-IN BY SUBCLASSING, LIKE `PlanSetupPage`. Fill `plans()`, mark whichever
  * one is `current: true` yourself - this class has no idea what "your
  * current plan" means for your billing model, the same reason
- * `BillingPortalPage::subscription()` is a host hook rather than a query
- * this class runs itself.
+ * `subscription()` defaults to null rather than reading `BillingStateStore`
+ * itself: that store tracks whether a TENANT's own subscription to the
+ * platform is current (what `EnforceSubscriptionGate`/`BillingPortalPage`
+ * gate on) - a different question from "which plan is THIS host's own
+ * product catalogue selling", which is exactly what this page is generic
+ * enough to be used for instead (an ISP selling internet plans to ITS
+ * customers, say). Wiring the two together by default would show a
+ * tenant's platform billing status on a screen selling something else
+ * entirely. A host whose catalogue genuinely IS the platform subscription
+ * overrides `subscription()` with `BillingStateStore::forCurrentContext()`
+ * itself - one line, and now it says so on purpose.
  */
 abstract class PlanCatalogPage extends Page
 {
-    protected static string $icon = 'package';
+    protected static string $icon = 'credit-card';
 
     protected static ?string $group = 'Account';
 
     public static function uri(): string
     {
-        return 'account/plans';
+        return 'account/subscription';
     }
 
     public static function label(): string
     {
-        return __('panel::billing.catalog.label');
+        return __('panel::billing.subscription.label');
     }
 
     public static function component(): string
     {
-        return 'PlanCatalog';
+        return 'Subscription';
     }
 
     public static function isEnabled(): bool
@@ -106,11 +122,30 @@ abstract class PlanCatalogPage extends Page
     abstract public static function plans(Request $request): array;
 
     /**
+     * The caller's current subscription status, for the summary at the top
+     * of the page. Null renders no summary at all - a page with plans to
+     * choose from but nothing to say about "your current plan" yet.
+     *
+     * NULL BY DEFAULT, deliberately not `BillingStateStore::forCurrentContext()`
+     * - see the class docblock for why auto-wiring that would be a category
+     * error for a host whose catalogue is not the platform subscription
+     * itself. Override with that call, or with your own query, once you
+     * know which one this page is selling.
+     *
+     * @return array{status?: string, period_end_at?: string|null, grace_ends_at?: string|null}|null
+     */
+    public static function subscription(Request $request): ?array
+    {
+        return null;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function data(Request $request): array
     {
         return [
+            'subscription' => static::subscription($request),
             'plans' => static::plans($request),
             'checkoutHref' => static::indexHref().'/checkout',
         ];
