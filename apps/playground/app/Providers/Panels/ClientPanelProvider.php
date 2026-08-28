@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Providers\Panels;
 
-use App\Models\Customer;
 use App\Models\Plan;
 use Illuminate\Support\ServiceProvider;
 use Alxtexh\Panel\Panel;
@@ -116,10 +115,12 @@ final class ClientPanelProvider extends ServiceProvider
                  * `Client\Resources\PlanResource` already offers.
                  *
                  * THIS CLOSURE IS A SHOWCASE, LIKE `PaymentGatewaySettings` -
-                 * no live processor is wired into the demo. It applies the
-                 * change directly (a real "no processor yet" flow might
-                 * instead queue it for manual billing) and sends the browser
-                 * to a DEDICATED CONFIRMATION PAGE this app owns
+                 * no live processor is wired into the demo, and it does not
+                 * write anything: no `Customer` field records "the plan
+                 * somebody chose", on purpose (see `PlanCatalogPage`'s own
+                 * docblock - not every business that sells packages has a
+                 * single exclusive "current" one to update). It sends the
+                 * browser to a DEDICATED CONFIRMATION PAGE this app owns
                  * (`SubscriptionConfirmedPage`) rather than an external
                  * checkout - the other of the two endings
                  * `PlanCatalogPage::checkout()`'s docblock describes. A host
@@ -129,10 +130,6 @@ final class ClientPanelProvider extends ServiceProvider
                  */
                 ->planCatalog(function (Panel $panel, mixed $user, mixed $request, string $planId): string {
                     $plan = Plan::query()->find($planId);
-
-                    if ($plan !== null && $user instanceof Customer) {
-                        $user->update(['plan_id' => $plan->getKey()]);
-                    }
 
                     $prefix = trim((string) $panel->getPath(), '/');
                     $query = $plan !== null ? '?plan='.$plan->getKey() : '';
