@@ -22,6 +22,16 @@
       "autoPort": false
     },
     {
+      "name": "filament-study",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "cd temp/filament-study && exec php artisan serve --host=127.0.0.1 --port=8010"
+      ],
+      "port": 8010,
+      "autoPort": false
+    },
+    {
       "name": "fresh-install",
       "runtimeExecutable": "bash",
       "runtimeArgs": [

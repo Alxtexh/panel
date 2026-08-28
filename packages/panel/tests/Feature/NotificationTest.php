@@ -154,6 +154,76 @@ final class NotificationTest extends TestCase
         $this->assertPanelToast('Nope', 'error');
     }
 
+    public function test_mark_unread_reverses_mark_read(): void
+    {
+        $user = $this->operator();
+        $this->actingAs($user);
+
+        Notification::make()->title('Ready')->success()->bell()->send();
+
+        $id = (string) $user->notifications()->first()->id;
+
+        $this->postJson("/notifications/{$id}/read")->assertOk();
+        $this->assertTrue($user->notifications()->first()->read());
+
+        $this->postJson("/notifications/{$id}/unread")->assertOk();
+        $this->assertFalse($user->fresh()->notifications()->first()->read());
+    }
+
+    /**
+     * SCOPED TO THE ACTING USER, the same guard `destroy()` and `markRead()`
+     * already take - an id from somebody else's inbox must 404, not toggle a
+     * notification that was never this user's to touch.
+     */
+    public function test_mark_unread_refuses_another_users_notification(): void
+    {
+        $mine = $this->operator();
+        $theirs = $this->otherOperator();
+
+        Notification::make()->title('Not yours')->success()->sendToDatabase($theirs);
+
+        $id = (string) $theirs->notifications()->first()->id;
+
+        $this->actingAs($mine);
+        $this->postJson("/notifications/{$id}/unread")->assertNotFound();
+    }
+
+    public function test_clear_all_removes_every_notification_for_this_user_only(): void
+    {
+        $mine = $this->operator();
+        $theirs = $this->otherOperator();
+
+        $this->actingAs($mine);
+        Notification::make()->title('Mine one')->success()->bell()->send();
+        Notification::make()->title('Mine two')->success()->bell()->send();
+        Notification::make()->title('Theirs')->success()->sendToDatabase($theirs);
+
+        $this->deleteJson('/notifications/clear')->assertOk();
+
+        $this->assertSame(0, $mine->notifications()->count());
+        $this->assertSame(1, $theirs->notifications()->count());
+    }
+
+    public function test_the_bell_paginates_past_the_first_page(): void
+    {
+        $user = $this->operator();
+        $this->actingAs($user);
+
+        for ($i = 0; $i < 31; $i++) {
+            Notification::make()->title("Note {$i}")->success()->bell()->send();
+        }
+
+        $this->getJson('/notifications')
+            ->assertOk()
+            ->assertJsonCount(30, 'notifications')
+            ->assertJsonPath('hasMore', true);
+
+        $this->getJson('/notifications?page=2')
+            ->assertOk()
+            ->assertJsonCount(1, 'notifications')
+            ->assertJsonPath('hasMore', false);
+    }
+
     private function operator(): User
     {
         $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
@@ -162,6 +232,20 @@ final class NotificationTest extends TestCase
             'tenant_id' => $tenant->id,
             'name' => 'Operator',
             'email' => 'operator@example.test',
+            'password' => 'password',
+            'email_verified_at' => now(),
+        ]);
+    }
+
+    /** A second, distinct operator - for asserting one user's inbox is not another's. */
+    private function otherOperator(): User
+    {
+        $tenant = Tenant::create(['name' => 'Theirs', 'slug' => 'theirs']);
+
+        return User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Other operator',
+            'email' => 'other-operator@example.test',
             'password' => 'password',
             'email_verified_at' => now(),
         ]);

@@ -114,6 +114,22 @@ const testimonial = computed((): { quote: string; author: string; role: string |
 
     return value && typeof value === 'object' ? (value as { quote: string; author: string; role: string | null }) : null
 })
+
+/**
+ * `Panel::authImage()`, or null when the panel declared none.
+ *
+ * WHAT THE `#image` SLOT'S DEFAULT CONTENT RENDERS INSTEAD OF THE PLACEHOLDER
+ * SVG. An explicit `<template #image>` from a consumer rendering this layout
+ * directly still wins - this only fills the slot's own fallback.
+ */
+const authImage = computed((): { src: string; alt: string | null } | null => {
+    const pageProps = usePage().props
+    const value = pageProps.panel && typeof pageProps.panel === 'object'
+        ? (pageProps.panel as Record<string, unknown>).authImage
+        : null
+
+    return value && typeof value === 'object' ? (value as { src: string; alt: string | null }) : null
+})
 </script>
 
 <template>
@@ -200,7 +216,7 @@ const testimonial = computed((): { quote: string; author: string; role: string |
     -->
     <div
         v-else-if="authLayout === 'card'"
-        class="relative flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10"
+        class="relative flex min-h-svh flex-col items-center justify-center bg-background p-6 md:p-10"
     >
         <div class="absolute top-4 right-4">
             <ThemeToggle />
@@ -227,7 +243,13 @@ const testimonial = computed((): { quote: string; author: string; role: string |
 
                     <div class="bg-muted relative hidden min-h-[280px] md:block">
                         <slot name="image">
-                            <div class="absolute inset-0 flex items-center justify-center text-muted-foreground/40">
+                            <img
+                                v-if="authImage"
+                                :src="authImage.src"
+                                :alt="authImage.alt ?? ''"
+                                class="absolute inset-0 size-full object-cover"
+                            />
+                            <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground/40">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 24 24"
@@ -315,7 +337,13 @@ const testimonial = computed((): { quote: string; author: string; role: string |
 
             <div class="flex flex-1 flex-col items-center justify-center gap-10 p-10">
                 <slot name="image">
-                    <div class="flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 text-muted-foreground/40">
+                    <img
+                        v-if="authImage"
+                        :src="authImage.src"
+                        :alt="authImage.alt ?? ''"
+                        class="h-64 w-64 rounded-2xl object-cover"
+                    />
+                    <div v-else class="flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 text-muted-foreground/40">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"
@@ -383,7 +411,13 @@ const testimonial = computed((): { quote: string; author: string; role: string |
             -->
             <div class="flex flex-1 items-center justify-center p-10">
                 <slot name="image">
-                    <div class="flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 text-muted-foreground/40">
+                    <img
+                        v-if="authImage"
+                        :src="authImage.src"
+                        :alt="authImage.alt ?? ''"
+                        class="h-64 w-64 rounded-2xl object-cover"
+                    />
+                    <div v-else class="flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 text-muted-foreground/40">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"

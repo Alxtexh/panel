@@ -344,8 +344,15 @@ function runRecordAction(row: Record<string, any>, action: RecordActionItem) {
              * session belongs to, so the shared props - the banner, the account
              * menu, the navigation - all have to be rebuilt. A partial reload of
              * the rows alone would leave the panel showing the previous person.
+             *
+             * A DECLARED `redirect()` OVERRIDES THE `/dashboard` DEFAULT for
+             * actions that say where they want to go (see
+             * `RecordAction::redirect()`) - Impersonate itself keeps landing on
+             * `/dashboard` either way, since it never declares one.
              */
-            router.visit('/dashboard')
+            const body = await response.json().catch(() => null)
+
+            router.visit(body?.redirect ?? '/dashboard')
         })
         .finally(() => (busyAction.value = null))
 }

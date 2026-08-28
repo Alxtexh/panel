@@ -631,7 +631,17 @@ async function runWorkflowTransition(action: { key: string; label: string; confi
             return
         }
 
+        const body = await response.json().catch(() => null)
+
         toast.success(`${action.label} done`)
+
+        // A declared `redirect()` wins over the default reload — see ResourceIndex.
+        if (body?.redirect) {
+            router.visit(body.redirect)
+
+            return
+        }
+
         router.reload()
     } finally {
         workflowRunning.value = null

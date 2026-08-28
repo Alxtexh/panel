@@ -130,4 +130,24 @@ final class EditableColumnTest extends TestCase
 
         $this->assertSame('draft', $this->article->fresh()->status);
     }
+
+    public function test_a_text_input_column_can_be_written(): void
+    {
+        $this->cell(['column' => 'slug', 'value' => 'my-new-slug'])->assertOk();
+
+        $this->assertSame('my-new-slug', $this->article->fresh()->slug);
+    }
+
+    /**
+     * `TextInputColumn` HAS NO FIXED OPTION LIST TO CHECK A VALUE AGAINST -
+     * `->rules()` is the only fence it has, so this is the one assertion that
+     * actually exercises it rather than trusting the class compiles.
+     */
+    public function test_a_text_input_column_rejects_a_value_that_fails_its_declared_rules(): void
+    {
+        $this->cell(['column' => 'slug', 'value' => 'way-too-long-for-the-declared-rule'])
+            ->assertStatus(422);
+
+        $this->assertNull($this->article->fresh()->slug);
+    }
 }

@@ -108,4 +108,109 @@ describe('PanelNotificationBell', () => {
         expect(wrapper.text()).toContain('Ready')
         expect(wrapper.findAll('[data-notification-action]')).toHaveLength(0)
     })
+
+    it('loads and appends the next page without dropping what is already shown', async () => {
+        const fetchMock = vi.fn(async (url: string) => {
+            if (String(url).includes('page=2')) {
+                return {
+                    ok: true,
+                    json: async () => ({
+                        notifications: [
+                            { id: 'n2', title: 'Older note', body: '', href: null, severity: 'info', read: true, at: null },
+                        ],
+                        hasMore: false,
+                    }),
+                }
+            }
+
+            return {
+                ok: true,
+                json: async () => ({
+                    alerts: [],
+                    unread: 1,
+                    canAnnounce: false,
+                    hasMore: true,
+                    notifications: [
+                        { id: 'n1', title: 'Newest note', body: '', href: null, severity: 'info', read: false, at: null },
+                    ],
+                }),
+            }
+        })
+
+        vi.stubGlobal('fetch', fetchMock)
+
+        const wrapper = mount(PanelNotificationBell)
+
+        await wrapper.get('[data-notification-bell]').trigger('click')
+        await flushPromises()
+
+        const inbox = wrapper.findAll('button').find((button) => button.text().includes('Inbox'))
+        await inbox?.trigger('click')
+
+        expect(wrapper.text()).toContain('Newest note')
+        expect(wrapper.text()).not.toContain('Older note')
+
+        await wrapper.get('[data-load-more]').trigger('click')
+        await flushPromises()
+
+        // BOTH pages, not the second replacing the first.
+        expect(wrapper.text()).toContain('Newest note')
+        expect(wrapper.text()).toContain('Older note')
+        // No more pages left, so the button itself is gone.
+        expect(wrapper.find('[data-load-more]').exists()).toBe(false)
+
+        const lastCallUrl = String(fetchMock.mock.calls[fetchMock.mock.calls.length - 1]![0])
+        expect(lastCallUrl).toContain('page=2')
+    })
+
+    it('flips a read note back to unread and restores the badge count', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async () => ({
+                ok: true,
+                json: async () => ({
+                    alerts: [],
+                    unread: 0,
+                    canAnnounce: false,
+                    hasMore: false,
+                    notifications: [
+                        { id: 'n1', title: 'Already read', body: '', href: null, severity: 'info', read: true, at: null },
+                    ],
+                }),
+            })),
+        )
+
+        const wrapper = mount(PanelNotificationBell)
+
+        await wrapper.get('[data-notification-bell]').trigger('click')
+        await flushPromises()
+
+        const inbox = wrapper.findAll('button').find((button) => button.text().includes('Inbox'))
+        await inbox?.trigger('click')
+
+        const unreadButton = wrapper.get('[aria-label="Mark Already read as unread"]')
+        await unreadButton.trigger('click')
+
+        expect(wrapper.get('[aria-label="Notifications, 1 unread"]')).toBeTruthy()
+    })
+
+    it('asks for confirmation before clearing every notification', async () => {
+        vi.stubGlobal('confirm', vi.fn(() => false))
+
+        const wrapper = mount(PanelNotificationBell)
+
+        await wrapper.get('[data-notification-bell]').trigger('click')
+        await flushPromises()
+
+        const inbox = wrapper.findAll('button').find((button) => button.text().includes('Inbox'))
+        await inbox?.trigger('click')
+
+        expect(wrapper.text()).toContain('Invoice posted')
+
+        await wrapper.get('[data-clear-all]').trigger('click')
+        await flushPromises()
+
+        // Declined the confirm, so nothing was removed.
+        expect(wrapper.text()).toContain('Invoice posted')
+    })
 })

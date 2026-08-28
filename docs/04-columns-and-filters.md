@@ -19,7 +19,8 @@ From `Alxtexh\Panel\Tables\Columns`:
 | `CheckboxColumn` | A read-only tick |
 | `ToggleColumn` | A switch that **writes** on click |
 | `SelectColumn` | A dropdown that **writes** on change |
-| `EditableColumn` | Base for the two above |
+| `TextInputColumn` | Short text that **writes** on blur/Enter, validated by `->rules()` |
+| `EditableColumn` | Base for the three above |
 
 ```php
 use Alxtexh\Panel\Tables\Columns\{TextColumn, BadgeColumn, ColumnGroup, TagsColumn, MoneyColumn, DateColumn};
@@ -48,11 +49,28 @@ present. `TagsColumn` accepts arrays, JSON array strings, or
 
 ### Editable columns write, so they are guarded
 
-`ToggleColumn` and `SelectColumn` post a single cell. That endpoint accepts
-**only** a column the resource declared as editable, and the value is validated
-by the column itself — a select accepts only its own options. Without that check
-it would write any attribute on any visible record, which is mass assignment
-wearing an inline-edit costume.
+`ToggleColumn`, `SelectColumn`, and `TextInputColumn` post a single cell. That
+endpoint accepts **only** a column the resource declared as editable, and the
+value is validated by the column itself — a select accepts only its own
+options, a toggle only a real boolean. Without that check it would write any
+attribute on any visible record, which is mass assignment wearing an
+inline-edit costume.
+
+`TextInputColumn` is the free-text one, so it is the only one that needs its
+own fence — `->rules([...])` runs Laravel's own validator against the incoming
+value before it is written:
+
+```php
+use Alxtexh\Panel\Tables\Columns\TextInputColumn;
+
+TextInputColumn::make('reference')
+    ->rules(['required', 'max:20', 'alpha_dash'])
+    ->placeholder('e.g. REF-1024');
+```
+
+For anything longer than a short reference code or note, edit it on the record
+form instead — an editable cell is a full write with a smaller control, not a
+smaller commitment.
 
 ## Every filter type
 

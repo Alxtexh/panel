@@ -50,6 +50,8 @@ export interface SchemaColumn {
     options?: Record<string, string>;
     onLabel?: string | null;
     offLabel?: string | null;
+    /** Text-only: placeholder shown in the empty cell input. */
+    placeholder?: string | null;
     /** Badge-only: a popover picker. Off unless the column opted in. */
     resolver?: boolean;
     showValue?: boolean;

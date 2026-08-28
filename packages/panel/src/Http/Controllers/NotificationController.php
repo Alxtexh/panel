@@ -46,16 +46,24 @@ use Alxtexh\Panel\PanelManager;
  */
 final class NotificationController extends Controller
 {
-    /** Bounded: a panel bell is a summary, not an archive. */
-    private const MAX_NOTIFICATIONS = 30;
+    /**
+     * One page's worth. Bounded per page, not in total - a panel bell is a
+     * summary that starts small, not an archive that arrives all at once;
+     * `hasMore` is what tells the client there is another page to ask for.
+     */
+    private const PER_PAGE = 30;
 
     public function index(Request $request, PanelManager $panels): JsonResponse
     {
         $user = $request->user();
 
         if ($user === null) {
-            return response()->json(['alerts' => [], 'notifications' => [], 'unread' => 0]);
+            return response()->json([
+                'alerts' => [], 'notifications' => [], 'unread' => 0, 'hasMore' => false,
+            ]);
         }
+
+        $page = max(1, $request->integer('page', 1));
 
         /*
          * THE TABLE MAY NOT EXIST, and that is not an error worth a 500.
@@ -66,14 +74,23 @@ final class NotificationController extends Controller
          * which is true, instead of taking the page down.
          */
         try {
-            $rows = $user->notifications()
+            /*
+             * `simplePaginate`, NOT `paginate` - it skips the COUNT query a
+             * full paginator needs for a total, and a bell only ever needs to
+             * know "is there another page", which `hasMorePages()` answers by
+             * fetching one row past the page size rather than counting the
+             * whole table.
+             */
+            $paginator = $user->notifications()
                 ->latest()
-                ->limit(self::MAX_NOTIFICATIONS)
-                ->get();
+                ->simplePaginate(self::PER_PAGE, ['*'], 'page', $page);
 
+            $rows = collect($paginator->items());
+            $hasMore = $paginator->hasMorePages();
             $unread = $user->unreadNotifications()->count();
         } catch (QueryException) {
             $rows = collect();
+            $hasMore = false;
             $unread = 0;
         }
 
@@ -98,6 +115,9 @@ final class NotificationController extends Controller
                 ...AlertRule::resolveAll($panels->alertRules()),
             ],
             'notifications' => $notifications,
+            // Whether `page + 1` has anything in it. Only meaningful past
+            // page 1 - the bell's own first open never shows this.
+            'hasMore' => $hasMore,
             // The badge counts UNREAD NOTIFICATIONS only - see the class note.
             'unread' => $unread,
             /*
@@ -191,9 +211,36 @@ final class NotificationController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /**
+     * The one Filament has and this did not: undoing a read, for a
+     * notification opened by accident or set aside to come back to. The
+     * badge does not restore itself past what it already showed - see
+     * `PanelNotificationBell.vue` - the same honesty `markRead` already
+     * keeps by moving the count before the request, not after.
+     */
+    public function markUnread(Request $request, string $id): JsonResponse
+    {
+        $request->user()->notifications()->whereKey($id)->firstOrFail()->markAsUnread();
+
+        return response()->json(['ok' => true]);
+    }
+
     public function destroy(Request $request, string $id): JsonResponse
     {
         $request->user()->notifications()->whereKey($id)->firstOrFail()->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Every notification addressed to this user, gone in one request rather
+     * than one delete per row. `destroy()` already scopes to the acting
+     * user's own relation for the reason in its note above; this is the same
+     * property at the size of the whole inbox instead of one row.
+     */
+    public function clearAll(Request $request): JsonResponse
+    {
+        $request->user()->notifications()->delete();
 
         return response()->json(['ok' => true]);
     }

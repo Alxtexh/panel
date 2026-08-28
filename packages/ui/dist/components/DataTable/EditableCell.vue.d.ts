@@ -1,5 +1,5 @@
 type __VLS_Props = {
-    type: 'toggle' | 'select';
+    type: 'toggle' | 'select' | 'text';
     value: unknown;
     /** For select: value => label. */
     options?: Record<string, string>;
@@ -7,6 +7,8 @@ type __VLS_Props = {
     disabled?: boolean;
     onLabel?: string | null;
     offLabel?: string | null;
+    /** For text. */
+    placeholder?: string | null;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     change: (value: unknown) => any;
@@ -14,6 +16,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     onChange?: ((value: unknown) => any) | undefined;
 }>, {
     disabled: boolean;
+    placeholder: string | null;
     busy: boolean;
     options: Record<string, string>;
     onLabel: string | null;

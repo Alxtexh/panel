@@ -20,6 +20,7 @@ PanelKit stays Vue + Inertia.
 | Comments | Opt-in record threads + @mentions ([17. Comments](17-comments.md)) |
 | Dashboards | Deferred widgets, Echo/poll, user DnD layout (`Panel::userDashboards()`), map/calendar/barcode/log-tail cards |
 | Auth | Auth families, conditional `socialite()`, opt-in `passwordless()` / magic link |
+| Impersonation | `ImpersonateAction::make()->toAction()` (never upward/nested/cross-tenant, audited both ends); `{panel}.impersonate.stop` registered automatically, unauthorised on purpose so the way out can never itself be revoked |
 | Sidebar | Layout families via `Panel::sidebarLayout` (incl. accordion, file-tree, calendar, dialog) |
 | Ops / doctor | Backups, logs, monitoring, search-index doctor, deny-by-default abilities |
 | Design freeze | `PAGE_SHELL` / `FORM_MEASURE`; `make check-page-shell` blocks congested `mx-auto` + `max-w-*` |

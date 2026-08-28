@@ -49,8 +49,20 @@ Panel::make('admin')
 Patterns are reimplemented in kit `AuthLayout` against PanelKit tokens. Do not
 run `npx shadcn-vue add login-*` into the monorepo for these screens.
 
-`split`, `showcase`, and `card` share the `#image` slot for a logo,
-illustration, or screenshot. Without it a placeholder is shown.
+`split`, `showcase`, and `card` share an image panel for a logo, illustration,
+or screenshot. Set it once, server-side — these are `panel/auth/*` screens
+resolved by name, so there is no template position to slot markup into
+without forking the page:
+
+```php
+Panel::make('admin')
+    ->authFamily('showcase')
+    ->authImage('/images/auth-cover.jpg', 'A dashboard, mid-shift')  // alt optional
+```
+
+Without it a placeholder is shown. `#image` still exists on `AuthLayout`
+itself for a consumer rendering the layout directly from its own page,
+outside `panel/auth/*` — that explicit slot wins over `authImage()`.
 
 `showcase` also accepts a testimonial, declared as text rather than a
 component - the renderer owns how it looks:
@@ -296,6 +308,66 @@ Fortify's own `/login` already does the TOTP pause. The packaged controller is
 the copy generated portals actually use. A missing `passkeys` table is still
 an empty list, not a 500.
 
+### Fortify::ignoreRoutes() takes 2FA management down too
+
+`Security.vue`'s enrolment modal (`ManageTwoFactor.vue`) posts straight to
+Fortify's own default paths — `/user/two-factor-authentication`,
+`/user/confirmed-two-factor-authentication`, `/user/two-factor-qr-code`,
+`/user/two-factor-secret-key`, `/user/two-factor-recovery-codes` — because
+those are the six routes `laravel/fortify` itself registers, and the modal is
+built to talk to them directly rather than to a packaged equivalent.
+
+If Fortify is only there for its 2FA machinery — the common case, since this
+package supplies its own login, registration and password-reset controllers —
+the usual move is `Fortify::ignoreRoutes()` in `boot()`, to stop Fortify's
+`/login` and friends colliding with the panel's. That call is all-or-nothing:
+it takes the six 2FA-management routes down as collateral, and the enrolment
+modal 404s instead of opening.
+
+Register just those six back, with Fortify's own controllers, guard and
+middleware:
+
+```php
+use Laravel\Fortify\Features;
+use Laravel\Fortify\Http\Controllers\{
+    ConfirmedTwoFactorAuthenticationController,
+    RecoveryCodeController,
+    TwoFactorAuthenticationController,
+    TwoFactorQrCodeController,
+    TwoFactorSecretKeyController,
+};
+
+if (Features::enabled(Features::twoFactorAuthentication())) {
+    $middleware = Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')
+        ? [config('fortify.auth_middleware', 'auth').':'.config('fortify.guard'), 'password.confirm']
+        : [config('fortify.auth_middleware', 'auth').':'.config('fortify.guard')];
+
+    Route::group(['middleware' => config('fortify.middleware', ['web'])], function () use ($middleware) {
+        Route::post('/user/two-factor-authentication', [TwoFactorAuthenticationController::class, 'store'])->middleware($middleware);
+        Route::post('/user/confirmed-two-factor-authentication', [ConfirmedTwoFactorAuthenticationController::class, 'store'])->middleware($middleware);
+        Route::delete('/user/two-factor-authentication', [TwoFactorAuthenticationController::class, 'destroy'])->middleware($middleware);
+        Route::get('/user/two-factor-qr-code', [TwoFactorQrCodeController::class, 'show'])->middleware($middleware);
+        Route::get('/user/two-factor-secret-key', [TwoFactorSecretKeyController::class, 'show'])->middleware($middleware);
+        Route::get('/user/two-factor-recovery-codes', [RecoveryCodeController::class, 'index'])->middleware($middleware);
+        Route::post('/user/two-factor-recovery-codes', [RecoveryCodeController::class, 'store'])->middleware($middleware);
+    });
+}
+```
+
+Put this where `Fortify::ignoreRoutes()` is called, so the two decisions stay
+next to each other.
+
+## Security screen layout
+
+Password, second factor, passkeys, connected accounts and devices render as
+one flat list by default. `Panel::groupedSecurityCards()` puts each in its
+own bordered card instead:
+
+```php
+Panel::make('admin')
+    ->groupedSecurityCards()   // or ->groupedSecurityCards(false), the default
+```
+
 ## Sensitive actions
 
 Changing a password requires the current one — every other control on the
@@ -318,3 +390,31 @@ A dedicated ability, separate from managing users — support needs the first an
 often should not have the second. It cannot nest, cannot target yourself, cannot
 cross tenants, and cannot reach a target holding anything the actor lacks. Both
 transitions regenerate the session and are audited.
+
+Attach it to a user resource with `ImpersonateAction`, the same way
+`ReplicateAction` attaches duplication:
+
+```php
+use Alxtexh\Panel\Actions\ImpersonateAction;
+
+$table->actions([
+    ImpersonateAction::make()->toAction(),
+    // ->label('Sign in as this customer')
+    // ->confirm(null)   // drop the confirmation dialog
+]);
+```
+
+It builds a `RecordAction` whose `visible()` and `handle()` both ask
+`Impersonation::allows()`/`start()` — the menu and the endpoint agree because
+they are asking the same object, not two copies of the same rule. `visible()`
+re-queries the target per row to check its abilities, which costs one extra
+query per row shown; a resource with hundreds of users already loaded for the
+page can call `->visible()` again on the returned action to resolve targets
+from what it has instead.
+
+**Stopping is not something you wire up.** `{panel}.impersonate.stop` is
+registered for every panel automatically — `PanelImpersonationBanner.vue`
+renders once anything starts an impersonation, with no configuration, and its
+"Stop impersonating" button posts there. It is deliberately unauthorised:
+whoever is impersonating must always be able to get back out, even after the
+ability that let them in was revoked in the meantime.

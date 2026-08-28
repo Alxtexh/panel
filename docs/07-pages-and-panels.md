@@ -142,6 +142,14 @@ importing it and write your own. The props are all on the page.
 Per-panel colours are applied as CSS variables, resolved per request, so a
 portal can wear the signed-in reseller's brand.
 
+`AppLogo` (the mark in the sidebar) renders `page.props.panelLogo` — a plain
+URL string, not fetched by this package. Share it from your own Inertia
+middleware however your application stores logos: a database column, a
+config value, a disk path. `page.props.panelLogoDark` is the same, read for
+the panel's dark theme; set only `panelLogo` and the mark simply does not
+change between themes. With no logo shared at all, the sidebar shows the
+tenant's name instead of a placeholder mark, per `brandName()` above.
+
 ## Environment badge
 
 Removed from chrome. The top bar no longer shows a LOCAL / staging badge (it

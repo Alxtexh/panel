@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import AuthPasskeyButton from './AuthPasskeyButton.vue'
 
 /**
@@ -93,6 +94,13 @@ describe('AuthPasskeyButton', () => {
     it('reads the challenge out of a nested options response', async () => {
         const wrapper = mount(AuthPasskeyButton, { props: { routes } })
 
+        /*
+         * `supported` STARTS FALSE AND FLIPS IN `onMounted` - see the component
+         * for why (SSR/CSR hydration parity). That flip is a reactive update,
+         * which Vue schedules rather than applying inline, so the button is not
+         * in the DOM until the next tick even though `mount()` already returned.
+         */
+        await nextTick()
         await wrapper.find('button').trigger('click')
         await vi.waitFor(() => expect(posted).not.toBeNull())
 
@@ -105,6 +113,7 @@ describe('AuthPasskeyButton', () => {
     it('posts the credential WRAPPED, which is what the endpoint validates', async () => {
         const wrapper = mount(AuthPasskeyButton, { props: { routes } })
 
+        await nextTick()
         await wrapper.find('button').trigger('click')
         await vi.waitFor(() => expect(posted).not.toBeNull())
 
@@ -139,6 +148,7 @@ describe('AuthPasskeyButton', () => {
 
         const wrapper = mount(AuthPasskeyButton, { props: { routes } })
 
+        await nextTick()
         await wrapper.find('button').trigger('click')
         await vi.waitFor(() => expect(wrapper.text()).toContain('No passkey found'))
 
@@ -156,6 +166,7 @@ describe('AuthPasskeyButton', () => {
             props: { routes },
         })
 
+        await nextTick()
         await wrapper.find('button').trigger('click')
 
         /*
@@ -182,6 +193,7 @@ describe('AuthPasskeyButton', () => {
 
         const wrapper = mount(AuthPasskeyButton, { props: { routes } })
 
+        await nextTick()
         await wrapper.find('button').trigger('click')
         await vi.waitFor(() => expect(wrapper.text()).toContain('challenge'))
     })

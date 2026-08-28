@@ -25,7 +25,7 @@ import { computed } from 'vue'
 
 const props = withDefaults(
     defineProps<{
-        type: 'toggle' | 'select'
+        type: 'toggle' | 'select' | 'text'
         value: unknown
         /** For select: value => label. */
         options?: Record<string, string>
@@ -33,6 +33,8 @@ const props = withDefaults(
         disabled?: boolean
         onLabel?: string | null
         offLabel?: string | null
+        /** For text. */
+        placeholder?: string | null
     }>(),
     {
         options: () => ({}),
@@ -40,6 +42,7 @@ const props = withDefaults(
         disabled: false,
         onLabel: null,
         offLabel: null,
+        placeholder: null,
     },
 )
 
@@ -71,6 +74,40 @@ function pick(event: Event) {
 
     emit('change', next)
 }
+
+/**
+ * Commits on blur, never on keystroke - a cell edit is a full write (see
+ * the class note), and a request per character would make typing a
+ * reference code cost as many round trips as it has letters.
+ */
+function commit(event: Event) {
+    const input = event.target as HTMLInputElement
+    const next = input.value
+
+    if (next === String(props.value ?? '')) {
+        return
+    }
+
+    emit('change', next)
+}
+
+/**
+ * Enter ends editing THROUGH `commit`, not beside it - blurring is what
+ * triggers the `@blur` listener above, so there is exactly one path that
+ * emits a change no matter which key or event closed the field. Calling
+ * `commit` from here too would fire it twice for the same edit.
+ */
+function commitOnEnter(event: Event) {
+    ;(event.target as HTMLInputElement).blur()
+}
+
+/** Discards what was typed and gives the field back the value it had. */
+function cancel(event: Event) {
+    const input = event.target as HTMLInputElement
+
+    input.value = String(props.value ?? '')
+    input.blur()
+}
 </script>
 
 <template>
@@ -91,6 +128,19 @@ function pick(event: Event) {
             :class="on ? 'translate-x-4.5' : 'translate-x-0.5'"
         />
     </button>
+
+    <input
+        v-else-if="type === 'text'"
+        type="text"
+        class="bg-background hover:bg-accent focus:ring-ring w-full min-w-28 rounded-md border px-2 py-1 text-xs transition-colors focus:ring-2 focus:outline-none disabled:opacity-50"
+        :value="String(value ?? '')"
+        :placeholder="placeholder ?? undefined"
+        :disabled="locked"
+        @click.stop
+        @blur="commit"
+        @keydown.enter="commitOnEnter"
+        @keydown.esc="cancel"
+    />
 
     <select
         v-else

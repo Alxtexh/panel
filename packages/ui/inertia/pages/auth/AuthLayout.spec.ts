@@ -126,8 +126,15 @@ describe('AuthLayout', () => {
 
             expect(wrapper.find('[data-slot="card"]').exists()).toBe(true)
             expect(wrapper.find('h1').text()).toBe('Log in')
-            // Page chrome is muted; the form column sits inside the card.
-            expect(wrapper.find('.bg-muted.flex.min-h-svh').exists()).toBe(true)
+            /*
+             * PAGE CHROME MATCHES THE CARD, not `muted` - `--muted` and `--card`
+             * are visibly distinct tones in the default dark palette (nearly
+             * identical in light), so a `bg-muted` page around a `bg-card` card
+             * drew a seam around the card in dark mode. `bg-background` and
+             * `--card` are defined identically in both palettes, so this reads
+             * as one surface in either theme.
+             */
+            expect(wrapper.find('.bg-background.flex.min-h-svh').exists()).toBe(true)
         })
 
         it('honours a layout prop over shared panel.authLayout', () => {

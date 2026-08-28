@@ -795,8 +795,22 @@ async function submitActionForm() {
             return
         }
 
+        const body = await response.json().catch(() => null)
+
         toast.success(`${open.action.label} done`)
         actionForm.value = null
+
+        /*
+         * A DECLARED `redirect()` WINS OVER THE DEFAULT RELOAD. Most actions
+         * have nowhere else to go - "resend invoice" ends right back on this
+         * list - but one that creates or opens something else (replicate,
+         * "start onboarding") says so itself; see `RecordAction::redirect()`.
+         */
+        if (body?.redirect) {
+            router.visit(body.redirect)
+
+            return
+        }
 
         // The list, not the row - see `runRecordAction` for why.
         router.reload({ only: ['records', 'total', 'tabCounts'] })
@@ -855,7 +869,16 @@ async function runRecordAction(row: Record<string, any>, action: any) {
             return
         }
 
+        const body = await response.json().catch(() => null)
+
         toast.success(`${action.label} done`)
+
+        // See `submitActionForm` for why a declared redirect wins.
+        if (body?.redirect) {
+            router.visit(body.redirect)
+
+            return
+        }
 
         /*
          * The LIST is reloaded, not the row patched.
@@ -1466,11 +1489,18 @@ function badgeLabel(key: string, value: unknown): string {
                     <template v-for="col in columns" :key="col.key" #[`cell:${col.key}`]="{ row }">
                         <EditableCell
                             v-if="byKey[col.key]?.editable && byKey[col.key]?.type !== 'badge'"
-                            :type="byKey[col.key].type === 'toggle' ? 'toggle' : 'select'"
+                            :type="
+                                byKey[col.key].type === 'toggle'
+                                    ? 'toggle'
+                                    : byKey[col.key].type === 'text'
+                                      ? 'text'
+                                      : 'select'
+                            "
                             :value="cellValue(row, col.key)"
                             :options="byKey[col.key].options ?? {}"
                             :on-label="byKey[col.key].onLabel"
                             :off-label="byKey[col.key].offLabel"
+                            :placeholder="byKey[col.key].placeholder"
                             :busy="savingCell === `${row.id}:${col.key}`"
                             :disabled="!can.update"
                             @change="(value: unknown) => editCell(row, col.key, value)"

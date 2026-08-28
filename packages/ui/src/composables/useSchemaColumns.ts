@@ -76,12 +76,14 @@ export interface SchemaColumn {
     fallback?: 'initials' | 'icon' | 'none'
     fallbackFrom?: string
 
-    /* toggle, select, and badge resolvers - writable in place */
+    /* toggle, select, text, and badge resolvers - writable in place */
     editable?: boolean
     confirmation?: string | null
     options?: Record<string, string>
     onLabel?: string | null
     offLabel?: string | null
+    /** Text-only: placeholder shown in the empty cell input. */
+    placeholder?: string | null
     /** Badge-only: a popover picker. Off unless the column opted in. */
     resolver?: boolean
 

@@ -21,7 +21,7 @@
  * somebody clicking a button that appears to do nothing - and the commonest
  * failure is the most confusing one: no passkey registered for this site yet.
  */
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const props = withDefaults(
     defineProps<{
@@ -57,10 +57,20 @@ const NO_PASSKEY =
 /**
  * WebAuthn is only offered over a secure context, which `localhost` counts as.
  * Checking the API rather than the protocol keeps this honest in both.
+ *
+ * STARTS FALSE AND FLIPS IN `onMounted`, matching what SSR renders. Reading
+ * `window` at setup time answers `false` on the server and `true` on the
+ * client for the exact same prerendered page, and Vue's hydration checks that
+ * a `v-if` agrees between the two passes - which this button never did until
+ * hydration itself resolved the mismatch, one paint late.
  */
-const supported = typeof window !== 'undefined' && 'PublicKeyCredential' in window
+const supported = ref(false)
 
-const visible = computed(() => supported && props.routes !== null)
+onMounted(() => {
+    supported.value = 'PublicKeyCredential' in window
+})
+
+const visible = computed(() => supported.value && props.routes !== null)
 
 /** base64url → ArrayBuffer. The wire format WebAuthn wants as bytes. */
 function toBuffer(value: string): ArrayBuffer {

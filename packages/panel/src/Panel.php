@@ -182,6 +182,9 @@ final class Panel
      */
     private bool $pageFooter = false;
 
+    /** Bordered cards on the Security screen instead of one flat list. Off by default. */
+    private bool $groupedSecurityCards = false;
+
     /**
      * Settings hub in the sidebar (Settings group). Default on so every install
      * finds Settings without opening the account menu. `->sidebarSettings(false)`
@@ -402,6 +405,9 @@ final class Panel
 
     /** @var array{quote: string, author: string, role: string|null}|null */
     private ?array $authTestimonial = null;
+
+    /** @var array{src: string, alt: string|null}|null */
+    private ?array $authImage = null;
 
     /**
      * SIDEBAR DESIGN FAMILIES. Prefer `sidebarLayout()`; `sidebarVariant()` is
@@ -1623,6 +1629,30 @@ final class Panel
     }
 
     /**
+     * A real image for the `card`, `showcase` and `split` auth layouts'
+     * `#image` panel, in place of the SVG placeholder.
+     *
+     * A PROP, NOT A SLOT, because these layouts render behind a packaged
+     * `panel/auth/*` page name that Inertia resolves by string - there is no
+     * template position to pass slot content into without forking the page
+     * component wholesale. An installation that wants its own image states
+     * the URL; the renderer owns the markup. An explicit `#image` slot still
+     * wins for a consumer rendering `AuthLayout` directly from its own page.
+     */
+    public function authImage(string $src, ?string $alt = null): self
+    {
+        $this->authImage = ['src' => $src, 'alt' => $alt];
+
+        return $this;
+    }
+
+    /** @return array{src: string, alt: string|null}|null */
+    public function getAuthImage(): ?array
+    {
+        return $this->authImage;
+    }
+
+    /**
      * Prefer `sidebarLayout()`. Alias kept for call sites that say "variant".
      *
      * @param  string  $variant  Layout name or shadcn block alias (see SIDEBAR_LAYOUT_ALIASES).
@@ -1931,6 +1961,28 @@ final class Panel
     public function hasPageFooter(): bool
     {
         return $this->pageFooter;
+    }
+
+    /**
+     * Bordered cards on the Security screen instead of one flat list.
+     *
+     * OFF BY DEFAULT, same reasoning as `pageFooter()`: it is chrome a host
+     * opts into. `Security.vue` is rendered directly by `SecurityController`
+     * under a fixed page name, so there is no template position for a host to
+     * pass a prop into without forking the page - this travels through
+     * `SharePanelProps` instead, the same route `authTestimonial()` takes to
+     * reach `AuthLayout`.
+     */
+    public function groupedSecurityCards(bool $enabled = true): self
+    {
+        $this->groupedSecurityCards = $enabled;
+
+        return $this;
+    }
+
+    public function hasGroupedSecurityCards(): bool
+    {
+        return $this->groupedSecurityCards;
     }
 
     /**

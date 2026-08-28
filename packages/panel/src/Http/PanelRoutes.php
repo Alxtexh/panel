@@ -951,19 +951,36 @@ final class PanelRoutes
                  * polled, and re-rendering a page to answer "anything new?" is
                  * the cost this package exists to avoid.
                  *
-                 * `read-all` IS DECLARED BEFORE `{id}/read` on purpose. It is
-                 * not ambiguous with it - the segments differ - but the two
-                 * sitting apart is how the pair ends up wrong when somebody
-                 * later adds `notifications/{id}` as a POST.
+                 * `read-all` AND `clear` ARE DECLARED BEFORE `{id}/read` AND
+                 * `{id}` on purpose. Laravel matches routes in registration
+                 * order, so a fixed segment registered AFTER a wildcard one
+                 * covering the same method and depth never gets to run - a
+                 * DELETE to `/notifications/clear` would resolve as
+                 * `{id} = 'clear'` and 404 inside the controller instead of
+                 * clearing anything.
                  */
                 Route::get('notifications', [Controllers\NotificationController::class, 'index'])
                     ->name('notifications');
                 Route::post('notifications/read-all', [Controllers\NotificationController::class, 'markAllRead'])
                     ->name('notifications.readAll');
+                Route::delete('notifications/clear', [Controllers\NotificationController::class, 'clearAll'])
+                    ->name('notifications.clearAll');
                 Route::post('notifications/{id}/read', [Controllers\NotificationController::class, 'markRead'])
                     ->name('notifications.read');
+                Route::post('notifications/{id}/unread', [Controllers\NotificationController::class, 'markUnread'])
+                    ->name('notifications.unread');
                 Route::delete('notifications/{id}', [Controllers\NotificationController::class, 'destroy'])
                     ->name('notifications.destroy');
+
+                /*
+                 * IMPERSONATION'S STOP SIDE. Mounted unconditionally, the same
+                 * way the bell is: a route nobody's impersonation ever reaches
+                 * is inert, and `Impersonation::stop()` already no-ops when
+                 * nothing is active. See `ImpersonationController` for why
+                 * starting is not registered here too.
+                 */
+                Route::post('impersonate/stop', [Controllers\ImpersonationController::class, 'stop'])
+                    ->name('impersonate.stop');
 
                 /*
                  | THE INSTALLATION'S OWN HEALTH: backups, logs and monitoring.

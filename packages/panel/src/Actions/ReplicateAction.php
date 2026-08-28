@@ -120,7 +120,7 @@ final class ReplicateAction
             ->icon('copy')
             // See the class note: a duplicate is a CREATE.
             ->authorize('create')
-            ->handle(function (Model $record) use ($except, $then): void {
+            ->handle(function (Model $record) use ($except, $then): array {
                 $copy = $record->replicate($except);
 
                 /*
@@ -142,6 +142,16 @@ final class ReplicateAction
                 }
 
                 $copy->save();
+
+                /*
+                 * SO A CALLER CAN CHAIN `->redirect()` TO THE NEW ROW. A
+                 * closure passed to `handle()` cannot rebind the caller's
+                 * `$record` - returning the copy's key is the only way to
+                 * hand it back at all. Harmless when nobody reads it: the
+                 * client only consumes `values` when an action's own
+                 * `redirect()` closure asks for it.
+                 */
+                return ['id' => $copy->getKey()];
             });
 
         if ($this->confirmation !== null) {

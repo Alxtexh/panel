@@ -37,7 +37,7 @@ use Alxtexh\Panel\Actions\RecordAction;
 $table->actions([
     RecordAction::make('send', 'Send')
         ->icon('mail')
-        ->ability('update')
+        ->authorize('update')
         ->confirm('Send this invoice to the customer?')
         ->visible(fn (array $row): bool => $row['status'] !== 'sent')
         ->handle(fn (Invoice $invoice) => $invoice->send()),
@@ -78,6 +78,29 @@ RecordAction::make('assign', 'Assign')
 
 Group related actions with `ActionGroup`.
 
+By default a successful action reloads the current list in place. `->redirect()`
+sends the browser somewhere else instead — useful for anything that produces or
+opens a different record:
+
+```php
+use Alxtexh\Panel\Actions\ReplicateAction;
+
+ReplicateAction::make()->toAction()
+    ->redirect(fn (Invoice $invoice, array $result): string => "/invoices/{$result['id']}/edit");
+```
+
+The closure's second argument is whatever `handle()` returned — the same array
+sent to the client as `values` — not the original `$record`. A closure cannot
+rebind the caller's variable, so an action whose `handle()` creates a different
+row (like `ReplicateAction`, which returns `['id' => $copy->getKey()]`) has no
+other way to hand the new one back. A plain string works for the common case,
+where every run goes to the same fixed place:
+
+```php
+RecordAction::make('start-onboarding', 'Start onboarding')
+    ->redirect('/onboarding');
+```
+
 ## Workflow transitions
 
 Declare a workflow on the resource to generate transition actions from a status
@@ -114,7 +137,7 @@ use Alxtexh\Panel\Actions\BulkAction;
 
 $table->bulkActions([
     BulkAction::make('mark-paid', 'Mark paid')
-        ->ability('update')
+        ->authorize('update')
         ->queueThreshold(100)
         ->handle(fn ($query) => $query->update(['paid_at' => now()])),
 ]);
