@@ -8,6 +8,33 @@
 @source '../../inertia/**/*.{vue,ts}';
 
 /**
+ * `dark:` FOLLOWS THE `.dark` CLASS, NOT THE OS. Tailwind v4's own default for
+ * the `dark:` variant is `@media (prefers-color-scheme: dark)` - a media
+ * query, entirely independent of whatever `useAppearance.ts` actually decided.
+ *
+ * `useAppearance.ts` deliberately removed every `matchMedia` call for exactly
+ * this reason - see `isDark()`'s own docblock: "a light-defaulting panel still
+ * rendered dark on a dark-mode laptop... which is exactly the behaviour being
+ * removed." That fixed every component reading `bg-background` / `text-foreground`
+ * and the rest of the semantic palette, because those resolve through CSS
+ * custom properties `applyAppearance()` sets on `.dark`.
+ *
+ * IT DID NOT FIX A COMPONENT USING A LITERAL `dark:bg-red-700/10` OR SIMILAR
+ * TAILWIND COLOUR UTILITY, because that class does not go through the custom
+ * properties at all - it compiles straight to the media query, unless this
+ * line repoints the variant at the class. Found on `DeleteUser.vue`'s "Delete
+ * account" warning box: on a light-themed panel opened from a browser whose
+ * OS reports `prefers-color-scheme: dark`, `dark:text-red-100` (near-white)
+ * still applied, over a `bg-red-50` background nothing ever switched away from
+ * light - unreadable pink-on-white text, on the one panel actually IN light
+ * mode. The playground's own `app.css` already has this line; the kit
+ * stylesheet - what ships to an installer who never runs `npm run build` -
+ * did not, so only a symlinked-Tailwind consumer of the package source was
+ * protected.
+ */
+@custom-variant dark (&:is(.dark *));
+
+/**
  * The design tokens every packaged component reads.
  *
  * THE SET IS NOT DECORATIVE - IT IS THE ONE THE COMPONENTS ACTUALLY ASK FOR.

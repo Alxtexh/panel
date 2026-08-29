@@ -6429,7 +6429,7 @@ const Ac = ["aria-busy", "aria-label"], zc = { class: "bg-background flex shrink
       ])
     ]));
   }
-}), gf = { class: "md:shrink-0 md:self-start" }, hf = { class: "md:hidden" }, bf = ["aria-expanded", "aria-label"], yf = { class: "flex min-w-0 items-center gap-2" }, xf = {
+}), gf = { class: "lg:shrink-0 lg:self-start" }, hf = { class: "lg:hidden" }, bf = ["aria-expanded", "aria-label"], yf = { class: "flex min-w-0 items-center gap-2" }, xf = {
   class: "text-muted-foreground size-4 shrink-0",
   viewBox: "0 0 24 24",
   fill: "none",
@@ -6451,7 +6451,7 @@ const Ac = ["aria-busy", "aria-label"], zc = { class: "bg-background flex shrink
   stroke: "currentColor",
   "stroke-width": "2",
   "aria-hidden": "true"
-}, _f = ["d"], Af = { class: "sticky top-6 hidden w-60 shrink-0 self-start md:block" }, zf = ["aria-label"], Pf = {
+}, _f = ["d"], Af = { class: "sticky top-6 hidden w-60 shrink-0 self-start lg:block" }, zf = ["aria-label"], Pf = {
   class: "size-4",
   viewBox: "0 0 24 24",
   fill: "none",

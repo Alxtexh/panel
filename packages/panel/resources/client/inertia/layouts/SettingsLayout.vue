@@ -61,7 +61,18 @@ const currentItem = computed(
             :description="currentItem?.description ?? 'Organisation, roles, payments and the rest of this portal.'"
         />
 
-        <div class="mt-6 flex flex-col md:flex-row md:gap-12">
+        <!--
+            `gap-6` IS NOT JUST THE `lg:gap-12` FALLBACK - it is what applies
+            BELOW `lg`, where this is a column (dropdown stacked over content)
+            rather than a row. `flex-col` with no unconditional `gap-*` puts
+            zero space between them: the dropdown trigger's own border sits
+            flush against the content card's border below it. Found live at
+            784px, right after moving the row switch to `lg:` (see `PkSubNav`)
+            made this stacked layout the one showing at a width somebody was
+            actually looking at, not only on a phone where it was just as
+            true and just as unnoticed.
+        -->
+        <div class="mt-6 flex flex-col gap-6 lg:flex-row lg:gap-12">
             <PkSubNav :items="items" aria-label="Settings" />
 
             <div class="@container min-w-0 flex-1">

@@ -29,6 +29,22 @@ import { iconPath } from '../primitives/icons'
 import PkDropdown from '../primitives/PkDropdown.vue'
 import { buttonClasses } from '../primitives/buttonClasses'
 
+/*
+ * THE RAIL BELOW SWITCHES ON AT `lg` (1024px), NOT `md` (768px) - one
+ * breakpoint later than the app's own primary sidebar.
+ *
+ * Both used to switch at 768px, because 768px is what "desktop" means to a
+ * component that has never met the other one. Together they do not fit: the
+ * primary sidebar is 16rem, this rail is another 15rem (w-60), plus the
+ * layout's own md:gap-12 - three-quarters of a 768px viewport is nav before a
+ * single settings field renders, so the surviving space truncated the email
+ * input to a few characters and force-wrapped the page heading. Found on an
+ * actual settings page at 784px, not assumed from the classes.
+ *
+ * A phone is unaffected: the primary sidebar is ALSO collapsed below 768px,
+ * so the dropdown below only ever shares the screen with a bottom nav bar.
+ */
+
 export interface SubNavItem {
     key: string
     title: string
@@ -87,8 +103,8 @@ function iconFor(item?: SubNavItem): string {
 </script>
 
 <template>
-    <div class="md:shrink-0 md:self-start">
-        <div class="md:hidden">
+    <div class="lg:shrink-0 lg:self-start">
+        <div class="lg:hidden">
             <PkDropdown align="start">
                 <template #trigger="{ open }">
                     <button
@@ -164,7 +180,7 @@ function iconFor(item?: SubNavItem): string {
             </PkDropdown>
         </div>
 
-        <aside class="sticky top-6 hidden w-60 shrink-0 self-start md:block">
+        <aside class="sticky top-6 hidden w-60 shrink-0 self-start lg:block">
             <nav class="flex flex-col space-y-1" :aria-label="ariaLabel">
                 <Link
                     v-for="item in items"
