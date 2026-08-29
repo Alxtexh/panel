@@ -5,13 +5,22 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Support;
 
 /**
- * Form gap utilities and landing typography blocks hosts need in app.css.
+ * Form gap utilities, landing typography, and the dark-mode variant blocks
+ * hosts need in app.css.
  *
  * THE FAILURE IS SILENT AND LOOKS LIKE A NEAR MISS. RecordForm uses
  * `.pk-form-stack` with `gap: var(--pk-form-gap)`. Without those tokens the
  * stack collapses to browser defaults while the rest of the shell looks fine.
  * Landing pages apply `.pk-editorial` / `.pk-console` on the wrapper; without
  * the rules every design reads as the same sans stack.
+ *
+ * `@custom-variant dark` IS THE SAME KIND OF SILENT GAP, found the same way:
+ * present in the playground's own app.css, absent from the other two
+ * canonical files, so a component's literal `dark:bg-red-700` followed the
+ * viewer's OS colour scheme instead of the panel's own `.dark` class -
+ * unreadable text on whichever install disagreed with its own OS. See
+ * `useAppearance.ts`'s `isDark()` docblock for why the panel deliberately
+ * never reads `prefers-color-scheme` anywhere else.
  *
  * VALUES MATCH packages/ui/src/kit/app.css and apps/playground/resources/css/app.css.
  */
@@ -24,6 +33,7 @@ final class CriticalStylesheetBlocks
         '.pk-editorial {',
         '.pk-console',
         '.pk-studio',
+        '@custom-variant dark',
     ];
 
     /**
@@ -95,11 +105,22 @@ final class CriticalStylesheetBlocks
     {
         return <<<'CSS'
 /*
- * Added by panel:update / panel:install - form gap and landing typography.
+ * Added by panel:update / panel:install - form gap, landing typography, and
+ * the dark-mode variant.
  *
  * RecordForm uses `.pk-form-stack` with `--pk-form-gap`. Landing wrappers use
  * `.pk-editorial`, `.pk-console` and `.pk-studio` for per-design typography.
+ *
+ * `@custom-variant dark` repoints Tailwind's `dark:` at this panel's own
+ * `.dark` class instead of the OS's `prefers-color-scheme` - without it, any
+ * component using a literal `dark:bg-*`/`dark:text-*` utility follows the
+ * viewer's OS setting regardless of which theme the panel is actually
+ * showing. `@custom-variant` is a top-level at-rule Tailwind accepts anywhere
+ * in the file, so appending it here (rather than requiring it near the top)
+ * still takes effect.
  */
+@custom-variant dark (&:is(.dark *));
+
 :root {
     --pk-form-gap: 1rem;
 }
