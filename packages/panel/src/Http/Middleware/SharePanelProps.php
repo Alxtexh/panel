@@ -385,7 +385,7 @@ final class SharePanelProps
                     'authLayout' => $panel->getAuthLayout(),
                     'authTestimonial' => $panel->getAuthTestimonial(),
                     'authImage' => $panel->getAuthImage(),
-                    'groupedSecurityCards' => $panel->hasGroupedSecurityCards(),
+                    'groupedSettingsCards' => $panel->hasGroupedSettingsCards(),
                     /*
                      * Gallery / preview routes may set request attribute
                      * `forceSidebarLayout` so the shared panel payload matches

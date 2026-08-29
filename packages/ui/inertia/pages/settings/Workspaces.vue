@@ -18,6 +18,7 @@ import {
     PkTextInput as Input,
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
+import { useGroupedSettingsCards } from '../../composables/useGroupedSettingsCards'
 
 interface Workspace {
     id: number
@@ -39,6 +40,8 @@ defineProps<{
 }>()
 
 const page = usePage()
+
+const { sectionClass } = useGroupedSettingsCards()
 
 const base = computed(() => (page.props.panel as { path?: string } | undefined)?.path ?? '')
 
@@ -95,62 +98,64 @@ function switchTo(workspace: Workspace) {
         can belong to more than one.
     </div>
 
-    <div v-else class="flex flex-col space-y-6">
-        <Heading
-            variant="small"
-            title="Workspaces"
-            description="The organisations you belong to, and which one you are working in"
-        />
+    <template v-else>
+        <div class="flex flex-col" :class="sectionClass">
+            <Heading
+                variant="small"
+                title="Workspaces"
+                description="The organisations you belong to, and which one you are working in"
+            />
 
-        <ul class="divide-y rounded-md border">
-            <li
-                v-for="workspace in workspaces"
-                :key="workspace.id"
-                class="flex items-center justify-between gap-3 px-3 py-2.5"
-            >
-                <div class="min-w-0">
-                    <span class="text-sm font-medium">{{ workspace.name }}</span>
-                    <span v-if="workspace.current" class="ml-2 text-xs font-medium text-primary">
-                        Current
-                    </span>
-                    <span
-                        v-else-if="workspace.suspended"
-                        class="ml-2 text-xs text-muted-foreground"
-                    >
-                        Suspended
-                    </span>
-                </div>
-
-                <!--
-                    The current workspace gets no button rather than a disabled
-                    one: "switch to where you already are" is not an action
-                    someone is waiting to become possible.
-                -->
-                <Button
-                    v-if="!workspace.current && !workspace.suspended"
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    :disabled="switching.processing"
-                    @click="switchTo(workspace)"
+            <ul class="divide-y rounded-md border">
+                <li
+                    v-for="workspace in workspaces"
+                    :key="workspace.id"
+                    class="flex items-center justify-between gap-3 px-3 py-2.5"
                 >
-                    Switch
-                </Button>
-            </li>
-        </ul>
+                    <div class="min-w-0">
+                        <span class="text-sm font-medium">{{ workspace.name }}</span>
+                        <span v-if="workspace.current" class="ml-2 text-xs font-medium text-primary">
+                            Current
+                        </span>
+                        <span
+                            v-else-if="workspace.suspended"
+                            class="ml-2 text-xs text-muted-foreground"
+                        >
+                            Suspended
+                        </span>
+                    </div>
 
-        <p v-if="canManageMembers" class="text-sm text-muted-foreground font-normal">
-            Who is in the current workspace, and what they may do, lives in
-            <button
-                type="button"
-                class="text-foreground underline underline-offset-4"
-                @click="router.visit(at('/user-management'))"
-            >
-                User management</button
-            >.
-        </p>
+                    <!--
+                        The current workspace gets no button rather than a disabled
+                        one: "switch to where you already are" is not an action
+                        someone is waiting to become possible.
+                    -->
+                    <Button
+                        v-if="!workspace.current && !workspace.suspended"
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        :disabled="switching.processing"
+                        @click="switchTo(workspace)"
+                    >
+                        Switch
+                    </Button>
+                </li>
+            </ul>
 
-        <form class="space-y-4 border-t pt-6" @submit.prevent="create">
+            <p v-if="canManageMembers" class="text-sm text-muted-foreground font-normal">
+                Who is in the current workspace, and what they may do, lives in
+                <button
+                    type="button"
+                    class="text-foreground underline underline-offset-4"
+                    @click="router.visit(at('/user-management'))"
+                >
+                    User management</button
+                >.
+            </p>
+        </div>
+
+        <form class="mt-6 flex flex-col" :class="sectionClass" @submit.prevent="create">
             <Heading
                 variant="small"
                 title="New workspace"
@@ -181,5 +186,5 @@ function switchTo(workspace: Workspace) {
                 {{ creating.processing ? 'Creating…' : 'Create workspace' }}
             </Button>
         </form>
-    </div>
+    </template>
 </template>

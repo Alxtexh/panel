@@ -1,0 +1,1 @@
+import{g as e}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{c as t}from"./dist-BolYny5m.js";function n(){let n=t(),r=e(()=>n.props.panel?.groupedSettingsCards===!0);return{grouped:r,sectionClass:e(()=>r.value?`space-y-6 rounded-lg border p-6`:`space-y-6`),wrapClass:e(()=>r.value?`rounded-lg border p-6`:``)}}export{n as t};

@@ -25,6 +25,9 @@ import {
     ShadcnInput as Input,
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
+import { useGroupedSettingsCards } from '../../composables/useGroupedSettingsCards'
+
+const { sectionClass } = useGroupedSettingsCards()
 
 const props = defineProps<{
     /** Where the form posts. See `AssistantSettingsController`. */
@@ -66,7 +69,7 @@ function remove() {
 
     <h1 class="sr-only">Assistant settings</h1>
 
-    <div class="flex flex-col space-y-6">
+    <div class="flex flex-col" :class="sectionClass">
         <Heading
             variant="small"
             title="Assistant"

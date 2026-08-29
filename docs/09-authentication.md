@@ -357,15 +357,17 @@ if (Features::enabled(Features::twoFactorAuthentication())) {
 Put this where `Fortify::ignoreRoutes()` is called, so the two decisions stay
 next to each other.
 
-## Security screen layout
+## Settings screen layout
 
-Password, second factor, passkeys, connected accounts and devices render as
-one flat list by default. `Panel::groupedSecurityCards()` puts each in its
-own bordered card instead:
+Profile, Security, Workspaces, Organisation, Notifications, Assistant and
+SMTP each render as bordered cards by default - one card per section
+(password, second factor, passkeys, connected accounts and devices on
+Security; name/email and delete-account on Profile; and so on).
+`Panel::groupedSettingsCards(false)` returns all of them to one flat list:
 
 ```php
 Panel::make('admin')
-    ->groupedSecurityCards()   // or ->groupedSecurityCards(false), the default
+    ->groupedSettingsCards(false)   // flat lists instead of bordered cards
 ```
 
 ## Sensitive actions

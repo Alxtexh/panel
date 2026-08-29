@@ -19,8 +19,10 @@ import {
     assertTransparentImage,
 } from '@alxtexh-enterprise/panel';
 import AuthInputError from '@alxtexh-enterprise/panel/components/AuthInputError.vue';
+import { useGroupedSettingsCards } from '@alxtexh-enterprise/panel/composables/useGroupedSettingsCards';
 
 const page = usePage();
+const { sectionClass } = useGroupedSettingsCards();
 
 const base = computed(() => (page.props.panel as { path?: string } | undefined)?.path ?? '');
 
@@ -133,7 +135,7 @@ function csrf(): string {
 
     <h1 class="sr-only">Organisation settings</h1>
 
-    <div class="flex flex-col space-y-6">
+    <div class="flex flex-col" :class="sectionClass">
         <Heading
             variant="small"
             title="Organisation"

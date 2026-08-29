@@ -188,8 +188,12 @@ final class Panel
      */
     private bool $pageFooter = false;
 
-    /** Bordered cards on the Security screen instead of one flat list. Off by default. */
-    private bool $groupedSecurityCards = false;
+    /**
+     * Bordered cards on Profile, Security, and the other multi-section
+     * settings screens, instead of one flat list. On by default - see
+     * `groupedSettingsCards()`.
+     */
+    private bool $groupedSettingsCards = true;
 
     /**
      * Settings hub in the sidebar (Settings group). Default on so every install
@@ -1980,25 +1984,28 @@ final class Panel
     }
 
     /**
-     * Bordered cards on the Security screen instead of one flat list.
+     * Bordered cards on the multi-section settings screens (Profile,
+     * Security, Workspaces, Organisation, Notifications, Assistant, SMTP)
+     * instead of one flat list.
      *
-     * OFF BY DEFAULT, same reasoning as `pageFooter()`: it is chrome a host
-     * opts into. `Security.vue` is rendered directly by `SecurityController`
-     * under a fixed page name, so there is no template position for a host to
-     * pass a prop into without forking the page - this travels through
-     * `SharePanelProps` instead, the same route `authTestimonial()` takes to
-     * reach `AuthLayout`.
+     * ON BY DEFAULT. Security and Profile are rendered directly by their own
+     * controllers under fixed page names, so there is no template position
+     * for a host to pass a prop into without forking the page - this travels
+     * through `SharePanelProps` instead, the same route `authTestimonial()`
+     * takes to reach `AuthLayout`. `->groupedSettingsCards(false)` returns
+     * every one of them to one flat list, for a host that wants the plainer
+     * chrome.
      */
-    public function groupedSecurityCards(bool $enabled = true): self
+    public function groupedSettingsCards(bool $enabled = true): self
     {
-        $this->groupedSecurityCards = $enabled;
+        $this->groupedSettingsCards = $enabled;
 
         return $this;
     }
 
-    public function hasGroupedSecurityCards(): bool
+    public function hasGroupedSettingsCards(): bool
     {
-        return $this->groupedSecurityCards;
+        return $this->groupedSettingsCards;
     }
 
     /**
