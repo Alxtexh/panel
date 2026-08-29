@@ -101,4 +101,19 @@ final class PageLayoutTest extends TestCase
         $this->assertSame('New left', $page['values']['left_note'] ?? null);
         $this->assertSame('New right', $page['values']['right_note'] ?? null);
     }
+
+    /**
+     * A CUSTOM PAGE GETS THE SAME WIDGET ROW A RESOURCE DOES, AT BOTH ENDS -
+     * `Page::headerWidgets()`/`footerWidgets()`, wired through the same
+     * `WidgetSet::props()` a resource's index and the dashboard already use,
+     * namespaced under `header`/`footer` so the two rows never collide.
+     */
+    public function test_a_page_declares_both_header_and_footer_widgets(): void
+    {
+        $page = $this->get('/layout-demo')->assertOk()->viewData('page')['props'];
+
+        $this->assertContains('demo-header', array_column($page['headerWidgets'] ?? [], 'key'));
+        $this->assertContains('demo-footer', array_column($page['footerWidgets'] ?? [], 'key'));
+        $this->assertNotContains('demo-footer', array_column($page['headerWidgets'] ?? [], 'key'));
+    }
 }

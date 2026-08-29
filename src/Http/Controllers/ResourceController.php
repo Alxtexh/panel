@@ -1008,6 +1008,13 @@ final class ResourceController extends Controller
              */
             ...Widgets\WidgetSet::props($class::resolvedIndexWidgets(), $request->user()),
 
+            /*
+             * WIDGETS BELOW THE LIST - see `Resource::footerWidgets()`. Same
+             * rules as the header row, namespaced under `footer` so the two
+             * never collide.
+             */
+            ...Widgets\WidgetSet::props($class::footerWidgets(), $request->user(), 'footer'),
+
             'lens' => $request->query('lens'),
 
             /*

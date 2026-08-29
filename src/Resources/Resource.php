@@ -577,6 +577,19 @@ abstract class Resource
     }
 
     /**
+     * Widgets below this resource's index - see `Page::footerWidgets()` for
+     * why the row exists at both ends. No `indexMetrics()`-style preferred
+     * alias here: that split is about naming two header methods for the
+     * same slot, which a single footer method has no reason to repeat.
+     *
+     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     */
+    public static function footerWidgets(): array
+    {
+        return [];
+    }
+
+    /**
      * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
      */
     public static function resolvedIndexWidgets(): array

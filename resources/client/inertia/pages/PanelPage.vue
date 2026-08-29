@@ -124,5 +124,7 @@ function submitLayout() {
         </div>
 
         <slot />
+
+        <PanelWidgets prefix="footer" />
     </div>
 </template>
