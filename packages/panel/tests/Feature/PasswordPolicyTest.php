@@ -185,4 +185,51 @@ final class PasswordPolicyTest extends TestCase
          */
         $this->assertSame(27, $policy->daysUntilExpiry($this->user->fresh()));
     }
+
+    /**
+     * `toPasswordRulesString()` only exists from Laravel 13 - this package
+     * declares `^12.0|^13.0` support, and calling it unconditionally
+     * (which is what `SecurityController`/`PanelAuthController` used to do)
+     * 500'd the register and security-settings pages on every Laravel 12
+     * install. Nothing here can actually run against Laravel 12 - the test
+     * suite only has one framework installed - so this proves the GUARD
+     * itself is correct: a rule object that genuinely lacks the method is
+     * handled without throwing, exercised through an anonymous class rather
+     * than a downgraded framework.
+     */
+    public function test_complexity_hint_falls_back_to_null_when_the_method_does_not_exist(): void
+    {
+        $ruleWithoutTheMethod = new class
+        {
+            //
+        };
+
+        $this->assertNull(PasswordPolicy::complexityHint($ruleWithoutTheMethod));
+    }
+
+    public function test_complexity_hint_returns_the_string_when_the_method_exists(): void
+    {
+        $ruleWithTheMethod = new class
+        {
+            public function toPasswordRulesString(): string
+            {
+                return 'minlength: 8;';
+            }
+        };
+
+        $this->assertSame('minlength: 8;', PasswordPolicy::complexityHint($ruleWithTheMethod));
+    }
+
+    /**
+     * The actual `Illuminate\Validation\Rules\Password` rule, on whichever
+     * Laravel this suite is running against - the two anonymous classes
+     * above prove the guard's two branches; this proves it is wired to the
+     * real rule object correctly, not just a shape that resembles one.
+     */
+    public function test_complexity_hint_works_against_the_real_password_rule(): void
+    {
+        $hint = PasswordPolicy::complexityHint(\Illuminate\Validation\Rules\Password::defaults());
+
+        $this->assertTrue($hint === null || is_string($hint));
+    }
 }

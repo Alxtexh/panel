@@ -51,6 +51,27 @@ final class PasswordPolicy
         );
     }
 
+    /**
+     * The Apple `passwordrules` attribute hint, when the running Laravel
+     * knows how to build one - the string a password manager reads to
+     * GENERATE something that will pass, sent to the register and
+     * security-settings pages.
+     *
+     * `toPasswordRulesString()` ONLY EXISTS FROM LARAVEL 13. This package
+     * declares Laravel `^12.0|^13.0` support (`composer.json`), and calling
+     * it unconditionally 500'd both pages on every Laravel 12 install - a
+     * crash a password-manager hint is not worth causing. UX ONLY: the
+     * `Password` rule object itself, passed separately to the validator at
+     * both call sites, is what actually enforces the policy, unaffected by
+     * whether this hint renders.
+     */
+    public static function complexityHint(object $rule): ?string
+    {
+        return method_exists($rule, 'toPasswordRulesString')
+            ? $rule->toPasswordRulesString()
+            : null;
+    }
+
     public function expiryEnabled(): bool
     {
         return $this->maxAgeDays > 0;

@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Http\Controllers;
 use Alxtexh\Panel\Auth\EmailTwoFactor;
 use Alxtexh\Panel\Auth\Mfa;
 use Alxtexh\Panel\Auth\Passkeys;
+use Alxtexh\Panel\Auth\PasswordPolicy;
 use Alxtexh\Panel\Auth\SocialLoginPayload;
 use Alxtexh\Panel\Auth\Turnstile;
 use Alxtexh\Panel\Auth\TwoFactor;
@@ -111,7 +112,7 @@ final class PanelAuthController extends Controller
         return Inertia::render('panel/auth/Register', [
             'action' => $this->url($panel, $panel->getRegistrationSlug()),
             'loginUrl' => $this->url($panel, $panel->getLoginSlug()),
-            'passwordRules' => PasswordRule::defaults()->toPasswordRulesString(),
+            'passwordRules' => PasswordPolicy::complexityHint(PasswordRule::defaults()),
             'turnstileSiteKey' => $panel->hasTurnstile() ? Turnstile::siteKey() : null,
             'heading' => config("panel.auth.{$panel->id}.register_heading"),
             'description' => config("panel.auth.{$panel->id}.register_description"),
