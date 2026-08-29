@@ -6,11 +6,14 @@
  * broken. This is the kit empty state: you have no grants, here is how to
  * create an Administrator.
  *
- * ONE TREATMENT, NOT TWO. `PanelDashboard` used to render this a second time,
- * full-size, directly under the identical banner `PanelShell` already puts
- * above every page's toolbar - the same title and the same three commands,
- * twice on one screen. `PanelShell` is the only caller now, so there is one
- * design to get right rather than one to maintain and one to forget.
+ * `PanelDashboard` IS THE ONLY CALLER. It lived in `PanelShell` first - every
+ * page's own toolbar, not just the dashboard's - which meant a person saw
+ * this banner following them from Settings to a resource list to wherever
+ * they clicked next, long after they had read it once. It answers "why is
+ * my sidebar empty", and the dashboard is the one screen actually asking
+ * that question. (An earlier pass also had `PanelDashboard` render this a
+ * SECOND time on top of the shell's copy, fixed in v1.4.59 - the shell copy
+ * was the one that needed to go, not the duplicate alone.)
  *
  * THE COMMANDS STAY, ON PURPOSE. `panel:permissions grant` is deliberately a
  * shell-only act - see that command's own docblock: "somebody with the

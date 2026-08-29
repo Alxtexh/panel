@@ -51,7 +51,6 @@ import AppSidebarHeader from './AppSidebarHeader.vue'
 import AppTopNav from './AppTopNav.vue'
 import PanelIdleLockGuard from './PanelIdleLockGuard.vue'
 import PanelImpersonationBanner from './PanelImpersonationBanner.vue'
-import EmptyGrantsNotice from '../EmptyGrantsNotice.vue'
 import RenderHook from '../RenderHook.vue'
 import type { BreadcrumbItem, User } from '../../types'
 
@@ -225,9 +224,6 @@ router.on('success', () => {
         <!-- Top navigation, by preference: no rail, no provider. -->
         <div v-if="horizontal" class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-sidebar">
             <PanelImpersonationBanner />
-            <div v-if="(page.props as any).panelEmptyGrants" class="px-4 pt-3">
-                <EmptyGrantsNotice />
-            </div>
 
             <!--
                 FORWARDED ONLY WHEN GIVEN. An unconditional forward renders an
@@ -263,9 +259,6 @@ router.on('success', () => {
 
             <AppContent variant="sidebar" class="min-h-0 overflow-x-hidden overflow-y-auto">
                 <PanelImpersonationBanner />
-                <div v-if="(page.props as any).panelEmptyGrants" class="px-4 pt-3">
-                    <EmptyGrantsNotice />
-                </div>
 
                 <AppSidebarHeader :breadcrumbs="props.breadcrumbs">
                     <template v-if="$slots.topbar" #topbar>
