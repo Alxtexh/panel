@@ -21,10 +21,10 @@ use Inertia\Response;
  * either gate the routine thing behind a password prompt or leave the serious
  * one ungated.
  *
- * IT REPORTS THE SECOND FACTOR AND DOES NOT MANAGE IT. A profile screen that
- * says nothing about two-factor is one where nobody discovers it exists, so the
- * state is surfaced here and the ACTION is a link to Security - which is behind
- * the password gate, which is the point.
+ * NOTHING ABOUT GETTING INTO THE ACCOUNT LIVES HERE, two-factor included -
+ * that used to be reported (not managed) on this screen too, which read as
+ * the same section shown twice once both screens got their own bordered
+ * cards. Security is the one and only place for it now.
  */
 final class ProfileController
 {
@@ -35,7 +35,6 @@ final class ProfileController
         return Inertia::render('settings/Profile', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
-            'twoFactorEnabled' => ($user->two_factor_confirmed_at ?? null) !== null,
         ]);
     }
 
