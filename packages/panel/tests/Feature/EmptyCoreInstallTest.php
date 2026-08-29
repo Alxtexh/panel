@@ -142,4 +142,30 @@ final class EmptyCoreInstallTest extends TestCase
             ->expectsOutputToContain('--password')
             ->assertSuccessful();
     }
+
+    /**
+     * A scripted `panel:install --email=admin@fresh.test --password=secret`
+     * creates that exact user in createFirstUser(). The local-dev login
+     * prefill must default to the SAME credentials, or first login fails
+     * against an account (`admin@example.com`) the install never made.
+     */
+    public function test_local_auth_prefill_defaults_to_the_first_user_flags(): void
+    {
+        $install = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
+        );
+
+        $this->assertStringContainsString(
+            "\$email = \$this->option('email');",
+            $install,
+            'writeLocalAuthPrefill must read --email instead of hardcoding admin@example.com.',
+        );
+        $this->assertStringContainsString(
+            "\$password = \$this->option('password');",
+            $install,
+            'writeLocalAuthPrefill must read --password instead of hardcoding a default.',
+        );
+        $this->assertStringContainsString('addcslashes($email', $install);
+        $this->assertStringContainsString('addcslashes($password', $install);
+    }
 }

@@ -102,6 +102,30 @@ final class RecordWriteTest extends TestCase
         $this->assertSame(0, Article::query()->count());
     }
 
+    /**
+     * THE PROP, NOT JUST THE SESSION FLASH. `assertSessionHasErrors` above
+     * confirms Laravel validated and flashed - it says nothing about whether
+     * the NEXT Inertia response actually carries `errors` to the client.
+     *
+     * A `panel:install` app with no Breeze/Jetstream `HandleInertiaRequests`
+     * has nothing else sharing that prop. Without it, `page.props.errors` is
+     * undefined on every page, and `useForm().post()` - which decides
+     * success or failure by reading THAT prop, not the HTTP status - reads
+     * "no errors" and fires `onSuccess` on a record that was never written.
+     */
+    public function test_validation_errors_reach_the_client_as_a_shared_prop(): void
+    {
+        $this->get('/articles/create')->assertOk();
+
+        $redirect = $this->post('/articles', ['title' => ''])
+            ->assertSessionHasErrors('title')
+            ->headers->get('Location');
+
+        $this->get($redirect)
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->has('errors.title'));
+    }
+
     public function test_it_updates_a_record(): void
     {
         $article = $this->makeArticle();

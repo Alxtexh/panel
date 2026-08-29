@@ -98,6 +98,24 @@ final class SharePanelProps
         $sharedAuth = Inertia::getShared('auth');
 
         /*
+         * SAME GAP AS `name` ABOVE, ONE SEVERITY HIGHER. Inertia's own
+         * `Middleware::share()` is what puts `errors` on every page - a
+         * `panel:install` app without Breeze/Jetstream has no class extending
+         * it, so `page.props.errors` was undefined everywhere, always.
+         *
+         * `useForm().post()` decides success vs failure by reading THAT prop,
+         * not the HTTP status: empty (or absent) means success. A failed
+         * validation on this route already redirects back with errors flashed
+         * to the session - correctly - but with no `errors` prop to carry them
+         * into the response, the client read "no errors" and called onSuccess
+         * on a record that was never written. `ResourceForm.vue`'s onSuccess
+         * then did exactly what it is supposed to on a REAL success: toasted
+         * "created" and navigated to the index. The user typed nothing wrong;
+         * the panel told them they had.
+         */
+        $sharedErrors = Inertia::getShared('errors');
+
+        /*
          * `chrome()` needs the current panel. On the web-group pass that runs
          * before `UsePanel`, the panel is still null and chrome stays a plain
          * closure. The route-middleware pass after `UsePanel` re-shares with
@@ -119,6 +137,17 @@ final class SharePanelProps
              * packaged screen sees the same product name.
              */
             'name' => static fn (): string => (string) config('app.name', 'Panel'),
+
+            /*
+             * FILLS THE SAME GAP AS `name`, NOT REPLACES A HOST'S OWN. An app
+             * with its own `HandleInertiaRequests` (Breeze/Jetstream, or one
+             * `panel:install` wrote itself) already shares this correctly -
+             * `$sharedErrors` is non-null there, and this defers to it rather
+             * than overwriting an equivalent value with a second one.
+             */
+            'errors' => $sharedErrors ?? Inertia::always(
+                static fn (): object => self::validationErrors($request),
+            ),
 
             /*
              * KIT STRINGS for Vue `t()`. A few kilobytes on first paint so keys
@@ -798,6 +827,38 @@ final class SharePanelProps
             $tenantKey,
             app()->getLocale(),
         ]));
+    }
+
+    /**
+     * Ported from Inertia's own `Middleware::resolveValidationErrors()` - the
+     * client-side contract (a flat `{field: message}` object, or `{bag: {...}}`
+     * when a named error bag is requested) is Inertia's, not this package's, so
+     * it has to match exactly rather than take the shape this file would
+     * otherwise choose.
+     */
+    private static function validationErrors(Request $request): object
+    {
+        if (! $request->hasSession() || ! $request->session()->has('errors')) {
+            return (object) [];
+        }
+
+        /** @var \Illuminate\Support\ViewErrorBag $viewErrorBag */
+        $viewErrorBag = $request->session()->get('errors');
+
+        $bags = collect($viewErrorBag->getBags())
+            ->map(static fn ($bag): object => (object) collect($bag->messages())
+                ->map(static fn (array $messages): string => $messages[0])
+                ->toArray());
+
+        if ($bags->has('default') && $request->header('X-Inertia-Error-Bag')) {
+            return (object) [(string) $request->header('X-Inertia-Error-Bag') => $bags->get('default')];
+        }
+
+        if ($bags->has('default')) {
+            return $bags->get('default');
+        }
+
+        return (object) $bags->toArray();
     }
 
     /**
