@@ -12,6 +12,7 @@ import {
     PkButton as Button,
     PkHeading as Heading,
 } from '@alxtexh-enterprise/panel'
+import { useGroupedSettingsCards } from '../../composables/useGroupedSettingsCards'
 
 type Props = {
     categories: string[]
@@ -27,6 +28,7 @@ type Props = {
 const props = defineProps<Props>()
 
 const page = usePage()
+const { sectionClass } = useGroupedSettingsCards()
 
 const base = computed(() => (page.props.panel as { path?: string } | undefined)?.path ?? '')
 const at = (path: string) => `${base.value === '/' ? '' : base.value}${path}`
@@ -57,7 +59,7 @@ defineOptions({
 
     <h1 class="sr-only">Notification preferences</h1>
 
-    <div class="flex flex-col space-y-6">
+    <div class="flex flex-col" :class="sectionClass">
         <Heading
             variant="small"
             title="Notifications"

@@ -22,8 +22,8 @@
  * it now; the settings hub's own "Security" entry is the discoverability
  * this card used to be standing in for.
  *
- * TWO CARDS, NOT ONE FLAT STACK - `Security.vue`'s bordered-card rhythm,
- * unconditionally rather than behind `groupedSecurityCards`. A page with no
+ * TWO CARDS, NOT ONE FLAT STACK - `useGroupedSettingsCards()`, the same
+ * `Panel::groupedSettingsCards()` toggle `Security.vue` reads. A page with no
  * visual seam between "change your name" and "delete everything" reads as
  * one undifferentiated form, and at a glance is easy to mistake for whatever
  * other settings screen was open last.
@@ -41,7 +41,9 @@ import {
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
 import DeleteUser from '../../components/DeleteUser.vue'
+import { useGroupedSettingsCards } from '../../composables/useGroupedSettingsCards'
 
+const { sectionClass, wrapClass } = useGroupedSettingsCards()
 const page = usePage()
 /**
  * TYPED, NOT `Record<string, unknown>`. The shared `auth.user` payload is JSON,
@@ -77,7 +79,7 @@ defineOptions({
 
     <h1 class="sr-only">Profile settings</h1>
 
-    <div class="flex flex-col space-y-6 rounded-lg border p-6">
+    <div class="flex flex-col" :class="sectionClass">
         <Heading variant="small" title="Profile" description="Update your name and email address" />
 
         <Form
@@ -154,7 +156,7 @@ defineOptions({
         does not exist, and a confirmation dialog that 404s on submit is worse
         than no dialog.
     -->
-    <div class="mt-6 rounded-lg border p-6">
+    <div class="mt-6" :class="wrapClass">
         <DeleteUser :action="at('/profile')" />
     </div>
 </template>

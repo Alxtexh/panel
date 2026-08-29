@@ -35,6 +35,9 @@ import {
     UnsavedBar,
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
+import { useGroupedSettingsCards } from '../../composables/useGroupedSettingsCards'
+
+const { sectionClass } = useGroupedSettingsCards()
 
 const props = defineProps<{
     /** Where `save` posts - injected by `PageController` for a declared `save` action. */
@@ -154,7 +157,7 @@ async function sendTest() {
         comment. The bar is fixed to the bottom of `#pk-main`; without
         reserved space it sits on top of the last field instead of below it.
     -->
-    <div class="flex flex-col space-y-6 pb-24">
+    <div class="flex flex-col pb-24" :class="sectionClass">
         <Heading
             variant="small"
             title="SMTP"

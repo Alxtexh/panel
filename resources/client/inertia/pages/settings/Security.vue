@@ -31,6 +31,7 @@ import {
 import AuthInputError from '../../components/AuthInputError.vue'
 import ManagePasskeys from '../../components/security/ManagePasskeys.vue'
 import ManageTwoFactor from '../../components/security/ManageTwoFactor.vue'
+import { useGroupedSettingsCards } from '../../composables/useGroupedSettingsCards'
 import type { Passkey } from '../../types'
 
 interface ConnectedAccountRow {
@@ -80,22 +81,7 @@ const props = defineProps<Props>()
 
 const page = usePage()
 
-/**
- * `Panel::groupedSecurityCards()`. Bordered cards instead of one flat list.
- *
- * READ FROM `panel.*`, NOT A PROP - `SecurityController` renders this page
- * directly under a fixed name, so there is no template position a host could
- * pass a prop into without forking the whole file. `panel.*` is the shared
- * route every panel-wide toggle already takes (`authTestimonial`,
- * `authImage`), and `ManageTwoFactor` / `ManagePasskeys` already draw their
- * own `space-y-6` - this only adds the card around them, once, here.
- */
-const grouped = computed(
-    () => (page.props.panel as { groupedSecurityCards?: boolean } | undefined)?.groupedSecurityCards === true,
-)
-
-const sectionClass = computed(() => (grouped.value ? 'space-y-6 rounded-lg border p-6' : 'space-y-6'))
-const wrapClass = computed(() => (grouped.value ? 'rounded-lg border p-6' : ''))
+const { sectionClass, wrapClass } = useGroupedSettingsCards()
 
 /** The panel's prefix, so these URLs work wherever it is mounted. */
 const base = computed(() => (page.props.panel as { path?: string } | undefined)?.path ?? '')

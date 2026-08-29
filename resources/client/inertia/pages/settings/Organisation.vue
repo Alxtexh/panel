@@ -30,6 +30,7 @@ import {
     PkTextInput as Input,
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
+import { useGroupedSettingsCards } from '../../composables/useGroupedSettingsCards'
 /*
  * GENERATED, NOT TYPED OUT - the same rule the account menu follows.
  *
@@ -39,6 +40,7 @@ import AuthInputError from '../../components/AuthInputError.vue'
  * relocate a screen people have bookmarked.
  */
 const page = usePage()
+const { sectionClass } = useGroupedSettingsCards()
 
 /**
  * THE PANEL'S PREFIX. The demo imported generated route helpers; a packaged
@@ -183,7 +185,7 @@ function csrf(): string {
 
     <h1 class="sr-only">Organisation settings</h1>
 
-    <div class="flex flex-col space-y-6">
+    <div class="flex flex-col" :class="sectionClass">
         <Heading
             variant="small"
             title="Organisation"
