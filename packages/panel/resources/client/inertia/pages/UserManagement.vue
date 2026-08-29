@@ -46,6 +46,7 @@ import {
     DataTable,
     PkBoundary,
     RecordActions,
+    SchemaNode,
     SelectionBar,
     PkModal,
 } from '@alxtexh-enterprise/panel'
@@ -275,6 +276,105 @@ function confirmPendingAction() {
     }
 }
 
+function csrfToken(): string {
+    return decodeURIComponent(
+        (document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/) ?? ['', ''])[1],
+    )
+}
+
+/**
+ * The open form action, or null.
+ *
+ * `RecordAction::form()` is not a resource-page-only feature - it exists so
+ * "why is this account suspended" or "who approved this" can be collected
+ * before an action runs, and a row action here is the exact same
+ * `RecordAction` a resource's own index page would render. Until this
+ * existed, `pendingAction`'s modal showed no fields for one - the operator
+ * had nowhere to type the value the server was about to require, and
+ * confirming submitted the key alone.
+ */
+const actionForm = ref<{
+    row: Record<string, any>
+    action: RecordActionItem
+    values: Record<string, any>
+    errors: Record<string, string>
+    processing: boolean
+} | null>(null)
+
+async function searchActionOptions(
+    field: string,
+    term: string,
+): Promise<{ value: any; label: string }[]> {
+    const query = new URLSearchParams({ field, q: term })
+
+    const res = await fetch(`/users/field-options?${query}`, {
+        headers: { Accept: 'application/json' },
+    })
+
+    if (!res.ok) {
+        throw new Error(String(res.status))
+    }
+
+    return (await res.json()).options
+}
+
+async function submitActionForm() {
+    const open = actionForm.value
+
+    if (!open) {
+        return
+    }
+
+    open.processing = true
+    open.errors = {}
+
+    try {
+        const response = await fetch(`/users/${open.row.id}/action`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': csrfToken(),
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: open.action.key, data: open.values }),
+        })
+
+        if (response.status === 422) {
+            const body = await response.json().catch(() => null)
+
+            open.errors = Object.fromEntries(
+                Object.entries(body?.errors ?? {}).map(([key, messages]) => [
+                    key,
+                    Array.isArray(messages) ? String(messages[0]) : String(messages),
+                ]),
+            )
+
+            return
+        }
+
+        if (!response.ok) {
+            const body = await response.json().catch(() => null)
+
+            window.alert(body?.message ?? 'That action could not be completed.')
+
+            return
+        }
+
+        const body = await response.json().catch(() => null)
+
+        actionForm.value = null
+
+        // Same full visit `runRecordAction` uses below - see its own note.
+        router.visit(body?.redirect ?? '/dashboard')
+    } finally {
+        if (actionForm.value) {
+            actionForm.value.processing = false
+        }
+    }
+}
+
 function runRecordAction(row: Record<string, any>, action: RecordActionItem) {
     if (action.key === DELETE_USER) {
         confirmingDeleteUser.value = row
@@ -284,6 +384,17 @@ function runRecordAction(row: Record<string, any>, action: RecordActionItem) {
 
     if (action.link) {
         router.visit(action.url ?? '#')
+
+        return
+    }
+
+    /*
+     * A FORM ACTION OPENS ITS DIALOG INSTEAD OF RUNNING - see `actionForm`.
+     * Checked before `confirmation` because a form action's own description
+     * is shown inside that dialog, not as a separate confirm-then-fill step.
+     */
+    if (action.form) {
+        actionForm.value = { row, action, values: {}, errors: {}, processing: false }
 
         return
     }
@@ -315,17 +426,13 @@ function runRecordAction(row: Record<string, any>, action: RecordActionItem) {
      * `fetch` rather than `router.post` because an action returns JSON, not an
      * Inertia page; the list is reloaded separately once it succeeds.
      */
-    const csrf = decodeURIComponent(
-        (document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/) ?? ['', ''])[1],
-    )
-
     fetch(`/users/${row.id}/action`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
-            'X-XSRF-TOKEN': csrf,
+            'X-XSRF-TOKEN': csrfToken(),
         },
         credentials: 'same-origin',
         body: JSON.stringify({ action: action.key }),
@@ -845,6 +952,43 @@ function save(): void {
             <Button variant="ghost" size="sm" @click="pendingAction = null">Cancel</Button>
             <Button size="sm" @click="confirmPendingAction">
                 {{ pendingAction?.action.label }}
+            </Button>
+        </template>
+    </PkModal>
+
+    <PkModal
+        :open="actionForm !== null"
+        :title="actionForm?.action.label ?? ''"
+        :description="actionForm?.action.confirmation ?? undefined"
+        :size="actionForm?.action.modalWidth ?? 'form'"
+        :busy="Boolean(actionForm?.processing)"
+        @close="actionForm = null"
+    >
+        <form class="flex flex-col gap-4" @submit.prevent="submitActionForm">
+            <SchemaNode
+                v-for="(node, index) in actionForm?.action.form?.nodes ?? []"
+                :key="index"
+                :node="node as any"
+                :values="actionForm!.values"
+                :errors="actionForm!.errors"
+                :processing="actionForm!.processing"
+                :search-options="searchActionOptions"
+                @change="(key: string, value: any) => (actionForm!.values[key] = value)"
+            />
+        </form>
+
+        <template #footer>
+            <Button
+                variant="ghost"
+                size="sm"
+                :disabled="actionForm?.processing"
+                @click="actionForm = null"
+            >
+                Cancel
+            </Button>
+
+            <Button size="sm" :disabled="actionForm?.processing" @click="submitActionForm">
+                {{ actionForm?.processing ? 'Working…' : actionForm?.action.label }}
             </Button>
         </template>
     </PkModal>

@@ -346,5 +346,34 @@ describe('SchemaNode - callout', () => {
         expect(wrapper.text()).toContain('Identity')
         expect(wrapper.find('svg path').exists()).toBe(true)
     })
+})
+
+/**
+ * `ResourceIndex.vue`'s record-action and bulk-action dialogs listened for a
+ * `SchemaNode` event named `update` - one that does not exist. `FormFieldControl`
+ * emits `change`, `SchemaNode` relays it as `change`, and the mismatched listener
+ * silently never fired: `actionForm.values` stayed `{}` no matter what was typed,
+ * so every form-collecting action (`RecordAction::form()`, roadmap 3.8's "a reason
+ * for a suspension, an amount to credit") shipped a request with an empty `data`
+ * regardless of what the operator filled in. Caught by hand while wiring the same
+ * pattern into `UserManagement.vue`'s own action dialog, which had copied it.
+ * This is the emitter half of that contract - a listener bound to the wrong name
+ * would not fail this test, so it does not replace checking the two `.vue` call
+ * sites still use `@change`.
+ */
+describe('SchemaNode - field value changes', () => {
+    it('emits change, not update, with the field key and the typed value', async () => {
+        const wrapper = mount(SchemaNode, {
+            props: {
+                node: { component: 'field', key: 'reason', label: 'Reason', type: 'text' },
+                values: {},
+            },
+        })
+
+        await wrapper.find('input').setValue('Device left unattended')
+
+        expect(wrapper.emitted('update')).toBeUndefined()
+        expect(wrapper.emitted('change')).toEqual([['reason', 'Device left unattended']])
+    })
 
 })
