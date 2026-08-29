@@ -784,8 +784,9 @@ function clearEverything() {
             <template #trigger>
                 <button
                     type="button"
-                    class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 transition-colors"
+                    class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-9 shrink-0 items-center justify-center rounded-md border transition-colors"
                     aria-label="Toggle columns"
+                    title="Columns"
                 >
                     <svg
                         viewBox="0 0 24 24"
@@ -797,7 +798,6 @@ function clearEverything() {
                         <rect x="3" y="4" width="18" height="16" rx="2" />
                         <path d="M9 4v16M15 4v16" />
                     </svg>
-                    <span class="text-sm">Columns View</span>
                 </button>
             </template>
 
