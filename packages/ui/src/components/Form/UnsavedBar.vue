@@ -18,6 +18,13 @@
  * `pointer-events-none` on the positioning wrapper keeps the strip either side
  * of the bar clickable, so it does not become an invisible barrier across the
  * page.
+ *
+ * CLEARS `PkBottomNav` ON A HANDSET. Both are `fixed`/`bottom-0`, and without
+ * an offset the bar and the handset nav occupy the same pixels - whichever
+ * has the higher `z-index` wins, which meant Save/Cancel painted UNDER the
+ * nav bar and were unreachable. `PkBottomNav` is `min-h-14` plus the safe-area
+ * inset and only renders `sm:hidden`, so the offset matches that exactly and
+ * drops away at the same breakpoint the nav does.
  */
 import { computed, onMounted, ref } from 'vue'
 import { FORM_MEASURE } from '../../lib/pageShell'
@@ -65,18 +72,53 @@ const teleportDisabled = computed(() => !shellReady.value)
 
 const frameClass = computed(() =>
     shellReady.value
-        ? 'pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 pb-3 sm:px-4 sm:pb-4'
-        : 'pointer-events-none sticky bottom-0 z-30 px-3 pb-3 sm:px-4 sm:pb-4',
+        ? 'pointer-events-none fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-3 pb-3 sm:bottom-0 sm:px-4 sm:pb-4'
+        : 'pointer-events-none sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-3 pb-3 sm:bottom-0 sm:px-4 sm:pb-4',
 )
+
+/**
+ * MANUAL, NOT CSS-CLASS-DRIVEN. `<Transition>`'s default mode detects
+ * completion by watching for `transitionend` on the element it thinks it
+ * teleported - which, combined with `Teleport`'s own dynamic target, left
+ * this element stuck mid-leave with both the "from" and "to" classes
+ * applied and nothing ever removing it: `show` genuinely went `false`,
+ * `UnsavedBar` genuinely received it, and the bar stayed on screen anyway.
+ * Driving the same animation from `requestAnimationFrame` + a plain
+ * `setTimeout` matching the CSS duration removes the one part that was
+ * failing to fire - `done()` is guaranteed to be called, so the element is
+ * guaranteed to be removed.
+ */
+const HIDDEN = { opacity: '0', transform: 'translateY(0.75rem)' }
+const SHOWN = { opacity: '1', transform: 'translateY(0)' }
+
+function onEnter(el: Element, done: () => void): void {
+    const node = el as HTMLElement
+    Object.assign(node.style, HIDDEN, { transition: 'none' })
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            node.style.transition = 'opacity 200ms ease-out, transform 200ms ease-out'
+            Object.assign(node.style, SHOWN)
+        })
+    })
+    setTimeout(done, 200)
+}
+
+function onLeave(el: Element, done: () => void): void {
+    const node = el as HTMLElement
+    Object.assign(node.style, SHOWN, { transition: 'opacity 150ms ease-in, transform 150ms ease-in' })
+    requestAnimationFrame(() => {
+        Object.assign(node.style, HIDDEN)
+    })
+    setTimeout(done, 150)
+}
 </script>
 
 <template>
     <Teleport :to="teleportTo" :disabled="teleportDisabled">
         <Transition
-            enter-active-class="transition duration-200 ease-out"
-            enter-from-class="translate-y-3 opacity-0"
-            leave-active-class="transition duration-150 ease-in"
-            leave-to-class="translate-y-3 opacity-0"
+            :css="false"
+            @enter="onEnter"
+            @leave="onLeave"
         >
             <div
                 v-if="show"
