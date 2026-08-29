@@ -924,6 +924,22 @@ final class ResourceController extends Controller
          */
         $parent = NestedContext::parent($request, $class);
 
+        /*
+         * PIVOT COLUMNS NEED THIS SPECIFIC PARENT, so they are layered onto
+         * `$definition` here rather than in `Resource::table()` - that method
+         * runs once per resource, with no parent to correlate a value
+         * against, and `$class::schema()` below is cached across every
+         * parent this resource is ever nested under. See
+         * `NestedRelation::appendPivotColumns()`.
+         */
+        $hasPivotColumns = $parent !== null
+            && NestedRelation::belongsToMany($class)
+            && $class::pivotColumns() !== [];
+
+        if ($hasPivotColumns) {
+            NestedRelation::appendPivotColumns($definition, $parent, $class);
+        }
+
         $query = $definition->toListQuery($class::model());
 
         if ($lens !== null) {
@@ -944,7 +960,7 @@ final class ResourceController extends Controller
             $schema = NestedContext::schema($schema, $class, $parent);
         }
 
-        if ($lens !== null) {
+        if ($lens !== null || $hasPivotColumns) {
             $schema = [
                 ...$schema,
                 'table' => $definition->toSchema(),

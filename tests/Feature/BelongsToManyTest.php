@@ -250,4 +250,68 @@ final class BelongsToManyTest extends TestCase
 
         $this->assertSame(['On'], $names);
     }
+
+    /**
+     * THE READ SIDE OF `pivotColumns()`, closing what its own docblock used
+     * to call out as not built yet: a value collected on attach, and
+     * editable afterwards through "Edit pivot", now actually shows up on the
+     * list a person is looking at when they reach for that action.
+     */
+    public function test_a_declared_pivot_column_appears_in_the_nested_lists_schema(): void
+    {
+        $props = $this->get("/articles/{$this->article->getKey()}/tags")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $columns = collect($props['schema']['table']['columns'] ?? []);
+
+        $this->assertTrue(
+            $columns->contains(static fn (array $column): bool => ($column['key'] ?? null) === 'pivot_note'),
+            'The declared pivot column must appear in the nested list\'s own column schema.',
+        );
+    }
+
+    public function test_a_declared_pivot_columns_value_appears_on_its_own_row(): void
+    {
+        $tag = $this->tag('Featured');
+        $this->article->tags()->attach($tag, ['note' => 'Front page this week']);
+
+        $props = $this->get("/articles/{$this->article->getKey()}/tags")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $row = collect($props['records'] ?? $props['data'] ?? [])
+            ->firstWhere('id', $tag->getKey());
+
+        $this->assertSame('Front page this week', $row['pivot_note'] ?? null);
+    }
+
+    /**
+     * ONE VALUE PER PAIR, not the whole pivot history - the correlated
+     * subquery this reads through returns a single row by construction, so
+     * a second tag attached to the same article cannot leak the first
+     * tag's note onto it.
+     */
+    public function test_a_second_rows_pivot_value_does_not_leak_onto_the_first(): void
+    {
+        $first = $this->tag('First');
+        $second = $this->tag('Second');
+        $this->article->tags()->attach($first, ['note' => 'Note for first']);
+        $this->article->tags()->attach($second, ['note' => 'Note for second']);
+
+        $props = $this->get("/articles/{$this->article->getKey()}/tags")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $rows = collect($props['records'] ?? $props['data'] ?? []);
+
+        $this->assertSame(
+            'Note for first',
+            $rows->firstWhere('id', $first->getKey())['pivot_note'] ?? null,
+        );
+        $this->assertSame(
+            'Note for second',
+            $rows->firstWhere('id', $second->getKey())['pivot_note'] ?? null,
+        );
+    }
 }

@@ -737,12 +737,12 @@ abstract class Resource
      * BelongsToMany nested resource. Empty for every other kind of resource.
      *
      * Collected once at attach time (the same values applied to every id in
-     * that submission, not per-row) and editable afterwards through an
-     * auto-registered "Edit pivot" row action next to "Detach". Declaring
-     * these does not make them appear as columns on the nested list - showing
-     * a pivot value there needs the list query to join the pivot table, which
-     * this does not do; the fields exist to be written; the resource can wire
-     * up its own display until that read-side join exists.
+     * that submission, not per-row), editable afterwards through an
+     * auto-registered "Edit pivot" row action next to "Detach", and shown as
+     * its own column on the nested list - `RelationManager::withPivotColumns()`
+     * reads each one through its own correlated subquery rather than a join,
+     * which would risk multiplying rows the moment a pair has more than one
+     * pivot row.
      *
      * @return list<Field>
      */

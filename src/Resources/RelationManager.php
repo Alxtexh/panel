@@ -392,12 +392,14 @@ final class RelationManager
         $foreignKey = $this->foreignKey;
         $modify = $this->modifyQuery;
 
-        $query = $definition->toListQuery($this->model);
-
         if ($this->resource !== null && NestedRelation::belongsToMany($this->resource)) {
             $parentClass = $this->resource::parentResource();
             $parent = $parentClass::model()::query()->findOrFail($parentKey);
             $resource = $this->resource;
+
+            NestedRelation::appendPivotColumns($definition, $parent, $resource);
+
+            $query = $definition->toListQuery($this->model);
 
             $query->constrain(function ($builder) use ($parent, $resource, $modify): void {
                 NestedRelation::constrain($builder, $resource, $parent);
@@ -409,6 +411,8 @@ final class RelationManager
 
             return $query->run($request);
         }
+
+        $query = $definition->toListQuery($this->model);
 
         // Layered on top of whatever join the table already declares, so a
         // relation manager can still show joined columns.
@@ -451,6 +455,8 @@ final class RelationManager
 
         $inlineCreate = $formSchema !== null;
 
+        $definition = $this->definition();
+
         if ($this->resource !== null) {
             $permissions = $this->resource::permissions();
             $canCreate = ! $this->readOnly && (bool) ($permissions['create'] ?? false);
@@ -458,6 +464,9 @@ final class RelationManager
             $pages = ['resource' => $this->resource::key()];
             if (NestedRelation::belongsToMany($this->resource)) {
                 $pages['attach'] = true;
+                // Structure only here - no parent to read a value against
+                // yet. `rows()` adds the matching `appendSelect()` for one.
+                $definition->appendColumns(NestedRelation::pivotColumnDeclarations($this->resource));
             }
             $inlineCreate = $canCreate;
         }
@@ -467,7 +476,7 @@ final class RelationManager
             'label' => $this->label,
             'icon' => $this->icon,
             'readOnly' => $this->readOnly,
-            'table' => $this->definition()->toSchema(),
+            'table' => $definition->toSchema(),
             'form' => $formSchema,
             /*
              * Create opens inline on the parent tab when a form exists. Edit

@@ -7,7 +7,11 @@ namespace Alxtexh\Panel\Http;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
+use Alxtexh\Panel\Tables\Table;
 
 /**
  * Nested HasMany vs BelongsToMany, one choke point.
@@ -100,6 +104,80 @@ final class NestedRelation
             $query->getModel()->getTable().'.'.$class::parentColumn(),
             $parent->getKey(),
         );
+    }
+
+    /**
+     * `Resource::pivotColumns()` as real table columns, with a value for
+     * THIS parent - the write half of the same declaration `attach()`
+     * collects and `edit-pivot` (see `RecordAction`) updates.
+     *
+     * A JOIN TO THE PIVOT TABLE WOULD RISK MULTIPLYING ROWS - nothing forces
+     * exactly one pivot row per (parent, child) pair, and a nested list is
+     * the wrong place to discover that assumption was wrong. A correlated
+     * subquery per column reads one value regardless, the same choice
+     * `UserResource::table()`'s own `role_names` column already made for the
+     * identical reason. Shared by both places a BelongsToMany nested list can
+     * be reached from - `ResourceController::index()`'s dedicated nested page,
+     * and `RelationManager` tabs embedded on the parent's own page - rather
+     * than kept as two copies of the same subquery that could drift apart.
+     *
+     * @param  resourceClass  $class
+     */
+    public static function appendPivotColumns(Table $definition, Model $parent, string $class): void
+    {
+        $columns = $class::pivotColumns();
+
+        if ($columns === []) {
+            return;
+        }
+
+        $relation = self::of($parent, $class);
+        $pivotTable = $relation->getTable();
+        $foreignPivotKey = $relation->getForeignPivotKeyName();
+        $relatedPivotKey = $relation->getRelatedPivotKeyName();
+        $relatedTable = $relation->getRelated()->getTable();
+        $relatedKey = $relation->getRelatedKeyName();
+        $parentKey = DB::escape($parent->getKey());
+
+        $definition->appendSelect(array_map(
+            static fn (Field $field) => DB::raw(sprintf(
+                '(select %1$s.%2$s from %1$s where %1$s.%3$s = %4$s and %1$s.%5$s = %6$s.%7$s) as %8$s',
+                $pivotTable,
+                $field->key,
+                $foreignPivotKey,
+                $parentKey,
+                $relatedPivotKey,
+                $relatedTable,
+                $relatedKey,
+                self::pivotColumnKey($field->key),
+            )),
+            $columns,
+        ));
+
+        $definition->appendColumns(self::pivotColumnDeclarations($class));
+    }
+
+    /**
+     * Structure only - the label and key a pivot column renders under, with
+     * no value behind it yet. Used both by `appendPivotColumns()` (paired
+     * with a matching `appendSelect()`) and anywhere only the declaration is
+     * needed, such as a cached schema with no specific parent to read against.
+     *
+     * @param  resourceClass  $class
+     * @return list<TextColumn>
+     */
+    public static function pivotColumnDeclarations(string $class): array
+    {
+        return array_map(
+            static fn (Field $field): TextColumn => TextColumn::make(self::pivotColumnKey($field->key))
+                ->label($field->resolvedLabel()),
+            $class::pivotColumns(),
+        );
+    }
+
+    private static function pivotColumnKey(string $key): string
+    {
+        return 'pivot_'.$key;
     }
 
     /**

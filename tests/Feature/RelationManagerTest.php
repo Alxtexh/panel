@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Tests\Feature;
 
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Comment;
+use Alxtexh\Panel\Tests\Fixtures\Models\Tag;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
@@ -360,5 +361,47 @@ final class RelationManagerTest extends TestCase
             'body' => 'Stamped from the URL',
             'article_id' => $other->getKey(),
         ]);
+    }
+
+    /**
+     * THE SAME `Resource::pivotColumns()` DECLARATION, READ THROUGH THE
+     * OTHER PATH `TagResource` CAN BE REACHED FROM. `BelongsToManyTest`
+     * covers this resource's own dedicated `/articles/{id}/tags` page;
+     * `tags` is ALSO declared as a `RelationManager` tab on the article's
+     * own page (`ArticleResource::relations()`), which goes through
+     * `RelationManager::toSchema()`/`rows()` instead of
+     * `ResourceController::index()` - a genuinely different code path
+     * reading the same `pivotColumns()` declaration, not a duplicate test
+     * of the same one.
+     */
+    public function test_a_relation_tabs_schema_carries_its_pivot_columns(): void
+    {
+        $relations = $this->get("/articles/{$this->article->getKey()}")
+            ->assertOk()
+            ->viewData('page')['props']['schema']['relations'] ?? [];
+
+        $tags = collect($relations)->firstWhere('key', 'tags');
+
+        $this->assertNotNull($tags);
+
+        $columns = collect($tags['table']['columns'] ?? []);
+
+        $this->assertTrue(
+            $columns->contains(static fn (array $column): bool => ($column['key'] ?? null) === 'pivot_note'),
+            'The declared pivot column must appear in the relation tab\'s own column schema.',
+        );
+    }
+
+    public function test_a_relation_tabs_rows_carry_their_pivot_values(): void
+    {
+        $tag = Tag::withoutGlobalScopes()->create(['tenant_id' => $this->mine->id, 'name' => 'Featured']);
+        $this->article->tags()->attach($tag, ['note' => 'Read through the relation tab']);
+
+        $response = $this->relation('tags')->assertOk();
+
+        $rows = collect($response->json('records') ?? $response->json('data') ?? []);
+        $row = $rows->firstWhere('id', $tag->getKey());
+
+        $this->assertSame('Read through the relation tab', $row['pivot_note'] ?? null);
     }
 }
