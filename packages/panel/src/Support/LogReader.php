@@ -30,6 +30,19 @@ final class LogReader
     private const MAX_BYTES = 512 * 1024;
 
     /**
+     * Monolog level names per tier, matched the way Laravel's default
+     * formatter writes them: `local.ERROR:`, never bare `ERROR`. Grouped the
+     * same way the client's own line colouring already groups them, so a
+     * line that reads red in the pane is a line the "Error" toggle finds.
+     */
+    private const TIERS = [
+        'error' => ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'],
+        'warning' => ['WARNING'],
+        'info' => ['INFO', 'NOTICE'],
+        'debug' => ['DEBUG'],
+    ];
+
+    /**
      * @param  list<string>|null  $allowlist  Basename allow-list. Null keeps every `*.log` in the directory.
      * @param  string|null  $directory  Absolute log directory. Null uses `storage/logs`.
      */
@@ -74,9 +87,10 @@ final class LogReader
      * concatenated into a path - so `../../.env`, an absolute path and a symlink
      * all simply fail to match, and there is no traversal to get wrong.
      *
+     * @param  string  $tier  One of `error`, `warning`, `info`, `debug`, or empty for every level.
      * @return array{name: string|null, lines: list<string>, truncated: bool}
      */
-    public function tail(?string $name, int $lines = 300, string $needle = ''): array
+    public function tail(?string $name, int $lines = 300, string $needle = '', string $tier = ''): array
     {
         $known = array_column($this->files(), 'name');
 
@@ -114,6 +128,16 @@ final class LogReader
             $all = array_values(array_filter(
                 $all,
                 static fn (string $line): bool => stripos($line, $needle) !== false,
+            ));
+        }
+
+        $levels = self::TIERS[$tier] ?? null;
+
+        if ($levels !== null) {
+            $pattern = '/\.('.implode('|', $levels).')\b/';
+            $all = array_values(array_filter(
+                $all,
+                static fn (string $line): bool => preg_match($pattern, $line) === 1,
             ));
         }
 

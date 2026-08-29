@@ -39,6 +39,7 @@ export { default as RecordActions } from './components/DataTable/RecordActions.v
 export { default as InlineRecordActions } from './components/DataTable/InlineRecordActions.vue'
 export { default as AppearanceDrawer } from './components/Layout/AppearanceDrawer.vue'
 export { default as PkBottomNav } from './components/Layout/PkBottomNav.vue'
+export { default as PkSubNav } from './components/Layout/PkSubNav.vue'
 
 /*
  | THE REFERENCE APP'S FORM PRIMITIVES, moved rather than redrawn - see each
@@ -353,6 +354,7 @@ export type { LineItem } from './components/Widgets/LineItems.vue'
 export type { PaymentGateway } from './components/Widgets/PaymentGateways.vue'
 export type { MultiSelectOption } from './components/primitives/PkMultiSelect.vue'
 export type { BottomNavItem } from './components/Layout/PkBottomNav.vue'
+export type { SubNavItem } from './components/Layout/PkSubNav.vue'
 export type { Step as StepIndicatorStep } from './components/Layout/PkStepIndicator.vue'
 export type { RecordActionGroup, RecordActionItem } from './components/DataTable/RecordActions.vue'
 export {

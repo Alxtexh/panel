@@ -135,7 +135,8 @@ screen the kit already ships.
 | `--catalog`, `--catalog-item`, `--register`, `--signatures`, `--device-preview` | Empty page bases |
 | `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |
 | `Panel::apiDocs()` / `apps(['api-docs'])` | Built-in Scalar API reference. OpenAPI at `{panel}/apps/api-docs/openapi.json`. Optional URL: `apiDocs('/path/to/openapi.json')`. Host Vite needs `@scalar/api-reference` (already a kit dependency when using the mirrored client) |
-| `Panel::logTail()` / `apps(['logs'])` | Read-only log tail at `{panel}/apps/logs`. Ability `view_operations`. Optional allow-list: `logTail('laravel.log', ['laravel.log'])`. Polls `{page}/tail` |
+| `Panel::logTail()` / `apps(['logs'])` | Read-only log tail at `{panel}/apps/logs`. Ability `view_operations`. Optional allow-list: `logTail('laravel.log', ['laravel.log'])`. Polls `{page}/tail`. Text search plus an Error/Warning/Info/Debug level toggle (`?tier=`) |
+| `Panel::mailSettings()` | SMTP settings at `{panel}/settings/smtp`, in the Settings hub. Password encrypted at rest, masked on render. Save and "Send test email" are separate requests - test sends with the form's current values, unsaved password included, to the signed-in operator. Ability `manage_mail_settings` |
 | `Panel::kitShowcase()` / `apps(['showcase'])` | Domain-neutral kit demo at `{panel}/apps/showcase` (fields, ColumnGroup, TagsColumn, widgets). Keep vertical demos on separate host pages |
 | `ColumnGroup::make('Contact', [...columns])` | Two-row table header group. Leaf columns stay flat for queries |
 | `TagsColumn::make('tags')->limit(3)` | Chip UI from array / JSON / separator-split string |

@@ -118,8 +118,12 @@ final class AdminPanelProvider extends ServiceProvider
                  */
                 ->editableSupport()
                 ->paymentSettings(static fn (): array => KitDemo::gateways())
+                ->mailSettings()
                 ->apps(['api-keys', 'webhooks'])
                 ->apiDocs()
+                // Read-only application-log tail, ability-gated behind
+                // `view_operations` - see `LogsPage`.
+                ->logTail()
                 /*
                  * Full dashboard DnD: operators rearrange stats, charts, and
                  * table widgets; order/span/visibility persist in appearance.

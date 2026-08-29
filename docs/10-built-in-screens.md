@@ -37,7 +37,7 @@ screens stay in the npm package and can be mirrored with
 | Till | `TillPage` | `make:panel-page --till` |
 | Device preview | `DevicePreviewPage` | `make:panel-page --device-preview` |
 | Mail | `MailPage` | `Panel::apps(['mail'])` on the portal |
-| Logs (opt-in tail) | `LogsPage` | `Panel::logTail()` / `apps(['logs'])`. Ability `view_operations` |
+| Logs (opt-in tail) | `LogsPage` | `Panel::logTail()` / `apps(['logs'])`. Text search plus an Error/Warning/Info/Debug level toggle (`?tier=`), both server-side against `LogReader`. Ability `view_operations` |
 | Chat | `ChatPage` | `Panel::apps(['chat'])` on the portal |
 | API keys | `ApiKeysPage` | `Panel::apps(['api-keys'])` |
 | API docs | `ApiDocsPage` (Scalar) | `Panel::apiDocs()` or `apps(['api-docs'])` |
@@ -51,6 +51,7 @@ screens stay in the npm package and can be mirrored with
 | Onboarding | `OnboardingPage` | `Panel::apps(['onboarding'])` |
 | Media library | `MediaLibraryPage` | `Panel::apps(['media-library'])`. Tenant-scoped local disk uploads (upload / move / delete). Preview and download use temporary signed URLs (or disk `temporaryUrl`) when the disk is private; override `resolveItemUrl()` for a host CDN |
 | Payment gateways | `PaymentSettingsPage` | `Panel::paymentSettings()` |
+| SMTP settings | `MailSettingsPage` | `Panel::mailSettings()`. Packaged host/port/encryption/username/password form over `SmtpSettings` (password encrypted, masked on render) plus a "Send test email" action that sends with whatever the form currently holds - saved or not - to the signed-in operator. Ability `manage_mail_settings` |
 
 The dashboard ships **empty** (`stats()` / `charts()` commented). Fill them, or
 register widgets with `Panel::widgets()`.

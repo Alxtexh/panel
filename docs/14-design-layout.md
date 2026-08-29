@@ -64,7 +64,9 @@ CSS variables over hard-coded `gap-4` / `py-2.5` when adding new chrome.
 2. No new `mx-auto max-w-*` on resource, settings, or kit app pages.
 3. Tables / relations still sit in a single `TableShell`.
 4. Catalogue grids sit under `CATALOGUE_CONTAINER`.
-5. `make check-page-shell` is green (also part of `make release-check`).
+5. A vertical sidebar of sibling links is `PkSubNav`, not a hand-rolled
+   `<aside>` - see below.
+6. `make check-page-shell` is green (also part of `make release-check`).
 
 ## CI / maintainer gate
 
@@ -134,6 +136,25 @@ header with brand, search, lock, and the account menu above the rail, and drops
 the labeled support group plus sidebar logo so the rail is primary navigation
 only. It must not replace or hide the inset header row, and it must not leave
 the avatar only on a nested inset bar while the site header looks empty.
+
+## Secondary (sub-page) navigation is `PkSubNav`, always
+
+Any screen that shows a vertical list of links to sibling screens - Settings
+today, a cluster's own sub-navigation tomorrow - renders it with `PkSubNav`
+(`packages/ui/src/components/Layout/PkSubNav.vue`), never a hand-rolled
+`<aside>` of `<Link>`s. This is **mandatory, not a per-screen choice**:
+`PkSubNav` collapses to a dropdown below `md` and only shows the vertical
+sidebar at `md` and up, and a page that reimplements the sidebar half without
+the dropdown half ships a screen a phone has to scroll past to reach the
+content. `SettingsLayout.vue` is the reference caller - pass it `items`
+(`{key, title, href, icon?, description?}[]`) and an `ariaLabel`; it reads the
+current URL itself and does not need a `current` prop threaded through.
+
+This does not apply to `ResourceIndex.vue`'s cluster strip (`nav[aria-label
+$="sections"]` above a clustered resource's table) - that is a horizontal,
+`flex-wrap`ping tab strip between PEER screens, not a vertical sidebar into a
+subject's facets, and already degrades correctly on a narrow screen by
+wrapping.
 
 ## Future (not in scope)
 

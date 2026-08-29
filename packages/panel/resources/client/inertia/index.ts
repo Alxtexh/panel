@@ -175,6 +175,7 @@ export { default as BackupSettings } from './pages/operations/BackupSettings.vue
 export { default as Logs } from './pages/operations/Logs.vue'
 export { default as Monitoring } from './pages/operations/Monitoring.vue'
 export { default as AssistantSettings } from './pages/settings/Assistant.vue'
+export { default as SmtpSettings } from './pages/settings/Smtp.vue'
 export {
     installSessionExpiryPreview,
     notifySessionExpired,
@@ -284,6 +285,9 @@ export const PANEL_PAGES = {
 
     // The assistant's provider and key.
     'settings/Assistant': () => import('./pages/settings/Assistant.vue'),
+
+    // The outgoing mail server this installation sends through.
+    'settings/Smtp': () => import('./pages/settings/Smtp.vue'),
 
     /*
      * A PANEL'S OWN SIGN-IN, UNDER A NAME NO APPLICATION OWNS.

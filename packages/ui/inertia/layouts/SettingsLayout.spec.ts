@@ -20,13 +20,11 @@ vi.mock('../composables/useCurrentUrl', () => ({
 
 vi.mock('@alxtexh-enterprise/panel', () => ({
     PAGE_SHELL: '',
-    PkDropdown: { template: '<div><slot name="trigger" :open="false" /><slot /></div>' },
     PkHeading: {
         props: ['title', 'description'],
         template: '<div><h1>{{ title }}</h1><p data-test="description">{{ description }}</p></div>',
     },
-    buttonClasses: () => '',
-    iconPath: () => '',
+    PkSubNav: { props: ['items', 'ariaLabel'], template: '<div />' },
 }))
 
 const { default: SettingsLayout } = await import('./SettingsLayout.vue')

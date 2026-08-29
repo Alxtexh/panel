@@ -76,6 +76,7 @@ final class PanelManager
          */
         Pages\OrganisationPage::class,
         Pages\PaymentSettingsPage::class,
+        Pages\MailSettingsPage::class,
         Pages\MailPage::class,
         Pages\ChatPage::class,
         Pages\ApiKeysPage::class,

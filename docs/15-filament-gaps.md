@@ -15,7 +15,7 @@ PanelKit stays Vue + Inertia.
 | CRUD IA | Dedicated create/edit/view pages, nested resources, attach pages |
 | Tables | Keyset lists, filters, ColumnGroup, TagsColumn, relation filters in TableShell |
 | Forms | Schema fields including MapField, BarcodeField, relationship selects, createOption |
-| Built-in apps | Scalar `apiDocs()`, outbound `webhooks()` (CRUD + ping + delivery log), `logTail()`, `kitShowcase()`, media library with signed preview/download URLs |
+| Built-in apps | Scalar `apiDocs()`, outbound `webhooks()` (CRUD + ping + delivery log), `logTail()` with level filtering, `mailSettings()` with a test-send action, `kitShowcase()`, media library with signed preview/download URLs |
 | Workflows | Resource states, transitions, visual board, status history ([16. Workflows](16-workflows.md)) |
 | Comments | Opt-in record threads + @mentions ([17. Comments](17-comments.md)) |
 | Dashboards | Deferred widgets, Echo/poll, user DnD layout (`Panel::userDashboards()`), map/calendar/barcode/log-tail cards |
