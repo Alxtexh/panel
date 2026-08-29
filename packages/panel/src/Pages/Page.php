@@ -63,6 +63,23 @@ abstract class Page
     }
 
     /**
+     * WIDGETS ACROSS THE BOTTOM OF THIS PAGE.
+     *
+     * THE SAME ROW, THE OTHER END. `PanelWidgets.vue` already renders any
+     * `$prefix` `WidgetSet::props()` namespaces its keys under - `header` was
+     * simply the only one anything ever passed. A summary card, a "recent
+     * activity" table, or a chart that only makes sense once the page's own
+     * content has been read belongs after it, not competing with the heading
+     * for the first thing seen.
+     *
+     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     */
+    public static function footerWidgets(): array
+    {
+        return [];
+    }
+
+    /**
      * Lucide icon name for the navigation entry.
      *
      * A NAME, NEVER A CLASS. The client decides what an icon looks like; a page

@@ -60,14 +60,14 @@ layout nodes** and a few minor per-component gaps.
 | `Wizard`/`Step` — description+icon, `skippable()`, `persistStepInQueryString()` (`Wizard.php:236-347`) | `Schema\Wizard`/`Step` — description+icon, **`stepRules()`** derives per-step validation from the step's own fields (`packages/panel/src/Schema/Wizard.php:32-86`) | parity, PanelKit's derived-rules touch is arguably nicer |
 | `Fieldset` — `<fieldset>`/`<legend>`, `columns(2)` default (`Fieldset.php:18,41`) | `Schema\Fieldset` — label/description/columns (`Fieldset.php:25-66`) | parity |
 | Field visibility: arbitrary `Closure` with `Get $get` injected (`Concerns/CanBeHidden.php:11`) | `Field::hidden()` accepts a closure, evaluated on `live()` round-trips (`Forms/Fields/Field.php:134-139`); `afterStateUpdated()` is the direct analogue (`:148-153`) | parity **on fields** |
-| Layout-node visibility (`Section`/`Tabs`/`Fieldset`) — same closure mechanism | `Schema\Component::visibleWhen` only supports a single `[field, value]` equality tuple (`packages/panel/src/Schema/Component.php:40-72`) — can't condition a section on two fields or a non-equality check | **behind** |
+| Layout-node visibility (`Section`/`Tabs`/`Fieldset`) — same closure mechanism | `Schema\Component::visible(Closure $condition)` — a `Closure(array $values): bool` variant alongside the `[field, value]` tuple form, consolidated into the base class so every layout node inherits it (`packages/panel/src/Schema/Component.php:120-124`) | parity |
 | Repeater — drag-and-drop **and** button reordering, `addable()`/`deletable()`/`cloneable()`, `collapsible()` with collapse/expand-all, `simple()`/`table()` modes, direct `relationship()` binding (`forms/src/Components/Repeater.php`, multiple lines) | `RepeaterField` — min/max items, item label, **deliberately refuses relationship binding by design** (JSON-column only, docblock at `Forms/Fields/RepeaterField.php:17-31`); `PkRepeater.vue` now matches on drag-and-drop reorder, `collapsible()` with collapse/expand-all, `addable()`/`deletable()`/`cloneable()`, and `table()`. Tested both sides throughout (`RepeaterFieldTest.php`, `PkRepeater.spec.ts`). | **parity** |
 
 **Ideas worth borrowing, in priority order:**
 
-1. Give `Schema\Component::visibleWhen` a `Closure(array $values): bool` variant so a
-   `Section`/`Tabs`/`Fieldset` can be conditioned on more than one field — mirror
-   `CanBeHidden.php:11`.
+1. ~~Give `Schema\Component::visibleWhen` a `Closure(array $values): bool` variant~~ —
+   ✅ already done (priority list item 5) when this section's own table row was
+   written; the row above was simply never updated to match. Fixed now.
 2. ~~Add drag-and-drop reordering to `PkRepeater.vue`~~ — ✅ done.
 3. ~~Add `collapsible()`/collapse-all to `RepeaterField`~~ — ✅ done.
 4. ~~Add `addable()`/`deletable()` toggles to `RepeaterField`~~ — ✅ done, `cloneable()`
@@ -252,7 +252,7 @@ The one area where PanelKit isn't just catching up.
 | Stat/chart/table widget types | ✅ `StatsOverviewWidget`, `ChartWidget` (8 chart-type subclasses), `TableWidget` | ✅ `StatWidget`, one `ChartWidget` class covering **20** `type()` values including heatmap/rankedBar/segments/map/calendar/barcode/logtail — a superset of chart *kinds* |
 | **Column span** | `int\|string\|array` with responsive breakpoints, plus `columnStart` | **Gap** — plain int only; user-customizable layout clamps to span 1 or 2 |
 | Per-widget sort order | ✅ `getSort(): int` | **Gap** — relies on declaration order only |
-| Per-resource header **and footer** widgets | ✅ both hooks | Header only (`Page::headerWidgets()`) — no footer hook, though trivial to add given the shared `WidgetSet::props()` already takes a prefix |
+| Per-resource header **and footer** widgets | ✅ both hooks | ✅ both — `Page::footerWidgets()` and `Resource::footerWidgets()`, wired through the same `WidgetSet::props()` prefix and the same `PanelWidgets.vue` renderer the header row already used; the renderer was already prefix-agnostic, only the header end was ever called |
 | Visibility/auth | `canView()` static | `ability()`/`visibleTo()`, resolved **server-side before the query is even built** — arguably stronger than Filament's, where a misused `canView()` can still let a Livewire mount through |
 | **Real-time push** | Polling only, fixed `'5s'` | ✅ ahead — `CanPoll` supports both polling **and** an Echo/Reverb live-channel push with auto-fallback |
 | **End-user drag/hide dashboard layout, persisted** | **Not in core at all** | ✅ ahead — opt-in `Panel::userDashboards()`, drag to reorder, widen/narrow, hide, persisted per-user |
@@ -264,8 +264,8 @@ The one area where PanelKit isn't just catching up.
    int-only `span()` can't make one widget fill a row on a 3-4 column grid.
 2. Explicit `sort()` per widget, useful once widgets come from multiple
    discovered/plugin sources.
-3. A footer-widgets hook to pair with the existing header one — small addition given
-   `WidgetSet::props()` already supports a prefix parameter.
+3. ~~A footer-widgets hook to pair with the existing header one~~ — ✅ done (see
+   priority list item 18).
 
 **Verdict: PanelKit is ahead**, net — two features Filament core lacks entirely
 (persisted end-user dashboard rearranging, live-push widgets) outweigh one narrow gap
@@ -296,6 +296,8 @@ Ranked by (impact if fixed) × (how small the fix is), highest first:
 | 15 | Fix `->ability()` → `->authorize()` in `docs/05-actions.md` | Docs | trivial | ✅ done — both occurrences fixed |
 | 16 | `addable()`/`deletable()`/`cloneable()` on `RepeaterField` | Forms | small | ✅ done — three new methods, UI-only like `itemLabel()` (nothing here changes `typeRules()`; `minItems()`/`maxItems()` remain the only server-enforced bound, tested explicitly). `PkRepeater.vue`: Add hides behind `addable`, each row's remove control behind `deletable`, and a new per-row duplicate control appears behind `cloneable` - gated on `atMax` (a clone is still a new row) but deliberately **not** on `addable`, since cloning is its own declared capability and the two are meant to be combinable independently in either direction. Wired into `ClientResource`'s existing "Other contacts" repeater (`cloneable()`) and verified live: filled a row, clicked Duplicate, confirmed the new row carried the same values, confirmed nothing persisted until an explicit save |
 | 17 | `table()` display mode on `RepeaterField` | Forms | medium | ✅ done — the last piece of the original Repeater gap. `RepeaterField::table()`; `PkRepeater.vue` gains a full second template branch (`<table>`/`<thead>`/`<tbody>`) alongside the existing stacked layout, sharing every mutation function (`move`/`remove`/`cloneRow`/`add`) rather than duplicating logic - only the markup differs. Column headers read straight off each child's own `label()`/`required()`, deliberately not a separate `TableColumn`-style API (Filament's `TableColumn::make($label)` exists mainly because Livewire's model needs positional column definitions divorced from the field declarations; PanelKit's fields already carry that label, so a second place to spell it would only be a place for it to drift). No collapse affordance renders in table mode, matching Filament's own `toTableEmbeddedHtml()`, which never checks `isCollapsible()` either. Read Filament's actual `Repeater.php` (`isSimple()`/`isTable()`, both embedded-HTML methods) in `temp/filament-study` before designing this, rather than assumed - and that reading is what surfaced `simple()` was never a real gap to begin with (see section 1's own note). Wired into the same "Other contacts" repeater (now `cloneable()->table()` together) and verified live: table renders with `Name`/`Phone`/`Relation` headers in schema order, duplicate-in-table-mode correctly carries a row's values, no page-level horizontal overflow. Tested both sides (6 new Vitest cases, 3 new Pest cases) |
+
+| 18 | Footer-widgets hook (`Page`/`Resource`) | Widgets | small | ✅ done — `Page::footerWidgets()`, `Resource::footerWidgets()`, both wired through `WidgetSet::props($widgets, $user, 'footer')` in `PageController`/`ResourceController`. `PanelWidgets.vue` needed no changes at all - it already read `${prefix}Widgets`/`Charts`/`Tables` off page props with `prefix` defaulting to `'header'`, so `<PanelWidgets prefix="footer" />` in `PanelPage.vue`/`ResourceIndex.vue` was the entire client-side change. Wired into `ClientResource` (a real "Suspended" count below the list) and verified live: renders correctly under the table/pagination, separate from the header row's Active/Expired pair. Tested both sides - a fixture page and `ArticleResource` each declare distinct header and footer widgets, asserting the two prefixes never collide |
 
 **What NOT to change:** the plugin system's add-only `PluginContext` boundary (safer
 than Filament's, deliberately), the relation-manager dedicated-page attach flow

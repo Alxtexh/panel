@@ -12,6 +12,7 @@ use Alxtexh\Panel\Schema\Column;
 use Alxtexh\Panel\Schema\Columns;
 use Alxtexh\Panel\Schema\Section;
 use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Widgets\StatWidget;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -51,6 +52,18 @@ final class LayoutDemoPage extends Page
         return [
             'save' => '',
         ];
+    }
+
+    /** @return list<StatWidget> */
+    public static function headerWidgets(): array
+    {
+        return [StatWidget::make('demo-header', 'Header stat')->value(static fn (): int => 1)];
+    }
+
+    /** @return list<StatWidget> */
+    public static function footerWidgets(): array
+    {
+        return [StatWidget::make('demo-footer', 'Footer stat')->value(static fn (): int => 2)];
     }
 
     public static function layout(): ?PageLayout

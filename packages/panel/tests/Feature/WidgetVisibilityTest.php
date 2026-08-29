@@ -141,4 +141,31 @@ final class WidgetVisibilityTest extends TestCase
             'A widget value was resolved inline, putting its query in front of the list.',
         );
     }
+
+    /**
+     * THE FOOTER ROW IS THE SAME MACHINERY, A DIFFERENT PREFIX.
+     *
+     * Asserted alongside the header row's own key, in the same response, so
+     * this proves the two are genuinely namespaced apart - not just that a
+     * `footerWidgets` key exists in isolation.
+     */
+    public function test_a_footer_widget_is_declared_under_its_own_prefix(): void
+    {
+        $props = $this->props();
+
+        $this->assertContains('drafts', array_column($props['footerWidgets'] ?? [], 'key'));
+        $this->assertContains('total', array_column($props['headerWidgets'] ?? [], 'key'));
+        $this->assertNotContains('drafts', array_column($props['headerWidgets'] ?? [], 'key'));
+    }
+
+    public function test_a_footer_widgets_value_is_also_deferred(): void
+    {
+        $props = $this->props();
+
+        $this->assertArrayNotHasKey(
+            'footer_stat_drafts',
+            $props,
+            'A footer widget value was resolved inline instead of deferred.',
+        );
+    }
 }

@@ -59,6 +59,14 @@ final class PageController extends Controller
                 ...Widgets\WidgetSet::props($class::headerWidgets(), $request->user()),
 
                 /*
+                 * WIDGETS BELOW THE PAGE'S OWN CONTENT - see
+                 * `Page::footerWidgets()`. Same rules, same deferred group,
+                 * namespaced under `footer` instead of `header` so the two
+                 * rows' props never collide.
+                 */
+                ...Widgets\WidgetSet::props($class::footerWidgets(), $request->user(), 'footer'),
+
+                /*
                  * A custom page is not a resource, so hooks here are the
                  * unscoped ("everywhere") ones - `dashboard.before/after` for
                  * `DashboardPage`, and any position a plugin registered with

@@ -1639,6 +1639,8 @@ function badgeLabel(key: string, value: unknown): string {
             </template>
         </TableShell>
 
+        <PanelWidgets prefix="footer" />
+
         <PkModal
             :open="!!confirmingDelete"
             :title="`Delete ${schema.label}?`"

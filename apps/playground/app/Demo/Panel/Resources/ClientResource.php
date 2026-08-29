@@ -84,6 +84,24 @@ final class ClientResource extends Resource
         ];
     }
 
+    /**
+     * ONE COUNT BELOW THE LIST - the worked example for
+     * `Resource::footerWidgets()`, same reasoning as the header pair above.
+     * Suspended sits here rather than beside Active/Expired: it is the
+     * status somebody put there deliberately rather than one time passed,
+     * and reads as a closing note on the list rather than a headline count.
+     *
+     * @return list<StatWidget>
+     */
+    public static function footerWidgets(): array
+    {
+        return [
+            StatWidget::make('clients_suspended', 'Suspended')
+                ->description('Held by an operator, not by expiry')
+                ->value(static fn (): int => Client::query()->where('status', 'suspended')->count()),
+        ];
+    }
+
     protected static string $model = Client::class;
 
     protected static string $icon = 'users';

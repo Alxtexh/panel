@@ -192,6 +192,24 @@ final class ArticleResource extends Resource
     }
 
     /**
+     * WIDGETS BELOW THE LIST - `Resource::footerWidgets()`.
+     *
+     * A DIFFERENT KEY FROM THE HEADER ROW's, on purpose: the two rows are
+     * namespaced under different prop prefixes (`header`/`footer`), and a
+     * shared key would still pass a test that only checked "is this key
+     * present somewhere" without proving the two never collide.
+     *
+     * @return list<StatWidget>
+     */
+    public static function footerWidgets(): array
+    {
+        return [
+            StatWidget::make('drafts', 'Drafts')
+                ->value(static fn (): int => Article::query()->where('status', 'draft')->count()),
+        ];
+    }
+
+    /**
      * A CHILD TABLE ON THE RECORD PAGE.
      *
      * `relations()` is the declared allowlist the relation endpoint checks a
