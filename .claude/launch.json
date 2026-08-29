@@ -40,6 +40,16 @@
       ],
       "port": 8124,
       "autoPort": false
+    },
+    {
+      "name": "smoke-test-fresh-install",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "cd /tmp/claude-1000/-home-alxtexh-Documents-Panel/b34e428b-f788-42d9-8295-673a903e0cd9/scratchpad/fresh-install && exec php artisan serve --host=127.0.0.1 --port=8199"
+      ],
+      "port": 8199,
+      "autoPort": false
     }
   ]
 }

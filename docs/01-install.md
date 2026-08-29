@@ -123,9 +123,10 @@ a VCS repository and authenticates even for a public one, failing with
 `Could not authenticate against github.com`, which reads as the repository
 being private. With it, Composer clones and no credential is involved.
 
-On a **fresh Laravel 12** app that already locked `guzzlehttp/guzzle` 8.x,
+On a **fresh Laravel 12 or 13** app that already locked `guzzlehttp/guzzle` 8.x,
 `composer require alxtexh-enterprise/panel` may need `-W` so Telegram's
-`^7.8` Guzzle constraint can resolve. Path and VCS installs both hit this.
+`^7.8` Guzzle constraint can resolve. Path and VCS installs both hit this
+(confirmed on a Laravel 13.29 skeleton via a fresh-install smoke test).
 
 **There is no npm registry install for the kit.** The Vue screens ship *inside*
 the Composer package at `resources/client`. If you later customise Vue,

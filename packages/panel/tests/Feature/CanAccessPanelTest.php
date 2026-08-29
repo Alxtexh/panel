@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tests\Feature;
 
 use Alxtexh\Panel\Contracts\CanAccessPanel;
+use Alxtexh\Panel\Models\Role;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\PanelAccess;
@@ -97,6 +98,30 @@ final class CanAccessPanelTest extends TestCase
             'php artisan panel:permissions grant --email=you@example.com',
             $props['panelEmptyGrantsHint']['commands'] ?? [],
         );
+    }
+
+    /**
+     * A role with `grants_all` must never see the empty-grants hint, even
+     * when nothing happens to be navigable yet.
+     *
+     * Found running a fresh install: `emptyGrants()` used to check
+     * `method_exists($user, 'grantsEverything')`, but `grantsEverything()`
+     * is `Role::grantsEverything()`, never a method a user model has - so
+     * that check was always false, and the installer's own first
+     * Administrator (`grants_all` from `panel:make-user`) saw "you have no
+     * grants" on the very dashboard it was just told it fully controlled.
+     */
+    public function test_empty_grants_is_false_for_grants_all_even_with_nothing_navigable(): void
+    {
+        $panel = app(PanelManager::class)->panel('admin');
+
+        $role = Role::findOrCreate('Administrator', 'web');
+        $role->forceFill(['grants_all' => true])->save();
+        $this->user->assignRole($role);
+
+        Gate::before(static fn (): bool => false);
+
+        $this->assertFalse(PanelAccess::emptyGrants($panel, $this->user->fresh()));
     }
 
     public function test_empty_grants_copy_is_in_the_kit_empty_state(): void

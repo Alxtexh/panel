@@ -189,6 +189,15 @@ final class PanelPages
          * The screen is OFF until the host opts in; it is not a demo default.
          */
         'settings/Payments',
+        /*
+         * SMTP, the same reasoning - `Panel::mailSettings()` mounts
+         * `/settings/smtp` later. Missing here until a fresh-install smoke
+         * test found the white page directly: `MailSettingsPage::component()`
+         * is a method return, not a literal `Inertia::render('...')` call, so
+         * nothing scanning for the literal string would have caught it either
+         * - see `PanelPageComponentCoverageTest`, added alongside this line.
+         */
+        'settings/Smtp',
 
         'support/Help',
         'support/Faq',
