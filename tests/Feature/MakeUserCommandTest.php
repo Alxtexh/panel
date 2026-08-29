@@ -46,4 +46,60 @@ final class MakeUserCommandTest extends TestCase
 
         $this->assertNull(User::query()->where('email', 'ada-two@example.test')->first());
     }
+
+    public function test_warns_locally_when_the_login_prefill_no_longer_matches(): void
+    {
+        $this->app['env'] = 'local';
+        config(['panel.default' => 'admin', 'panel.auth.admin.prefill.email' => 'admin@example.com']);
+
+        $this->artisan('panel:make-user', [
+            '--name' => 'Ada',
+            '--email' => 'ada-three@example.test',
+            '--password' => 'correct-horse-battery',
+        ])
+            ->expectsOutputToContain('still pre-filled with [admin@example.com]')
+            ->assertSuccessful();
+    }
+
+    public function test_says_nothing_when_the_prefill_already_matches(): void
+    {
+        $this->app['env'] = 'local';
+        config(['panel.default' => 'admin', 'panel.auth.admin.prefill.email' => 'ada-four@example.test']);
+
+        $this->artisan('panel:make-user', [
+            '--name' => 'Ada',
+            '--email' => 'ada-four@example.test',
+            '--password' => 'correct-horse-battery',
+        ])
+            ->doesntExpectOutputToContain('pre-filled')
+            ->assertSuccessful();
+    }
+
+    public function test_says_nothing_outside_local(): void
+    {
+        $this->app['env'] = 'testing';
+        config(['panel.default' => 'admin', 'panel.auth.admin.prefill.email' => 'admin@example.com']);
+
+        $this->artisan('panel:make-user', [
+            '--name' => 'Ada',
+            '--email' => 'ada-five@example.test',
+            '--password' => 'correct-horse-battery',
+        ])
+            ->doesntExpectOutputToContain('pre-filled')
+            ->assertSuccessful();
+    }
+
+    public function test_says_nothing_when_no_prefill_is_configured(): void
+    {
+        $this->app['env'] = 'local';
+        config(['panel.default' => 'admin', 'panel.auth.admin.prefill' => null]);
+
+        $this->artisan('panel:make-user', [
+            '--name' => 'Ada',
+            '--email' => 'ada-six@example.test',
+            '--password' => 'correct-horse-battery',
+        ])
+            ->doesntExpectOutputToContain('pre-filled')
+            ->assertSuccessful();
+    }
 }

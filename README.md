@@ -37,6 +37,10 @@ php artisan panel:install
 php artisan make:panel-recipe Invoices
 ```
 
+On a fresh Laravel 12/13 app (which already locks `guzzlehttp/guzzle` 8.x), plain
+`composer require` fails: Telegram's `^7.8` Guzzle constraint can't resolve
+without it, so add `-W` (`composer require alxtexh-enterprise/panel:^1.0 -W`).
+
 **AI: read `AGENTS.md` first** (Day 0 do/don't). Install writes it. Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`.
 
 **Page width:** kit admin pages fill the shell content area. Prefer

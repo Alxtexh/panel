@@ -40,11 +40,41 @@ final class PanelAccess
             return false;
         }
 
-        if (method_exists($user, 'grantsEverything') && $user->grantsEverything()) {
+        if (self::grantsEverything($user)) {
             return false;
         }
 
         return PanelNavigation::build($panel->id) === [];
+    }
+
+    /**
+     * Whether `$user` holds a role with `grants_all` - a superuser is never
+     * shown the "you have no grants" hint, even on the fresh, resource-less
+     * install where nothing is in the navigation yet for anyone to see.
+     *
+     * NEVER FIRED, until a fresh-install smoke test caught it: this used to
+     * read `method_exists($user, 'grantsEverything') && $user->grantsEverything()`
+     * - but `grantsEverything()` is `Role::grantsEverything()`, never a
+     * method on a user model anywhere in this codebase or the reference
+     * application, so that check's own `method_exists` was always false. An
+     * Administrator with `grants_all` on their one and only role saw the
+     * hint on every fresh install, right after being told the installer
+     * grants exactly that role by default - the dashboard called its own
+     * newly-created Administrator empty-handed.
+     *
+     * `Ability::withTeam()`, not a bare query, for the same reason
+     * `Ability::allows()` needs it: Spatie's team scoping is set by a
+     * request's own middleware and by nothing else, so a role held under
+     * one organisation would read as unheld from a console command, a test,
+     * or a queued job with no request to have set it.
+     */
+    private static function grantsEverything(Authenticatable $user): bool
+    {
+        if (! method_exists($user, 'roles')) {
+            return false;
+        }
+
+        return Ability::withTeam(static fn (): bool => $user->roles()->where('grants_all', true)->exists());
     }
 
     /**

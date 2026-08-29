@@ -60,6 +60,7 @@ final class InstallCommand extends Command
         $this->scaffoldPackageJson();
         $this->repointViews();
         $this->createDefaultPanel();
+        $this->repointStockWelcomeRoute();
         $this->wireRolesOntoUser();
         $this->writeDashboard();
         $this->writePageFiles();
@@ -880,6 +881,87 @@ final class InstallCommand extends Command
         }
 
         $this->components->info('Created the admin panel at / (app/Providers/Panels/AdminPanelProvider.php).');
+    }
+
+    /**
+     * `routes/web.php` STILL CLAIMS `GET /` ON EVERY FRESH LARAVEL APP, and
+     * the panel this command just mounted at `path('')` deliberately does
+     * NOT - `PanelRoutes` skips registering a home route for a root-mounted
+     * panel on purpose (its own comment: "that portal IS the application,
+     * and `/` already belongs to it - a marketing page, a redirect, whatever
+     * the app decided. Claiming it here would put a resource directory over
+     * somebody's landing page"). So `/` is the host's to decide, and a fresh
+     * install left it deciding nothing: Laravel's router matches whichever
+     * route registered first, `web.php`'s stock welcome route wins over
+     * nothing, and the exact documented golden path (`composer require`,
+     * `panel:install`, visit `/login`) landed a first-time visitor to `/` on
+     * `welcome.blade.php` instead of the panel - with every diagnostic clean
+     * and `panel:doctor` finding nothing wrong. Found running an actual fresh
+     * install and reading what `/` rendered, not assumed from the route
+     * list - and simply DELETING the stock route (this method's first cut)
+     * traded that for a 404, which is worse: `PanelHomeController` truly does
+     * not answer here, by the same design decision, so there is nothing else
+     * to fall through to.
+     *
+     * A REDIRECT TO `/login` IS THE MINIMAL SENSIBLE DEFAULT, not a bigger
+     * decision than deleting the welcome route already was: `panel:install`'s
+     * own printed instructions already say "Visit /login" as the golden
+     * path, and `login` is what the auth scaffolding this same run just
+     * wrote always names it for a root-mounted panel.
+     *
+     * ONLY THE EXACT, UNMODIFIED STOCK ROUTE IS REPLACED. `createDefaultPanel()`
+     * itself will not touch an `AdminPanelProvider.php` that already exists,
+     * for the same reason: a file recognisably still at Laravel's own default
+     * is safe to change, and one with anything else added is a file a
+     * developer wrote something into, which this command has no business
+     * overwriting on a second run.
+     */
+    private function repointStockWelcomeRoute(): void
+    {
+        $routes = base_path('routes/web.php');
+
+        if (! file_exists($routes)) {
+            return;
+        }
+
+        $stock = <<<'PHP'
+        <?php
+
+        use Illuminate\Support\Facades\Route;
+
+        Route::get('/', function () {
+            return view('welcome');
+        });
+
+        PHP;
+
+        $contents = (string) file_get_contents($routes);
+
+        if (trim($contents) !== trim($stock)) {
+            return;
+        }
+
+        $provider = app_path('Providers/Panels/AdminPanelProvider.php');
+
+        if (! file_exists($provider) || ! str_contains((string) file_get_contents($provider), "->path('')")) {
+            return;
+        }
+
+        $replacement = <<<'PHP'
+        <?php
+
+        use Illuminate\Support\Facades\Route;
+
+        // The panel is mounted at `/` and does not claim its own root - see
+        // `PanelRoutes::landing()` and its own comment on why. Point yours
+        // wherever makes sense once you have one; `/login` is the panel's own
+        // sign-in and works with nothing else written here.
+        Route::redirect('/', '/login');
+
+        PHP;
+
+        file_put_contents($routes, $replacement);
+        $this->components->twoColumnDetail('Wrote', "routes/web.php (redirects / to /login)");
     }
 
     /**

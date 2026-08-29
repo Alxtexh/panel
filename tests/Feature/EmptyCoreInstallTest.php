@@ -149,6 +149,48 @@ final class EmptyCoreInstallTest extends TestCase
      * prefill must default to the SAME credentials, or first login fails
      * against an account (`admin@example.com`) the install never made.
      */
+    /**
+     * `createDefaultPanel()` mounts every fresh install's panel at `path('')`
+     * - `/` - and `PanelRoutes` deliberately does not claim `/` for a
+     * root-mounted panel (its own comment: that portal IS the application,
+     * so `/` is the host's to decide). A stock Laravel skeleton's own
+     * `routes/web.php` still claims `GET /` for `welcome.blade.php` though,
+     * and Laravel's router matches whichever registered first. Found running
+     * an actual fresh install and reading what `/` rendered: the documented
+     * golden path (`composer require`, `panel:install`, visit `/login`)
+     * silently landed a first visit to `/` on Laravel's default welcome page
+     * instead of the panel, with `panel:doctor` finding nothing wrong -
+     * and simply deleting that stock route (an earlier attempt) traded it
+     * for a 404, since nothing else answers `/` for a root-mounted panel by
+     * that same deliberate design.
+     */
+    public function test_install_repoints_the_stock_welcome_route_when_the_panel_owns_root(): void
+    {
+        $install = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
+        );
+
+        $this->assertStringContainsString('repointStockWelcomeRoute', $install);
+        $this->assertStringContainsString(
+            "\$this->createDefaultPanel();\n        \$this->repointStockWelcomeRoute();",
+            $install,
+            'repointStockWelcomeRoute must run right after the panel is created, so it always '
+            .'sees the provider it just wrote.',
+        );
+
+        // ONLY THE EXACT, UNMODIFIED STOCK ROUTE - a file with anything else
+        // added is one a developer wrote something into.
+        $this->assertStringContainsString("return view('welcome');", $install);
+        $this->assertStringContainsString('trim($contents) !== trim($stock)', $install);
+
+        // AND ONLY WHEN THE PANEL ACTUALLY OWNS ROOT - a provider repointed
+        // to a different path must not have its sibling route file touched.
+        $this->assertStringContainsString('"->path(\'\')"', $install);
+
+        // A REDIRECT, NOT A BLANK FILE - the 404 an earlier attempt produced.
+        $this->assertStringContainsString("Route::redirect('/', '/login');", $install);
+    }
+
     public function test_local_auth_prefill_defaults_to_the_first_user_flags(): void
     {
         $install = (string) file_get_contents(

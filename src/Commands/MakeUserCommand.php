@@ -142,7 +142,50 @@ final class MakeUserCommand extends Command
 
         $this->components->info("Created [{$email}].");
 
+        $this->warnIfPrefillNowMismatched($email);
+
         return self::SUCCESS;
+    }
+
+    /**
+     * `panel:install`'s login-prefill convenience writes a literal email and
+     * password into `config/panel.php` so a fresh install can press Log in
+     * without typing - see `InstallCommand::writeLocalAuthPrefill()`. That
+     * write only happens when `panel:install` itself created the first
+     * account (`--email=`/`--password=` passed to install). The install
+     * command's OWN output tells a developer who skipped that to run THIS
+     * command instead - which is exactly how a fresh install ends up with a
+     * login form pre-filled with an email that does not exist, guaranteed to
+     * fail on the very first attempt. Found running an actual fresh install,
+     * not assumed.
+     *
+     * A NOTE, NOT A FILE EDIT. `panel:make-user` refuses to accept a password
+     * as a plain option specifically so a printed password is never one that
+     * lingers - writing the one just typed at a hidden prompt into
+     * `config/panel.php`, a file installations commonly commit, would defeat
+     * that. Telling the developer the mismatch exists is enough for them to
+     * fix it by hand, or ignore it because they always type their own
+     * credentials anyway.
+     */
+    private function warnIfPrefillNowMismatched(string $email): void
+    {
+        if (! app()->environment('local')) {
+            return;
+        }
+
+        $panel = (string) config('panel.default', 'admin');
+        $prefilled = config("panel.auth.{$panel}.prefill.email");
+
+        if (! is_string($prefilled) || $prefilled === '' || $prefilled === $email) {
+            return;
+        }
+
+        $this->components->warn(
+            "The local sign-in form is still pre-filled with [{$prefilled}], not [{$email}] - "
+            .'pressing Log in without typing will fail. Update '
+            ."config/panel.php's auth.{$panel}.prefill (or PANEL_DEMO_EMAIL/PANEL_DEMO_PASSWORD "
+            .'in .env) to match, or just type this account\'s own credentials.',
+        );
     }
 
     /**
