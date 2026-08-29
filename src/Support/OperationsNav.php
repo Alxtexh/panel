@@ -8,12 +8,15 @@ use Illuminate\Support\Facades\Route;
 use Alxtexh\Panel\Panel;
 
 /**
- * Backups, Logs and Monitoring as a findable Operations nav group.
+ * Backups, Logs and Monitoring URLs for this panel.
  *
- * These screens already exist, gated on `view_operations`. They used to live
- * only in the account menu, which is why a fresh install looked like it had
- * no operations cluster. Customer portals still drop them with
- * `->without(['operations'])`.
+ * These screens live in the account menu (`Support\OnboardingSteps`,
+ * `Http\Middleware\SharePanelProps`) and nowhere else - a SIDEBAR group for
+ * them was tried and dropped: the account menu already lists Backups, Logs
+ * and Monitoring, and a second copy in the sidebar was two places teaching
+ * nobody where either one lives, the same reasoning `PanelNavigation`
+ * already applies to Settings/Backups/Logs/Monitoring under the account
+ * menu (see that class's own doc comment).
  */
 final class OperationsNav
 {
@@ -36,47 +39,5 @@ final class OperationsNav
             'logs' => $resolve('logs'),
             'monitoring' => $resolve('monitoring'),
         ];
-    }
-
-    /**
-     * Sidebar entries when this panel offers operations and the viewer may open them.
-     *
-     * @return list<array{title: string, href: string, icon: string, group: string, sort: int, key: string}>
-     */
-    public static function pages(Panel $panel, mixed $user): array
-    {
-        if (! $panel->offers('operations')) {
-            return [];
-        }
-
-        if (! Ability::allows($user, 'view_operations')) {
-            return [];
-        }
-
-        $urls = self::urls($panel);
-        $entries = [];
-
-        $screens = [
-            ['key' => 'operations-backups', 'title' => __('panel::directory.links.backups'), 'href' => $urls['backups'], 'icon' => 'archive', 'sort' => 10],
-            ['key' => 'operations-logs', 'title' => __('panel::directory.links.logs'), 'href' => $urls['logs'], 'icon' => 'file-text', 'sort' => 20],
-            ['key' => 'operations-monitoring', 'title' => __('panel::directory.links.monitoring'), 'href' => $urls['monitoring'], 'icon' => 'gauge', 'sort' => 30],
-        ];
-
-        foreach ($screens as $screen) {
-            if ($screen['href'] === null || $screen['href'] === '') {
-                continue;
-            }
-
-            $entries[] = [
-                'key' => $screen['key'],
-                'title' => $screen['title'],
-                'href' => $screen['href'],
-                'icon' => $screen['icon'],
-                'group' => __('panel::operations.group'),
-                'sort' => $screen['sort'],
-            ];
-        }
-
-        return $entries;
     }
 }

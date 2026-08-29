@@ -55,7 +55,13 @@ use Alxtexh\Panel\Widgets\TableWidget;
  */
 abstract class DashboardPage extends Page
 {
-    protected static string $icon = 'layout-dashboard';
+    /*
+     * 'home', NOT 'layout-dashboard' - the latter has no entry in
+     * `panelIcons.ts`'s PANEL_ICONS map, so it silently fell back to a
+     * generic package/box glyph in the sidebar. 'home' is already mapped
+     * (Lucide's House) and matches Filament's own default dashboard icon.
+     */
+    protected static string $icon = 'home';
 
     /**
      * NO ABILITY OF ITS OWN, unlike every other page.

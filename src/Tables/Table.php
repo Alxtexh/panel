@@ -99,6 +99,17 @@ final class Table
     /** @var list<RecordAction|ActionGroup> */
     private array $recordActions = [];
 
+    /**
+     * Off by default: every action collapses into one kebab menu (the
+     * existing, unconditional behaviour - see RecordActions.vue's own
+     * reasoning). Turning this on renders a bare `RecordAction` inline as a
+     * text link, Filament's own default; an `ActionGroup` entry still
+     * collapses to its own dropdown, so grouping stays exactly the tool it
+     * already was - it just now controls something visible instead of being
+     * silently flattened into one undifferentiated menu.
+     */
+    private bool $inlineRecordActions = false;
+
     /** @var class-string|null Set only when the table stands alone (a workspace). */
     private ?string $model = null;
 
@@ -488,6 +499,20 @@ final class Table
         return $this;
     }
 
+    /**
+     * Opt-in: bare actions render inline (Filament's default) instead of
+     * every action collapsing into one kebab menu. Wrap actions that should
+     * still collapse in `ActionGroup` - that already renders as its own
+     * dropdown trigger; this toggle only changes what happens to the ones
+     * left outside a group.
+     */
+    public function inlineRecordActions(bool $inline = true): self
+    {
+        $this->inlineRecordActions = $inline;
+
+        return $this;
+    }
+
     /** @return list<RecordAction|ActionGroup> */
     public function getRecordActions(): array
     {
@@ -851,6 +876,7 @@ final class Table
              * because a hidden button is not a permission (§9 item 3).
              */
             'recordActions' => $this->recordActionSchema(),
+            'inlineRecordActions' => $this->inlineRecordActions,
             'rowClick' => $this->rowClick,
             'striped' => $this->striped,
             'stickyFirstColumn' => $this->stickyFirstColumn,

@@ -117,7 +117,7 @@ final class Blueprint
     private const CLIENT_ONLY = <<<'MD'
         **Client-side components** (`@alxtexh-enterprise/panel`, no PHP equivalent): `StatStrip`
         `MiniStatCard` `SegmentedBar` `HeatmapChart` `ComboChart` `PolarAreaChart`
-        `RadarChart` `SetupChecklist` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid` `CatalogTill` `CatalogBrowser` `CatalogRegister` `DirectoryPage` `LineItems` `CartPanel`
+        `RadarChart` `SetupChecklist` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid` `CatalogTill` `CatalogBrowser` `CatalogRegister` `LineItems` `CartPanel`
         `PkQtyStepper` `PkStatusBadge` `PkSignaturePad` `PaymentGateways`
         _How to reach them: import them into YOUR OWN Vue page. A `CatalogBrowserPage` or
         `PlanSetupPage` is optional routing, not a requirement to draw the widget.
@@ -128,10 +128,10 @@ final class Blueprint
         MD;
 
     private const PAGE_HOW = 'extend `Page` (or `DashboardPage` / `PlanSetupPage` / `TillPage` / '
-        .'`DirectoryPage` / `DevicePreviewPage` / `MailPage` / `ChatPage`) in `app/Panel/Pages` and '
+        .'`DevicePreviewPage` / `MailPage` / `ChatPage`) in `app/Panel/Pages` and '
         .'discovery routes it - `php artisan make:panel-page ServerHealth` writes the class '
         .'and its Vue file. Flags: `--dashboard`, `--plan-setup`, `--till`, `--catalog`, '
-        .'`--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`. '
+        .'`--catalog-item`, `--register`, `--signatures`, `--device-preview`. '
         .'`make:panel-page BillingPlans --plan-setup` writes an empty page (import PlanGrid). '
         .'`ChangelogPage` and `EnvironmentPage` are the package\'s OWN '
         .'screens rather than things to extend: each appears only once configured '
@@ -390,9 +390,8 @@ final class Blueprint
         create-and-pick dialog (JSON, not a Livewire modal; resource CRUD stays
         on dedicated pages). Nested resources live at
         `/{parent}/{id}/{child}`; BelongsToMany attach is
-        `/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas plus
-        a Directory of chrome links (Settings, Users, Roles, Documents, Backups,
-        Logs, Monitoring, Help). Settings appears in a Settings sidebar group by
+        `/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas.
+        Settings appears in a Settings sidebar group by
         default (`->sidebarSettings(false)` opts out). Operations appear in an
         Operations nav group when the panel offers them. Catalog is not in core.
         Do not resurrect dashboard sample widgets. `Notification::make()->title('Saved')->success()->send()`
@@ -801,19 +800,15 @@ final class Blueprint
         Never poll and subscribe for the same widget. Redis is infrastructure,
         not a UI transport.
 
-        ### Add a till, catalog, directory or device preview
+        ### Add a till, catalog or device preview
 
         ```bash
         php artisan make:panel-page Front --till
         php artisan make:panel-page Browse --catalog
-        php artisan make:panel-page Hub --directory
         php artisan make:panel-page Preview --device-preview
         ```
 
-        `TillPage` / `CatalogBrowserPage` / `DirectoryPage` / `DevicePreviewPage`
-        are empty canvases. Directory inherits chrome links (Settings, Users,
-        Roles, Documents, Backups, Logs, Monitoring, Help). Override
-        `sections()` for a vertical. `panel:install` already writes a Directory.
+        `TillPage` / `CatalogBrowserPage` / `DevicePreviewPage` are empty canvases.
 
         Mail and Chat are opt-in empty apps, not merchandising:
 

@@ -263,6 +263,38 @@ final class SharePanelProps
             'panelTrash' => Inertia::getShared('panelTrash')
                 ?? static fn (): ?array => app(TrashBin::class)->navigationEntry(),
 
+            /*
+             * THE SIDEBAR'S OWN "DASHBOARD" ENTRY, separate from `panel.home`
+             * above (the logo's click target - `PanelShell.vue`). Both resolve
+             * through the same `PanelHome::urlFor`, so they cannot disagree,
+             * but `AppSidebar.vue` reads a TOP-LEVEL `panelHome` prop, not
+             * `panel.home` - and until this was added, that read always missed,
+             * so the client fell back to its own hardcoded `{ href: '/',
+             * isDefault: true }`. On a panel mounted at the application's own
+             * root that fallback IS the bug this whole class exists to prevent:
+             * the sidebar's first, most-clicked entry pointed at Laravel's
+             * welcome page instead of the dashboard, silently, because nothing
+             * ever threw - a wrong href is not an error.
+             *
+             * `isDefault` NAMES THE APPLICATION'S DEFAULT PANEL - `config('panel.default')`,
+             * mounted at the root - not whether resolution succeeded. A
+             * generated portal's home is never the operator panel's, so its
+             * support footer falls back to nothing rather than linking out
+             * (see `supportNavItems` in `AppSidebar.vue`).
+             */
+            'panelHome' => $chrome(static function () use ($panels): ?array {
+                $panel = $panels->currentPanel();
+
+                if ($panel === null) {
+                    return null;
+                }
+
+                return [
+                    'href' => PanelHome::urlFor($panel),
+                    'isDefault' => $panel->id === (string) config('panel.default', 'admin'),
+                ];
+            }, 'panelHome'),
+
             'panel' => $chrome(static function () use ($panels): ?array {
                 $panel = $panels->currentPanel();
 

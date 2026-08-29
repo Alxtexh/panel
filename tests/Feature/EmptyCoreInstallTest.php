@@ -70,46 +70,9 @@ final class EmptyCoreInstallTest extends TestCase
             $this->assertContains($screen, PanelPages::OPTIONAL_SCREENS);
         }
 
-        $this->assertContains('Directory', PanelPages::SCREENS);
-        $this->assertNotContains('Directory', PanelPages::OPTIONAL_SCREENS);
-
         foreach (['settings/Profile', 'settings/Security', 'settings/Notifications', 'settings/Organisation', 'settings/Index', 'PanelDashboard', 'ResourcePicker'] as $core) {
             $this->assertContains($core, PanelPages::SCREENS);
         }
-    }
-
-    public function test_install_writes_a_chrome_directory_without_merchandising(): void
-    {
-        $install = (string) file_get_contents(
-            dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
-        );
-
-        $this->assertStringContainsString('writeDirectory', $install);
-        $this->assertStringContainsString('app/Panel/Pages/DirectoryPage.php', $install);
-        $this->assertStringContainsString('No clients, routers, or catalog', $install);
-        $this->assertStringNotContainsString('coffee', $install);
-        $this->assertStringNotContainsString("'/clients'", $install);
-        $this->assertStringNotContainsString("'/routers'", $install);
-    }
-
-    public function test_kit_directory_defaults_are_chrome_only(): void
-    {
-        $source = (string) file_get_contents(
-            dirname(__DIR__, 2).'/src/Pages/DirectoryPage.php'
-        );
-
-        $this->assertStringContainsString('chromeSections', $source);
-        $this->assertStringContainsString('panel::directory.links.settings', $source);
-        $this->assertStringContainsString('panel::directory.links.users', $source);
-        $this->assertStringContainsString('panel::directory.links.roles', $source);
-        $this->assertStringContainsString('panel::directory.links.documents', $source);
-        $this->assertStringContainsString('panel::directory.links.backups', $source);
-        $this->assertStringContainsString('panel::directory.links.logs', $source);
-        $this->assertStringContainsString('panel::directory.links.monitoring', $source);
-        $this->assertStringContainsString('panel::directory.links.help', $source);
-        $this->assertStringNotContainsString('Clients', $source);
-        $this->assertStringNotContainsString('Routers', $source);
-        $this->assertStringNotContainsString('coffee', $source);
     }
 
     public function test_auth_is_on_by_default_with_an_opt_out(): void

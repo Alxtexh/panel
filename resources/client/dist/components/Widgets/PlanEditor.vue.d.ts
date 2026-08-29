@@ -16,8 +16,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }>, {
     mode: "create" | "edit";
     processing: boolean;
-    embedded: boolean;
     plan: PlanRecord | null;
+    embedded: boolean;
     modules: PlanModuleOption[];
     limits: PlanLimitField[];
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;

@@ -25,8 +25,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }>, {
     variant: "doctor" | "onboarding";
     heading: string;
-    linkComponent: string | Component;
     reportHref: string | null;
     skipLabel: string | null;
+    linkComponent: string | Component;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;
