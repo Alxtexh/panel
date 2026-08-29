@@ -22,7 +22,7 @@ import { ref } from 'vue'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import { useTranslations } from '../composables/useTranslations'
 
-const props = defineProps<{ resource: string; recordId: string | number }>()
+const props = defineProps<{ url: string }>()
 
 const { t, locale } = useTranslations()
 
@@ -58,7 +58,7 @@ async function load(): Promise<void> {
 
     try {
         const next = page.value + 1
-        const response = await fetch(`/${props.resource}/${props.recordId}/audit?page=${next}`, {
+        const response = await fetch(`${props.url}?page=${next}`, {
             headers: { Accept: 'application/json' },
         })
 

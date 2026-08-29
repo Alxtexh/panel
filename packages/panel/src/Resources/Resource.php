@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Alxtexh\Panel\Actions\Action;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Comments\Comments;
@@ -1031,11 +1032,24 @@ abstract class Resource
          */
         $prefix = rtrim('/'.trim(app(PanelManager::class)->panel($panelId)?->getPath() ?? '', '/'), '/');
 
+        /*
+         * WHETHER THIS PANEL EVEN HAS AN AUDIT ROUTE. `PanelRoutes::host()`
+         * says why the package cannot register it itself - it hangs off an
+         * application controller `panel:install` never scaffolds. Sending the
+         * route unconditionally on every resource meant `<AuditTimeline>`
+         * rendered a "History" section that 404s in a permanent retry loop on
+         * every fresh install, for every resource, before anyone wires one -
+         * the same `Route::has()` guard `SettingsNav::url()` already uses for
+         * exactly this reason.
+         */
+        $panelRouteName = app(PanelManager::class)->panel($panelId)?->getRouteName();
+        $auditRouteName = $panelRouteName === null ? null : $panelRouteName.'audit';
+
         return $cache->remember(
             $panelId,
             static::key(),
             static::permissionsFingerprint(),
-            static function () use ($prefix): array {
+            static function () use ($prefix, $auditRouteName): array {
                 $table = static::definition();
 
                 return [
@@ -1063,6 +1077,9 @@ abstract class Resource
                             : null,
                         'comments' => static::hasComments()
                             ? $prefix.'/'.static::key().'/{id}/record-comments'
+                            : null,
+                        'audit' => $auditRouteName !== null && Route::has($auditRouteName)
+                            ? $prefix.'/'.static::key().'/{id}/audit'
                             : null,
                     ],
                     'table' => $table->toSchema(),
