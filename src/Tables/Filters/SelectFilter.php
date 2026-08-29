@@ -96,7 +96,36 @@ final class SelectFilter extends Filter implements HasOptions
     /** @return list<string|array{value: string, label: string}> */
     public function resolvedOptions(): array
     {
-        return $this->resolved ??= ($this->options instanceof Closure ? ($this->options)() : $this->options);
+        if ($this->resolved !== null) {
+            return $this->resolved;
+        }
+
+        $options = $this->options instanceof Closure ? ($this->options)() : $this->options;
+
+        /*
+         * CAUGHT HERE, NOT ON THE CLIENT. `SelectField::options()` takes a
+         * `value => label` map - the natural shape to reach for, since it is
+         * the SAME method name on a sibling class in the same package. This
+         * one takes a `list` instead (a security allowlist, per the class
+         * docblock: an associative map has no unambiguous "the value side"
+         * to allow). Passed a map anyway, `json_encode` turns the string keys
+         * into a JS OBJECT, and the client's `(filter.options ?? []).map(...)`
+         * throws "options.map is not a function" - a crash in a browser
+         * console, days after the typo that caused it. This throws in the
+         * request that made the mistake, naming the fix.
+         */
+        if ($options !== [] && ! array_is_list($options)) {
+            throw new InvalidArgumentException(sprintf(
+                "SelectFilter::make('%s')->options() received a value => label map (SelectField's shape). "
+                ."SelectFilter wants a list: ->options(['%s']) or "
+                ."->options([['value' => '%s', 'label' => '...'], ...]).",
+                $this->key,
+                implode("', '", array_keys($options)),
+                array_key_first($options),
+            ));
+        }
+
+        return $this->resolved = $options;
     }
 
     /** @return list<string> */
