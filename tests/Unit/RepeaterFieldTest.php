@@ -100,6 +100,53 @@ final class RepeaterFieldTest extends TestCase
         $this->assertContains('max:3', $rules);
     }
 
+    public function test_table_defaults_to_false(): void
+    {
+        $schema = RepeaterField::make('lines')->schema([TextField::make('description')])->toSchema();
+
+        $this->assertFalse($schema['table']);
+    }
+
+    public function test_table_can_be_opted_into_and_back_out(): void
+    {
+        $schema = RepeaterField::make('lines')
+            ->schema([TextField::make('description')])
+            ->table()
+            ->toSchema();
+
+        $this->assertTrue($schema['table']);
+
+        $schema = RepeaterField::make('lines')
+            ->schema([TextField::make('description')])
+            ->table()
+            ->table(false)
+            ->toSchema();
+
+        $this->assertFalse($schema['table']);
+    }
+
+    /**
+     * `table()` reuses each child's own `label()` as the column heading -
+     * there is no separate `TableColumn::make($label)` to keep in sync, so
+     * the schema payload should not carry anything beyond the existing
+     * `children` array the stacked layout already reads.
+     */
+    public function test_table_mode_introduces_no_separate_column_definitions(): void
+    {
+        $schema = RepeaterField::make('lines')
+            ->schema([
+                TextField::make('description')->label('Description')->required(),
+                TextField::make('amount')->label('Amount'),
+            ])
+            ->table()
+            ->toSchema();
+
+        $this->assertSame('Description', $schema['children'][0]['label']);
+        $this->assertTrue($schema['children'][0]['required']);
+        $this->assertSame('Amount', $schema['children'][1]['label']);
+        $this->assertArrayNotHasKey('columns', $schema);
+    }
+
     public function test_schema_carries_item_label_and_children(): void
     {
         $schema = RepeaterField::make('contacts')

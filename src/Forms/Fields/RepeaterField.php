@@ -49,6 +49,8 @@ final class RepeaterField extends Field
 
     private bool $cloneable = false;
 
+    private bool $table = false;
+
     public function type(): string
     {
         return 'repeater';
@@ -162,6 +164,37 @@ final class RepeaterField extends Field
         return $this;
     }
 
+    /**
+     * Render rows as a `<table>` - one column per child field, one row per
+     * item - instead of the stacked one-field-per-line layout every other
+     * repeater uses.
+     *
+     * FOR SEVERAL SHORT FIELDS, NOT ONE LONG ONE. A line item - description,
+     * quantity, unit price - wastes most of a screen's width wrapping to a
+     * new line per field, the way the stacked layout does; the same three
+     * values read as one glance across a row. A single-child repeater, or
+     * one whose fields are long-form (a textarea, a rich editor), has
+     * nothing to gain here and should stay stacked.
+     *
+     * NO SEPARATE COLUMN-LABEL API, unlike Filament's `TableColumn::make()`.
+     * Each child field already has a `label()` - a second place to spell the
+     * same heading is a second place for it to drift from the first. The
+     * header row reads straight off `children()`, in schema order.
+     *
+     * NOT COMBINED WITH `collapsible()`. Folding a table row has no honest
+     * rendering here - a summary line replacing an ordinal badge and one
+     * input is a fold; replacing a full row of cells is a different control
+     * this does not build. The client renders no collapse affordance at all
+     * while this is on, whatever `collapsible()` says - not an error, since
+     * nothing about the two is structurally incompatible, only rendered.
+     */
+    public function table(bool $table = true): self
+    {
+        $this->table = $table;
+
+        return $this;
+    }
+
     /** @return list<Field> */
     public function children(): array
     {
@@ -264,6 +297,7 @@ final class RepeaterField extends Field
             'addable' => $this->addable,
             'deletable' => $this->deletable,
             'cloneable' => $this->cloneable,
+            'table' => $this->table,
             'children' => array_map(static fn (Field $f): array => $f->toSchema(), $this->children),
         ];
     }

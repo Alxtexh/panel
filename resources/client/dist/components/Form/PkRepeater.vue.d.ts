@@ -18,6 +18,10 @@ type __VLS_Props = {
     /** Whether a row can be duplicated. Independent of `addable`: a host
      * can offer "start from a copy" while still refusing a blank row. */
     cloneable?: boolean;
+    /** Render as a `<table>` - one column per child, one row per item -
+     * instead of the stacked one-field-per-line layout. No collapse
+     * affordance renders in this mode, whatever `collapsible` says. */
+    table?: boolean;
     disabled?: boolean;
     /** Validation errors for the whole form, keyed by dotted path. */
     errors?: Record<string, string>;
@@ -34,6 +38,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     "onUpdate:modelValue"?: ((value: Row[] | null) => any) | undefined;
 }>, {
+    table: boolean;
     disabled: boolean;
     errors: Record<string, string>;
     childOptions: Record<string, {
