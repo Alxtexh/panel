@@ -272,6 +272,30 @@ default. Folding a row changes nothing about its data: nothing is submitted,
 saved, or validated differently, and reloading the page starts every row
 expanded again.
 
+`->table()` renders rows as a `<table>` - one column per child field, header
+row above, one row per item - instead of stacking each field onto its own
+line:
+
+```php
+RepeaterField::make('lines')
+    ->itemLabel('Line')
+    ->schema([
+        TextField::make('description')->required(),
+        NumberField::make('qty')->required(),
+        NumberField::make('unit_price')->required(),
+    ])
+    ->table();
+```
+
+Several short fields read as one glance across a row this way; the stacked
+layout wraps each to its own line, which wastes width for exactly this shape
+and is the right choice for one field, or a long one (a textarea, a rich
+editor). The header row reads straight off each child's own `label()` -
+there is no separate column-label API to keep in sync with it. Not combined
+with `collapsible()`: folding a row of table cells has no rendering this
+builds, so no collapse control appears in table mode whatever `collapsible()`
+says.
+
 ### SelectField with many options
 
 ```php

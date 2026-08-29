@@ -125,6 +125,7 @@ export interface FormField {
     addable?: boolean
     deletable?: boolean
     cloneable?: boolean
+    table?: boolean
 
     /**
      * Builder blocks - roadmap 4.5. Each is a named set of fields, and the

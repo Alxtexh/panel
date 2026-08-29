@@ -203,6 +203,10 @@ final class ClientResource extends Resource
                                 // repeat here; starting from a copy beats
                                 // retyping the name and relation.
                                 ->cloneable()
+                                // Three short fields read as one glance
+                                // across a row; stacked, each wraps to its
+                                // own line for no benefit.
+                                ->table()
                                 ->schema([
                                     TextField::make('name')->label('Name')->max(80),
                                     TextField::make('phone')->label('Phone')->as('tel')->max(32),

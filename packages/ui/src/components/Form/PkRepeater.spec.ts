@@ -273,3 +273,106 @@ describe('PkRepeater - addable, deletable, cloneable', () => {
         expect(emitted?.at(-1)?.[0]).toEqual([{ text: 'One.' }, { text: 'One.' }])
     })
 })
+
+describe('PkRepeater - table mode', () => {
+    function mountTable(value: Record<string, unknown>[] | null, extra: Record<string, unknown> = {}) {
+        return mount(PkRepeater, {
+            props: {
+                modelValue: value,
+                children: contactChildren,
+                fieldKey: 'contacts',
+                itemLabel: 'Contact',
+                table: true,
+                ...extra,
+            },
+        })
+    }
+
+    it('renders a table with one header cell per child, in schema order', () => {
+        const wrapper = mountTable([{ name: 'Amina', phone: '0700' }])
+
+        const headers = wrapper.findAll('th').map((h) => h.text())
+        expect(headers).toContain('Name')
+        expect(headers).toContain('Phone')
+        expect(headers.indexOf('Name')).toBeLessThan(headers.indexOf('Phone'))
+    })
+
+    it('marks a required child column with the same asterisk fields use', () => {
+        const required: FormField[] = [
+            { key: 'name', label: 'Name', type: 'text', required: true } as FormField,
+            { key: 'phone', label: 'Phone', type: 'text' } as FormField,
+        ]
+        const wrapper = mount(PkRepeater, {
+            props: {
+                modelValue: [{ name: 'Amina', phone: '0700' }],
+                children: required,
+                fieldKey: 'contacts',
+                itemLabel: 'Contact',
+                table: true,
+            },
+        })
+
+        const nameHeader = wrapper.findAll('th').find((h) => h.text().startsWith('Name'))
+        expect(nameHeader?.find('.text-destructive').exists()).toBe(true)
+    })
+
+    it('renders one row per item with every child field inline, no per-item ordinal or label', () => {
+        const wrapper = mountTable([
+            { name: 'Amina', phone: '0700' },
+            { name: 'Baraka', phone: '0711' },
+        ])
+
+        expect(wrapper.findAll('tbody tr')).toHaveLength(2)
+        // The badge/ordinal from stacked mode has no table-mode equivalent.
+        expect(wrapper.find('span.rounded-full').exists()).toBe(false)
+        // Column headers name the field, so a per-cell label would repeat it.
+        expect(wrapper.findAll('td label').every((l) => l.classes().includes('sr-only'))).toBe(true)
+    })
+
+    it('shows no collapse affordance even when collapsible is also set', () => {
+        const wrapper = mountTable([{ name: 'Amina', phone: '0700' }], { collapsible: true })
+
+        expect(wrapper.text()).not.toContain('Collapse all')
+        expect(wrapper.find('[aria-label^="Collapse"]').exists()).toBe(false)
+    })
+
+    it('still moves, removes, and clones rows from the table row controls', async () => {
+        const wrapper = mountTable(
+            [
+                { name: 'Amina', phone: '0700' },
+                { name: 'Baraka', phone: '0711' },
+            ],
+            { cloneable: true },
+        )
+
+        await wrapper.find('button[aria-label="Move Contact 2 up"]').trigger('click')
+        let emitted = wrapper.emitted('update:modelValue')
+        expect(emitted?.at(-1)?.[0]).toEqual([
+            { name: 'Baraka', phone: '0711' },
+            { name: 'Amina', phone: '0700' },
+        ])
+
+        await wrapper.find('button[aria-label="Duplicate Contact 1"]').trigger('click')
+        emitted = wrapper.emitted('update:modelValue')
+        expect(emitted?.at(-1)?.[0]).toEqual([
+            { name: 'Baraka', phone: '0711' },
+            { name: 'Baraka', phone: '0711' },
+            { name: 'Amina', phone: '0700' },
+        ])
+
+        await wrapper.find('button[aria-label="Remove Contact 1"]').trigger('click')
+        emitted = wrapper.emitted('update:modelValue')
+        expect(emitted?.at(-1)?.[0]).toEqual([
+            { name: 'Baraka', phone: '0711' },
+            { name: 'Amina', phone: '0700' },
+        ])
+    })
+
+    it('shows the same empty state and Add control below the table', () => {
+        const wrapper = mountTable(null)
+
+        expect(wrapper.find('table').exists()).toBe(false)
+        expect(wrapper.text()).toContain('No contacts yet.')
+        expect(wrapper.text()).toContain('Add contact')
+    })
+})

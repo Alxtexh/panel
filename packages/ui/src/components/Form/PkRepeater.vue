@@ -60,6 +60,10 @@ const props = withDefaults(
         /** Whether a row can be duplicated. Independent of `addable`: a host
          * can offer "start from a copy" while still refusing a blank row. */
         cloneable?: boolean
+        /** Render as a `<table>` - one column per child, one row per item -
+         * instead of the stacked one-field-per-line layout. No collapse
+         * affordance renders in this mode, whatever `collapsible` says. */
+        table?: boolean
         disabled?: boolean
         /** Validation errors for the whole form, keyed by dotted path. */
         errors?: Record<string, string>
@@ -76,6 +80,7 @@ const props = withDefaults(
         addable: true,
         deletable: true,
         cloneable: false,
+        table: false,
         disabled: false,
         errors: () => ({}),
         childOptions: () => ({}),
@@ -377,7 +382,7 @@ function onRowDrop(targetUid: number, event: DragEvent) {
         with its own heading and control strip made three short entries taller
         than the rest of the form put together.
     -->
-    <div v-if="collapsible && rows.length > 1" class="flex justify-end">
+    <div v-if="!table && collapsible && rows.length > 1" class="flex justify-end">
         <button
             type="button"
             class="text-muted-foreground hover:text-foreground text-xs font-medium"
@@ -387,7 +392,7 @@ function onRowDrop(targetUid: number, event: DragEvent) {
         </button>
     </div>
 
-    <div class="flex flex-col gap-2">
+    <div v-if="!table" class="flex flex-col gap-2">
         <div
             v-for="(row, index) in rows"
             :key="row.uid"
@@ -589,6 +594,210 @@ function onRowDrop(targetUid: number, event: DragEvent) {
             controls describing a state instead of offering an action; when
             nothing more can be added, the honest UI is nothing.
         -->
+        <button
+            v-if="!atMax && addable"
+            type="button"
+            class="text-foreground hover:bg-accent inline-flex w-fit items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors disabled:pointer-events-none disabled:opacity-50"
+            :disabled="disabled"
+            @click="add"
+        >
+            <svg
+                class="size-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                aria-hidden="true"
+            >
+                <path d="M12 5v14M5 12h14" />
+            </svg>
+            Add {{ itemLabel.toLowerCase() }}
+        </button>
+    </div>
+
+    <!--
+        TABLE MODE - `RepeaterField::table()`. Several short fields read as
+        one glance across a row here; the stacked layout above wraps each to
+        its own line, which is right for one field or a long one and wastes
+        width for several short ones. No collapse affordance in this mode -
+        see the PHP side's own note on why folding a row of cells is not a
+        thing this builds.
+    -->
+    <div v-else class="flex flex-col gap-2">
+        <div v-if="rows.length" class="overflow-x-auto rounded-md border">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-muted/40">
+                        <th v-if="!disabled" class="w-8 border-b px-2 py-1.5">
+                            <span class="sr-only">Reorder</span>
+                        </th>
+
+                        <th
+                            v-for="child in children"
+                            :key="child.key"
+                            class="text-muted-foreground border-b px-2 py-1.5 text-left text-xs font-medium"
+                        >
+                            {{ child.label }}
+                            <span v-if="child.required" class="text-destructive" aria-hidden="true"
+                                >*</span
+                            >
+                        </th>
+
+                        <th class="border-b px-2 py-1.5">
+                            <span class="sr-only">Row actions</span>
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr
+                        v-for="(row, index) in rows"
+                        :key="row.uid"
+                        class="border-b last:border-b-0"
+                        :class="dragUid === row.uid ? 'opacity-40' : ''"
+                        @dragover.prevent
+                        @drop="onRowDrop(row.uid, $event)"
+                    >
+                        <td v-if="!disabled" class="px-2 py-1.5 align-top">
+                            <button
+                                type="button"
+                                class="text-muted-foreground/60 hover:text-muted-foreground mt-0.5 flex size-6 cursor-grab items-center justify-center active:cursor-grabbing"
+                                draggable="true"
+                                :aria-label="`Drag to reorder ${itemLabel} ${index + 1}`"
+                                @dragstart="onHandleDragStart(row.uid, $event)"
+                                @dragend="onHandleDragEnd"
+                            >
+                                <svg
+                                    class="size-3.5"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                    aria-hidden="true"
+                                >
+                                    <circle cx="9" cy="6" r="1.4" />
+                                    <circle cx="15" cy="6" r="1.4" />
+                                    <circle cx="9" cy="12" r="1.4" />
+                                    <circle cx="15" cy="12" r="1.4" />
+                                    <circle cx="9" cy="18" r="1.4" />
+                                    <circle cx="15" cy="18" r="1.4" />
+                                </svg>
+                            </button>
+                        </td>
+
+                        <td
+                            v-for="child in children"
+                            :key="child.key"
+                            class="min-w-[8rem] px-2 py-1.5 align-top"
+                        >
+                            <FormFieldControl
+                                :field="{ ...child, disabled: child.disabled || disabled, labelHidden: true }"
+                                :value="row.data[child.key]"
+                                :error="errorFor(index, child.key)"
+                                :options="childOptions[child.key] ?? []"
+                                @change="(value) => setChild(row.uid, child.key, value)"
+                            />
+                        </td>
+
+                        <td class="px-2 py-1.5 align-top">
+                            <div class="mt-0.5 flex items-center gap-0.5">
+                                <button
+                                    type="button"
+                                    class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
+                                    :disabled="disabled || index === 0"
+                                    :aria-label="`Move ${itemLabel} ${index + 1} up`"
+                                    @click="move(index, -1)"
+                                >
+                                    <svg
+                                        class="size-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="m18 15-6-6-6 6" />
+                                    </svg>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
+                                    :disabled="disabled || index === rows.length - 1"
+                                    :aria-label="`Move ${itemLabel} ${index + 1} down`"
+                                    @click="move(index, 1)"
+                                >
+                                    <svg
+                                        class="size-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </button>
+
+                                <button
+                                    v-if="cloneable"
+                                    type="button"
+                                    class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
+                                    :disabled="disabled || atMax"
+                                    :title="atMax ? `At most ${maxItems} allowed` : undefined"
+                                    :aria-label="`Duplicate ${itemLabel} ${index + 1}`"
+                                    @click="cloneRow(row.uid)"
+                                >
+                                    <svg
+                                        class="size-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <rect x="8" y="8" width="12" height="12" rx="2" />
+                                        <path d="M4 16V6a2 2 0 0 1 2-2h10" />
+                                    </svg>
+                                </button>
+
+                                <button
+                                    v-if="deletable"
+                                    type="button"
+                                    class="text-muted-foreground hover:bg-destructive/10 hover:text-destructive inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
+                                    :disabled="disabled || atMin"
+                                    :title="atMin ? `At least ${minItems} required` : undefined"
+                                    :aria-label="`Remove ${itemLabel} ${index + 1}`"
+                                    @click="remove(row.uid)"
+                                >
+                                    <svg
+                                        class="size-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M18 6 6 18M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p v-else class="text-muted-foreground rounded-md border border-dashed px-3 py-4 text-xs">
+            No {{ itemLabel.toLowerCase() }}s yet.
+        </p>
+
         <button
             v-if="!atMax && addable"
             type="button"
