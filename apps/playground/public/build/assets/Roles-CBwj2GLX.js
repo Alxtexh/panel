@@ -1,0 +1,1 @@
+import{$n as e,k as t,mt as n,v as r,z as i}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{j as a}from"./inertia-C6o5aZ4p.js";import{t as o}from"./AppLayout-B3wqLTtn.js";var s=t({inheritAttrs:!1,layout:o,__name:`Roles`,setup(t){return(t,o)=>(n(),r(a,e(i(t.$attrs)),null,16))}});export{s as default};

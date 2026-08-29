@@ -24,19 +24,6 @@
 @source '../../node_modules/@alxtexh-enterprise/panel/inertia/**/*.{vue,ts}';
 
 /**
- * `dark:` FOLLOWS THE `.dark` CLASS BELOW, NOT YOUR OS. Tailwind 4's own
- * default for the `dark:` variant is `@media (prefers-color-scheme: dark)` -
- * entirely separate from the class the appearance drawer actually toggles.
- * Without this line, a component using a literal `dark:bg-red-700` (rather
- * than the semantic `bg-destructive` tokens below) renders by whatever your
- * OS reports, regardless of which theme this panel is actually showing -
- * unreadable text is what that looks like when the two disagree. Delete
- * this line only if you have your own reason for `dark:` to mean "my OS says
- * dark" rather than "this panel's theme is dark".
- */
-@custom-variant dark (&:is(.dark *));
-
-/**
  * The design tokens every packaged component reads.
  *
  * THE SET IS NOT DECORATIVE - IT IS THE ONE THE COMPONENTS ACTUALLY ASK FOR.
@@ -111,6 +98,25 @@
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
 }
+
+/**
+ * `dark:` FOLLOWS THE `.dark` CLASS BELOW, NOT YOUR OS. Tailwind 4's own
+ * default for the `dark:` variant is `@media (prefers-color-scheme: dark)` -
+ * entirely separate from the class the appearance drawer actually toggles.
+ * Without this line, a component using a literal `dark:bg-red-700` (rather
+ * than the semantic `bg-destructive` tokens above) renders by whatever your
+ * OS reports, regardless of which theme this panel is actually showing -
+ * unreadable text is what that looks like when the two disagree. Delete
+ * this line only if you have your own reason for `dark:` to mean "my OS says
+ * dark" rather than "this panel's theme is dark".
+ *
+ * AFTER `@theme`, NOT BEFORE, though Tailwind accepts either position: a
+ * plain-CSS host's `panel:install` merge copies "everything from `@theme`
+ * down" out of this stub (`InstallCommand::mergeStylesheet()`) to graft onto
+ * an existing stylesheet that has none of the tokens below yet - a line
+ * placed above `@theme` would silently miss that copy.
+ */
+@custom-variant dark (&:is(.dark *));
 
 /*
  * THESE VALUES ARE THE DEMO'S. Keep them in lockstep with

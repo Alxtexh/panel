@@ -53,6 +53,9 @@ final class SettingsIndexTest extends TestCase
         // baseline. `manage_roles` is excluded too because it used to add User
         // management here - it no longer does, and holding it must not start
         // adding anything back without this list being changed on purpose.
+        // `manage_mail_settings` is NOT excluded: SMTP is the one entry every
+        // operator with the ordinary ability set already sees, so it belongs
+        // in the baseline rather than in its own gated test below.
         $user = $this->operator(array_values(array_diff(
             Abilities::all(),
             ['manage_roles', 'manage_assistant'],
@@ -64,7 +67,7 @@ final class SettingsIndexTest extends TestCase
         $titles = array_column($entries, 'title');
 
         $this->assertSame(
-            ['Profile', 'Security', 'Notifications', 'Organisation', 'Payment gateways', 'Workspaces'],
+            ['Profile', 'Security', 'Notifications', 'Organisation', 'Payment gateways', 'SMTP', 'Workspaces'],
             $titles,
         );
     }
