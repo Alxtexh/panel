@@ -6,12 +6,14 @@ namespace Alxtexh\Panel\Jobs;
 
 use Alxtexh\Panel\Actions\ExportedFile;
 use Alxtexh\Panel\Actions\JobStatus;
+use Alxtexh\Panel\Imports\ImportFailure;
 use Alxtexh\Panel\Imports\Importer;
 use Alxtexh\Panel\Imports\RowsReader;
 use Alxtexh\Panel\Support\TenantContext;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -65,32 +67,53 @@ final class ImportRecords implements ShouldQueue
             $result = $importer->process($reader->rows());
 
             $written = 0;
+            $saveFailures = [];
 
             if (! $this->dryRun) {
                 $model = $class::model();
 
+                /*
+                 * ONE BAD ROW MUST NOT ABORT THE BATCH - `Importer`'s own rule,
+                 * and it held for a bad phone number, not for a duplicate
+                 * access code. A unique-constraint violation is invisible to
+                 * form validation (it has no query to check against) and only
+                 * shows up here, at `save()` - so this is where it has to be
+                 * caught, per row, or one collision undoes every row already
+                 * written in the same batch and hands the operator a raw SQL
+                 * message instead of "line 4: this access code is already in
+                 * use."
+                 */
                 foreach ($result->prepared as $row) {
-                    $record = new $model;
-                    $record->forceFill($form->sanitize($row));
-                    $this->applyTenant($record);
-                    $record->save();
-                    $written++;
+                    try {
+                        $record = new $model;
+                        $record->forceFill($row->data);
+                        $this->applyTenant($record);
+                        $record->save();
+                        $written++;
+                    } catch (Throwable $e) {
+                        $saveFailures[] = new ImportFailure(
+                            line: $row->line,
+                            messages: [self::friendlySaveError($e)],
+                        );
+                    }
+
                     JobStatus::progress($this->token, $written, $result->importable());
                 }
             }
 
-            $failurePath = $this->writeFailures($result->failures);
+            $failures = [...$result->failures, ...$saveFailures];
+            $failurePath = $this->writeFailures($failures);
 
             JobStatus::finish($this->token, [
                 'done' => $written,
                 'total' => $result->importable(),
-                'importable' => $result->importable(),
-                'failed' => $result->failed(),
+                'importable' => $result->importable() - count($saveFailures),
+                'failed' => count($failures),
                 'failures' => array_map(
                     static fn ($f): array => $f->toArray(),
-                    array_slice($result->failures, 0, 50),
+                    array_slice($failures, 0, 50),
                 ),
-                'truncated' => $result->failed() > 50,
+                'truncated' => count($failures) > 50,
                 'written' => $written,
                 'file' => $failurePath,
             ]);
@@ -149,6 +172,31 @@ final class ImportRecords implements ShouldQueue
         fclose($handle);
 
         return $path;
+    }
+
+    /**
+     * A DB-level save failure, worded for the operator rather than logged
+     * for a developer.
+     *
+     * A UNIQUE VIOLATION IS BY FAR THE COMMON CASE - the form's own rules
+     * validated everything they know how to; a duplicate access code, email
+     * or slug is invisible to them because checking it means a query, not a
+     * regex. `QueryException::errorInfo` carries the driver's own SQLSTATE
+     * (`23000`, portable across MySQL/Postgres/SQLite) precisely so this does
+     * not have to string-match a vendor-specific message. Anything else
+     * (a NOT NULL column no field maps, a foreign key with no matching row)
+     * is rarer and gets its own generic line rather than the SQL itself -
+     * the raw text default names the column, the table and the values,
+     * which read as fine detail to whoever wrote the migration and as noise
+     * to whoever is looking at a spreadsheet.
+     */
+    private static function friendlySaveError(Throwable $e): string
+    {
+        if ($e instanceof QueryException && ($e->errorInfo[0] ?? null) === '23000') {
+            return 'This row duplicates a value that must be unique (for example, an access code or email already in use).';
+        }
+
+        return 'This row could not be saved.';
     }
 
     private function applyTenant(Model $record): void

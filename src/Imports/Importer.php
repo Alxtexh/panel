@@ -149,7 +149,10 @@ final class Importer
                 continue;
             }
 
-            $prepared[] = $this->form->sanitize($validator->validated());
+            $prepared[] = new ImportRow(
+                line: $index + 2,
+                data: $this->form->sanitize($validator->validated()),
+            );
         }
 
         return new ImportResult(prepared: $prepared, failures: $failures);

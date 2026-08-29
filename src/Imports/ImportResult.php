@@ -15,7 +15,7 @@ namespace Alxtexh\Panel\Imports;
 final class ImportResult
 {
     /**
-     * @param  list<array<string, mixed>>  $prepared  Rows ready to write.
+     * @param  list<ImportRow>  $prepared  Rows ready to write.
      * @param  list<ImportFailure>  $failures
      */
     public function __construct(

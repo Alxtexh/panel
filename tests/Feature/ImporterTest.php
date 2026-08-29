@@ -56,8 +56,10 @@ final class ImporterTest extends TestCase
         $this->assertSame(0, $result->failed());
         $this->assertSame(
             [['title' => 'First', 'status' => 'draft'], ['title' => 'Second', 'status' => 'published']],
-            $result->prepared,
+            array_map(static fn ($row) => $row->data, $result->prepared),
         );
+        // +2: the header is line 1, so the first data row is line 2.
+        $this->assertSame([2, 3], array_map(static fn ($row) => $row->line, $result->prepared));
     }
 
     /**
@@ -75,7 +77,7 @@ final class ImporterTest extends TestCase
             ['Heading' => 'First', 'tenant_id' => '999', 'is_admin' => '1'],
         ]);
 
-        $this->assertSame(['title' => 'First'], $result->prepared[0]);
+        $this->assertSame(['title' => 'First'], $result->prepared[0]->data);
     }
 
     /**

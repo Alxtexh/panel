@@ -10,6 +10,7 @@ use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Opt-in CSV import over HTTP: inspect, queue, failed-row download.
@@ -89,6 +90,57 @@ final class ImportHttpTest extends TestCase
         $this->assertSame(1, $payload['written'] ?? null);
         $this->assertSame(1, Article::query()->where('title', 'Imported')->count());
         $this->assertSame($this->user->tenant_id, Article::query()->where('title', 'Imported')->value('tenant_id'));
+    }
+
+    /**
+     * A UNIQUE-CONSTRAINT VIOLATION IS INVISIBLE TO FORM VALIDATION - it has
+     * no query to check against, only a rule like "required" or "max:120".
+     * It only surfaces at the actual `save()`, and used to abort the whole
+     * job there: `ImportRecords::handle()`'s per-row loop had no try/catch,
+     * so one duplicate slug threw an uncaught QueryException that took down
+     * every row in the batch (including ones already written) and handed
+     * the browser a raw SQLSTATE message. This is `articles.slug`'s real
+     * unique constraint, not a validation rule - the only way to reach the
+     * code path this test is actually checking.
+     */
+    public function test_a_duplicate_unique_value_fails_its_own_row_without_a_500(): void
+    {
+        /*
+         * THE FIXTURE `articles` TABLE HAS NO UNIQUE COLUMN OF ITS OWN - a
+         * constraint scoped to THIS test, not a migration every other test
+         * in this table also runs against, is what proves the code path a
+         * validation rule cannot: a duplicate invisible to `Importer`'s
+         * validation pass and only caught at `save()`.
+         */
+        Schema::table('articles', function ($table): void {
+            $table->unique('slug');
+        });
+
+        Article::withoutGlobalScopes()->create([
+            'tenant_id' => $this->user->tenant_id,
+            'title' => 'Existing',
+            'slug' => 'taken-slug',
+            'status' => 'draft',
+        ]);
+
+        $csv = UploadedFile::fake()->createWithContent(
+            'rows.csv',
+            "title,slug,status\nFirst,new-slug,draft\nSecond,taken-slug,draft\n",
+        );
+
+        $payload = $this->post('/articles/import', [
+            'file' => $csv,
+            'mapping' => ['title' => 'title', 'slug' => 'slug', 'status' => 'status'],
+            'dryRun' => '0',
+        ])->assertOk()->json();
+
+        $this->assertSame(1, $payload['written'] ?? null);
+        $this->assertSame(1, $payload['failed'] ?? null);
+        $this->assertSame(3, $payload['failures'][0]['line'] ?? null);
+        $this->assertStringContainsString('unique', $payload['failures'][0]['messages'][0] ?? '');
+
+        $this->assertSame(1, Article::query()->where('title', 'First')->count());
+        $this->assertSame(0, Article::query()->where('title', 'Second')->count());
     }
 
     public function test_failed_rows_are_downloadable(): void
