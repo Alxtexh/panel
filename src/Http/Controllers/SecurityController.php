@@ -57,7 +57,7 @@ final class SecurityController
              * will pass. Without it the manager offers its own default, the
              * server rejects it, and the person blames the panel.
              */
-            'passwordRules' => Password::defaults()->toPasswordRulesString(),
+            'passwordRules' => PasswordPolicy::complexityHint(Password::defaults()),
 
             /*
              * Current device is always present while authenticated. Other
