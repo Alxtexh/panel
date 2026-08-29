@@ -91,17 +91,18 @@ final class UserDirectory
     public static function roles(Request $request): array
     {
         $model = self::model();
+        $column = self::teamColumn();
         $tenant = $request->user()?->{config('panel.tenancy.column', 'tenant_id')} ?? null;
 
         return Role::query()
             ->select('roles.*')
-            ->where('tenant_id', $tenant)
+            ->where($column, $tenant)
             ->with('permissions:id,name')
             ->addSelect(['user_count' => DB::table('model_has_roles')
                 ->selectRaw('count(*)')
                 ->whereColumn('model_has_roles.role_id', 'roles.id')
                 ->where('model_has_roles.model_type', $model)
-                ->where('model_has_roles.tenant_id', $tenant),
+                ->where('model_has_roles.'.$column, $tenant),
             ])
             ->orderBy('id')
             ->get()
@@ -121,5 +122,27 @@ final class UserDirectory
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * The column `roles` and `model_has_roles` are actually scoped by, ASKED
+     * of Spatie rather than assumed.
+     *
+     * `tenant_id` is this project's name for the concept; `team_id` is
+     * Spatie's own default column, and it is the one a plain `panel:install`
+     * ends up with - nothing here publishes `config/permission.php` to rename
+     * it. This used to hardcode `'tenant_id'` directly, which happened to
+     * match neither: querying `model_has_roles.tenant_id` on a table whose
+     * real column is `team_id` 500'd the User Management page on the exact
+     * install that never touched that config, which is every one of them.
+     * See `RoleController::teamColumn()` for the identical resolution this
+     * mirrors.
+     */
+    private static function teamColumn(): string
+    {
+        return (string) config(
+            'permission.column_names.team_foreign_key',
+            config('panel.tenancy.column', 'tenant_id'),
+        );
     }
 }
