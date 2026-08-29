@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import SchemaNode from './SchemaNode.vue'
 import type { SchemaNode as SchemaNodeType } from './SchemaNode.vue'
 
@@ -210,6 +210,134 @@ describe('SchemaNode - wizard', () => {
         })
 
         expect(wrapper.find('[aria-label="has errors"]').exists()).toBe(true)
+    })
+})
+
+/**
+ * `Tabs::persistInQueryString()`/`Wizard::persistInQueryString()` - the URL
+ * end. Everything here happens through `history.replaceState`, so each test
+ * resets `window.location` afterward rather than letting one test's URL
+ * leak into the next.
+ */
+describe('SchemaNode - position persisted in the query string', () => {
+    const tabs: SchemaNodeType = {
+        component: 'tabs',
+        persistInQueryString: 'tab',
+        children: [
+            { component: 'tab', label: 'First', children: [] },
+            { component: 'tab', label: 'Second', children: [] },
+            { component: 'tab', label: 'Third', children: [] },
+        ],
+    }
+
+    afterEach(() => {
+        window.history.replaceState(null, '', '/')
+    })
+
+    /**
+     * The active tab BUTTON carries a distinct class - `bg-background` -
+     * from every inactive one; every tab PANEL stays mounted (`v-show`),
+     * so panel text presence proves nothing about which one is active.
+     * The button's own class is what actually answers "which tab is on".
+     */
+    function activeTabLabel(wrapper: ReturnType<typeof mount>): string | undefined {
+        return wrapper
+            .findAll('button')
+            .find((b) => b.classes().includes('bg-background'))
+            ?.text()
+    }
+
+    it('opens the first tab when the node did not opt in', () => {
+        window.history.replaceState(null, '', '/?tab=2')
+
+        const wrapper = mount(SchemaNode, {
+            props: { node: { ...tabs, persistInQueryString: undefined }, values: {} },
+        })
+
+        // Not opted in, so `?tab=2` (the third tab) is never consulted.
+        expect(activeTabLabel(wrapper)).toBe('First')
+    })
+
+    it('reads the initial tab from the query string on mount', () => {
+        window.history.replaceState(null, '', '/?tab=2')
+
+        const wrapper = mount(SchemaNode, { props: { node: tabs, values: {} } })
+
+        expect(activeTabLabel(wrapper)).toBe('Third')
+    })
+
+    it('falls back to the first tab for an out-of-range query value', () => {
+        window.history.replaceState(null, '', '/?tab=99')
+
+        const wrapper = mount(SchemaNode, { props: { node: tabs, values: {} } })
+
+        expect(activeTabLabel(wrapper)).toBe('First')
+    })
+
+    it('falls back to the first tab for a non-numeric query value', () => {
+        window.history.replaceState(null, '', '/?tab=not-a-number')
+
+        const wrapper = mount(SchemaNode, { props: { node: tabs, values: {} } })
+
+        expect(activeTabLabel(wrapper)).toBe('First')
+    })
+
+    it('updates the query string when the active tab changes, without a pushState entry', async () => {
+        window.history.replaceState(null, '', '/')
+
+        const wrapper = mount(SchemaNode, { props: { node: tabs, values: {} } })
+
+        const lengthBefore = window.history.length
+
+        const secondTabButton = wrapper
+            .findAll('button')
+            .find((b) => b.text().trim() === 'Second')
+
+        await secondTabButton?.trigger('click')
+
+        expect(new URLSearchParams(window.location.search).get('tab')).toBe('1')
+        // replaceState, not pushState - the history stack did not grow.
+        expect(window.history.length).toBe(lengthBefore)
+    })
+
+    it('does not touch the URL at all for a node that never opted in', async () => {
+        window.history.replaceState(null, '', '/')
+
+        const wrapper = mount(SchemaNode, {
+            props: { node: { ...tabs, persistInQueryString: undefined }, values: {} },
+        })
+
+        const secondTabButton = wrapper
+            .findAll('button')
+            .find((b) => b.text().trim() === 'Second')
+
+        await secondTabButton?.trigger('click')
+
+        expect(window.location.search).toBe('')
+    })
+
+    it('does the same for a wizard, under its own key', async () => {
+        const wizardNode: SchemaNodeType = {
+            component: 'wizard',
+            persistInQueryString: 'step',
+            children: [
+                { component: 'step', label: 'One', children: [] },
+                { component: 'step', label: 'Two', children: [] },
+            ],
+        }
+
+        window.history.replaceState(null, '', '/?step=1')
+
+        const wrapper = mount(SchemaNode, { props: { node: wizardNode, values: {} } })
+
+        expect(wrapper.html()).toContain('Two')
+
+        await wrapper
+            .findAll('button')
+            .find((b) => b.text() === 'Back')
+            ?.trigger('click')
+
+        expect(new URLSearchParams(window.location.search).get('step')).toBe('0')
     })
 })
 

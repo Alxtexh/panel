@@ -31,6 +31,8 @@ namespace Alxtexh\Panel\Schema;
  */
 final class Wizard extends Component
 {
+    private ?string $persistInQueryString = null;
+
     public static function make(): self
     {
         return new self;
@@ -45,6 +47,29 @@ final class Wizard extends Component
     public function component(): string
     {
         return 'wizard';
+    }
+
+    /**
+     * Remember the current step in the URL - see `Tabs::persistInQueryString()`
+     * for the full reasoning, which is identical here: `$key` names the query
+     * parameter (`?step=1` by default) because a layout node has no identity
+     * of its own, and the client syncs it with `history.replaceState` rather
+     * than a request, so advancing a step never costs a `pushState` entry the
+     * back button would have to unwind.
+     */
+    public function persistInQueryString(string $key = 'step'): self
+    {
+        $this->persistInQueryString = $key;
+
+        return $this;
+    }
+
+    public function toSchema(): array
+    {
+        return [
+            ...parent::toSchema(),
+            'persistInQueryString' => $this->persistInQueryString,
+        ];
     }
 
     /**

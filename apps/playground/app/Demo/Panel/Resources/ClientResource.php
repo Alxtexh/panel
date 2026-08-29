@@ -145,7 +145,11 @@ final class ClientResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Tabs::make()->tabs([
+            // The worked example for Tabs::persistInQueryString() - a long
+            // edit form somebody switches away from mid-tab and back to
+            // (a copy-pasted access code, a phone call) should not reopen
+            // on Identity every time.
+            Tabs::make()->persistInQueryString('tab')->tabs([
                 Tab::make('Identity')->schema([
                     Section::make('Contact')->columns(2)->schema([
                         TextField::make('name')->required()->placeholder('Full name'),

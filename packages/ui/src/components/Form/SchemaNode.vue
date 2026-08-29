@@ -16,7 +16,7 @@
  * this file decides what those look like. PHP never emits a class
  * (antipatterns §6.1).
  */
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import PkStepIndicator from '../Layout/PkStepIndicator.vue'
 import { iconPath } from '../primitives/icons'
 import FormFieldControl from './FormFieldControl.vue'
@@ -54,6 +54,9 @@ export interface SchemaNode {
     /** `callout` */
     tone?: 'info' | 'success' | 'warning' | 'danger'
     body?: string
+    /** `tabs`/`wizard`: the query-string key to remember position under, or
+     * null when the node did not opt in. */
+    persistInQueryString?: string | null
     [key: string]: any
 }
 
@@ -85,10 +88,56 @@ const emit = defineEmits<{
 }>()
 
 const open = ref(!props.node.collapsed)
-const activeTab = ref(0)
+
+/**
+ * The position a persisted `Tabs`/`Wizard` was left at, read from its own
+ * query-string key - `?tab=2`, `?step=1` - so a refresh or a browser-back
+ * return lands where it was left instead of resetting to the first one.
+ * `0` (never `NaN`, never out of range) for a node that did not opt in, was
+ * never visited with that key set, or was given a value that no longer
+ * fits the tab/step count - a stale link from before a step was removed
+ * should not open past the end of what still exists.
+ */
+function initialIndexFromQuery(): number {
+    const key = props.node.persistInQueryString
+
+    if (!key || typeof window === 'undefined') {
+        return 0
+    }
+
+    const raw = new URLSearchParams(window.location.search).get(key)
+    const parsed = raw === null ? NaN : Number.parseInt(raw, 10)
+    const count = props.node.children?.length ?? 0
+
+    return Number.isInteger(parsed) && parsed >= 0 && parsed < count ? parsed : 0
+}
+
+const activeTab = ref(props.node.component === 'tabs' ? initialIndexFromQuery() : 0)
 
 /** Which wizard step is showing. Separate from `activeTab`: one node is one or the other. */
-const activeStep = ref(0)
+const activeStep = ref(props.node.component === 'wizard' ? initialIndexFromQuery() : 0)
+
+/**
+ * `history.replaceState`, NOT a `router.visit` or `pushState`. Every value
+ * in a schema is already on the page - switching tabs or steps is local
+ * state with nothing to fetch, so a request here would be pure latency for
+ * no new data. `replaceState` over `pushState` for the same reason
+ * `Tabs::persistInQueryString()`'s own docblock gives: a `pushState` entry
+ * per switch would make the browser's own back button switch tabs instead
+ * of leaving the page, which is not what anybody reaching for "back" wants.
+ */
+function syncQueryString(key: string | null | undefined, index: number): void {
+    if (!key || typeof window === 'undefined') {
+        return
+    }
+
+    const url = new URL(window.location.href)
+    url.searchParams.set(key, String(index))
+    window.history.replaceState(window.history.state, '', url)
+}
+
+watch(activeTab, (index) => syncQueryString(props.node.persistInQueryString, index))
+watch(activeStep, (index) => syncQueryString(props.node.persistInQueryString, index))
 
 /**
  * `PkStepIndicator` requires a label; a schema node's is optional because

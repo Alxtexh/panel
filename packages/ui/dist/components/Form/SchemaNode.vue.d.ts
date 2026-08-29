@@ -17,6 +17,9 @@ export interface SchemaNode {
     /** `callout` */
     tone?: 'info' | 'success' | 'warning' | 'danger';
     body?: string;
+    /** `tabs`/`wizard`: the query-string key to remember position under, or
+     * null when the node did not opt in. */
+    persistInQueryString?: string | null;
     [key: string]: any;
 }
 type __VLS_Props = {
